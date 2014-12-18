@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35402 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41605 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754460AbaLVTNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2014 14:13:10 -0500
-Message-ID: <1419275582.1890.24.camel@sipsolutions.net> (sfid-20141222_201331_053293_C53478D9)
-Subject: Re: [PATCH RFC] ipw2200: select CFG80211_WEXT
+	id S1751796AbaLRN4z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Dec 2014 08:56:55 -0500
+Message-ID: <1418911011.6134.10.camel@sipsolutions.net> (sfid-20141218_145657_993773_CAC63E59)
+Subject: Re: [PATCH] nl80211: increase the max number of rules in regdomain
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 22 Dec 2014 20:13:02 +0100
-In-Reply-To: <1419271817.2317.12.camel@tiscali.nl> (sfid-20141222_191040_534124_837C59D7)
-References: <1419271817.2317.12.camel@tiscali.nl>
-	 (sfid-20141222_191040_534124_837C59D7)
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Thu, 18 Dec 2014 14:56:51 +0100
+In-Reply-To: <1418910981.6134.9.camel@sipsolutions.net> (sfid-20141218_145628_745961_945194E6)
+References: <1418832044-25582-1-git-send-email-arik@wizery.com>
+	 (sfid-20141217_170045_082207_4F64BED6) <1418910981.6134.9.camel@sipsolutions.net>
+	 (sfid-20141218_145628_745961_945194E6)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-22 at 19:10 +0100, Paul Bolle wrote:
-> Commit 24a0aa212ee2 ("cfg80211: make WEXT compatibility unselectable")
-> made it impossible to depend on CFG80211_WEXT. It does still allow to
-> select that symbol. (Yes, the commit summary is confusing.)
+On Thu, 2014-12-18 at 14:56 +0100, Johannes Berg wrote:
+> On Wed, 2014-12-17 at 18:00 +0200, Arik Nemtsov wrote:
+> > Some network cards (Intel) produce per-channel regdomains and rely on
+> > cfg80211 to merge rules as needed. This hits the max rules limit and
+> > fails.
 > 
-> So make IPW2200 select CFG80211_WEXT, so that the ipw2200 driver can be
-> built again.
-> 
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
-> ---
-> Johannes,
-> 
-> Building v3.19-rc1 for an outdated ThinkPad X41 left me without the
-> ipw2200 driver. It turns out this trivial patch is all that's needed to
-> make ipw2200 buildable again.
-> 
-> (A similar patch would be needed for the drivers behind Kconfig symbol
-> HERMES. Ie, orinico and friends.) 
-> 
-> I must admit that I do not fully understand your commit. (How was
-> CFG80211_WEXT "marked for deprecation and removal for a little more than
-> two years"?) There's some terminology confusion: what you call "select"
-> I tend to call "set". Anyhow, your commit basically disables building
-> ipw2200 (and apparently orinoco and friends)?
-> 
-> Was that your intention?
->  
->  drivers/net/wireless/ipw2x00/Kconfig | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ipw2x00/Kconfig b/drivers/net/wireless/ipw2x00/Kconfig
-> index 91c0cb3c368e..21de4fe6cf2d 100644
-> --- a/drivers/net/wireless/ipw2x00/Kconfig
-> +++ b/drivers/net/wireless/ipw2x00/Kconfig
-> @@ -65,7 +65,8 @@ config IPW2100_DEBUG
->  
->  config IPW2200
->  	tristate "Intel PRO/Wireless 2200BG and 2915ABG Network Connection"
-> -	depends on PCI && CFG80211 && CFG80211_WEXT
-> +	depends on PCI && CFG80211
-> +	select CFG80211_WEXT
->  	select WIRELESS_EXT
+> Maybe we should consider just getting rid of this or bumping it to
+> something ridiculously large like 1000? Looking at how this is (not)
+> used, there's no real sense in limiting it. The only possible problem is
+> the O(n^2) complexity when doing an intersection, but processing a
+> million combinations is probably not a big deal? In fact, even if that
+> becomes a problem, we can easily optimise that complexity away by
+> sorting the rules or so. Then it becomes O(n log n)...
 
-I didn't realize that this driver actually depended on this symbol - I
-had been under the impression that those would still use regular wext
-(WIRELESS_EXT) only.
-
-So yeah - this makes sense. FWIW, by "selectable" I meant by the user.
+For now I'll apply this anyway though.
 
 johannes
 
