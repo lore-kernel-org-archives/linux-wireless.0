@@ -1,112 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28975 "EHLO
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:65014 "EHLO
 	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751588AbaLCUFk (ORCPT
+	with ESMTP id S1751159AbaLRUm3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 15:05:40 -0500
+	Thu, 18 Dec 2014 15:42:29 -0500
 From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
+	Gautam Kumar Shukla <gautams@broadcom.com>,
 	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 6/7] brcmfmac: Add ifidx to logging of fwil cmds.
-Date: Wed, 3 Dec 2014 21:05:32 +0100
-Message-ID: <1417637133-6966-7-git-send-email-arend@broadcom.com> (sfid-20141203_210553_587699_FF5F1962)
-In-Reply-To: <1417637133-6966-1-git-send-email-arend@broadcom.com>
-References: <1417637133-6966-1-git-send-email-arend@broadcom.com>
+Subject: [RFC V2] cfg80211: Add feature flag for 4-way handshake offload
+Date: Thu, 18 Dec 2014 21:42:24 +0100
+Message-ID: <1418935344-22159-1-git-send-email-arend@broadcom.com> (sfid-20141218_214232_689419_D2A70E0B)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Gautam Kumar Shukla <gautams@broadcom.com>
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+The new feature flag allows the driver to indicate that it can
+offload the 4-way handshake for WPA/RSN-PSK. With the
+wiphy::features flag being used up this patch adds a new
+field wiphy::ext_features. Considering extensibility this
+new field is declared as a byte array.
+
+Signed-off-by: Gautam (Gautam Kumar) Shukla <gautams@broadcom.com>
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/fwil.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+V2:
+  - rename helper functions.
+  - make helper function static inline.
+  - derive ext_feature array size from extended feature count.
+---
+ include/net/cfg80211.h       | 39 +++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/nl80211.h | 22 ++++++++++++++++++++++
+ net/wireless/nl80211.c       |  5 +++++
+ 3 files changed, 66 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-index 51f88c1..03f2c40 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
-@@ -136,7 +136,7 @@ brcmf_fil_cmd_data_set(struct brcmf_if *ifp, u32 cmd, void *data, u32 len)
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 670b9ed..38f30e5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3013,6 +3013,8 @@ struct wiphy_vendor_command {
+  * @regulatory_flags: wiphy regulatory flags, see
+  *	&enum ieee80211_regulatory_flags
+  * @features: features advertised to nl80211, see &enum nl80211_feature_flags.
++ * @ext_features: extended features advertised to nl80211, see
++ *	&enum nl80211_ext_feature_index.
+  * @bss_priv_size: each BSS struct has private data allocated with it,
+  *	this variable determines its size
+  * @max_scan_ssids: maximum number of SSIDs the device can scan for in
+@@ -3122,6 +3124,7 @@ struct wiphy {
+ 	u16 max_acl_mac_addrs;
  
- 	mutex_lock(&ifp->drvr->proto_block);
+ 	u32 flags, regulatory_flags, features;
++	u8 ext_features[(NUM_NL80211_EXT_FEATURES / 8) + 1];
  
--	brcmf_dbg(FIL, "cmd=%d, len=%d\n", cmd, len);
-+	brcmf_dbg(FIL, "ifidx=%d, cmd=%d, len=%d\n", ifp->ifidx, cmd, len);
- 	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
- 			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data\n");
+ 	u32 ap_sme_capa;
  
-@@ -154,7 +154,7 @@ brcmf_fil_cmd_data_get(struct brcmf_if *ifp, u32 cmd, void *data, u32 len)
- 	mutex_lock(&ifp->drvr->proto_block);
- 	err = brcmf_fil_cmd_data(ifp, cmd, data, len, false);
+@@ -5049,6 +5052,42 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+  */
+ void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy);
  
--	brcmf_dbg(FIL, "cmd=%d, len=%d\n", cmd, len);
-+	brcmf_dbg(FIL, "ifidx=%d, cmd=%d, len=%d\n", ifp->ifidx, cmd, len);
- 	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
- 			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data\n");
++/**
++ * wiphy_ext_feature_set - set the extended feature flag
++ *
++ * @wiphy: the wiphy to modify.
++ * @ftidx: extended feature bit index.
++ *
++ * The extended features are flagged in multiple bytes (see
++ * &struct wiphy.@ext_features)
++ */
++static inline void wiphy_ext_feature_set(struct wiphy *wiphy,
++					 enum nl80211_ext_feature_index ftidx)
++{
++	u8 *ft_byte;
++
++	ft_byte = &wiphy->ext_features[ftidx / 8];
++	*ft_byte |= BIT(ftidx % 8);
++}
++
++/**
++ * wiphy_ext_feature_isset - check the extended feature flag
++ *
++ * @wiphy: the wiphy to modify.
++ * @ftidx: extended feature bit index.
++ *
++ * The extended features are flagged in multiple bytes (see
++ * &struct wiphy.@ext_features)
++ */
++static inline bool
++wiphy_ext_feature_isset(struct wiphy *wiphy,
++			enum nl80211_ext_feature_index ftidx)
++{
++	u8 ft_byte;
++
++	ft_byte = wiphy->ext_features[ftidx / 8];
++	return (ft_byte & BIT(ftidx % 8)) != 0;
++}
  
-@@ -171,7 +171,7 @@ brcmf_fil_cmd_int_set(struct brcmf_if *ifp, u32 cmd, u32 data)
- 	__le32 data_le = cpu_to_le32(data);
+ /* ethtool helper */
+ void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info);
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index c0383e9..13f201b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1713,6 +1713,13 @@ enum nl80211_commands {
+  *	obtained from it is coming from the device's wiphy and not the global
+  *	cfg80211 regdomain.
+  *
++ * @NL80211_ATTR_EXT_FEATURES: extended feature flags contained in a byte
++ *	array. The feature flags are identified by their bit index (see &enum
++ *	nl80211_ext_feature_index). The bit index is ordered starting at the
++ *	least-significant bit of the first byte in the array, ie. bit index 0
++ *	is located at bit 0 of byte 0. bit index 25 would be located at bit 1
++ *	of byte 3 (u8 array).
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2072,6 +2079,8 @@ enum nl80211_attrs {
  
- 	mutex_lock(&ifp->drvr->proto_block);
--	brcmf_dbg(FIL, "cmd=%d, value=%d\n", cmd, data);
-+	brcmf_dbg(FIL, "ifidx=%d, cmd=%d, value=%d\n", ifp->ifidx, cmd, data);
- 	err = brcmf_fil_cmd_data(ifp, cmd, &data_le, sizeof(data_le), true);
- 	mutex_unlock(&ifp->drvr->proto_block);
+ 	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
  
-@@ -188,7 +188,7 @@ brcmf_fil_cmd_int_get(struct brcmf_if *ifp, u32 cmd, u32 *data)
- 	err = brcmf_fil_cmd_data(ifp, cmd, &data_le, sizeof(data_le), false);
- 	mutex_unlock(&ifp->drvr->proto_block);
- 	*data = le32_to_cpu(data_le);
--	brcmf_dbg(FIL, "cmd=%d, value=%d\n", cmd, *data);
-+	brcmf_dbg(FIL, "ifidx=%d, cmd=%d, value=%d\n", ifp->ifidx, cmd, *data);
++	NL80211_ATTR_EXT_FEATURES,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	return err;
- }
-@@ -224,7 +224,7 @@ brcmf_fil_iovar_data_set(struct brcmf_if *ifp, char *name, const void *data,
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -4221,6 +4230,19 @@ enum nl80211_feature_flags {
+ };
  
- 	mutex_lock(&drvr->proto_block);
+ /**
++ * enum nl80211_ext_feature_index - bit index of extended features.
++ *
++ * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE: the device supports 4way handshake
++ */
++enum nl80211_ext_feature_index {
++	NL80211_EXT_FEATURE_4WAY_HANDSHAKE,
++
++	/* add new features before the definition below */
++	NUM_NL80211_EXT_FEATURES,
++	MAX_NL80211_EXT_FEATURES = NUM_NL80211_EXT_FEATURES - 1
++};
++
++/**
+  * enum nl80211_probe_resp_offload_support_attr - optional supported
+  *	protocols for probe-response offloading by the driver/FW.
+  *	To be used with the %NL80211_ATTR_PROBE_RESP_OFFLOAD attribute.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7029201..7c00577 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1603,6 +1603,11 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		if (nla_put_u32(msg, NL80211_ATTR_FEATURE_FLAGS, features))
+ 			goto nla_put_failure;
  
--	brcmf_dbg(FIL, "name=%s, len=%d\n", name, len);
-+	brcmf_dbg(FIL, "ifidx=%d, name=%s, len=%d\n", ifp->ifidx, name, len);
- 	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
- 			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data\n");
- 
-@@ -264,7 +264,7 @@ brcmf_fil_iovar_data_get(struct brcmf_if *ifp, char *name, void *data,
- 		brcmf_err("Creating iovar failed\n");
- 	}
- 
--	brcmf_dbg(FIL, "name=%s, len=%d\n", name, len);
-+	brcmf_dbg(FIL, "ifidx=%d, name=%s, len=%d\n", ifp->ifidx, name, len);
- 	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
- 			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data\n");
- 
-@@ -347,7 +347,8 @@ brcmf_fil_bsscfg_data_set(struct brcmf_if *ifp, char *name,
- 
- 	mutex_lock(&drvr->proto_block);
- 
--	brcmf_dbg(FIL, "bssidx=%d, name=%s, len=%d\n", ifp->bssidx, name, len);
-+	brcmf_dbg(FIL, "ifidx=%d, bssidx=%d, name=%s, len=%d\n", ifp->ifidx,
-+		  ifp->bssidx, name, len);
- 	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
- 			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data\n");
- 
-@@ -386,7 +387,8 @@ brcmf_fil_bsscfg_data_get(struct brcmf_if *ifp, char *name,
- 		err = -EPERM;
- 		brcmf_err("Creating bsscfg failed\n");
- 	}
--	brcmf_dbg(FIL, "bssidx=%d, name=%s, len=%d\n", ifp->bssidx, name, len);
-+	brcmf_dbg(FIL, "ifidx=%d, bssidx=%d, name=%s, len=%d\n", ifp->ifidx,
-+		  ifp->bssidx, name, len);
- 	brcmf_dbg_hex_dump(BRCMF_FIL_ON(), data,
- 			   min_t(uint, len, MAX_HEX_DUMP_LEN), "data\n");
- 
++		if (nla_put(msg, NL80211_ATTR_EXT_FEATURES,
++			    sizeof(rdev->wiphy.ext_features),
++			    rdev->wiphy.ext_features))
++			goto nla_put_failure;
++
+ 		if (rdev->wiphy.ht_capa_mod_mask &&
+ 		    nla_put(msg, NL80211_ATTR_HT_CAPABILITY_MASK,
+ 			    sizeof(*rdev->wiphy.ht_capa_mod_mask),
 -- 
 1.9.1
 
