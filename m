@@ -1,60 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34094 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932116AbaLDQaM (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:33039 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751066AbaLRJGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2014 11:30:12 -0500
-Date: Thu, 4 Dec 2014 11:28:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux NFC <linux-nfc@ml01.01.org>
-Subject: Re: [GIT] [3.19] NFC update
-Message-ID: <20141204162835.GA2842@tuxdriver.com> (sfid-20141204_173017_046758_C19303A5)
-References: <20141202223749.GA31964@ribalta.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141202223749.GA31964@ribalta.ger.corp.intel.com>
+	Thu, 18 Dec 2014 04:06:08 -0500
+Received: by mail-ob0-f177.google.com with SMTP id va2so2285449obc.8
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 01:06:07 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 11/16] rtlwifi: rtl8192ee: Convert driver to use common rate-mapping code
+Date: Thu, 18 Dec 2014 03:05:35 -0600
+Message-Id: <1418893540-19944-12-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141218_100617_452051_80F8A9D1)
+In-Reply-To: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 02, 2014 at 11:37:49PM +0100, Samuel Ortiz wrote:
-> Hi John,
-> 
-> This is the NFC pull request for 3.19.
-> 
-> With this one we get:
-> 
-> - NFC digital improvements for DEP support: Chaining, NACK and ATN
->   support added.
-> 
-> - NCI improvements: Support for p2p target, SE IO operand addition,
->   SE operands extensions to support proprietary implementations, and
->   a few fixes.
-> 
-> - NFC HCI improvements: OPEN_PIPE and NOTIFY_ALL_CLEARED support,
->   and SE IO operand addition.
-> 
-> - A bunch of minor improvements and fixes for STMicro st21nfcb and
->   st21nfca
-> 
-> Thanks in advance for pulling that one in.
-> 
-> 
-> The following changes since commit 18ca43823f3ce111c6efb8cc90d9f35246527727:
-> 
->   mwifiex: add Tx status support for ACTION frames (2014-11-25 14:09:57 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/sameo/nfc-next.git tags/nfc-next-3.19-1
-> 
-> for you to fetch changes up to e479ce479743984a5d4581749f9aaa9c3bfd65e4:
-> 
->   NFC: NCI: Fix max length of General Bytes in ATR_RES (2014-12-02 22:59:28 +0100)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 163 +--------------------------
+ 1 file changed, 2 insertions(+), 161 deletions(-)
 
-Pulling now...
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+index 2fcbef1..fb46fb9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+@@ -47,164 +47,6 @@ static u8 _rtl92ee_map_hwqueue_to_fwqueue(struct sk_buff *skb, u8 hw_queue)
+ 	return skb->priority;
+ }
+ 
+-/* mac80211's rate_idx is like this:
+- *
+- * 2.4G band:rx_status->band == IEEE80211_BAND_2GHZ
+- *
+- * B/G rate:
+- * (rx_status->flag & RX_FLAG_HT) = 0,
+- * DESC92C_RATE1M-->DESC92C_RATE54M ==> idx is 0-->11,
+- *
+- * N rate:
+- * (rx_status->flag & RX_FLAG_HT) = 1,
+- * DESC92C_RATEMCS0-->DESC92C_RATEMCS15 ==> idx is 0-->15
+- *
+- * 5G band:rx_status->band == IEEE80211_BAND_5GHZ
+- * A rate:
+- * (rx_status->flag & RX_FLAG_HT) = 0,
+- * DESC92C_RATE6M-->DESC92C_RATE54M ==> idx is 0-->7,
+- *
+- * N rate:
+- * (rx_status->flag & RX_FLAG_HT) = 1,
+- * DESC92C_RATEMCS0-->DESC92C_RATEMCS15 ==> idx is 0-->15
+- */
+-static int _rtl92ee_rate_mapping(struct ieee80211_hw *hw,
+-				 bool isht, u8 desc_rate)
+-{
+-	int rate_idx;
+-
+-	if (!isht) {
+-		if (IEEE80211_BAND_2GHZ == hw->conf.chandef.chan->band) {
+-			switch (desc_rate) {
+-			case DESC92C_RATE1M:
+-				rate_idx = 0;
+-				break;
+-			case DESC92C_RATE2M:
+-				rate_idx = 1;
+-				break;
+-			case DESC92C_RATE5_5M:
+-				rate_idx = 2;
+-				break;
+-			case DESC92C_RATE11M:
+-				rate_idx = 3;
+-				break;
+-			case DESC92C_RATE6M:
+-				rate_idx = 4;
+-				break;
+-			case DESC92C_RATE9M:
+-				rate_idx = 5;
+-				break;
+-			case DESC92C_RATE12M:
+-				rate_idx = 6;
+-				break;
+-			case DESC92C_RATE18M:
+-				rate_idx = 7;
+-				break;
+-			case DESC92C_RATE24M:
+-				rate_idx = 8;
+-				break;
+-			case DESC92C_RATE36M:
+-				rate_idx = 9;
+-				break;
+-			case DESC92C_RATE48M:
+-				rate_idx = 10;
+-				break;
+-			case DESC92C_RATE54M:
+-				rate_idx = 11;
+-				break;
+-			default:
+-				rate_idx = 0;
+-				break;
+-			}
+-		} else {
+-			switch (desc_rate) {
+-			case DESC92C_RATE6M:
+-				rate_idx = 0;
+-				break;
+-			case DESC92C_RATE9M:
+-				rate_idx = 1;
+-				break;
+-			case DESC92C_RATE12M:
+-				rate_idx = 2;
+-				break;
+-			case DESC92C_RATE18M:
+-				rate_idx = 3;
+-				break;
+-			case DESC92C_RATE24M:
+-				rate_idx = 4;
+-				break;
+-			case DESC92C_RATE36M:
+-				rate_idx = 5;
+-				break;
+-			case DESC92C_RATE48M:
+-				rate_idx = 6;
+-				break;
+-			case DESC92C_RATE54M:
+-				rate_idx = 7;
+-				break;
+-			default:
+-				rate_idx = 0;
+-				break;
+-			}
+-		}
+-	} else {
+-		switch (desc_rate) {
+-		case DESC92C_RATEMCS0:
+-			rate_idx = 0;
+-			break;
+-		case DESC92C_RATEMCS1:
+-			rate_idx = 1;
+-			break;
+-		case DESC92C_RATEMCS2:
+-			rate_idx = 2;
+-			break;
+-		case DESC92C_RATEMCS3:
+-			rate_idx = 3;
+-			break;
+-		case DESC92C_RATEMCS4:
+-			rate_idx = 4;
+-			break;
+-		case DESC92C_RATEMCS5:
+-			rate_idx = 5;
+-			break;
+-		case DESC92C_RATEMCS6:
+-			rate_idx = 6;
+-			break;
+-		case DESC92C_RATEMCS7:
+-			rate_idx = 7;
+-			break;
+-		case DESC92C_RATEMCS8:
+-			rate_idx = 8;
+-			break;
+-		case DESC92C_RATEMCS9:
+-			rate_idx = 9;
+-			break;
+-		case DESC92C_RATEMCS10:
+-			rate_idx = 10;
+-			break;
+-		case DESC92C_RATEMCS11:
+-			rate_idx = 11;
+-			break;
+-		case DESC92C_RATEMCS12:
+-			rate_idx = 12;
+-			break;
+-		case DESC92C_RATEMCS13:
+-			rate_idx = 13;
+-			break;
+-		case DESC92C_RATEMCS14:
+-			rate_idx = 14;
+-			break;
+-		case DESC92C_RATEMCS15:
+-			rate_idx = 15;
+-			break;
+-		default:
+-			rate_idx = 0;
+-			break;
+-		}
+-	}
+-	return rate_idx;
+-}
+-
+ static void _rtl92ee_query_rxphystatus(struct ieee80211_hw *hw,
+ 				       struct rtl_stats *pstatus, u8 *pdesc,
+ 				       struct rx_fwinfo *p_drvinfo,
+@@ -576,9 +418,8 @@ bool rtl92ee_rx_query_desc(struct ieee80211_hw *hw,
+ 	 * are use (RX_FLAG_HT)
+ 	 * Notice: this is diff with windows define
+ 	 */
+-	rx_status->rate_idx = _rtl92ee_rate_mapping(hw,
+-						    status->is_ht,
+-						    status->rate);
++	rx_status->rate_idx = rtlwifi_rate_mapping(hw, status->is_ht,
++						   status->rate);
+ 
+ 	rx_status->mactime = status->timestamp_low;
+ 	if (phystatus) {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.2
+
