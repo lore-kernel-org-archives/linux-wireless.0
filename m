@@ -1,330 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7516 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751449AbaLQKWa (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:44624 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402AbaLRJF6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:22:30 -0500
-Subject: [PATCH v2 6/8] ath10k: add thermal cooling device support
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Dec 2014 12:22:07 +0200
-Message-ID: <20141217102207.15964.86994.stgit@potku.adurom.net> (sfid-20141217_112233_604651_768D198E)
-In-Reply-To: <20141217101755.15964.2625.stgit@potku.adurom.net>
-References: <20141217101755.15964.2625.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Thu, 18 Dec 2014 04:05:58 -0500
+Received: by mail-oi0-f53.google.com with SMTP id g201so110075oib.40
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 01:05:57 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 01/16] rtlwifi: rtl8821ae: Simplify loading of WOWLAN firmware
+Date: Thu, 18 Dec 2014 03:05:25 -0600
+Message-Id: <1418893540-19944-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141218_100612_082239_A0362FFE)
+In-Reply-To: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+From: Troy Tan <troy_tan@realsil.com.cn>
 
-Thermal cooling device support is added to control the temperature
-by throttling the data transmission for the given duration. Throttling
-is done using hw MAC quiet time setting. Period, duration and offset
-from TBTT can be set up to quiet the MAC transmits for the required duty
-cycle (% of quiet duration). The thermal device allows user to configure
-duty cycle.
+The existing method for loading both normal and WOWLAN firmware for the
+device duplicates a lot of code. This solution is much cleaner.
 
-The quiet params are derived as follows.
-	period = max(25TU, beacon interval / number of bss)
-	duration = period * duty cycle / 100
-
-Quiet mode can be disabled by setting the duty cycle to 0. The cooling
-device can be found under /sys/class/thermal/cooling_deviceX/.
-Corresponding soft link to this device can be found under phy folder.
-
-/sys/class/ieee80211/phy*/device/cooling_device.
-
-To set duty cycle as 40%,
-
-echo 40 >/sys/class/ieee80211/phy*/device/cooling_device/cur_state
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath10k/Makefile  |    1 
- drivers/net/wireless/ath/ath10k/core.c    |   10 ++
- drivers/net/wireless/ath/ath10k/core.h    |    3 +
- drivers/net/wireless/ath/ath10k/thermal.c |  155 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/thermal.h |   44 ++++++++
- 5 files changed, 213 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/thermal.c
- create mode 100644 drivers/net/wireless/ath/ath10k/thermal.h
+ drivers/net/wireless/rtlwifi/core.c         | 24 +++++++++-
+ drivers/net/wireless/rtlwifi/core.h         |  1 +
+ drivers/net/wireless/rtlwifi/rtl8821ae/sw.c | 74 ++++++++++-------------------
+ drivers/net/wireless/rtlwifi/wifi.h         |  3 +-
+ 4 files changed, 48 insertions(+), 54 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
-index 8abb66ceb99c..ffa3b1a8745f 100644
---- a/drivers/net/wireless/ath/ath10k/Makefile
-+++ b/drivers/net/wireless/ath/ath10k/Makefile
-@@ -14,6 +14,7 @@ ath10k_core-y += mac.o \
- ath10k_core-$(CONFIG_ATH10K_DEBUGFS) += spectral.o
- ath10k_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
- ath10k_core-$(CONFIG_ATH10K_TRACING) += trace.o
-+ath10k_core-$(CONFIG_THERMAL) += thermal.o
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index 5fc6f52..deab852 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -95,7 +95,8 @@ void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
+ }
+ EXPORT_SYMBOL(rtl_bb_delay);
  
- obj-$(CONFIG_ATH10K_PCI) += ath10k_pci.o
- ath10k_pci-y += pci.o \
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 45bca513719e..28bfacb382f3 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1234,9 +1234,18 @@ static void ath10k_core_register_work(struct work_struct *work)
- 		goto err_debug_destroy;
- 	}
- 
-+	status = ath10k_thermal_register(ar);
-+	if (status) {
-+		ath10k_err(ar, "could not register thermal device: %d\n",
-+			   status);
-+		goto err_spectral_destroy;
-+	}
-+
- 	set_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags);
- 	return;
- 
-+err_spectral_destroy:
-+	ath10k_spectral_destroy(ar);
- err_debug_destroy:
- 	ath10k_debug_destroy(ar);
- err_unregister_mac:
-@@ -1266,6 +1275,7 @@ void ath10k_core_unregister(struct ath10k *ar)
- 	if (!test_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags))
+-void rtl_fw_cb(const struct firmware *firmware, void *context)
++static void rtl_fw_do_work(const struct firmware *firmware, void *context,
++			   bool is_wow)
+ {
+ 	struct ieee80211_hw *hw = context;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -125,12 +126,31 @@ found_alt:
+ 		release_firmware(firmware);
  		return;
+ 	}
+-	memcpy(rtlpriv->rtlhal.pfirmware, firmware->data, firmware->size);
++	if (!is_wow) {
++		memcpy(rtlpriv->rtlhal.pfirmware, firmware->data,
++		       firmware->size);
++		rtlpriv->rtlhal.fwsize = firmware->size;
++	} else {
++		memcpy(rtlpriv->rtlhal.wowlan_firmware, firmware->data,
++		       firmware->size);
++		rtlpriv->rtlhal.wowlan_fwsize = firmware->size;
++	}
+ 	rtlpriv->rtlhal.fwsize = firmware->size;
+ 	release_firmware(firmware);
+ }
++
++void rtl_fw_cb(const struct firmware *firmware, void *context)
++{
++	rtl_fw_do_work(firmware, context, false);
++}
+ EXPORT_SYMBOL(rtl_fw_cb);
  
-+	ath10k_thermal_unregister(ar);
- 	/* Stop spectral before unregistering from mac80211 to remove the
- 	 * relayfs debugfs file cleanly. Otherwise the parent debugfs tree
- 	 * would be already be free'd recursively, leading to a double free.
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 3998f1e33874..7b6d9e4567a3 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -34,6 +34,7 @@
- #include "../regd.h"
- #include "../dfs_pattern_detector.h"
- #include "spectral.h"
-+#include "thermal.h"
++void rtl_wowlan_fw_cb(const struct firmware *firmware, void *context)
++{
++	rtl_fw_do_work(firmware, context, true);
++}
++EXPORT_SYMBOL(rtl_wowlan_fw_cb);
++
+ /*mutex for start & stop is must here. */
+ static int rtl_op_start(struct ieee80211_hw *hw)
+ {
+diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
+index 624e1dc..8c87eb5 100644
+--- a/drivers/net/wireless/rtlwifi/core.h
++++ b/drivers/net/wireless/rtlwifi/core.h
+@@ -37,6 +37,7 @@
  
- #define MS(_v, _f) (((_v) & _f##_MASK) >> _f##_LSB)
- #define SM(_v, _f) (((_v) << _f##_LSB) & _f##_MASK)
-@@ -634,6 +635,8 @@ struct ath10k {
- 		u32 fw_cold_reset_counter;
- 	} stats;
+ extern const struct ieee80211_ops rtl_ops;
+ void rtl_fw_cb(const struct firmware *firmware, void *context);
++void rtl_wowlan_fw_cb(const struct firmware *firmware, void *context);
+ void rtl_addr_delay(u32 addr);
+ void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+ 		     u32 mask, u32 data);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/sw.c
+index fc92dd6..a4988121 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/sw.c
+@@ -85,52 +85,6 @@ static void rtl8821ae_init_aspm_vars(struct ieee80211_hw *hw)
+ 	rtlpci->const_support_pciaspm = 1;
+ }
  
-+	struct ath10k_thermal thermal;
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-new file mode 100644
-index 000000000000..e98ce8ce27e2
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -0,0 +1,155 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/sysfs.h>
-+#include <linux/thermal.h>
-+#include "core.h"
-+#include "debug.h"
-+#include "wmi-ops.h"
-+
-+static int ath10k_thermal_get_active_vifs(struct ath10k *ar,
-+					  enum wmi_vdev_type type)
-+{
-+	struct ath10k_vif *arvif;
-+	int count = 0;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (!arvif->is_started)
-+			continue;
-+
-+		if (!arvif->is_up)
-+			continue;
-+
-+		if (arvif->vdev_type != type)
-+			continue;
-+
-+		count++;
+-static void load_wowlan_fw(struct rtl_priv *rtlpriv)
+-{
+-	/* callback routine to load wowlan firmware after main fw has
+-	 * been loaded
+-	 */
+-	const struct firmware *wowlan_firmware;
+-	char *fw_name = NULL;
+-	int err;
+-
+-	/* for wowlan firmware buf */
+-	rtlpriv->rtlhal.wowlan_firmware = vzalloc(0x8000);
+-	if (!rtlpriv->rtlhal.wowlan_firmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for wowlan fw.\n");
+-		return;
+-	}
+-
+-	if (rtlpriv->rtlhal.hw_type == HARDWARE_TYPE_RTL8821AE)
+-		fw_name = "rtlwifi/rtl8821aefw_wowlan.bin";
+-	else
+-		fw_name = "rtlwifi/rtl8812aefw_wowlan.bin";
+-	err = request_firmware(&wowlan_firmware, fw_name, rtlpriv->io.dev);
+-	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request wowlan firmware!\n");
+-		goto error;
+-	}
+-
+-	if (wowlan_firmware->size > 0x8000) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Wowlan Firmware is too big!\n");
+-		goto error;
+-	}
+-
+-	memcpy(rtlpriv->rtlhal.wowlan_firmware, wowlan_firmware->data,
+-	       wowlan_firmware->size);
+-	rtlpriv->rtlhal.wowlan_fwsize = wowlan_firmware->size;
+-	release_firmware(wowlan_firmware);
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "WOWLAN FirmwareDownload OK\n");
+-	return;
+-error:
+-	release_firmware(wowlan_firmware);
+-	vfree(rtlpriv->rtlhal.wowlan_firmware);
+-}
+-
+ /*InitializeVariables8812E*/
+ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ {
+@@ -231,7 +185,6 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 	else if (rtlpriv->psc.reg_fwctrl_lps == 3)
+ 		rtlpriv->psc.fwctrl_psmode = FW_PS_DTIM_MODE;
+ 
+-	rtlpriv->rtl_fw_second_cb = load_wowlan_fw;
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+@@ -239,20 +192,41 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 			 "Can't alloc buffer for fw.\n");
+ 		return 1;
+ 	}
++	rtlpriv->rtlhal.wowlan_firmware = vzalloc(0x8000);
++	if (!rtlpriv->rtlhal.wowlan_firmware) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 "Can't alloc buffer for wowlan fw.\n");
++		return 1;
 +	}
-+	return count;
-+}
-+
-+static int ath10k_thermal_get_max_dutycycle(struct thermal_cooling_device *cdev,
-+					    unsigned long *state)
-+{
-+	*state = ATH10K_QUIET_DUTY_CYCLE_MAX;
-+
-+	return 0;
-+}
-+
-+static int ath10k_thermal_get_cur_dutycycle(struct thermal_cooling_device *cdev,
-+					    unsigned long *state)
-+{
-+	struct ath10k *ar = cdev->devdata;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	*state = ar->thermal.duty_cycle;
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+}
-+
-+static int ath10k_thermal_set_cur_dutycycle(struct thermal_cooling_device *cdev,
-+					    unsigned long duty_cycle)
-+{
-+	struct ath10k *ar = cdev->devdata;
-+	u32 period, duration, enabled;
-+	int num_bss, ret = 0;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if (ar->state != ATH10K_STATE_ON) {
-+		ret = -ENETDOWN;
-+		goto out;
+ 
+-	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE)
++	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
+ 		rtlpriv->cfg->fw_name = "rtlwifi/rtl8812aefw.bin";
+-	else
++		rtlpriv->cfg->wowlan_fw_name = "rtlwifi/rtl8812aefw_wowlan.bin";
++	} else {
+ 		rtlpriv->cfg->fw_name = "rtlwifi/rtl8821aefw.bin";
++		rtlpriv->cfg->wowlan_fw_name = "rtlwifi/rtl8821aefw_wowlan.bin";
 +	}
-+
-+	if (duty_cycle > ATH10K_QUIET_DUTY_CYCLE_MAX) {
-+		ath10k_warn(ar, "duty cycle %ld is exceeding the limit %d\n",
-+			    duty_cycle, ATH10K_QUIET_DUTY_CYCLE_MAX);
-+		ret = -EINVAL;
-+		goto out;
+ 
+ 	rtlpriv->max_fw_size = 0x8000;
++	/*load normal firmware*/
+ 	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+ 	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++			 "Failed to request normal firmware!\n");
++		return 1;
 +	}
-+	/* TODO: Right now, thermal mitigation is handled only for single/multi
-+	 * vif AP mode. Since quiet param is not validated in STA mode, it needs
-+	 * to be investigated further to handle multi STA and multi-vif (AP+STA)
-+	 * mode properly.
-+	 */
-+	num_bss = ath10k_thermal_get_active_vifs(ar, WMI_VDEV_TYPE_AP);
-+	if (!num_bss) {
-+		ath10k_warn(ar, "no active AP interfaces\n");
-+		ret = -ENETDOWN;
-+		goto out;
-+	}
-+	period = max(ATH10K_QUIET_PERIOD_MIN,
-+		     (ATH10K_QUIET_PERIOD_DEFAULT / num_bss));
-+	duration = period * (duty_cycle / 100);
-+	enabled = duration ? 1 : 0;
-+
-+	ret = ath10k_wmi_pdev_set_quiet_mode(ar, period, duration,
-+					     ATH10K_QUIET_START_OFFSET,
-+					     enabled);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set quiet mode period %u duarion %u enabled %u ret %d\n",
-+			    period, duration, enabled, ret);
-+		goto out;
-+	}
-+	ar->thermal.duty_cycle = duty_cycle;
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static struct thermal_cooling_device_ops ath10k_thermal_ops = {
-+	.get_max_state = ath10k_thermal_get_max_dutycycle,
-+	.get_cur_state = ath10k_thermal_get_cur_dutycycle,
-+	.set_cur_state = ath10k_thermal_set_cur_dutycycle,
-+};
-+
-+int ath10k_thermal_register(struct ath10k *ar)
-+{
-+	struct thermal_cooling_device *cdev;
-+	int ret;
-+
-+	cdev = thermal_cooling_device_register("ath10k_thermal", ar,
-+					       &ath10k_thermal_ops);
-+
-+	if (IS_ERR(cdev)) {
-+		ath10k_err(ar, "failed to setup thermal device result: %ld\n",
-+			   PTR_ERR(cdev));
-+		return -EINVAL;
-+	}
-+
-+	ret = sysfs_create_link(&ar->dev->kobj, &cdev->device.kobj,
-+				"cooling_device");
-+	if (ret) {
-+		ath10k_err(ar, "failed to create thermal symlink\n");
-+		goto err_cooling_destroy;
-+	}
-+
-+	ar->thermal.cdev = cdev;
-+	return 0;
-+
-+err_cooling_destroy:
-+	thermal_cooling_device_unregister(cdev);
-+	return ret;
-+}
-+
-+void ath10k_thermal_unregister(struct ath10k *ar)
-+{
-+	thermal_cooling_device_unregister(ar->thermal.cdev);
-+	sysfs_remove_link(&ar->dev->kobj, "cooling_device");
-+}
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
-new file mode 100644
-index 000000000000..e20bb87849ae
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/thermal.h
-@@ -0,0 +1,44 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef _THERMAL_
-+#define _THERMAL_
-+
-+#define ATH10K_QUIET_PERIOD_DEFAULT     100
-+#define ATH10K_QUIET_PERIOD_MIN         25
-+#define ATH10K_QUIET_START_OFFSET       10
-+#define ATH10K_QUIET_DUTY_CYCLE_MAX     70
-+
-+struct ath10k_thermal {
-+	struct thermal_cooling_device *cdev;
-+
-+	/* protected by conf_mutex */
-+	u32 duty_cycle;
-+};
-+
-+#ifdef CONFIG_THERMAL
-+int ath10k_thermal_register(struct ath10k *ar);
-+void ath10k_thermal_unregister(struct ath10k *ar);
-+#else
-+static inline int ath10k_thermal_register(struct ath10k *ar)
-+{
-+	return 0;
-+}
-+
-+static inline void ath10k_thermal_unregister(struct ath10k *ar)
-+{
-+}
-+#endif
-+#endif /* _THERMAL_ */
++	/*load wowlan firmware*/
++	pr_info("Using firmware %s\n", rtlpriv->cfg->wowlan_fw_name);
++	err = request_firmware_nowait(THIS_MODULE, 1,
++				      rtlpriv->cfg->wowlan_fw_name,
++				      rtlpriv->io.dev, GFP_KERNEL, hw,
++				      rtl_wowlan_fw_cb);
++	if (err) {
++		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
++			 "Failed to request wowlan firmware!\n");
+ 		return 1;
+ 	}
+ 	return 0;
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index 6866dcf..a233b26 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -2242,6 +2242,7 @@ struct rtl_hal_cfg {
+ 	char *name;
+ 	char *fw_name;
+ 	char *alt_fw_name;
++	char *wowlan_fw_name;
+ 	struct rtl_hal_ops *ops;
+ 	struct rtl_mod_params *mod_params;
+ 	struct rtl_hal_usbint_cfg *usb_interface_cfg;
+@@ -2518,8 +2519,6 @@ struct proxim {
+ 
+ struct rtl_priv {
+ 	struct ieee80211_hw *hw;
+-	/* Used to load a second firmware */
+-	void (*rtl_fw_second_cb)(struct rtl_priv *rtlpriv);
+ 	struct completion firmware_loading_complete;
+ 	struct list_head list;
+ 	struct rtl_priv *buddy_priv;
+-- 
+2.1.2
 
