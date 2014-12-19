@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47240 "EHLO mx1.redhat.com"
+Received: from mail.neratec.com ([46.140.151.2]:59803 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754087AbaLLSwp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 13:52:45 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Krzysztof Konopko <kris@konagma.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
-References: <1418336609-10191-1-git-send-email-kris@konagma.com>
-	<548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com>
-	<548B2752.7030607@lwfinger.net>
-Date: Fri, 12 Dec 2014 13:52:35 -0500
-In-Reply-To: <548B2752.7030607@lwfinger.net> (Larry Finger's message of "Fri,
-	12 Dec 2014 11:35:14 -0600")
-Message-ID: <wrfjwq5wwvik.fsf@redhat.com> (sfid-20141212_195305_262660_09FCC8AD)
+	id S1750953AbaLSP4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2014 10:56:40 -0500
+Message-ID: <54944AB4.7050208@neratec.com> (sfid-20141219_165643_099599_EAF4C46E)
+Date: Fri, 19 Dec 2014 16:56:36 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: DFS CAC time
+References: <CAGXE3d8Uv01qjfvRQkMr1w_5wB6XKpC7d2VOR3UG0DMPHk6r9A@mail.gmail.com>	<54940B8C.5070801@neratec.com> <CAGXE3d9ZubxEoeV+uD9GHJiAa7aB_NM87OfddNa4SC5CQkjNuA@mail.gmail.com>
+In-Reply-To: <CAGXE3d9ZubxEoeV+uD9GHJiAa7aB_NM87OfddNa4SC5CQkjNuA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 12/12/2014 05:35 AM, Krzysztof Konopko wrote:
->> I was hunting particularly for inconsistencies with `sparse` and came
->> across this one.  But I dug a bit further and I wonder why the driver is
->> not using standard stuff like the one in `include/linux/ieee80211.h`
->> where any data wider than one byte is clearly declared as __le<nn>?
->
-> That is a good question. One possibility is that those definitions do
-> not exist on some of the older kernels that Realtek supports. They
-> generally work with 2.6.18 and newer.
+On 12/19/2014 02:19 PM, Helmut Schaa wrote:
+> Hi Zefir,
+> 
+> On Fri, Dec 19, 2014 at 12:27 PM, Zefir Kurtisi
+> <zefir.kurtisi@neratec.com> wrote:
+>>
+>> Hello Helmut,
+>>
+>> just forget about those aka 'weather channels' that require a pracitcally
+>> impossible to achieve radar detection probability rate (99.99% during CAC, see
+>> table D.5).
+> 
+> Hmm, ok :)
+> 
+> Would it make sense to mark these somehow in the wireless-regdb in a
+> special way?
+> 
 
-The reason the 8723au driver doesn't use the defines from there is that
-in ieee80211.h they are part of struct ieee80211_mgmt, while the 8723au
-driver access the addba etc. elements without the full struct in place.
+To reflect the fact that channels are available from regulatory's point of view
+but not usable from driver's perspective, the correct way would be to
+* set the correct CAC time in crda
+* disable them in the driver internal regdb
 
-Jes
+In practice, that's an overhead to manage channels that we know will never be
+available for WLAN master devices.
+
+
+Cheers,
+Zefir
+
