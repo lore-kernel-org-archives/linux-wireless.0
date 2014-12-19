@@ -1,96 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:56937 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932236AbaLBSLl (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:65111 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230AbaLSJoJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:11:41 -0500
-Received: by mail-wg0-f41.google.com with SMTP id y19so17711493wgg.14
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:39 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Idan Kahlon <idanx.kahlon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 12/26] iwlwifi: mvm: support NVM file with header
-Date: Tue,  2 Dec 2014 20:11:03 +0200
-Message-Id: <1417543877-24193-12-git-send-email-egrumbach@gmail.com> (sfid-20141202_191347_182436_17315FD8)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+	Fri, 19 Dec 2014 04:44:09 -0500
+Message-ID: <5493F34A.4040500@broadcom.com> (sfid-20141219_104414_598659_BEB68890)
+Date: Fri, 19 Dec 2014 10:43:38 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Gautam Kumar Shukla <gautams@broadcom.com>
+Subject: Re: [RFC V2] cfg80211: Add feature flag for 4-way handshake offload
+References: <1418935344-22159-1-git-send-email-arend@broadcom.com> <1418980707.1889.1.camel@sipsolutions.net>
+In-Reply-To: <1418980707.1889.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Idan Kahlon <idanx.kahlon@intel.com>
+On 12/19/14 10:18, Johannes Berg wrote:
+> On Thu, 2014-12-18 at 21:42 +0100, Arend van Spriel wrote:
+>
+>> +	u8 ext_features[(NUM_NL80211_EXT_FEATURES / 8) + 1];
+>
+> Should probably use DIV_ROUND_UP() here.
 
-Handle NVM file header. When NVM header detected, skip
-the header and reading only the sections data.
+Will do.
 
-Signed-off-by: Idan Kahlon <idanx.kahlon@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/nvm.c | 31 +++++++++++++++++++++++--------
- 1 file changed, 23 insertions(+), 8 deletions(-)
+>> +static inline bool
+>> +wiphy_ext_feature_isset(struct wiphy *wiphy,
+>> +			enum nl80211_ext_feature_index ftidx)
+>> +{
+>> +	u8 ft_byte;
+>> +
+>> +	ft_byte = wiphy->ext_features[ftidx / 8];
+>> +	return (ft_byte&  BIT(ftidx % 8)) != 0;
+>> +}
+>
+> Don't really need != 0 (but doesn't hurt either) since the type
+> promotion is to bool in the return value.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index af07456..d55fd8e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -339,11 +339,15 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
- 	} *file_sec;
- 	const u8 *eof, *temp;
- 	int max_section_size;
-+	const __le32 *dword_buff;
- 
- #define NVM_WORD1_LEN(x) (8 * (x & 0x03FF))
- #define NVM_WORD2_ID(x) (x >> 12)
- #define NVM_WORD2_LEN_FAMILY_8000(x) (2 * ((x & 0xFF) << 8 | x >> 8))
- #define NVM_WORD1_ID_FAMILY_8000(x) (x >> 4)
-+#define NVM_HEADER_0	(0x2A504C54)
-+#define NVM_HEADER_1	(0x4E564D2A)
-+#define NVM_HEADER_SIZE	(4 * sizeof(u32))
- 
- 	IWL_DEBUG_EEPROM(mvm->trans->dev, "Read from external NVM\n");
- 
-@@ -372,12 +376,6 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
- 	IWL_INFO(mvm, "Loaded NVM file %s (%zu bytes)\n",
- 		 mvm->nvm_file_name, fw_entry->size);
- 
--	if (fw_entry->size < sizeof(*file_sec)) {
--		IWL_ERR(mvm, "NVM file too small\n");
--		ret = -EINVAL;
--		goto out;
--	}
--
- 	if (fw_entry->size > MAX_NVM_FILE_LEN) {
- 		IWL_ERR(mvm, "NVM file too large\n");
- 		ret = -EINVAL;
-@@ -385,8 +383,25 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
- 	}
- 
- 	eof = fw_entry->data + fw_entry->size;
--
--	file_sec = (void *)fw_entry->data;
-+	dword_buff = (__le32 *)fw_entry->data;
-+
-+	/* some NVM file will contain a header.
-+	 * The header is identified by 2 dwords header as follow:
-+	 * dword[0] = 0x2A504C54
-+	 * dword[1] = 0x4E564D2A
-+	 *
-+	 * This header must be skipped when providing the NVM data to the FW.
-+	 */
-+	if (fw_entry->size > NVM_HEADER_SIZE &&
-+	    dword_buff[0] == cpu_to_le32(NVM_HEADER_0) &&
-+	    dword_buff[1] == cpu_to_le32(NVM_HEADER_1)) {
-+		file_sec = (void *)(fw_entry->data + NVM_HEADER_SIZE);
-+		IWL_INFO(mvm, "NVM Version %08X\n", le32_to_cpu(dword_buff[2]));
-+		IWL_INFO(mvm, "NVM Manufacturing date %08X\n",
-+			 le32_to_cpu(dword_buff[3]));
-+	} else {
-+		file_sec = (void *)fw_entry->data;
-+	}
- 
- 	while (true) {
- 		if (file_sec->data > eof) {
--- 
-1.9.1
+It is a personal preference to use logical expression for a bool return.
 
+>>   /**
+>> + * enum nl80211_ext_feature_index - bit index of extended features.
+>> + *
+>> + * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE: the device supports 4way handshake
+>> + */
+>> +enum nl80211_ext_feature_index {
+>> +	NL80211_EXT_FEATURE_4WAY_HANDSHAKE,
+>> +
+>> +	/* add new features before the definition below */
+>> +	NUM_NL80211_EXT_FEATURES,
+>> +	MAX_NL80211_EXT_FEATURES = NUM_NL80211_EXT_FEATURES - 1
+>> +};
+>
+> Don't think you need MAX_? Also you should add NUM_ to the documentation
+> (and MAX_ also if you want to keep it)
+
+True. Just added it for consistency with other enumerations. Maybe the 
+API users can find good use for it ;-) I will add the kerneldoc.
+
+>> +++ b/net/wireless/nl80211.c
+>> @@ -1603,6 +1603,11 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+>>   		if (nla_put_u32(msg, NL80211_ATTR_FEATURE_FLAGS, features))
+>>   			goto nla_put_failure;
+>>
+>> +		if (nla_put(msg, NL80211_ATTR_EXT_FEATURES,
+>> +			    sizeof(rdev->wiphy.ext_features),
+>> +			    rdev->wiphy.ext_features))
+>> +			goto nla_put_failure;
+>
+> I don't think this should go here - I can see how it's tempting to put
+> it with the feature flags but there's a size limit issue with the wiphy
+> data on old userspace, so this should go towards the end to deal with
+> the split data.
+
+I suspected that. Will change it.
+
+Regards,
+Arend
