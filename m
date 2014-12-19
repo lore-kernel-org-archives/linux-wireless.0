@@ -1,77 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:55000 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbaLRILV (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:49796 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745AbaLSBBv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 03:11:21 -0500
-Received: by mail-wg0-f43.google.com with SMTP id l18so904410wgh.2
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 00:11:20 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Thu, 18 Dec 2014 20:01:51 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/5] iwlwifi: mvm: clear IN_HW_RESTART flag on stop()
-Date: Thu, 18 Dec 2014 10:09:57 +0200
-Message-Id: <1418890201-15177-1-git-send-email-egrumbach@gmail.com> (sfid-20141218_091125_056547_6208D33E)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5CD8C0@hasmsx107.ger.corp.intel.com>
+Cc: ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 0/5] ath9k patches
+Date: Fri, 19 Dec 2014 06:33:54 +0530
+Message-Id: <1418951039-12309-1-git-send-email-sujith@msujith.org> (sfid-20141219_020212_980257_15B180CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-On stop(), we already cleared our internal state,
-and the restart_complete() callback won't be
-called, so simply clear the IN_HW_RESTART flag.
+Pending patches for ath9k, rebased over wireless-drivers-next.
+All of these are for -next.
 
-Keeping the flag might result in invalid state
-on the next start(), preventing the driver starting
-properly.
+The patch "ath9k: Fix no-ack frame status" depends on two commits
+that have been merged in mac80211-next, so it needs to be pulled
+into wireless-drivers-next.
 
-Additionally, don't take IWL_MVM_REF_UCODE_DOWN on stop()
-if hw restart was requested, as the ref was already
-taken in this case.
+Sujith
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
+Miaoqing Pan (4):
+  ath9k: Add HW IDs for QCA956x
+  ath9k: Add initvals for QCA956x
+  ath9k: Fix register definitions for QCA956x
+  ath9k: Add QCA956x HW support
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 31a5b3f..e880f9d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1004,8 +1004,13 @@ void __iwl_mvm_mac_stop(struct iwl_mvm *mvm)
- {
- 	lockdep_assert_held(&mvm->mutex);
- 
--	/* disallow low power states when the FW is down */
--	iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
-+	/*
-+	 * Disallow low power states when the FW is down by taking
-+	 * the UCODE_DOWN ref. in case of ongoing hw restart the
-+	 * ref is already taken, so don't take it again.
-+	 */
-+	if (!test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
-+		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
- 
- 	/* async_handlers_wk is now blocked */
- 
-@@ -1023,6 +1028,12 @@ void __iwl_mvm_mac_stop(struct iwl_mvm *mvm)
- 	/* the fw is stopped, the aux sta is dead: clean up driver state */
- 	iwl_mvm_del_aux_sta(mvm);
- 
-+	/*
-+	 * Clear IN_HW_RESTART flag when stopping the hw (as restart_complete()
-+	 * won't be called in this case).
-+	 */
-+	clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
-+
- 	mvm->ucode_loaded = false;
- }
- 
+Sujith Manoharan (1):
+  ath9k: Fix no-ack frame status
+
+ drivers/net/wireless/ath/ath9k/ahb.c             |    4 +
+ drivers/net/wireless/ath/ath9k/ani.c             |    3 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c   |   15 +-
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c       |   61 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c      |   47 +-
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h      |   19 +-
+ drivers/net/wireless/ath/ath9k/ar956x_initvals.h | 1046 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c              |   41 +-
+ drivers/net/wireless/ath/ath9k/hw.h              |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c             |    3 +-
+ drivers/net/wireless/ath/ath9k/recv.c            |    3 +-
+ drivers/net/wireless/ath/ath9k/reg.h             |    4 +
+ drivers/net/wireless/ath/ath9k/xmit.c            |    9 +-
+ 13 files changed, 1212 insertions(+), 44 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar956x_initvals.h
+
 -- 
-1.9.1
+2.1.3
 
