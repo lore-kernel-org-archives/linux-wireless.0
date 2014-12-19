@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:64196 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752241AbaLJKaY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24694 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752533AbaLSOWa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 05:30:24 -0500
-Message-ID: <548820B8.8020407@broadcom.com> (sfid-20141210_113031_408810_484E30A7)
-Date: Wed, 10 Dec 2014 11:30:16 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 19 Dec 2014 09:22:30 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: [PATCH 5/5] ath10k: implement support for ap beacon offloading
+References: <1418829711-19713-1-git-send-email-bartosz.markowski@tieto.com>
+	<1418829711-19713-6-git-send-email-bartosz.markowski@tieto.com>
+Date: Fri, 19 Dec 2014 16:22:18 +0200
+In-Reply-To: <1418829711-19713-6-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Wed, 17 Dec 2014 16:21:51 +0100")
+Message-ID: <87lhm3iusl.fsf@kamboji.qca.qualcomm.com> (sfid-20141219_152233_404639_CFA51110)
 MIME-Version: 1.0
-To: Brian Norris <computersforpeace@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-CC: Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: don't leak kernel memory via printk()
-References: <1418204358-8357-1-git-send-email-computersforpeace@gmail.com>
-In-Reply-To: <1418204358-8357-1-git-send-email-computersforpeace@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10-12-14 10:39, Brian Norris wrote:
-> Debug code prints the fifo name via custom dev_warn() wrappers. The
-> fifo_names array is only non-zero when debugging is manually enabled,
-> which is all well and good. However, it's *not* good that this array
-> uses zero-length arrays in the non-debug case, and so it doesn't
-> actually have any memory allocated to it. This means that as far as we
-> know, fifo_names[i] actually points to garbage memory.
-> 
-> I've seen this in my log:
-> 
-> [ 4601.205511] brcmsmac bcma0:1: wl0: brcms_c_d11hdrs_mac80211: �GeL txop exceeded phylen 137/256 dur 1602/1504
-> 
-> So let's give this array space enough to fill it with a NULL byte.
-> 
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-+ Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
-> Cc: Brett Rudley <brudley@broadcom.com>
-- Cc: Arend van Spriel <arend@broadcom.com>
-> Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-> Cc: Hante Meuleman <meuleman@broadcom.com>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: brcm80211-dev-list@broadcom.com
-> Cc: netdev@vger.kernel.org
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> index 1b474828d5b8..aed0c948dce8 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> @@ -316,7 +316,7 @@ static const u16 xmtfifo_sz[][NFIFO] = {
->  static const char * const fifo_names[] = {
->  	"AC_BK", "AC_BE", "AC_VI", "AC_VO", "BCMC", "ATIM" };
->  #else
-> -static const char fifo_names[6][0];
-> +static const char fifo_names[6][1];
->  #endif
->  
->  #ifdef DEBUG
-> 
+> From: Michal Kazior <michal.kazior@tieto.com>
+>
+> New firmware revisions support beacon and probe
+> response templates instead. This means SWBA events
+> are no longer delivered for these firmware
+> revisions.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
+[...]
+
+> +	ret = ath10k_mac_setup_bcn_p2p_ie(arvif, bcn);
+> +	if (ret) {
+> +		ath10k_warn(ar, "failed to setup p2p go bcn ie: %d\n", ret);
+> +		kfree_skb(bcn);
+> +		return ret;
+> +	}
+> +
+> +	ath10k_mac_remove_vendor_ie(bcn, WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P,
+> +				    offsetof(struct ieee80211_mgmt,
+> +					     u.beacon.variable));
+
+A comment would be nice why you are removing the P2P IE. I guess because
+there's a different command to set that IE?
+ 
+-- 
+Kalle Valo
