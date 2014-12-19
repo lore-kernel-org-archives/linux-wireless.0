@@ -1,36 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39384 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756178AbaLWP6k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 10:58:40 -0500
-Message-ID: <1419350316.6091.9.camel@sipsolutions.net> (sfid-20141223_165843_074848_89CDC23F)
-Subject: Re: [PATCH] cfg80211: add extensible feature flag attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Gautam Kumar Shukla <gautams@broadcom.com>,
-	Avinash Patil <patila@marvell.com>
-Date: Tue, 23 Dec 2014 16:58:36 +0100
-In-Reply-To: <1419350119-29166-1-git-send-email-arend@broadcom.com>
-References: <1419350119-29166-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:57815 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751370AbaLSNju (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2014 08:39:50 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: [PATCH 1/5] ath10k: implement new beacon tx status event
+References: <1418829711-19713-1-git-send-email-bartosz.markowski@tieto.com>
+	<1418829711-19713-2-git-send-email-bartosz.markowski@tieto.com>
+Date: Fri, 19 Dec 2014 15:39:34 +0200
+In-Reply-To: <1418829711-19713-2-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Wed, 17 Dec 2014 16:21:47 +0100")
+Message-ID: <87ppbfiwrt.fsf@kamboji.qca.qualcomm.com> (sfid-20141219_143953_577985_1B0DC822)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-12-23 at 16:55 +0100, Arend van Spriel wrote:
-> From: Gautam Kumar Shukla <gautams@broadcom.com>
-> 
-> With the wiphy::features flag being used up this patch adds a
-> new field wiphy::ext_features. Considering extensibility this
-> new field is declared as a byte array. This extensible flag is
-> exposed to user-space by NL80211_ATTR_EXT_FEATURES.
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
-Ah, I guess this will compile without even any flags defined, so
-Avinash, you can just build on top of this and define the first flag,
-and for the sake of attribution I'll apply it as two separate patches.
+> From: Michal Kazior <michal.kazior@tieto.com>
+>
+> This event is delivered to host by firmware if it
+> supports beacon templates only.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Thanks Arend.
+If you submit something, even written by someone else, you have to add
+your Signed-off-by line. Otherwise I cannot take these.
 
-johannes
-
+-- 
+Kalle Valo
