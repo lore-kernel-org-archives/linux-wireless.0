@@ -1,86 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:54825 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750760AbaLaLWp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 06:22:45 -0500
-Received: by mail-lb0-f169.google.com with SMTP id p9so13404569lbv.0
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 03:22:43 -0800 (PST)
-Message-ID: <54A3DC80.1080505@cogentembedded.com> (sfid-20141231_122316_457699_AAC605CD)
-Date: Wed, 31 Dec 2014 14:22:40 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>, brudley@broadcom.com,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	kvalo@codeaurora.org, linville@tuxdriver.com,
-	pieterpg@broadcom.com, hdegoede@redhat.com, wens@csie.org,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
-References: <54A3B1B4.7090705@linux.intel.com>
-In-Reply-To: <54A3B1B4.7090705@linux.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:45782 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751602AbaLSKF3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2014 05:05:29 -0500
+Message-ID: <1418983525.1889.2.camel@sipsolutions.net> (sfid-20141219_110533_089399_DE96BADC)
+Subject: Re: [RFC V2] cfg80211: Add feature flag for 4-way handshake offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Gautam Kumar Shukla <gautams@broadcom.com>
+Date: Fri, 19 Dec 2014 11:05:25 +0100
+In-Reply-To: <5493F6E5.5060907@broadcom.com>
+References: <1418935344-22159-1-git-send-email-arend@broadcom.com>
+	 <1418980707.1889.1.camel@sipsolutions.net> <5493F34A.4040500@broadcom.com>
+	 <5493F6E5.5060907@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+On Fri, 2014-12-19 at 10:59 +0100, Arend van Spriel wrote:
 
-On 12/31/2014 11:20 AM, Fu, Zhonghui wrote:
+> Looking at this again I wonder if it would be of value to have this as 
+> NL80211_EXT_FEATURES_ATTR_LEN in nl80211.h so user-space can check the 
+> nla_len() against it and detect API in-compatibility. Just can not use 
+> DIV_ROUND_UP() in that case. What's your opinion?
 
->  From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
-> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
-> Date: Mon, 29 Dec 2014 21:25:31 +0800
-> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+Well, userspace must not check it since it should be compatible with new
+kernels ... That was kinda my original point about not liking it in the
+header to start with :)
 
-> WiFi chip has 2 SDIO functions, and PM core will trigger
-> twice suspend/resume operations for one WiFi chip to do
-> the same things. This patch avoid this case.
-
-> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
->   1 files changed, 17 insertions(+), 2 deletions(-)
-
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index 3c06e93..eee7818 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
->   static int brcmf_ops_sdio_suspend(struct device *dev)
->   {
->   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-> +	struct brcmf_sdio_dev *sdiodev;
->   	mmc_pm_flag_t sdio_flags;
-> +	struct sdio_func *func = dev_to_sdio_func(dev);
->
->   	brcmf_dbg(SDIO, "Enter\n");
->
-> +	if (func->num == 2) {
-> +		return 0;
-> +	}
-
-    {} not needed.
-
-[...]
-> @@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
->   static int brcmf_ops_sdio_resume(struct device *dev)
->   {
->   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-> +	struct brcmf_sdio_dev *sdiodev;
-> +	struct sdio_func *func = dev_to_sdio_func(dev);
->
->   	brcmf_dbg(SDIO, "Enter\n");
-> +
-> +	if (func->num == 2) {
-> +		return 0;
-> +	}
-
-    Same here.
-
-[...]
-
-WBR, Sergei
+johannes
 
