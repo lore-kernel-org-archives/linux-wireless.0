@@ -1,170 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:65014 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751159AbaLRUm3 (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:49960 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751370AbaLSNTR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 15:42:29 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Gautam Kumar Shukla <gautams@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [RFC V2] cfg80211: Add feature flag for 4-way handshake offload
-Date: Thu, 18 Dec 2014 21:42:24 +0100
-Message-ID: <1418935344-22159-1-git-send-email-arend@broadcom.com> (sfid-20141218_214232_689419_D2A70E0B)
+	Fri, 19 Dec 2014 08:19:17 -0500
+Received: by mail-ie0-f180.google.com with SMTP id rp18so626478iec.25
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2014 05:19:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <54940B8C.5070801@neratec.com>
+References: <CAGXE3d8Uv01qjfvRQkMr1w_5wB6XKpC7d2VOR3UG0DMPHk6r9A@mail.gmail.com>
+	<54940B8C.5070801@neratec.com>
+Date: Fri, 19 Dec 2014 14:19:17 +0100
+Message-ID: <CAGXE3d9ZubxEoeV+uD9GHJiAa7aB_NM87OfddNa4SC5CQkjNuA@mail.gmail.com> (sfid-20141219_141923_127108_8E3908A1)
+Subject: Re: DFS CAC time
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gautam Kumar Shukla <gautams@broadcom.com>
+Hi Zefir,
 
-The new feature flag allows the driver to indicate that it can
-offload the 4-way handshake for WPA/RSN-PSK. With the
-wiphy::features flag being used up this patch adds a new
-field wiphy::ext_features. Considering extensibility this
-new field is declared as a byte array.
+On Fri, Dec 19, 2014 at 12:27 PM, Zefir Kurtisi
+<zefir.kurtisi@neratec.com> wrote:
+> On 12/18/2014 05:21 PM, Helmut Schaa wrote:
+>> Hi,
+>>
+>> [...]
+>>
+>> So, every channel has a CAC time of 60 seconds.
+>>
+>> Checking version 1.7.2 of the ETSI regulation indicates that we might
+>> need some modifications to cfg80211:
+>>
+>> From [1] page 79:
+>>
+>> "NOTE 1: For channels whose nominal bandwidth falls completely or
+>> partly within the
+>> band 5 600 MHz to 5 650 MHz, the Channel Availability Check Time shall be
+>> 10 minutes.
+>> NOTE 2: For channels whose nominal bandwidth falls completely or
+>> partly within the
+>> band 5 600 MHz to 5 650 MHz, the Off-Channel CAC Time shall be within the
+>> range 1 hour to 24 hours."
+>>
+>> So, for these channels we should select a longer initial CAC time.
+>>
+>> Is anyone aware of this issue?
+>>
+>> Thanks,
+>> Helmut
+>>
+>>
+>> [1] http://www.etsi.org/deliver/etsi_en/301800_301899/301893/01.07.02_20/en_301893v010702a.pdf
+>> --
+>
+> Hello Helmut,
+>
+> just forget about those aka 'weather channels' that require a pracitcally
+> impossible to achieve radar detection probability rate (99.99% during CAC, see
+> table D.5).
 
-Signed-off-by: Gautam (Gautam Kumar) Shukla <gautams@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-V2:
-  - rename helper functions.
-  - make helper function static inline.
-  - derive ext_feature array size from extended feature count.
----
- include/net/cfg80211.h       | 39 +++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/nl80211.h | 22 ++++++++++++++++++++++
- net/wireless/nl80211.c       |  5 +++++
- 3 files changed, 66 insertions(+)
+Hmm, ok :)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 670b9ed..38f30e5 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3013,6 +3013,8 @@ struct wiphy_vendor_command {
-  * @regulatory_flags: wiphy regulatory flags, see
-  *	&enum ieee80211_regulatory_flags
-  * @features: features advertised to nl80211, see &enum nl80211_feature_flags.
-+ * @ext_features: extended features advertised to nl80211, see
-+ *	&enum nl80211_ext_feature_index.
-  * @bss_priv_size: each BSS struct has private data allocated with it,
-  *	this variable determines its size
-  * @max_scan_ssids: maximum number of SSIDs the device can scan for in
-@@ -3122,6 +3124,7 @@ struct wiphy {
- 	u16 max_acl_mac_addrs;
- 
- 	u32 flags, regulatory_flags, features;
-+	u8 ext_features[(NUM_NL80211_EXT_FEATURES / 8) + 1];
- 
- 	u32 ap_sme_capa;
- 
-@@ -5049,6 +5052,42 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
-  */
- void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy);
- 
-+/**
-+ * wiphy_ext_feature_set - set the extended feature flag
-+ *
-+ * @wiphy: the wiphy to modify.
-+ * @ftidx: extended feature bit index.
-+ *
-+ * The extended features are flagged in multiple bytes (see
-+ * &struct wiphy.@ext_features)
-+ */
-+static inline void wiphy_ext_feature_set(struct wiphy *wiphy,
-+					 enum nl80211_ext_feature_index ftidx)
-+{
-+	u8 *ft_byte;
-+
-+	ft_byte = &wiphy->ext_features[ftidx / 8];
-+	*ft_byte |= BIT(ftidx % 8);
-+}
-+
-+/**
-+ * wiphy_ext_feature_isset - check the extended feature flag
-+ *
-+ * @wiphy: the wiphy to modify.
-+ * @ftidx: extended feature bit index.
-+ *
-+ * The extended features are flagged in multiple bytes (see
-+ * &struct wiphy.@ext_features)
-+ */
-+static inline bool
-+wiphy_ext_feature_isset(struct wiphy *wiphy,
-+			enum nl80211_ext_feature_index ftidx)
-+{
-+	u8 ft_byte;
-+
-+	ft_byte = wiphy->ext_features[ftidx / 8];
-+	return (ft_byte & BIT(ftidx % 8)) != 0;
-+}
- 
- /* ethtool helper */
- void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info);
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c0383e9..13f201b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1713,6 +1713,13 @@ enum nl80211_commands {
-  *	obtained from it is coming from the device's wiphy and not the global
-  *	cfg80211 regdomain.
-  *
-+ * @NL80211_ATTR_EXT_FEATURES: extended feature flags contained in a byte
-+ *	array. The feature flags are identified by their bit index (see &enum
-+ *	nl80211_ext_feature_index). The bit index is ordered starting at the
-+ *	least-significant bit of the first byte in the array, ie. bit index 0
-+ *	is located at bit 0 of byte 0. bit index 25 would be located at bit 1
-+ *	of byte 3 (u8 array).
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2072,6 +2079,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
- 
-+	NL80211_ATTR_EXT_FEATURES,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4221,6 +4230,19 @@ enum nl80211_feature_flags {
- };
- 
- /**
-+ * enum nl80211_ext_feature_index - bit index of extended features.
-+ *
-+ * @NL80211_EXT_FEATURE_4WAY_HANDSHAKE: the device supports 4way handshake
-+ */
-+enum nl80211_ext_feature_index {
-+	NL80211_EXT_FEATURE_4WAY_HANDSHAKE,
-+
-+	/* add new features before the definition below */
-+	NUM_NL80211_EXT_FEATURES,
-+	MAX_NL80211_EXT_FEATURES = NUM_NL80211_EXT_FEATURES - 1
-+};
-+
-+/**
-  * enum nl80211_probe_resp_offload_support_attr - optional supported
-  *	protocols for probe-response offloading by the driver/FW.
-  *	To be used with the %NL80211_ATTR_PROBE_RESP_OFFLOAD attribute.
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7029201..7c00577 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1603,6 +1603,11 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		if (nla_put_u32(msg, NL80211_ATTR_FEATURE_FLAGS, features))
- 			goto nla_put_failure;
- 
-+		if (nla_put(msg, NL80211_ATTR_EXT_FEATURES,
-+			    sizeof(rdev->wiphy.ext_features),
-+			    rdev->wiphy.ext_features))
-+			goto nla_put_failure;
-+
- 		if (rdev->wiphy.ht_capa_mod_mask &&
- 		    nla_put(msg, NL80211_ATTR_HT_CAPABILITY_MASK,
- 			    sizeof(*rdev->wiphy.ht_capa_mod_mask),
--- 
-1.9.1
+Would it make sense to mark these somehow in the wireless-regdb in a
+special way?
 
+Thanks,
+Helmut
