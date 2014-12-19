@@ -1,81 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0178.hostedemail.com ([216.40.44.178]:56637 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751121AbaLQKnV (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:59536 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752073AbaLSG5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:43:21 -0500
-Message-ID: <1418812995.14140.20.camel@perches.com> (sfid-20141217_114324_989589_7927A4AD)
-Subject: Re: [PATCH 3/4] mwifiex: make tx packet 64 byte DMA aligned
-From: Joe Perches <joe@perches.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	akarwar@marvell.com, cluo@marvell.com, yangyang@marvell.com,
-	huxm@marvell.com
-Date: Wed, 17 Dec 2014 02:43:15 -0800
-In-Reply-To: <1418824621-2102-3-git-send-email-patila@marvell.com>
-References: <1418824621-2102-1-git-send-email-patila@marvell.com>
-	 <1418824621-2102-3-git-send-email-patila@marvell.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 19 Dec 2014 01:57:08 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 7/8] ath10k: add support to send addba response
+Date: Fri, 19 Dec 2014 12:24:58 +0530
+Message-ID: <1418972099-5296-8-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141219_075711_931631_22AB3D9F)
+In-Reply-To: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-17 at 19:27 +0530, Avinash Patil wrote:
-> From: Xinming Hu <huxm@marvell.com>
-[]
-> diff --git a/drivers/net/wireless/mwifiex/11n_aggr.c b/drivers/net/wireless/mwifiex/11n_aggr.c
-[]
-> @@ -101,6 +101,13 @@ mwifiex_11n_form_amsdu_txpd(struct mwifiex_private *priv,
->  {
->  	struct txpd *local_tx_pd;
->  	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
-> +	u8 pad;
+This per-station debugfs entry helps to send addba response in
+manual mode for debugging purpose. It accepts tid and status code
+as input arguments.
 
-The u8 gets upcasted to unsigned int for the skb_push
-so why use u8 at all?
+To send addba response,
 
-I think unsigned int makes more sense.
+echo 0 25 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
+	   stations/XX:XX:XX:XX:XX:XX/addba_resp
 
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c | 55 +++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
-> +	int headroom = (priv->adapter->iface_type ==
-> +			MWIFIEX_USB) ? 0 : INTF_HEADER_LEN;
-> +
-> +	pad = ((void *)skb->data - sizeof(*local_tx_pd) -
-> +		headroom - NULL) & (MWIFIEX_DMA_ALIGN_SZ - 1);
-> +	skb_push(skb, pad);
->  
->  	skb_push(skb, sizeof(*local_tx_pd));
-
-[]
-
-> diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-[]
-> @@ -32,8 +32,10 @@
->  
->  #define MWIFIEX_MAX_BSS_NUM         (3)
->  
-> -#define MWIFIEX_MIN_DATA_HEADER_LEN 36	/* sizeof(mwifiex_txpd)
-> -					 *   + 4 byte alignment
-> +#define MWIFIEX_DMA_ALIGN_SZ	    64
-> +#define MWIFIEX_MIN_DATA_HEADER_LEN 100	/* sizeof(mwifiex_txpd)
-> +					 *   + 4 byte interface header alignment
-> +					 *   + 64 byte dma alignment
-
-Maybe better to use those values in the
-#define instead.
-
-> diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
-> index b896d73..9796334 100644
-> --- a/drivers/net/wireless/mwifiex/sta_tx.c
-> +++ b/drivers/net/wireless/mwifiex/sta_tx.c
-> @@ -47,8 +47,10 @@ void *mwifiex_process_sta_txpd(struct mwifiex_private *priv,
->  	struct mwifiex_adapter *adapter = priv->adapter;
->  	struct txpd *local_tx_pd;
->  	struct mwifiex_txinfo *tx_info = MWIFIEX_SKB_TXCB(skb);
-> -	u8 pad;
-> +	int pad;
-
-here it's int?
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 89e5e5a..95eb5a1 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -136,10 +136,65 @@ static const struct file_operations fops_addba = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath10k_dbg_sta_write_addba_resp(struct file *file,
++					       const char __user *user_buf,
++					       size_t count, loff_t *ppos)
++{
++	struct ieee80211_sta *sta = file->private_data;
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct ath10k *ar = arsta->arvif->ar;
++	u32 tid, status;
++	int ret;
++	char buf[64];
++
++	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
++
++	/* make sure that buf is null terminated */
++	buf[sizeof(buf) - 1] = '\0';
++
++	ret = sscanf(buf, "%u %u", &tid, &status);
++	if (ret != 2) {
++		ath10k_warn(ar, "ex: echo <tid> <status code> >addba_resp\n");
++		return -EINVAL;
++	}
++
++	/* Valid TID values are 0 through 15 */
++	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
++		ath10k_warn(ar, "Invalid TID %u\n", tid);
++		return -EINVAL;
++	}
++
++	mutex_lock(&ar->conf_mutex);
++	if ((ar->state != ATH10K_STATE_ON) ||
++	    (arsta->aggr_mode != ATH10K_DBG_AGGR_MODE_MANUAL)) {
++		ret = count;
++		goto out;
++	}
++
++	ret = ath10k_wmi_addba_set_resp(ar, arsta->arvif->vdev_id, sta->addr,
++					tid, status);
++	if (ret) {
++		ath10k_warn(ar, "failed to send addba response: vdev_id %u peer %pM tid %u status%u\n",
++			    arsta->arvif->vdev_id, sta->addr, tid, status);
++	}
++	ret = count;
++out:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static const struct file_operations fops_addba_resp = {
++	.write = ath10k_dbg_sta_write_addba_resp,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir)
+ {
+ 	debugfs_create_file("aggr_mode", S_IRUGO | S_IWUSR, dir, sta,
+ 			    &fops_aggr_mode);
+ 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
++	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
+ }
+-- 
+2.2.0
 
