@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41470 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751113AbaLRG31 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 01:29:27 -0500
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>, <kvalo@codeaurora.org>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 1/4] mwifiex: enable -D__CHECK_ENDIAN__ for sparse by default
-Date: Thu, 18 Dec 2014 17:28:43 +0530
-Message-ID: <1418903926-11859-1-git-send-email-patila@marvell.com> (sfid-20141218_072937_970174_4AE0C764)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:46053 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751370AbaLSLFg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2014 06:05:36 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Y1vNG-0000gG-RS
+	for linux-wireless@vger.kernel.org; Fri, 19 Dec 2014 12:05:35 +0100
+Message-ID: <1418987132.1889.4.camel@sipsolutions.net> (sfid-20141219_120539_597543_99ADEE34)
+Subject: Re: [PATCH 1/2] nl80211: support MSDU statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 19 Dec 2014 12:05:32 +0100
+In-Reply-To: <1418919083-28297-1-git-send-email-johannes@sipsolutions.net> (sfid-20141218_171132_119479_078E1815)
+References: <1418919083-28297-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20141218_171132_119479_078E1815)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable the endian checks by default.
 
-v2: remove -DDEBUG as suggested by Joe Perches
+> + * @rx_qos_msdu: QoS-MSDUs received from this station (per TID)
+> + * @rx_nonqos_msdu: non-QoS-MSDUs received from this station
+> + * @tx_qos_msdu: QoS-MSDUs sent to this station (per TID)
+> + * @tx_nonqos_msdu: non-QoS-MSDUs sent to this station
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/Makefile | 2 ++
- 1 file changed, 2 insertions(+)
+Well, come to think of it, it looks like we'll probably want more
+per-TID data in the future, I'll need at least retries and lost MSDUs.
 
-diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
-index 9487d72..fdfd9bf 100644
---- a/drivers/net/wireless/mwifiex/Makefile
-+++ b/drivers/net/wireless/mwifiex/Makefile
-@@ -53,3 +53,5 @@ obj-$(CONFIG_MWIFIEX_PCIE) += mwifiex_pcie.o
- 
- mwifiex_usb-y += usb.o
- obj-$(CONFIG_MWIFIEX_USB) += mwifiex_usb.o
-+
-+ccflags-y += -D__CHECK_ENDIAN
--- 
-1.8.1.4
+As a consequence, I'm going to make this the other way around and have a
+per-TID nesting (using idx 16 for non-QoS) and in there have the
+different values. This will also affect the cfg80211 API.
+
+johannes
 
