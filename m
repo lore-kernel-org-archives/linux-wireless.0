@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49396 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48205 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967817AbaLLOCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 09:02:55 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+	id S1751165AbaLSUeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2014 15:34:46 -0500
+Message-ID: <1419021281.1889.7.camel@sipsolutions.net> (sfid-20141219_213449_349361_36ADDA64)
+Subject: Re: [PATCH v2 3.19] mac80211: minstrel: reduce size of struct
+ minstrel_rate_stats
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
 Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] wireless: mac80211: Avoid using uninitialized stack data
-References: <1418238847-3332-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1418238847-3332-2-git-send-email-Jes.Sorensen@redhat.com>
-	<1418382219.2470.10.camel@sipsolutions.net>
-Date: Fri, 12 Dec 2014 09:02:49 -0500
-In-Reply-To: <1418382219.2470.10.camel@sipsolutions.net> (Johannes Berg's
-	message of "Fri, 12 Dec 2014 12:03:39 +0100")
-Message-ID: <wrfjoar90xva.fsf@redhat.com> (sfid-20141212_150258_704483_7FDF772D)
-MIME-Version: 1.0
-Content-Type: text/plain
+Date: Fri, 19 Dec 2014 21:34:41 +0100
+In-Reply-To: <1418819914-9535-1-git-send-email-nbd@openwrt.org>
+References: <1418819914-9535-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-> On Wed, 2014-12-10 at 14:14 -0500, Jes.Sorensen@redhat.com wrote:
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->> 
->> Avoid case where we would access uninitialized stack data if a driver
->> advertises HT support without 40MHz channel support.
->
-> I've fixed the commit message (it's actually in the check for the *AP*,
-> not the driver!)
->
-> Also, this is complicated. We originally had the DISABLE_VHT, but then
-> found APs that were doing it wrong - see commit f3000e1b43f1 ("mac80211:
-> fix broken use of VHT/20Mhz with some APs"). That fix introduced the bug
-> here, going back now to the DISABLE_VHT as I'd suggested would break the
-> fix again ... I'm thus taking this version to just put the right data on
-> the stack, with the correct Fixes/Cc stable tags.
+On Wed, 2014-12-17 at 13:38 +0100, Felix Fietkau wrote:
+> On minstrel_ht, the size of the per-sta struct is almost 18k, making it
+> an order-3 allocation.
+> A few fields inside the per-rate statistics are bigger than they need to
+> be. This patch reduces the size enough to cut down the per-sta struct to
+> about 13k (order-2 allocation).
 
-Either patch works for me, so I'm all good! Thanks for fixing this up!
+Applied to mac80211-next.
 
-Cheers,
-Jes
+johannes
+
