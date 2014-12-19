@@ -1,199 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:36912 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbaL2GYX (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:37655 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752013AbaLSG4D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 01:24:23 -0500
-Received: by mail-wg0-f43.google.com with SMTP id k14so358077wgh.30
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2014 22:24:21 -0800 (PST)
-Received: from muse.ger.corp.intel.com (85-250-108-142.bb.netvision.net.il. [85.250.108.142])
-        by mx.google.com with ESMTPSA id gb10sm23488030wjb.21.2014.12.28.22.24.20
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sun, 28 Dec 2014 22:24:20 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 03/13] wlcore/wl18xx: handle rc updates in a separate work
-Date: Mon, 29 Dec 2014 08:24:03 +0200
-Message-Id: <1419834253-18331-3-git-send-email-eliad@wizery.com> (sfid-20141229_072426_954612_7360A4B4)
-In-Reply-To: <1419834253-18331-1-git-send-email-eliad@wizery.com>
-References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
+	Fri, 19 Dec 2014 01:56:03 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 3/8] ath10k: add wmi support for addba_set_resp
+Date: Fri, 19 Dec 2014 12:24:54 +0530
+Message-ID: <1418972099-5296-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141219_075615_953323_1C56D4A3)
+In-Reply-To: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sta_rc_update runs in atomic context. thus, a new work
-should be scheduled in order to configure the fw
-with the required configuration.
+Add WMI support for sending addba response manually. This command
+is used for debugging purpose.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ti/wl18xx/main.c     | 18 ++++------------
- drivers/net/wireless/ti/wlcore/hw_ops.h   |  5 ++---
- drivers/net/wireless/ti/wlcore/main.c     | 35 +++++++++++++++++++++++++++++--
- drivers/net/wireless/ti/wlcore/wlcore.h   |  3 +--
- drivers/net/wireless/ti/wlcore/wlcore_i.h |  4 ++++
- 5 files changed, 44 insertions(+), 21 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
+ drivers/net/wireless/ath/ath10k/wmi.c     | 29 +++++++++++++++++++++++++++++
+ 3 files changed, 50 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 7af1936..6946d18 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1559,26 +1559,19 @@ static u32 wl18xx_pre_pkt_send(struct wl1271 *wl,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index badf422..e8f49de 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -123,6 +123,9 @@ struct wmi_ops {
+ 						const u8 *mac);
+ 	struct sk_buff *(*gen_addba_send)(struct ath10k *ar, u32 vdev_id,
+ 					  const u8 *mac, u32 tid, u32 buf_size);
++	struct sk_buff *(*gen_addba_set_resp)(struct ath10k *ar, u32 vdev_id,
++					      const u8 *mac, u32 tid,
++					      u32 status);
+ };
+ 
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -894,4 +897,21 @@ ath10k_wmi_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
+ 				   ar->wmi.cmd->addba_send_cmdid);
  }
  
- static void wl18xx_sta_rc_update(struct wl1271 *wl,
--				 struct wl12xx_vif *wlvif,
--				 struct ieee80211_sta *sta,
--				 u32 changed)
-+				 struct wl12xx_vif *wlvif)
- {
--	bool wide = sta->bandwidth >= IEEE80211_STA_RX_BW_40;
-+	bool wide = wlvif->rc_update_bw >= IEEE80211_STA_RX_BW_40;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 sta_rc_update wide %d", wide);
- 
--	if (!(changed & IEEE80211_RC_BW_CHANGED))
--		return;
--
--	mutex_lock(&wl->mutex);
--
- 	/* sanity */
- 	if (WARN_ON(wlvif->bss_type != BSS_TYPE_STA_BSS))
--		goto out;
-+		return;
- 
- 	/* ignore the change before association */
- 	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
--		goto out;
-+		return;
- 
- 	/*
- 	 * If we started out as wide, we can change the operation mode. If we
-@@ -1589,9 +1582,6 @@ static void wl18xx_sta_rc_update(struct wl1271 *wl,
- 		wl18xx_acx_peer_ht_operation_mode(wl, wlvif->sta.hlid, wide);
- 	else
- 		ieee80211_connection_loss(wl12xx_wlvif_to_vif(wlvif));
--
--out:
--	mutex_unlock(&wl->mutex);
- }
- 
- static int wl18xx_set_peer_cap(struct wl1271 *wl,
-diff --git a/drivers/net/wireless/ti/wlcore/hw_ops.h b/drivers/net/wireless/ti/wlcore/hw_ops.h
-index aa9f82c..29ce55f 100644
---- a/drivers/net/wireless/ti/wlcore/hw_ops.h
-+++ b/drivers/net/wireless/ti/wlcore/hw_ops.h
-@@ -211,11 +211,10 @@ wlcore_hw_pre_pkt_send(struct wl1271 *wl, u32 buf_offset, u32 last_len)
- }
- 
- static inline void
--wlcore_hw_sta_rc_update(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--			struct ieee80211_sta *sta, u32 changed)
-+wlcore_hw_sta_rc_update(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- {
- 	if (wl->ops->sta_rc_update)
--		wl->ops->sta_rc_update(wl, wlvif, sta, changed);
-+		wl->ops->sta_rc_update(wl, wlvif);
- }
- 
- static inline int
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 2a99456..f6e37d5 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -226,6 +226,29 @@ void wl12xx_rearm_tx_watchdog_locked(struct wl1271 *wl)
- 		msecs_to_jiffies(wl->conf.tx.tx_watchdog_timeout));
- }
- 
-+static void wlcore_rc_update_work(struct work_struct *work)
++static inline int
++ath10k_wmi_addba_set_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac,
++			  u32 tid, u32 status)
 +{
-+	int ret;
-+	struct wl12xx_vif *wlvif = container_of(work, struct wl12xx_vif,
-+						rc_update_work);
-+	struct wl1271 *wl = wlvif->wl;
++	struct sk_buff *skb;
 +
-+	mutex_lock(&wl->mutex);
++	if (!ar->wmi.ops->gen_addba_set_resp)
++		return -EOPNOTSUPP;
 +
-+	if (unlikely(wl->state != WLCORE_STATE_ON))
-+		goto out;
++	skb = ar->wmi.ops->gen_addba_set_resp(ar, vdev_id, mac, tid, status);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
 +
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	wlcore_hw_sta_rc_update(wl, wlvif);
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->addba_set_resp_cmdid);
 +}
 +
- static void wl12xx_tx_watchdog_work(struct work_struct *work)
- {
- 	struct delayed_work *dwork;
-@@ -2279,6 +2302,7 @@ static int wl12xx_init_vif_data(struct wl1271 *wl, struct ieee80211_vif *vif)
- 		  wl1271_rx_streaming_enable_work);
- 	INIT_WORK(&wlvif->rx_streaming_disable_work,
- 		  wl1271_rx_streaming_disable_work);
-+	INIT_WORK(&wlvif->rc_update_work, wlcore_rc_update_work);
- 	INIT_DELAYED_WORK(&wlvif->channel_switch_work,
- 			  wlcore_channel_switch_work);
- 	INIT_DELAYED_WORK(&wlvif->connection_loss_work,
-@@ -2724,6 +2748,7 @@ unlock:
- 	del_timer_sync(&wlvif->rx_streaming_timer);
- 	cancel_work_sync(&wlvif->rx_streaming_enable_work);
- 	cancel_work_sync(&wlvif->rx_streaming_disable_work);
-+	cancel_work_sync(&wlvif->rc_update_work);
- 	cancel_delayed_work_sync(&wlvif->connection_loss_work);
- 	cancel_delayed_work_sync(&wlvif->channel_switch_work);
- 	cancel_delayed_work_sync(&wlvif->pending_auth_complete_work);
-@@ -5371,9 +5396,15 @@ static void wlcore_op_sta_rc_update(struct ieee80211_hw *hw,
- 				    u32 changed)
- {
- 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
--	struct wl1271 *wl = hw->priv;
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 74a0598..63f9860 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2209,6 +2209,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	/* .gen_pdev_get_temperature not implemented */
+ 	/* .gen_addba_clear_resp not implemented */
+ 	/* .gen_addba_send not implemented */
++	/* .gen_addba_set_resp not implemented */
+ };
  
--	wlcore_hw_sta_rc_update(wl, wlvif, sta, changed);
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 sta_rc_update");
-+
-+	if (!(changed & IEEE80211_RC_BW_CHANGED))
-+		return;
-+
-+	/* this callback is atomic, so schedule a new work */
-+	wlvif->rc_update_bw = sta->bandwidth;
-+	ieee80211_queue_work(hw, &wlvif->rc_update_work);
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index b118795..b5a771f 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4694,6 +4694,32 @@ ath10k_wmi_op_gen_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
+ 	return skb;
  }
  
- static int wlcore_op_get_rssi(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index df78cf1..2440ebe 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -106,8 +106,7 @@ struct wlcore_ops {
- 			      struct wl12xx_vif *wlvif,
- 			      struct ieee80211_channel_switch *ch_switch);
- 	u32 (*pre_pkt_send)(struct wl1271 *wl, u32 buf_offset, u32 last_len);
--	void (*sta_rc_update)(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--			      struct ieee80211_sta *sta, u32 changed);
-+	void (*sta_rc_update)(struct wl1271 *wl, struct wl12xx_vif *wlvif);
- 	int (*set_peer_cap)(struct wl1271 *wl,
- 			    struct ieee80211_sta_ht_cap *ht_cap,
- 			    bool allow_ht_operation,
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 0e52556..811851d 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -463,6 +463,10 @@ struct wl12xx_vif {
- 	/* work for canceling ROC after pending auth reply */
- 	struct delayed_work pending_auth_complete_work;
- 
-+	/* update rate conrol */
-+	enum ieee80211_sta_rx_bandwidth rc_update_bw;
-+	struct work_struct rc_update_work;
++static struct sk_buff *
++ath10k_wmi_op_gen_addba_set_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac,
++				 u32 tid, u32 status)
++{
++	struct wmi_addba_setresponse_cmd *cmd;
++	struct sk_buff *skb;
 +
- 	/*
- 	 * total freed FW packets on the link.
- 	 * For STA this holds the PN of the link to the AP.
++	if (!mac)
++		return ERR_PTR(-EINVAL);
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_addba_setresponse_cmd *)skb->data;
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	ether_addr_copy(cmd->peer_macaddr.addr, mac);
++	cmd->tid = __cpu_to_le32(tid);
++	cmd->statuscode = __cpu_to_le32(status);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi addba set resp vdev_id 0x%X mac_addr %pM tid %u status %u\n",
++		   vdev_id, mac, tid, status);
++	return skb;
++}
++
+ static const struct wmi_ops wmi_ops = {
+ 	.rx = ath10k_wmi_op_rx,
+ 	.map_svc = wmi_main_svc_map,
+@@ -4747,6 +4773,7 @@ static const struct wmi_ops wmi_ops = {
+ 	/* .gen_pdev_get_temperature not implemented */
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
++	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
+ };
+ 
+ static const struct wmi_ops wmi_10_1_ops = {
+@@ -4803,6 +4830,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
++	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
+ };
+ 
+ static const struct wmi_ops wmi_10_2_ops = {
+@@ -4860,6 +4888,7 @@ static const struct wmi_ops wmi_10_2_ops = {
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
++	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
 -- 
-1.8.5.2.229.g4448466.dirty
+2.2.0
 
