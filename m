@@ -1,68 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:56275 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227AbaLQNOH (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25071 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751243AbaLSGzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 08:14:07 -0500
-Message-ID: <5491819C.2050303@broadcom.com> (sfid-20141217_141411_490832_CF181839)
-Date: Wed, 17 Dec 2014 14:14:04 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 19 Dec 2014 01:55:35 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 1/8] ath10k: add wmi support for addba_clear_resp
+Date: Fri, 19 Dec 2014 12:24:52 +0530
+Message-ID: <1418972099-5296-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141219_075613_235500_C0E8044C)
+In-Reply-To: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-To: Bruno Randolf <br1@thinktube.com>
-CC: Dani Camps <danicamps81@gmail.com>,
-	<linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: mac80211 USB adapters with 5GHz support and SMA antenna
-References: <CAD3NH5X-neqP-61kP=C2oNPPJTQNBkarae0rh93Hm4qzdpZRew@mail.gmail.com> <54916C38.80103@thinktube.com>
-In-Reply-To: <54916C38.80103@thinktube.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/17/14 12:42, Bruno Randolf wrote:
-> Hi,
->
-> On 12/16/2014 07:09 PM, Dani Camps wrote:
->> I am looking for a Wi-Fi adapter with the following specs:
->>
->> a) Operates at 5GHz
->> b) Supports 802.11n and optionally 802.11ac
->> c) USB interface
->> d) SMA connector for external antenna(s)
->> e) It is supported by mac80211, and supports mesh mode
->
-> Me too...
->
-> IHMO the best USB based chipset/driver combination is still ath9k_htc
-> with Atheros AR7010/AR9280 or AR9271, which is rock solid and has very
-> good thruput (and an open firmware). Unfortunately I have heard it's EOL
-> but it's still possible to buy them, e.g the "TP-Link TL-WN722N" or
-> "TP-LINK TL-WN822N"...
->
-> I have not found good alternatives yet... So I repeat: Does anyone know
-> a good USB dongle with a good mac/cfg80211 driver and at least 802.11n
-> 2x2:2 and support for AP and IBSS mode?
->
-> It's a shame that vendors like Ralink/MediaTek and Realtek do not work
-> on decent upstream linux drivers... Instead of wasting time cleaning up
-> the mess they leave with dozens of incomplete "vendor drivers" they drop
-> on us - maybe the Linux community should just choose *ONE* modern
-> (preferrably "ac") and cheap USB chipset and concentrate on writing a
-> driver for it?
->
-> And what about the vendors which are more involved in proper linux
-> wireless develpment? Qualcom/Atheros, Intel, Broadcom: don't you have
-> any USB chipsets in line?
+Add WMI support for clearing addba response before switching aggregation
+mode (auto/manual) for debugging purpose.
 
-We do, but no mac80211-based USB devices.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 18 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
+ drivers/net/wireless/ath/ath10k/wmi.c     | 27 +++++++++++++++++++++++++++
+ 3 files changed, 46 insertions(+)
 
-Regards,
-Arend
-
-> bruno
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 20e2c30..b161043 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -119,6 +119,8 @@ struct wmi_ops {
+ 						   u32 next_offset,
+ 						   u32 enabled);
+ 	struct sk_buff *(*gen_pdev_get_temperature)(struct ath10k *ar);
++	struct sk_buff *(*gen_addba_clear_resp)(struct ath10k *ar, u32 vdev_id,
++						const u8 *mac);
+ };
+ 
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -857,4 +859,20 @@ ath10k_wmi_pdev_get_temperature(struct ath10k *ar)
+ 				   ar->wmi.cmd->pdev_get_temperature_cmdid);
+ }
+ 
++static inline int
++ath10k_wmi_addba_clear_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac)
++{
++	struct sk_buff *skb;
++
++	if (!ar->wmi.ops->gen_addba_clear_resp)
++		return -EOPNOTSUPP;
++
++	skb = ar->wmi.ops->gen_addba_clear_resp(ar, vdev_id, mac);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->addba_clear_resp_cmdid);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 4c050ce..499a779 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2207,6 +2207,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_tlv_op_gen_pktlog_disable,
+ 	/* .gen_pdev_set_quiet_mode not implemented */
+ 	/* .gen_pdev_get_temperature not implemented */
++	/* .gen_addba_clear_resp not implemented */
+ };
+ 
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index f6b0de3..0053641 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4644,6 +4644,30 @@ ath10k_wmi_op_gen_pdev_set_quiet_mode(struct ath10k *ar, u32 period,
+ 	return skb;
+ }
+ 
++static struct sk_buff *
++ath10k_wmi_op_gen_addba_clear_resp(struct ath10k *ar, u32 vdev_id,
++				   const u8 *mac)
++{
++	struct wmi_addba_clear_resp_cmd *cmd;
++	struct sk_buff *skb;
++
++	if (!mac)
++		return ERR_PTR(-EINVAL);
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_addba_clear_resp_cmd *)skb->data;
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	ether_addr_copy(cmd->peer_macaddr.addr, mac);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi addba clear resp vdev_id 0x%X mac_addr %pM\n",
++		   vdev_id, mac);
++	return skb;
++}
++
+ static const struct wmi_ops wmi_ops = {
+ 	.rx = ath10k_wmi_op_rx,
+ 	.map_svc = wmi_main_svc_map,
+@@ -4695,6 +4719,7 @@ static const struct wmi_ops wmi_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	/* .gen_pdev_get_temperature not implemented */
++	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ };
+ 
+ static const struct wmi_ops wmi_10_1_ops = {
+@@ -4749,6 +4774,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	.gen_pktlog_enable = ath10k_wmi_op_gen_pktlog_enable,
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
++	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ };
+ 
+ static const struct wmi_ops wmi_10_2_ops = {
+@@ -4804,6 +4830,7 @@ static const struct wmi_ops wmi_10_2_ops = {
+ 	.gen_pktlog_enable = ath10k_wmi_op_gen_pktlog_enable,
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
++	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
+-- 
+2.2.0
 
