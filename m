@@ -1,36 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:57815 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751370AbaLSNju (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:34188 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696AbaLSKQg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 08:39:50 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH 1/5] ath10k: implement new beacon tx status event
-References: <1418829711-19713-1-git-send-email-bartosz.markowski@tieto.com>
-	<1418829711-19713-2-git-send-email-bartosz.markowski@tieto.com>
-Date: Fri, 19 Dec 2014 15:39:34 +0200
-In-Reply-To: <1418829711-19713-2-git-send-email-bartosz.markowski@tieto.com>
-	(Bartosz Markowski's message of "Wed, 17 Dec 2014 16:21:47 +0100")
-Message-ID: <87ppbfiwrt.fsf@kamboji.qca.qualcomm.com> (sfid-20141219_143953_577985_1B0DC822)
+	Fri, 19 Dec 2014 05:16:36 -0500
+Message-ID: <5493FABD.9060207@broadcom.com> (sfid-20141219_111640_297460_7FCD5895)
+Date: Fri, 19 Dec 2014 11:15:25 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Gautam Kumar Shukla <gautams@broadcom.com>
+Subject: Re: [RFC V2] cfg80211: Add feature flag for 4-way handshake offload
+References: <1418935344-22159-1-git-send-email-arend@broadcom.com>	 <1418980707.1889.1.camel@sipsolutions.net> <5493F34A.4040500@broadcom.com>	 <5493F6E5.5060907@broadcom.com> <1418983525.1889.2.camel@sipsolutions.net>
+In-Reply-To: <1418983525.1889.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
-
-> From: Michal Kazior <michal.kazior@tieto.com>
+On 12/19/14 11:05, Johannes Berg wrote:
+> On Fri, 2014-12-19 at 10:59 +0100, Arend van Spriel wrote:
 >
-> This event is delivered to host by firmware if it
-> supports beacon templates only.
+>> Looking at this again I wonder if it would be of value to have this as
+>> NL80211_EXT_FEATURES_ATTR_LEN in nl80211.h so user-space can check the
+>> nla_len() against it and detect API in-compatibility. Just can not use
+>> DIV_ROUND_UP() in that case. What's your opinion?
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Well, userspace must not check it since it should be compatible with new
+> kernels ... That was kinda my original point about not liking it in the
+> header to start with :)
 
-If you submit something, even written by someone else, you have to add
-your Signed-off-by line. Otherwise I cannot take these.
+Understood.
 
--- 
-Kalle Valo
+Thanks,
+Arend
+
