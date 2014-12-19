@@ -1,180 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:41511 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752471AbaLAHaI (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:43412 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752013AbaLSGzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 02:30:08 -0500
-Received: by mail-wi0-f178.google.com with SMTP id hi2so16266550wib.5
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Nov 2014 23:30:06 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/3] ath10k: create a chip revision whielist
-Date: Mon,  1 Dec 2014 08:17:44 +0100
-Message-Id: <1417418266-21974-1-git-send-email-michal.kazior@tieto.com> (sfid-20141201_083014_254302_1DFA432D)
-In-Reply-To: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
-References: <1416838646-18801-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 19 Dec 2014 01:55:47 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/8] ath10k: add wmi support for addba_send
+Date: Fri, 19 Dec 2014 12:24:53 +0530
+Message-ID: <1418972099-5296-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141219_075614_605002_D5FB7B66)
+In-Reply-To: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will make it easier to extend and maintain
-list of supported hardware.
+Add WMI support for sending addba request. This command is meant
+for debugging purpose.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 19 +++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
+ drivers/net/wireless/ath/ath10k/wmi.c     | 29 +++++++++++++++++++++++++++++
+ 3 files changed, 49 insertions(+)
 
-Notes:
-    v2:
-     * create a separate chip_id whitelist array
-       instead of using hw_params as discussed [Kalle]
-
- drivers/net/wireless/ath/ath10k/core.c | 37 ----------------------------------
- drivers/net/wireless/ath/ath10k/core.h |  1 -
- drivers/net/wireless/ath/ath10k/pci.c  | 31 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/pci.h  |  5 +++++
- 4 files changed, 36 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7762061..ece8ab4 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1068,34 +1068,6 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 	return 0;
- }
- 
--static int ath10k_core_check_chip_id(struct ath10k *ar)
--{
--	u32 hw_revision = MS(ar->chip_id, SOC_CHIP_ID_REV);
--
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot chip_id 0x%08x hw_revision 0x%x\n",
--		   ar->chip_id, hw_revision);
--
--	/* Check that we are not using hw1.0 (some of them have same pci id
--	 * as hw2.0) before doing anything else as ath10k crashes horribly
--	 * due to missing hw1.0 workarounds. */
--	switch (hw_revision) {
--	case QCA988X_HW_1_0_CHIP_ID_REV:
--		ath10k_err(ar, "ERROR: qca988x hw1.0 is not supported\n");
--		return -EOPNOTSUPP;
--
--	case QCA988X_HW_2_0_CHIP_ID_REV:
--		/* known hardware revision, continue normally */
--		return 0;
--
--	default:
--		ath10k_warn(ar, "Warning: hardware revision unknown (0x%x), expect problems\n",
--			    ar->chip_id);
--		return 0;
--	}
--
--	return 0;
--}
--
- static void ath10k_core_register_work(struct work_struct *work)
- {
- 	struct ath10k *ar = container_of(work, struct ath10k, register_work);
-@@ -1143,16 +1115,7 @@ err:
- 
- int ath10k_core_register(struct ath10k *ar, u32 chip_id)
- {
--	int status;
--
- 	ar->chip_id = chip_id;
--
--	status = ath10k_core_check_chip_id(ar);
--	if (status) {
--		ath10k_err(ar, "Unsupported chip id 0x%08x\n", ar->chip_id);
--		return status;
--	}
--
- 	queue_work(ar->workqueue, &ar->register_work);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 4a29498..88e6c74 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -479,7 +479,6 @@ struct ath10k {
- 		u32 id;
- 		const char *name;
- 		u32 patch_load_addr;
--
- 		struct ath10k_hw_params_fw {
- 			const char *dir;
- 			const char *fw;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 0816098..e55292f 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -64,6 +64,14 @@ static const struct pci_device_id ath10k_pci_id_table[] = {
- 	{0}
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index b161043..badf422 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -121,6 +121,8 @@ struct wmi_ops {
+ 	struct sk_buff *(*gen_pdev_get_temperature)(struct ath10k *ar);
+ 	struct sk_buff *(*gen_addba_clear_resp)(struct ath10k *ar, u32 vdev_id,
+ 						const u8 *mac);
++	struct sk_buff *(*gen_addba_send)(struct ath10k *ar, u32 vdev_id,
++					  const u8 *mac, u32 tid, u32 buf_size);
  };
  
-+static const struct ath10k_pci_supp_chip ath10k_pci_supp_chips[] = {
-+	/* QCA988X pre 2.0 chips are not supported because they need some nasty
-+	 * hacks. ath10k doesn't have them and these devices crash horribly
-+	 * because of that.
-+	 */
-+	{ QCA988X_2_0_DEVICE_ID, QCA988X_HW_2_0_CHIP_ID_REV },
-+};
-+
- static void ath10k_pci_buffer_cleanup(struct ath10k *ar);
- static int ath10k_pci_cold_reset(struct ath10k *ar);
- static int ath10k_pci_warm_reset(struct ath10k *ar);
-@@ -2467,6 +2475,23 @@ static void ath10k_pci_release(struct ath10k *ar)
- 	pci_disable_device(pdev);
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -875,4 +877,21 @@ ath10k_wmi_addba_clear_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac)
+ 				   ar->wmi.cmd->addba_clear_resp_cmdid);
  }
  
-+static bool ath10k_pci_chip_is_supported(u32 dev_id, u32 chip_id)
++static inline int
++ath10k_wmi_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
++		      u32 tid, u32 buf_size)
 +{
-+	const struct ath10k_pci_supp_chip *supp_chip;
-+	int i;
-+	u32 rev_id = MS(chip_id, SOC_CHIP_ID_REV);
++	struct sk_buff *skb;
 +
-+	for (i = 0; i < ARRAY_SIZE(ath10k_pci_supp_chips); i++) {
-+		supp_chip = &ath10k_pci_supp_chips[i];
++	if (!ar->wmi.ops->gen_addba_send)
++		return -EOPNOTSUPP;
 +
-+		if (supp_chip->dev_id == dev_id &&
-+		    supp_chip->rev_id == rev_id)
-+			return true;
-+	}
++	skb = ar->wmi.ops->gen_addba_send(ar, vdev_id, mac, tid, buf_size);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
 +
-+	return false;
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->addba_send_cmdid);
 +}
 +
- static int ath10k_pci_probe(struct pci_dev *pdev,
- 			    const struct pci_device_id *pci_dev)
- {
-@@ -2512,6 +2537,12 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 		goto err_sleep;
- 	}
- 
-+	if (!ath10k_pci_chip_is_supported(pdev->device, chip_id)) {
-+		ath10k_err(ar, "device %04x with chip_id %08x isn't supported\n",
-+			   pdev->device, chip_id);
-+		goto err_sleep;
-+	}
-+
- 	ret = ath10k_pci_alloc_pipes(ar);
- 	if (ret) {
- 		ath10k_err(ar, "failed to allocate copy engine pipes: %d\n",
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index cf36511..ce4a1ef 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -152,6 +152,11 @@ struct ath10k_pci_pipe {
- 	struct tasklet_struct intr;
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 499a779..74a0598 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2208,6 +2208,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	/* .gen_pdev_set_quiet_mode not implemented */
+ 	/* .gen_pdev_get_temperature not implemented */
+ 	/* .gen_addba_clear_resp not implemented */
++	/* .gen_addba_send not implemented */
  };
  
-+struct ath10k_pci_supp_chip {
-+	u32 dev_id;
-+	u32 rev_id;
-+};
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 0053641..b118795 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4668,6 +4668,32 @@ ath10k_wmi_op_gen_addba_clear_resp(struct ath10k *ar, u32 vdev_id,
+ 	return skb;
+ }
+ 
++static struct sk_buff *
++ath10k_wmi_op_gen_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
++			     u32 tid, u32 buf_size)
++{
++	struct wmi_addba_send_cmd *cmd;
++	struct sk_buff *skb;
 +
- struct ath10k_pci {
- 	struct pci_dev *pdev;
- 	struct device *dev;
++	if (!mac)
++		return ERR_PTR(-EINVAL);
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_addba_send_cmd *)skb->data;
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	ether_addr_copy(cmd->peer_macaddr.addr, mac);
++	cmd->tid = __cpu_to_le32(tid);
++	cmd->buffersize = __cpu_to_le32(buf_size);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi addba send vdev_id 0x%X mac_addr %pM tid %u bufsize %u\n",
++		   vdev_id, mac, tid, buf_size);
++	return skb;
++}
++
+ static const struct wmi_ops wmi_ops = {
+ 	.rx = ath10k_wmi_op_rx,
+ 	.map_svc = wmi_main_svc_map,
+@@ -4720,6 +4746,7 @@ static const struct wmi_ops wmi_ops = {
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	/* .gen_pdev_get_temperature not implemented */
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
++	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ };
+ 
+ static const struct wmi_ops wmi_10_1_ops = {
+@@ -4775,6 +4802,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
++	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ };
+ 
+ static const struct wmi_ops wmi_10_2_ops = {
+@@ -4831,6 +4859,7 @@ static const struct wmi_ops wmi_10_2_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
++	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
 -- 
-1.8.5.3
+2.2.0
 
