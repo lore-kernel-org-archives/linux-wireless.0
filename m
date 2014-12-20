@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37430 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751445AbaLQQqD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 11:46:03 -0500
-Message-ID: <1418834751.2135.26.camel@sipsolutions.net> (sfid-20141217_174622_503524_28EE6CCC)
-Subject: Re: changes to Linux wireless maintenance
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-nfc@ml01.01.org, "David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kvalo@codeaurora.org>, lwn@lwn.net
-Date: Wed, 17 Dec 2014 17:45:51 +0100
-In-Reply-To: <20141217155951.GA3144@tuxdriver.com> (sfid-20141217_170024_328162_22665574)
-References: <20141217155951.GA3144@tuxdriver.com>
-	 (sfid-20141217_170024_328162_22665574)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:61421 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645AbaLTM1M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Dec 2014 07:27:12 -0500
+Received: by mail-wg0-f42.google.com with SMTP id k14so3376394wgh.29
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 04:27:11 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: ipw2x00: ipw2200.c:  Remove unused function
+Date: Sat, 20 Dec 2014 13:29:59 +0100
+Message-Id: <1419078599-31118-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141220_132717_131054_C4FEF47B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Remove the function ipw_alive() that is not used anywhere.
 
-> Nevertheless, I think it is time for some changes.  I have been
-> the wireless maintainer for a long time, and I personally would
-> like to develop in a different direction.  Plus, I think that Linux
-> will benefit from having some fresh blood involved in more of the
-> maintenance duties.  I will be stepping aside to let that happen.
+This was partially found by using a static code analysis program called cppcheck.
 
-Thank you John for all the work you've put into wireless, from the
-day-to-day grind of merging/bugs/etc. to organising meetings and looking
-after people at conference nights (...)
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/ipw2x00/ipw2200.c |   14 --------------
+ 1 file changed, 14 deletions(-)
 
-Good luck with the retro-computing and whatever else you end up doing!
-
-I guess we need to throw a party at netconf/netdev :)
-
-johannes
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index edc3443..2f830ca 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -3021,20 +3021,6 @@ static void ipw_remove_current_network(struct ipw_priv *priv)
+ 	spin_unlock_irqrestore(&priv->ieee->lock, flags);
+ }
+ 
+-/**
+- * Check that card is still alive.
+- * Reads debug register from domain0.
+- * If card is present, pre-defined value should
+- * be found there.
+- *
+- * @param priv
+- * @return 1 if card is present, 0 otherwise
+- */
+-static inline int ipw_alive(struct ipw_priv *priv)
+-{
+-	return ipw_read32(priv, 0x90) == 0xd55555d5;
+-}
+-
+ /* timeout in msec, attempted in 10-msec quanta */
+ static int ipw_poll_bit(struct ipw_priv *priv, u32 addr, u32 mask,
+ 			       int timeout)
+-- 
+1.7.10.4
 
