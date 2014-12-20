@@ -1,94 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8127 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751654AbaLaTsa (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:60957 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753295AbaLTQlY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 14:48:30 -0500
-Message-ID: <54A45309.6080606@broadcom.com> (sfid-20141231_204846_106905_D83D522F)
-Date: Wed, 31 Dec 2014 20:48:25 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Andreas Hartmann <andihartmann@freenet.de>
-CC: Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> <54A412CE.6010803@maya.org>
-In-Reply-To: <54A412CE.6010803@maya.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sat, 20 Dec 2014 11:41:24 -0500
+Received: by mail-wi0-f170.google.com with SMTP id bs8so7267062wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 08:41:23 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: hal: odm.c:  Remove some unused functions
+Date: Sat, 20 Dec 2014 17:44:10 +0100
+Message-Id: <1419093850-8610-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141220_174153_759272_E3FCB203)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/31/14 16:14, Andreas Hartmann wrote:
-> Jiri Kosina wrote:
->> On Wed, 31 Dec 2014, Arend van Spriel wrote:
->>
->>> The thing with WEXT is that it will stay as is. So if tools like wicd
->>> want to support new features like P2P it will need to make the switch. I
->>> checked out wicd repo and found a number of iwconfig calls and they kick
->>> off wpa_supplicant with wext driver.
->>
->> Unfortunately this is by no means just about wicd. I have already received
->> a few off-list mails from people who were wondering why their home-made
->> scripts / tools, which are running 'iwconfig' directly suddenly stopped to
->> work, and that it was indeed fallout of WEXT going away. Given the very
->> short time this has been in mainline, you can probably imagine the
->> fireworks once this appears in major release.
->
-> It is not just the userspace tools (I prefer them, too), which need
-> wext, but a lot of drivers, too, such as Mediathek drivers e.g. which
-> perform *much* better compared to rt2x00, especially concerning USB
-> chips like the one used by Linksys AE3000 (3x3 Mimo)
-> (https://wikidevi.com/wiki/Linksys_AE3000), which achieves average
-> throughputs around 14 MB/s *average* with scp of big (>  10 GB) crypted
-> files even through reinforced-concrete floor(!) - rt2x00 is *far* away
-> of providing such a performance.
->
-> Next bad point of rt2x00 e.g. is the huge CPU overhead - compare
-> rt5572sta on Raspi with rt2x00 running netperf and you will see the huge
-> problem of rt2x00 (which is covered on x86 by mostly oversized multi
-> core CPUs).
->
-> Another big advantage of rt5572sta is: it is *stable* over a lot of
-> kernel versions (as long as the kernel didn't break interfaces - but
-> there are patches to catch them).
->
-> Even ath9k, which usually is a really fine driver, is broken on some
-> kernel versions (link and throughput is not stable - my use case depends
-> *heavily* on very high and longterm stable throughput). That's why I'm
-> using a VM for my ath9k-device to be independent of these quality
-> problems of mac80211 (or maybe ath9k - don't know) over different kernel
-> versions.
->
->
-> All in all:
-> If you want to get rid of wext, you still have to go a *very* long way
-> to get the same *stable* and high throughput quality with *all* chips
-> depending on mac80211 and not just a few flagship drivers like Atheros.
+Removes some functions that are not used anywhere:
+odm_1R_CCA23a() odm_TXPowerTrackingCheckAP() odm_TXPowerTrackingCheckMP()
+odm_RSSIMonitorCheck23aAP() odm_RSSIMonitorCheck23aMP() odm_RSSIMonitorInit()
+odm_RefreshRateAdaptiveMask23aAPADSL23a() odm_RefreshRateAdaptiveMask23aMP23a()
 
-Hi Andreas,
+This was partially found by using a static code analysis program called cppcheck.
 
-That's a nice list of unrelated stuff. This has all nothing to do with 
-WEXT. Actually, you can build rt5572sta with cfg80211 support 
-(RT_CFG80211_SUPPORT). This thread is about the configuration API and 
-not about driver performance.
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/staging/rtl8723au/hal/odm.c |   81 -----------------------------------
+ 1 file changed, 81 deletions(-)
 
-Regards,
-Arend
-
-> Kind regards,
-> Andreas Hartmann
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+diff --git a/drivers/staging/rtl8723au/hal/odm.c b/drivers/staging/rtl8723au/hal/odm.c
+index 1c0f106d..6d84fb5 100644
+--- a/drivers/staging/rtl8723au/hal/odm.c
++++ b/drivers/staging/rtl8723au/hal/odm.c
+@@ -187,24 +187,13 @@ void odm23a_DynBBPSInit(struct dm_odm_t *pDM_Odm);
+ 
+ void odm_DynamicBBPowerSaving23a(struct dm_odm_t *pDM_Odm);
+ 
+-void odm_1R_CCA23a(struct dm_odm_t *pDM_Odm);
+ /* END---------BB POWER SAVE----------------------- */
+ 
+-void odm_RefreshRateAdaptiveMask23aMP23a(struct dm_odm_t *pDM_Odm);
+-
+ void odm_RefreshRateAdaptiveMask23aCE23a(struct dm_odm_t *pDM_Odm);
+ 
+-void odm_RefreshRateAdaptiveMask23aAPADSL23a(struct dm_odm_t *pDM_Odm);
+-
+ void odm_DynamicTxPower23aInit(struct dm_odm_t *pDM_Odm);
+ 
+-void odm_RSSIMonitorInit(struct dm_odm_t *pDM_Odm);
+-
+-void odm_RSSIMonitorCheck23aMP(struct dm_odm_t *pDM_Odm);
+-
+ void odm_RSSIMonitorCheck23aCE(struct dm_odm_t *pDM_Odm);
+-void odm_RSSIMonitorCheck23aAP(struct dm_odm_t *pDM_Odm);
+-
+ void odm_RSSIMonitorCheck23a(struct dm_odm_t *pDM_Odm);
+ void odm_DynamicTxPower23a(struct dm_odm_t *pDM_Odm);
+ 
+@@ -212,16 +201,12 @@ void odm_RefreshRateAdaptiveMask23a(struct dm_odm_t *pDM_Odm);
+ 
+ void ODM_TXPowerTrackingCheck23a(struct dm_odm_t *pDM_Odm);
+ 
+-void odm_TXPowerTrackingCheckAP(struct dm_odm_t *pDM_Odm);
+-
+ void odm_RateAdaptiveMaskInit23a(struct dm_odm_t *pDM_Odm);
+ 
+ void odm_TXPowerTrackingThermalMeterInit23a(struct dm_odm_t *pDM_Odm);
+ 
+ void odm_TXPowerTrackingInit23a(struct dm_odm_t *pDM_Odm);
+ 
+-void odm_TXPowerTrackingCheckMP(struct dm_odm_t *pDM_Odm);
+-
+ void odm_TXPowerTrackingCheckCE23a(struct dm_odm_t *pDM_Odm);
+ 
+ static void odm_EdcaTurboCheck23a(struct dm_odm_t *pDM_Odm);
+@@ -946,40 +931,6 @@ void odm_DynamicBBPowerSaving23a(struct dm_odm_t *pDM_Odm)
+ 	return;
+ }
+ 
+-void odm_1R_CCA23a(struct dm_odm_t *pDM_Odm)
+-{
+-	struct dynamic_pwr_sav *pDM_PSTable = &pDM_Odm->DM_PSTable;
+-
+-	if (pDM_Odm->RSSI_Min != 0xFF) {
+-		if (pDM_PSTable->PreCCAState == CCA_2R) {
+-			if (pDM_Odm->RSSI_Min >= 35)
+-				pDM_PSTable->CurCCAState = CCA_1R;
+-			else
+-				pDM_PSTable->CurCCAState = CCA_2R;
+-		} else {
+-			if (pDM_Odm->RSSI_Min <= 30)
+-				pDM_PSTable->CurCCAState = CCA_2R;
+-			else
+-				pDM_PSTable->CurCCAState = CCA_1R;
+-		}
+-	} else {
+-		pDM_PSTable->CurCCAState = CCA_MAX;
+-	}
+-
+-	if (pDM_PSTable->PreCCAState != pDM_PSTable->CurCCAState) {
+-		if (pDM_PSTable->CurCCAState == CCA_1R) {
+-			if (pDM_Odm->RFType == ODM_2T2R)
+-				ODM_SetBBReg(pDM_Odm, 0xc04, bMaskByte0, 0x13);
+-			else
+-				ODM_SetBBReg(pDM_Odm, 0xc04, bMaskByte0, 0x23);
+-		} else {
+-			ODM_SetBBReg(pDM_Odm, 0xc04, bMaskByte0, 0x33);
+-			/* PHY_SetBBReg(pAdapter, 0xe70, bMaskByte3, 0x63); */
+-		}
+-		pDM_PSTable->PreCCAState = pDM_PSTable->CurCCAState;
+-	}
+-}
+-
+ void ODM_RF_Saving23a(struct dm_odm_t *pDM_Odm, u8 bForceInNormal)
+ {
+ 	struct dynamic_pwr_sav *pDM_PSTable = &pDM_Odm->DM_PSTable;
+@@ -1177,10 +1128,6 @@ void odm_RefreshRateAdaptiveMask23a(struct dm_odm_t *pDM_Odm)
+ 	odm_RefreshRateAdaptiveMask23aCE23a(pDM_Odm);
+ }
+ 
+-void odm_RefreshRateAdaptiveMask23aMP23a(struct dm_odm_t *pDM_Odm)
+-{
+-}
+-
+ void odm_RefreshRateAdaptiveMask23aCE23a(struct dm_odm_t *pDM_Odm)
+ {
+ 	u8 i;
+@@ -1216,10 +1163,6 @@ void odm_RefreshRateAdaptiveMask23aCE23a(struct dm_odm_t *pDM_Odm)
+ 
+ }
+ 
+-void odm_RefreshRateAdaptiveMask23aAPADSL23a(struct dm_odm_t *pDM_Odm)
+-{
+-}
+-
+ /*  Return Value: bool */
+ /*  - true: RATRState is changed. */
+ bool ODM_RAStateCheck23a(struct dm_odm_t *pDM_Odm, s32 RSSI, bool bForceUpdate,
+@@ -1284,14 +1227,6 @@ void odm_DynamicTxPower23aInit(struct dm_odm_t *pDM_Odm)
+ 	pdmpriv->DynamicTxHighPowerLvl = TxHighPwrLevel_Normal;
+ }
+ 
+-/* 3 ============================================================ */
+-/* 3 RSSI Monitor */
+-/* 3 ============================================================ */
+-
+-void odm_RSSIMonitorInit(struct dm_odm_t *pDM_Odm)
+-{
+-}
+-
+ void odm_RSSIMonitorCheck23a(struct dm_odm_t *pDM_Odm)
+ {
+ 	/*  For AP/ADSL use struct rtl8723a_priv * */
+@@ -1306,10 +1241,6 @@ void odm_RSSIMonitorCheck23a(struct dm_odm_t *pDM_Odm)
+ 	odm_RSSIMonitorCheck23aCE(pDM_Odm);
+ }	/*  odm_RSSIMonitorCheck23a */
+ 
+-void odm_RSSIMonitorCheck23aMP(struct dm_odm_t *pDM_Odm)
+-{
+-}
+-
+ static void
+ FindMinimumRSSI(
+ 	struct rtw_adapter *pAdapter
+@@ -1378,10 +1309,6 @@ void odm_RSSIMonitorCheck23aCE(struct dm_odm_t *pDM_Odm)
+ 	ODM_CmnInfoUpdate23a(&pHalData->odmpriv, ODM_CMNINFO_RSSI_MIN, pdmpriv->MinUndecoratedPWDBForDM);
+ }
+ 
+-void odm_RSSIMonitorCheck23aAP(struct dm_odm_t *pDM_Odm)
+-{
+-}
+-
+ /* endif */
+ /* 3 ============================================================ */
+ /* 3 Tx Power Tracking */
+@@ -1422,14 +1349,6 @@ void odm_TXPowerTrackingCheckCE23a(struct dm_odm_t *pDM_Odm)
+ {
+ }
+ 
+-void odm_TXPowerTrackingCheckMP(struct dm_odm_t *pDM_Odm)
+-{
+-}
+-
+-void odm_TXPowerTrackingCheckAP(struct dm_odm_t *pDM_Odm)
+-{
+-}
+-
+ /* EDCA Turbo */
+ static void ODM_EdcaTurboInit23a(struct dm_odm_t *pDM_Odm)
+ {
+-- 
+1.7.10.4
 
