@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59495 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750734AbaLaOIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 09:08:00 -0500
-Date: Wed, 31 Dec 2014 15:07:56 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: Arend van Spriel <arend@broadcom.com>
-cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility
- unselectable"
-In-Reply-To: <54A3E1F1.7030807@broadcom.com>
-Message-ID: <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> (sfid-20141231_150832_558223_8EA742B7)
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
- <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
- <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:64546 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752722AbaLTAQ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Dec 2014 19:16:56 -0500
+Received: by mail-wg0-f46.google.com with SMTP id x13so2606422wgg.33
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Dec 2014 16:16:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Date: Sat, 20 Dec 2014 00:16:55 +0000
+Message-ID: <CACZYS+o80M7OkxUTOumCf1VhPRjM-U0zj8xebGQ8-1W_qPDo5Q@mail.gmail.com> (sfid-20141220_011659_481869_F88C0051)
+Subject: nl80211: send_and_recv->nl_recvmsgs failed: -33
+From: Notes Jonny <jongmob@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 31 Dec 2014, Arend van Spriel wrote:
+Hello
 
-> The thing with WEXT is that it will stay as is. So if tools like wicd 
-> want to support new features like P2P it will need to make the switch. I 
-> checked out wicd repo and found a number of iwconfig calls and they kick 
-> off wpa_supplicant with wext driver.
+I am seeing this error message quite often in syslog. Was wondering if
+it is something I can fix. Not sure if related, but the laptop drops
+off the established wifi at this location (that problem happens ever
+few days).
 
-Unfortunately this is by no means just about wicd. I have already received 
-a few off-list mails from people who were wondering why their home-made 
-scripts / tools, which are running 'iwconfig' directly suddenly stopped to 
-work, and that it was indeed fallout of WEXT going away. Given the very 
-short time this has been in mainline, you can probably imagine the 
-fireworks once this appears in major release.
+Could the -33 be replaced with an error string? I wonder what -33 is,
+perhaps -EDOM?
 
--- 
-Jiri Kosina
-SUSE Labs
+Regards, Jonny
+
+Dec 20 00:07:28 ubuntu1404 NetworkManager[749]: <info> Activation
+(wlan0) Stage 4 of 5 (IPv6 Configure Timeout) started...
+Dec 20 00:07:28 ubuntu1404 NetworkManager[749]: <info> Activation
+(wlan0) Stage 4 of 5 (IPv6 Configure Timeout) complete.
+Dec 20 00:07:28 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
+Dec 20 00:07:29 ubuntu1404 wpa_supplicant[1095]: nl80211:
+send_and_recv->nl_recvmsgs failed: -33
+Dec 20 00:08:11 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
+Dec 20 00:08:12 ubuntu1404 wpa_supplicant[1095]: nl80211:
+send_and_recv->nl_recvmsgs failed: -33
+Dec 20 00:09:14 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
+Dec 20 00:09:15 ubuntu1404 wpa_supplicant[1095]: nl80211:
+send_and_recv->nl_recvmsgs failed: -33
+Dec 20 00:09:45 ubuntu1404 wpa_supplicant[1095]: wlan0: WPA: Group
+rekeying completed with xxxxxxxxxxxxxx [GTK=TKIP]
+Dec 20 00:10:37 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
+Dec 20 00:10:38 ubuntu1404 wpa_supplicant[1095]: nl80211:
+send_and_recv->nl_recvmsgs failed: -33
+Dec 20 00:12:20 ubuntu1404 wpa_supplicant[1095]: wlan0: CTRL-EVENT-SCAN-STARTED
+Dec 20 00:12:21 ubuntu1404 wpa_supplicant[1095]: nl80211:
+send_and_recv->nl_recvmsgs failed: -33
