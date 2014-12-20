@@ -1,72 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0062.hostedemail.com ([216.40.44.62]:54065 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932252AbaLBQUH (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:44889 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753027AbaLTRH1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 11:20:07 -0500
-Message-ID: <1417537201.3365.3.camel@perches.com> (sfid-20141202_172012_772472_3FE3DA59)
-Subject: Re: [PATCH v2 02/10] wil6210: introduce wil_err_ratelimited()
-From: Joe Perches <joe@perches.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Date: Tue, 02 Dec 2014 08:20:01 -0800
-In-Reply-To: <1745741.h3nTIlTg0C@lx-wigig-72>
-References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1417513598-18304-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1417532867.3365.1.camel@perches.com> <1745741.h3nTIlTg0C@lx-wigig-72>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Sat, 20 Dec 2014 12:07:27 -0500
+Received: by mail-wg0-f45.google.com with SMTP id b13so3721930wgh.18
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 09:07:26 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: core: rtw_cmd.c:  Remove some unused functions
+Date: Sat, 20 Dec 2014 18:10:13 +0100
+Message-Id: <1419095413-10163-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141220_180730_989705_F0E43DD0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-12-02 at 18:07 +0200, Vladimir Kondratiev wrote:
-> On Tuesday, December 02, 2014 07:07:47 AM Joe Perches wrote:
-> > net_<foo>_ratelimited uses the same form.
-> > 
-> > include/linux/net.h:#define net_ratelimited_function(function, ...)             
-> > include/linux/net.h-do {                                                        
-> > include/linux/net.h-    if (net_ratelimit())                                    
-> > include/linux/net.h-            function(__VA_ARGS__);                          
-> > include/linux/net.h-} while (0)
-> > 
-> Yes, I see. There are representatives of both "schools". As counter example,
-> netdev_<foo> uses "long" way:
+Removes some functions that are not used anywhere:
+rtw_set_ch_cmd23a() rtw_cmd_clr_isr23a()
 
-These used to be macros.
-They were converted to reduce overall code "size".
+This was partially found by using a static code analysis program called cppcheck.
 
-commit 256df2f3879efdb2e9808bdb1b54b16fbb11fa38
-Date:   Sun Jun 27 01:02:35 2010 +0000
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/staging/rtl8723au/core/rtw_cmd.c    |   61 ---------------------------
+ drivers/staging/rtl8723au/include/rtw_cmd.h |    2 -
+ 2 files changed, 63 deletions(-)
 
-    netdevice.h net/core/dev.c: Convert netdev_<level> logging macros to functions
-    
-    Reduces an x86 defconfig text and data ~2k.
-    text is smaller, data is larger.
-    
-    $ size vmlinux*
-       text        data     bss     dec     hex filename
-    7198862      720112 1366288 9285262  8dae8e vmlinux
-    7205273      716016 1366288 9287577  8db799 vmlinux.device_h
-    
-    Uses %pV and struct va_format
-    Format arguments are verified before printk
-
-> I agree it is bad practice to have non-trivial arguments in printk-like functions,
-
-true.
-
-It limits the ability to make side-effect
-free smaller code when printk is a no-op.
-
-> but it is hard to detect, specifically if one just automatically replace function with its
-> "ratelimited" version.
-
-Also true.
-
-It is and remains just a suggestion.
-
-Your code, your choices...
-
-
+diff --git a/drivers/staging/rtl8723au/core/rtw_cmd.c b/drivers/staging/rtl8723au/core/rtw_cmd.c
+index 4eaa502..a69e9bd 100644
+--- a/drivers/staging/rtl8723au/core/rtw_cmd.c
++++ b/drivers/staging/rtl8723au/core/rtw_cmd.c
+@@ -245,11 +245,6 @@ exit:
+ 	return res;
+ }
+ 
+-void rtw_cmd_clr_isr23a(struct	cmd_priv *pcmdpriv)
+-{
+-	pcmdpriv->cmd_done_cnt++;
+-}
+-
+ void rtw_free_cmd_obj23a(struct cmd_obj *pcmd)
+ {
+ 
+@@ -855,62 +850,6 @@ exit:
+ 	return res;
+ }
+ 
+-/*
+- * This is only ever called from on_action_spct23a_ch_switch () which isn't
+- * called from anywhere itself
+- */
+-int rtw_set_ch_cmd23a(struct rtw_adapter*padapter, u8 ch, u8 bw, u8 ch_offset,
+-		      u8 enqueue)
+-{
+-	struct cmd_obj *pcmdobj;
+-	struct set_ch_parm *set_ch_parm;
+-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+-	int res = _SUCCESS;
+-
+-	DBG_8723A("%s(%s): ch:%u, bw:%u, ch_offset:%u\n", __func__,
+-		  padapter->pnetdev->name, ch, bw, ch_offset);
+-
+-	/* check input parameter */
+-
+-	/* prepare cmd parameter */
+-	set_ch_parm = kzalloc(sizeof(*set_ch_parm), GFP_KERNEL);
+-	if (!set_ch_parm) {
+-		res = _FAIL;
+-		goto exit;
+-	}
+-	set_ch_parm->ch = ch;
+-	set_ch_parm->bw = bw;
+-	set_ch_parm->ch_offset = ch_offset;
+-
+-	if (enqueue) {
+-		/* need enqueue, prepare cmd_obj and enqueue */
+-		pcmdobj = kzalloc(sizeof(struct cmd_obj), GFP_KERNEL);
+-		if (!pcmdobj) {
+-			kfree(set_ch_parm);
+-			res = _FAIL;
+-			goto exit;
+-		}
+-
+-		init_h2fwcmd_w_parm_no_rsp(pcmdobj, set_ch_parm,
+-					   GEN_CMD_CODE(_SetChannel));
+-		res = rtw_enqueue_cmd23a(pcmdpriv, pcmdobj);
+-	} else {
+-		/* no need to enqueue, do the cmd hdl directly and
+-		   free cmd parameter */
+-		if (H2C_SUCCESS != set_ch_hdl23a(padapter, (u8 *)set_ch_parm))
+-			res = _FAIL;
+-
+-		kfree(set_ch_parm);
+-	}
+-
+-	/* do something based on res... */
+-exit:
+-
+-	DBG_8723A("%s(%s): res:%u\n", __func__, padapter->pnetdev->name, res);
+-
+-	return res;
+-}
+-
+ static void traffic_status_watchdog(struct rtw_adapter *padapter)
+ {
+ 	u8 bEnterPS;
+diff --git a/drivers/staging/rtl8723au/include/rtw_cmd.h b/drivers/staging/rtl8723au/include/rtw_cmd.h
+index ef67068..2322b27 100644
+--- a/drivers/staging/rtl8723au/include/rtw_cmd.h
++++ b/drivers/staging/rtl8723au/include/rtw_cmd.h
+@@ -100,7 +100,6 @@ int rtw_init_cmd_priv23a(struct cmd_priv *pcmdpriv);
+ 
+ u32 rtw_init_evt_priv23a (struct evt_priv *pevtpriv);
+ void rtw_free_evt_priv23a (struct evt_priv *pevtpriv);
+-void rtw_cmd_clr_isr23a(struct cmd_priv *pcmdpriv);
+ void rtw_evt_notify_isr(struct evt_priv *pevtpriv);
+ 
+ enum rtw_drvextra_cmd_id
+@@ -715,7 +714,6 @@ int rtw_ps_cmd23a(struct rtw_adapter*padapter);
+ int rtw_chk_hi_queue_cmd23a(struct rtw_adapter*padapter);
+ #endif
+ 
+-int rtw_set_ch_cmd23a(struct rtw_adapter*padapter, u8 ch, u8 bw, u8 ch_offset, u8 enqueue);
+ int rtw_set_chplan_cmd(struct rtw_adapter*padapter, u8 chplan, u8 enqueue);
+ int rtw_led_blink_cmd(struct rtw_adapter*padapter, struct led_8723a *pLed);
+ int rtw_set_csa_cmd(struct rtw_adapter*padapter, u8 new_ch_no);
+-- 
+1.7.10.4
 
