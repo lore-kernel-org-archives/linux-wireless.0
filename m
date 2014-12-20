@@ -1,64 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39754 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750862AbaLESYw (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:40498 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753081AbaLTMp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 13:24:52 -0500
-Date: Fri, 5 Dec 2014 18:24:43 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141205182443.GX11285@n2100.arm.linux.org.uk> (sfid-20141205_192456_070057_2DB1A164)
-References: <5481794E.4050406@broadcom.com>
- <4565667.WCBuNmaazQ@wuerfel>
- <20141205111114.GQ11285@n2100.arm.linux.org.uk>
- <20141205173839.GB31222@e104818-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141205173839.GB31222@e104818-lin.cambridge.arm.com>
+	Sat, 20 Dec 2014 07:45:28 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so4286825wiv.11
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 04:45:27 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: rtlwifi: rtl8192ee: trx.c:  Remove unused function
+Date: Sat, 20 Dec 2014 13:48:14 +0100
+Message-Id: <1419079694-32476-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141220_134620_768865_5EA3619C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 05, 2014 at 05:38:39PM +0000, Catalin Marinas wrote:
-> On Fri, Dec 05, 2014 at 11:11:14AM +0000, Russell King - ARM Linux wrote:
-> > In any case, wouldn't using a u64 type for "address" be better - isn't
-> > "long long" 128-bit on 64-bit architectures?
-> 
-> No, it's still 64-bit. There is no 128-bit integer in the C standard.
+Remove the function rtl92ee_get_available_desc() that is not used anywhere.
 
-Actually, that's a fallicy.
+This was partially found by using a static code analysis program called cppcheck.
 
-The C99 standard (like previous versions) does not define exactly the
-number of bits in each type.  It defines ranks of type, and says that
-lower ranks are a subrange of integers with higher ranks (for the same
-signed-ness.)  See section 6.2.5.
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c |   21 ---------------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.h |    1 -
+ 2 files changed, 22 deletions(-)
 
-So, it merely states that:
-
-range(char) <= range(short) <= range(int) <= range(long) <= range(long long)
-
-So, an implementation could have:
-
-char: 8  short: 16 int: 16 long: 32 long long: 64
-char: 8  short: 16 int: 32 long: 32 long long: 64
-char: 8  short: 16 int: 32 long: 64 long long: 64
-char: 8  short: 16 int: 64 long: 64 long long: 64
-
-or even:
-
-char: 8  short: 16 int: 32 long: 64 long long: 128
-
-and that would still be compliant with C99, since it continues to meet
-the criteria about the required data types specified in the standard.
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+index 2fcbef1..8186ed2 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+@@ -710,27 +710,6 @@ static u16 get_desc_addr_fr_q_idx(u16 queue_index)
+ 	return desc_address;
+ }
+ 
+-void rtl92ee_get_available_desc(struct ieee80211_hw *hw, u8 q_idx)
+-{
+-	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u16 point_diff = 0;
+-	u16 current_tx_read_point = 0, current_tx_write_point = 0;
+-	u32 tmp_4byte;
+-
+-	tmp_4byte = rtl_read_dword(rtlpriv,
+-				   get_desc_addr_fr_q_idx(q_idx));
+-	current_tx_read_point = (u16)((tmp_4byte >> 16) & 0x0fff);
+-	current_tx_write_point = (u16)((tmp_4byte) & 0x0fff);
+-
+-	point_diff = ((current_tx_read_point > current_tx_write_point) ?
+-		      (current_tx_read_point - current_tx_write_point) :
+-		      (TX_DESC_NUM_92E - current_tx_write_point +
+-		       current_tx_read_point));
+-
+-	rtlpci->tx_ring[q_idx].avl_desc = point_diff;
+-}
+-
+ void rtl92ee_pre_fill_tx_bd_desc(struct ieee80211_hw *hw,
+ 				 u8 *tx_bd_desc, u8 *desc, u8 queue_index,
+ 				 struct sk_buff *skb, dma_addr_t addr)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
+index 6f9be1c..4426c49 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
+@@ -829,7 +829,6 @@ void rtl92ee_rx_check_dma_ok(struct ieee80211_hw *hw, u8 *header_desc,
+ 			     u8 queue_index);
+ u16	rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw,
+ 					  u8 queue_index);
+-void rtl92ee_get_available_desc(struct ieee80211_hw *hw, u8 queue_index);
+ void rtl92ee_pre_fill_tx_bd_desc(struct ieee80211_hw *hw,
+ 				 u8 *tx_bd_desc, u8 *desc, u8 queue_index,
+ 				 struct sk_buff *skb, dma_addr_t addr);
 -- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+1.7.10.4
+
