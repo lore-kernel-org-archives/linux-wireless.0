@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:49163 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbaLaKU3 (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:42253 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751090AbaLUP15 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 05:20:29 -0500
-Received: by mail-wi0-f175.google.com with SMTP id l15so25254289wiw.2
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 02:20:28 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, pizza@shaftnet.org
-Subject: [RFT 3/3] cw1200: use mac80211 to resize outgoing frames for protected
-Date: Wed, 31 Dec 2014 11:20:25 +0100
-Message-ID: <52607462.yl7ixH72Rq@debian64> (sfid-20141231_112049_763510_29D47268)
-In-Reply-To: <c31517e669693fceff192e510891356cd9ab795e.1420019654.git.chunkeey@googlemail.com>
-References: <c31517e669693fceff192e510891356cd9ab795e.1420019654.git.chunkeey@googlemail.com>
+	Sun, 21 Dec 2014 10:27:57 -0500
+Received: by mail-ig0-f170.google.com with SMTP id r2so4269285igi.5
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Dec 2014 07:27:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <5496D6F6.6050001@gmail.com>
+References: <1419168328-6114-1-git-send-email-eliad@wizery.com>
+	<5496D6F6.6050001@gmail.com>
+Date: Sun, 21 Dec 2014 17:27:56 +0200
+Message-ID: <CAB3XZEeQJs7pye+SBr-s09gO8crqkbVWJndVKx836QGQcrjKDQ@mail.gmail.com> (sfid-20141221_163241_093072_9DACC0AA)
+Subject: Re: [PATCH] mac80211: fix dot11MulticastTransmittedFrameCount tested address
+From: Eliad Peller <eliad@wizery.com>
+To: Fred Chou <fred.chou.nd@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "mac80211: add feature flag to enable resizing of
-outgoing frames for encryption"  introduced a feature  flag
-which has to be set for cw1200 to re-enable resizing of
-outgoing frames for hardware-offloaded CCMP connections.
+On Sun, Dec 21, 2014 at 4:19 PM, Fred Chou <fred.chou.nd@gmail.com> wrote:
+> On 21/12/2014 9:25 PM, Eliad Peller wrote:
+>> dot11MulticastTransmittedFrameCount should be updated according
+>> to the DA, which might be different from hdr1.
+>
+> Shouldn't address 1 be used to determine whether the MPDU is multicast?
+> From Std-2012 definition of multicast: "When applied to a MAC protocol
+> data unit (MPDU), it is an MPDU with a group address in the Address 1
+> field."
+>
+good point. i guess it depends on the meaning of
+dot11MulticastTransmittedFrameCount -
+multicast frames sent by sta are not multicast frames per se (as they
+are sent directly to the AP), but they are destined to multicast
+group.
 
-Cc: Solomon Peachy <pizza@shaftnet.org>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/net/wireless/cw1200/main.c | 1 +
- 1 file changed, 1 insertion(+)
+i tried understanding the meaning of this MIB from here (as i couldn't
+find clear definition in the spec):
+http://tools.cisco.com/Support/SNMP/do/BrowseOID.do?local=en&translate=Translate&objectInput=dot11MulticastTransmittedFrameCount
 
-diff --git a/drivers/net/wireless/cw1200/main.c b/drivers/net/wireless/cw1200/main.c
-index 3e78cc3..69c1f51 100644
---- a/drivers/net/wireless/cw1200/main.c
-+++ b/drivers/net/wireless/cw1200/main.c
-@@ -281,6 +281,7 @@ static struct ieee80211_hw *cw1200_init_common(const u8 *macaddr,
- 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		    IEEE80211_HW_SUPPORTS_PS |
- 		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
-+		    IEEE80211_HW_TAILROOM_CRYPTO |
- 		    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		    IEEE80211_HW_SUPPORTS_UAPSD |
- 		    IEEE80211_HW_CONNECTION_MONITOR |
--- 
-2.1.4
+where it seems to be similar (IIUC) to the way i interpreted it, but i
+might got it wrong :)
 
+Eliad.
