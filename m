@@ -1,115 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24108 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751830AbaL3OTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:19:52 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/33] iwlwifi: mvm: change SMEM dump to general purpose memory dump
-Date: Tue, 30 Dec 2014 16:18:48 +0200
-Message-Id: <1419949148-24046-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154350_661081_39FEE3A4)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:45142 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020AbaLUKMn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2014 05:12:43 -0500
+Message-ID: <54969D18.3060000@broadcom.com> (sfid-20141221_111316_811129_C0DCE7F1)
+Date: Sun, 21 Dec 2014 11:12:40 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Michael Tokarev <mjt@tls.msk.ru>
+CC: Maximilian Engelhardt <maxi@daemonizer.de>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru> <546CD94D.9060509@broadcom.com> <546CF66A.3000207@msgid.tls.msk.ru> <546D04EE.1030200@msgid.tls.msk.ru> <5471AC29.6040009@broadcom.com> <5475A2DC.80502@msgid.tls.msk.ru> <547B07CF.90501@broadcom.com> <547E31BD.8090302@msgid.tls.msk.ru> <547F0575.7010104@broadcom.com> <549062FE.2000808@broadcom.com> <549699D9.2060106@msgid.tls.msk.ru>
+In-Reply-To: <549699D9.2060106@msgid.tls.msk.ru>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of adding a dump type for each type of memory, change
-the SMEM type to be a general purpose memory dump. Add the
-type of the memory and its offset in the device in the dump
-itself. This will allow an external parser to know where
-this memory came from.
+On 12/21/14 10:58, Michael Tokarev wrote:
+> 16.12.2014 19:51, Arend van Spriel wrote:
+>
+>> Hmm. The function brcms_btc_ecicoex_enab() is calling itself. Please remove that call as it causes endless recursion and eventually reboot.
+>
+> Ok, that was easy.  Now it loads, but wifi link still
+> does not work, stalling as before.  What we're looking
+> at now?
 
-Note that since this type isn't really in use yet, this is
-not a real problem.
+The patch is just to provide me with extra bt-coex related information 
+in the kernel log. So if you can provide that to me I have to info 
+needed to look in the proprietary code base to determine what is missing.
 
-Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 21 +++++++++++++++++++--
- drivers/net/wireless/iwlwifi/mvm/mac80211.c      | 14 ++++++++++----
- 2 files changed, 29 insertions(+), 6 deletions(-)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-index c6a81a7..c0fe82c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-@@ -82,7 +82,7 @@
-  * @IWL_FW_ERROR_DUMP_PRPH: range of periphery registers - there can be several
-  *	sections like this in a single file.
-  * @IWL_FW_ERROR_DUMP_FH_REGS: range of FH registers
-- * @IWL_FW_ERROR_DUMP_SMEM:
-+ * @IWL_FW_ERROR_DUMP_MEM: chunk of memory
-  */
- enum iwl_fw_error_dump_type {
- 	IWL_FW_ERROR_DUMP_SRAM = 0,
-@@ -94,7 +94,7 @@ enum iwl_fw_error_dump_type {
- 	IWL_FW_ERROR_DUMP_PRPH = 6,
- 	IWL_FW_ERROR_DUMP_TXF = 7,
- 	IWL_FW_ERROR_DUMP_FH_REGS = 8,
--	IWL_FW_ERROR_DUMP_SMEM = 9,
-+	IWL_FW_ERROR_DUMP_MEM = 9,
- 
- 	IWL_FW_ERROR_DUMP_MAX,
- };
-@@ -182,6 +182,23 @@ struct iwl_fw_error_dump_prph {
- 	__le32 data[];
- };
- 
-+enum iwl_fw_error_dump_mem_type {
-+	IWL_FW_ERROR_DUMP_MEM_SRAM,
-+	IWL_FW_ERROR_DUMP_MEM_SMEM,
-+};
-+
-+/**
-+ * struct iwl_fw_error_dump_mem - chunk of memory
-+ * @type: %enum iwl_fw_error_dump_mem_type
-+ * @offset: the offset from which the memory was read
-+ * @data: the content of the memory
-+ */
-+struct iwl_fw_error_dump_mem {
-+	__le32 type;
-+	__le32 offset;
-+	u8 data[];
-+};
-+
- /**
-  * iwl_fw_error_next_data - advance fw error dump data pointer
-  * @data: previous data block
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index d5d1cda..e24de97 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -815,7 +815,8 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 
- 	/* Make room for the SMEM, if it exists */
- 	if (smem_len)
--		file_len += sizeof(*dump_data) + smem_len;
-+		file_len += sizeof(*dump_data) +
-+			sizeof(struct iwl_fw_error_dump_mem) + smem_len;
- 
- 	dump_file = vzalloc(file_len);
- 	if (!dump_file) {
-@@ -868,11 +869,16 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 				 sram_len);
- 
- 	if (smem_len) {
-+		struct iwl_fw_error_dump_mem *dump_mem;
-+
- 		dump_data = iwl_fw_error_next_data(dump_data);
--		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_SMEM);
--		dump_data->len = cpu_to_le32(smem_len);
-+		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
-+		dump_data->len = cpu_to_le32(smem_len + sizeof(*dump_mem));
-+		dump_mem = (void *)dump_data->data;
-+		dump_mem->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM_SMEM);
-+		dump_mem->offset = cpu_to_le32(mvm->cfg->smem_offset);
- 		iwl_trans_read_mem_bytes(mvm->trans, mvm->cfg->smem_offset,
--					 dump_data->data, smem_len);
-+					 dump_mem->data, smem_len);
- 	}
- 
- 	fw_error_dump->trans_ptr = iwl_trans_dump_data(mvm->trans);
--- 
-1.9.1
+> (To have a common base, I applied this bt-coex patch to
+> 3.18.0 kernel.  I can also apply the previously mentioned
+> debugging/stats patch too).
+>
+> Thanks,
+>
+> /mjt
 
