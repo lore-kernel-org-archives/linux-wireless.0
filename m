@@ -1,107 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:28554 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752013AbaLSG4s (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:40357 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572AbaLUAqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 01:56:48 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 6/8] ath10k: add support to send addba request
-Date: Fri, 19 Dec 2014 12:24:57 +0530
-Message-ID: <1418972099-5296-7-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141219_075651_161070_A57000A8)
-In-Reply-To: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Sat, 20 Dec 2014 19:46:14 -0500
+Message-ID: <54961852.8000403@lwfinger.net> (sfid-20141221_014643_240804_8F981216)
+Date: Sat, 20 Dec 2014 18:46:10 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8723be: phy.c:  Remove unused
+ function
+References: <1419116358-13223-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+In-Reply-To: <1419116358-13223-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This per-station debugfs entry helps to send addba request in manual
-mode. Need to pass two configuration parameters (tid, buffer size)
-as input.
+On 12/20/2014 04:59 PM, Rickard Strandqvist wrote:
+> Remove the function rtl8723be_phy_get_txpower_level() that is not used anywhere.
+>
+> This was partially found by using a static code analysis program called cppcheck.
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8723be/phy.c |   25 -------------------------
+>   drivers/net/wireless/rtlwifi/rtl8723be/phy.h |    2 --
+>   2 files changed, 27 deletions(-)
 
-To send addba,
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-echo 1 32 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
-	   stations/XX:XX:XX:XX:XX:XX/addba
+Larry
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 56 +++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index d5fca70..89e5e5a 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -81,9 +81,65 @@ static const struct file_operations fops_aggr_mode = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_dbg_sta_write_addba(struct file *file,
-+					  const char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	struct ath10k *ar = arsta->arvif->ar;
-+	u32 tid, buf_size;
-+	int ret;
-+	char buf[64];
-+
-+	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+
-+	/* make sure that buf is null terminated */
-+	buf[sizeof(buf) - 1] = '\0';
-+
-+	ret = sscanf(buf, "%u %u", &tid, &buf_size);
-+	if (ret != 2) {
-+		ath10k_warn(ar, "ex: echo <tid> <buffer size> >addba\n");
-+		return -EINVAL;
-+	}
-+
-+	/* Valid TID values are 0 through 15 */
-+	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
-+		ath10k_warn(ar, "Invalid TID %u\n", tid);
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if ((ar->state != ATH10K_STATE_ON) ||
-+	    (arsta->aggr_mode != ATH10K_DBG_AGGR_MODE_MANUAL)) {
-+		ret = count;
-+		goto out;
-+	}
-+
-+	ret = ath10k_wmi_addba_send(ar, arsta->arvif->vdev_id, sta->addr,
-+				    tid, buf_size);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to send addba request: vdev_id %u peer %pM tid %u buf_size %u\n",
-+			    arsta->arvif->vdev_id, sta->addr, tid, buf_size);
-+	}
-+
-+	ret = count;
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations fops_addba = {
-+	.write = ath10k_dbg_sta_write_addba,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
- 	debugfs_create_file("aggr_mode", S_IRUGO | S_IWUSR, dir, sta,
- 			    &fops_aggr_mode);
-+	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
- }
--- 
-2.2.0
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
+> index 20dcc25..b7b73cb 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/phy.c
+> @@ -874,31 +874,6 @@ void rtl8723be_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw)
+>   		  ROFDM0_RXDETECTOR3, rtlphy->framesync);
+>   }
+>
+> -void rtl8723be_phy_get_txpower_level(struct ieee80211_hw *hw, long *powerlevel)
+> -{
+> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> -	struct rtl_phy *rtlphy = &rtlpriv->phy;
+> -	u8 txpwr_level;
+> -	long txpwr_dbm;
+> -
+> -	txpwr_level = rtlphy->cur_cck_txpwridx;
+> -	txpwr_dbm = rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_B,
+> -						 txpwr_level);
+> -	txpwr_level = rtlphy->cur_ofdm24g_txpwridx;
+> -	if (rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_G, txpwr_level) >
+> -	    txpwr_dbm)
+> -		txpwr_dbm =
+> -		    rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_G,
+> -						 txpwr_level);
+> -	txpwr_level = rtlphy->cur_ofdm24g_txpwridx;
+> -	if (rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_N_24G,
+> -					 txpwr_level) > txpwr_dbm)
+> -		txpwr_dbm =
+> -		    rtl8723_phy_txpwr_idx_to_dbm(hw, WIRELESS_MODE_N_24G,
+> -						 txpwr_level);
+> -	*powerlevel = txpwr_dbm;
+> -}
+> -
+>   static u8 _rtl8723be_phy_get_ratesection_intxpower_byrate(enum radio_path path,
+>   							  u8 rate)
+>   {
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/phy.h b/drivers/net/wireless/rtlwifi/rtl8723be/phy.h
+> index 6339738..9021d47 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8723be/phy.h
+> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/phy.h
+> @@ -114,8 +114,6 @@ bool rtl8723be_phy_mac_config(struct ieee80211_hw *hw);
+>   bool rtl8723be_phy_bb_config(struct ieee80211_hw *hw);
+>   bool rtl8723be_phy_rf_config(struct ieee80211_hw *hw);
+>   void rtl8723be_phy_get_hw_reg_originalvalue(struct ieee80211_hw *hw);
+> -void rtl8723be_phy_get_txpower_level(struct ieee80211_hw *hw,
+> -				     long *powerlevel);
+>   void rtl8723be_phy_set_txpower_level(struct ieee80211_hw *hw,
+>   				     u8 channel);
+>   void rtl8723be_phy_scan_operation_backup(struct ieee80211_hw *hw,
+>
 
