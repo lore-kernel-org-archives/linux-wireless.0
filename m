@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:28975 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbaLCUFi (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:58363 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752972AbaLUM5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 15:05:38 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 1/7] brcmfmac: Fix bitmap malloc bug in msgbuf.
-Date: Wed, 3 Dec 2014 21:05:27 +0100
-Message-ID: <1417637133-6966-2-git-send-email-arend@broadcom.com> (sfid-20141203_210543_187922_E1F16984)
-In-Reply-To: <1417637133-6966-1-git-send-email-arend@broadcom.com>
-References: <1417637133-6966-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 21 Dec 2014 07:57:15 -0500
+Received: by mail-wi0-f181.google.com with SMTP id r20so5718809wiv.14
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Dec 2014 04:57:14 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/2 bug fix] staging: vt6655: Fix loss of distant/weak access points on channel change.
+Date: Sun, 21 Dec 2014 12:56:35 +0000
+Message-Id: <1419166595-3096-2-git-send-email-tvboxspy@gmail.com> (sfid-20141221_135720_498332_AB13BF23)
+In-Reply-To: <1419166595-3096-1-git-send-email-tvboxspy@gmail.com>
+References: <1419166595-3096-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+If the asssocated access point is strong byBBVGACurrent will be adjusted
+accordingly.
 
-Cc: stable@vger.kernel.org # v3.17, v3.18
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Users will nolonger see distant access points without taking down interface.
+
+When changing channel reset byBBVGACurrent back to pDevice->abyBBVGA[0] for
+max sensitivity.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/vt6655/channel.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-index 9f783db..5b0b70f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
-@@ -1354,6 +1354,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	}
- 	INIT_WORK(&msgbuf->txflow_work, brcmf_msgbuf_txflow_worker);
- 	count = BITS_TO_LONGS(if_msgbuf->nrof_flowrings);
-+	count = count * sizeof(unsigned long);
- 	msgbuf->flow_map = kzalloc(count, GFP_KERNEL);
- 	if (!msgbuf->flow_map)
- 		goto fail;
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index c8f739d..70f8705 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -182,6 +182,14 @@ bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel)
+ 	if (pDevice->byCurrentCh == uConnectionChannel)
+ 		return bResult;
+ 
++	/* Set VGA to max sensitivity */
++	if (pDevice->bUpdateBBVGA &&
++	    pDevice->byBBVGACurrent != pDevice->abyBBVGA[0]) {
++		pDevice->byBBVGACurrent = pDevice->abyBBVGA[0];
++
++		BBvSetVGAGainOffset(pDevice, pDevice->byBBVGACurrent);
++	}
++
+ 	/* clear NAV */
+ 	MACvRegBitsOn(pDevice->PortOffset, MAC_REG_MACCR, MACCR_CLRNAV);
+ 
 -- 
-1.9.1
+2.1.0
 
