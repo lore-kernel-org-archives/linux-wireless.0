@@ -1,95 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:43941
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750999AbaLQL0E (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:37377 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129AbaLUUOH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 06:26:04 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3.19] mac80211: minstrel: reduce size of struct minstrel_rate_stats
-Date: Wed, 17 Dec 2014 12:26:00 +0100
-Message-Id: <1418815560-52346-1-git-send-email-nbd@openwrt.org> (sfid-20141217_122717_325651_7F1B60A3)
+	Sun, 21 Dec 2014 15:14:07 -0500
+Received: by mail-ig0-f180.google.com with SMTP id h15so3098532igd.13
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Dec 2014 12:14:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <549725D1.2090402@broadcom.com>
+References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
+	<1419162233-19492-4-git-send-email-arend@broadcom.com>
+	<B1CB9465-1353-411C-9B3C-42DEFBFDBBE0@holtmann.org>
+	<549725D1.2090402@broadcom.com>
+Date: Sun, 21 Dec 2014 21:14:06 +0100
+Message-ID: <CACna6rxjKUeDVGXGB5UzgOw1WyQKE+LYmtxJvTLW+H1fC7-13Q@mail.gmail.com> (sfid-20141221_211413_547578_CC7447F8)
+Subject: Re: [PATCH 03/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Rob Herring <rob.herring@linaro.org>,
+	John Stultz <john.stultz@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On minstrel_ht, the size of the per-sta struct is almost 18k, making it
-an order-3 allocation.
-A few fields inside the per-rate statistics are bigger than they need to
-be. This patch reduces the size enough to cut down the per-sta struct to
-about 13k (order-2 allocation).
+On 21 December 2014 at 20:56, Arend van Spriel <arend@broadcom.com> wrote:
+> On 12/21/14 18:50, Marcel Holtmann wrote:
+>>
+>> Hi Arend,
+>>
+>>> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+>>> index 0f01fe0..61f8318 100644
+>>> --- a/include/linux/mmc/sdio_ids.h
+>>> +++ b/include/linux/mmc/sdio_ids.h
+>>> @@ -29,6 +29,8 @@
+>>> #define SDIO_DEVICE_ID_BROADCOM_4329            0x4329
+>>> #define SDIO_DEVICE_ID_BROADCOM_4330            0x4330
+>>> #define SDIO_DEVICE_ID_BROADCOM_4334            0x4334
+>>> +#define SDIO_DEVICE_ID_BROADCOM_43340          43340
+>>> +#define SDIO_DEVICE_ID_BROADCOM_43341          43341
+>>
+>>
+>> the general preference is to have these values in hex. I get the fact that
+>> they map the marketing number, but that could be just stated in a comment
+>> after the hex number.
+>
+> Will change that.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel.c |  6 +++---
- net/mac80211/rc80211_minstrel.h | 15 ++++++++-------
- 2 files changed, 11 insertions(+), 10 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index d51f6b1..7c86a00 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -263,12 +263,12 @@ static inline unsigned int
- minstrel_get_retry_count(struct minstrel_rate *mr,
- 			 struct ieee80211_tx_info *info)
- {
--	unsigned int retry = mr->adjusted_retry_count;
-+	u8 retry = mr->adjusted_retry_count;
- 
- 	if (info->control.use_rts)
--		retry = max(2U, min(mr->stats.retry_count_rtscts, retry));
-+		retry = max_t(u8, 2, min(mr->stats.retry_count_rtscts, retry));
- 	else if (info->control.use_cts_prot)
--		retry = max(2U, min(mr->retry_count_cts, retry));
-+		retry = max_t(u8, 2, min(mr->retry_count_cts, retry));
- 	return retry;
- }
- 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 97eca86..b49d663 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -33,8 +33,8 @@ minstrel_ewma(int old, int new, int weight)
- 
- struct minstrel_rate_stats {
- 	/* current / last sampling period attempts/success counters */
--	unsigned int attempts, last_attempts;
--	unsigned int success, last_success;
-+	u16 attempts, last_attempts;
-+	u16 success, last_success;
- 
- 	/* total attempts/success counters */
- 	u64 att_hist, succ_hist;
-@@ -46,8 +46,8 @@ struct minstrel_rate_stats {
- 	unsigned int cur_prob, probability;
- 
- 	/* maximum retry counts */
--	unsigned int retry_count;
--	unsigned int retry_count_rtscts;
-+	u8 retry_count;
-+	u8 retry_count_rtscts;
- 
- 	u8 sample_skipped;
- 	bool retry_updated;
-@@ -55,14 +55,15 @@ struct minstrel_rate_stats {
- 
- struct minstrel_rate {
- 	int bitrate;
--	int rix;
-+
-+	u8 rix;
-+	u8 retry_count_cts;
-+	u8 adjusted_retry_count;
- 
- 	unsigned int perfect_tx_time;
- 	unsigned int ack_time;
- 
- 	int sample_limit;
--	unsigned int retry_count_cts;
--	unsigned int adjusted_retry_count;
- 
- 	struct minstrel_rate_stats stats;
- };
--- 
-2.1.2
-
+I vote for keeping user-friendly numbers as comments :)
