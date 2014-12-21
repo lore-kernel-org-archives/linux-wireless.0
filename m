@@ -1,53 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-hk1hn0123.outbound.protection.outlook.com ([134.170.140.123]:58293
-	"EHLO APAC01-HK1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751076AbaLNCSs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2014 21:18:48 -0500
-From: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"Bob Copeland (me@bobcopeland.com)" <me@bobcopeland.com>,
-	"Thomas Pedersen (thomas@noack.us)" <thomas@noack.us>
-Subject: RE: [PATCH v4] mac80211: keep sending peer candidate events while
- in listen state
-Date: Sun, 14 Dec 2014 02:18:34 +0000
-Message-ID: <2EB4F5C65A3B8E4E92660930F4EF6B5B07548C@JPYOKXMS113.jp.sony.com> (sfid-20141214_031853_281967_DC25CD45)
-References: <2EB4F5C65A3B8E4E92660930F4EF6B5B06C981@JPYOKXMS113.jp.sony.com>
- <1418384490.2470.23.camel@sipsolutions.net>
-In-Reply-To: <1418384490.2470.23.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:5290 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753540AbaLULoC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2014 06:44:02 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 04/10] brcmfmac: get rid of duplicate SDIO device identifiers
+Date: Sun, 21 Dec 2014 12:43:47 +0100
+Message-ID: <1419162233-19492-5-git-send-email-arend@broadcom.com> (sfid-20141221_124411_804461_84AC65C5)
+In-Reply-To: <1419162233-19492-1-git-send-email-arend@broadcom.com>
+References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCkkgY2hhbmdlZCB0aGUgcGF0Y2ggdGl0bGUgZnJvbSBWMy4gVGhlIHBy
-ZXZpb3VzIHBhdGNoIHRpdGxlIHdhcyANCiJtYWM4MDIxMTogU2VuZCBwZWVyaW5nIG9wZW4gZnJh
-bWUgYWdhaW4gaWYgYmVhY29uIGZyb20gbGlzdGVuIHN0YXRlIHBlZXIgaXMgcmVjZWl2ZWQiLg0K
-DQpUaGUgY29tbWVudHMgZnJvbSB0aGUgbWVzaCBmb3JrcyBhcmUgYXMgZm9sbG93cy4NCmh0dHA6
-Ly9tYXJjLmluZm8vP2w9bGludXgtd2lyZWxlc3MmbT0xNDE1OTAzMDkyMDg2NjImdz0yDQpodHRw
-Oi8vbWFyYy5pbmZvLz9sPWxpbnV4LXdpcmVsZXNzJm09MTQxNjIzMTQ2MDAzMzQxJnc9Mg0KDQoN
-Ci0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86
-am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBGcmlkYXksIERlY2VtYmVyIDEyLCAy
-MDE0IDg6NDIgUE0NClRvOiBOaXNoaWthd2EsIEtlbnpvaA0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZn
-ZXIua2VybmVsLm9yZzsgZGV2ZWxAbGlzdHMub3BlbjgwMjExcy5vcmc7IEJvYiBDb3BlbGFuZCAo
-bWVAYm9iY29wZWxhbmQuY29tKTsgVGhvbWFzIFBlZGVyc2VuICh0aG9tYXNAbm9hY2sudXMpDQpT
-dWJqZWN0OiBSZTogW1BBVENIIHY0XSBtYWM4MDIxMToga2VlcCBzZW5kaW5nIHBlZXIgY2FuZGlk
-YXRlIGV2ZW50cyB3aGlsZSBpbiBsaXN0ZW4gc3RhdGUNCg0KT24gRnJpLCAyMDE0LTExLTIxIGF0
-IDExOjI0ICswMDAwLCBOaXNoaWthd2EsIEtlbnpvaCB3cm90ZToNCj4gSW5zdGVhZCBvZiBzZW5k
-aW5nIHBlZXIgY2FuZGlkYXRlIGV2ZW50cyBqdXN0IG9uY2UsIHNlbmQgdGhlbSBhcyBsb25nIA0K
-PiBhcyB0aGUgcGVlciByZW1haW5zIGluIHRoZSBMSVNURU4gc3RhdGUgaW4gdGhlIHBlZXJpbmcg
-c3RhdGUgbWFjaGluZSwgDQo+IHdoZW4gdXNlcnNwYWNlIGlzIGltcGxlbWVudGluZyB0aGUgcGVl
-cmluZyBtYW5hZ2VyLg0KPiBVc2Vyc3BhY2UgbWF5IHNpbGVuY2UgdGhlIGV2ZW50cyBmcm9tIGEg
-cGVlciBieSBwcm9ncmVzc2luZyB0aGUgc3RhdGUgDQo+IG1hY2hpbmUgb3IgYnkgc2V0dGluZyB0
-aGUgbGluayBzdGF0ZSB0byBCTE9DS0VELg0KPiANCj4gRml4ZXMgdGhlIHByb2JsZW0gdGhhdCBh
-IG1lc2ggcGVlcmluZyBwcm9jZXNzIHdvbid0IGJlIGZpcmVkIGFnYWluIA0KPiBhZnRlciB0aGUg
-cHJldmlvdXMgZmlyc3QgcGVlcmluZyB0cmlhbCBmYWlscyBkdWUgdG8gbGlrZSBhaXIgDQo+IHBy
-b3BhZ2F0aW9uIGVycm9yIGlmIHRoZSBwZWVyaW5nIGlzIG1hbmFnZWQgYnkgdXNlciBzcGFjZSBz
-dWNoIGFzIA0KPiB3cGFfc3VwcGxpY2FudC4NCj4gDQo+IFRoaXMgcGF0Y2ggd29ya3Mgd2l0aCBh
-bm90aGVyIHBhdGNoIGZvciB3cGFfc3VwcGxpY2FudCBkZXNjcmliZWQgaGVyZSANCj4gd2hpY2gg
-ZmlyZXMgYSBwZWVyaW5nIHByb2Nlc3MgYWdhaW4gdHJpZ2dlcmVkIGJ5IHRoZSBub3RpY2UgZnJv
-bSANCj4ga2VybmVsLg0KPiBodHRwOi8vbGlzdHMuc2htb28uY29tL3BpcGVybWFpbC9ob3N0YXAv
-MjAxNC1Ob3ZlbWJlci8wMzEyMzUuaHRtbA0KDQpDYW4gYW55IG9mIHRoZSBtZXNoIGZvbGtzIGNv
-bW1lbnQgb24gdGhpcz8NCg0Kam9oYW5uZXMNCg0K
+Instead of defining SDIO device identifier in brcm80211 code use
+the defintions in linux/mmc/sdio_ids.h directly.
+
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   | 22 +++++++++++-----------
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c     |  2 +-
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   | 13 -------------
+ 3 files changed, 12 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 7cf42e56..eaead8b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -996,20 +996,20 @@ out:
+ }
+ 
+ #define BRCMF_SDIO_DEVICE(dev_id)	\
+-	{SDIO_DEVICE(BRCM_SDIO_VENDOR_ID_BROADCOM, dev_id)}
++	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, dev_id)}
+ 
+ /* devices we support, null terminated */
+ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43143_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43241_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4329_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4330_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4334_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43340_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43341_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43362_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4335_4339_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4354_DEVICE_ID),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43143),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43241),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4329),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4330),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4334),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43340),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43341),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43362),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4335_4339),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
+ 	{ /* end: all zeroes */ }
+ };
+ MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 551da35..99a3776 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -3816,7 +3816,7 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
+ 	u32 val, rev;
+ 
+ 	val = brcmf_sdiod_regrl(sdiodev, addr, NULL);
+-	if (sdiodev->func[0]->device == BRCM_SDIO_4335_4339_DEVICE_ID &&
++	if (sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 &&
+ 	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
+ 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
+ 		if (rev >= 2) {
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index 00215ef..2124a17 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -22,7 +22,6 @@
+ 
+ #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
+ #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
+-#define BRCM_SDIO_VENDOR_ID_BROADCOM	SDIO_VENDOR_ID_BROADCOM
+ 
+ /* Chipcommon Core Chip IDs */
+ #define BRCM_CC_43143_CHIP_ID		43143
+@@ -46,18 +45,6 @@
+ #define BRCM_CC_43570_CHIP_ID		43570
+ #define BRCM_CC_43602_CHIP_ID		43602
+ 
+-/* SDIO Device IDs */
+-#define BRCM_SDIO_43143_DEVICE_ID	BRCM_CC_43143_CHIP_ID
+-#define BRCM_SDIO_43241_DEVICE_ID	BRCM_CC_43241_CHIP_ID
+-#define BRCM_SDIO_4329_DEVICE_ID	BRCM_CC_4329_CHIP_ID
+-#define BRCM_SDIO_4330_DEVICE_ID	BRCM_CC_4330_CHIP_ID
+-#define BRCM_SDIO_4334_DEVICE_ID	BRCM_CC_4334_CHIP_ID
+-#define BRCM_SDIO_43340_DEVICE_ID	BRCM_CC_43340_CHIP_ID
+-#define BRCM_SDIO_43341_DEVICE_ID	43341
+-#define BRCM_SDIO_43362_DEVICE_ID	BRCM_CC_43362_CHIP_ID
+-#define BRCM_SDIO_4335_4339_DEVICE_ID	BRCM_CC_4335_CHIP_ID
+-#define BRCM_SDIO_4354_DEVICE_ID	BRCM_CC_4354_CHIP_ID
+-
+ /* USB Device IDs */
+ #define BRCM_USB_43143_DEVICE_ID	0xbd1e
+ #define BRCM_USB_43236_DEVICE_ID	0xbd17
+-- 
+1.9.1
+
