@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61402 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537AbaLCMnh (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44772 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751268AbaLURPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 07:43:37 -0500
-Message-ID: <547F0575.7010104@broadcom.com> (sfid-20141203_134344_866827_1EAF630B)
-Date: Wed, 3 Dec 2014 13:43:33 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Sun, 21 Dec 2014 12:15:18 -0500
+Date: Sun, 21 Dec 2014 12:07:23 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org,
+	"David S. Miller" <davem@davemloft.net>, lwn@lwn.net
+Subject: Re: changes to Linux wireless maintenance
+Message-ID: <20141221170722.GA28648@tuxdriver.com> (sfid-20141221_181522_674427_AC27B3B0)
+References: <87388d2tbn.fsf@purkki.adurom.net>
+ <c1f3352bed1f1a2985a5111a077134a5.squirrel@www.codeaurora.org>
+ <549697F0.8090506@broadcom.com>
 MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>
-CC: Maximilian Engelhardt <maxi@daemonizer.de>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru> <546CD94D.9060509@broadcom.com> <546CF66A.3000207@msgid.tls.msk.ru> <546D04EE.1030200@msgid.tls.msk.ru> <5471AC29.6040009@broadcom.com> <5475A2DC.80502@msgid.tls.msk.ru> <547B07CF.90501@broadcom.com> <547E31BD.8090302@msgid.tls.msk.ru>
-In-Reply-To: <547E31BD.8090302@msgid.tls.msk.ru>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <549697F0.8090506@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/14 22:40, Michael Tokarev wrote:
-> 30.11.2014 15:04, Arend van Spriel wrote:
->
->> Thanks. Did not find what I was looking for, but I started working on
->> integrating btcoex related functionality. The attached patch will print
->> some info so I can focus on the required functionality for your device.
->> It is based on 3.18-rc5.
->
-> With this patch applied against 3.18-rc5, the machine instantly reboots
-> once brcmsmac module is loaded.  I'm still debugging this.
+On Sun, Dec 21, 2014 at 10:50:40AM +0100, Arend van Spriel wrote:
 
-Argh. Probably the register access I added end up in limbo land or some 
-other stupid mistake. I will double check my patch.
+> >The trees work similarly like John's wireless and wireless-next trees, the
+> >former only for important bugfixes to -rc releases and the latter for the
+> >rest going to the next release.
+> 
+> So are you dropping the wireless-testing tree? From earlier IRC discussion I
+> figured that tree was still in demand.
 
-Regards,
-Arend
+I still plan to maintain a version of wireless-testing for some amount of time.
 
-> Thanks,
->
-> /mjt
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
