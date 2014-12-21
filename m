@@ -1,40 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:59173 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750704AbaLOLzA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 06:55:00 -0500
-Message-ID: <1418644492.12873.27.camel@coelho.fi> (sfid-20141215_125504_593790_C4E97FE8)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kvalo@adurom.com,
-	pizza@shaftnet.org, Johannes Berg <johannes.berg@intel.com>
-Date: Mon, 15 Dec 2014 13:54:52 +0200
-In-Reply-To: <1418643354-5597-1-git-send-email-johannes@sipsolutions.net>
-References: <1418643354-5597-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] mac80211: move U-APSD enablement to vif flags
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:27208 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047AbaLUPDU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2014 10:03:20 -0500
+Message-ID: <5496E135.1@broadcom.com> (sfid-20141221_160330_427632_96D8DB59)
+Date: Sun, 21 Dec 2014 16:03:17 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Maximilian Engelhardt <maxi@daemonizer.de>
+CC: Michael Tokarev <mjt@tls.msk.ru>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Network Development" <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <141935691.MGh8oJCUVD@fuchs> <5496D59E.5030601@broadcom.com> <9234001.YBqfvtcJFx@fuchs>
+In-Reply-To: <9234001.YBqfvtcJFx@fuchs>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-15 at 12:35 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In order to let drivers have more dynamic U-APSD support,
-> move the enablement flag to the virtual interface driver
-> flags. This lets drivers not only set it up differently
-> for different interfaces, but also enable/disable on the
-> fly if needed.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
+On 12/21/14 15:24, Maximilian Engelhardt wrote:
+> On Sunday 21 December 2014 15:13:50 Arend van Spriel wrote:
+>> On 12/21/14 15:08, Maximilian Engelhardt wrote:
+>>> On Sunday 21 December 2014 11:12:40 Arend van Spriel wrote:
+>>>> On 12/21/14 10:58, Michael Tokarev wrote:
+>>>>> 16.12.2014 19:51, Arend van Spriel wrote:
+>>>>>> Hmm. The function brcms_btc_ecicoex_enab() is calling itself. Please
+>>>>>> remove that call as it causes endless recursion and eventually reboot.>
+>>>>>
+>>>>> Ok, that was easy.  Now it loads, but wifi link still
+>>>>> does not work, stalling as before.  What we're looking
+>>>>> at now?
+>>>>
+>>>> The patch is just to provide me with extra bt-coex related information
+>>>> in the kernel log. So if you can provide that to me I have to info
+>>>> needed to look in the proprietary code base to determine what is missing.
+>>>>
+>>>> Regards,
+>>>> Arend
+>>>
+>>> Hi Arend,
+>>
+>>> here is the output from my card:
+>> Thanks. It shows you have have the same bt-coex version as Michael. I am
+>> not familiar with bluetooth side of things. Are you both using bluetooth
+>> on 4313?
+>>
+>> Regards,
+>> Arend
+>
+> I don't know. I think I have Bluetooth somehow enabled but I'm not really
+> using it. I definitely don't have any Bluetooth devices connected. I could try
+> to unload/disable Bluetooth it to see if it makes any difference.
 
-Looks fine to me.
+That would be useful to know.
 
-For the wlcore and wl1251 parts:
+Thanks,
+Arend
 
-Acked-by: Luciano Coelho <luca@coelho.fi>
-
---
-Luca.
+> Greetings,
+> Maxi
+>
 
