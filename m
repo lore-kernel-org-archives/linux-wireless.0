@@ -1,166 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:59998 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977AbaL3QTK (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:47598 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129AbaLUXrT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 11:19:10 -0500
-Message-ID: <54A2D07B.607@broadcom.com> (sfid-20141230_171930_141225_45E945A7)
-Date: Tue, 30 Dec 2014 17:19:07 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
+	Sun, 21 Dec 2014 18:47:19 -0500
+Date: Sun, 21 Dec 2014 17:47:14 -0600
+From: Eric Biggers <ebiggers3@gmail.com>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Tuc at Beach House <tuctboh@gmail.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: IBSS or Hostapd, but not both
-References: <CAM-0sLw-N1J535xWE=XG-Pn3yi7YBUFhbBKJE0pmEUy9tKDtsA@mail.gmail.com> <54A2C865.8020203@lwfinger.net>
-In-Reply-To: <54A2C865.8020203@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUG] rtl8192se: panic accessing unmapped memory in skb
+Message-ID: <20141221234714.GA30675@zzz> (sfid-20141222_004754_340550_763CD790)
+References: <20141221172516.GA12784@zzz>
+ <5497516A.2020400@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5497516A.2020400@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/30/14 16:44, Larry Finger wrote:
-> On 12/29/2014 01:17 PM, Tuc at Beach House wrote:
->> Hi,
->>
->> Raspberry Pi Model B+, Linux blue 3.12.28+ #709 PREEMPT Mon Sep 8
->> 15:28:00
->> BST 2014 armv6l GNU/Linux, hostapd v2.3 (defconfig), Ralink using
->> rt2800usb
->> driver on either a Wi-Pi or Panda Ultra Wireless N USB Adapter.
->>
->> What I'm trying to accomplish is using a single interface to be an AP on
->> one SSID, and ad-hoc on another SSID. The problem is that I can either do
->> one, or the other, but not both...
->>
->> root@blue:~# iwconfig wlan1
->> wlan1 IEEE 802.11bgn ESSID:off/any
->> Mode:Managed Access Point: Not-Associated Tx-Power=0 dBm
->> Retry long limit:7 RTS thr:off Fragment thr:off
->> Encryption key:off
->> Power Management:on
->>
->> So if I set up ad-hoc, works fine :
->>
->> root@blue:~# iw dev wlan1 interface add wlan10 type ibss
->> root@blue:~# iwconfig wlan10
->> wlan10 IEEE 802.11bgn ESSID:off/any
->> Mode:Ad-Hoc Cell: Not-Associated Tx-Power=0 dBm
->> Retry long limit:7 RTS thr:off Fragment thr:off
->> Encryption key:off
->> Power Management:on
->>
->> root@blue:~# iwconfig wlan10 essid WEDDING
->> root@blue:~# ifconfig wlan10 10.4.4.8 netmask 255.255.255.0
->> root@blue:~# ping -c2 new
->> PING new.wedding.ramolaandscott,com (10.4.4.6) 56(84) bytes of data.
->> 64 bytes from new.wedding.ramolaandscott,com (10.4.4.6): icmp_req=1
->> ttl=64
->> time=3.51 ms
->> 64 bytes from new.wedding.ramolaandscott,com (10.4.4.6): icmp_req=2
->> ttl=64
->> time=1.02 ms
->>
->> --- new.wedding.ramolaandscott,com ping statistics ---
->> 2 packets transmitted, 2 received, 0% packet loss, time 1001ms
->> rtt min/avg/max/mdev = 1.024/2.268/3.512/1.244 ms
->>
->>
->> Now invoke hostapd with the following /etc/hostapd/hostapd.conf :
->>
->> root@blue:~# cat /etc/hostapd/hostapd.conf
->> interface=wlan1
->> ssid=FREE
->> hw_mode=g
->> channel=1
->> root@blue:~# /usr/local/bin/hostapd -dd /etc/hostapd/hostapd.conf
->> (Please see http://pastebin.com/cjqukwyH)
->>
->>
->> But if I reboot and try backwards :
->>
->> root@blue:~# hostapd -dd /etc/hostapd/hostapd.conf
->> (Please see http://pastebin.com/Tdc5dz81)
->>
->>
->> And its fine, but then :
->>
->> root@blue:~# iw dev wlan1 interface add wlan10 type ibss
->> root@blue:~# iwconfig wlan10
->> wlan10 IEEE 802.11bgn ESSID:off/any
->> Mode:Ad-Hoc Cell: Not-Associated Tx-Power=20 dBm
->> Retry long limit:7 RTS thr:off Fragment thr:off
->> Encryption key:off
->> Power Management:on
->>
->> root@blue:~# iwconfig wlan10 essid WEDDING
->> root@blue:~# ifconfig wlan10
->> wlan10 Link encap:Ethernet HWaddr 00:c1:41:07:07:d1
->> BROADCAST MULTICAST MTU:1500 Metric:1
->> RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->> TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->> collisions:0 txqueuelen:1000
->> RX bytes:0 (0.0 B) TX bytes:0 (0.0 B)
->>
->> root@blue:~# ifconfig wlan10 10.4.4.8 netmask 255.255.255.0
->> SIOCSIFFLAGS: Device or resource busy
->> root@blue:~# ifconfig wlan10
->> wlan10 Link encap:Ethernet HWaddr 00:c1:41:07:07:d1
->> inet addr:10.4.4.8 Bcast:10.4.4.255 Mask:255.255.255.0
->> BROADCAST MULTICAST MTU:1500 Metric:1
->> RX packets:0 errors:0 dropped:0 overruns:0 frame:0
->> TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
->> collisions:0 txqueuelen:1000
->> RX bytes:0 (0.0 B) TX bytes:0 (0.0 B)
->>
->> root@blue:~# ping -c2 new
->> PING new.wedding.ramolaandscott,com (10.4.4.6) 56(84) bytes of data.
->>
->> --- new.wedding.ramolaandscott,com ping statistics ---
->> 2 packets transmitted, 0 received, 100% packet loss, time 1001ms
->>
->>
->>
->> Any idea where to look or what to do to get them to work and play
->> together?
->
-> I am not an expert, but this sounds like a proper application of virtual
-> interfaces.
+Hi,
 
-Hi Larry,
+To get your patched version to work at all I had to update
+_rtl_pci_init_rx_ring() to account for new return value of
+_rtl_pci_init_one_rxdesc().  I will let you know if anything shows up in the
+kernel log, but I expect this is a highly sporadic problem.  The system has 4 GB
+of memory, and I used the 3.18 kernel for 10 days prior to the panic with no
+issues.  The panic occurred while upgrading system packages, so it's possible
+jhat the system was experiencing memory pressure.
 
-The thread started on the hostap mailing list [1]. I have taken part of 
-pastebin page [2]:
+I upgraded from 3.17 to 3.18 on Dec 8, so I've actually only had since then to
+notice any bugs that may have been introduced since 3.17.
 
-         Supported interface modes:
-                  * IBSS
-                  * managed
-                  * AP
-                  * AP/VLAN
-                  * WDS
-                  * monitor
-                  * mesh point
-         software interface modes (can always be added):
-                  * AP/VLAN
-                  * monitor
-         valid interface combinations:
-                  * #{ AP, mesh point } <= 8,
-                    total <= 8, #channels <= 1
+It does appear there were changes made to pci.c between 3.17 and 3.18.  It
+appears the 3.17 code will drop the incoming packet if a new skb can't be
+allocated, whereas the 3.18 code assumes a new skb can always be allocated.  The
+3.17 behavior seems more logical to me.  I don't know how either of these
+behaviors compare to other networking drivers, however.
 
-Looks to me that those interface combinations are clearly *not* valid as 
-it does list only two of the supported interface modes.
-
-Regards,
-Arend
-
-[1] http://thread.gmane.org/gmane.linux.drivers.hostap/31697/focus=31723
-[2] http://pastebin.com/RytcqXVZ
-
-> Larry
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
-
+Eric
