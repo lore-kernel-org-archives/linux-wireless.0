@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:48857 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932296AbaLIQRG (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:44904 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752675AbaLUNZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 11:17:06 -0500
-Received: by mail-ig0-f175.google.com with SMTP id h15so4803601igd.8
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Dec 2014 08:17:05 -0800 (PST)
-Date: Tue, 9 Dec 2014 11:14:05 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: deepak kumar Pradhan <hydipu@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Mesh hwmp mpath service causes ping packet drop
-Message-ID: <20141209161405.GJ28394@localhost> (sfid-20141209_171714_323530_F1B691F3)
-References: <CAGKQeFifW2FGKUh_i0h4Nkw22biNLYz1T=bKZW2ZgrkFsp9aTQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGKQeFifW2FGKUh_i0h4Nkw22biNLYz1T=bKZW2ZgrkFsp9aTQ@mail.gmail.com>
+	Sun, 21 Dec 2014 08:25:34 -0500
+Received: by mail-wi0-f174.google.com with SMTP id h11so5885928wiw.7
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Dec 2014 05:25:32 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: fix dot11MulticastTransmittedFrameCount tested address
+Date: Sun, 21 Dec 2014 15:25:28 +0200
+Message-Id: <1419168328-6114-1-git-send-email-eliad@wizery.com> (sfid-20141221_142537_501373_27D66430)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 02:00:52PM +0530, deepak kumar Pradhan wrote:
-> Hi,
-> 
-> I am using mesh network. Kernel ver 3.12.2.
-> Scenario: When 2 wired and 1 wireless boards are forming mesh network,
-> packets are dropped
-> because of 'iw mesh0 mpath dump" changed entry.
-> This case no Issue:
-> // Own mac X:X:X:14:17:AD  -------> A     wireless
->                   X:X:X:10:3f:ad    -------> B     wired
->                   X:X:X:14:18:01    -------> C    wired
-> # iw mesh0 mpath dump
-> DEST ADDR         NEXT HOP          IFACE
-> X:X:X:10:3f:ad    X:X:X:10:3f:ad   mesh0         //All traffic travels
-> through this mesh peer
-> X:X:X:14:18:01   X:X:X:14:18:01  mesh0
->  # iw mesh0 mpath dump        //Changed packet is dropped because of mpath entry
-> DEST ADDR         NEXT HOP        IFACE
-> X:X:X:10:3f:ad    X:X:X:14:18:01     mesh0
-> X:X:X:14:18:01   X:X:X:14:18:01     mesh0
+dot11MulticastTransmittedFrameCount should be updated according
+to the DA, which might be different from hdr1.
 
-Are both B and C wired _and_ wireless, and A is wireless only?  So B and C
-are mesh portals, to the same wired network?
+(Checking hdr1 results in the counter being 0 in case of station,
+as TODS data frames use hdr1 for the bssid address)
 
-If that's the case you need to enable STP on the bridges.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/status.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index d64037c..7d4e930 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -862,7 +862,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	    (info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED)) {
+ 		if (ieee80211_is_first_frag(hdr->seq_ctrl)) {
+ 			local->dot11TransmittedFrameCount++;
+-			if (is_multicast_ether_addr(hdr->addr1))
++			if (is_multicast_ether_addr(ieee80211_get_DA(hdr)))
+ 				local->dot11MulticastTransmittedFrameCount++;
+ 			if (retry_count > 0)
+ 				local->dot11RetryCount++;
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.8.5.1.109.g3d252a9
+
