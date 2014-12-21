@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45432 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751252AbaLERit (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:34858 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752447AbaLUAV4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 12:38:49 -0500
-Date: Fri, 5 Dec 2014 17:38:39 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141205173839.GB31222@e104818-lin.cambridge.arm.com> (sfid-20141205_183906_498979_B5547645)
-References: <5481794E.4050406@broadcom.com>
- <4565667.WCBuNmaazQ@wuerfel>
- <20141205111114.GQ11285@n2100.arm.linux.org.uk>
+	Sat, 20 Dec 2014 19:21:56 -0500
+Received: by mail-lb0-f181.google.com with SMTP id l4so2386604lbv.40
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 16:21:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141205111114.GQ11285@n2100.arm.linux.org.uk>
+In-Reply-To: <1419120588-14105-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+References: <1419120588-14105-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Date: Sun, 21 Dec 2014 01:21:34 +0100
+Message-ID: <CAFo99ga9L3x0cS1kBfSx2dt2JLi1br=USBGvi9PF7=rSejCQYg@mail.gmail.com> (sfid-20141221_012231_815700_DB420EE7)
+Subject: Re: [PATCH v2] net: wireless: brcm80211: brcmsmac: phy: phy_cmn.c:
+ Remove some unused functions
+To: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	Peter Senna Tschudin <peter.senna@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 05, 2014 at 11:11:14AM +0000, Russell King - ARM Linux wrote:
-> In any case, wouldn't using a u64 type for "address" be better - isn't
-> "long long" 128-bit on 64-bit architectures?
+2014-12-21 1:09 GMT+01:00 Rickard Strandqvist
+<rickard_strandqvist@spectrumdigital.se>:
+> Removes some functions that are not used anywhere:
+> wlc_phy_edcrs_lock() wlc_phy_txpower_ipa_ison() wlc_phy_upd_rssi_offset()
+> wlc_phy_get_pwrdet_offsets() wlc_lcnphy_epa_switch() wlc_phy_stf_ssmode_get()
+> wlc_phy_stf_chain_get() write_phy_channel_reg() wlc_phy_BSSinit()
+> wlc_phy_set_deaf() wlc_phy_freqtrack_end() wlc_phy_freqtrack_start()
+> wlc_phy_noise_sample_request_external() wlc_phy_test_ison()
+> wlc_phy_txpower_hw_ctrl_set() wlc_phy_bf_preempt_enable()
+> wlc_phy_runbist_config() wlc_phy_txpwr_percent_set()
+> wlc_phy_txpower_get_target_max() wlc_radioreg_exit()
+> wlc_phy_txpower_get_target_min() wlc_phy_txpower_boardlimit_band()
+> wlc_phy_txpower_sromlimit_max_get() wlc_radioreg_enter()
+> wlc_phy_txpower_target_set() wlc_phy_chanspec_band_firstch()
+> wlc_phy_chanspec_bandrange_get() wlc_phy_bw_state_get() wlc_phy_clear_tssi()
 
-No, it's still 64-bit. There is no 128-bit integer in the C standard.
 
--- 
-Catalin
+Hi
+
+Sorry!  Wrong again :(
+
+wlc_lcnphy_crsuprs () should not be removed from hedder file.
+V2 was the same problem with wlc_phy_txpwr_idx_get_nphy()
+A new V3 comes in same minute.
+
+
+Kind regards
+Rickard Strandqvist
