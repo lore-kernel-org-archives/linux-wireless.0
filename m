@@ -1,91 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:39741 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932622AbaLLRfQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 12:35:16 -0500
-Message-ID: <548B2752.7030607@lwfinger.net> (sfid-20141212_183653_373606_4CA227D9)
-Date: Fri, 12 Dec 2014 11:35:14 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Krzysztof Konopko <kris@konagma.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
-References: <1418336609-10191-1-git-send-email-kris@konagma.com> <548A2E7A.4010303@lwfinger.net> <548AD2F1.3080200@konagma.com>
-In-Reply-To: <548AD2F1.3080200@konagma.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from sauhun.de ([89.238.76.85]:52900 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753402AbaLUVPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2014 16:15:32 -0500
+From: Wolfram Sang <wsa@the-dreams.de>
+To: linux-kernel@vger.kernel.org
+Cc: Wolfram Sang <wsa@the-dreams.de>, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 11/28] net: wireless: ath: ath5k: drop owner assignment from platform_drivers
+Date: Sun, 21 Dec 2014 22:14:32 +0100
+Message-Id: <1419196495-9626-12-git-send-email-wsa@the-dreams.de> (sfid-20141221_222324_500304_CC9527ED)
+In-Reply-To: <1419196495-9626-1-git-send-email-wsa@the-dreams.de>
+References: <1419196495-9626-1-git-send-email-wsa@the-dreams.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2014 05:35 AM, Krzysztof Konopko wrote:
-> On 12/12/14 00:53, Larry Finger wrote:
->>
->> This fix may make the sparse warnings go away, but I think it introduces
->> new bugs.
->
-> Right, I see.  Nice try though, isn't it? ;)
->
->> In particular, did you test on big-endian hardware after you
->> made this change?
->
-> Nope.  I don't have any big-endian hardware.  I don't even have the
-> wireless card TBH.  But I'm happy to try to get one.  Is Rtl8723AE the
-> right model?
+This platform_driver does not need to set an owner, it will be populated by the
+driver core.
 
-No. The device numbers that end in E are PCIe and use a mac80211-based driver. 
-As none of my BE hardware has PCIe, I cannot test those drivers on other than LE 
-hardware. I do not have the hardware either for the RTL8723AU. For that reason, 
-I am careful when modifying the driver - I let Jes do that.
+Signed-off-by: Wolfram Sang <wsa@the-dreams.de>
+---
+Generated with coccinelle. SmPL file is in the introductory msg. The big
+cleanup was pulled in this merge window. This series catches the bits fallen
+through. The patches shall go in via the subsystem trees.
 
->> I recently found that the driver for RTL8188EU needed
->> to have BA_para_set to unsigned short, and the endianess warnings needed
->> to be fixed in the code. Then it would work on my PowerBook G4 with a
->> PPC processor.
->>
->
-> OK.  Does it still work with little endian?
+ drivers/net/wireless/ath/ath5k/ahb.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Of course. Making changes between u16 and __le16 do not make any difference in 
-the code for little endian. As Dan Carpenter pointed out, these changes cannot 
-introduce any bugs. I should have said that the changes could obscure bugs for 
-big-endian systems.
-
->> In RTL8188EU, both BA_starting_seqctrl and TXOP_limit are unsigned short.
->>
->
-> That's not quite the case.  `TXOP_limit` is __le16 in RTL8188EU [1].
-> It's __le16 even in your GitHub repo [2].  And that made me thinking
-> that there's probably some inconsistency in the header.
-
-All the USB drivers are a mess. The kernel version of rtl8188eu does not work on 
-PPC; however, the git repo now does. I'm working on finding the differences and 
-fixing the kernel version.
-
-> I'm _far_ from being a wireless expert but doesn't data coming out of
-> the wire/air have the endianess defined explicitly?  And both `AC_param`
-> and `ADDBA_request` come out of air?
-
-Yes, in the air the endianess is explicitly defined. I'm not sure how AC_param 
-is populated, but the data in ADDBA_request are individually extracted/inserted 
-from/to the on-air packets. They could be kept as little endian, but the 
-calculations on BA_para_set are being done in CPU endianess. For consistency 
-with the kernel headers you mention below, the structures should probably use LE 
-and the calculations modified.
-
-> I was hunting particularly for inconsistencies with `sparse` and came
-> across this one.  But I dug a bit further and I wonder why the driver is
-> not using standard stuff like the one in `include/linux/ieee80211.h`
-> where any data wider than one byte is clearly declared as __le<nn>?
-
-That is a good question. One possibility is that those definitions do not exist 
-on some of the older kernels that Realtek supports. They generally work with 
-2.6.18 and newer.
-
-To be able to fix the kernel driver for RTL8188EU on PPC, I need to sort out 
-these endian problems. Once I do, I will port them to the other drivers.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath5k/ahb.c b/drivers/net/wireless/ath/ath5k/ahb.c
+index 8f387cf67340..2ca88b593e4c 100644
+--- a/drivers/net/wireless/ath/ath5k/ahb.c
++++ b/drivers/net/wireless/ath/ath5k/ahb.c
+@@ -227,7 +227,6 @@ static struct platform_driver ath_ahb_driver = {
+ 	.remove     = ath_ahb_remove,
+ 	.driver		= {
+ 		.name	= "ar231x-wmac",
+-		.owner	= THIS_MODULE,
+ 	},
+ };
+ 
+-- 
+2.1.3
 
