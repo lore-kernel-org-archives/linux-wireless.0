@@ -1,44 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33482 "EHLO sipsolutions.net"
+Received: from daemonizer.de ([87.230.18.164]:36994 "EHLO daemonizer.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966281AbaLLOBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 09:01:10 -0500
-Message-ID: <1418392866.2470.49.camel@sipsolutions.net> (sfid-20141212_150114_156061_5BFEEE1A)
-Subject: Re: [PATCH] mac80211: add an intermediate software queue
- implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Dec 2014 15:01:06 +0100
-In-Reply-To: <548AF047.9080404@openwrt.org>
-References: <1416352495-82172-1-git-send-email-nbd@openwrt.org>
-	 <1418390516.2470.46.camel@sipsolutions.net> <548AF047.9080404@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751842AbaLURej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2014 12:34:39 -0500
+From: Maximilian Engelhardt <maxi@daemonizer.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+Date: Sun, 21 Dec 2014 18:34:24 +0100
+Message-ID: <9062978.Vq0rTjKd5z@fuchs> (sfid-20141221_183447_130533_18C959B4)
+In-Reply-To: <5496E135.1@broadcom.com>
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <9234001.YBqfvtcJFx@fuchs> <5496E135.1@broadcom.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart10774983.agFPI7KegM"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-12-12 at 14:40 +0100, Felix Fietkau wrote:
 
-> > Then
-> > again what even sets vif->txq? Shouldn't those be per-AC? Do you really
-> > want to mix 'normal' and txq-TX?
-> Are we even using multiple ACs for packets that don't belong to a
-> particular sta? I thought normal mcast data frames only use non-QoS
-> frames. And yes, I'm currently mixing normal and txq-TX to prioritize
-> ctl/mgmt frames over other less important traffic.
+--nextPart10774983.agFPI7KegM
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Management (and maybe control) frames can have different priorities as
-well, this is only used for something with TDLS now I think though.
+On Sunday 21 December 2014 16:03:17 Arend van Spriel wrote:
+> On 12/21/14 15:24, Maximilian Engelhardt wrote:
+> > On Sunday 21 December 2014 15:13:50 Arend van Spriel wrote:
+> >> On 12/21/14 15:08, Maximilian Engelhardt wrote:
+> >>> On Sunday 21 December 2014 11:12:40 Arend van Spriel wrote:
+> >>>> On 12/21/14 10:58, Michael Tokarev wrote:
+> >>>>> 16.12.2014 19:51, Arend van Spriel wrote:
+> >>>>>> Hmm. The function brcms_btc_ecicoex_enab() is calling itself. Please
+> >>>>>> remove that call as it causes endless recursion and eventually
+> >>>>>> reboot.>
+> >>>>> 
+> >>>>> Ok, that was easy.  Now it loads, but wifi link still
+> >>>>> does not work, stalling as before.  What we're looking
+> >>>>> at now?
+> >>>> 
+> >>>> The patch is just to provide me with extra bt-coex related information
+> >>>> in the kernel log. So if you can provide that to me I have to info
+> >>>> needed to look in the proprietary code base to determine what is
+> >>>> missing.
+> >>>> 
+> >>>> Regards,
+> >>>> Arend
+> >>> 
+> >>> Hi Arend,
+> >> 
+> >>> here is the output from my card:
+> >> Thanks. It shows you have have the same bt-coex version as Michael. I am
+> >> not familiar with bluetooth side of things. Are you both using bluetooth
+> >> on 4313?
+> >> 
+> >> Regards,
+> >> Arend
+> > 
+> > I don't know. I think I have Bluetooth somehow enabled but I'm not really
+> > using it. I definitely don't have any Bluetooth devices connected. I could
+> > try to unload/disable Bluetooth it to see if it makes any difference.
+> 
+> That would be useful to know.
+> 
 
-> > You might consider doing locking differently here - I think you probably
-> > don't need the txq->queue spinlock at all since you're in per-AC and
-> > mappings are static. Not sure how that interacts with other parts of the
-> > code though.
-> I wanted to use the lock to give the driver the freedom to call
-> ieee80211_tx_dequeue from outside of normal per-AC tx context.
+I did a test with all Bluetooth modules unloaded that I could find but 
+throughput was still very low (about 4 Mbit/s with brcmsmac, my atheros USB 
+stick archived about 110 Mbit/s).
 
-Ok.
+Greetings,
+Maxi
 
-johannes
+--nextPart10774983.agFPI7KegM
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJUlwSjAAoJEIHqZH0kK9IV/2YQALtyTrDLsb2b7yVKU+A7GOdm
+tTEjJVtZYwn1/IiNVr0gpZMsKRrqXjHfwy6EYOqNHtmbifFttz6kMlCMT95Okb+w
+luvkT5n1KmxOMiyxiNMXMFR/BpN6/Ml15R33Gpm/jldTF55saGiPXsHUhpQHS8uU
+sqmEb+eMw/aJKbU6OSVOjLFTBB99Fgak7VQhuQ4YDB6UOscuJZJYRbdC7g5HgMMC
+ixG9mBB9DSfmLk9TUz9yMNuP8Io2SyiPdfxjQbgOGuru2YgcZWjmhO62+Z7D0Y1i
+xcSTxcKYjiejULPiwtDD/QuE0XLhvFPNOseT94j8JDtCE1i4OozHyYX6Io4FxLn0
+wp2cKVBDPjoLm+RGmiI1+PNG1p81vmZUat9bcuL7tS5oL3Jpz6XaIPNbAZlv7sP4
+kIkL63QYhs7ZOJv8kEmfZX9NyVP24MNSUsAm3dR918ZnVQlN8N3hZpZsmbeZoB90
+UF9mieWuUW0lg1K7NPsFt9a8OrYMfDkUNcAQE479hkfO8O8iBpQAt+752WfoUpOg
+1sO23FEnVGVANwYRIFYiPaUrRNqcq3XC0Rh/pSl9wSFHOYt/qt4XD4yXWr3CAaPz
+gDLGRvPNgxyQlE6nLVeZ4i8cJOO5PVnBrpmHiKawuwTLzrwrYqEMZuzNsyAcwyLh
+RJI2LK6jn8/OhzNjs7hB
+=PLx/
+-----END PGP SIGNATURE-----
+
+--nextPart10774983.agFPI7KegM--
 
