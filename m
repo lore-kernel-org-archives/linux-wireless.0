@@ -1,72 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:44828 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933282AbaLBXnz (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:48528 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753593AbaLULoD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 18:43:55 -0500
-Received: by mail-qg0-f54.google.com with SMTP id q107so9992218qgd.41
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 15:43:55 -0800 (PST)
+	Sun, 21 Dec 2014 06:44:03 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/10] brcmfmac: follow user-space regulatory domain selection
+Date: Sun, 21 Dec 2014 12:43:51 +0100
+Message-ID: <1419162233-19492-9-git-send-email-arend@broadcom.com> (sfid-20141221_124427_488806_AD2A71E3)
+In-Reply-To: <1419162233-19492-1-git-send-email-arend@broadcom.com>
+References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1417563128.32003.8.camel@dcbw.local>
-References: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com>
-	<CAP+RiCDMerG_8EYi=0Ta3BvAwuWinNPYuNevjF85w08HsX4f2Q@mail.gmail.com>
-	<CABPxzY+oxDH7QysFNWQg6fMWpsQDSFm5YgOusaz0KibEnH++yQ@mail.gmail.com>
-	<CAP+RiCCD7EefqNKKXonrvd9T3G=+4aKZQXe0QbXBKKCzHvgAzQ@mail.gmail.com>
-	<CABPxzY+Eimssqcxs0W79_5zGBHmFnrTc5+qeTnmYr_UH_9ti6A@mail.gmail.com>
-	<CAP+RiCC4KmgNMGCiCzDeL_0-frGw7acoZf5FDv4OTmauQPU5Hw@mail.gmail.com>
-	<1417563128.32003.8.camel@dcbw.local>
-Date: Tue, 2 Dec 2014 17:43:55 -0600
-Message-ID: <CAP+RiCD2vtZyVOTykKwBcm12g8mpPKc8ZBWUgFL90TU0C5ciUw@mail.gmail.com> (sfid-20141203_004436_932556_2DABE1B2)
-Subject: Re: Laptop disassociating by local choice (reason=17)
-From: Brent Taylor <motobud@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	ath6kl@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 2, 2014 at 5:32 PM, Dan Williams <dcbw@redhat.com> wrote:
-> On Tue, 2014-12-02 at 16:35 -0600, Brent Taylor wrote:
->> 1417557229.339147: WPA: RSN IE in EAPOL-Key - hexdump(len=22): 30 14
->> 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
->> 1417557229.339179: WPA: RSN IE in Beacon/ProbeResp - hexdump(len=26):
->> 30 18 01 00 00 0f ac 04 02 00 00 0f ac 04 00 0f ac 02 01 00 00 0f ac
->> 02 00 00
->> 1417557229.339192: WPA: RSN IE in 3/4 msg - hexdump(len=22): 30 14 01
->> 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
->
-> On the STA side:
->
-> The RSN IE in the EAPOL-Key and the 3/4msg are the same, and contain
-> only the CCMP pairwise suite.  The RSN IE in the Beacon/ProbeResp debug
-> message contains both CCMP and TKIP pairwise suites.
->
-> Earlier in the run we have:
->
-> 1417557228.979261: WPA: set AP RSN IE - hexdump(len=26): 30 18 01 00
-> 00 0f ac 04 02 00 00 0f ac 04 00 0f ac 02 01 00 00 0f ac 02 00 00
-> 1417557228.979342: WPA: Set own WPA IE default - hexdump(len=22): 30
-> 14 01 00 00 0f ac 04 01 00 00 0f ac 04 01 00 00 0f ac 02 00 00
->
-> which is where the extra TKIP bit comes from.  I'm guessing this is from
-> wpa_supplicant_set_suites() because of the closely paired AP RSN IE/own
-> WPA IE calls.
->
-> Brent, is there any chance you can run the supplicant on the laptop with
-> "-dddt" to get *all* the debug messages?  It seems the logs are missing
-> quite a few that could tell us where wpa_supplicant_set_suites() is
-> getting called.
->
-> Dan
->
+When user-space uses a valid ISO-3166-1 country code for its
+regulatory domain selection, the driver will try to configure
+the firmware to use the same.
 
-Dan,
-   I actually ran the wpa_supplicant with -ddddt as the parameter not
-knowing how many 'd's I could put there before I hit the limit of the
-debugging.  The wpa_supplicant on the ubuntu laptop is v0.7.3.  I'll
-change the -ddddt to just -dddt and re-run the test again.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 25 +++++++++++++++++++++-
+ .../net/wireless/brcm80211/brcmfmac/fwil_types.h   | 14 ++++++++++++
+ 2 files changed, 38 insertions(+), 1 deletion(-)
 
--- Brent
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 1172551..2471dd5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -3982,7 +3982,6 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 	brcmf_dbg(TRACE, "ssid=%s(%zu), auth_type=%d, inactivity_timeout=%d\n",
+ 		  settings->ssid, settings->ssid_len, settings->auth_type,
+ 		  settings->inactivity_timeout);
+-
+ 	dev_role = ifp->vif->wdev.iftype;
+ 	mbss = ifp->vif->mbss;
+ 
+@@ -5921,6 +5920,29 @@ int brcmf_cfg80211_wait_vif_event_timeout(struct brcmf_cfg80211_info *cfg,
+ 				  vif_event_equals(event, action), timeout);
+ }
+ 
++static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
++					struct regulatory_request *req)
++{
++	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
++	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
++	struct brcmf_fil_country_le ccreq;
++	int i;
++
++	brcmf_dbg(TRACE, "enter: initiator=%d, alpha=%c%c\n", req->initiator,
++		  req->alpha2[0], req->alpha2[1]);
++
++	/* ignore non-ISO3166 country codes */
++	for (i = 0; i < sizeof(req->alpha2); i++)
++		if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
++			brcmf_err("not a ISO3166 code\n");
++			return;
++		}
++	memset(&ccreq, 0, sizeof(ccreq));
++	ccreq.rev = cpu_to_le32(-1);
++	memcpy(ccreq.ccode, req->alpha2, sizeof(req->alpha2));
++	brcmf_fil_iovar_data_set(ifp, "country", &ccreq, sizeof(ccreq));
++}
++
+ static void brcmf_free_wiphy(struct wiphy *wiphy)
+ {
+ 	kfree(wiphy->iface_combinations);
+@@ -5997,6 +6019,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		goto priv_out;
+ 
+ 	brcmf_dbg(INFO, "Registering custom regulatory\n");
++	wiphy->reg_notifier = brcmf_cfg80211_reg_notifier;
+ 	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
+ 	wiphy_apply_custom_regulatory(wiphy, &brcmf_regdom);
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+index 50891c0..619669b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil_types.h
+@@ -112,6 +112,7 @@
+ #define BRCMF_WOWL_MAXPATTERNS		8
+ #define BRCMF_WOWL_MAXPATTERNSIZE	128
+ 
++#define BRCMF_COUNTRY_BUF_SZ		4
+ 
+ /* join preference types for join_pref iovar */
+ enum brcmf_join_pref_types {
+@@ -525,4 +526,17 @@ struct brcmf_mbss_ssid_le {
+ 	unsigned char SSID[32];
+ };
+ 
++/**
++ * struct brcmf_fil_country_le - country configuration structure.
++ *
++ * @country_abbrev: null-terminated country code used in the country IE.
++ * @rev: revision specifier for ccode. on set, -1 indicates unspecified.
++ * @ccode: null-terminated built-in country code.
++ */
++struct brcmf_fil_country_le {
++	char country_abbrev[BRCMF_COUNTRY_BUF_SZ];
++	__le32 rev;
++	char ccode[BRCMF_COUNTRY_BUF_SZ];
++};
++
+ #endif /* FWIL_TYPES_H_ */
+-- 
+1.9.1
+
