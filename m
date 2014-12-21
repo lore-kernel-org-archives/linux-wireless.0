@@ -1,72 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:38902 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752695AbaLEJpb (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:42153 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752966AbaLUM5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 04:45:31 -0500
-Date: Fri, 5 Dec 2014 09:45:08 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Arend van Spriel <arend@broadcom.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Will Deacon <will.deacon@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Miller <davem@davemloft.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141205094507.GP11285@n2100.arm.linux.org.uk> (sfid-20141205_104547_759613_BB354465)
-References: <5481794E.4050406@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5481794E.4050406@broadcom.com>
+	Sun, 21 Dec 2014 07:57:14 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so5853203wiv.6
+        for <linux-wireless@vger.kernel.org>; Sun, 21 Dec 2014 04:57:13 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/2 bug fix] staging: vt6655: vnt_tx_packet Fix corrupted tx packets.
+Date: Sun, 21 Dec 2014 12:56:34 +0000
+Message-Id: <1419166595-3096-1-git-send-email-tvboxspy@gmail.com> (sfid-20141221_135718_398276_2B4A7629)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 05, 2014 at 10:22:22AM +0100, Arend van Spriel wrote:
-> For our brcm80211 development we are working on getting brcmfmac driver
-> up and running on a Broadcom ARM-based platform. The wireless device is
-> a PCIe device, which is hooked up to the system behind a PCIe host
-> bridge, and we transfer information between host and device using a
-> descriptor ring buffer allocated using dma_alloc_coherent(). We mostly
-> tested on x86 and seen no issue. However, on this ARM platform
-> (single-core A9) we detect occasionally that the descriptor content is
-> invalid. When this occurs we do a dma_sync_single_for_cpu() and this is
-> retried a number of times if the problem persists. Actually, found out
-> that someone made a mistake by using virt_to_dma(va) to get the
-> dma_handle parameter. So probably we only provided a delay in the retry
-> loop. After fixing that a single call to dma_sync_single_for_cpu() is
-> sufficient. The DMA-API-HOWTO clearly states that:
-> 
-> """
-> the hardware should guarantee that the device and the CPU can access the
-> data in parallel and will see updates made by each other without any
-> explicit software flushing.
-> """
-> 
-> So it seems incorrect that we would need to do a dma_sync for this
-> memory. That we do need it seems like this memory can end up in
-> cache(?), or whatever happens, in some rare condition. Is there anyway
-> to investigate this situation either through DMA-API or some low-level
-> ARM specific functions.
+Move PSTxDesc->m_td1TD1 to inside spin locks.
 
-It's been a long while since I looked at the code, and the code for
-dma_alloc_coherent() has completely changed since then with the
-addition of CMA.  I'm afraid that anything I would say about it would
-not be accurate without research into the possible paths through that
-code - it's no longer just a simple allocator.
+if m_td1TD1.byTCR has TCR_EDP and TCR_STP are set, the interrupt handler will
+try and complete the buffer before it is completed. Usually on the tail
+of a burst of tx packets.
 
-What you say is correct however: the memory should not have any cache
-lines associated with it, if it does, there's a bug somewhere.
+This results in a partially completed packet being transmitted or worse
+sitll dead lock when skb is freed by the interrupt handler.
 
-Also, the memory will be weakly ordered, which means that writes to such
-memory can be reordered.  If ordering matters, barriers should be used.
-rmb() and wmb() can be used for this.
+Set head_td->m_td1TD1.byTCR to 0 in first lock of vnt_tx_packet to stop
+interrupt handler completing the buffer. Move Set TSR1 & ReqCount in
+s_cbFillTxBufHead to the second lock.
 
-(Added Marek for comment on dma_alloc_coherent(), Will for comment on
-barrier stuff.)
+cbReqCount is carried to the second lock in pTDInfo->dwReqCount without
+the padding removed.
 
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/device_main.c | 7 ++++++-
+ drivers/staging/vt6655/rxtx.c        | 5 +----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index 83e4162..519c337 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1232,7 +1232,7 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 
+ 	head_td = priv->apCurrTD[dma_idx];
+ 
+-	head_td->m_td1TD1.byTCR = (TCR_EDP|TCR_STP);
++	head_td->m_td1TD1.byTCR = 0;
+ 
+ 	head_td->pTDInfo->skb = skb;
+ 
+@@ -1257,6 +1257,11 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 
+ 	priv->bPWBitOn = false;
+ 
++	/* Set TSR1 & ReqCount in TxDescHead */
++	head_td->m_td1TD1.byTCR |= (TCR_STP | TCR_EDP | EDMSDU);
++	head_td->m_td1TD1.wReqCount =
++			cpu_to_le16((u16)head_td->pTDInfo->dwReqCount);
++
+ 	head_td->pTDInfo->byFlags = TD_FLAGS_NETIF_SKB;
+ 
+ 	if (dma_idx == TYPE_AC0DMA)
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 61c39dd..b5b0155 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -1204,13 +1204,10 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
+ 
+ 	ptdCurr = (PSTxDesc)pHeadTD;
+ 
+-	ptdCurr->pTDInfo->dwReqCount = cbReqCount - uPadding;
++	ptdCurr->pTDInfo->dwReqCount = cbReqCount;
+ 	ptdCurr->pTDInfo->dwHeaderLength = cbHeaderLength;
+ 	ptdCurr->pTDInfo->skb_dma = ptdCurr->pTDInfo->buf_dma;
+ 	ptdCurr->buff_addr = cpu_to_le32(ptdCurr->pTDInfo->skb_dma);
+-	/* Set TSR1 & ReqCount in TxDescHead */
+-	ptdCurr->m_td1TD1.byTCR |= (TCR_STP | TCR_EDP | EDMSDU);
+-	ptdCurr->m_td1TD1.wReqCount = cpu_to_le16((unsigned short)(cbReqCount));
+ 
+ 	return cbHeaderLength;
+ }
 -- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+2.1.0
+
