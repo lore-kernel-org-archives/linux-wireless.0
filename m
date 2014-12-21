@@ -1,157 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:58815 "EHLO arrakis.dune.hu"
+Received: from mga11.intel.com ([192.55.52.93]:47359 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967589AbaLLNk3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 08:40:29 -0500
-Message-ID: <548AF047.9080404@openwrt.org> (sfid-20141212_144032_336936_0EBB7A96)
-Date: Fri, 12 Dec 2014 14:40:23 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+	id S1750972AbaLUH6b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2014 02:58:31 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "linux-firmware@vger.kernel.org" <linux-firmware@vger.kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: firmware update for iwlwifi (3160 / 7260 / 7265)
+Date: Sun, 21 Dec 2014 07:58:27 +0000
+Message-ID: <1419148696.2316.7.camel@egrumbacBox> (sfid-20141221_085911_575957_FB9D5FD4)
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="=-LAjZsY1lBNKmxnwlqY2b"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add an intermediate software queue implementation
-References: <1416352495-82172-1-git-send-email-nbd@openwrt.org> <1418390516.2470.46.camel@sipsolutions.net>
-In-Reply-To: <1418390516.2470.46.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2014-12-12 14:21, Johannes Berg wrote:
-> On Wed, 2014-11-19 at 00:14 +0100, Felix Fietkau wrote:
-> 
->> +	struct txq_info *txq;
->> +	atomic_t txq_len[IEEE80211_NUM_ACS];
-> 
-> I think you should consider renaming the latter to txqs_len or so - it
-> doesn't just cover one txq as is be implied by the name now. Otherwise
-> the skb_queue_head also maintains the length anyway, but I think you
-> need the aggregate for all stations here...
-> 
-> Some documentation for this and the vif.txq would be good too :)
-> 
-> In fact - it might be worthwhile to take parts of the commit message and
-> elaborate a bit on it and write a whole DOC: section?
-Yeah, makes sense.
+--=-LAjZsY1lBNKmxnwlqY2b
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
->> --- a/net/mac80211/sta_info.h
->> +++ b/net/mac80211/sta_info.h
->> @@ -371,6 +371,7 @@ struct sta_info {
->>  	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
->>  	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
->>  	unsigned long driver_buffered_tids;
->> +	void *txq;
-> 
-> You can still use struct txq_info * here even when it's not declared yet
-> (since it's in the other header file)
-OK.
+Dear Linux firmware maintainers,
 
->> +static void ieee80211_drv_tx(struct ieee80211_local *local,
->> +			     struct ieee80211_vif *vif,
->> +			     struct ieee80211_sta *pubsta,
->> +			     struct sk_buff *skb)
->> +{
->> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
->> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
->> +	struct ieee80211_tx_control control = {
->> +		.sta = pubsta
->> +	};
->> +	struct ieee80211_txq *pubtxq = NULL;
->> +	struct txq_info *txq;
->> +	u8 ac;
->> +
->> +	if (ieee80211_is_mgmt(hdr->frame_control) ||
->> +	    ieee80211_is_ctl(hdr->frame_control))
->> +		goto tx_normal;
->> +
->> +	if (pubsta) {
->> +		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
->> +		pubtxq = pubsta->txq[tid];
->> +	} else {
->> +		pubtxq = vif->txq;
->> +	}
-> 
-> This is a bit confusing - isn't this the same as &sdata->txq.txq?
-Right, I should probably use that.
+Here is new release of the -10.ucode firmware for the following Intel
+Wireless devices:
+3160 / 7260 / 7265 / 7265D
 
-> Then
-> again what even sets vif->txq? Shouldn't those be per-AC? Do you really
-> want to mix 'normal' and txq-TX?
-Are we even using multiple ACs for packets that don't belong to a
-particular sta? I thought normal mcast data frames only use non-QoS
-frames. And yes, I'm currently mixing normal and txq-TX to prioritize
-ctl/mgmt frames over other less important traffic.
+This release includes bug fixes only. We fix here firmware assertions
+and association with buggy APs.
 
-> I think you should also use txqi as variables for txq_info - it gets
-> cumbersome to distinguish the two everywhere.
-Will do.
+Please pull - thanks.
 
-> Also in many cases where you have txq allocation failures you just
-> continue as is, I'm not sure that's such a great idea. Those driver
-> paths will practically never get tested.
-It will just do normal tx in that case, which should work.
 
->> +	if (!pubtxq)
->> +		goto tx_normal;
->> +
->> +	ac = pubtxq->ac;
->> +	txq = container_of(pubtxq, struct txq_info, txq);
->> +	atomic_inc(&sdata->txq_len[ac]);
->> +	if (atomic_read(&sdata->txq_len[ac]) >= local->hw.txq_ac_max_pending)
->> +		netif_stop_subqueue(sdata->dev, ac);
->> +
->> +	skb_queue_tail(&txq->queue, skb);
->> +	drv_wake_tx_queue(local, txq);
-> 
-> You might consider doing locking differently here - I think you probably
-> don't need the txq->queue spinlock at all since you're in per-AC and
-> mappings are static. Not sure how that interacts with other parts of the
-> code though.
-I wanted to use the lock to give the driver the freedom to call
-ieee80211_tx_dequeue from outside of normal per-AC tx context.
+The following changes since commit
+38e5405c96d10bb42b629b45210c46166461fc21:
 
->> +int ieee80211_tx_dequeue(struct ieee80211_hw *hw, struct ieee80211_txq *pubtxq,
->> +			 struct sk_buff **dest)
-> 
-> I'd prefer you return the skb and use ERR_PTR() for errors.
-Will do
+  cxgb4: Update firmware to revision 1.12.25.0 (2014-12-01 15:48:02
+-0500)
 
->> +void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
->> +			     struct sta_info *sta,
->> +			     struct txq_info *txq, int tid)
->> +{
->> +	skb_queue_head_init(&txq->queue);
->> +	txq->txq.vif = &sdata->vif;
->> +
->> +	if (sta) {
->> +		txq->txq.sta = &sta->sta;
->> +		sta->sta.txq[tid] = &txq->txq;
->> +		txq->txq.ac = ieee802_1d_to_ac[tid & 7];
->> +	} else {
->> +		sdata->vif.txq = &txq->txq;
->> +		txq->txq.ac = IEEE80211_AC_BE;
->> +	}
-> 
-> Again, I don't quite understand the single AC queue here per vif. It
-> seems it should be one for each AC and possibly one for cab? Or none at
-> all - I don't really see what this single one would be used for, in the
-> TX code you seem to use it for mcast data only but then I don't really
-> see the point. It's also not part of the queue length accounting.
-I handle CAB through normal mac80211 mcast buffering.
+are available in the git repository at:
 
->> +void ieee80211_flush_tx_queue(struct ieee80211_local *local,
->> +			      struct ieee80211_txq *pubtxq)
->> +{
->> +	struct txq_info *txq = container_of(pubtxq, struct txq_info, txq);
->> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(pubtxq->vif);
->> +	struct sk_buff *skb;
->> +
->> +	while ((skb = skb_dequeue(&txq->queue)) != NULL) {
->> +		atomic_dec(&sdata->txq_len[pubtxq->ac]);
->> +		ieee80211_free_txskb(&local->hw, skb);
->> +	}
->> +}
-> 
-> You can rewrite this a bit smarter to just do one atomic op.
-Will do.
 
-- Felix
+git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git
+master
+
+for you to fetch changes up to 571ad1ab9f6c85ba859387166f528a70ee1aa151:
+
+  iwlwifi: update -10.ucode for 3160 / 7260 / 7265 / 7265D (2014-12-21
+09:52:07 +0200)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: update -10.ucode for 3160 / 7260 / 7265 / 7265D
+
+ WHENCE                 |   8 ++++----
+ iwlwifi-3160-10.ucode  | Bin 610168 -> 610064 bytes
+ iwlwifi-7260-10.ucode  | Bin 672480 -> 672372 bytes
+ iwlwifi-7265-10.ucode  | Bin 736968 -> 736864 bytes
+ iwlwifi-7265D-10.ucode | Bin 740636 -> 740456 bytes
+ 5 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/WHENCE b/WHENCE
+index 44c41c7..df2dffa 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -816,7 +816,7 @@ File: iwlwifi-7260-9.ucode
+ Version: 25.228.9.0
+=20
+ File: iwlwifi-7260-10.ucode
+-Version: 23.10.10.0
++Version: 23.11.10.0
+=20
+ File: iwlwifi-3160-7.ucode
+ Version: 22.1.7.0
+@@ -828,7 +828,7 @@ File: iwlwifi-3160-9.ucode
+ Version: 25.228.9.0
+=20
+ File: iwlwifi-3160-10.ucode
+-Version: 23.10.10.0
++Version: 23.11.10.0
+=20
+ File: iwlwifi-7265-8.ucode
+ Version: 22.24.8.0
+@@ -837,10 +837,10 @@ File: iwlwifi-7265-9.ucode
+ Version: 25.228.9.0
+=20
+ File: iwlwifi-7265-10.ucode
+-Version: 23.10.10.0
++Version: 23.11.10.0
+=20
+ File: iwlwifi-7265D-10.ucode
+-Version: 23.10.10.0
++Version: 23.11.10.0
+=20
+ Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
+=20
+diff --git a/iwlwifi-3160-10.ucode b/iwlwifi-3160-10.ucode
+index 8cec7bf..241bd4e 100644
+Binary files a/iwlwifi-3160-10.ucode and b/iwlwifi-3160-10.ucode differ
+diff --git a/iwlwifi-7260-10.ucode b/iwlwifi-7260-10.ucode
+index 9e5b930..c7d8532 100644
+Binary files a/iwlwifi-7260-10.ucode and b/iwlwifi-7260-10.ucode differ
+diff --git a/iwlwifi-7265-10.ucode b/iwlwifi-7265-10.ucode
+index 488ddd0..bda8dff 100644
+Binary files a/iwlwifi-7265-10.ucode and b/iwlwifi-7265-10.ucode differ
+diff --git a/iwlwifi-7265D-10.ucode b/iwlwifi-7265D-10.ucode
+index 01194db..ebda04c 100644
+Binary files a/iwlwifi-7265D-10.ucode and b/iwlwifi-7265D-10.ucode
+differ
+
+
+--=-LAjZsY1lBNKmxnwlqY2b
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAABAgAGBQJUln2YAAoJEC0Llv5uNjIBR6UP/j1n4C77zzmqsbKWa4+3kKcZ
+72dWj90vk9Bv2fxqAgC53CIcGXZySgVN2zmITUHIEy/K1yQKfTq1/Ft1niHqIvom
+SGfxzv7t1pnXAoEIqcUpMID9OcD9vZoBq3s/LNGWTA+1tswJVfHDhqfLbGwWhzWJ
+GjrqciupNZLjzTe9jQp8PwpTm70EHNftAoHTS7wtApiofqwI+Cqcc+UqHJRVIh+n
+B4ZTEgkiIbM2yeGpFKLnHyLCtB7itMwdxrGh74Z/Hhp06kj9sT5oBamkfxvBPy9u
+bW2reAetuqRh1vBndfFHpiRIQR7Em0KboZ7I2Kui94X4DlOKufDS9b09vCfNZ+5i
+5wMMwwGiSILhwD0w6xkMY6/iAwgqKDQGdSAbz0U9MzQI5x95EuxGYy8zN9kvdlH8
+bKMNcHHrISIbOOTlGwIoMexoTjP619lWnxY6XvCuaq9zO4ynNGwVob8E9xq8OaqO
+IPRZehdYiUQBa/+gDBVdDFgbD3QrUMaXLWHPSW05pKUay40CteBf9TzxStiTbz9/
+jk5yfIFltnYN/DwIXJ+rXdHqVb3TxT2LRqxOCWxThJ+3az1jvoLWOyOST8OvbJvF
+Z4QSe3qGk54Xq3pQ2Uh4XpxTtUGT8SNd46Ns67v8oOihjEhILH2bhqsmmxw11zcE
+BIDw9Ggg49V0tjwSzOMX
+=gl5n
+-----END PGP SIGNATURE-----
+
+--=-LAjZsY1lBNKmxnwlqY2b--
