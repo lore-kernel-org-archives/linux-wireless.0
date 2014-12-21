@@ -1,85 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
+Received: from sauhun.de ([89.238.76.85]:52867 "EHLO pokefinder.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751816AbaL3OT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:19:57 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/33] iwlwifi: support multiple d0i3 modes
-Date: Tue, 30 Dec 2014 16:18:52 +0200
-Message-Id: <1419949148-24046-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154347_969208_7AA65D55)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+	id S1751521AbaLUVPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2014 16:15:22 -0500
+From: Wolfram Sang <wsa@the-dreams.de>
+To: linux-kernel@vger.kernel.org
+Cc: Wolfram Sang <wsa@the-dreams.de>, alsa-devel@alsa-project.org,
+	ath5k-devel@lists.ath5k.org,
+	Dan Williams <dan.j.williams@intel.com>,
+	devicetree@vger.kernel.org, dmaengine@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, iommu@lists.linux-foundation.org,
+	linux-arm-kernel@lists.infradead.org, linux-gpio@vger.kernel.org,
+	linux-mips@linux-mips.org, linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-rockchip@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, openipmi-developer@lists.sourceforge.net,
+	rtc-linux@googlegroups.com
+Subject: [PATCH 00/28] remove .owner for most platform_drivers: the missing bits
+Date: Sun, 21 Dec 2014 22:14:21 +0100
+Message-Id: <1419196495-9626-1-git-send-email-wsa@the-dreams.de> (sfid-20141221_222105_143670_CD59B666)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Generated with coccinelle. The big cleanup was pulled in this merge window.
+This series catches the bits fallen through. The patches shall go in via the
+subsystem trees. If possible for 3.19 to increase consistency I'd say, but you
+decide, of course.
 
-Allow configuring additional d0i3 mode, in which the
-fw will be configured to enter d0i3 only on suspend
-(while keeping the wake_lock accounting as usual)
+cocci-file used:
 
-The d0i3 mode to use will be determined by the
-underlying trans layer.
+@match1@
+declarer name module_platform_driver;
+declarer name module_platform_driver_probe;
+declarer name for_each_node_by_type;
+identifier __driver;
+@@
+(
+	module_platform_driver(__driver);
+|
+	module_platform_driver_probe(__driver, ...);
+)
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.h | 17 +++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h   |  1 +
- 2 files changed, 18 insertions(+)
+@fix1 depends on match1@
+identifier match1.__driver;
+@@
+	static struct platform_driver __driver = {
+		.driver = {
+-			.owner = THIS_MODULE,
+		}
+	};
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 028408a..10ae9d7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -552,6 +552,21 @@ enum iwl_trans_state {
- };
- 
- /**
-+ * enum iwl_d0i3_mode - d0i3 mode
-+ *
-+ * @IWL_D0I3_MODE_OFF - d0i3 is disabled
-+ * @IWL_D0I3_MODE_ON_IDLE - enter d0i3 when device is idle
-+ *	(e.g. no active references)
-+ * @IWL_D0I3_MODE_ON_SUSPEND - enter d0i3 only on suspend
-+ *	(in case of 'any' trigger)
-+ */
-+enum iwl_d0i3_mode {
-+	IWL_D0I3_MODE_OFF = 0,
-+	IWL_D0I3_MODE_ON_IDLE,
-+	IWL_D0I3_MODE_ON_SUSPEND,
-+};
-+
-+/**
-  * struct iwl_trans - transport common data
-  *
-  * @ops - pointer to iwl_trans_ops
-@@ -612,6 +627,8 @@ struct iwl_trans {
- 	const struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_MAX];
- 	u8 dbg_dest_reg_num;
- 
-+	enum iwl_d0i3_mode d0i3_mode;
-+
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
- 	char trans_specific[0] __aligned(sizeof(void *));
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index ff1a409..e608dc4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -850,6 +850,7 @@ iwl_mvm_sta_from_staid_protected(struct iwl_mvm *mvm, u8 sta_id)
- static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
- {
- 	return mvm->trans->cfg->d0i3 &&
-+	       mvm->trans->d0i3_mode != IWL_D0I3_MODE_OFF &&
- 	       (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_D0I3_SUPPORT);
- }
- 
+@match2@
+identifier __driver;
+@@
+(
+	platform_driver_register(&__driver)
+|
+	platform_driver_probe(&__driver, ...)
+|
+	platform_create_bundle(&__driver, ...)
+)
+
+@fix2 depends on match2@
+identifier match2.__driver;
+@@
+	static struct platform_driver __driver = {
+		.driver = {
+-			.owner = THIS_MODULE,
+		}
+	};
+
+Thanks again to Julia Lawall for support. And hey, we fixed a coccinelle bug on
+the way :)
+
+
+Wolfram Sang (28):
+  ARM: mach-exynos: drop owner assignment from platform_drivers
+  mips: lantiq: xway: drop owner assignment from platform_drivers
+  mips: pci: drop owner assignment from platform_drivers
+  char: ipmi: drop owner assignment from platform_drivers
+  cpufreq: drop owner assignment from platform_drivers
+  dma: drop owner assignment from platform_drivers
+  gpio: drop owner assignment from platform_drivers
+  gpu: drm: rockchip: drop owner assignment from platform_drivers
+  iommu: drop owner assignment from platform_drivers
+  net: ethernet: stmicro: stmmac: drop owner assignment from
+    platform_drivers
+  net: wireless: ath: ath5k: drop owner assignment from platform_drivers
+  of: drop owner assignment from platform_drivers
+  pci: host: drop owner assignment from platform_drivers
+  phy: drop owner assignment from platform_drivers
+  pinctrl: intel: drop owner assignment from platform_drivers
+  rtc: drop owner assignment from platform_drivers
+  scsi: drop owner assignment from platform_drivers
+  thermal: drop owner assignment from platform_drivers
+  thermal: int340x_thermal: drop owner assignment from platform_drivers
+  tty: serial: 8250: drop owner assignment from platform_drivers
+  usb: gadget: udc: bdc: drop owner assignment from platform_drivers
+  watchdog: drop owner assignment from platform_drivers
+  ASoC: intel: drop owner assignment from platform_drivers
+  ASoC: intel: sst: drop owner assignment from platform_drivers
+  ASoC: omap: drop owner assignment from platform_drivers
+  ASoC: pxa: drop owner assignment from platform_drivers
+  ASoC: samsung: drop owner assignment from platform_drivers
+  macintosh: drop owner assignment from platform_drivers
+
+ arch/arm/mach-exynos/pmu.c                            | 1 -
+ arch/mips/lantiq/xway/vmmc.c                          | 1 -
+ arch/mips/pci/pci-ar2315.c                            | 1 -
+ arch/mips/pci/pci-rt2880.c                            | 1 -
+ drivers/char/ipmi/ipmi_powernv.c                      | 1 -
+ drivers/cpufreq/ls1x-cpufreq.c                        | 1 -
+ drivers/dma/at_xdmac.c                                | 1 -
+ drivers/gpio/gpio-vf610.c                             | 1 -
+ drivers/gpu/drm/rockchip/rockchip_drm_drv.c           | 1 -
+ drivers/iommu/rockchip-iommu.c                        | 1 -
+ drivers/macintosh/windfarm_pm112.c                    | 1 -
+ drivers/macintosh/windfarm_pm72.c                     | 1 -
+ drivers/macintosh/windfarm_rm31.c                     | 1 -
+ drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c | 1 -
+ drivers/net/wireless/ath/ath5k/ahb.c                  | 1 -
+ drivers/of/unittest.c                                 | 1 -
+ drivers/pci/host/pci-layerscape.c                     | 1 -
+ drivers/phy/phy-armada375-usb2.c                      | 1 -
+ drivers/phy/phy-berlin-usb.c                          | 1 -
+ drivers/phy/phy-miphy28lp.c                           | 1 -
+ drivers/pinctrl/intel/pinctrl-cherryview.c            | 1 -
+ drivers/rtc/rtc-opal.c                                | 1 -
+ drivers/scsi/atari_scsi.c                             | 1 -
+ drivers/scsi/mac_scsi.c                               | 1 -
+ drivers/scsi/sun3_scsi.c                              | 1 -
+ drivers/thermal/int340x_thermal/int3400_thermal.c     | 1 -
+ drivers/thermal/int340x_thermal/int3402_thermal.c     | 1 -
+ drivers/thermal/rockchip_thermal.c                    | 1 -
+ drivers/tty/serial/8250/8250_omap.c                   | 1 -
+ drivers/usb/gadget/udc/bdc/bdc_core.c                 | 1 -
+ drivers/watchdog/cadence_wdt.c                        | 1 -
+ drivers/watchdog/meson_wdt.c                          | 1 -
+ sound/soc/intel/bytcr_dpcm_rt5640.c                   | 1 -
+ sound/soc/intel/cht_bsw_rt5672.c                      | 1 -
+ sound/soc/intel/sst/sst_acpi.c                        | 1 -
+ sound/soc/omap/omap-hdmi-audio.c                      | 1 -
+ sound/soc/pxa/spitz.c                                 | 1 -
+ sound/soc/samsung/arndale_rt5631.c                    | 1 -
+ 38 files changed, 38 deletions(-)
+
 -- 
-1.9.1
+2.1.3
 
