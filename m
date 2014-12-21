@@ -1,94 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:48631 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752715AbaLAJcT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 04:32:19 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+Received: from s3.sipsolutions.net ([5.9.151.49]:58659 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753097AbaLUWJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Dec 2014 17:09:51 -0500
+Message-ID: <1419199788.2387.5.camel@sipsolutions.net> (sfid-20141221_230954_339906_34B66863)
+Subject: Re: [PATCH 2/2] mac80211: allow some multi-channel combinations
+ with DFS master
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Mon,  1 Dec 2014 11:32:09 +0200
-Message-Id: <1417426329-16099-1-git-send-email-luca@coelho.fi> (sfid-20141201_103223_272751_269CA617)
-Subject: [PATCH] nl80211: check matches array length before acessing it
+Date: Sun, 21 Dec 2014 23:09:48 +0100
+In-Reply-To: <1419179546-29313-2-git-send-email-eliad@wizery.com> (sfid-20141221_173231_578831_6AC3F6DF)
+References: <1419179546-29313-1-git-send-email-eliad@wizery.com>
+	 <1419179546-29313-2-git-send-email-eliad@wizery.com>
+	 (sfid-20141221_173231_578831_6AC3F6DF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Sun, 2014-12-21 at 18:32 +0200, Eliad Peller wrote:
+> Allow some multi-channel interface combinations along with
+> DFS master support, if there is only a single AP/GO.
+> 
+> Allowing other interface types at the same time is fine
 
-If the userspace passes a malformed sched scan request (or a net
-detect wowlan configuration) by adding a NL80211_ATTR_SCHED_SCAN_MATCH
-attribute without any nested matchsets, a NULL pointer dereference
-will occur.  Fix this by checking that we do have matchsets in our
-array before trying to access it.
+I don't believe this to be true - how are you going to do radar
+detection accurately if you're spending any amount of time on another
+channel?
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000024
-IP: [<ffffffffa002fd69>] nl80211_parse_sched_scan.part.67+0x6e9/0x900 [cfg80211]
-PGD 865c067 PUD 865b067 PMD 0
-Oops: 0002 [#1] SMP
-Modules linked in: iwlmvm(O) iwlwifi(O) mac80211(O) cfg80211(O) compat(O) [last unloaded: compat]
-CPU: 2 PID: 2442 Comm: iw Tainted: G           O   3.17.2 #31
-Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
-task: ffff880013800790 ti: ffff880008d80000 task.ti: ffff880008d80000
-RIP: 0010:[<ffffffffa002fd69>]  [<ffffffffa002fd69>] nl80211_parse_sched_scan.part.67+0x6e9/0x900 [cfg80211]
-RSP: 0018:ffff880008d838d0  EFLAGS: 00010293
-RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
-RDX: 000000000000143c RSI: 0000000000000000 RDI: ffff880008ee8dd0
-RBP: ffff880008d83948 R08: 0000000000000002 R09: 0000000000000019
-R10: ffff88001d1b3c40 R11: 0000000000000002 R12: ffff880019e85e00
-R13: 00000000fffffed4 R14: ffff880009757800 R15: 0000000000001388
-FS:  00007fa3b6d13700(0000) GS:ffff88003e200000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 0000000000000024 CR3: 0000000008670000 CR4: 00000000000006e0
-Stack:
- ffff880009757800 ffff880000000001 0000000000000000 ffff880008ee84e0
- 0000000000000000 ffff880009757800 00000000fffffed4 ffff880008d83948
- ffffffff814689c9 ffff880009757800 ffff880008ee8000 0000000000000000
-Call Trace:
- [<ffffffff814689c9>] ? nla_parse+0xb9/0x120
- [<ffffffffa00306de>] nl80211_set_wowlan+0x75e/0x960 [cfg80211]
- [<ffffffff810bf3d5>] ? mark_held_locks+0x75/0xa0
- [<ffffffff8161a77b>] genl_family_rcv_msg+0x18b/0x360
- [<ffffffff810bf66d>] ? trace_hardirqs_on+0xd/0x10
- [<ffffffff8161a9d4>] genl_rcv_msg+0x84/0xc0
- [<ffffffff8161a950>] ? genl_family_rcv_msg+0x360/0x360
- [<ffffffff81618e79>] netlink_rcv_skb+0xa9/0xd0
- [<ffffffff81619458>] genl_rcv+0x28/0x40
- [<ffffffff816184a5>] netlink_unicast+0x105/0x180
- [<ffffffff8161886f>] netlink_sendmsg+0x34f/0x7a0
- [<ffffffff8105a097>] ? kvm_clock_read+0x27/0x40
- [<ffffffff815c644d>] sock_sendmsg+0x8d/0xc0
- [<ffffffff811a75c9>] ? might_fault+0xb9/0xc0
- [<ffffffff811a756e>] ? might_fault+0x5e/0xc0
- [<ffffffff815d5d26>] ? verify_iovec+0x56/0xe0
- [<ffffffff815c73e0>] ___sys_sendmsg+0x3d0/0x3e0
- [<ffffffff810a7be8>] ? sched_clock_cpu+0x98/0xd0
- [<ffffffff810611b4>] ? __do_page_fault+0x254/0x580
- [<ffffffff810bb39f>] ? up_read+0x1f/0x40
- [<ffffffff810611b4>] ? __do_page_fault+0x254/0x580
- [<ffffffff812146ed>] ? __fget_light+0x13d/0x160
- [<ffffffff815c7b02>] __sys_sendmsg+0x42/0x80
- [<ffffffff815c7b52>] SyS_sendmsg+0x12/0x20
- [<ffffffff81751f69>] system_call_fastpath+0x16/0x1b
-
-Fixes: ea73cbce4e1f ("nl80211: fix scheduled scan RSSI matchset attribute confusion")
-Cc: stable@vger.kernel.org [3.15+]
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a17d6bc..7ca4b51 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6002,7 +6002,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		}
- 
- 		/* there was no other matchset, so the RSSI one is alone */
--		if (i == 0)
-+		if (i == 0 && n_match_sets)
- 			request->match_sets[0].rssi_thold = default_match_rssi;
- 
- 		request->min_rssi_thold = INT_MAX;
--- 
-2.1.3
+johannes
 
