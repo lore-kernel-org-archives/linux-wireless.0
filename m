@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:61570 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbaLETmz (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:44702 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753595AbaLULoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 14:42:55 -0500
-Received: by mail-oi0-f49.google.com with SMTP id i138so938053oig.22
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Dec 2014 11:42:54 -0800 (PST)
-From: Seth Forshee <seth.forshee@canonical.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wireless: Update location of wireless-regdb repository
-Date: Fri,  5 Dec 2014 13:42:32 -0600
-Message-Id: <1417808552-56153-1-git-send-email-seth.forshee@canonical.com> (sfid-20141205_204258_254869_FE3EED69)
+	Sun, 21 Dec 2014 06:44:04 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 07/10] brcmfmac: Change error log in standard log for rxbufpost.
+Date: Sun, 21 Dec 2014 12:43:50 +0100
+Message-ID: <1419162233-19492-8-git-send-email-arend@broadcom.com> (sfid-20141221_131346_885653_38A02254)
+In-Reply-To: <1419162233-19492-1-git-send-email-arend@broadcom.com>
+References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've taken over maintenance of the wireless regulatory database
-from linville. Update references to John's repository to point
-at my repository instead.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Seth Forshee <seth.forshee@canonical.com>
+When there is no room in the ring for rxbufpost an error is logged,
+however this happens quite frequently and can be considered normal
+and is certainly recoverable. This patch changes the erorr into
+a normal msgbuf log.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- Documentation/networking/regulatory.txt | 2 +-
- net/wireless/db.txt                     | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/networking/regulatory.txt b/Documentation/networking/regulatory.txt
-index 356f791af574..b4af93fbbff6 100644
---- a/Documentation/networking/regulatory.txt
-+++ b/Documentation/networking/regulatory.txt
-@@ -205,7 +205,7 @@ the data in regdb.c as an alternative to using CRDA.
- The file net/wireless/db.txt should be kept up-to-date with the db.txt
- file available in the git repository here:
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 3ff6acf..ee147f5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -894,7 +894,7 @@ static u32 brcmf_msgbuf_rxbuf_data_post(struct brcmf_msgbuf *msgbuf, u32 count)
+ 							      count,
+ 							      &alloced);
+ 	if (!ret_ptr) {
+-		brcmf_err("Failed to reserve space in commonring\n");
++		brcmf_dbg(MSGBUF, "Failed to reserve space in commonring\n");
+ 		return 0;
+ 	}
  
--    git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
-+    git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git
- 
- Again, most users in most situations should be using the CRDA package
- provided with their distribution, and in most other situations users
-diff --git a/net/wireless/db.txt b/net/wireless/db.txt
-index a2fc3a09ccdc..4f7715d87979 100644
---- a/net/wireless/db.txt
-+++ b/net/wireless/db.txt
-@@ -13,5 +13,5 @@
- # best option is to extract the db.txt file from the wireless-regdb git
- # repository:
- #
--#   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-regdb.git
-+#   git://git.kernel.org/pub/scm/linux/kernel/git/sforshee/wireless-regdb.git
- #
 -- 
 1.9.1
 
