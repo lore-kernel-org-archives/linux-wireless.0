@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:49697 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045AbaL1GPg (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:58588 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754868AbaLVQcv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2014 01:15:36 -0500
-Message-ID: <549FA005.7050802@lwfinger.net> (sfid-20141228_071545_235193_1E3909D8)
-Date: Sun, 28 Dec 2014 00:15:33 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 22 Dec 2014 11:32:51 -0500
+Received: by mail-wg0-f45.google.com with SMTP id b13so7069114wgh.32
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2014 08:32:50 -0800 (PST)
+Date: Mon, 22 Dec 2014 19:32:47 +0300
+From: Alexey Tulia <alexey.tulia@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH] staging: rtl8723au: fix sparse warning
+Message-ID: <20141222163247.GA25707@epbyminw1710.minsk.epam.com> (sfid-20141222_173255_304772_64DEA321)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Stable <stable@vger.kernel.org>,
-	Eric Biggers <ebiggers3@gmail.com>
-Subject: Re: [PATCH 23/23 V2 for 3.19]  rtlwifi: Fix error when accessing
- unmapped memory in skb
-References: <1419711457-21469-1-git-send-email-Larry.Finger@lwfinger.net> <87a928726w.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87a928726w.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/27/2014 11:50 PM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> These drivers use 9100-byte receive buffers, thus allocating an skb requires
->> an O(3) memory allocation. Under heavy memory loads and fragmentation, such
->> a request can fail. Previous versions of the driver have dropped the packet
->> and reused the old buffer; however, the new version introduced a bug in that
->> it released the old buffer before trying to allocate a new one. The previous
->> method is implemented here.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org>  [v3.18]
->> Reported-by: Eric Biggers <ebiggers3@gmail.com>
->> Cc: Eric Biggers <ebiggers3@gmail.com>
->> ---
->>
->> V2 - Fixes an error in the logic of V1. Realtek is working on a change to
->>       the RX buffer allocation, but that is likely to be too invasive for
->>       a fix to -rc or stable. In the meantime, this will help.
->
-> 23/23? Where are patches 1-22? I don't see them in patchwork:
->
-> https://patchwork.kernel.org/project/linux-wireless/list/
+drivers/staging/rtl8723au/core/rtw_xmit.c:2375 warning: symbol
+'rtl8723a_EfusePgPacketRead' was not declared. Should it be static?
 
-Sorry. I forgot to edit the subject line. To get git to format that one patch, I 
-had to generate a total of 23. There is only 1 of 1 that will be submitted.
+Function 'rtw_ack_tx_done23a' seems to be unused in current staging
+code.
 
-Larry
+Signed-off-by: Alexey Tulia <alexey.tulia@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_xmit.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
+diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
+index 7a5e6bf..1c82dff 100644
+--- a/drivers/staging/rtl8723au/core/rtw_xmit.c
++++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
+@@ -2372,12 +2372,3 @@ int rtw_ack_tx_wait23a(struct xmit_priv *pxmitpriv, u32 timeout_ms)
+ 	return rtw_sctx_wait23a(pack_tx_ops);
+ }
+
+-void rtw_ack_tx_done23a(struct xmit_priv *pxmitpriv, int status)
+-{
+-	struct submit_ctx *pack_tx_ops = &pxmitpriv->ack_tx_ops;
+-
+-	if (pxmitpriv->ack_tx)
+-		rtw23a_sctx_done_err(&pack_tx_ops, status);
+-	else
+-		DBG_8723A("%s ack_tx not set\n", __func__);
+-}
+--
+2.1.0
 
