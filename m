@@ -1,172 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:45986 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967057AbaLLLyc (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:33817 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754134AbaLVRnk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 06:54:32 -0500
-Received: by mail-wi0-f169.google.com with SMTP id r20so4269552wiv.4
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 03:54:31 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/5] ath10k: fix STA u-APSD
-Date: Fri, 12 Dec 2014 12:41:36 +0100
-Message-Id: <1418384499-31660-3-git-send-email-michal.kazior@tieto.com> (sfid-20141212_125457_353559_3AEADEA0)
-In-Reply-To: <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
-References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
- <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 22 Dec 2014 12:43:40 -0500
+Message-ID: <5498584A.6080204@lwfinger.net> (sfid-20141222_184402_063845_5981CD94)
+Date: Mon, 22 Dec 2014 11:43:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Eric Biggers <ebiggers3@gmail.com>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [BUG] rtl8192se: panic accessing unmapped memory in skb
+References: <20141221172516.GA12784@zzz> <5497516A.2020400@lwfinger.net> <20141221234714.GA30675@zzz>
+In-Reply-To: <20141221234714.GA30675@zzz>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To comply with WMM-PS the device shouldn't wake up
-with a NullFunc frame pair when tx-ing. Instead PM
-bit on each tx frame should be used.
+On 12/21/2014 05:47 PM, Eric Biggers wrote:
+> Hi,
+>
+> To get your patched version to work at all I had to update
+> _rtl_pci_init_rx_ring() to account for new return value of
+> _rtl_pci_init_one_rxdesc().  I will let you know if anything shows up in the
+> kernel log, but I expect this is a highly sporadic problem.  The system has 4 GB
+> of memory, and I used the 3.18 kernel for 10 days prior to the panic with no
+> issues.  The panic occurred while upgrading system packages, so it's possible
+> jhat the system was experiencing memory pressure.
+>
+> I upgraded from 3.17 to 3.18 on Dec 8, so I've actually only had since then to
+> notice any bugs that may have been introduced since 3.17.
+>
+> It does appear there were changes made to pci.c between 3.17 and 3.18.  It
+> appears the 3.17 code will drop the incoming packet if a new skb can't be
+> allocated, whereas the 3.18 code assumes a new skb can always be allocated.  The
+> 3.17 behavior seems more logical to me.  I don't know how either of these
+> behaviors compare to other networking drivers, however.
 
-To make this work correctly firmware needs to be
-told to use a different STA PS wake threshold when
-u-APSD is enabled.
+Sorry about missing the necessary changes in the rest of the driver. That is 
+what I get for only compile testing.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
+I reviewed the 3.17 => 3.18 changes and found the difference in the logic that 
+you noticed, and I missed earlier. As a result, I need to push this change for 
+3.19 with the notation for updating of 3.18. You have probably received this 
+patch already. As it needs to be backported, I decided to forgo changing the 
+return value of _rtl_pci_init_one_rxdesc(). That change should be made, but 
+there is no emergency there.
 
-Notes:
-    v2:
-     * fix Rx performance
-     * fix error handling (use goto instead of return)
+Thanks,
 
- drivers/net/wireless/ath/ath10k/mac.c | 79 ++++++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/wmi.h |  7 ++++
- 2 files changed, 76 insertions(+), 10 deletions(-)
+Larry
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 950322d..13c2bad 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1048,6 +1048,57 @@ static void ath10k_control_ibss(struct ath10k_vif *arvif,
- 			    arvif->vdev_id, ret);
- }
- 
-+static int ath10k_mac_vif_recalc_ps_wake_threshold(struct ath10k_vif *arvif)
-+{
-+	struct ath10k *ar = arvif->ar;
-+	u32 param;
-+	u32 value;
-+	int ret;
-+
-+	lockdep_assert_held(&arvif->ar->conf_mutex);
-+
-+	if (arvif->u.sta.uapsd)
-+		value = WMI_STA_PS_TX_WAKE_THRESHOLD_NEVER;
-+	else
-+		value = WMI_STA_PS_TX_WAKE_THRESHOLD_ALWAYS;
-+
-+	param = WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD;
-+	ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id, param, value);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to submit ps wake threshold %u on vdev %i: %d\n",
-+			    value, arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath10k_mac_vif_recalc_ps_poll_count(struct ath10k_vif *arvif)
-+{
-+	struct ath10k *ar = arvif->ar;
-+	u32 param;
-+	u32 value;
-+	int ret;
-+
-+	lockdep_assert_held(&arvif->ar->conf_mutex);
-+
-+	if (arvif->u.sta.uapsd)
-+		value = WMI_STA_PS_PSPOLL_COUNT_UAPSD;
-+	else
-+		value = WMI_STA_PS_PSPOLL_COUNT_NO_MAX;
-+
-+	param = WMI_STA_PS_PARAM_PSPOLL_COUNT;
-+	ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
-+					  param, value);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to submit ps poll count %u on vdev %i: %d\n",
-+			    value, arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- /*
-  * Review this when mac80211 gains per-interface powersave support.
-  */
-@@ -3036,22 +3087,16 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 			goto err_peer_delete;
- 		}
- 
--		param = WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD;
--		value = WMI_STA_PS_TX_WAKE_THRESHOLD_ALWAYS;
--		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
--						  param, value);
-+		ret = ath10k_mac_vif_recalc_ps_wake_threshold(arvif);
- 		if (ret) {
--			ath10k_warn(ar, "failed to set vdev %i TX wake thresh: %d\n",
-+			ath10k_warn(ar, "failed to recalc ps wake threshold on vdev %i: %d\n",
- 				    arvif->vdev_id, ret);
- 			goto err_peer_delete;
- 		}
- 
--		param = WMI_STA_PS_PARAM_PSPOLL_COUNT;
--		value = WMI_STA_PS_PSPOLL_COUNT_NO_MAX;
--		ret = ath10k_wmi_set_sta_ps_param(ar, arvif->vdev_id,
--						  param, value);
-+		ret = ath10k_mac_vif_recalc_ps_poll_count(arvif);
- 		if (ret) {
--			ath10k_warn(ar, "failed to set vdev %i PSPOLL count: %d\n",
-+			ath10k_warn(ar, "failed to recalc ps poll count on vdev %i: %d\n",
- 				    arvif->vdev_id, ret);
- 			goto err_peer_delete;
- 		}
-@@ -3818,6 +3863,20 @@ static int ath10k_conf_tx_uapsd(struct ath10k *ar, struct ieee80211_vif *vif,
- 	if (ret)
- 		ath10k_warn(ar, "failed to set rx wake param: %d\n", ret);
- 
-+	ret = ath10k_mac_vif_recalc_ps_wake_threshold(arvif);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to recalc ps wake threshold on vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_mac_vif_recalc_ps_poll_count(arvif);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to recalc ps poll count on vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
- exit:
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 97f902f..ff2d076 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4015,6 +4015,13 @@ enum wmi_sta_ps_param_pspoll_count {
- 	 * Values greater than 0 indicate the maximum numer of PS-Poll frames
- 	 * FW will send before waking up.
- 	 */
-+
-+	/* When u-APSD is enabled the firmware will be very reluctant to exit
-+	 * STA PS. This could result in very poor Rx performance with STA doing
-+	 * PS-Poll for each and every buffered frame. This value is a bit
-+	 * arbitrary.
-+	 */
-+	WMI_STA_PS_PSPOLL_COUNT_UAPSD = 3,
- };
- 
- /*
--- 
-1.8.5.3
 
