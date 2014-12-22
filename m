@@ -1,91 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:54432 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045AbaLCR00 (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:52996 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753919AbaLVJd1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 12:26:26 -0500
-Received: by mail-qa0-f48.google.com with SMTP id v10so10671981qac.21
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Dec 2014 09:26:26 -0800 (PST)
+	Mon, 22 Dec 2014 04:33:27 -0500
+Received: by mail-ie0-f169.google.com with SMTP id y20so4033219ier.0
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Dec 2014 01:33:26 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAP+RiCC5Ck97dKaQStu07RnO9aDOLAeo25CfuMuY+VnEEb10_Q@mail.gmail.com>
-References: <CAP+RiCBDAi7e6vj5vvrcEpt17JicdmPwq16zhG9Fun11HfnBkw@mail.gmail.com>
-	<CAP+RiCDMerG_8EYi=0Ta3BvAwuWinNPYuNevjF85w08HsX4f2Q@mail.gmail.com>
-	<CABPxzY+oxDH7QysFNWQg6fMWpsQDSFm5YgOusaz0KibEnH++yQ@mail.gmail.com>
-	<CAP+RiCCD7EefqNKKXonrvd9T3G=+4aKZQXe0QbXBKKCzHvgAzQ@mail.gmail.com>
-	<CABPxzY+Eimssqcxs0W79_5zGBHmFnrTc5+qeTnmYr_UH_9ti6A@mail.gmail.com>
-	<CAP+RiCC4KmgNMGCiCzDeL_0-frGw7acoZf5FDv4OTmauQPU5Hw@mail.gmail.com>
-	<1417563128.32003.8.camel@dcbw.local>
-	<CAP+RiCD2vtZyVOTykKwBcm12g8mpPKc8ZBWUgFL90TU0C5ciUw@mail.gmail.com>
-	<87h9xdl30j.fsf@kamboji.qca.qualcomm.com>
-	<CAP+RiCCE1Z96z6+YX=Cfnb0O3vGdnZeivJH5T3XQ5DWbCbbH_w@mail.gmail.com>
-	<878uipl2dl.fsf@kamboji.qca.qualcomm.com>
-	<CAP+RiCDFPX0r82eNwoNPv=YrE3xjfAztH_VghVNa__UKzKZBQA@mail.gmail.com>
-	<CAP+RiCC5Ck97dKaQStu07RnO9aDOLAeo25CfuMuY+VnEEb10_Q@mail.gmail.com>
-Date: Wed, 3 Dec 2014 11:26:25 -0600
-Message-ID: <CAP+RiCDpR7DwHLg3Pu_tyjUpcCT7hvM_Ex5+hof17XA968Tvpg@mail.gmail.com> (sfid-20141203_182630_848136_8A3A339B)
-Subject: Re: Laptop disassociating by local choice (reason=17)
-From: Brent Taylor <motobud@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>,
-	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	ath6kl@lists.infradead.org
+In-Reply-To: <5497DEE0.1040007@broadcom.com>
+References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
+	<1419162233-19492-4-git-send-email-arend@broadcom.com>
+	<B1CB9465-1353-411C-9B3C-42DEFBFDBBE0@holtmann.org>
+	<549725D1.2090402@broadcom.com>
+	<CACna6rxjKUeDVGXGB5UzgOw1WyQKE+LYmtxJvTLW+H1fC7-13Q@mail.gmail.com>
+	<5497DEE0.1040007@broadcom.com>
+Date: Mon, 22 Dec 2014 10:33:26 +0100
+Message-ID: <CACna6rzfDdavRVH1-KU5oX_Jk-B0Jw75t-GmNJJyqm5rqThLyw@mail.gmail.com> (sfid-20141222_103330_721103_5D2E4D33)
+Subject: Re: [PATCH 03/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Rob Herring <rob.herring@linaro.org>,
+	John Stultz <john.stultz@linaro.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 3, 2014 at 10:58 AM, Brent Taylor <motobud@gmail.com> wrote:
-> On Wed, Dec 3, 2014 at 8:05 AM, Brent Taylor <motobud@gmail.com> wrote:
->> On Tue, Dec 2, 2014 at 11:37 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->>> Brent Taylor <motobud@gmail.com> writes:
+On 22 December 2014 at 10:05, Arend van Spriel <arend@broadcom.com> wrote:
+> On 12/21/14 21:14, Rafał Miłecki wrote:
+>>
+>> On 21 December 2014 at 20:56, Arend van Spriel<arend@broadcom.com>  wrote:
 >>>
->>>> On Dec 2, 2014 11:24 PM, "Kalle Valo" <kvalo@qca.qualcomm.com> wrote:
->>>>>
->>>>> Brent Taylor <motobud@gmail.com> writes:
->>>>>
->>>>> >    I actually ran the wpa_supplicant with -ddddt as the parameter not
->>>>> > knowing how many 'd's I could put there before I hit the limit of the
->>>>> > debugging.  The wpa_supplicant on the ubuntu laptop is v0.7.3.  I'll
->>>>> > change the -ddddt to just -dddt and re-run the test again.
->>>>>
->>>>> IMHO 0.7.3 is ancient. Please use something more recent.
+>>> On 12/21/14 18:50, Marcel Holtmann wrote:
 >>>>
->>>> Ancient it may be, but why would it work with the ath9k chip and not
->>>> the ath6kl chip?
+>>>>
+>>>> Hi Arend,
+>>>>
+>>>>> diff --git a/include/linux/mmc/sdio_ids.h
+>>>>> b/include/linux/mmc/sdio_ids.h
+>>>>> index 0f01fe0..61f8318 100644
+>>>>> --- a/include/linux/mmc/sdio_ids.h
+>>>>> +++ b/include/linux/mmc/sdio_ids.h
+>>>>> @@ -29,6 +29,8 @@
+>>>>> #define SDIO_DEVICE_ID_BROADCOM_4329            0x4329
+>>>>> #define SDIO_DEVICE_ID_BROADCOM_4330            0x4330
+>>>>> #define SDIO_DEVICE_ID_BROADCOM_4334            0x4334
+>>>>> +#define SDIO_DEVICE_ID_BROADCOM_43340          43340
+>>>>> +#define SDIO_DEVICE_ID_BROADCOM_43341          43341
+>>>>
+>>>>
+>>>>
+>>>> the general preference is to have these values in hex. I get the fact
+>>>> that
+>>>> they map the marketing number, but that could be just stated in a
+>>>> comment
+>>>> after the hex number.
 >>>
->>> Because of a bug we are not aware of? ath6kl and ath9k are very
->>> different drivers and 0.7.3 might have some problem which only comes
->>> with ath6kl. Up to you, but I would not waste time testing on that old
->>> wpasupplicant.
 >>>
->>> --
->>> Kalle Valo
+>>> Will change that.
 >>
->> Apologies for my last reply not making it through the mailing lists, I
->> sent it from my phone and it was automatically formatted in HTML and
->> not Plain Text.
 >>
->> The ultimate goal is to use an Android device to communicate with my
->> custom device being the Access Point.  The laptop is easier to debug
->> (at the moment) than an Android device.  I'm currently using a Samsung
->> S4 running 4.4.4 and it was not able to complete the authentication
->> step either.  This is when I turned to using the laptop.  Any idea
->> what version of the wpa_supplicant is running on Kit Kat?
->>
->> -- Brent Taylor
+>> I vote for keeping user-friendly numbers as comments :)
 >
 >
-> Here is another log capture from the device and the laptop.  This time
-> both were using -dddt as the debug parameter to wpa_supplicant.
->
-> Laptop wpa_supplicant Log
->
+> I don't see added value as the define id ends with the marketing number.
 
--- snip last log data from 2014-12-03 --
+Ah, right. I was thinking about some less common cases like
+#define BCMA_CHIP_ID_BCM4707 0x0xCF12 /* 53010 */
+but this is not such case obviously.
 
-I just found out that the Samsung S4 that we are testing with has
-wpa_supplicant version v2.0-devel-4.2.2 which is not KitKat, but Jelly
-Bean.  Does anyone know if the logging can be turned on without
-rooting the phone?
-
--- Brent Taylor
+-- 
+Rafał
