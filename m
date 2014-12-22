@@ -1,93 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:54637 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbaLHPCn (ORCPT
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:49532 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754702AbaLVTsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 10:02:43 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Hante Meuleman <meuleman@broadcom.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arend Van Spriel <arend@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	Marek Szyprowski <m.szyprowski@samsung.com>, hauke@hauke-m.de
-Subject: Re: using DMA-API on ARM
-Date: Mon, 08 Dec 2014 16:01:32 +0100
-Message-ID: <2863746.4sUSEYqahB@wuerfel> (sfid-20141208_160300_887175_D5381E2B)
-In-Reply-To: <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com>
-References: <5481794E.4050406@broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com>
+	Mon, 22 Dec 2014 14:48:45 -0500
+Date: Mon, 22 Dec 2014 13:48:43 -0600
+From: Eric Biggers <ebiggers3@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH for 3.19] rtlwifi: Fix error when accessing unmapped
+ memory in skb
+Message-ID: <20141222194843.GA7575@zzz> (sfid-20141222_204853_458483_B35F9899)
+References: <1419269826-12552-1-git-send-email-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1419269826-12552-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 December 2014 13:47:38 Hante Meuleman wrote:
-> Still using outlook, but will limit the line length, I hope that works for the
-> moment. Attached is a log with the requested information, it is a little
-> bit non-standard though. The dump code from the mm was copied in
-> the driver and called from there, mapping the prints back to our local
-> printf, but it should produce the same. I did this because I didn't realize
-> the table is static.
-> 
-> Some background on the test setup: I'm using a Broadcom reference 
-> design AP platform with an BRCM 4708 host SOC.
-
-I think you are using the wrong dtb file, the log says this is
-a "Buffalo WZR-1750DHP", not the reference design.
-
-> For the AP router 
-> platform the opensource packet OpenWRT was used. Some small
-> modifications were made to get it to work on our HW. Only one core
-> is enabled for the moment (no time to figure out how to enable the
-> other one). Openwrt was configured to use kernel 3.18-rc2 and 
-> the brcmfmac of the compat-wireless code was updated with our 
-> latest code (minor patches, which have been submitted already). 
-> The device used is 43602 pcie device. Some modifications to the build
-> system were made to enable PCIE. The test is to connect with a 
-> client to the AP and run iperf (TCP). The test can run for many hours
-> without a problem, but sometimes fails very quickly.
-
-The bcm4708 platform is maintained by Hauke Mehrtens, adding him to Cc.
-
-In your log, I see this message:
-
-[    0.000000] PL310 OF: cache setting yield illegal associativity
-[    0.000000] PL310 OF: -1069781724 calculated, only 8 and 16 legal
-[    0.000000] L2C-310 enabling early BRESP for Cortex-A9
-[    0.000000] L2C-310 full line of zeros enabled for Cortex-A9
-[    0.000000] L2C-310 dynamic clock gating enabled, standby mode enabled
-[    0.000000] L2C-310 cache controller enabled, 16 ways, 256 kB
-[    0.000000] L2C-310: CACHE_ID 0x410000c8, AUX_CTRL 0x4e130001
-
-Evidently the cache controller information in DT is incorrect and
-the setup may be wrong as a consequence, which may explain cache
-coherency problems.
-
-Can you verify that the AUX_CTRL value is the same one you see
-in a working kernel?
-
-> The log: first the ring allocation info is printed. Starting at
-> 16.124847, ring 2, 3 and 4 are rings used for device to host. In this
-> log the failure is on a read of ring 3. Ring 3 is 1024 entries of each
-> 16 bytes. The next thing printed is the kernel page tables. Then some 
-> OpenWRT info and the logging of part of the connection setup. Then at 
-> 1780.130752 the logging of the failure starts. The sequence number is 
-> modulo 253 with ring size of 1024 matches an "old" entry (read 40, 
-> expected 52). Then the different pointers are printed followed by 
-> the kernel page table. The code does then a cache invalidate on the 
-> dma_handle and the next read the sequence number is correct.
-
-How do you invalidate the cache? A dma_handle is of type dma_addr_t
-and we don't define an operation for that, nor does it make sense
-on an allocation from dma_alloc_coherent(). What happens if you
-take out the invalidate?
-
-Can you post the patch that you use (both platform and driver) relative
-to the snapshot of the the mainline kernel you are basing on?
-
-	Arnd
-
+Is this really the same behavior as 3.17?  In 3.17, allocating the new skb is
+one of the first things the interrupt handler does, and if that fails it drops
+the packet and keeps using the old skb.  In this proposal, it's only after the
+packet has been received and the old skb has been freed that a new one is
+allocated.  And if that fails --- well, what are you expecting to happen
+exactly?
