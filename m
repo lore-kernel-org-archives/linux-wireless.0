@@ -1,115 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:5290 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753540AbaLULoC (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:53883 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751918AbaLVWlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 06:44:02 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 04/10] brcmfmac: get rid of duplicate SDIO device identifiers
-Date: Sun, 21 Dec 2014 12:43:47 +0100
-Message-ID: <1419162233-19492-5-git-send-email-arend@broadcom.com> (sfid-20141221_124411_804461_84AC65C5)
-In-Reply-To: <1419162233-19492-1-git-send-email-arend@broadcom.com>
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
+	Mon, 22 Dec 2014 17:41:25 -0500
+Message-ID: <54989E12.6050808@lwfinger.net> (sfid-20141222_234132_972099_61391781)
+Date: Mon, 22 Dec 2014 16:41:22 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Eric Biggers <ebiggers3@gmail.com>
+CC: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH for 3.19] rtlwifi: Fix error when accessing unmapped memory
+ in skb
+References: <1419269826-12552-1-git-send-email-Larry.Finger@lwfinger.net> <20141222194843.GA7575@zzz>
+In-Reply-To: <20141222194843.GA7575@zzz>
+Content-Type: multipart/mixed;
+ boundary="------------070702000602040909090600"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of defining SDIO device identifier in brcm80211 code use
-the defintions in linux/mmc/sdio_ids.h directly.
+This is a multi-part message in MIME format.
+--------------070702000602040909090600
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   | 22 +++++++++++-----------
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c     |  2 +-
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   | 13 -------------
- 3 files changed, 12 insertions(+), 25 deletions(-)
+On 12/22/2014 01:48 PM, Eric Biggers wrote:
+> Is this really the same behavior as 3.17?  In 3.17, allocating the new skb is
+> one of the first things the interrupt handler does, and if that fails it drops
+> the packet and keeps using the old skb.  In this proposal, it's only after the
+> packet has been received and the old skb has been freed that a new one is
+> allocated.  And if that fails --- well, what are you expecting to happen
+> exactly?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 7cf42e56..eaead8b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -996,20 +996,20 @@ out:
+You are correct. In trying to get a small patch for stable, I missed some 
+important points.
+
+Please look at the attached patch. I think it handles the skb allocations 
+correctly. The critical point is that _rtl_pci_init_one_rxdesc() cannot be 
+allowed to fail to allocate an skb while in the interrupt path. Now, I have 
+already allocated the skb before the call and bypassed this routine if the 
+allocation fails. After a couple of crashes, this one now works for the case 
+when the allocation wouldn't fail anyway. I will likely pull the allocation out 
+of _rtl_pci_init_one_rxdesc() in all cases for the final patch.
+
+@Kalle: Please drop the patch I submitted this morning with this subject. It 
+would not help the problem. I will resubmit after I am sure of the proper fix.
+
+Thanks,
+
+Larry
+
+
+
+--------------070702000602040909090600
+Content-Type: text/plain; charset=UTF-8;
+ name="fix_skb_alloc_v2"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="fix_skb_alloc_v2"
+
+Index: wireless-drivers/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-drivers.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-drivers/drivers/net/wireless/rtlwifi/pci.c
+@@ -666,6 +666,7 @@ tx_status_ok:
  }
  
- #define BRCMF_SDIO_DEVICE(dev_id)	\
--	{SDIO_DEVICE(BRCM_SDIO_VENDOR_ID_BROADCOM, dev_id)}
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, dev_id)}
+ static int _rtl_pci_init_one_rxdesc(struct ieee80211_hw *hw,
++				    struct sk_buff *new_skb,
+ 				    u8 *entry, int rxring_idx, int desc_idx)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -674,7 +675,10 @@ static int _rtl_pci_init_one_rxdesc(stru
+ 	u8 tmp_one = 1;
+ 	struct sk_buff *skb;
  
- /* devices we support, null terminated */
- static const struct sdio_device_id brcmf_sdmmc_ids[] = {
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43143_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43241_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4329_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4330_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4334_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43340_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43341_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43362_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4335_4339_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4354_DEVICE_ID),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43143),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43241),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4329),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4330),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4334),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43340),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43341),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43362),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4335_4339),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
- 	{ /* end: all zeroes */ }
- };
- MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index 551da35..99a3776 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -3816,7 +3816,7 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 	u32 val, rev;
+-	skb = dev_alloc_skb(rtlpci->rxbuffersize);
++	if (new_skb)
++		skb = new_skb;
++	else
++		skb = dev_alloc_skb(rtlpci->rxbuffersize);
+ 	if (!skb)
+ 		return 0;
+ 	rtlpci->rx_ring[rxring_idx].rx_buf[desc_idx] = skb;
+@@ -772,6 +776,7 @@ static void _rtl_pci_rx_interrupt(struct
+ 	/*RX NORMAL PKT */
+ 	while (count--) {
+ 		struct ieee80211_hdr *hdr;
++		struct sk_buff *new_skb = NULL;
+ 		__le16 fc;
+ 		u16 len;
+ 		/*rx buffer descriptor */
+@@ -800,6 +805,12 @@ static void _rtl_pci_rx_interrupt(struct
+ 				return;
+ 		}
  
- 	val = brcmf_sdiod_regrl(sdiodev, addr, NULL);
--	if (sdiodev->func[0]->device == BRCM_SDIO_4335_4339_DEVICE_ID &&
-+	if (sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 &&
- 	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
- 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
- 		if (rev >= 2) {
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 00215ef..2124a17 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -22,7 +22,6 @@
++		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
++		if (unlikely(!new_skb)) {
++			RT_TRACE(rtlpriv, (COMP_INTR | COMP_RECV), DBG_DMESG,
++				 "can't alloc skb for rx\n");
++			goto end;
++		}
+ 		/* Reaching this point means: data is filled already
+ 		 * AAAAAAttention !!!
+ 		 * We can NOT access 'skb' before 'pci_unmap_single'
+@@ -845,6 +856,7 @@ static void _rtl_pci_rx_interrupt(struct
+ 		if (rtlpriv->cfg->ops->rx_command_packet &&
+ 		    rtlpriv->cfg->ops->rx_command_packet(hw, stats, skb)) {
+ 				dev_kfree_skb_any(skb);
++				skb = new_skb;
+ 				goto end;
+ 		}
  
- #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
- #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
--#define BRCM_SDIO_VENDOR_ID_BROADCOM	SDIO_VENDOR_ID_BROADCOM
+@@ -895,6 +907,7 @@ static void _rtl_pci_rx_interrupt(struct
+ 		} else {
+ 			dev_kfree_skb_any(skb);
+ 		}
++		skb = new_skb;
+ 		if (rtlpriv->use_new_trx_flow) {
+ 			rtlpci->rx_ring[hw_queue].next_rx_rp += 1;
+ 			rtlpci->rx_ring[hw_queue].next_rx_rp %=
+@@ -912,12 +925,13 @@ static void _rtl_pci_rx_interrupt(struct
+ 		}
+ end:
+ 		if (rtlpriv->use_new_trx_flow) {
+-			if (!_rtl_pci_init_one_rxdesc(hw, (u8 *)buffer_desc,
+-					     rxring_idx,
+-					     rtlpci->rx_ring[rxring_idx].idx))
++			/* TODO: Can the following fail? */
++			if (!_rtl_pci_init_one_rxdesc(hw, skb,
++					 (u8 *)buffer_desc, rxring_idx,
++					 rtlpci->rx_ring[rxring_idx].idx))
+ 				return;
+ 		} else {
+-			if (!_rtl_pci_init_one_rxdesc(hw, (u8 *)pdesc,
++			if (!_rtl_pci_init_one_rxdesc(hw, skb, (u8 *)pdesc,
+ 					     rxring_idx,
+ 					     rtlpci->rx_ring[rxring_idx].idx))
+ 				return;
+@@ -1309,7 +1323,7 @@ static int _rtl_pci_init_rx_ring(struct
+ 		rtlpci->rx_ring[rxring_idx].idx = 0;
+ 		for (i = 0; i < rtlpci->rxringcount; i++) {
+ 			entry = &rtlpci->rx_ring[rxring_idx].buffer_desc[i];
+-			if (!_rtl_pci_init_one_rxdesc(hw, (u8 *)entry,
++			if (!_rtl_pci_init_one_rxdesc(hw, NULL, (u8 *)entry,
+ 						      rxring_idx, i))
+ 				return -ENOMEM;
+ 		}
+@@ -1334,7 +1348,7 @@ static int _rtl_pci_init_rx_ring(struct
  
- /* Chipcommon Core Chip IDs */
- #define BRCM_CC_43143_CHIP_ID		43143
-@@ -46,18 +45,6 @@
- #define BRCM_CC_43570_CHIP_ID		43570
- #define BRCM_CC_43602_CHIP_ID		43602
- 
--/* SDIO Device IDs */
--#define BRCM_SDIO_43143_DEVICE_ID	BRCM_CC_43143_CHIP_ID
--#define BRCM_SDIO_43241_DEVICE_ID	BRCM_CC_43241_CHIP_ID
--#define BRCM_SDIO_4329_DEVICE_ID	BRCM_CC_4329_CHIP_ID
--#define BRCM_SDIO_4330_DEVICE_ID	BRCM_CC_4330_CHIP_ID
--#define BRCM_SDIO_4334_DEVICE_ID	BRCM_CC_4334_CHIP_ID
--#define BRCM_SDIO_43340_DEVICE_ID	BRCM_CC_43340_CHIP_ID
--#define BRCM_SDIO_43341_DEVICE_ID	43341
--#define BRCM_SDIO_43362_DEVICE_ID	BRCM_CC_43362_CHIP_ID
--#define BRCM_SDIO_4335_4339_DEVICE_ID	BRCM_CC_4335_CHIP_ID
--#define BRCM_SDIO_4354_DEVICE_ID	BRCM_CC_4354_CHIP_ID
--
- /* USB Device IDs */
- #define BRCM_USB_43143_DEVICE_ID	0xbd1e
- #define BRCM_USB_43236_DEVICE_ID	0xbd17
--- 
-1.9.1
+ 		for (i = 0; i < rtlpci->rxringcount; i++) {
+ 			entry = &rtlpci->rx_ring[rxring_idx].desc[i];
+-			if (!_rtl_pci_init_one_rxdesc(hw, (u8 *)entry,
++			if (!_rtl_pci_init_one_rxdesc(hw, NULL, (u8 *)entry,
+ 						      rxring_idx, i))
+ 				return -ENOMEM;
+ 		}
 
+--------------070702000602040909090600--
