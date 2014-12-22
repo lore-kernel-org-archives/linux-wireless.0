@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:36455 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751127AbaLZTFp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 14:05:45 -0500
-Received: by mail-ob0-f174.google.com with SMTP id nt9so38869598obb.5
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 11:05:44 -0800 (PST)
-Message-ID: <549DB187.3090003@lwfinger.net> (sfid-20141226_200548_474551_DB1AA44F)
-Date: Fri, 26 Dec 2014 13:05:43 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	Christopher Chavez <chrischavez@gmx.us>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: p54usb kernel panic on recent mainline kernels
-References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com> <549CCAD8.70704@lwfinger.net> <loom.20141226T052138-41@post.gmane.org> <2868661.A1AiatZ287@debian64>
-In-Reply-To: <2868661.A1AiatZ287@debian64>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:33515 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754281AbaLVNOj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2014 08:14:39 -0500
+Message-ID: <1419254074.1890.18.camel@sipsolutions.net> (sfid-20141222_141442_020873_C94AE707)
+Subject: Re: [PATCH 1/2] brmc80211: dont use jiffies for BSS TSF
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Franky Lin <frankyl@broadcom.com>, linux-wireless@vger.kernel.org
+Date: Mon, 22 Dec 2014 14:14:34 +0100
+In-Reply-To: <549818FE.1090707@broadcom.com>
+References: <20120313125702.703540202@sipsolutions.net>
+		 <20120313125919.370791280@sipsolutions.net>
+		 (sfid-20120313_140421_642123_6BC8E250) <1419253089.1890.13.camel@sipsolutions.net>
+	 <549818FE.1090707@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/26/2014 08:35 AM, Christian Lamparter wrote:
-> On Friday, December 26, 2014 04:23:21 AM Christopher Chavez wrote:
->> Larry Finger <Larry.Finger@...> writes:
->>> In any case, file a bug report at bugzilla.kernel.org, mark it as a regression,
->>> and post the bug number here. If you are able to finish the bisection, that
->>> would be helpful.
->>
->> Reported.
->> https://bugzilla.kernel.org/show_bug.cgi?id=90331
->
-> According to what Larry wrote, this bug should disappear, if
-> the hw crypto offloading is disabled.
->
-> Christopher, can you please load the p54common kernel module
-> with the module parameter "nohwcrypt=1" and report back?
+On Mon, 2014-12-22 at 14:13 +0100, Arend van Spriel wrote:
+> On 12/22/14 13:58, Johannes Berg wrote:
+> > By the way - I know now that the proprietary Broadcom driver has the
+> > same bug, to the point where this is apparently getting encoded into the
+> > Android framework.
+> >
+> > I urge you to fix this issue there as well. If an absolute "last
+> > updated" timestamp is needed (and "last seen [ms] ago" isn't sufficient)
+> > then new API will be needed.
+> 
+> Sorry, seem to have missed the original patches somehow. Guess because 
+> it says *brmc*80211.
 
-Christian,
+No no - it's a looong time ago and was also applied a long time ago. It
+just reared it's head again in another place.
 
-I can confirm that the skb panic goes away if hardware encryption is disabled.
-
-My bisection led to a branch commit d17ec4d as the "bad" commit. Rather than 
-finding out where the bisection went bad, I added code to check skb->tail, 
-skb->end, and the length to be added. At the time of the call that panics, there 
-are 6 bytes between tail and end with 8 bytes needed.
-
-I will be looking for the place where the driver calculates how large the skb 
-should be.
-
-Larry
+johannes
 
