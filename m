@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:33829 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbaLJJXb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 04:23:31 -0500
-Received: by mail-wg0-f51.google.com with SMTP id x12so2994204wgg.38
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Dec 2014 01:23:29 -0800 (PST)
-From: Henning Rogge <hrogge@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33152 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754616AbaLVLxL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2014 06:53:11 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Henning Rogge <hrogge@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Subject: [PATCH] iw: Fix calculation of maximum supported 802.11n data rate
-Date: Wed, 10 Dec 2014 10:23:20 +0100
-Message-Id: <1418203400-6451-1-git-send-email-hrogge@gmail.com> (sfid-20141210_102335_618229_C219E8CD)
+Cc: David Binderman <dcb314@hotmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211_hwsim: fix check for custom world regdom array size
+Date: Mon, 22 Dec 2014 12:53:07 +0100
+Message-Id: <1419249187-8823-1-git-send-email-johannes@sipsolutions.net> (sfid-20141222_125317_968318_6BEE314D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix typo in calculation, binary AND combination of low byte
-and high byte is always zero.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+David Binderman reports that the conditions in the first loop
+are the wrong way around - checking the array contents before
+the size.
+
+Instead of leaving the empty loop there and reordering the two
+checks unify it into a single loop that skips over non-matches
+and exits after the first match.
+
+Reported-by: David Binderman <dcb314@hotmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mac80211_hwsim.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/util.c b/util.c
-index ce4b0ac..c61955c 100644
---- a/util.c
-+++ b/util.c
-@@ -594,7 +594,7 @@ void print_ht_mcs(const __u8 *mcs)
- 	unsigned int tx_max_num_spatial_streams, max_rx_supp_data_rate;
- 	bool tx_mcs_set_defined, tx_mcs_set_equal, tx_unequal_modulation;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index a71b9d5e353d..057a99e01637 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2150,14 +2150,14 @@ static int append_radio_msg(struct sk_buff *skb, int id,
+ 	if (param->regd) {
+ 		int i;
  
--	max_rx_supp_data_rate = (mcs[10] & ((mcs[11] & 0x3) << 8));
-+	max_rx_supp_data_rate = (mcs[10] | ((mcs[11] & 0x3) << 8));
- 	tx_mcs_set_defined = !!(mcs[12] & (1 << 0));
- 	tx_mcs_set_equal = !(mcs[12] & (1 << 1));
- 	tx_max_num_spatial_streams = ((mcs[12] >> 2) & 3) + 1;
+-		for (i = 0; hwsim_world_regdom_custom[i] != param->regd &&
+-		     i < ARRAY_SIZE(hwsim_world_regdom_custom); i++)
+-			;
++		for (i = 0; i < ARRAY_SIZE(hwsim_world_regdom_custom); i++) {
++			if (hwsim_world_regdom_custom[i] != param->regd)
++				continue;
+ 
+-		if (i < ARRAY_SIZE(hwsim_world_regdom_custom)) {
+ 			ret = nla_put_u32(skb, HWSIM_ATTR_REG_CUSTOM_REG, i);
+ 			if (ret < 0)
+ 				return ret;
++			break;
+ 		}
+ 	}
+ 
 -- 
-1.9.3
+2.1.1
 
