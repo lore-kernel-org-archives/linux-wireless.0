@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:38569 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750808AbaL0AQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 19:16:13 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Y4f3C-0007y5-BH
-	for linux-wireless@vger.kernel.org; Sat, 27 Dec 2014 01:16:10 +0100
-Received: from cpe-67-11-235-53.satx.res.rr.com ([67.11.235.53])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 01:16:10 +0100
-Received: from chrischavez by cpe-67-11-235-53.satx.res.rr.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 01:16:10 +0100
-To: linux-wireless@vger.kernel.org
-From: Christopher Chavez <chrischavez@gmx.us>
-Subject: Re: p54usb kernel panic on recent mainline kernels
-Date: Sat, 27 Dec 2014 00:15:58 +0000 (UTC)
-Message-ID: <loom.20141227T010207-869@post.gmane.org> (sfid-20141227_012032_145583_6B7679CB)
-References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com> <549CCAD8.70704@lwfinger.net> <loom.20141226T052138-41@post.gmane.org> <2868661.A1AiatZ287@debian64> <549DB187.3090003@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:40655 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753977AbaLVJFj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Dec 2014 04:05:39 -0500
+Message-ID: <5497DEE0.1040007@broadcom.com> (sfid-20141222_100545_864364_AE3B1FE1)
+Date: Mon, 22 Dec 2014 10:05:36 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Marcel Holtmann <marcel@holtmann.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Rob Herring <rob.herring@linaro.org>,
+	John Stultz <john.stultz@linaro.org>
+Subject: Re: [PATCH 03/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
+References: <1419162233-19492-1-git-send-email-arend@broadcom.com>	<1419162233-19492-4-git-send-email-arend@broadcom.com>	<B1CB9465-1353-411C-9B3C-42DEFBFDBBE0@holtmann.org>	<549725D1.2090402@broadcom.com> <CACna6rxjKUeDVGXGB5UzgOw1WyQKE+LYmtxJvTLW+H1fC7-13Q@mail.gmail.com>
+In-Reply-To: <CACna6rxjKUeDVGXGB5UzgOw1WyQKE+LYmtxJvTLW+H1fC7-13Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/21/14 21:14, Rafał Miłecki wrote:
+> On 21 December 2014 at 20:56, Arend van Spriel<arend@broadcom.com>  wrote:
+>> On 12/21/14 18:50, Marcel Holtmann wrote:
+>>>
+>>> Hi Arend,
+>>>
+>>>> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+>>>> index 0f01fe0..61f8318 100644
+>>>> --- a/include/linux/mmc/sdio_ids.h
+>>>> +++ b/include/linux/mmc/sdio_ids.h
+>>>> @@ -29,6 +29,8 @@
+>>>> #define SDIO_DEVICE_ID_BROADCOM_4329            0x4329
+>>>> #define SDIO_DEVICE_ID_BROADCOM_4330            0x4330
+>>>> #define SDIO_DEVICE_ID_BROADCOM_4334            0x4334
+>>>> +#define SDIO_DEVICE_ID_BROADCOM_43340          43340
+>>>> +#define SDIO_DEVICE_ID_BROADCOM_43341          43341
+>>>
+>>>
+>>> the general preference is to have these values in hex. I get the fact that
+>>> they map the marketing number, but that could be just stated in a comment
+>>> after the hex number.
+>>
+>> Will change that.
+>
+> I vote for keeping user-friendly numbers as comments :)
 
-I have not yet confirmed Christian's workaround, but thank you both for testing.
+I don't see added value as the define id ends with the marketing number.
 
-> My bisection led to a branch commit d17ec4d as the "bad" commit. Rather than
-> finding out where the bisection went bad, I added code to check skb->tail, 
-> skb->end, and the length to be added. At the time of the call that panics,
-> there are 6 bytes between tail and end with 8 bytes needed.
-> 
-> I will be looking for the place where the driver calculates how large the skb 
-> should be.
-
-In the few remaining revisions from "git bisect visualize",
-this one mentions skbs:
-
-commit c70f59a2a007c57843195a93c3b7308204e0a5ab
-Author: Ido Yariv <ido@wizery.com>
-Date:   Tue Jul 29 15:39:14 2014 +0300
-
-    mac80211: don't resize skbs needlessly
-    
-    Header-less cloned skbs with sufficient headroom need not be cloned
-    unless the tailroom is going to be modified.
-    
-    Fix ieee80211_skb_resize so it would only resize cloned skbs if either
-    the header isn't released or the tailroom is going to be modified.
-    
-    Some drivers might have assumed that skbs are never cloned, so add a HW
-    flag that explicitly permits cloned TX skbs. Drivers which do not modify
-    TX skbs should set this flag to avoid copying skbs.
-    
-    Signed-off-by: Ido Yariv <idox.yariv@intel.com>
-    Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-
-
+Regards,
+Arend
