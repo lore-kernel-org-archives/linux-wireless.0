@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17532 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751992AbaLZOmd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 09:42:33 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 16/27] ath6kl: Use setup_timer
-Date: Fri, 26 Dec 2014 15:35:47 +0100
-Message-Id: <1419604558-29743-17-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154757_100316_CF421BDA)
-In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37986 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755510AbaLWK0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 05:26:37 -0500
+Message-ID: <1419330394.6091.0.camel@sipsolutions.net> (sfid-20141223_112641_136943_BB7E0CA0)
+Subject: Re: [PATCH] cfg80211: do not check for carrier during
+ start_radar_detect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <patila@marvell.com>
+Cc: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 23 Dec 2014 11:26:34 +0100
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>
+References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
+	 <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com>
+	,<5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
+	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert a call to init_timer and accompanying intializations of
-the timer's data and function fields to a call to setup_timer.
+On Tue, 2014-12-23 at 02:13 -0800, Avinash Patil wrote:
+> Hi Janusz,
+> 
+> Any further update on this?
 
-A simplified version of the semantic match that fixes this problem is as
-follows: (http://coccinelle.lip6.fr/)
+We were waiting for you to send a new patch?
 
-// <smpl>
-@@
-expression t,f,d;
-@@
+johannes
 
--init_timer(&t);
-+setup_timer(&t,f,d);
--t.function = f;
--t.data = d;
-// </smpl>
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 40432fe..3bc3aa7 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1757,9 +1757,7 @@ void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
- 
- 	aggr_conn->aggr_sz = AGGR_SZ_DEFAULT;
- 	aggr_conn->dev = vif->ndev;
--	init_timer(&aggr_conn->timer);
--	aggr_conn->timer.function = aggr_timeout;
--	aggr_conn->timer.data = (unsigned long) aggr_conn;
-+	setup_timer(&aggr_conn->timer, aggr_timeout, (unsigned long)aggr_conn);
- 	aggr_conn->aggr_info = aggr_info;
- 
- 	aggr_conn->timer_scheduled = false;
 
