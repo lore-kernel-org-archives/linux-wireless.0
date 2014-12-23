@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37946 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753877AbaLDUAN (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21144 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755097AbaLWHsc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2014 15:00:13 -0500
-Date: Thu, 4 Dec 2014 14:59:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: wireless-regdb@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Subject: new regulatory database mainteiner -- Seth Forshee
-Message-ID: <20141204195945.GC2842@tuxdriver.com> (sfid-20141204_210022_859068_455FC800)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 23 Dec 2014 02:48:32 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 11/22] wil6210: Increase number of associated stations
+Date: Tue, 23 Dec 2014 09:47:13 +0200
+Message-Id: <1419320844-23989-12-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141223_091348_472602_AF83EC74)
+In-Reply-To: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings,
+Change default to support maximum number of associated
+stations to an AP
 
-As you may know, I have been maintaining the wireless regulatory rules
-database used by CRDA since the project was started.  Although I
-am not an expert on regulatory law by anyone's estimation, I have
-maintained this database both through personal trust in those
-presenting patches and through an abundance of caution about only
-applying non-controversial changes.
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-In any case, I now find other demands on my time.  I have asked Seth
-Forshee if he would be willing to accept this responsibility from
-me and Seth has graciously done so.  Seth, Luis, and I have been in
-the process of making the actual technical hand-off over the past
-several days, and I think everything should be in place soon (if it
-isn't already there now).  This includes ensuring that Seth has the
-necessary access for publishing wireless-regdb updates on kernel.org,
-and ensuring that his public signing key is included as part of the
-CRDA package distribution.
-
-I would like to thank Seth for taking this important duty upon himself
-and I wish him all the best in doing so.  I hope that everyone else
-will do the same!
-
-Thanks,
-
-John
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 70b055c..245215a 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -23,7 +23,7 @@
+ #include "wmi.h"
+ #include "trace.h"
+ 
+-static uint max_assoc_sta = 1;
++static uint max_assoc_sta = WIL6210_MAX_CID;
+ module_param(max_assoc_sta, uint, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(max_assoc_sta, " Max number of stations associated to the AP");
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+2.1.0
+
