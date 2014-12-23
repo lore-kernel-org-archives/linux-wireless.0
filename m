@@ -1,206 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:61682 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751916AbaLBSRs (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44399 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755153AbaLWIO6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:17:48 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so17691569wgh.6
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:17:47 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/26] iwlwifi: mvm: check and report if wake up was due to net detect
-Date: Tue,  2 Dec 2014 20:10:53 +0200
-Message-Id: <1417543877-24193-2-git-send-email-egrumbach@gmail.com> (sfid-20141202_191751_932663_41DBC46F)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+	Tue, 23 Dec 2014 03:14:58 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id sBN8Eans010300
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2014 00:14:58 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1rd602ptbc-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2014 00:14:58 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<huxm@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 6/8] mwifiex: save driver information to file when firmware dump
+Date: Tue, 23 Dec 2014 19:14:10 +0530
+Message-ID: <1419342252-2702-7-git-send-email-patila@marvell.com> (sfid-20141223_091514_337616_EE74F0EB)
+In-Reply-To: <1419342252-2702-1-git-send-email-patila@marvell.com>
+References: <1419342252-2702-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+From: Xinming Hu <huxm@marvell.com>
 
-Query the firmware for scan offload matches when waking up in order to
-report net detect as the reason for the wake up.
+This patch adds support to dump driver information to a file
+when firmware dump happens. This information can be used to
+root casue FW crash.
 
-This requires a new command API to be implemented.  Additionally,
-remove some net detect command entries that are not valid anymore.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/d3.c          | 46 ++++++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h | 44 ++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/fw-api.h      |  8 ++---
- drivers/net/wireless/iwlwifi/mvm/ops.c         |  8 ++---
- 4 files changed, 94 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mwifiex/ethtool.c |  16 +++++-
+ drivers/net/wireless/mwifiex/init.c    |   5 ++
+ drivers/net/wireless/mwifiex/main.c    | 102 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/main.h    |   9 +++
+ drivers/net/wireless/mwifiex/sdio.c    |   2 +
+ 5 files changed, 133 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 60748bd..8970386 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1626,14 +1626,50 @@ out_unlock:
- 	return false;
- }
+diff --git a/drivers/net/wireless/mwifiex/ethtool.c b/drivers/net/wireless/mwifiex/ethtool.c
+index 04e56b5..65d8d6d 100644
+--- a/drivers/net/wireless/mwifiex/ethtool.c
++++ b/drivers/net/wireless/mwifiex/ethtool.c
+@@ -76,7 +76,9 @@ mwifiex_get_dump_flag(struct net_device *dev, struct ethtool_dump *dump)
  
-+static u32 iwl_mvm_netdetect_query_results(struct iwl_mvm *mvm)
-+{
-+	struct iwl_scan_offload_profiles_query *query;
-+	struct iwl_host_cmd cmd = {
-+		.id = SCAN_OFFLOAD_PROFILES_QUERY_CMD,
-+		.flags = CMD_WANT_SKB,
-+	};
-+	int ret, len;
-+
-+	ret = iwl_mvm_send_cmd(mvm, &cmd);
-+	if (ret) {
-+		IWL_ERR(mvm, "failed to query matched profiles (%d)\n", ret);
+ 	dump->flag = adapter->curr_mem_idx;
+ 	dump->version = 1;
+-	if (adapter->curr_mem_idx != MWIFIEX_FW_DUMP_IDX) {
++	if (adapter->curr_mem_idx == MWIFIEX_DRV_INFO_IDX) {
++		dump->len = adapter->drv_info_size;
++	} else if (adapter->curr_mem_idx != MWIFIEX_FW_DUMP_IDX) {
+ 		entry = &adapter->mem_type_mapping_tbl[adapter->curr_mem_idx];
+ 		dump->len = entry->mem_size;
+ 	} else {
+@@ -98,6 +100,13 @@ mwifiex_get_dump_data(struct net_device *dev, struct ethtool_dump *dump,
+ 	if (!adapter->if_ops.fw_dump)
+ 		return -ENOTSUPP;
+ 
++	if (adapter->curr_mem_idx == MWIFIEX_DRV_INFO_IDX) {
++		if (!adapter->drv_info_dump)
++			return -EFAULT;
++		memcpy(p, adapter->drv_info_dump, adapter->drv_info_size);
 +		return 0;
 +	}
 +
-+	/* RF-kill already asserted again... */
-+	if (!cmd.resp_pkt)
-+		goto out_free_resp;
-+
-+	len = iwl_rx_packet_payload_len(cmd.resp_pkt);
-+	if (len < sizeof(*query)) {
-+		IWL_ERR(mvm, "Invalid scan offload profiles query response!\n");
-+		goto out_free_resp;
+ 	if (adapter->curr_mem_idx == MWIFIEX_FW_DUMP_IDX) {
+ 		dev_err(adapter->dev, "firmware dump in progress!!\n");
+ 		return -EBUSY;
+@@ -125,6 +134,11 @@ static int mwifiex_set_dump(struct net_device *dev, struct ethtool_dump *val)
+ 	if (!adapter->if_ops.fw_dump)
+ 		return -ENOTSUPP;
+ 
++	if (val->flag == MWIFIEX_DRV_INFO_IDX) {
++		adapter->curr_mem_idx = MWIFIEX_DRV_INFO_IDX;
++		return 0;
 +	}
 +
-+	query = (void *)cmd.resp_pkt->data;
-+
-+	ret = le32_to_cpu(query->matched_profiles);
-+
-+out_free_resp:
-+	iwl_free_resp(&cmd);
-+	return ret;
-+}
-+
- static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
- 					    struct ieee80211_vif *vif)
- {
-+	struct cfg80211_wowlan_nd_info net_detect = {};
- 	struct cfg80211_wowlan_wakeup wakeup = {
- 		.pattern_idx = -1,
- 	};
- 	struct cfg80211_wowlan_wakeup *wakeup_report = &wakeup;
- 	struct iwl_wowlan_status *fw_status;
-+	u32 matched_profiles;
- 	u32 reasons = 0;
- 
- 	fw_status = iwl_mvm_get_wakeup_status(mvm, vif);
-@@ -1643,11 +1679,17 @@ static void iwl_mvm_query_netdetect_reasons(struct iwl_mvm *mvm,
- 	if (reasons & IWL_WOWLAN_WAKEUP_BY_RFKILL_DEASSERTED)
- 		wakeup.rfkill_release = true;
- 
--	if (reasons == IWL_WOWLAN_WAKEUP_BY_NON_WIRELESS) {
--		/* TODO: read and check if it was netdetect */
-+	if (reasons != IWL_WOWLAN_WAKEUP_BY_NON_WIRELESS)
-+		goto out;
-+
-+	matched_profiles = iwl_mvm_netdetect_query_results(mvm);
-+	if (!matched_profiles) {
- 		wakeup_report = NULL;
-+		goto out;
+ 	if (adapter->curr_mem_idx == MWIFIEX_FW_DUMP_IDX) {
+ 		dev_err(adapter->dev, "firmware dump in progress!!\n");
+ 		return -EBUSY;
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 520ad4a..a3dd601 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -411,6 +411,11 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ 		entry->mem_size = 0;
  	}
  
-+	wakeup.net_detect = &net_detect;
-+out:
- 	mutex_unlock(&mvm->mutex);
- 	ieee80211_report_wowlan_wakeup(vif, wakeup_report, GFP_KERNEL);
++	if (adapter->drv_info_dump) {
++		vfree(adapter->drv_info_dump);
++		adapter->drv_info_size = 0;
++	}
++
+ 	if (adapter->sleep_cfm)
+ 		dev_kfree_skb_any(adapter->sleep_cfm);
  }
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-index 7163eb3..1f2acf4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
-@@ -1047,4 +1047,48 @@ struct iwl_umac_scan_complete {
- 	__le32 reserved;
- } __packed; /* SCAN_COMPLETE_NTF_UMAC_API_S_VER_1 */
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 0c44c5ee..4edaaf4 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -801,6 +801,108 @@ mwifiex_tx_timeout(struct net_device *dev)
+ 	}
+ }
  
-+#define SCAN_OFFLOAD_MATCHING_CHANNELS_LEN 5
-+/**
-+ * struct iwl_scan_offload_profile_match - match information
-+ * @bssid: matched bssid
-+ * @channel: channel where the match occurred
-+ * @energy:
-+ * @matching_feature:
-+ * @matching_channels: bitmap of channels that matched, referencing
-+ *	the channels passed in tue scan offload request
-+ */
-+struct iwl_scan_offload_profile_match {
-+	u8 bssid[ETH_ALEN];
-+	__le16 reserved;
-+	u8 channel;
-+	u8 energy;
-+	u8 matching_feature;
-+	u8 matching_channels[SCAN_OFFLOAD_MATCHING_CHANNELS_LEN];
-+} __packed; /* SCAN_OFFLOAD_PROFILE_MATCH_RESULTS_S_VER_1 */
++void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter)
++{
++	void *p;
++	char drv_version[64];
++	struct usb_card_rec *cardp;
++	struct sdio_mmc_card *sdio_card;
++	struct mwifiex_private *priv;
++	int i, idx;
++	struct netdev_queue *txq;
++	struct mwifiex_debug_info *debug_info;
 +
-+/**
-+ * struct iwl_scan_offload_profiles_query - match results query response
-+ * @matched_profiles: bitmap of matched profiles, referencing the
-+ *	matches passed in the scan offload request
-+ * @last_scan_age: age of the last offloaded scan
-+ * @n_scans_done: number of offloaded scans done
-+ * @gp2_d0u: GP2 when D0U occurred
-+ * @gp2_invoked: GP2 when scan offload was invoked
-+ * @resume_while_scanning: not used
-+ * @self_recovery: obsolete
-+ * @reserved: reserved
-+ * @matches: array of match information, one for each match
-+ */
-+struct iwl_scan_offload_profiles_query {
-+	__le32 matched_profiles;
-+	__le32 last_scan_age;
-+	__le32 n_scans_done;
-+	__le32 gp2_d0u;
-+	__le32 gp2_invoked;
-+	u8 resume_while_scanning;
-+	u8 self_recovery;
-+	__le16 reserved;
-+	struct iwl_scan_offload_profile_match matches[IWL_SCAN_MAX_PROFILES];
-+} __packed; /* SCAN_OFFLOAD_PROFILES_QUERY_RSP_S_VER_2 */
++	if (adapter->drv_info_dump) {
++		vfree(adapter->drv_info_dump);
++		adapter->drv_info_size = 0;
++	}
 +
- #endif
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 2ff4f41..01d6f9e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -249,11 +249,9 @@ enum {
- 	WOWLAN_TX_POWER_PER_DB = 0xe6,
++	dev_info(adapter->dev, "=== DRIVER INFO DUMP START===\n");
++
++	adapter->drv_info_dump = vzalloc(MWIFIEX_DRV_INFO_SIZE_MAX);
++
++	if (!adapter->drv_info_dump)
++		return;
++
++	p = (char *)(adapter->drv_info_dump);
++	p += sprintf(p, "driver_name = " "\"mwifiex\"\n");
++
++	mwifiex_drv_get_driver_version(adapter, drv_version,
++				       sizeof(drv_version) - 1);
++	p += sprintf(p, "driver_version = %s\n", drv_version);
++
++	if (adapter->iface_type == MWIFIEX_USB) {
++		cardp = (struct usb_card_rec *)adapter->card;
++		p += sprintf(p, "tx_cmd_urb_pending = %d\n",
++			     atomic_read(&cardp->tx_cmd_urb_pending));
++		p += sprintf(p, "tx_data_urb_pending = %d\n",
++			     atomic_read(&cardp->tx_data_urb_pending));
++		p += sprintf(p, "rx_cmd_urb_pending = %d\n",
++			     atomic_read(&cardp->rx_cmd_urb_pending));
++		p += sprintf(p, "rx_data_urb_pending = %d\n",
++			     atomic_read(&cardp->rx_data_urb_pending));
++	}
++
++	p += sprintf(p, "tx_pending = %d\n",
++		     atomic_read(&adapter->tx_pending));
++	p += sprintf(p, "rx_pending = %d\n",
++		     atomic_read(&adapter->rx_pending));
++
++	if (adapter->iface_type == MWIFIEX_SDIO) {
++		sdio_card = (struct sdio_mmc_card *)adapter->card;
++		p += sprintf(p, "\nmp_rd_bitmap=0x%x curr_rd_port=0x%x\n",
++			     sdio_card->mp_rd_bitmap, sdio_card->curr_rd_port);
++		p += sprintf(p, "mp_wr_bitmap=0x%x curr_wr_port=0x%x\n",
++			     sdio_card->mp_wr_bitmap, sdio_card->curr_wr_port);
++	}
++
++	for (i = 0; i < adapter->priv_num; i++) {
++		if (!adapter->priv[i] || !adapter->priv[i]->netdev)
++			continue;
++		priv = adapter->priv[i];
++		p += sprintf(p, "\n[interface  : \"%s\"]\n",
++			     priv->netdev->name);
++		p += sprintf(p, "wmm_tx_pending[0] = %d\n",
++			     atomic_read(&priv->wmm_tx_pending[0]));
++		p += sprintf(p, "wmm_tx_pending[1] = %d\n",
++			     atomic_read(&priv->wmm_tx_pending[1]));
++		p += sprintf(p, "wmm_tx_pending[2] = %d\n",
++			     atomic_read(&priv->wmm_tx_pending[2]));
++		p += sprintf(p, "wmm_tx_pending[3] = %d\n",
++			     atomic_read(&priv->wmm_tx_pending[3]));
++		p += sprintf(p, "media_state=\"%s\"\n", !priv->media_connected ?
++			     "Disconnected" : "Connected");
++		p += sprintf(p, "carrier %s\n", (netif_carrier_ok(priv->netdev)
++			     ? "on" : "off"));
++		for (idx = 0; idx < priv->netdev->num_tx_queues; idx++) {
++			txq = netdev_get_tx_queue(priv->netdev, idx);
++			p += sprintf(p, "tx queue %d:%s  ", idx,
++				     netif_tx_queue_stopped(txq) ?
++				     "stopped" : "started");
++		}
++		p += sprintf(p, "\n%s: num_tx_timeout = %d\n",
++			     priv->netdev->name, priv->num_tx_timeout);
++	}
++
++	p += sprintf(p, "\n=== MORE DEBUG INFORMATION\n");
++	debug_info = kzalloc(sizeof(*debug_info), GFP_KERNEL);
++	if (debug_info) {
++		for (i = 0; i < adapter->priv_num; i++) {
++			if (!adapter->priv[i] || !adapter->priv[i]->netdev)
++				continue;
++			priv = adapter->priv[i];
++			mwifiex_get_debug_info(priv, debug_info);
++			p += mwifiex_debug_info_to_buffer(priv, p, debug_info);
++			break;
++		}
++		kfree(debug_info);
++	}
++
++	adapter->drv_info_size = p - adapter->drv_info_dump;
++	dev_info(adapter->dev, "=== DRIVER INFO DUMP END===\n");
++}
++EXPORT_SYMBOL_GPL(mwifiex_dump_drv_info);
++
+ /*
+  * CFG802.11 network device handler for statistics retrieval.
+  */
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 6f7e060..2f085de 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -41,6 +41,8 @@
+ #include "util.h"
+ #include "fw.h"
+ #include "pcie.h"
++#include "usb.h"
++#include "sdio.h"
  
- 	/* and for NetDetect */
--	NET_DETECT_CONFIG_CMD = 0x54,
--	NET_DETECT_PROFILES_QUERY_CMD = 0x56,
--	NET_DETECT_PROFILES_CMD = 0x57,
--	NET_DETECT_HOTSPOTS_CMD = 0x58,
--	NET_DETECT_HOTSPOTS_QUERY_CMD = 0x59,
-+	SCAN_OFFLOAD_PROFILES_QUERY_CMD = 0x56,
-+	SCAN_OFFLOAD_HOTSPOTS_CONFIG_CMD = 0x58,
-+	SCAN_OFFLOAD_HOTSPOTS_QUERY_CMD = 0x59,
+ extern const char driver_version[];
  
- 	REPLY_MAX = 0xff,
+@@ -136,6 +138,8 @@ enum {
+ /* Threshold for tx_timeout_cnt before we trigger a card reset */
+ #define TX_TIMEOUT_THRESHOLD	6
+ 
++#define MWIFIEX_DRV_INFO_SIZE_MAX 0x40000
++
+ struct mwifiex_dbg {
+ 	u32 num_cmd_host_to_card_failure;
+ 	u32 num_cmd_sleep_cfm_host_to_card_failure;
+@@ -413,6 +417,7 @@ struct mwifiex_roc_cfg {
  };
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index b3ae094..b952e79 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -325,11 +325,9 @@ static const char *const iwl_mvm_cmd_strings[REPLY_MAX] = {
- 	CMD(WOWLAN_KEK_KCK_MATERIAL),
- 	CMD(WOWLAN_GET_STATUSES),
- 	CMD(WOWLAN_TX_POWER_PER_DB),
--	CMD(NET_DETECT_CONFIG_CMD),
--	CMD(NET_DETECT_PROFILES_QUERY_CMD),
--	CMD(NET_DETECT_PROFILES_CMD),
--	CMD(NET_DETECT_HOTSPOTS_CMD),
--	CMD(NET_DETECT_HOTSPOTS_QUERY_CMD),
-+	CMD(SCAN_OFFLOAD_PROFILES_QUERY_CMD),
-+	CMD(SCAN_OFFLOAD_HOTSPOTS_CONFIG_CMD),
-+	CMD(SCAN_OFFLOAD_HOTSPOTS_QUERY_CMD),
- 	CMD(CARD_STATE_NOTIFICATION),
- 	CMD(MISSED_BEACONS_NOTIFICATION),
- 	CMD(BT_COEX_PRIO_TABLE),
+ 
+ #define MWIFIEX_FW_DUMP_IDX		0xff
++#define MWIFIEX_DRV_INFO_IDX		20
+ #define FW_DUMP_MAX_NAME_LEN		8
+ #define FW_DUMP_HOST_READY		0xEE
+ #define FW_DUMP_DONE			0xFF
+@@ -867,6 +872,8 @@ struct mwifiex_adapter {
+ 	struct memory_type_mapping *mem_type_mapping_tbl;
+ 	u8 num_mem_types;
+ 	u8 curr_mem_idx;
++	void *drv_info_dump;
++	u32 drv_info_size;
+ 	bool scan_chan_gap_enabled;
+ 	struct sk_buff_head rx_data_q;
+ 	struct mwifiex_chan_stats *chan_stats;
+@@ -1360,6 +1367,8 @@ void mwifiex_hist_data_add(struct mwifiex_private *priv,
+ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+ 			    u8 rx_rate, u8 ht_info);
+ 
++void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter);
++
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+ void mwifiex_debugfs_remove(void);
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 933dae1..6bdfe67 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -2023,6 +2023,8 @@ static void mwifiex_sdio_fw_dump_work(struct work_struct *work)
+ 	u32 memory_size;
+ 	static char *env[] = { "DRIVER=mwifiex_sdio", "EVENT=fw_dump", NULL };
+ 
++	mwifiex_dump_drv_info(adapter);
++
+ 	if (!card->supports_fw_dump)
+ 		return;
+ 
 -- 
-1.9.1
+1.8.1.4
 
