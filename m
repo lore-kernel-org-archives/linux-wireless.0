@@ -1,85 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40635 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751614AbaLZLD4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Dec 2014 06:03:56 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id sBQAxt8X031889
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 03:03:55 -0800
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1rfjy5x15v-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 03:03:55 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH v3 4/4] mwifiex: get supported BA stream info from FW
-Date: Fri, 26 Dec 2014 03:02:34 -0800
-Message-ID: <1419591754-4086-4-git-send-email-patila@marvell.com> (sfid-20141226_120400_126485_2DA4CB4E)
-In-Reply-To: <1419591754-4086-1-git-send-email-patila@marvell.com>
-References: <1419591754-4086-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:38916 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755704AbaLWOxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 09:53:31 -0500
+Message-ID: <1419346405.6091.6.camel@sipsolutions.net> (sfid-20141223_155334_784728_B2EDDDCC)
+Subject: Re: [PATCH] cfg80211: check for carrier state only when offchanel
+ CAC supported
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <patila@marvell.com>
+Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
+	cluo@marvell.com, janusz.dziedzic@tieto.com,
+	Arend van Spriel <arend@broadcom.com>
+Date: Tue, 23 Dec 2014 15:53:25 +0100
+In-Reply-To: <1419365159-6577-1-git-send-email-patila@marvell.com>
+References: <1419365159-6577-1-git-send-email-patila@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to get number of BA streams
-supported information from FW. Some newer chips(e.g. 8897 series)
-support 4 BA streams for TX; so driver should not disallow BA stream
-setup just after 2 streams have been established.
+On Wed, 2014-12-24 at 01:35 +0530, Avinash Patil wrote:
+> Checking for carrier state during start_radar_detection is needed
+> only for devices which support offchannel CAC.
+> This patch adds one more condition while checking for carrier state
+> to see if offchanel CAC is supported, else we need not check carrier
+> state.
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> ---
+>  include/net/cfg80211.h | 2 ++
+>  net/wireless/nl80211.c | 3 ++-
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 4ebb816..1b80302 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -2740,6 +2740,7 @@ struct cfg80211_ops {
+>   * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
+>   * @WIPHY_FLAG_HAS_CHANNEL_SWITCH: Device supports channel switch in
+>   *	beaconing mode (AP, IBSS, Mesh, ...).
+> + * @WIPHY_FLAG_OFFCHAN_CAC: Device supports offchannel CAC.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.h | 14 +++++++++++---
- drivers/net/wireless/mwifiex/fw.h  |  1 +
- 2 files changed, 12 insertions(+), 3 deletions(-)
+I think this should be an nl80211 feature flag, so that userspace can
+also know whether or not this is supported.
 
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index f275675..8e2e394 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -130,7 +130,9 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
- {
- 	struct mwifiex_private *priv;
- 	u8 i;
--	u32 ba_stream_num = 0;
-+	u32 ba_stream_num = 0, ba_stream_max;
-+
-+	ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
- 
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		priv = adapter->priv[i];
-@@ -139,8 +141,14 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
- 				&priv->tx_ba_stream_tbl_ptr);
- 	}
- 
--	return ((ba_stream_num <
--		 MWIFIEX_MAX_TX_BASTREAM_SUPPORTED) ? true : false);
-+	if (adapter->fw_api_ver == MWIFIEX_FW_V15) {
-+		ba_stream_max =
-+			       GETSUPP_TXBASTREAMS(adapter->hw_dot_11n_dev_cap);
-+		if (!ba_stream_max)
-+			ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
-+	}
-+
-+	return ((ba_stream_num < ba_stream_max) ? true : false);
- }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index fb5936e..9a82323 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -233,6 +233,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define ISSUPP_RXLDPC(Dot11nDevCap) (Dot11nDevCap & BIT(22))
- #define ISSUPP_BEAMFORMING(Dot11nDevCap) (Dot11nDevCap & BIT(30))
- #define ISALLOWED_CHANWIDTH40(ht_param) (ht_param & BIT(2))
-+#define GETSUPP_TXBASTREAMS(Dot11nDevCap) ((Dot11nDevCap >> 18) & 0xF)
- 
- /* httxcfg bitmap
-  * 0		reserved
--- 
-1.8.1.4
+However, we've run out of nl80211 feature flags. Arend is working on
+adding more, see here:
+http://mid.gmane.org/1418935344-22159-1-git-send-email-arend@broadcom.com
+(ignore the 4-way-HS offload bit he's defining)
+
+I'm not sure how to proceed here - in a sense your feature flag is far
+less controversial and work-intensive than Arend's (who needs a lot more
+than just that patch) so I guess you could pick up his patch, but I
+expect him to also have fixed already. He's probably also on vacation
+for about the same time though...
+
+johannes
 
