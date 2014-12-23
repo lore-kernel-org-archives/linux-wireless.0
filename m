@@ -1,330 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:24827 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750756AbaLOFNK (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:33036 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022AbaLWWvD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 00:13:10 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 3/5] ath10k: add thermal cooling device support
-Date: Mon, 15 Dec 2014 10:41:12 +0530
-Message-ID: <1418620274-3081-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141215_061314_702987_F87B650B)
-In-Reply-To: <1418620274-3081-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1418620274-3081-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 23 Dec 2014 17:51:03 -0500
+From: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+To: zajec5@gmail.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+Subject: [PATCH] Drivers: bcma: Fix three coding style issues, more than 80 characters per line.
+Date: Tue, 23 Dec 2014 23:55:09 +0000
+Message-Id: <1419378909-14414-1-git-send-email-oscar.forner.martinez@gmail.com> (sfid-20141223_235128_237729_5867160B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thermal cooling device support is added to control the temperature
-by throttling the data transmission for the given duration. Throttling
-is done using hw MAC quiet time setting. Period, duration and offset
-from TBTT can be set up to quiet the MAC transmits for the required duty
-cycle (% of quiet duration). The thermal device allows user to configure
-duty cycle.
+Three lines with more than 80 characters per line have been split in several lines.
 
-The quiet params are derived as follows.
-	period = max(25TU, beacon interval / number of bss)
-	duration = period * duty cycle / 100
-
-Quiet mode can be disabled by setting the duty cycle to 0. The cooling
-device can be found under /sys/class/thermal/cooling_deviceX/.
-Corresponding soft link to this device can be found under phy folder.
-
-/sys/class/ieee80211/phy*/device/cooling_device.
-
-To set duty cycle as 40%,
-
-echo 40 >/sys/class/ieee80211/phy*/device/cooling_device/cur_state
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/Makefile  |   1 +
- drivers/net/wireless/ath/ath10k/core.c    |  10 ++
- drivers/net/wireless/ath/ath10k/core.h    |   3 +
- drivers/net/wireless/ath/ath10k/thermal.c | 155 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/thermal.h |  44 +++++++++
- 5 files changed, 213 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath10k/thermal.c
- create mode 100644 drivers/net/wireless/ath/ath10k/thermal.h
+ drivers/bcma/driver_chipcommon.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
-index 8abb66c..ffa3b1a 100644
---- a/drivers/net/wireless/ath/ath10k/Makefile
-+++ b/drivers/net/wireless/ath/ath10k/Makefile
-@@ -14,6 +14,7 @@ ath10k_core-y += mac.o \
- ath10k_core-$(CONFIG_ATH10K_DEBUGFS) += spectral.o
- ath10k_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
- ath10k_core-$(CONFIG_ATH10K_TRACING) += trace.o
-+ath10k_core-$(CONFIG_THERMAL) += thermal.o
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 19f6796..1956918 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -79,7 +79,8 @@ static int bcma_chipco_watchdog_ticks_per_ms(struct bcma_drv_cc *cc)
  
- obj-$(CONFIG_ATH10K_PCI) += ath10k_pci.o
- ath10k_pci-y += pci.o \
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c05841e..2eb3f2c 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1232,9 +1232,18 @@ static void ath10k_core_register_work(struct work_struct *work)
- 		goto err_debug_destroy;
+ 	if (cc->capabilities & BCMA_CC_CAP_PMU) {
+ 		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
+-			/* 4706 CC and PMU watchdogs are clocked at 1/4 of ALP clock */
++			/* 4706 CC and PMU watchdogs are clocked */
++			/* at 1/4 of ALP clock */
+ 			return bcma_chipco_get_alp_clock(cc) / 4000;
+ 		else
+ 			/* based on 32KHz ILP clock */
+@@ -97,7 +98,8 @@ int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc)
+ 	wdt.driver_data = cc;
+ 	wdt.timer_set = bcma_chipco_watchdog_timer_set_wdt;
+ 	wdt.timer_set_ms = bcma_chipco_watchdog_timer_set_ms_wdt;
+-	wdt.max_timer_ms = bcma_chipco_watchdog_get_max_timer(cc) / cc->ticks_per_ms;
++	wdt.max_timer_ms =
++		bcma_chipco_watchdog_get_max_timer(cc) / cc->ticks_per_ms;
+ 
+ 	pdev = platform_device_register_data(NULL, "bcm47xx-wdt",
+ 					     cc->core->bus->num, &wdt,
+@@ -335,7 +337,9 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
+ 				       | BCMA_CC_CORECTL_UARTCLKEN);
+ 		}
+ 	} else {
+-		bcma_err(cc->core->bus, "serial not supported on this device ccrev: 0x%x\n", ccrev);
++		bcma_err(cc->core->bus,
++			 "serial not supported on this device ccrev: 0x%x\n",
++			 ccrev);
+ 		return;
  	}
  
-+	status = ath10k_thermal_register(ar);
-+	if (status) {
-+		ath10k_err(ar, "could not register thermal device: %d\n",
-+			   status);
-+		goto err_spectral_destroy;
-+	}
-+
- 	set_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags);
- 	return;
- 
-+err_spectral_destroy:
-+	ath10k_spectral_destroy(ar);
- err_debug_destroy:
- 	ath10k_debug_destroy(ar);
- err_unregister_mac:
-@@ -1264,6 +1273,7 @@ void ath10k_core_unregister(struct ath10k *ar)
- 	if (!test_bit(ATH10K_FLAG_CORE_REGISTERED, &ar->dev_flags))
- 		return;
- 
-+	ath10k_thermal_unregister(ar);
- 	/* Stop spectral before unregistering from mac80211 to remove the
- 	 * relayfs debugfs file cleanly. Otherwise the parent debugfs tree
- 	 * would be already be free'd recursively, leading to a double free.
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 8083b91..b7ba7cf 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -34,6 +34,7 @@
- #include "../regd.h"
- #include "../dfs_pattern_detector.h"
- #include "spectral.h"
-+#include "thermal.h"
- 
- #define MS(_v, _f) (((_v) & _f##_MASK) >> _f##_LSB)
- #define SM(_v, _f) (((_v) << _f##_LSB) & _f##_MASK)
-@@ -638,6 +639,8 @@ struct ath10k {
- 		u32 fw_cold_reset_counter;
- 	} stats;
- 
-+	struct ath10k_thermal thermal;
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-new file mode 100644
-index 0000000..e98ce8c
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -0,0 +1,155 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/sysfs.h>
-+#include <linux/thermal.h>
-+#include "core.h"
-+#include "debug.h"
-+#include "wmi-ops.h"
-+
-+static int ath10k_thermal_get_active_vifs(struct ath10k *ar,
-+					  enum wmi_vdev_type type)
-+{
-+	struct ath10k_vif *arvif;
-+	int count = 0;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (!arvif->is_started)
-+			continue;
-+
-+		if (!arvif->is_up)
-+			continue;
-+
-+		if (arvif->vdev_type != type)
-+			continue;
-+
-+		count++;
-+	}
-+	return count;
-+}
-+
-+static int ath10k_thermal_get_max_dutycycle(struct thermal_cooling_device *cdev,
-+					    unsigned long *state)
-+{
-+	*state = ATH10K_QUIET_DUTY_CYCLE_MAX;
-+
-+	return 0;
-+}
-+
-+static int ath10k_thermal_get_cur_dutycycle(struct thermal_cooling_device *cdev,
-+					    unsigned long *state)
-+{
-+	struct ath10k *ar = cdev->devdata;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	*state = ar->thermal.duty_cycle;
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+}
-+
-+static int ath10k_thermal_set_cur_dutycycle(struct thermal_cooling_device *cdev,
-+					    unsigned long duty_cycle)
-+{
-+	struct ath10k *ar = cdev->devdata;
-+	u32 period, duration, enabled;
-+	int num_bss, ret = 0;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if (ar->state != ATH10K_STATE_ON) {
-+		ret = -ENETDOWN;
-+		goto out;
-+	}
-+
-+	if (duty_cycle > ATH10K_QUIET_DUTY_CYCLE_MAX) {
-+		ath10k_warn(ar, "duty cycle %ld is exceeding the limit %d\n",
-+			    duty_cycle, ATH10K_QUIET_DUTY_CYCLE_MAX);
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+	/* TODO: Right now, thermal mitigation is handled only for single/multi
-+	 * vif AP mode. Since quiet param is not validated in STA mode, it needs
-+	 * to be investigated further to handle multi STA and multi-vif (AP+STA)
-+	 * mode properly.
-+	 */
-+	num_bss = ath10k_thermal_get_active_vifs(ar, WMI_VDEV_TYPE_AP);
-+	if (!num_bss) {
-+		ath10k_warn(ar, "no active AP interfaces\n");
-+		ret = -ENETDOWN;
-+		goto out;
-+	}
-+	period = max(ATH10K_QUIET_PERIOD_MIN,
-+		     (ATH10K_QUIET_PERIOD_DEFAULT / num_bss));
-+	duration = period * (duty_cycle / 100);
-+	enabled = duration ? 1 : 0;
-+
-+	ret = ath10k_wmi_pdev_set_quiet_mode(ar, period, duration,
-+					     ATH10K_QUIET_START_OFFSET,
-+					     enabled);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set quiet mode period %u duarion %u enabled %u ret %d\n",
-+			    period, duration, enabled, ret);
-+		goto out;
-+	}
-+	ar->thermal.duty_cycle = duty_cycle;
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static struct thermal_cooling_device_ops ath10k_thermal_ops = {
-+	.get_max_state = ath10k_thermal_get_max_dutycycle,
-+	.get_cur_state = ath10k_thermal_get_cur_dutycycle,
-+	.set_cur_state = ath10k_thermal_set_cur_dutycycle,
-+};
-+
-+int ath10k_thermal_register(struct ath10k *ar)
-+{
-+	struct thermal_cooling_device *cdev;
-+	int ret;
-+
-+	cdev = thermal_cooling_device_register("ath10k_thermal", ar,
-+					       &ath10k_thermal_ops);
-+
-+	if (IS_ERR(cdev)) {
-+		ath10k_err(ar, "failed to setup thermal device result: %ld\n",
-+			   PTR_ERR(cdev));
-+		return -EINVAL;
-+	}
-+
-+	ret = sysfs_create_link(&ar->dev->kobj, &cdev->device.kobj,
-+				"cooling_device");
-+	if (ret) {
-+		ath10k_err(ar, "failed to create thermal symlink\n");
-+		goto err_cooling_destroy;
-+	}
-+
-+	ar->thermal.cdev = cdev;
-+	return 0;
-+
-+err_cooling_destroy:
-+	thermal_cooling_device_unregister(cdev);
-+	return ret;
-+}
-+
-+void ath10k_thermal_unregister(struct ath10k *ar)
-+{
-+	thermal_cooling_device_unregister(ar->thermal.cdev);
-+	sysfs_remove_link(&ar->dev->kobj, "cooling_device");
-+}
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
-new file mode 100644
-index 0000000..e20bb87
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath10k/thermal.h
-@@ -0,0 +1,44 @@
-+/*
-+ * Copyright (c) 2014 Qualcomm Atheros, Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef _THERMAL_
-+#define _THERMAL_
-+
-+#define ATH10K_QUIET_PERIOD_DEFAULT     100
-+#define ATH10K_QUIET_PERIOD_MIN         25
-+#define ATH10K_QUIET_START_OFFSET       10
-+#define ATH10K_QUIET_DUTY_CYCLE_MAX     70
-+
-+struct ath10k_thermal {
-+	struct thermal_cooling_device *cdev;
-+
-+	/* protected by conf_mutex */
-+	u32 duty_cycle;
-+};
-+
-+#ifdef CONFIG_THERMAL
-+int ath10k_thermal_register(struct ath10k *ar);
-+void ath10k_thermal_unregister(struct ath10k *ar);
-+#else
-+static inline int ath10k_thermal_register(struct ath10k *ar)
-+{
-+	return 0;
-+}
-+
-+static inline void ath10k_thermal_unregister(struct ath10k *ar)
-+{
-+}
-+#endif
-+#endif /* _THERMAL_ */
 -- 
-2.1.3
+2.2.1
 
