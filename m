@@ -1,90 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:53812 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753091AbaLUAb1 (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:57376 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752310AbaLWRIL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2014 19:31:27 -0500
-Received: by mail-wi0-f174.google.com with SMTP id h11so5153954wiw.7
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 16:31:25 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Fabian Frederick <fabf@skynet.be>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: brcm80211: brcmsmac: phy: phy_lcn.c:  Remove unused function
-Date: Sun, 21 Dec 2014 01:34:13 +0100
-Message-Id: <1419122053-14613-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20141221_013131_839425_8C66AD65)
+	Tue, 23 Dec 2014 12:08:11 -0500
+Message-ID: <5499A15E.9080307@broadcom.com> (sfid-20141223_180814_336978_C604CB76)
+Date: Tue, 23 Dec 2014 18:07:42 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 02/10] brcmfmac: Fix possible dereference of NULL pointer.
+References: <1419162233-19492-1-git-send-email-arend@broadcom.com> <1419162233-19492-3-git-send-email-arend@broadcom.com>
+In-Reply-To: <1419162233-19492-3-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the function wlc_lcnphy_crsuprs() that is not used anywhere.
+On 12/21/14 12:43, Arend van Spriel wrote:
+> From: Hante Meuleman<meuleman@broadcom.com>
+>
+> With the introduction of WOWL for SDIO a possible dereference of a
+> NULL pointer got introduced. Found by static checker.
 
-This was partially found by using a static code analysis program called cppcheck.
+Kalle,
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- .../net/wireless/brcm80211/brcmsmac/phy/phy_int.h  |    1 -
- .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   31 --------------------
- 2 files changed, 32 deletions(-)
+Can you drop this patch and take the one from Mika instead with 
+Message-ID: 
+1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com [1]
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_int.h b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_int.h
-index 4960f7d..a05dbde 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_int.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_int.h
-@@ -1002,7 +1002,6 @@ s16 wlc_lcnphy_tempsense_new(struct brcms_phy *pi, bool mode);
- s8 wlc_lcnphy_tempsense_degree(struct brcms_phy *pi, bool mode);
- s8 wlc_lcnphy_vbatsense(struct brcms_phy *pi, bool mode);
- void wlc_phy_carrier_suppress_lcnphy(struct brcms_phy *pi);
--void wlc_lcnphy_crsuprs(struct brcms_phy *pi, int channel);
- void wlc_lcnphy_epa_switch(struct brcms_phy *pi, bool mode);
- void wlc_2064_vco_cal(struct brcms_phy *pi);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-index 5f13662..d2adb2d 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -1546,37 +1546,6 @@ s8 wlc_lcnphy_get_current_tx_pwr_idx(struct brcms_phy *pi)
- 	return index;
- }
- 
--void wlc_lcnphy_crsuprs(struct brcms_phy *pi, int channel)
--{
--	u16 afectrlovr, afectrlovrval;
--	afectrlovr = read_phy_reg(pi, 0x43b);
--	afectrlovrval = read_phy_reg(pi, 0x43c);
--	if (channel != 0) {
--		mod_phy_reg(pi, 0x43b, (0x1 << 1), (1) << 1);
--
--		mod_phy_reg(pi, 0x43c, (0x1 << 1), (0) << 1);
--
--		mod_phy_reg(pi, 0x43b, (0x1 << 4), (1) << 4);
--
--		mod_phy_reg(pi, 0x43c, (0x1 << 6), (0) << 6);
--
--		write_phy_reg(pi, 0x44b, 0xffff);
--		wlc_lcnphy_tx_pu(pi, 1);
--
--		mod_phy_reg(pi, 0x634, (0xff << 8), (0) << 8);
--
--		or_phy_reg(pi, 0x6da, 0x0080);
--
--		or_phy_reg(pi, 0x00a, 0x228);
--	} else {
--		and_phy_reg(pi, 0x00a, ~(0x228));
--
--		and_phy_reg(pi, 0x6da, 0xFF7F);
--		write_phy_reg(pi, 0x43b, afectrlovr);
--		write_phy_reg(pi, 0x43c, afectrlovrval);
--	}
--}
--
- static void wlc_lcnphy_toggle_afe_pwdn(struct brcms_phy *pi)
- {
- 	u16 save_AfeCtrlOvrVal, save_AfeCtrlOvr;
--- 
-1.7.10.4
+Regards,
+Arend
+
+[1] 
+http://mid.gmane.org/1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com
+
+> Reported-by: Dan Carpenter<dan.carpenter@oracle.com>
+> Reviewed-by: Arend Van Spriel<arend@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts<pieterpg@broadcom.com>
+> Signed-off-by: Hante Meuleman<meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> index 3c06e93..9583dcd 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> @@ -1070,7 +1070,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>   	 */
+>   	if ((sdio_get_host_pm_caps(sdiodev->func[1])&  MMC_PM_KEEP_POWER)&&
+>   	((sdio_get_host_pm_caps(sdiodev->func[1])&  MMC_PM_WAKE_SDIO_IRQ) ||
+> -	     (sdiodev->pdata->oob_irq_supported)))
+> +	     ((sdiodev->pdata)&&  (sdiodev->pdata->oob_irq_supported))))
+>   		bus_if->wowl_supported = true;
+>   #endif
+>
 
