@@ -1,32 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38801 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756176AbaLWPYH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 10:24:07 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: fix low TX rates when IBSS and HT
-References: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
-Date: Tue, 23 Dec 2014 17:23:59 +0200
-In-Reply-To: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Tue, 16 Dec 2014 09:52:59 +0100")
-Message-ID: <87fvc6e6eo.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_162418_332844_31630D64)
+Received: from mout.gmx.net ([212.227.15.19]:58498 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750725AbaLWRRS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 12:17:18 -0500
+Message-ID: <5499A391.2060705@rempel-privat.de> (sfid-20141223_181721_766725_78935D3F)
+Date: Tue, 23 Dec 2014 18:17:05 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Jeremy Audet <ichimonji10@gmail.com>
+CC: linux-wireless@vger.kernel.org, Adrian Chadd <adrian@freebsd.org>
+Subject: Re: bug report for ath9k_htc driver
+References: <CA+A7n+jFWWs-U2DapExRqYgK=e2kGowPzFHJPh72DRwzBmVggg@mail.gmail.com>	<54991B32.2010105@rempel-privat.de> <CA+A7n+hbr2ctPkSta9-MWT1opAT2hCB9jYHvFu7N3C_ZvxXSzw@mail.gmail.com>
+In-Reply-To: <CA+A7n+hbr2ctPkSta9-MWT1opAT2hCB9jYHvFu7N3C_ZvxXSzw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+Am 23.12.2014 um 16:31 schrieb Jeremy Audet:
+> Hi Oleksij,
+> 
+> Sure thing. I cloned your ath9k-htc-firmware-blob repository and
+> copied the htc_9271.fw file to /usr/lib/firmware/. I then plugged in
+> the TL-WN722N USB adapter, brought up the wireless device with `sudo
+> ip link set dev wlp0s18f2u4 up; echo $?` (return code 0), and sat back
+> and waited. I did not interact with the machine beyond keeping open an
+> SSH session (via a wired interface) and watching the log file. About
+> five minutes later, a similar error occurred as described in my
+> previous email.
+> 
+> I've collected some logging output with the command `journalctl -k
+> --since=today`. You may find this log a bit more useful than the dmesg
+> log linked to in my previous email. You can find the log here:
+> http://www.ichimonji10.name/downloads/tl-wn722n-journalctl.txt
+> 
+> -Jeremy "Ichimonji10" Audet
+> 
 
-> This fix TX problem when IBSS used in HT mode.
-> Before we used 6Mbps all the time for TX direction.
->
-> Reported-by: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+So, at some point usb layer dropped connection, and reconnected in
+full-speed mode, which is slow:
+=================================================================
+Dec 23 10:07:49 pine kernel: usb 5-4: USB disconnect, device number 9
+Dec 23 10:07:49 pine kernel: ath: phy6: Failed to wakeup in 500us
+Dec 23 10:07:50 pine kernel: ath: phy6: RX failed to go idle in 10 ms
+RXSM=0xb063df84
+Dec 23 10:07:50 pine kernel: ath: phy6: Failed to wakeup in 500us
+Dec 23 10:07:50 pine kernel: usb 5-4: ath9k_htc: USB layer deinitialized
+Dec 23 10:07:50 pine kernel: usb 5-4: new high-speed USB device number
+10 using ehci-pci
+Dec 23 10:07:51 pine kernel: usb 1-4: new full-speed USB device number 5
+using ohci-pci
+Dec 23 10:07:51 pine kernel: usb 1-4: not running at top speed; connect
+to a high speed hub
+Dec 23 10:07:51 pine kernel: usb 1-4: ath9k_htc: Firmware htc_9271.fw
+requested
+Dec 23 10:07:51 pine kernel: usb 1-4: ath9k_htc: Transferred FW:
+htc_9271.fw, size: 51008
+==================================================================
 
-Thanks, both patches applied.
+After reconnecting to fulls-speed, ath9k-htc was unusable. I would
+suggest to test other cable or other usb controller.
+With other words, I have no idea about the reason for initial
+disconnection. It can be bad usb connection, noise or not enough power.
 
 -- 
-Kalle Valo
+Regards,
+Oleksij
