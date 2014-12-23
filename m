@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58357 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932162AbaLWPV6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 10:21:58 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/8] ath10k: Add thermal mitigation support
-References: <20141217101755.15964.2625.stgit@potku.adurom.net>
-Date: Tue, 23 Dec 2014 17:21:47 +0200
-In-Reply-To: <20141217101755.15964.2625.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Wed, 17 Dec 2014 12:20:35 +0200")
-Message-ID: <87k31ie6ic.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_162208_020321_DDFD3F86)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga02.intel.com ([134.134.136.20]:60917 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755704AbaLWOs4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 09:48:56 -0500
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christophe Prigent <christophe.prigent@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] brcmfmac: Do not crash if platform data is not populated
+Date: Tue, 23 Dec 2014 16:48:32 +0200
+Message-Id: <1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com> (sfid-20141223_154918_251479_92BFCF9F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+The driver looks for pdata->oob_irq_supported to find out if wowl can be
+supported. However, not all platforms populate pdata in which case we crash
+the kernel because of NULL pointer dereference.
 
-> The following patches add thermal sensor and thermal cooling device
-> support in ath10k. For sensor, hwmon interface is used. For controlling
-> temperature cooling device interface is used. For thermal mitigation,
-> tx throttling is done using hw MAC quiet time setting.
->
-> v2:
->
-> * use ATH10K_FW_IE_WMI_OP_VERSION instead of a feature flag
->
-> * add separate wmi mappings for 10.2.4
->
-> * bump up FW API to 4
->
-> * new patch: ath10k: set max_num_vdevs based on wmi op version
->
-> * new patch: ath10k: use wmi op version to check which iface
->   combination to use
->
-> * new patch: ath10k: print ath10k wmi op version
->
-> ---
->
-> Kalle Valo (3):
->       ath10k: set max_num_vdevs based on wmi op version
->       ath10k: use wmi op version to check which iface combination to use
->       ath10k: print ath10k wmi op version
->
-> Rajkumar Manoharan (5):
->       ath10k: add 10.2.4 firmware support
->       ath10k: add wmi support for pdev_set_quiet_mode
->       ath10k: add thermal cooling device support
->       ath10k: add wmi interface for pdev_get_temperature
->       ath10k: add thermal sensor device support
+Fixes: 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.")
+Reported-by: Christophe Prigent <christophe.prigent@intel.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-All eight patches applied, thanks Rajkumar.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 3c06e9365949..9880dae2a569 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1070,7 +1070,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 	 */
+ 	if ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_KEEP_POWER) &&
+ 	    ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_WAKE_SDIO_IRQ) ||
+-	     (sdiodev->pdata->oob_irq_supported)))
++	     (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)))
+ 		bus_if->wowl_supported = true;
+ #endif
+ 
+@@ -1167,7 +1167,7 @@ static int brcmf_ops_sdio_resume(struct device *dev)
+ 	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
+-	if (sdiodev->pdata->oob_irq_supported)
++	if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
+ 		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+ 	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+ 	atomic_set(&sdiodev->suspend, false);
 -- 
-Kalle Valo
+2.1.3
+
