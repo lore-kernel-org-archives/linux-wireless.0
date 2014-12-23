@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:35554 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751250AbaLURum convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:16559 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694AbaLWHqh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 12:50:42 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Subject: Re: [PATCH 03/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1419162233-19492-4-git-send-email-arend@broadcom.com>
-Date: Sun, 21 Dec 2014 18:50:25 +0100
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Rob Herring <rob.herring@linaro.org>,
-	John Stultz <john.stultz@linaro.org>
-Message-Id: <B1CB9465-1353-411C-9B3C-42DEFBFDBBE0@holtmann.org> (sfid-20141221_185051_629601_22E81A60)
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com> <1419162233-19492-4-git-send-email-arend@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
+	Tue, 23 Dec 2014 02:46:37 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 8/8] ath10k: ath10k: add support to send delba
+References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<1418972099-5296-9-git-send-email-rmanohar@qti.qualcomm.com>
+	<1419142431590.38389@qti.qualcomm.com>
+Date: Tue, 23 Dec 2014 09:46:28 +0200
+In-Reply-To: <1419142431590.38389@qti.qualcomm.com> (Rajkumar Manoharan's
+	message of "Sun, 21 Dec 2014 06:13:52 +0000")
+Message-ID: <87d27ag65n.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_084758_718845_BA09F1AB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com> writes:
 
-> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-> index 0f01fe0..61f8318 100644
-> --- a/include/linux/mmc/sdio_ids.h
-> +++ b/include/linux/mmc/sdio_ids.h
-> @@ -29,6 +29,8 @@
-> #define SDIO_DEVICE_ID_BROADCOM_4329		0x4329
-> #define SDIO_DEVICE_ID_BROADCOM_4330		0x4330
-> #define SDIO_DEVICE_ID_BROADCOM_4334		0x4334
-> +#define SDIO_DEVICE_ID_BROADCOM_43340		43340
-> +#define SDIO_DEVICE_ID_BROADCOM_43341		43341
+>> Subject: [PATCH 8/8] ath10k: ath10k: add support to send delba
+>> 
+>> This per-station debugfs entry helps to send delba in manual mode
+>> for debugging purpose. It accepts tid, initiator and reason code
+>> as inputs.
+> Kalle,
+>
+> Subject needs small correction (ath10k: ath10k:). Do you want
+> me send v2 patch for this change?
 
-the general preference is to have these values in hex. I get the fact that they map the marketing number, but that could be just stated in a comment after the hex number.
+No need to send v2, I can do the change myself. But I noticed that you
+already sent it :)
 
-> #define SDIO_DEVICE_ID_BROADCOM_4335_4339	0x4335
-> #define SDIO_DEVICE_ID_BROADCOM_43362		43362
-> #define SDIO_DEVICE_ID_BROADCOM_4354		0x4354
+But in the future please don't resubmit individual patches, that's just
+too error prone. Instead just resubmit the whole series.
 
-Is there any chance that you can also send patches against sdio.ids database from systemd:
-
-http://cgit.freedesktop.org/systemd/systemd/tree/hwdb/sdio.ids
-
-That would allow for udev to provide friendly names and they would also be shown using networkctl.
-
-Regards
-
-Marcel
-
+-- 
+Kalle Valo
