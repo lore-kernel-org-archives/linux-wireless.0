@@ -1,52 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:42109 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750734AbaLaK03 (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:34989 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756149AbaLWP1z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 05:26:29 -0500
-Received: by mail-wg0-f43.google.com with SMTP id k14so4009908wgh.30
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 02:26:28 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
+	Tue, 23 Dec 2014 10:27:55 -0500
+Date: Tue, 23 Dec 2014 20:57:47 +0530
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	chrischavez@gmx.us, pizza@shaftnet.org, johannes@sipsolutions.net
-Subject: [PATCH 3.17 2/3] p54: use mac80211 to resize outgoing frames for protected
-Date: Wed, 31 Dec 2014 11:20:10 +0100
-Message-ID: <8568428.idsM252yN9@debian64> (sfid-20141231_112632_832109_D7DF4732)
-In-Reply-To: <c31517e669693fceff192e510891356cd9ab795e.1420019654.git.chunkeey@googlemail.com>
-References: <c31517e669693fceff192e510891356cd9ab795e.1420019654.git.chunkeey@googlemail.com>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: port100: Introduce the use of function
+ put_unaligned_le16
+Message-ID: <20141223152747.GA14667@vaishali-Ideapad-Z570> (sfid-20141223_162816_155210_F571347E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "mac80211: add feature flag to enable resizing of
-outgoing frames for encryption"  introduced a feature  flag
-which has to be set for p54 to re-enable resizing of outgoing
-frames for hardware-offloaded CCMP connections.
+This patch introduces the use of function put_unaligned_le16.
 
-Cc: stable@vger.kernel.org # mac80211: add feature flag to enable resizing of outgoing frames for encryption
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Bugzilla: <https://bugzilla.kernel.org/show_bug.cgi?id=90331>
-Reported-by: Christopher Chavez <chrischavez@gmx.us>
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+This is done using Coccinelle and semantic patch used is as follows:
+
+@a@
+typedef u16, __le16;
+{u16,__le16} e16;
+identifier tmp;
+expression ptr;
+expression y,e;
+type T;
+@@
+
+- tmp = cpu_to_le16(y);
+
+  <+... when != tmp
+(
+- memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
++ put_unaligned_le16(y,ptr);
+|
+- memcpy(ptr, (T)&tmp, ...);
++ put_unaligned_le16(y,ptr);
+)
+  ...+>
+? tmp = e
+
+@@ type T; identifier a.tmp; @@
+
+- T tmp;
+...when != tmp
+
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
 ---
- drivers/net/wireless/p54/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/nfc/port100.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
-index 97aeff0..b877c7f 100644
---- a/drivers/net/wireless/p54/main.c
-+++ b/drivers/net/wireless/p54/main.c
-@@ -751,6 +751,7 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
- 		     IEEE80211_HW_SUPPORTS_PS |
- 		     IEEE80211_HW_PS_NULLFUNC_STACK |
- 		     IEEE80211_HW_MFP_CAPABLE |
-+		     IEEE80211_HW_TAILROOM_CRYPTO |
- 		     IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
+index 4ac4d31..f7cbca8 100644
+--- a/drivers/nfc/port100.c
++++ b/drivers/nfc/port100.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/usb.h>
+ #include <net/nfc/digital.h>
++#include <linux/unaligned/access_ok.h>
  
- 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ #define VERSION "0.1"
+ 
+@@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+ {
+ 	struct port100 *dev = nfc_digital_get_drvdata(ddev);
+ 	struct port100_cb_arg *cb_arg;
+-	__le16 timeout;
+ 
+ 	cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
+ 	if (!cb_arg)
+@@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+ 	cb_arg->complete_cb = cb;
+ 	cb_arg->complete_arg = arg;
+ 
+-	timeout = cpu_to_le16(_timeout * 10);
+-
+-	memcpy(skb_push(skb, sizeof(__le16)), &timeout, sizeof(__le16));
++	put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
+ 
+ 	return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
+ 				      port100_in_comm_rf_complete, cb_arg);
 -- 
-2.1.4
+1.9.1
 
