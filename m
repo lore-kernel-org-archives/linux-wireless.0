@@ -1,57 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:43321 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563AbaLXJoG convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:63154 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754946AbaLWXrq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 04:44:06 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] Drivers: bcma: Fix three coding style issues, more than 80 characters per line.
-From: =?iso-8859-1?Q?=D2scar_Forner_Mart=EDnez?=
-	<oscar.forner.martinez@gmail.com>
-In-Reply-To: <877fxhbjj8.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 24 Dec 2014 09:44:02 +0000
-Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Message-Id: <4E065003-D723-47FD-B463-C1C0C4C238E2@gmail.com> (sfid-20141224_104442_553165_DFBEFABC)
-References: <1419378909-14414-1-git-send-email-oscar.forner.martinez@gmail.com> <877fxhbjj8.fsf@kamboji.qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+	Tue, 23 Dec 2014 18:47:46 -0500
+MIME-Version: 1.0
+In-Reply-To: <1419378909-14414-1-git-send-email-oscar.forner.martinez@gmail.com>
+References: <1419378909-14414-1-git-send-email-oscar.forner.martinez@gmail.com>
+Date: Wed, 24 Dec 2014 00:47:45 +0100
+Message-ID: <CACna6rwNDwzqb6Qj38nuTDyRrW-OT23TiNkn0qqRc_P6w2Jb+g@mail.gmail.com> (sfid-20141224_004803_451269_84F1D0E5)
+Subject: Re: [PATCH] Drivers: bcma: Fix three coding style issues, more than
+ 80 characters per line.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On 24 December 2014 at 00:55, Oscar Forner Martinez
+<oscar.forner.martinez@gmail.com> wrote:
+> Three lines with more than 80 characters per line have been split in several lines.
 
-I am doing it from London with the timezone of Spain, maybe is that the odd stuff? I can change it and do the patch again. I will check the style guide to do the changes properly this time. I have a couple of questions, as it is my first patch I am not sure how to do them.
-
-Do I have to sent the V2 of the patch as the previous one? or I have to do something to follow that one?
-
-Regards,
-
-Oscar
-
-On 24 Dec 2014, at 07:20, Kalle Valo <kvalo@codeaurora.org> wrote:
-
-> Oscar Forner Martinez <oscar.forner.martinez@gmail.com> writes:
-> 
->> Three lines with more than 80 characters per line have been split in several lines.
->> 
->> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
->> ---
->> drivers/bcma/driver_chipcommon.c | 10 +++++++---
->> 1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-> Just to handle the bureaucracy before v2 is submitted:
-> 
-> To which tree should this go to? I see that earlier John has applied
-> patches to drivers/bcma/, but what about now? Should I take these? John,
-> any suggestions?
-> 
-> Oscar, the patchwork entry for this patch looked odd. I'm guessing it
-> was because your time (or timezone) is wrong:
-> 
-> https://patchwork.kernel.org/patch/5535751/
-> 
-> -- 
-> Kalle Valo
-
+Since you will need V2 anyway, you may also drop this "Drivers:" prefix :)
