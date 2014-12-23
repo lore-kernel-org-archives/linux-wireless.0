@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:33943 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbaLTSZV (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:62920 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755796AbaLWKU6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2014 13:25:21 -0500
-Received: by mail-wi0-f179.google.com with SMTP id ex7so4650292wid.12
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 10:25:19 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [BUG REPORT] brcmfmac: wrong logic in finding control/primary channel relative location
-Date: Sat, 20 Dec 2014 19:25:04 +0100
-Message-Id: <1419099904-13303-1-git-send-email-zajec5@gmail.com> (sfid-20141220_192532_176976_715122C0)
+	Tue, 23 Dec 2014 05:20:58 -0500
+Message-ID: <1419330055.30945.76.camel@x220> (sfid-20141223_112132_178464_CBB7E17F)
+Subject: Re: [PATCH RFC] ipw2200: select CFG80211_WEXT
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 23 Dec 2014 11:20:55 +0100
+In-Reply-To: <871tnqhn7j.fsf@kamboji.qca.qualcomm.com>
+References: <1419271817.2317.12.camel@tiscali.nl>
+	 <871tnqhn7j.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
-Hi guys,
+On Tue, 2014-12-23 at 08:52 +0200, Kalle Valo wrote:
+> Paul Bolle <pebolle@tiscali.nl> writes:
+> 
+> > Commit 24a0aa212ee2 ("cfg80211: make WEXT compatibility unselectable")
+> > made it impossible to depend on CFG80211_WEXT. It does still allow to
+> > select that symbol. (Yes, the commit summary is confusing.)
+> >
+> > So make IPW2200 select CFG80211_WEXT, so that the ipw2200 driver can be
+> > built again.
+> 
+> I think the last sentence is a bit misleading (this isn't a compilation
+> error, right?)
 
-Let me report something I think is a bug in this unusual-patch way ;)
----
- drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 ++
- 1 file changed, 2 insertions(+)
+No, it's not a compilation error.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 39b45c0..2c9e88b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -313,11 +313,13 @@ static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
- 	case NL80211_CHAN_WIDTH_80:
- 		ch_inf.bw = BRCMU_CHAN_BW_80;
- 		if (primary_offset < 0) {
-+			/* FIXME: We compare frequencies offset with a value -2. Looks like a wrong logic. */
- 			if (primary_offset < -CH_10MHZ_APART)
- 				ch_inf.sb = BRCMU_CHAN_SB_UU;
- 			else
- 				ch_inf.sb = BRCMU_CHAN_SB_UL;
- 		} else {
-+			/* FIXME: We compare frequencies offset with a value 2. Looks like a wrong logic. */
- 			if (primary_offset > CH_10MHZ_APART)
- 				ch_inf.sb = BRCMU_CHAN_SB_LL;
- 			else
--- 
-1.8.4.5
+The reasoning here is that all code hidden behind a Kconfig symbol that
+cannot be set will, in practice, never be built. Sure, there are hoops
+one can jump through to try to bypass the generated .config, but no one
+should have to do that.
+
+>  and I would like to clarify it like this:
+> 
+> "So make IPW2200 select CFG80211_WEXT, so that the ipw2200 driver can be
+> enabled in config again."
+> 
+> Does that look ok?
+
+I understand the confusion my text might cause, so I'm fine with your
+amendment.
+
+Thanks,
+
+
+Paul Bolle
 
