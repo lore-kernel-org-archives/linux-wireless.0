@@ -1,82 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46424 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751520AbaLHQux (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:33579 "EHLO
+	webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525AbaLWTwI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 11:50:53 -0500
-Date: Mon, 8 Dec 2014 16:50:43 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	David Miller <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141208165042.GO16185@e104818-lin.cambridge.arm.com> (sfid-20141208_175115_016553_534A60B6)
-References: <5481794E.4050406@broadcom.com>
- <2863746.4sUSEYqahB@wuerfel>
- <5485D054.7090109@broadcom.com>
- <2048819.2EPzBi8E3T@wuerfel>
+	Tue, 23 Dec 2014 14:52:08 -0500
+Message-ID: <5499C7ED.2020404@dd-wrt.com> (sfid-20141223_205212_313170_1F09BE96)
+Date: Tue, 23 Dec 2014 20:52:13 +0100
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2048819.2EPzBi8E3T@wuerfel>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <20141217101755.15964.2625.stgit@potku.adurom.net>	<20141217102226.15964.32919.stgit@potku.adurom.net>	<5491D20F.2020202@dd-wrt.com> <87tx0mcled.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87tx0mcled.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: [PATCH v2 8/8] ath10k: add thermal sensor device support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 04:38:57PM +0000, Arnd Bergmann wrote:
-> On Monday 08 December 2014 17:22:44 Arend van Spriel wrote:
-> > >> The log: first the ring allocation info is printed. Starting at
-> > >> 16.124847, ring 2, 3 and 4 are rings used for device to host. In this
-> > >> log the failure is on a read of ring 3. Ring 3 is 1024 entries of each
-> > >> 16 bytes. The next thing printed is the kernel page tables. Then some
-> > >> OpenWRT info and the logging of part of the connection setup. Then at
-> > >> 1780.130752 the logging of the failure starts. The sequence number is
-> > >> modulo 253 with ring size of 1024 matches an "old" entry (read 40,
-> > >> expected 52). Then the different pointers are printed followed by
-> > >> the kernel page table. The code does then a cache invalidate on the
-> > >> dma_handle and the next read the sequence number is correct.
-> > >
-> > > How do you invalidate the cache? A dma_handle is of type dma_addr_t
-> > > and we don't define an operation for that, nor does it make sense
-> > > on an allocation from dma_alloc_coherent(). What happens if you
-> > > take out the invalidate?
-> > 
-> > dma_sync_single_for_cpu(, DMA_FROM_DEVICE) which ends up invalidating 
-> > the cache (or that is our suspicion).
-> 
-> I'm not sure about that:
-> 
-> static void arm_dma_sync_single_for_cpu(struct device *dev,
->                 dma_addr_t handle, size_t size, enum dma_data_direction dir)
-> {
->         unsigned int offset = handle & (PAGE_SIZE - 1);
->         struct page *page = pfn_to_page(dma_to_pfn(dev, handle-offset));
->         __dma_page_dev_to_cpu(page, offset, size, dir);
-> }
-> 
-> Assuming a noncoherent linear (no IOMMU, no swiotlb, no dmabounce) mapping,
-> dma_to_pfn will return the correct pfn here, but pfn_to_page will return a
-> page pointer into the kernel linear mapping,
+Am 23.12.2014 um 18:43 schrieb Kalle Valo:
+> Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+>
+>> the whole code will not work. the firmware 10.2.4 returns op_version 3
+>> so this check here fails
+>>
+>> if (ar->wmi.op_version != ATH10K_FW_WMI_OP_VERSION_10_2_4)
+>>
+>> since 5 is required
+> I know, I used firmware-4.bin_10.2.4.13-2 to test this. I just didn't
+> have a chance to upload it until now:
+>
+> https://github.com/kvalo/ath10k-firmware/tree/master/10.2.4
+:-) thanks
+i tested it using a hardcoded api version patch based on the firmware 
+version  and it worked as well so far. (just tested temperture sensor 
+readout)
 
-Or a highmem page, both should be handled by dma_cache_maint_page().
+Sebastian
 
-> which is not the same
-> as the pointer you get from __alloc_remap_buffer(). The pointer that
-> was returned from dma_alloc_coherent is a) non-cachable, and b) not the
-> same that you flush here.
-
-Correct. But apart from the fact that you don't need to flush buffers
-allocated with dma_alloc_coherent(), the above sync_single would work on
-ARMv7 where the D-cache is PIPT, so the virtual address doesn't matter
-much as long as it maps the same physical address.
-
--- 
-Catalin
