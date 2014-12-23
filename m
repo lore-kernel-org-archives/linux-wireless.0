@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:19930 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751059AbaLRSN4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17835 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbaLWHrv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 13:13:56 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: set phymode to 11b when NO_OFDM flag set
-Date: Thu, 18 Dec 2014 10:13:00 -0800
-Message-ID: <1418926380-22206-1-git-send-email-poh@qca.qualcomm.com> (sfid-20141218_191400_601410_DAFD66E6)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 23 Dec 2014 02:47:51 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 00/22] wil6210 patches
+Date: Tue, 23 Dec 2014 09:47:02 +0200
+Message-Id: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141223_084800_871135_AC0D7BA3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-phymode should use 11b only if NO_OFDM flags is set.
-Hence check up channel flag for NO_OFDM and set to
-11b.
+Several topics:
+- block ack with secure and insecure connection
+- MTU
+- some infrastructure fixes
+- some debugfs changes
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Vladimir Kondratiev (22):
+  wil6210: ADDBA/DELBA flows
+  wil6210: simple ADDBA on originator (Tx) side
+  wil6210: allow to configure ADDBA request
+  wil6210: improve debugfs for reorder buffer
+  wil6210: fix disconnect 1 STA in AP
+  wil6210: improve debugfs for VRING
+  wil6210: control AMSDU on Tx side of Block Ack
+  wil6210: delba for responder
+  wil6210: fix max. MPDU size
+  wil6210: consider SNAP header in MTU calculations
+  wil6210: Increase number of associated stations
+  wil6210: use bitmap API for "status"
+  wil6210: fix Tx VRING for STA mode
+  wil6210: rework debugfs for BACK
+  wil6210: detect HW capabilities
+  wil6210: use HW capabilities mask in reset
+  wil6210: add advanced interrupt moderation
+  wil6210: RX high threshold interrupt configuration
+  wil6210: fix reordering for MCAST
+  wil6210: Tx/Rx descriptors documentation
+  wil6210: workaround for BACK establishment race
+  wil6210: relax spinlocks in rx reorder
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 42f6a4d..c68beac 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -269,7 +269,10 @@ chan_to_phymode(const struct cfg80211_chan_def *chandef)
- 	case IEEE80211_BAND_2GHZ:
- 		switch (chandef->width) {
- 		case NL80211_CHAN_WIDTH_20_NOHT:
--			phymode = MODE_11G;
-+			if (chandef->chan->flags & IEEE80211_CHAN_NO_OFDM)
-+				phymode = MODE_11B;
-+			else
-+				phymode = MODE_11G;
- 			break;
- 		case NL80211_CHAN_WIDTH_20:
- 			phymode = MODE_11NG_HT20;
+ drivers/net/wireless/ath/wil6210/cfg80211.c   |  12 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c    | 160 +++++++++++++--
+ drivers/net/wireless/ath/wil6210/ethtool.c    |  46 +++--
+ drivers/net/wireless/ath/wil6210/interrupt.c  | 109 ++++++++--
+ drivers/net/wireless/ath/wil6210/main.c       | 194 ++++++++++--------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c   |  65 ++++--
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 275 +++++++++++++++++++++++++-
+ drivers/net/wireless/ath/wil6210/txrx.c       |  70 +++++--
+ drivers/net/wireless/ath/wil6210/txrx.h       | 158 ++++++++++-----
+ drivers/net/wireless/ath/wil6210/wil6210.h    | 161 +++++++++++++--
+ drivers/net/wireless/ath/wil6210/wmi.c        | 221 +++++++++++++++++----
+ drivers/net/wireless/ath/wil6210/wmi.h        |  12 +-
+ 12 files changed, 1199 insertions(+), 284 deletions(-)
+
 -- 
-1.9.1
+2.1.0
 
