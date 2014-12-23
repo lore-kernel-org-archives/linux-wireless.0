@@ -1,42 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:37536 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934AbaLEPrX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:40835 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750845AbaLWRBB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 10:47:23 -0500
-From: Anjana Sasindran <anjanasasindran123@gmail.com>
-To: gregkh@linuxfoundation.org, roberta.dobrescu@gmail.com
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org,
-	Anjana Sasindran <anjanasasindran123@gmail.com>
-Subject: [PATCH] staging: rtl8723au: hal: Removed a space before semicolon
-Date: Fri,  5 Dec 2014 21:17:02 +0530
-Message-Id: <1417794422-6383-1-git-send-email-anjanasasindran123@gmail.com> (sfid-20141205_164739_674701_4EA5040E)
+	Tue, 23 Dec 2014 12:01:01 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	<linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christophe Prigent <christophe.prigent@intel.com>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: Do not crash if platform data is not populated
+References: <1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com>
+	<54998C31.9090500@broadcom.com>
+	<20141223154738.GM1314@lahna.fi.intel.com> <54999161.504@broadcom.com>
+Date: Tue, 23 Dec 2014 19:00:51 +0200
+In-Reply-To: <54999161.504@broadcom.com> (Arend van Spriel's message of "Tue,
+	23 Dec 2014 16:59:29 +0100")
+Message-ID: <877fxie1x8.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_180134_385223_7C62DF7F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix the checkpatch.pl warning:
+Arend van Spriel <arend@broadcom.com> writes:
 
-WARNING: space before semicolon prohibited
+> On 12/23/14 16:47, Mika Westerberg wrote:
+>> On Tue, Dec 23, 2014 at 04:37:21PM +0100, Arend van Spriel wrote:
+>>> On 12/23/14 15:48, Mika Westerberg wrote:
+>>>> The driver looks for pdata->oob_irq_supported to find out if wowl can be
+>>>> supported. However, not all platforms populate pdata in which case we crash
+>>>> the kernel because of NULL pointer dereference.
+>>>
+>>> Thanks, Mika
+>>>
+>>> However, this was already reported by Dan Carpenter and I submitted a patch
+>>> for that a couple of days ago: "[PATCH 02/10] brcmfmac: Fix possible
+>>> dereference of NULL pointer." [1].
+>>>
+>>> Regards,
+>>> Arend
+>>>
+>>> [1]
+>>> http://mid.gmane.org/1419162233-19492-3-git-send-email-arend@broadcom.com
+>>
+>> Oh, good. I didn't notice that one.
+>>
+>> Thanks for fixing it :)
+>>
+>> BTW, that patch seems to miss brcmf_ops_sdio_resume(), perhaps it is
+>> fixed in another patch?
+>
+> Aargh, a nice "BTW" this is as there is no other patch for the resume
+> code. Maybe I should ask Kalle to apply your patch instead of ours. If
+> it did not already got applied.
 
-Signed-off-by: Anjana Sasindran <anjanasasindran123@gmail.com>
----
- drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I have been waiting for net-next to open so I haven't applied any -next
+patches yet. So if you want I can take Mika's patch as well. Just send a
+reply to your patch I should drop.
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-index 6151e85..6878c91 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-@@ -9145,7 +9145,7 @@ u32 BTDM_BtTxRxCounterL(struct rtw_adapter *padapter)
- 	u32	counters = 0;
- 
- 	counters = pHalData->bt_coexist.halCoex8723.lowPriorityTx+
--		pHalData->bt_coexist.halCoex8723.lowPriorityRx ;
-+		pHalData->bt_coexist.halCoex8723.lowPriorityRx;
- 	return counters;
- }
- 
+And should this patch go to 3.19?
+
 -- 
-1.9.1
-
+Kalle Valo
