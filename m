@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:61351 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751439AbaL1Ixi convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:52693 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750963AbaLWKzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2014 03:53:38 -0500
+	Tue, 23 Dec 2014 05:55:19 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RFC] ipw2200: select CFG80211_WEXT
+References: <1419271817.2317.12.camel@tiscali.nl>
+	<1419330521.6091.1.camel@sipsolutions.net>
+Date: Tue, 23 Dec 2014 12:55:11 +0200
+In-Reply-To: <1419330521.6091.1.camel@sipsolutions.net> (Johannes Berg's
+	message of "Tue, 23 Dec 2014 11:28:41 +0100")
+Message-ID: <87oaqueiuo.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_115544_782805_56DFB236)
 MIME-Version: 1.0
-In-Reply-To: <CA+icZUVm6YNK_eN7-NcSH-mAqC61vwYryVUJuNMCKuhq8kXV2g@mail.gmail.com>
-References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
-	<CACna6rz4ue2PFQR-=nKxmCJSw9O8pKU=S7LqxA68OY1D0obvKg@mail.gmail.com>
-	<CA+icZUVm6YNK_eN7-NcSH-mAqC61vwYryVUJuNMCKuhq8kXV2g@mail.gmail.com>
-Date: Sun, 28 Dec 2014 09:53:36 +0100
-Message-ID: <CACna6rymPy1+YtEHEk18ci3VaAWkiwJ2iWv+p_yYPAjzQeJwtw@mail.gmail.com> (sfid-20141228_095404_285210_5D85C06F)
-Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80
- characters per line
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Sedat Dilek <sedat.dilek@gmail.com>
-Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 December 2014 at 06:50, Sedat Dilek <sedat.dilek@gmail.com> wrote:
-> On Sun, Dec 28, 2014 at 12:44 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
->> On 27 December 2014 at 20:24, Oscar Forner Martinez
->> <oscar.forner.martinez@gmail.com> wrote:
->>> Three lines with more than 80 characters per line have been split in several lines.
->>>
->>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
->>
->> Acked-by: Rafał Miłecki <zajec5@gmail.com>
->>
->
-> As for the comment-line changes... 80+ chars are allowed for better readability.
-> So, please don't do that.
-> [ Checkpatch should not warn on this especially for comments. ]
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-We almost always split long comments into separated lines in the
-kernel. What's different with this case?
+> On Mon, 2014-12-22 at 19:10 +0100, Paul Bolle wrote:
+>> Commit 24a0aa212ee2 ("cfg80211: make WEXT compatibility unselectable")
+>> made it impossible to depend on CFG80211_WEXT. It does still allow to
+>> select that symbol. (Yes, the commit summary is confusing.)
+>> 
+>> So make IPW2200 select CFG80211_WEXT, so that the ipw2200 driver can be
+>> built again.
+>> 
+>> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+>> ---
+>> Johannes,
+>> 
+>> Building v3.19-rc1 for an outdated ThinkPad X41 left me without the
+>> ipw2200 driver. It turns out this trivial patch is all that's needed to
+>> make ipw2200 buildable again.
+>> 
+>> (A similar patch would be needed for the drivers behind Kconfig symbol
+>> HERMES. Ie, orinico and friends.) 
+>
+> Yeah, config HERMES needs the same change.
+>
+> Kalle, do you want to take those through your tree, or should I fix it
+> seeing that I introduced the bug in a sense?
+
+To keep things simple I would prefer to take this through
+wireless-drivers.git, if it's ok for you.
 
 -- 
-Rafał
+Kalle Valo
