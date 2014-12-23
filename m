@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17619 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406AbaLWRnQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 12:43:16 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 8/8] ath10k: add thermal sensor device support
-References: <20141217101755.15964.2625.stgit@potku.adurom.net>
-	<20141217102226.15964.32919.stgit@potku.adurom.net>
-	<5491D20F.2020202@dd-wrt.com>
-Date: Tue, 23 Dec 2014 19:43:06 +0200
-In-Reply-To: <5491D20F.2020202@dd-wrt.com> (Sebastian Gottschall's message of
-	"Wed, 17 Dec 2014 19:57:19 +0100")
-Message-ID: <87tx0mcled.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_184319_735561_589D4FD4)
-MIME-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20290 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754481AbaLWKRf convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 05:17:35 -0500
+From: Avinash Patil <patila@marvell.com>
+To: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 23 Dec 2014 02:13:32 -0800
+Subject: RE: [PATCH] cfg80211: do not check for carrier during
+ start_radar_detect
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com> (sfid-20141223_111739_781726_3D3051F6)
+References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
+ <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com>,<5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+Hi Janusz,
 
-> the whole code will not work. the firmware 10.2.4 returns op_version 3
-> so this check here fails
+Any further update on this?
+
+Thanks,
+Avinash
+
+-----Original Message-----
+From: Janusz Dziedzic [mailto:janusz.dziedzic@tieto.com]
+Sent: 01 December 2014 12:44
+To: Avinash Patil
+Cc: Johannes Berg; Simon Wunderlich; Amitkumar Karwar; linux-wireless@vger.kernel.org; Cathy Luo; John W. Linville
+Subject: Re: [PATCH] cfg80211: do not check for carrier during start_radar_detect
+
+On 28 November 2014 at 17:35, Avinash Patil <patila@marvell.com> wrote:
+> Yes; beats me as well.
 >
-> if (ar->wmi.op_version != ATH10K_FW_WMI_OP_VERSION_10_2_4)
+> That's why I added original authors - Simon and Janusz.
 >
-> since 5 is required
+> -Avinash
+>
+> On Nov 28, 2014 8:41 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>
+>> On Fri, 2014-11-28 at 16:58 +0530, Avinash Patil wrote:
+>> > Radar detection happens before starting AP; so netdev carrier may
+>> > be dormant at this time. Remove this check from cfg80211_start_radar_detection.
+>>
+>> Looks fine to me, but I wonder how it ever worked?
+>>
+radar detection starts before we setup AP, so woks fine
 
-I know, I used firmware-4.bin_10.2.4.13-2 to test this. I just didn't
-have a chance to upload it until now:
+Seems this patch unlock off-channel CAC (we are connected/ap started and detect radar on other channel), but seem mac80211 don't support this correctly now.
+So, at least we should move if (netif_carrier_ok(dev)) check to
+mac80211 otherwise we might change channel of the running interface (via vif_use_channel).
 
-https://github.com/kvalo/ath10k-firmware/tree/master/10.2.4
+BR
+Janusz
 
--- 
-Kalle Valo
+>> johannes
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe
+>> linux-wireless" in the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
