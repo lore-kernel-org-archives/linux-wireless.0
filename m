@@ -1,28 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:39919 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753263AbaLIXWf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 18:22:35 -0500
-Date: Tue, 09 Dec 2014 18:22:33 -0500 (EST)
-Message-Id: <20141209.182233.1341650327810529864.davem@davemloft.net> (sfid-20141210_002243_353980_44416F4B)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2014-12-08
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20141208193223.GA14086@tuxdriver.com>
-References: <20141208193223.GA14086@tuxdriver.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38024 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755673AbaLWKgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 05:36:39 -0500
+Message-ID: <1419330994.6091.2.camel@sipsolutions.net> (sfid-20141223_113642_547667_1737F2DD)
+Subject: Re: [PATCH] cfg80211: do not check for carrier during
+ start_radar_detect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <patila@marvell.com>
+Cc: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 23 Dec 2014 11:36:34 +0100
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A38@SC-VEXCH2.marvell.com>
+References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
+	 <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com>
+	 ,<5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
+	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>
+	,<1419330394.6091.0.camel@sipsolutions.net>
+	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A38@SC-VEXCH2.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 8 Dec 2014 14:32:23 -0500
+On Tue, 2014-12-23 at 02:30 -0800, Avinash Patil wrote:
+> Oops..
+> 
+> Are you talking about this?
+> >>So, at least we should move if (netif_carrier_ok(dev)) check to mac80211 otherwise we might change channel of the running interface (via vif_use_channel).
+> 
+> I can move this check to ieee80211_start_radar_detection but I dont have any hardware to test these modifications.
 
-> Please pull this last batch of pending wireless updates for the 3.19
-> tree...
+That should be ok - however maybe you don't need those modifications at
+all?
 
-Wow that's a lot :)
+Frankly I'm not even sure how off-channel CAC stuff would work but
+Janusz probably knows what he's talking about :)
 
-Pulled, thanks John.
+johannes
+
