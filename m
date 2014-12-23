@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:55321 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbaLOS4O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 13:56:14 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath: fix incorrect PPB on FCC radar type 5
-Date: Mon, 15 Dec 2014 10:55:34 -0800
-Message-ID: <1418669734-12921-1-git-send-email-poh@qca.qualcomm.com> (sfid-20141215_195630_235661_A5B4111B)
+Received: from mga01.intel.com ([192.55.52.88]:31730 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932243AbaLWPrm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 10:47:42 -0500
+Date: Tue, 23 Dec 2014 17:47:38 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Christophe Prigent <christophe.prigent@intel.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: Do not crash if platform data is not populated
+Message-ID: <20141223154738.GM1314@lahna.fi.intel.com> (sfid-20141223_164758_649892_32D1D06F)
+References: <1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com>
+ <54998C31.9090500@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54998C31.9090500@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The minimum number of pulses per burst on FCC radar type 5 is 1.
-Use this number for correct radar detection.
+On Tue, Dec 23, 2014 at 04:37:21PM +0100, Arend van Spriel wrote:
+> On 12/23/14 15:48, Mika Westerberg wrote:
+> >The driver looks for pdata->oob_irq_supported to find out if wowl can be
+> >supported. However, not all platforms populate pdata in which case we crash
+> >the kernel because of NULL pointer dereference.
+> 
+> Thanks, Mika
+> 
+> However, this was already reported by Dan Carpenter and I submitted a patch
+> for that a couple of days ago: "[PATCH 02/10] brcmfmac: Fix possible
+> dereference of NULL pointer." [1].
+> 
+> Regards,
+> Arend
+> 
+> [1]
+> http://mid.gmane.org/1419162233-19492-3-git-send-email-arend@broadcom.com
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/dfs_pattern_detector.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Oh, good. I didn't notice that one.
 
-diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-index cfd0554..3d57f87 100644
---- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-@@ -86,7 +86,7 @@ static const struct radar_detector_specs fcc_radar_ref_types[] = {
- 	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
- 	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
- 	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
--	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 20),
-+	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 1),
- 	FCC_PATTERN(5, 0, 1, 333, 333, 1, 9),
- };
- 
--- 
-1.9.1
+Thanks for fixing it :)
 
+BTW, that patch seems to miss brcmf_ops_sdio_resume(), perhaps it is
+fixed in another patch?
