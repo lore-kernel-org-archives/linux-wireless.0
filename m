@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32911 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37759 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966072AbaLLLfe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 06:35:34 -0500
-Message-ID: <1418384131.2470.19.camel@sipsolutions.net> (sfid-20141212_123538_141547_A1944443)
-Subject: Re: [PATCH] mac80211: update the channel context after channel
- switch
+	id S1752369AbaLWJKZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 04:10:25 -0500
+Message-ID: <1419325819.1720.1.camel@sipsolutions.net> (sfid-20141223_101033_475473_68D75F6E)
+Subject: Re: [PATCH] mac80211: fix dot11MulticastTransmittedFrameCount
+ tested address
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: Eliad Peller <eliad@wizery.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Dec 2014 12:35:31 +0100
-In-Reply-To: <1417360646-5262-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1417360646-5262-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Tue, 23 Dec 2014 10:10:19 +0100
+In-Reply-To: <1419168328-6114-1-git-send-email-eliad@wizery.com> (sfid-20141221_142533_445059_B1EE4471)
+References: <1419168328-6114-1-git-send-email-eliad@wizery.com>
+	 (sfid-20141221_142533_445059_B1EE4471)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-11-30 at 17:17 +0200, Emmanuel Grumbach wrote:
-> When the channel switch has been made, a vif is now using
-> the channel context which was reserved. When that happens,
-> we need to update the channel context since its parameters
-> may change.
+On Sun, 2014-12-21 at 15:25 +0200, Eliad Peller wrote:
+> dot11MulticastTransmittedFrameCount should be updated according
+> to the DA, which might be different from hdr1.
 > 
-> I hit a case in which I switched to a 40Mhz channel but the
-> reserved channel context was still on 20Mhz. The rate control
-> would try to send 40Mhz packets on a 20Mhz channel context and
-> that made iwlwifi's firmware unhappy.
+> (Checking hdr1 results in the counter being 0 in case of station,
+> as TODS data frames use hdr1 for the bssid address)
 
-Applied.
+I've found this in the spec - see sta_tx_dcf_3.1d(10) (page 2410 of
+802.11-2012):
+
+cTmcfrm:=
+  If (fsdu!grpa or
+      ((toDs(tpdu) = 1) and (isGrp(addr3(tpdu))) and (fsdu!fTot=fsdu!
+fCur+1))
+     )
+  then inc(cTmcfrm)
+  else cTmcfrm fi
+
+fsdu!grpa is true if RA is multicast, but the rest is clearly checking
+the DA (and for fragmentation, which can happen in that case.)
+
+So I believe this patch is correct and will apply it (with some commit
+message fixes - should say A1 not hdr1)
 
 johannes
 
