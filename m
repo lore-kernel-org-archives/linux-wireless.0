@@ -1,54 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:61177 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965222AbaLLQrN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 11:47:13 -0500
-Received: by mail-ig0-f172.google.com with SMTP id hl2so1729550igb.17
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 08:47:10 -0800 (PST)
-Date: Fri, 12 Dec 2014 11:47:05 -0500
-From: "Bob Copeland (me@bobcopeland.com)" <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@lists.open80211s.org" <devel@lists.open80211s.org>,
-	"Thomas Pedersen (thomas@noack.us)" <thomas@noack.us>
-Subject: Re: [PATCH v4] mac80211: keep sending peer candidate events while in
- listen state
-Message-ID: <20141212164705.GA7932@localhost> (sfid-20141212_174716_242958_B380CBE0)
-References: <2EB4F5C65A3B8E4E92660930F4EF6B5B06C981@JPYOKXMS113.jp.sony.com>
- <1418384490.2470.23.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1418384490.2470.23.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39154 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756321AbaLWPi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 10:38:28 -0500
+Message-ID: <1419349104.6091.8.camel@sipsolutions.net> (sfid-20141223_163832_036986_857FB8F5)
+Subject: Re: [PATCH] cfg80211: check for carrier state only when offchanel
+ CAC supported
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Avinash Patil <patila@marvell.com>, linux-wireless@vger.kernel.org,
+	akarwar@marvell.com, cluo@marvell.com, janusz.dziedzic@tieto.com
+Date: Tue, 23 Dec 2014 16:38:24 +0100
+In-Reply-To: <54998B8E.3020002@broadcom.com>
+References: <1419365159-6577-1-git-send-email-patila@marvell.com>
+	 <1419346405.6091.6.camel@sipsolutions.net> <54998B8E.3020002@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 12, 2014 at 12:41:30PM +0100, Johannes Berg wrote:
-> On Fri, 2014-11-21 at 11:24 +0000, Nishikawa, Kenzoh wrote:
-> > Instead of sending peer candidate events just once, send them 
-> > as long as the peer remains in the LISTEN state in the peering 
-> > state machine, when userspace is implementing the peering manager.
-> > Userspace may silence the events from a peer by progressing 
-> > the state machine or by setting the link state to BLOCKED.
-> > 
-> > Fixes the problem that a mesh peering process won't be fired 
-> > again after the previous first peering trial fails due to 
-> > like air propagation error if the peering is managed by 
-> > user space such as wpa_supplicant.
-> > 
-> > This patch works with another patch for wpa_supplicant described 
-> > here which fires a peering process again triggered by the notice 
-> > from kernel.
-> > http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
+On Tue, 2014-12-23 at 16:34 +0100, Arend van Spriel wrote:
+> On 12/23/14 15:53, Johannes Berg wrote:
+> > On Wed, 2014-12-24 at 01:35 +0530, Avinash Patil wrote:
+> >> Checking for carrier state during start_radar_detection is needed
+> >> only for devices which support offchannel CAC.
+> >> This patch adds one more condition while checking for carrier state
+> >> to see if offchanel CAC is supported, else we need not check carrier
+> >> state.
+> >>
+> >> Signed-off-by: Avinash Patil<patila@marvell.com>
+> >> ---
+> >>   include/net/cfg80211.h | 2 ++
+> >>   net/wireless/nl80211.c | 3 ++-
+> >>   2 files changed, 4 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> >> index 4ebb816..1b80302 100644
+> >> --- a/include/net/cfg80211.h
+> >> +++ b/include/net/cfg80211.h
+> >> @@ -2740,6 +2740,7 @@ struct cfg80211_ops {
+> >>    * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
+> >>    * @WIPHY_FLAG_HAS_CHANNEL_SWITCH: Device supports channel switch in
+> >>    *	beaconing mode (AP, IBSS, Mesh, ...).
+> >> + * @WIPHY_FLAG_OFFCHAN_CAC: Device supports offchannel CAC.
+> >
+> > I think this should be an nl80211 feature flag, so that userspace can
+> > also know whether or not this is supported.
+> >
+> > However, we've run out of nl80211 feature flags. Arend is working on
+> > adding more, see here:
+> > http://mid.gmane.org/1418935344-22159-1-git-send-email-arend@broadcom.com
+> > (ignore the 4-way-HS offload bit he's defining)
+> >
+> > I'm not sure how to proceed here - in a sense your feature flag is far
+> > less controversial and work-intensive than Arend's (who needs a lot more
+> > than just that patch) so I guess you could pick up his patch, but I
+> > expect him to also have fixed already. He's probably also on vacation
+> > for about the same time though...
 > 
-> Can any of the mesh folks comment on this?
+> Not on vacation just yet. I indeed reworked the patch, but I was waiting 
+> for wpa_supplicant patches so I can verify it works with brcmfmac. I can 
+> submit the reworked feature flag patch with empty enum if that would work.
 
-I think it's fine.  It's not strictly necessary: userspace could
-run its own timers to restart peering with any unpeered candidates
-periodically, but doing it based on beacon arrival is a little better
-since it indicates the peer is still alive, and this is also exactly
-how the in-kernel MPM operates.
+Maybe if you were to do that Avinash could resubmit it again with the
+feature flag they need.
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+johannes
+
