@@ -1,79 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:62709 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751692AbaLQI14 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 03:27:56 -0500
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <yangyang@marvell.com>, <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 4/4] mwifiex: get supported BA stream info from FW
-Date: Wed, 17 Dec 2014 19:27:01 +0530
-Message-ID: <1418824621-2102-4-git-send-email-patila@marvell.com> (sfid-20141217_092758_459935_4D399D7F)
-In-Reply-To: <1418824621-2102-1-git-send-email-patila@marvell.com>
-References: <1418824621-2102-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:38027 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750798AbaLWKhS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 05:37:18 -0500
+Message-ID: <1419331030.6091.3.camel@sipsolutions.net> (sfid-20141223_113722_691556_00EFDA27)
+Subject: Re: [PATCH] cfg80211: do not check for carrier during
+ start_radar_detect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <patila@marvell.com>
+Cc: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 23 Dec 2014 11:37:10 +0100
+In-Reply-To: <1419330994.6091.2.camel@sipsolutions.net> (sfid-20141223_113642_547667_1737F2DD)
+References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
+	 <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com>
+	 ,<5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
+	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>
+	 ,<1419330394.6091.0.camel@sipsolutions.net>
+	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A38@SC-VEXCH2.marvell.com>
+	 <1419330994.6091.2.camel@sipsolutions.net>
+	 (sfid-20141223_113642_547667_1737F2DD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to get number of BA streams
-supported information from FW. Some newer chips(e.g. 8897 series)
-support 4 BA streams for TX; so driver should not disallow BA stream
-setup just after 2 streams have been established.
+On Tue, 2014-12-23 at 11:36 +0100, Johannes Berg wrote:
+> On Tue, 2014-12-23 at 02:30 -0800, Avinash Patil wrote:
+> > Oops..
+> > 
+> > Are you talking about this?
+> > >>So, at least we should move if (netif_carrier_ok(dev)) check to mac80211 otherwise we might change channel of the running interface (via vif_use_channel).
+> > 
+> > I can move this check to ieee80211_start_radar_detection but I dont have any hardware to test these modifications.
+> 
+> That should be ok - however maybe you don't need those modifications at
+> all?
+> 
+> Frankly I'm not even sure how off-channel CAC stuff would work but
+> Janusz probably knows what he's talking about :)
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/11n.h | 14 +++++++++++---
- drivers/net/wireless/mwifiex/fw.h  |  1 +
- 2 files changed, 12 insertions(+), 3 deletions(-)
+Also - maybe we need some sort of capability flag for this, and then the
+check doesn't have to move but just be made conditional on not having
+the feature?
 
-diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
-index f275675..8e2e394 100644
---- a/drivers/net/wireless/mwifiex/11n.h
-+++ b/drivers/net/wireless/mwifiex/11n.h
-@@ -130,7 +130,9 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
- {
- 	struct mwifiex_private *priv;
- 	u8 i;
--	u32 ba_stream_num = 0;
-+	u32 ba_stream_num = 0, ba_stream_max;
-+
-+	ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
- 
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		priv = adapter->priv[i];
-@@ -139,8 +141,14 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
- 				&priv->tx_ba_stream_tbl_ptr);
- 	}
- 
--	return ((ba_stream_num <
--		 MWIFIEX_MAX_TX_BASTREAM_SUPPORTED) ? true : false);
-+	if (adapter->fw_api_ver == MWIFIEX_FW_V15) {
-+		ba_stream_max =
-+			       GETSUPP_TXBASTREAMS(adapter->hw_dot_11n_dev_cap);
-+		if (!ba_stream_max)
-+			ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
-+	}
-+
-+	return ((ba_stream_num < ba_stream_max) ? true : false);
- }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index fb5936e..9a82323 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -233,6 +233,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define ISSUPP_RXLDPC(Dot11nDevCap) (Dot11nDevCap & BIT(22))
- #define ISSUPP_BEAMFORMING(Dot11nDevCap) (Dot11nDevCap & BIT(30))
- #define ISALLOWED_CHANWIDTH40(ht_param) (ht_param & BIT(2))
-+#define GETSUPP_TXBASTREAMS(Dot11nDevCap) ((Dot11nDevCap >> 18) & 0xF)
- 
- /* httxcfg bitmap
-  * 0		reserved
--- 
-1.8.1.4
+johannes
 
