@@ -1,38 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752006AbaL3OUT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:20:19 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 25/33] iwlwifi: remove useless extern definition of iwl4265_2ac_sdio_cfg
-Date: Tue, 30 Dec 2014 16:19:00 +0200
-Message-Id: <1419949148-24046-25-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154347_626602_8D81FAA2)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30876 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750798AbaLWKdB convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 05:33:01 -0500
+From: Avinash Patil <patila@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Tue, 23 Dec 2014 02:30:13 -0800
+Subject: RE: [PATCH] cfg80211: do not check for carrier during
+ start_radar_detect
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A38@SC-VEXCH2.marvell.com> (sfid-20141223_113305_118990_DC6877B0)
+References: <CBACCFA0AEB13A41977475BCF3E896FC66736E7972@SC-VEXCH2.marvell.com>
+	 <CALhHN=qA7icuY_MNvBebDsOMOkh6hEsWNkrZoGDGsQg+-f6Xog@mail.gmail.com>
+	,<5FF020A1CFFEEC49BD1E09530C4FF5951B160B81A7@SC-VEXCH1.marvell.com>
+	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A37@SC-VEXCH2.marvell.com>,<1419330394.6091.0.camel@sipsolutions.net>
+In-Reply-To: <1419330394.6091.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This device was renamed, but the external definition remained there.
+Oops..
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-config.h | 1 -
- 1 file changed, 1 deletion(-)
+Are you talking about this?
+>>So, at least we should move if (netif_carrier_ok(dev)) check to mac80211 otherwise we might change channel of the running interface (via vif_use_channel).
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 3985051..fa0bc48 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -379,7 +379,6 @@ extern const struct iwl_cfg iwl7265d_n_cfg;
- extern const struct iwl_cfg iwl8260_2n_cfg;
- extern const struct iwl_cfg iwl8260_2ac_cfg;
- extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
--extern const struct iwl_cfg iwl4265_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
- #endif /* CONFIG_IWLMVM */
- 
--- 
-1.9.1
+I can move this check to ieee80211_start_radar_detection but I dont have any hardware to test these modifications.
+
+Thanks,
+Avinash
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: Tuesday, December 23, 2014 3:56 PM
+To: Avinash Patil
+Cc: janusz.dziedzic@tieto.com; linux-wireless@vger.kernel.org; Cathy Luo; Amitkumar Karwar
+Subject: Re: [PATCH] cfg80211: do not check for carrier during start_radar_detect
+
+On Tue, 2014-12-23 at 02:13 -0800, Avinash Patil wrote:
+> Hi Janusz,
+>
+> Any further update on this?
+
+We were waiting for you to send a new patch?
+
+johannes
 
