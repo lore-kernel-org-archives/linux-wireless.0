@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38916 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755704AbaLWOxb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 09:53:31 -0500
-Message-ID: <1419346405.6091.6.camel@sipsolutions.net> (sfid-20141223_155334_784728_B2EDDDCC)
-Subject: Re: [PATCH] cfg80211: check for carrier state only when offchanel
- CAC supported
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com, janusz.dziedzic@tieto.com,
-	Arend van Spriel <arend@broadcom.com>
-Date: Tue, 23 Dec 2014 15:53:25 +0100
-In-Reply-To: <1419365159-6577-1-git-send-email-patila@marvell.com>
-References: <1419365159-6577-1-git-send-email-patila@marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58965 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbaLXUkM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2014 15:40:12 -0500
+Message-ID: <549B24A9.4080001@broadcom.com> (sfid-20141224_214016_714216_DDC0BD4C)
+Date: Wed, 24 Dec 2014 21:40:09 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Jouni Malinen <j@w1.fi>
+CC: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>
+Subject: Re: hostapd and 11h support
+References: <549A8827.3070703@broadcom.com> <20141224173227.GA1969@w1.fi> <549B05F0.9020704@broadcom.com> <20141224190452.GA6933@w1.fi>
+In-Reply-To: <20141224190452.GA6933@w1.fi>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-24 at 01:35 +0530, Avinash Patil wrote:
-> Checking for carrier state during start_radar_detection is needed
-> only for devices which support offchannel CAC.
-> This patch adds one more condition while checking for carrier state
-> to see if offchanel CAC is supported, else we need not check carrier
-> state.
-> 
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> ---
->  include/net/cfg80211.h | 2 ++
->  net/wireless/nl80211.c | 3 ++-
->  2 files changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 4ebb816..1b80302 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -2740,6 +2740,7 @@ struct cfg80211_ops {
->   * @WIPHY_FLAG_SUPPORTS_5_10_MHZ: Device supports 5 MHz and 10 MHz channels.
->   * @WIPHY_FLAG_HAS_CHANNEL_SWITCH: Device supports channel switch in
->   *	beaconing mode (AP, IBSS, Mesh, ...).
-> + * @WIPHY_FLAG_OFFCHAN_CAC: Device supports offchannel CAC.
+On 12/24/14 20:04, Jouni Malinen wrote:
+> On Wed, Dec 24, 2014 at 07:29:04PM +0100, Arend van Spriel wrote:
+>> The firmware on the device *can* have CAC logic built-in. When it
+>> *is* built-in it is however disabled by default. Based on your
+>> feedback I will just detect firmware support, enable dfs in
+>> firmware, and signal DFS offload to hostapd. I would suggest
+>> introducing a new common capability flag for this instead of using a
+>> QCA vendor specific one. That would be odd ;-)
+>
+> I see nothing odd in other drivers using the already defined QCA vendor
+> specific nl80211 command. Anyway, I have no issues with a new nl80211
+> capability flag added for this purpose. You'll probably have better
+> chances of getting that accepted with an upstream driver using it.
 
-I think this should be an nl80211 feature flag, so that userspace can
-also know whether or not this is supported.
+Maybe not odd but counter-intuitive to some people. Anyway, I was 
+looking at the code in driver_nl80211_capa.c and stumbled upon 
+WPA_DRIVER_FLAGS_KEY_MGMT_OFFLOAD. I introduced entensible feature flags 
+upstream just yesterday to accomodate this type of offload. Just curious 
+but are those QCA vendor specific nl80211 commands used by the upstream 
+QCA drivers or is this for supporting QCA proprietary drivers. I guess 
+the latter as that would be the only reason I can think of to have 
+vendor specific commands.
 
-However, we've run out of nl80211 feature flags. Arend is working on
-adding more, see here:
-http://mid.gmane.org/1418935344-22159-1-git-send-email-arend@broadcom.com
-(ignore the 4-way-HS offload bit he's defining)
-
-I'm not sure how to proceed here - in a sense your feature flag is far
-less controversial and work-intensive than Arend's (who needs a lot more
-than just that patch) so I guess you could pick up his patch, but I
-expect him to also have fixed already. He's probably also on vacation
-for about the same time though...
-
-johannes
-
+Regards,
+Arend
