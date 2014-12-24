@@ -1,228 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27929 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751911AbaLQKWi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:56549 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643AbaLXRhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:22:38 -0500
-Subject: [PATCH v2 8/8] ath10k: add thermal sensor device support
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Dec 2014 12:22:26 +0200
-Message-ID: <20141217102226.15964.32919.stgit@potku.adurom.net> (sfid-20141217_112242_688304_C6315922)
-In-Reply-To: <20141217101755.15964.2625.stgit@potku.adurom.net>
-References: <20141217101755.15964.2625.stgit@potku.adurom.net>
+	Wed, 24 Dec 2014 12:37:05 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"Rob Herring" <rob.herring@linaro.org>,
+	John Stultz <john.stultz@linaro.org>
+Subject: Re: [PATCH V2 3/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
+References: <1419357863-2018-1-git-send-email-arend@broadcom.com>
+	<5499BDE9.7020807@broadcom.com>
+Date: Wed, 24 Dec 2014 19:36:59 +0200
+In-Reply-To: <5499BDE9.7020807@broadcom.com> (Arend van Spriel's message of
+	"Tue, 23 Dec 2014 20:09:29 +0100")
+Message-ID: <87mw6d6jb8.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_183724_368124_58B87C75)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Arend van Spriel <arend@broadcom.com> writes:
 
-Temperature sensor generates electrical analog voltage from temperature
-of each chain. The analog voltage is converted to digital value through
-ADC. For reading temperature values fom user space, hw monitoring device
-is used.
+> On 12/23/14 19:04, Arend van Spriel wrote:
+>> This patch adds support for the bcm43340 and bcm43341 wireless
+>> chipsets. These two chipsets are identical from wireless parts
+>> perspective. As such they use the same firmware image.
+>
+> Kalle,
+>
+> Just curious. Would this patch have ended up on [1] when I would have
+> filled In-Reply-to: properly during git send-email? If so I can add
+> that to our internal process description.
 
-Whenever the user requests for current temperature, the driver sends WMI
-command and wait for response. For reading temperature,
+Not sure, I'm not very familiar with patchwork yet. I saw some
+documentation that it's possible to update the patch with pwclient, but
+I haven't seen anything about doing it via email.
 
-cat /sys/class/ieee80211/phy*/device/hwmon/hwmon2/temp1_input
+IMHO it's just best to resend the whole series even if just one patch
+needs changes. Anything else would be just confusing and error prone.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c    |    2 +
- drivers/net/wireless/ath/ath10k/thermal.c |   83 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/thermal.h |   14 +++++
- drivers/net/wireless/ath/ath10k/wmi.c     |    1 
- 4 files changed, 100 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 28bfacb382f3..7d5a7b3add52 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -847,6 +847,7 @@ static void ath10k_core_restart(struct work_struct *work)
- 	complete_all(&ar->offchan_tx_completed);
- 	complete_all(&ar->install_key_done);
- 	complete_all(&ar->vdev_setup_done);
-+	complete_all(&ar->thermal.wmi_sync);
- 	wake_up(&ar->htt.empty_tx_wq);
- 	wake_up(&ar->wmi.tx_credits_wq);
- 	wake_up(&ar->peer_mapping_wq);
-@@ -1322,6 +1323,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 
- 	init_completion(&ar->install_key_done);
- 	init_completion(&ar->vdev_setup_done);
-+	init_completion(&ar->thermal.wmi_sync);
- 
- 	INIT_DELAYED_WORK(&ar->scan.timeout, ath10k_scan_timeout_work);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index e98ce8ce27e2..d93913538d18 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -17,6 +17,8 @@
- #include <linux/device.h>
- #include <linux/sysfs.h>
- #include <linux/thermal.h>
-+#include <linux/hwmon.h>
-+#include <linux/hwmon-sysfs.h>
- #include "core.h"
- #include "debug.h"
- #include "wmi-ops.h"
-@@ -119,9 +121,72 @@ static struct thermal_cooling_device_ops ath10k_thermal_ops = {
- 	.set_cur_state = ath10k_thermal_set_cur_dutycycle,
- };
- 
-+static ssize_t ath10k_thermal_show_temp(struct device *dev,
-+					struct device_attribute *attr,
-+					char *buf)
-+{
-+	struct ath10k *ar = dev_get_drvdata(dev);
-+	int ret, temperature;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	/* Can't get temperature when the card is off */
-+	if (ar->state != ATH10K_STATE_ON) {
-+		ret = -ENETDOWN;
-+		goto out;
-+	}
-+
-+	reinit_completion(&ar->thermal.wmi_sync);
-+	ret = ath10k_wmi_pdev_get_temperature(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to read temperature %d\n", ret);
-+		goto out;
-+	}
-+
-+	if (test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags)) {
-+		ret = -ESHUTDOWN;
-+		goto out;
-+	}
-+
-+	ret = wait_for_completion_timeout(&ar->thermal.wmi_sync,
-+					  ATH10K_THERMAL_SYNC_TIMEOUT_HZ);
-+	if (ret == 0) {
-+		ath10k_warn(ar, "failed to synchronize thermal read\n");
-+		ret = -ETIMEDOUT;
-+		goto out;
-+	}
-+
-+	spin_lock_bh(&ar->data_lock);
-+	temperature = ar->thermal.temperature;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ret = snprintf(buf, PAGE_SIZE, "%d", temperature);
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+void ath10k_thermal_event_temperature(struct ath10k *ar, int temperature)
-+{
-+	spin_lock_bh(&ar->data_lock);
-+	ar->thermal.temperature = temperature;
-+	spin_unlock_bh(&ar->data_lock);
-+	complete(&ar->thermal.wmi_sync);
-+}
-+
-+static SENSOR_DEVICE_ATTR(temp1_input, S_IRUGO, ath10k_thermal_show_temp,
-+			  NULL, 0);
-+
-+static struct attribute *ath10k_hwmon_attrs[] = {
-+	&sensor_dev_attr_temp1_input.dev_attr.attr,
-+	NULL,
-+};
-+ATTRIBUTE_GROUPS(ath10k_hwmon);
-+
- int ath10k_thermal_register(struct ath10k *ar)
- {
- 	struct thermal_cooling_device *cdev;
-+	struct device *hwmon_dev;
- 	int ret;
- 
- 	cdev = thermal_cooling_device_register("ath10k_thermal", ar,
-@@ -141,8 +206,26 @@ int ath10k_thermal_register(struct ath10k *ar)
- 	}
- 
- 	ar->thermal.cdev = cdev;
-+
-+	/* Do not register hwmon device when temperature reading is not
-+	 * supported by firmware
-+	 */
-+	if (ar->wmi.op_version != ATH10K_FW_WMI_OP_VERSION_10_2_4)
-+		return 0;
-+
-+	hwmon_dev = devm_hwmon_device_register_with_groups(ar->dev,
-+							   "ath10k_hwmon", ar,
-+							   ath10k_hwmon_groups);
-+	if (IS_ERR(hwmon_dev)) {
-+		ath10k_err(ar, "failed to register hwmon device: %ld\n",
-+			   PTR_ERR(hwmon_dev));
-+		ret = -EINVAL;
-+		goto err_remove_link;
-+	}
- 	return 0;
- 
-+err_remove_link:
-+	sysfs_remove_link(&ar->dev->kobj, "thermal_sensor");
- err_cooling_destroy:
- 	thermal_cooling_device_unregister(cdev);
- 	return ret;
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
-index e20bb87849ae..bccc17ae0fde 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.h
-+++ b/drivers/net/wireless/ath/ath10k/thermal.h
-@@ -20,17 +20,25 @@
- #define ATH10K_QUIET_PERIOD_MIN         25
- #define ATH10K_QUIET_START_OFFSET       10
- #define ATH10K_QUIET_DUTY_CYCLE_MAX     70
-+#define ATH10K_HWMON_NAME_LEN           15
-+#define ATH10K_THERMAL_SYNC_TIMEOUT_HZ (5*HZ)
- 
- struct ath10k_thermal {
- 	struct thermal_cooling_device *cdev;
-+	struct completion wmi_sync;
- 
- 	/* protected by conf_mutex */
- 	u32 duty_cycle;
-+	/* temperature value in Celcius degree
-+	 * protected by data_lock
-+	 */
-+	int temperature;
- };
- 
- #ifdef CONFIG_THERMAL
- int ath10k_thermal_register(struct ath10k *ar);
- void ath10k_thermal_unregister(struct ath10k *ar);
-+void ath10k_thermal_event_temperature(struct ath10k *ar, int temperature);
- #else
- static inline int ath10k_thermal_register(struct ath10k *ar)
- {
-@@ -40,5 +48,11 @@ static inline int ath10k_thermal_register(struct ath10k *ar)
- static inline void ath10k_thermal_unregister(struct ath10k *ar)
- {
- }
-+
-+static inline void ath10k_thermal_event_temperature(struct ath10k *ar,
-+						    int temperature)
-+{
-+}
-+
- #endif
- #endif /* _THERMAL_ */
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c2d7ac31fd78..ac742905331b 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3038,6 +3038,7 @@ static int ath10k_wmi_event_temperature(struct ath10k *ar, struct sk_buff *skb)
- 	if (WARN_ON(skb->len < sizeof(*ev)))
- 		return -EPROTO;
- 
-+	ath10k_thermal_event_temperature(ar, __le32_to_cpu(ev->temperature));
- 	return 0;
- }
- 
-
+-- 
+Kalle Valo
