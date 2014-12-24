@@ -1,94 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:37443 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbaLTK1x (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:15396 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751512AbaLXXSI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 20 Dec 2014 05:27:53 -0500
-Received: by mail-ig0-f178.google.com with SMTP id hl2so1916938igb.11
-        for <linux-wireless@vger.kernel.org>; Sat, 20 Dec 2014 02:27:52 -0800 (PST)
+	Wed, 24 Dec 2014 18:18:08 -0500
+Message-ID: <549B49AD.7070804@broadcom.com> (sfid-20141225_001821_258995_541280E0)
+Date: Thu, 25 Dec 2014 00:18:05 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CALhHN=qmhK983BHasRQKVtrHQy44wOdZc-PRL8s8v+e0GDHZHQ@mail.gmail.com>
-References: <CAGXE3d8Uv01qjfvRQkMr1w_5wB6XKpC7d2VOR3UG0DMPHk6r9A@mail.gmail.com>
-	<54940B8C.5070801@neratec.com>
-	<CALhHN=qmhK983BHasRQKVtrHQy44wOdZc-PRL8s8v+e0GDHZHQ@mail.gmail.com>
-Date: Sat, 20 Dec 2014 18:27:52 +0800
-Message-ID: <CAFuUQkh1R6Lv2UQKtACV4ijbQ-AZujVE6rt0Zwu7SqrrWS7oXw@mail.gmail.com> (sfid-20141220_112756_956852_E05F626D)
-Subject: Re: DFS CAC time
-From: YanBo <dreamfly281@gmail.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Avinash Patil <patila@marvell.com>
+CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <janusz.dziedzic@tieto.com>,
+	<johannes@sipsolutions.net>
+Subject: Re: [PATCH] cfg80211: check for carrier state only when offchanel
+ CAC supported
+References: <1419425236-17457-1-git-send-email-patila@marvell.com>
+In-Reply-To: <1419425236-17457-1-git-send-email-patila@marvell.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One correct based on the patch, the 5600 should be change with 5590,
-or else the channel 128 will be disabled in my testing.
-
-
-+       (5490 - 5590 @ 80), (27), DFS, AUTO-BW
-+       (5590 - 5650 @ 40), (27), (600000), DFS, AUTO-BW
-+       (5650 - 5710 @ 40), (27), DFS, AUTO-BW
-
-BR /Yanbo
-
-On Fri, Dec 19, 2014 at 8:28 PM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> On 19 December 2014 at 12:27, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->> On 12/18/2014 05:21 PM, Helmut Schaa wrote:
->>> Hi,
->>>
->>> [...]
->>>
->>> So, every channel has a CAC time of 60 seconds.
->>>
->>> Checking version 1.7.2 of the ETSI regulation indicates that we might
->>> need some modifications to cfg80211:
->>>
->>> From [1] page 79:
->>>
->>> "NOTE 1: For channels whose nominal bandwidth falls completely or
->>> partly within the
->>> band 5 600 MHz to 5 650 MHz, the Channel Availability Check Time shall be
->>> 10 minutes.
->>> NOTE 2: For channels whose nominal bandwidth falls completely or
->>> partly within the
->>> band 5 600 MHz to 5 650 MHz, the Off-Channel CAC Time shall be within the
->>> range 1 hour to 24 hours."
->>>
->>> So, for these channels we should select a longer initial CAC time.
->>>
->>> Is anyone aware of this issue?
->>>
->>> Thanks,
->>> Helmut
->>>
->>>
->>> [1] http://www.etsi.org/deliver/etsi_en/301800_301899/301893/01.07.02_20/en_301893v010702a.pdf
->>> --
->>
->> Hello Helmut,
->>
->> just forget about those aka 'weather channels' that require a pracitcally
->> impossible to achieve radar detection probability rate (99.99% during CAC, see
->> table D.5).
->>
->> They should simply be disabled, either at mac layer, or at least in ath/regd.c.
->>
+On 12/24/14 13:47, Avinash Patil wrote:
+> Checking for carrier state during start_radar_detection is needed
+> only for devices which support offchannel CAC.
+> This patch provides this additional check of extended feature offchannel
+> CAC support while checking for carrier state.
 >
-> You can use internal regdb and set this correctly in db.txt, eg
+> Signed-off-by: Avinash Patil<patila@marvell.com>
+> ---
+>   include/uapi/linux/nl80211.h | 3 +++
+>   net/wireless/nl80211.c       | 4 +++-
+>   2 files changed, 6 insertions(+), 1 deletion(-)
 >
-> +       (5490 - 5600 @ 80), (27), DFS, AUTO-BW
-> +       (5600 - 5650 @ 40), (27), (600000), DFS, AUTO-BW
-> +       (5650 - 5710 @ 40), (27), DFS, AUTO-BW
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 735ab43..9ac9008 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -4205,11 +4205,14 @@ enum nl80211_feature_flags {
+>   /**
+>    * enum nl80211_ext_feature_index - bit index of extended features.
+>    *
+> + * @NL80211_EXT_FEATURE_OFFCHAN_CAC: This device/driver supports
+> + * offchannel Channel Availibility Check(CAC).
+
+continuation on next line should be indented with a tab.
+
+Regards,
+Arend
+
+>    * @NUM_NL80211_EXT_FEATURES: number of extended features.
+>    * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+>    */
+>   enum nl80211_ext_feature_index {
 >
-> There are also patches for crda/wireless-regdb but not merged, so use
-> internal regdb.
+> +	NL80211_EXT_FEATURE_OFFCHAN_CAC,
+>   	/* add new features before the definition below */
+>   	NUM_NL80211_EXT_FEATURES,
+>   	MAX_NL80211_EXT_FEATURES = NUM_NL80211_EXT_FEATURES - 1
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 39753de..b2abb37 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -6138,7 +6138,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+>   	if (err)
+>   		return err;
 >
-> BR
-> Janusz
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> -	if (netif_carrier_ok(dev))
+> +	if (wiphy_ext_feature_isset(&rdev->wiphy,
+> +				    NL80211_EXT_FEATURE_OFFCHAN_CAC)&&
+> +	    netif_carrier_ok(dev))
+>   		return -EBUSY;
+>
+>   	if (wdev->cac_started)
+
