@@ -1,31 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32902 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966072AbaLLLdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 06:33:42 -0500
-Message-ID: <1418384019.2470.18.camel@sipsolutions.net> (sfid-20141212_123345_988479_E3320618)
-Subject: Re: [PATCH] nl80211: check matches array length before acessing it
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Dec 2014 12:33:39 +0100
-In-Reply-To: <1417426329-16099-1-git-send-email-luca@coelho.fi>
-References: <1417426329-16099-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:41734 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602AbaLXNGD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2014 08:06:03 -0500
+Date: Wed, 24 Dec 2014 18:35:54 +0530
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, linux-kernel@vger.kernel.org,
+	johannes.berg@intel.com, arend@broadcom.com
+Subject: [PATCH v2] NFC: port100: Introduce the use of function
+ put_unaligned_le16ameo@linux.intel.com,
+Message-ID: <20141224130554.GA2301@vaishali-Ideapad-Z570> (sfid-20141224_140632_955905_A948CA9C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-01 at 11:32 +0200, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> If the userspace passes a malformed sched scan request (or a net
-> detect wowlan configuration) by adding a NL80211_ATTR_SCHED_SCAN_MATCH
-> attribute without any nested matchsets, a NULL pointer dereference
-> will occur.  Fix this by checking that we do have matchsets in our
-> array before trying to access it.
+This patch introduces the use of function put_unaligned_le16.
 
-Applied, thanks.
+This is done using Coccinelle and semantic patch used is as follows:
 
-johannes
+@a@
+typedef u16, __le16;
+{u16,__le16} e16;
+identifier tmp;
+expression ptr;
+expression y,e;
+type T;
+@@
+
+- tmp = cpu_to_le16(y);
+
+  <+... when != tmp
+(
+- memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
++ put_unaligned_le16(y,ptr);
+|
+- memcpy(ptr, (T)&tmp, ...);
++ put_unaligned_le16(y,ptr);
+)
+  ...+>
+? tmp = e
+
+@@ type T; identifier a.tmp; @@
+
+- T tmp;
+...when != tmp
+
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+Changes since v1:
+	<asm/unaligned.h>  has arch-specific knowlege of which of
+	the implementations needs to be used. So, include it instaed
+	of <linux/unaligned/access_ok.h>.
+
+ drivers/nfc/port100.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
+index 4ac4d31..440f0f3 100644
+--- a/drivers/nfc/port100.c
++++ b/drivers/nfc/port100.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/usb.h>
+ #include <net/nfc/digital.h>
++#include <asm/unaligned.h>
+ 
+ #define VERSION "0.1"
+ 
+@@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+ {
+ 	struct port100 *dev = nfc_digital_get_drvdata(ddev);
+ 	struct port100_cb_arg *cb_arg;
+-	__le16 timeout;
+ 
+ 	cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
+ 	if (!cb_arg)
+@@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+ 	cb_arg->complete_cb = cb;
+ 	cb_arg->complete_arg = arg;
+ 
+-	timeout = cpu_to_le16(_timeout * 10);
+-
+-	memcpy(skb_push(skb, sizeof(__le16)), &timeout, sizeof(__le16));
++	put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
+ 
+ 	return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
+ 				      port100_in_comm_rf_complete, cb_arg);
+-- 
+1.9.1
 
