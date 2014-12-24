@@ -1,152 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58493 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751649AbaLXIA0 (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:50011 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbaLXHt5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 03:00:26 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 4/8] ath10k: add wmi support for delba_send
-Date: Wed, 24 Dec 2014 13:29:05 +0530
-Message-ID: <1419407949-32367-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141224_090028_510353_3E1DFEAD)
-In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Wed, 24 Dec 2014 02:49:57 -0500
+Received: by mail-wi0-f182.google.com with SMTP id h11so12866320wiw.15
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2014 23:49:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <54981C1C.2020904@broadcom.com>
+References: <20120313125702.703540202@sipsolutions.net> <20120313125919.370791280@sipsolutions.net>
+ <1419253089.1890.13.camel@sipsolutions.net> <549818FE.1090707@broadcom.com>
+ <1419254074.1890.18.camel@sipsolutions.net> <54981C1C.2020904@broadcom.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 24 Dec 2014 09:49:40 +0200
+Message-ID: <CA+XVXfdcPyGgteKxWU3k0prCfr7sVHriDyZSgTxOhPVGuRr7qw@mail.gmail.com> (sfid-20141224_085000_775613_7855CAA4)
+Subject: Re: [PATCH 1/2] brmc80211: dont use jiffies for BSS TSF
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Franky Lin <frankyl@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WMI support for sending delba request. This command is used for
-debugging purpose.
+On Mon, Dec 22, 2014 at 3:26 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 12/22/14 14:14, Johannes Berg wrote:
+>>
+>> On Mon, 2014-12-22 at 14:13 +0100, Arend van Spriel wrote:
+>>>
+>>> On 12/22/14 13:58, Johannes Berg wrote:
+>>>>
+>>>> By the way - I know now that the proprietary Broadcom driver has the
+>>>> same bug, to the point where this is apparently getting encoded into the
+>>>> Android framework.
+>>>>
+>>>> I urge you to fix this issue there as well. If an absolute "last
+>>>> updated" timestamp is needed (and "last seen [ms] ago" isn't sufficient)
+>>>> then new API will be needed.
+>>>
+>>>
+>>> Sorry, seem to have missed the original patches somehow. Guess because
+>>> it says *brmc*80211.
+>>
+>>
+>> No no - it's a looong time ago and was also applied a long time ago. It
+>> just reared it's head again in another place.
+>
+>
+> Found the commit in git log. So you mean the proprietary DHD driver or
+> Android bcmdhd still uses host timestamp. I agree it should be fixed, but I
+> may need some good arguments to convince my co-workers. So what kind of
+> issues are rearing their (ugly) heads? supplicant issues?
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 21 +++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
- drivers/net/wireless/ath/ath10k/wmi.c     | 31 +++++++++++++++++++++++++++++++
- 3 files changed, 53 insertions(+)
+Basically the Android framework is using the TSF from the scan results
+as a timestamp for when the BSS was seen. In Android LL a new CTS test
+was added to verify these values.
+This of course means the CTS test fails for every vendor besides BRCM :)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index e8f49de..3a3d15e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -126,6 +126,9 @@ struct wmi_ops {
- 	struct sk_buff *(*gen_addba_set_resp)(struct ath10k *ar, u32 vdev_id,
- 					      const u8 *mac, u32 tid,
- 					      u32 status);
-+	struct sk_buff *(*gen_delba_send)(struct ath10k *ar, u32 vdev_id,
-+					  const u8 *mac, u32 tid, u32 initiator,
-+					  u32 reason);
- };
- 
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -914,4 +917,22 @@ ath10k_wmi_addba_set_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac,
- 				   ar->wmi.cmd->addba_set_resp_cmdid);
- }
- 
-+static inline int
-+ath10k_wmi_delba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
-+		      u32 tid, u32 initiator, u32 reason)
-+{
-+	struct sk_buff *skb;
-+
-+	if (!ar->wmi.ops->gen_delba_send)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_delba_send(ar, vdev_id, mac, tid, initiator,
-+					  reason);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	return ath10k_wmi_cmd_send(ar, skb,
-+				   ar->wmi.cmd->delba_send_cmdid);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 63f9860..57d2b50 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2210,6 +2210,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	/* .gen_addba_clear_resp not implemented */
- 	/* .gen_addba_send not implemented */
- 	/* .gen_addba_set_resp not implemented */
-+	/* .gen_delba_send not implemented */
- };
- 
- /************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index dd17c00..26d8139 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4953,6 +4953,33 @@ ath10k_wmi_op_gen_addba_set_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac,
- 	return skb;
- }
- 
-+static struct sk_buff *
-+ath10k_wmi_op_gen_delba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
-+			     u32 tid, u32 initiator, u32 reason)
-+{
-+	struct wmi_delba_send_cmd *cmd;
-+	struct sk_buff *skb;
-+
-+	if (!mac)
-+		return ERR_PTR(-EINVAL);
-+
-+	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	cmd = (struct wmi_delba_send_cmd *)skb->data;
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	ether_addr_copy(cmd->peer_macaddr.addr, mac);
-+	cmd->tid = __cpu_to_le32(tid);
-+	cmd->initiator = __cpu_to_le32(initiator);
-+	cmd->reasoncode = __cpu_to_le32(reason);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI,
-+		   "wmi delba send vdev_id 0x%X mac_addr %pM tid %u initiator %u reason %u\n",
-+		   vdev_id, mac, tid, initiator, reason);
-+	return skb;
-+}
-+
- static const struct wmi_ops wmi_ops = {
- 	.rx = ath10k_wmi_op_rx,
- 	.map_svc = wmi_main_svc_map,
-@@ -5007,6 +5034,7 @@ static const struct wmi_ops wmi_ops = {
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
- 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
-+	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
- };
- 
- static const struct wmi_ops wmi_10_1_ops = {
-@@ -5064,6 +5092,7 @@ static const struct wmi_ops wmi_10_1_ops = {
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
- 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
-+	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
- };
- 
- static const struct wmi_ops wmi_10_2_ops = {
-@@ -5122,6 +5151,7 @@ static const struct wmi_ops wmi_10_2_ops = {
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
- 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
-+	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
- };
- 
- static const struct wmi_ops wmi_10_2_4_ops = {
-@@ -5180,6 +5210,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
- 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
- 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
- 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
-+	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
- };
- 
- int ath10k_wmi_attach(struct ath10k *ar)
--- 
-2.2.1
+It seems the framework knows it's a driver bug, since in the java code
+they explicitly name the variable "tsf", before assigning it to the
+scan result timestamp..
 
+Arik
