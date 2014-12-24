@@ -1,32 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9780 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58660 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426AbaLAHGu (ORCPT
+	with ESMTP id S1751753AbaLXIBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 02:06:50 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add pointer constness to traces
-References: <1417074131-18460-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 1 Dec 2014 09:06:45 +0200
-In-Reply-To: <1417074131-18460-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 27 Nov 2014 08:42:11 +0100")
-Message-ID: <87r3wjrgqi.fsf@kamboji.qca.qualcomm.com> (sfid-20141201_080654_053456_D77A880E)
+	Wed, 24 Dec 2014 03:01:10 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 7/8] ath10k: add support to send addba response
+Date: Wed, 24 Dec 2014 13:29:08 +0530
+Message-ID: <1419407949-32367-8-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141224_090114_369129_40D387B1)
+In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This per-station debugfs entry helps to send addba response in
+manual mode for debugging purpose. It accepts tid and status code
+as input arguments.
 
-> Traces shouldn't modified passed data. This will
-> make it possible to pass const arguments to
-> traces.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+To send addba response,
 
-Thanks, applied.
+echo 0 25 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
+	   stations/XX:XX:XX:XX:XX:XX/addba_resp
 
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c | 55 +++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 89e5e5a..95eb5a1 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -136,10 +136,65 @@ static const struct file_operations fops_addba = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath10k_dbg_sta_write_addba_resp(struct file *file,
++					       const char __user *user_buf,
++					       size_t count, loff_t *ppos)
++{
++	struct ieee80211_sta *sta = file->private_data;
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct ath10k *ar = arsta->arvif->ar;
++	u32 tid, status;
++	int ret;
++	char buf[64];
++
++	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
++
++	/* make sure that buf is null terminated */
++	buf[sizeof(buf) - 1] = '\0';
++
++	ret = sscanf(buf, "%u %u", &tid, &status);
++	if (ret != 2) {
++		ath10k_warn(ar, "ex: echo <tid> <status code> >addba_resp\n");
++		return -EINVAL;
++	}
++
++	/* Valid TID values are 0 through 15 */
++	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
++		ath10k_warn(ar, "Invalid TID %u\n", tid);
++		return -EINVAL;
++	}
++
++	mutex_lock(&ar->conf_mutex);
++	if ((ar->state != ATH10K_STATE_ON) ||
++	    (arsta->aggr_mode != ATH10K_DBG_AGGR_MODE_MANUAL)) {
++		ret = count;
++		goto out;
++	}
++
++	ret = ath10k_wmi_addba_set_resp(ar, arsta->arvif->vdev_id, sta->addr,
++					tid, status);
++	if (ret) {
++		ath10k_warn(ar, "failed to send addba response: vdev_id %u peer %pM tid %u status%u\n",
++			    arsta->arvif->vdev_id, sta->addr, tid, status);
++	}
++	ret = count;
++out:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static const struct file_operations fops_addba_resp = {
++	.write = ath10k_dbg_sta_write_addba_resp,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir)
+ {
+ 	debugfs_create_file("aggr_mode", S_IRUGO | S_IWUSR, dir, sta,
+ 			    &fops_aggr_mode);
+ 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
++	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
+ }
 -- 
-Kalle Valo
+2.2.1
+
