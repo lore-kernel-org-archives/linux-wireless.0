@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:46783 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750934AbaL2GTJ (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:44909 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750903AbaLXGPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 01:19:09 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath10k: Enable RX batching
-Date: Mon, 29 Dec 2014 11:51:24 +0530
-Message-Id: <1419834084-11859-1-git-send-email-sujith@msujith.org> (sfid-20141229_071947_840315_F856CB21)
+	Wed, 24 Dec 2014 01:15:14 -0500
+Received: by mail-wi0-f182.google.com with SMTP id h11so12697715wiw.9
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2014 22:15:13 -0800 (PST)
+Date: Wed, 24 Dec 2014 09:15:09 +0300
+From: Alexey Tulia <alexey.tulia@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH v3] staging: rtl8723au: fix sparse warning
+Message-ID: <20141224061509.GA18562@epbyminw1710.minsk.epam.com> (sfid-20141224_071532_342963_EB9326E1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+drivers/staging/rtl8723au/core/rtw_xmit.c:2375 warning: symbol
+'rtw_ack_tx_done23a' was not declared. Should it be static?
 
-This feature allows the FW to batch RX indications,
-reducing the rate of host interrupt generation, which
-in turn reduces CPU load. Currently, this is enabled
-only for the 10.2 firmware.
+Function 'rtw_ack_tx_done23a' seems to be unused in current staging
+code.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Alexey Tulia <alexey.tulia@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/staging/rtl8723au/core/rtw_xmit.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index b103122..aad08a2 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3710,7 +3710,7 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
- 	struct wmi_init_cmd_10_2 *cmd;
- 	struct sk_buff *buf;
- 	struct wmi_resource_config_10x config = {};
--	u32 len, val;
-+	u32 len, val, features = 0;
- 
- 	config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
- 	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
-@@ -3764,6 +3764,9 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
- 
- 	cmd = (struct wmi_init_cmd_10_2 *)buf->data;
- 
-+	features |= WMI_10_2_RX_BATCH_MODE;
-+	cmd->resource_config.feature_mask = __cpu_to_le32(features);
-+
- 	memcpy(&cmd->resource_config.common, &config, sizeof(config));
- 	ath10k_wmi_put_host_mem_chunks(ar, &cmd->mem_chunks);
- 
--- 
-2.2.1
+diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
+index 7a5e6bf..1c82dff 100644
+--- a/drivers/staging/rtl8723au/core/rtw_xmit.c
++++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
+@@ -2372,12 +2372,3 @@ int rtw_ack_tx_wait23a(struct xmit_priv *pxmitpriv, u32 timeout_ms)
+ 	return rtw_sctx_wait23a(pack_tx_ops);
+ }
+
+-void rtw_ack_tx_done23a(struct xmit_priv *pxmitpriv, int status)
+-{
+-	struct submit_ctx *pack_tx_ops = &pxmitpriv->ack_tx_ops;
+-
+-	if (pxmitpriv->ack_tx)
+-		rtw23a_sctx_done_err(&pack_tx_ops, status);
+-	else
+-		DBG_8723A("%s ack_tx not set\n", __func__);
+-}
+--
+2.1.0
 
