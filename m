@@ -1,34 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45782 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751602AbaLSKF3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 05:05:29 -0500
-Message-ID: <1418983525.1889.2.camel@sipsolutions.net> (sfid-20141219_110533_089399_DE96BADC)
-Subject: Re: [RFC V2] cfg80211: Add feature flag for 4-way handshake offload
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Gautam Kumar Shukla <gautams@broadcom.com>
-Date: Fri, 19 Dec 2014 11:05:25 +0100
-In-Reply-To: <5493F6E5.5060907@broadcom.com>
-References: <1418935344-22159-1-git-send-email-arend@broadcom.com>
-	 <1418980707.1889.1.camel@sipsolutions.net> <5493F34A.4040500@broadcom.com>
-	 <5493F6E5.5060907@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40347 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbaLXIAw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2014 03:00:52 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 6/8] ath10k: add support to send addba request
+Date: Wed, 24 Dec 2014 13:29:07 +0530
+Message-ID: <1419407949-32367-7-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141224_090054_831263_8E309E6F)
+In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-12-19 at 10:59 +0100, Arend van Spriel wrote:
+This per-station debugfs entry helps to send addba request in manual
+mode. Need to pass two configuration parameters (tid, buffer size)
+as input.
 
-> Looking at this again I wonder if it would be of value to have this as 
-> NL80211_EXT_FEATURES_ATTR_LEN in nl80211.h so user-space can check the 
-> nla_len() against it and detect API in-compatibility. Just can not use 
-> DIV_ROUND_UP() in that case. What's your opinion?
+To send addba,
 
-Well, userspace must not check it since it should be compatible with new
-kernels ... That was kinda my original point about not liking it in the
-header to start with :)
+echo 1 32 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
+	   stations/XX:XX:XX:XX:XX:XX/addba
 
-johannes
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c | 56 +++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index d5fca70..89e5e5a 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -81,9 +81,65 @@ static const struct file_operations fops_aggr_mode = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t ath10k_dbg_sta_write_addba(struct file *file,
++					  const char __user *user_buf,
++					  size_t count, loff_t *ppos)
++{
++	struct ieee80211_sta *sta = file->private_data;
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct ath10k *ar = arsta->arvif->ar;
++	u32 tid, buf_size;
++	int ret;
++	char buf[64];
++
++	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
++
++	/* make sure that buf is null terminated */
++	buf[sizeof(buf) - 1] = '\0';
++
++	ret = sscanf(buf, "%u %u", &tid, &buf_size);
++	if (ret != 2) {
++		ath10k_warn(ar, "ex: echo <tid> <buffer size> >addba\n");
++		return -EINVAL;
++	}
++
++	/* Valid TID values are 0 through 15 */
++	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
++		ath10k_warn(ar, "Invalid TID %u\n", tid);
++		return -EINVAL;
++	}
++
++	mutex_lock(&ar->conf_mutex);
++	if ((ar->state != ATH10K_STATE_ON) ||
++	    (arsta->aggr_mode != ATH10K_DBG_AGGR_MODE_MANUAL)) {
++		ret = count;
++		goto out;
++	}
++
++	ret = ath10k_wmi_addba_send(ar, arsta->arvif->vdev_id, sta->addr,
++				    tid, buf_size);
++	if (ret) {
++		ath10k_warn(ar, "failed to send addba request: vdev_id %u peer %pM tid %u buf_size %u\n",
++			    arsta->arvif->vdev_id, sta->addr, tid, buf_size);
++	}
++
++	ret = count;
++out:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
++static const struct file_operations fops_addba = {
++	.write = ath10k_dbg_sta_write_addba,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir)
+ {
+ 	debugfs_create_file("aggr_mode", S_IRUGO | S_IWUSR, dir, sta,
+ 			    &fops_aggr_mode);
++	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
+ }
+-- 
+2.2.1
 
