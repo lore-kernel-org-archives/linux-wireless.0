@@ -1,93 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:38300 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932525AbaLJPyV (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55418 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbaLXJKp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 10:54:21 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: [PATCH 3/4] ath10k: Fix no-ack frame status
-Date: Wed, 10 Dec 2014 21:26:12 +0530
-Message-Id: <1418226973-13779-3-git-send-email-sujith@msujith.org> (sfid-20141210_165441_221407_D9A65F34)
-In-Reply-To: <1418226973-13779-1-git-send-email-sujith@msujith.org>
-References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
+	Wed, 24 Dec 2014 04:10:45 -0500
+Message-ID: <549A8312.7080004@broadcom.com> (sfid-20141224_101112_954661_7F73A8E2)
+Date: Wed, 24 Dec 2014 10:10:42 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Vaishali Thakkar <vthakkar1994@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <lauro.venancio@openbossa.org>,
+	<aloisio.almeida@openbossa.org>, <sameo@linux.intel.com>,
+	<linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] NFC: port100: Introduce the use of function put_unaligned_le16
+References: <20141223152747.GA14667@vaishali-Ideapad-Z570>	<5499C154.3000500@broadcom.com> <CAK-LDb+PkqTXebZ2=5S42b+c7DGzgxs3Ey3d0S0NBDWuFNi7pw@mail.gmail.com>
+In-Reply-To: <CAK-LDb+PkqTXebZ2=5S42b+c7DGzgxs3Ey3d0S0NBDWuFNi7pw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 12/24/14 03:35, Vaishali Thakkar wrote:
+> On Wed, Dec 24, 2014 at 12:54 AM, Arend van Spriel<arend@broadcom.com>  wrote:
+>> On 12/23/14 16:27, Vaishali Thakkar wrote:
+>>>
+>>> This patch introduces the use of function put_unaligned_le16.
+>>>
+>>> This is done using Coccinelle and semantic patch used is as follows:
+>>>
+>>> @a@
+>>> typedef u16, __le16;
+>>> {u16,__le16} e16;
+>>> identifier tmp;
+>>> expression ptr;
+>>> expression y,e;
+>>> type T;
+>>> @@
+>>>
+>>> - tmp = cpu_to_le16(y);
+>>>
+>>>     <+... when != tmp
+>>> (
+>>> - memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
+>>> + put_unaligned_le16(y,ptr);
+>>> |
+>>> - memcpy(ptr, (T)&tmp, ...);
+>>> + put_unaligned_le16(y,ptr);
+>>> )
+>>>     ...+>
+>>> ? tmp = e
+>>>
+>>> @@ type T; identifier a.tmp; @@
+>>>
+>>> - T tmp;
+>>> ...when != tmp
+>>>
+>>> Signed-off-by: Vaishali Thakkar<vthakkar1994@gmail.com>
+>>> ---
+>>>    drivers/nfc/port100.c | 6 ++----
+>>>    1 file changed, 2 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
+>>> index 4ac4d31..f7cbca8 100644
+>>> --- a/drivers/nfc/port100.c
+>>> +++ b/drivers/nfc/port100.c
+>>> @@ -18,6 +18,7 @@
+>>>    #include<linux/module.h>
+>>>    #include<linux/usb.h>
+>>>    #include<net/nfc/digital.h>
+>>> +#include<linux/unaligned/access_ok.h>
+>>
+>>
+>> It is incorrect to use this header file as was pointed out by Johannes to me
+>> in a brcmfmac driver patch [1]. Unless this driver is architecture specific.
+>>
+>> Regards,
+>> Arend
+>>
+>> [1]
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=a1d69c60c44
+>
+> Ok. Thanks for pointing out. I didn't know this. So, I guess using
+> <asm/unaligned.h>  could make sense. Should I include this??
 
-Use the new IEEE80211_TX_STAT_NOACK_TRANSMITTED flag
-to indicate successful transmission of no-ack frames.
-This fixes multicast frame accounting.
+That's the one.
 
-Cc: ath10k@lists.infradead.org
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.h    | 1 +
- drivers/net/wireless/ath/ath10k/htt_rx.c | 2 ++
- drivers/net/wireless/ath/ath10k/txrx.c   | 9 +++++++--
- 3 files changed, 10 insertions(+), 2 deletions(-)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 1bd5545..cb74211 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1159,6 +1159,7 @@ struct htt_tx_done {
- 	u32 msdu_id;
- 	bool discard;
- 	bool no_ack;
-+	bool success;
- };
- 
- struct htt_peer_map_event {
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 9c782a4..d4d082e 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1476,6 +1476,7 @@ static void ath10k_htt_rx_frm_tx_compl(struct ath10k *ar,
- 		tx_done.no_ack = true;
- 		break;
- 	case HTT_DATA_TX_STATUS_OK:
-+		tx_done.success = true;
- 		break;
- 	case HTT_DATA_TX_STATUS_DISCARD:
- 	case HTT_DATA_TX_STATUS_POSTPONE:
-@@ -1627,6 +1628,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 
- 		switch (status) {
- 		case HTT_MGMT_TX_STATUS_OK:
-+			tx_done.success = true;
- 			break;
- 		case HTT_MGMT_TX_STATUS_RETRY:
- 			tx_done.no_ack = true;
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 7579de8..7464d82 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -55,8 +55,10 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 
- 	lockdep_assert_held(&htt->tx_lock);
- 
--	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt tx completion msdu_id %u discard %d no_ack %d\n",
--		   tx_done->msdu_id, !!tx_done->discard, !!tx_done->no_ack);
-+	ath10k_dbg(ar, ATH10K_DBG_HTT,
-+		   "htt tx completion msdu_id %u discard %d no_ack %d success %d\n",
-+		   tx_done->msdu_id, !!tx_done->discard,
-+		   !!tx_done->no_ack, !!tx_done->success);
- 
- 	if (tx_done->msdu_id >= htt->max_num_pending_tx) {
- 		ath10k_warn(ar, "warning: msdu_id %d too big, ignoring\n",
-@@ -91,6 +93,9 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 	if (tx_done->no_ack)
- 		info->flags &= ~IEEE80211_TX_STAT_ACK;
- 
-+	if (tx_done->success && (info->flags & IEEE80211_TX_CTL_NO_ACK))
-+		info->flags |= IEEE80211_TX_STAT_NOACK_TRANSMITTED;
-+
- 	ieee80211_tx_status(htt->ar->hw, msdu);
- 	/* we do not own the msdu anymore */
- 
--- 
-2.1.3
+>>>    #define VERSION "0.1"
+>>>
+>>> @@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct
+>>> nfc_digital_dev *ddev,
+>>>    {
+>>>          struct port100 *dev = nfc_digital_get_drvdata(ddev);
+>>>          struct port100_cb_arg *cb_arg;
+>>> -       __le16 timeout;
+>>>
+>>>          cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
+>>>          if (!cb_arg)
+>>> @@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct
+>>> nfc_digital_dev *ddev,
+>>>          cb_arg->complete_cb = cb;
+>>>          cb_arg->complete_arg = arg;
+>>>
+>>> -       timeout = cpu_to_le16(_timeout * 10);
+>>> -
+>>> -       memcpy(skb_push(skb, sizeof(__le16)),&timeout, sizeof(__le16));
+>>> +       put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
+>>>
+>>>          return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
+>>>                                        port100_in_comm_rf_complete,
+>>> cb_arg);
+>>
+>>
+>
+>
+>
 
