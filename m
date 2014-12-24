@@ -1,36 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from isrv.corpit.ru ([86.62.121.231]:59353 "EHLO isrv.corpit.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750769AbaLBVkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 16:40:16 -0500
-Message-ID: <547E31BD.8090302@msgid.tls.msk.ru> (sfid-20141202_224031_042637_0C0AA73E)
-Date: Wed, 03 Dec 2014 00:40:13 +0300
-From: Michael Tokarev <mjt@tls.msk.ru>
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:48807 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751602AbaLXNM0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2014 08:12:26 -0500
+Date: Wed, 24 Dec 2014 18:42:18 +0530
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, linux-kernel@vger.kernel.org,
+	johannes.berg@intel.com, arend@broadcom.com
+Subject: [PATCH] NFC: port100: Introduce the use of function
+ put_unaligned_le16
+Message-ID: <20141224131218.GA2578@vaishali-Ideapad-Z570> (sfid-20141224_141327_184502_1E518B28)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Maximilian Engelhardt <maxi@daemonizer.de>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <54363ED0.605@broadcom.com> <CACna6rw3XgdJz0uKkAuas8RTzozTdFp2mgF5g1uo7LHJVSMt4g@mail.gmail.com> <3543341.FmUQFH9nrl@eisbaer> <546C5D1F.108@msgid.tls.msk.ru> <546CD94D.9060509@broadcom.com> <546CF66A.3000207@msgid.tls.msk.ru> <546D04EE.1030200@msgid.tls.msk.ru> <5471AC29.6040009@broadcom.com> <5475A2DC.80502@msgid.tls.msk.ru> <547B07CF.90501@broadcom.com>
-In-Reply-To: <547B07CF.90501@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-30.11.2014 15:04, Arend van Spriel wrote:
+This patch introduces the use of function put_unaligned_le16.
 
-> Thanks. Did not find what I was looking for, but I started working on
-> integrating btcoex related functionality. The attached patch will print
-> some info so I can focus on the required functionality for your device.
-> It is based on 3.18-rc5.
+This is done using Coccinelle and semantic patch used is as follows:
 
-With this patch applied against 3.18-rc5, the machine instantly reboots
-once brcmsmac module is loaded.  I'm still debugging this.
+@a@
+typedef u16, __le16;
+{u16,__le16} e16;
+identifier tmp;
+expression ptr;
+expression y,e;
+type T;
+@@
 
-Thanks,
+- tmp = cpu_to_le16(y);
 
-/mjt
+  <+... when != tmp
+(
+- memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
++ put_unaligned_le16(y,ptr);
+|
+- memcpy(ptr, (T)&tmp, ...);
++ put_unaligned_le16(y,ptr);
+)
+  ...+>
+? tmp = e
+
+@@ type T; identifier a.tmp; @@
+
+- T tmp;
+...when != tmp
+
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+Changes since v1:
+	<asm/unaligned.h>  has arch-specific knowlege of which of
+	the implementations needs to be used. So, include it instaed
+	of <linux/unaligned/access_ok.h>.
+Changes since v2:
+	Fix typing mistake in subject
+
+ drivers/nfc/port100.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
+index 4ac4d31..440f0f3 100644
+--- a/drivers/nfc/port100.c
++++ b/drivers/nfc/port100.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/usb.h>
+ #include <net/nfc/digital.h>
++#include <asm/unaligned.h>
+ 
+ #define VERSION "0.1"
+ 
+@@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+ {
+ 	struct port100 *dev = nfc_digital_get_drvdata(ddev);
+ 	struct port100_cb_arg *cb_arg;
+-	__le16 timeout;
+ 
+ 	cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
+ 	if (!cb_arg)
+@@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+ 	cb_arg->complete_cb = cb;
+ 	cb_arg->complete_arg = arg;
+ 
+-	timeout = cpu_to_le16(_timeout * 10);
+-
+-	memcpy(skb_push(skb, sizeof(__le16)), &timeout, sizeof(__le16));
++	put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
+ 
+ 	return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
+ 				      port100_in_comm_rf_complete, cb_arg);
+-- 
+1.9.1
+
