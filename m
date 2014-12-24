@@ -1,79 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from imap.thunk.org ([74.207.234.97]:48015 "EHLO imap.thunk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751080AbaLaVoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 16:44:34 -0500
-Date: Wed, 31 Dec 2014 16:44:21 -0500
-From: Theodore Ts'o <tytso@mit.edu>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-Message-ID: <20141231214421.GA29273@thunk.org> (sfid-20141231_224459_045012_F9F7AF5F)
-References: <54A328C2.5080606@lwfinger.net>
- <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
- <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
- <54A3D955.6020809@broadcom.com>
- <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
- <54A3E1F1.7030807@broadcom.com>
- <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
- <54A41000.3040306@broadcom.com>
- <20141231173113.GA443@thunk.org>
- <54A45D4D.7070302@broadcom.com>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45876 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751641AbaLXH75 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2014 02:59:57 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 2/8] ath10k: add wmi support for addba_send
+Date: Wed, 24 Dec 2014 13:29:03 +0530
+Message-ID: <1419407949-32367-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141224_090004_804642_A804582E)
+In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54A45D4D.7070302@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 31, 2014 at 09:32:13PM +0100, Arend van Spriel wrote:
-> 
-> Agree. I can't even recall using "ip" ever. iw help system does provide
-> command specific help. The phy keyword is both a command and a selector key,
-> which I realize is confusing to the user, eg. 'iw help info' does provide
-> help for the 'info' subcommand.
+Add WMI support for sending addba request. This command is meant
+for debugging purpose.
 
-Yeah, the confusing part is that "ip" tends to use "verb object"
-scheme, which is consistent with the Cisco IOS command set it was
-trying to emulate.   So for ip, you do something like
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 19 +++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
+ drivers/net/wireless/ath/ath10k/wmi.c     | 30 ++++++++++++++++++++++++++++++
+ 3 files changed, 50 insertions(+)
 
-ip link info eth0
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index b161043..badf422 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -121,6 +121,8 @@ struct wmi_ops {
+ 	struct sk_buff *(*gen_pdev_get_temperature)(struct ath10k *ar);
+ 	struct sk_buff *(*gen_addba_clear_resp)(struct ath10k *ar, u32 vdev_id,
+ 						const u8 *mac);
++	struct sk_buff *(*gen_addba_send)(struct ath10k *ar, u32 vdev_id,
++					  const u8 *mac, u32 tid, u32 buf_size);
+ };
+ 
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -875,4 +877,21 @@ ath10k_wmi_addba_clear_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac)
+ 				   ar->wmi.cmd->addba_clear_resp_cmdid);
+ }
+ 
++static inline int
++ath10k_wmi_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
++		      u32 tid, u32 buf_size)
++{
++	struct sk_buff *skb;
++
++	if (!ar->wmi.ops->gen_addba_send)
++		return -EOPNOTSUPP;
++
++	skb = ar->wmi.ops->gen_addba_send(ar, vdev_id, mac, tid, buf_size);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->addba_send_cmdid);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 499a779..74a0598 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2208,6 +2208,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	/* .gen_pdev_set_quiet_mode not implemented */
+ 	/* .gen_pdev_get_temperature not implemented */
+ 	/* .gen_addba_clear_resp not implemented */
++	/* .gen_addba_send not implemented */
+ };
+ 
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 4bd38a6..8103cbc 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4901,6 +4901,32 @@ ath10k_wmi_op_gen_addba_clear_resp(struct ath10k *ar, u32 vdev_id,
+ 	return skb;
+ }
+ 
++static struct sk_buff *
++ath10k_wmi_op_gen_addba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
++			     u32 tid, u32 buf_size)
++{
++	struct wmi_addba_send_cmd *cmd;
++	struct sk_buff *skb;
++
++	if (!mac)
++		return ERR_PTR(-EINVAL);
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_addba_send_cmd *)skb->data;
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	ether_addr_copy(cmd->peer_macaddr.addr, mac);
++	cmd->tid = __cpu_to_le32(tid);
++	cmd->buffersize = __cpu_to_le32(buf_size);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi addba send vdev_id 0x%X mac_addr %pM tid %u bufsize %u\n",
++		   vdev_id, mac, tid, buf_size);
++	return skb;
++}
++
+ static const struct wmi_ops wmi_ops = {
+ 	.rx = ath10k_wmi_op_rx,
+ 	.map_svc = wmi_main_svc_map,
+@@ -4953,6 +4979,7 @@ static const struct wmi_ops wmi_ops = {
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	/* .gen_pdev_get_temperature not implemented */
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
++	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ };
+ 
+ static const struct wmi_ops wmi_10_1_ops = {
+@@ -5008,6 +5035,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
++	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ };
+ 
+ static const struct wmi_ops wmi_10_2_ops = {
+@@ -5064,6 +5092,7 @@ static const struct wmi_ops wmi_10_2_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
++	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ };
+ 
+ static const struct wmi_ops wmi_10_2_4_ops = {
+@@ -5120,6 +5149,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
++	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
+-- 
+2.2.1
 
-Where as for "iw" it's almost exactly backwards, i.e.:
-
-iw wlan0 info
-
-It's actually rather unfortunate that there is no consistency between
-many of these tools, for example:
-
-ethtool --show-features eth0
-
-If we were going to create a new interface, wouldn't be nice if we
-could have some kind of consistency?  Sigh; oh well, water under the
-bridge at this point.
-
-> Thanks. If there are still drivers, upstream or out-of-tree, providing only
-> WEXT API this will not work unless iwconfig/iwlist can distinguish those
-> from cfg80211-based drivers (which is possible) and fallback to WEXT ioctl
-> syscalls. Just not sure if it is worth the effort. As you stated below, it
-> does not seem "evil" to retain WEXT if that is providing users what they
-> need.
-
-Is it really that much effort?  Unless there is some license
-incompatibility nonsense (i.e., GPLv2 vs GPLv3), the code's already
-there in the wireless-tools source.  It would just be a matter of
-trying the new ioctls first, and then falling back to the WEXT ones if
-needed, right?
-
-Cheers,
-
-					- Ted
