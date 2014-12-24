@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:6931 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750869AbaLBHJV (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23591 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165AbaLXIMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 02:09:21 -0500
+	Wed, 24 Dec 2014 03:12:06 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 1/7] ath10k: create ath10k_core_init_features()
-References: <20141201144400.18248.62714.stgit@potku.adurom.net>
-	<20141201144458.18248.28568.stgit@potku.adurom.net>
-	<CA+BoTQkrqeWcr2vrd-b18HezZhyBkfvOYE3SgF39oYu54BX-Fw@mail.gmail.com>
-Date: Tue, 2 Dec 2014 09:09:06 +0200
-In-Reply-To: <CA+BoTQkrqeWcr2vrd-b18HezZhyBkfvOYE3SgF39oYu54BX-Fw@mail.gmail.com>
-	(Michal Kazior's message of "Tue, 2 Dec 2014 07:58:09 +0100")
-Message-ID: <87a936plyl.fsf@kamboji.qca.qualcomm.com> (sfid-20141202_080931_684313_AF5904C3)
+To: Rajkumar <rmanohar@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 8/8] ath10k: ath10k: add support to send delba
+References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<1418972099-5296-9-git-send-email-rmanohar@qti.qualcomm.com>
+	<1419142431590.38389@qti.qualcomm.com>
+	<87d27ag65n.fsf@kamboji.qca.qualcomm.com>
+	<20141224075426.GA17103@qca.qualcomm.com>
+Date: Wed, 24 Dec 2014 10:11:48 +0200
+In-Reply-To: <20141224075426.GA17103@qca.qualcomm.com> (Rajkumar's message of
+	"Wed, 24 Dec 2014 13:24:29 +0530")
+Message-ID: <873885bh6j.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_091221_979338_58CDD1EB)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Rajkumar <rmanohar@qti.qualcomm.com> writes:
 
-> On 1 December 2014 at 15:44, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> [...]
->>  int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
->> @@ -1046,7 +1047,12 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
->>                 return ret;
->>         }
->>
->> -       ath10k_core_init_max_sta_count(ar);
->> +       ret = ath10k_core_init_firmware_features(ar);
->> +       if (ret) {
->> +               ath10k_err(ar, "fatal problem with firmware features: %d\n",
->> +                          ret);
->> +               return ret;
->
-> I think you should call ath10k_core_free_firmware_files() and
-> ath10k_hif_power_down() before returning (similar to how
-> ath10k_core_start() failure is handled).
+> On Tue, Dec 23, 2014 at 09:46:28AM +0200, Kalle Valo wrote:
+>> "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com> writes:
+>> 
+>> >> Subject: [PATCH 8/8] ath10k: ath10k: add support to send delba
+>> >> 
+>> >> This per-station debugfs entry helps to send delba in manual mode
+>> >> for debugging purpose. It accepts tid, initiator and reason code
+>> >> as inputs.
+>> > Kalle,
+>> >
+>> > Subject needs small correction (ath10k: ath10k:). Do you want
+>> > me send v2 patch for this change?
+>> 
+>> No need to send v2, I can do the change myself. But I noticed that you
+>> already sent it :)
+>> 
+>> But in the future please don't resubmit individual patches, that's just
+>> too error prone. Instead just resubmit the whole series.
+>> 
+> Agree... I will resend the whole series. Recently separate WMI ops for 10.2.4
+> is added. So newer WMI APIs has to be registered in 10.2.4 table.
 
-Indeed. I'll fix that in v4.
+Perfect, I was just about to mention that.
 
 -- 
 Kalle Valo
