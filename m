@@ -1,65 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17835 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58493 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbaLWHsC (ORCPT
+	with ESMTP id S1751649AbaLXIA0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 02:48:02 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 06/22] wil6210: improve debugfs for VRING
-Date: Tue, 23 Dec 2014 09:47:08 +0200
-Message-Id: <1419320844-23989-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141223_084809_248864_40AEDCB9)
-In-Reply-To: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 24 Dec 2014 03:00:26 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 4/8] ath10k: add wmi support for delba_send
+Date: Wed, 24 Dec 2014 13:29:05 +0530
+Message-ID: <1419407949-32367-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141224_090028_510353_3E1DFEAD)
+In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When printing VRING on debugfs (file "vrings"),
-software head & tail indexes were printed in decimal format
-while hardware tail in hexadecimal only.
+Add WMI support for sending delba request. This command is used for
+debugging purpose.
 
-It is not comfortable to compare indexes in different formats;
-on the other hand, hexadecimal output useful to see hardware
-glitches.
-
-To serve all purposes, print hardware tail in both decimal and
-hexadecimal formats.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 21 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
+ drivers/net/wireless/ath/ath10k/wmi.c     | 31 +++++++++++++++++++++++++++++++
+ 3 files changed, 53 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 5117a02..fedfa64 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -50,6 +50,7 @@ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
- 			    char _s, char _h)
- {
- 	void __iomem *x = wmi_addr(wil, vring->hwtail);
-+	u32 v;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index e8f49de..3a3d15e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -126,6 +126,9 @@ struct wmi_ops {
+ 	struct sk_buff *(*gen_addba_set_resp)(struct ath10k *ar, u32 vdev_id,
+ 					      const u8 *mac, u32 tid,
+ 					      u32 status);
++	struct sk_buff *(*gen_delba_send)(struct ath10k *ar, u32 vdev_id,
++					  const u8 *mac, u32 tid, u32 initiator,
++					  u32 reason);
+ };
  
- 	seq_printf(s, "VRING %s = {\n", name);
- 	seq_printf(s, "  pa     = %pad\n", &vring->pa);
-@@ -58,10 +59,12 @@ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
- 	seq_printf(s, "  swtail = %d\n", vring->swtail);
- 	seq_printf(s, "  swhead = %d\n", vring->swhead);
- 	seq_printf(s, "  hwtail = [0x%08x] -> ", vring->hwtail);
--	if (x)
--		seq_printf(s, "0x%08x\n", ioread32(x));
--	else
-+	if (x) {
-+		v = ioread32(x);
-+		seq_printf(s, "0x%08x = %d\n", v, v);
-+	} else {
- 		seq_puts(s, "???\n");
-+	}
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -914,4 +917,22 @@ ath10k_wmi_addba_set_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac,
+ 				   ar->wmi.cmd->addba_set_resp_cmdid);
+ }
  
- 	if (vring->va && (vring->size < 1025)) {
- 		uint i;
++static inline int
++ath10k_wmi_delba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
++		      u32 tid, u32 initiator, u32 reason)
++{
++	struct sk_buff *skb;
++
++	if (!ar->wmi.ops->gen_delba_send)
++		return -EOPNOTSUPP;
++
++	skb = ar->wmi.ops->gen_delba_send(ar, vdev_id, mac, tid, initiator,
++					  reason);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->delba_send_cmdid);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 63f9860..57d2b50 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2210,6 +2210,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	/* .gen_addba_clear_resp not implemented */
+ 	/* .gen_addba_send not implemented */
+ 	/* .gen_addba_set_resp not implemented */
++	/* .gen_delba_send not implemented */
+ };
+ 
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index dd17c00..26d8139 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4953,6 +4953,33 @@ ath10k_wmi_op_gen_addba_set_resp(struct ath10k *ar, u32 vdev_id, const u8 *mac,
+ 	return skb;
+ }
+ 
++static struct sk_buff *
++ath10k_wmi_op_gen_delba_send(struct ath10k *ar, u32 vdev_id, const u8 *mac,
++			     u32 tid, u32 initiator, u32 reason)
++{
++	struct wmi_delba_send_cmd *cmd;
++	struct sk_buff *skb;
++
++	if (!mac)
++		return ERR_PTR(-EINVAL);
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_delba_send_cmd *)skb->data;
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	ether_addr_copy(cmd->peer_macaddr.addr, mac);
++	cmd->tid = __cpu_to_le32(tid);
++	cmd->initiator = __cpu_to_le32(initiator);
++	cmd->reasoncode = __cpu_to_le32(reason);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi delba send vdev_id 0x%X mac_addr %pM tid %u initiator %u reason %u\n",
++		   vdev_id, mac, tid, initiator, reason);
++	return skb;
++}
++
+ static const struct wmi_ops wmi_ops = {
+ 	.rx = ath10k_wmi_op_rx,
+ 	.map_svc = wmi_main_svc_map,
+@@ -5007,6 +5034,7 @@ static const struct wmi_ops wmi_ops = {
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
++	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
+ };
+ 
+ static const struct wmi_ops wmi_10_1_ops = {
+@@ -5064,6 +5092,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
++	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
+ };
+ 
+ static const struct wmi_ops wmi_10_2_ops = {
+@@ -5122,6 +5151,7 @@ static const struct wmi_ops wmi_10_2_ops = {
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
++	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
+ };
+ 
+ static const struct wmi_ops wmi_10_2_4_ops = {
+@@ -5180,6 +5210,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	.gen_addba_clear_resp = ath10k_wmi_op_gen_addba_clear_resp,
+ 	.gen_addba_send = ath10k_wmi_op_gen_addba_send,
+ 	.gen_addba_set_resp = ath10k_wmi_op_gen_addba_set_resp,
++	.gen_delba_send = ath10k_wmi_op_gen_delba_send,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
 -- 
-2.1.0
+2.2.1
 
