@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:35703 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751459AbaL3VX3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 16:23:29 -0500
-Date: Tue, 30 Dec 2014 22:23:26 +0100
-From: Borislav Petkov <bp@alien8.de>
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi-driver card doesn't work with 3.19-rc2+
-Message-ID: <20141230212326.GA29263@pd.tnic> (sfid-20141230_222355_903936_BCF76040)
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>
- <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
- <54A2B807.1020202@hurleysoftware.com>
- <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
- <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz>
- <1419971304.30412.0.camel@egrumbacBox>
- <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+Received: from smtp.codeaurora.org ([198.145.11.231]:55916 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578AbaLXRJa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Dec 2014 12:09:30 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>
+Subject: Re: [PATCH v2 1/4] mwifiex: enable -D__CHECK_ENDIAN__ for sparse by default
+References: <1418903926-11859-1-git-send-email-patila@marvell.com>
+Date: Wed, 24 Dec 2014 19:09:22 +0200
+In-Reply-To: <1418903926-11859-1-git-send-email-patila@marvell.com> (Avinash
+	Patil's message of "Thu, 18 Dec 2014 17:28:43 +0530")
+Message-ID: <8738857z5p.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_180933_890189_EECCEB7A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 30, 2014 at 09:41:41PM +0100, Jiri Kosina wrote:
-> If wireless maintainers think otherwise, I'll send a revert request to
-> Linus for consideration.
+Avinash Patil <patila@marvell.com> writes:
 
-I wonder if the reaction would be like this one:
+> Enable the endian checks by default.
+>
+> v2: remove -DDEBUG as suggested by Joe Perches
 
-https://lkml.org/lkml/2012/12/23/75
+Please don't add the change log to the commit log. Instead add it after
+'---' line so that git am can automatically skip it. Alternatively send
+a cover letter and include the change log there.
 
-:-)
+Can fix that, please?
+
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> ---
+
+<Add the changelog here>
+
+>  drivers/net/wireless/mwifiex/Makefile | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
+> index 9487d72..fdfd9bf 100644
+> --- a/drivers/net/wireless/mwifiex/Makefile
+> +++ b/drivers/net/wireless/mwifiex/Makefile
+> @@ -53,3 +53,5 @@ obj-$(CONFIG_MWIFIEX_PCIE) += mwifiex_pcie.o
+>  
+>  mwifiex_usb-y += usb.o
+>  obj-$(CONFIG_MWIFIEX_USB) += mwifiex_usb.o
+> +
+> +ccflags-y += -D__CHECK_ENDIAN
 
 -- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
---
+Kalle Valo
