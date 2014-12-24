@@ -1,98 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50559 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751764AbaLEMYb (ORCPT
+Received: from out21.biz.mail.alibaba.com ([205.204.114.132]:56991 "EHLO
+	out21.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751967AbaLXOrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 07:24:31 -0500
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 2/4] mwifiex: delete peer station's RA list upon deauthentication
-Date: Fri, 5 Dec 2014 23:23:40 +0530
-Message-ID: <1417802022-7364-2-git-send-email-patila@marvell.com> (sfid-20141205_132445_952263_0CCC33FB)
-In-Reply-To: <1417802022-7364-1-git-send-email-patila@marvell.com>
-References: <1417802022-7364-1-git-send-email-patila@marvell.com>
+	Wed, 24 Dec 2014 09:47:14 -0500
+Message-ID: <549ACDD8.2090506@sunrus.com.cn> (sfid-20141224_154734_192352_0817382B)
+Date: Wed, 24 Dec 2014 22:29:44 +0800
+From: Chen Gang <gang.chen@sunrus.com.cn>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: qca_vkondrat@qca.qualcomm.com, kvalo@codeaurora.org
+CC: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH next] drivers: net: wireless: ath: wil6210: debugfs: Use 'uint64_t'
+ instead of 'cycles_t' to avoid warnings
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to delete peer station's RA lists
-upon station deautheticate event on AP interface. Patch also
-decrements TX pending count upon removing packets from RA list.
+do_div() checks the type strictly. 'cycles_t' may be 32-bit under quite
+a few architectures (parisc, arm, avr32 ...). So use 'uint64_t' instead
+of, the related warning (with allmodconfig undr parisc):
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+    CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
+  In file included from arch/parisc/include/generated/asm/div64.h:1:0,
+                   from include/linux/kernel.h:124,
+                   from include/linux/list.h:8,
+                   from include/linux/module.h:9,
+                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+  drivers/net/wireless/ath/wil6210/debugfs.c: In function
+‘wil_vring_debugfs_show’:
+  include/asm-generic/div64.h:43:28: warning: comparison of distinct
+pointer types lacks a cast
+    (void)(((typeof((n)) *)0) == ((uint64_t *)0)); \
+                              ^
+  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
+of macro ‘do_div’
+      do_div(idle, total);
+      ^
+  In file included from include/uapi/linux/stddef.h:1:0,
+                   from include/linux/stddef.h:4,
+                   from ./include/uapi/linux/posix_types.h:4,
+                   from include/uapi/linux/types.h:13,
+                   from include/linux/types.h:5,
+                   from include/linux/list.h:4,
+                   from include/linux/module.h:9,
+                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+  include/asm-generic/div64.h:44:18: warning: right shift count >= width
+of type [-Wshift-count-overflow]
+    if (likely(((n) >> 32) == 0)) {   \
+                    ^
+  include/linux/compiler.h:159:40: note: in definition of macro ‘likely’
+   # define likely(x) __builtin_expect(!!(x), 1)
+                                          ^
+  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
+of macro ‘do_div’
+      do_div(idle, total);
+      ^
+  In file included from arch/parisc/include/generated/asm/div64.h:1:0,
+                   from include/linux/kernel.h:124,
+                   from include/linux/list.h:8,
+                   from include/linux/module.h:9,
+                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+  include/asm-generic/div64.h:48:22: warning: passing argument 1 of
+‘__div64_32’ from incompatible pointer type [-Wincompatible-pointer-types]
+     __rem = __div64_32(&(n), __base); \
+                        ^
+  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
+of macro ‘do_div’
+      do_div(idle, total);
+      ^
+  include/asm-generic/div64.h:35:17: note: expected ‘uint64_t * {aka
+long long unsigned int *}’ but argument is of type ‘cycles_t * {aka long
+unsigned int *}’
+   extern uint32_t __div64_32(uint64_t *dividend, uint32_t divisor);
+                   ^
+
+Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
 ---
- drivers/net/wireless/mwifiex/main.h      |  2 ++
- drivers/net/wireless/mwifiex/uap_event.c |  1 +
- drivers/net/wireless/mwifiex/wmm.c       | 26 ++++++++++++++++++++++++++
- 3 files changed, 29 insertions(+)
+ drivers/net/wireless/ath/wil6210/debugfs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index bdba37b..e66993c 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -975,6 +975,8 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
- int mwifiex_process_sta_event(struct mwifiex_private *);
- int mwifiex_process_uap_event(struct mwifiex_private *);
- void mwifiex_delete_all_station_list(struct mwifiex_private *priv);
-+void mwifiex_wmm_del_peer_ra_list(struct mwifiex_private *priv,
-+				  const u8 *ra_addr);
- void *mwifiex_process_sta_txpd(struct mwifiex_private *, struct sk_buff *skb);
- void *mwifiex_process_uap_txpd(struct mwifiex_private *, struct sk_buff *skb);
- int mwifiex_sta_init_cmd(struct mwifiex_private *, u8 first_sta);
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index 38390cb..c54a537 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -110,6 +110,7 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 			mwifiex_11n_del_rx_reorder_tbl_by_ta(priv, deauth_mac);
- 			mwifiex_del_tx_ba_stream_tbl_by_ra(priv, deauth_mac);
- 		}
-+		mwifiex_wmm_del_peer_ra_list(priv, deauth_mac);
- 		mwifiex_del_sta_entry(priv, deauth_mac);
- 		break;
- 	case EVENT_UAP_BSS_IDLE:
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index dc1f2ad..0dafcb0 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -611,6 +611,32 @@ mwifiex_wmm_get_queue_raptr(struct mwifiex_private *priv, u8 tid,
- }
- 
- /*
-+ * This function deletes RA list nodes for given mac for all TIDs.
-+ * Function also decrements TX pending count accordingly.
-+ */
-+void
-+mwifiex_wmm_del_peer_ra_list(struct mwifiex_private *priv, const u8 *ra_addr)
-+{
-+	struct mwifiex_ra_list_tbl *ra_list;
-+	unsigned long flags;
-+	int i;
-+
-+	spin_lock_irqsave(&priv->wmm.ra_list_spinlock, flags);
-+
-+	for (i = 0; i < MAX_NUM_TID; ++i) {
-+		ra_list = mwifiex_wmm_get_ralist_node(priv, i, ra_addr);
-+
-+		if (!ra_list)
-+			continue;
-+		mwifiex_wmm_del_pkts_in_ralist_node(priv, ra_list);
-+		atomic_sub(ra_list->total_pkt_count, &priv->wmm.tx_pkts_queued);
-+		list_del(&ra_list->list);
-+		kfree(ra_list);
-+	}
-+	spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock, flags);
-+}
-+
-+/*
-  * This function checks if a particular RA list node exists in a given TID
-  * table index.
-  */
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c
+b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 4e6e145..cd991fa 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -101,8 +101,8 @@ static int wil_vring_debugfs_show(struct seq_file
+*s, void *data)
+ 			char name[10];
+ 			/* performance monitoring */
+ 			cycles_t now = get_cycles();
+-			cycles_t idle = txdata->idle * 100;
+-			cycles_t total = now - txdata->begin;
++			uint64_t idle = txdata->idle * 100;
++			uint64_t total = now - txdata->begin;
+
+ 			do_div(idle, total);
+ 			txdata->begin = now;
 -- 
-1.8.1.4
-
+1.7.9.5
