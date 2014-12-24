@@ -1,145 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:33714 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751442AbaL1Vzf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:55076 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086AbaLXQjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2014 16:55:35 -0500
-Message-ID: <54A07C54.6040407@broadcom.com> (sfid-20141228_225539_536339_E3FDB49C)
-Date: Sun, 28 Dec 2014 22:55:32 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 24 Dec 2014 11:39:49 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/16] rtlwifi updates for kernel 3.20
+References: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Wed, 24 Dec 2014 18:39:40 +0200
+In-Reply-To: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
+	(Larry Finger's message of "Thu, 18 Dec 2014 03:05:24 -0600")
+Message-ID: <87fvc580j7.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_173952_606699_BE805263)
 MIME-Version: 1.0
-To: Vaishali Thakkar <vthakkar1994@gmail.com>
-CC: Samuel Ortiz <sameo@linux.intel.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] NFC: port100: Introduce the use of function put_unaligned_le16
-References: <20141224131557.GA2591@vaishali-Ideapad-Z570>	<CAK-LDbJgwdWLZf9tH67sFdYodX0u+t2RGuwsJF3a1-8o0=RBPg@mail.gmail.com>	<54A01EBF.2020608@broadcom.com> <CAK-LDb+saP+1fXmOqmiKzBmBR2Bh-o0kdomkRBHY4uJG5DoemA@mail.gmail.com>
-In-Reply-To: <CAK-LDb+saP+1fXmOqmiKzBmBR2Bh-o0kdomkRBHY4uJG5DoemA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/28/14 17:34, Vaishali Thakkar wrote:
->
-> On Dec 28, 2014 8:46 PM, "Arend van Spriel" <arend@broadcom.com
-> <mailto:arend@broadcom.com>> wrote:
->  >
->  > + Samuel
->  >
->  >
->  > On 12/28/14 12:33, Vaishali Thakkar wrote:
->  >>
->  >> On Wed, Dec 24, 2014 at 6:45 PM, Vaishali Thakkar
->  >> <vthakkar1994@gmail.com <mailto:vthakkar1994@gmail.com>> wrote:
->  >>>
->  >>> This patch introduces the use of function put_unaligned_le16.
->  >>>
->  >>> This is done using Coccinelle and semantic patch used is as follows:
->  >>>
->  >>> @a@
->  >>> typedef u16, __le16;
->  >>> {u16,__le16} e16;
->  >>> identifier tmp;
->  >>> expression ptr;
->  >>> expression y,e;
->  >>> type T;
->  >>> @@
->  >>>
->  >>> - tmp = cpu_to_le16(y);
->  >>>
->  >>> <+... when != tmp
->  >>> (
->  >>> - memcpy(ptr, (T)&tmp,
-> \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
->  >>> + put_unaligned_le16(y,ptr);
->  >>> |
->  >>> - memcpy(ptr, (T)&tmp, ...);
->  >>> + put_unaligned_le16(y,ptr);
->  >>> )
->  >>> ...+>
->  >>> ? tmp = e
->  >>>
->  >>> @@ type T; identifier a.tmp; @@
->  >>>
->  >>> - T tmp;
->  >>> ...when != tmp
->  >>>
->  >>> Signed-off-by: Vaishali Thakkar<vthakkar1994@gmail.com
-> <mailto:vthakkar1994@gmail.com>>
->  >>> ---
->  >>> Changes since v1:
->  >>> <asm/unaligned.h> has arch-specific knowlege of which of
->  >>> the implementations needs to be used. So, include it instaed
->  >>> of<linux/unaligned/access_ok.h>.
->  >>> Changes since v2:
->  >>> Fix typing mistake in subject
->  >>>
->  >>> drivers/nfc/port100.c | 6 ++----
->  >>> 1 file changed, 2 insertions(+), 4 deletions(-)
->  >>>
->  >>> diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
->  >>> index 4ac4d31..440f0f3 100644
->  >>> --- a/drivers/nfc/port100.c
->  >>> +++ b/drivers/nfc/port100.c
->  >>> @@ -18,6 +18,7 @@
->  >>> #include<linux/module.h>
->  >>> #include<linux/usb.h>
->  >>> #include<net/nfc/digital.h>
->  >>> +#include<asm/unaligned.h>
->  >>>
->  >>> #define VERSION "0.1"
->  >>>
->  >>> @@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct
-> nfc_digital_dev *ddev,
->  >>> {
->  >>> struct port100 *dev = nfc_digital_get_drvdata(ddev);
->  >>> struct port100_cb_arg *cb_arg;
->  >>> - __le16 timeout;
->  >>>
->  >>> cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
->  >>> if (!cb_arg)
->  >>> @@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct
-> nfc_digital_dev *ddev,
->  >>> cb_arg->complete_cb = cb;
->  >>> cb_arg->complete_arg = arg;
->  >>>
->  >>> - timeout = cpu_to_le16(_timeout * 10);
->  >>> -
->  >>> - memcpy(skb_push(skb, sizeof(__le16)),&timeout, sizeof(__le16));
->  >>>
->  >>> + put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
->  >>>
->  >>> return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
->  >>> port100_in_comm_rf_complete, cb_arg);
->  >>> --
->  >>> 1.9.1
->  >>>
->  >>
->  >> Hello...Can someone please review my patch so that I can have idea
->  >> about I am on a right way or not??
->  >> I think this is missed by developers.
->  >
->  >
->  > Generally that's not how it works. You either get comments or not. It
-> may also help to send the patch to the maintainer, ie. Samuel Ortiz.
->
-> Oh.ok. Sorry for the noise.
->
-> Actually original patch was Cc'd to maintainer also. But as a newbie, I
-> thought may be it is missed or I am wrong somewhere. That's why just
-> asked it on mailing list. Anyways got your point.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-No problem. You were not that noisy ;-)
+> Welcome as the wireless-driver maintainer.
 
-Regards,
-Arend
+Thanks.
 
-> Thanks.
+> I'm certain that it will take a while for all of us to function with
+> the new structure, but I will try.
+
+Yeah, it will take some time to get everything working smoothly again.
+But always feel free to give feedback if there's something I could
+improve. And _please_ do double check my commits :)
+
+> This patch bomb is the first of a set of cleanups. As I wrote John earlier,
+> my intent is to identify code that appears in multiple drivers and move such
+> routines into rtlwifi. None of the changes in this set need have high priority,
+> and all should be pushed into the "next" stream for kernel 3.20.
 >
->  > Regards,
->  > Arend
->  >
->  >> Thank You.
->  >>
->  >
+> Thanks,
 >
+> Larry
+> ---
+>
+> Larry Finger (15):
+>   rtlwifi: rtl8821ae: Fix typos in power-sequence macro
+>   rtlwifi: rtl8192ce: Add code to set the keep-alive operation
+>   rtlwifi: rtl8192ce: Update setting of the media status
+>   rtlwifi: rtl8192ce: Update rate setting routines
+>   rtlwifi: rtl8192ce: Improve RF sleep routine
+>   rtlwifi: rtl8192ce: rtl8192cu: rtl8192de: rtl8192se:
+>   rtlwifi: rtl8723be: Swith to use common rate-mapping routine
+>   rtlwifi: rtl8188ee: Switch to use common rate-mapping routine
+>   rtlwifi: rtl8723ae: Modify driver to use rate-mapping routine in core
+>   rtlwifi: rtl8192ee: Convert driver to use common rate-mapping code
+>   rtlwifi: Convert all drivers to use a common set of rate descriptors
+>   rtlwifi: rtl8821ae: Add VHT rate descriptors
+>   rtlwifi: rtl8192cu: Rework calls to rate-control routine
+>   rtlwifi: rtl8192de: Rework calls to rate-control routine
+>   rtlwifi: rtl8821ae: Switch to use common rate control routine
+>
+> Troy Tan (1):
+>   rtlwifi: rtl8821ae: Simplify loading of WOWLAN firmware
 
+Thanks, all 16 applied to wireless-drivers-next.git.
+
+-- 
+Kalle Valo
