@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7386 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbaLHPlm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:53425 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997AbaLXPfO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 10:41:42 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 0/8] ath10k: add support for new wmi-tlv backend
-References: <20141203080803.31187.85059.stgit@potku.adurom.net>
-Date: Mon, 8 Dec 2014 17:41:31 +0200
-In-Reply-To: <20141203080803.31187.85059.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Wed, 3 Dec 2014 10:09:16 +0200")
-Message-ID: <87wq62ywr8.fsf@kamboji.qca.qualcomm.com> (sfid-20141208_164153_786463_3FD4B77C)
+	Wed, 24 Dec 2014 10:35:14 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Chen Gang <gang.chen.5i5j@gmail.com>
+Cc: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	wil6210@qca.qualcomm.com,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-next@vger.kernel.org
+Subject: Re: [PATCH next] drivers/net/wireless/ath/wil6210/debugfs.c: Use 'uint64_t' instead of 'cycles_t' to avoid warnings
+References: <549AD067.80608@gmail.com> <549AD54F.3020605@gmail.com>
+	<8761d19j6z.fsf@kamboji.qca.qualcomm.com> <549ADA1D.8030509@gmail.com>
+Date: Wed, 24 Dec 2014 17:35:07 +0200
+In-Reply-To: <549ADA1D.8030509@gmail.com> (Chen Gang's message of "Wed, 24 Dec
+	2014 23:22:05 +0800")
+Message-ID: <87oaqt83is.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_163521_037977_821B9D62)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+Chen Gang <gang.chen.5i5j@gmail.com> writes:
 
-> here's v4 of Michal's patches to add WMI TLV interface support to
-> ath10k.
-
-[...]
-
-> Kalle Valo (4):
->       ath10k: clean up error handling in ath10k_core_probe_fw()
->       ath10k: create ath10k_core_init_features()
->       ath10k: add ATH10K_FW_IE_WMI_OP_VERSION
->       ath10k: set max_num_pending_tx in ath10k_core_init_firmware_features()
+> On 12/24/2014 11:11 PM, Kalle Valo wrote:
+>> Chen Gang <gang.chen.5i5j@gmail.com> writes:
+>> 
+>>> Oh, sorry, I forgot the word wrap (after change a new pc). I shall send
+>>> patch v2 for it.
+>> 
+>> While at it, could you also please simplify the title. You don't have to
+>> put the full directory there, it just makes it more difficult to read.
+>> This should be enough:
+>> 
+>> wil6210: Use 'uint64_t' instead of 'cycles_t' to avoid warnings
+>> 
 >
-> Michal Kazior (4):
->       ath10k: implement intermediate event args
->       ath10k: introduce wmi ops
->       ath10k: make some wmi functions public
->       ath10k: implement wmi-tlv backend
+> Oh, I have sent patch v2, if necessary, I will send patch v3 for it.
+> (if necessary, please let me know)
 
-All four applied. Thanks Michal.
+I can edit it this time, but in the future please be use less verbose
+titles.
 
 -- 
 Kalle Valo
