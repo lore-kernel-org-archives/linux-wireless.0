@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48205 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751165AbaLSUeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 15:34:46 -0500
-Message-ID: <1419021281.1889.7.camel@sipsolutions.net> (sfid-20141219_213449_349361_36ADDA64)
-Subject: Re: [PATCH v2 3.19] mac80211: minstrel: reduce size of struct
- minstrel_rate_stats
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
+Received: from s72.web-hosting.com ([198.187.29.22]:39755 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750896AbaLXDbZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Dec 2014 22:31:25 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21658.13327.479459.295983@gargle.gargle.HOWL> (sfid-20141224_043129_513209_848CE2D0)
+Date: Wed, 24 Dec 2014 09:03:35 +0530
+To: TGK <tg.kiran@igate.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Fri, 19 Dec 2014 21:34:41 +0100
-In-Reply-To: <1418819914-9535-1-git-send-email-nbd@openwrt.org>
-References: <1418819914-9535-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: MAC80211 dynamic powersave freeze
+In-Reply-To: <loom.20141224T035621-218@post.gmane.org>
+References: <loom.20141224T035621-218@post.gmane.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-17 at 13:38 +0100, Felix Fietkau wrote:
-> On minstrel_ht, the size of the per-sta struct is almost 18k, making it
-> an order-3 allocation.
-> A few fields inside the per-rate statistics are bigger than they need to
-> be. This patch reduces the size enough to cut down the per-sta struct to
-> about 13k (order-2 allocation).
+TGK wrote:
+> Having investigated the logs, we have observed that the crash is mainly 
+> occurring due to mac80211 dynamic power save module.  Following information 
+> is recorded in log every time prior to crash/system freeze.
 
-Applied to mac80211-next.
+It could be a problem with ath9k, since error messages from ath9k are
+seen in the log. Moreover your version is using ath9k rate control, which
+has been removed from the driver.
 
-johannes
+> 2.  Is there a fix available in latest/recent version of compat or
+> backports. In which version of compat is thee fix available?
 
+3.3 is close to two years old. Using a more recent backports package
+would be good.
+
+> 3.  If I disable dynamic power save in mac80211, would it solve my
+> problem?
+
+PS has been disabled by default in STA mode for ath9k.
+
+Sujith
