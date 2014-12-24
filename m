@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39873 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751374AbaLETZy (ORCPT
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:64615 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074AbaLXPyP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 14:25:54 -0500
-Date: Fri, 5 Dec 2014 19:25:44 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	David Miller <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141205192544.GY11285@n2100.arm.linux.org.uk> (sfid-20141205_202556_843071_40805C08)
-References: <5481794E.4050406@broadcom.com>
- <20141205094507.GP11285@n2100.arm.linux.org.uk>
- <20141205122423.GK1630@arm.com>
- <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
- <20141205132332.GS11285@n2100.arm.linux.org.uk>
- <20141205150648.GT11285@n2100.arm.linux.org.uk>
- <20141205182851.GC31222@e104818-lin.cambridge.arm.com>
- <548205DD.4080101@broadcom.com>
+	Wed, 24 Dec 2014 10:54:15 -0500
+Message-ID: <549AE19E.9030008@gmail.com> (sfid-20141224_165422_779886_3319D79B)
+Date: Wed, 24 Dec 2014 23:54:06 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <548205DD.4080101@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	wil6210@qca.qualcomm.com,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-next@vger.kernel.org
+Subject: Re: [PATCH next] drivers/net/wireless/ath/wil6210/debugfs.c: Use
+ 'uint64_t' instead of 'cycles_t' to avoid warnings
+References: <549AD067.80608@gmail.com> <549AD54F.3020605@gmail.com>	<8761d19j6z.fsf@kamboji.qca.qualcomm.com> <549ADA1D.8030509@gmail.com> <87oaqt83is.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87oaqt83is.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 05, 2014 at 08:22:05PM +0100, Arend van Spriel wrote:
-> On 12/05/14 19:28, Catalin Marinas wrote:
-> >This is solved by using a pre-allocated, pre-mapped atomic_pool which
-> >avoids any further mapping. __dma_alloc() calls __alloc_from_pool() when
-> >!__GFP_WAIT.
+On 12/24/2014 11:35 PM, Kalle Valo wrote:
+> Chen Gang <gang.chen.5i5j@gmail.com> writes:
 > 
-> So we are actually calling dma_alloc_coherent() with GFP_KERNEL during
-> device probe. That last paragraph Russell pointed out seems to suggest this
-> is not allowed.
+>> On 12/24/2014 11:11 PM, Kalle Valo wrote:
+>>> Chen Gang <gang.chen.5i5j@gmail.com> writes:
+>>>
+>>>> Oh, sorry, I forgot the word wrap (after change a new pc). I shall send
+>>>> patch v2 for it.
+>>>
+>>> While at it, could you also please simplify the title. You don't have to
+>>> put the full directory there, it just makes it more difficult to read.
+>>> This should be enough:
+>>>
+>>> wil6210: Use 'uint64_t' instead of 'cycles_t' to avoid warnings
+>>>
+>>
+>> Oh, I have sent patch v2, if necessary, I will send patch v3 for it.
+>> (if necessary, please let me know)
+> 
+> I can edit it this time, but in the future please be use less verbose
+> titles.
+> 
 
-device probe is a schedulable, sleepable context, so dma_alloc_coherent()
-is fine there.  As Catalin points out, and as I realised after sending
-them ail, it does check for __GFP_WAIT and uses a smaller atomic pool
-for those allocations.  This explains why no one has hit any warnings in
-map_vm_area.
+OK, thanks. Next, I shall use the short subject for drivers.
 
-So, it's safe from atomic contexts after all.
 
+Thanks.
 -- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+Chen Gang
+
+Open, share, and attitude like air, water, and life which God blessed
