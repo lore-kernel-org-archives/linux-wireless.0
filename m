@@ -1,96 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:5997 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751080AbaLaUcR (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:64370 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751893AbaLXOks (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 15:32:17 -0500
-Message-ID: <54A45D4D.7070302@broadcom.com> (sfid-20141231_213241_905756_923292E0)
-Date: Wed, 31 Dec 2014 21:32:13 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 24 Dec 2014 09:40:48 -0500
+Message-ID: <549AD067.80608@gmail.com> (sfid-20141224_154109_954488_377176A8)
+Date: Wed, 24 Dec 2014 22:40:39 +0800
+From: Chen Gang <gang.chen.5i5j@gmail.com>
 MIME-Version: 1.0
-To: Theodore Ts'o <tytso@mit.edu>, Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-References: <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> <54A41000.3040306@broadcom.com> <20141231173113.GA443@thunk.org>
-In-Reply-To: <20141231173113.GA443@thunk.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: qca_vkondrat@qca.qualcomm.com, kvalo@codeaurora.org
+CC: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-next@vger.kernel.org
+Subject: [PATCH next] drivers/net/wireless/ath/wil6210/debugfs.c: Use 'uint64_t'
+ instead of 'cycles_t' to avoid warnings
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/31/14 18:31, Theodore Ts'o wrote:
-> On Wed, Dec 31, 2014 at 04:02:24PM +0100, Arend van Spriel wrote:
->>
->> It is unfortunately indeed. I think iwconfig and friends will never go away
->> although iw is a better alternative, simply because people don't like to
->> change their home-made scripts/tools. WIRELESS_EXT actually is largely, but
->> not entirely, gone in upstream drivers and what we are talking about here is
->> CFG80211_WEXT which allows WEXT userspace to interact with cfg80211-based
->> drivers through a compatibility layer.
->
-> Most poeple are still using "route" and "ifconfig" instead of "ip".
-> Deal with it.  Personally, I find it much easier to use the existing
-> commands instead of figuring all of the various subcommands, and the
-> options to the subcommands to commands like "ip" and "iw".  At least
-> "ip help route" will give me all of the options to "ip route", where
-> as "iw help phy" doesn't tell give me the options; instead I have to
-> paw through 300 lines of "iw help" in order to find the command I
-> need.  So having a better user interface / help system so people can
-> better understand how to use iw would be a great step forward.
+do_div() checks the type strictly. 'cycles_t' may be 32-bit under quite
+a few architectures (parisc, arm, avr32 ...). So use 'uint64_t' instead
+of, the related warning (with allmodconfig under parisc):
 
-Agree. I can't even recall using "ip" ever. iw help system does provide 
-command specific help. The phy keyword is both a command and a selector 
-key, which I realize is confusing to the user, eg. 'iw help info' does 
-provide help for the 'info' subcommand.
+    CC [M]  drivers/net/wireless/ath/wil6210/debugfs.o
+  In file included from arch/parisc/include/generated/asm/div64.h:1:0,
+                   from include/linux/kernel.h:124,
+                   from include/linux/list.h:8,
+                   from include/linux/module.h:9,
+                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+  drivers/net/wireless/ath/wil6210/debugfs.c: In function
+‘wil_vring_debugfs_show’:
+  include/asm-generic/div64.h:43:28: warning: comparison of distinct
+pointer types lacks a cast
+    (void)(((typeof((n)) *)0) == ((uint64_t *)0)); \
+                              ^
+  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
+of macro ‘do_div’
+      do_div(idle, total);
+      ^
+  In file included from include/uapi/linux/stddef.h:1:0,
+                   from include/linux/stddef.h:4,
+                   from ./include/uapi/linux/posix_types.h:4,
+                   from include/uapi/linux/types.h:13,
+                   from include/linux/types.h:5,
+                   from include/linux/list.h:4,
+                   from include/linux/module.h:9,
+                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+  include/asm-generic/div64.h:44:18: warning: right shift count >= width
+of type [-Wshift-count-overflow]
+    if (likely(((n) >> 32) == 0)) {   \
+                    ^
+  include/linux/compiler.h:159:40: note: in definition of macro ‘likely’
+   # define likely(x) __builtin_expect(!!(x), 1)
+                                          ^
+  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
+of macro ‘do_div’
+      do_div(idle, total);
+      ^
+  In file included from arch/parisc/include/generated/asm/div64.h:1:0,
+                   from include/linux/kernel.h:124,
+                   from include/linux/list.h:8,
+                   from include/linux/module.h:9,
+                   from drivers/net/wireless/ath/wil6210/debugfs.c:17:
+  include/asm-generic/div64.h:48:22: warning: passing argument 1 of
+‘__div64_32’ from incompatible pointer type [-Wincompatible-pointer-types]
+     __rem = __div64_32(&(n), __base); \
+                        ^
+  drivers/net/wireless/ath/wil6210/debugfs.c:107:4: note: in expansion
+of macro ‘do_div’
+      do_div(idle, total);
+      ^
+  include/asm-generic/div64.h:35:17: note: expected ‘uint64_t * {aka
+long long unsigned int *}’ but argument is of type ‘cycles_t * {aka long
+unsigned int *}’
+   extern uint32_t __div64_32(uint64_t *dividend, uint32_t divisor);
+                   ^
 
-> Better yet, why not hack into the "iw" command backwards compatibility
-> so that if argv[0] is "iwlist" or "iwconfig", it provides the limited
-> subset compatibility to the legacy commands.  Then all you need to do
-> is to convince the distributions to set up the packaging rules so that
-> "iw" conflicts with wireless-tools, and you will be able to get
-> everyone switched over to iw after at least seven years.
+Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks. If there are still drivers, upstream or out-of-tree, providing 
-only WEXT API this will not work unless iwconfig/iwlist can distinguish 
-those from cfg80211-based drivers (which is possible) and fallback to 
-WEXT ioctl syscalls. Just not sure if it is worth the effort. As you 
-stated below, it does not seem "evil" to retain WEXT if that is 
-providing users what they need.
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c
+b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 4e6e145..cd991fa 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -101,8 +101,8 @@ static int wil_vring_debugfs_show(struct seq_file
+*s, void *data)
+ 			char name[10];
+ 			/* performance monitoring */
+ 			cycles_t now = get_cycles();
+-			cycles_t idle = txdata->idle * 100;
+-			cycles_t total = now - txdata->begin;
++			uint64_t idle = txdata->idle * 100;
++			uint64_t total = now - txdata->begin;
 
-Regards,
-Arend
-
-> Note that I said *seven* years --- there are people who try to use an
-> enterprise kernel, or an older Debian Stable or Ubuntu LTS userspace,
-> with a newer kernel, and and if said users notice, and complain, Linus
-> *will* revert the commit.  (Note that I've worked at more than one
-> company where I was forced to use an older Ubuntu LTS or RHEL distro
-> if I wanted to connect to the intranet, and I was using bleeding edge
-> kernels --- and if anything like that had broken, I would have
-> complained directly to Linus, cc'ing the patch author and the wireless
-> maintainers with the revert.  And while I fortunately am not trying to
-> do upstream development with a stable distro, be sure there are other
-> such folks around who have to live with similar restrictions.)
->
->     	      	  	     	   - Ted
->
-> P.S.  If you really think it's evil that users use the
-> simpler-to-understand iwconfig/iwlist interface over the iw command
-> line interface, if you provide full backwards compatibility for the
-> iwconfig/iwlist commands so you can "take over" from wireless-tools,
-> you could even have a mode which, in addition to doing what the user
-> wants, prints a "by the way, here's the equivalent if you want to use
-> the iw command instead".  I don't see the reason of allowing users to
-> continue to use iwconfig and iwlist, though --- face it, route and
-> ifconfig are going to be around for a long time; why not let users use
-> iwconfig and iwlist if it's sufficient for their needs?
-
-
+ 			do_div(idle, total);
+ 			txdata->begin = now;
+-- 
+1.7.9.5
