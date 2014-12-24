@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34783 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108AbaLQRPU (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:53805 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750963AbaLXJst (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 12:15:20 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, davem@davemloft.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] MAINTAINERS: changes for wireless
-Date: Wed, 17 Dec 2014 12:07:05 -0500
-Message-Id: <1418836025-9035-1-git-send-email-linville@tuxdriver.com> (sfid-20141217_181533_257069_C02E9F22)
+	Wed, 24 Dec 2014 04:48:49 -0500
+MIME-Version: 1.0
+In-Reply-To: <1413802344.10246.20.camel@jlt4.sipsolutions.net>
+References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com>
+	<1411075535.2034.5.camel@jlt4.sipsolutions.net>
+	<20141014121627.GA5115@angus-think.lan>
+	<1413798437.10246.12.camel@jlt4.sipsolutions.net>
+	<128188DF-5A9B-47A5-8A89-974CF7CF9064@holtmann.org>
+	<1413802344.10246.20.camel@jlt4.sipsolutions.net>
+Date: Wed, 24 Dec 2014 11:48:48 +0200
+Message-ID: <CAMw6YJKLWQmT-fqg1QLDHbCxnpxWyJUSX+wvOB_pFyE=8HfSfQ@mail.gmail.com> (sfid-20141224_104857_546968_53FCC802)
+Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device
+ via RTM_LINK
+From: Vadim Kochan <vadim4j@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-http://marc.info/?l=linux-wireless&m=141883202530292&w=2
+On Mon, Oct 20, 2014 at 1:52 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2014-10-20 at 12:46 +0200, Marcel Holtmann wrote:
+>
+>> Maybe relaxing the check and allow ip link to move a wireless netdev
+>> into a namespace (and having the wiphy follow) could be allowed if it
+>> is the only netdev or the original wlan0 that each wiphy creates. I
+>> really do not know if this is worth it, but for some simpler container
+>> cases it could be beneficial if RTNL can be used instead of having to
+>> go through nl80211.
+>
+> The thought crossed my mind, but
+>
+> 1) it's relatively complex, though by no means impossible
+> 2) it still moves more than you bargained for, since in theory the wiphy
+> could be
+>    used to create new interfaces etc.
+>
+> That said, I'm much more inclined to believe such a patch would be
+> worthwhile than the original.
+>
+> johannes
+>
 
-This makes it official... :-)
+Hi Johannes,
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- MAINTAINERS | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+What about the following thoughts:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fdffe962a16a..e82d31aeb936 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6603,19 +6603,8 @@ L:	netdev@vger.kernel.org
- S:	Maintained
- 
- NETWORKING [WIRELESS]
--M:	"John W. Linville" <linville@tuxdriver.com>
- L:	linux-wireless@vger.kernel.org
- Q:	http://patchwork.kernel.org/project/linux-wireless/list/
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git
--S:	Maintained
--F:	net/mac80211/
--F:	net/rfkill/
--F:	net/wireless/
--F:	include/net/ieee80211*
--F:	include/linux/wireless.h
--F:	include/uapi/linux/wireless.h
--F:	include/net/iw_handler.h
--F:	drivers/net/wireless/
- 
- NETWORKING DRIVERS
- L:	netdev@vger.kernel.org
-@@ -6636,6 +6625,14 @@ F:	include/linux/inetdevice.h
- F:	include/uapi/linux/if_*
- F:	include/uapi/linux/netdevice.h
- 
-+NETWORKING DRIVERS (WIRELESS)
-+M:	Kalle Valo <kvalo@codeaurora.org>
-+L:	linux-wireless@vger.kernel.org
-+Q:	http://patchwork.kernel.org/project/linux-wireless/list/
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git/
-+S:	Maintained
-+F:	drivers/net/wireless/
-+
- NETXEN (1/10) GbE SUPPORT
- M:	Manish Chopra <manish.chopra@qlogic.com>
- M:	Sony Chacko <sony.chacko@qlogic.com>
--- 
-1.9.3
+    1) Set NETIF_F_NETNS_LOCAL for phy wireless device only if there
+is at least one virtual interface which was created on it
+    2) What about to inherit netns for newer created interfaces from
+the phy device ?
 
+Thanks,
