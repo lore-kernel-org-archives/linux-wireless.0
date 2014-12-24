@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:45188 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753692AbaLANdx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:53245 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751113AbaLXPXK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 08:33:53 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH 3/9] wil6210: fix recovery after scan timeout
-Date: Mon, 1 Dec 2014 15:33:17 +0200
-Message-ID: <1417440803-26883-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141201_143356_911776_5B1E84F8)
-In-Reply-To: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Wed, 24 Dec 2014 10:23:10 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: wireless: rtlwifi: rtl8192de: fw.c:  Remove unused function
+References: <1417989613-18300-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Date: Wed, 24 Dec 2014 17:23:01 +0200
+In-Reply-To: <1417989613-18300-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	(Rickard Strandqvist's message of "Sun, 7 Dec 2014 23:00:13 +0100")
+Message-ID: <871tnp9ine.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_162335_785372_0A610A73)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Scan timeout treated as indication for firmware error;
-and should be handled in the same way.
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
 
-Recovery state machine does not perform as designed because
-its state is not updated in case of scan timeout.
+> Remove the function rtl92d_set_fw_pwrmode_cmd() that is not used anywhere.
+>
+> This was partially found by using a static code analysis program called cppcheck.
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 
-Fix is to set recovery state machine into the proper state.
+Thanks, applied to wireless-drivers-next.git.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 1 +
- 1 file changed, 1 insertion(+)
+But in the future, to make my work easier, please simplify your patch
+titles. You do not have to put the full directory structure there. I now
+manually changed it to:
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 151ff6b..3bef153 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -220,6 +220,7 @@ static void wil_scan_timer_fn(ulong x)
- 
- 	clear_bit(wil_status_fwready, &wil->status);
- 	wil_err(wil, "Scan timeout detected, start fw error recovery\n");
-+	wil->recovery_state = fw_recovery_pending;
- 	schedule_work(&wil->fw_error_worker);
- }
- 
+commit 18e0c0bf3a5ea0f54384149570274d535341dc06
+Author: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Date:   Sun Dec 7 23:00:13 2014 +0100
+
+    rtlwifi: rtl8192de: fw.c: Remove unused function
+
+Most important is that the title begins with the name of the driver
+(rtlwifi, iwlwifi, ath9k and so on) and is not too long. That way it's a
+lot easier for me and Johannes to manage the wireless patches in
+patchwork.
+
 -- 
-2.1.0
-
+Kalle Valo
