@@ -1,57 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:57835 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753699AbaLUT4E (ORCPT
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:64285 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbaLXNQE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 14:56:04 -0500
-Message-ID: <549725D1.2090402@broadcom.com> (sfid-20141221_205625_408105_E5420BFD)
-Date: Sun, 21 Dec 2014 20:56:01 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 24 Dec 2014 08:16:04 -0500
+Date: Wed, 24 Dec 2014 18:45:57 +0530
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, linux-kernel@vger.kernel.org,
+	johannes.berg@intel.com, arend@broadcom.com
+Subject: [PATCH v3] NFC: port100: Introduce the use of function
+ put_unaligned_le16
+Message-ID: <20141224131557.GA2591@vaishali-Ideapad-Z570> (sfid-20141224_141625_584018_DA0317CB)
 MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"Rob Herring" <rob.herring@linaro.org>,
-	John Stultz <john.stultz@linaro.org>
-Subject: Re: [PATCH 03/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com> <1419162233-19492-4-git-send-email-arend@broadcom.com> <B1CB9465-1353-411C-9B3C-42DEFBFDBBE0@holtmann.org>
-In-Reply-To: <B1CB9465-1353-411C-9B3C-42DEFBFDBBE0@holtmann.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/21/14 18:50, Marcel Holtmann wrote:
-> Hi Arend,
->
->> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
->> index 0f01fe0..61f8318 100644
->> --- a/include/linux/mmc/sdio_ids.h
->> +++ b/include/linux/mmc/sdio_ids.h
->> @@ -29,6 +29,8 @@
->> #define SDIO_DEVICE_ID_BROADCOM_4329		0x4329
->> #define SDIO_DEVICE_ID_BROADCOM_4330		0x4330
->> #define SDIO_DEVICE_ID_BROADCOM_4334		0x4334
->> +#define SDIO_DEVICE_ID_BROADCOM_43340		43340
->> +#define SDIO_DEVICE_ID_BROADCOM_43341		43341
->
-> the general preference is to have these values in hex. I get the fact that they map the marketing number, but that could be just stated in a comment after the hex number.
+This patch introduces the use of function put_unaligned_le16.
 
-Will change that.
+This is done using Coccinelle and semantic patch used is as follows:
 
->> #define SDIO_DEVICE_ID_BROADCOM_4335_4339	0x4335
->> #define SDIO_DEVICE_ID_BROADCOM_43362		43362
->> #define SDIO_DEVICE_ID_BROADCOM_4354		0x4354
->
-> Is there any chance that you can also send patches against sdio.ids database from systemd:
->
-> http://cgit.freedesktop.org/systemd/systemd/tree/hwdb/sdio.ids
->
-> That would allow for udev to provide friendly names and they would also be shown using networkctl.
+@a@
+typedef u16, __le16;
+{u16,__le16} e16;
+identifier tmp;
+expression ptr;
+expression y,e;
+type T;
+@@
 
-Ah, my bad. I recall you asking that question a while ago when I started 
-adding broadcom device ids here. I found a git clone on my system and 
-already had a patch there for almost a year ;-)
+- tmp = cpu_to_le16(y);
 
-Regards,
-Arend
+  <+... when != tmp
+(
+- memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
++ put_unaligned_le16(y,ptr);
+|
+- memcpy(ptr, (T)&tmp, ...);
++ put_unaligned_le16(y,ptr);
+)
+  ...+>
+? tmp = e
+
+@@ type T; identifier a.tmp; @@
+
+- T tmp;
+...when != tmp
+
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+Changes since v1:
+	<asm/unaligned.h>  has arch-specific knowlege of which of
+	the implementations needs to be used. So, include it instaed
+	of <linux/unaligned/access_ok.h>.
+Changes since v2:
+	Fix typing mistake in subject
+
+ drivers/nfc/port100.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
+index 4ac4d31..440f0f3 100644
+--- a/drivers/nfc/port100.c
++++ b/drivers/nfc/port100.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/usb.h>
+ #include <net/nfc/digital.h>
++#include <asm/unaligned.h>
+ 
+ #define VERSION "0.1"
+ 
+@@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+ {
+ 	struct port100 *dev = nfc_digital_get_drvdata(ddev);
+ 	struct port100_cb_arg *cb_arg;
+-	__le16 timeout;
+ 
+ 	cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
+ 	if (!cb_arg)
+@@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+ 	cb_arg->complete_cb = cb;
+ 	cb_arg->complete_arg = arg;
+ 
+-	timeout = cpu_to_le16(_timeout * 10);
+-
+-	memcpy(skb_push(skb, sizeof(__le16)), &timeout, sizeof(__le16));
++	put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
+ 
+ 	return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
+ 				      port100_in_comm_rf_complete, cb_arg);
+-- 
+1.9.1
+
