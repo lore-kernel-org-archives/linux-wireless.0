@@ -1,73 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:36973 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753178AbaLOPCk (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:49680 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751352AbaLXTE4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 10:02:40 -0500
-Received: by mail-wg0-f46.google.com with SMTP id x13so14986616wgg.33
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Dec 2014 07:02:39 -0800 (PST)
-From: Krzysztof Konopko <kris@konagma.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, kris@konagma.com
-Subject: [PATCH] staging: rtl8723au: Fix sparse warnings
-Date: Mon, 15 Dec 2014 16:02:14 +0100
-Message-Id: <1418655734-32475-1-git-send-email-kris@konagma.com> (sfid-20141215_160301_107762_ACD95B7C)
-In-Reply-To: <1418452981.29082.7.camel@perches.com>
-References: <1418452981.29082.7.camel@perches.com>
+	Wed, 24 Dec 2014 14:04:56 -0500
+Date: Wed, 24 Dec 2014 21:04:52 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: hostapd and 11h support
+Message-ID: <20141224190452.GA6933@w1.fi> (sfid-20141224_200459_126926_8CEAFC64)
+References: <549A8827.3070703@broadcom.com>
+ <20141224173227.GA1969@w1.fi>
+ <549B05F0.9020704@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <549B05F0.9020704@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some struct fields in wifi.h are meant to be __le16 but were declared as
-unsigned short.  This was reported by sparse:
+On Wed, Dec 24, 2014 at 07:29:04PM +0100, Arend van Spriel wrote:
+> The firmware on the device *can* have CAC logic built-in. When it
+> *is* built-in it is however disabled by default. Based on your
+> feedback I will just detect firmware support, enable dfs in
+> firmware, and signal DFS offload to hostapd. I would suggest
+> introducing a new common capability flag for this instead of using a
+> QCA vendor specific one. That would be odd ;-)
 
-  rtw_wlan_util.c:538:24: warning: cast to restricted __le16
-  rtw_wlan_util.c:1544:29: warning: cast to restricted __le16
-  rtw_wlan_util.c:1546:25: warning: cast to restricted __le16
+I see nothing odd in other drivers using the already defined QCA vendor
+specific nl80211 command. Anyway, I have no issues with a new nl80211
+capability flag added for this purpose. You'll probably have better
+chances of getting that accepted with an upstream driver using it.
 
-This patch updates the types of the fields in `AC_param` and
-`ADDBA_request` structs to be consistent with relevant structs in
-include/linux/ieee80211.h.
-
-Signed-off-by: Krzysztof Konopko <kris@konagma.com>
----
- drivers/staging/rtl8723au/include/wifi.h | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/include/wifi.h b/drivers/staging/rtl8723au/include/wifi.h
-index fd3da3b..25d573c 100644
---- a/drivers/staging/rtl8723au/include/wifi.h
-+++ b/drivers/staging/rtl8723au/include/wifi.h
-@@ -26,9 +26,9 @@
- ------------------------------------------------------------------------------*/
- 
- struct AC_param {
--	unsigned char		ACI_AIFSN;
--	unsigned char		CW;
--	unsigned short	TXOP_limit;
-+	u8			ACI_AIFSN;
-+	u8			CW;
-+	__le16			TXOP_limit;
- }  __packed;
- 
- struct WMM_para_element {
-@@ -38,10 +38,10 @@ struct WMM_para_element {
- }  __packed;
- 
- struct ADDBA_request {
--	unsigned char		dialog_token;
--	unsigned short	BA_para_set;
--	unsigned short	BA_timeout_value;
--	unsigned short	BA_starting_seqctrl;
-+	u8		dialog_token;
-+	__le16		BA_para_set;
-+	__le16		BA_timeout_value;
-+	__le16		BA_starting_seqctrl;
- }  __packed;
- 
- 
 -- 
-2.1.3
-
+Jouni Malinen                                            PGP id EFC895FA
