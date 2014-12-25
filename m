@@ -1,158 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42203 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751659AbaLaKig (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:49770 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751968AbaLYJLE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 05:38:36 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Maithili Hinge <maithili@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 4/9] mwifiex: add wakeup timer based recovery mechanism
-Date: Wed, 31 Dec 2014 02:36:41 -0800
-Message-ID: <1420022206-11435-5-git-send-email-akarwar@marvell.com> (sfid-20141231_113840_793277_B4B5C1ED)
-In-Reply-To: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
-References: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
+	Thu, 25 Dec 2014 04:11:04 -0500
+Date: Thu, 25 Dec 2014 11:10:59 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"Gautam (Gautam Kumar) Shukla" <gautams@broadcom.com>
+Subject: Re: hostapd and 11h support
+Message-ID: <20141225091059.GA3436@w1.fi> (sfid-20141225_101113_307450_80755090)
+References: <549A8827.3070703@broadcom.com>
+ <20141224173227.GA1969@w1.fi>
+ <549B05F0.9020704@broadcom.com>
+ <20141224190452.GA6933@w1.fi>
+ <549B24A9.4080001@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <549B24A9.4080001@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If host fails to wakeup the firmware, we will trigger card reset
-after 3 second timeout.
+On Wed, Dec 24, 2014 at 09:40:09PM +0100, Arend van Spriel wrote:
+> On 12/24/14 20:04, Jouni Malinen wrote:
+> >I see nothing odd in other drivers using the already defined QCA vendor
+> >specific nl80211 command.
+> 
+> Maybe not odd but counter-intuitive to some people.
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/init.c      | 16 ++++++++++++++++
- drivers/net/wireless/mwifiex/main.c      |  2 ++
- drivers/net/wireless/mwifiex/main.h      |  1 +
- drivers/net/wireless/mwifiex/pcie.c      |  1 +
- drivers/net/wireless/mwifiex/sta_event.c |  3 +++
- drivers/net/wireless/mwifiex/usb.c       |  1 +
- 6 files changed, 24 insertions(+)
+Maybe so, but certainly not on purpose. It has to be a specific OUI and
+as such, assigned to someone.. This one happens to be coordinated in a
+way that all (non-MAC address) assignments get done by upstream
+hostap.git commits. In other words, there is no intent of trying to
+limit it to a single vendor, but to have something that is easily usable
+for hostapd/wpa_supplicant extensions in cases where upstream nl80211
+extensions for needed functionality are not acceptable for some reason
+at the time.
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index a3dd601..524692a 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -52,6 +52,18 @@ static int mwifiex_add_bss_prio_tbl(struct mwifiex_private *priv)
- 	return 0;
- }
- 
-+static void wakeup_timer_fn(unsigned long data)
-+{
-+	struct mwifiex_adapter *adapter = (struct mwifiex_adapter *)data;
-+
-+	dev_err(adapter->dev, "Firmware wakeup failed\n");
-+	adapter->hw_status = MWIFIEX_HW_STATUS_RESET;
-+	mwifiex_cancel_all_pending_cmd(adapter);
-+
-+	if (adapter->if_ops.card_reset)
-+		adapter->if_ops.card_reset(adapter);
-+}
-+
- /*
-  * This function initializes the private structure and sets default
-  * values to the members.
-@@ -285,6 +297,9 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->ext_scan = true;
- 	adapter->key_api_major_ver = 0;
- 	adapter->key_api_minor_ver = 0;
-+
-+	setup_timer(&adapter->wakeup_timer, wakeup_timer_fn,
-+		    (unsigned long)adapter);
- }
- 
- /*
-@@ -391,6 +406,7 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
- 		return;
- 	}
- 
-+	del_timer(&adapter->wakeup_timer);
- 	mwifiex_cancel_all_pending_cmd(adapter);
- 
- 	/* Free lock variables */
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 2d4047f..119e875 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -237,6 +237,7 @@ process_start:
- 		    (is_command_pending(adapter) ||
- 		     !mwifiex_wmm_lists_empty(adapter))) {
- 			adapter->pm_wakeup_fw_try = true;
-+			mod_timer(&adapter->wakeup_timer, jiffies + (HZ*3));
- 			adapter->if_ops.wakeup(adapter);
- 			continue;
- 		}
-@@ -244,6 +245,7 @@ process_start:
- 		if (IS_CARD_RX_RCVD(adapter)) {
- 			adapter->data_received = false;
- 			adapter->pm_wakeup_fw_try = false;
-+			del_timer_sync(&adapter->wakeup_timer);
- 			if (adapter->ps_state == PS_STATE_SLEEP)
- 				adapter->ps_state = PS_STATE_AWAKE;
- 		} else {
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index f927939..55273ee 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -830,6 +830,7 @@ struct mwifiex_adapter {
- 	u16 gen_null_pkt;
- 	u16 pps_uapsd_mode;
- 	u32 pm_wakeup_fw_try;
-+	struct timer_list wakeup_timer;
- 	u8 is_hs_configured;
- 	struct mwifiex_hs_config_param hs_cfg;
- 	u8 hs_activated;
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index c3a20f9..10e4a93 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -2064,6 +2064,7 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
- 				 * state until cookie is set */
- 				adapter->ps_state = PS_STATE_AWAKE;
- 				adapter->pm_wakeup_fw_try = false;
-+				del_timer(&adapter->wakeup_timer);
- 		}
- 	}
- }
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index fbec95b..419e35f 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -312,6 +312,8 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 					adapter->ps_state = PS_STATE_AWAKE;
- 					adapter->pm_wakeup_card_req = false;
- 					adapter->pm_wakeup_fw_try = false;
-+					mod_timer(&adapter->wakeup_timer,
-+						  jiffies + (HZ*3));
- 					break;
- 				}
- 				if (!mwifiex_send_null_packet
-@@ -326,6 +328,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		adapter->ps_state = PS_STATE_AWAKE;
- 		adapter->pm_wakeup_card_req = false;
- 		adapter->pm_wakeup_fw_try = false;
-+		del_timer_sync(&adapter->wakeup_timer);
- 
- 		break;
- 
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 8ae7a85..199b43f 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -990,6 +990,7 @@ static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
- {
- 	/* Simulation of HS_AWAKE event */
- 	adapter->pm_wakeup_fw_try = false;
-+	del_timer_sync(&adapter->wakeup_timer);
- 	adapter->pm_wakeup_card_req = false;
- 	adapter->ps_state = PS_STATE_AWAKE;
- 
+> Anyway, I was
+> looking at the code in driver_nl80211_capa.c and stumbled upon
+> WPA_DRIVER_FLAGS_KEY_MGMT_OFFLOAD. I introduced entensible feature
+> flags upstream just yesterday to accomodate this type of offload.
+> Just curious but are those QCA vendor specific nl80211 commands used
+> by the upstream QCA drivers or is this for supporting QCA
+> proprietary drivers. I guess the latter as that would be the only
+> reason I can think of to have vendor specific commands.
+
+This is currently used by an open source, but not upstream, driver.
+There was actually an attempt to get this done in standard nl80211
+commands/events, but the response was not exactly encouraging with no
+existing upstream driver to show as a user for the new functionality.
+I'd still like to get this done cleanly in nl80211 at some point in
+time, though, since extensions to Connect command/event are not possible
+using the vendor specific commands/events, i.e., you end up having to
+fully override these commands/events which gets ugly pretty quickly.
+
 -- 
-1.8.1.4
-
+Jouni Malinen                                            PGP id EFC895FA
