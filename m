@@ -1,107 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51612 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:29731 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750814AbaLPOCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 09:02:20 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Asaf Vertz <asaf.vertz@tandemg.com>
-Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	ninox@posteo.net, tapaswenipathak@gmail.com, gdonald@gmail.com,
-	cmroliv@gmail.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] staging: rtl8723au: core: fixing "foo * bar" should be "foo *bar"
-References: <20141216135758.GA32288@ubuntu>
-Date: Tue, 16 Dec 2014 09:01:45 -0500
-In-Reply-To: <20141216135758.GA32288@ubuntu> (Asaf Vertz's message of "Tue, 16
-	Dec 2014 15:57:58 +0200")
-Message-ID: <wrfjoar31ynq.fsf@redhat.com> (sfid-20141216_150237_308158_C76B1595)
+	id S1752924AbaLYR6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Dec 2014 12:58:12 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "arioniadrian@gmail.com" <arioniadrian@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: [Ilw] Issue intel 6205 wlan card
+Date: Thu, 25 Dec 2014 17:58:09 +0000
+Message-ID: <1419530289.19887.4.camel@egrumbacBox> (sfid-20141225_185838_979898_698ED905)
+References: <CAN_RdTSCyyRzHOink26pfOOZXxa0yp6tVUDLsLSVV5+vbsR0OA@mail.gmail.com>
+In-Reply-To: <CAN_RdTSCyyRzHOink26pfOOZXxa0yp6tVUDLsLSVV5+vbsR0OA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Asaf Vertz <asaf.vertz@tandemg.com> writes:
-> Fixed a coding style error, "foo * bar" should be "foo *bar"
->
-> Signed-off-by: Asaf Vertz <asaf.vertz@tandemg.com>
-> ---
-> Changes in v2:
->   - fix ugly multiline arguments to the functions
->
->  drivers/staging/rtl8723au/core/rtw_efuse.c |   32 ++++++---------------------
->  1 files changed, 7 insertions(+), 25 deletions(-)
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-
-> diff --git a/drivers/staging/rtl8723au/core/rtw_efuse.c b/drivers/staging/rtl8723au/core/rtw_efuse.c
-> index 81960e7..a6deddc 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_efuse.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_efuse.c
-> @@ -327,15 +327,9 @@ EFUSE_Read1Byte23a(struct rtw_adapter *Adapter, u16 Address)
->   *---------------------------------------------------------------------------*/
->  
->  void
-> -EFUSE_Write1Byte(
-> -	struct rtw_adapter *	Adapter,
-> -	u16		Address,
-> -	u8		Value);
-> +EFUSE_Write1Byte(struct rtw_adapter *Adapter, u16 Address, u8 Value);
->  void
-> -EFUSE_Write1Byte(
-> -	struct rtw_adapter *	Adapter,
-> -	u16		Address,
-> -	u8		Value)
-> +EFUSE_Write1Byte(struct rtw_adapter *Adapter, u16 Address, u8 Value)
->  {
->  	u8	Bytetemp = {0x00};
->  	u8	temp = {0x00};
-> @@ -635,10 +629,7 @@ Efuse_ReadAllMap(struct rtw_adapter *pAdapter, u8 efuseType, u8 *Efuse)
->   *
->   *---------------------------------------------------------------------------*/
->  static void
-> -efuse_ShadowRead1Byte(
-> -	struct rtw_adapter *	pAdapter,
-> -	u16		Offset,
-> -	u8		*Value)
-> +efuse_ShadowRead1Byte(struct rtw_adapter *pAdapter, u16 Offset, u8 *Value)
->  {
->  	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
->  
-> @@ -647,10 +638,7 @@ efuse_ShadowRead1Byte(
->  
->  /* Read Two Bytes */
->  static void
-> -efuse_ShadowRead2Byte(
-> -	struct rtw_adapter *	pAdapter,
-> -	u16		Offset,
-> -	u16		*Value)
-> +efuse_ShadowRead2Byte(struct rtw_adapter *pAdapter, u16 Offset, u16 *Value)
->  {
->  	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
->  
-> @@ -660,10 +648,7 @@ efuse_ShadowRead2Byte(
->  
->  /* Read Four Bytes */
->  static void
-> -efuse_ShadowRead4Byte(
-> -	struct rtw_adapter *	pAdapter,
-> -	u16		Offset,
-> -	u32		*Value)
-> +efuse_ShadowRead4Byte(struct rtw_adapter *pAdapter, u16 Offset, u32 *Value)
->  {
->  	struct eeprom_priv *pEEPROM = GET_EEPROM_EFUSE_PRIV(pAdapter);
->  
-> @@ -722,11 +707,8 @@ void EFUSE_ShadowMapUpdate23a(struct rtw_adapter *pAdapter, u8 efuseType)
->   *
->   *---------------------------------------------------------------------------*/
->  void
-> -EFUSE_ShadowRead23a(
-> -	struct rtw_adapter *	pAdapter,
-> -	u8		Type,
-> -	u16		Offset,
-> -	u32		*Value)
-> +EFUSE_ShadowRead23a(struct rtw_adapter *pAdapter,
-> +		    u8 Type, u16 Offset, u32 *Value)
->  {
->  	if (Type == 1)
->  		efuse_ShadowRead1Byte(pAdapter, Offset, (u8 *)Value);
+SGksDQoNCg0KDQo+IEhlbGxvLA0KPiANCj4gDQo+IEkgaGF2ZSBhIHRoaW5rcGFkIHQ0MzAgd2l0
+aCBpbnRlbCA2MjA1IHdpZmkgY2FyZC4gSSBhbSBydW5uaW5nDQo+IHNsYWNrd2FyZSAxNC4xIHdp
+dGgga2VybmVsIDMuMTAuMTcgYnV0IHdpdGggb3RoZXIga2VybmVscyBsaWtlDQo+IDMuMTQuMjcs
+IDMuMTcuNyBhbmQgMy4xOC4xIGlzIG5vdCB3b3JraW5nLg0KPiANCj4gDQo+IEkgY29tcGlsZWQg
+dGhlIGtlcm5lbHMgd2l0aCBhbGwgbW9kdWxlcyByZWxhdGVkIHRvIGludGVsIHdpZmkgY2FyZC4g
+DQo+IA0KPiANCj4gTm93IEkgY2FuIHNlZSB3bGFuMCB1bmRlciAiIGlmY29uZmlnIg0KPiANCldo
+YXQgZG8geW91IG1lYW4gYnkgIm5vdyI/DQpXaXRoIHRoZSBlcnJvcnMgYmVsb3csIHlvdSdsbCBz
+dXJlbHkgbm90IHNlZSB3bGFuMCBpbiBpZmNvbmZpZydzIG91cHV0Lg0KPiANCj4gSSBhbSBnZXR0
+aW5nIHRoaXMgZXJyb3JzOg0KPiANCj4gZG1lc2cgfCBncmVwIGl3bHdpZmkgICAgICANCj4gWyAg
+ICAxLjUxMDc0OV0gaXdsd2lmaSAwMDAwOjAzOjAwLjA6IGNhbid0IGRpc2FibGUgQVNQTTsgT1Mg
+ZG9lc24ndA0KPiBoYXZlIEFTUE0gY29udHJvbA0KPiBbICAgIDEuNTEyOTI1XSBpd2x3aWZpIDAw
+MDA6MDM6MDAuMDogaXJxIDI3IGZvciBNU0kvTVNJLVgNCj4gWyAgICAxLjUxMzM2MF0gaXdsd2lm
+aSAwMDAwOjAzOjAwLjA6IERpcmVjdCBmaXJtd2FyZSBsb2FkIGZvcg0KPiBpd2x3aWZpLTYwMDBn
+MmEtNi51Y29kZSBmYWlsZWQgd2l0aCBlcnJvciAtMg0KPiBbICAgIDEuNTE1MjU5XSBpd2x3aWZp
+IDAwMDA6MDM6MDAuMDogRGlyZWN0IGZpcm13YXJlIGxvYWQgZm9yDQo+IGl3bHdpZmktNjAwMGcy
+YS01LnVjb2RlIGZhaWxlZCB3aXRoIGVycm9yIC0yDQo+IFsgICAgMS43MDI2MTRdIGl3bHdpZmkg
+MDAwMDowMzowMC4wOiByZXF1ZXN0IGZvciBmaXJtd2FyZSBmaWxlDQo+ICdpd2x3aWZpLTYwMDBn
+MmEtNS51Y29kZScgZmFpbGVkLg0KPiBbICAgIDEuNzAyNjE4XSBpd2x3aWZpIDAwMDA6MDM6MDAu
+MDogbm8gc3VpdGFibGUgZmlybXdhcmUgZm91bmQhDQo+IA0KcGxlYXNlIG1ha2Ugc3VyZSB5b3Ug
+eW91IGhhdmUgaXdsd2lmaS02MDAwZzJhLTYudWNvZGUNCnVuZGVyIC9saWIvZmlybXdhcmUuDQpJ
+IGNhbid0IHJlYWxseSBleHBsYWluIGFueSByZWdyZXNzaW9uIGJldHdlZW4gMy4xMC4xNyBhbmQg
+bW9yZSByZWNlbnQNCmtlcm5lbHMuDQoNCg0KDQo=
