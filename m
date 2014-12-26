@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53109 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932980AbaLBWAM (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17532 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751992AbaLZOmd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 17:00:12 -0500
-Date: Tue, 2 Dec 2014 16:56:34 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2014-12-02
-Message-ID: <20141202215634.GF19024@tuxdriver.com> (sfid-20141202_230016_101052_E4606CC6)
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+	Fri, 26 Dec 2014 09:42:33 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 16/27] ath6kl: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:47 +0100
+Message-Id: <1419604558-29743-17-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154757_100316_CF421BDA)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 02, 2014 at 06:05:39PM +0000, Grumbach, Emmanuel wrote:
-> Hi John,
-> 
-> This is a last pull request with content for 3.19. As usual, the details are below.
-> 
-> Thanks!
-> 
-> The following changes since commit dcad8e4299bf81f8795b44677036dfa490c9fb15:
-> 
->   iwlwifi: update the secure mem space and for the CPUs (2014-11-24 08:30:44 +0200)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-john-2014-12-02
-> 
-> for you to fetch changes up to 61df750cb00b69882ba3acbb82e9368d01119c93:
-> 
->   iwlwifi: mvm: Ability to work with packed usniffer image (2014-12-02 16:51:56 +0200)
-> 
-> ----------------------------------------------------------------
-> I deprecate here -8.ucode since -9 has been published long ago.
-> Along with that I have a new activity, we have now better
-> a infrastructure for firmware debugging. This will allow to
-> have configurable probes insides the firmware.
-> Luca continues his work on NetDetect, this feature is now
-> complete. All the rest is minor fixes here and there.
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-Pulled...
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+// <smpl>
+@@
+expression t,f,d;
+@@
+
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.function = f;
+-t.data = d;
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/ath/ath6kl/txrx.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 40432fe..3bc3aa7 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1757,9 +1757,7 @@ void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
+ 
+ 	aggr_conn->aggr_sz = AGGR_SZ_DEFAULT;
+ 	aggr_conn->dev = vif->ndev;
+-	init_timer(&aggr_conn->timer);
+-	aggr_conn->timer.function = aggr_timeout;
+-	aggr_conn->timer.data = (unsigned long) aggr_conn;
++	setup_timer(&aggr_conn->timer, aggr_timeout, (unsigned long)aggr_conn);
+ 	aggr_conn->aggr_info = aggr_info;
+ 
+ 	aggr_conn->timer_scheduled = false;
+
