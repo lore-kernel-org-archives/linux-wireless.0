@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:38271 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932164AbaLDRhX convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:59317 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbaLZSd3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2014 12:37:23 -0500
-From: "Oh, Peter" <poh@qca.qualcomm.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v2 0/2] ath10k: NF calibration period debugfs file
-Date: Thu, 4 Dec 2014 17:37:01 +0000
-Message-ID: <1240abdd13da409ab749b4e720e300fd@NASANEXM01B.na.qualcomm.com> (sfid-20141204_183727_225991_3D8D50A4)
-References: <20141202110443.14817.85639.stgit@potku.adurom.net>
-In-Reply-To: <20141202110443.14817.85639.stgit@potku.adurom.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 26 Dec 2014 13:33:29 -0500
+From: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+To: zajec5@gmail.com
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+Subject: [PATCH v2] bcma: Fix three coding style issues, more than 80 characters per line
+Date: Fri, 26 Dec 2014 18:33:18 +0000
+Message-Id: <1419618798-9275-1-git-send-email-oscar.forner.martinez@gmail.com> (sfid-20141226_193347_483651_98F486A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That sounds good to me.
+Three lines with more than 80 characters per line have been split in several lines.
 
-Thanks,
-Peter
-
------Original Message-----
-From: ath10k [mailto:ath10k-bounces@lists.infradead.org] On Behalf Of Kalle Valo
-Sent: Tuesday, December 02, 2014 3:07 AM
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/2] ath10k: NF calibration period debugfs file
-
-Hi,
-
-here are some changes I made to Peter's NF calibdation period patches. Please review.
-
-v2:
-
-* add _MAX define
-
-* support firmware restart
-
-* set cal_period in wmi_tlv_pdev_param_map
-
-* simplify ar->state check
-
-* rename debugfs file to nf_cal_period to not confuse with cal_data
-  file (which is about calibration data)
-
-* WMI_10X_PDEV_PEER_STA_PS_STATECHG_ENABLE -> WMI_10X_PDEV_PARAM_PEER_STA_PS_STATECHG_ENABLE
-
+Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
 ---
+ drivers/bcma/driver_chipcommon.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-Peter Oh (2):
-      ath10k: add new pdev parameters for fw 10.2
-      ath10k: add new wmi interface of NF cal period
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 19f6796..15f044d 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -79,7 +79,9 @@ static int bcma_chipco_watchdog_ticks_per_ms(struct bcma_drv_cc *cc)
+ 
+ 	if (cc->capabilities & BCMA_CC_CAP_PMU) {
+ 		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
+-			/* 4706 CC and PMU watchdogs are clocked at 1/4 of ALP clock */
++			/* 4706 CC and PMU watchdogs are clocked
++			 * at 1/4 of ALP clock
++			 */
+ 			return bcma_chipco_get_alp_clock(cc) / 4000;
+ 		else
+ 			/* based on 32KHz ILP clock */
+@@ -97,7 +99,8 @@ int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc)
+ 	wdt.driver_data = cc;
+ 	wdt.timer_set = bcma_chipco_watchdog_timer_set_wdt;
+ 	wdt.timer_set_ms = bcma_chipco_watchdog_timer_set_ms_wdt;
+-	wdt.max_timer_ms = bcma_chipco_watchdog_get_max_timer(cc) / cc->ticks_per_ms;
++	wdt.max_timer_ms =
++		bcma_chipco_watchdog_get_max_timer(cc) / cc->ticks_per_ms;
+ 
+ 	pdev = platform_device_register_data(NULL, "bcm47xx-wdt",
+ 					     cc->core->bus->num, &wdt,
+@@ -335,7 +338,9 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
+ 				       | BCMA_CC_CORECTL_UARTCLKEN);
+ 		}
+ 	} else {
+-		bcma_err(cc->core->bus, "serial not supported on this device ccrev: 0x%x\n", ccrev);
++		bcma_err(cc->core->bus,
++			 "serial not supported on this device ccrev: 0x%x\n",
++			 ccrev);
+ 		return;
+ 	}
+ 
+-- 
+2.2.1
 
-
- drivers/net/wireless/ath/ath10k/core.h    |    1 
- drivers/net/wireless/ath/ath10k/debug.c   |   80 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |    1 
- drivers/net/wireless/ath/ath10k/wmi.c     |    2 +
- drivers/net/wireless/ath/ath10k/wmi.h     |    7 +++
- 5 files changed, 91 insertions(+)
-
-
-_______________________________________________
-ath10k mailing list
-ath10k@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/ath10k
