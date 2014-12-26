@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:34364 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366AbaLXS3G (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17530 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751991AbaLZOmd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 13:29:06 -0500
-Message-ID: <549B05F0.9020704@broadcom.com> (sfid-20141224_192914_018055_1330C989)
-Date: Wed, 24 Dec 2014 19:29:04 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>
-CC: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: hostapd and 11h support
-References: <549A8827.3070703@broadcom.com> <20141224173227.GA1969@w1.fi>
-In-Reply-To: <20141224173227.GA1969@w1.fi>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Fri, 26 Dec 2014 09:42:33 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 24/27] orinoco_usb: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:55 +0100
+Message-Id: <1419604558-29743-25-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154737_818120_80CC5B22)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/24/14 18:32, Jouni Malinen wrote:
-> On Wed, Dec 24, 2014 at 10:32:23AM +0100, Arend van Spriel wrote:
->> I am looking at 11h support in hostapd. The supplicant uses
->> .start_dfs_cac() driver callback (resulting in
->> NL08211_CMD_RADAR_DETECT) and basically the CAC logic is done in the
->> supplicant. Now for our devices the entire radar detection and CAC
->> state machine is built in firmware. So hostapd would just need to
->> enable 11h in the driver/firmware.
->>
->> I am considering a new offload feature flag, but not sure whether we
->> would need to introduce a new nl80211 command. I am thinking we
->> could just reuse .start_dfc_cac(). Because of the feature flag it
->> would have a different meaning in the driver. Wanted to know your
->> opinion on this approach before starting the work.
->
-> There's already one vendor-specific mechanism for supporting such
-> offloading.. Could you please check whether that would work for your
-> driver as well? Search for WPA_DRIVER_FLAGS_DFS_OFFLOAD to see how the
-> hostapd-based operations are skipped. This driver flag is currently set
-> based on a QCA vendor specific driver capability indication.
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-Thanks for the info.
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-> I'm not sure I understood why we would use .start_dfs_cac() for a driver
-> that takes care of CAC logic completely (i.e., I'd assume the driver
-> would be capable of handling this automatically without additional input
-> from user space). I don't really want to get N+1 different ways of doing
-> DFS offloading, so if you can either use as-is or build on top of the
-> existing design (without breaking it for other, obviously), that would
-> be preferred.
+// <smpl>
+@@
+expression t,f,d;
+@@
 
-The firmware on the device *can* have CAC logic built-in. When it *is* 
-built-in it is however disabled by default. Based on your feedback I 
-will just detect firmware support, enable dfs in firmware, and signal 
-DFS offload to hostapd. I would suggest introducing a new common 
-capability flag for this instead of using a QCA vendor specific one. 
-That would be odd ;-)
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.function = f;
+-t.data = d;
+// </smpl>
 
-Regards,
-Arend
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/orinoco/orinoco_usb.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+index 9958464..61612a6 100644
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -364,9 +364,7 @@ static struct request_context *ezusb_alloc_ctx(struct ezusb_priv *upriv,
+ 	atomic_set(&ctx->refcount, 1);
+ 	init_completion(&ctx->done);
+ 
+-	init_timer(&ctx->timer);
+-	ctx->timer.function = ezusb_request_timerfn;
+-	ctx->timer.data = (u_long) ctx;
++	setup_timer(&ctx->timer, ezusb_request_timerfn, (u_long)ctx);
+ 	return ctx;
+ }
+ 
+
