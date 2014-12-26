@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45342 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750894AbaLQKbI convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:31:08 -0500
-From: Avinash Patil <patila@marvell.com>
-To: Joe Perches <joe@perches.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>
-Date: Wed, 17 Dec 2014 02:30:34 -0800
-Subject: RE: [PATCH 1/4] mwifiex: enable -D__CHECK_ENDIAN__ for sparse by
- default
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A07@SC-VEXCH2.marvell.com> (sfid-20141217_113113_005601_D353F612)
-References: <1418817273-22669-1-git-send-email-patila@marvell.com>,<1418809260.14140.18.camel@perches.com>
-In-Reply-To: <1418809260.14140.18.camel@perches.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.codeaurora.org ([198.145.11.231]:41509 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730AbaLZMJs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Dec 2014 07:09:48 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2014-12-26
+Date: Fri, 26 Dec 2014 14:09:42 +0200
+Message-ID: <87egrm7gu1.fsf@kamboji.qca.qualcomm.com> (sfid-20141226_131014_765459_CDB11878)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for review, Joe.
+Hi Dave,
 
-I will send v2 with -DDEBUG removed.
+here's my first wireless-drivers pull request after John's "retirement".
+I'll start this with few fixes for 3.19, changelog below.
 
-Thanks,
-Avinash
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of Joe Perches [joe@perches.com]
-Sent: Wednesday, December 17, 2014 3:11 PM
-To: Avinash Patil
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo; Marc Yang
-Subject: Re: [PATCH 1/4] mwifiex: enable -D__CHECK_ENDIAN__ for sparse by default
+I used a signed tag to create this pull request, I hope that's ok.
+Please let me know if there are any problems.
 
-On Wed, 2014-12-17 at 17:24 +0530, Avinash Patil wrote:
-> Enable the endian checks by default.
-[]
-> diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
-[]
-> @@ -53,3 +53,5 @@ obj-$(CONFIG_MWIFIEX_PCIE) += mwifiex_pcie.o
->
->  mwifiex_usb-y += usb.o
->  obj-$(CONFIG_MWIFIEX_USB) += mwifiex_usb.o
-> +
-> +ccflags-y += -D__CHECK_ENDIAN__ -DDEBUG
-
-I think the -DDEBUG should not be there.
-
-This also forces all the dev_dbg / wiphy_dbg
-statement to always be emitted.
+Kalle
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The following changes since commit 02d6a746c3f0cdd6f8aad0afd0b32d4646d6525e:
+
+  Merge branch 'for-upstream' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth (2014-12-19 15:47:32 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2014-12-26
+
+for you to fetch changes up to 8975842bed0840f314281c9fbf021a1d29537cf0:
+
+  brcmfmac: Do not crash if platform data is not populated (2014-12-24 15:26:46 +0200)
+
+----------------------------------------------------------------
+o Paul made a Kconfig dependency fix to ipw2200, it was not possible to
+  enable that driver because Wireless Extensions is now disabled by default.
+
+o Mika fixed brcmfmac not to crash when platform data is not populated
+
+o Emmanuel provided few fixes to iwlwifi, he says:
+
+  "I have here new device IDs and a fix for double free bug I
+  introduced. I also fix an issue with the RFKILL interrupt - the HW
+  needs us to ACK the interrupt again after we reset it. Liad fixes an
+  issue with the firmware debugging infrastructure. While working on
+  torture scenarios of firmware restarts, Eliad found an issue which
+  he fixed."
+
+----------------------------------------------------------------
+Eliad Peller (1):
+      iwlwifi: mvm: clear IN_HW_RESTART flag on stop()
+
+Emmanuel Grumbach (3):
+      iwlwifi: pcie: re-ACK all interrupts after device reset
+      iwlwifi: don't double free a pointer if no FW was found
+      iwlwifi: add new device IDs for 3165
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-fixes-for-kalle-2014-12-18' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Liad Kaufman (1):
+      iwlwifi: pcie: limit fw chunk sizes given to fh
+
+Mika Westerberg (1):
+      brcmfmac: Do not crash if platform data is not populated
+
+Paul Bolle (1):
+      ipw2200: select CFG80211_WEXT
+
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    4 ++--
+ drivers/net/wireless/ipw2x00/Kconfig             |    3 ++-
+ drivers/net/wireless/iwlwifi/iwl-drv.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-fh.h            |    1 +
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c      |   15 +++++++++++++--
+ drivers/net/wireless/iwlwifi/pcie/drv.c          |    4 ++++
+ drivers/net/wireless/iwlwifi/pcie/trans.c        |   17 +++++++++++------
+ 7 files changed, 34 insertions(+), 12 deletions(-)
+
+-- 
+Kalle Valo
