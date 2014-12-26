@@ -1,34 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0053.hostedemail.com ([216.40.44.53]:40903 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752005AbaLHDzS (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4736 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752042AbaLZOmh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2014 22:55:18 -0500
-Message-ID: <1418010912.31745.29.camel@perches.com> (sfid-20141208_045547_519662_C4BD1423)
-Subject: Re: [PATCH 0/20] fix misspelling of current function in string
-From: Joe Perches <joe@perches.com>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux@rasmusvillemoes.dk, devel@driverdev.osuosl.org,
-	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	intel-gfx@lists.freedesktop.org, linux-mtd@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org
-Date: Sun, 07 Dec 2014 19:55:12 -0800
-In-Reply-To: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 26 Dec 2014 09:42:37 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Avinash Patil <patila@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 25/27] mwifiex: tdls: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:58 +0100
+Message-Id: <1419604558-29743-28-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154459_307193_39879F8E)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2014-12-07 at 20:20 +0100, Julia Lawall wrote:
-> These patches replace what appears to be a reference to the name of the
-> current function but is misspelled in some way by either the name of the
-> function itself, or by %s and then __func__ in an argument list.
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-At least a few of these seem to be function tracing
-style uses that might as well be deleted instead.
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression t,f,d;
+@@
+
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.function = f;
+-t.data = d;
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/mwifiex/tdls.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/tdls.c b/drivers/net/wireless/mwifiex/tdls.c
+index 22884b4..5a64681 100644
+--- a/drivers/net/wireless/mwifiex/tdls.c
++++ b/drivers/net/wireless/mwifiex/tdls.c
+@@ -1367,9 +1367,8 @@ void mwifiex_check_auto_tdls(unsigned long context)
+ 
+ void mwifiex_setup_auto_tdls_timer(struct mwifiex_private *priv)
+ {
+-	init_timer(&priv->auto_tdls_timer);
+-	priv->auto_tdls_timer.function = mwifiex_check_auto_tdls;
+-	priv->auto_tdls_timer.data = (unsigned long)priv;
++	setup_timer(&priv->auto_tdls_timer, mwifiex_check_auto_tdls,
++		    (unsigned long)priv);
+ 	priv->auto_tdls_timer_active = true;
+ 	mod_timer(&priv->auto_tdls_timer,
+ 		  jiffies + msecs_to_jiffies(MWIFIEX_TIMER_10S));
 
