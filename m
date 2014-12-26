@@ -1,53 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:58254 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751904AbaLXPWN (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4736 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751046AbaLZOmY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 10:22:13 -0500
-Message-ID: <549ADA1D.8030509@gmail.com> (sfid-20141224_162231_927904_29CFBFFB)
-Date: Wed, 24 Dec 2014 23:22:05 +0800
-From: Chen Gang <gang.chen.5i5j@gmail.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: qca_vkondrat@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	wil6210@qca.qualcomm.com,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-next@vger.kernel.org
-Subject: Re: [PATCH next] drivers/net/wireless/ath/wil6210/debugfs.c: Use
- 'uint64_t' instead of 'cycles_t' to avoid warnings
-References: <549AD067.80608@gmail.com> <549AD54F.3020605@gmail.com> <8761d19j6z.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8761d19j6z.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+	Fri, 26 Dec 2014 09:42:24 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: wil6210@qca.qualcomm.com
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-usb@vger.kernel.org
+Subject: [PATCH 0/27] Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:31 +0100
+Message-Id: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_155209_056410_EDD3E093)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/24/2014 11:11 PM, Kalle Valo wrote:
-> Chen Gang <gang.chen.5i5j@gmail.com> writes:
-> 
->> Oh, sorry, I forgot the word wrap (after change a new pc). I shall send
->> patch v2 for it.
-> 
-> While at it, could you also please simplify the title. You don't have to
-> put the full directory there, it just makes it more difficult to read.
-> This should be enough:
-> 
-> wil6210: Use 'uint64_t' instead of 'cycles_t' to avoid warnings
-> 
+These patches group a call to init_timer and initialization of the function
+and data fields into a call to setup_timer.  Is there is no initialization
+of the data field before add_timer is called, the the data value is set to
+0UL.  If the data value has a cast to something other than unsigned long,
+it is changes to a cast to unsigned long, which is the type of the data
+field.
 
-Oh, I have sent patch v2, if necessary, I will send patch v3 for it.
-(if necessary, please let me know)
+The semantic patch that performs this change is shown below
+(http://coccinelle.lip6.fr/).  This semantic patch is fairly restrictive on
+what appears between the init_timer call and the two field initializations,
+to ensure that the there is no code that the initializations depend on.
 
-> I see quite a few patches with titles like 'drivers: net: wireless: ath:
-> fix foo'. Where an earth is that coming from? Bad documentation
-> somewhere?
-> 
+// <smpl>
+@@
+expression t,d,f,e1,e2;
+identifier x1,x2;
+statement S1,S2;
+@@
 
-I guess, this can let the patch makers have a easier life, e.g. for me,
-I may send patches for various sub-systems (arch/*, drivers/*, net/*,
-also another projects ...).
+(
+-t.data = d;
+|
+-t.function = f;
+|
+-init_timer(&t);
++setup_timer(&t,f,d);
+|
+-init_timer_on_stack(&t);
++setup_timer_on_stack(&t,f,d);
+)
+<... when != S1
+t.x1 = e1;
+...>
+(
+-t.data = d;
+|
+-t.function = f;
+|
+-init_timer(&t);
++setup_timer(&t,f,d);
+|
+-init_timer_on_stack(&t);
++setup_timer_on_stack(&t,f,d);
+)
+<... when != S2
+t.x2 = e2;
+...>
+(
+-t.data = d;
+|
+-t.function = f;
+|
+-init_timer(&t);
++setup_timer(&t,f,d);
+|
+-init_timer_on_stack(&t);
++setup_timer_on_stack(&t,f,d);
+)
 
-Thanks.
--- 
-Chen Gang
+// ----------------------
 
-Open, share, and attitude like air, water, and life which God blessed
+@@
+expression t,d,f,e1,e2;
+identifier x1,x2;
+statement S1,S2;
+@@
+
+(
+-t->data = d;
+|
+-t->function = f;
+|
+-init_timer(t);
++setup_timer(t,f,d);
+|
+-init_timer_on_stack(t);
++setup_timer_on_stack(t,f,d);
+)
+<... when != S1
+t->x1 = e1;
+...>
+(
+-t->data = d;
+|
+-t->function = f;
+|
+-init_timer(t);
++setup_timer(t,f,d);
+|
+-init_timer_on_stack(t);
++setup_timer_on_stack(t,f,d);
+)
+<... when != S2
+t->x2 = e2;
+...>
+(
+-t->data = d;
+|
+-t->function = f;
+|
+-init_timer(t);
++setup_timer(t,f,d);
+|
+-init_timer_on_stack(t);
++setup_timer_on_stack(t,f,d);
+)
+
+// ---------------------------------------------------------------------
+// no initialization of data field
+
+@@
+expression t,d1,d2,f;
+@@
+
+(
+-init_timer(&t);
++setup_timer(&t,f,0UL);
+|
+-init_timer_on_stack(&t);
++setup_timer_on_stack(&t,f,0UL);
+)
+... when != t.data = d1;
+-t.function = f;
+... when != t.data = d2;
+add_timer(&t);
+
+@@
+expression t,d,f,fn;
+type T;
+@@
+
+-t.function = f;
+... when != t.data
+    when != fn(...,(T)t,...)
+(
+-init_timer(&t);
++setup_timer(&t,f,d);
+|
+-init_timer_on_stack(&t);
++setup_timer_on_stack(&t,f,0UL);
+)
+... when != t.data = d;
+add_timer(&t);
+
+// ----------------------
+
+@@
+expression t,d1,d2,f;
+@@
+
+(
+-init_timer(t);
++setup_timer(t,f,0UL);
+|
+-init_timer_on_stack(t);
++setup_timer_on_stack(t,f,0UL);
+)
+... when != t->data = d1;
+-t->function = f;
+... when != t->data = d2;
+add_timer(t);
+
+@@
+expression t,d,f,fn;
+type T;
+@@
+
+-t->function = f;
+... when != t.data
+    when != fn(...,(T)t,...)
+(
+-init_timer(t);
++setup_timer(t,f,d);
+|
+-init_timer_on_stack(t);
++setup_timer_on_stack(t,f,0UL);
+)
+... when != t->data = d;
+add_timer(t);
+
+// ---------------------------------------------------------------------
+// change data field type
+
+@@
+expression d;
+type T;
+@@
+
+(
+setup_timer
+|
+setup_timer_on_stack
+)
+ (...,
+(
+  (unsigned long)d
+|
+- (T)
++ (unsigned long)
+  d
+)
+ )
+// </smpl>
+
