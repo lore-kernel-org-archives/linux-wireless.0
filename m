@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:57332 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477AbaLQKU7 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39223 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751421AbaLZLBf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:20:59 -0500
-Subject: [PATCH v2 2/8] ath10k: use wmi op version to check which iface
- combination to use
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 17 Dec 2014 12:20:54 +0200
-Message-ID: <20141217102054.15964.32162.stgit@potku.adurom.net> (sfid-20141217_112101_781780_A4C8FBAB)
-In-Reply-To: <20141217101755.15964.2625.stgit@potku.adurom.net>
-References: <20141217101755.15964.2625.stgit@potku.adurom.net>
+	Fri, 26 Dec 2014 06:01:35 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id sBQAxpqb024622
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 03:01:35 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1rfdgcppsp-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 03:01:35 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2] cfg80211: check for carrier state only when offchanel CAC supported
+Date: Fri, 26 Dec 2014 03:00:13 -0800
+Message-ID: <1419591613-3998-1-git-send-email-patila@marvell.com> (sfid-20141226_120143_638518_3418F8E2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ATH10K_FW_FEATURE_WMI_10X should not be used for anymore as that's
-now deprecated, instead use wmi op version.
+Checking for carrier state during start_radar_detection is needed
+only for devices which support offchannel CAC.
+This patch provides this additional check of extended feature offchannel
+CAC support while checking for carrier state.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ include/uapi/linux/nl80211.h | 3 +++
+ net/wireless/nl80211.c       | 4 +++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5475f0fbbe41..4576d758d50b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5064,16 +5064,25 @@ int ath10k_mac_register(struct ath10k *ar)
- 	 */
- 	ar->hw->queues = 4;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 735ab43..61f7daad 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4205,11 +4205,14 @@ enum nl80211_feature_flags {
+ /**
+  * enum nl80211_ext_feature_index - bit index of extended features.
+  *
++ * @NL80211_EXT_FEATURE_OFFCHAN_CAC: This device/driver supports
++ *	offchannel Channel Availibility Check(CAC).
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+ enum nl80211_ext_feature_index {
  
--	if (test_bit(ATH10K_FW_FEATURE_WMI_10X, ar->fw_features)) {
--		ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
--		ar->hw->wiphy->n_iface_combinations =
--			ARRAY_SIZE(ath10k_10x_if_comb);
--	} else {
-+	switch (ar->wmi.op_version) {
-+	case ATH10K_FW_WMI_OP_VERSION_MAIN:
-+	case ATH10K_FW_WMI_OP_VERSION_TLV:
- 		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
- 		ar->hw->wiphy->n_iface_combinations =
- 			ARRAY_SIZE(ath10k_if_comb);
--
- 		ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
-+		break;
-+	case ATH10K_FW_WMI_OP_VERSION_10_1:
-+	case ATH10K_FW_WMI_OP_VERSION_10_2:
-+		ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
-+		ar->hw->wiphy->n_iface_combinations =
-+			ARRAY_SIZE(ath10k_10x_if_comb);
-+		break;
-+	case ATH10K_FW_WMI_OP_VERSION_UNSET:
-+	case ATH10K_FW_WMI_OP_VERSION_MAX:
-+		WARN_ON(1);
-+		ret = -EINVAL;
-+		goto err_free;
- 	}
++	NL80211_EXT_FEATURE_OFFCHAN_CAC,
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+ 	MAX_NL80211_EXT_FEATURES = NUM_NL80211_EXT_FEATURES - 1
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 39753de..b2abb37 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6138,7 +6138,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
  
- 	ar->hw->netdev_features = NETIF_F_HW_CSUM;
+-	if (netif_carrier_ok(dev))
++	if (wiphy_ext_feature_isset(&rdev->wiphy,
++				    NL80211_EXT_FEATURE_OFFCHAN_CAC) &&
++	    netif_carrier_ok(dev))
+ 		return -EBUSY;
+ 
+ 	if (wdev->cac_started)
+-- 
+1.8.1.4
 
