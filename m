@@ -1,81 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53060 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbaLHPf4 convert rfc822-to-8bit (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17526 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751046AbaLZOmf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 10:35:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <201412081622.25541@pali>
-References: <201411271506.20457@pali>
-	<201412061402.21514@pali>
-	<CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
-	<201412081622.25541@pali>
-Date: Mon, 8 Dec 2014 23:35:53 +0800
-Message-ID: <CACVXFVMUubNWKrZeRSNF5+1hdrrMJ26FGFzm0g8DWbmKrsboWw@mail.gmail.com> (sfid-20141208_163637_946520_93FED337)
-Subject: Re: wl1251: NVS firmware data
-From: Ming Lei <ming.lei@canonical.com>
-To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 26 Dec 2014 09:42:35 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: kernel-janitors@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 17/27] iwl3945: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:49 +0100
+Message-Id: <1419604558-29743-19-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154513_529032_D6BF6802)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 8, 2014 at 11:22 PM, Pali Rohár <pali.rohar@gmail.com> wrote:
-> On Monday 08 December 2014 16:18:18 Ming Lei wrote:
->> On Sat, Dec 6, 2014 at 9:02 PM, Pali Rohár
-> <pali.rohar@gmail.com> wrote:
->> > On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
->> >  /**
->> >
->> > + * request_firmware_prefer_user: - prefer usermode helper
->> > for loading firmware + * @firmware_p: pointer to firmware
->> > image
->> > + * @name: name of firmware file
->> > + * @device: device for which firmware is being loaded
->> > + *
->> > + * This function works pretty much like request_firmware(),
->> > but it prefer + * usermode helper. If usermode helper fails
->> > then it fallback to direct access. + * Usefull for dynamic
->> > or model specific firmware data. + **/
->> > +int request_firmware_prefer_user(const struct firmware
->> > **firmware_p, +                           const char *name,
->> > struct device *device) +{
->> > +       int ret;
->> > +       __module_get(THIS_MODULE);
->> > +       ret = _request_firmware(firmware_p, name, device,
->> > +                               FW_OPT_UEVENT |
->> > FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
->> > +       return ret;
->> > +}
->> > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
->>
->> I'd like to introduce request_firmware_user() which only
->> requests firmware from user space, and this way is simpler
->> and more flexible since we have request_firmware_direct()
->> already.
->>
->> Thanks,
->> Ming Lei
->
-> Ming, for wl1251 NVS data we need to load use usermode helper and
-> fallback to direct load. So I think it is better to handle this
-> request in firmware code and not in driver.
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-Please do that in driver and don't mess firmware loader.
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-With introducing request_firmware_user(), it is even possible to
-clean up firmware loader further.
+// <smpl>
+@@
+expression t,f,d;
+@@
 
-Thanks,
-Ming Lei
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.data = d;
+-t.function = f;
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index dc1d20c..e566580 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3429,9 +3429,7 @@ il3945_setup_deferred_work(struct il_priv *il)
+ 
+ 	il3945_hw_setup_deferred_work(il);
+ 
+-	init_timer(&il->watchdog);
+-	il->watchdog.data = (unsigned long)il;
+-	il->watchdog.function = il_bg_watchdog;
++	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
+ 
+ 	tasklet_init(&il->irq_tasklet,
+ 		     (void (*)(unsigned long))il3945_irq_tasklet,
+
