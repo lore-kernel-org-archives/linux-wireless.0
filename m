@@ -1,38 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:50903 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751641AbaLXNSY (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20378 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751726AbaLZLEJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 08:18:24 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC] ipw2200: select CFG80211_WEXT
-References: <1419271817.2317.12.camel@tiscali.nl>
-Date: Wed, 24 Dec 2014 15:18:13 +0200
-In-Reply-To: <1419271817.2317.12.camel@tiscali.nl> (Paul Bolle's message of
-	"Mon, 22 Dec 2014 19:10:17 +0100")
-Message-ID: <87tx0l9ofe.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_141843_183481_E740ED59)
+	Fri, 26 Dec 2014 06:04:09 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id sBQB0AoD024963
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 03:04:08 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1rfdgcppvq-8
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 03:04:08 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v3 2/4] mwifiex: do not send key material cmd when delete wep key
+Date: Fri, 26 Dec 2014 03:02:32 -0800
+Message-ID: <1419591754-4086-2-git-send-email-patila@marvell.com> (sfid-20141226_120421_208245_E3BCA1AB)
+In-Reply-To: <1419591754-4086-1-git-send-email-patila@marvell.com>
+References: <1419591754-4086-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paul Bolle <pebolle@tiscali.nl> writes:
+From: Xinming Hu <huxm@marvell.com>
 
-> Commit 24a0aa212ee2 ("cfg80211: make WEXT compatibility unselectable")
-> made it impossible to depend on CFG80211_WEXT. It does still allow to
-> select that symbol. (Yes, the commit summary is confusing.)
->
-> So make IPW2200 select CFG80211_WEXT, so that the ipw2200 driver can be
-> built again.
->
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+This patch fixes memory corruption reported by community developer.
 
-Thanks, applied to wireless-drivers.git.
+"Memory corruption occurs in mwifiex_ret_802_11_key_material_v1()
+when a short command response is received without a key length
+causing non initialised memory to be interpreted as the key
+length resulting in a memcpy() overwriting the part of the
+driver's private data structure beyond the key area."
 
+For v1 key material API firmwares, there is no need to send
+command to delete WEP key. WEP encryption/decryption is controlled
+by mac_control command.
+
+This patch avoids sending key material command in del_key case.
+
+Reported-by: Martin Fuzzey <mfuzzey@parkeon.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_ioctl.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 1626868..fb9c5fc 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -902,9 +902,12 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
+ 	if (wep_key->key_length) {
+ 		void *enc_key;
+ 
+-		if (encrypt_key->key_disable)
++		if (encrypt_key->key_disable) {
+ 			memset(&priv->wep_key[index], 0,
+ 			       sizeof(struct mwifiex_wep_key));
++			if (wep_key->key_length)
++				goto done;
++			}
+ 
+ 		if (adapter->key_api_major_ver == KEY_API_VER_MAJOR_V2)
+ 			enc_key = encrypt_key;
+@@ -918,6 +921,7 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
+ 			return ret;
+ 	}
+ 
++done:
+ 	if (priv->sec_info.wep_enabled)
+ 		priv->curr_pkt_filter |= HostCmd_ACT_MAC_WEP_ENABLE;
+ 	else
 -- 
-Kalle Valo
+1.8.1.4
+
