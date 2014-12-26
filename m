@@ -1,31 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:48545 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751125AbaLRUdE (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40635 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751614AbaLZLD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 15:33:04 -0500
-Date: Thu, 18 Dec 2014 15:32:59 -0500 (EST)
-Message-Id: <20141218.153259.1434707913030906643.davem@davemloft.net> (sfid-20141218_213334_129555_3955CDAB)
-To: johan.hedberg@gmail.com
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth 2014-12-17
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20141217204614.GA15480@t440s.P-661HNU-F1>
-References: <20141217204614.GA15480@t440s.P-661HNU-F1>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 26 Dec 2014 06:03:56 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id sBQAxt8X031889
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 03:03:55 -0800
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1rfjy5x15v-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 03:03:55 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v3 4/4] mwifiex: get supported BA stream info from FW
+Date: Fri, 26 Dec 2014 03:02:34 -0800
+Message-ID: <1419591754-4086-4-git-send-email-patila@marvell.com> (sfid-20141226_120400_126485_2DA4CB4E)
+In-Reply-To: <1419591754-4086-1-git-send-email-patila@marvell.com>
+References: <1419591754-4086-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johan Hedberg <johan.hedberg@gmail.com>
-Date: Wed, 17 Dec 2014 22:46:14 +0200
+This patch adds support to get number of BA streams
+supported information from FW. Some newer chips(e.g. 8897 series)
+support 4 BA streams for TX; so driver should not disallow BA stream
+setup just after 2 streams have been established.
 
-> Here's the first direct (i.e. skipping the wireless tree) bluetooth pull
-> request for you, intended for 3.19. It's just one patch: a fix from
-> Marcel for for remote service discovery filtering which also fixes a
-> 'used uninitialized' compiler warning.
-> 
-> Please let me know if there are any issues pulling. Thanks.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n.h | 14 +++++++++++---
+ drivers/net/wireless/mwifiex/fw.h  |  1 +
+ 2 files changed, 12 insertions(+), 3 deletions(-)
 
-Pulled, thanks Johan.
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index f275675..8e2e394 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -130,7 +130,9 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
+ {
+ 	struct mwifiex_private *priv;
+ 	u8 i;
+-	u32 ba_stream_num = 0;
++	u32 ba_stream_num = 0, ba_stream_max;
++
++	ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
+ 
+ 	for (i = 0; i < adapter->priv_num; i++) {
+ 		priv = adapter->priv[i];
+@@ -139,8 +141,14 @@ static inline u8 mwifiex_space_avail_for_new_ba_stream(
+ 				&priv->tx_ba_stream_tbl_ptr);
+ 	}
+ 
+-	return ((ba_stream_num <
+-		 MWIFIEX_MAX_TX_BASTREAM_SUPPORTED) ? true : false);
++	if (adapter->fw_api_ver == MWIFIEX_FW_V15) {
++		ba_stream_max =
++			       GETSUPP_TXBASTREAMS(adapter->hw_dot_11n_dev_cap);
++		if (!ba_stream_max)
++			ba_stream_max = MWIFIEX_MAX_TX_BASTREAM_SUPPORTED;
++	}
++
++	return ((ba_stream_num < ba_stream_max) ? true : false);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index fb5936e..9a82323 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -233,6 +233,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define ISSUPP_RXLDPC(Dot11nDevCap) (Dot11nDevCap & BIT(22))
+ #define ISSUPP_BEAMFORMING(Dot11nDevCap) (Dot11nDevCap & BIT(30))
+ #define ISALLOWED_CHANWIDTH40(ht_param) (ht_param & BIT(2))
++#define GETSUPP_TXBASTREAMS(Dot11nDevCap) ((Dot11nDevCap >> 18) & 0xF)
+ 
+ /* httxcfg bitmap
+  * 0		reserved
+-- 
+1.8.1.4
+
