@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55916 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751578AbaLXRJa (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17526 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752055AbaLZOmi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 12:09:30 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>
-Subject: Re: [PATCH v2 1/4] mwifiex: enable -D__CHECK_ENDIAN__ for sparse by default
-References: <1418903926-11859-1-git-send-email-patila@marvell.com>
-Date: Wed, 24 Dec 2014 19:09:22 +0200
-In-Reply-To: <1418903926-11859-1-git-send-email-patila@marvell.com> (Avinash
-	Patil's message of "Thu, 18 Dec 2014 17:28:43 +0530")
-Message-ID: <8738857z5p.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_180933_890189_EECCEB7A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 26 Dec 2014 09:42:38 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Avinash Patil <patila@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 27/27] mwifiex: main: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:56 +0100
+Message-Id: <1419604558-29743-26-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154429_061939_B3F40239)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avinash Patil <patila@marvell.com> writes:
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-> Enable the endian checks by default.
->
-> v2: remove -DDEBUG as suggested by Joe Perches
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-Please don't add the change log to the commit log. Instead add it after
-'---' line so that git am can automatically skip it. Alternatively send
-a cover letter and include the change log there.
+// <smpl>
+@@
+expression t,f,d;
+@@
 
-Can fix that, please?
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.function = f;
+-t.data = d;
+// </smpl>
 
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> ---
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-<Add the changelog here>
+---
+ drivers/net/wireless/mwifiex/main.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
->  drivers/net/wireless/mwifiex/Makefile | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
-> index 9487d72..fdfd9bf 100644
-> --- a/drivers/net/wireless/mwifiex/Makefile
-> +++ b/drivers/net/wireless/mwifiex/Makefile
-> @@ -53,3 +53,5 @@ obj-$(CONFIG_MWIFIEX_PCIE) += mwifiex_pcie.o
->  
->  mwifiex_usb-y += usb.o
->  obj-$(CONFIG_MWIFIEX_USB) += mwifiex_usb.o
-> +
-> +ccflags-y += -D__CHECK_ENDIAN
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index d4d2223..53f4202 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -83,9 +83,8 @@ static int mwifiex_register(void *card, struct mwifiex_if_ops *if_ops,
+ 	}
+ 	mwifiex_init_lock_list(adapter);
+ 
+-	init_timer(&adapter->cmd_timer);
+-	adapter->cmd_timer.function = mwifiex_cmd_timeout_func;
+-	adapter->cmd_timer.data = (unsigned long) adapter;
++	setup_timer(&adapter->cmd_timer, mwifiex_cmd_timeout_func,
++		    (unsigned long)adapter);
+ 
+ 	return 0;
+ 
 
--- 
-Kalle Valo
