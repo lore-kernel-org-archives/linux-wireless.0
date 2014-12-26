@@ -1,107 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:59536 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbaLSG5I (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:36455 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751127AbaLZTFp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 01:57:08 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 7/8] ath10k: add support to send addba response
-Date: Fri, 19 Dec 2014 12:24:58 +0530
-Message-ID: <1418972099-5296-8-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20141219_075711_931631_22AB3D9F)
-In-Reply-To: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1418972099-5296-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Fri, 26 Dec 2014 14:05:45 -0500
+Received: by mail-ob0-f174.google.com with SMTP id nt9so38869598obb.5
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 11:05:44 -0800 (PST)
+Message-ID: <549DB187.3090003@lwfinger.net> (sfid-20141226_200548_474551_DB1AA44F)
+Date: Fri, 26 Dec 2014 13:05:43 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	Christopher Chavez <chrischavez@gmx.us>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: p54usb kernel panic on recent mainline kernels
+References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com> <549CCAD8.70704@lwfinger.net> <loom.20141226T052138-41@post.gmane.org> <2868661.A1AiatZ287@debian64>
+In-Reply-To: <2868661.A1AiatZ287@debian64>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This per-station debugfs entry helps to send addba response in
-manual mode for debugging purpose. It accepts tid and status code
-as input arguments.
+On 12/26/2014 08:35 AM, Christian Lamparter wrote:
+> On Friday, December 26, 2014 04:23:21 AM Christopher Chavez wrote:
+>> Larry Finger <Larry.Finger@...> writes:
+>>> In any case, file a bug report at bugzilla.kernel.org, mark it as a regression,
+>>> and post the bug number here. If you are able to finish the bisection, that
+>>> would be helpful.
+>>
+>> Reported.
+>> https://bugzilla.kernel.org/show_bug.cgi?id=90331
+>
+> According to what Larry wrote, this bug should disappear, if
+> the hw crypto offloading is disabled.
+>
+> Christopher, can you please load the p54common kernel module
+> with the module parameter "nohwcrypt=1" and report back?
 
-To send addba response,
+Christian,
 
-echo 0 25 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
-	   stations/XX:XX:XX:XX:XX:XX/addba_resp
+I can confirm that the skb panic goes away if hardware encryption is disabled.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debugfs_sta.c | 55 +++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+My bisection led to a branch commit d17ec4d as the "bad" commit. Rather than 
+finding out where the bisection went bad, I added code to check skb->tail, 
+skb->end, and the length to be added. At the time of the call that panics, there 
+are 6 bytes between tail and end with 8 bytes needed.
 
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index 89e5e5a..95eb5a1 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -136,10 +136,65 @@ static const struct file_operations fops_addba = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t ath10k_dbg_sta_write_addba_resp(struct file *file,
-+					       const char __user *user_buf,
-+					       size_t count, loff_t *ppos)
-+{
-+	struct ieee80211_sta *sta = file->private_data;
-+	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-+	struct ath10k *ar = arsta->arvif->ar;
-+	u32 tid, status;
-+	int ret;
-+	char buf[64];
-+
-+	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+
-+	/* make sure that buf is null terminated */
-+	buf[sizeof(buf) - 1] = '\0';
-+
-+	ret = sscanf(buf, "%u %u", &tid, &status);
-+	if (ret != 2) {
-+		ath10k_warn(ar, "ex: echo <tid> <status code> >addba_resp\n");
-+		return -EINVAL;
-+	}
-+
-+	/* Valid TID values are 0 through 15 */
-+	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
-+		ath10k_warn(ar, "Invalid TID %u\n", tid);
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&ar->conf_mutex);
-+	if ((ar->state != ATH10K_STATE_ON) ||
-+	    (arsta->aggr_mode != ATH10K_DBG_AGGR_MODE_MANUAL)) {
-+		ret = count;
-+		goto out;
-+	}
-+
-+	ret = ath10k_wmi_addba_set_resp(ar, arsta->arvif->vdev_id, sta->addr,
-+					tid, status);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to send addba response: vdev_id %u peer %pM tid %u status%u\n",
-+			    arsta->arvif->vdev_id, sta->addr, tid, status);
-+	}
-+	ret = count;
-+out:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations fops_addba_resp = {
-+	.write = ath10k_dbg_sta_write_addba_resp,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
- 	debugfs_create_file("aggr_mode", S_IRUGO | S_IWUSR, dir, sta,
- 			    &fops_aggr_mode);
- 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
-+	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
- }
--- 
-2.2.0
+I will be looking for the place where the driver calculates how large the skb 
+should be.
+
+Larry
 
