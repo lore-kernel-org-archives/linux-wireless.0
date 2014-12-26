@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:31730 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932243AbaLWPrm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 10:47:42 -0500
-Date: Tue, 23 Dec 2014 17:47:38 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17532 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752035AbaLZOmg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Dec 2014 09:42:36 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Avinash Patil <patila@marvell.com>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Christophe Prigent <christophe.prigent@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: Do not crash if platform data is not populated
-Message-ID: <20141223154738.GM1314@lahna.fi.intel.com> (sfid-20141223_164758_649892_32D1D06F)
-References: <1419346112-173303-1-git-send-email-mika.westerberg@linux.intel.com>
- <54998C31.9090500@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54998C31.9090500@broadcom.com>
+Subject: [PATCH 26/27] mwifiex: 11n_rxreorder: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:57 +0100
+Message-Id: <1419604558-29743-27-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154635_193661_C2E347B4)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 23, 2014 at 04:37:21PM +0100, Arend van Spriel wrote:
-> On 12/23/14 15:48, Mika Westerberg wrote:
-> >The driver looks for pdata->oob_irq_supported to find out if wowl can be
-> >supported. However, not all platforms populate pdata in which case we crash
-> >the kernel because of NULL pointer dereference.
-> 
-> Thanks, Mika
-> 
-> However, this was already reported by Dan Carpenter and I submitted a patch
-> for that a couple of days ago: "[PATCH 02/10] brcmfmac: Fix possible
-> dereference of NULL pointer." [1].
-> 
-> Regards,
-> Arend
-> 
-> [1]
-> http://mid.gmane.org/1419162233-19492-3-git-send-email-arend@broadcom.com
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-Oh, good. I didn't notice that one.
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-Thanks for fixing it :)
+// <smpl>
+@@
+expression t,f,d;
+@@
 
-BTW, that patch seems to miss brcmf_ops_sdio_resume(), perhaps it is
-fixed in another patch?
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.function = f;
+-t.data = d;
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index d73fda3..f33dc81 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -391,10 +391,8 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
+ 	new_node->timer_context.priv = priv;
+ 	new_node->timer_context.timer_is_set = false;
+ 
+-	init_timer(&new_node->timer_context.timer);
+-	new_node->timer_context.timer.function = mwifiex_flush_data;
+-	new_node->timer_context.timer.data =
+-			(unsigned long) &new_node->timer_context;
++	setup_timer(&new_node->timer_context.timer, mwifiex_flush_data,
++		    (unsigned long)&new_node->timer_context);
+ 
+ 	for (i = 0; i < win_size; ++i)
+ 		new_node->rx_reorder_ptr[i] = NULL;
+
