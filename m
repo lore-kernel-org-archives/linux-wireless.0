@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:37377 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752129AbaLUUOH (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17526 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751858AbaLZOm3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 15:14:07 -0500
-Received: by mail-ig0-f180.google.com with SMTP id h15so3098532igd.13
-        for <linux-wireless@vger.kernel.org>; Sun, 21 Dec 2014 12:14:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <549725D1.2090402@broadcom.com>
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
-	<1419162233-19492-4-git-send-email-arend@broadcom.com>
-	<B1CB9465-1353-411C-9B3C-42DEFBFDBBE0@holtmann.org>
-	<549725D1.2090402@broadcom.com>
-Date: Sun, 21 Dec 2014 21:14:06 +0100
-Message-ID: <CACna6rxjKUeDVGXGB5UzgOw1WyQKE+LYmtxJvTLW+H1fC7-13Q@mail.gmail.com> (sfid-20141221_211413_547578_CC7447F8)
-Subject: Re: [PATCH 03/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Rob Herring <rob.herring@linaro.org>,
-	John Stultz <john.stultz@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 26 Dec 2014 09:42:29 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: kernel-janitors@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 18/27] iwl4965: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:48 +0100
+Message-Id: <1419604558-29743-18-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_155000_758543_8CAB81DA)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 December 2014 at 20:56, Arend van Spriel <arend@broadcom.com> wrote:
-> On 12/21/14 18:50, Marcel Holtmann wrote:
->>
->> Hi Arend,
->>
->>> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
->>> index 0f01fe0..61f8318 100644
->>> --- a/include/linux/mmc/sdio_ids.h
->>> +++ b/include/linux/mmc/sdio_ids.h
->>> @@ -29,6 +29,8 @@
->>> #define SDIO_DEVICE_ID_BROADCOM_4329            0x4329
->>> #define SDIO_DEVICE_ID_BROADCOM_4330            0x4330
->>> #define SDIO_DEVICE_ID_BROADCOM_4334            0x4334
->>> +#define SDIO_DEVICE_ID_BROADCOM_43340          43340
->>> +#define SDIO_DEVICE_ID_BROADCOM_43341          43341
->>
->>
->> the general preference is to have these values in hex. I get the fact that
->> they map the marketing number, but that could be just stated in a comment
->> after the hex number.
->
-> Will change that.
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-I vote for keeping user-friendly numbers as comments :)
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression t,f,d;
+@@
+
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.data = d;
+-t.function = f;
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/iwlegacy/4965-mac.c |    9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 2748fde..976f65f 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6247,13 +6247,10 @@ il4965_setup_deferred_work(struct il_priv *il)
+ 
+ 	INIT_WORK(&il->txpower_work, il4965_bg_txpower_work);
+ 
+-	init_timer(&il->stats_periodic);
+-	il->stats_periodic.data = (unsigned long)il;
+-	il->stats_periodic.function = il4965_bg_stats_periodic;
++	setup_timer(&il->stats_periodic, il4965_bg_stats_periodic,
++		    (unsigned long)il);
+ 
+-	init_timer(&il->watchdog);
+-	il->watchdog.data = (unsigned long)il;
+-	il->watchdog.function = il_bg_watchdog;
++	setup_timer(&il->watchdog, il_bg_watchdog, (unsigned long)il);
+ 
+ 	tasklet_init(&il->irq_tasklet,
+ 		     (void (*)(unsigned long))il4965_irq_tasklet,
+
