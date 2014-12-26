@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:60138 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751119AbaLQQAq (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:17526 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751886AbaLZOma (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 11:00:46 -0500
-Received: by mail-wi0-f169.google.com with SMTP id r20so17464421wiv.4
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 08:00:44 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] nl80211: increase the max number of rules in regdomain
-Date: Wed, 17 Dec 2014 18:00:44 +0200
-Message-Id: <1418832044-25582-1-git-send-email-arik@wizery.com> (sfid-20141217_170048_965685_ADA7C904)
+	Fri, 26 Dec 2014 09:42:30 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: kernel-janitors@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 8/27] wireless: cw1200: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:37 +0100
+Message-Id: <1419604558-29743-7-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154956_290951_E3EE91B7)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some network cards (Intel) produce per-channel regdomains and rely on
-cfg80211 to merge rules as needed. This hits the max rules limit and
-fails.
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression t,f,d;
+@@
+
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.data = d;
+-t.function = f;
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
- include/uapi/linux/nl80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/cw1200/pm.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index c0383e9..18cb0aa 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2112,7 +2112,7 @@ enum nl80211_attrs {
+diff --git a/drivers/net/wireless/cw1200/pm.c b/drivers/net/wireless/cw1200/pm.c
+index 6907c8f..d2202ae 100644
+--- a/drivers/net/wireless/cw1200/pm.c
++++ b/drivers/net/wireless/cw1200/pm.c
+@@ -101,9 +101,8 @@ int cw1200_pm_init(struct cw1200_pm_state *pm,
+ {
+ 	spin_lock_init(&pm->lock);
  
- #define NL80211_MAX_SUPP_RATES			32
- #define NL80211_MAX_SUPP_HT_RATES		77
--#define NL80211_MAX_SUPP_REG_RULES		32
-+#define NL80211_MAX_SUPP_REG_RULES		64
- #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
- #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
- #define NL80211_TKIP_DATA_OFFSET_RX_MIC_KEY	24
--- 
-1.9.1
+-	init_timer(&pm->stay_awake);
+-	pm->stay_awake.data = (unsigned long)pm;
+-	pm->stay_awake.function = cw1200_pm_stay_awake_tmo;
++	setup_timer(&pm->stay_awake, cw1200_pm_stay_awake_tmo,
++		    (unsigned long)pm);
+ 
+ 	return 0;
+ }
 
