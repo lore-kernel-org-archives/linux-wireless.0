@@ -1,57 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54132 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751330AbaLOPs4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 10:48:56 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	devel@driverdev.osuosl.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: os_dep: usb_intf.c: Fix for possible null pointer dereference
-References: <1418596754-24735-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<20141215103117.GC4856@mwanda>
-Date: Mon, 15 Dec 2014 10:48:45 -0500
-In-Reply-To: <20141215103117.GC4856@mwanda> (Dan Carpenter's message of "Mon,
-	15 Dec 2014 13:31:17 +0300")
-Message-ID: <wrfjbnn4vrqa.fsf@redhat.com> (sfid-20141215_164900_642430_7C90E8BD)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:4736 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752008AbaLZOme (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Dec 2014 09:42:34 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 13/27] iwlwifi: dvm: tt: Use setup_timer
+Date: Fri, 26 Dec 2014 15:35:43 +0100
+Message-Id: <1419604558-29743-13-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141226_154700_695993_F005FE61)
+In-Reply-To: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-> On Sun, Dec 14, 2014 at 11:39:14PM +0100, Rickard Strandqvist wrote:
->> There is otherwise a risk of a possible null pointer dereference.
->> 
->> Was largely found by using a static code analysis program called cppcheck.
->> 
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  drivers/staging/rtl8723au/os_dep/usb_intf.c |    3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->> 
->> diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c
->> b/drivers/staging/rtl8723au/os_dep/usb_intf.c
->> index 865743e..71a6330 100644
->> --- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
->> +++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
->> @@ -351,10 +351,11 @@ error_exit:
->>  int rtw_hw_resume23a(struct rtw_adapter *padapter)
->
-> That's weird.  Is this function even called?
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-[jes@ultrasam jes.git]$ find drivers/staging/rtl8723au -name \*.[ch] |xargs grep rtw_hw_resume
-drivers/staging/rtl8723au/include/osdep_intf.h:int rtw_hw_resume23a(struct rtw_adapter *padapter);
-drivers/staging/rtl8723au/os_dep/usb_intf.c:int rtw_hw_resume23a(struct rtw_adapter *padapter)
-drivers/staging/rtl8723au/os_dep/usb_intf.c:		DBG_8723A("==> rtw_hw_resume23a\n");
-[jes@ultrasam jes.git]$ find drivers/staging/rtl8723au -name \*.[ch] |xargs grep rtw_hw_suspend
-drivers/staging/rtl8723au/include/osdep_intf.h:int rtw_hw_suspend23a(struct rtw_adapter *padapter);
-drivers/staging/rtl8723au/os_dep/usb_intf.c:int rtw_hw_suspend23a(struct rtw_adapter *padapter)
-drivers/staging/rtl8723au/os_dep/usb_intf.c:		DBG_8723A("==> rtw_hw_suspend23a\n");
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-A more useful patch would be one removing those two functions IMHO.
+// <smpl>
+@@
+expression t,f,d;
+@@
 
-Jes
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.data = d;
+-t.function = f;
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/net/wireless/iwlwifi/dvm/tt.c |   13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tt.c b/drivers/net/wireless/iwlwifi/dvm/tt.c
+index acb981a..c4736c8 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tt.c
+@@ -612,15 +612,10 @@ void iwl_tt_initialize(struct iwl_priv *priv)
+ 	memset(tt, 0, sizeof(struct iwl_tt_mgmt));
+ 
+ 	tt->state = IWL_TI_0;
+-	init_timer(&priv->thermal_throttle.ct_kill_exit_tm);
+-	priv->thermal_throttle.ct_kill_exit_tm.data = (unsigned long)priv;
+-	priv->thermal_throttle.ct_kill_exit_tm.function =
+-		iwl_tt_check_exit_ct_kill;
+-	init_timer(&priv->thermal_throttle.ct_kill_waiting_tm);
+-	priv->thermal_throttle.ct_kill_waiting_tm.data =
+-		(unsigned long)priv;
+-	priv->thermal_throttle.ct_kill_waiting_tm.function =
+-		iwl_tt_ready_for_ct_kill;
++	setup_timer(&priv->thermal_throttle.ct_kill_exit_tm,
++		    iwl_tt_check_exit_ct_kill, (unsigned long)priv);
++	setup_timer(&priv->thermal_throttle.ct_kill_waiting_tm,
++		    iwl_tt_ready_for_ct_kill, (unsigned long)priv);
+ 	/* setup deferred ct kill work */
+ 	INIT_WORK(&priv->tt_work, iwl_bg_tt_work);
+ 	INIT_WORK(&priv->ct_enter, iwl_bg_ct_enter);
+
