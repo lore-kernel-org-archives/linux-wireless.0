@@ -1,38 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46053 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751370AbaLSLFg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Dec 2014 06:05:36 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.84)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Y1vNG-0000gG-RS
-	for linux-wireless@vger.kernel.org; Fri, 19 Dec 2014 12:05:35 +0100
-Message-ID: <1418987132.1889.4.camel@sipsolutions.net> (sfid-20141219_120539_597543_99ADEE34)
-Subject: Re: [PATCH 1/2] nl80211: support MSDU statistics
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 19 Dec 2014 12:05:32 +0100
-In-Reply-To: <1418919083-28297-1-git-send-email-johannes@sipsolutions.net> (sfid-20141218_171132_119479_078E1815)
-References: <1418919083-28297-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20141218_171132_119479_078E1815)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:40490 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081AbaL0SSj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Dec 2014 13:18:39 -0500
+Message-ID: <549EF7FD.5070702@broadcom.com> (sfid-20141227_191844_069409_B0235AF0)
+Date: Sat, 27 Dec 2014 19:18:37 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?SsO2cmcgS3JhdXNl?= <jkrause@posteo.de>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 7/7] brcmfmac: add multiple BSS support.
+References: <1417885078.22723.24.camel@posteo.de>
+In-Reply-To: <1417885078.22723.24.camel@posteo.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/06/14 17:57, Jörg Krause wrote:
+> First, I just subscribed to this mailing list and copied the subject
+> from the archive. I didn't know better.
+>
+> Second, many thanks for this new feature to the Broadcom developers!
+>
+> I've tested this series of patches with the linux-next-20141205 kernel
+> on a custom ARM board with a BCM43362 chip running a Linux system build
+> with Buildroot. I'm using the wireless tools hostapd/wpa_supplicant 2.3.
+>
+> I was able to create a virtual interface:
+>          # iw dev wlan0 interface add wlan0_ap type __ap
+>
+> Add IP and set MAC:
+>          # ip addr add 192.168.2.1/24 broadcast 255.255.255.0 dev
+>          wlan0_ap
+>          # ip link set dev wlan0_ap address 12:34:56:78:ab:ce
+>
+> Start hostapd with the following minimal configuration:
+>          # cat /etc/hostapd-minimal.conf
+>          interface=wlan0_ap
+>          driver=nl80211
+>          ssid=myAP
+>          channel=1
+>          # hostapd -B /etc/hostapd-minimal.conf
+>
+> Start dnsmasq daemon with minimal configuration:
+>          # cat /etc/dnsmasq
+>          interface=wlan0_ap
+>          dhcp-range=192.168.2.2,192.168.2.254,24h
+>          # dnsmasq
+>
+>
+> ifconfig shows:
+>          wlan0_ap  Link encap:Ethernet  HWaddr 12:34:56:78:AB:CE
+>                    inet addr:192.168.2.1  Bcast:255.255.255.0
+>          Mask:255.255.255.0
+>                    inet6 addr: fe80::1034:56ff:fe78:abce/64 Scope:Link
+>                    UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>                    RX packets:1 errors:0 dropped:1 overruns:0 frame:0
+>                    TX packets:60 errors:0 dropped:0 overruns:0 carrier:0
+>                    collisions:0 txqueuelen:1000
+>                    RX bytes:60 (60.0 B)  TX bytes:20728 (20.2 KiB)
+>
+> Looks good so far.
+>
+> Unfortunatly, I do not see any SSID 'myAP', but an SSID
+> 'BRCM_TEST_SSID'. Trying to associate with the SSID using wpa_supplicant
+> 2.3 fails.
+>
+> Do I missed something within the setup?
 
-> + * @rx_qos_msdu: QoS-MSDUs received from this station (per TID)
-> + * @rx_nonqos_msdu: non-QoS-MSDUs received from this station
-> + * @tx_qos_msdu: QoS-MSDUs sent to this station (per TID)
-> + * @tx_nonqos_msdu: non-QoS-MSDUs sent to this station
+Hi Jörg,
 
-Well, come to think of it, it looks like we'll probably want more
-per-TID data in the future, I'll need at least retries and lost MSDUs.
+I looked at the 43362 firmware, ie. using hexdump -C, and it contains 
+the string BRCM_TEST_SSID. I already mentioned that being suspicious. So 
+it may be a firmware issue. I recently bought a Cubietruck device, which 
+has a 43362 module integrated, so I will try to replicate this.
 
-As a consequence, I'm going to make this the other way around and have a
-per-TID nesting (using idx 16 for non-QoS) and in there have the
-different values. This will also affect the cfg80211 API.
+Regards,
+Arend
 
-johannes
+> Best regards
+> Jörg Krause
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
