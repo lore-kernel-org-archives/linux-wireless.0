@@ -1,93 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:1235 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924AbaLEOUc convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:35156 "EHLO
+	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbaL0Si0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 09:20:32 -0500
-From: Hante Meuleman <meuleman@broadcom.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-CC: Will Deacon <will.deacon@arm.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	David Miller <davem@davemloft.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: using DMA-API on ARM
-Date: Fri, 5 Dec 2014 14:20:30 +0000
-Message-ID: <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20141205_152049_624496_4B1D3F89)
-References: <5481794E.4050406@broadcom.com>
- <20141205094507.GP11285@n2100.arm.linux.org.uk>
- <20141205122423.GK1630@arm.com>
- <F51492713EF10846800D8C0ED37A7DCE019016E1@SJEXCHMB15.corp.ad.broadcom.com>
- <20141205132332.GS11285@n2100.arm.linux.org.uk>
-In-Reply-To: <20141205132332.GS11285@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 27 Dec 2014 13:38:26 -0500
+Received: by mail-oi0-f48.google.com with SMTP id u20so25154553oif.7
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 10:38:25 -0800 (PST)
+Message-ID: <549EFC9F.9030504@lwfinger.net> (sfid-20141227_193830_072466_B4B82861)
+Date: Sat, 27 Dec 2014 12:38:23 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	Christopher Chavez <chrischavez@gmx.us>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: p54usb kernel panic on recent mainline kernels
+References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com> <loom.20141227T010207-869@post.gmane.org> <2296382.VCr2c4tJc9@debian64> <5946673.YueIgFzjsn@debian64>
+In-Reply-To: <5946673.YueIgFzjsn@debian64>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok, I'll add the necessary debug to get all the information out, 
-but it will take some time to get it done, so I won't have anything 
-before Monday.
-
------Original Message-----
-From: Russell King - ARM Linux [mailto:linux@arm.linux.org.uk] 
-Sent: vrijdag 5 december 2014 14:24
-To: Hante Meuleman
-Cc: Will Deacon; Arend Van Spriel; Marek Szyprowski; linux-arm-kernel@lists.infradead.org; David Miller; linux-kernel@vger.kernel.org; brcm80211-dev-list; linux-wireless
-Subject: Re: using DMA-API on ARM
-
-Please wrap your message - replying to a message which looks like this in
-my editor is far from easy, and gives me much more work to /manually/
-reformat it before I can reply to it:
-
-On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
-> The problem is with data coming from device, so DMA from device to host. The $
+On 12/27/2014 05:57 AM, Christian Lamparter wrote:
+> Alright, here's lunch [for the people in CET].
 >
-> However: this indicates that dma_alloc_coherent on an ARM target may result i$
+> On Saturday, December 27, 2014 11:10:16 AM Christian Lamparter wrote:
+>> On Saturday, December 27, 2014 12:15:58 AM Christopher Chavez wrote:
+>>>> My bisection led to a branch commit d17ec4d as the "bad" commit.
+>>>> Rather than finding out where the bisection went bad, I added
+>>>> code to check skb->tail, skb->end, and the length to be added.
+>>>> At the time of the call that panics, there are 6 bytes between
+>>>> tail and end with 8 bytes needed.
+>>>>
+>>>> I will be looking for the place where the driver calculates how
+>>>> large the skb should be.
+>>
+>>  From looking at a other patch from that time and context. I think: "
+>>
+>> commit ca34e3b5c808385b175650605faa29e71e91991b
+>> Author: Ido Yariv <ido@wizery.com>
+>> Date:   Tue Jul 29 15:38:53 2014 +0300
+>>
+>>      mac80211: Fix accounting of the tailroom-needed counter [1]
+>>
+>> [...]
+>> I can think of several ways of dealing with this issue:
+>>
+>>   2. add extra IEEE80211_KEY_FLAG_ or HW_FLAG to restore the old behavior.
+>>      This should be possible and relatively simple. But we/I have to be
+>>      especially careful to differentiate properly between the old and new.
+>>      [i.e.: I need to know what the deal is behind:
+>>      IEEE80211_KEY_FLAG_GENERATE_IV_MGMT in this case? Looks like it can
+>>      be ignored?]
+>>
 >
-> Regards,
-> Hante
+> ---
+> [Note: for convenience this patch is rolled into one for now -
+> if it and the concept works, I'll make two parts. one for p54
+> one for mac80211 [both -stable]. It would be great if someone
+> could proofread the commit message though - and provide
+> "tested-by" tags if possible]
+>
+> mac80211: re-enable tailroom resizing when needed for hardware encryption
+>
+> The patch "mac80211: Fix accounting of the tailroom-needed counter" reduced
+> the overhead associated with unnecessary resizing of outgoing frames.
+> Unfortunately this change broke the assumption that there is always enough
+> tailroom and this in turn caused p54* to panic.
+>
+> Reported-by: Christopher Chavez <chrischavez@gmx.us>
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+> diff --git a/drivers/net/wireless/p54/main.c b/drivers/net/wireless/p54/main.c
+> index 97aeff0..b877c7f 100644
+> --- a/drivers/net/wireless/p54/main.c
+> +++ b/drivers/net/wireless/p54/main.c
+> @@ -751,6 +751,7 @@ struct ieee80211_hw *p54_init_common(size_t priv_data_len)
+>   		     IEEE80211_HW_SUPPORTS_PS |
+>   		     IEEE80211_HW_PS_NULLFUNC_STACK |
+>   		     IEEE80211_HW_MFP_CAPABLE |
+> +		     IEEE80211_HW_TAILROOM_CRYPTO |
+>   		     IEEE80211_HW_REPORTS_TX_ACK_STATUS;
+>
+>   	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index 58d719d..c04ac04 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -1270,8 +1270,11 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
+>    *
+>    * @IEEE80211_KEY_FLAG_GENERATE_IV: This flag should be set by the
+>    *	driver to indicate that it requires IV generation for this
+> - *	particular key. Setting this flag does not necessarily mean that SKBs
+> - *	will have sufficient tailroom for ICV or MIC.
+> + *	particular key. Setting this flag does not mean that SKBs will
+> + *	have sufficient tailroom for ICV or MIC. If additional tailroom
+> + *	tailroom needs to be reserved for the ICV or MIC, the driver
+> + *	should also set the hardware feature flag:
+> + *      %IEEE80211_HW_TAILROOM_CRYPTO.
+>    * @IEEE80211_KEY_FLAG_GENERATE_MMIC: This flag should be set by
+>    *	the driver for a TKIP key if it requires Michael MIC
+>    *	generation in software.
+> @@ -1583,6 +1586,10 @@ struct ieee80211_tx_control {
+>    * @IEEE80211_HW_MFP_CAPABLE:
+>    *	Hardware supports management frame protection (MFP, IEEE 802.11w).
+>    *
+> + * @IEEE80211_HW_TAILROOM_CRYPTO: The driver would like to have sufficient
+> + *	tailroom for ICV or MIC for outgoing frames in order to perform
+> + *	hardware encryption without any additional resizing overhead.
+> + *
+>    * @IEEE80211_HW_SUPPORTS_UAPSD:
+>    *	Hardware supports Unscheduled Automatic Power Save Delivery
+>    *	(U-APSD) in managed mode. The mode is configured with
+> @@ -1673,7 +1680,7 @@ enum ieee80211_hw_flags {
+>   	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
+>   	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
+>   	IEEE80211_HW_NO_AUTO_VIF			= 1<<15,
+> -	/* free slot */
+> +	IEEE80211_HW_TAILROOM_CRYPTO			= 1<<16,
+>   	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+>   	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
+>   	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
+> diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+> index 0bb7038..c3e9a9a 100644
+> --- a/net/mac80211/key.c
+> +++ b/net/mac80211/key.c
+> @@ -140,7 +140,8 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+>   	if (!ret) {
+>   		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
+>
+> -		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
+> +		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
+> +		      (key->local->hw.flags & IEEE80211_HW_TAILROOM_CRYPTO)))
+>   			sdata->crypto_tx_tailroom_needed_cnt--;
+>
+>   		WARN_ON((key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE) &&
+> @@ -188,7 +189,8 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+>   	sta = key->sta;
+>   	sdata = key->sdata;
+>
+> -	if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
+> +	if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
+> +	      (key->local->hw.flags & IEEE80211_HW_TAILROOM_CRYPTO)))
+>   		increment_tailroom_need_count(sdata);
+>
+>   	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
+> @@ -884,7 +886,8 @@ void ieee80211_remove_key(struct ieee80211_key_conf *keyconf)
+>   	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+>   		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+>
+> -		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
+> +		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
+> +		      (key->local->hw.flags & IEEE80211_HW_TAILROOM_CRYPTO)))
+>   			increment_tailroom_need_count(key->sdata);
+>   	}
 
-Thanks.
+Christian,
 
-On Fri, Dec 05, 2014 at 12:56:45PM +0000, Hante Meuleman wrote:
-> However: this indicates that dma_alloc_coherent on an ARM target may
-> result in a memory buffer which can be cached which conflicts with
-> the API of this function.
+I had redone the bisection and found that ca34e3b was the bad commit. That was 
+late last night (CST - UTC-5). I was pleased to find your patch in my mailbox 
+this morning.
 
-If the memory has an alias which is cacheable, it is possible for cache
-lines to get allocated via that alias, even if the alias has no explicit
-accesses to it.
+With your patch, my system has survived for about 2 hours, whereas it would have 
+failed in 2 minutes or less. You can add
 
-This is something which I've been going on for quite literally /years/ -
-mismatched cache attributes can cause unpredictable behaviour.  I've had
-a lot of push back from people who are of the opinion that "if it works
-for me, then there isn't a problem" and I eventually gave up fighting
-the battle, especially as the ARM architecture people weakened my
-reasoning behind it by publishing a relaxation of the "no differing
-attributes" issue.  This was particularly true of those who wanted to
-use ioremap() on system memory - and cases such as
-dma_init_coherent_memory().
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-So, I never fixed this problem in the original DMA allocator code; I
-basically gave up with it.  It's a latent bug which did need to be fixed,
-and is still present today in the non-CMA case.
+I think this needs to be applied to 3.{17-19}.
 
-The symptoms which you are reporting sound very much like this kind of
-problem - the virtual address for the memory returned by
-dma_alloc_coherent() will not be cacheable memory - it will have been
-remapped using map_vm_area().  However, there could very well be a fully
-cacheable lowmem mapping of that memory, which if a read (speculative or
-otherwise) will bring a cache line in, and because the caches are VIPT
-or PIPT, that cache line can be hit via the non-cacheable mapping too.
+Thanks,
 
-What I /really/ need is more evidence of this to tell those disbelievers
-where to stick their flawed arguments. :)
+Larry
 
--- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+
