@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:7282 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756529AbaLILHb (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:59128 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751288AbaL0TIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 06:07:31 -0500
-Message-ID: <5486D7EF.6010902@broadcom.com> (sfid-20141209_120748_308363_C58AA39B)
-Date: Tue, 9 Dec 2014 12:07:27 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Sat, 27 Dec 2014 14:08:51 -0500
+Received: by mail-wg0-f48.google.com with SMTP id y19so16228279wgg.7
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 11:08:49 -0800 (PST)
+From: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+To: emmanuel.grumbach@intel.com, johannes.berg@intel.com,
+	ilw@linux.intel.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Unable to disable WiFi with 3.19-rc1 - iwlwifi 7260
+Date: Sat, 27 Dec 2014 20:08:47 +0100
+Message-ID: <3095419.huSVmtL0ib@xps13> (sfid-20141227_200855_150197_8F4B0DDC)
 MIME-Version: 1.0
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-CC: Catalin Marinas <catalin.marinas@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	David Miller <davem@davemloft.net>,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: using DMA-API on ARM
-References: <5481794E.4050406@broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com> <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com> <2863746.4sUSEYqahB@wuerfel> <20141208160316.GM16185@e104818-lin.cambridge.arm.com> <5485D97D.1040404@broadcom.com> <5486CCBC.3@broadcom.com> <20141209102904.GJ11285@n2100.arm.linux.org.uk>
-In-Reply-To: <20141209102904.GJ11285@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/14 11:29, Russell King - ARM Linux wrote:
-> On Tue, Dec 09, 2014 at 11:19:40AM +0100, Arend van Spriel wrote:
->> The issue did not trigger overnight so it seems setting bit 22<Shared
->> Attribute _Override_ Enable>  solves the issue over here. Now the question is
->> how to move forward with this. As I understood from Catalin this patch was
->> not included as it was not considered responsibility of the linux kernel.
->
-> It is preferable for firmware to configure the L2 cache appropriately,
-> which includes things like the prefetch offsets as well as feature bits
-> like bit 22.
->
-> I think what I'll do is queue up a patch which adds a warning if bit 22
-> is not set, suggesting that firmware is updated to set this bit.
+Hi,
 
-I was thinking in the same direction. Thanks to you all for looking into 
-this. It did not feel right to use the dma_sync_single_for_cpu() for 
-memory allocated with dma_alloc_coherent() and I am glad this got 
-cleared up.
+since v3.19-rc1 I have problems with WiFi (Intel Corporation Dual Band
+Wireless-AC 7260) on my laptop. Trying to disable all the radio devices
+(WiFi and BT) with the function key of my laptop, which should hard
+block the rfkills, causes the following message to be repeated over and
+over until I re-enable them again with the function key:
+
+[  593.746001] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+[  593.746468] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+[  593.746781] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+[  593.747091] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+
+Sometimes my laptop hangs when I try to toggle the state of the radio
+devices and have to forcefully reboot it.
+
+Reverting 522713c81e ("iwlwifi: pcie: properly reset the device") seems
+to fix the problem. I haven't tried anything else since this was the
+first thing I tried.
+
+Does anyone know what's the problem with that specific commit?
+I will gladly provide any additional information, just tell me what
+is needed.
 
 Regards,
-Arend
-
+Gabriele
