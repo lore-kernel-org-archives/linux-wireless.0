@@ -1,85 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:45548 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751482AbaLHQzG (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:50816 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751106AbaL0OMc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 11:55:06 -0500
-Date: Mon, 8 Dec 2014 16:54:52 +0000
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-To: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Arend van Spriel <arend@broadcom.com>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	David Miller <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141208165451.GH11285@n2100.arm.linux.org.uk> (sfid-20141208_175639_342697_FCEE303A)
-References: <5481794E.4050406@broadcom.com>
- <2863746.4sUSEYqahB@wuerfel>
- <5485D054.7090109@broadcom.com>
- <2048819.2EPzBi8E3T@wuerfel>
- <20141208165042.GO16185@e104818-lin.cambridge.arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141208165042.GO16185@e104818-lin.cambridge.arm.com>
+	Sat, 27 Dec 2014 09:12:32 -0500
+Received: by mail-wg0-f53.google.com with SMTP id l18so15981517wgh.12
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 06:12:30 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
+Subject: [RFC 2/3] ath9k: add TPC to TX path for AR9002 based chips
+Date: Sat, 27 Dec 2014 15:12:24 +0100
+Message-Id: <1419689545-26965-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141227_151242_821207_2D5FBEC7)
+In-Reply-To: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 04:50:43PM +0000, Catalin Marinas wrote:
-> On Mon, Dec 08, 2014 at 04:38:57PM +0000, Arnd Bergmann wrote:
-> > On Monday 08 December 2014 17:22:44 Arend van Spriel wrote:
-> > > >> The log: first the ring allocation info is printed. Starting at
-> > > >> 16.124847, ring 2, 3 and 4 are rings used for device to host. In this
-> > > >> log the failure is on a read of ring 3. Ring 3 is 1024 entries of each
-> > > >> 16 bytes. The next thing printed is the kernel page tables. Then some
-> > > >> OpenWRT info and the logging of part of the connection setup. Then at
-> > > >> 1780.130752 the logging of the failure starts. The sequence number is
-> > > >> modulo 253 with ring size of 1024 matches an "old" entry (read 40,
-> > > >> expected 52). Then the different pointers are printed followed by
-> > > >> the kernel page table. The code does then a cache invalidate on the
-> > > >> dma_handle and the next read the sequence number is correct.
-> > > >
-> > > > How do you invalidate the cache? A dma_handle is of type dma_addr_t
-> > > > and we don't define an operation for that, nor does it make sense
-> > > > on an allocation from dma_alloc_coherent(). What happens if you
-> > > > take out the invalidate?
-> > > 
-> > > dma_sync_single_for_cpu(, DMA_FROM_DEVICE) which ends up invalidating 
-> > > the cache (or that is our suspicion).
-> > 
-> > I'm not sure about that:
-> > 
-> > static void arm_dma_sync_single_for_cpu(struct device *dev,
-> >                 dma_addr_t handle, size_t size, enum dma_data_direction dir)
-> > {
-> >         unsigned int offset = handle & (PAGE_SIZE - 1);
-> >         struct page *page = pfn_to_page(dma_to_pfn(dev, handle-offset));
-> >         __dma_page_dev_to_cpu(page, offset, size, dir);
-> > }
-> > 
-> > Assuming a noncoherent linear (no IOMMU, no swiotlb, no dmabounce) mapping,
-> > dma_to_pfn will return the correct pfn here, but pfn_to_page will return a
-> > page pointer into the kernel linear mapping,
-> 
-> Or a highmem page, both should be handled by dma_cache_maint_page().
+Add TPC capability to TX descriptor path for AR9002 based chips. Scale
+per-packet TX power according to eeprom power bias, power adjustments for
+HT40 mode and open loop CCK rates. Cap per-packet TX power according to
+TX power per-rate tables
 
-A valid point, but one which is irrelevant to this thread, because we're
-talking about a platform with only 128MB, and a PAGE_OFFSET of 2GB (hence
-no highmem):
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 66 +++++++++++++++++++++++++++++------
+ 1 file changed, 55 insertions(+), 11 deletions(-)
 
-Memory: 125936K/131072K available (2682K kernel code, 103K rwdata,
- 744K rodata, 164K init, 188K bss, 5136K reserved)
-
-Can we stay on-point to getting this problem solved, rather than drifting
-off topic please?
-
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 52d63de..1cfe5f8 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1097,24 +1097,65 @@ void ath_update_max_aggr_framelen(struct ath_softc *sc, int queue, int txop)
+ }
+ 
+ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+-			       u8 rateidx)
++			       u8 rateidx, bool is_40, bool is_cck)
+ {
+ 	u8 max_power;
++	struct sk_buff *skb;
++	struct ath_frame_info *fi;
++	struct ieee80211_tx_info *info;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 
+ 	if (sc->tx99_state)
+ 		return MAX_RATE_POWER;
+ 
++	skb = bf->bf_mpdu;
++	fi = get_frame_info(skb);
++	info = IEEE80211_SKB_CB(skb);
++
+ 	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+-		/* ar9002 does not support TPC for the moment */
+-		return MAX_RATE_POWER;
+-	}
++		int txpower = fi->tx_power;
+ 
+-	if (!bf->bf_state.bfs_paprd) {
+-		struct sk_buff *skb = bf->bf_mpdu;
+-		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-		struct ath_frame_info *fi = get_frame_info(skb);
++		if (is_40) {
++			u8 power_ht40delta;
++			struct ar5416_eeprom_def *eep = &ah->eeprom.def;
++
++			if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_2) {
++				bool is_2ghz;
++				struct modal_eep_header *pmodal;
+ 
++				is_2ghz = info->band == IEEE80211_BAND_2GHZ;
++				pmodal = &eep->modalHeader[is_2ghz];
++				power_ht40delta = pmodal->ht40PowerIncForPdadc;
++			} else {
++				power_ht40delta = 2;
++			}
++			txpower += power_ht40delta;
++		}
++
++		if (AR_SREV_9287(ah) || AR_SREV_9285(ah) ||
++		    AR_SREV_9271(ah)) {
++			txpower -= 2 * AR9287_PWR_TABLE_OFFSET_DB;
++		} else if (AR_SREV_9280_20_OR_LATER(ah)) {
++			s8 power_offset;
++
++			power_offset = ah->eep_ops->get_eeprom(ah,
++							EEP_PWR_TABLE_OFFSET);
++			txpower -= 2 * power_offset;
++		}
++
++		if (OLC_FOR_AR9280_20_LATER && is_cck)
++			txpower -= 2;
++
++		txpower = max(txpower, 0);
++		max_power = min_t(ah->tx_power[rateidx], (u8)txpower);
++
++		/* XXX: clamp minimum TX power at 1 for AR9160 since if
++		 * max_power is set to 0, frames are transmitted at max
++		 * TX power
++		 */
++		if (!max_power && !AR_SREV_9280_20_OR_LATER(ah))
++			max_power = 1;
++	} else if (!bf->bf_state.bfs_paprd) {
+ 		if (rateidx < 8 && (info->flags & IEEE80211_TX_CTL_STBC))
+ 			max_power = min(ah->tx_power_stbc[rateidx],
+ 					fi->tx_power);
+@@ -1152,7 +1193,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 	info->rtscts_rate = fi->rtscts_rate;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(bf->rates); i++) {
+-		bool is_40, is_sgi, is_sp;
++		bool is_40, is_sgi, is_sp, is_cck;
+ 		int phy;
+ 
+ 		if (!rates[i].count || (rates[i].idx < 0))
+@@ -1198,7 +1239,8 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 			if (rix < 8 && (tx_info->flags & IEEE80211_TX_CTL_STBC))
+ 				info->rates[i].RateFlags |= ATH9K_RATESERIES_STBC;
+ 
+-			info->txpower[i] = ath_get_rate_txpower(sc, bf, rix);
++			info->txpower[i] = ath_get_rate_txpower(sc, bf, rix,
++								is_40, false);
+ 			continue;
+ 		}
+ 
+@@ -1227,7 +1269,9 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 		info->rates[i].PktDuration = ath9k_hw_computetxtime(sc->sc_ah,
+ 			phy, rate->bitrate * 100, len, rix, is_sp);
+ 
+-		info->txpower[i] = ath_get_rate_txpower(sc, bf, rix);
++		is_cck = IS_CCK_RATE(info->rates[i].Rate);
++		info->txpower[i] = ath_get_rate_txpower(sc, bf, rix, false,
++							is_cck);
+ 	}
+ 
+ 	/* For AR5416 - RTS cannot be followed by a frame larger than 8K */
 -- 
-FTTC broadband for 0.8mile line: currently at 9.5Mbps down 400kbps up
-according to speedtest.net.
+2.1.0
+
