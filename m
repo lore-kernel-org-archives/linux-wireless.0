@@ -1,74 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:36937 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751020AbaLUJuo (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:38066 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751369AbaL0EF5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 04:50:44 -0500
-Message-ID: <549697F0.8090506@broadcom.com> (sfid-20141221_105049_860645_EE9E3A98)
-Date: Sun, 21 Dec 2014 10:50:40 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 26 Dec 2014 23:05:57 -0500
+Received: by mail-ie0-f178.google.com with SMTP id vy18so8254086iec.23
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Dec 2014 20:05:57 -0800 (PST)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>,
-	<linux-bluetooth@vger.kernel.org>, <linux-nfc@ml01.01.org>,
-	"David S. Miller" <davem@davemloft.net>, <lwn@lwn.net>
-Subject: Re: changes to Linux wireless maintenance
-References: <87388d2tbn.fsf@purkki.adurom.net> <c1f3352bed1f1a2985a5111a077134a5.squirrel@www.codeaurora.org>
-In-Reply-To: <c1f3352bed1f1a2985a5111a077134a5.squirrel@www.codeaurora.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <5499A391.2060705@rempel-privat.de>
+References: <CA+A7n+jFWWs-U2DapExRqYgK=e2kGowPzFHJPh72DRwzBmVggg@mail.gmail.com>
+	<54991B32.2010105@rempel-privat.de>
+	<CA+A7n+hbr2ctPkSta9-MWT1opAT2hCB9jYHvFu7N3C_ZvxXSzw@mail.gmail.com>
+	<5499A391.2060705@rempel-privat.de>
+Date: Fri, 26 Dec 2014 23:05:56 -0500
+Message-ID: <CA+A7n+iHKBxy3qfjzrnN7GdZhJ-WwoDdi6hjw8RSaDs8TBznvw@mail.gmail.com> (sfid-20141227_050603_520422_223ED65C)
+Subject: Re: bug report for ath9k_htc driver
+From: Jeremy Audet <ichimonji10@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless@vger.kernel.org, Adrian Chadd <adrian@freebsd.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/18/14 11:55, Kalle Valo wrote:
-> John W. Linville wrote:
->
->> Nevertheless, I think it is time for some changes.  I have been
->> the wireless maintainer for a long time, and I personally would
->> like to develop in a different direction.  Plus, I think that Linux
->> will benefit from having some fresh blood involved in more of the
->> maintenance duties.  I will be stepping aside to let that happen.
->
-> Thanks to you both the Linux wireless subsystem as well as the wireless
-> community has improved so much from what you started. You will be missed.
-> Thank you for all your efforts and I hope you still hang around :)
+Sending this again b/c of a delivery error. [9] Sorry for the possible spam.
 
-Congrats with your maintainer role.
+Hi again,
 
->> As for the wireless driver patches, I have asked Kalle Valo
->> to handle patch review and merge duties for everything under the
->> drivers/net/wireless directory.  This will now include not only the ath
->> patches he already manages, but other drivers that don't have trees
->> such as mwifiex, rt2x00, rtlwifi, and others.  For consistency, the
->> iwlwifi tree will also be merged through Kalle's new tree.  I expect
->> that Kalle will announce any relevant details in a follow-up message.
->
-> I have created two trees, wireless-drivers and wireless-drivers-next:
->
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/
->
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/
->
-> The trees work similarly like John's wireless and wireless-next trees, the
-> former only for important bugfixes to -rc releases and the latter for the
-> rest going to the next release.
+When last I wrote, I stated that the issue lay with the USB cradle I'd been
+using, and I'd discarded it in favor of plugging the TL-WN722N directly in to
+my PC. I also mentioned that I'd gotten a wireless access point up and running
+for 30 minutes. Not five minutes after I sent that email, the same error I've
+described earlier occurred, and the USB wireless adapter was demoted to
+full-speed mode.
 
-So are you dropping the wireless-testing tree? From earlier IRC 
-discussion I figured that tree was still in demand.
+This is bothersome, so in an effort to rule out sources of error, I ran a series
+of simple tests, all having this structure:
 
-> I still need to ask both linux-next and kbuild maintainers to add these
-> trees to their list of trees to test from, but I hope that to happen in
-> the next few days.
->
-> There's no need to CC me on the patches, I can pick the patches from the
-> mailing list. Actually in the future I'm hoping to use patchwork[1] for
-> managing patches, but my access request is still pending in helpdesk's
-> queue. I'll send a separate email once I start using patchwork. For the
-> time being I just use email to apply patches.
+1. Start logging out kernel messages with the `journalctl -k --follow -n 0`
+   command.
+2. Plug a TP-LINK TL-WN722N wireless adapter directly in to a USB port.
+3. Turn on the adapter with the `ip link set dev $device up` command.
+4. Wait for an error.
+5. Stop collecting logging output. (Send CTRL-C to `journalctl`.)
+6. Unplug TL-WN722N.
 
-I see. I used to send patches To: the maintainer and Cc: the mailing 
-list following SubmittingPatches documentation. I can change my workflow 
-so let me know if I should.
+Here's the purpose of the above:
 
-Regards,
-Arend
+* It is possible that a specific USB port or ports on my motherboard are flaky.
+  To help rule this out, run the test with three different USB ports on my
+  motherboard. Two of the ports are built directly in to the back panel of the
+  motherboard, and the third connects to header pins on the motherboard.
+* It is possible that the specific TL-WN722N I am using is flaky. To help rule
+  this out, run the test with a second TL-WN722N. [1, 2]
+
+Notably, I am also using the `htc_9271.fw` firmware file available at
+https://github.com/olerem/ath9k-htc-firmware-blob for this test. As a refresher,
+here's some other info about my system:
+
+    $ uname -a
+    Linux pine 3.17.6-1-ARCH #1 SMP PREEMPT Sun Dec 7 23:43:32 UTC
+2014 x86_64 GNU/Linux
+    $ ip -V
+    ip utility, iproute2-ss141009
+
+And here's some output from `lsusb -v` for the old and new TL-WN722N devices:
+
+* old: http://www.ichimonji10.name/downloads/tl-wn722n-old-lsusb.txt
+* new: http://www.ichimonji10.name/downloads/tl-wn722n-lsusb.txt
+
+Here's the test results. Port 1, 2, and 3 are the upper back panel, lower back
+panel and header pins on the motherboard, respectively.
+
+* Port 1, old adapter: fail [3]
+* Port 1, new adapter: fail [4]
+* Port 2, old adapter: fail [5]
+* Port 2, new adapter: fail [6]
+* Port 3, old adapter: fail [7]
+* Port 3, new adapter: fail [8]
+
+[1] I bought a TL-WN722N several years ago, eventually stuck it in the bottom of
+    my tool kit and forgot about it until just now. I bought the two TL-WN722Ns
+    several years apart, so it is unlikely that the two adapters both suffer
+    from e.g. a manufacturing defect. They were bought on 2014-11-10 and
+    2012-09-25.
+[2] lsusb -v: http://www.ichimonji10.name/downloads/tl-wn722n-old-lsusb.txt
+[3] http://www.ichimonji10.name/downloads/2014-12-26-p1-old.txt
+[4] http://www.ichimonji10.name/downloads/2014-12-26-p1-new.txt
+[5] http://www.ichimonji10.name/downloads/2014-12-26-p2-old.txt
+[6] http://www.ichimonji10.name/downloads/2014-12-26-p2-new.txt
+[7] http://www.ichimonji10.name/downloads/2014-12-26-p3-old.txt
+[8] http://www.ichimonji10.name/downloads/2014-12-26-p3-new.txt
+[9] Technical details of permanent failure:
+Google tried to deliver your message, but it was rejected by the
+server for the recipient domain vger.kernel.org by vger.kernel.org.
+[...] The error that the other server returned was: 550 5.7.1
+Content-Policy reject msg: The message contains HTML subpart,
+therefore we consider it SPAM or Outlook Virus.  TEXT/PLAIN is
+accepted.
