@@ -1,153 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:52867 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751521AbaLUVPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 16:15:22 -0500
-From: Wolfram Sang <wsa@the-dreams.de>
-To: linux-kernel@vger.kernel.org
-Cc: Wolfram Sang <wsa@the-dreams.de>, alsa-devel@alsa-project.org,
-	ath5k-devel@lists.ath5k.org,
-	Dan Williams <dan.j.williams@intel.com>,
-	devicetree@vger.kernel.org, dmaengine@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, iommu@lists.linux-foundation.org,
-	linux-arm-kernel@lists.infradead.org, linux-gpio@vger.kernel.org,
-	linux-mips@linux-mips.org, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-rockchip@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-serial@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-watchdog@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, openipmi-developer@lists.sourceforge.net,
-	rtc-linux@googlegroups.com
-Subject: [PATCH 00/28] remove .owner for most platform_drivers: the missing bits
-Date: Sun, 21 Dec 2014 22:14:21 +0100
-Message-Id: <1419196495-9626-1-git-send-email-wsa@the-dreams.de> (sfid-20141221_222105_143670_CD59B666)
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:59350 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751672AbaL0UG2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Dec 2014 15:06:28 -0500
+Received: by mail-wi0-f177.google.com with SMTP id l15so19119711wiw.16
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 12:06:26 -0800 (PST)
+From: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: Unable to disable WiFi with 3.19-rc1 - iwlwifi 7260
+Date: Sat, 27 Dec 2014 21:06:24 +0100
+Message-ID: <2280989.3hu2uPCZ1b@xps13> (sfid-20141227_210632_257559_08931A4D)
+In-Reply-To: <1419709679.5162.2.camel@egrumbacBox>
+References: <3095419.huSVmtL0ib@xps13> <CA+icZUVsmoPE8Le4XeyBratXe23BFtgOEoyd6dBFC9x+MVaJFw@mail.gmail.com> <1419709679.5162.2.camel@egrumbacBox>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Generated with coccinelle. The big cleanup was pulled in this merge window.
-This series catches the bits fallen through. The patches shall go in via the
-subsystem trees. If possible for 3.19 to increase consistency I'd say, but you
-decide, of course.
+On Saturday 27 December 2014 19:47:59 Grumbach, Emmanuel wrote:
+> Hi,
+> 
+> On Sat, 2014-12-27 at 20:17 +0100, Sedat Dilek wrote:
+> > On Sat, Dec 27, 2014 at 8:08 PM, Gabriele Mazzotta
+> > <gabriele.mzt@gmail.com> wrote:
+> > > Hi,
+> > >
+> > > since v3.19-rc1 I have problems with WiFi (Intel Corporation Dual Band
+> > > Wireless-AC 7260) on my laptop. Trying to disable all the radio devices
+> > > (WiFi and BT) with the function key of my laptop, which should hard
+> > > block the rfkills, causes the following message to be repeated over and
+> > > over until I re-enable them again with the function key:
+> > >
+> > > [  593.746001] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+> > > [  593.746468] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+> > > [  593.746781] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+> > > [  593.747091] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
+> > >
+> > > Sometimes my laptop hangs when I try to toggle the state of the radio
+> > > devices and have to forcefully reboot it.
+> > >
+> > > Reverting 522713c81e ("iwlwifi: pcie: properly reset the device") seems
+> > > to fix the problem. I haven't tried anything else since this was the
+> > > first thing I tried.
+> > >
+> > > Does anyone know what's the problem with that specific commit?
+> > > I will gladly provide any additional information, just tell me what
+> > > is needed.
+> > >
+> > 
+> > I cannot say much to the "internals" of your problem
+> 
+> Thanks for jumping in :)
+> 
+> > 
+> > Just two things...
+> > 
+> > There is a new firmware for 7260 around see [0].
+> > 
+> 
+> This won't help.
+> 
+> > 2nd try to pull in the new wireless-drivers.git tree, the changelog
+> > mentions a race with rfkill on iwlwifi [1].
+> > 
+> 
+> This will help :) Precisely commit:
+> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=03d6c3b0fa4f5f0379cede079ec828a6c999fe43
 
-cocci-file used:
+Somehow I missed it, the commit is even mentioned there.
+I should have tried to pull the new changes first. I confirm that
+everything works with wireless-drivers-for-davem-2014-12-26.
 
-@match1@
-declarer name module_platform_driver;
-declarer name module_platform_driver_probe;
-declarer name for_each_node_by_type;
-identifier __driver;
-@@
-(
-	module_platform_driver(__driver);
-|
-	module_platform_driver_probe(__driver, ...);
-)
+Thank you both for the quick replies.
 
-@fix1 depends on match1@
-identifier match1.__driver;
-@@
-	static struct platform_driver __driver = {
-		.driver = {
--			.owner = THIS_MODULE,
-		}
-	};
-
-@match2@
-identifier __driver;
-@@
-(
-	platform_driver_register(&__driver)
-|
-	platform_driver_probe(&__driver, ...)
-|
-	platform_create_bundle(&__driver, ...)
-)
-
-@fix2 depends on match2@
-identifier match2.__driver;
-@@
-	static struct platform_driver __driver = {
-		.driver = {
--			.owner = THIS_MODULE,
-		}
-	};
-
-Thanks again to Julia Lawall for support. And hey, we fixed a coccinelle bug on
-the way :)
-
-
-Wolfram Sang (28):
-  ARM: mach-exynos: drop owner assignment from platform_drivers
-  mips: lantiq: xway: drop owner assignment from platform_drivers
-  mips: pci: drop owner assignment from platform_drivers
-  char: ipmi: drop owner assignment from platform_drivers
-  cpufreq: drop owner assignment from platform_drivers
-  dma: drop owner assignment from platform_drivers
-  gpio: drop owner assignment from platform_drivers
-  gpu: drm: rockchip: drop owner assignment from platform_drivers
-  iommu: drop owner assignment from platform_drivers
-  net: ethernet: stmicro: stmmac: drop owner assignment from
-    platform_drivers
-  net: wireless: ath: ath5k: drop owner assignment from platform_drivers
-  of: drop owner assignment from platform_drivers
-  pci: host: drop owner assignment from platform_drivers
-  phy: drop owner assignment from platform_drivers
-  pinctrl: intel: drop owner assignment from platform_drivers
-  rtc: drop owner assignment from platform_drivers
-  scsi: drop owner assignment from platform_drivers
-  thermal: drop owner assignment from platform_drivers
-  thermal: int340x_thermal: drop owner assignment from platform_drivers
-  tty: serial: 8250: drop owner assignment from platform_drivers
-  usb: gadget: udc: bdc: drop owner assignment from platform_drivers
-  watchdog: drop owner assignment from platform_drivers
-  ASoC: intel: drop owner assignment from platform_drivers
-  ASoC: intel: sst: drop owner assignment from platform_drivers
-  ASoC: omap: drop owner assignment from platform_drivers
-  ASoC: pxa: drop owner assignment from platform_drivers
-  ASoC: samsung: drop owner assignment from platform_drivers
-  macintosh: drop owner assignment from platform_drivers
-
- arch/arm/mach-exynos/pmu.c                            | 1 -
- arch/mips/lantiq/xway/vmmc.c                          | 1 -
- arch/mips/pci/pci-ar2315.c                            | 1 -
- arch/mips/pci/pci-rt2880.c                            | 1 -
- drivers/char/ipmi/ipmi_powernv.c                      | 1 -
- drivers/cpufreq/ls1x-cpufreq.c                        | 1 -
- drivers/dma/at_xdmac.c                                | 1 -
- drivers/gpio/gpio-vf610.c                             | 1 -
- drivers/gpu/drm/rockchip/rockchip_drm_drv.c           | 1 -
- drivers/iommu/rockchip-iommu.c                        | 1 -
- drivers/macintosh/windfarm_pm112.c                    | 1 -
- drivers/macintosh/windfarm_pm72.c                     | 1 -
- drivers/macintosh/windfarm_rm31.c                     | 1 -
- drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c | 1 -
- drivers/net/wireless/ath/ath5k/ahb.c                  | 1 -
- drivers/of/unittest.c                                 | 1 -
- drivers/pci/host/pci-layerscape.c                     | 1 -
- drivers/phy/phy-armada375-usb2.c                      | 1 -
- drivers/phy/phy-berlin-usb.c                          | 1 -
- drivers/phy/phy-miphy28lp.c                           | 1 -
- drivers/pinctrl/intel/pinctrl-cherryview.c            | 1 -
- drivers/rtc/rtc-opal.c                                | 1 -
- drivers/scsi/atari_scsi.c                             | 1 -
- drivers/scsi/mac_scsi.c                               | 1 -
- drivers/scsi/sun3_scsi.c                              | 1 -
- drivers/thermal/int340x_thermal/int3400_thermal.c     | 1 -
- drivers/thermal/int340x_thermal/int3402_thermal.c     | 1 -
- drivers/thermal/rockchip_thermal.c                    | 1 -
- drivers/tty/serial/8250/8250_omap.c                   | 1 -
- drivers/usb/gadget/udc/bdc/bdc_core.c                 | 1 -
- drivers/watchdog/cadence_wdt.c                        | 1 -
- drivers/watchdog/meson_wdt.c                          | 1 -
- sound/soc/intel/bytcr_dpcm_rt5640.c                   | 1 -
- sound/soc/intel/cht_bsw_rt5672.c                      | 1 -
- sound/soc/intel/sst/sst_acpi.c                        | 1 -
- sound/soc/omap/omap-hdmi-audio.c                      | 1 -
- sound/soc/pxa/spitz.c                                 | 1 -
- sound/soc/samsung/arndale_rt5631.c                    | 1 -
- 38 files changed, 38 deletions(-)
-
--- 
-2.1.3
-
+> > Have fun!
+> > 
+> > - Sedat -
+> > 
+> > [0] http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/?id=a876c69f042cf4732755b325d3b709125bb51a06
+> > [1] http://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/tag/?id=wireless-drivers-for-davem-2014-12-26
+> 
+> 
