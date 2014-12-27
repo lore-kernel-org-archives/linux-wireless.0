@@ -1,73 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52506 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197AbaLHQhS (ORCPT
+Received: from smtprelay0043.hostedemail.com ([216.40.44.43]:50092 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750795AbaL0R0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 11:37:18 -0500
-Date: Mon, 8 Dec 2014 11:37:14 -0500
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-	Pavel Machek <pavel@ucw.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Subject: Re: wl1251: NVS firmware data
-Message-ID: <20141208163714.GA31169@kroah.com> (sfid-20141208_173740_152532_A416FF8D)
-References: <201411271506.20457@pali>
- <20141127155840.GC24149@kroah.com>
- <20141206124954.GB17289@amd>
- <201412061402.21514@pali>
- <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CACVXFVPOLfDuqc0nLb-zM8vH618DLXy0xtZbUOn5_XvdxRZSDw@mail.gmail.com>
+	Sat, 27 Dec 2014 12:26:53 -0500
+Message-ID: <1419701207.20894.3.camel@perches.com> (sfid-20141227_182721_276590_DC13048E)
+Subject: Re: [PATCH] staging: rtl8723au: Fixed multiple space issues
+From: Joe Perches <joe@perches.com>
+To: Matthew Emerson <emersonmde@gmail.com>
+Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Date: Sat, 27 Dec 2014 09:26:47 -0800
+In-Reply-To: <1419669741-6048-1-git-send-email-emersonmde@gmail.com>
+References: <1419669741-6048-1-git-send-email-emersonmde@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 11:18:18PM +0800, Ming Lei wrote:
-> On Sat, Dec 6, 2014 at 9:02 PM, Pali Rohár <pali.rohar@gmail.com> wrote:
-> > On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
-> 
-> >
-> >  /**
-> > + * request_firmware_prefer_user: - prefer usermode helper for loading firmware
-> > + * @firmware_p: pointer to firmware image
-> > + * @name: name of firmware file
-> > + * @device: device for which firmware is being loaded
-> > + *
-> > + * This function works pretty much like request_firmware(), but it prefer
-> > + * usermode helper. If usermode helper fails then it fallback to direct access.
-> > + * Usefull for dynamic or model specific firmware data.
-> > + **/
-> > +int request_firmware_prefer_user(const struct firmware **firmware_p,
-> > +                           const char *name, struct device *device)
-> > +{
-> > +       int ret;
-> > +       __module_get(THIS_MODULE);
-> > +       ret = _request_firmware(firmware_p, name, device,
-> > +                               FW_OPT_UEVENT | FW_OPT_PREFER_USER);
-> > +       module_put(THIS_MODULE);
-> > +       return ret;
-> > +}
-> > +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
-> 
-> I'd like to introduce request_firmware_user() which only requests
-> firmware from user space, and this way is simpler and more flexible
-> since we have request_firmware_direct() already.
+On Sat, 2014-12-27 at 03:42 -0500, Matthew Emerson wrote:
+> Fixed multiple space issues found by checkpatch.pl in
+> drivers/staging/rtl8723au/core/rtw_ap.c
 
-Why would a driver care about what program provides the firmware?  It
-shouldn't at all, and we want to get rid of the userspace firmware
-loader, not encourage drivers to use it "exclusively" at all.
+Hello.
 
-So no, I don't want to see this, and I don't want drivers to worry about
-this either.
+Please strive for more than simple robotic like
+adherence to checkpatch messages.
 
-greg k-h
+A lot of the time, there is a better way.
+
+> diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
+[]
+> @@ -897,7 +897,7 @@ int rtw_check_beacon_data23a(struct rtw_adapter *padapter,
+>  	pairwise_cipher = 0;
+>  	psecuritypriv->wpa_group_cipher = 0;
+>  	psecuritypriv->wpa_pairwise_cipher = 0;
+> -	for (p = ie; ;p += (ie_len + 2)) {
+> +	for (p = ie; ; p += (ie_len + 2)) {
+
+While it's arguably true that the ; is misplaced,
+the loop control logic is probably better rewritten
+for clarity here instead.
+
+[]
+
+> @@ -1871,7 +1871,7 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
+>  	pmlmeext->bstart_bss = false;
+>  
+>  	/* reset and init security priv , this can refine with rtw_reset_securitypriv23a */
+> -	memset((unsigned char *)&padapter->securitypriv, 0, sizeof (struct security_priv));
+> +	memset((unsigned char *)&padapter->securitypriv, 0, sizeof(struct security_priv));
+
+unnecessary cast too.
+
+More likely this style would be nicer:
+
+	memset(&adapter->securitypriv, 0, sizeof(adapter->securitypriv));
+
+You could also use a compound literal.
+
+
