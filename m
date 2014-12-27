@@ -1,197 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:38316 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbaLEKQJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 05:16:09 -0500
-Received: by mail-qg0-f52.google.com with SMTP id a108so211501qge.11
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Dec 2014 02:16:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E79A6@SC-VEXCH2.marvell.com>
-References: <1417000056-16920-1-git-send-email-patila@marvell.com>
-	<CAPDyKFr-iaPWKWWgk-5_XcJm9sag=y=uZjfJvo-DQiJFM8BVLw@mail.gmail.com>
-	<CBACCFA0AEB13A41977475BCF3E896FC66736E7987@SC-VEXCH2.marvell.com>
-	<CBACCFA0AEB13A41977475BCF3E896FC66736E79A6@SC-VEXCH2.marvell.com>
-Date: Fri, 5 Dec 2014 11:16:08 +0100
-Message-ID: <CAPDyKFr-NiJHszPdVEUCSYQbK3TXbsdRsW0JHfgZ3P_DGbFPdA@mail.gmail.com> (sfid-20141205_111614_871642_1A8CFC41)
-Subject: Re: [PATCH] mmc: new API for data write using scatter gather DMA
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-mmc <linux-mmc@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	"bin9zha0@gmail.com" <bin9zha0@gmail.com>,
-	Bing Zhao <bzhao@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:38569 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750808AbaL0AQN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Dec 2014 19:16:13 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Y4f3C-0007y5-BH
+	for linux-wireless@vger.kernel.org; Sat, 27 Dec 2014 01:16:10 +0100
+Received: from cpe-67-11-235-53.satx.res.rr.com ([67.11.235.53])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 01:16:10 +0100
+Received: from chrischavez by cpe-67-11-235-53.satx.res.rr.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 01:16:10 +0100
+To: linux-wireless@vger.kernel.org
+From: Christopher Chavez <chrischavez@gmx.us>
+Subject: Re: p54usb kernel panic on recent mainline kernels
+Date: Sat, 27 Dec 2014 00:15:58 +0000 (UTC)
+Message-ID: <loom.20141227T010207-869@post.gmane.org> (sfid-20141227_012032_145583_6B7679CB)
+References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com> <549CCAD8.70704@lwfinger.net> <loom.20141226T052138-41@post.gmane.org> <2868661.A1AiatZ287@debian64> <549DB187.3090003@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 December 2014 at 10:24, Avinash Patil <patila@marvell.com> wrote:
-> Hi Ulf,
->
-> We have decided to drop this patch.
 
-Why?
+I have not yet confirmed Christian's workaround, but thank you both for testing.
 
-Kind regards
-Uffe
+> My bisection led to a branch commit d17ec4d as the "bad" commit. Rather than
+> finding out where the bisection went bad, I added code to check skb->tail, 
+> skb->end, and the length to be added. At the time of the call that panics,
+> there are 6 bytes between tail and end with 8 bytes needed.
+> 
+> I will be looking for the place where the driver calculates how large the skb 
+> should be.
 
->
-> Thanks,
-> Avinash
-> ________________________________________
-> From: Avinash Patil
-> Sent: Tuesday, December 02, 2014 2:55 PM
-> To: Ulf Hansson
-> Cc: linux-mmc; linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo; Marc Yang; Xinming Hu; bin9zha0@gmail.com; Bing Zhao
-> Subject: RE: [PATCH] mmc: new API for data write using scatter gather DMA
->
-> Hi Ulf,
->
-> Purpose of patch is to offload scatter gather list population to host driver.
-> Patch provides MMC API using which host driver can directly use to program SG DMA.
->
->
-> Thanks,
-> Avinash
-> ________________________________________
-> From: Ulf Hansson [ulf.hansson@linaro.org]
-> Sent: Wednesday, November 26, 2014 7:13 PM
-> To: Avinash Patil
-> Cc: linux-mmc; linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo; Marc Yang; Xinming Hu; bin9zha0@gmail.com; Bing Zhao
-> Subject: Re: [PATCH] mmc: new API for data write using scatter gather DMA
->
-> On 26 November 2014 at 12:07, Avinash Patil <patila@marvell.com> wrote:
->> From: Bing Zhao <bzhao@marvell.com>
->>
->> This patch adds new API to handle scatter gather aggregation.
->
-> Why is this needed?
->
->>
->> Signed-off-by: Bing Zhao <bzhao@marvell.com>
->> Signed-off-by: Avinash Patil <patila@marvell.com>
->> Signed-off-by: Xinming Hu <huxm@marvell.com>
->> Signed-off-by: Cathy Luo <cluo@marvell.com>
->> ---
->>  drivers/mmc/core/sdio_ops.c   | 65 +++++++++++++++++++++++++++++++++++++++++++
->>  include/linux/mmc/sdio_func.h |  5 ++++
->>  2 files changed, 70 insertions(+)
->>
->> diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
->> index 62508b4..4c5e362 100644
->> --- a/drivers/mmc/core/sdio_ops.c
->> +++ b/drivers/mmc/core/sdio_ops.c
->> @@ -15,6 +15,7 @@
->>  #include <linux/mmc/card.h>
->>  #include <linux/mmc/mmc.h>
->>  #include <linux/mmc/sdio.h>
->> +#include <linux/export.h>
->>
->>  #include "core.h"
->>  #include "sdio_ops.h"
->> @@ -204,6 +205,70 @@ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
->>         return 0;
->>  }
->>
->> +int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
->> +                         unsigned addr, int incr_addr,
->> +                         struct sg_table *sgt, unsigned blksz)
->> +{
->> +       struct mmc_request mrq = {NULL};
->> +       struct mmc_command cmd = {0};
->> +       struct mmc_data data = {0};
->> +       struct scatterlist *sg_ptr;
->> +       unsigned blocks = 0;
->> +       int i;
->> +
->> +       BUG_ON(!card || !card->host);
->> +       BUG_ON(fn > 7);
->> +       BUG_ON(!blksz);
->
-> No BUG_ON() here please. Better to return an error.
->
->> +       for_each_sg(sgt->sgl, sg_ptr, sgt->nents, i) {
->> +               WARN_ON(sg_ptr->length > card->host->max_seg_size);
->> +               blocks += DIV_ROUND_UP(sg_ptr->length, blksz);
->> +       }
->> +
->> +       /* sanity check */
->> +       if (addr & ~0x1FFFF)
->> +               return -EINVAL;
->> +
->> +       mrq.cmd = &cmd;
->> +       mrq.data = &data;
->> +
->> +       cmd.opcode = SD_IO_RW_EXTENDED;
->> +       cmd.arg = write ? 0x80000000 : 0x00000000;
->> +       cmd.arg |= fn << 28;
->> +       cmd.arg |= incr_addr ? 0x04000000 : 0x00000000;
->> +       cmd.arg |= addr << 9;
->> +       cmd.arg |= 0x08000000 | blocks;
->> +       cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
->> +
->> +       data.blksz = blksz;
->> +       data.blocks = blocks;
->> +       data.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
->> +
->> +       data.sg = sgt->sgl;
->> +       data.sg_len = sgt->nents;
->> +
->> +       mmc_set_data_timeout(&data, card);
->> +       mmc_wait_for_req(card->host, &mrq);
->> +
->> +       if (cmd.error)
->> +               return cmd.error;
->> +       if (data.error)
->> +               return data.error;
->> +
->> +       if (mmc_host_is_spi(card->host)) {
->> +               /* host driver already reported errors */
->> +       } else {
->> +               if (cmd.resp[0] & R5_ERROR)
->> +                       return -EIO;
->> +               if (cmd.resp[0] & R5_FUNCTION_NUMBER)
->> +                       return -EINVAL;
->> +               if (cmd.resp[0] & R5_OUT_OF_RANGE)
->> +                       return -ERANGE;
->> +       }
->> +
->> +       return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(mmc_io_rw_extended_sg);
->> +
->>  int sdio_reset(struct mmc_host *host)
->>  {
->>         int ret;
->> diff --git a/include/linux/mmc/sdio_func.h b/include/linux/mmc/sdio_func.h
->> index 50f0bc9..927ea8f 100644
->> --- a/include/linux/mmc/sdio_func.h
->> +++ b/include/linux/mmc/sdio_func.h
->> @@ -14,6 +14,7 @@
->>
->>  #include <linux/device.h>
->>  #include <linux/mod_devicetable.h>
->> +#include <linux/scatterlist.h>
->>
->>  #include <linux/mmc/pm.h>
->>
->> @@ -153,6 +154,10 @@ extern int sdio_memcpy_toio(struct sdio_func *func, unsigned int addr,
->>  extern int sdio_writesb(struct sdio_func *func, unsigned int addr,
->>         void *src, int count);
->>
->> +int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
->> +                         unsigned addr, int incr_addr,
->> +                         struct sg_table *sgt, unsigned blksz);
->> +
->>  extern unsigned char sdio_f0_readb(struct sdio_func *func,
->>         unsigned int addr, int *err_ret);
->>  extern void sdio_f0_writeb(struct sdio_func *func, unsigned char b,
->> --
->> 1.8.1.4
->>
->
-> Kind regards
-> Uffe
+In the few remaining revisions from "git bisect visualize",
+this one mentions skbs:
+
+commit c70f59a2a007c57843195a93c3b7308204e0a5ab
+Author: Ido Yariv <ido@wizery.com>
+Date:   Tue Jul 29 15:39:14 2014 +0300
+
+    mac80211: don't resize skbs needlessly
+    
+    Header-less cloned skbs with sufficient headroom need not be cloned
+    unless the tailroom is going to be modified.
+    
+    Fix ieee80211_skb_resize so it would only resize cloned skbs if either
+    the header isn't released or the tailroom is going to be modified.
+    
+    Some drivers might have assumed that skbs are never cloned, so add a HW
+    flag that explicitly permits cloned TX skbs. Drivers which do not modify
+    TX skbs should set this flag to avoid copying skbs.
+    
+    Signed-off-by: Ido Yariv <idox.yariv@intel.com>
+    Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+
