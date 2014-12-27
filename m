@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46890 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755486AbaLILyf (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:52010 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbaL0OMc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Dec 2014 06:54:35 -0500
-Date: Tue, 9 Dec 2014 11:54:26 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	David Miller <davem@davemloft.net>,
-	Marek Szyprowski <m.szyprowski@samsung.com>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141209115425.GB31129@e104818-lin.cambridge.arm.com> (sfid-20141209_125452_609304_DA461F7D)
-References: <5481794E.4050406@broadcom.com>
- <F51492713EF10846800D8C0ED37A7DCE01901765@SJEXCHMB15.corp.ad.broadcom.com>
- <F51492713EF10846800D8C0ED37A7DCE01902076@SJEXCHMB15.corp.ad.broadcom.com>
- <2863746.4sUSEYqahB@wuerfel>
- <20141208160316.GM16185@e104818-lin.cambridge.arm.com>
- <5485D97D.1040404@broadcom.com>
- <5486CCBC.3@broadcom.com>
- <20141209102904.GJ11285@n2100.arm.linux.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141209102904.GJ11285@n2100.arm.linux.org.uk>
+	Sat, 27 Dec 2014 09:12:32 -0500
+Received: by mail-wi0-f171.google.com with SMTP id bs8so18718317wib.4
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 06:12:31 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
+Subject: [RFC 3/3] ath9k: enable per-packet TPC on AR9002 based chips
+Date: Sat, 27 Dec 2014 15:12:25 +0100
+Message-Id: <1419689545-26965-4-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141227_151243_460860_69358A55)
+In-Reply-To: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 09, 2014 at 10:29:05AM +0000, Russell King - ARM Linux wrote:
-> On Tue, Dec 09, 2014 at 11:19:40AM +0100, Arend van Spriel wrote:
-> > The issue did not trigger overnight so it seems setting bit 22 <Shared
-> > Attribute _Override_ Enable> solves the issue over here. Now the question is
-> > how to move forward with this. As I understood from Catalin this patch was
-> > not included as it was not considered responsibility of the linux kernel.
-> 
-> It is preferable for firmware to configure the L2 cache appropriately,
-> which includes things like the prefetch offsets as well as feature bits
-> like bit 22.
-> 
-> I think what I'll do is queue up a patch which adds a warning if bit 22
-> is not set, suggesting that firmware is updated to set this bit.
+Enable per-packet TPC on AR9002 based chips by default
 
-I'm fine with a (big) warning on this bit. But when you boot in secure
-mode on 32-bit, do we still have a read/modify/write sequence for
-L2X0_AUX_CTRL? A quick look at l2c310_enable() didn't reveal this (the
-code has changed since I proposed the bit 22 setting patch).
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c | 5 -----
+ drivers/net/wireless/ath/ath9k/hw.c    | 3 +--
+ 2 files changed, 1 insertion(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index c43e2ad..a52cbf13 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1150,11 +1150,6 @@ static ssize_t write_file_tpc(struct file *file, const char __user *user_buf,
+ 	ssize_t len;
+ 	bool tpc_enabled;
+ 
+-	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+-		/* ar9002 does not support TPC for the moment */
+-		return -EOPNOTSUPP;
+-	}
+-
+ 	len = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, len))
+ 		return -EFAULT;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 258c4d2..e2e4441 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -422,8 +422,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->power_mode = ATH9K_PM_UNDEFINED;
+ 	ah->htc_reset_init = true;
+ 
+-	/* ar9002 does not support TPC for the moment */
+-	ah->tpc_enabled = !!AR_SREV_9300_20_OR_LATER(ah);
++	ah->tpc_enabled = true;
+ 
+ 	ah->ani_function = ATH9K_ANI_ALL;
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
 -- 
-Catalin
+2.1.0
+
