@@ -1,40 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:24849 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752939AbaLBJxl (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:34127 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbaL0XnA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 04:53:41 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: add new wmi interface of NF cal period
-References: <1416945765-26902-1-git-send-email-poh@qca.qualcomm.com>
-	<1416945765-26902-2-git-send-email-poh@qca.qualcomm.com>
-Date: Tue, 2 Dec 2014 11:53:35 +0200
-In-Reply-To: <1416945765-26902-2-git-send-email-poh@qca.qualcomm.com> (Peter
-	Oh's message of "Tue, 25 Nov 2014 12:02:45 -0800")
-Message-ID: <87tx1enzs0.fsf@kamboji.qca.qualcomm.com> (sfid-20141202_105346_188498_B2A1D930)
+	Sat, 27 Dec 2014 18:43:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CADZ0XgJ=LU3n55MxcHUMdX7uRcOm-m+=DFLGDi6PPkj+5=y1sg@mail.gmail.com>
+References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
+	<CACna6rxjrcpZXiv0jxmY4+EtLESYtKh=6W2RgqUDLHYy3AQ4rA@mail.gmail.com>
+	<CADZ0Xg++nexnzmuaOp+MHXBbODwSpoEYNcbDU=X9tNYbzh=W-w@mail.gmail.com>
+	<CADZ0XgJ=LU3n55MxcHUMdX7uRcOm-m+=DFLGDi6PPkj+5=y1sg@mail.gmail.com>
+Date: Sun, 28 Dec 2014 00:42:59 +0100
+Message-ID: <CACna6ry78Gs5PTUxjXy+tZAS-DNzTmqrSmwa_EVYRO6L-5_3ZA@mail.gmail.com> (sfid-20141228_004320_305725_6630C600)
+Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80
+ characters per line
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
+On 27 December 2014 at 23:04, Oscar Forner Martinez
+<oscar.forner.martinez@gmail.com> wrote:
+> 2014-12-27 21:14 GMT+00:00 Oscar Forner Martinez
+> <oscar.forner.martinez@gmail.com>:
+>>
+>> 2014-12-27 20:19 GMT+00:00 Rafał Miłecki <zajec5@gmail.com>:
+>>>
+>>> On 27 December 2014 at 20:24, Oscar Forner Martinez
+>>> <oscar.forner.martinez@gmail.com> wrote:
+>>> > Three lines with more than 80 characters per line have been split in
+>>> > several lines.
+>>>
+>>> Thanks for the next version :)
+>>>
+>>> 1) You missed version number. Something like
+>>> git format-patch --subject-prefix="PATCH V3"
+>>> (you saying for the future).
+>>
+>>
+>> Yes, sorry I forgot to put -v 3 in git format-patch.
+>>
+>>>
+>>>
+>>> 2) I'm OK with your changes, but when checking the patch I get some
+>>> errors like
+>>> ERROR: trailing whitespace
+>>> ERROR: DOS line endings
+>>> (I used ./scripts/checkpatch.pl, see attached checkpatch log).
+>>>
+>>> I think that "trailing whitespace" errors are caused by DOS line
+>>> endings, because I don't see anything wrong about your code.
+>>>
+>>> Is there something wrong with your emacs? git-send-email shouldn't
+>>> malform patches I believe.
+>>
+>>
+>> When I run ./scripts/checkpatch.pl with my patch does not show any error
+>> (please find attached the output). I will try to run it with the one from my
+>> e-mail. My only configuration in the .emacs file is: (setq c-default-style
+>> "linux").
+>
+>
+> I ran the ./scripts/checkpatch.pl with the patch got it from
+> http://marc.info/?l=linux-wireless&m=141970834908165 and it does not show
+> any error. Could you please tell me how I have to check in the same way as
+> you did?
 
-> Introduce a new wmi interface controls noise floor (NF) calibration
-> period via debugfs as firmware has introduced it on v10.2.
->
-> It allows users to modify frequency of NF calibration in millisecond
-> and changes RSSI reporting frequency consequently.
-> Short calibration period will trigger more frequent NF calibration,
-> so that RSSI reported in receive frames is more realistic.
->
-> Till now calibration was done at 30 seconds.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
-
-This doesn't handle firmware retstarts in any way, let me send v2 to fix
-that.
+False alarm, sorry. GMail changed sth again or my browser
+change/update broke saving e-mails.
 
 -- 
-Kalle Valo
+Rafał
