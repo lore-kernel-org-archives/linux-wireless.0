@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0246.hostedemail.com ([216.40.44.246]:52152 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750799AbaLQJlD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 04:41:03 -0500
-Message-ID: <1418809260.14140.18.camel@perches.com> (sfid-20141217_104108_651447_C43D7CF5)
-Subject: Re: [PATCH 1/4] mwifiex: enable -D__CHECK_ENDIAN__ for sparse by
- default
-From: Joe Perches <joe@perches.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	akarwar@marvell.com, cluo@marvell.com, yangyang@marvell.com
-Date: Wed, 17 Dec 2014 01:41:00 -0800
-In-Reply-To: <1418817273-22669-1-git-send-email-patila@marvell.com>
-References: <1418817273-22669-1-git-send-email-patila@marvell.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:4645 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751624AbaL0Tzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Dec 2014 14:55:43 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "Julia.Lawall@lip6.fr" <Julia.Lawall@lip6.fr>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [PATCH 12/27] iwlwifi: dvm: main: Use setup_timer
+Date: Sat, 27 Dec 2014 19:55:21 +0000
+Message-ID: <1419710121.6140.0.camel@egrumbacBox> (sfid-20141227_205623_662478_D2A665AA)
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+	 <1419604558-29743-14-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1419604558-29743-14-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-17 at 17:24 +0530, Avinash Patil wrote:
-> Enable the endian checks by default.
-[]
-> diff --git a/drivers/net/wireless/mwifiex/Makefile b/drivers/net/wireless/mwifiex/Makefile
-[]
-> @@ -53,3 +53,5 @@ obj-$(CONFIG_MWIFIEX_PCIE) += mwifiex_pcie.o
->  
->  mwifiex_usb-y += usb.o
->  obj-$(CONFIG_MWIFIEX_USB) += mwifiex_usb.o
-> +
-> +ccflags-y += -D__CHECK_ENDIAN__ -DDEBUG
-
-I think the -DDEBUG should not be there.
-
-This also forces all the dev_dbg / wiphy_dbg
-statement to always be emitted.
-
-
+T24gRnJpLCAyMDE0LTEyLTI2IGF0IDE1OjM1ICswMTAwLCBKdWxpYSBMYXdhbGwgd3JvdGU6DQo+
+IENvbnZlcnQgYSBjYWxsIHRvIGluaXRfdGltZXIgYW5kIGFjY29tcGFueWluZyBpbnRpYWxpemF0
+aW9ucyBvZg0KPiB0aGUgdGltZXIncyBkYXRhIGFuZCBmdW5jdGlvbiBmaWVsZHMgdG8gYSBjYWxs
+IHRvIHNldHVwX3RpbWVyLg0KPiANCj4gQSBzaW1wbGlmaWVkIHZlcnNpb24gb2YgdGhlIHNlbWFu
+dGljIG1hdGNoIHRoYXQgZml4ZXMgdGhpcyBwcm9ibGVtIGlzIGFzDQo+IGZvbGxvd3M6IChodHRw
+Oi8vY29jY2luZWxsZS5saXA2LmZyLykNCj4gDQo+IC8vIDxzbXBsPg0KPiBAQA0KPiBleHByZXNz
+aW9uIHQsZixkOw0KPiBAQA0KPiANCj4gLWluaXRfdGltZXIoJnQpOw0KPiArc2V0dXBfdGltZXIo
+JnQsZixkKTsNCj4gLXQuZGF0YSA9IGQ7DQo+IC10LmZ1bmN0aW9uID0gZjsNCj4gLy8gPC9zbXBs
+Pg0KPiANCj4gU2lnbmVkLW9mZi1ieTogSnVsaWEgTGF3YWxsIDxKdWxpYS5MYXdhbGxAbGlwNi5m
+cj4NCj4gDQoNCkJvdGggYXBwbGllZCAtIHRoYW5rcy4NCg==
