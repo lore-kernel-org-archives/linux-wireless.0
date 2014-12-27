@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56405 "EHLO sipsolutions.net"
+Received: from mga11.intel.com ([192.55.52.93]:13745 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751479AbaLFISq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2014 03:18:46 -0500
-Message-ID: <1417853921.2046.1.camel@sipsolutions.net> (sfid-20141206_091849_745959_F91EF094)
-Subject: Re: iwlwifi 6235 AGN: hardware limitation on number of stations
- that can connect in ap mode ?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Sat, 06 Dec 2014 09:18:41 +0100
-In-Reply-To: <955277702.20141205105522@eikelenboom.it> (sfid-20141205_110059_932860_1A930067)
-References: <955277702.20141205105522@eikelenboom.it>
-	 (sfid-20141205_110059_932860_1A930067)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751562AbaL0TsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Dec 2014 14:48:04 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
+CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"gabriele.mzt@gmail.com" <gabriele.mzt@gmail.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: Unable to disable WiFi with 3.19-rc1 - iwlwifi 7260
+Date: Sat, 27 Dec 2014 19:47:59 +0000
+Message-ID: <1419709679.5162.2.camel@egrumbacBox> (sfid-20141227_204829_897951_5DACA6EA)
+References: <3095419.huSVmtL0ib@xps13>
+	 <CA+icZUVsmoPE8Le4XeyBratXe23BFtgOEoyd6dBFC9x+MVaJFw@mail.gmail.com>
+In-Reply-To: <CA+icZUVsmoPE8Le4XeyBratXe23BFtgOEoyd6dBFC9x+MVaJFw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sander,
-
-> So i'm wondering is there a hardware limitation of stations that can connect to 
-> this mini-pci card in ap-mode ?
-
-Yes, there's a hardware/firmware limitation of 16 "station entries".
-
-> the first clients connect perfectly well but after 12 client have connected, for 
-> the 13th i get:
-> 
-> [  784.301106] wlan0: Allocated STA 00:0d:f0:2e:ee:02
-> [  784.301117] wlan0: moving STA 00:0d:f0:2e:ee:02 to state 2
-> [  784.301122] wlan0: moving STA 00:0d:f0:2e:ee:02 to state 3
-> [  784.301141] iwlwifi 0000:00:05.0: Unable to prepare station 00:0d:f0:2e:ee:02 for addition
-> [  784.481399] iwlwifi 0000:00:05.0: Unable to add station 00:0d:f0:2e:ee:02 (-22)
-> [  784.647835] wlan0: Destroyed STA 00:0d:f0:2e:ee:02
-> [  785.828588] wlan0: Allocated STA 00:0d:f0:2e:ee:02
-> [  785.828600] wlan0: moving STA 00:0d:f0:2e:ee:02 to state 2
-> [  785.828605] wlan0: moving STA 00:0d:f0:2e:ee:02 to state 3
-> [  785.828624] iwlwifi 0000:00:05.0: Unable to prepare station 00:0d:f0:2e:ee:02 for addition
-> [  786.044379] iwlwifi 0000:00:05.0: Unable to add station 00:0d:f0:2e:ee:02 (-22)
-> [  786.219632] wlan0: Destroyed STA 00:0d:f0:2e:ee:02
-
-Right. I'm not exactly sure why we put -EINVAL rather than -ENOSPC or
-something like that, but this is a limitation.
-
-> If it is a hardware limitation, are there any other intel mini-pci adapters that 
-> don't have this hardware limitation (or at least a highter one).
-
-With the newer 7260/7265 adapters you might be able to go up to 14 or 15
-stations (I haven't checked exactly), but that's not a significant
-increase - the fundamental limit of 16 station entries is still there
-and at least one is needed for internal tracking for multi-/broadcast
-transmit transmit (and another one might be reserved for P2P on those
-devices, and I might be forgetting another one perhaps which would mean
-13 is the max)
-
-I don't believe that the driver (or even firmware) would be able to work
-around this.
-
-johannes
-
+SGksDQoNCk9uIFNhdCwgMjAxNC0xMi0yNyBhdCAyMDoxNyArMDEwMCwgU2VkYXQgRGlsZWsgd3Jv
+dGU6DQo+IE9uIFNhdCwgRGVjIDI3LCAyMDE0IGF0IDg6MDggUE0sIEdhYnJpZWxlIE1henpvdHRh
+DQo+IDxnYWJyaWVsZS5tenRAZ21haWwuY29tPiB3cm90ZToNCj4gPiBIaSwNCj4gPg0KPiA+IHNp
+bmNlIHYzLjE5LXJjMSBJIGhhdmUgcHJvYmxlbXMgd2l0aCBXaUZpIChJbnRlbCBDb3Jwb3JhdGlv
+biBEdWFsIEJhbmQNCj4gPiBXaXJlbGVzcy1BQyA3MjYwKSBvbiBteSBsYXB0b3AuIFRyeWluZyB0
+byBkaXNhYmxlIGFsbCB0aGUgcmFkaW8gZGV2aWNlcw0KPiA+IChXaUZpIGFuZCBCVCkgd2l0aCB0
+aGUgZnVuY3Rpb24ga2V5IG9mIG15IGxhcHRvcCwgd2hpY2ggc2hvdWxkIGhhcmQNCj4gPiBibG9j
+ayB0aGUgcmZraWxscywgY2F1c2VzIHRoZSBmb2xsb3dpbmcgbWVzc2FnZSB0byBiZSByZXBlYXRl
+ZCBvdmVyIGFuZA0KPiA+IG92ZXIgdW50aWwgSSByZS1lbmFibGUgdGhlbSBhZ2FpbiB3aXRoIHRo
+ZSBmdW5jdGlvbiBrZXk6DQo+ID4NCj4gPiBbICA1OTMuNzQ2MDAxXSBpd2x3aWZpIDAwMDA6MDI6
+MDAuMDogUkZfS0lMTCBiaXQgdG9nZ2xlZCB0byBkaXNhYmxlIHJhZGlvLg0KPiA+IFsgIDU5My43
+NDY0NjhdIGl3bHdpZmkgMDAwMDowMjowMC4wOiBSRl9LSUxMIGJpdCB0b2dnbGVkIHRvIGRpc2Fi
+bGUgcmFkaW8uDQo+ID4gWyAgNTkzLjc0Njc4MV0gaXdsd2lmaSAwMDAwOjAyOjAwLjA6IFJGX0tJ
+TEwgYml0IHRvZ2dsZWQgdG8gZGlzYWJsZSByYWRpby4NCj4gPiBbICA1OTMuNzQ3MDkxXSBpd2x3
+aWZpIDAwMDA6MDI6MDAuMDogUkZfS0lMTCBiaXQgdG9nZ2xlZCB0byBkaXNhYmxlIHJhZGlvLg0K
+PiA+DQo+ID4gU29tZXRpbWVzIG15IGxhcHRvcCBoYW5ncyB3aGVuIEkgdHJ5IHRvIHRvZ2dsZSB0
+aGUgc3RhdGUgb2YgdGhlIHJhZGlvDQo+ID4gZGV2aWNlcyBhbmQgaGF2ZSB0byBmb3JjZWZ1bGx5
+IHJlYm9vdCBpdC4NCj4gPg0KPiA+IFJldmVydGluZyA1MjI3MTNjODFlICgiaXdsd2lmaTogcGNp
+ZTogcHJvcGVybHkgcmVzZXQgdGhlIGRldmljZSIpIHNlZW1zDQo+ID4gdG8gZml4IHRoZSBwcm9i
+bGVtLiBJIGhhdmVuJ3QgdHJpZWQgYW55dGhpbmcgZWxzZSBzaW5jZSB0aGlzIHdhcyB0aGUNCj4g
+PiBmaXJzdCB0aGluZyBJIHRyaWVkLg0KPiA+DQo+ID4gRG9lcyBhbnlvbmUga25vdyB3aGF0J3Mg
+dGhlIHByb2JsZW0gd2l0aCB0aGF0IHNwZWNpZmljIGNvbW1pdD8NCj4gPiBJIHdpbGwgZ2xhZGx5
+IHByb3ZpZGUgYW55IGFkZGl0aW9uYWwgaW5mb3JtYXRpb24sIGp1c3QgdGVsbCBtZSB3aGF0DQo+
+ID4gaXMgbmVlZGVkLg0KPiA+DQo+IA0KPiBJIGNhbm5vdCBzYXkgbXVjaCB0byB0aGUgImludGVy
+bmFscyIgb2YgeW91ciBwcm9ibGVtDQoNClRoYW5rcyBmb3IganVtcGluZyBpbiA6KQ0KDQo+IA0K
+PiBKdXN0IHR3byB0aGluZ3MuLi4NCj4gDQo+IFRoZXJlIGlzIGEgbmV3IGZpcm13YXJlIGZvciA3
+MjYwIGFyb3VuZCBzZWUgWzBdLg0KPiANCg0KVGhpcyB3b24ndCBoZWxwLg0KDQo+IDJuZCB0cnkg
+dG8gcHVsbCBpbiB0aGUgbmV3IHdpcmVsZXNzLWRyaXZlcnMuZ2l0IHRyZWUsIHRoZSBjaGFuZ2Vs
+b2cNCj4gbWVudGlvbnMgYSByYWNlIHdpdGggcmZraWxsIG9uIGl3bHdpZmkgWzFdLg0KPiANCg0K
+VGhpcyB3aWxsIGhlbHAgOikgUHJlY2lzZWx5IGNvbW1pdDoNCmh0dHBzOi8vZ2l0Lmtlcm5lbC5v
+cmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1maXhlcy5naXQvY29tbWl0
+Lz9pZD0wM2Q2YzNiMGZhNGY1ZjAzNzljZWRlMDc5ZWM4MjhhNmM5OTlmZTQzDQoNCg0KPiBIYXZl
+IGZ1biENCj4gDQo+IC0gU2VkYXQgLQ0KPiANCj4gWzBdIGh0dHA6Ly9naXQua2VybmVsLm9yZy9j
+Z2l0L2xpbnV4L2tlcm5lbC9naXQvZmlybXdhcmUvbGludXgtZmlybXdhcmUuZ2l0L2NvbW1pdC8/
+aWQ9YTg3NmM2OWYwNDJjZjQ3MzI3NTViMzI1ZDNiNzA5MTI1YmI1MWEwNg0KPiBbMV0gaHR0cDov
+L2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgva2VybmVsL2dpdC9rdmFsby93aXJlbGVzcy1kcml2
+ZXJzLmdpdC90YWcvP2lkPXdpcmVsZXNzLWRyaXZlcnMtZm9yLWRhdmVtLTIwMTQtMTItMjYNCg0K
