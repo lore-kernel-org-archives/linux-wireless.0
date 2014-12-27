@@ -1,57 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0230.hostedemail.com ([216.40.44.230]:58568 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S965425AbaLMGnF (ORCPT
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:58075 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751702AbaL0UTu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Dec 2014 01:43:05 -0500
-Message-ID: <1418452981.29082.7.camel@perches.com> (sfid-20141213_074341_187708_60F248F8)
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warnings
-From: Joe Perches <joe@perches.com>
-To: Krzysztof Konopko <kris@konagma.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Date: Fri, 12 Dec 2014 22:43:01 -0800
-In-Reply-To: <1418425137-13339-1-git-send-email-kris@konagma.com>
-References: <1418336609-10191-1-git-send-email-kris@konagma.com>
-	 <1418425137-13339-1-git-send-email-kris@konagma.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Sat, 27 Dec 2014 15:19:50 -0500
+MIME-Version: 1.0
+In-Reply-To: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
+References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
+Date: Sat, 27 Dec 2014 21:19:49 +0100
+Message-ID: <CACna6rxjrcpZXiv0jxmY4+EtLESYtKh=6W2RgqUDLHYy3AQ4rA@mail.gmail.com> (sfid-20141227_212005_002790_0B53F6C9)
+Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80
+ characters per line
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary=001a11407980019e26050b385db4
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-12-12 at 23:58 +0100, Krzysztof Konopko wrote:
-> This patch changes the types of the struct fields involved to be
-> little-endian which is what is received over the air and consistent with
-> relevant structs in include/linux/ieee80211.h.
-[]
-> diff --git a/drivers/staging/rtl8723au/include/wifi.h b/drivers/staging/rtl8723au/include/wifi.h
-[]
-> @@ -28,7 +28,7 @@
->  struct AC_param {
->  	unsigned char		ACI_AIFSN;
->  	unsigned char		CW;
-> -	unsigned short	TXOP_limit;
-> +	__le16			TXOP_limit;
->  }  __packed;
->  
->  struct WMM_para_element {
-> @@ -39,9 +39,9 @@ struct WMM_para_element {
->  
->  struct ADDBA_request {
->  	unsigned char		dialog_token;
-> -	unsigned short	BA_para_set;
-> -	unsigned short	BA_timeout_value;
-> -	unsigned short	BA_starting_seqctrl;
-> +	__le16		BA_para_set;
-> +	__le16		BA_timeout_value;
-> +	__le16		BA_starting_seqctrl;
->  }  __packed;
+--001a11407980019e26050b385db4
+Content-Type: text/plain; charset=UTF-8
 
-If I did this, I would also change the
-unsigned char uses to u8 at the same time.
+On 27 December 2014 at 20:24, Oscar Forner Martinez
+<oscar.forner.martinez@gmail.com> wrote:
+> Three lines with more than 80 characters per line have been split in several lines.
 
+Thanks for the next version :)
 
+1) You missed version number. Something like
+git format-patch --subject-prefix="PATCH V3"
+(you saying for the future).
 
+2) I'm OK with your changes, but when checking the patch I get some errors like
+ERROR: trailing whitespace
+ERROR: DOS line endings
+(I used ./scripts/checkpatch.pl, see attached checkpatch log).
+
+I think that "trailing whitespace" errors are caused by DOS line
+endings, because I don't see anything wrong about your code.
+
+Is there something wrong with your emacs? git-send-email shouldn't
+malform patches I believe.
+
+--001a11407980019e26050b385db4
+Content-Type: text/plain; charset=US-ASCII; name="bcma.checkpatch.txt"
+Content-Disposition: attachment; filename="bcma.checkpatch.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i47fj1cu0
+
+RVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UKIzYyOiBGSUxFOiBkcml2ZXJzL2JjbWEvZHJpdmVy
+X2NoaXBjb21tb24uYzo4MjoKK15JXkleSS8qIDQ3MDYgQ0MgYW5kIFBNVSB3YXRjaGRvZ3MgYXJl
+IGNsb2NrZWQgYXQgMS80IG9mIEFMUF5NJAoKRVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UKIzYz
+OiBGSUxFOiBkcml2ZXJzL2JjbWEvZHJpdmVyX2NoaXBjb21tb24uYzo4MzoKK15JXkleSSAqIGNs
+b2NrXk0kCgpFUlJPUjogRE9TIGxpbmUgZW5kaW5ncwojNjQ6IEZJTEU6IGRyaXZlcnMvYmNtYS9k
+cml2ZXJfY2hpcGNvbW1vbi5jOjg0OgorXkleSV5JICovXk0kCgpFUlJPUjogRE9TIGxpbmUgZW5k
+aW5ncwojNzM6IEZJTEU6IGRyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1vbi5jOjEwMjoKK15J
+d2R0Lm1heF90aW1lcl9tcyA9Xk0kCgpFUlJPUjogRE9TIGxpbmUgZW5kaW5ncwojNzQ6IEZJTEU6
+IGRyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1vbi5jOjEwMzoKK15JXkliY21hX2NoaXBjb193
+YXRjaGRvZ19nZXRfbWF4X3RpbWVyKGNjKSAvIGNjLT50aWNrc19wZXJfbXM7Xk0kCgpFUlJPUjog
+RE9TIGxpbmUgZW5kaW5ncwojODM6IEZJTEU6IGRyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1v
+bi5jOjM0MToKK15JXkliY21hX2VycihjYy0+Y29yZS0+YnVzLCAic2VyaWFsIG5vdCBzdXBwb3J0
+ZWQgb24gdGhpcyBkZXZpY2UgY2NyZXY6IDB4JXhcbiIsXk0kCgpFUlJPUjogRE9TIGxpbmUgZW5k
+aW5ncwojODQ6IEZJTEU6IGRyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1vbi5jOjM0MjoKK15J
+XkleSSBjY3Jldik7Xk0kCgp0b3RhbDogNyBlcnJvcnMsIDAgd2FybmluZ3MsIDI4IGxpbmVzIGNo
+ZWNrZWQKCk5PVEU6IHdoaXRlc3BhY2UgZXJyb3JzIGRldGVjdGVkLCB5b3UgbWF5IHdpc2ggdG8g
+dXNlIHNjcmlwdHMvY2xlYW5wYXRjaCBvcgogICAgICBzY3JpcHRzL2NsZWFuZmlsZQoKYmNtYS5w
+YXRjaCBoYXMgc3R5bGUgcHJvYmxlbXMsIHBsZWFzZSByZXZpZXcuCgpJZiBhbnkgb2YgdGhlc2Ug
+ZXJyb3JzIGFyZSBmYWxzZSBwb3NpdGl2ZXMsIHBsZWFzZSByZXBvcnQKdGhlbSB0byB0aGUgbWFp
+bnRhaW5lciwgc2VlIENIRUNLUEFUQ0ggaW4gTUFJTlRBSU5FUlMuCg==
+--001a11407980019e26050b385db4--
