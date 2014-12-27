@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:37880 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbaLUNDg (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:58898 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795AbaL0OM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 08:03:36 -0500
-Message-ID: <5496C525.7000000@broadcom.com> (sfid-20141221_140342_353793_A553F4A5)
-Date: Sun, 21 Dec 2014 14:03:33 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	<brcm80211-dev-list@broadcom.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [BUG REPORT] brcmfmac: wrong logic in finding control/primary
- channel relative location
-References: <1419099904-13303-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1419099904-13303-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Sat, 27 Dec 2014 09:12:29 -0500
+Received: by mail-wi0-f180.google.com with SMTP id n3so18689355wiv.13
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Dec 2014 06:12:28 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
+Subject: [RFC 0/3] add TPC capability for AR9002 based chips
+Date: Sat, 27 Dec 2014 15:12:22 +0100
+Message-Id: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141227_151240_060733_DE2B9A31)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/14 19:25, Rafał Miłecki wrote:
-> ---
-> Hi guys,
->
-> Let me report something I think is a bug in this unusual-patch way ;)
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 ++
->   1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> index 39b45c0..2c9e88b 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-> @@ -313,11 +313,13 @@ static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
->   	case NL80211_CHAN_WIDTH_80:
->   		ch_inf.bw = BRCMU_CHAN_BW_80;
->   		if (primary_offset<  0) {
-> +			/* FIXME: We compare frequencies offset with a value -2. Looks like a wrong logic. */
->   			if (primary_offset<  -CH_10MHZ_APART)
+This patchset adds TPC capability to ath9k for AR9002 based chips
 
-You are right. The primary_offset is in MHz, but the logical expression 
-is for channel spacing (1 channel == 5MHz). So here it should be -10 
-instead. Thanks for reporting this.
+*[RFC 1/3]: add TX power per-rate tables to cap TX power in TX descriptor path
+*[RFC 2/3]: cap per-packet TX power according to TX power per-rate tables
+*[RFC 3/3]: enable per-packet TPC on AR9002 based chips by default
 
-Regards,
-Arend
->   				ch_inf.sb = BRCMU_CHAN_SB_UU;
->   			else
->   				ch_inf.sb = BRCMU_CHAN_SB_UL;
->   		} else {
-> +			/* FIXME: We compare frequencies offset with a value 2. Looks like a wrong logic. */
->   			if (primary_offset>  CH_10MHZ_APART)
->   				ch_inf.sb = BRCMU_CHAN_SB_LL;
->   			else
+This pachset is based on Adrian Chadd's hints
+(https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg10396.html)
+
+Lorenzo Bianconi (3):
+  ath9k: add power per-rate tables for AR9002 chips
+  ath9k: add TPC to TX path for AR9002 based chips
+  ath9k: enable per-packet TPC on AR9002 based chips
+
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c  | 80 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/debug.c       |  5 --
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 14 +++++
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c | 15 ++++++
+ drivers/net/wireless/ath/ath9k/eeprom_def.c  | 14 +++++
+ drivers/net/wireless/ath/ath9k/hw.c          |  3 +-
+ drivers/net/wireless/ath/ath9k/hw.h          |  2 +
+ drivers/net/wireless/ath/ath9k/xmit.c        | 66 +++++++++++++++++++----
+ 8 files changed, 181 insertions(+), 18 deletions(-)
+
+-- 
+2.1.0
 
