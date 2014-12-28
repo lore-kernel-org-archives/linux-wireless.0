@@ -1,92 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:52822 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826AbaL0Imv (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23042 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbaL1PBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Dec 2014 03:42:51 -0500
-From: Matthew Emerson <emersonmde@gmail.com>
-To: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Matthew Emerson <emersonmde@gmail.com>
-Subject: [PATCH] staging: rtl8723au: Fixed multiple space issues
-Date: Sat, 27 Dec 2014 03:42:21 -0500
-Message-Id: <1419669741-6048-1-git-send-email-emersonmde@gmail.com> (sfid-20141227_094311_523603_9909FA3D)
+	Sun, 28 Dec 2014 10:01:11 -0500
+Message-ID: <54A01B34.4000002@broadcom.com> (sfid-20141228_160127_506450_B332C3E0)
+Date: Sun, 28 Dec 2014 16:01:08 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Sedat Dilek <sedat.dilek@gmail.com>,
+	Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80 characters
+ per line
+References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>	<CACna6rz4ue2PFQR-=nKxmCJSw9O8pKU=S7LqxA68OY1D0obvKg@mail.gmail.com>	<CA+icZUVm6YNK_eN7-NcSH-mAqC61vwYryVUJuNMCKuhq8kXV2g@mail.gmail.com>	<CACna6rymPy1+YtEHEk18ci3VaAWkiwJ2iWv+p_yYPAjzQeJwtw@mail.gmail.com>	<CA+icZUVuTB55UcKKbUMd8VB5mHMkaxhCVDkLKhtSXizR+1gE2A@mail.gmail.com> <CACna6rwRPwannK7TviY7AmhMvd09h-zLXJOBEK-U09dz=5ezKQ@mail.gmail.com>
+In-Reply-To: <CACna6rwRPwannK7TviY7AmhMvd09h-zLXJOBEK-U09dz=5ezKQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed multiple space issues found by checkpatch.pl in
-drivers/staging/rtl8723au/core/rtw_ap.c
+On 12/28/14 15:02, Rafał Miłecki wrote:
+> On 28 December 2014 at 10:12, Sedat Dilek<sedat.dilek@gmail.com>  wrote:
+>> On Sun, Dec 28, 2014 at 9:53 AM, Rafał Miłecki<zajec5@gmail.com>  wrote:
+>>> On 28 December 2014 at 06:50, Sedat Dilek<sedat.dilek@gmail.com>  wrote:
+>>>> On Sun, Dec 28, 2014 at 12:44 AM, Rafał Miłecki<zajec5@gmail.com>  wrote:
+>>>>> On 27 December 2014 at 20:24, Oscar Forner Martinez
+>>>>> <oscar.forner.martinez@gmail.com>  wrote:
+>>>>>> Three lines with more than 80 characters per line have been split in several lines.
+>>>>>>
+>>>>>> Signed-off-by: Oscar Forner Martinez<oscar.forner.martinez@gmail.com>
+>>>>>
+>>>>> Acked-by: Rafał Miłecki<zajec5@gmail.com>
+>>>>>
+>>>>
+>>>> As for the comment-line changes... 80+ chars are allowed for better readability.
+>>>> So, please don't do that.
+>>>> [ Checkpatch should not warn on this especially for comments. ]
+>>>
+>>> We almost always split long comments into separated lines in the
+>>> kernel. What's different with this case?
+>>>
+>>
+>> 1st it is not mandatory.
+>>
+>> 2nd it is more readable in one line.
+>>
+>> -                       /* 4706 CC and PMU watchdogs are clocked at
+>> 1/4 of ALP clock */
+>> +                       /* 4706 CC and PMU watchdogs are clocked at 1/4 of ALP
+>> +                        * clock
+>> +                        */
+>>
+>> I agree with you when the comment would be longer.
+>
+> So I guess there is some rule like
+> "Don't use 2 lines if there is 80 chars + one word"
+> ? Where can I find such rules?
 
-Signed-off-by: Matthew Emerson <emersonmde@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_ap.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Personally, I don't like taking this sliding slope. Just stick to the 80 
+characters rule and add a few words in the comment, eg:
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
-index e394d12c36b0..db8c55f6c6ed 100644
---- a/drivers/staging/rtl8723au/core/rtw_ap.c
-+++ b/drivers/staging/rtl8723au/core/rtw_ap.c
-@@ -897,7 +897,7 @@ int rtw_check_beacon_data23a(struct rtw_adapter *padapter,
- 	pairwise_cipher = 0;
- 	psecuritypriv->wpa_group_cipher = 0;
- 	psecuritypriv->wpa_pairwise_cipher = 0;
--	for (p = ie; ;p += (ie_len + 2)) {
-+	for (p = ie; ; p += (ie_len + 2)) {
- 		p = rtw_get_ie23a(p, WLAN_EID_VENDOR_SPECIFIC, &ie_len,
- 				  pbss_network->IELength - (ie_len + 2));
- 		if ((p) && (!memcmp(p+2, RTW_WPA_OUI23A_TYPE, 4))) {
-@@ -924,7 +924,7 @@ int rtw_check_beacon_data23a(struct rtw_adapter *padapter,
- 	ie_len = 0;
- 	pmlmepriv->qos_option = 0;
- 	if (pregistrypriv->wmm_enable) {
--		for (p = ie; ;p += (ie_len + 2)) {
-+		for (p = ie; ; p += (ie_len + 2)) {
- 			p = rtw_get_ie23a(p, WLAN_EID_VENDOR_SPECIFIC, &ie_len,
- 					  (pbss_network->IELength -
- 					   (ie_len + 2)));
-@@ -1204,7 +1204,7 @@ static void update_bcn_p2p_ie(struct rtw_adapter *padapter)
- {
- }
- 
--static void update_bcn_vendor_spec_ie(struct rtw_adapter *padapter, u8*oui)
-+static void update_bcn_vendor_spec_ie(struct rtw_adapter *padapter, u8 *oui)
- {
- 	DBG_8723A("%s\n", __func__);
- 
-@@ -1642,7 +1642,7 @@ u8 ap_free_sta23a(struct rtw_adapter *padapter, struct sta_info *psta, bool acti
- 	return beacon_updated;
- }
- 
--int rtw_ap_inform_ch_switch23a (struct rtw_adapter *padapter, u8 new_ch, u8 ch_offset)
-+int rtw_ap_inform_ch_switch23a(struct rtw_adapter *padapter, u8 new_ch, u8 ch_offset)
- {
- 	struct list_head *phead, *plist;
- 	struct sta_info *psta = NULL;
-@@ -1663,12 +1663,12 @@ int rtw_ap_inform_ch_switch23a (struct rtw_adapter *padapter, u8 new_ch, u8 ch_o
- 	list_for_each(plist, phead) {
- 		psta = container_of(plist, struct sta_info, asoc_list);
- 
--		issue_action_spct_ch_switch23a (padapter, psta->hwaddr, new_ch, ch_offset);
-+		issue_action_spct_ch_switch23a(padapter, psta->hwaddr, new_ch, ch_offset);
- 		psta->expire_to = ((pstapriv->expire_to * 2) > 5) ? 5 : (pstapriv->expire_to * 2);
- 	}
- 	spin_unlock_bh(&pstapriv->asoc_list_lock);
- 
--	issue_action_spct_ch_switch23a (padapter, bc_addr, new_ch, ch_offset);
-+	issue_action_spct_ch_switch23a(padapter, bc_addr, new_ch, ch_offset);
- 
- 	return 0;
- }
-@@ -1871,7 +1871,7 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
- 	pmlmeext->bstart_bss = false;
- 
- 	/* reset and init security priv , this can refine with rtw_reset_securitypriv23a */
--	memset((unsigned char *)&padapter->securitypriv, 0, sizeof (struct security_priv));
-+	memset((unsigned char *)&padapter->securitypriv, 0, sizeof(struct security_priv));
- 	padapter->securitypriv.ndisauthtype = Ndis802_11AuthModeOpen;
- 	padapter->securitypriv.ndisencryptstatus = Ndis802_11WEPDisabled;
- 
--- 
-2.0.5
+			/* The BCM4706 ChipCommon and PMU watchdogs are
+			 * clocked at one quarter of the ALP clock.
+			 */
+
+Regards,
+Arend
 
