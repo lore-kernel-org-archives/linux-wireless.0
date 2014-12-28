@@ -1,61 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43394 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932309AbaLBQHv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 11:07:51 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: "John W . Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH v2 02/10] wil6210: introduce wil_err_ratelimited()
-Date: Tue, 2 Dec 2014 18:07:46 +0200
-Message-ID: <1745741.h3nTIlTg0C@lx-wigig-72> (sfid-20141202_170755_189340_4D65B24D)
-In-Reply-To: <1417532867.3365.1.camel@perches.com>
-References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1417513598-18304-3-git-send-email-qca_vkondrat@qca.qualcomm.com> <1417532867.3365.1.camel@perches.com>
+Received: from mga14.intel.com ([192.55.52.115]:11350 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751800AbaL1S5l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Dec 2014 13:57:41 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: Re: [patch -next] iwlwifi: use a format string for an snprintf()
+Date: Sun, 28 Dec 2014 18:57:37 +0000
+Message-ID: <1419793057.15213.2.camel@egrumbacBox> (sfid-20141228_195746_546238_21477D21)
+References: <20141204110220.GE22643@mwanda>
+In-Reply-To: <20141204110220.GE22643@mwanda>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, December 02, 2014 07:07:47 AM Joe Perches wrote:
-> net_<foo>_ratelimited uses the same form.
-> 
-> include/linux/net.h:#define net_ratelimited_function(function, ...)             
-> include/linux/net.h-do {                                                        
-> include/linux/net.h-    if (net_ratelimit())                                    
-> include/linux/net.h-            function(__VA_ARGS__);                          
-> include/linux/net.h-} while (0)
-> 
-Yes, I see. There are representatives of both "schools". As counter example,
-netdev_<foo> uses "long" way:
-
-#define define_netdev_printk_level(func, level)			\
-void func(const struct net_device *dev, const char *fmt, ...)	\
-{								\
-	struct va_format vaf;					\
-	va_list args;						\
-								\
-	va_start(args, fmt);					\
-								\
-	vaf.fmt = fmt;						\
-	vaf.va = &args;						\
-								\
-	__netdev_printk(level, dev, &vaf);			\
-								\
-	va_end(args);						\
-}								\
-EXPORT_SYMBOL(func);
-
-define_netdev_printk_level(netdev_emerg, KERN_EMERG);
-
-Problem with "short" way, it is hard to detect usage with side effect.
-Example from netfilter:
-		if (dst_mtu(skb_dst(skb)) <= minlen) {
-			net_err_ratelimited("unknown or invalid path-MTU (%u)\n",
-					    dst_mtu(skb_dst(skb)));
-
-Now, one need to remember that dst_mtu() can't have side effects.
-I agree it is bad practice to have non-trivial arguments in printk-like functions,
-but it is hard to detect, specifically if one just automatically replace function with its
-"ratelimited" version.
+T24gVGh1LCAyMDE0LTEyLTA0IGF0IDE0OjAyICswMzAwLCBEYW4gQ2FycGVudGVyIHdyb3RlOg0K
+PiBUaGlzIHdpbGwgbWFrZSBLZWVzIENvb2sgaGFwcHkgaWYgd2Ugc3BlY2lmeSBhIGZvcm1hdCBz
+dHJpbmcgYW5kLCB3aG8NCj4ga25vd3MsIG1heWJlIHNvbWVkYXkgdGhlcmUgd2lsbCBiZSBhIGZp
+cm13YXJlIHZlcnNpb24gd2l0aCBhIHBlcmNlbnQNCj4gY2hhcmFjdGVyIGFuZCB3ZSdsbCBiZSBn
+bGFkIGZvciB0aGlzLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogRGFuIENhcnBlbnRlciA8ZGFuLmNh
+cnBlbnRlckBvcmFjbGUuY29tPg0KPiANCg0KVGhlIHBhdGNoIHRoYXQgaW50cm9kdWNlcyB0aGlz
+IGNvZGUgaGFzIGJlZW4gcmV2ZXJ0ZWQgaW4gLW5leHQsIHNvIHRoaXMNCmRvZXNuJ3QgYXBwbHkg
+dGhlcmUuDQoNClRoYW5rIHlvdS4NCg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvaXdsd2lmaS9pd2wtZHJ2LmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1k
+cnYuYw0KPiBpbmRleCAzOGRlMTUxLi42OGVmZTk3IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25l
+dC93aXJlbGVzcy9pd2x3aWZpL2l3bC1kcnYuYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9pd2x3aWZpL2l3bC1kcnYuYw0KPiBAQCAtMTI5Niw3ICsxMjk2LDcgQEAgc3RhdGljIHZvaWQg
+aXdsX3JlcV9md19jYWxsYmFjayhjb25zdCBzdHJ1Y3QgZmlybXdhcmUgKnVjb2RlX3Jhdywgdm9p
+ZCAqY29udGV4dCkNCj4gIAkJaXdsX2RlYWxsb2NfdWNvZGUoZHJ2KTsNCj4gIA0KPiAgCQkvKiBC
+dWlsZCBuYW1lIG9mIGNvcnJlY3Qtc3RlcCBGVyAqLw0KPiAtCQlzbnByaW50ZihmaXJtd2FyZV9u
+YW1lLCBzaXplb2YoZmlybXdhcmVfbmFtZSksDQo+ICsJCXNucHJpbnRmKGZpcm13YXJlX25hbWUs
+IHNpemVvZihmaXJtd2FyZV9uYW1lKSwgIiVzIiwNCj4gIAkJCSBzdHJyY2hyKGRydi0+ZmlybXdh
+cmVfbmFtZSwgJy0nKSk7DQo+ICAJCXNucHJpbnRmKGRydi0+ZmlybXdhcmVfbmFtZSwgc2l6ZW9m
+KGRydi0+ZmlybXdhcmVfbmFtZSksDQo+ICAJCQkgIiVzJXMiLCBkcnYtPmNmZy0+ZndfbmFtZV9w
+cmUsIGZpcm13YXJlX25hbWUpOw0KDQo=
