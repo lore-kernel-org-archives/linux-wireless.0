@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:63133 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbaLRGDH (ORCPT
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:62591 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737AbaL1OCi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 01:03:07 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: send (re)assoc peer command when NSS changed
-References: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1418719980-19753-2-git-send-email-janusz.dziedzic@tieto.com>
-	<87a92mr2gi.fsf@kamboji.qca.qualcomm.com>
-	<CALhHN=rvAPMPOWyOM207sAiS+YQ2fWKEM0BO6d1KM7a+F6e3zQ@mail.gmail.com>
-Date: Thu, 18 Dec 2014 08:02:59 +0200
-In-Reply-To: <CALhHN=rvAPMPOWyOM207sAiS+YQ2fWKEM0BO6d1KM7a+F6e3zQ@mail.gmail.com>
-	(Janusz Dziedzic's message of "Thu, 18 Dec 2014 06:28:22 +0100")
-Message-ID: <87388dpka4.fsf@kamboji.qca.qualcomm.com> (sfid-20141218_070311_425323_6228F0AA)
+	Sun, 28 Dec 2014 09:02:38 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CA+icZUVuTB55UcKKbUMd8VB5mHMkaxhCVDkLKhtSXizR+1gE2A@mail.gmail.com>
+References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
+	<CACna6rz4ue2PFQR-=nKxmCJSw9O8pKU=S7LqxA68OY1D0obvKg@mail.gmail.com>
+	<CA+icZUVm6YNK_eN7-NcSH-mAqC61vwYryVUJuNMCKuhq8kXV2g@mail.gmail.com>
+	<CACna6rymPy1+YtEHEk18ci3VaAWkiwJ2iWv+p_yYPAjzQeJwtw@mail.gmail.com>
+	<CA+icZUVuTB55UcKKbUMd8VB5mHMkaxhCVDkLKhtSXizR+1gE2A@mail.gmail.com>
+Date: Sun, 28 Dec 2014 15:02:37 +0100
+Message-ID: <CACna6rwRPwannK7TviY7AmhMvd09h-zLXJOBEK-U09dz=5ezKQ@mail.gmail.com> (sfid-20141228_150306_784511_D6DC5C06)
+Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80
+ characters per line
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Sedat Dilek <sedat.dilek@gmail.com>
+Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
-
-> On 17 December 2014 at 11:32, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
->>
->>> Assoc peer command contain information about NSS.
->>> When we will get IEEE80211_RC_NSS_CHANGED we should
->>> also send (re) assoc peer command to be sure firmware
->>> will know about it and RC will work correctly.
+On 28 December 2014 at 10:12, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Sun, Dec 28, 2014 at 9:53 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> On 28 December 2014 at 06:50, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+>>> On Sun, Dec 28, 2014 at 12:44 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>>> On 27 December 2014 at 20:24, Oscar Forner Martinez
+>>>> <oscar.forner.martinez@gmail.com> wrote:
+>>>>> Three lines with more than 80 characters per line have been split in several lines.
+>>>>>
+>>>>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+>>>>
+>>>> Acked-by: Rafał Miłecki <zajec5@gmail.com>
+>>>>
 >>>
->>> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>>> As for the comment-line changes... 80+ chars are allowed for better readability.
+>>> So, please don't do that.
+>>> [ Checkpatch should not warn on this especially for comments. ]
 >>
->> Does this fix a user visible bug or is this something you just found
->> from doing code review?
+>> We almost always split long comments into separated lines in the
+>> kernel. What's different with this case?
+>>
 >
-> In case we will get only IEEE80211_RC_NSS_CHANGED we will not update
-> FW configuration correctly. This is not the problem when IBSS, while
-> we update two flags in one step IEEE80211_RC_SUPP_RATES_CHANGED |
-> IEEE80211_RC_NSS_CHANGED.
+> 1st it is not mandatory.
 >
-> We could have problems when mac80211 will send only NSS_CHANGED flag.
-> This seems could happen when we will get WLAN_EID_OPMODE_NOTIF. I
-> didn't test such case, but I believe some AP could send such
-> notification. So, this fix potential TP issue.
+> 2nd it is more readable in one line.
+>
+> -                       /* 4706 CC and PMU watchdogs are clocked at
+> 1/4 of ALP clock */
+> +                       /* 4706 CC and PMU watchdogs are clocked at 1/4 of ALP
+> +                        * clock
+> +                        */
+>
+> I agree with you when the comment would be longer.
 
-Ok, I'll add to the commit log that this was found during code review
-(and doesn't fix a reported bug).
+So I guess there is some rule like
+"Don't use 2 lines if there is 80 chars + one word"
+? Where can I find such rules?
 
 -- 
-Kalle Valo
+Rafał
