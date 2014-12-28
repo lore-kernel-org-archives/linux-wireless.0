@@ -1,74 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50552 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751268AbaL3PVW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 10:21:22 -0500
-Date: Tue, 30 Dec 2014 16:21:19 +0100 (CET)
-From: Jiri Kosina <jkosina@suse.cz>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-cc: Peter Hurley <peter@hurleysoftware.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: iwlwifi-driver card doesn't work with 3.19-rc2+
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
-Message-ID: <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> (sfid-20141230_162137_885623_6C052C2C)
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55477 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbaL1PQS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Dec 2014 10:16:18 -0500
+Message-ID: <54A01EBF.2020608@broadcom.com> (sfid-20141228_161621_176791_539FF6D0)
+Date: Sun, 28 Dec 2014 16:16:15 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+To: Vaishali Thakkar <vthakkar1994@gmail.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: Re: [PATCH v3] NFC: port100: Introduce the use of function put_unaligned_le16
+References: <20141224131557.GA2591@vaishali-Ideapad-Z570> <CAK-LDbJgwdWLZf9tH67sFdYodX0u+t2RGuwsJF3a1-8o0=RBPg@mail.gmail.com>
+In-Reply-To: <CAK-LDbJgwdWLZf9tH67sFdYodX0u+t2RGuwsJF3a1-8o0=RBPg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 30 Dec 2014, Grumbach, Emmanuel wrote:
++ Samuel
 
-> > > So why do you used them?
-> > > They have been deprecated for a couple of years now. You should be
-> > > using nl80211 based tools such as iw.
-> > 
-> > A couple of years is not very long where userspace is concerned.
-> > 
-> Well - the decently new wireless tools do talk nl80211.
-
-With 3.18-rc5, I get this:
-
-# iwconfig --version
-iwconfig  Wireless-Tools version 30
-          Compatible with Wireless Extension v11 to v22.
-
-Kernel    Currently compiled with Wireless Extension v22.
-
-wlan0     Recommend Wireless Extension v21 or later,
-          Currently compiled with Wireless Extension v22.
-
-
-With 3.19-rc, I get (with the same userspace) this:
-
-# iwconfig --version
-iwconfig  Wireless-Tools version 30
-          Compatible with Wireless Extension v11 to v22.
-
-          Cannot read /proc/net/wireless
-
-And nothing else (iwlist, etc) works either. This is with
-
-# rpm -qi wireless-tools | grep Ver
-Version     : 30.pre9
-
-from openSUSE 13.2. That's not decently new enough?
-
-> You can still enable it (CFG80211_WEXT).
-> It has been disabled by:
-> 
-> commit 24a0aa212ee2dbe44360288684478d76a8e20a0a
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Fri Nov 28 12:14:06 2014 +0100
+On 12/28/14 12:33, Vaishali Thakkar wrote:
+> On Wed, Dec 24, 2014 at 6:45 PM, Vaishali Thakkar
+> <vthakkar1994@gmail.com>  wrote:
+>> This patch introduces the use of function put_unaligned_le16.
+>>
+>> This is done using Coccinelle and semantic patch used is as follows:
+>>
+>> @a@
+>> typedef u16, __le16;
+>> {u16,__le16} e16;
+>> identifier tmp;
+>> expression ptr;
+>> expression y,e;
+>> type T;
+>> @@
+>>
+>> - tmp = cpu_to_le16(y);
+>>
+>>    <+... when != tmp
+>> (
+>> - memcpy(ptr, (T)&tmp, \(2\|sizeof(u16)\|sizeof(__le16)\|sizeof(e16)\));
+>> + put_unaligned_le16(y,ptr);
+>> |
+>> - memcpy(ptr, (T)&tmp, ...);
+>> + put_unaligned_le16(y,ptr);
+>> )
+>>    ...+>
+>> ? tmp = e
+>>
+>> @@ type T; identifier a.tmp; @@
+>>
+>> - T tmp;
+>> ...when != tmp
+>>
+>> Signed-off-by: Vaishali Thakkar<vthakkar1994@gmail.com>
+>> ---
+>> Changes since v1:
+>>          <asm/unaligned.h>   has arch-specific knowlege of which of
+>>          the implementations needs to be used. So, include it instaed
+>>          of<linux/unaligned/access_ok.h>.
+>> Changes since v2:
+>>          Fix typing mistake in subject
+>>
+>>   drivers/nfc/port100.c | 6 ++----
+>>   1 file changed, 2 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/nfc/port100.c b/drivers/nfc/port100.c
+>> index 4ac4d31..440f0f3 100644
+>> --- a/drivers/nfc/port100.c
+>> +++ b/drivers/nfc/port100.c
+>> @@ -18,6 +18,7 @@
+>>   #include<linux/module.h>
+>>   #include<linux/usb.h>
+>>   #include<net/nfc/digital.h>
+>> +#include<asm/unaligned.h>
+>>
+>>   #define VERSION "0.1"
+>>
+>> @@ -1136,7 +1137,6 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+>>   {
+>>          struct port100 *dev = nfc_digital_get_drvdata(ddev);
+>>          struct port100_cb_arg *cb_arg;
+>> -       __le16 timeout;
+>>
+>>          cb_arg = kzalloc(sizeof(struct port100_cb_arg), GFP_KERNEL);
+>>          if (!cb_arg)
+>> @@ -1145,9 +1145,7 @@ static int port100_in_send_cmd(struct nfc_digital_dev *ddev,
+>>          cb_arg->complete_cb = cb;
+>>          cb_arg->complete_arg = arg;
+>>
+>> -       timeout = cpu_to_le16(_timeout * 10);
+>> -
+>> -       memcpy(skb_push(skb, sizeof(__le16)),&timeout, sizeof(__le16));
+>> +       put_unaligned_le16(_timeout * 10, skb_push(skb, sizeof(__le16)));
+>>
+>>          return port100_send_cmd_async(dev, PORT100_CMD_IN_COMM_RF, skb,
+>>                                        port100_in_comm_rf_complete, cb_arg);
+>> --
+>> 1.9.1
+>>
 >
->    cfg80211: make WEXT compatibility unselectable
+> Hello...Can someone please review my patch so that I can have idea
+> about I am on a right way or not??
+> I think this is missed by developers.
 
-I think this needs to be reverted.
+Generally that's not how it works. You either get comments or not. It 
+may also help to send the patch to the maintainer, ie. Samuel Ortiz.
 
--- 
-Jiri Kosina
-SUSE Labs
+Regards,
+Arend
+
+> Thank You.
+>
+
