@@ -1,30 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33269 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967631AbaLLMxs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 07:53:48 -0500
-Message-ID: <1418388824.2470.39.camel@sipsolutions.net> (sfid-20141212_135351_495566_6052F7EC)
-Subject: Re: [PATCH iw v3 0/3] add WoWLAN net-detect trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 12 Dec 2014 13:53:44 +0100
-In-Reply-To: <1417208756-14839-1-git-send-email-luca@coelho.fi>
-References: <1417208756-14839-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:61351 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439AbaL1Ixi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Dec 2014 03:53:38 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA+icZUVm6YNK_eN7-NcSH-mAqC61vwYryVUJuNMCKuhq8kXV2g@mail.gmail.com>
+References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
+	<CACna6rz4ue2PFQR-=nKxmCJSw9O8pKU=S7LqxA68OY1D0obvKg@mail.gmail.com>
+	<CA+icZUVm6YNK_eN7-NcSH-mAqC61vwYryVUJuNMCKuhq8kXV2g@mail.gmail.com>
+Date: Sun, 28 Dec 2014 09:53:36 +0100
+Message-ID: <CACna6rymPy1+YtEHEk18ci3VaAWkiwJ2iWv+p_yYPAjzQeJwtw@mail.gmail.com> (sfid-20141228_095404_285210_5D85C06F)
+Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80
+ characters per line
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Sedat Dilek <sedat.dilek@gmail.com>
+Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2014-11-28 at 23:05 +0200, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> A third spin.  This one includes parsing of some configuration
-> information related to net-detect (patch 3/3).  I haven't send the
-> nl80211 counterpart yet, but it's backwards compatible with the
-> existing nl80211 code, so it doesn't matter if it's added in iw first.
+On 28 December 2014 at 06:50, Sedat Dilek <sedat.dilek@gmail.com> wrote:
+> On Sun, Dec 28, 2014 at 12:44 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> On 27 December 2014 at 20:24, Oscar Forner Martinez
+>> <oscar.forner.martinez@gmail.com> wrote:
+>>> Three lines with more than 80 characters per line have been split in several lines.
+>>>
+>>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+>>
+>> Acked-by: Rafał Miłecki <zajec5@gmail.com>
+>>
+>
+> As for the comment-line changes... 80+ chars are allowed for better readability.
+> So, please don't do that.
+> [ Checkpatch should not warn on this especially for comments. ]
 
-Applied.
+We almost always split long comments into separated lines in the
+kernel. What's different with this case?
 
-johannes
-
+-- 
+Rafał
