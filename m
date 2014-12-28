@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50901 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754357AbaLJIMt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 03:12:49 -0500
-Message-ID: <1418199160.3460.2.camel@sipsolutions.net> (sfid-20141210_091251_979298_14F5152A)
-Subject: Re: [PATCH v3] wireless: Supporting of IFLA_INFO_KIND rtnl attribute
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Vadim Kochan <vadim4j@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 10 Dec 2014 09:12:40 +0100
-In-Reply-To: <24A120F8-952B-4471-88A6-463CBAD168BE@holtmann.org>
-References: <1418163666-9206-1-git-send-email-vadim4j@gmail.com>
-	 <24A120F8-952B-4471-88A6-463CBAD168BE@holtmann.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:37276 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045AbaL1FuT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Dec 2014 00:50:19 -0500
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CACna6rz4ue2PFQR-=nKxmCJSw9O8pKU=S7LqxA68OY1D0obvKg@mail.gmail.com>
+References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
+	<CACna6rz4ue2PFQR-=nKxmCJSw9O8pKU=S7LqxA68OY1D0obvKg@mail.gmail.com>
+Date: Sun, 28 Dec 2014 06:50:16 +0100
+Message-ID: <CA+icZUVm6YNK_eN7-NcSH-mAqC61vwYryVUJuNMCKuhq8kXV2g@mail.gmail.com> (sfid-20141228_065052_014956_4D2D3D1B)
+Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80
+ characters per line
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-10 at 00:23 +0100, Marcel Holtmann wrote:
+On Sun, Dec 28, 2014 at 12:44 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 27 December 2014 at 20:24, Oscar Forner Martinez
+> <oscar.forner.martinez@gmail.com> wrote:
+>> Three lines with more than 80 characters per line have been split in several lines.
+>>
+>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+>
+> Acked-by: Rafał Miłecki <zajec5@gmail.com>
+>
 
-> have we considered also exposing the mode of this netdev. So for
-> example sta,ap,p2p-go,p2p-client etc. If we can send dynamic updates
-> via RTNL, we could easily tell the networking management system what
-> type of wireless device we have here. I am thinking about it like
-> "wlan/p2p-go" etc. Or should this be better kept strictly to "wlan".
+As for the comment-line changes... 80+ chars are allowed for better readability.
+So, please don't do that.
+[ Checkpatch should not warn on this especially for comments. ]
 
-I certainly haven't considered this API at all :)
-That said, I'm not sure where it would be used, so I don't really know.
+- Sedat -
 
-> And I am not sure RTNL would be capable of changing this kind strings
-> at runtime anyway.
-
-Given the API (fixed constant string in a const struct that the netdev
-points to) it seems that it doesn't really support that, unless we
-change the internals to have a function to return the string or keep
-lots of copies of the struct and reassign them - neither seems very
-appealing.
-
-johannes
-
+> Kalle: will you pick this patch?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
