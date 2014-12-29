@@ -1,113 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:48706 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967362AbaLLLyf (ORCPT
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:39535 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbaL2CWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 06:54:35 -0500
-Received: by mail-wi0-f181.google.com with SMTP id r20so2285210wiv.8
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Dec 2014 03:54:34 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 5/5] ath10k: advertise p2p dev support
-Date: Fri, 12 Dec 2014 12:41:39 +0100
-Message-Id: <1418384499-31660-6-git-send-email-michal.kazior@tieto.com> (sfid-20141212_125457_972611_FA3FAC78)
-In-Reply-To: <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
-References: <1418214714-29689-1-git-send-email-michal.kazior@tieto.com>
- <1418384499-31660-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 28 Dec 2014 21:22:31 -0500
+From: Matthew Emerson <emersonmde@gmail.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Matthew Emerson <emersonmde@gmail.com>
+Subject: [PATCH] staging: rtl8723au: changes stop ap mode to use reset function
+Date: Sun, 28 Dec 2014 21:22:16 -0500
+Message-Id: <1419819736-4861-1-git-send-email-emersonmde@gmail.com> (sfid-20141229_032247_969942_244802BF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware doesn't allow precise tx rate control so
-P2P wasn't entirely spec compliant (it was using
-CCK rates in some cases).
+Changes stop_ap_mode23a() to use rtw_reset_securitypriv23a. This makes
+the code cleaner and fixes two checkpatch.pl errors, one line over 80
+characters, and one spacing issue.
 
-The only way to make sure firmware doesn't use CCK
-rates is to have a vdev with P2P subtype used for
-scanning and tx. This can be done via a special
-dedicated P2P device interface support.
-
-This also removes the ancient hack from ath10k in
-favor of p2pdev.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Matthew Emerson <emersonmde@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c |  6 ------
- drivers/net/wireless/ath/ath10k/mac.c  | 12 +++++++++---
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_ap.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 577a3d7..c83f1e7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -32,17 +32,14 @@
+diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
+index e394d12c36b0..510ee212496f 100644
+--- a/drivers/staging/rtl8723au/core/rtw_ap.c
++++ b/drivers/staging/rtl8723au/core/rtw_ap.c
+@@ -1870,10 +1870,8 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
+ 	pmlmepriv->update_bcn = false;
+ 	pmlmeext->bstart_bss = false;
  
- unsigned int ath10k_debug_mask;
- static bool uart_print;
--static unsigned int ath10k_p2p;
- static bool skip_otp;
+-	/* reset and init security priv , this can refine with rtw_reset_securitypriv23a */
+-	memset((unsigned char *)&padapter->securitypriv, 0, sizeof (struct security_priv));
+-	padapter->securitypriv.ndisauthtype = Ndis802_11AuthModeOpen;
+-	padapter->securitypriv.ndisencryptstatus = Ndis802_11WEPDisabled;
++	/* reset and init security priv */
++	rtw_reset_securitypriv23a(padapter);
  
- module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
- module_param(uart_print, bool, 0644);
--module_param_named(p2p, ath10k_p2p, uint, 0644);
- module_param(skip_otp, bool, 0644);
- 
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
- MODULE_PARM_DESC(uart_print, "Uart target debugging");
--MODULE_PARM_DESC(p2p, "Enable ath10k P2P support");
- MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
- 
- static const struct ath10k_hw_params ath10k_hw_params_list[] = {
-@@ -1290,10 +1287,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 
- 	ar->ath_common.priv = ar;
- 	ar->ath_common.hw = ar->hw;
--
--	ar->p2p = !!ath10k_p2p;
- 	ar->dev = dev;
--
- 	ar->hif.ops = hif_ops;
- 	ar->hif.bus = bus;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 19ddbc6..42f6a4d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2961,10 +2961,11 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	arvif->vdev_id = bit;
- 	arvif->vdev_subtype = WMI_VDEV_SUBTYPE_NONE;
- 
--	if (ar->p2p)
--		arvif->vdev_subtype = WMI_VDEV_SUBTYPE_P2P_DEVICE;
--
- 	switch (vif->type) {
-+	case NL80211_IFTYPE_P2P_DEVICE:
-+		arvif->vdev_type = WMI_VDEV_TYPE_STA;
-+		arvif->vdev_subtype = WMI_VDEV_SUBTYPE_P2P_DEVICE;
-+		break;
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 	case NL80211_IFTYPE_STATION:
- 		arvif->vdev_type = WMI_VDEV_TYPE_STA;
-@@ -4860,6 +4861,10 @@ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
- 	.types	= BIT(NL80211_IFTYPE_P2P_GO)
- 	},
- 	{
-+	.max	= 1,
-+	.types	= BIT(NL80211_IFTYPE_P2P_DEVICE)
-+	},
-+	{
- 	.max	= 7,
- 	.types	= BIT(NL80211_IFTYPE_AP)
- 	},
-@@ -5079,6 +5084,7 @@ int ath10k_mac_register(struct ath10k *ar)
- 
- 	if (!test_bit(ATH10K_FW_FEATURE_NO_P2P, ar->fw_features))
- 		ar->hw->wiphy->interface_modes |=
-+			BIT(NL80211_IFTYPE_P2P_DEVICE) |
- 			BIT(NL80211_IFTYPE_P2P_CLIENT) |
- 			BIT(NL80211_IFTYPE_P2P_GO);
- 
+ 	/* for ACL */
+ 	spin_lock_bh(&pacl_node_q->lock);
 -- 
-1.8.5.3
+2.0.5
 
