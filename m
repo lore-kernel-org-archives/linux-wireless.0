@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44772 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751268AbaLURPS (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:64881 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945AbaL2GYi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 12:15:18 -0500
-Date: Sun, 21 Dec 2014 12:07:23 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-nfc@ml01.01.org,
-	"David S. Miller" <davem@davemloft.net>, lwn@lwn.net
-Subject: Re: changes to Linux wireless maintenance
-Message-ID: <20141221170722.GA28648@tuxdriver.com> (sfid-20141221_181522_674427_AC27B3B0)
-References: <87388d2tbn.fsf@purkki.adurom.net>
- <c1f3352bed1f1a2985a5111a077134a5.squirrel@www.codeaurora.org>
- <549697F0.8090506@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <549697F0.8090506@broadcom.com>
+	Mon, 29 Dec 2014 01:24:38 -0500
+Received: by mail-wi0-f169.google.com with SMTP id r20so22878843wiv.0
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2014 22:24:37 -0800 (PST)
+Received: from muse.ger.corp.intel.com (85-250-108-142.bb.netvision.net.il. [85.250.108.142])
+        by mx.google.com with ESMTPSA id gb10sm23488030wjb.21.2014.12.28.22.24.36
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Sun, 28 Dec 2014 22:24:37 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 13/13] wl18xx: declare radar_detect_widths support for ap interfaces
+Date: Mon, 29 Dec 2014 08:24:13 +0200
+Message-Id: <1419834253-18331-13-git-send-email-eliad@wizery.com> (sfid-20141229_074347_189276_93DD230F)
+In-Reply-To: <1419834253-18331-1-git-send-email-eliad@wizery.com>
+References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 21, 2014 at 10:50:40AM +0100, Arend van Spriel wrote:
+After having all the dfs infrastructure in place, declare
+radar_detect_widths support for the ap interfaces combination.
 
-> >The trees work similarly like John's wireless and wireless-next trees, the
-> >former only for important bugfixes to -rc releases and the latter for the
-> >rest going to the next release.
-> 
-> So are you dropping the wireless-testing tree? From earlier IRC discussion I
-> figured that tree was still in demand.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-I still plan to maintain a version of wireless-testing for some amount of time.
-
-John
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 604de24..e5bc557 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1799,6 +1799,10 @@ wl18xx_iface_combinations[] = {
+ 		.limits = wl18xx_iface_ap_limits,
+ 		.n_limits = ARRAY_SIZE(wl18xx_iface_ap_limits),
+ 		.num_different_channels = 1,
++		.radar_detect_widths =	BIT(NL80211_CHAN_NO_HT) |
++					BIT(NL80211_CHAN_HT20) |
++					BIT(NL80211_CHAN_HT40MINUS) |
++					BIT(NL80211_CHAN_HT40PLUS),
+ 	}
+ };
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.8.5.2.229.g4448466.dirty
+
