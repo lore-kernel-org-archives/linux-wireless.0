@@ -1,138 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:48737 "EHLO
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:62590 "EHLO
 	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933257AbaLDWNZ (ORCPT
+	with ESMTP id S1751594AbaL2TRE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2014 17:13:25 -0500
-Received: by mail-wi0-f171.google.com with SMTP id bs8so36204911wib.10
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Dec 2014 14:13:24 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/6] staging: vt6655: common variable size channel numbers to ieee80211_channel->hw_value
-Date: Thu,  4 Dec 2014 22:12:43 +0000
-Message-Id: <1417731167-3231-2-git-send-email-tvboxspy@gmail.com> (sfid-20141204_231336_773286_EF197092)
-In-Reply-To: <1417731167-3231-1-git-send-email-tvboxspy@gmail.com>
-References: <1417731167-3231-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 29 Dec 2014 14:17:04 -0500
+Received: by mail-wi0-f171.google.com with SMTP id bs8so22897900wib.4
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2014 11:17:02 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 29 Dec 2014 14:17:02 -0500
+Message-ID: <CAM-0sLw-N1J535xWE=XG-Pn3yi7YBUFhbBKJE0pmEUy9tKDtsA@mail.gmail.com> (sfid-20141229_201711_003109_96AC10CA)
+Subject: IBSS or Hostapd, but not both
+From: Tuc at Beach House <tuctboh@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hw_value is u16 so fix all to the same size.
+Hi,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/channel.c |  6 +++---
- drivers/staging/vt6655/device.h  |  2 +-
- drivers/staging/vt6655/rf.c      | 12 +++++++-----
- drivers/staging/vt6655/rf.h      |  8 ++++----
- 4 files changed, 15 insertions(+), 13 deletions(-)
+Raspberry Pi Model B+, Linux blue 3.12.28+ #709 PREEMPT Mon Sep 8 15:28:00
+BST 2014 armv6l GNU/Linux, hostapd v2.3 (defconfig), Ralink using rt2800usb
+driver on either a Wi-Pi or Panda Ultra Wireless N USB Adapter.
 
-diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
-index 6514869..1302f3c 100644
---- a/drivers/staging/vt6655/channel.c
-+++ b/drivers/staging/vt6655/channel.c
-@@ -189,11 +189,11 @@ bool set_channel(void *pDeviceHandler, struct ieee80211_channel *ch)
- 
- 	if (pDevice->byRFType == RF_AIROHA7230)
- 		RFbAL7230SelectChannelPostProcess(pDevice, pDevice->byCurrentCh,
--						  (unsigned char)ch->hw_value);
-+						  ch->hw_value);
- 
--	pDevice->byCurrentCh = (unsigned char)ch->hw_value;
-+	pDevice->byCurrentCh = ch->hw_value;
- 	bResult &= RFbSelectChannel(pDevice, pDevice->byRFType,
--				    (unsigned char)ch->hw_value);
-+				    ch->hw_value);
- 
- 	/* Init Synthesizer Table */
- 	if (pDevice->bEnablePSMode)
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 83efbfb..96d8e62 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -367,7 +367,7 @@ struct vnt_private {
- 	bool bIsBeaconBufReadySet;
- 	unsigned int	cbBeaconBufReadySetCnt;
- 	bool bFixRate;
--	unsigned char byCurrentCh;
-+	u16 byCurrentCh;
- 
- 	bool bAES;
- 
-diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
-index 32ef993..27841aa 100644
---- a/drivers/staging/vt6655/rf.c
-+++ b/drivers/staging/vt6655/rf.c
-@@ -651,7 +651,8 @@ bool RFbInit(
-  * Return Value: true if succeeded; false if failed.
-  *
-  */
--bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType, unsigned char byChannel)
-+bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType,
-+		      u16 byChannel)
- {
- 	bool bResult = true;
- 
-@@ -687,7 +688,8 @@ bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType, unsigned
-  * Return Value: None.
-  *
-  */
--bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType, unsigned int uChannel)
-+bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType,
-+			 u16 uChannel)
- {
- 	void __iomem *dwIoBase = priv->PortOffset;
- 	int   ii;
-@@ -767,7 +769,7 @@ bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType, unsig
- bool RFbSetPower(
- 	struct vnt_private *priv,
- 	unsigned int uRATE,
--	unsigned int uCH
-+	u16 uCH
- )
- {
- 	bool bResult = true;
-@@ -937,8 +939,8 @@ RFvRSSITodBm(
- /* Post processing for the 11b/g and 11a.
-  * for save time on changing Reg2,3,5,7,10,12,15 */
- bool RFbAL7230SelectChannelPostProcess(struct vnt_private *priv,
--				       unsigned char byOldChannel,
--				       unsigned char byNewChannel)
-+				       u16 byOldChannel,
-+				       u16 byNewChannel)
- {
- 	bool bResult;
- 
-diff --git a/drivers/staging/vt6655/rf.h b/drivers/staging/vt6655/rf.h
-index 8a6e2cf..2ea21e2 100644
---- a/drivers/staging/vt6655/rf.h
-+++ b/drivers/staging/vt6655/rf.h
-@@ -74,12 +74,12 @@
- /*---------------------  Export Functions  --------------------------*/
- 
- bool IFRFbWriteEmbedded(struct vnt_private *, unsigned long dwData);
--bool RFbSelectChannel(struct vnt_private *, unsigned char byRFType, unsigned char byChannel);
-+bool RFbSelectChannel(struct vnt_private *, unsigned char byRFType, u16);
- bool RFbInit(
- 	struct vnt_private *
- );
--bool RFvWriteWakeProgSyn(struct vnt_private *, unsigned char byRFType, unsigned int uChannel);
--bool RFbSetPower(struct vnt_private *, unsigned int uRATE, unsigned int uCH);
-+bool RFvWriteWakeProgSyn(struct vnt_private *, unsigned char byRFType, u16);
-+bool RFbSetPower(struct vnt_private *, unsigned int uRATE, u16);
- bool RFbRawSetPower(
- 	struct vnt_private *,
- 	unsigned char byPwr,
-@@ -94,7 +94,7 @@ RFvRSSITodBm(
- );
- 
- //{{ RobertYu: 20050104
--bool RFbAL7230SelectChannelPostProcess(struct vnt_private *, unsigned char byOldChannel, unsigned char byNewChannel);
-+bool RFbAL7230SelectChannelPostProcess(struct vnt_private *, u16, u16);
- //}} RobertYu
- 
- #endif // __RF_H__
--- 
-2.1.0
+What I'm trying to accomplish is using a single interface to be an AP on
+one SSID, and ad-hoc on another SSID. The problem is that I can either do
+one, or the other, but not both...
 
+root@blue:~# iwconfig wlan1
+wlan1     IEEE 802.11bgn  ESSID:off/any
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=0 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
+
+So if I set up ad-hoc, works fine :
+
+root@blue:~# iw dev wlan1 interface add wlan10 type ibss
+root@blue:~# iwconfig wlan10
+wlan10    IEEE 802.11bgn  ESSID:off/any
+          Mode:Ad-Hoc  Cell: Not-Associated   Tx-Power=0 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
+
+root@blue:~# iwconfig wlan10 essid WEDDING
+root@blue:~# ifconfig wlan10 10.4.4.8 netmask 255.255.255.0
+root@blue:~# ping -c2 new
+PING new.wedding.ramolaandscott,com (10.4.4.6) 56(84) bytes of data.
+64 bytes from new.wedding.ramolaandscott,com (10.4.4.6): icmp_req=1 ttl=64
+time=3.51 ms
+64 bytes from new.wedding.ramolaandscott,com (10.4.4.6): icmp_req=2 ttl=64
+time=1.02 ms
+
+--- new.wedding.ramolaandscott,com ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1001ms
+rtt min/avg/max/mdev = 1.024/2.268/3.512/1.244 ms
+
+
+Now invoke hostapd with the following /etc/hostapd/hostapd.conf :
+
+root@blue:~# cat /etc/hostapd/hostapd.conf
+interface=wlan1
+ssid=FREE
+hw_mode=g
+channel=1
+root@blue:~# /usr/local/bin/hostapd -dd /etc/hostapd/hostapd.conf
+(Please see http://pastebin.com/cjqukwyH)
+
+
+But if I reboot and try backwards :
+
+root@blue:~# hostapd -dd /etc/hostapd/hostapd.conf
+(Please see http://pastebin.com/Tdc5dz81)
+
+
+And its fine, but then :
+
+root@blue:~# iw dev wlan1 interface add wlan10 type ibss
+root@blue:~# iwconfig wlan10
+wlan10    IEEE 802.11bgn  ESSID:off/any
+          Mode:Ad-Hoc  Cell: Not-Associated   Tx-Power=20 dBm
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
+
+root@blue:~# iwconfig wlan10 essid WEDDING
+root@blue:~# ifconfig wlan10
+wlan10    Link encap:Ethernet  HWaddr 00:c1:41:07:07:d1
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+root@blue:~# ifconfig wlan10 10.4.4.8 netmask 255.255.255.0
+SIOCSIFFLAGS: Device or resource busy
+root@blue:~# ifconfig wlan10
+wlan10    Link encap:Ethernet  HWaddr 00:c1:41:07:07:d1
+          inet addr:10.4.4.8  Bcast:10.4.4.255  Mask:255.255.255.0
+          BROADCAST MULTICAST  MTU:1500  Metric:1
+          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
+
+root@blue:~# ping -c2 new
+PING new.wedding.ramolaandscott,com (10.4.4.6) 56(84) bytes of data.
+
+--- new.wedding.ramolaandscott,com ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1001ms
+
+
+
+Any idea where to look or what to do to get them to work and play together?
+
+Thanks, Tuc
