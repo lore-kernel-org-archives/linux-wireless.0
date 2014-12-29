@@ -1,152 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:56939 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932833AbaLBSMB (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:62930
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751693AbaL2RKu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:12:01 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so17893257wgh.20
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:12:00 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 26/26] iwlwifi: mvm: Ability to work with packed usniffer image
-Date: Tue,  2 Dec 2014 20:11:17 +0200
-Message-Id: <1417543877-24193-26-git-send-email-egrumbach@gmail.com> (sfid-20141202_191214_896857_3CAC2467)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+	Mon, 29 Dec 2014 12:10:50 -0500
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: linux-arm-kernel@lists.infradead.org
+Cc: kernel-janitors@vger.kernel.org, netdev@vger.kernel.org,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PATCH 0/8] fix error return code
+Date: Mon, 29 Dec 2014 18:04:35 +0100
+Message-Id: <1419872683-32709-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141229_181406_713712_708C232E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+The complate semantic patch that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-The new ucode package format holds also the usniffer images
-(in addition to the operational images and the TLVs).
-The driver can load the usniffer image if debug
-configuration tells it to.
+// <smpl>
+@ok exists@
+identifier f,ret,i;
+expression e;
+constant c;
+@@
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-drv.c     | 17 +++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-fw-file.h |  1 +
- drivers/net/wireless/iwlwifi/iwl-fw.h      | 13 +++++++++++++
- drivers/net/wireless/iwlwifi/mvm/fw.c      |  7 ++++++-
- 4 files changed, 37 insertions(+), 1 deletion(-)
+// identify a function that returns a negative return value at least once.
+f(...) {
+... when any
+(
+return -c@i;
+|
+ret = -c@i;
+... when != ret = e
+return ret;
+|
+if (ret < 0) { ... return ret; }
+)
+... when any
+}
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index a53b534..38de151 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -591,6 +591,8 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 	char buildstr[25];
- 	u32 build;
- 	int num_of_cpus;
-+	bool usniffer_images = false;
-+	bool usniffer_req = false;
- 
- 	if (len < sizeof(*ucode)) {
- 		IWL_ERR(drv, "uCode has invalid length: %zd\n", len);
-@@ -908,6 +910,9 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 				break;
- 			}
- 
-+			if (conf->usniffer)
-+				usniffer_req = true;
-+
- 			IWL_INFO(drv, "Found debug configuration: %d\n",
- 				 conf->id);
- 
-@@ -915,12 +920,24 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 			pieces->dbg_conf_tlv_len[conf->id] = tlv_len;
- 			break;
- 			}
-+		case IWL_UCODE_TLV_SEC_RT_USNIFFER:
-+			usniffer_images = true;
-+			iwl_store_ucode_sec(pieces, tlv_data,
-+					    IWL_UCODE_REGULAR_USNIFFER,
-+					    tlv_len);
-+			break;
- 		default:
- 			IWL_DEBUG_INFO(drv, "unknown TLV: %d\n", tlv_type);
- 			break;
- 		}
- 	}
- 
-+	if (usniffer_req && !usniffer_images) {
-+		IWL_ERR(drv,
-+			"user selected to work with usniffer but usniffer image isn't available in ucode package\n");
-+		return -EINVAL;
-+	}
-+
- 	if (len) {
- 		IWL_ERR(drv, "invalid TLV after parsing: %zd\n", len);
- 		iwl_print_hex_dump(drv, IWL_DL_FW, (u8 *)data, len);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index 9faad69..f2a047f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -131,6 +131,7 @@ enum iwl_ucode_tlv_type {
- 	IWL_UCODE_TLV_API_CHANGES_SET	= 29,
- 	IWL_UCODE_TLV_ENABLED_CAPABILITIES	= 30,
- 	IWL_UCODE_TLV_N_SCAN_CHANNELS		= 31,
-+	IWL_UCODE_TLV_SEC_RT_USNIFFER	= 34,
- 	IWL_UCODE_TLV_FW_DBG_DEST	= 38,
- 	IWL_UCODE_TLV_FW_DBG_CONF	= 39,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 20d44ea..e6dc3b8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -77,11 +77,13 @@
-  * @IWL_UCODE_REGULAR: Normal runtime ucode
-  * @IWL_UCODE_INIT: Initial ucode
-  * @IWL_UCODE_WOWLAN: Wake on Wireless enabled ucode
-+ * @IWL_UCODE_REGULAR_USNIFFER: Normal runtime ucode when using usniffer image
-  */
- enum iwl_ucode_type {
- 	IWL_UCODE_REGULAR,
- 	IWL_UCODE_INIT,
- 	IWL_UCODE_WOWLAN,
-+	IWL_UCODE_REGULAR_USNIFFER,
- 	IWL_UCODE_TYPE_MAX,
- };
- 
-@@ -231,4 +233,15 @@ iwl_fw_dbg_conf_enabled(const struct iwl_fw *fw, u8 id)
- 	return trigger->enabled;
+@r exists@
+identifier ret,ok.f,fn;
+expression e1,e2,e3,e4,e5,e6,x;
+statement S,S1;
+position p1,p2,p3;
+@@
+
+// identify a case where the return variable is set to a non-negative value
+// and then returned in error-handling code
+f(...) {
+... when any
+(
+if@p1 (\(ret < 0\|ret != 0\))
+ { ... return ret; }
+|
+ret@p1 = 0
+)
+... when != \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\)
+    when != &ret
+    when any
+(
+ if (<+... ret = e5 ...+>) S1
+|
+ if (<+... &ret ...+>) S1
+|
+if@p2(<+...x = fn(...)...+>)
+ {
+  ... when != ret = e6
+      when forall
+ return@p3 ret;
+}
+|
+break;
+|
+x = fn(...)
+... when != \(ret = e4\|ret++\|ret--\|ret+=e4\|ret-=e4\)
+    when != &ret
+(
+ if (<+... ret = e3 ...+>) S
+|
+ if (<+... &ret ...+>) S
+|
+if@p2(<+...\(x != 0\|x < 0\|x == NULL\|IS_ERR(x)\)...+>)
+ {
+  ... when != ret = e2
+      when forall
+ return@p3 ret;
+}
+)
+)
+... when any
+}
+
+@printer depends on r@
+position p;
+identifier ok.f,pr;
+constant char [] c;
+@@
+
+f(...) { <...pr@p(...,c,...)...> }
+
+@bad0 exists@
+identifier r.ret,ok.f,g != {ERR_PTR,IS_ERR};
+position p != printer.p;
+@@
+
+f(...) { ... when any
+g@p(...,ret,...)
+... when any
  }
- 
-+static inline bool
-+iwl_fw_dbg_conf_usniffer(const struct iwl_fw *fw, u8 id)
-+{
-+	const struct iwl_fw_dbg_conf_tlv *conf_tlv = fw->dbg_conf_tlv[id];
-+
-+	if (!conf_tlv)
-+		return false;
-+
-+	return conf_tlv->usniffer;
-+}
-+
- #endif  /* __iwl_fw_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 1f1337a..d0fa6e9 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -186,7 +186,12 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	static const u8 alive_cmd[] = { MVM_ALIVE };
- 	struct iwl_sf_region st_fwrd_space;
- 
--	fw = iwl_get_ucode_image(mvm, ucode_type);
-+	if (ucode_type == IWL_UCODE_REGULAR &&
-+	    iwl_fw_dbg_conf_usniffer(mvm->fw, FW_DBG_CUSTOM) &&
-+	    iwl_fw_dbg_conf_enabled(mvm->fw, FW_DBG_CUSTOM))
-+		fw = iwl_get_ucode_image(mvm, IWL_UCODE_REGULAR_USNIFFER);
-+	else
-+		fw = iwl_get_ucode_image(mvm, ucode_type);
- 	if (WARN_ON(!fw))
- 		return -EINVAL;
- 	mvm->cur_ucode = ucode_type;
--- 
-1.9.1
+
+@bad depends on !bad0 exists@
+position r.p1,r.p2;
+statement S1,S2;
+identifier r.ret;
+expression e1;
+@@
+
+// ignore the above if there is some path where the variable is set to
+// something else
+(
+if@p1 (\(ret < 0\|ret != 0\)) S1
+|
+ret@p1 = 0
+)
+... when any
+ \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\|&ret\)
+... when any
+if@p2(...) S2
+
+@bad1 depends on !bad0 && !bad exists@
+position r.p2;
+statement S2;
+identifier r.ret;
+expression e1;
+constant c;
+@@
+
+ret = -c
+... when != \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\)
+    when != &ret
+    when any
+if@p2(...) S2
+
+@bad2 depends on !bad0 && !bad && !bad1 exists@
+position r.p1,r.p2;
+identifier r.ret;
+expression e1;
+statement S2;
+constant c;
+@@
+
+// likewise ignore it if there has been an intervening return
+ret@p1 = 0
+... when != if (...) { ... ret = e1 ... return ret; }
+    when != if (...) { ... return -c; }
+    when any
+if@p2(...) S2
+
+
+@script:python depends on !bad0 && !bad && !bad1 && !bad2@
+p1 << r.p1;
+p2 << r.p2;
+p3 << r.p3;
+@@
+
+cocci.print_main("",p1)
+cocci.print_secs("",p2)
+cocci.print_secs("",p3)
+// </smpl>
 
