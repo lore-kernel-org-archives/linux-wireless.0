@@ -1,139 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17835 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbaLWHsF (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:51745 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681AbaL2GYh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 02:48:05 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 07/22] wil6210: control AMSDU on Tx side of Block Ack
-Date: Tue, 23 Dec 2014 09:47:09 +0200
-Message-Id: <1419320844-23989-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141223_084811_744014_CFE5DA0C)
-In-Reply-To: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 29 Dec 2014 01:24:37 -0500
+Received: by mail-wg0-f52.google.com with SMTP id x12so18145029wgg.11
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2014 22:24:36 -0800 (PST)
+Received: from muse.ger.corp.intel.com (85-250-108-142.bb.netvision.net.il. [85.250.108.142])
+        by mx.google.com with ESMTPSA id gb10sm23488030wjb.21.2014.12.28.22.24.34
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Sun, 28 Dec 2014 22:24:35 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 12/13] wlcore: add dfs region to reg domain update cmd
+Date: Mon, 29 Dec 2014 08:24:12 +0200
+Message-Id: <1419834253-18331-12-git-send-email-eliad@wizery.com> (sfid-20141229_074347_019289_6EC84849)
+In-Reply-To: <1419834253-18331-1-git-send-email-eliad@wizery.com>
+References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When establishing Block Ack as originator (Tx), control
-AMSDU flag when sending ADDBA and update status upon
-establishment flow completion. To be used in AMSDU flows
+From: Guy Mishol <guym@ti.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Add dfs region to the reg domain channel update command.
+
+Signed-off-by: Guy Mishol <guym@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c |  3 ++-
- drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
- drivers/net/wireless/ath/wil6210/wmi.c     |  8 ++++++--
- drivers/net/wireless/ath/wil6210/wmi.h     | 12 +++++++++++-
- 4 files changed, 20 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ti/wlcore/cmd.c    | 1 +
+ drivers/net/wireless/ti/wlcore/cmd.h    | 2 ++
+ drivers/net/wireless/ti/wlcore/main.c   | 4 ++++
+ drivers/net/wireless/ti/wlcore/wlcore.h | 3 +++
+ 4 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index fedfa64..c57cc2d 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -114,9 +114,10 @@ static int wil_vring_debugfs_show(struct seq_file *s, void *data)
- 			snprintf(name, sizeof(name), "tx_%2d", i);
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 50ca10c..c26fc21 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -1736,6 +1736,7 @@ int wlcore_cmd_regdomain_config_locked(struct wl1271 *wl)
  
- 			seq_printf(s,
--				   "\n%pM CID %d TID %d BACK([%d] %d TU) [%3d|%3d] idle %3d%%\n",
-+				   "\n%pM CID %d TID %d BACK([%d] %d TU A%s) [%3d|%3d] idle %3d%%\n",
- 				   wil->sta[cid].addr, cid, tid,
- 				   txdata->agg_wsize, txdata->agg_timeout,
-+				   txdata->agg_amsdu ? "+" : "-",
- 				   used, avail, (int)idle);
+ 	cmd->ch_bit_map1 = cpu_to_le32(tmp_ch_bitmap[0]);
+ 	cmd->ch_bit_map2 = cpu_to_le32(tmp_ch_bitmap[1]);
++	cmd->dfs_region = wl->dfs_region;
  
- 			wil_print_vring(s, wil, name, vring, '_', 'H');
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index a94d67d..747052d 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -315,6 +315,7 @@ struct vring_tx_data {
- 	cycles_t idle, last_idle, begin;
- 	u8 agg_wsize; /* agreed aggregation window, 0 - no agg */
- 	u16 agg_timeout;
-+	u8 agg_amsdu;
- 	bool addba_in_progress; /* if set, agg_xxx is for request in progress */
- };
+ 	wl1271_debug(DEBUG_CMD,
+ 		     "cmd reg domain bitmap1: 0x%08x, bitmap2: 0x%08x",
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.h b/drivers/net/wireless/ti/wlcore/cmd.h
+index 06bdee2..e14cd40 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.h
++++ b/drivers/net/wireless/ti/wlcore/cmd.h
+@@ -648,6 +648,8 @@ struct wl12xx_cmd_regdomain_dfs_config {
  
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 2538161..00cba4a 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -608,10 +608,11 @@ static void wmi_evt_ba_status(struct wil6210_priv *wil, int id, void *d,
- 	struct wmi_vring_ba_status_event *evt = d;
- 	struct vring_tx_data *txdata;
+ 	__le32 ch_bit_map1;
+ 	__le32 ch_bit_map2;
++	u8 dfs_region;
++	u8 padding[3];
+ } __packed;
  
--	wil_dbg_wmi(wil, "BACK[%d] %s {%d} timeout %d\n",
-+	wil_dbg_wmi(wil, "BACK[%d] %s {%d} timeout %d AMSDU%s\n",
- 		    evt->ringid,
- 		    evt->status == WMI_BA_AGREED ? "OK" : "N/A",
--		    evt->agg_wsize, __le16_to_cpu(evt->ba_timeout));
-+		    evt->agg_wsize, __le16_to_cpu(evt->ba_timeout),
-+		    evt->amsdu ? "+" : "-");
+ struct wl12xx_cmd_config_fwlog {
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index d99f289..ebb03b9 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -82,6 +82,10 @@ static void wl1271_reg_notify(struct wiphy *wiphy,
+ 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
+ 	struct wl1271 *wl = hw->priv;
  
- 	if (evt->ringid >= WIL6210_MAX_TX_RINGS) {
- 		wil_err(wil, "invalid ring id %d\n", evt->ringid);
-@@ -621,12 +622,14 @@ static void wmi_evt_ba_status(struct wil6210_priv *wil, int id, void *d,
- 	if (evt->status != WMI_BA_AGREED) {
- 		evt->ba_timeout = 0;
- 		evt->agg_wsize = 0;
-+		evt->amsdu = 0;
- 	}
- 
- 	txdata = &wil->vring_tx_data[evt->ringid];
- 
- 	txdata->agg_timeout = le16_to_cpu(evt->ba_timeout);
- 	txdata->agg_wsize = evt->agg_wsize;
-+	txdata->agg_amsdu = evt->amsdu;
- 	txdata->addba_in_progress = false;
++	/* copy the current dfs region */
++	if (request)
++		wl->dfs_region = request->dfs_region;
++
+ 	wlcore_regdomain_config(wl);
  }
  
-@@ -1172,6 +1175,7 @@ int wmi_addba(struct wil6210_priv *wil, u8 ringid, u8 size, u16 timeout)
- 		.ringid = ringid,
- 		.agg_max_wsize = size,
- 		.ba_timeout = cpu_to_le16(timeout),
-+		.amsdu = 0,
- 	};
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 581c479..d599c86 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -465,6 +465,9 @@ struct wl1271 {
+ 	/* HW HT (11n) capabilities */
+ 	struct ieee80211_sta_ht_cap ht_cap[WLCORE_NUM_BANDS];
  
- 	wil_dbg_wmi(wil, "%s(ring %d size %d timeout %d)\n", __func__,
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 27b9743..b5102f0 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -586,6 +586,7 @@ struct wmi_vring_ba_en_cmd {
- 	u8 ringid;
- 	u8 agg_max_wsize;
- 	__le16 ba_timeout;
-+	u8 amsdu;
- } __packed;
- 
- /*
-@@ -1052,14 +1053,23 @@ struct wmi_scan_complete_event {
- enum wmi_vring_ba_status {
- 	WMI_BA_AGREED			= 0,
- 	WMI_BA_NON_AGREED		= 1,
-+	/* BA_EN in middle of teardown flow */
-+	WMI_BA_TD_WIP			= 2,
-+	/* BA_DIS or BA_EN in middle of BA SETUP flow */
-+	WMI_BA_SETUP_WIP		= 3,
-+	/* BA_EN when the BA session is already active */
-+	WMI_BA_SESSION_ACTIVE		= 4,
-+	/* BA_DIS when the BA session is not active */
-+	WMI_BA_SESSION_NOT_ACTIVE	= 5,
- };
- 
- struct wmi_vring_ba_status_event {
--	__le16 status;
-+	__le16 status; /* enum wmi_vring_ba_status */
- 	u8 reserved[2];
- 	u8 ringid;
- 	u8 agg_wsize;
- 	__le16 ba_timeout;
-+	u8 amsdu;
- } __packed;
- 
- /*
++	/* the current dfs region */
++	enum nl80211_dfs_regions dfs_region;
++
+ 	/* size of the private FW status data */
+ 	size_t fw_status_len;
+ 	size_t fw_status_priv_len;
 -- 
-2.1.0
+1.8.5.2.229.g4448466.dirty
 
