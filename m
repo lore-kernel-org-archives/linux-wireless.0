@@ -1,75 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40655 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751121AbaLQJXs (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:57663 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbaL2GY0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 04:23:48 -0500
-From: Avinash Patil <patila@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <yangyang@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 2/4] mwifiex: do not send key material cmd when delete wep key
-Date: Wed, 17 Dec 2014 17:24:31 +0530
-Message-ID: <1418817273-22669-2-git-send-email-patila@marvell.com> (sfid-20141217_102354_747652_6984F31A)
-In-Reply-To: <1418817273-22669-1-git-send-email-patila@marvell.com>
-References: <1418817273-22669-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 29 Dec 2014 01:24:26 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so21086995wiv.12
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2014 22:24:25 -0800 (PST)
+Received: from muse.ger.corp.intel.com (85-250-108-142.bb.netvision.net.il. [85.250.108.142])
+        by mx.google.com with ESMTPSA id gb10sm23488030wjb.21.2014.12.28.22.24.23
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Sun, 28 Dec 2014 22:24:24 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/13] wlcore: enable AP wowlan
+Date: Mon, 29 Dec 2014 08:24:05 +0200
+Message-Id: <1419834253-18331-5-git-send-email-eliad@wizery.com> (sfid-20141229_072431_843387_838D3C49)
+In-Reply-To: <1419834253-18331-1-git-send-email-eliad@wizery.com>
+References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+configure wowlan when host is suspended in AP mode,
+since the FW can now wake the host up on Rx.
 
-This patch fixes memory corruption reported by community developer.
-
-"Memory corruption occurs in mwifiex_ret_802_11_key_material_v1()
-when a short command response is received without a key length
-causing non initialised memory to be interpreted as the key
-length resulting in a memcpy() overwriting the part of the
-driver's private data structure beyond the key area."
-
-For v1 key material API firmwares, there is no need to send
-command to delete WEP key. WEP encryption/decryption is controlled
-by mac_control command.
-
-This patch avoids sending key material command in del_key case.
-
-Reported-by: Martin Fuzzey <mfuzzey@parkeon.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kobi Leibovitch <kobi.lev100@gmail.com>
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/mwifiex/sta_ioctl.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/main.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 1626868..fb9c5fc 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -902,9 +902,12 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
- 	if (wep_key->key_length) {
- 		void *enc_key;
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index aaa836b..0d67e39 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -1707,7 +1707,8 @@ out:
+ }
  
--		if (encrypt_key->key_disable)
-+		if (encrypt_key->key_disable) {
- 			memset(&priv->wep_key[index], 0,
- 			       sizeof(struct mwifiex_wep_key));
-+			if (wep_key->key_length)
-+				goto done;
-+			}
+ static int wl1271_configure_suspend_ap(struct wl1271 *wl,
+-				       struct wl12xx_vif *wlvif)
++					struct wl12xx_vif *wlvif,
++					struct cfg80211_wowlan *wow)
+ {
+ 	int ret = 0;
  
- 		if (adapter->key_api_major_ver == KEY_API_VER_MAJOR_V2)
- 			enc_key = encrypt_key;
-@@ -918,6 +921,7 @@ static int mwifiex_sec_ioctl_set_wep_key(struct mwifiex_private *priv,
- 			return ret;
- 	}
+@@ -1715,6 +1716,12 @@ static int wl1271_configure_suspend_ap(struct wl1271 *wl,
+ 		goto out;
  
-+done:
- 	if (priv->sec_info.wep_enabled)
- 		priv->curr_pkt_filter |= HostCmd_ACT_MAC_WEP_ENABLE;
- 	else
+ 	ret = wl1271_acx_beacon_filter_opt(wl, wlvif, true);
++	if (ret < 0)
++		goto out;
++
++	ret = wl1271_configure_wowlan(wl, wow);
++	if (ret < 0)
++		goto out;
+ 
+ out:
+ 	return ret;
+@@ -1728,7 +1735,7 @@ static int wl1271_configure_suspend(struct wl1271 *wl,
+ 	if (wlvif->bss_type == BSS_TYPE_STA_BSS)
+ 		return wl1271_configure_suspend_sta(wl, wlvif, wow);
+ 	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
+-		return wl1271_configure_suspend_ap(wl, wlvif);
++		return wl1271_configure_suspend_ap(wl, wlvif, wow);
+ 	return 0;
+ }
+ 
+@@ -1741,12 +1748,13 @@ static void wl1271_configure_resume(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	if ((!is_ap) && (!is_sta))
+ 		return;
+ 
+-	if (is_sta && !test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
++	if ((is_sta && !test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags)) ||
++	    (is_ap && !test_bit(WLVIF_FLAG_AP_STARTED, &wlvif->flags)))
+ 		return;
+ 
+-	if (is_sta) {
+-		wl1271_configure_wowlan(wl, NULL);
++	wl1271_configure_wowlan(wl, NULL);
+ 
++	if (is_sta) {
+ 		if ((wl->conf.conn.suspend_wake_up_event ==
+ 		     wl->conf.conn.wake_up_event) &&
+ 		    (wl->conf.conn.suspend_listen_interval ==
 -- 
-1.8.1.4
+1.8.5.2.229.g4448466.dirty
 
