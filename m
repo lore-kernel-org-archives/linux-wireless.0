@@ -1,39 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33180 "EHLO sipsolutions.net"
+Received: from mga11.intel.com ([192.55.52.93]:52687 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967592AbaLLMj1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 07:39:27 -0500
-Message-ID: <1418387963.2470.32.camel@sipsolutions.net> (sfid-20141212_133929_614163_E7799C12)
-Subject: Re: [PATCH v8 2/4] cfg80211: allow wiphy specific regdomain
- management
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jonathan Doron <jond@wizery.com>
-Date: Fri, 12 Dec 2014 13:39:23 +0100
-In-Reply-To: <1417622897-30768-2-git-send-email-arik@wizery.com> (sfid-20141203_170818_099557_FFECF0CB)
-References: <1417622897-30768-1-git-send-email-arik@wizery.com>
-	 <1417622897-30768-2-git-send-email-arik@wizery.com>
-	 (sfid-20141203_170818_099557_FFECF0CB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751783AbaL3OTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 09:19:48 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/33] iwlwifi: pcie: let the Manageability Engine know when we leave
+Date: Tue, 30 Dec 2014 16:18:40 +0200
+Message-Id: <1419949148-24046-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_151956_407020_35F09C5B)
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
+References: <1419948357.21410.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2014-12-03 at 18:08 +0200, Arik Nemtsov wrote:
+When the driver is unload, the Manageability Engine should
+know about that - send an event to inform it about this
+event.
 
-> +void nl80211_send_reg_change_event(struct regulatory_request *request)
-> +{
-> +	nl80211_common_reg_change_event(NL80211_CMD_REG_CHANGE, request);
-> +}
-> +
-> +void nl80211_send_wiphy_reg_change_event(struct regulatory_request *request)
-> +{
-> +	nl80211_common_reg_change_event(NL80211_CMD_WIPHY_REG_CHANGE, request);
-> +}
+Reviewed-by: Reuven Borok <reuven.borok@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-csr.h    |  1 +
+ drivers/net/wireless/iwlwifi/iwl-prph.h   |  1 +
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 21 ++++++++++++++++++---
+ 3 files changed, 20 insertions(+), 3 deletions(-)
 
-These are trivial wrappers, I'd make them inlines.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
+index aff63c3..7f40cf3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-csr.h
++++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
+@@ -184,6 +184,7 @@
+ #define CSR_HW_IF_CONFIG_REG_BIT_NIC_READY	(0x00400000) /* PCI_OWN_SEM */
+ #define CSR_HW_IF_CONFIG_REG_BIT_NIC_PREPARE_DONE (0x02000000) /* ME_OWN */
+ #define CSR_HW_IF_CONFIG_REG_PREPARE		  (0x08000000) /* WAKE_ME */
++#define CSR_HW_IF_CONFIG_REG_ENABLE_PME		  (0x10000000)
+ #define CSR_HW_IF_CONFIG_REG_PERSIST_MODE	  (0x40000000) /* PERSISTENCE */
+ 
+ #define CSR_MBOX_SET_REG_OS_ALIVE		BIT(5)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index 2df51ea..ea3b970 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -99,6 +99,7 @@
+ 
+ #define APMG_PCIDEV_STT_VAL_PERSIST_DIS	(0x00000200)
+ #define APMG_PCIDEV_STT_VAL_L1_ACT_DIS	(0x00000800)
++#define APMG_PCIDEV_STT_VAL_WAKE_ME	(0x00004000)
+ 
+ #define APMG_RTC_INT_STT_RFKILL		(0x10000000)
+ 
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 5d79a1f..4b42de3 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -443,10 +443,25 @@ static int iwl_pcie_apm_stop_master(struct iwl_trans *trans)
+ 	return ret;
+ }
+ 
+-static void iwl_pcie_apm_stop(struct iwl_trans *trans)
++static void iwl_pcie_apm_stop(struct iwl_trans *trans, bool op_mode_leave)
+ {
+ 	IWL_DEBUG_INFO(trans, "Stop card, put in low power state\n");
+ 
++	if (op_mode_leave) {
++		if (!test_bit(STATUS_DEVICE_ENABLED, &trans->status))
++			iwl_pcie_apm_init(trans);
++
++		/* inform ME that we are leaving */
++		if (trans->cfg->device_family == IWL_DEVICE_FAMILY_7000)
++			iwl_set_bits_prph(trans, APMG_PCIDEV_STT_REG,
++					  APMG_PCIDEV_STT_VAL_WAKE_ME);
++		else if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
++			iwl_set_bit(trans, CSR_HW_IF_CONFIG_REG,
++				    CSR_HW_IF_CONFIG_REG_PREPARE |
++				    CSR_HW_IF_CONFIG_REG_ENABLE_PME);
++		mdelay(5);
++	}
++
+ 	clear_bit(STATUS_DEVICE_ENABLED, &trans->status);
+ 
+ 	/* Stop device's DMA activity */
+@@ -1010,7 +1025,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 		      CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 
+ 	/* Stop the device, and put it in low power state */
+-	iwl_pcie_apm_stop(trans);
++	iwl_pcie_apm_stop(trans, false);
+ 
+ 	/* Upon stop, the APM issues an interrupt if HW RF kill is set.
+ 	 * Clean again the interrupt here
+@@ -1187,7 +1202,7 @@ static void iwl_trans_pcie_op_mode_leave(struct iwl_trans *trans)
+ 	iwl_disable_interrupts(trans);
+ 	spin_unlock(&trans_pcie->irq_lock);
+ 
+-	iwl_pcie_apm_stop(trans);
++	iwl_pcie_apm_stop(trans, true);
+ 
+ 	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-- 
+1.9.1
 
