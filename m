@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:36778 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056AbaLWGwz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 01:52:55 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+Received: from www.osadl.org ([62.245.132.105]:51273 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752657AbaL3NDs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 08:03:48 -0500
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC] ipw2200: select CFG80211_WEXT
-References: <1419271817.2317.12.camel@tiscali.nl>
-Date: Tue, 23 Dec 2014 08:52:48 +0200
-In-Reply-To: <1419271817.2317.12.camel@tiscali.nl> (Paul Bolle's message of
-	"Mon, 22 Dec 2014 19:10:17 +0100")
-Message-ID: <871tnqhn7j.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_075333_226277_27260EDC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH 4/4] ath10k: fixup wait_for_completion_timeout return handling
+Date: Tue, 30 Dec 2014 07:20:46 -0500
+Message-Id: <1419942046-17985-5-git-send-email-der.herr@hofr.at> (sfid-20141230_140351_742193_36B6E97C)
+In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Paul Bolle <pebolle@tiscali.nl> writes:
+wait_for_completion_timeout does not return negative values so
+"ret" handling here should check for timeout only.
 
-> Commit 24a0aa212ee2 ("cfg80211: make WEXT compatibility unselectable")
-> made it impossible to depend on CFG80211_WEXT. It does still allow to
-> select that symbol. (Yes, the commit summary is confusing.)
->
-> So make IPW2200 select CFG80211_WEXT, so that the ipw2200 driver can be
-> built again.
+patch was only compile tested for x86_64_defconfig + CONFIG_ATH10K=m
 
-I think the last sentence is a bit misleading (this isn't a compilation
-error, right?) and I would like to clarify it like this:
+patch is against linux-next 3.19.0-rc1 -next-20141226
 
-"So make IPW2200 select CFG80211_WEXT, so that the ipw2200 driver can be
-enabled in config again."
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+---
+ drivers/net/wireless/ath/ath10k/htt.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Does that look ok?
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 56cb4ac..58b6fc1 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -102,7 +102,7 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 
+ 	status = wait_for_completion_timeout(&htt->target_version_received,
+ 					     HTT_TARGET_VERSION_TIMEOUT_HZ);
+-	if (status <= 0) {
++	if (status == 0) {
+ 		ath10k_warn(ar, "htt version request timed out\n");
+ 		return -ETIMEDOUT;
+ 	}
 -- 
-Kalle Valo
+1.7.10.4
+
