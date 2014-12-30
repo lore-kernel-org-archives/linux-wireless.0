@@ -1,120 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:46792 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbaLRJGB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 04:06:01 -0500
-Received: by mail-ob0-f182.google.com with SMTP id wo20so2282197obc.13
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Dec 2014 01:06:00 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 04/16] rtlwifi: rtl8192ce: Update setting of the media status
-Date: Thu, 18 Dec 2014 03:05:28 -0600
-Message-Id: <1418893540-19944-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20141218_100613_827029_693AE2AF)
-In-Reply-To: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752047AbaL3OUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 09:20:30 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 30/33] iwlwifi: mvm: Configure EBS scan ratio
+Date: Tue, 30 Dec 2014 16:19:05 +0200
+Message-Id: <1419949148-24046-30-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154350_127631_5B27DF01)
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
+References: <1419948357.21410.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch applies changes found in the latest vendor driver.
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+This configuration defines the ratio between number of scan iterations
+where EBS is involved to those where it is not.
+This configuration was left unconfigured due to inaccurate documentation.
+Fix documentation as well.
+
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 51 ++++++++++++++++++-----------
- 1 file changed, 31 insertions(+), 20 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h | 7 +++++--
+ drivers/net/wireless/iwlwifi/mvm/scan.c        | 6 ++++++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index b63b78b..2ee778a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1161,36 +1161,24 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	u8 bt_msr = rtl_read_byte(rtlpriv, MSR);
- 	enum led_ctl_mode ledaction = LED_CTL_NO_LINK;
--	bt_msr &= 0xfc;
-+	u8 mode = MSR_NOLINK;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+index 1f2acf4..2d1a81c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h
+@@ -653,8 +653,11 @@ enum iwl_scan_channel_flags {
+ };
  
--	if (type == NL80211_IFTYPE_UNSPECIFIED ||
--	    type == NL80211_IFTYPE_STATION) {
--		_rtl92ce_stop_tx_beacon(hw);
--		_rtl92ce_enable_bcn_sub_func(hw);
--	} else if (type == NL80211_IFTYPE_ADHOC || type == NL80211_IFTYPE_AP ||
--		   type == NL80211_IFTYPE_MESH_POINT) {
--		_rtl92ce_resume_tx_beacon(hw);
--		_rtl92ce_disable_bcn_sub_func(hw);
--	} else {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "Set HW_VAR_MEDIA_STATUS: No such media status(%x)\n",
--			 type);
--	}
-+	bt_msr &= 0xfc;
+ /* iwl_scan_channel_opt - CHANNEL_OPTIMIZATION_API_S
+- * @flags: enum iwl_scan_channel_flgs
+- * @non_ebs_ratio: how many regular scan iteration before EBS
++ * @flags: enum iwl_scan_channel_flags
++ * @non_ebs_ratio: defines the ratio of number of scan iterations where EBS is
++ *	involved.
++ *	1 - EBS is disabled.
++ *	2 - every second scan will be full scan(and so on).
+  */
+ struct iwl_scan_channel_opt {
+ 	__le16 flags;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 2433676..ed229a8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -72,6 +72,8 @@
  
- 	switch (type) {
- 	case NL80211_IFTYPE_UNSPECIFIED:
--		bt_msr |= MSR_NOLINK;
-+		mode = MSR_NOLINK;
- 		ledaction = LED_CTL_LINK;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "Set Network type to NO LINK!\n");
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
--		bt_msr |= MSR_ADHOC;
-+		mode = MSR_ADHOC;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "Set Network type to Ad Hoc!\n");
- 		break;
- 	case NL80211_IFTYPE_STATION:
--		bt_msr |= MSR_INFRA;
-+		mode = MSR_INFRA;
- 		ledaction = LED_CTL_LINK;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "Set Network type to STA!\n");
-@@ -1201,7 +1189,7 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
- 			 "Set Network type to AP!\n");
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
--		bt_msr |= MSR_ADHOC;
-+		mode = MSR_ADHOC;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "Set Network type to Mesh Point!\n");
- 		break;
-@@ -1212,9 +1200,32 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
+ #define IWL_PLCP_QUIET_THRESH 1
+ #define IWL_ACTIVE_QUIET_TIME 10
++#define IWL_DENSE_EBS_SCAN_RATIO 5
++#define IWL_SPARSE_EBS_SCAN_RATIO 1
  
+ struct iwl_mvm_scan_params {
+ 	u32 max_out_time;
+@@ -1296,10 +1298,14 @@ iwl_mvm_build_generic_unified_scan_cmd(struct iwl_mvm *mvm,
+ 			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
+ 				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+ 				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
++		cmd->channel_opt[0].non_ebs_ratio =
++			cpu_to_le16(IWL_DENSE_EBS_SCAN_RATIO);
+ 		cmd->channel_opt[1].flags =
+ 			cpu_to_le16(IWL_SCAN_CHANNEL_FLAG_EBS |
+ 				    IWL_SCAN_CHANNEL_FLAG_EBS_ACCURATE |
+ 				    IWL_SCAN_CHANNEL_FLAG_CACHE_ADD);
++		cmd->channel_opt[1].non_ebs_ratio =
++			cpu_to_le16(IWL_SPARSE_EBS_SCAN_RATIO);
  	}
  
--	rtl_write_byte(rtlpriv, (MSR), bt_msr);
-+	/* MSR_INFRA == Link in infrastructure network;
-+	 * MSR_ADHOC == Link in ad hoc network;
-+	 * Therefore, check link state is necessary.
-+	 *
-+	 * MSR_AP == AP mode; link state does not matter here.
-+	 */
-+	if (mode != MSR_AP &&
-+	    rtlpriv->mac80211.link_state < MAC80211_LINKED) {
-+		mode = MSR_NOLINK;
-+		ledaction = LED_CTL_NO_LINK;
-+	}
-+	if (mode == MSR_NOLINK || mode == MSR_INFRA) {
-+		_rtl92ce_stop_tx_beacon(hw);
-+		_rtl92ce_enable_bcn_sub_func(hw);
-+	} else if (mode == MSR_ADHOC || mode == MSR_AP) {
-+		_rtl92ce_resume_tx_beacon(hw);
-+		_rtl92ce_disable_bcn_sub_func(hw);
-+	} else {
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
-+			 "Set HW_VAR_MEDIA_STATUS: No such media status(%x).\n",
-+			 mode);
-+	}
-+	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
-+
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
--	if ((bt_msr & MSR_MASK) == MSR_AP)
-+	if (mode == MSR_AP)
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
- 	else
- 		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x66);
+ 	if (iwl_mvm_rrm_scan_needed(mvm))
 -- 
-2.1.2
+1.9.1
 
