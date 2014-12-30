@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:49767 "EHLO mout.gmx.net"
+Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932140AbaLWMD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 07:03:26 -0500
-Message-ID: <1419335948.29925.33.camel@gmx.de> (sfid-20141223_130330_244333_A283E10B)
-Subject: [PATCH] iw dev link: print channel number as well
-From: Recursive Madman <recursive.madman@gmx.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 23 Dec 2014 12:59:08 +0100
-Content-Type: multipart/mixed; boundary="=-ybxQGyN2QnVzfBEJlUGe"
-Mime-Version: 1.0
+	id S1751991AbaL3OUL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 09:20:11 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/33] iwlwifi: dvm: tt: Use setup_timer
+Date: Tue, 30 Dec 2014 16:18:57 +0200
+Message-Id: <1419949148-24046-22-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154348_991035_9587364A)
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
+References: <1419948357.21410.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
---=-ybxQGyN2QnVzfBEJlUGe
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Convert a call to init_timer and accompanying intializations of
+the timer's data and function fields to a call to setup_timer.
 
-Hi,
-  dev <devname> link
-prints the SSID and frequency, when connected.
-To figure out the channel however (if you don't
-know it by heart), you need to use
-  dev <devname> info
-which will print the channel along with the
-frequency (though not the current SSID).
+A simplified version of the semantic match that fixes this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-With attached patch,
-  dev <devname> link
-prints the channel along with the frequency, e.g. as:
-	freq: 2442
-	channel: 7
-.
+// <smpl>
+@@
+expression t,f,d;
+@@
 
-I find it more convenient this way.
+-init_timer(&t);
++setup_timer(&t,f,d);
+-t.data = d;
+-t.function = f;
+// </smpl>
 
--- madman.
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/tt.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
---=-ybxQGyN2QnVzfBEJlUGe
-Content-Disposition: attachment; filename="0001-dev-link-print-channel-number-as-well.patch"
-Content-Type: text/x-patch; name="0001-dev-link-print-channel-number-as-well.patch";
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
-
-RnJvbSAwZTE2NzAxOGZiYzk1NTgwYmEyY2I5NDEyODQ1MmExODQ2M2NiZGUyIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBSZWN1cnNpdmUgTWFkbWFuIDxyZWN1cnNpdmUubWFkbWFuQGdt
-eC5kZT4KRGF0ZTogTW9uLCAyMiBEZWMgMjAxNCAxNToyMTowNyArMDEwMApTdWJqZWN0OiBbUEFU
-Q0hdIGRldiBsaW5rOiBwcmludCBjaGFubmVsIG51bWJlciBhcyB3ZWxsCgpTaWduZWQtb2ZmLWJ5
-OiBSZWN1cnNpdmUgTWFkbWFuIDxyZWN1cnNpdmUubWFkbWFuQGdteC5kZT4KLS0tCiBsaW5rLmMg
-fCA1ICsrKystCiAxIGZpbGUgY2hhbmdlZCwgNCBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9uKC0p
-CgpkaWZmIC0tZ2l0IGEvbGluay5jIGIvbGluay5jCmluZGV4IGY3ODE4ZjUuLjYyOWIyYmEgMTAw
-NjQ0Ci0tLSBhL2xpbmsuYworKysgYi9saW5rLmMKQEAgLTg0LDkgKzg0LDEyIEBAIHN0YXRpYyBp
-bnQgbGlua19ic3NfaGFuZGxlcihzdHJ1Y3QgbmxfbXNnICptc2csIHZvaWQgKmFyZykKIAkJCSAg
-bmxhX2xlbihic3NbTkw4MDIxMV9CU1NfSU5GT1JNQVRJT05fRUxFTUVOVFNdKSwKIAkJCSAgZmFs
-c2UsIFBSSU5UX0xJTkspOwogCi0JaWYgKGJzc1tOTDgwMjExX0JTU19GUkVRVUVOQ1ldKQorCWlm
-IChic3NbTkw4MDIxMV9CU1NfRlJFUVVFTkNZXSkgewogCQlwcmludGYoIlx0ZnJlcTogJWRcbiIs
-CiAJCQlubGFfZ2V0X3UzMihic3NbTkw4MDIxMV9CU1NfRlJFUVVFTkNZXSkpOworCQlwcmludGYo
-Ilx0Y2hhbm5lbDogJWRcbiIsCisgICAgICAgICAgIGllZWU4MDIxMV9mcmVxdWVuY3lfdG9fY2hh
-bm5lbChubGFfZ2V0X3UzMihic3NbTkw4MDIxMV9CU1NfRlJFUVVFTkNZXSkpKTsKKyAgfQogCiAJ
-aWYgKG5sYV9nZXRfdTMyKGJzc1tOTDgwMjExX0JTU19TVEFUVVNdKSAhPSBOTDgwMjExX0JTU19T
-VEFUVVNfQVNTT0NJQVRFRCkKIAkJcmV0dXJuIE5MX1NLSVA7Ci0tIAoyLjEuMwoK
-
-
---=-ybxQGyN2QnVzfBEJlUGe--
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tt.c b/drivers/net/wireless/iwlwifi/dvm/tt.c
+index acb981a..c4736c8 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tt.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tt.c
+@@ -612,15 +612,10 @@ void iwl_tt_initialize(struct iwl_priv *priv)
+ 	memset(tt, 0, sizeof(struct iwl_tt_mgmt));
+ 
+ 	tt->state = IWL_TI_0;
+-	init_timer(&priv->thermal_throttle.ct_kill_exit_tm);
+-	priv->thermal_throttle.ct_kill_exit_tm.data = (unsigned long)priv;
+-	priv->thermal_throttle.ct_kill_exit_tm.function =
+-		iwl_tt_check_exit_ct_kill;
+-	init_timer(&priv->thermal_throttle.ct_kill_waiting_tm);
+-	priv->thermal_throttle.ct_kill_waiting_tm.data =
+-		(unsigned long)priv;
+-	priv->thermal_throttle.ct_kill_waiting_tm.function =
+-		iwl_tt_ready_for_ct_kill;
++	setup_timer(&priv->thermal_throttle.ct_kill_exit_tm,
++		    iwl_tt_check_exit_ct_kill, (unsigned long)priv);
++	setup_timer(&priv->thermal_throttle.ct_kill_waiting_tm,
++		    iwl_tt_ready_for_ct_kill, (unsigned long)priv);
+ 	/* setup deferred ct kill work */
+ 	INIT_WORK(&priv->tt_work, iwl_bg_tt_work);
+ 	INIT_WORK(&priv->ct_enter, iwl_bg_ct_enter);
+-- 
+1.9.1
 
