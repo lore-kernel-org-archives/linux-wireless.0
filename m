@@ -1,183 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52687 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722AbaL3OTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:19:48 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:39258 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751473AbaL3WK1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 17:10:27 -0500
+Received: by mail-wi0-f170.google.com with SMTP id bs8so26179933wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2014 14:10:25 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/33] iwlwifi: mvm: add debugfs to trigger fw debug logs collection
-Date: Tue, 30 Dec 2014 16:18:41 +0200
-Message-Id: <1419949148-24046-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154349_474272_B7DC7BEE)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
+Subject: [PATCH 1/3] ath9k: add power per-rate tables for AR9002 chips
+Date: Tue, 30 Dec 2014 23:10:18 +0100
+Message-Id: <1419977420-23732-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141230_231047_111706_D8491A1F)
+In-Reply-To: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows to collect the logs even if the firmware hasn't
-crashed. Of course, crashing the firmware is an option, but
-this is easier and nicer.
+Add TX power per-rate tables for MIMO/legacy modes for AR9002 based chips
+in order to cap the maximum TX power value per-rate in the TX descriptor path.
+Add TX power adjustments for HT40 mode, open loop CCK rates and eeprom power
+bias for AR9280 and later chips
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-prph.h    |  4 +++
- drivers/net/wireless/iwlwifi/mvm/debugfs.c | 54 ++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/fw.c      | 23 +++++++++++--
- drivers/net/wireless/iwlwifi/mvm/mvm.h     |  3 ++
- 4 files changed, 82 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c  | 80 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 14 +++++
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c | 15 ++++++
+ drivers/net/wireless/ath/ath9k/eeprom_def.c  | 14 +++++
+ drivers/net/wireless/ath/ath9k/hw.h          |  2 +
+ 5 files changed, 125 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index ea3b970..83ab423 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -366,11 +366,15 @@ enum secure_load_status_reg {
- #define RXF_FIFO_RD_FENCE_ADDR		(0xa00c0c)
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 5829074..f273427 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -22,6 +22,21 @@
  
- /* FW monitor */
-+#define MON_BUFF_SAMPLE_CTL		(0xa03c00)
- #define MON_BUFF_BASE_ADDR		(0xa03c3c)
- #define MON_BUFF_END_ADDR		(0xa03c40)
- #define MON_BUFF_WRPTR			(0xa03c44)
- #define MON_BUFF_CYCLE_CNT		(0xa03c48)
+ /* All code below is for AR5008, AR9001, AR9002 */
  
-+#define DBGC_IN_SAMPLE			(0xa03c00)
-+#define DBGC_OUT_CTRL			(0xa03c0c)
++#define AR5008_OFDM_RATES		8
++#define AR5008_HT_SS_RATES		8
++#define AR5008_HT_DS_RATES		8
 +
- /* FW chicken bits */
- #define LMPM_CHICK			0xA01FF8
- enum {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-index 0507647..a1b276c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
-@@ -945,6 +945,56 @@ iwl_dbgfs_scan_ant_rxchain_write(struct iwl_mvm *mvm, char *buf,
- 	return count;
++#define AR5008_HT20_SHIFT		16
++#define AR5008_HT40_SHIFT		24
++
++#define AR5008_11NA_OFDM_SHIFT		0
++#define AR5008_11NA_HT_SS_SHIFT		8
++#define AR5008_11NA_HT_DS_SHIFT		16
++
++#define AR5008_11NG_OFDM_SHIFT		4
++#define AR5008_11NG_HT_SS_SHIFT		12
++#define AR5008_11NG_HT_DS_SHIFT		20
++
+ static const int firstep_table[] =
+ /* level:  0   1   2   3   4   5   6   7   8  */
+ 	{ -4, -2,  0,  2,  4,  6,  8, 10, 12 }; /* lvl 0-8, default 2 */
+@@ -1235,6 +1250,71 @@ static void ar5008_hw_set_radar_conf(struct ath_hw *ah)
+ 	conf->radar_inband = 8;
  }
  
-+static ssize_t iwl_dbgfs_fw_dbg_conf_read(struct file *file,
-+					  char __user *user_buf,
-+					  size_t count, loff_t *ppos)
++static void ar5008_hw_init_txpower_cck(struct ath_hw *ah, int16_t *rate_array)
 +{
-+	struct iwl_mvm *mvm = file->private_data;
-+	enum iwl_fw_dbg_conf conf;
-+	char buf[8];
-+	const size_t bufsz = sizeof(buf);
-+	int pos = 0;
-+
-+	mutex_lock(&mvm->mutex);
-+	conf = mvm->fw_dbg_conf;
-+	mutex_unlock(&mvm->mutex);
-+
-+	pos += scnprintf(buf + pos, bufsz - pos, "%d\n", conf);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++#define CCK_DELTA(x) ((OLC_FOR_AR9280_20_LATER) ? max((x) - 2, 0) : (x))
++	ah->tx_power[0] = CCK_DELTA(rate_array[rate1l]);
++	ah->tx_power[1] = CCK_DELTA(min(rate_array[rate2l],
++					rate_array[rate2s]));
++	ah->tx_power[2] = CCK_DELTA(min(rate_array[rate5_5l],
++					rate_array[rate5_5s]));
++	ah->tx_power[3] = CCK_DELTA(min(rate_array[rate11l],
++					rate_array[rate11s]));
++#undef CCK_DELTA
 +}
 +
-+static ssize_t iwl_dbgfs_fw_dbg_conf_write(struct iwl_mvm *mvm,
-+					   char *buf, size_t count,
-+					   loff_t *ppos)
++static void ar5008_hw_init_txpower_ofdm(struct ath_hw *ah, int16_t *rate_array,
++					int offset)
 +{
-+	int ret, conf_id;
++	int i, idx = 0;
 +
-+	ret = kstrtoint(buf, 0, &conf_id);
-+	if (ret)
-+		return ret;
-+
-+	if (WARN_ON(conf_id >= FW_DBG_MAX))
-+		return -EINVAL;
-+
-+	mutex_lock(&mvm->mutex);
-+	ret = iwl_mvm_start_fw_dbg_conf(mvm, conf_id);
-+	mutex_unlock(&mvm->mutex);
-+
-+	return ret ?: count;
++	for (i = offset; i < offset + AR5008_OFDM_RATES; i++) {
++		ah->tx_power[i] = rate_array[idx];
++		idx++;
++	}
 +}
 +
-+static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
-+					      char *buf, size_t count,
-+					      loff_t *ppos)
++static void ar5008_hw_init_txpower_ht(struct ath_hw *ah, int16_t *rate_array,
++				      int ss_offset, int ds_offset,
++				      bool is_40, int ht40_delta)
 +{
-+	mutex_lock(&mvm->mutex);
-+	iwl_mvm_fw_dbg_collect(mvm);
-+	mutex_unlock(&mvm->mutex);
++	int i, mcs_idx = (is_40) ? AR5008_HT40_SHIFT : AR5008_HT20_SHIFT;
 +
-+	return count;
++	for (i = ss_offset; i < ss_offset + AR5008_HT_SS_RATES; i++) {
++		ah->tx_power[i] = rate_array[mcs_idx] + ht40_delta;
++		mcs_idx++;
++	}
++	memcpy(&ah->tx_power[ds_offset], &ah->tx_power[ss_offset],
++	       AR5008_HT_SS_RATES);
 +}
 +
- #define ADD_TEXT(...) pos += scnprintf(buf + pos, bufsz - pos, __VA_ARGS__)
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
- static ssize_t iwl_dbgfs_bcast_filters_read(struct file *file,
-@@ -1459,6 +1509,8 @@ MVM_DEBUGFS_WRITE_FILE_OPS(bt_tx_prio, 10);
- MVM_DEBUGFS_WRITE_FILE_OPS(bt_force_ant, 10);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(d0i3_refs, 8);
-+MVM_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_conf, 8);
-+MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_collect, 8);
- 
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(bcast_filters, 256);
-@@ -1500,6 +1552,8 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 			     S_IWUSR | S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(prph_reg, mvm->debugfs_dir, S_IWUSR | S_IRUSR);
- 	MVM_DEBUGFS_ADD_FILE(d0i3_refs, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
-+	MVM_DEBUGFS_ADD_FILE(fw_dbg_conf, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
-+	MVM_DEBUGFS_ADD_FILE(fw_dbg_collect, mvm->debugfs_dir, S_IWUSR);
- 
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
- 	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BCAST_FILTERING) {
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 60d0c9f..534ee31 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -70,6 +70,7 @@
- #include "iwl-debug.h"
- #include "iwl-csr.h" /* for iwl_mvm_rx_card_state_notif */
- #include "iwl-io.h" /* for iwl_mvm_rx_card_state_notif */
-+#include "iwl-prph.h"
- #include "iwl-eeprom-parse.h"
- 
- #include "mvm.h"
-@@ -399,8 +400,26 @@ out:
- 	return ret;
- }
- 
--static int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm,
--				     enum iwl_fw_dbg_conf conf_id)
-+void iwl_mvm_fw_dbg_collect(struct iwl_mvm *mvm)
++void ar5008_hw_init_rate_txpower(struct ath_hw *ah, int16_t *rate_array,
++				 struct ath9k_channel *chan, int ht40_delta)
 +{
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	/* stop recording */
-+	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
-+		iwl_set_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x100);
++	if (IS_CHAN_5GHZ(chan)) {
++		ar5008_hw_init_txpower_ofdm(ah, rate_array,
++					    AR5008_11NA_OFDM_SHIFT);
++		if (IS_CHAN_HT20(chan) || IS_CHAN_HT40(chan)) {
++			ar5008_hw_init_txpower_ht(ah, rate_array,
++						  AR5008_11NA_HT_SS_SHIFT,
++						  AR5008_11NA_HT_DS_SHIFT,
++						  IS_CHAN_HT40(chan),
++						  ht40_delta);
++		}
 +	} else {
-+		iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, 0);
-+		iwl_write_prph(mvm->trans, DBGC_OUT_CTRL, 0);
++		ar5008_hw_init_txpower_cck(ah, rate_array);
++		ar5008_hw_init_txpower_ofdm(ah, rate_array,
++					    AR5008_11NG_OFDM_SHIFT);
++		if (IS_CHAN_HT20(chan) || IS_CHAN_HT40(chan)) {
++			ar5008_hw_init_txpower_ht(ah, rate_array,
++						  AR5008_11NG_HT_SS_SHIFT,
++						  AR5008_11NG_HT_DS_SHIFT,
++						  IS_CHAN_HT40(chan),
++						  ht40_delta);
++		}
++	}
++}
++
+ int ar5008_hw_attach_phy_ops(struct ath_hw *ah)
+ {
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 07b806c..e5a78d4 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -748,6 +748,20 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
+ 			  | ATH9K_POW_SM(ratesArray[rateDupCck], 0));
+ 	}
+ 
++	/* TPC initializations */
++	if (ah->tpc_enabled) {
++		int ht40_delta;
++
++		ht40_delta = (IS_CHAN_HT40(chan)) ? ht40PowerIncForPdadc : 0;
++		ar5008_hw_init_rate_txpower(ah, ratesArray, chan, ht40_delta);
++		/* Enable TPC */
++		REG_WRITE(ah, AR_PHY_POWER_TX_RATE_MAX,
++			MAX_RATE_POWER | AR_PHY_POWER_TX_RATE_MAX_TPC_ENABLE);
++	} else {
++		/* Disable TPC */
++		REG_WRITE(ah, AR_PHY_POWER_TX_RATE_MAX, MAX_RATE_POWER);
 +	}
 +
-+	iwl_mvm_fw_error_dump(mvm);
-+
-+	/* start recording again */
-+	WARN_ON_ONCE(mvm->fw->dbg_dest_tlv &&
-+		     iwl_mvm_start_fw_dbg_conf(mvm, mvm->fw_dbg_conf));
-+}
-+
-+int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, enum iwl_fw_dbg_conf conf_id)
- {
- 	u8 *ptr;
- 	int ret;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index f3cb089..ff1a409 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1371,4 +1371,7 @@ struct ieee80211_vif *iwl_mvm_get_bss_vif(struct iwl_mvm *mvm);
- void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error);
- void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ }
  
-+int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, enum iwl_fw_dbg_conf id);
-+void iwl_mvm_fw_dbg_collect(struct iwl_mvm *mvm);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 5ba1385..6ca33df 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -886,6 +886,21 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
+ 			  | ATH9K_POW_SM(ratesArray[rateDupOfdm], 8)
+ 			  | ATH9K_POW_SM(ratesArray[rateDupCck], 0));
+ 	}
 +
- #endif /* __IWL_MVM_H__ */
++	/* TPC initializations */
++	if (ah->tpc_enabled) {
++		int ht40_delta;
++
++		ht40_delta = (IS_CHAN_HT40(chan)) ? ht40PowerIncForPdadc : 0;
++		ar5008_hw_init_rate_txpower(ah, ratesArray, chan, ht40_delta);
++		/* Enable TPC */
++		REG_WRITE(ah, AR_PHY_POWER_TX_RATE_MAX,
++			MAX_RATE_POWER | AR_PHY_POWER_TX_RATE_MAX_TPC_ENABLE);
++	} else {
++		/* Disable TPC */
++		REG_WRITE(ah, AR_PHY_POWER_TX_RATE_MAX, MAX_RATE_POWER);
++	}
++
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 122b846..0980590 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -1332,6 +1332,20 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
+ 		  ATH9K_POW_SM(pModal->pwrDecreaseFor3Chain, 6)
+ 		  | ATH9K_POW_SM(pModal->pwrDecreaseFor2Chain, 0));
+ 
++	/* TPC initializations */
++	if (ah->tpc_enabled) {
++		int ht40_delta;
++
++		ht40_delta = (IS_CHAN_HT40(chan)) ? ht40PowerIncForPdadc : 0;
++		ar5008_hw_init_rate_txpower(ah, ratesArray, chan, ht40_delta);
++		/* Enable TPC */
++		REG_WRITE(ah, AR_PHY_POWER_TX_RATE_MAX,
++			MAX_RATE_POWER | AR_PHY_POWER_TX_RATE_MAX_TPC_ENABLE);
++	} else {
++		/* Disable TPC */
++		REG_WRITE(ah, AR_PHY_POWER_TX_RATE_MAX, MAX_RATE_POWER);
++	}
++
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1cbd335..69a1222 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1086,6 +1086,8 @@ bool ar9003_is_paprd_enabled(struct ath_hw *ah);
+ void ar9003_hw_set_chain_masks(struct ath_hw *ah, u8 rx, u8 tx);
+ void ar9003_hw_init_rate_txpower(struct ath_hw *ah, u8 *rate_array,
+ 				 struct ath9k_channel *chan);
++void ar5008_hw_init_rate_txpower(struct ath_hw *ah, int16_t *rate_array,
++				 struct ath9k_channel *chan, int ht40_delta);
+ 
+ /* Hardware family op attach helpers */
+ int ar5008_hw_attach_phy_ops(struct ath_hw *ah);
 -- 
-1.9.1
+2.1.0
 
