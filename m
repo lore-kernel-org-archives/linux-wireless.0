@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:45526 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386AbaLESxN (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:65122 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445AbaL3RS4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Dec 2014 13:53:13 -0500
-Date: Fri, 5 Dec 2014 18:53:03 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141205185303.GG31222@e104818-lin.cambridge.arm.com> (sfid-20141205_195330_110506_B336D69E)
-References: <5481794E.4050406@broadcom.com>
- <20141205183945.GE31222@e104818-lin.cambridge.arm.com>
+	Tue, 30 Dec 2014 12:18:56 -0500
+Received: by mail-la0-f41.google.com with SMTP id hv19so12840754lab.0
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2014 09:18:55 -0800 (PST)
+Message-ID: <54A2DE7C.1050602@cogentembedded.com> (sfid-20141230_181922_603172_DE47A975)
+Date: Tue, 30 Dec 2014 20:18:52 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141205183945.GE31222@e104818-lin.cambridge.arm.com>
+To: Nicholas Mc Guire <der.herr@hofr.at>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/4] ath10k: a few incorrect return handling fix-up
+References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 05, 2014 at 06:39:45PM +0000, Catalin Marinas wrote:
-> On Fri, Dec 05, 2014 at 09:22:22AM +0000, Arend van Spriel wrote:
-> > For our brcm80211 development we are working on getting brcmfmac driver
-> > up and running on a Broadcom ARM-based platform. The wireless device is
-> > a PCIe device, which is hooked up to the system behind a PCIe host
-> > bridge, and we transfer information between host and device using a
-> > descriptor ring buffer allocated using dma_alloc_coherent(). We mostly
-> > tested on x86 and seen no issue. However, on this ARM platform
-> > (single-core A9) we detect occasionally that the descriptor content is
-> > invalid. When this occurs we do a dma_sync_single_for_cpu() and this is
-> > retried a number of times if the problem persists. Actually, found out
-> > that someone made a mistake by using virt_to_dma(va) to get the
-> > dma_handle parameter. So probably we only provided a delay in the retry
-> > loop. After fixing that a single call to dma_sync_single_for_cpu() is
-> > sufficient. The DMA-API-HOWTO clearly states that:
-> 
-> Does your system have an L2 cache? What's the SoC topology, can PCIe see
-> such L2 cache (or snoop the L1 caches)?
+Hello.
 
-BTW, if you really have a PL310-like L2 cache, have a look at some
-patches (I've seen similar symptoms) and make sure your configuration is
-correct:
+On 12/30/2014 03:20 PM, Nicholas Mc Guire wrote:
 
-http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6395/1
+> wait_for_completion_timeout does not return negative values so the tests
+> for <= 0 are not needed and the case differentiation in the error handling
+> path unnecessary.
 
-http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6529/1
+    I decided to verify your statement and I saw that it seems wrong. 
+do_wait_for_common() can return -ERESTARTSYS and the return value gets 
+returned by its callers unchanged.
 
-The first one is vexpress specific. The second one was eventually
-discarded by Russell (I don't remember the reason, I guess it's because
-SoC code is supposed to set the right bits in there anyway). In your
-case, such bits may be set up by firmware, so Linux cannot fix anything
-up.
+> patch was only compile tested x86_64_defconfig + CONFIG_ATH_CARDS=m
+> CONFIG_ATH10K=m
 
--- 
-Catalin
+> patch is against linux-next 3.19.0-rc1 -next-20141226
+
+    Rather patches. It would have been better to send one patch instead of 4 
+patches with the same name.
+
+WBR, Sergei
+
