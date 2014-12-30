@@ -1,210 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:3211 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753377AbaLGT0n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Dec 2014 14:26:43 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: linux-wireless@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux@rasmusvillemoes.dk,
-	joe@perches.com, devel@driverdev.osuosl.org,
-	linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	intel-gfx@lists.freedesktop.org, linux-mtd@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	linux-usb@vger.kernel.org
-Subject: [PATCH 0/20] fix misspelling of current function in string
-Date: Sun,  7 Dec 2014 20:20:42 +0100
-Message-Id: <1417980062-25151-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141207_203024_664995_9E3CECFF)
+Received: from cantor2.suse.de ([195.135.220.15]:54074 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751748AbaL3Wmv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 17:42:51 -0500
+Date: Tue, 30 Dec 2014 23:42:48 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+cc: Borislav Petkov <bp@alien8.de>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: iwlwifi-driver card doesn't work with 3.19-rc2+
+In-Reply-To: <54A328C2.5080606@lwfinger.net>
+Message-ID: <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> (sfid-20141230_234310_787751_D4168EB4)
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+ <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches replace what appears to be a reference to the name of the
-current function but is misspelled in some way by either the name of the
-function itself, or by %s and then __func__ in an argument list.
+On Tue, 30 Dec 2014, Larry Finger wrote:
 
-// <smpl>
-// sudo apt-get install python-pip
-// sudo pip install python-Levenshtein
-// spatch requires the argument --in-place
+> > > If wireless maintainers think otherwise, I'll send a revert request to
+> > > Linus for consideration.
+> > 
+> > I wonder if the reaction would be like this one:
+> > 
+> > https://lkml.org/lkml/2012/12/23/75
+> > 
+> > :-)
+> 
+> It would be a little like that.
+> 
+> One thread of interest is https://lkml.org/lkml/2014/12/22/348. Commit
+> 24a0aa212ee2 ("cfg80211: make WEXT compatibility unselectable") made it
+> impossible to select the IPW2200. The patch to allow selecting the IPW2200,
+> which automatically selects CFG80211_WEXT has been added to wireless-drivers,
+> but it has not yet made it to mainline. Once it does, then choosing to build
+> the IPW2200 will provide a workaround.
+> 
+> In my opinion, the need for the IPW2200 to have CFG80211_WEXT means that the
+> original commit will likely be reverted, but your voice will help.
 
-virtual after_start
+Ok, thanks a lot for another datapoint. I am sending revert patch to Linus 
+tonight.
 
-@initialize:ocaml@
-@@
-
-let extensible_functions = ref ([] : string list)
-let restarted = ref false
-
-let restart _ =
-  restarted := true;
-  let it = new iteration() in
-  it#add_virtual_rule After_start;
-  Printf.eprintf "restarting\n";
-  it#register()
-
-@initialize:python@
-@@
-import re
-from Levenshtein import distance
-mindist = 1 // 1 to find only misspellings
-maxdist = 2
-ignore_leading = True
-
-// ---------------------------------------------------------------------
-
-@r0@
-constant char [] c;
-identifier f;
-@@
-
-f(...,c,...)
-
-@script:ocaml@
-c << r0.c;
-f << r0.f;
-@@
-
-(if not !restarted then restart());
-match Str.split_delim (Str.regexp "%") c with
-  _::_::_ ->
-    if not (List.mem f !extensible_functions)
-    then extensible_functions := f :: !extensible_functions
-| _ -> ()
-
-// ---------------------------------------------------------------------
-
-@r depends on after_start@
-constant char [] c;
-position p;
-identifier f;
-@@
-
-f(...,c@p,...)
-
-@script:python flt@
-c << r.c;
-p << r.p;
-matched;
-@@
-
-func = p[0].current_element
-wpattern = "[a-zA-Z_][a-zA-Z0-9_]*"
-if ignore_leading:
-   func = func.strip("_")
-   wpattern = "[a-zA-Z][a-zA-Z0-9_]*"
-lf = len(func)
-cocci.include_match(False)
-// ignore extremely short function names
-if lf > 3:
-   words = [w for w in re.findall(wpattern, c) if abs(len(w) - lf) <= maxdist]
-   for w in words:
-       d = distance(w, func) 
-       if mindist <= d and d <= maxdist:
-          coccinelle.matched = w
-          cocci.include_match(True)
-     	  //print "%s:%d:%s():%d: %s" % (p[0].file, int(p[0].line), func, d, c)
-	  break
-
-@script:ocaml r2@
-c << r.c;
-f << r.f;
-matched << flt.matched;
-fixed;
-@@
-
-let pieces = Str.split_delim (Str.regexp_string matched) c in
-match pieces with
-  [before;after] ->
-    let preceeding =
-      List.length(Str.split (Str.regexp_string "%") before) > 1 in
-    if preceeding
-    then Coccilib.include_match false
-    else
-      if List.mem f !extensible_functions
-      then fixed := before ^ "%s" ^ after
-      else Coccilib.include_match false
-| _ -> Coccilib.include_match false
-
-@changed1@
-constant char [] r.c;
-identifier r2.fixed;
-position r.p;
-identifier r.f;
-@@
-
-f(...,
--c@p
-+fixed,__func__
- ,...)
-
-// -------------------------------------------------------------------
-
-@s depends on after_start@
-constant char [] c;
-position p;
-identifier f;
-@@
-
-f(...,c@p,...)
-
-@script:python flt2@
-c << s.c;
-p << s.p;
-matched;
-@@
-
-func = p[0].current_element
-wpattern = "[a-zA-Z_][a-zA-Z0-9_]*"
-if ignore_leading:
-   func = func.strip("_")
-   wpattern = "[a-zA-Z][a-zA-Z0-9_]*"
-lf = len(func)
-cocci.include_match(False)
-// ignore extremely short function names
-if lf > 3:
-   words = [w for w in re.findall(wpattern, c) if abs(len(w) - lf) <= maxdist]
-   for w in words:
-       d = distance(w, func) 
-       if mindist <= d and d <= maxdist:
-          coccinelle.matched = w
-          cocci.include_match(True)
-     	  //print "%s:%d:%s():%d: %s" % (p[0].file, int(p[0].line), func, d, c)
-	  break
-
-@script:ocaml s2@
-c << s.c;
-f << s.f;
-p << s.p;
-matched << flt2.matched;
-fixed;
-@@
-
-let ce = (List.hd p).current_element in
-let pieces = Str.split_delim (Str.regexp_string matched) c in
-match pieces with
-  [before;after] ->
-    let preceeding =
-      List.length(Str.split (Str.regexp_string "%") before) > 1 in
-    if preceeding
-    then Coccilib.include_match false
-    else
-      if List.mem f !extensible_functions
-      then Coccilib.include_match false
-      else fixed := before ^ ce ^ after
-| _ -> Coccilib.include_match false
-
-@changed2@
-constant char [] s.c;
-identifier s2.fixed;
-position s.p;
-identifier s.f;
-@@
-
-f(...,
--c@p
-+fixed
- ,...)
-// </smpl>
-
+-- 
+Jiri Kosina
+SUSE Labs
