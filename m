@@ -1,35 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:24485 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbaLRR4l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 12:56:41 -0500
-Message-ID: <54931556.7020302@broadcom.com> (sfid-20141218_185644_437397_BDA76B8E)
-Date: Thu, 18 Dec 2014 18:56:38 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Gautam Kumar Shukla <gautams@broadcom.com>
-Subject: Re: [RFC] cfg80211: Add feature flag for 4-way handshake offload
-References: <1418907095-10224-1-git-send-email-arend@broadcom.com> <1418909497.6134.5.camel@sipsolutions.net>
-In-Reply-To: <1418909497.6134.5.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751816AbaL3OT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 09:19:57 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/33] iwlwifi: support multiple d0i3 modes
+Date: Tue, 30 Dec 2014 16:18:52 +0200
+Message-Id: <1419949148-24046-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154347_969208_7AA65D55)
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
+References: <1419948357.21410.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/18/14 14:31, Johannes Berg wrote:
-> On Thu, 2014-12-18 at 13:51 +0100, Arend van Spriel wrote:
->
->> Here the proposed way to deal with new feature flags. Let
->> me know if this is suitable.
->
-> I guess that works. I think those functions should be inlines - no point
-> in having them with export symbol etc (the structures needed for that
-> are *far* bigger than the functions.)
+From: Eliad Peller <eliad@wizery.com>
 
-Ok. I should do some self-learning about the things going on behind the 
-scene called EXPORT_SYMBOL. Thanks.
+Allow configuring additional d0i3 mode, in which the
+fw will be configured to enter d0i3 only on suspend
+(while keeping the wake_lock accounting as usual)
 
-Regards,
-Arend
+The d0i3 mode to use will be determined by the
+underlying trans layer.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h | 17 +++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h   |  1 +
+ 2 files changed, 18 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 028408a..10ae9d7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -552,6 +552,21 @@ enum iwl_trans_state {
+ };
+ 
+ /**
++ * enum iwl_d0i3_mode - d0i3 mode
++ *
++ * @IWL_D0I3_MODE_OFF - d0i3 is disabled
++ * @IWL_D0I3_MODE_ON_IDLE - enter d0i3 when device is idle
++ *	(e.g. no active references)
++ * @IWL_D0I3_MODE_ON_SUSPEND - enter d0i3 only on suspend
++ *	(in case of 'any' trigger)
++ */
++enum iwl_d0i3_mode {
++	IWL_D0I3_MODE_OFF = 0,
++	IWL_D0I3_MODE_ON_IDLE,
++	IWL_D0I3_MODE_ON_SUSPEND,
++};
++
++/**
+  * struct iwl_trans - transport common data
+  *
+  * @ops - pointer to iwl_trans_ops
+@@ -612,6 +627,8 @@ struct iwl_trans {
+ 	const struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_MAX];
+ 	u8 dbg_dest_reg_num;
+ 
++	enum iwl_d0i3_mode d0i3_mode;
++
+ 	/* pointer to trans specific struct */
+ 	/*Ensure that this pointer will always be aligned to sizeof pointer */
+ 	char trans_specific[0] __aligned(sizeof(void *));
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index ff1a409..e608dc4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -850,6 +850,7 @@ iwl_mvm_sta_from_staid_protected(struct iwl_mvm *mvm, u8 sta_id)
+ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
+ {
+ 	return mvm->trans->cfg->d0i3 &&
++	       mvm->trans->d0i3_mode != IWL_D0I3_MODE_OFF &&
+ 	       (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_D0I3_SUPPORT);
+ }
+ 
+-- 
+1.9.1
+
