@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:54315 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932591AbaLMBOk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Dec 2014 20:14:40 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: linux-wireless@vger.kernel.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: [Resend][PATCH] NFC / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
-Date: Sat, 13 Dec 2014 02:36:19 +0100
-Message-ID: <2345337.9Neq3LLH1l@vostro.rjw.lan> (sfid-20141213_021456_815809_61280CBC)
-In-Reply-To: <1783661.J0PllbRLKd@vostro.rjw.lan>
-References: <1783661.J0PllbRLKd@vostro.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from www.osadl.org ([62.245.132.105]:51273 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752657AbaL3NDq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 08:03:46 -0500
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH 1/4] ath10k: fixup wait_for_completion_timeout return handling
+Date: Tue, 30 Dec 2014 07:20:43 -0500
+Message-Id: <1419942046-17985-2-git-send-email-der.herr@hofr.at> (sfid-20141230_140350_495145_90FF1D7B)
+In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: NFC / PM: Replace CONFIG_PM_RUNTIME with CONFIG_PM
+wait_for_completion_timeout does not return negative values so
+"ret" handling here should check for timeout only.
 
-After commit b2b49ccbdd54 (PM: Kconfig: Set PM_RUNTIME if PM_SLEEP is
-selected) PM_RUNTIME is always set if PM is set, so #ifdef blocks
-depending on CONFIG_PM_RUNTIME may now be changed to depend on
-CONFIG_PM.
+patch was only compile tested for x86_64_defconfig + CONFIG_ATH_DEBUG=y
 
-Replace CONFIG_PM_RUNTIME with CONFIG_PM in drivers/nfc/trf7970a.c.
+patch is against linux-next 3.19.0-rc1 -next-20141226
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
 ---
-
-Please let me know if there are any objections against this.  If not, I'll
-take it through the linux-pm tree, as I'm going to remove CONFIG_PM_RUNTIME
-entirely shortly.
-
----
- drivers/nfc/trf7970a.c |    2 +-
+ drivers/net/wireless/ath/ath10k/debug.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: linux-pm/drivers/nfc/trf7970a.c
-===================================================================
---- linux-pm.orig/drivers/nfc/trf7970a.c
-+++ linux-pm/drivers/nfc/trf7970a.c
-@@ -2154,7 +2154,7 @@ static int trf7970a_resume(struct device
- }
- #endif
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index a716758..7e1fe93 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -373,7 +373,7 @@ static int ath10k_debug_fw_stats_request(struct ath10k *ar)
  
--#ifdef CONFIG_PM_RUNTIME
-+#ifdef CONFIG_PM
- static int trf7970a_pm_runtime_suspend(struct device *dev)
- {
- 	struct spi_device *spi = container_of(dev, struct spi_device, dev);
+ 		ret = wait_for_completion_timeout(&ar->debug.fw_stats_complete,
+ 						  1*HZ);
+-		if (ret <= 0)
++		if (ret == 0)
+ 			return -ETIMEDOUT;
+ 
+ 		spin_lock_bh(&ar->data_lock);
+-- 
+1.7.10.4
 
