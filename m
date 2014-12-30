@@ -1,62 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:46365 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755572AbaLHP4H (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:64671 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345AbaL3SjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 10:56:07 -0500
-Date: Mon, 8 Dec 2014 15:55:57 +0000
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Johannes Stezenbach <js@sig21.net>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	"brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	David Miller <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: using DMA-API on ARM
-Message-ID: <20141208155556.GL16185@e104818-lin.cambridge.arm.com> (sfid-20141208_165610_992491_9CA09733)
-References: <5481794E.4050406@broadcom.com>
- <20141205183945.GE31222@e104818-lin.cambridge.arm.com>
- <20141205185303.GG31222@e104818-lin.cambridge.arm.com>
- <20141208125538.GA26983@sig21.net>
+	Tue, 30 Dec 2014 13:39:19 -0500
+Received: by mail-la0-f53.google.com with SMTP id gm9so12822125lab.26
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2014 10:39:17 -0800 (PST)
+Message-ID: <54A2F151.6040205@cogentembedded.com> (sfid-20141230_193940_792709_3DD0B3B4)
+Date: Tue, 30 Dec 2014 21:39:13 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20141208125538.GA26983@sig21.net>
+To: Nicholas Mc Guire <der.herr@hofr.at>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/4] ath10k: a few incorrect return handling fix-up
+References: <1419942046-17985-1-git-send-email-der.herr@hofr.at> <54A2DE7C.1050602@cogentembedded.com> <20141230182842.GA18361@opentech.at>
+In-Reply-To: <20141230182842.GA18361@opentech.at>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 08, 2014 at 12:55:38PM +0000, Johannes Stezenbach wrote:
-> On Fri, Dec 05, 2014 at 06:53:03PM +0000, Catalin Marinas wrote:
-> > On Fri, Dec 05, 2014 at 06:39:45PM +0000, Catalin Marinas wrote:
-> > > 
-> > > Does your system have an L2 cache? What's the SoC topology, can PCIe see
-> > > such L2 cache (or snoop the L1 caches)?
-> > 
-> > BTW, if you really have a PL310-like L2 cache, have a look at some
-> > patches (I've seen similar symptoms) and make sure your configuration is
-> > correct:
-> > 
-> > http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6395/1
-> > 
-> > http://www.arm.linux.org.uk/developer/patches/viewpatch.php?id=6529/1
-> > 
-> > The first one is vexpress specific. The second one was eventually
-> > discarded by Russell (I don't remember the reason, I guess it's because
-> > SoC code is supposed to set the right bits in there anyway). In your
-> > case, such bits may be set up by firmware, so Linux cannot fix anything
-> > up.
-> 
-> How do you avoid the unpredictable behavior mentioned in the
-> PL310 TRM when the Shared Attribute Invalidate Enable bit is set?
-> http://infocenter.arm.com/help/topic/com.arm.doc.ddi0246h/Ceggcfcj.html
+On 12/30/2014 09:28 PM, Nicholas Mc Guire wrote:
 
-So you talk about "Shared Attribute _Invalidate_ Enable" (bit 13) while
-I talk about "Shared Attribute _Override_ Enable" (bit 22).
+>>> wait_for_completion_timeout does not return negative values so the tests
+>>> for <= 0 are not needed and the case differentiation in the error handling
+>>> path unnecessary.
 
-In addition, Shared _Invalidate_ behaviour can only be enabled if Shared
-Attribute _Override_ Enable bit is not set.
+>>     I decided to verify your statement and I saw that it seems wrong.
+>> do_wait_for_common() can return -ERESTARTSYS and the return value gets
+>> returned by its callers unchanged.
 
--- 
-Catalin
+> the -ERESTARTSYS only can be returned if state matches but
+> wait_for_completion_timemout passes TASK_UNINTERRUPTIBLE
+> so signal_pending_state will return 0 and never negativ
+
+> my understanding of the callchain is:
+> wait_for_completion_timemout with TASK_UNINTERRUPTIBLE
+>    -> wait_for_common(...TASK_UNINTERRUPTIBLE)
+>      -> __wait_for_common(...TASK_UNINTERRUPTIBLE)
+>        -> do_wait_for_common(...TASK_UNINTERRUPTIBLE)
+>          -> signal_pending_state(TASK_UNINTERRUPTIBLE...)
+
+> static inline int signal_pending_state(long state, struct task_struct *p)
+> {
+>          if (!(state & (TASK_INTERRUPTIBLE | TASK_WAKEKILL)))
+>                  return 0;
+
+    Right. I didn't look into TASK_UNINTERRUPTIBLE thing before sending my mail.
+
+> so wait_for_completion_timemout should return 0 or 1 only
+
+    0 or the remaining time, to be precise.
+
+>>> patch was only compile tested x86_64_defconfig + CONFIG_ATH_CARDS=m
+>>> CONFIG_ATH10K=m
+
+>>> patch is against linux-next 3.19.0-rc1 -next-20141226
+
+>>     Rather patches. It would have been better to send one patch instead of
+>> 4 patches with the same name.
+
+> sorry for that - I had split it into separate patches as it was
+> in different files - giving them the same name of course was a bit
+> brain-dead.
+
+    You should have mentioned the modified files in the subject. But IMHO it 
+would be better to have just one patch.
+
+> please do give it one more look - if the above argument is invalid
+> I apologize for the noise.
+
+    It's me who should apologize. :-<
+
+> thx!
+> hofrat
+
+WBR, Sergei
+
