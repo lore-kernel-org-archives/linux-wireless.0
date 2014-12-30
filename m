@@ -1,206 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42955 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:52687 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752047AbaLHT2U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 14:28:20 -0500
-Message-ID: <1418066813.1350.18.camel@dcbw.local> (sfid-20141208_202842_812956_17D5EF42)
-Subject: Re: wl1251: NVS firmware data
-From: Dan Williams <dcbw@redhat.com>
-To: Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Date: Mon, 08 Dec 2014 13:26:53 -0600
-In-Reply-To: <201412082015.18501@pali>
-References: <201411271506.20457@pali> <201412081811.46943@pali>
-	 <30072B9E-2495-4F90-AC91-9C0D7E08F44E@holtmann.org>
-	 <201412082015.18501@pali>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751722AbaL3OTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 09:19:48 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 06/33] iwlwifi: mvm: add debugfs to trigger fw debug logs collection
+Date: Tue, 30 Dec 2014 16:18:41 +0200
+Message-Id: <1419949148-24046-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154349_474272_B7DC7BEE)
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
+References: <1419948357.21410.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-08 at 20:15 +0100, Pali Rohár wrote:
-> On Monday 08 December 2014 19:50:17 Marcel Holtmann wrote:
-> > Hi Pali,
-> > 
-> > >>>>>> On Saturday 06 December 2014 13:49:54 Pavel Machek
-> > >>>>>> wrote: /**
-> > >>>>>> 
-> > >>>>>> + * request_firmware_prefer_user: - prefer usermode
-> > >>>>>> helper for loading firmware + * @firmware_p: pointer to
-> > >>>>>> firmware image
-> > >>>>>> + * @name: name of firmware file
-> > >>>>>> + * @device: device for which firmware is being loaded
-> > >>>>>> + *
-> > >>>>>> + * This function works pretty much like
-> > >>>>>> request_firmware(), but it prefer + * usermode helper.
-> > >>>>>> If usermode helper fails then it fallback to direct
-> > >>>>>> access. + * Usefull for dynamic or model specific
-> > >>>>>> firmware data. + **/
-> > >>>>>> +int request_firmware_prefer_user(const struct firmware
-> > >>>>>> **firmware_p, +                           const char
-> > >>>>>> *name, struct device *device) +{
-> > >>>>>> +       int ret;
-> > >>>>>> +       __module_get(THIS_MODULE);
-> > >>>>>> +       ret = _request_firmware(firmware_p, name,
-> > >>>>>> device, +                               FW_OPT_UEVENT
-> > >>>>>> | FW_OPT_PREFER_USER); +      
-> > >>>>>> module_put(THIS_MODULE); +       return ret;
-> > >>>>>> +}
-> > >>>>>> +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
-> > >>>>> 
-> > >>>>> I'd like to introduce request_firmware_user() which only
-> > >>>>> requests firmware from user space, and this way is
-> > >>>>> simpler and more flexible since we have
-> > >>>>> request_firmware_direct() already.
-> > >>>> 
-> > >>>> Why would a driver care about what program provides the
-> > >>>> firmware?  It shouldn't at all, and we want to get rid of
-> > >>>> the userspace firmware loader, not encourage drivers to
-> > >>>> use it "exclusively" at all.
-> > >>> 
-> > >>> Do not remove it! Without userspace firmware loader it is
-> > >>> impossible to load dynamic firmware files.
-> > >> 
-> > >> why is this dynamic in the first place. It does not sound
-> > >> like dynamic data to me at all. This is like the WiFi MAC
-> > >> address(es) or Bluetooth BD_ADDR. They are all static
-> > >> information. The only difference is that they are on the
-> > >> host accessibly filesystem or storage and not on the
-> > >> device itself.
-> > >> 
-> > >> To be honest, for Bluetooth we solved this now. If the
-> > >> device is missing key information like the calibration
-> > >> data or BD_ADDR, then it comes up unconfigured. A
-> > >> userspace process can then go and load the right data into
-> > >> it and then the device becomes available as Bluetooth
-> > >> device.
-> > >> 
-> > >> Trying to use request_firmware to load some random data and
-> > >> insist on going through userspace helper for that sounds
-> > >> crazy to me. Especially since we are trying hard to get
-> > >> away from the userspace loader. Forcing to keep it for new
-> > >> stuff sounds backwards to me.
-> > >> 
-> > >> With the special Nokia partition in mind, why hasn't this
-> > >> been turned into a mountable filesystem or into a
-> > >> driver/subsystem that can access the data direct from the
-> > >> kernel. I advocated for this some time ago. Maybe there
-> > >> should be a special subsystem for access to these factory
-> > >> persistent information that drivers then just can access.
-> > >> I seem to remember that some systems provide these via
-> > >> ACPI. Why does the ARM platform has to be special here?
-> > >> 
-> > >> And the problem of getting Ethernet and WiFi MAC address
-> > >> and Bluetooth BD_ADDR comes up many many times. Why not
-> > >> have something generic here. And don't tell me
-> > >> request_firmware is that generic solution ;)
-> > >> 
-> > >> Regards
-> > >> 
-> > >> Marcel
-> > > 
-> > > Hi Marcel. I think you did not understand this problem. This
-> > > discussion is not about mac address. Please read email
-> > > thread again and if there are some unclear pars, then ask.
-> > > Thanks!
-> > 
-> > I think that I pretty clearly understand the problem.
-> > Calibration data, MAC address, what is the difference? For me
-> > this is all the same. It is data that is specific to a device
-> > or type of devices and it is stored somewhere else. In most
-> > cases in some immutable memory/flash area.
-> > 
-> 
-> Those calibration data (in form of binary NVS firmware file) 
-> needs to be sent to wl1251 chip. Mac address is not needed at 
-> this step (and kernel generate some random if is not provided).
-> 
-> (Just to note wl1271 driver loads both MAC address and NVS data 
-> via one firmware file which is prepared by userspace, but this 
-> discussion is about wl1251...)
-> 
-> > What you want is access to this data since the kernel driver
-> > needs it. Do I get this so far ;)
-> > 
-> 
-> Yes, we need to provide NVS data to kernel when kernel ask for 
-> them.
-> 
-> > So my take is that request_firmware is not the right way to
-> > get this data. Or more precisely make sure that this data is
-> > available to kernel drivers. And what I am seeing here is
-> > that instead of actually solving the bigger problem, we just
-> > hack around it with request_firmware. Now surprisingly the
-> > request_firmware loads files directly from the kernel and all
-> > the hacks do not work anymore.
-> > 
-> > Regards
-> > 
-> > Marcel
-> 
-> Just read emails again...
-> 
-> Our problem is:
-> 
-> linux-firmware.git tree provides two binary firmware files:
-> 
-> ti-connectivity/wl1251-fw.bin
-> ti-connectivity/wl1251-nvs.bin
-> 
-> First is firmware file, second NVS file with generic calibration 
-> data. Kernel driver wl1251 now loads both firmware files via 
-> request_firmware. Generic calibration data are enough for wl1251 
-> chip (it should work). But devices have own calibration data 
-> stored somewhere else.
-> 
-> On Nokia N900 NVS data are generated on-the-fly from some bytes 
-> from CAL (/dev/mtd1), from state of cellular network and from 
-> some other regulation settings.
-> 
-> So I think that files stored in linux-firmware.git tree (which 
-> are also installed into /lib/firmware/) should be loaded with 
-> request_firmware function. Or not? Do you think something else? 
-> What other developers think?
-> 
-> I'm against kernel driver for CAL (/dev/mtd1) for more reasons:
-> 
-> 1) we have userspace open source code, but licensed under GPLv3. 
-> And until kernel change license, we cannot include it.
-> 
-> 2) NVS data are (probably) not in one place, plus they depends on 
-> something other.
-> 
-> 3) If manufacture XYZ create new device with its own storage 
-> format of calibration data this means that correct solution for 
-> XYZ is also to implement new kernel fs driver for its own format. 
-> Do you really want to have in kernel all those drivers for all 
-> different (proprietary) storage formats?
-> 
-> 4) It does not help us with existence of generic file 
-> /lib/firmware/ti-connectivity/wl1251-nvs.bin which comes from 
-> linux-firmware.git tree.
+This allows to collect the logs even if the firmware hasn't
+crashed. Of course, crashing the firmware is an option, but
+this is easier and nicer.
 
-a) change driver to prefer a new "wl1251-nvs-n900.bin" file, but fall
-back to "wl1251-nvs.bin" if the first one isn't present
-b) have a "wl1251-cal-nvs-update" service that, if wl1521-nvs-n900.bin
-is *not* present mounts the CAL MTD, reads the data, writes it out into
-wl1521-nvs-n900.bin, and the rmmod/modprobes the driver
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-prph.h    |  4 +++
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c | 54 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/fw.c      | 23 +++++++++++--
+ drivers/net/wireless/iwlwifi/mvm/mvm.h     |  3 ++
+ 4 files changed, 82 insertions(+), 2 deletions(-)
 
-and done?  Stuff that's not N900 just wouldn't ship the update service
-and would proceed like none of this happened.
-
-Dan
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index ea3b970..83ab423 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -366,11 +366,15 @@ enum secure_load_status_reg {
+ #define RXF_FIFO_RD_FENCE_ADDR		(0xa00c0c)
+ 
+ /* FW monitor */
++#define MON_BUFF_SAMPLE_CTL		(0xa03c00)
+ #define MON_BUFF_BASE_ADDR		(0xa03c3c)
+ #define MON_BUFF_END_ADDR		(0xa03c40)
+ #define MON_BUFF_WRPTR			(0xa03c44)
+ #define MON_BUFF_CYCLE_CNT		(0xa03c48)
+ 
++#define DBGC_IN_SAMPLE			(0xa03c00)
++#define DBGC_OUT_CTRL			(0xa03c0c)
++
+ /* FW chicken bits */
+ #define LMPM_CHICK			0xA01FF8
+ enum {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index 0507647..a1b276c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -945,6 +945,56 @@ iwl_dbgfs_scan_ant_rxchain_write(struct iwl_mvm *mvm, char *buf,
+ 	return count;
+ }
+ 
++static ssize_t iwl_dbgfs_fw_dbg_conf_read(struct file *file,
++					  char __user *user_buf,
++					  size_t count, loff_t *ppos)
++{
++	struct iwl_mvm *mvm = file->private_data;
++	enum iwl_fw_dbg_conf conf;
++	char buf[8];
++	const size_t bufsz = sizeof(buf);
++	int pos = 0;
++
++	mutex_lock(&mvm->mutex);
++	conf = mvm->fw_dbg_conf;
++	mutex_unlock(&mvm->mutex);
++
++	pos += scnprintf(buf + pos, bufsz - pos, "%d\n", conf);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++}
++
++static ssize_t iwl_dbgfs_fw_dbg_conf_write(struct iwl_mvm *mvm,
++					   char *buf, size_t count,
++					   loff_t *ppos)
++{
++	int ret, conf_id;
++
++	ret = kstrtoint(buf, 0, &conf_id);
++	if (ret)
++		return ret;
++
++	if (WARN_ON(conf_id >= FW_DBG_MAX))
++		return -EINVAL;
++
++	mutex_lock(&mvm->mutex);
++	ret = iwl_mvm_start_fw_dbg_conf(mvm, conf_id);
++	mutex_unlock(&mvm->mutex);
++
++	return ret ?: count;
++}
++
++static ssize_t iwl_dbgfs_fw_dbg_collect_write(struct iwl_mvm *mvm,
++					      char *buf, size_t count,
++					      loff_t *ppos)
++{
++	mutex_lock(&mvm->mutex);
++	iwl_mvm_fw_dbg_collect(mvm);
++	mutex_unlock(&mvm->mutex);
++
++	return count;
++}
++
+ #define ADD_TEXT(...) pos += scnprintf(buf + pos, bufsz - pos, __VA_ARGS__)
+ #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+ static ssize_t iwl_dbgfs_bcast_filters_read(struct file *file,
+@@ -1459,6 +1509,8 @@ MVM_DEBUGFS_WRITE_FILE_OPS(bt_tx_prio, 10);
+ MVM_DEBUGFS_WRITE_FILE_OPS(bt_force_ant, 10);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(scan_ant_rxchain, 8);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(d0i3_refs, 8);
++MVM_DEBUGFS_READ_WRITE_FILE_OPS(fw_dbg_conf, 8);
++MVM_DEBUGFS_WRITE_FILE_OPS(fw_dbg_collect, 8);
+ 
+ #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(bcast_filters, 256);
+@@ -1500,6 +1552,8 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
+ 			     S_IWUSR | S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(prph_reg, mvm->debugfs_dir, S_IWUSR | S_IRUSR);
+ 	MVM_DEBUGFS_ADD_FILE(d0i3_refs, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
++	MVM_DEBUGFS_ADD_FILE(fw_dbg_conf, mvm->debugfs_dir, S_IRUSR | S_IWUSR);
++	MVM_DEBUGFS_ADD_FILE(fw_dbg_collect, mvm->debugfs_dir, S_IWUSR);
+ 
+ #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
+ 	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BCAST_FILTERING) {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index 60d0c9f..534ee31 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -70,6 +70,7 @@
+ #include "iwl-debug.h"
+ #include "iwl-csr.h" /* for iwl_mvm_rx_card_state_notif */
+ #include "iwl-io.h" /* for iwl_mvm_rx_card_state_notif */
++#include "iwl-prph.h"
+ #include "iwl-eeprom-parse.h"
+ 
+ #include "mvm.h"
+@@ -399,8 +400,26 @@ out:
+ 	return ret;
+ }
+ 
+-static int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm,
+-				     enum iwl_fw_dbg_conf conf_id)
++void iwl_mvm_fw_dbg_collect(struct iwl_mvm *mvm)
++{
++	lockdep_assert_held(&mvm->mutex);
++
++	/* stop recording */
++	if (mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000) {
++		iwl_set_bits_prph(mvm->trans, MON_BUFF_SAMPLE_CTL, 0x100);
++	} else {
++		iwl_write_prph(mvm->trans, DBGC_IN_SAMPLE, 0);
++		iwl_write_prph(mvm->trans, DBGC_OUT_CTRL, 0);
++	}
++
++	iwl_mvm_fw_error_dump(mvm);
++
++	/* start recording again */
++	WARN_ON_ONCE(mvm->fw->dbg_dest_tlv &&
++		     iwl_mvm_start_fw_dbg_conf(mvm, mvm->fw_dbg_conf));
++}
++
++int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, enum iwl_fw_dbg_conf conf_id)
+ {
+ 	u8 *ptr;
+ 	int ret;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index f3cb089..ff1a409 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -1371,4 +1371,7 @@ struct ieee80211_vif *iwl_mvm_get_bss_vif(struct iwl_mvm *mvm);
+ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error);
+ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
+ 
++int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, enum iwl_fw_dbg_conf id);
++void iwl_mvm_fw_dbg_collect(struct iwl_mvm *mvm);
++
+ #endif /* __IWL_MVM_H__ */
+-- 
+1.9.1
 
