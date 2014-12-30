@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:43024 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751697AbaLPIyZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Dec 2014 03:54:25 -0500
-Received: by mail-wg0-f52.google.com with SMTP id x12so16663123wgg.11
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Dec 2014 00:54:23 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 2/2] ath10k: send (re)assoc peer command when NSS changed
-Date: Tue, 16 Dec 2014 09:53:00 +0100
-Message-Id: <1418719980-19753-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20141216_095429_238015_6B6D675E)
-In-Reply-To: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1418719980-19753-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from www.osadl.org ([62.245.132.105]:51273 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752022AbaL3NDu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 08:03:50 -0500
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH 3/4] ath10k: fixup wait_for_completion_timeout return handling
+Date: Tue, 30 Dec 2014 07:20:45 -0500
+Message-Id: <1419942046-17985-4-git-send-email-der.herr@hofr.at> (sfid-20141230_140354_895238_1C36D4F5)
+In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assoc peer command contain information about NSS.
-When we will get IEEE80211_RC_NSS_CHANGED we should
-also send (re) assoc peer command to be sure firmware
-will know about it and RC will work correctly.
+wait_for_completion_timeout does not return negative values so
+"ret" handling here should check for timeout only.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+patch was only compile tested for x86_64_defconfig + CONFIG_ATH10K=m
+
+patch is against linux-next 3.19.0-rc1 -next-20141226
+
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/htc.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c9e7995..05fd620 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3592,8 +3592,9 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
- 				    sta->addr, smps, err);
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index f1946a6..2fd9e18 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -703,11 +703,9 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 	/* wait for response */
+ 	status = wait_for_completion_timeout(&htc->ctl_resp,
+ 					     ATH10K_HTC_CONN_SVC_TIMEOUT_HZ);
+-	if (status <= 0) {
+-		if (status == 0)
+-			status = -ETIMEDOUT;
++	if (status == 0) {
+ 		ath10k_err(ar, "Service connect timeout: %d\n", status);
+-		return status;
++		return -ETIMEDOUT;
  	}
  
--	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED) {
--		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates\n",
-+	if (changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
-+	    changed & IEEE80211_RC_NSS_CHANGED) {
-+		ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates/nss\n",
- 			   sta->addr);
- 
- 		err = ath10k_station_assoc(ar, arvif->vif, sta, true);
+ 	/* we controlled the buffer creation, it's aligned */
 -- 
-1.9.1
+1.7.10.4
 
