@@ -1,66 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews01.kpnxchange.com ([213.75.39.4]:62532 "EHLO
-	cpsmtpb-ews01.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754957AbaLVSKU (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:63215 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860AbaL3WK1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2014 13:10:20 -0500
-Message-ID: <1419271817.2317.12.camel@tiscali.nl> (sfid-20141222_191040_534124_837C59D7)
-Subject: [PATCH RFC] ipw2200: select CFG80211_WEXT
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 22 Dec 2014 19:10:17 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 30 Dec 2014 17:10:27 -0500
+Received: by mail-wg0-f46.google.com with SMTP id x13so21445613wgg.33
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2014 14:10:26 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
+Subject: [PATCH 2/3] ath9k: add TPC to TX path for AR9002 based chips
+Date: Tue, 30 Dec 2014 23:10:19 +0100
+Message-Id: <1419977420-23732-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141230_231047_725627_3F71FAD8)
+In-Reply-To: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 24a0aa212ee2 ("cfg80211: make WEXT compatibility unselectable")
-made it impossible to depend on CFG80211_WEXT. It does still allow to
-select that symbol. (Yes, the commit summary is confusing.)
+Add TPC capability to TX descriptor path for AR9002 based chips. Scale
+per-packet TX power according to eeprom power bias, power adjustments for
+HT40 mode and open loop CCK rates. Cap per-packet TX power according to
+TX power per-rate tables
 
-So make IPW2200 select CFG80211_WEXT, so that the ipw2200 driver can be
-built again.
-
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
-Johannes,
+ drivers/net/wireless/ath/ath9k/xmit.c | 68 ++++++++++++++++++++++++++++-------
+ 1 file changed, 56 insertions(+), 12 deletions(-)
 
-Building v3.19-rc1 for an outdated ThinkPad X41 left me without the
-ipw2200 driver. It turns out this trivial patch is all that's needed to
-make ipw2200 buildable again.
-
-(A similar patch would be needed for the drivers behind Kconfig symbol
-HERMES. Ie, orinico and friends.) 
-
-I must admit that I do not fully understand your commit. (How was
-CFG80211_WEXT "marked for deprecation and removal for a little more than
-two years"?) There's some terminology confusion: what you call "select"
-I tend to call "set". Anyhow, your commit basically disables building
-ipw2200 (and apparently orinoco and friends)?
-
-Was that your intention?
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 52d63de..9c332f9 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1097,24 +1097,65 @@ void ath_update_max_aggr_framelen(struct ath_softc *sc, int queue, int txop)
+ }
  
- drivers/net/wireless/ipw2x00/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/Kconfig b/drivers/net/wireless/ipw2x00/Kconfig
-index 91c0cb3c368e..21de4fe6cf2d 100644
---- a/drivers/net/wireless/ipw2x00/Kconfig
-+++ b/drivers/net/wireless/ipw2x00/Kconfig
-@@ -65,7 +65,8 @@ config IPW2100_DEBUG
+ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+-			       u8 rateidx)
++			       u8 rateidx, bool is_40, bool is_cck)
+ {
+ 	u8 max_power;
++	struct sk_buff *skb;
++	struct ath_frame_info *fi;
++	struct ieee80211_tx_info *info;
+ 	struct ath_hw *ah = sc->sc_ah;
  
- config IPW2200
- 	tristate "Intel PRO/Wireless 2200BG and 2915ABG Network Connection"
--	depends on PCI && CFG80211 && CFG80211_WEXT
-+	depends on PCI && CFG80211
-+	select CFG80211_WEXT
- 	select WIRELESS_EXT
- 	select WEXT_SPY
- 	select WEXT_PRIV
+-	if (sc->tx99_state)
++	if (sc->tx99_state || !ah->tpc_enabled)
+ 		return MAX_RATE_POWER;
+ 
++	skb = bf->bf_mpdu;
++	fi = get_frame_info(skb);
++	info = IEEE80211_SKB_CB(skb);
++
+ 	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+-		/* ar9002 does not support TPC for the moment */
+-		return MAX_RATE_POWER;
+-	}
++		int txpower = fi->tx_power;
+ 
+-	if (!bf->bf_state.bfs_paprd) {
+-		struct sk_buff *skb = bf->bf_mpdu;
+-		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-		struct ath_frame_info *fi = get_frame_info(skb);
++		if (is_40) {
++			u8 power_ht40delta;
++			struct ar5416_eeprom_def *eep = &ah->eeprom.def;
+ 
++			if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_2) {
++				bool is_2ghz;
++				struct modal_eep_header *pmodal;
++
++				is_2ghz = info->band == IEEE80211_BAND_2GHZ;
++				pmodal = &eep->modalHeader[is_2ghz];
++				power_ht40delta = pmodal->ht40PowerIncForPdadc;
++			} else {
++				power_ht40delta = 2;
++			}
++			txpower += power_ht40delta;
++		}
++
++		if (AR_SREV_9287(ah) || AR_SREV_9285(ah) ||
++		    AR_SREV_9271(ah)) {
++			txpower -= 2 * AR9287_PWR_TABLE_OFFSET_DB;
++		} else if (AR_SREV_9280_20_OR_LATER(ah)) {
++			s8 power_offset;
++
++			power_offset = ah->eep_ops->get_eeprom(ah,
++							EEP_PWR_TABLE_OFFSET);
++			txpower -= 2 * power_offset;
++		}
++
++		if (OLC_FOR_AR9280_20_LATER && is_cck)
++			txpower -= 2;
++
++		txpower = max(txpower, 0);
++		max_power = min_t(u8, ah->tx_power[rateidx], txpower);
++
++		/* XXX: clamp minimum TX power at 1 for AR9160 since if
++		 * max_power is set to 0, frames are transmitted at max
++		 * TX power
++		 */
++		if (!max_power && !AR_SREV_9280_20_OR_LATER(ah))
++			max_power = 1;
++	} else if (!bf->bf_state.bfs_paprd) {
+ 		if (rateidx < 8 && (info->flags & IEEE80211_TX_CTL_STBC))
+ 			max_power = min(ah->tx_power_stbc[rateidx],
+ 					fi->tx_power);
+@@ -1152,7 +1193,7 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 	info->rtscts_rate = fi->rtscts_rate;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(bf->rates); i++) {
+-		bool is_40, is_sgi, is_sp;
++		bool is_40, is_sgi, is_sp, is_cck;
+ 		int phy;
+ 
+ 		if (!rates[i].count || (rates[i].idx < 0))
+@@ -1198,7 +1239,8 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 			if (rix < 8 && (tx_info->flags & IEEE80211_TX_CTL_STBC))
+ 				info->rates[i].RateFlags |= ATH9K_RATESERIES_STBC;
+ 
+-			info->txpower[i] = ath_get_rate_txpower(sc, bf, rix);
++			info->txpower[i] = ath_get_rate_txpower(sc, bf, rix,
++								is_40, false);
+ 			continue;
+ 		}
+ 
+@@ -1227,7 +1269,9 @@ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+ 		info->rates[i].PktDuration = ath9k_hw_computetxtime(sc->sc_ah,
+ 			phy, rate->bitrate * 100, len, rix, is_sp);
+ 
+-		info->txpower[i] = ath_get_rate_txpower(sc, bf, rix);
++		is_cck = IS_CCK_RATE(info->rates[i].Rate);
++		info->txpower[i] = ath_get_rate_txpower(sc, bf, rix, false,
++							is_cck);
+ 	}
+ 
+ 	/* For AR5416 - RTS cannot be followed by a frame larger than 8K */
 -- 
 2.1.0
 
