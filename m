@@ -1,106 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:53038 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932826AbaLBSL5 (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:60987 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871AbaL3WK2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:11:57 -0500
-Received: by mail-wi0-f172.google.com with SMTP id n3so28830854wiv.11
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:56 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Tue, 30 Dec 2014 17:10:28 -0500
+Received: by mail-wi0-f170.google.com with SMTP id bs8so26224173wib.5
+        for <linux-wireless@vger.kernel.org>; Tue, 30 Dec 2014 14:10:27 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 23/26] iwlwifi: mvm: send dbg config hcmds to fw if set in tlv
-Date: Tue,  2 Dec 2014 20:11:14 +0200
-Message-Id: <1417543877-24193-23-git-send-email-egrumbach@gmail.com> (sfid-20141202_191202_610210_74F706E9)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
+Subject: [PATCH 3/3] ath9k: enable per-packet TPC on AR9002 based chips
+Date: Tue, 30 Dec 2014 23:10:20 +0100
+Message-Id: <1419977420-23732-4-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20141230_231048_394944_1D6D9A35)
+In-Reply-To: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Enable per-packet TPC on AR9002 based chips by default
 
-Send all debug-configuration HCMDs that are set in the TLVs
-to the FW. This may include HCMDs to configure the FW
-monitor and FW log level, for example.
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/fw.c  | 39 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/iwlwifi/mvm/mvm.h |  1 +
- 2 files changed, 40 insertions(+)
+ drivers/net/wireless/ath/ath9k/debug.c | 5 -----
+ drivers/net/wireless/ath/ath9k/hw.c    | 3 +--
+ 2 files changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index bbb78710..1f1337a 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -394,6 +394,42 @@ out:
- 	return ret;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index c43e2ad..a52cbf13 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1150,11 +1150,6 @@ static ssize_t write_file_tpc(struct file *file, const char __user *user_buf,
+ 	ssize_t len;
+ 	bool tpc_enabled;
  
-+static int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm,
-+				     enum iwl_fw_dbg_conf conf_id)
-+{
-+	u8 *ptr;
-+	int ret;
-+	int i;
-+
-+	if (WARN_ONCE(conf_id >= ARRAY_SIZE(mvm->fw->dbg_conf_tlv),
-+		      "Invalid configuration %d\n", conf_id))
-+		return -EINVAL;
-+
-+	if (!mvm->fw->dbg_conf_tlv[conf_id])
-+		return -EINVAL;
-+
-+	if (mvm->fw_dbg_conf != FW_DBG_INVALID)
-+		IWL_WARN(mvm, "FW already configured (%d) - re-configuring\n",
-+			 mvm->fw_dbg_conf);
-+
-+	/* Send all HCMDs for configuring the FW debug */
-+	ptr = (void *)&mvm->fw->dbg_conf_tlv[conf_id]->hcmd;
-+	for (i = 0; i < mvm->fw->dbg_conf_tlv[conf_id]->num_of_hcmds; i++) {
-+		struct iwl_fw_dbg_conf_hcmd *cmd = (void *)ptr;
-+
-+		ret = iwl_mvm_send_cmd_pdu(mvm, cmd->id, 0,
-+					   le16_to_cpu(cmd->len), cmd->data);
-+		if (ret)
-+			return ret;
-+
-+		ptr += sizeof(*cmd);
-+		ptr += le16_to_cpu(cmd->len);
-+	}
-+
-+	mvm->fw_dbg_conf = conf_id;
-+	return ret;
-+}
-+
- int iwl_mvm_up(struct iwl_mvm *mvm)
- {
- 	int ret, i;
-@@ -445,6 +481,9 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to initialize Smart Fifo\n");
+-	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+-		/* ar9002 does not support TPC for the moment */
+-		return -EOPNOTSUPP;
+-	}
+-
+ 	len = min(count, sizeof(buf) - 1);
+ 	if (copy_from_user(buf, user_buf, len))
+ 		return -EFAULT;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 258c4d2..e2e4441 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -422,8 +422,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->power_mode = ATH9K_PM_UNDEFINED;
+ 	ah->htc_reset_init = true;
  
-+	mvm->fw_dbg_conf = FW_DBG_INVALID;
-+	iwl_mvm_start_fw_dbg_conf(mvm, FW_DBG_CUSTOM);
-+
- 	ret = iwl_send_tx_ant_cfg(mvm, mvm->fw->valid_tx_ant);
- 	if (ret)
- 		goto error;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 12be7f3..d24660f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -670,6 +670,7 @@ struct iwl_mvm {
- 	/* -1 for always, 0 for never, >0 for that many times */
- 	s8 restart_fw;
- 	struct work_struct fw_error_dump_wk;
-+	enum iwl_fw_dbg_conf fw_dbg_conf;
+-	/* ar9002 does not support TPC for the moment */
+-	ah->tpc_enabled = !!AR_SREV_9300_20_OR_LATER(ah);
++	ah->tpc_enabled = true;
  
- #ifdef CONFIG_IWLWIFI_LEDS
- 	struct led_classdev led;
+ 	ah->ani_function = ATH9K_ANI_ALL;
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
 -- 
-1.9.1
+2.1.0
 
