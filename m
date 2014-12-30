@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:50673 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751613AbaL1OcT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Dec 2014 09:32:19 -0500
-Received: by mail-wi0-f175.google.com with SMTP id l15so20163486wiw.8
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Dec 2014 06:32:17 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <549FFB8F.9010701@rempel-privat.de>
-References: <1419689545-26965-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<549FFB8F.9010701@rempel-privat.de>
-Date: Sun, 28 Dec 2014 15:32:17 +0100
-Message-ID: <CAA2SeNKxDk+sgpP9be=8MUgVOBHO26=oA4r4v+wRHfN1b6fH8w@mail.gmail.com> (sfid-20141228_153222_370092_8E0DF931)
-Subject: Re: [RFC 0/3] add TPC capability for AR9002 based chips
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
-	adrian@freebsd.org
-Content-Type: text/plain; charset=UTF-8
+Received: from www.osadl.org ([62.245.132.105]:51273 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752022AbaL3NDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 08:03:47 -0500
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Yanbo Li <yanbol@qti.qualcomm.com>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH 2/4] ath10k: fixup wait_for_completion_timeout return handling
+Date: Tue, 30 Dec 2014 07:20:44 -0500
+Message-Id: <1419942046-17985-3-git-send-email-der.herr@hofr.at> (sfid-20141230_140355_499894_72BF7B1E)
+In-Reply-To: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
+References: <1419942046-17985-1-git-send-email-der.herr@hofr.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi, can you please describe some testcases for you patches.
->
+wait_for_completion_timeout does not return negative values so
+"ret" handling here should check for timeout only.
 
-This patchset adds Transmission Power Control (TPC) for AR9002 based
-chips. IOW it enables the capability of correct TX power on per-packet
-basis. It is preparatory for upcoming Thomas's joint rate and power
-control
- algorithm.
+patch was only compile tested for x86_64_defconfig + CONFIG_ATH10K=m
 
-Regards,
-Lorenzo
+patch is against linux-next 3.19.0-rc1 -next-20141226
 
-> Am 27.12.2014 um 15:12 schrieb Lorenzo Bianconi:
->> This patchset adds TPC capability to ath9k for AR9002 based chips
->>
->> *[RFC 1/3]: add TX power per-rate tables to cap TX power in TX descriptor path
->> *[RFC 2/3]: cap per-packet TX power according to TX power per-rate tables
->> *[RFC 3/3]: enable per-packet TPC on AR9002 based chips by default
->>
->> This pachset is based on Adrian Chadd's hints
->> (https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg10396.html)
->>
->> Lorenzo Bianconi (3):
->>   ath9k: add power per-rate tables for AR9002 chips
->>   ath9k: add TPC to TX path for AR9002 based chips
->>   ath9k: enable per-packet TPC on AR9002 based chips
->>
->>  drivers/net/wireless/ath/ath9k/ar5008_phy.c  | 80 ++++++++++++++++++++++++++++
->>  drivers/net/wireless/ath/ath9k/debug.c       |  5 --
->>  drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 14 +++++
->>  drivers/net/wireless/ath/ath9k/eeprom_9287.c | 15 ++++++
->>  drivers/net/wireless/ath/ath9k/eeprom_def.c  | 14 +++++
->>  drivers/net/wireless/ath/ath9k/hw.c          |  3 +-
->>  drivers/net/wireless/ath/ath9k/hw.h          |  2 +
->>  drivers/net/wireless/ath/ath9k/xmit.c        | 66 +++++++++++++++++++----
->>  8 files changed, 181 insertions(+), 18 deletions(-)
->>
->
->
-> --
-> Regards,
-> Oleksij
->
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index c400567..f9d7dbb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2151,7 +2151,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 
+ 		ret = wait_for_completion_timeout(&ar->offchan_tx_completed,
+ 						  3 * HZ);
+-		if (ret <= 0)
++		if (ret == 0)
+ 			ath10k_warn(ar, "timed out waiting for offchannel skb %p\n",
+ 				    skb);
+ 
 -- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+1.7.10.4
+
