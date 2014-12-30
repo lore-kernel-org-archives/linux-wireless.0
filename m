@@ -1,36 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47373 "EHLO mx2.suse.de"
+Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753103AbaLASKC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 13:10:02 -0500
-Date: Mon, 1 Dec 2014 19:09:59 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v7 1/4] cfg80211: allow usermode to query wiphy
-	specific regdom
-Message-ID: <20141201180959.GK25677@wotan.suse.de> (sfid-20141201_191007_014782_1CA5839D)
-References: <1417451331-20536-1-git-send-email-arik@wizery.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417451331-20536-1-git-send-email-arik@wizery.com>
+	id S1751816AbaL3OUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 09:20:09 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/33] iwlwifi: mvm: support 2 different channels
+Date: Tue, 30 Dec 2014 16:18:56 +0200
+Message-Id: <1419949148-24046-21-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154350_286880_2D851041)
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
+References: <1419948357.21410.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 01, 2014 at 06:28:48PM +0200, Arik Nemtsov wrote:
-> If a wiphy-idx is specified, the kernel will return the wiphy specific
-> regdomain, if such exists. Otherwise return the global regdom.
-> 
-> When no wiphy-idx is specified, return the global regdomain as well as
-> all wiphy-specific regulatory domains in the system, via a new nested
-> list of attributes.
-> 
-> Add a new attribute for each wiphy-specific regdomain, for usermode to
-> identify it as such.
-> 
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+The driver and the firmware now support 2 different channels
+at the same time. Advertise this capability to the stack.
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-  Luis
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 9ccecbc..4db051d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -106,7 +106,7 @@ static const struct ieee80211_iface_limit iwl_mvm_limits[] = {
+ 
+ static const struct ieee80211_iface_combination iwl_mvm_iface_combinations[] = {
+ 	{
+-		.num_different_channels = 1,
++		.num_different_channels = 2,
+ 		.max_interfaces = 3,
+ 		.limits = iwl_mvm_limits,
+ 		.n_limits = ARRAY_SIZE(iwl_mvm_limits),
+-- 
+1.9.1
+
