@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33199 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124AbaLFRvg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Dec 2014 12:51:36 -0500
-Date: Sat, 6 Dec 2014 09:51:35 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: parthsane@laer.in
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Driverdev devel <driverdev-devel@linuxdriverproject.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: My new email + some notes on mt7601
-Message-ID: <20141206175135.GA27544@kroah.com> (sfid-20141206_185246_392221_CBBCFA9B)
-References: <0b2102651a76997bd04f6be7e98d3ac0@laer.in>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0b2102651a76997bd04f6be7e98d3ac0@laer.in>
+Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752006AbaL3OUT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 09:20:19 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 25/33] iwlwifi: remove useless extern definition of iwl4265_2ac_sdio_cfg
+Date: Tue, 30 Dec 2014 16:19:00 +0200
+Message-Id: <1419949148-24046-25-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154347_626602_8D81FAA2)
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
+References: <1419948357.21410.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 04, 2014 at 09:54:29AM +0000, parthsane@laer.in wrote:
-> Hi again,
-> Please note my new email parthsane@laer.in . Also If you guys don't know
-> there's a working source supplied by mediatek for mt7601. Please find the
-> attached tarball. Also please apply this patch I mentioned about earlier.
-> It's at https://gist.github.com/Boggartfly/b18bd86b8eb60fabe160
-> 
-> rt_linux.h has the following path in the driver directory.
-> 
-> /include/os/rt_linux.h
-> 
-> After you replace the patched file everything works and compiles
-> successfully!! Any pointers on what should be done to make it kernel
-> compatible?
+This device was renamed, but the external definition remained there.
 
-Let's wait to see if we have a "real" driver support working in the tree
-soon before adding this huge driver to staging, where it will take a
-long time to clean up and get merged "properly".
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-config.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-thanks,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index 3985051..fa0bc48 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -379,7 +379,6 @@ extern const struct iwl_cfg iwl7265d_n_cfg;
+ extern const struct iwl_cfg iwl8260_2n_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
+-extern const struct iwl_cfg iwl4265_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
+ #endif /* CONFIG_IWLMVM */
+ 
+-- 
+1.9.1
 
-greg k-h
