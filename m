@@ -1,36 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36150 "EHLO sipsolutions.net"
+Received: from cantor2.suse.de ([195.135.220.15]:54160 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751193AbaLQKta (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 05:49:30 -0500
-Message-ID: <1418813359.2135.7.camel@sipsolutions.net> (sfid-20141217_114933_396855_B90F48A0)
-Subject: Re: [PATCH v5] mac80211: keep sending peer candidate events while
- in listen state
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Nishikawa, Kenzoh" <Kenzoh.Nishikawa@jp.sony.com>
-Cc: "'linux-wireless@vger.kernel.org'" <linux-wireless@vger.kernel.org>,
-	"'devel@lists.open80211s.org'" <devel@lists.open80211s.org>,
-	"'Bob Copeland (me@bobcopeland.com)'" <me@bobcopeland.com>,
-	"'Thomas Pedersen (thomas@noack.us)'" <thomas@noack.us>
-Date: Wed, 17 Dec 2014 11:49:19 +0100
-In-Reply-To: <2EB4F5C65A3B8E4E92660930F4EF6B5B07AB81@JPYOKXMS113.jp.sony.com>
-References: <2EB4F5C65A3B8E4E92660930F4EF6B5B07AB81@JPYOKXMS113.jp.sony.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752033AbaL3WwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 17:52:23 -0500
+Date: Tue, 30 Dec 2014 23:52:20 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+cc: Borislav Petkov <bp@alien8.de>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+In-Reply-To: <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+Message-ID: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> (sfid-20141230_235240_902498_A61424E2)
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+ <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net>
+ <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-12-16 at 01:41 +0000, Nishikawa, Kenzoh wrote:
-> Instead of sending peer candidate events just once, send them as long as the peer remains in the LISTEN state in the peering state machine, when userspace is implementing the peering manager.
-> Userspace may silence the events from a peer by progressing the state machine or by setting the link state to BLOCKED.
-> 
-> Fixes the problem that a mesh peering process won't be fired again after the previous first peering trial fails due to like air propagation error if the peering is managed by user space such as wpa_supplicant.
-> 
-> This patch works with another patch for wpa_supplicant described here which fires a peering process again triggered by the notice from kernel.
-> http://lists.shmoo.com/pipermail/hostap/2014-November/031235.html
+This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
 
-Applied, but please try to send patches with line-broken commit
-messages.
+It's causing severe userspace breakage. Namely, all the utilities
+from wireless-utils which are relying on CONFIG_WEXT (which means
+tools like 'iwconfig', 'iwlist', etc) are not working anymore. There
+is a 'iw' utility in newer wireless-tools, which is supposed to be
+a replacement for all the "deprecated" binaries, but it's far away
+from being massively adopted.
 
-johannes
+Please see [1] for example of the userspace breakage this is causing.
 
+In addition to that, Larry Finger reports [2] that this patch is also
+causing ipw2200 driver being impossible to build.
+
+To me this clearly shows that CONFIG_WEXT is far, far away from being
+"deprecated enough" to be removed.
+
+[1] http://thread.gmane.org/gmane.linux.kernel/1857010
+[2] http://thread.gmane.org/gmane.linux.network/343688
+
+Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+---
+ net/wireless/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+index 22ba971..29c8675 100644
+--- a/net/wireless/Kconfig
++++ b/net/wireless/Kconfig
+@@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
+ 	  Most distributions have a CRDA package.  So if unsure, say N.
+ 
+ config CFG80211_WEXT
+-	bool
++	bool "cfg80211 wireless extensions compatibility"
+ 	depends on CFG80211
+ 	select WEXT_CORE
+ 	help
+-- 
+Jiri Kosina
+SUSE Labs
