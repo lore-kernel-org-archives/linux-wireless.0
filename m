@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33731 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751450AbaLaFHn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 00:07:43 -0500
-Date: Tue, 30 Dec 2014 23:07:35 -0600
-From: Eric Biggers <ebiggers3@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH V3 for 3.19]  rtlwifi: Fix error when accessing unmapped
- memory in skb
-Message-ID: <20141231050735.GA20639@zzz> (sfid-20141231_060752_599160_DC65655E)
-References: <1419996787-17395-1-git-send-email-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1419996787-17395-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mga01.intel.com ([192.55.52.88]:23965 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750833AbaL3OTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 30 Dec 2014 09:19:34 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ido Yariv <ido@wizery.com>, Ido Yariv <idox.yariv@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/33] iwlwifi: mvm: Set the HW step in the core dump
+Date: Tue, 30 Dec 2014 16:18:43 +0200
+Message-Id: <1419949148-24046-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_151937_661302_1A45AB38)
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
+References: <1419948357.21410.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 30, 2014 at 09:33:07PM -0600, Larry Finger wrote:
-> v3 - Unmap skb before trying to allocate a new one so as to not leak mapping.
+From: Ido Yariv <ido@wizery.com>
 
-Looks good to me, although I'm not sure about the handling of DMA mapping errors
-(perhaps that's something that drivers typically don't even try to handle?).
-Anyway, the skb allocation issue appears to be resolved now.  I am running your
-patch with an extra hack to inject some occasional skb allocation failures, and
-I haven't noticed any problems except dropped packets.
+The HW step member was left out of the core dump information. Fix this.
 
-Eric
+Signed-off-by: Ido Yariv <idox.yariv@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index bec588d..2293a51 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -823,6 +823,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 		mvm->cfg->device_family == IWL_DEVICE_FAMILY_7000 ?
+ 			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_7) :
+ 			cpu_to_le32(IWL_FW_ERROR_DUMP_FAMILY_8);
++	dump_info->hw_step = cpu_to_le32(CSR_HW_REV_STEP(mvm->trans->hw_rev));
+ 	memcpy(dump_info->fw_human_readable, mvm->fw->human_readable,
+ 	       sizeof(dump_info->fw_human_readable));
+ 	strncpy(dump_info->dev_human_readable, mvm->cfg->name,
+-- 
+1.9.1
+
