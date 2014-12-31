@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44481 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752426AbaLAHLF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 02:11:05 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/7] ath10k: add support for new wmi-tlv backend
-References: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 1 Dec 2014 09:10:59 +0200
-In-Reply-To: <1417079481-22255-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 27 Nov 2014 10:11:14 +0100")
-Message-ID: <87mw77rgjg.fsf@kamboji.qca.qualcomm.com> (sfid-20141201_081109_176007_653F5B7B)
+Received: from cantor2.suse.de ([195.135.220.15]:59021 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750734AbaLaNK2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 08:10:28 -0500
+Date: Wed, 31 Dec 2014 14:10:24 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Arend van Spriel <arend@broadcom.com>
+cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility
+ unselectable"
+In-Reply-To: <54A3D955.6020809@broadcom.com>
+Message-ID: <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz> (sfid-20141231_141054_675659_9DA64C9D)
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+ <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Wed, 31 Dec 2014, Arend van Spriel wrote:
 
-> First 2 patches are simple fixes. Patch 3 isn't
-> strictly related to wmi-tlv but I decided to
-> include it anyway. Other patches gradually
-> implement wmi-tlv.
->
-> There's a bunch of false-positive checkpatch
-> warnings regarding `CHECK: No space is necessary
-> after a cast`.
->
-> v2:
->  * a lot of fixes (see notes on patch #7)
->
-> Michal Kazior (7):
->   ath10k: fix wmi svc bitmap dbg print
->   ath10k: add sanity checks for service bmap parsing
->   ath10k: make wmi service bitmap non-debug
+> You mentioned in the discussion and I quote: "*If* wireless maintainers 
+> think otherwise, I'll send a revert request to Linus for 
+> consideration.". However, you did not wait for any response from the 
+> wireless maintainers nor from the author of the patch you are reverting. 
+> Seems like an overreaction to me though personally I do not disgree with 
+> the revert itself.
 
-These three are applied.
+My understanding from the whole thread was that Emmanuel disagrees with 
+the revert, and I consider Emmanuel to definitely belong to the "wireless 
+maintainers" group. If my understanding was wrong on this, sorry for that.
 
->   ath10k: implement intermediate event args
->   ath10k: introduce wmi ops
->   ath10k: make some wmi functions public
->   ath10k: implement wmi-tlv backend
-
-I'm still looking at these.
+One way or another, the revert really is a-must-have, as it causes visible 
+userspace regressions. I am really surprised that it's causing so lively 
+discussion and doubts.
 
 -- 
-Kalle Valo
+Jiri Kosina
+SUSE Labs
