@@ -1,74 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:60593 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751697AbaLRKzZ (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:64012 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750710AbaLaHoU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Dec 2014 05:55:25 -0500
-Message-ID: <c1f3352bed1f1a2985a5111a077134a5.squirrel@www.codeaurora.org> (sfid-20141218_115529_907790_B6D7FDC0)
-In-Reply-To: <87388d2tbn.fsf@purkki.adurom.net>
-References: <87388d2tbn.fsf@purkki.adurom.net>
-Date: Thu, 18 Dec 2014 12:55:23 +0200
-Subject: Re: changes to Linux wireless maintenance
-From: "Kalle Valo" <kvalo@codeaurora.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-nfc@ml01.01.org, "David S. Miller" <davem@davemloft.net>,
-	"Kalle Valo" <kvalo@codeaurora.org>, lwn@lwn.net
+	Wed, 31 Dec 2014 02:44:20 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Jiri Kosina <jkosina@suse.cz>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+CC: Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: RE: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+Date: Wed, 31 Dec 2014 07:44:14 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD408@hasmsx107.ger.corp.intel.com> (sfid-20141231_084444_678204_5B158431)
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>
+ <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
+ <54A2B807.1020202@hurleysoftware.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+ <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz>
+ <1419971304.30412.0.camel@egrumbacBox>
+ <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+ <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net>
+ <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+In-Reply-To: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
+> Subject: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+> 
+> This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
+> 
+> It's causing severe userspace breakage. Namely, all the utilities from
+> wireless-utils which are relying on CONFIG_WEXT (which means tools like
+> 'iwconfig', 'iwlist', etc) are not working anymore. There is a 'iw' utility in
+> newer wireless-tools, which is supposed to be a replacement for all the
+> "deprecated" binaries, but it's far away from being massively adopted.
+> 
+> Please see [1] for example of the userspace breakage this is causing.
+> 
+> In addition to that, Larry Finger reports [2] that this patch is also causing
+> ipw2200 driver being impossible to build.
+> 
+> To me this clearly shows that CONFIG_WEXT is far, far away from being
+> "deprecated enough" to be removed.
+> 
+> [1] http://thread.gmane.org/gmane.linux.kernel/1857010
+> [2] http://thread.gmane.org/gmane.linux.network/343688
+> 
+> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
 
-> Nevertheless, I think it is time for some changes.  I have been
-> the wireless maintainer for a long time, and I personally would
-> like to develop in a different direction.  Plus, I think that Linux
-> will benefit from having some fresh blood involved in more of the
-> maintenance duties.  I will be stepping aside to let that happen.
+Wait. I don't want to discuss the userspace API deprecation here but
+I do think that this patch should be applied to the proper tree if at all.
+The proper tree is mac80211.git. Now you are unhappy with what happens
+there and want to escalate - fine. But then, please do so following the
+natural hierarchy of the trees: net.git. Then mac80211.git's maintainer
+(Johannes) will be able to sync with your change more easily.
+Johannes doesn't need me as an advocate, but I feel that reverting a
+mac80211 patch in linux.git while we are only in -rc2 while everybody
+is on holiday leave is a bit unfair.
 
-Thanks to you both the Linux wireless subsystem as well as the wireless
-community has improved so much from what you started. You will be missed.
-Thank you for all your efforts and I hope you still hang around :)
-
-> As for the wireless driver patches, I have asked Kalle Valo
-> to handle patch review and merge duties for everything under the
-> drivers/net/wireless directory.  This will now include not only the ath
-> patches he already manages, but other drivers that don't have trees
-> such as mwifiex, rt2x00, rtlwifi, and others.  For consistency, the
-> iwlwifi tree will also be merged through Kalle's new tree.  I expect
-> that Kalle will announce any relevant details in a follow-up message.
-
-I have created two trees, wireless-drivers and wireless-drivers-next:
-
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/
-
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/
-
-The trees work similarly like John's wireless and wireless-next trees, the
-former only for important bugfixes to -rc releases and the latter for the
-rest going to the next release.
-
-I still need to ask both linux-next and kbuild maintainers to add these
-trees to their list of trees to test from, but I hope that to happen in
-the next few days.
-
-There's no need to CC me on the patches, I can pick the patches from the
-mailing list. Actually in the future I'm hoping to use patchwork[1] for
-managing patches, but my access request is still pending in helpdesk's
-queue. I'll send a separate email once I start using patchwork. For the
-time being I just use email to apply patches.
-
-For ath6kl and ath10k there will be no changes. I will maintain ath.git
-tree separately and just periodically merge that tree to
-wireless-drivers-next.
-
-I'll try to make this transition period as smooth as possible but some
-glitches might happen, like missing patches and so on. So please keep your
-eyes open and let me know if you spot any problems or I missed something.
-
-Kalle
-
-[1] https://patchwork.kernel.org/project/linux-wireless/list/
-
-
+> ---
+>  net/wireless/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig index
+> 22ba971..29c8675 100644
+> --- a/net/wireless/Kconfig
+> +++ b/net/wireless/Kconfig
+> @@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
+>  	  Most distributions have a CRDA package.  So if unsure, say N.
+> 
+>  config CFG80211_WEXT
+> -	bool
+> +	bool "cfg80211 wireless extensions compatibility"
+>  	depends on CFG80211
+>  	select WEXT_CORE
+>  	help
+> --
+> Jiri Kosina
+> SUSE Labs
