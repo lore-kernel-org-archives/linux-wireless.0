@@ -1,53 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36478 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751531AbaLaKid (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:16757 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbaLaLp5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 05:38:33 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Maithili Hinge <maithili@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 3/9] mwifiex: increase delay during card reset
-Date: Wed, 31 Dec 2014 02:36:40 -0800
-Message-ID: <1420022206-11435-4-git-send-email-akarwar@marvell.com> (sfid-20141231_113837_240093_BF8B7036)
-In-Reply-To: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
-References: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
+	Wed, 31 Dec 2014 06:45:57 -0500
+Message-ID: <54A3E1F1.7030807@broadcom.com> (sfid-20141231_124627_423946_22BCB8E8)
+Date: Wed, 31 Dec 2014 12:45:53 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: Jiri Kosina <jkosina@suse.cz>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marc Yang <yangyang@marvell.com>
+On 12/31/14 12:10, Grumbach, Emmanuel wrote:
+>> On 12/30/14 23:52, Jiri Kosina wrote:
+>>> This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
+>>>
+>>> It's causing severe userspace breakage. Namely, all the utilities from
+>>> wireless-utils which are relying on CONFIG_WEXT (which means tools
+>>> like 'iwconfig', 'iwlist', etc) are not working anymore. There is a
+>>> 'iw' utility in newer wireless-tools, which is supposed to be a
+>>> replacement for all the "deprecated" binaries, but it's far away from
+>>> being massively adopted.
+>>>
+>>> Please see [1] for example of the userspace breakage this is causing.
+>>>
+>>> In addition to that, Larry Finger reports [2] that this patch is also
+>>> causing ipw2200 driver being impossible to build.
+>>>
+>>> To me this clearly shows that CONFIG_WEXT is far, far away from being
+>>> "deprecated enough" to be removed.
+>>
+>> Hi Jiri,
+>>
+>> You mentioned in the discussion and I quote: "*If* wireless maintainers think
+>> otherwise, I'll send a revert request to Linus for consideration.". However,
+>> you did not wait for any response from the wireless maintainers nor from the
+>> author of the patch you are reverting.
+>> Seems like an overreaction to me though personally I do not disgree with the
+>> revert itself.
+>
+> Not to mention the patch has already been applied on Linus's tree...
 
-200ms is the requirement to allow VDD1.1 and VDD1.8 to
-drop to have proper reset.
+Water under the bridge. The thing with WEXT is that it will stay as is. 
+So if tools like wicd want to support new features like P2P it will need 
+to make the switch. I checked out wicd repo and found a number of 
+iwconfig calls and they kick off wpa_supplicant with wext driver.
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+With libnl python support wicd could use nl80211 directly avoiding 
+screen-scraping iw output, but it seems not included in distros.
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 274a1b2..4e8aedd 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1958,8 +1958,8 @@ static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
- 
- 	pr_err("Resetting card...\n");
- 	mmc_remove_host(target);
--	/* 20ms delay is based on experiment with sdhci controller */
--	mdelay(20);
-+	/* 200ms delay is based on experiment with sdhci controller */
-+	mdelay(200);
- 	target->rescan_entered = 0; /* rescan non-removable cards */
- 	mmc_add_host(target);
- }
--- 
-1.8.1.4
+Regards,
+Arend
+
+>>
+>> Regards,
+>> Arend
+>>
+>>> [1] http://thread.gmane.org/gmane.linux.kernel/1857010
+>>> [2] http://thread.gmane.org/gmane.linux.network/343688
+>>>
+>>> Signed-off-by: Jiri Kosina<jkosina@suse.cz>
+>>> ---
+>>>    net/wireless/Kconfig | 2 +-
+>>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig index
+>>> 22ba971..29c8675 100644
+>>> --- a/net/wireless/Kconfig
+>>> +++ b/net/wireless/Kconfig
+>>> @@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
+>>>    	  Most distributions have a CRDA package.  So if unsure, say N.
+>>>
+>>>    config CFG80211_WEXT
+>>> -	bool
+>>> +	bool "cfg80211 wireless extensions compatibility"
+>>>    	depends on CFG80211
+>>>    	select WEXT_CORE
+>>>    	help
+>
 
