@@ -1,59 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13745 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751562AbaL0TsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Dec 2014 14:48:04 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>
-CC: "ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"gabriele.mzt@gmail.com" <gabriele.mzt@gmail.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: Unable to disable WiFi with 3.19-rc1 - iwlwifi 7260
-Date: Sat, 27 Dec 2014 19:47:59 +0000
-Message-ID: <1419709679.5162.2.camel@egrumbacBox> (sfid-20141227_204829_897951_5DACA6EA)
-References: <3095419.huSVmtL0ib@xps13>
-	 <CA+icZUVsmoPE8Le4XeyBratXe23BFtgOEoyd6dBFC9x+MVaJFw@mail.gmail.com>
-In-Reply-To: <CA+icZUVsmoPE8Le4XeyBratXe23BFtgOEoyd6dBFC9x+MVaJFw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:32916 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbaLaJ4M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 04:56:12 -0500
+Message-ID: <54A3C837.6040400@broadcom.com> (sfid-20141231_105633_554425_8E007ADB)
+Date: Wed, 31 Dec 2014 10:56:07 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+CC: <brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
+	<meuleman@broadcom.com>, <kvalo@codeaurora.org>,
+	<linville@tuxdriver.com>, <pieterpg@broadcom.com>,
+	<hdegoede@redhat.com>, <wens@csie.org>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54A3B1B4.7090705@linux.intel.com>
+In-Reply-To: <54A3B1B4.7090705@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCk9uIFNhdCwgMjAxNC0xMi0yNyBhdCAyMDoxNyArMDEwMCwgU2VkYXQgRGlsZWsgd3Jv
-dGU6DQo+IE9uIFNhdCwgRGVjIDI3LCAyMDE0IGF0IDg6MDggUE0sIEdhYnJpZWxlIE1henpvdHRh
-DQo+IDxnYWJyaWVsZS5tenRAZ21haWwuY29tPiB3cm90ZToNCj4gPiBIaSwNCj4gPg0KPiA+IHNp
-bmNlIHYzLjE5LXJjMSBJIGhhdmUgcHJvYmxlbXMgd2l0aCBXaUZpIChJbnRlbCBDb3Jwb3JhdGlv
-biBEdWFsIEJhbmQNCj4gPiBXaXJlbGVzcy1BQyA3MjYwKSBvbiBteSBsYXB0b3AuIFRyeWluZyB0
-byBkaXNhYmxlIGFsbCB0aGUgcmFkaW8gZGV2aWNlcw0KPiA+IChXaUZpIGFuZCBCVCkgd2l0aCB0
-aGUgZnVuY3Rpb24ga2V5IG9mIG15IGxhcHRvcCwgd2hpY2ggc2hvdWxkIGhhcmQNCj4gPiBibG9j
-ayB0aGUgcmZraWxscywgY2F1c2VzIHRoZSBmb2xsb3dpbmcgbWVzc2FnZSB0byBiZSByZXBlYXRl
-ZCBvdmVyIGFuZA0KPiA+IG92ZXIgdW50aWwgSSByZS1lbmFibGUgdGhlbSBhZ2FpbiB3aXRoIHRo
-ZSBmdW5jdGlvbiBrZXk6DQo+ID4NCj4gPiBbICA1OTMuNzQ2MDAxXSBpd2x3aWZpIDAwMDA6MDI6
-MDAuMDogUkZfS0lMTCBiaXQgdG9nZ2xlZCB0byBkaXNhYmxlIHJhZGlvLg0KPiA+IFsgIDU5My43
-NDY0NjhdIGl3bHdpZmkgMDAwMDowMjowMC4wOiBSRl9LSUxMIGJpdCB0b2dnbGVkIHRvIGRpc2Fi
-bGUgcmFkaW8uDQo+ID4gWyAgNTkzLjc0Njc4MV0gaXdsd2lmaSAwMDAwOjAyOjAwLjA6IFJGX0tJ
-TEwgYml0IHRvZ2dsZWQgdG8gZGlzYWJsZSByYWRpby4NCj4gPiBbICA1OTMuNzQ3MDkxXSBpd2x3
-aWZpIDAwMDA6MDI6MDAuMDogUkZfS0lMTCBiaXQgdG9nZ2xlZCB0byBkaXNhYmxlIHJhZGlvLg0K
-PiA+DQo+ID4gU29tZXRpbWVzIG15IGxhcHRvcCBoYW5ncyB3aGVuIEkgdHJ5IHRvIHRvZ2dsZSB0
-aGUgc3RhdGUgb2YgdGhlIHJhZGlvDQo+ID4gZGV2aWNlcyBhbmQgaGF2ZSB0byBmb3JjZWZ1bGx5
-IHJlYm9vdCBpdC4NCj4gPg0KPiA+IFJldmVydGluZyA1MjI3MTNjODFlICgiaXdsd2lmaTogcGNp
-ZTogcHJvcGVybHkgcmVzZXQgdGhlIGRldmljZSIpIHNlZW1zDQo+ID4gdG8gZml4IHRoZSBwcm9i
-bGVtLiBJIGhhdmVuJ3QgdHJpZWQgYW55dGhpbmcgZWxzZSBzaW5jZSB0aGlzIHdhcyB0aGUNCj4g
-PiBmaXJzdCB0aGluZyBJIHRyaWVkLg0KPiA+DQo+ID4gRG9lcyBhbnlvbmUga25vdyB3aGF0J3Mg
-dGhlIHByb2JsZW0gd2l0aCB0aGF0IHNwZWNpZmljIGNvbW1pdD8NCj4gPiBJIHdpbGwgZ2xhZGx5
-IHByb3ZpZGUgYW55IGFkZGl0aW9uYWwgaW5mb3JtYXRpb24sIGp1c3QgdGVsbCBtZSB3aGF0DQo+
-ID4gaXMgbmVlZGVkLg0KPiA+DQo+IA0KPiBJIGNhbm5vdCBzYXkgbXVjaCB0byB0aGUgImludGVy
-bmFscyIgb2YgeW91ciBwcm9ibGVtDQoNClRoYW5rcyBmb3IganVtcGluZyBpbiA6KQ0KDQo+IA0K
-PiBKdXN0IHR3byB0aGluZ3MuLi4NCj4gDQo+IFRoZXJlIGlzIGEgbmV3IGZpcm13YXJlIGZvciA3
-MjYwIGFyb3VuZCBzZWUgWzBdLg0KPiANCg0KVGhpcyB3b24ndCBoZWxwLg0KDQo+IDJuZCB0cnkg
-dG8gcHVsbCBpbiB0aGUgbmV3IHdpcmVsZXNzLWRyaXZlcnMuZ2l0IHRyZWUsIHRoZSBjaGFuZ2Vs
-b2cNCj4gbWVudGlvbnMgYSByYWNlIHdpdGggcmZraWxsIG9uIGl3bHdpZmkgWzFdLg0KPiANCg0K
-VGhpcyB3aWxsIGhlbHAgOikgUHJlY2lzZWx5IGNvbW1pdDoNCmh0dHBzOi8vZ2l0Lmtlcm5lbC5v
-cmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1maXhlcy5naXQvY29tbWl0
-Lz9pZD0wM2Q2YzNiMGZhNGY1ZjAzNzljZWRlMDc5ZWM4MjhhNmM5OTlmZTQzDQoNCg0KPiBIYXZl
-IGZ1biENCj4gDQo+IC0gU2VkYXQgLQ0KPiANCj4gWzBdIGh0dHA6Ly9naXQua2VybmVsLm9yZy9j
-Z2l0L2xpbnV4L2tlcm5lbC9naXQvZmlybXdhcmUvbGludXgtZmlybXdhcmUuZ2l0L2NvbW1pdC8/
-aWQ9YTg3NmM2OWYwNDJjZjQ3MzI3NTViMzI1ZDNiNzA5MTI1YmI1MWEwNg0KPiBbMV0gaHR0cDov
-L2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgva2VybmVsL2dpdC9rdmFsby93aXJlbGVzcy1kcml2
-ZXJzLmdpdC90YWcvP2lkPXdpcmVsZXNzLWRyaXZlcnMtZm9yLWRhdmVtLTIwMTQtMTItMjYNCg0K
+On 12/31/14 09:20, Fu, Zhonghui wrote:
+>  From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
+> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+> Date: Mon, 29 Dec 2014 21:25:31 +0800
+> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>
+> WiFi chip has 2 SDIO functions, and PM core will trigger
+> twice suspend/resume operations for one WiFi chip to do
+> the same things. This patch avoid this case.
+
+We have a patch queued up for this as well, but this one looks good 
+enough although I personally prefer container_of() instead of 
+dev_to_sdio_func().
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
+>   1 files changed, 17 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> index 3c06e93..eee7818 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> @@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+>   static int brcmf_ops_sdio_suspend(struct device *dev)
+>   {
+>   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+> +	struct brcmf_sdio_dev *sdiodev;
+>   	mmc_pm_flag_t sdio_flags;
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>
+>   	brcmf_dbg(SDIO, "Enter\n");
+>
+> +	if (func->num == 2) {
+> +		return 0;
+> +	}
+> +
+> +	sdiodev = bus_if->bus_priv.sdio;
+> +
+>   	atomic_set(&sdiodev->suspend, true);
+>
+>   	if (sdiodev->wowl_enabled) {
+> @@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>   static int brcmf_ops_sdio_resume(struct device *dev)
+>   {
+>   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+> +	struct brcmf_sdio_dev *sdiodev;
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>
+>   	brcmf_dbg(SDIO, "Enter\n");
+> +
+> +	if (func->num == 2) {
+> +		return 0;
+> +	}
+> +
+> +	sdiodev = bus_if->bus_priv.sdio;
+> +
+>   	if (sdiodev->pdata->oob_irq_supported)
+>   		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>   	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+> -- 1.7.1
+>
+
