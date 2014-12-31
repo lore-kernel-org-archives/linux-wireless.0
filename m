@@ -1,152 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:43590 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752386AbaLUXCE (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42203 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751659AbaLaKig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 18:02:04 -0500
-Message-ID: <5497516A.2020400@lwfinger.net> (sfid-20141222_000244_319711_1EADC63D)
-Date: Sun, 21 Dec 2014 17:02:02 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 31 Dec 2014 05:38:36 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Maithili Hinge <maithili@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 4/9] mwifiex: add wakeup timer based recovery mechanism
+Date: Wed, 31 Dec 2014 02:36:41 -0800
+Message-ID: <1420022206-11435-5-git-send-email-akarwar@marvell.com> (sfid-20141231_113840_793277_B4B5C1ED)
+In-Reply-To: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
+References: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-To: Eric Biggers <ebiggers3@gmail.com>, linux-wireless@vger.kernel.org
-CC: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [BUG] rtl8192se: panic accessing unmapped memory in skb
-References: <20141221172516.GA12784@zzz>
-In-Reply-To: <20141221172516.GA12784@zzz>
-Content-Type: multipart/mixed;
- boundary="------------080701040609070407000102"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------080701040609070407000102
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+If host fails to wakeup the firmware, we will trigger card reset
+after 3 second timeout.
 
-On 12/21/2014 11:25 AM, Eric Biggers wrote:
-> Hi,
->
-> I have a RTL8192SE wireless card, attached via PCI.  Usually it works with no
-> issues, but I recently had a kernel panic occur in the rtl8192se driver.  The
-> kernel version is 3.18.  Based on my analysis of the panic dump, the panic was
-> caused by a memory access violation in this block of code in
-> rtl92se_rx_query_desc():
->
->          if (stats->decrypted) {
->                  hdr = (struct ieee80211_hdr *)(skb->data +
->                         stats->rx_drvinfo_size + stats->rx_bufshift);
->
->                  if ((_ieee80211_is_robust_mgmt_frame(hdr)) &&
->                          (ieee80211_has_protected(hdr->frame_control)))
->                          rx_status->flag &= ~RX_FLAG_DECRYPTED;
->                  else
->                          rx_status->flag |= RX_FLAG_DECRYPTED;
->          }
->
-> Specifically, the violation occurred the first time hdr->frame_control was
-> accessed, as part of _ieee80211_is_robust_mgmt_frame().
->
-> The panic occurred when the system was under heavy filesystem load but seemingly
-> is not easily reproducible.
->
-> There was recently a NULL check that was removed from this exact place in the
-> code, but it was certainly useless.  Instead, what's much more suspect to me is
-> that inside _rtl_pci_rx_interrupt(), there is no error checking of the return
-> value of _rtl_pci_init_one_rxdesc(), which might fail if the skb couldn't be
-> allocated.  I am wondering if this could be causing the problem.
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c      | 16 ++++++++++++++++
+ drivers/net/wireless/mwifiex/main.c      |  2 ++
+ drivers/net/wireless/mwifiex/main.h      |  1 +
+ drivers/net/wireless/mwifiex/pcie.c      |  1 +
+ drivers/net/wireless/mwifiex/sta_event.c |  3 +++
+ drivers/net/wireless/mwifiex/usb.c       |  1 +
+ 6 files changed, 24 insertions(+)
 
-Your analysis is probably correct; however, I'm not sure what to do if the 
-allocate of an skb fails. As the name says, this routine is entered through an 
-interrupt, and I'm not sure what to do other than to exit.
-
-The attached patch will implement the exit after logging an error. Please patch 
-your system and report back.
-
-How much RAM does your system have? That info might be useful in trying to 
-reproduce the problem, which might indeed be difficult. Although pci.c was 
-extensively reworked in the 3.17 => 3.18 transition, most of the changes were 
-added to implement the changed descriptor structure for the RTL8192EE, and I do 
-not remember any changes that would affect any of the other drivers. As a 
-result, the current structure has been in place for some time, and this problem 
-has not been reported before.
-
-Larry
-
-
---------------080701040609070407000102
-Content-Type: text/plain; charset=UTF-8;
- name="rtlwifi_report_add_new_rxdesc_failure"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="rtlwifi_report_add_new_rxdesc_failure"
-
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 846a2e6..c576c71 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -676,7 +676,7 @@ static int _rtl_pci_init_one_rxdesc(struct ieee80211_hw *hw,
- 
- 	skb = dev_alloc_skb(rtlpci->rxbuffersize);
- 	if (!skb)
--		return 0;
-+		return -ENOMEM;;
- 	rtlpci->rx_ring[rxring_idx].rx_buf[desc_idx] = skb;
- 
- 	/* just set skb->cb to mapping addr for pci_unmap_single use */
-@@ -685,7 +685,7 @@ static int _rtl_pci_init_one_rxdesc(struct ieee80211_hw *hw,
- 			       rtlpci->rxbuffersize, PCI_DMA_FROMDEVICE);
- 	bufferaddress = *((dma_addr_t *)skb->cb);
- 	if (pci_dma_mapping_error(rtlpci->pdev, bufferaddress))
--		return 0;
-+		return -EFAULT;
- 	if (rtlpriv->use_new_trx_flow) {
- 		rtlpriv->cfg->ops->set_desc(hw, (u8 *)entry, false,
- 					    HW_DESC_RX_PREPARE,
-@@ -701,7 +701,7 @@ static int _rtl_pci_init_one_rxdesc(struct ieee80211_hw *hw,
- 					    HW_DESC_RXOWN,
- 					    (u8 *)&tmp_one);
- 	}
--	return 1;
-+	return 0;
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index a3dd601..524692a 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -52,6 +52,18 @@ static int mwifiex_add_bss_prio_tbl(struct mwifiex_private *priv)
+ 	return 0;
  }
  
- /* inorder to receive 8K AMSDU we have set skb to
-@@ -768,6 +768,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 		.signal = 0,
- 		.rate = 0,
- 	};
-+	int err;
++static void wakeup_timer_fn(unsigned long data)
++{
++	struct mwifiex_adapter *adapter = (struct mwifiex_adapter *)data;
++
++	dev_err(adapter->dev, "Firmware wakeup failed\n");
++	adapter->hw_status = MWIFIEX_HW_STATUS_RESET;
++	mwifiex_cancel_all_pending_cmd(adapter);
++
++	if (adapter->if_ops.card_reset)
++		adapter->if_ops.card_reset(adapter);
++}
++
+ /*
+  * This function initializes the private structure and sets default
+  * values to the members.
+@@ -285,6 +297,9 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	adapter->ext_scan = true;
+ 	adapter->key_api_major_ver = 0;
+ 	adapter->key_api_minor_ver = 0;
++
++	setup_timer(&adapter->wakeup_timer, wakeup_timer_fn,
++		    (unsigned long)adapter);
+ }
  
- 	/*RX NORMAL PKT */
- 	while (count--) {
-@@ -912,13 +913,21 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ /*
+@@ -391,6 +406,7 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ 		return;
+ 	}
+ 
++	del_timer(&adapter->wakeup_timer);
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 
+ 	/* Free lock variables */
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 2d4047f..119e875 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -237,6 +237,7 @@ process_start:
+ 		    (is_command_pending(adapter) ||
+ 		     !mwifiex_wmm_lists_empty(adapter))) {
+ 			adapter->pm_wakeup_fw_try = true;
++			mod_timer(&adapter->wakeup_timer, jiffies + (HZ*3));
+ 			adapter->if_ops.wakeup(adapter);
+ 			continue;
  		}
- end:
- 		if (rtlpriv->use_new_trx_flow) {
--			_rtl_pci_init_one_rxdesc(hw, (u8 *)buffer_desc,
--						 rxring_idx,
--					       rtlpci->rx_ring[rxring_idx].idx);
-+			err = _rtl_pci_init_one_rxdesc(hw, (u8 *)buffer_desc,
-+						       rxring_idx,
-+						       rtlpci->rx_ring[rxring_idx].idx);
-+			if (err) {
-+				pr_err("%s Failed to init RX descriptor\n");
-+				return;
-+			}
+@@ -244,6 +245,7 @@ process_start:
+ 		if (IS_CARD_RX_RCVD(adapter)) {
+ 			adapter->data_received = false;
+ 			adapter->pm_wakeup_fw_try = false;
++			del_timer_sync(&adapter->wakeup_timer);
+ 			if (adapter->ps_state == PS_STATE_SLEEP)
+ 				adapter->ps_state = PS_STATE_AWAKE;
  		} else {
--			_rtl_pci_init_one_rxdesc(hw, (u8 *)pdesc, rxring_idx,
--						 rtlpci->rx_ring[rxring_idx].idx);
--
-+			err = _rtl_pci_init_one_rxdesc(hw, (u8 *)pdesc,
-+						       rxring_idx,
-+						       rtlpci->rx_ring[rxring_idx].idx);
-+			if (err) {
-+				pr_err("%s Failed to init RX descriptor\n");
-+				return;
-+			}
- 			if (rtlpci->rx_ring[rxring_idx].idx ==
- 			    rtlpci->rxringcount - 1)
- 				rtlpriv->cfg->ops->set_desc(hw, (u8 *)pdesc,
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index f927939..55273ee 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -830,6 +830,7 @@ struct mwifiex_adapter {
+ 	u16 gen_null_pkt;
+ 	u16 pps_uapsd_mode;
+ 	u32 pm_wakeup_fw_try;
++	struct timer_list wakeup_timer;
+ 	u8 is_hs_configured;
+ 	struct mwifiex_hs_config_param hs_cfg;
+ 	u8 hs_activated;
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index c3a20f9..10e4a93 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -2064,6 +2064,7 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
+ 				 * state until cookie is set */
+ 				adapter->ps_state = PS_STATE_AWAKE;
+ 				adapter->pm_wakeup_fw_try = false;
++				del_timer(&adapter->wakeup_timer);
+ 		}
+ 	}
+ }
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index fbec95b..419e35f 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -312,6 +312,8 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 					adapter->ps_state = PS_STATE_AWAKE;
+ 					adapter->pm_wakeup_card_req = false;
+ 					adapter->pm_wakeup_fw_try = false;
++					mod_timer(&adapter->wakeup_timer,
++						  jiffies + (HZ*3));
+ 					break;
+ 				}
+ 				if (!mwifiex_send_null_packet
+@@ -326,6 +328,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 		adapter->ps_state = PS_STATE_AWAKE;
+ 		adapter->pm_wakeup_card_req = false;
+ 		adapter->pm_wakeup_fw_try = false;
++		del_timer_sync(&adapter->wakeup_timer);
+ 
+ 		break;
+ 
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 8ae7a85..199b43f 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -990,6 +990,7 @@ static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
+ {
+ 	/* Simulation of HS_AWAKE event */
+ 	adapter->pm_wakeup_fw_try = false;
++	del_timer_sync(&adapter->wakeup_timer);
+ 	adapter->pm_wakeup_card_req = false;
+ 	adapter->ps_state = PS_STATE_AWAKE;
+ 
+-- 
+1.8.1.4
 
-
---------------080701040609070407000102--
