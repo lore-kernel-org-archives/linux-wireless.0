@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0121.hostedemail.com ([216.40.44.121]:40019 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751508AbaLBPHv (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:49163 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbaLaKU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 10:07:51 -0500
-Message-ID: <1417532867.3365.1.camel@perches.com> (sfid-20141202_160754_964480_3C6F1019)
-Subject: Re: [PATCH v2 02/10] wil6210: introduce wil_err_ratelimited()
-From: Joe Perches <joe@perches.com>
-To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "John W . Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Date: Tue, 02 Dec 2014 07:07:47 -0800
-In-Reply-To: <1417513598-18304-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1417513598-18304-3-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 31 Dec 2014 05:20:29 -0500
+Received: by mail-wi0-f175.google.com with SMTP id l15so25254289wiw.2
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 02:20:28 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, pizza@shaftnet.org
+Subject: [RFT 3/3] cw1200: use mac80211 to resize outgoing frames for protected
+Date: Wed, 31 Dec 2014 11:20:25 +0100
+Message-ID: <52607462.yl7ixH72Rq@debian64> (sfid-20141231_112049_763510_29D47268)
+In-Reply-To: <c31517e669693fceff192e510891356cd9ab795e.1420019654.git.chunkeey@googlemail.com>
+References: <c31517e669693fceff192e510891356cd9ab795e.1420019654.git.chunkeey@googlemail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2014-12-02 at 11:46 +0200, Vladimir Kondratiev wrote:
-> Add rate-limited flavor of wil_err(); in some cases,
-> specially in IRQ and data path, if something went wrong,
-> error message may be printed at very high rate, rendering
-> whole system unresponsive or unstable.
-> Need to do real function and not a macro to have arguments
-> always evaluated.
+The patch "mac80211: add feature flag to enable resizing of
+outgoing frames for encryption"  introduced a feature  flag
+which has to be set for cw1200 to re-enable resizing of
+outgoing frames for hardware-offloaded CCMP connections.
 
-net_<foo>_ratelimited uses the same form.
+Cc: Solomon Peachy <pizza@shaftnet.org>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/cw1200/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-include/linux/net.h:#define net_ratelimited_function(function, ...)             
-include/linux/net.h-do {                                                        
-include/linux/net.h-    if (net_ratelimit())                                    
-include/linux/net.h-            function(__VA_ARGS__);                          
-include/linux/net.h-} while (0)
-
-include/linux/net.h-#define net_err_ratelimited(fmt, ...)                       
-include/linux/net.h:    net_ratelimited_function(pr_err, fmt, ##__VA_ARGS__)
-
+diff --git a/drivers/net/wireless/cw1200/main.c b/drivers/net/wireless/cw1200/main.c
+index 3e78cc3..69c1f51 100644
+--- a/drivers/net/wireless/cw1200/main.c
++++ b/drivers/net/wireless/cw1200/main.c
+@@ -281,6 +281,7 @@ static struct ieee80211_hw *cw1200_init_common(const u8 *macaddr,
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM |
+ 		    IEEE80211_HW_SUPPORTS_PS |
+ 		    IEEE80211_HW_SUPPORTS_DYNAMIC_PS |
++		    IEEE80211_HW_TAILROOM_CRYPTO |
+ 		    IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+ 		    IEEE80211_HW_SUPPORTS_UAPSD |
+ 		    IEEE80211_HW_CONNECTION_MONITOR |
+-- 
+2.1.4
 
