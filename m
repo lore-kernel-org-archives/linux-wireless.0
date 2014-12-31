@@ -1,117 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:62590 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751594AbaL2TRE (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:29936 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbaLaLJN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 14:17:04 -0500
-Received: by mail-wi0-f171.google.com with SMTP id bs8so22897900wib.4
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Dec 2014 11:17:02 -0800 (PST)
+	Wed, 31 Dec 2014 06:09:13 -0500
+Message-ID: <54A3D955.6020809@broadcom.com> (sfid-20141231_120937_661051_AF51AAFC)
+Date: Wed, 31 Dec 2014 12:09:09 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Date: Mon, 29 Dec 2014 14:17:02 -0500
-Message-ID: <CAM-0sLw-N1J535xWE=XG-Pn3yi7YBUFhbBKJE0pmEUy9tKDtsA@mail.gmail.com> (sfid-20141229_201711_003109_96AC10CA)
-Subject: IBSS or Hostapd, but not both
-From: Tuc at Beach House <tuctboh@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Jiri Kosina <jkosina@suse.cz>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+In-Reply-To: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 12/30/14 23:52, Jiri Kosina wrote:
+> This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
+>
+> It's causing severe userspace breakage. Namely, all the utilities
+> from wireless-utils which are relying on CONFIG_WEXT (which means
+> tools like 'iwconfig', 'iwlist', etc) are not working anymore. There
+> is a 'iw' utility in newer wireless-tools, which is supposed to be
+> a replacement for all the "deprecated" binaries, but it's far away
+> from being massively adopted.
+>
+> Please see [1] for example of the userspace breakage this is causing.
+>
+> In addition to that, Larry Finger reports [2] that this patch is also
+> causing ipw2200 driver being impossible to build.
+>
+> To me this clearly shows that CONFIG_WEXT is far, far away from being
+> "deprecated enough" to be removed.
 
-Raspberry Pi Model B+, Linux blue 3.12.28+ #709 PREEMPT Mon Sep 8 15:28:00
-BST 2014 armv6l GNU/Linux, hostapd v2.3 (defconfig), Ralink using rt2800usb
-driver on either a Wi-Pi or Panda Ultra Wireless N USB Adapter.
+Hi Jiri,
 
-What I'm trying to accomplish is using a single interface to be an AP on
-one SSID, and ad-hoc on another SSID. The problem is that I can either do
-one, or the other, but not both...
+You mentioned in the discussion and I quote: "*If* wireless maintainers 
+think otherwise, I'll send a revert request to Linus for 
+consideration.". However, you did not wait for any response from the 
+wireless maintainers nor from the author of the patch you are reverting. 
+Seems like an overreaction to me though personally I do not disgree with 
+the revert itself.
 
-root@blue:~# iwconfig wlan1
-wlan1     IEEE 802.11bgn  ESSID:off/any
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=0 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:on
+Regards,
+Arend
 
-So if I set up ad-hoc, works fine :
+> [1] http://thread.gmane.org/gmane.linux.kernel/1857010
+> [2] http://thread.gmane.org/gmane.linux.network/343688
+>
+> Signed-off-by: Jiri Kosina<jkosina@suse.cz>
+> ---
+>   net/wireless/Kconfig | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+> index 22ba971..29c8675 100644
+> --- a/net/wireless/Kconfig
+> +++ b/net/wireless/Kconfig
+> @@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
+>   	  Most distributions have a CRDA package.  So if unsure, say N.
+>
+>   config CFG80211_WEXT
+> -	bool
+> +	bool "cfg80211 wireless extensions compatibility"
+>   	depends on CFG80211
+>   	select WEXT_CORE
+>   	help
 
-root@blue:~# iw dev wlan1 interface add wlan10 type ibss
-root@blue:~# iwconfig wlan10
-wlan10    IEEE 802.11bgn  ESSID:off/any
-          Mode:Ad-Hoc  Cell: Not-Associated   Tx-Power=0 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:on
-
-root@blue:~# iwconfig wlan10 essid WEDDING
-root@blue:~# ifconfig wlan10 10.4.4.8 netmask 255.255.255.0
-root@blue:~# ping -c2 new
-PING new.wedding.ramolaandscott,com (10.4.4.6) 56(84) bytes of data.
-64 bytes from new.wedding.ramolaandscott,com (10.4.4.6): icmp_req=1 ttl=64
-time=3.51 ms
-64 bytes from new.wedding.ramolaandscott,com (10.4.4.6): icmp_req=2 ttl=64
-time=1.02 ms
-
---- new.wedding.ramolaandscott,com ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1001ms
-rtt min/avg/max/mdev = 1.024/2.268/3.512/1.244 ms
-
-
-Now invoke hostapd with the following /etc/hostapd/hostapd.conf :
-
-root@blue:~# cat /etc/hostapd/hostapd.conf
-interface=wlan1
-ssid=FREE
-hw_mode=g
-channel=1
-root@blue:~# /usr/local/bin/hostapd -dd /etc/hostapd/hostapd.conf
-(Please see http://pastebin.com/cjqukwyH)
-
-
-But if I reboot and try backwards :
-
-root@blue:~# hostapd -dd /etc/hostapd/hostapd.conf
-(Please see http://pastebin.com/Tdc5dz81)
-
-
-And its fine, but then :
-
-root@blue:~# iw dev wlan1 interface add wlan10 type ibss
-root@blue:~# iwconfig wlan10
-wlan10    IEEE 802.11bgn  ESSID:off/any
-          Mode:Ad-Hoc  Cell: Not-Associated   Tx-Power=20 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:on
-
-root@blue:~# iwconfig wlan10 essid WEDDING
-root@blue:~# ifconfig wlan10
-wlan10    Link encap:Ethernet  HWaddr 00:c1:41:07:07:d1
-          BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-
-root@blue:~# ifconfig wlan10 10.4.4.8 netmask 255.255.255.0
-SIOCSIFFLAGS: Device or resource busy
-root@blue:~# ifconfig wlan10
-wlan10    Link encap:Ethernet  HWaddr 00:c1:41:07:07:d1
-          inet addr:10.4.4.8  Bcast:10.4.4.255  Mask:255.255.255.0
-          BROADCAST MULTICAST  MTU:1500  Metric:1
-          RX packets:0 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000
-          RX bytes:0 (0.0 B)  TX bytes:0 (0.0 B)
-
-root@blue:~# ping -c2 new
-PING new.wedding.ramolaandscott,com (10.4.4.6) 56(84) bytes of data.
-
---- new.wedding.ramolaandscott,com ping statistics ---
-2 packets transmitted, 0 received, 100% packet loss, time 1001ms
-
-
-
-Any idea where to look or what to do to get them to work and play together?
-
-Thanks, Tuc
