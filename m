@@ -1,100 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from daemonizer.de ([87.230.18.164]:36994 "EHLO daemonizer.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751842AbaLURej (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Dec 2014 12:34:39 -0500
-From: Maximilian Engelhardt <maxi@daemonizer.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-Date: Sun, 21 Dec 2014 18:34:24 +0100
-Message-ID: <9062978.Vq0rTjKd5z@fuchs> (sfid-20141221_183447_130533_18C959B4)
-In-Reply-To: <5496E135.1@broadcom.com>
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <9234001.YBqfvtcJFx@fuchs> <5496E135.1@broadcom.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33552 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751687AbaLaKij (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 05:38:39 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Maithili Hinge <maithili@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 6/9] mwifiex: do not release lock during list_for_each_entry_safe()
+Date: Wed, 31 Dec 2014 02:36:43 -0800
+Message-ID: <1420022206-11435-7-git-send-email-akarwar@marvell.com> (sfid-20141231_113845_903447_81ADB2D9)
+In-Reply-To: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
+References: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart10774983.agFPI7KegM"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+As we are releasing the lock, during next iteration we may end
+up getting page fault if other thread has already deleted that
+node.
 
---nextPart10774983.agFPI7KegM
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cmdevt.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-On Sunday 21 December 2014 16:03:17 Arend van Spriel wrote:
-> On 12/21/14 15:24, Maximilian Engelhardt wrote:
-> > On Sunday 21 December 2014 15:13:50 Arend van Spriel wrote:
-> >> On 12/21/14 15:08, Maximilian Engelhardt wrote:
-> >>> On Sunday 21 December 2014 11:12:40 Arend van Spriel wrote:
-> >>>> On 12/21/14 10:58, Michael Tokarev wrote:
-> >>>>> 16.12.2014 19:51, Arend van Spriel wrote:
-> >>>>>> Hmm. The function brcms_btc_ecicoex_enab() is calling itself. Please
-> >>>>>> remove that call as it causes endless recursion and eventually
-> >>>>>> reboot.>
-> >>>>> 
-> >>>>> Ok, that was easy.  Now it loads, but wifi link still
-> >>>>> does not work, stalling as before.  What we're looking
-> >>>>> at now?
-> >>>> 
-> >>>> The patch is just to provide me with extra bt-coex related information
-> >>>> in the kernel log. So if you can provide that to me I have to info
-> >>>> needed to look in the proprietary code base to determine what is
-> >>>> missing.
-> >>>> 
-> >>>> Regards,
-> >>>> Arend
-> >>> 
-> >>> Hi Arend,
-> >> 
-> >>> here is the output from my card:
-> >> Thanks. It shows you have have the same bt-coex version as Michael. I am
-> >> not familiar with bluetooth side of things. Are you both using bluetooth
-> >> on 4313?
-> >> 
-> >> Regards,
-> >> Arend
-> > 
-> > I don't know. I think I have Bluetooth somehow enabled but I'm not really
-> > using it. I definitely don't have any Bluetooth devices connected. I could
-> > try to unload/disable Bluetooth it to see if it makes any difference.
-> 
-> That would be useful to know.
-> 
-
-I did a test with all Bluetooth modules unloaded that I could find but 
-throughput was still very low (about 4 Mbit/s with brcmsmac, my atheros USB 
-stick archived about 110 Mbit/s).
-
-Greetings,
-Maxi
-
---nextPart10774983.agFPI7KegM
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJUlwSjAAoJEIHqZH0kK9IV/2YQALtyTrDLsb2b7yVKU+A7GOdm
-tTEjJVtZYwn1/IiNVr0gpZMsKRrqXjHfwy6EYOqNHtmbifFttz6kMlCMT95Okb+w
-luvkT5n1KmxOMiyxiNMXMFR/BpN6/Ml15R33Gpm/jldTF55saGiPXsHUhpQHS8uU
-sqmEb+eMw/aJKbU6OSVOjLFTBB99Fgak7VQhuQ4YDB6UOscuJZJYRbdC7g5HgMMC
-ixG9mBB9DSfmLk9TUz9yMNuP8Io2SyiPdfxjQbgOGuru2YgcZWjmhO62+Z7D0Y1i
-xcSTxcKYjiejULPiwtDD/QuE0XLhvFPNOseT94j8JDtCE1i4OozHyYX6Io4FxLn0
-wp2cKVBDPjoLm+RGmiI1+PNG1p81vmZUat9bcuL7tS5oL3Jpz6XaIPNbAZlv7sP4
-kIkL63QYhs7ZOJv8kEmfZX9NyVP24MNSUsAm3dR918ZnVQlN8N3hZpZsmbeZoB90
-UF9mieWuUW0lg1K7NPsFt9a8OrYMfDkUNcAQE479hkfO8O8iBpQAt+752WfoUpOg
-1sO23FEnVGVANwYRIFYiPaUrRNqcq3XC0Rh/pSl9wSFHOYt/qt4XD4yXWr3CAaPz
-gDLGRvPNgxyQlE6nLVeZ4i8cJOO5PVnBrpmHiKawuwTLzrwrYqEMZuzNsyAcwyLh
-RJI2LK6jn8/OhzNjs7hB
-=PLx/
------END PGP SIGNATURE-----
-
---nextPart10774983.agFPI7KegM--
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 8559720..946a2f7 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -1008,11 +1008,9 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ 	list_for_each_entry_safe(cmd_node, tmp_node,
+ 				 &adapter->scan_pending_q, list) {
+ 		list_del(&cmd_node->list);
+-		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
+ 
+ 		cmd_node->wait_q_enabled = false;
+ 		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+-		spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
+ 	}
+ 	spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
+ 
+@@ -1070,12 +1068,8 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 	list_for_each_entry_safe(cmd_node, tmp_node,
+ 				 &adapter->scan_pending_q, list) {
+ 		list_del(&cmd_node->list);
+-		spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+-				       scan_pending_q_flags);
+ 		cmd_node->wait_q_enabled = false;
+ 		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+-		spin_lock_irqsave(&adapter->scan_pending_q_lock,
+-				  scan_pending_q_flags);
+ 	}
+ 	spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+ 			       scan_pending_q_flags);
+-- 
+1.8.1.4
 
