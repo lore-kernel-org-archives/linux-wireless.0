@@ -1,64 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34446 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932092AbaLDQpK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Dec 2014 11:45:10 -0500
-Date: Thu, 4 Dec 2014 11:32:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: mac80211-next 2014-12-03
-Message-ID: <20141204163211.GB2842@tuxdriver.com> (sfid-20141204_174526_093824_AB146DA3)
-References: <1417592902.2640.1.camel@sipsolutions.net>
+Received: from mail.skyhub.de ([78.46.96.112]:55590 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750726AbaLaPLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 10:11:38 -0500
+Date: Wed, 31 Dec 2014 16:11:35 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Peter Hurley <peter@hurleysoftware.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+Message-ID: <20141231151135.GF6332@pd.tnic> (sfid-20141231_161155_045536_39E71F93)
+References: <54A328C2.5080606@lwfinger.net>
+ <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+ <54A3D955.6020809@broadcom.com>
+ <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com>
+ <54A3FECC.7050202@hurleysoftware.com>
+ <CAGRGNgVMa=P9XbuFqfKHu5Gpiw=3h_OtOzSUYCsMbVLfTuL2Zw@mail.gmail.com>
+ <20141231144617.GE6332@pd.tnic>
+ <CAGRGNgWcoEf87ndwTpm7zc6vdJ3PWNOSP9CBca40iSrZ4+e17g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1417592902.2640.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGRGNgWcoEf87ndwTpm7zc6vdJ3PWNOSP9CBca40iSrZ4+e17g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 03, 2014 at 08:48:22AM +0100, Johannes Berg wrote:
-> Hi John,
-> 
-> Yes, you were right - I must have missed that you merged my other pull
-> request. I hope you can still pull this in time for the next merge
-> window.
-> 
-> Unfortunately I can't send a signed tag because I forgot my yubikey at
-> home and thus can't upload anything to kernel.org. I hope you can accept
-> signed pgp email instead.
-> 
-> This time I have Felix's no-status rate control work, which will allow
-> drivers to work better with rate control even if they don't have perfect
-> status reporting. In addition to this, a small hwsim fix from Patrik,
-> one of the regulatory patches from Arik, and a number of cleanups and
-> fixes I did myself.
-> 
-> Of note is a patch where I disable CFG80211_WEXT so that compatibility
-> is no longer selectable - this is intended as a wake-up call for anyone
-> who's still using it, and is still easily worked around (it's a one-line
-> patch) before we fully remove the code as well in the future.
-> 
-> Let me know if there's any problem.
-> 
-> johannes
-> 
-> 
-> 
-> The following changes since commit 75769c80e381653994293b5aa5a8cfec50088f9f:
-> 
->   mac80211: minstrel_ht: add a small optimization to minstrel_aggr_check (2014-11-19 19:31:07 +0100)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git 
-> 
-> for you to fetch changes up to f027c2aca0cf43e0f15fc8de8841f7b566163d94:
-> 
->   mac80211: add ieee80211_tx_status_noskb (2014-11-28 15:01:51 +0100)
+On Thu, Jan 01, 2015 at 01:56:54AM +1100, Julian Calaby wrote:
+> The point is that WEXT has been depreciated for _years_. Nobody
+> seems to have listened. Yes, talking to maintainers will get the
+> last holdouts of the "big" tools (e.g. wicd) to fix them, but it's
+> not going to change all the people out there with hacked together
+> home-grown setups.
 
-Pulling now...
+That's fine - you can fix the major tools first and then take a look at
+the home-grown fun later.
+
+> Yes, a full WARN() will end up with loads of duplicated bugzillas -
+> and I wish I had the time to volunteer to close every last one with
+> "upgrade your userspace to use nl80211 / iw" - but I feel that
+> speaking quietly hasn't worked: maybe now we need to yell.
+
+This goes to show once again how hard it is to design a userspace
+interface properly and how hard it is to change it once it gets exposed.
+
+But yeah, screaming or not screaming, you will have to support it anyway
+as long as there are tools using it. This is why I think the proper and
+maybe faster way to address the situation is to go fix userspace tools
+instead of issuing warnings. People never look at those as long as it
+works, in my experience.
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
