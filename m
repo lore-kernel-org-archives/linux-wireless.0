@@ -1,83 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50567 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032AbaL3OUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 09:20:35 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 32/33] iwlwifi: mvm: Alter passive scan fragmentation parameters in case of multi-MAC
-Date: Tue, 30 Dec 2014 16:19:07 +0200
-Message-Id: <1419949148-24046-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20141230_154349_629683_B9971FBB)
-In-Reply-To: <1419948357.21410.4.camel@egrumbacBox>
-References: <1419948357.21410.4.camel@egrumbacBox>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:62919 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751073AbaLaNtJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 08:49:09 -0500
+Received: by mail-qa0-f46.google.com with SMTP id w8so11117777qac.19
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 05:49:08 -0800 (PST)
+Message-ID: <54A3FECC.7050202@hurleysoftware.com> (sfid-20141231_144926_394657_F3217C6F)
+Date: Wed, 31 Dec 2014 08:49:00 -0500
+From: Peter Hurley <peter@hurleysoftware.com>
+MIME-Version: 1.0
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Arend van Spriel <arend@broadcom.com>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+On 12/31/2014 08:26 AM, Grumbach, Emmanuel wrote:
+>>
+>> On Wed, 31 Dec 2014, Arend van Spriel wrote:
+>>
+>>> You mentioned in the discussion and I quote: "*If* wireless
+>>> maintainers think otherwise, I'll send a revert request to Linus for
+>>> consideration.". However, you did not wait for any response from the
+>>> wireless maintainers nor from the author of the patch you are reverting.
+>>> Seems like an overreaction to me though personally I do not disgree
+>>> with the revert itself.
+>>
+>> My understanding from the whole thread was that Emmanuel disagrees with
+>> the revert, and I consider Emmanuel to definitely belong to the "wireless
+>> maintainers" group. If my understanding was wrong on this, sorry for that.
+> 
+> You understanding is wrong. This patch has an author and you could I didn't
+> sign-off the patch which is an obvious indication I am not a "wireless maintainer".
+> You didn't even make the minimal effort to check how this patch should be properly
+> routed.
+> 
+> Regardless of all this, I didn't say I disagree, I said that we need to find a way to signal
+> the userland developers that an API will be deprecated at some point. I haven't seen
+> any response / suggestion from you on that.
 
-Make passive scan fragmentation depends on the number of active
-interfaces. In case of single-MAC, make passive scan less fragmented.
-
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/scan.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index ed229a8..348b9c4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -284,11 +284,11 @@ static void iwl_mvm_scan_condition_iterator(void *data, u8 *mac,
- 					    struct ieee80211_vif *vif)
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
--	bool *global_bound = data;
-+	int *global_cnt = data;
- 
- 	if (vif->type != NL80211_IFTYPE_P2P_DEVICE && mvmvif->phy_ctxt &&
- 	    mvmvif->phy_ctxt->id < MAX_PHYS)
--		*global_bound = true;
-+		*global_cnt += 1;
- }
- 
- static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
-@@ -296,16 +296,16 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
- 				     int n_ssids, u32 flags,
- 				     struct iwl_mvm_scan_params *params)
- {
--	bool global_bound = false;
-+	int global_cnt = 0;
- 	enum ieee80211_band band;
- 	u8 frag_passive_dwell = 0;
- 
- 	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
- 					    IEEE80211_IFACE_ITER_NORMAL,
- 					    iwl_mvm_scan_condition_iterator,
--					    &global_bound);
-+					    &global_cnt);
- 
--	if (!global_bound)
-+	if (!global_cnt)
- 		goto not_bound;
- 
- 	params->suspend_time = 30;
-@@ -316,7 +316,11 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
- 		    IWL_UCODE_TLV_API_FRAGMENTED_SCAN) {
- 			params->suspend_time = 105;
- 			params->max_out_time = 70;
--			frag_passive_dwell = 20;
-+			/*
-+			 * If there is more than one active interface make
-+			 * passive scan more fragmented.
-+			 */
-+			frag_passive_dwell = (global_cnt < 2) ? 40 : 20;
- 		} else {
- 			params->suspend_time = 120;
- 			params->max_out_time = 120;
--- 
-1.9.1
+pr_notice_once("WEXT compatibility has been deprecated since _____" \
+               " Upgrade your userspace tools to nl80211!\n");
 
