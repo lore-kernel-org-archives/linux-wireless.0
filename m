@@ -1,61 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:52083 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753947AbaLAPxw (ORCPT
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:50450 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751425AbaLaAtv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 10:53:52 -0500
-From: Anjana Sasindran <anjanasasindran123@gmail.com>
-To: gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net,
-	es.Sorensen@redhat.com
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org,
-	Anjana Sasindran <anjanasasindran123@gmail.com>
-Subject: [PATCH] staging: rtl8723au: hal: Removed spaces before starting of a line
-Date: Mon,  1 Dec 2014 21:23:17 +0530
-Message-Id: <1417449197-3227-1-git-send-email-anjanasasindran123@gmail.com> (sfid-20141201_165357_033505_316CE003)
+	Tue, 30 Dec 2014 19:49:51 -0500
+Date: Tue, 30 Dec 2014 18:49:47 -0600
+From: Eric Biggers <ebiggers3@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH 23/23 V2 for 3.19]  rtlwifi: Fix error when accessing
+ unmapped memory in skb
+Message-ID: <20141231004947.GA2007@zzz> (sfid-20141231_015000_006643_D6F04FC9)
+References: <1419711457-21469-1-git-send-email-Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1419711457-21469-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix the checkpatch.pl warning:
+On Sat, Dec 27, 2014 at 02:17:37PM -0600, Larry Finger wrote:
+> These drivers use 9100-byte receive buffers, thus allocating an skb requires
+> an O(3) memory allocation. Under heavy memory loads and fragmentation, such
+> a request can fail. Previous versions of the driver have dropped the packet
+> and reused the old buffer; however, the new version introduced a bug in that
+> it released the old buffer before trying to allocate a new one. The previous
+> method is implemented here.
 
-WARNING: please, no spaces at the start of a line
-
-Signed-off-by: Anjana Sasindran <anjanasasindran123@gmail.com>
----
- drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-index 88e0126..959e89e 100644
---- a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-+++ b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-@@ -20,7 +20,7 @@ odm_ConfigRFReg_8723A(
- 	struct dm_odm_t *pDM_Odm,
- 	u32					Addr,
- 	u32					Data,
--  enum RF_RADIO_PATH     RF_PATH,
-+enum RF_RADIO_PATH     RF_PATH,
- 	u32				    RegAddr
- 	)
- {
-@@ -60,7 +60,7 @@ odm_ConfigBB_AGC_8723A(
- 	u32		Addr,
- 	u32		Bitmask,
- 	u32		Data
--  )
-+)
- {
- 	ODM_SetBBReg(pDM_Odm, Addr, Bitmask, Data);
- 	/*  Add 1us delay between BB/RF register setting. */
-@@ -77,7 +77,7 @@ odm_ConfigBB_PHY_8723A(
- 	u32		Addr,
- 	u32		Bitmask,
- 	u32		Data
--  )
-+)
- {
- 	if (Addr == 0xfe)
- 		msleep(50);
--- 
-1.9.1
-
+It looks like in the out-of-memory path, pci_map_single() gets called while the
+skb is still mapped.  Won't this leak the IOMMU mapping?
