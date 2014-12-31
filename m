@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:39059 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933179AbaLBTfi (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:58765 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956AbaLaOYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 14:35:38 -0500
-Message-ID: <547E1485.40302@broadcom.com> (sfid-20141202_203548_445644_CFBCA60E)
-Date: Tue, 2 Dec 2014 20:35:33 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 31 Dec 2014 09:24:20 -0500
+Received: by mail-lb0-f178.google.com with SMTP id f15so14867051lbj.23
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 06:24:18 -0800 (PST)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Eric Schultz <eschultz@prplfoundation.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: New FCC requirements and Linux Wifi
-References: <CAMkzgA5=NA-yLEWcvhXYpHmTAyqqiR7s58ndv-0gcSiZ3Ps88g@mail.gmail.com> <20141202003143.GA11546@tuxdriver.com>
-In-Reply-To: <20141202003143.GA11546@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Date: Wed, 31 Dec 2014 15:24:18 +0100
+Message-ID: <CAJWpbEhm06+nXkFfeMwe5yUb0Pve0y65okp5VMFdXacJQxjm5w@mail.gmail.com> (sfid-20141231_152423_489387_5E7257B5)
+Subject: wperf - a test tool for monitor mode frame injection/reception on mac80211
+From: Johan Almbladh <ja@anyfi.net>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/14 01:31, John W. Linville wrote:
-> On Mon, Dec 01, 2014 at 04:27:25PM -0600, Eric Schultz wrote:
->> All,
->>
->> I work for the prpl Foundation, an open source foundation organized by
->> a number of companies, most related to MIPS. One project we work with
->> externally is the OpenWrt project. Recently one of our members
->> mentioned a new FCC requirement (described in FCC publication 594280)
->> which requires wifi hardware devices to restrict modifications in ways
->> that were not previously required. Some of the suggestions the company
->> had internally for complying would be to use features like Secure Boot
->> and other types of DRM-like mechanisms to prevent routers from being
->> modified. This obviously would be quite bad for the OpenWrt community
->> (and the embedded Linux community as a whole) so we agreed as a group
->> to try to provide hardware companies with a way of complying without
->> harming the community.
->>
->> I'm looking to find individuals (and other companies!) interested in
->> working with myself and the foundation, companies, the OpenWrt
->> community and eventually regulators to provide guidance to hardware
->> companies on how to best comply with these rules. If you're interested
->> in getting involved or just would like to know more, please get in
->> touch with me. We want to make sure that routers and related embedded
->> Linux hardware is hackable and we could use all the help we could get.
->>
->> Thanks and I look forward to working with you,
->>
->> Eric
->
-> Eric,
->
-> Obviously, I would be interested in hearing more.  I suspect there
-> are others on the list that will be interested as well...
+Hi,
 
-I think so too. Just not sure what "Linux hardware is hackable" really 
-means here. Well, I guess I mean to say: tell me more. I guess with 
-hardware companies you mean OEMs here, right?
+I am working on improving the monitor mode frame injection/reception
+functionality in mac80211. For this purpose I have written a small
+test tool that can transmit and receive frames in monitor mode. It can
+be used to measure throughput and packet loss for Tx and Rx, in AP or
+STA mode, with or without encryption.
 
-Regards,
-Arend
+The source code is on GitHub, https://github.com/anyfi/wperf. There
+are also statically-linked binaries for mips and x86:
+
+$ wget https://github.com/anyfi/wperf/releases/download/v1.0.0/wperf-1.0.0-i386
+$ wget https://github.com/anyfi/wperf/releases/download/v1.0.0/wperf-1.0.0-mips
+$ wget https://github.com/anyfi/wperf/releases/download/v1.0.0/wperf-1.0.0-x86_64
+$ file wperf-1.0.0-*
+wperf-1.0.0-i386:   ELF 32-bit LSB  executable, Intel 80386, version 1
+(SYSV), statically linked, for GNU/Linux 3.7.3, not stripped
+wperf-1.0.0-mips:   ELF 32-bit MSB  executable, MIPS, MIPS-I version 1
+(SYSV), statically linked, not stripped
+wperf-1.0.0-x86_64: ELF 64-bit LSB  executable, x86-64, version 1
+(GNU/Linux), statically linked, for GNU/Linux 2.6.24,
+BuildID[sha1]=b5ac1e98b0ce1c0665f280762ef6ab05ebfff153, not stripped
+
+$ md5sum wperf-1.0.0-*
+b96b5d81518bad8094f37195e7fcae85  wperf-1.0.0-i386
+300a5ad881039550b03e682d5eae981d  wperf-1.0.0-mips
+a0586dc3ed5c6f32630ae233640c1d57  wperf-1.0.0-x86_64
+
+To transmit frames in monitor mode from an AP:
+
+1) Set up an wireless network in AP mode with mac80211 and hostapd,
+and create a monitor interface on the phy
+
+2) Connect a STA to the wireless network
+
+3) Run a wperf UDP server on the STA
+
+    wperf -s
+
+4) Run a wperf client in monitor mode on the AP
+
+    wperf -c <STA IP> --monitor=<monitor ifname> --bssid=<AP BSSID>
+--dhost=<STA MAC>
+
+
+Johan
