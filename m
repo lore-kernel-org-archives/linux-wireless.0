@@ -1,103 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:53181 "EHLO www.osadl.org"
+Received: from mail.skyhub.de ([78.46.96.112]:47018 "EHLO mail.skyhub.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751350AbaL3Tsk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 30 Dec 2014 14:48:40 -0500
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Ben Greear <greearb@candelatech.com>,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Yanbo Li <yanbol@qti.qualcomm.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <der.herr@hofr.at>
-Subject: [PATCH v2] ath10k: fixup wait_for_completion_timeout return handling
-Date: Tue, 30 Dec 2014 14:44:20 -0500
-Message-Id: <1419968660-17404-1-git-send-email-der.herr@hofr.at> (sfid-20141230_204900_252079_3F38E57F)
+	id S1751455AbaLaNyw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 08:54:52 -0500
+Date: Wed, 31 Dec 2014 14:54:49 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Jiri Kosina <jkosina@suse.cz>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: iwlwifi-driver card doesn't work with 3.19-rc2+
+Message-ID: <20141231135448.GA6332@pd.tnic> (sfid-20141231_145524_301065_B951E733)
+References: <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
+ <54A2B807.1020202@hurleysoftware.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+ <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz>
+ <1419971304.30412.0.camel@egrumbacBox>
+ <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+ <20141230212326.GA29263@pd.tnic>
+ <54A328C2.5080606@lwfinger.net>
+ <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DD429@hasmsx107.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD429@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wait_for_completion_timeout does not return negative values so the tests
-for <= 0 are not needed and the case differentiation in the error handling
-path unnecessary.
+On Wed, Dec 31, 2014 at 07:50:19AM +0000, Grumbach, Emmanuel wrote:
+> Now - basically all your argument is on Johannes's comment:
+> "deprecated enough". I think we have a chicken and egg problem here.
+> We can't break things towards userland. Good. But we do want to
+> deprecate this API because lots of valid purely technical reasons.
+> Unfortunately, I don't see what we could do to send a strong signal to
+> userspace tools developers to have them work / plan a move to a modern
+> API.
 
-v2: all wait_for_completion_timeout changes in a single patch
+I don't see what all the fuss is all about. If you're still unsure, go
+read Linus' message once more. You're absolutely not allowed to break
+userspace. Fullstop. No ifs and buts and whatever.
 
-patch was only compile tested x86_64_defconfig + CONFIG_ATH_CARDS=m
-CONFIG_ATH10K=m
+Everything extra you wanna do is probably fine. You can go talk to
+userspace tools maintainers using the deprecated API, you can go and fix
+it yourself, and so on and so on...
 
-patch is against linux-next 3.19.0-rc1 -next-20141226
+And giving Jiri hard time for "bypassing" maintainers for something
+which is clearly a no-no and has to be reverted the moment it hits
+mainline shows yet again you haven't really understood the rule yet:
 
-None of the proposed cleanups are critical.
-All changes should only be removing unreachable cases.
+There is no breaking of userspace. Fullstop.
 
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
----
- drivers/net/wireless/ath/ath10k/debug.c |    2 +-
- drivers/net/wireless/ath/ath10k/htc.c   |    6 ++----
- drivers/net/wireless/ath/ath10k/htt.c   |    2 +-
- drivers/net/wireless/ath/ath10k/mac.c   |    2 +-
- 4 files changed, 5 insertions(+), 7 deletions(-)
+Things like that get reverted ASAP. No "it needs to go through my tree",
+"I'm not sure, blabalba" ...
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index a716758..7e1fe93 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -373,7 +373,7 @@ static int ath10k_debug_fw_stats_request(struct ath10k *ar)
- 
- 		ret = wait_for_completion_timeout(&ar->debug.fw_stats_complete,
- 						  1*HZ);
--		if (ret <= 0)
-+		if (ret == 0)
- 			return -ETIMEDOUT;
- 
- 		spin_lock_bh(&ar->data_lock);
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index f1946a6..2fd9e18 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -703,11 +703,9 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- 	/* wait for response */
- 	status = wait_for_completion_timeout(&htc->ctl_resp,
- 					     ATH10K_HTC_CONN_SVC_TIMEOUT_HZ);
--	if (status <= 0) {
--		if (status == 0)
--			status = -ETIMEDOUT;
-+	if (status == 0) {
- 		ath10k_err(ar, "Service connect timeout: %d\n", status);
--		return status;
-+		return -ETIMEDOUT;
- 	}
- 
- 	/* we controlled the buffer creation, it's aligned */
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index 56cb4ac..58b6fc1 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -102,7 +102,7 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
- 
- 	status = wait_for_completion_timeout(&htt->target_version_received,
- 					     HTT_TARGET_VERSION_TIMEOUT_HZ);
--	if (status <= 0) {
-+	if (status == 0) {
- 		ath10k_warn(ar, "htt version request timed out\n");
- 		return -ETIMEDOUT;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c400567..f9d7dbb 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2151,7 +2151,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 
- 		ret = wait_for_completion_timeout(&ar->offchan_tx_completed,
- 						  3 * HZ);
--		if (ret <= 0)
-+		if (ret == 0)
- 			ath10k_warn(ar, "timed out waiting for offchannel skb %p\n",
- 				    skb);
- 
+So instead of giving him hard time, say "thank you for sending the
+revert and thank you for helping us maintainers". Now, before you say
+something, remember this: there is no breaking of userspace!
+
 -- 
-1.7.10.4
+Regards/Gruss,
+    Boris.
 
+Sent from a fat crate under my desk. Formatting is fine.
+--
