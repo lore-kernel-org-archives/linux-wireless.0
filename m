@@ -1,72 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:58075 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751702AbaL0UTu (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8127 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751654AbaLaTsa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Dec 2014 15:19:50 -0500
+	Wed, 31 Dec 2014 14:48:30 -0500
+Message-ID: <54A45309.6080606@broadcom.com> (sfid-20141231_204846_106905_D83D522F)
+Date: Wed, 31 Dec 2014 20:48:25 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
-References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com>
-Date: Sat, 27 Dec 2014 21:19:49 +0100
-Message-ID: <CACna6rxjrcpZXiv0jxmY4+EtLESYtKh=6W2RgqUDLHYy3AQ4rA@mail.gmail.com> (sfid-20141227_212005_002790_0B53F6C9)
-Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80
- characters per line
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=001a11407980019e26050b385db4
+To: Andreas Hartmann <andihartmann@freenet.de>
+CC: Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> <54A412CE.6010803@maya.org>
+In-Reply-To: <54A412CE.6010803@maya.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---001a11407980019e26050b385db4
-Content-Type: text/plain; charset=UTF-8
+On 12/31/14 16:14, Andreas Hartmann wrote:
+> Jiri Kosina wrote:
+>> On Wed, 31 Dec 2014, Arend van Spriel wrote:
+>>
+>>> The thing with WEXT is that it will stay as is. So if tools like wicd
+>>> want to support new features like P2P it will need to make the switch. I
+>>> checked out wicd repo and found a number of iwconfig calls and they kick
+>>> off wpa_supplicant with wext driver.
+>>
+>> Unfortunately this is by no means just about wicd. I have already received
+>> a few off-list mails from people who were wondering why their home-made
+>> scripts / tools, which are running 'iwconfig' directly suddenly stopped to
+>> work, and that it was indeed fallout of WEXT going away. Given the very
+>> short time this has been in mainline, you can probably imagine the
+>> fireworks once this appears in major release.
+>
+> It is not just the userspace tools (I prefer them, too), which need
+> wext, but a lot of drivers, too, such as Mediathek drivers e.g. which
+> perform *much* better compared to rt2x00, especially concerning USB
+> chips like the one used by Linksys AE3000 (3x3 Mimo)
+> (https://wikidevi.com/wiki/Linksys_AE3000), which achieves average
+> throughputs around 14 MB/s *average* with scp of big (>  10 GB) crypted
+> files even through reinforced-concrete floor(!) - rt2x00 is *far* away
+> of providing such a performance.
+>
+> Next bad point of rt2x00 e.g. is the huge CPU overhead - compare
+> rt5572sta on Raspi with rt2x00 running netperf and you will see the huge
+> problem of rt2x00 (which is covered on x86 by mostly oversized multi
+> core CPUs).
+>
+> Another big advantage of rt5572sta is: it is *stable* over a lot of
+> kernel versions (as long as the kernel didn't break interfaces - but
+> there are patches to catch them).
+>
+> Even ath9k, which usually is a really fine driver, is broken on some
+> kernel versions (link and throughput is not stable - my use case depends
+> *heavily* on very high and longterm stable throughput). That's why I'm
+> using a VM for my ath9k-device to be independent of these quality
+> problems of mac80211 (or maybe ath9k - don't know) over different kernel
+> versions.
+>
+>
+> All in all:
+> If you want to get rid of wext, you still have to go a *very* long way
+> to get the same *stable* and high throughput quality with *all* chips
+> depending on mac80211 and not just a few flagship drivers like Atheros.
 
-On 27 December 2014 at 20:24, Oscar Forner Martinez
-<oscar.forner.martinez@gmail.com> wrote:
-> Three lines with more than 80 characters per line have been split in several lines.
+Hi Andreas,
 
-Thanks for the next version :)
+That's a nice list of unrelated stuff. This has all nothing to do with 
+WEXT. Actually, you can build rt5572sta with cfg80211 support 
+(RT_CFG80211_SUPPORT). This thread is about the configuration API and 
+not about driver performance.
 
-1) You missed version number. Something like
-git format-patch --subject-prefix="PATCH V3"
-(you saying for the future).
+Regards,
+Arend
 
-2) I'm OK with your changes, but when checking the patch I get some errors like
-ERROR: trailing whitespace
-ERROR: DOS line endings
-(I used ./scripts/checkpatch.pl, see attached checkpatch log).
+> Kind regards,
+> Andreas Hartmann
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
-I think that "trailing whitespace" errors are caused by DOS line
-endings, because I don't see anything wrong about your code.
-
-Is there something wrong with your emacs? git-send-email shouldn't
-malform patches I believe.
-
---001a11407980019e26050b385db4
-Content-Type: text/plain; charset=US-ASCII; name="bcma.checkpatch.txt"
-Content-Disposition: attachment; filename="bcma.checkpatch.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_i47fj1cu0
-
-RVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UKIzYyOiBGSUxFOiBkcml2ZXJzL2JjbWEvZHJpdmVy
-X2NoaXBjb21tb24uYzo4MjoKK15JXkleSS8qIDQ3MDYgQ0MgYW5kIFBNVSB3YXRjaGRvZ3MgYXJl
-IGNsb2NrZWQgYXQgMS80IG9mIEFMUF5NJAoKRVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UKIzYz
-OiBGSUxFOiBkcml2ZXJzL2JjbWEvZHJpdmVyX2NoaXBjb21tb24uYzo4MzoKK15JXkleSSAqIGNs
-b2NrXk0kCgpFUlJPUjogRE9TIGxpbmUgZW5kaW5ncwojNjQ6IEZJTEU6IGRyaXZlcnMvYmNtYS9k
-cml2ZXJfY2hpcGNvbW1vbi5jOjg0OgorXkleSV5JICovXk0kCgpFUlJPUjogRE9TIGxpbmUgZW5k
-aW5ncwojNzM6IEZJTEU6IGRyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1vbi5jOjEwMjoKK15J
-d2R0Lm1heF90aW1lcl9tcyA9Xk0kCgpFUlJPUjogRE9TIGxpbmUgZW5kaW5ncwojNzQ6IEZJTEU6
-IGRyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1vbi5jOjEwMzoKK15JXkliY21hX2NoaXBjb193
-YXRjaGRvZ19nZXRfbWF4X3RpbWVyKGNjKSAvIGNjLT50aWNrc19wZXJfbXM7Xk0kCgpFUlJPUjog
-RE9TIGxpbmUgZW5kaW5ncwojODM6IEZJTEU6IGRyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1v
-bi5jOjM0MToKK15JXkliY21hX2VycihjYy0+Y29yZS0+YnVzLCAic2VyaWFsIG5vdCBzdXBwb3J0
-ZWQgb24gdGhpcyBkZXZpY2UgY2NyZXY6IDB4JXhcbiIsXk0kCgpFUlJPUjogRE9TIGxpbmUgZW5k
-aW5ncwojODQ6IEZJTEU6IGRyaXZlcnMvYmNtYS9kcml2ZXJfY2hpcGNvbW1vbi5jOjM0MjoKK15J
-XkleSSBjY3Jldik7Xk0kCgp0b3RhbDogNyBlcnJvcnMsIDAgd2FybmluZ3MsIDI4IGxpbmVzIGNo
-ZWNrZWQKCk5PVEU6IHdoaXRlc3BhY2UgZXJyb3JzIGRldGVjdGVkLCB5b3UgbWF5IHdpc2ggdG8g
-dXNlIHNjcmlwdHMvY2xlYW5wYXRjaCBvcgogICAgICBzY3JpcHRzL2NsZWFuZmlsZQoKYmNtYS5w
-YXRjaCBoYXMgc3R5bGUgcHJvYmxlbXMsIHBsZWFzZSByZXZpZXcuCgpJZiBhbnkgb2YgdGhlc2Ug
-ZXJyb3JzIGFyZSBmYWxzZSBwb3NpdGl2ZXMsIHBsZWFzZSByZXBvcnQKdGhlbSB0byB0aGUgbWFp
-bnRhaW5lciwgc2VlIENIRUNLUEFUQ0ggaW4gTUFJTlRBSU5FUlMuCg==
---001a11407980019e26050b385db4--
