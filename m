@@ -1,84 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:35110 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088AbaLCJJW (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:23263 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468AbaLaWlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Dec 2014 04:09:22 -0500
-Message-ID: <547ED33C.5020409@broadcom.com> (sfid-20141203_101012_944160_E2210051)
-Date: Wed, 3 Dec 2014 10:09:16 +0100
+	Wed, 31 Dec 2014 17:41:07 -0500
+Message-ID: <54A47B7F.9000403@broadcom.com> (sfid-20141231_234137_324245_133576EE)
+Date: Wed, 31 Dec 2014 23:41:03 +0100
 From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Eric Schultz <eschultz@prplfoundation.org>,
-	<linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: New FCC requirements and Linux Wifi
-References: <CAMkzgA5=NA-yLEWcvhXYpHmTAyqqiR7s58ndv-0gcSiZ3Ps88g@mail.gmail.com> <20141202003143.GA11546@tuxdriver.com> <547E1485.40302@broadcom.com>
-In-Reply-To: <547E1485.40302@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Theodore Ts'o <tytso@mit.edu>, Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+References: <54A328C2.5080606@lwfinger.net>	<alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>	<alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>	<54A3D955.6020809@broadcom.com>	<0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>	<54A3E1F1.7030807@broadcom.com>	<alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>	<54A41000.3040306@broadcom.com>	<20141231173113.GA443@thunk.org>	<54A45D4D.7070302@broadcom.com>	<20141231214421.GA29273@thunk.org> <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
+In-Reply-To: <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/14 20:35, Arend van Spriel wrote:
-> On 12/02/14 01:31, John W. Linville wrote:
->> On Mon, Dec 01, 2014 at 04:27:25PM -0600, Eric Schultz wrote:
->>> All,
->>>
->>> I work for the prpl Foundation, an open source foundation organized by
->>> a number of companies, most related to MIPS. One project we work with
->>> externally is the OpenWrt project. Recently one of our members
->>> mentioned a new FCC requirement (described in FCC publication 594280)
->>> which requires wifi hardware devices to restrict modifications in ways
->>> that were not previously required. Some of the suggestions the company
->>> had internally for complying would be to use features like Secure Boot
->>> and other types of DRM-like mechanisms to prevent routers from being
->>> modified. This obviously would be quite bad for the OpenWrt community
->>> (and the embedded Linux community as a whole) so we agreed as a group
->>> to try to provide hardware companies with a way of complying without
->>> harming the community.
+On 12/31/14 22:57, Linus Torvalds wrote:
+> On Wed, Dec 31, 2014 at 1:44 PM, Theodore Ts'o<tytso@mit.edu>  wrote:
+>>
+>> Yeah, the confusing part is that "ip" tends to use "verb object"
+>> scheme, which is consistent with the Cisco IOS command set it was
+>> trying to emulate.
+>
+> Side note: does anybody think that was really a good idea to begin
+> with? I mean, Cisco iOS is just _soooo_ universally loved, right?
 
-The FCC publication can be found here:
+I think I sense a bit cynical (under)tone here ;-)
 
-https://apps.fcc.gov/oetcf/kdb/forms/FTSSearchResultPage.cfm?switch=P&id=39498
+> And yeah, I refuse to use "ip link" or other insane commands. Let's
+> face it, "ifconfig" and "route" are perfectly fine commands, and a
+> whole lot less confusing than "ip" with random crap after it.  I'm
+> really not seeing why that "ip" command was seen as an improvement.
 
-I had issues downloading the guidance document itself.
+So does "ip" provide the same functionality as "ifconfig" and "route" or 
+does the package have more to offer.
 
-Another fine read from 2010 is here:
+The "iw" tool provides much more subcommands to perform different 
+wireless tasks that are not provided by "iwconfig" and friends. So 
+functionally "iw" provides a superset. Just have to get equivalent 
+output format to mimic "iwconfig" as Ted suggested.
 
-http://www.fcc.gov/oet/ea/presentations/files/oct10/FCC_Roundtable_General_Discussion_101910-Staff.pdf
-
-At page 13 of this document are draft updates that Eric is probably 
-referring to.
+Well, that's something for next year as we are getting close to midnight 
+over here.
 
 Regards,
 Arend
 
->>> I'm looking to find individuals (and other companies!) interested in
->>> working with myself and the foundation, companies, the OpenWrt
->>> community and eventually regulators to provide guidance to hardware
->>> companies on how to best comply with these rules. If you're interested
->>> in getting involved or just would like to know more, please get in
->>> touch with me. We want to make sure that routers and related embedded
->>> Linux hardware is hackable and we could use all the help we could get.
->>>
->>> Thanks and I look forward to working with you,
->>>
->>> Eric
->>
->> Eric,
->>
->> Obviously, I would be interested in hearing more. I suspect there
->> are others on the list that will be interested as well...
+> (Ok, "ip route" isn't any more complex than "route", but "ip link"
+> sure as hell isn't simpler than "ifconfig" for most things I can think
+> of)
 >
-> I think so too. Just not sure what "Linux hardware is hackable" really
-> means here. Well, I guess I mean to say: tell me more. I guess with
-> hardware companies you mean OEMs here, right?
->
-> Regards,
-> Arend
-> --
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>                       Linus
 
