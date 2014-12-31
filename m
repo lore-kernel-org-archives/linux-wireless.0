@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:59287 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102AbaLJJkF (ORCPT
+Received: from mga14.intel.com ([192.55.52.115]:21837 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751237AbaLaN07 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Dec 2014 04:40:05 -0500
-From: Brian Norris <computersforpeace@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Brian Norris <computersforpeace@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: [PATCH] brcmsmac: don't leak kernel memory via printk()
-Date: Wed, 10 Dec 2014 01:39:18 -0800
-Message-Id: <1418204358-8357-1-git-send-email-computersforpeace@gmail.com> (sfid-20141210_104018_021233_24A71223)
+	Wed, 31 Dec 2014 08:26:59 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Jiri Kosina <jkosina@suse.cz>,
+	Arend van Spriel <arend@broadcom.com>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: RE: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+Date: Wed, 31 Dec 2014 13:26:53 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com> (sfid-20141231_142721_671747_6DCFB169)
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>
+ <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
+ <54A2B807.1020202@hurleysoftware.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+ <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz>
+ <1419971304.30412.0.camel@egrumbacBox>
+ <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+ <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net>
+ <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+ <54A3D955.6020809@broadcom.com>
+ <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz>
+In-Reply-To: <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Debug code prints the fifo name via custom dev_warn() wrappers. The
-fifo_names array is only non-zero when debugging is manually enabled,
-which is all well and good. However, it's *not* good that this array
-uses zero-length arrays in the non-debug case, and so it doesn't
-actually have any memory allocated to it. This means that as far as we
-know, fifo_names[i] actually points to garbage memory.
+> 
+> On Wed, 31 Dec 2014, Arend van Spriel wrote:
+> 
+> > You mentioned in the discussion and I quote: "*If* wireless
+> > maintainers think otherwise, I'll send a revert request to Linus for
+> > consideration.". However, you did not wait for any response from the
+> > wireless maintainers nor from the author of the patch you are reverting.
+> > Seems like an overreaction to me though personally I do not disgree
+> > with the revert itself.
+> 
+> My understanding from the whole thread was that Emmanuel disagrees with
+> the revert, and I consider Emmanuel to definitely belong to the "wireless
+> maintainers" group. If my understanding was wrong on this, sorry for that.
 
-I've seen this in my log:
+You understanding is wrong. This patch has an author and you could I didn't
+sign-off the patch which is an obvious indication I am not a "wireless maintainer".
+You didn't even make the minimal effort to check how this patch should be properly
+routed.
 
-[ 4601.205511] brcmsmac bcma0:1: wl0: brcms_c_d11hdrs_mac80211: �GeL txop exceeded phylen 137/256 dur 1602/1504
+Regardless of all this, I didn't say I disagree, I said that we need to find a way to signal
+the userland developers that an API will be deprecated at some point. I haven't seen
+any response / suggestion from you on that.
 
-So let's give this array space enough to fill it with a NULL byte.
-
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>
-Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list@broadcom.com
-Cc: netdev@vger.kernel.org
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 1b474828d5b8..aed0c948dce8 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -316,7 +316,7 @@ static const u16 xmtfifo_sz[][NFIFO] = {
- static const char * const fifo_names[] = {
- 	"AC_BK", "AC_BE", "AC_VI", "AC_VO", "BCMC", "ATIM" };
- #else
--static const char fifo_names[6][0];
-+static const char fifo_names[6][1];
- #endif
- 
- #ifdef DEBUG
--- 
-2.2.0
-
+> 
+> One way or another, the revert really is a-must-have, as it causes visible
+> userspace regressions. I am really surprised that it's causing so lively
+> discussion and doubts.
+> 
+> --
+> Jiri Kosina
+> SUSE Labs
