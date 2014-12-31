@@ -1,120 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:62825 "EHLO
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:37538 "EHLO
 	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932613AbaLBSLs (ORCPT
+	with ESMTP id S1751197AbaLaKTn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:11:48 -0500
-Received: by mail-wi0-f171.google.com with SMTP id bs8so28877761wib.4
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Dec 2014 10:11:47 -0800 (PST)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
+	Wed, 31 Dec 2014 05:19:43 -0500
+Received: by mail-wi0-f171.google.com with SMTP id bs8so25268898wib.16
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 02:19:42 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/26] iwlwifi: pcie: add fh registers to dump data
-Date: Tue,  2 Dec 2014 20:11:08 +0200
-Message-Id: <1417543877-24193-17-git-send-email-egrumbach@gmail.com> (sfid-20141202_191346_929548_966AE4DD)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	chrischavez@gmx.us, pizza@shaftnet.org, johannes@sipsolutions.net
+Subject: [PATCH 3.17 1/3] mac80211: add feature flag to enable resizing of outgoing frames for encryption
+Date: Wed, 31 Dec 2014 11:19:39 +0100
+Message-ID: <2051417.66dkbc7KnO@debian64> (sfid-20141231_112049_159376_52BCF595)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+The  patch  "mac80211: Fix accounting of the tailroom-needed counter"
+reduced the overhead associated with unnecessary resizing of outgoing
+frames. Unfortunately this change  broke the assumption that there is
+always enough tailroom for the MIC. This in turn caused p54* to panic
+when it tried to prepare  outgoing frames for hardware-offloaded CCMP
+connections.
 
-Adds all FH registers between FH_MEM_UPPER_BOUND and
-FH_MEM_LOWER_BOUND (which should be readable to the driver)
-to the dump data when it is collected.
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: stable@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Bugzilla: <https://bugzilla.kernel.org/show_bug.cgi?id=90331>
+Reported-by: Christopher Chavez <chrischavez@gmx.us>
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  3 +++
- drivers/net/wireless/iwlwifi/pcie/trans.c        | 30 ++++++++++++++++++++++++
- 2 files changed, 33 insertions(+)
+ include/net/mac80211.h | 13 ++++++++++---
+ net/mac80211/key.c     |  9 ++++++---
+ 2 files changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-index e30a41d..20a8a64 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-@@ -81,6 +81,7 @@
-  * @IWL_FW_ERROR_DUMP_FW_MONITOR: firmware monitor
-  * @IWL_FW_ERROR_DUMP_PRPH: range of periphery registers - there can be several
-  *	sections like this in a single file.
-+ * @IWL_FW_ERROR_DUMP_FH_REGS: range of FH registers
-  */
- enum iwl_fw_error_dump_type {
- 	IWL_FW_ERROR_DUMP_SRAM = 0,
-@@ -90,6 +91,8 @@ enum iwl_fw_error_dump_type {
- 	IWL_FW_ERROR_DUMP_DEV_FW_INFO = 4,
- 	IWL_FW_ERROR_DUMP_FW_MONITOR = 5,
- 	IWL_FW_ERROR_DUMP_PRPH = 6,
-+	IWL_FW_ERROR_DUMP_TXF = 7,
-+	IWL_FW_ERROR_DUMP_FH_REGS = 8,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 58d719d..c04ac04 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1270,8 +1270,11 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
+  *
+  * @IEEE80211_KEY_FLAG_GENERATE_IV: This flag should be set by the
+  *	driver to indicate that it requires IV generation for this
+- *	particular key. Setting this flag does not necessarily mean that SKBs
+- *	will have sufficient tailroom for ICV or MIC.
++ *	particular key. Setting this flag does not mean that SKBs will
++ *	have sufficient tailroom for ICV or MIC. If additional tailroom
++ *	tailroom needs to be reserved for the ICV or MIC, the driver
++ *	should also set the hardware feature flag:
++ *      %IEEE80211_HW_TAILROOM_CRYPTO.
+  * @IEEE80211_KEY_FLAG_GENERATE_MMIC: This flag should be set by
+  *	the driver for a TKIP key if it requires Michael MIC
+  *	generation in software.
+@@ -1583,6 +1586,10 @@ struct ieee80211_tx_control {
+  * @IEEE80211_HW_MFP_CAPABLE:
+  *	Hardware supports management frame protection (MFP, IEEE 802.11w).
+  *
++ * @IEEE80211_HW_TAILROOM_CRYPTO: The driver would like to have sufficient
++ *	tailroom for ICV or MIC for outgoing frames in order to perform
++ *	hardware encryption without any additional resizing overhead.
++ *
+  * @IEEE80211_HW_SUPPORTS_UAPSD:
+  *	Hardware supports Unscheduled Automatic Power Save Delivery
+  *	(U-APSD) in managed mode. The mode is configured with
+@@ -1673,7 +1680,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
+ 	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
+ 	IEEE80211_HW_NO_AUTO_VIF			= 1<<15,
+-	/* free slot */
++	IEEE80211_HW_TAILROOM_CRYPTO			= 1<<16,
+ 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
+ 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
+ 	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 0bb7038..c3e9a9a 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -140,7 +140,8 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 	if (!ret) {
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
  
- 	IWL_FW_ERROR_DUMP_MAX,
- };
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 666925c..ced3354 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -78,6 +78,7 @@
- #include "iwl-agn-hw.h"
- #include "iwl-fw-error-dump.h"
- #include "internal.h"
-+#include "iwl-fh.h"
+-		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++		      (key->local->hw.flags & IEEE80211_HW_TAILROOM_CRYPTO)))
+ 			sdata->crypto_tx_tailroom_needed_cnt--;
  
- /* extended range in FW SRAM */
- #define IWL_FW_MEM_EXTENDED_START	0x40000
-@@ -1970,6 +1971,31 @@ static u32 iwl_trans_pcie_dump_csr(struct iwl_trans *trans,
- 	return csr_len;
- }
+ 		WARN_ON((key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE) &&
+@@ -188,7 +189,8 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 	sta = key->sta;
+ 	sdata = key->sdata;
  
-+static u32 iwl_trans_pcie_fh_regs_dump(struct iwl_trans *trans,
-+				       struct iwl_fw_error_dump_data **data)
-+{
-+	u32 fh_regs_len = FH_MEM_UPPER_BOUND - FH_MEM_LOWER_BOUND;
-+	unsigned long flags;
-+	__le32 *val;
-+	int i;
-+
-+	if (!iwl_trans_grab_nic_access(trans, false, &flags))
-+		return 0;
-+
-+	(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_FH_REGS);
-+	(*data)->len = cpu_to_le32(fh_regs_len);
-+	val = (void *)(*data)->data;
-+
-+	for (i = FH_MEM_LOWER_BOUND; i < FH_MEM_UPPER_BOUND; i += sizeof(u32))
-+		*val++ = cpu_to_le32(iwl_trans_pcie_read32(trans, i));
-+
-+	iwl_trans_release_nic_access(trans, &flags);
-+
-+	*data = iwl_fw_error_next_data(*data);
-+
-+	return sizeof(**data) + fh_regs_len;
-+}
-+
- static
- struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
- {
-@@ -2001,6 +2027,9 @@ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
- 			num_bytes_in_chunk;
+-	if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++	if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++	      (key->local->hw.flags & IEEE80211_HW_TAILROOM_CRYPTO)))
+ 		increment_tailroom_need_count(sdata);
+ 
+ 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
+@@ -884,7 +886,8 @@ void ieee80211_remove_key(struct ieee80211_key_conf *keyconf)
+ 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+ 		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+ 
+-		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++		      (key->local->hw.flags & IEEE80211_HW_TAILROOM_CRYPTO)))
+ 			increment_tailroom_need_count(key->sdata);
  	}
  
-+	/* FH registers */
-+	len += sizeof(*data) + (FH_MEM_UPPER_BOUND - FH_MEM_LOWER_BOUND);
-+
- 	/* FW monitor */
- 	if (trans_pcie->fw_mon_page)
- 		len += sizeof(*data) + sizeof(struct iwl_fw_error_dump_fw_mon) +
-@@ -2041,6 +2070,7 @@ struct iwl_trans_dump_data *iwl_trans_pcie_dump_data(struct iwl_trans *trans)
- 
- 	len += iwl_trans_pcie_dump_prph(trans, &data);
- 	len += iwl_trans_pcie_dump_csr(trans, &data);
-+	len += iwl_trans_pcie_fh_regs_dump(trans, &data);
- 	/* data is already pointing to the next section */
- 
- 	if (trans_pcie->fw_mon_page) {
 -- 
-1.9.1
+2.1.4
 
