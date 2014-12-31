@@ -1,122 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:54473 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750980AbaLHSuV convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:5997 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080AbaLaUcR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Dec 2014 13:50:21 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Subject: Re: wl1251: NVS firmware data
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <201412081811.46943@pali>
-Date: Mon, 8 Dec 2014 19:50:17 +0100
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>, Pavel Machek <pavel@ucw.cz>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Grazvydas Ignotas <notasas@gmail.com>,
+	Wed, 31 Dec 2014 15:32:17 -0500
+Message-ID: <54A45D4D.7070302@broadcom.com> (sfid-20141231_213241_905756_923292E0)
+Date: Wed, 31 Dec 2014 21:32:13 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Theodore Ts'o <tytso@mit.edu>, Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Kalle Valo <kvalo@adurom.com>,
-	Sebastian Reichel <sre@ring0.de>,
-	David Gnedt <david.gnedt@davizone.at>
-Message-Id: <30072B9E-2495-4F90-AC91-9C0D7E08F44E@holtmann.org> (sfid-20141208_195041_004545_12BE977B)
-References: <201411271506.20457@pali> <201412081747.30965@pali> <E5F3BB54-6365-4856-A231-A5FEDAEA217F@holtmann.org> <201412081811.46943@pali>
-To: =?utf-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+References: <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> <54A41000.3040306@broadcom.com> <20141231173113.GA443@thunk.org>
+In-Reply-To: <20141231173113.GA443@thunk.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pali,
+On 12/31/14 18:31, Theodore Ts'o wrote:
+> On Wed, Dec 31, 2014 at 04:02:24PM +0100, Arend van Spriel wrote:
+>>
+>> It is unfortunately indeed. I think iwconfig and friends will never go away
+>> although iw is a better alternative, simply because people don't like to
+>> change their home-made scripts/tools. WIRELESS_EXT actually is largely, but
+>> not entirely, gone in upstream drivers and what we are talking about here is
+>> CFG80211_WEXT which allows WEXT userspace to interact with cfg80211-based
+>> drivers through a compatibility layer.
+>
+> Most poeple are still using "route" and "ifconfig" instead of "ip".
+> Deal with it.  Personally, I find it much easier to use the existing
+> commands instead of figuring all of the various subcommands, and the
+> options to the subcommands to commands like "ip" and "iw".  At least
+> "ip help route" will give me all of the options to "ip route", where
+> as "iw help phy" doesn't tell give me the options; instead I have to
+> paw through 300 lines of "iw help" in order to find the command I
+> need.  So having a better user interface / help system so people can
+> better understand how to use iw would be a great step forward.
 
->>>>>> On Saturday 06 December 2014 13:49:54 Pavel Machek wrote:
->>>>>> /**
->>>>>> 
->>>>>> + * request_firmware_prefer_user: - prefer usermode
->>>>>> helper for loading firmware + * @firmware_p: pointer to
->>>>>> firmware image
->>>>>> + * @name: name of firmware file
->>>>>> + * @device: device for which firmware is being loaded
->>>>>> + *
->>>>>> + * This function works pretty much like
->>>>>> request_firmware(), but it prefer + * usermode helper. If
->>>>>> usermode helper fails then it fallback to direct access.
->>>>>> + * Usefull for dynamic or model specific firmware data.
->>>>>> + **/
->>>>>> +int request_firmware_prefer_user(const struct firmware
->>>>>> **firmware_p, +                           const char
->>>>>> *name, struct device *device) +{
->>>>>> +       int ret;
->>>>>> +       __module_get(THIS_MODULE);
->>>>>> +       ret = _request_firmware(firmware_p, name, device,
->>>>>> +                               FW_OPT_UEVENT |
->>>>>> FW_OPT_PREFER_USER); +       module_put(THIS_MODULE);
->>>>>> +       return ret;
->>>>>> +}
->>>>>> +EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
->>>>> 
->>>>> I'd like to introduce request_firmware_user() which only
->>>>> requests firmware from user space, and this way is simpler
->>>>> and more flexible since we have request_firmware_direct()
->>>>> already.
->>>> 
->>>> Why would a driver care about what program provides the
->>>> firmware?  It shouldn't at all, and we want to get rid of
->>>> the userspace firmware loader, not encourage drivers to
->>>> use it "exclusively" at all.
->>> 
->>> Do not remove it! Without userspace firmware loader it is
->>> impossible to load dynamic firmware files.
->> 
->> why is this dynamic in the first place. It does not sound like
->> dynamic data to me at all. This is like the WiFi MAC
->> address(es) or Bluetooth BD_ADDR. They are all static
->> information. The only difference is that they are on the host
->> accessibly filesystem or storage and not on the device
->> itself.
->> 
->> To be honest, for Bluetooth we solved this now. If the device
->> is missing key information like the calibration data or
->> BD_ADDR, then it comes up unconfigured. A userspace process
->> can then go and load the right data into it and then the
->> device becomes available as Bluetooth device.
->> 
->> Trying to use request_firmware to load some random data and
->> insist on going through userspace helper for that sounds
->> crazy to me. Especially since we are trying hard to get away
->> from the userspace loader. Forcing to keep it for new stuff
->> sounds backwards to me.
->> 
->> With the special Nokia partition in mind, why hasn't this been
->> turned into a mountable filesystem or into a driver/subsystem
->> that can access the data direct from the kernel. I advocated
->> for this some time ago. Maybe there should be a special
->> subsystem for access to these factory persistent information
->> that drivers then just can access. I seem to remember that
->> some systems provide these via ACPI. Why does the ARM
->> platform has to be special here?
->> 
->> And the problem of getting Ethernet and WiFi MAC address and
->> Bluetooth BD_ADDR comes up many many times. Why not have
->> something generic here. And don't tell me request_firmware is
->> that generic solution ;)
->> 
->> Regards
->> 
->> Marcel
-> 
-> Hi Marcel. I think you did not understand this problem. This 
-> discussion is not about mac address. Please read email thread 
-> again and if there are some unclear pars, then ask. Thanks!
+Agree. I can't even recall using "ip" ever. iw help system does provide 
+command specific help. The phy keyword is both a command and a selector 
+key, which I realize is confusing to the user, eg. 'iw help info' does 
+provide help for the 'info' subcommand.
 
-I think that I pretty clearly understand the problem. Calibration data, MAC address, what is the difference? For me this is all the same. It is data that is specific to a device or type of devices and it is stored somewhere else. In most cases in some immutable memory/flash area.
+> Better yet, why not hack into the "iw" command backwards compatibility
+> so that if argv[0] is "iwlist" or "iwconfig", it provides the limited
+> subset compatibility to the legacy commands.  Then all you need to do
+> is to convince the distributions to set up the packaging rules so that
+> "iw" conflicts with wireless-tools, and you will be able to get
+> everyone switched over to iw after at least seven years.
 
-What you want is access to this data since the kernel driver needs it. Do I get this so far ;)
+Thanks. If there are still drivers, upstream or out-of-tree, providing 
+only WEXT API this will not work unless iwconfig/iwlist can distinguish 
+those from cfg80211-based drivers (which is possible) and fallback to 
+WEXT ioctl syscalls. Just not sure if it is worth the effort. As you 
+stated below, it does not seem "evil" to retain WEXT if that is 
+providing users what they need.
 
-So my take is that request_firmware is not the right way to get this data. Or more precisely make sure that this data is available to kernel drivers. And what I am seeing here is that instead of actually solving the bigger problem, we just hack around it with request_firmware. Now surprisingly the request_firmware loads files directly from the kernel and all the hacks do not work anymore.
+Regards,
+Arend
 
-Regards
+> Note that I said *seven* years --- there are people who try to use an
+> enterprise kernel, or an older Debian Stable or Ubuntu LTS userspace,
+> with a newer kernel, and and if said users notice, and complain, Linus
+> *will* revert the commit.  (Note that I've worked at more than one
+> company where I was forced to use an older Ubuntu LTS or RHEL distro
+> if I wanted to connect to the intranet, and I was using bleeding edge
+> kernels --- and if anything like that had broken, I would have
+> complained directly to Linus, cc'ing the patch author and the wireless
+> maintainers with the revert.  And while I fortunately am not trying to
+> do upstream development with a stable distro, be sure there are other
+> such folks around who have to live with similar restrictions.)
+>
+>     	      	  	     	   - Ted
+>
+> P.S.  If you really think it's evil that users use the
+> simpler-to-understand iwconfig/iwlist interface over the iw command
+> line interface, if you provide full backwards compatibility for the
+> iwconfig/iwlist commands so you can "take over" from wireless-tools,
+> you could even have a mode which, in addition to doing what the user
+> wants, prints a "by the way, here's the equivalent if you want to use
+> the iw command instead".  I don't see the reason of allowing users to
+> continue to use iwconfig and iwlist, though --- face it, route and
+> ifconfig are going to be around for a long time; why not let users use
+> iwconfig and iwlist if it's sufficient for their needs?
 
-Marcel
 
