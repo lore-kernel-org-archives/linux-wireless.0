@@ -1,39 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0099.hostedemail.com ([216.40.44.99]:60330 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753812AbaLARDq (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:43561 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbaLaID2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Dec 2014 12:03:46 -0500
-Message-ID: <1417453419.4894.4.camel@perches.com> (sfid-20141201_180407_564405_A7360D00)
-Subject: Re: [PATCH] staging: rtl8723au: hal: Removed spaces before starting
- of a line
-From: Joe Perches <joe@perches.com>
-To: Anjana Sasindran <anjanasasindran123@gmail.com>
-Cc: gregkh@linuxfoundation.org, Larry.Finger@lwfinger.net,
-	es.Sorensen@redhat.com, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Date: Mon, 01 Dec 2014 09:03:39 -0800
-In-Reply-To: <1417449197-3227-1-git-send-email-anjanasasindran123@gmail.com>
-References: <1417449197-3227-1-git-send-email-anjanasasindran123@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 31 Dec 2014 03:03:28 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21667.44627.825091.517424@gargle.gargle.HOWL> (sfid-20141231_090344_826108_965A8FF2)
+Date: Wed, 31 Dec 2014 13:35:39 +0530
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Jiri Kosina <jkosina@suse.cz>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach\@gmail.com" <egrumbach@gmail.com>,
+	"peter\@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw\@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg\, Johannes" <johannes.berg@intel.com>,
+	"johannes\@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: RE: iwlwifi-driver card doesn't work with 3.19-rc2+
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD429@hasmsx107.ger.corp.intel.com>
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>
+	<CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
+	<54A2B807.1020202@hurleysoftware.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+	<alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz>
+	<1419971304.30412.0.camel@egrumbacBox>
+	<alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+	<20141230212326.GA29263@pd.tnic>
+	<54A328C2.5080606@lwfinger.net>
+	<alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5DD429@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-01 at 21:23 +0530, Anjana Sasindran wrote:
-> This patch fix the checkpatch.pl warning:
-> WARNING: please, no spaces at the start of a line
-[]
-> diff --git a/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c b/drivers/staging/rtl8723au/hal/odm_RegConfig8723A.c
-[]
-> @@ -20,7 +20,7 @@ odm_ConfigRFReg_8723A(
->  	struct dm_odm_t *pDM_Odm,
->  	u32					Addr,
->  	u32					Data,
-> -  enum RF_RADIO_PATH     RF_PATH,
-> +enum RF_RADIO_PATH     RF_PATH,
-.
-This should have a leading tab indentation
+Grumbach, Emmanuel wrote:
+> I don't see this as another datapoint. All it means is that there are ancient
+> drivers that won't work at all with newer tools and that are taken into
+> consideration while trying to deprecate an API.
 
+Not just drivers, tools and applications too.
 
+I don't think we can ever lose the WEXT baggage since there will probably be
+tools that will never migrate to nl80211. But, we can direct to /dev/null all
+kernel bugs that are related to WEXT. :-)
 
+Sujith
