@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33515 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754281AbaLVNOj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Dec 2014 08:14:39 -0500
-Message-ID: <1419254074.1890.18.camel@sipsolutions.net> (sfid-20141222_141442_020873_C94AE707)
-Subject: Re: [PATCH 1/2] brmc80211: dont use jiffies for BSS TSF
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Franky Lin <frankyl@broadcom.com>, linux-wireless@vger.kernel.org
-Date: Mon, 22 Dec 2014 14:14:34 +0100
-In-Reply-To: <549818FE.1090707@broadcom.com>
-References: <20120313125702.703540202@sipsolutions.net>
-		 <20120313125919.370791280@sipsolutions.net>
-		 (sfid-20120313_140421_642123_6BC8E250) <1419253089.1890.13.camel@sipsolutions.net>
-	 <549818FE.1090707@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:36893 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080AbaLaVKx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 16:10:53 -0500
+Message-ID: <54A4665A.8090906@lwfinger.net> (sfid-20141231_221104_532529_B167F4F3)
+Date: Wed, 31 Dec 2014 15:10:50 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Eric Biggers <ebiggers3@gmail.com>
+CC: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH V3 for 3.19]  rtlwifi: Fix error when accessing unmapped
+ memory in skb
+References: <1419996787-17395-1-git-send-email-Larry.Finger@lwfinger.net> <20141231050735.GA20639@zzz>
+In-Reply-To: <20141231050735.GA20639@zzz>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2014-12-22 at 14:13 +0100, Arend van Spriel wrote:
-> On 12/22/14 13:58, Johannes Berg wrote:
-> > By the way - I know now that the proprietary Broadcom driver has the
-> > same bug, to the point where this is apparently getting encoded into the
-> > Android framework.
-> >
-> > I urge you to fix this issue there as well. If an absolute "last
-> > updated" timestamp is needed (and "last seen [ms] ago" isn't sufficient)
-> > then new API will be needed.
-> 
-> Sorry, seem to have missed the original patches somehow. Guess because 
-> it says *brmc*80211.
+On 12/30/2014 11:07 PM, Eric Biggers wrote:
+> On Tue, Dec 30, 2014 at 09:33:07PM -0600, Larry Finger wrote:
+>> v3 - Unmap skb before trying to allocate a new one so as to not leak mapping.
+>
+> Looks good to me, although I'm not sure about the handling of DMA mapping errors
+> (perhaps that's something that drivers typically don't even try to handle?).
+> Anyway, the skb allocation issue appears to be resolved now.  I am running your
+> patch with an extra hack to inject some occasional skb allocation failures, and
+> I haven't noticed any problems except dropped packets.
 
-No no - it's a looong time ago and was also applied a long time ago. It
-just reared it's head again in another place.
+The last time I saw any DMA mapping errors were for some early BCM43xx cards 
+that only had 20 bits of DMA addressing space. These Realtek devices have a full 
+32 bits of addressing, thus any physical address in the first 4GB of RAM will be 
+OK. I suppose that it might be possible to get a physical address outside this 
+range for machines with a lot of RAM, but they are unlikely to have wifi interfaces.
 
-johannes
+Thanks for the testing. The Realtek engineer told me that they are looking at 
+this section, and may do a rewrite. I'm waiting to see what happens there before 
+considering alternatives. If the number of packets dropped due to skb allocation 
+failures is small, then the current code is likely OK.
+
+Larry
 
