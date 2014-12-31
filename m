@@ -1,67 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:53723
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752330AbaL2RKx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Dec 2014 12:10:53 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: kernel-janitors@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 8/8] ath10k: fix error return code
-Date: Mon, 29 Dec 2014 18:04:43 +0100
-Message-Id: <1419872683-32709-9-git-send-email-Julia.Lawall@lip6.fr> (sfid-20141229_181132_606721_2E435047)
-In-Reply-To: <1419872683-32709-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1419872683-32709-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from imap.thunk.org ([74.207.234.97]:48015 "EHLO imap.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751080AbaLaVoe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 16:44:34 -0500
+Date: Wed, 31 Dec 2014 16:44:21 -0500
+From: Theodore Ts'o <tytso@mit.edu>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+Message-ID: <20141231214421.GA29273@thunk.org> (sfid-20141231_224459_045012_F9F7AF5F)
+References: <54A328C2.5080606@lwfinger.net>
+ <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+ <54A3D955.6020809@broadcom.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
+ <54A3E1F1.7030807@broadcom.com>
+ <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
+ <54A41000.3040306@broadcom.com>
+ <20141231173113.GA443@thunk.org>
+ <54A45D4D.7070302@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54A45D4D.7070302@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return a negative error code on failure.
+On Wed, Dec 31, 2014 at 09:32:13PM +0100, Arend van Spriel wrote:
+> 
+> Agree. I can't even recall using "ip" ever. iw help system does provide
+> command specific help. The phy keyword is both a command and a selector key,
+> which I realize is confusing to the user, eg. 'iw help info' does provide
+> help for the 'info' subcommand.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+Yeah, the confusing part is that "ip" tends to use "verb object"
+scheme, which is consistent with the Cisco IOS command set it was
+trying to emulate.   So for ip, you do something like
 
-// <smpl>
-@@
-identifier ret; expression e1,e2;
-@@
-(
-if (\(ret < 0\|ret != 0\))
- { ... return ret; }
-|
-ret = 0
-)
-... when != ret = e1
-    when != &ret
-*if(...)
-{
-  ... when != ret = e2
-      when forall
- return ret;
-}
-// </smpl>
+ip link info eth0
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Where as for "iw" it's almost exactly backwards, i.e.:
 
----
- drivers/net/wireless/ath/ath10k/htt_tx.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+iw wlan0 info
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 4bc51d8..2836f4c 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -480,8 +480,10 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 
- 	skb_cb->htt.txbuf = dma_pool_alloc(htt->tx_pool, GFP_ATOMIC,
- 					   &paddr);
--	if (!skb_cb->htt.txbuf)
-+	if (!skb_cb->htt.txbuf) {
-+		res = -ENOMEM;
- 		goto err_free_msdu_id;
-+	}
- 	skb_cb->htt.txbuf_paddr = paddr;
- 
- 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
+It's actually rather unfortunate that there is no consistency between
+many of these tools, for example:
 
+ethtool --show-features eth0
+
+If we were going to create a new interface, wouldn't be nice if we
+could have some kind of consistency?  Sigh; oh well, water under the
+bridge at this point.
+
+> Thanks. If there are still drivers, upstream or out-of-tree, providing only
+> WEXT API this will not work unless iwconfig/iwlist can distinguish those
+> from cfg80211-based drivers (which is possible) and fallback to WEXT ioctl
+> syscalls. Just not sure if it is worth the effort. As you stated below, it
+> does not seem "evil" to retain WEXT if that is providing users what they
+> need.
+
+Is it really that much effort?  Unless there is some license
+incompatibility nonsense (i.e., GPLv2 vs GPLv3), the code's already
+there in the wireless-tools source.  It would just be a matter of
+trying the new ioctls first, and then falling back to the WEXT ones if
+needed, right?
+
+Cheers,
+
+					- Ted
