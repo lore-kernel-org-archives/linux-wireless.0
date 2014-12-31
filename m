@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55076 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086AbaLXQjt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 11:39:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/16] rtlwifi updates for kernel 3.20
-References: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Wed, 24 Dec 2014 18:39:40 +0200
-In-Reply-To: <1418893540-19944-1-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Thu, 18 Dec 2014 03:05:24 -0600")
-Message-ID: <87fvc580j7.fsf@kamboji.qca.qualcomm.com> (sfid-20141224_173952_606699_BE805263)
+Received: from mail.skyhub.de ([78.46.96.112]:34107 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750760AbaLaOqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 09:46:20 -0500
+Date: Wed, 31 Dec 2014 15:46:17 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Peter Hurley <peter@hurleysoftware.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+Message-ID: <20141231144617.GE6332@pd.tnic> (sfid-20141231_154636_404494_3832A21A)
+References: <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+ <20141230212326.GA29263@pd.tnic>
+ <54A328C2.5080606@lwfinger.net>
+ <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+ <54A3D955.6020809@broadcom.com>
+ <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com>
+ <54A3FECC.7050202@hurleysoftware.com>
+ <CAGRGNgVMa=P9XbuFqfKHu5Gpiw=3h_OtOzSUYCsMbVLfTuL2Zw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGRGNgVMa=P9XbuFqfKHu5Gpiw=3h_OtOzSUYCsMbVLfTuL2Zw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Thu, Jan 01, 2015 at 01:40:53AM +1100, Julian Calaby wrote:
+> Sadly, nobody will read that. It needs to be at least an error,
+> possibly with a big splat to scare people.
+> 
+> Maybe using one of WARN()'s siblings instead.
 
-> Welcome as the wireless-driver maintainer.
+And that opens a lot of useless bugzillas...
 
-Thanks.
-
-> I'm certain that it will take a while for all of us to function with
-> the new structure, but I will try.
-
-Yeah, it will take some time to get everything working smoothly again.
-But always feel free to give feedback if there's something I could
-improve. And _please_ do double check my commits :)
-
-> This patch bomb is the first of a set of cleanups. As I wrote John earlier,
-> my intent is to identify code that appears in multiple drivers and move such
-> routines into rtlwifi. None of the changes in this set need have high priority,
-> and all should be pushed into the "next" stream for kernel 3.20.
->
-> Thanks,
->
-> Larry
-> ---
->
-> Larry Finger (15):
->   rtlwifi: rtl8821ae: Fix typos in power-sequence macro
->   rtlwifi: rtl8192ce: Add code to set the keep-alive operation
->   rtlwifi: rtl8192ce: Update setting of the media status
->   rtlwifi: rtl8192ce: Update rate setting routines
->   rtlwifi: rtl8192ce: Improve RF sleep routine
->   rtlwifi: rtl8192ce: rtl8192cu: rtl8192de: rtl8192se:
->   rtlwifi: rtl8723be: Swith to use common rate-mapping routine
->   rtlwifi: rtl8188ee: Switch to use common rate-mapping routine
->   rtlwifi: rtl8723ae: Modify driver to use rate-mapping routine in core
->   rtlwifi: rtl8192ee: Convert driver to use common rate-mapping code
->   rtlwifi: Convert all drivers to use a common set of rate descriptors
->   rtlwifi: rtl8821ae: Add VHT rate descriptors
->   rtlwifi: rtl8192cu: Rework calls to rate-control routine
->   rtlwifi: rtl8192de: Rework calls to rate-control routine
->   rtlwifi: rtl8821ae: Switch to use common rate control routine
->
-> Troy Tan (1):
->   rtlwifi: rtl8821ae: Simplify loading of WOWLAN firmware
-
-Thanks, all 16 applied to wireless-drivers-next.git.
+The right thing to do is go talk to the maintainers of the userspace
+tools or send patches.
 
 -- 
-Kalle Valo
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
+--
