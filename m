@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:56356 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932236AbaLBSLy (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:23343 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbaLaPC2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 13:11:54 -0500
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 21/26] iwlwifi: mvm: update values for Smart Fifo
-Date: Tue,  2 Dec 2014 20:11:12 +0200
-Message-Id: <1417543877-24193-21-git-send-email-egrumbach@gmail.com> (sfid-20141202_191200_706905_EE5F30D5)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5A7D27@hasmsx107.ger.corp.intel.com>
+	Wed, 31 Dec 2014 10:02:28 -0500
+Message-ID: <54A41000.3040306@broadcom.com> (sfid-20141231_160254_376983_6726DD20)
+Date: Wed, 31 Dec 2014 16:02:24 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Jiri Kosina <jkosina@suse.cz>
+CC: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
+In-Reply-To: <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 12/31/14 15:07, Jiri Kosina wrote:
+> On Wed, 31 Dec 2014, Arend van Spriel wrote:
+>
+>> The thing with WEXT is that it will stay as is. So if tools like wicd
+>> want to support new features like P2P it will need to make the switch. I
+>> checked out wicd repo and found a number of iwconfig calls and they kick
+>> off wpa_supplicant with wext driver.
+>
+> Unfortunately this is by no means just about wicd. I have already received
+> a few off-list mails from people who were wondering why their home-made
+> scripts / tools, which are running 'iwconfig' directly suddenly stopped to
+> work, and that it was indeed fallout of WEXT going away. Given the very
+> short time this has been in mainline, you can probably imagine the
+> fireworks once this appears in major release.
 
-Interoperability issues were identified and root caused to
-the Smart Fifo watermarks. These issues arose with
-NetGear R7000. Fix this.
+It is unfortunately indeed. I think iwconfig and friends will never go 
+away although iw is a better alternative, simply because people don't 
+like to change their home-made scripts/tools. WIRELESS_EXT actually is 
+largely, but not entirely, gone in upstream drivers and what we are 
+talking about here is CFG80211_WEXT which allows WEXT userspace to 
+interact with cfg80211-based drivers through a compatibility layer.
 
-Cc: <stable@vger.kernel.org> [3.14+]
-Fixes: 1f3b0ff8ecce ("iwlwifi: mvm: Add Smart FIFO support")
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw-api.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-index 01d6f9e..88af6dd 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api.h
-@@ -1615,7 +1615,7 @@ enum iwl_sf_scenario {
- #define SF_NUM_TIMEOUT_TYPES 2		/* Aging timer and Idle timer */
- 
- /* smart FIFO default values */
--#define SF_W_MARK_SISO 4096
-+#define SF_W_MARK_SISO 6144
- #define SF_W_MARK_MIMO2 8192
- #define SF_W_MARK_MIMO3 6144
- #define SF_W_MARK_LEGACY 4096
--- 
-1.9.1
-
+Regards,
+Arend
