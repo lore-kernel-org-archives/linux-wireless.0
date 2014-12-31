@@ -1,32 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19053 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbaLWPZi (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:54825 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760AbaLaLWp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Dec 2014 10:25:38 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: set phymode to 11b when NO_OFDM flag set
-References: <1418926380-22206-1-git-send-email-poh@qca.qualcomm.com>
-Date: Tue, 23 Dec 2014 17:25:28 +0200
-In-Reply-To: <1418926380-22206-1-git-send-email-poh@qca.qualcomm.com> (Peter
-	Oh's message of "Thu, 18 Dec 2014 10:13:00 -0800")
-Message-ID: <87bnmue6c7.fsf@kamboji.qca.qualcomm.com> (sfid-20141223_162541_394681_BAD0E1F4)
+	Wed, 31 Dec 2014 06:22:45 -0500
+Received: by mail-lb0-f169.google.com with SMTP id p9so13404569lbv.0
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Dec 2014 03:22:43 -0800 (PST)
+Message-ID: <54A3DC80.1080505@cogentembedded.com> (sfid-20141231_122316_457699_AAC605CD)
+Date: Wed, 31 Dec 2014 14:22:40 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>, brudley@broadcom.com,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	kvalo@codeaurora.org, linville@tuxdriver.com,
+	pieterpg@broadcom.com, hdegoede@redhat.com, wens@csie.org,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54A3B1B4.7090705@linux.intel.com>
+In-Reply-To: <54A3B1B4.7090705@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
+Hello.
 
-> phymode should use 11b only if NO_OFDM flags is set.
-> Hence check up channel flag for NO_OFDM and set to
-> 11b.
+On 12/31/2014 11:20 AM, Fu, Zhonghui wrote:
+
+>  From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
+> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> Date: Mon, 29 Dec 2014 21:25:31 +0800
+> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+
+> WiFi chip has 2 SDIO functions, and PM core will trigger
+> twice suspend/resume operations for one WiFi chip to do
+> the same things. This patch avoid this case.
+
+> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
+>   1 files changed, 17 insertions(+), 2 deletions(-)
+
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> index 3c06e93..eee7818 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> @@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+>   static int brcmf_ops_sdio_suspend(struct device *dev)
+>   {
+>   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+> +	struct brcmf_sdio_dev *sdiodev;
+>   	mmc_pm_flag_t sdio_flags;
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
 >
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+>   	brcmf_dbg(SDIO, "Enter\n");
+>
+> +	if (func->num == 2) {
+> +		return 0;
+> +	}
 
-Thanks, applied.
+    {} not needed.
 
--- 
-Kalle Valo
+[...]
+> @@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>   static int brcmf_ops_sdio_resume(struct device *dev)
+>   {
+>   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+> +	struct brcmf_sdio_dev *sdiodev;
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>
+>   	brcmf_dbg(SDIO, "Enter\n");
+> +
+> +	if (func->num == 2) {
+> +		return 0;
+> +	}
+
+    Same here.
+
+[...]
+
+WBR, Sergei
+
