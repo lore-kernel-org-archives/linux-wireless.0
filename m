@@ -1,34 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from st11p00mm-asmtpout001.mac.com ([17.172.81.0]:34016 "EHLO
-	st11p00mm-asmtp001.mac.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750889AbaLOPMl (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:39528 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080AbaLaOlP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Dec 2014 10:12:41 -0500
-MIME-version: 1.0
-Content-type: text/plain; charset=utf-8; format=flowed
-Received: from MacBook-Pro-de-Jonathan.local
- (vir91-12-78-231-136-126.fbx.proxad.net [78.231.136.126])
- by st11p00mm-asmtp001.mac.com
- (Oracle Communications Messaging Server 7.0.5.33.0 64bit (built Aug 27 2014))
- with ESMTPSA id <0NGM00C9PNH2HH40@st11p00mm-asmtp001.mac.com> for
- linux-wireless@vger.kernel.org; Mon, 15 Dec 2014 14:12:39 +0000 (GMT)
-Message-id: <548EEC55.5060804@me.com> (sfid-20141215_161252_722391_9A887E84)
-Date: Mon, 15 Dec 2014 15:12:37 +0100
-From: Jonathan Marcille <marcille.jonathan@me.com>
-To: linux-wireless@vger.kernel.org
-Subject: Issue with iwlwifi in Wi-Fi N mode on ThinkPad x201 (Debian Testing)
+	Wed, 31 Dec 2014 09:41:15 -0500
+MIME-Version: 1.0
+In-Reply-To: <54A3FECC.7050202@hurleysoftware.com>
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>
+ <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
+ <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+ <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox>
+ <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic>
+ <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com>
+ <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com>
+ <54A3FECC.7050202@hurleysoftware.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 1 Jan 2015 01:40:53 +1100
+Message-ID: <CAGRGNgVMa=P9XbuFqfKHu5Gpiw=3h_OtOzSUYCsMbVLfTuL2Zw@mail.gmail.com> (sfid-20141231_154140_551561_831200F6)
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+To: Peter Hurley <peter@hurleysoftware.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi,
 
-I have an issue with iwlwifi driver.
+On Thu, Jan 1, 2015 at 12:49 AM, Peter Hurley <peter@hurleysoftware.com> wrote:
+> On 12/31/2014 08:26 AM, Grumbach, Emmanuel wrote:
+>>>
+>>> On Wed, 31 Dec 2014, Arend van Spriel wrote:
+>>>
+>>>> You mentioned in the discussion and I quote: "*If* wireless
+>>>> maintainers think otherwise, I'll send a revert request to Linus for
+>>>> consideration.". However, you did not wait for any response from the
+>>>> wireless maintainers nor from the author of the patch you are reverting.
+>>>> Seems like an overreaction to me though personally I do not disgree
+>>>> with the revert itself.
+>>>
+>>> My understanding from the whole thread was that Emmanuel disagrees with
+>>> the revert, and I consider Emmanuel to definitely belong to the "wireless
+>>> maintainers" group. If my understanding was wrong on this, sorry for that.
+>>
+>> You understanding is wrong. This patch has an author and you could I didn't
+>> sign-off the patch which is an obvious indication I am not a "wireless maintainer".
+>> You didn't even make the minimal effort to check how this patch should be properly
+>> routed.
+>>
+>> Regardless of all this, I didn't say I disagree, I said that we need to find a way to signal
+>> the userland developers that an API will be deprecated at some point. I haven't seen
+>> any response / suggestion from you on that.
+>
+> pr_notice_once("WEXT compatibility has been deprecated since _____" \
+>                " Upgrade your userspace tools to nl80211!\n");
 
-I installed iwlwifi-6000-ucode-9.193.4.1 on my ThinkPad x201 (Intel® 
-Centrino® Advanced-N 6200) running Debian Testing (Jessie)
-It works fine in b/g mode but not in N mode.
+Sadly, nobody will read that. It needs to be at least an error,
+possibly with a big splat to scare people.
 
-Is there something I need to do to make it work in N mode ? Or is it a 
-driver issue with N mode ?
+Maybe using one of WARN()'s siblings instead.
 
-Thanks for the help.
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
