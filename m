@@ -1,64 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out21.sjc.mx.trendmicro.com ([216.99.131.78]:52636 "EHLO
-	out21.sjc.mx.trendmicro.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750829AbaLQMEt (ORCPT
+Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:49951 "EHLO
+	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750726AbaLaQnJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Dec 2014 07:04:49 -0500
-Received: from out13.sjc.mx.trendmicro.com (unknown [216.99.131.50])
-	by out21.sjc.mx.trendmicro.com (Postfix) with ESMTP id BE4CCAA83A7
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 11:42:57 +0000 (UTC)
-Received: from relay04.sjc.mx.trendmicro.com (unknown [10.30.239.25])
-	by out13.sjc.mx.trendmicro.com (Postfix) with ESMTP id 31D439816D1
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 11:42:55 +0000 (UTC)
-Received: from thinktube.com (unknown [111.68.225.247])
-	by relay04.sjc.mx.trendmicro.com (Postfix) with ESMTP id C49B398042D
-	for <linux-wireless@vger.kernel.org>; Wed, 17 Dec 2014 11:42:53 +0000 (UTC)
-Message-ID: <54916C38.80103@thinktube.com> (sfid-20141217_130454_579382_599718C0)
-Date: Wed, 17 Dec 2014 11:42:48 +0000
-From: Bruno Randolf <br1@thinktube.com>
-MIME-Version: 1.0
-To: Dani Camps <danicamps81@gmail.com>, linux-wireless@vger.kernel.org,
+	Wed, 31 Dec 2014 11:43:09 -0500
+Message-ID: <1420044185.9624.18.camel@x220> (sfid-20141231_174357_609956_539D6E6D)
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
 	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: mac80211 USB adapters with 5GHz support and SMA antenna
-References: <CAD3NH5X-neqP-61kP=C2oNPPJTQNBkarae0rh93Hm4qzdpZRew@mail.gmail.com>
-In-Reply-To: <CAD3NH5X-neqP-61kP=C2oNPPJTQNBkarae0rh93Hm4qzdpZRew@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Date: Wed, 31 Dec 2014 17:43:05 +0100
+In-Reply-To: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz>
+	 <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com>
+	 <54A2B807.1020202@hurleysoftware.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com>
+	 <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz>
+	 <1419971304.30412.0.camel@egrumbacBox>
+	 <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+	 <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net>
+	 <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+	 <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 12/16/2014 07:09 PM, Dani Camps wrote:
-> I am looking for a Wi-Fi adapter with the following specs:
+On Tue, 2014-12-30 at 23:52 +0100, Jiri Kosina wrote:
+> This reverts commit 24a0aa212ee2dbe44360288684478d76a8e20a0a.
 > 
-> a) Operates at 5GHz
-> b) Supports 802.11n and optionally 802.11ac
-> c) USB interface
-> d) SMA connector for external antenna(s)
-> e) It is supported by mac80211, and supports mesh mode
+> It's causing severe userspace breakage. Namely, all the utilities
+> from wireless-utils which are relying on CONFIG_WEXT (which means
+> tools like 'iwconfig', 'iwlist', etc) are not working anymore. There
+> is a 'iw' utility in newer wireless-tools, which is supposed to be
+> a replacement for all the "deprecated" binaries, but it's far away
+> from being massively adopted.
+> 
+> Please see [1] for example of the userspace breakage this is causing.
+> 
+> In addition to that, Larry Finger reports [2] that this patch is also
+> causing ipw2200 driver being impossible to build.
+> 
+> To me this clearly shows that CONFIG_WEXT is far, far away from being
+> "deprecated enough" to be removed.
+> 
+> [1] http://thread.gmane.org/gmane.linux.kernel/1857010
+> [2] http://thread.gmane.org/gmane.linux.network/343688
 
-Me too...
+So [2] already entered mainline as commit dddd60220f41 ("ipw2200: select
+CFG80211_WEXT"). As this revert has now been applied, I think my patch
+should now be reverted too. But I don't think it's a good idea to submit
+a patch, however trivial, in the last hours before new year. So I'll
+have a look into this in the first days of next year.
 
-IHMO the best USB based chipset/driver combination is still ath9k_htc
-with Atheros AR7010/AR9280 or AR9271, which is rock solid and has very
-good thruput (and an open firmware). Unfortunately I have heard it's EOL
-but it's still possible to buy them, e.g the "TP-Link TL-WN722N" or
-"TP-LINK TL-WN822N"...
+> Signed-off-by: Jiri Kosina <jkosina@suse.cz>
+> ---
+>  net/wireless/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/wireless/Kconfig b/net/wireless/Kconfig
+> index 22ba971..29c8675 100644
+> --- a/net/wireless/Kconfig
+> +++ b/net/wireless/Kconfig
+> @@ -175,7 +175,7 @@ config CFG80211_INTERNAL_REGDB
+>  	  Most distributions have a CRDA package.  So if unsure, say N.
+>  
+>  config CFG80211_WEXT
+> -	bool
+> +	bool "cfg80211 wireless extensions compatibility"
+>  	depends on CFG80211
+>  	select WEXT_CORE
+>  	help
 
-I have not found good alternatives yet... So I repeat: Does anyone know
-a good USB dongle with a good mac/cfg80211 driver and at least 802.11n
-2x2:2 and support for AP and IBSS mode?
 
-It's a shame that vendors like Ralink/MediaTek and Realtek do not work
-on decent upstream linux drivers... Instead of wasting time cleaning up
-the mess they leave with dozens of incomplete "vendor drivers" they drop
-on us - maybe the Linux community should just choose *ONE* modern
-(preferrably "ac") and cheap USB chipset and concentrate on writing a
-driver for it?
+Paul Bolle
 
-And what about the vendors which are more involved in proper linux
-wireless develpment? Qualcom/Atheros, Intel, Broadcom: don't you have
-any USB chipsets in line?
-
-bruno
 
