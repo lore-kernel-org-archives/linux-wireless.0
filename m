@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:44909 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750903AbaLXGPO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Dec 2014 01:15:14 -0500
-Received: by mail-wi0-f182.google.com with SMTP id h11so12697715wiw.9
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Dec 2014 22:15:13 -0800 (PST)
-Date: Wed, 24 Dec 2014 09:15:09 +0300
-From: Alexey Tulia <alexey.tulia@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH v3] staging: rtl8723au: fix sparse warning
-Message-ID: <20141224061509.GA18562@epbyminw1710.minsk.epam.com> (sfid-20141224_071532_342963_EB9326E1)
+Received: from cantor2.suse.de ([195.135.220.15]:59949 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751237AbaLaPDg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 10:03:36 -0500
+Date: Wed, 31 Dec 2014 16:03:33 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Julian Calaby <julian.calaby@gmail.com>
+cc: Borislav Petkov <bp@alien8.de>,
+	Peter Hurley <peter@hurleysoftware.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility
+ unselectable"
+In-Reply-To: <CAGRGNgWcoEf87ndwTpm7zc6vdJ3PWNOSP9CBca40iSrZ4+e17g@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1412311602030.31609@pobox.suse.cz> (sfid-20141231_160352_430666_363A5190)
+References: <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com>
+ <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com> <54A3FECC.7050202@hurleysoftware.com> <CAGRGNgVMa=P9XbuFqfKHu5Gpiw=3h_OtOzSUYCsMbVLfTuL2Zw@mail.gmail.com> <20141231144617.GE6332@pd.tnic>
+ <CAGRGNgWcoEf87ndwTpm7zc6vdJ3PWNOSP9CBca40iSrZ4+e17g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/staging/rtl8723au/core/rtw_xmit.c:2375 warning: symbol
-'rtw_ack_tx_done23a' was not declared. Should it be static?
+On Thu, 1 Jan 2015, Julian Calaby wrote:
 
-Function 'rtw_ack_tx_done23a' seems to be unused in current staging
-code.
+> The point is that WEXT has been depreciated for _years_. Nobody seems
+> to have listened. Yes, talking to maintainers will get the last
+> holdouts of the "big" tools (e.g. wicd) to fix them, but it's not
+> going to change all the people out there with hacked together
+> home-grown setups.
 
-Signed-off-by: Alexey Tulia <alexey.tulia@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_xmit.c | 9 ---------
- 1 file changed, 9 deletions(-)
+Exactly. So why not work with whoever maintains iwconfig and friends, so 
+that they are turned into functionally equivalent wrappers around iw? Only 
+then it seems to make sense to start any kind of depreciation.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
-index 7a5e6bf..1c82dff 100644
---- a/drivers/staging/rtl8723au/core/rtw_xmit.c
-+++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
-@@ -2372,12 +2372,3 @@ int rtw_ack_tx_wait23a(struct xmit_priv *pxmitpriv, u32 timeout_ms)
- 	return rtw_sctx_wait23a(pack_tx_ops);
- }
-
--void rtw_ack_tx_done23a(struct xmit_priv *pxmitpriv, int status)
--{
--	struct submit_ctx *pack_tx_ops = &pxmitpriv->ack_tx_ops;
--
--	if (pxmitpriv->ack_tx)
--		rtw23a_sctx_done_err(&pack_tx_ops, status);
--	else
--		DBG_8723A("%s ack_tx not set\n", __func__);
--}
---
-2.1.0
-
+-- 
+Jiri Kosina
+SUSE Labs
