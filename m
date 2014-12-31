@@ -1,54 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32175 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750964AbaLBJrA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Dec 2014 04:47:00 -0500
-From: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-CC: Joe Perches <joe@perches.com>,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: [PATCH v2 00/10] wil6210 fixes, reroll
-Date: Tue, 2 Dec 2014 11:46:28 +0200
-Message-ID: <1417513598-18304-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20141202_104715_984944_D369D11C)
-In-Reply-To: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1417440803-26883-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mga02.intel.com ([134.134.136.20]:11887 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751950AbaLaIUP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 03:20:15 -0500
+Message-ID: <54A3B1B4.7090705@linux.intel.com> (sfid-20141231_092027_508764_4C0B01DB)
+Date: Wed, 31 Dec 2014 16:20:04 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	kvalo@codeaurora.org, linville@tuxdriver.com,
+	pieterpg@broadcom.com, hdegoede@redhat.com, wens@csie.org,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assorted fixes
+>From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
+From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+Date: Mon, 29 Dec 2014 21:25:31 +0800
+Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
 
-V2: split single commit into 2, accordingly to input by
-Joe Perches.
+WiFi chip has 2 SDIO functions, and PM core will trigger
+twice suspend/resume operations for one WiFi chip to do
+the same things. This patch avoid this case.
 
-re-sending whole series to avoid mis-interpretation.
+Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
+ 1 files changed, 17 insertions(+), 2 deletions(-)
 
-Vladimir Kondratiev (10):
-  wil6210: propagate disconnect reason
-  wil6210: introduce wil_err_ratelimited()
-  wil6210: add handling of RX HTRSH interrupt
-  wil6210: fix recovery after scan timeout
-  wil6210: remove wil_to_pcie_dev()
-  wil6210: configurable vring sizes
-  wil6210: fix warning in pointer arithmetic
-  wil6210: Rate limit "ring full" error message
-  wil6210: reset flow update
-  wil6210: remove TODO wrt buffer alignment
-
- drivers/net/wireless/ath/wil6210/cfg80211.c  |  2 +-
- drivers/net/wireless/ath/wil6210/debug.c     | 17 ++++++++
- drivers/net/wireless/ath/wil6210/fw.c        |  1 -
- drivers/net/wireless/ath/wil6210/fw_inc.c    |  4 +-
- drivers/net/wireless/ath/wil6210/interrupt.c | 30 +++++++++++--
- drivers/net/wireless/ath/wil6210/main.c      | 63 +++++++++++++++++++++-------
- drivers/net/wireless/ath/wil6210/txrx.c      | 11 +++--
- drivers/net/wireless/ath/wil6210/wil6210.h   | 15 ++++---
- drivers/net/wireless/ath/wil6210/wmi.c       |  8 ++--
- 9 files changed, 114 insertions(+), 37 deletions(-)
-
--- 
-2.1.0
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 3c06e93..eee7818 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+ static int brcmf_ops_sdio_suspend(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio_dev *sdiodev;
+ 	mmc_pm_flag_t sdio_flags;
++	struct sdio_func *func = dev_to_sdio_func(dev);
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
++	if (func->num == 2) {
++		return 0;
++	}
++
++	sdiodev = bus_if->bus_priv.sdio;
++
+ 	atomic_set(&sdiodev->suspend, true);
+ 
+ 	if (sdiodev->wowl_enabled) {
+@@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ static int brcmf_ops_sdio_resume(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio_dev *sdiodev;
++	struct sdio_func *func = dev_to_sdio_func(dev);
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
++
++	if (func->num == 2) {
++		return 0;
++	}
++
++	sdiodev = bus_if->bus_priv.sdio;
++
+ 	if (sdiodev->pdata->oob_irq_supported)
+ 		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+ 	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+-- 1.7.1
 
