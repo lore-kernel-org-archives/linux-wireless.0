@@ -1,81 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:61613 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057AbbAOVAx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 16:00:53 -0500
-Received: by mail-wg0-f50.google.com with SMTP id a1so17226766wgh.9
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2015 13:00:52 -0800 (PST)
+Received: from mout2.freenet.de ([195.4.92.92]:41362 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751585AbbAAK6u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jan 2015 05:58:50 -0500
+Message-ID: <54A527CE.4000407@maya.org> (sfid-20150101_115917_023869_07C8D1D7)
+Date: Thu, 01 Jan 2015 11:56:14 +0100
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <54B82598.9060403@erley.org>
-References: <CACsJT9OOBcYNhNG6=+Q2EE4VHEvJ8_rJ3fr6gb9_3P4KpPPX3g@mail.gmail.com>
- <f46d043c061e8dd5c9050cb5990c@google.com> <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com>
- <54B82598.9060403@erley.org>
-From: Mike Purvis <mpurvis@clearpathrobotics.com>
-Date: Thu, 15 Jan 2015 16:00:32 -0500
-Message-ID: <CACsJT9NHO=AZLTFqCN+R1wc_PMrmEonboS+kv1_o6O+xe0Yvig@mail.gmail.com> (sfid-20150115_220057_447157_468DE39B)
-Subject: Re: Delivery Status Notification (Failure)
-To: Pat Erley <pat-lkml@erley.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>
+CC: Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> <54A412CE.6010803@maya.org> <54A45309.6080606@broadcom.com>
+In-Reply-To: <54A45309.6080606@broadcom.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Pat,
+Arend van Spriel wrote:
+> On 12/31/14 16:14, Andreas Hartmann wrote:
+[...]
+>> All in all:
+>> If you want to get rid of wext, you still have to go a *very* long way
+>> to get the same *stable* and high throughput quality with *all* chips
+>> depending on mac80211 and not just a few flagship drivers like Atheros.
+> 
+> Hi Andreas,
+> 
+> That's a nice list of unrelated stuff. This has all nothing to do with
+> WEXT. Actually, you can build rt5572sta with cfg80211 support
+> (RT_CFG80211_SUPPORT).
 
-It's a good guess, but I don't think that's the case, in part because
-the 6235 is a 2x2 MIMO module— the antennas are MAIN/AUX, not WIFI/BT.
+You seem to know sources I don't know off. Could you please tell me,
+where to find them?
 
-I actually did encounter an Azurewave module which was set up that
-way, and both portions came up on the Gigabyte motherboard— I would
-have kept using that module, but there was a supply availability
-issue, the wifi performance was very poor, and I was interested in
-using a MIMO part.
+I have DPO_RT5572_LinuxSTA_2.6.0.1_20120629 which doesn't compile with
+HAS_CFG80211_SUPPORT=y because -DCONFIG_AP_SUPPORT, on which
+RT_CFG80211_SUPPORT relies, is broken.
 
-On 15 January 2015 at 15:39, Pat Erley <pat-lkml@erley.org> wrote:
-> On 01/15/2015 01:34 PM, Mike Purvis wrote:
->>
->> I'm having an issue with the Centrino Advanced-N 6235 module. I'm running
->> Ubuntu Trusty, and I've tried both the 3.13 and 3.16 kernels. Haven't yet
->> tried 3.18.
->>
->> What's weirdest about it is that the module actually works with full
->> functionality on an Advantech AIMB-274 (Q87 chipset) with the described
->> software configuration. However, when I plug the module into either a
->> Gigabyte
->> J1800N or an ASRock IMB-152 (J1900), I get no bluetooth— no hci0 device
->> comes up at all in hciconfig dev or rfkill list.
->
->
-> I'd guess that the 6235 module has WLAN on the pci-e connector portion,
-> and Bluetooth on the USB portion.  Check the docs on the board you're
-> plugging it into, and I bet the mini-pcie connector doesn't have the
-> USB side wired up, or it's disabled in(or by) the bios?
->
->>
->> My sense is that the 6235 is a very popular module, and low-cost celeron
->> motherboards are also pretty popular, so there must be others who have run
->> into this. Maybe people just don't use bluetooth, or don't expect it to
->> work on Linux?
->>
->> Anyhow, here is a gist with the dmesg boot log and lshw output:
->>
->> https://gist.github.com/mikepurvis/ee7bc8fb85ff7ae64a9d
->>
->> Looks like there's a crash in there related to intel integrated graphics—
->> could this be a cause? This is a headless machine, so disabling graphics
->> completely is on the table, if someone can suggest a good way to go
->> about that. Any other ideas as to what's going on here?
->>
->> Thanks muchly.
->>
->>   --
->> Mike Purvis | Clearpath Robotics, Inc.
->> 1425 Strasburg Road, Unit 2A , Kitchener, Ontario, N2R 1H2
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
+DPO_RT5572_LinuxSTA_2.6.1.3_20121022 removed the necessary broken AP
+code completely.
+
+> This thread is about the configuration API and
+> not about driver performance.
+
+I know.
+
+I tried to show, why WEXT as a whole is still necessary even if there is
+a mac80211 based driver, because of the weakness of rt2800usb:
+Nip it in the bud.
+
+
+
+Kind regards,
+Andreas
