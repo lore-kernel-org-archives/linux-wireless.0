@@ -1,69 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54115 "EHLO sipsolutions.net"
+Received: from plane.gmane.org ([80.91.229.3]:43827 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753272AbbAEM57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 07:57:59 -0500
-Message-ID: <1420462674.9459.9.camel@sipsolutions.net> (sfid-20150105_135808_759296_2C2478B1)
-Subject: Re: [PATCH v3] cfg80211: check for carrier state only when
- offchanel CAC supported
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com
-Date: Mon, 05 Jan 2015 13:57:54 +0100
-In-Reply-To: <1420475584-5533-1-git-send-email-patila@marvell.com> (sfid-20150105_120344_381788_A7E15DA0)
-References: <1420475584-5533-1-git-send-email-patila@marvell.com>
-	 (sfid-20150105_120344_381788_A7E15DA0)
-Content-Type: text/plain; charset="UTF-8"
+	id S1750701AbbAAGw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jan 2015 01:52:58 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Y6Zcq-0007Ro-T9
+	for linux-wireless@vger.kernel.org; Thu, 01 Jan 2015 07:52:53 +0100
+Received: from cpe-67-11-235-53.satx.res.rr.com ([67.11.235.53])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Jan 2015 07:52:52 +0100
+Received: from chrischavez by cpe-67-11-235-53.satx.res.rr.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Jan 2015 07:52:52 +0100
+To: linux-wireless@vger.kernel.org
+From: Christopher Chavez <chrischavez@gmx.us>
+Subject: Re: p54usb kernel panic on recent mainline kernels
+Date: Thu, 1 Jan 2015 06:52:37 +0000 (UTC)
+Message-ID: <loom.20150101T051652-786@post.gmane.org> (sfid-20150101_075316_149054_109903E7)
+References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com> <loom.20141227T010207-869@post.gmane.org> <2296382.VCr2c4tJc9@debian64> <5946673.YueIgFzjsn@debian64> <549EFC9F.9030504@lwfinger.net>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 22:03 +0530, Avinash Patil wrote:
-> Checking for carrier state during start_radar_detection is needed
-> only for devices which support offchannel CAC.
-> This patch provides this additional check of extended feature offchannel
-> CAC support while checking for carrier state.
-> 
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> ---
->  include/uapi/linux/nl80211.h | 3 +++
->  net/wireless/nl80211.c       | 4 +++-
->  2 files changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 735ab43..c318802 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -4205,10 +4205,13 @@ enum nl80211_feature_flags {
->  /**
->   * enum nl80211_ext_feature_index - bit index of extended features.
->   *
-> + * @NL80211_EXT_FEATURE_OFFCHAN_CAC: This device/driver supports
-> + *	offchannel Channel Availability Check(CAC).
->   * @NUM_NL80211_EXT_FEATURES: number of extended features.
->   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
->   */
->  enum nl80211_ext_feature_index {
-> +	NL80211_EXT_FEATURE_OFFCHAN_CAC,
->  
->  	/* add new features before the definition below */
->  	NUM_NL80211_EXT_FEATURES,
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 39753de..b2abb37 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -6138,7 +6138,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
->  	if (err)
->  		return err;
->  
-> -	if (netif_carrier_ok(dev))
-> +	if (wiphy_ext_feature_isset(&rdev->wiphy,
-> +				    NL80211_EXT_FEATURE_OFFCHAN_CAC) &&
-> +	    netif_carrier_ok(dev))
->  		return -EBUSY;
+Larry Finger <Larry.Finger@...> writes:
+ 
+> I think this needs to be applied to 3.{17-19}.
 
-Wait - doesn't that have to be !feature_isset()?
+I finally tested the patch on 3.18.1, and it works. It would be nice to have 
+this available in 3.17 and 3.18 -stable.
 
-johannes
+Tested-by: Christopher Chavez <chrischavez@gmx.us>
+
+nohwcrypt=1 also worked.
+
+Thanks
 
