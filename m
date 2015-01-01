@@ -1,113 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:63465 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753884AbbAESrD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 13:47:03 -0500
-Received: by mail-wi0-f171.google.com with SMTP id bs8so3915286wib.4
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 10:47:01 -0800 (PST)
-Message-ID: <54AADC22.9050105@gmail.com> (sfid-20150105_194724_005372_B6E1F256)
-Date: Mon, 05 Jan 2015 19:46:58 +0100
-From: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>
+Received: from mail.lang.hm ([64.81.33.126]:42173 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751407AbbAAA3P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 31 Dec 2014 19:29:15 -0500
+Date: Wed, 31 Dec 2014 16:22:47 -0800 (PST)
+From: David Lang <david@lang.hm>
+To: Arend van Spriel <arend@broadcom.com>
+cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	"Theodore Ts'o" <tytso@mit.edu>, Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility
+ unselectable"
+In-Reply-To: <54A47B7F.9000403@broadcom.com>
+Message-ID: <alpine.DEB.2.02.1412311620140.3337@nftneq.ynat.uz> (sfid-20150101_012951_369944_A92AE920)
+References: <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
+ <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> <54A41000.3040306@broadcom.com> <20141231173113.GA443@thunk.org> <54A45D4D.7070302@broadcom.com> <20141231214421.GA29273@thunk.org> <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
+ <54A47B7F.9000403@broadcom.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel crash while copying big files since kernel 3.18
-References: <54AA3953.20603@gmail.com> <54AAC925.6050602@lwfinger.net>
-In-Reply-To: <54AAC925.6050602@lwfinger.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 05/01/15 18:25, Larry Finger a écrit :
-> On 01/05/2015 01:12 AM, François Valenduc wrote:
->> Hello everybody,
->>
->> Since kernel 3.18, I encounter a kernel crash each time when I copy a
->> big file (around 12 Gb) from an external USB drive to the harddrive of
->> my laptop.
->> I tried a bisection between kernels 3.17 and 3.18 and I was surprised to
->> find that this has to do with the driver of the wireless card
->> (rtl8188ee). However, I don't have problems if I copy the file while the
->> rtl8188 module is not loaded. Unfortunately, the results of git-bisect
->> are not totally conclusive because the kernel crash during boot when the
->> wireless connection is established. Here are the last steps of the
->> bisection:
->>
->> # bad: [c151aed6aa146e9587590051aba9da68b9370f9b] rtlwifi: rtl8188ee:
->> Update driver to match Realtek release of 06282014
->> git bisect bad c151aed6aa146e9587590051aba9da68b9370f9b
->> # good: [fd09ff958777cf583d7541f180991c0fc50bd2f7] rtlwifi: Remove extra
->> workqueue for enter/leave power state
->> git bisect good fd09ff958777cf583d7541f180991c0fc50bd2f7
->> # skip: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b] rtlwifi: Modify
->> base.{c,h} for new drivers
->> git bisect skip 9afa2e44f4d8f9d031f815c32bb8f225f0f6746b
->> # skip: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd] rtlwifi: Modify
->> cam.{c,h} and efuse.{c,h} for new drivers
->> git bisect skip 3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd
->> # skip: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8] rtlwifi: Modify
->> core.c for new drivers
->> git bisect skip f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8
->> # skip: [d3feae41a3473a0f7b431d6af4e092865d586e52] rtlwifi: Update
->> power-save routines for 062814 driver
->> git bisect skip d3feae41a3473a0f7b431d6af4e092865d586e52
->> # skip: [38506ecefab911785d5e1aa5889f6eeb462e0954] rtlwifi: rtl_pci:
->> Start modification for new drivers
->> git bisect skip 38506ecefab911785d5e1aa5889f6eeb462e0954
->> # skip: [f3a97e93814aeac3f13e857a0071726acc9bd626] rtlwifi: Finish
->> modifying core routines for new drivers
->> git bisect skip f3a97e93814aeac3f13e857a0071726acc9bd626
->> # only skipped commits left to test
->> # possible first bad commit: [c151aed6aa146e9587590051aba9da68b9370f9b]
->> rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
->> # possible first bad commit: [f3a97e93814aeac3f13e857a0071726acc9bd626]
->> rtlwifi: Finish modifying core routines for new drivers
->> # possible first bad commit: [d3feae41a3473a0f7b431d6af4e092865d586e52]
->> rtlwifi: Update power-save routines for 062814 driver
->> # possible first bad commit: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd]
->> rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
->> # possible first bad commit: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b]
->> rtlwifi: Modify base.{c,h} for new drivers
->> # possible first bad commit: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8]
->> rtlwifi: Modify core.c for new drivers
->> # possible first bad commit: [38506ecefab911785d5e1aa5889f6eeb462e0954]
->> rtlwifi: rtl_pci: Start modification for new drivers
->>
->> Can somebody explain what's happening ? I do the copy via Dolphin in KDE
->> and the screen becomes black and the computer becomes totally
->> unresponsive. So, I don't have access to the logs to see the trace of
->> the problem.
->>
->> Thanks in advance for your help,
->
-> There is a bug in 3.18 that is triggered when an O(3) memory
-> allocation fails. There is a patch to fix this at
-> http://marc.info/?l=linux-netdev&m=141999680927473&w=2 that has been
-> merged into wireless-drivers as commit
-> e9538cf4f90713eca71b1d6a74b4eae1d445c664. It will be applied to 3.18.X
-> when it makes it into mainline 3.19-rcY, but that has not yet happened.
->
-> You could manually apply that patch to your kernel source, or you
-> could pull the git repo at http://github.com/lwfinger/rtlwifi_new.git.
-> That code has this patch already applied.
->
-> If this patch does not fix the problem, you might be able to capture
-> at least part of the backtrace by starting the transfer and then
-> switching to the logging console. When a crash happens, photograph the
-> screen. On my system, I display it with CTRL-ALT-F10. I return to the
-> normal graphical console with CTRL-ALT-F7, but your distro may use
-> different virtual consoles.
->
-> Larry
->
->
-Thanks for your help, it seems that your patch solves the problem. Now,
-the system doesn't crash anymore after copying the same large file than
-yesterday. I also see this message in the log:
-rtl_pci: Allocation of new skb failed in _rtl_pci_rx_interrupt which is
-added by your patch.
-Should I worry about this failure ? Or is it expected ?
+On Wed, 31 Dec 2014, Arend van Spriel wrote:
 
-François Valenduc
+> On 12/31/14 22:57, Linus Torvalds wrote:
+>> On Wed, Dec 31, 2014 at 1:44 PM, Theodore Ts'o<tytso@mit.edu>  wrote:
+>>> 
+>>> Yeah, the confusing part is that "ip" tends to use "verb object"
+>>> scheme, which is consistent with the Cisco IOS command set it was
+>>> trying to emulate.
+>> 
+>> Side note: does anybody think that was really a good idea to begin
+>> with? I mean, Cisco iOS is just _soooo_ universally loved, right?
+>
+> I think I sense a bit cynical (under)tone here ;-)
+>
+>> And yeah, I refuse to use "ip link" or other insane commands. Let's
+>> face it, "ifconfig" and "route" are perfectly fine commands, and a
+>> whole lot less confusing than "ip" with random crap after it.  I'm
+>> really not seeing why that "ip" command was seen as an improvement.
+>
+> So does "ip" provide the same functionality as "ifconfig" and "route" or does 
+> the package have more to offer.
 
+there are things that you can do with "ip" that you can't do with "ifconfig", 
+but they tend to be rather esoteric things (hundreds of IP addresses on "eth0" 
+without using eth0:1, eth0:2, etc as one example)
+
+The trouble is that doing simple things is harder with "ip" than "ifconfig"
+
+David Lang
+
+> The "iw" tool provides much more subcommands to perform different wireless 
+> tasks that are not provided by "iwconfig" and friends. So functionally "iw" 
+> provides a superset. Just have to get equivalent output format to mimic 
+> "iwconfig" as Ted suggested.
+>
+> Well, that's something for next year as we are getting close to midnight over 
+> here.
+>
+> Regards,
+> Arend
+>
+>> (Ok, "ip route" isn't any more complex than "route", but "ip link"
+>> sure as hell isn't simpler than "ifconfig" for most things I can think
+>> of)
+>>
+>>                       Linus
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
