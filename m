@@ -1,60 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:36270 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753177AbbAOAPK (ORCPT
+Received: from mail.csclub.uwaterloo.ca ([129.97.134.52]:39051 "EHLO
+	mail.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751164AbbAATvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 19:15:10 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 1 Jan 2015 14:51:04 -0500
+From: "Lennart Sorensen" <lsorense@csclub.uwaterloo.ca>
+Date: Thu, 1 Jan 2015 14:44:17 -0500
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Theodore Ts'o <tytso@mit.edu>,
+	Arend van Spriel <arend@broadcom.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+Message-ID: <20150101194417.GN24112@csclub.uwaterloo.ca> (sfid-20150101_205110_658830_993B894E)
+References: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+ <54A3D955.6020809@broadcom.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
+ <54A3E1F1.7030807@broadcom.com>
+ <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
+ <54A41000.3040306@broadcom.com>
+ <20141231173113.GA443@thunk.org>
+ <54A45D4D.7070302@broadcom.com>
+ <20141231214421.GA29273@thunk.org>
+ <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <21687.1828.923192.384081@gargle.gargle.HOWL> (sfid-20150115_011516_069868_F5A46708)
-Date: Thu, 15 Jan 2015 05:47:40 +0530
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-In-Reply-To: <CA+BoTQkX1KFxpyiotADSaFaEea5BrmgvWLTaSRgMbKzHHP=a2Q@mail.gmail.com>
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
-	<21685.35179.110539.780864@gargle.gargle.HOWL>
-	<CA+BoTQmNkVKyeWB0fCFhG2MfMZYTz6Dp4+cs44Dm4HCKjTc3Zw@mail.gmail.com>
-	<21686.15337.153726.847995@gargle.gargle.HOWL>
-	<CA+BoTQkX1KFxpyiotADSaFaEea5BrmgvWLTaSRgMbKzHHP=a2Q@mail.gmail.com>
+In-Reply-To: <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior wrote:
-> If I were to narrow down I'd say all uniprocessors. AP135 is just an
-> example where the problem easily occurs since it has an underpowered
-> cpu for the task. Even a more powerful single-core system will get
-> into trouble - all you need is a couple extra netfilter rules, nat,
-> some running services or additional processing hardware (usb anyone?).
-
-There are platforms which offload such network operations to the HW.
-AP148 is an example.
-
-> Apparently this isn't enough. Also, tasklets aren't subject to regular
-> scheduling policies and they just steal time from other threads. This
-> is important if you consider how much time a single tasklet can run -
-> you can actually estimate this.
+On Wed, Dec 31, 2014 at 01:57:59PM -0800, Linus Torvalds wrote:
+> Side note: does anybody think that was really a good idea to begin
+> with? I mean, Cisco iOS is just _soooo_ universally loved, right?
 > 
-> 800mbps is 100mbytes/s. Assume this is what host system can handle at 100% cpu.
-> HTT Rx ring is 1000 frames long which is ~1.5mbyte of data (assuming
-> 1500bytes for each packet).
-> You eventually end up with cycles which drain entire htt rx ring and
-> then replenish it if you push more traffic that host cpu can take.
-> 100mbytes / 1.5mbytes = ~66runs/s which is ~15ms for each tasklet run.
-> That's a lot. You might not get a chance to cycle through all the
-> running processes to give them their timeslice for a few seconds..
+> And yeah, I refuse to use "ip link" or other insane commands. Let's
+> face it, "ifconfig" and "route" are perfectly fine commands, and a
+> whole lot less confusing than "ip" with random crap after it.  I'm
+> really not seeing why that "ip" command was seen as an improvement.
 > 
-> If you starve userspace which runs a watchdog process you'll end up
-> failing to poke the watchdog timer in kernel and you'll get a reboot.
-> 
-> I'm starting to think tasklets are plain evil for network drivers :P
+> (Ok, "ip route" isn't any more complex than "route", but "ip link"
+> sure as hell isn't simpler than "ifconfig" for most things I can think
+> of)
 
-Well, we need a way to lift the fill level restriction for platforms
-that can afford a higher value, until the tx/rx engine in ath10k is
-rewritten - and I don't want to carry an internal patch...
+Well at least in the past (not sure these days), ifconfig was reading
+rather inefficiently from /proc rather than using netlink, and it had
+annoying bugs like only showing the first 9 characters of the interface
+name, not handling IPv6 (I think that has been fixed by now), and many
+other awfulnesses.
 
-Sujith
+I just did a quick check to see how ifconfig does longer interface names
+and got this:
+tun0-12345678:2: error fetching interface information: Device not found
+
+for an interface I had renamed to tun0-123456789
+
+ip had no issue with it.
+
+Renaming it to tun0-12345678 made ifconfig not die on it.  I wonder if
+someone failed to understand that 15 character interface names meant
+that 15 characters before the NULL should be allowed.  If did show all
+of the 14 characters though, so the old cut at 9 character limit is at
+least gone these days.
+
+ifconfig seems to just be broken for many cases of perfectly nice features
+in the kernel.
+
+So yes some parts of ip are pretty painful, while others are rather nice
+(I certainly like ip route, where the output actually matches the syntax
+of the input, unlike the route command).
+
+Would be nice if all features of the ip command were actually documented,
+but they clearly are not.
+
+-- 
+Len Sorensen
