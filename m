@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41261 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750831AbbAPKzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 05:55:06 -0500
-Message-ID: <1421405703.9214.4.camel@sipsolutions.net> (sfid-20150116_115511_837890_2FB85C4C)
-Subject: Re: [RFCv2 6/6] mac80211: IBSS setup correctly BW for VHT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 16 Jan 2015 11:55:03 +0100
-In-Reply-To: <1421404724-32326-6-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150116_113943_517353_27DA5285)
-References: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1421404724-32326-6-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150116_113943_517353_27DA5285)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:52209 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925AbbAAPnL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jan 2015 10:43:11 -0500
+Received: by mail-wg0-f48.google.com with SMTP id y19so23294868wgg.35
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Jan 2015 07:43:09 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] net: wireless: b43legacy: radio.c:  Remove unused function
+Date: Thu,  1 Jan 2015 16:46:10 +0100
+Message-Id: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150101_164332_129500_C21A4F19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-16 at 11:38 +0100, Janusz Dziedzic wrote:
+Remove the function b43legacy_radio_set_tx_iq() that is not used anywhere.
 
-> +				/* we both use VHT */
-> +				struct ieee80211_vht_cap vhtcap_ie;
-> +				struct ieee80211_sta_vht_cap vht_cap = sta->sta.vht_cap;
-> +
-> +				ieee80211_vht_oper_to_chandef(channel,
-> +							      elems->vht_operation,
-> +							      &chandef);
+This was partially found by using a static code analysis program called cppcheck.
 
-Ok maybe I'm missing something - but can't this erroneously configure
-the local HW to 160 MHz when it doesn't even support it, or so?
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/b43legacy/radio.c |   19 -------------------
+ drivers/net/wireless/b43legacy/radio.h |    1 -
+ 2 files changed, 20 deletions(-)
 
-> +				memcpy(&vhtcap_ie, elems->vht_cap_elem, sizeof(vhtcap_ie));
-> +				ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband, &vhtcap_ie, sta);
-> +				if (memcmp(&vht_cap, &sta->sta.vht_cap, sizeof(vht_cap)))
-> +						rates_updated |= true;
-
-Indentation is wrong here.
-
-johannes
+diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
+index 8961776..9501420 100644
+--- a/drivers/net/wireless/b43legacy/radio.c
++++ b/drivers/net/wireless/b43legacy/radio.c
+@@ -1743,25 +1743,6 @@ u16 freq_r3A_value(u16 frequency)
+ 	return value;
+ }
+ 
+-void b43legacy_radio_set_tx_iq(struct b43legacy_wldev *dev)
+-{
+-	static const u8 data_high[5] = { 0x00, 0x40, 0x80, 0x90, 0xD0 };
+-	static const u8 data_low[5]  = { 0x00, 0x01, 0x05, 0x06, 0x0A };
+-	u16 tmp = b43legacy_radio_read16(dev, 0x001E);
+-	int i;
+-	int j;
+-
+-	for (i = 0; i < 5; i++) {
+-		for (j = 0; j < 5; j++) {
+-			if (tmp == (data_high[i] | data_low[j])) {
+-				b43legacy_phy_write(dev, 0x0069, (i - j) << 8 |
+-						    0x00C0);
+-				return;
+-			}
+-		}
+-	}
+-}
+-
+ int b43legacy_radio_selectchannel(struct b43legacy_wldev *dev,
+ 				  u8 channel,
+ 				  int synthetic_pu_workaround)
+diff --git a/drivers/net/wireless/b43legacy/radio.h b/drivers/net/wireless/b43legacy/radio.h
+index bccb3d7..dd2976d 100644
+--- a/drivers/net/wireless/b43legacy/radio.h
++++ b/drivers/net/wireless/b43legacy/radio.h
+@@ -92,7 +92,6 @@ void b43legacy_nrssi_hw_write(struct b43legacy_wldev *dev, u16 offset, s16 val);
+ void b43legacy_nrssi_hw_update(struct b43legacy_wldev *dev, u16 val);
+ void b43legacy_nrssi_mem_update(struct b43legacy_wldev *dev);
+ 
+-void b43legacy_radio_set_tx_iq(struct b43legacy_wldev *dev);
+ u16 b43legacy_radio_calibrationvalue(struct b43legacy_wldev *dev);
+ 
+ #endif /* B43legacy_RADIO_H_ */
+-- 
+1.7.10.4
 
