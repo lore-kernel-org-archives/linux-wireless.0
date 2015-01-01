@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54282 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753144AbbAENr2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 08:47:28 -0500
-Message-ID: <1420465645.9459.13.camel@sipsolutions.net> (sfid-20150105_144731_888509_A636D1CD)
-Subject: Re: [PATCH v3] cfg80211: check for carrier state only when
- offchanel CAC supported
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <patila@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>
-Date: Mon, 05 Jan 2015 14:47:25 +0100
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com> (sfid-20150105_143403_923577_F829B8B6)
-References: <1420475584-5533-1-git-send-email-patila@marvell.com>
-	 (sfid-20150105_120344_381788_A7E15DA0),<1420462674.9459.9.camel@sipsolutions.net>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com>
-	 (sfid-20150105_143403_923577_F829B8B6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:39006 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751573AbbAAUOQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Jan 2015 15:14:16 -0500
+MIME-Version: 1.0
+In-Reply-To: <20150101194417.GN24112@csclub.uwaterloo.ca>
+References: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+	<54A3D955.6020809@broadcom.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
+	<54A3E1F1.7030807@broadcom.com>
+	<alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
+	<54A41000.3040306@broadcom.com>
+	<20141231173113.GA443@thunk.org>
+	<54A45D4D.7070302@broadcom.com>
+	<20141231214421.GA29273@thunk.org>
+	<CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
+	<20150101194417.GN24112@csclub.uwaterloo.ca>
+Date: Thu, 1 Jan 2015 12:14:15 -0800
+Message-ID: <CA+55aFzFT94xrfC+4tdeQOxDnPaxy0f72N+HEQ7NgRxHdvqbGQ@mail.gmail.com> (sfid-20150101_211434_970363_ABE1EEC0)
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: "Theodore Ts'o" <tytso@mit.edu>,
+	Arend van Spriel <arend@broadcom.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 05:28 -0800, Avinash Patil wrote:
+On Thu, Jan 1, 2015 at 11:44 AM, Lennart Sorensen
+<lsorense@csclub.uwaterloo.ca> wrote:
+>
+> ifconfig seems to just be broken for many cases of perfectly nice features
+> in the kernel.
 
-> > -     if (netif_carrier_ok(dev))
-> > +     if (wiphy_ext_feature_isset(&rdev->wiphy,
-> > +                                 NL80211_EXT_FEATURE_OFFCHAN_CAC) &&
-> > +         netif_carrier_ok(dev))
-> >               return -EBUSY;
-> 
-> >Wait - doesn't that have to be !feature_isset()?
-> 
-> >johannes
-> 
-> If Offchannel CAC is supported (driver has set this bit in wiphy's
-> extended features) & carrier is ON, return EBUSY as offchannel CAC may
-> be ongoing, isnt it?
+So I'm not saying "ifconfig is wonderful". It's not.
 
-Well, my thinking is this - a new feature flag should allow something
-new.
+But I *am* saying that "changing user interfaces and then expecting
+people to change is f*cking stupid".
 
-Therefore, the patch should essentially be this:
+The fact is, ifconfig is simple for the simple cases, but more
+importantly, a lot of people learnt how to use it. Saying "you should
+all change, because we made up a new syntax" is not good policy.
 
-+ if (!new_feature)
-  if (do_old_check)
+The people who did "ip" could have fairly easily have done a wrapper
+around the same code that also left the old "ifconfig" syntax. Then,
+distros could have trivially just dropped the old "ifconfig" package,
+and entirely replaced it with the new "ip" package.
 
-Now wrapping that into a single if gives
+As it is, we have two different models, and they'll basically stay
+around forever.
 
-- if (do_old_check)
-+ if (!new_feature && do_old_check)
+For something like ifconfig, very few people care. But *all* the same
+arguments are true wrt "iw" and "iwconfig".
 
-so the patch looks wrong to me.
+The people who are trying to deprecate the WEXT interfaces should put
+the blame firmly where it belongs - on the people who thought that
+"we'll just ignore all old history".
 
-johannes
+Because people who think that "we'll just redesign everything" are
+actually f*cking morons. Really.
 
+There's a real reason the kernel has the "no regression" policy. And
+that reason is that I'm not a moron.
+
+History matter. Legacy uses matter.
+
+                          Linus
