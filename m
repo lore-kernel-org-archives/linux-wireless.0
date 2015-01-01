@@ -1,79 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63110 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887AbbAKJkX (ORCPT
+Received: from mail-vc0-f179.google.com ([209.85.220.179]:39766 "EHLO
+	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbbAALcK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2015 04:40:23 -0500
-Message-ID: <54B24504.60105@broadcom.com> (sfid-20150111_104032_964955_5D483223)
-Date: Sun, 11 Jan 2015 10:40:20 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 1 Jan 2015 06:32:10 -0500
 MIME-Version: 1.0
-To: Hong Xu <hong@topbug.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
-References: <1420968029-1222-1-git-send-email-hong@topbug.net>
-In-Reply-To: <1420968029-1222-1-git-send-email-hong@topbug.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <alpine.DEB.2.02.1412311620140.3337@nftneq.ynat.uz>
+References: <54A328C2.5080606@lwfinger.net>
+	<alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+	<alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+	<54A3D955.6020809@broadcom.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
+	<54A3E1F1.7030807@broadcom.com>
+	<alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
+	<54A41000.3040306@broadcom.com>
+	<20141231173113.GA443@thunk.org>
+	<54A45D4D.7070302@broadcom.com>
+	<20141231214421.GA29273@thunk.org>
+	<CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
+	<54A47B7F.9000403@broadcom.com>
+	<alpine.DEB.2.02.1412311620140.3337@nftneq.ynat.uz>
+Date: Thu, 1 Jan 2015 12:32:09 +0100
+Message-ID: <CAFLxGvxTYkCdUAxePjGi3HkJuG5MihSCxdU+F7vE+H8gWxpiPg@mail.gmail.com> (sfid-20150101_123231_453888_A0B37C71)
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+From: Richard Weinberger <richard.weinberger@gmail.com>
+To: David Lang <david@lang.hm>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Theodore Ts'o" <tytso@mit.edu>, Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/15 10:20, Hong Xu wrote:
-> Add an option "blink" to enable or disable the LED blink. The default
-> value is set to 1 so that existing users would not experience any
-> unexpected changes.
-> ---
->   drivers/net/wireless/ath/ath9k/htc.h          | 1 +
->   drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 4 ++++
->   drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++++
->   3 files changed, 9 insertions(+)
+On Thu, Jan 1, 2015 at 1:22 AM, David Lang <david@lang.hm> wrote:
+> there are things that you can do with "ip" that you can't do with
+> "ifconfig", but they tend to be rather esoteric things (hundreds of IP
+> addresses on "eth0" without using eth0:1, eth0:2, etc as one example)
 >
-> diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-> index 9dde265..5697097 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc.h
-> +++ b/drivers/net/wireless/ath/ath9k/htc.h
-> @@ -44,6 +44,7 @@
->
->   extern struct ieee80211_ops ath9k_htc_ops;
->   extern int htc_modparam_nohwcrypt;
-> +extern int led_blink;
->
->   enum htc_phymode {
->   	HTC_MODE_11NA		= 0,
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-> index 50f74a2..998b558 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-> @@ -279,6 +279,10 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
->   	else
->   		priv->ah->led_pin = ATH_LED_PIN_DEF;
->
-> +	if (!led_blink)
-> +		priv->led_cdev.default_trigger =
-> +			ieee80211_get_radio_led_name(priv->hw);
-> +
->   	ath9k_configure_leds(priv);
->
->   	snprintf(priv->led_name, sizeof(priv->led_name),
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> index e8fa944..c762d84 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> @@ -38,6 +38,10 @@ static int ath9k_ps_enable;
->   module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
->   MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
->
-> +int led_blink = 1;
-> +module_param_named(blink, led_blink, int, 0444);
-> +MODULE_PARM_DESC(blink, "Enable LED blink on activity");
-> +
+> The trouble is that doing simple things is harder with "ip" than "ifconfig"
 
-Seems like this module parameter is only applicable if 
-CONFIG_MAC80211_LEDS is set.
+Jan did a nice overview:
+http://inai.de/2008/02/19
 
-Regards,
-Arend
-
->   #ifdef CONFIG_MAC80211_LEDS
->   static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
->   	{ .throughput = 0 * 1024, .blink_time = 334 },
-
+-- 
+Thanks,
+//richard
