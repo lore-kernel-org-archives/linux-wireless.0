@@ -1,68 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khitomer.mortis.eu ([185.27.175.75]:20287 "EHLO
-	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754703AbbAGTjI (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:49256 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931AbbABFLa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 14:39:08 -0500
-From: Giel van Schijndel <me@mortis.eu>
-To: linux-kernel@vger.kernel.org
-Cc: Giel van Schijndel <me@mortis.eu>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Eliad Peller <eliad@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	linux-wireless@vger.kernel.org (open list:TI WILINK WIRELES...),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-Subject: [PATCH RESEND 2/2] wlcore: align member-assigns in a structure-copy block
-Date: Wed,  7 Jan 2015 20:38:38 +0100
-Message-Id: <1420659525-22975-2-git-send-email-me@mortis.eu> (sfid-20150107_203933_809965_983D6796)
-In-Reply-To: <1420659525-22975-1-git-send-email-me@mortis.eu>
-References: <1420394427-19509-1-git-send-email-me@mortis.eu>
- <1420659525-22975-1-git-send-email-me@mortis.eu>
+	Fri, 2 Jan 2015 00:11:30 -0500
+Date: Fri, 2 Jan 2015 06:11:27 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Peter Hurley <peter@hurleysoftware.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+Message-ID: <20150102051127.GE4873@amd> (sfid-20150102_061157_352814_F87FFEB7)
+References: <1419971304.30412.0.camel@egrumbacBox>
+ <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz>
+ <20141230212326.GA29263@pd.tnic>
+ <54A328C2.5080606@lwfinger.net>
+ <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
+ <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
+ <54A3D955.6020809@broadcom.com>
+ <alpine.LNX.2.00.1412311408090.31609@pobox.suse.cz>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DD8D8@hasmsx107.ger.corp.intel.com>
+ <54A3FECC.7050202@hurleysoftware.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54A3FECC.7050202@hurleysoftware.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This highlights the differences (e.g. the bug fixed in the previous
-commit).
+On Wed 2014-12-31 08:49:00, Peter Hurley wrote:
+> On 12/31/2014 08:26 AM, Grumbach, Emmanuel wrote:
+> >>
+> >> On Wed, 31 Dec 2014, Arend van Spriel wrote:
+> >>
+> >>> You mentioned in the discussion and I quote: "*If* wireless
+> >>> maintainers think otherwise, I'll send a revert request to Linus for
+> >>> consideration.". However, you did not wait for any response from the
+> >>> wireless maintainers nor from the author of the patch you are reverting.
+> >>> Seems like an overreaction to me though personally I do not disgree
+> >>> with the revert itself.
+> >>
+> >> My understanding from the whole thread was that Emmanuel disagrees with
+> >> the revert, and I consider Emmanuel to definitely belong to the "wireless
+> >> maintainers" group. If my understanding was wrong on this, sorry for that.
+> > 
+> > You understanding is wrong. This patch has an author and you could I didn't
+> > sign-off the patch which is an obvious indication I am not a "wireless maintainer".
+> > You didn't even make the minimal effort to check how this patch should be properly
+> > routed.
+> > 
+> > Regardless of all this, I didn't say I disagree, I said that we need to find a way to signal
+> > the userland developers that an API will be deprecated at some point. I haven't seen
+> > any response / suggestion from you on that.
+> 
+> pr_notice_once("WEXT compatibility has been deprecated since _____" \
+>                " Upgrade your userspace tools to nl80211!\n");
 
-Signed-off-by: Giel van Schijndel <me@mortis.eu>
----
- drivers/net/wireless/ti/wlcore/acx.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+Kernel interfaces are not being removed, not now, not ever. No need to
+spam logs.
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index f28fa3b..93a2fa8 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -1715,17 +1715,17 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
- 		goto out;
- 	}
- 
--	acx->recover_time = cpu_to_le32(conf->recover_time);
--	acx->hangover_period = conf->hangover_period;
--	acx->dynamic_mode = conf->dynamic_mode;
--	acx->early_termination_mode = conf->early_termination_mode;
--	acx->max_period = conf->max_period;
--	acx->min_period = conf->min_period;
--	acx->increase_delta = conf->increase_delta;
--	acx->decrease_delta = conf->decrease_delta;
--	acx->quiet_time = conf->quiet_time;
--	acx->increase_time = conf->increase_time;
--	acx->window_size = conf->window_size;
-+	acx->recover_time               = cpu_to_le32(conf->recover_time);
-+	acx->hangover_period            = conf->hangover_period;
-+	acx->dynamic_mode               = conf->dynamic_mode;
-+	acx->early_termination_mode     = conf->early_termination_mode;
-+	acx->max_period                 = conf->max_period;
-+	acx->min_period                 = conf->min_period;
-+	acx->increase_delta             = conf->increase_delta;
-+	acx->decrease_delta             = conf->decrease_delta;
-+	acx->quiet_time                 = conf->quiet_time;
-+	acx->increase_time              = conf->increase_time;
-+	acx->window_size                = conf->window_size;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
- 				   sizeof(*acx));
+(And to the person who suggested WARN(): No.)
+
+									Pavel
 -- 
-2.1.4
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
