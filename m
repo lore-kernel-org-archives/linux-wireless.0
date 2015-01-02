@@ -1,115 +1,313 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42471 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753473AbbAVUdg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 15:33:36 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/38] iwlwifi: mvm: rs: repeat initial legacy rates in LQ table
-Date: Thu, 22 Jan 2015 22:32:53 +0200
-Message-Id: <1421958809-3371-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_213341_465602_A68442F2)
-In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
-References: <1421958313.6424.2.camel@egrumbacBox>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:54856 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752111AbbABQ6f (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2015 11:58:35 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 01/11] rtlwifi: Unify variable naming for all drivers
+Date: Fri,  2 Jan 2015 10:58:18 -0600
+Message-Id: <1420217908-1382-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175930_853244_4A293387)
+In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Some drivers refer to a particular quantity in the driver's private
+are by one name, while others use a different name. These differences
+are removed.
 
-Repeating the legacy rates avoids degrading quickly to
-lower rates due to collisions which is common when doing
-TCP Tx traffic in legacy.
-This slightly improves TCP Tx throughput while working
-in legacy in different scenarios.
-
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/mvm/constants.h |  5 +++--
- drivers/net/wireless/iwlwifi/mvm/rs.c        | 19 ++++++++++---------
- 2 files changed, 13 insertions(+), 11 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |  2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.c       | 26 ++++++++++----------
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c       | 26 ++++++++++----------
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 30 +++++++++++------------
+ drivers/net/wireless/rtlwifi/wifi.h               |  2 --
+ 5 files changed, 42 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
-index 7cd1de8..2d8e7e3 100644
---- a/drivers/net/wireless/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
-@@ -103,12 +103,13 @@
- #define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
- #define IWL_MVM_RS_DISABLE_MIMO			0
- #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
--#define IWL_MVM_RS_LEGACY_RETRIES_PER_RATE      1
- #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE      2
- #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE_TW   1
- #define IWL_MVM_RS_INITIAL_MIMO_NUM_RATES       3
- #define IWL_MVM_RS_INITIAL_SISO_NUM_RATES       3
--#define IWL_MVM_RS_INITIAL_LEGACY_NUM_RATES     16
-+#define IWL_MVM_RS_INITIAL_LEGACY_NUM_RATES     2
-+#define IWL_MVM_RS_INITIAL_LEGACY_RETRIES       2
-+#define IWL_MVM_RS_SECONDARY_LEGACY_RETRIES	1
- #define IWL_MVM_RS_SECONDARY_LEGACY_NUM_RATES   16
- #define IWL_MVM_RS_SECONDARY_SISO_NUM_RATES     3
- #define IWL_MVM_RS_SECONDARY_SISO_RETRIES       1
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 7ba6e5d..4747224 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2862,12 +2862,13 @@ static void rs_fill_rates_for_column(struct iwl_mvm *mvm,
- 	int index = *rs_table_index;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index f6cb5ae..c3aad76 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -221,7 +221,7 @@ static void rtl92c_dm_diginit(struct ieee80211_hw *hw)
+ 	dm_digtable->forbidden_igi = DM_DIG_MIN;
+ 	dm_digtable->large_fa_hit = 0;
+ 	dm_digtable->recover_cnt = 0;
+-	dm_digtable->dig_dynamic_min  = 0x25;
++	dm_digtable->dig_min_0  = 0x25;
+ }
  
- 	for (i = 0; i < num_rates && index < end; i++) {
--		ucode_rate = cpu_to_le32(ucode_rate_from_rs_rate(mvm, rate));
--		for (j = 0; j < num_retries && index < end; j++, index++)
-+		for (j = 0; j < num_retries && index < end; j++, index++) {
-+			ucode_rate = cpu_to_le32(ucode_rate_from_rs_rate(mvm,
-+									 rate));
- 			rs_table[index] = ucode_rate;
--
--		if (toggle_ant)
--			rs_toggle_antenna(valid_tx_ant, rate);
-+			if (toggle_ant)
-+				rs_toggle_antenna(valid_tx_ant, rate);
-+		}
+ static u8 rtl92c_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
+index 77deedf..2fa4c45 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
+@@ -172,8 +172,8 @@ static void rtl92ee_dm_diginit(struct ieee80211_hw *hw)
+ 	dm_dig->forbidden_igi = DM_DIG_MIN;
+ 	dm_dig->large_fa_hit = 0;
+ 	dm_dig->recover_cnt = 0;
+-	dm_dig->dig_dynamic_min = DM_DIG_MIN;
+-	dm_dig->dig_dynamic_min_1 = DM_DIG_MIN;
++	dm_dig->dig_min_0 = DM_DIG_MIN;
++	dm_dig->dig_min_1 = DM_DIG_MIN;
+ 	dm_dig->media_connect_0 = false;
+ 	dm_dig->media_connect_1 = false;
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+@@ -298,7 +298,7 @@ static void rtl92ee_dm_dig(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct dig_t *dm_dig = &rtlpriv->dm_digtable;
+-	u8 dig_dynamic_min , dig_maxofmin;
++	u8 dig_min_0, dig_maxofmin;
+ 	bool bfirstconnect , bfirstdisconnect;
+ 	u8 dm_dig_max, dm_dig_min;
+ 	u8 current_igi = dm_dig->cur_igvalue;
+@@ -308,7 +308,7 @@ static void rtl92ee_dm_dig(struct ieee80211_hw *hw)
+ 	if (mac->act_scanning)
+ 		return;
  
- 		prev_rate_idx = rate->index;
- 		bottom_reached = rs_get_lower_rate_in_column(lq_sta, rate);
-@@ -2875,7 +2876,7 @@ static void rs_fill_rates_for_column(struct iwl_mvm *mvm,
- 			break;
- 	}
+-	dig_dynamic_min = dm_dig->dig_dynamic_min;
++	dig_min_0 = dm_dig->dig_min_0;
+ 	bfirstconnect = (mac->link_state >= MAC80211_LINKED) &&
+ 			!dm_dig->media_connect_0;
+ 	bfirstdisconnect = (mac->link_state < MAC80211_LINKED) &&
+@@ -329,19 +329,19 @@ static void rtl92ee_dm_dig(struct ieee80211_hw *hw)
+ 		if (rtlpriv->dm.one_entry_only) {
+ 			offset = 0;
+ 			if (dm_dig->rssi_val_min - offset < dm_dig_min)
+-				dig_dynamic_min = dm_dig_min;
++				dig_min_0 = dm_dig_min;
+ 			else if (dm_dig->rssi_val_min - offset >
+ 				 dig_maxofmin)
+-				dig_dynamic_min = dig_maxofmin;
++				dig_min_0 = dig_maxofmin;
+ 			else
+-				dig_dynamic_min = dm_dig->rssi_val_min - offset;
++				dig_min_0 = dm_dig->rssi_val_min - offset;
+ 		} else {
+-			dig_dynamic_min = dm_dig_min;
++			dig_min_0 = dm_dig_min;
+ 		}
  
--	if (!bottom_reached)
-+	if (!bottom_reached && !is_legacy(rate))
- 		rate->index = prev_rate_idx;
- 
- 	*rs_table_index = index;
-@@ -2925,7 +2926,7 @@ static void rs_build_rates_table(struct iwl_mvm *mvm,
- 		num_retries = IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE;
  	} else {
- 		num_rates = IWL_MVM_RS_INITIAL_LEGACY_NUM_RATES;
--		num_retries = IWL_MVM_RS_LEGACY_RETRIES_PER_RATE;
-+		num_retries = IWL_MVM_RS_INITIAL_LEGACY_RETRIES;
- 		toggle_ant = true;
+ 		dm_dig->rx_gain_max = dm_dig_max;
+-		dig_dynamic_min = dm_dig_min;
++		dig_min_0 = dm_dig_min;
+ 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "no link\n");
  	}
  
-@@ -2941,7 +2942,7 @@ static void rs_build_rates_table(struct iwl_mvm *mvm,
- 		lq_cmd->mimo_delim = index;
- 	} else if (is_legacy(&rate)) {
- 		num_rates = IWL_MVM_RS_SECONDARY_LEGACY_NUM_RATES;
--		num_retries = IWL_MVM_RS_LEGACY_RETRIES_PER_RATE;
-+		num_retries = IWL_MVM_RS_SECONDARY_LEGACY_RETRIES;
+@@ -368,10 +368,10 @@ static void rtl92ee_dm_dig(struct ieee80211_hw *hw)
+ 		} else {
+ 			if (dm_dig->large_fa_hit < 3) {
+ 				if ((dm_dig->forbidden_igi - 1) <
+-				    dig_dynamic_min) {
+-					dm_dig->forbidden_igi = dig_dynamic_min;
++				    dig_min_0) {
++					dm_dig->forbidden_igi = dig_min_0;
+ 					dm_dig->rx_gain_min =
+-								dig_dynamic_min;
++								dig_min_0;
+ 				} else {
+ 					dm_dig->forbidden_igi--;
+ 					dm_dig->rx_gain_min =
+@@ -430,7 +430,7 @@ static void rtl92ee_dm_dig(struct ieee80211_hw *hw)
+ 	rtl92ee_dm_write_dig(hw , current_igi);
+ 	dm_dig->media_connect_0 = ((mac->link_state >= MAC80211_LINKED) ?
+ 				   true : false);
+-	dm_dig->dig_dynamic_min = dig_dynamic_min;
++	dm_dig->dig_min_0 = dig_min_0;
+ }
+ 
+ void rtl92ee_dm_write_cck_cca_thres(struct ieee80211_hw *hw, u8 cur_thres)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+index dd7eb43..b92c521e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+@@ -232,8 +232,8 @@ static void rtl8723be_dm_diginit(struct ieee80211_hw *hw)
+ 	dm_digtable->forbidden_igi = DM_DIG_MIN;
+ 	dm_digtable->large_fa_hit = 0;
+ 	dm_digtable->recover_cnt = 0;
+-	dm_digtable->dig_dynamic_min = DM_DIG_MIN;
+-	dm_digtable->dig_dynamic_min_1 = DM_DIG_MIN;
++	dm_digtable->dig_min_0 = DM_DIG_MIN;
++	dm_digtable->dig_min_1 = DM_DIG_MIN;
+ 	dm_digtable->media_connect_0 = false;
+ 	dm_digtable->media_connect_1 = false;
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+@@ -424,7 +424,7 @@ static void rtl8723be_dm_dig(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+-	u8 dig_dynamic_min, dig_maxofmin;
++	u8 dig_min_0, dig_maxofmin;
+ 	bool bfirstconnect, bfirstdisconnect;
+ 	u8 dm_dig_max, dm_dig_min;
+ 	u8 current_igi = dm_digtable->cur_igvalue;
+@@ -434,7 +434,7 @@ static void rtl8723be_dm_dig(struct ieee80211_hw *hw)
+ 	if (mac->act_scanning)
+ 		return;
+ 
+-	dig_dynamic_min = dm_digtable->dig_dynamic_min;
++	dig_min_0 = dm_digtable->dig_min_0;
+ 	bfirstconnect = (mac->link_state >= MAC80211_LINKED) &&
+ 			!dm_digtable->media_connect_0;
+ 	bfirstdisconnect = (mac->link_state < MAC80211_LINKED) &&
+@@ -456,20 +456,20 @@ static void rtl8723be_dm_dig(struct ieee80211_hw *hw)
+ 		if (rtlpriv->dm.one_entry_only) {
+ 			offset = 12;
+ 			if (dm_digtable->rssi_val_min - offset < dm_dig_min)
+-				dig_dynamic_min = dm_dig_min;
++				dig_min_0 = dm_dig_min;
+ 			else if (dm_digtable->rssi_val_min - offset >
+ 							dig_maxofmin)
+-				dig_dynamic_min = dig_maxofmin;
++				dig_min_0 = dig_maxofmin;
+ 			else
+-				dig_dynamic_min =
++				dig_min_0 =
+ 					dm_digtable->rssi_val_min - offset;
+ 		} else {
+-			dig_dynamic_min = dm_dig_min;
++			dig_min_0 = dm_dig_min;
+ 		}
+ 
  	} else {
- 		WARN_ON_ONCE(1);
+ 		dm_digtable->rx_gain_max = dm_dig_max;
+-		dig_dynamic_min = dm_dig_min;
++		dig_min_0 = dm_dig_min;
+ 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD, "no link\n");
  	}
-@@ -2955,7 +2956,7 @@ static void rs_build_rates_table(struct iwl_mvm *mvm,
- 	rs_get_lower_rate_down_column(lq_sta, &rate);
  
- 	num_rates = IWL_MVM_RS_SECONDARY_LEGACY_NUM_RATES;
--	num_retries = IWL_MVM_RS_LEGACY_RETRIES_PER_RATE;
-+	num_retries = IWL_MVM_RS_SECONDARY_LEGACY_RETRIES;
+@@ -497,11 +497,11 @@ static void rtl8723be_dm_dig(struct ieee80211_hw *hw)
+ 		} else {
+ 			if (dm_digtable->large_fa_hit < 3) {
+ 				if ((dm_digtable->forbidden_igi - 1) <
+-				     dig_dynamic_min) {
++				     dig_min_0) {
+ 					dm_digtable->forbidden_igi =
+-							dig_dynamic_min;
++							dig_min_0;
+ 					dm_digtable->rx_gain_min =
+-							dig_dynamic_min;
++							dig_min_0;
+ 				} else {
+ 					dm_digtable->forbidden_igi--;
+ 					dm_digtable->rx_gain_min =
+@@ -552,7 +552,7 @@ static void rtl8723be_dm_dig(struct ieee80211_hw *hw)
+ 	rtl8723be_dm_write_dig(hw, current_igi);
+ 	dm_digtable->media_connect_0 =
+ 		((mac->link_state >= MAC80211_LINKED) ? true : false);
+-	dm_digtable->dig_dynamic_min = dig_dynamic_min;
++	dm_digtable->dig_min_0 = dig_min_0;
+ }
  
- 	rs_fill_rates_for_column(mvm, lq_sta, &rate, lq_cmd->rs_table, &index,
- 				 num_rates, num_retries, valid_tx_ant,
+ static void rtl8723be_dm_false_alarm_counter_statistics(
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+index ba30b0d..8b0bfb2 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+@@ -539,8 +539,8 @@ static void rtl8821ae_dm_diginit(struct ieee80211_hw *hw)
+ 	dm_digtable->forbidden_igi = DM_DIG_MIN;
+ 	dm_digtable->large_fa_hit = 0;
+ 	dm_digtable->recover_cnt = 0;
+-	dm_digtable->dig_dynamic_min = DM_DIG_MIN;
+-	dm_digtable->dig_dynamic_min_1 = DM_DIG_MIN;
++	dm_digtable->dig_min_0 = DM_DIG_MIN;
++	dm_digtable->dig_min_1 = DM_DIG_MIN;
+ 	dm_digtable->media_connect_0 = false;
+ 	dm_digtable->media_connect_1 = false;
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+@@ -822,7 +822,7 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
+ 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	u8 dig_dynamic_min;
++	u8 dig_min_0;
+ 	u8 dig_max_of_min;
+ 	bool first_connect, first_disconnect;
+ 	u8 dm_dig_max, dm_dig_min, offset;
+@@ -837,7 +837,7 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	/*add by Neil Chen to avoid PSD is processing*/
+-	dig_dynamic_min = dm_digtable->dig_dynamic_min;
++	dig_min_0 = dm_digtable->dig_min_0;
+ 	first_connect = (mac->link_state >= MAC80211_LINKED) &&
+ 			(!dm_digtable->media_connect_0);
+ 	first_disconnect = (mac->link_state < MAC80211_LINKED) &&
+@@ -876,23 +876,23 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
+ 			offset = 0;
+ 
+ 			if (dm_digtable->rssi_val_min - offset < dm_dig_min)
+-				dig_dynamic_min = dm_dig_min;
++				dig_min_0 = dm_dig_min;
+ 			else if (dm_digtable->rssi_val_min -
+ 				offset > dig_max_of_min)
+-				dig_dynamic_min = dig_max_of_min;
++				dig_min_0 = dig_max_of_min;
+ 			else
+-				dig_dynamic_min =
++				dig_min_0 =
+ 					dm_digtable->rssi_val_min - offset;
+ 
+ 			RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
+-				 "bOneEntryOnly=TRUE, dig_dynamic_min=0x%x\n",
+-				 dig_dynamic_min);
++				 "bOneEntryOnly=TRUE, dig_min_0=0x%x\n",
++				 dig_min_0);
+ 		} else {
+-			dig_dynamic_min = dm_dig_min;
++			dig_min_0 = dm_dig_min;
+ 		}
+ 	} else {
+ 		dm_digtable->rx_gain_max = dm_dig_max;
+-		dig_dynamic_min = dm_dig_min;
++		dig_min_0 = dm_dig_min;
+ 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
+ 			 "No Link\n");
+ 	}
+@@ -925,11 +925,11 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
+ 		} else {
+ 			if (dm_digtable->large_fa_hit < 3) {
+ 				if ((dm_digtable->forbidden_igi - 1) <
+-				    dig_dynamic_min) {
++				    dig_min_0) {
+ 					dm_digtable->forbidden_igi =
+-						dig_dynamic_min;
++						dig_min_0;
+ 					dm_digtable->rx_gain_min =
+-						dig_dynamic_min;
++						dig_min_0;
+ 					RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
+ 						 "Normal Case: At Lower Bound\n");
+ 				} else {
+@@ -1024,7 +1024,7 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
+ 	rtl8821ae_dm_write_dig(hw, current_igi);
+ 	dm_digtable->media_connect_0 =
+ 		((mac->link_state >= MAC80211_LINKED) ? true : false);
+-	dm_digtable->dig_dynamic_min = dig_dynamic_min;
++	dm_digtable->dig_min_0 = dig_min_0;
+ }
+ 
+ static void rtl8821ae_dm_common_info_self_update(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index 7a718fd..b53d9dd 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -2412,8 +2412,6 @@ struct dig_t {
+ 	u8 pre_ccastate;
+ 	u8 cur_ccasate;
+ 	u8 large_fa_hit;
+-	u8 dig_dynamic_min;
+-	u8 dig_dynamic_min_1;
+ 	u8 forbidden_igi;
+ 	u8 dig_state;
+ 	u8 dig_highpwrstate;
 -- 
-1.9.1
+2.1.2
 
