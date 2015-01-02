@@ -1,64 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:56804 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750995AbbALHJo (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:58533 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752249AbbABQ6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 02:09:44 -0500
-Received: by mail-pd0-f171.google.com with SMTP id y13so28987333pdi.2
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 23:09:43 -0800 (PST)
-References: <1420968029-1222-1-git-send-email-hong@topbug.net> <20150112065445.GB29484@localhost>
-From: Hong Xu <hong@topbug.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
-In-reply-to: <20150112065445.GB29484@localhost>
-Date: Sun, 11 Jan 2015 23:09:36 -0800
-Message-ID: <87a91oeaq7.fsf@home.hong.me> (sfid-20150112_080954_927207_63973D9F)
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+	Fri, 2 Jan 2015 11:58:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 09/11] rtlwifi: rtl8723be: Convert driver to use common DM table initialization
+Date: Fri,  2 Jan 2015 10:58:26 -0600
+Message-Id: <1420217908-1382-10-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175912_713119_D0D24AAC)
+In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
+Convert driver rtl8723be to use routine rtl_dm_diginit().
 
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c | 32 ++---------------------------
+ 1 file changed, 2 insertions(+), 30 deletions(-)
 
-Bob Copeland <me@bobcopeland.com> writes:
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+index ddf45d9..2367e8f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+@@ -212,35 +212,6 @@ void rtl8723be_dm_txpower_track_adjust(struct ieee80211_hw *hw, u8 type,
+ 		(pwr_val << 16) | (pwr_val << 24);
+ }
+ 
+-static void rtl8723be_dm_diginit(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
+-
+-	dm_digtable->dig_enable_flag = true;
+-	dm_digtable->cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
+-	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
+-	dm_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
+-	dm_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
+-	dm_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
+-	dm_digtable->rx_gain_max = DM_DIG_MAX;
+-	dm_digtable->rx_gain_min = DM_DIG_MIN;
+-	dm_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
+-	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
+-	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
+-	dm_digtable->pre_cck_cca_thres = 0xff;
+-	dm_digtable->cur_cck_cca_thres = 0x83;
+-	dm_digtable->forbidden_igi = DM_DIG_MIN;
+-	dm_digtable->large_fa_hit = 0;
+-	dm_digtable->recover_cnt = 0;
+-	dm_digtable->dig_min_0 = DM_DIG_MIN;
+-	dm_digtable->dig_min_1 = DM_DIG_MIN;
+-	dm_digtable->media_connect_0 = false;
+-	dm_digtable->media_connect_1 = false;
+-	rtlpriv->dm.dm_initialgain_enable = true;
+-	dm_digtable->bt30_cur_igi = 0x32;
+-}
+-
+ void rtl8723be_dm_init_rate_adaptive_mask(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -294,9 +265,10 @@ static void rtl8723be_dm_init_dynamic_atc_switch(struct ieee80211_hw *hw)
+ void rtl8723be_dm_init(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u32 cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
+ 
+ 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
+-	rtl8723be_dm_diginit(hw);
++	rtl_dm_diginit(hw, cur_igvalue);
+ 	rtl8723be_dm_init_rate_adaptive_mask(hw);
+ 	rtl8723_dm_init_edca_turbo(hw);
+ 	rtl8723_dm_init_dynamic_bb_powersaving(hw);
+-- 
+2.1.2
 
-> On Sun, Jan 11, 2015 at 01:20:29AM -0800, Hong Xu wrote:
->> Add an option "blink" to enable or disable the LED blink. The default
->> value is set to 1 so that existing users would not experience any
->> unexpected changes.
->
-> Been a while since I looked, but isn't there a way to achieve same
-> result by just echoing 'none' into the relevant LED's sysfs file
-> (something like /sys/class/leds/phy0-led/trigger)?
-
-It's a bit different. echo 'none' to the trigger would cause the LED
-light to be dark, but if turn off the blink option here, the LED is
-bright but without blinking.
-
-Hong
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJUs3MwAAoJECZsfTOCL4R4WgsQANkLCWoxawi84MtkNBagrEBv
-UMwcfTiM4jAkU9TAbs5vk80VjcvTTdNGrycj4oiDu7u/iDGfJ9SetY/EuGRcM/z2
-gAk9DBt5BXijmeOaSHFpdCgIG0TpKSzdhnOtepWs0vVGrMWcOPBf6mo+xcGK92qn
-7WNSIYswHj4M/hmdloq5Pw0pvQMdorXz3p0riKjoZGzhjBsFos9BlgEP14t6I3ES
-n6CPkpCwhbx40GBXwCyGbC1o2RYBR/gD5zH8VM6wIU8ImIH829NWVdrVJqXIA9Bi
-lR1KlXHhJrbjA7YzSeVF8s+b8PLhsFpK8aN9gffFAMQ1XaipDSyaYokxdnD46aSm
-Si50VCyOZWEAr76Wfz6tAKAFeuaogTR/22+NNPXcsVoY3N5/UdgBWmxUdeGUbZU3
-3ccUuKINmWBKM6I+v1K+SXaz+QpF2QkxjTc6m4qjGcSvfaAylkpmT8UyATzJ4zaK
-dJES6Csgag8lgble22PYwfgGE5FJ6pM3GIt3WU72rfZb9jjBsEpctQ+S90sCyKqd
-HlJx5X+UN0EBK0SKUtMjcq+YBXSmYhdxH2gqfFoHd2bfoXkgYDmZta421N9QG0ZQ
-gT03gFpdwgoD9XNFzKHu0UvwmF/eJeQ/b3zDdNEPc76uY1wAkzMmwPbXAQLVMXDh
-of/4tLaKEbITiGq1ZqMP
-=i6yB
------END PGP SIGNATURE-----
---=-=-=--
