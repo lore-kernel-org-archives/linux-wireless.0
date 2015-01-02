@@ -1,83 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:57445 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756468AbbAIQbg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 11:31:36 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+Received: from mx1.redhat.com ([209.132.183.28]:42649 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752380AbbABPvw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2015 10:51:52 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Matthew Emerson <emersonmde@gmail.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2015-01-09
-Date: Fri, 09 Jan 2015 18:31:30 +0200
-Message-ID: <87lhlbj4pp.fsf@kamboji.qca.qualcomm.com> (sfid-20150109_173155_662946_76EC3AF4)
+Subject: Re: [PATCH] staging: rtl8723au: changes stop ap mode to use reset function
+References: <1419819736-4861-1-git-send-email-emersonmde@gmail.com>
+Date: Fri, 02 Jan 2015 10:51:38 -0500
+In-Reply-To: <1419819736-4861-1-git-send-email-emersonmde@gmail.com> (Matthew
+	Emerson's message of "Sun, 28 Dec 2014 21:22:16 -0500")
+Message-ID: <wrfjoaqhmb91.fsf@redhat.com> (sfid-20150102_165211_513611_9C36BD7C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Matthew Emerson <emersonmde@gmail.com> writes:
+> Changes stop_ap_mode23a() to use rtw_reset_securitypriv23a. This makes
+> the code cleaner and fixes two checkpatch.pl errors, one line over 80
+> characters, and one spacing issue.
+>
+> Signed-off-by: Matthew Emerson <emersonmde@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_ap.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
+> index e394d12c36b0..510ee212496f 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_ap.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_ap.c
+> @@ -1870,10 +1870,8 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
+>  	pmlmepriv->update_bcn = false;
+>  	pmlmeext->bstart_bss = false;
+>  
+> -	/* reset and init security priv , this can refine with rtw_reset_securitypriv23a */
+> -	memset((unsigned char *)&padapter->securitypriv, 0, sizeof (struct security_priv));
+> -	padapter->securitypriv.ndisauthtype = Ndis802_11AuthModeOpen;
+> -	padapter->securitypriv.ndisencryptstatus = Ndis802_11WEPDisabled;
+> +	/* reset and init security priv */
+> +	rtw_reset_securitypriv23a(padapter);
 
-here are few more fixes to 3.19. Please let me know if there are any
-problems.
+This is broken, rtw_reset_securitypriv23a() takes different actions
+based on the value of adapter->securitypriv.dot11AuthAlgrthm - you leave
+it at it's old value, which does not have the same effect as the above.
 
-Kalle
+If anything you should remove the memset() and call
+rtw_reset_securitypriv23a() after the two assignments.
 
-The following changes since commit 7ce67a38f799d1fb332f672b117efbadedaa5352:
+NACK
 
-  net: ethernet: cpsw: fix hangs with interrupts (2015-01-04 22:18:34 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-01-09
-
-for you to fetch changes up to c702674f99e612a22cf6e8f9b4bec341257970c0:
-
-  Merge tag 'iwlwifi-for-kalle-2015-01-05' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-01-05 12:07:04 +0200)
-
-----------------------------------------------------------------
-
-* rtlwifi: fix a regression in large skb allocation failure
-
-iwlwifi:
-
-* fix for 7265D NVM check
-* fixes for scan: fix long scanning times and network discovery
-* new firmware API for iwlmvm supported devices
-* fixes in rate control
-
-----------------------------------------------------------------
-Arik Nemtsov (1):
-      iwlwifi: pcie: correctly define 7265-D cfg
-
-David Spinadel (2):
-      iwlwifi: mvm: add a flag to enable match found notification
-      iwlwifi: mvm: scan dwell time corrections
-
-Emmanuel Grumbach (2):
-      iwlwifi: 7000: fix reported firmware name for 7265D
-      iwlwifi: bump firmware API for mvm devices to 12
-
-Eyal Shapira (2):
-      iwlwifi: mvm: fix Rx with both chains
-      iwlwifi: mvm: fix out of bounds access to tid_to_mac80211_ac
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2015-01-05' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Larry Finger (1):
-      rtlwifi: Fix error when accessing unmapped memory in skb
-
- drivers/net/wireless/iwlwifi/iwl-7000.c        |    6 ++---
- drivers/net/wireless/iwlwifi/iwl-8000.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-fw-file.h     |    4 +++
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |    2 ++
- drivers/net/wireless/iwlwifi/mvm/scan.c        |   19 ++++++++++----
- drivers/net/wireless/iwlwifi/mvm/tx.c          |    8 ++++--
- drivers/net/wireless/iwlwifi/mvm/utils.c       |    2 +-
- drivers/net/wireless/iwlwifi/pcie/drv.c        |    4 ++-
- drivers/net/wireless/rtlwifi/pci.c             |   32 ++++++++++++++++++------
- 9 files changed, 58 insertions(+), 21 deletions(-)
-
--- 
-Kalle Valo
+Jes
