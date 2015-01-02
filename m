@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:40534 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752331AbbAVSNG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 13:13:06 -0500
-Received: by mail-wg0-f51.google.com with SMTP id l18so3252306wgh.10
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 10:13:04 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Nicholas Mc Guire <der.herr@hofr.at>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: p54: add handling of the signal case
-Date: Thu, 22 Jan 2015 19:13:01 +0100
-Message-ID: <12702639.FEnIjGW6UW@debian64> (sfid-20150122_191310_360243_372E35F4)
-In-Reply-To: <1421731543-13290-1-git-send-email-der.herr@hofr.at>
-References: <1421731543-13290-1-git-send-email-der.herr@hofr.at>
+Received: from mx1.redhat.com ([209.132.183.28]:58492 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752104AbbABPrn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2015 10:47:43 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Jesus Legaspy <jesus.legaspy@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rtl8723au system lock ups, possible code regression
+References: <CAMUBipdVDgxeTDEY=q2QP1=OyF67tvU-S1riy_CMSawj01xhgA@mail.gmail.com>
+	<CAMUBipfDmww-Jv5p9ZUumfv6oto+gc9JEuez7Ee4XoEv0mGbqw@mail.gmail.com>
+Date: Fri, 02 Jan 2015 10:40:48 -0500
+In-Reply-To: <CAMUBipfDmww-Jv5p9ZUumfv6oto+gc9JEuez7Ee4XoEv0mGbqw@mail.gmail.com>
+	(Jesus Legaspy's message of "Wed, 24 Dec 2014 03:10:09 -0600")
+Message-ID: <wrfjy4plmbr3.fsf@redhat.com> (sfid-20150102_164746_816226_69180A71)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, January 20, 2015 06:25:43 AM Nicholas Mc Guire wrote:
-> if(!wait_for_completion_interruptible_timeout(...))
-> only handles the timeout case - this patch adds handling the
-> signal case the same as timeout.
-> 
-> Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+Jesus Legaspy <jesus.legaspy@gmail.com> writes:
+> plain text
+> cc linux-wireless@vger.kernel.org
+>
+> On Wed, Dec 24, 2014 at 2:56 AM, Jesus Legaspy <jesus.legaspy@gmail.com> wrote:
+>>
+>> Hi Jes,
+>>
+>> I hope you're having a great Christmas celebration!
+>> I've been having this issue for a while now, and decided to submit
+> this bug report as many others have similar problems. Hopefully this
+> helps fix the bug!
+>>
+>> rtl8723au driver: wifi connection drops and system lock ups,
+> possible code regression
+>>
+>> I'm using Ubuntu 14.10 with Linux version 3.16.0-28-generic on
+> Lenovo Yoga 13 using the built in rtl8723au driver from the kernel. At
+> random times my internet doesn't work. I disactivate the internet and
+> reactivate it to get it working again. It is usually at this time
+> where most of the system hangs and freezes occur. The computer hangs
+> and freezes occur at random times as well. I've used many wifi
+> connections and types and they all cause the bug. The driver from
+> lwfinger works flawlessly. Maybe there was some code regression? I've
+> attached several log files.
 
-> diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-> index bc065e8..5367d51 100644
-> --- a/drivers/net/wireless/p54/fwio.c
-> +++ b/drivers/net/wireless/p54/fwio.c
-> @@ -249,9 +250,11 @@ int p54_download_eeprom(struct p54_common *priv, void *buf,
->  
->  	p54_tx(priv, skb);
->  
-> -	if (!wait_for_completion_interruptible_timeout(
-> -	     &priv->eeprom_comp, HZ)) {
-> -		wiphy_err(priv->hw->wiphy, "device does not respond!\n");
-> +	timeout = wait_for_completion_interruptible_timeout(
-> +			&priv->eeprom_comp, HZ);
-> +	if (timeout <= 0) {
-> +		wiphy_err(priv->hw->wiphy,
-> +			"device does not respond or signal received!\n");
->  		ret = -EBUSY;
->  	}
->  	priv->eeprom = NULL;
-> 
+Jesus,
 
-CHECK: Alignment should match open parenthesis
-#98: FILE: drivers/net/wireless/p54/fwio.c:257:
-+               wiphy_err(priv->hw->wiphy,
-+                       "device does not respond or signal received!\n");
+First of all, I have never seen this happen in my usage, however I use
+recent kernels (upstream, and Fedora). 3.16 is pre-historic in term of
+the 8723au driver - please update and try again.
 
-total: 0 errors, 0 warnings, 1 checks, 21 lines checked
+Second, please don't ever send me HTML email (multipart or not), it will
+be ignored.
 
+Jes
