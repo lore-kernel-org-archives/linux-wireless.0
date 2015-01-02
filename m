@@ -1,102 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13244 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759945AbbAYTbt (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:43839 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752225AbbABQ6k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 14:31:49 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 07/14] brcmfmac: Reopen netdev queue on bus state data.
-Date: Sun, 25 Jan 2015 20:31:36 +0100
-Message-ID: <1422214303-7816-8-git-send-email-arend@broadcom.com> (sfid-20150125_203230_823289_8C6FC268)
-In-Reply-To: <1422214303-7816-1-git-send-email-arend@broadcom.com>
-References: <1422214303-7816-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 2 Jan 2015 11:58:40 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 07/11] rtlwifi: rtl8192ee: Convert driver to use common DM table initialization
+Date: Fri,  2 Jan 2015 10:58:24 -0600
+Message-Id: <1420217908-1382-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175904_677154_CAF41C60)
+In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Convert driver rtl8192ee to use the common routine to initialize
+dm_digtable.
 
-During suspend the bus state is put in the down state. When data
-is being transmitted during this state then the netdev queue will
-be close. This patch will wake the queue on state data if the
-queue was closed.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bus.h  | 10 +++-------
- drivers/net/wireless/brcm80211/brcmfmac/core.c | 21 +++++++++++++++++++++
- 2 files changed, 24 insertions(+), 7 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.c | 32 ++---------------------------
+ 1 file changed, 2 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-index 55d36ff..89e6a4d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
-@@ -185,13 +185,6 @@ void brcmf_bus_wowl_config(struct brcmf_bus *bus, bool enabled)
- 		bus->ops->wowl_config(bus->dev, enabled);
- }
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
+index 70e58d1..459f3d0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
+@@ -152,35 +152,6 @@ static const u8 cckswing_table_ch14[CCK_TABLE_SIZE][8] = {
+ 	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00}  /* 32, -16.0dB */
+ };
  
--static inline void brcmf_bus_change_state(struct brcmf_bus *bus,
--					  enum brcmf_bus_state new_state)
+-static void rtl92ee_dm_diginit(struct ieee80211_hw *hw)
 -{
--	brcmf_dbg(TRACE, "%d -> %d\n", bus->state, new_state);
--	bus->state = new_state;
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct dig_t *dm_dig = &rtlpriv->dm_digtable;
+-
+-	dm_dig->cur_igvalue = rtl_get_bbreg(hw, DM_REG_IGI_A_11N,
+-					    DM_BIT_IGI_11N);
+-	dm_dig->rssi_lowthresh = DM_DIG_THRESH_LOW;
+-	dm_dig->rssi_highthresh = DM_DIG_THRESH_HIGH;
+-	dm_dig->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
+-	dm_dig->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
+-	dm_dig->rx_gain_max = DM_DIG_MAX;
+-	dm_dig->rx_gain_min = DM_DIG_MIN;
+-	dm_dig->back_val = DM_DIG_BACKOFF_DEFAULT;
+-	dm_dig->back_range_max = DM_DIG_BACKOFF_MAX;
+-	dm_dig->back_range_min = DM_DIG_BACKOFF_MIN;
+-	dm_dig->pre_cck_cca_thres = 0xff;
+-	dm_dig->cur_cck_cca_thres = 0x83;
+-	dm_dig->forbidden_igi = DM_DIG_MIN;
+-	dm_dig->large_fa_hit = 0;
+-	dm_dig->recover_cnt = 0;
+-	dm_dig->dig_min_0 = DM_DIG_MIN;
+-	dm_dig->dig_min_1 = DM_DIG_MIN;
+-	dm_dig->media_connect_0 = false;
+-	dm_dig->media_connect_1 = false;
+-	rtlpriv->dm.dm_initialgain_enable = true;
+-	dm_dig->bt30_cur_igi = 0x32;
 -}
 -
- /*
-  * interface functions from common layer
-  */
-@@ -214,6 +207,9 @@ void brcmf_txflowblock(struct device *dev, bool state);
- /* Notify the bus has transferred the tx packet to firmware */
- void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
- 
-+/* Configure the "global" bus state used by upper layers */
-+void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
-+
- int brcmf_bus_start(struct device *dev);
- s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len);
- void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index ff8c97b..b8520c3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -1106,6 +1106,27 @@ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp)
- 	return !err;
- }
- 
-+void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state)
-+{
-+	struct brcmf_pub *drvr = bus->drvr;
-+	struct net_device *ndev;
-+	int ifidx;
-+
-+	brcmf_dbg(TRACE, "%d -> %d\n", bus->state, state);
-+	bus->state = state;
-+
-+	if (state == BRCMF_BUS_UP) {
-+		for (ifidx = 0; ifidx < BRCMF_MAX_IFS; ifidx++) {
-+			if ((drvr->iflist[ifidx]) &&
-+			    (drvr->iflist[ifidx]->ndev)) {
-+				ndev = drvr->iflist[ifidx]->ndev;
-+				if (netif_queue_stopped(ndev))
-+					netif_wake_queue(ndev);
-+			}
-+		}
-+	}
-+}
-+
- static void brcmf_driver_register(struct work_struct *work)
+ static void rtl92ee_dm_false_alarm_counter_statistics(struct ieee80211_hw *hw)
  {
- #ifdef CONFIG_BRCMFMAC_SDIO
+ 	u32 ret_value;
+@@ -1089,10 +1060,11 @@ static void rtl92ee_dm_init_dynamic_atc_switch(struct ieee80211_hw *hw)
+ void rtl92ee_dm_init(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u32 cur_igvalue = rtl_get_bbreg(hw, DM_REG_IGI_A_11N, DM_BIT_IGI_11N);
+ 
+ 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
+ 
+-	rtl92ee_dm_diginit(hw);
++	rtl_dm_diginit(hw, cur_igvalue);
+ 	rtl92ee_dm_init_rate_adaptive_mask(hw);
+ 	rtl92ee_dm_init_primary_cca_check(hw);
+ 	rtl92ee_dm_init_edca_turbo(hw);
 -- 
-1.9.1
+2.1.2
 
