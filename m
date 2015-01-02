@@ -1,130 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:38605 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756406AbbAHLM4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 06:12:56 -0500
-Received: by mail-wi0-f170.google.com with SMTP id bs8so2346890wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:12:55 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/5] ath10k: implement new beacon tx status event
-Date: Thu,  8 Jan 2015 12:12:26 +0100
-Message-Id: <1420715550-16017-2-git-send-email-michal.kazior@tieto.com> (sfid-20150108_121301_178189_DDAC4ADD)
-In-Reply-To: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
-References: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+Received: from bues.ch ([80.190.117.144]:52805 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750761AbbABLmg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2015 06:42:36 -0500
+Date: Fri, 2 Jan 2015 12:42:17 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Nicholas Krause <xerofoify@gmail.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH] drivers:net:wireless: Add proper locking for the
+ function, b43_op_beacon_set_tim in main.c
+Message-ID: <20150102124217.5c1aa5ef@wiggum> (sfid-20150102_124256_067388_51DEDB91)
+In-Reply-To: <CACna6rxP5dB7ng5pf1jeJL7TTOq4xPC9B=wmrX+yeYK-hfF5uw@mail.gmail.com>
+References: <1420184041-6788-1-git-send-email-xerofoify@gmail.com>
+	<20150102102727.3918a684@wiggum>
+	<CACna6rxP5dB7ng5pf1jeJL7TTOq4xPC9B=wmrX+yeYK-hfF5uw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ boundary="Sig_/K+eq=hQXwN7zrPuf_HWLNwo"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This event is delivered to host by firmware if it
-supports beacon templates only.
+--Sig_/K+eq=hQXwN7zrPuf_HWLNwo
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 50 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 12 ++++++++
- 2 files changed, 62 insertions(+)
+On Fri, 2 Jan 2015 12:19:12 +0100
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrote:
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 4c050ce..ae7c898 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -58,6 +58,8 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
- 		= { .min_len = sizeof(struct wlan_host_mem_req) },
- 	[WMI_TLV_TAG_STRUCT_READY_EVENT]
- 		= { .min_len = sizeof(struct wmi_tlv_rdy_ev) },
-+	[WMI_TLV_TAG_STRUCT_OFFLOAD_BCN_TX_STATUS_EVENT]
-+		= { .min_len = sizeof(struct wmi_tlv_bcn_tx_status_ev) },
- };
- 
- static int
-@@ -156,6 +158,51 @@ static u16 ath10k_wmi_tlv_len(const void *ptr)
- 	return __le16_to_cpu((((const struct wmi_tlv *)ptr) - 1)->len);
- }
- 
-+/**************/
-+/* TLV events */
-+/**************/
-+static int ath10k_wmi_tlv_event_bcn_tx_status(struct ath10k *ar,
-+					      struct sk_buff *skb)
-+{
-+	const void **tb;
-+	const struct wmi_tlv_bcn_tx_status_ev *ev;
-+	u32 vdev_id, tx_status;
-+	int ret;
-+
-+	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
-+	if (IS_ERR(tb)) {
-+		ret = PTR_ERR(tb);
-+		ath10k_warn(ar, "failed to parse tlv: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ev = tb[WMI_TLV_TAG_STRUCT_OFFLOAD_BCN_TX_STATUS_EVENT];
-+	if (!ev) {
-+		kfree(tb);
-+		return -EPROTO;
-+	}
-+
-+	tx_status = __le32_to_cpu(ev->tx_status);
-+	vdev_id = __le32_to_cpu(ev->vdev_id);
-+
-+	switch (tx_status) {
-+	case WMI_TLV_BCN_TX_STATUS_OK:
-+		break;
-+	case WMI_TLV_BCN_TX_STATUS_XRETRY:
-+	case WMI_TLV_BCN_TX_STATUS_DROP:
-+	case WMI_TLV_BCN_TX_STATUS_FILTERED:
-+		/* FIXME: It's probably worth telling mac80211 to stop the
-+		 * interface as it is crippled.
-+		 */
-+		ath10k_warn(ar, "received bcn tmpl tx status on vdev %i: %d",
-+			    vdev_id, tx_status);
-+		break;
-+	}
-+
-+	kfree(tb);
-+	return 0;
-+}
-+
- /***********/
- /* TLV ops */
- /***********/
-@@ -268,6 +315,9 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_TLV_READY_EVENTID:
- 		ath10k_wmi_event_ready(ar, skb);
- 		break;
-+	case WMI_TLV_OFFLOAD_BCN_TX_STATUS_EVENTID:
-+		ath10k_wmi_tlv_event_bcn_tx_status(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 54ffa12..ee19353 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1375,6 +1375,18 @@ struct wmi_tlv_pktlog_disable {
- 	__le32 reserved;
- } __packed;
- 
-+enum wmi_tlv_bcn_tx_status {
-+	WMI_TLV_BCN_TX_STATUS_OK,
-+	WMI_TLV_BCN_TX_STATUS_XRETRY,
-+	WMI_TLV_BCN_TX_STATUS_DROP,
-+	WMI_TLV_BCN_TX_STATUS_FILTERED,
-+};
-+
-+struct wmi_tlv_bcn_tx_status_ev {
-+	__le32 vdev_id;
-+	__le32 tx_status;
-+} __packed;
-+
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
- 
- #endif
--- 
-1.8.5.3
+> On 2 January 2015 at 10:27, Michael B=C3=BCsch <m@bues.ch> wrote:
+> > On Fri,  2 Jan 2015 02:34:01 -0500
+> > Nicholas Krause <xerofoify@gmail.com> wrote:
+> >
+> >> This adds proper locking for the function, b43_op_beacon_set_tim in ma=
+in.c by using the mutex lock
+> >> in the structure pointer wl, as embedded into this pointer as a mutex =
+in order to protect against
+> >> multiple access to the pointer wl when updating the templates for this=
+ pointer in the function,
+> >> b43_update_templates internally in the function, b43_op_beacon_set_tim.
+> >>
+> >> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> >> ---
+> >>  drivers/net/wireless/b43/main.c | 3 ++-
+> >>  1 file changed, 2 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b4=
+3/main.c
+> >> index 47731cb..d568fc8 100644
+> >> --- a/drivers/net/wireless/b43/main.c
+> >> +++ b/drivers/net/wireless/b43/main.c
+> >> @@ -5094,8 +5094,9 @@ static int b43_op_beacon_set_tim(struct ieee8021=
+1_hw *hw,
+> >>  {
+> >>       struct b43_wl *wl =3D hw_to_b43_wl(hw);
+> >>
+> >> -     /* FIXME: add locking */
+> >> +     mutex_lock(&wl->mutex);
+> >>       b43_update_templates(wl);
+> >> +     mutex_unlock(&wl->mutex);
+> >>
+> >>       return 0;
+> >>  }
+> >
+> > Thanks for the patch.
+> >
+> > However, this does not work. We are in atomic context here.
+> > Please see the b43-dev mailing list archives for a recent thread about =
+that.
+>=20
+> Michael: guess who it was who sent the patch doing the same back in Novem=
+ber.
+>=20
+> Yes, the same troll.
 
+D'oh.
+Thanks for the notice.
+
+--=20
+Michael
+
+--Sig_/K+eq=hQXwN7zrPuf_HWLNwo
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJUpoQcAAoJEPUyvh2QjYsOhNAQALPbTkThjVUqnQTWNOoy+MzK
+99S3RvqouOPehHInvjiZppcb4lncZqdpDCvzDivkH1ydYMMz5QSoTGuyhM2zuJG1
+RChyFnXrg1TTgifFwibFlwhWmX5p9gwA3DMYjw7yQDiiD7uJgSyvoRq27vxUfGYy
+UZbYm3Z4bnaXg8e6lzqPQE9Dq4VkZgQu7UpphX//wyjtJV2qMV56V6zX9+NPCwEp
+jYYdNZ9T0HJAZLRrTeBYu4rifHyjlLye/fmV//2SEBUyos8IcpZb3t+AUg4kQBWB
+uj8MszF7T+InRUeCykLWVTmJ5f/t3UYyZ9naTdrc4Og6uDbGEETTt0TEBz7bP9ZC
+o6NRnZkCbzZwablqh7tq0IigLTBSL+YjYGXpU+m9QQpvcnb4LJ/LSTr2VyTUJgmB
+rwKEcfNMMaT84a8hpTXmORYgHVJ2EgiiIbrVnxfebOSILYtcbXHQKw5HoWl4JeqC
+hmgfbN3uJNSg9kfFtVpdhyXO1BK0298MV/ErpgAzpVYhBELSurky3rVt6uz1upJI
+5A+RWkK9dBFoc6dd33KsJfNDilMFR/q2QEUH20UvlQ3h4XWctcYMXXxIz/qTv31H
+e1Nya8FHigSmsEECveSl5Dyyb610Qxy1ybZdJFULuFkgo+oZVR4J+mVPn4OQzP6k
+g2oR4hr/9Jq6vgrndJAR
+=qRse
+-----END PGP SIGNATURE-----
+
+--Sig_/K+eq=hQXwN7zrPuf_HWLNwo--
