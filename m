@@ -1,156 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:62491 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752473AbbAXLvU (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:41780 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752191AbbABQ6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 06:51:20 -0500
-Received: by mail-we0-f173.google.com with SMTP id w62so1793703wes.4
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 03:51:19 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <1422099243-20321-1-git-send-email-hong@topbug.net>
-References: <1422099243-20321-1-git-send-email-hong@topbug.net>
-Date: Sat, 24 Jan 2015 12:51:19 +0100
-Message-ID: <CA+icZUWtwQoBxWu+LSgva4sKgx1dLgAvxNXWxu2QN0s1zm-tWQ@mail.gmail.com> (sfid-20150124_125124_150187_1ECA3898)
-Subject: Re: [PATCH v4] ath9k and ath9k_htc: rename variable "led_blink"
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Hong Xu <hong@topbug.net>
-Cc: wireless <linux-wireless@vger.kernel.org>, kvalo@codeaurora.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 2 Jan 2015 11:58:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 04/11] rtlwifi: rtl8188ee: Convert driver to use the common DM table init routine
+Date: Fri,  2 Jan 2015 10:58:21 -0600
+Message-Id: <1420217908-1382-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175939_993464_0D7C3214)
+In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 24, 2015 at 12:34 PM, Hong Xu <hong@topbug.net> wrote:
-> ath9k and ath9k_htc use the variable name "led_blink" to indicate
-> whether the module parameter "blink" is on. This name is easy to
-> conflict with other variables, and has caused a compiler error found
-> by kbuild test bot. The compiler error is as following:
->
-> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
-> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
->
-> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
-> Reported-by: kbuild test robot <fengguang.wu@intel.com>
-> Signed-off-by: Hong Xu <hong@topbug.net>
-> ---
-> Compared to previous versions, the commit message is improved to fit
-> the contribution guideline (again).
-> ---
+The previous patch created a routine in rtlwifi to initialize dm_digtable.
+Driver rtl8188ee is converted to use that routine.
 
-This looks good.
-( As said please have a look at [1]. )
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c | 35 ++---------------------------
+ 1 file changed, 2 insertions(+), 33 deletions(-)
 
-I have one thing for followers of (linux-wireless) mailing-lists in general.
-If your patch is against a special Git tree, please add a
-"subject-prefix" and/or put a note in the commit-body.
-For example: "This patch is against wireless-drivers-next or
-linux-next (next-2015-01-23)."
-This is very helpful.
-Think also of patches listed and downloadable from patchwork-service [2].
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+index 7ebf6e0..d930c1f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+@@ -342,38 +342,6 @@ static void dm_tx_pwr_track_set_pwr(struct ieee80211_hw *hw,
+ 	}
+ }
+ 
+-static void rtl88e_dm_diginit(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct dig_t *dm_dig = &rtlpriv->dm_digtable;
+-
+-	dm_dig->dig_enable_flag = true;
+-	dm_dig->cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
+-	dm_dig->pre_igvalue = 0;
+-	dm_dig->cur_sta_cstate = DIG_STA_DISCONNECT;
+-	dm_dig->presta_cstate = DIG_STA_DISCONNECT;
+-	dm_dig->curmultista_cstate = DIG_MULTISTA_DISCONNECT;
+-	dm_dig->rssi_lowthresh = DM_DIG_THRESH_LOW;
+-	dm_dig->rssi_highthresh = DM_DIG_THRESH_HIGH;
+-	dm_dig->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
+-	dm_dig->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
+-	dm_dig->rx_gain_max = DM_DIG_MAX;
+-	dm_dig->rx_gain_min = DM_DIG_MIN;
+-	dm_dig->back_val = DM_DIG_BACKOFF_DEFAULT;
+-	dm_dig->back_range_max = DM_DIG_BACKOFF_MAX;
+-	dm_dig->back_range_min = DM_DIG_BACKOFF_MIN;
+-	dm_dig->pre_cck_cca_thres = 0xff;
+-	dm_dig->cur_cck_cca_thres = 0x83;
+-	dm_dig->forbidden_igi = DM_DIG_MIN;
+-	dm_dig->large_fa_hit = 0;
+-	dm_dig->recover_cnt = 0;
+-	dm_dig->dig_min_0 = 0x25;
+-	dm_dig->dig_min_1 = 0x25;
+-	dm_dig->media_connect_0 = false;
+-	dm_dig->media_connect_1 = false;
+-	rtlpriv->dm.dm_initialgain_enable = true;
+-}
+-
+ static u8 rtl88e_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -1797,9 +1765,10 @@ static void rtl88e_dm_antenna_diversity(struct ieee80211_hw *hw)
+ void rtl88e_dm_init(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u32 cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
+ 
+ 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
+-	rtl88e_dm_diginit(hw);
++	rtl_dm_diginit(hw, cur_igvalue);
+ 	rtl88e_dm_init_dynamic_txpower(hw);
+ 	rtl88e_dm_init_edca_turbo(hw);
+ 	rtl88e_dm_init_rate_adaptive_mask(hw);
+-- 
+2.1.2
 
-$ git format-patch --subject-prefix="PATCH wireless-drivers-next" ...
-
-( Maybe w-d-n or w-d-next is a good abbreviation :-). )
-
-- Sedat -
-
-[1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches
-[2] https://patchwork.kernel.org/project/linux-wireless/list/
-
->  drivers/net/wireless/ath/ath9k/ath9k.h        | 2 +-
->  drivers/net/wireless/ath/ath9k/gpio.c         | 2 +-
->  drivers/net/wireless/ath/ath9k/htc.h          | 2 +-
->  drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 2 +-
->  drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++--
->  drivers/net/wireless/ath/ath9k/init.c         | 4 ++--
->  6 files changed, 8 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-> index 1a9fe09..e84b576 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> @@ -34,7 +34,7 @@ struct ath_vif;
->
->  extern struct ieee80211_ops ath9k_ops;
->  extern int ath9k_modparam_nohwcrypt;
-> -extern int led_blink;
-> +extern int ath9k_led_blink;
->  extern bool is_ath9k_unloaded;
->  extern int ath9k_use_chanctx;
->
-> diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-> index 2fef7a4..da344b2 100644
-> --- a/drivers/net/wireless/ath/ath9k/gpio.c
-> +++ b/drivers/net/wireless/ath/ath9k/gpio.c
-> @@ -49,7 +49,7 @@ void ath_init_leds(struct ath_softc *sc)
->         if (AR_SREV_9100(sc->sc_ah))
->                 return;
->
-> -       if (!led_blink)
-> +       if (!ath9k_led_blink)
->                 sc->led_cdev.default_trigger =
->                         ieee80211_get_radio_led_name(sc->hw);
->
-> diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-> index c43fec5..300d367 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc.h
-> +++ b/drivers/net/wireless/ath/ath9k/htc.h
-> @@ -45,7 +45,7 @@
->  extern struct ieee80211_ops ath9k_htc_ops;
->  extern int htc_modparam_nohwcrypt;
->  #ifdef CONFIG_MAC80211_LEDS
-> -extern int led_blink;
-> +extern int ath9k_htc_led_blink;
->  #endif
->
->  enum htc_phymode {
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-> index 998b558..2aabcbd 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-> @@ -279,7 +279,7 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
->         else
->                 priv->ah->led_pin = ATH_LED_PIN_DEF;
->
-> -       if (!led_blink)
-> +       if (!ath9k_htc_led_blink)
->                 priv->led_cdev.default_trigger =
->                         ieee80211_get_radio_led_name(priv->hw);
->
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> index 9470127..fd22940 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-> @@ -39,8 +39,8 @@ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
->  MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
->
->  #ifdef CONFIG_MAC80211_LEDS
-> -int led_blink = 1;
-> -module_param_named(blink, led_blink, int, 0444);
-> +int ath9k_htc_led_blink = 1;
-> +module_param_named(blink, ath9k_htc_led_blink, int, 0444);
->  MODULE_PARM_DESC(blink, "Enable LED blink on activity");
->
->  static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index d1c3934..2aef14e 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -45,8 +45,8 @@ int ath9k_modparam_nohwcrypt;
->  module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, 0444);
->  MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
->
-> -int led_blink;
-> -module_param_named(blink, led_blink, int, 0444);
-> +int ath9k_led_blink;
-> +module_param_named(blink, ath9k_led_blink, int, 0444);
->  MODULE_PARM_DESC(blink, "Enable LED blink on activity");
->
->  static int ath9k_btcoex_enable;
-> --
-> 2.2.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
