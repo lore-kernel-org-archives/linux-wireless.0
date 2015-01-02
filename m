@@ -1,60 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59203 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755038AbbAFMPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 07:15:51 -0500
-Message-ID: <1420546548.1966.26.camel@sipsolutions.net> (sfid-20150106_131556_262629_EDF84BA3)
-Subject: pull-request: mac80211 2015-01-06
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 06 Jan 2015 13:15:48 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31821 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750711AbbABHqG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Jan 2015 02:46:06 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Enable RX batching
+References: <1419834084-11859-1-git-send-email-sujith@msujith.org>
+Date: Fri, 2 Jan 2015 09:45:54 +0200
+In-Reply-To: <1419834084-11859-1-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Mon, 29 Dec 2014 11:51:24 +0530")
+Message-ID: <87fvbt62x9.fsf@kamboji.qca.qualcomm.com> (sfid-20150102_084612_223034_C9226BBA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's just a single fix - a revert of a patch that broke the
-p54 and cw2100 drivers (arguably due to bad assumptions there.)
-Since this affects kernels since 3.17, I decided to revert for
-now and we'll revisit this optimisation properly for -next.
+Sujith Manoharan <sujith@msujith.org> writes:
+
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> This feature allows the FW to batch RX indications,
+> reducing the rate of host interrupt generation, which
+> in turn reduces CPU load. Currently, this is enabled
+> only for the 10.2 firmware.
+>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+
+Any throughput improvements?
+
+Also I simplified the patch a bit in ath-next-test:
+
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3710,7 +3710,7 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
+        struct wmi_init_cmd_10_2 *cmd;
+        struct sk_buff *buf;
+        struct wmi_resource_config_10x config = {};
+-       u32 len, val, features = 0;
++       u32 len, val, features;
+ 
+        config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
+        config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
+@@ -3764,7 +3764,7 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
+ 
+        cmd = (struct wmi_init_cmd_10_2 *)buf->data;
+ 
+-       features |= WMI_10_2_RX_BATCH_MODE;
++       features = WMI_10_2_RX_BATCH_MODE;
+        cmd->resource_config.feature_mask = __cpu_to_le32(features);
+ 
+        memcpy(&cmd->resource_config.common, &config, sizeof(config));
 
 
-Also -- happy New Year, and sorry about the genl issue :(
-
-I'm still a bit confused about whether you wanted the pull request with
-the text in the email or in the tag, or branch, or something - I
-interpreted what you said to Kalle differently to what you said to me.
-I've duplicated it for now :)
-
-Thanks,
-johannes
-
-The following changes since commit 28a9bc68124c319b2b3dc861e80828a8865fd1ba:
-
-  mac80211: free management frame keys when removing station (2014-12-17 14:00:17 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-01-06
-
-for you to fetch changes up to 1e359a5de861a57aa04d92bb620f52a5c1d7f8b1:
-
-  Revert "mac80211: Fix accounting of the tailroom-needed counter" (2015-01-05 10:33:46 +0100)
-
-----------------------------------------------------------------
-Here's just a single fix - a revert of a patch that broke the
-p54 and cw2100 drivers (arguably due to bad assumptions there.)
-Since this affects kernels since 3.17, I decided to revert for
-now and we'll revisit this optimisation properly for -next.
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      Revert "mac80211: Fix accounting of the tailroom-needed counter"
-
- include/net/mac80211.h |  7 ++-----
- net/mac80211/key.c     | 12 +++++++++---
- 2 files changed, 11 insertions(+), 8 deletions(-)
-
-
+-- 
+Kalle Valo
