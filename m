@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:48217 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762AbbA2QCm (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:55581 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbbABQ6e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 11:02:42 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Subject: Re: [PATCH] nl80211: don't document per-wiphy interface dump
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1422546796-22526-1-git-send-email-johannes@sipsolutions.net>
-Date: Thu, 29 Jan 2015 08:02:36 -0800
+	Fri, 2 Jan 2015 11:58:34 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Message-Id: <6CBE8643-DD96-45AB-9F73-4CADC7FD2277@holtmann.org> (sfid-20150129_170246_892258_7AAAE738)
-References: <1422546796-22526-1-git-send-email-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 00/11] rtlwifi: A set of patches that simplify the drivers
+Date: Fri,  2 Jan 2015 10:58:17 -0600
+Message-Id: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175947_778843_EEE5EA32)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Happy New Year.
 
-> Such a feature doesn't exist and isn't really needed since you
-> probably won't have enough interfaces to make it worthwhile, so
-> just remove that from the documentation.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> include/uapi/linux/nl80211.h | 4 ++--
-> 1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 1cbc3aae425c..68b294e83944 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -180,8 +180,8 @@
->  *	%NL80211_ATTR_WIPHY and %NL80211_ATTR_WIPHY_NAME.
->  *
->  * @NL80211_CMD_GET_INTERFACE: Request an interface's configuration;
-> - *	either a dump request on a %NL80211_ATTR_WIPHY or a specific get
-> - *	on an %NL80211_ATTR_IFINDEX is supported.
-> + *	either a dump request for all interfaces or a specific get with a
-> + *	single %NL80211_ATTR_IFINDEX is supported.
->  * @NL80211_CMD_SET_INTERFACE: Set type of a virtual interface, requires
->  *	%NL80211_ATTR_IFINDEX and %NL80211_ATTR_IFTYPE.
->  * @NL80211_CMD_NEW_INTERFACE: Newly created virtual interface or response
+This set of patches, which are intended for the 3.20 stream, are intended to
+simplify the drivers. In particular, each of them has a separate routine that
+initilizes the dynamic power manipulation variables. Ten of these patches convert
+the drivers to use a common copy of this code. The other patch updates the
+parameter descriptions of rtl8723be to clarify usage.
 
-we had a TODO item internally that planned to implement this actually.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Regards
+Larry Finger (11):
+  rtlwifi: Unify variable naming for all drivers
+  rtlwifi: rtl8723be: Improve modinfo output
+  rtlwifi: Create new routine to initialize the DM tables
+  rtlwifi: rtl8188ee: Convert driver to use the common DM table init
+    routine
+  rtlwifi: rtl8192c-common: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8192de: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8192ee: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8723ae: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8723be: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8821ae: Convert driver to use common DM table
+    initialization
+  rtlwifi: Move macro definitions to core
 
-Marcel
+ drivers/net/wireless/rtlwifi/core.c               | 37 +++++++++++++++
+ drivers/net/wireless/rtlwifi/core.h               | 41 ++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c       | 36 ++------------
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.h       | 41 ----------------
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 45 ++++--------------
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h | 38 ---------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.h       | 13 -----
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 33 ++-----------
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.h       | 38 ---------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.c       | 55 ++++++---------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.h       | 16 -------
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |  7 +--
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.h       | 28 -----------
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c       | 42 ++++------------
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h       | 38 ---------------
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c       | 55 ++++++---------------
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.h       | 33 -------------
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c       | 11 +++--
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 58 +++++++----------------
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.h       | 41 ----------------
+ drivers/net/wireless/rtlwifi/wifi.h               |  2 -
+ 22 files changed, 157 insertions(+), 552 deletions(-)
+
+-- 
+2.1.2
 
