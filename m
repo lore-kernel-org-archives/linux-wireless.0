@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:57665 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751763AbbA3T0Y (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:43558 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbbABMW4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 14:26:24 -0500
+	Fri, 2 Jan 2015 07:22:56 -0500
+Received: by mail-wi0-f171.google.com with SMTP id bs8so27666760wib.10
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2015 04:22:54 -0800 (PST)
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Date: Fri, 30 Jan 2015 11:26:02 -0800
-Message-ID: <CAB=NE6UM-=ARNqwyxk0a_qve+9Ndk1znsm+FjfXq+xenCkTvCQ@mail.gmail.com> (sfid-20150130_202640_007594_57225D87)
-Subject: [ANN] crda-3.18 released
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Seth Forshee <seth.forshee@canonical.com>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
+References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
+	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
+Date: Fri, 2 Jan 2015 13:14:47 +0100
+Message-ID: <CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com> (sfid-20150102_133201_067727_AEC85B74)
+Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of CRDA has been released, this might be the last since
-we have some ideas of how to just shift this functionality directly
-into the kernel and in the future may not need any userspace tool
-other than to help debug stuff perhaps. The major thing here is
-trusting Seth's new key as he is now the maintainer of the
-wireless-regdb. Other than this it also add AUTO-BW rule support,
-parse/print of CAC on db2rd, and fixes a compile error. This release
-goes signed with my new PGP key.
+On Fri, Jan 2, 2015 at 1:06 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 2 January 2015 at 13:05, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> On 1 January 2015 at 16:46, Rickard Strandqvist
+>> <rickard_strandqvist@spectrumdigital.se> wrote:
+>>> Remove the function b43legacy_radio_set_tx_iq() that is not used anywhere.
+>>>
+>>> This was partially found by using a static code analysis program called cppcheck.
+>>
+>> It seems to be for A-PHY based hardware (with 0x2060 radio id) which
+>> is not handled by b43legacy. Should be safe to drop this code (we
+>> won't likely need it).
+>>
+>> Ack
+>
+> For future, we prefix patches with just a driver name. So this could
+> be simply called
+> b43legacy: radio.c: Remove unused function
+>
 
-Thanks to all who have contributed. There release page for CRDA:
+Alternatively...
 
-http://drvbp1.linux-foundation.org/~mcgrof/rel-html/crda/
+"b43legacy: Remove unused function in radio.c"
 
-The v3.18 release:
+BTW, as Arnd Bergmann pointed out [1] how did you test with cppcheck
+to get such stuff?
 
-http://kernel.org/pub/software/network/crda/crda-3.18.tar.xz
+- Sedat -
 
-The wireless-regdb release page:
-
-http://drvbp1.linux-foundation.org/~mcgrof/rel-html/wireless-regdb/
-
-As announced by Seth, the new wireless-regdb is:
-
-http://kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.01.30.tar.xz
-
-The shortlog of this CRDA v3.18 release:
-
-mcgrof@garbanzo ~/devel/crda (git::master)$ git shortlog v3.13..v3.18
-Janusz Dziedzic (4):
-      crda: sync with latest nl80211.h
-      crda: add AUTO-BW rule flag support
-      crda: simplify text parsing for country/rules
-      crda: db2rd, parse/print CAC time
-
-John W. Linville (1):
-      crda: Add DESTDIR support in install-libreg* rules in Makefile
-
-Krishna Chaitanya (1):
-      crda: Fix the linking order to avoid compilation error
-
-Luis R. Rodriguez (1):
-      crda: document contribution process using the DCO
-
-Seth Forshee (1):
-      crda: Trust regulatory.bin from Seth Forshee
+[1] https://lkml.org/lkml/2015/1/2/51
