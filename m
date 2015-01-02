@@ -1,75 +1,423 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:49511 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755137AbbATMgr (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:35197 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752213AbbABQ6j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 07:36:47 -0500
-Received: by mail-wi0-f172.google.com with SMTP id bs8so24708673wib.5
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 04:36:46 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFCv3 2/4] cfg80211: add VHT support for IBSS
-Date: Tue, 20 Jan 2015 13:35:16 +0100
-Message-Id: <1421757318-8343-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150120_133653_634116_AB0A4DEA)
-In-Reply-To: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
+	Fri, 2 Jan 2015 11:58:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 05/11] rtlwifi: rtl8192c-common: Convert driver to use common DM table initialization
+Date: Fri,  2 Jan 2015 10:58:22 -0600
+Message-Id: <1420217908-1382-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175914_514211_CA9D27E6)
+In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add NL80211_FEATURE_VHT_IBSS flag and VHT
-support for IBSS.
+These changes convert both rtl8192ce and rtl8192cu to use the new routine.
+Some additional definitions are needed in the core, thus several of the
+headers for other drivers are affected, but no other executable code is
+changed.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- include/uapi/linux/nl80211.h |  2 ++
- net/wireless/nl80211.c       | 14 ++++++++++++--
- 2 files changed, 14 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtlwifi/core.c               |  3 ++
+ drivers/net/wireless/rtlwifi/core.h               | 16 +++++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.h       | 16 ---------
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 44 ++++-------------------
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h | 16 ---------
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.h       | 16 ---------
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.h       |  8 -----
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c       | 14 ++++----
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h       | 16 ---------
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.h       |  8 -----
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.h       | 16 ---------
+ 11 files changed, 33 insertions(+), 140 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e2fc08b..3f40789 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4203,11 +4203,13 @@ enum nl80211_feature_flags {
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index 5aa3ab3..eb20316 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -1878,6 +1878,7 @@ void rtl_dm_diginit(struct ieee80211_hw *hw, u32 cur_igvalue)
+ 	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
  
- /**
-  * enum nl80211_ext_feature_index - bit index of extended features.
-+ * @NL80211_FEATURE_VHT_IBSS: This driver supports IBSS with VHT datarates.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
- enum nl80211_ext_feature_index {
-+	NL80211_FEATURE_VHT_IBSS,
+ 	dm_digtable->dig_enable_flag = true;
++	dm_digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
+ 	dm_digtable->cur_igvalue = cur_igvalue;
+ 	dm_digtable->pre_igvalue = 0;
+ 	dm_digtable->cur_sta_cstate = DIG_STA_DISCONNECT;
+@@ -1903,5 +1904,7 @@ void rtl_dm_diginit(struct ieee80211_hw *hw, u32 cur_igvalue)
+ 	dm_digtable->media_connect_1 = false;
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+ 	dm_digtable->bt30_cur_igi = 0x32;
++	dm_digtable->pre_cck_pd_state = CCK_PD_STAGE_MAX;
++	dm_digtable->cur_cck_pd_state = CCK_PD_STAGE_LOWRSSI;
+ }
+ EXPORT_SYMBOL(rtl_dm_diginit);
+diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
+index c0a0317..1cde356 100644
+--- a/drivers/net/wireless/rtlwifi/core.h
++++ b/drivers/net/wireless/rtlwifi/core.h
+@@ -46,6 +46,22 @@
+ #define DM_DIG_BACKOFF_MIN		-4
+ #define DM_DIG_BACKOFF_DEFAULT		10
  
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b18d2bc..05d6db0 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7095,8 +7095,18 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		break;
- 	case NL80211_CHAN_WIDTH_20:
- 	case NL80211_CHAN_WIDTH_40:
--		if (rdev->wiphy.features & NL80211_FEATURE_HT_IBSS)
--			break;
-+		if (!(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
-+			return -EINVAL;
-+		break;
-+	case NL80211_CHAN_WIDTH_80:
-+	case NL80211_CHAN_WIDTH_80P80:
-+	case NL80211_CHAN_WIDTH_160:
-+		if (!(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
-+			return -EINVAL;
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_FEATURE_VHT_IBSS))
-+			return -EINVAL;
-+		break;
- 	default:
- 		return -EINVAL;
++enum cck_packet_detection_threshold {
++	CCK_PD_STAGE_LOWRSSI = 0,
++	CCK_PD_STAGE_HIGHRSSI = 1,
++	CCK_FA_STAGE_LOW = 2,
++	CCK_FA_STAGE_HIGH = 3,
++	CCK_PD_STAGE_MAX = 4,
++};
++
++enum dm_dig_ext_port_alg_e {
++	DIG_EXT_PORT_STAGE_0 = 0,
++	DIG_EXT_PORT_STAGE_1 = 1,
++	DIG_EXT_PORT_STAGE_2 = 2,
++	DIG_EXT_PORT_STAGE_3 = 3,
++	DIG_EXT_PORT_STAGE_MAX = 4,
++};
++
+ enum dm_dig_connect_e {
+ 	DIG_STA_DISCONNECT,
+ 	DIG_STA_CONNECT,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
+index 6217b7c..51ad3f9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
+@@ -249,14 +249,6 @@ enum tag_dynamic_init_gain_operation_type_definition {
+ 	DIG_OP_TYPE_MAX
+ };
+ 
+-enum tag_cck_packet_detection_threshold_type_definition {
+-	CCK_PD_STAGE_LOWRSSI = 0,
+-	CCK_PD_STAGE_HIGHRSSI = 1,
+-	CCK_FA_STAGE_LOW = 2,
+-	CCK_FA_STAGE_HIGH = 3,
+-	CCK_PD_STAGE_MAX = 4,
+-};
+-
+ enum dm_1r_cca_e {
+ 	CCA_1R = 0,
+ 	CCA_2R = 1,
+@@ -275,14 +267,6 @@ enum dm_sw_ant_switch_e {
+ 	ANS_ANTENNA_MAX = 3,
+ };
+ 
+-enum dm_dig_ext_port_alg_e {
+-	DIG_EXT_PORT_STAGE_0 = 0,
+-	DIG_EXT_PORT_STAGE_1 = 1,
+-	DIG_EXT_PORT_STAGE_2 = 2,
+-	DIG_EXT_PORT_STAGE_3 = 3,
+-	DIG_EXT_PORT_STAGE_MAX = 4,
+-};
+-
+ enum pwr_track_control_method {
+ 	BBSWING,
+ 	TXAGC
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index dabe18f..f5ee67c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -195,36 +195,6 @@ void dm_savepowerindex(struct ieee80211_hw *hw)
+ }
+ EXPORT_SYMBOL_GPL(dm_savepowerindex);
+ 
+-static void rtl92c_dm_diginit(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
+-
+-	dm_digtable->dig_enable_flag = true;
+-	dm_digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
+-	dm_digtable->cur_igvalue = 0x20;
+-	dm_digtable->pre_igvalue = 0x0;
+-	dm_digtable->cursta_cstate = DIG_STA_DISCONNECT;
+-	dm_digtable->presta_cstate = DIG_STA_DISCONNECT;
+-	dm_digtable->curmultista_cstate = DIG_MULTISTA_DISCONNECT;
+-	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
+-	dm_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
+-	dm_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
+-	dm_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
+-	dm_digtable->rx_gain_max = DM_DIG_MAX;
+-	dm_digtable->rx_gain_min = DM_DIG_MIN;
+-	dm_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
+-	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
+-	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
+-	dm_digtable->pre_cck_pd_state = CCK_PD_STAGE_MAX;
+-	dm_digtable->cur_cck_pd_state = CCK_PD_STAGE_LowRssi;
+-
+-	dm_digtable->forbidden_igi = DM_DIG_MIN;
+-	dm_digtable->large_fa_hit = 0;
+-	dm_digtable->recover_cnt = 0;
+-	dm_digtable->dig_min_0  = 0x25;
+-}
+-
+ static u8 rtl92c_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -508,27 +478,27 @@ static void rtl92c_dm_cck_packet_detection_thresh(struct ieee80211_hw *hw)
+ 		if (dm_digtable->rssi_val_min > 100)
+ 			dm_digtable->rssi_val_min = 100;
+ 
+-		if (dm_digtable->pre_cck_pd_state == CCK_PD_STAGE_LowRssi) {
++		if (dm_digtable->pre_cck_pd_state == CCK_PD_STAGE_LOWRSSI) {
+ 			if (dm_digtable->rssi_val_min <= 25)
+ 				dm_digtable->cur_cck_pd_state =
+-				    CCK_PD_STAGE_LowRssi;
++				    CCK_PD_STAGE_LOWRSSI;
+ 			else
+ 				dm_digtable->cur_cck_pd_state =
+-				    CCK_PD_STAGE_HighRssi;
++				    CCK_PD_STAGE_HIGHRSSI;
+ 		} else {
+ 			if (dm_digtable->rssi_val_min <= 20)
+ 				dm_digtable->cur_cck_pd_state =
+-				    CCK_PD_STAGE_LowRssi;
++				    CCK_PD_STAGE_LOWRSSI;
+ 			else
+ 				dm_digtable->cur_cck_pd_state =
+-				    CCK_PD_STAGE_HighRssi;
++				    CCK_PD_STAGE_HIGHRSSI;
+ 		}
+ 	} else {
+ 		dm_digtable->cur_cck_pd_state = CCK_PD_STAGE_MAX;
  	}
+ 
+ 	if (dm_digtable->pre_cck_pd_state != dm_digtable->cur_cck_pd_state) {
+-		if ((dm_digtable->cur_cck_pd_state == CCK_PD_STAGE_LowRssi) ||
++		if ((dm_digtable->cur_cck_pd_state == CCK_PD_STAGE_LOWRSSI) ||
+ 		    (dm_digtable->cur_cck_pd_state == CCK_PD_STAGE_MAX))
+ 			rtl_set_bbreg(hw, RCCK0_CCA, MASKBYTE2, 0x83);
+ 		else
+@@ -1375,7 +1345,7 @@ void rtl92c_dm_init(struct ieee80211_hw *hw)
+ 	rtlpriv->dm.undec_sm_pwdb = -1;
+ 	rtlpriv->dm.undec_sm_cck = -1;
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+-	rtl92c_dm_diginit(hw);
++	rtl_dm_diginit(hw, 0x20);
+ 
+ 	rtlpriv->dm.dm_flag |= HAL_DM_HIPWR_DISABLE;
+ 	rtl92c_dm_init_dynamic_txpower(hw);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
+index 55ebffd..4422e31 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
+@@ -110,14 +110,6 @@ enum tag_dynamic_init_gain_operation_type_definition {
+ 	DIG_OP_TYPE_MAX
+ };
+ 
+-enum tag_cck_packet_detection_threshold_type_definition {
+-	CCK_PD_STAGE_LowRssi = 0,
+-	CCK_PD_STAGE_HighRssi = 1,
+-	CCK_FA_STAGE_Low = 2,
+-	CCK_FA_STAGE_High = 3,
+-	CCK_PD_STAGE_MAX = 4,
+-};
+-
+ enum dm_1r_cca_e {
+ 	CCA_1R = 0,
+ 	CCA_2R = 1,
+@@ -136,14 +128,6 @@ enum dm_sw_ant_switch_e {
+ 	ANS_ANTENNA_MAX = 3,
+ };
+ 
+-enum dm_dig_ext_port_alg_e {
+-	DIG_EXT_PORT_STAGE_0 = 0,
+-	DIG_EXT_PORT_STAGE_1 = 1,
+-	DIG_EXT_PORT_STAGE_2 = 2,
+-	DIG_EXT_PORT_STAGE_3 = 3,
+-	DIG_EXT_PORT_STAGE_MAX = 4,
+-};
+-
+ void rtl92c_dm_init(struct ieee80211_hw *hw);
+ void rtl92c_dm_watchdog(struct ieee80211_hw *hw);
+ void rtl92c_dm_write_dig(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
+index d21b3bc..f2d318c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
+@@ -95,14 +95,6 @@ enum tag_dynamic_init_gain_operation_type_definition {
+ 	DIG_OP_TYPE_MAX
+ };
+ 
+-enum tag_cck_packet_detection_threshold_type_definition {
+-	CCK_PD_STAGE_LOWRSSI = 0,
+-	CCK_PD_STAGE_HIGHRSSI = 1,
+-	CCK_FA_STAGE_LOW = 2,
+-	CCK_FA_STAGE_HIGH = 3,
+-	CCK_PD_STAGE_MAX = 4,
+-};
+-
+ enum dm_1r_cca {
+ 	CCA_1R = 0,
+ 	CCA_2R = 1,
+@@ -121,14 +113,6 @@ enum dm_sw_ant_switch {
+ 	ANS_ANTENNA_MAX = 3,
+ };
+ 
+-enum dm_dig_ext_port_alg {
+-	DIG_EXT_PORT_STAGE_0 = 0,
+-	DIG_EXT_PORT_STAGE_1 = 1,
+-	DIG_EXT_PORT_STAGE_2 = 2,
+-	DIG_EXT_PORT_STAGE_3 = 3,
+-	DIG_EXT_PORT_STAGE_MAX = 4,
+-};
+-
+ void rtl92d_dm_init(struct ieee80211_hw *hw);
+ void rtl92d_dm_watchdog(struct ieee80211_hw *hw);
+ void rtl92d_dm_init_edca_turbo(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
+index 7d778d3..be07d81 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
+@@ -54,14 +54,6 @@ enum dm_dig_sta {
+ 	DM_STA_DIG_MAX
+ };
+ 
+-enum dm_dig_ext_port_alg {
+-	DIG_EXT_PORT_STAGE_0 = 0,
+-	DIG_EXT_PORT_STAGE_1 = 1,
+-	DIG_EXT_PORT_STAGE_2 = 2,
+-	DIG_EXT_PORT_STAGE_3 = 3,
+-	DIG_EXT_PORT_STAGE_MAX = 4,
+-};
+-
+ enum dm_ratr_sta {
+ 	DM_RATR_STA_HIGH = 0,
+ 	DM_RATR_STA_MIDDLEHIGH = 1,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
+index 80f4c54..8bd124c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
+@@ -396,30 +396,30 @@ static void rtl8723e_dm_cck_packet_detection_thresh(struct ieee80211_hw *hw)
+ 	if (dm_digtable->cursta_cstate == DIG_STA_CONNECT) {
+ 		dm_digtable->rssi_val_min = rtl8723e_dm_initial_gain_min_pwdb(hw);
+ 
+-		if (dm_digtable->pre_cck_pd_state == CCK_PD_STAGE_LowRssi) {
++		if (dm_digtable->pre_cck_pd_state == CCK_PD_STAGE_LOWRSSI) {
+ 			if (dm_digtable->rssi_val_min <= 25)
+ 				dm_digtable->cur_cck_pd_state =
+-				    CCK_PD_STAGE_LowRssi;
++				    CCK_PD_STAGE_LOWRSSI;
+ 			else
+ 				dm_digtable->cur_cck_pd_state =
+-				    CCK_PD_STAGE_HighRssi;
++				    CCK_PD_STAGE_HIGHRSSI;
+ 		} else {
+ 			if (dm_digtable->rssi_val_min <= 20)
+ 				dm_digtable->cur_cck_pd_state =
+-				    CCK_PD_STAGE_LowRssi;
++				    CCK_PD_STAGE_LOWRSSI;
+ 			else
+ 				dm_digtable->cur_cck_pd_state =
+-				    CCK_PD_STAGE_HighRssi;
++				    CCK_PD_STAGE_HIGHRSSI;
+ 		}
+ 	} else {
+ 		dm_digtable->cur_cck_pd_state = CCK_PD_STAGE_MAX;
+ 	}
+ 
+ 	if (dm_digtable->pre_cck_pd_state != dm_digtable->cur_cck_pd_state) {
+-		if (dm_digtable->cur_cck_pd_state == CCK_PD_STAGE_LowRssi) {
++		if (dm_digtable->cur_cck_pd_state == CCK_PD_STAGE_LOWRSSI) {
+ 			if (rtlpriv->falsealm_cnt.cnt_cck_fail > 800)
+ 				dm_digtable->cur_cck_fa_state =
+-				    CCK_FA_STAGE_High;
++				    CCK_FA_STAGE_HIGH;
+ 			else
+ 				dm_digtable->cur_cck_fa_state =
+ 				    CCK_FA_STAGE_LOW;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
+index c54024e..5711105 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
+@@ -95,14 +95,6 @@ enum tag_dynamic_init_gain_operation_type_definition {
+ 	DIG_OP_TYPE_MAX
+ };
+ 
+-enum tag_cck_packet_detection_threshold_type_definition {
+-	CCK_PD_STAGE_LowRssi = 0,
+-	CCK_PD_STAGE_HighRssi = 1,
+-	CCK_FA_STAGE_LOW = 2,
+-	CCK_FA_STAGE_High = 3,
+-	CCK_PD_STAGE_MAX = 4,
+-};
+-
+ enum dm_1r_cca_e {
+ 	CCA_1R = 0,
+ 	CCA_2R = 1,
+@@ -121,14 +113,6 @@ enum dm_sw_ant_switch_e {
+ 	ANS_ANTENNA_MAX = 3,
+ };
+ 
+-enum dm_dig_ext_port_alg_e {
+-	DIG_EXT_PORT_STAGE_0 = 0,
+-	DIG_EXT_PORT_STAGE_1 = 1,
+-	DIG_EXT_PORT_STAGE_2 = 2,
+-	DIG_EXT_PORT_STAGE_3 = 3,
+-	DIG_EXT_PORT_STAGE_MAX = 4,
+-};
+-
+ #define BT_RSSI_STATE_NORMAL_POWER      BIT_OFFSET_LEN_MASK_32(0, 1)
+ #define BT_RSSI_STATE_AMDPU_OFF         BIT_OFFSET_LEN_MASK_32(1, 1)
+ #define BT_RSSI_STATE_SPECIAL_LOW       BIT_OFFSET_LEN_MASK_32(2, 1)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.h b/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
+index f3e47ab..533b4f2 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
+@@ -239,14 +239,6 @@ enum dm_sw_ant_switch_e {
+ 	ANS_ANTENNA_MAX	= 3,
+ };
+ 
+-enum dm_dig_ext_port_alg_e {
+-	DIG_EXT_PORT_STAGE_0	= 0,
+-	DIG_EXT_PORT_STAGE_1	= 1,
+-	DIG_EXT_PORT_STAGE_2	= 2,
+-	DIG_EXT_PORT_STAGE_3	= 3,
+-	DIG_EXT_PORT_STAGE_MAX	= 4,
+-};
+-
+ enum pwr_track_control_method {
+ 	BBSWING,
+ 	TXAGC
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
+index f311887..5516557 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
+@@ -255,14 +255,6 @@ enum tag_dynamic_init_gain_operation_type_definition {
+ 	DIG_OP_TYPE_MAX
+ };
+ 
+-enum tag_cck_packet_detection_threshold_type_definition {
+-	CCK_PD_STAGE_LOWRSSI = 0,
+-	CCK_PD_STAGE_HIGHRSSI = 1,
+-	CCK_FA_STAGE_LOW = 2,
+-	CCK_FA_STAGE_HIGH = 3,
+-	CCK_PD_STAGE_MAX = 4,
+-};
+-
+ enum dm_1r_cca_e {
+ 	CCA_1R = 0,
+ 	CCA_2R = 1,
+@@ -281,14 +273,6 @@ enum dm_sw_ant_switch_e {
+ 	ANS_ANTENNA_MAX = 3,
+ };
+ 
+-enum dm_dig_ext_port_alg_e {
+-	DIG_EXT_PORT_STAGE_0 = 0,
+-	DIG_EXT_PORT_STAGE_1 = 1,
+-	DIG_EXT_PORT_STAGE_2 = 2,
+-	DIG_EXT_PORT_STAGE_3 = 3,
+-	DIG_EXT_PORT_STAGE_MAX = 4,
+-};
+-
+ enum pwr_track_control_method {
+ 	BBSWING,
+ 	TXAGC,
 -- 
-1.9.1
+2.1.2
 
