@@ -1,64 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8581 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751058AbbAMGJQ (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:35809 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751358AbbABSgA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 01:09:16 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0D64xG0022625
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:09:15 -0800
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1rv520k6bh-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:09:15 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 1/8] mwifiex: remove redundant nick_name variable
-Date: Tue, 13 Jan 2015 17:08:43 +0530
-Message-ID: <1421149130-5889-2-git-send-email-patila@marvell.com> (sfid-20150113_070919_650676_66E61DD2)
-In-Reply-To: <1421149130-5889-1-git-send-email-patila@marvell.com>
-References: <1421149130-5889-1-git-send-email-patila@marvell.com>
+	Fri, 2 Jan 2015 13:36:00 -0500
+Received: by mail-lb0-f178.google.com with SMTP id f15so17479326lbj.9
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2015 10:35:59 -0800 (PST)
+Message-ID: <54A6E50E.8070205@cogentembedded.com> (sfid-20150102_193605_829036_0C19CFA7)
+Date: Fri, 02 Jan 2015 21:35:58 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 02/11] rtlwifi: rtl8723be: Improve modinfo output
+References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net> <1420217908-1382-3-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1420217908-1382-3-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not used anywhere execpt initialization.
+Hello.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c | 1 -
- drivers/net/wireless/mwifiex/main.h | 1 -
- 2 files changed, 2 deletions(-)
+On 1/2/2015 7:58 PM, Larry Finger wrote:
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index a16c293..c7158e8 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -968,7 +968,6 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
- 	/* Initialize private structure */
- 	priv->current_key_index = 0;
- 	priv->media_connected = false;
--	memset(&priv->nick_name, 0, sizeof(priv->nick_name));
- 	memset(priv->mgmt_ie, 0,
- 	       sizeof(struct mwifiex_ie) * MAX_MGMT_IE_INDEX);
- 	priv->beacon_idx = MWIFIEX_AUTO_IDX_MASK;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index dd55bc1..149ef7d 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -554,7 +554,6 @@ struct mwifiex_private {
- #ifdef CONFIG_DEBUG_FS
- 	struct dentry *dfs_dev_dir;
- #endif
--	u8 nick_name[16];
- 	u16 current_key_index;
- 	struct semaphore async_sem;
- 	struct cfg80211_scan_request *scan_request;
--- 
-1.8.1.4
+> The description of the power-save variables for this driver is not as
+> clear as for the others. The wording is changed to match the others.
+
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 11 ++++++-----
+>   1 file changed, 6 insertions(+), 5 deletions(-)
+
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+> index 223eb42..52a6d90 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+> @@ -387,12 +387,13 @@ module_param_named(swlps, rtl8723be_mod_params.swctrl_lps, bool, 0444);
+>   module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
+>   module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
+>   		   bool, 0444);
+> -MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
+> -MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
+> -MODULE_PARM_DESC(fwlps, "using linked fw control power save (default 1 is open)\n");
+> -MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
+
+    You are completely removing this description. Is it intentional?
+
+> +MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+> +MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+> +MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+> +MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+>   MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+> -MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
+> +MODULE_PARM_DESC(disable_watchdog,
+> +		 "Set to 1 to disable the watchdog (default 0)\n");
+
+WBR, Sergei
 
