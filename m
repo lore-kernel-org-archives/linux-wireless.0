@@ -1,334 +1,620 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n9-22.mail.139.com ([221.176.9.22]:63219 "EHLO
-	n9-22.mail.139.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760800AbbA3Kdx (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:49903 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752048AbbABQ6h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 05:33:53 -0500
-From: yuweizheng@139.com
-To: linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@qca.qualcomm.com, linux@rempel-privat.de
-Cc: netdev@vger.kernel.org, Yuwei Zheng <yuweizheng@139.com>,
-	Yuwei Zheng <zhengyuwei@360.cn>
-Subject: [PATCH] Repair soft lockup with monitor mode of ath9k_htc card
-Date: Thu, 29 Jan 2015 07:14:32 +0800
-Message-Id: <1422486872-16308-1-git-send-email-yuweizheng@139.com> (sfid-20150130_113758_002984_D563BD0A)
+	Fri, 2 Jan 2015 11:58:37 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 03/11] rtlwifi: Create new routine to initialize the DM tables
+Date: Fri,  2 Jan 2015 10:58:20 -0600
+Message-Id: <1420217908-1382-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175937_165070_DB228C65)
+In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yuwei Zheng <yuweizheng@139.com>
+Each of the drivers contains a routine that initializes the dm_digtable
+member of the driver's private area. As a first step toward reducing the
+size of the drivers, a copy of this driver is created in rtlwifi, and the
+definitions of the parameters are moved there.
 
-In the environment with heavy wifi traffic, set the ar9271 into monitor mode, will
-trigger a deadloop panic.
- 
-The ath9k_hif_usb_rx_cb function excute on  the interrupt context, and ath9k_rx_tasklet excute
-on the soft irq context. In other words, the ath9k_hif_usb_rx_cb have more chance to excute than
-ath9k_rx_tasklet.  So in the worst condition,  the rx.rxbuf receive list is always full,
-and the do {}while(true) loop will not be break. The kernel get a soft lockup panic. 
- 
-[59011.007210] BUG: soft lockup - CPU#0 stuck for 23s!
-[kworker/0:0:30609]
-[59011.030560] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
-[59013.804486] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
-[59013.858522] Kernel panic - not syncing: softlockup: hung tasks
- 
-[59014.038891] Exception stack(0xdf4bbc38 to 0xdf4bbc80)
-[59014.046834] bc20:                                                       de57b950 60000113
-[59014.059579] bc40: 00000000 bb32bb32 60000113 de57b948 de57b500 dc7bb440 df4bbcd0 00000000
-[59014.072337] bc60: de57b950 60000113 df4bbcd0 df4bbc80 c04c259d c04c25a0 60000133 ffffffff
-[59014.085233] [<c04c28db>] (__irq_svc+0x3b/0x5c) from [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10)
-[59014.100437] [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10) from [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc])
-[59014.118267] [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc]) from [<c0036d23>] (tasklet_action+0x3b/0x98)
-[59014.134132] [<c0036d23>] (tasklet_action+0x3b/0x98) from [<c0036709>] (__do_softirq+0x99/0x16c)
-[59014.147784] [<c0036709>] (__do_softirq+0x99/0x16c) from [<c00369f7>] (irq_exit+0x5b/0x5c)
-[59014.160653] [<c00369f7>] (irq_exit+0x5b/0x5c) from [<c000cfc3>] (handle_IRQ+0x37/0x78)
-[59014.173124] [<c000cfc3>] (handle_IRQ+0x37/0x78) from [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68)
-[59014.187225] [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68) from [<c04c28db>](__irq_svc+0x3b/0x5c)
- 
-This bug can be see with low performance board, such as uniprocessor beagle bone board.
- 
- 
-Signed-off-by: Yuwei Zheng <zhengyuwei@360.cn>
-Signed-off-by: Yuwei Zheng <yuweizheng@139.com>
-
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c       | 58 ++++++++++++++++++++++----
- drivers/net/wireless/ath/ath9k/hif_usb.h       |  5 +++
- drivers/net/wireless/ath/ath9k/htc.h           | 13 ++++++
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 49 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  | 26 ++++++++++++
- 5 files changed, 144 insertions(+), 7 deletions(-)
+ drivers/net/wireless/rtlwifi/core.c               | 34 +++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/core.h               | 24 ++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.h       | 22 ---------------
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h | 22 ---------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.h       | 13 ---------
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.h       | 22 ---------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.h       | 13 ---------
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.h       | 19 -------------
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h       | 22 ---------------
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.h       | 22 ---------------
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.h       | 16 -----------
+ 20 files changed, 67 insertions(+), 171 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 8e7153b..18c6f0e 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -658,7 +658,6 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
- 	default:
- 		goto resubmit;
- 	}
--
- 	if (likely(urb->actual_length != 0)) {
- 		skb_put(skb, urb->actual_length);
- 		ath9k_hif_usb_rx_stream(hif_dev, skb);
-@@ -667,12 +666,18 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
- resubmit:
- 	skb_reset_tail_pointer(skb);
- 	skb_trim(skb, 0);
--
--	usb_anchor_urb(urb, &hif_dev->rx_submitted);
--	ret = usb_submit_urb(urb, GFP_ATOMIC);
--	if (ret) {
--		usb_unanchor_urb(urb);
--		goto free;
-+	if (atomic_read(&hif_dev->rx_urb_submit_delay) > 0) {
-+		usb_anchor_urb(urb, &hif_dev->rx_delayed_submitted);
-+		ret = tasklet_hrtimer_start(&hif_dev->rx_submit_timer,
-+						ktime_set(0, atomic_read(&hif_dev->rx_urb_submit_delay)*1000),
-+						HRTIMER_MODE_REL);
-+	} else {
-+		usb_anchor_urb(urb, &hif_dev->rx_submitted);
-+		ret = usb_submit_urb(urb, GFP_ATOMIC);
-+		if (ret) {
-+			usb_unanchor_urb(urb);
-+			goto free;
-+		}
- 	}
- 
- 	return;
-@@ -818,9 +823,39 @@ err:
- 	return -ENOMEM;
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index deab852..5aa3ab3 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -1871,3 +1871,37 @@ bool rtl_btc_status_false(void)
+ 	return false;
  }
- 
-+static enum hrtimer_restart rx_urb_submit_timer_handler(struct hrtimer *me)
+ EXPORT_SYMBOL_GPL(rtl_btc_status_false);
++
++void rtl_dm_diginit(struct ieee80211_hw *hw, u32 cur_igvalue)
 +{
-+	struct tasklet_hrtimer *thr =
-+		container_of(me, struct tasklet_hrtimer, timer);
-+	struct  hif_device_usb *hif_dev =
-+		container_of(thr, struct hif_device_usb, rx_submit_timer);
-+	struct urb *urb = NULL;
-+	struct sk_buff *skb = NULL;
-+	int ret;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
 +
-+	while (true) {
-+		urb = usb_get_from_anchor(&hif_dev->rx_delayed_submitted);
-+		if (urb != NULL) {
-+			skb = (struct sk_buff *)urb->context;
-+			ret = usb_submit_urb(urb, GFP_ATOMIC);
-+			if (ret != -EBUSY) {
-+				usb_unanchor_urb(urb);
-+				dev_kfree_skb_any(skb);
-+				urb->context = NULL;
-+			}
-+		} else {
-+			break;
-+		}
-+	}
-+
-+	return HRTIMER_NORESTART;
++	dm_digtable->dig_enable_flag = true;
++	dm_digtable->cur_igvalue = cur_igvalue;
++	dm_digtable->pre_igvalue = 0;
++	dm_digtable->cur_sta_cstate = DIG_STA_DISCONNECT;
++	dm_digtable->presta_cstate = DIG_STA_DISCONNECT;
++	dm_digtable->curmultista_cstate = DIG_MULTISTA_DISCONNECT;
++	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
++	dm_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
++	dm_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
++	dm_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
++	dm_digtable->rx_gain_max = DM_DIG_MAX;
++	dm_digtable->rx_gain_min = DM_DIG_MIN;
++	dm_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
++	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
++	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
++	dm_digtable->pre_cck_cca_thres = 0xff;
++	dm_digtable->cur_cck_cca_thres = 0x83;
++	dm_digtable->forbidden_igi = DM_DIG_MIN;
++	dm_digtable->large_fa_hit = 0;
++	dm_digtable->recover_cnt = 0;
++	dm_digtable->dig_min_0 = 0x25;
++	dm_digtable->dig_min_1 = 0x25;
++	dm_digtable->media_connect_0 = false;
++	dm_digtable->media_connect_1 = false;
++	rtlpriv->dm.dm_initialgain_enable = true;
++	dm_digtable->bt30_cur_igi = 0x32;
 +}
++EXPORT_SYMBOL(rtl_dm_diginit);
+diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
+index 8c87eb5..c0a0317 100644
+--- a/drivers/net/wireless/rtlwifi/core.h
++++ b/drivers/net/wireless/rtlwifi/core.h
+@@ -35,6 +35,29 @@
+ 
+ #define RTL_SUPPORTED_CTRL_FILTER	0xFF
+ 
++#define DM_DIG_THRESH_HIGH		40
++#define DM_DIG_THRESH_LOW		35
++#define DM_FALSEALARM_THRESH_LOW	400
++#define DM_FALSEALARM_THRESH_HIGH	1000
 +
- static void ath9k_hif_usb_dealloc_rx_urbs(struct hif_device_usb *hif_dev)
- {
- 	usb_kill_anchored_urbs(&hif_dev->rx_submitted);
-+	usb_kill_anchored_urbs(&hif_dev->rx_delayed_submitted);
-+	tasklet_hrtimer_cancel(&hif_dev->rx_submit_timer);
- }
- 
- static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
-@@ -830,6 +865,8 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
- 	int i, ret;
- 
- 	init_usb_anchor(&hif_dev->rx_submitted);
-+	init_usb_anchor(&hif_dev->rx_delayed_submitted);
++#define DM_DIG_MAX			0x3e
++#define DM_DIG_MIN			0x1e
++#define DM_DIG_BACKOFF_MAX		12
++#define DM_DIG_BACKOFF_MIN		-4
++#define DM_DIG_BACKOFF_DEFAULT		10
 +
- 	spin_lock_init(&hif_dev->rx_lock);
- 
- 	for (i = 0; i < MAX_RX_URB_NUM; i++) {
-@@ -871,6 +908,13 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
- 		usb_free_urb(urb);
- 	}
- 
-+	/* add for flow control*/
-+	atomic_set(&hif_dev->rx_urb_submit_delay, 0);
-+	tasklet_hrtimer_init(&hif_dev->rx_submit_timer,
-+				rx_urb_submit_timer_handler,
-+				CLOCK_MONOTONIC,
-+				HRTIMER_MODE_REL);
-+
- 	return 0;
- 
- err_submit:
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index 51496e7..56d6be8 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -98,9 +98,14 @@ struct hif_device_usb {
- 	struct hif_usb_tx tx;
- 	struct usb_anchor regout_submitted;
- 	struct usb_anchor rx_submitted;
-+	struct usb_anchor rx_delayed_submitted; /* delayed submit anchor */
- 	struct usb_anchor reg_in_submitted;
- 	struct usb_anchor mgmt_submitted;
- 	struct sk_buff *remain_skb;
-+
-+	struct tasklet_hrtimer  rx_submit_timer;/* delayed submit hrtimer */
-+	atomic_t  rx_urb_submit_delay; /*us*/
-+
- 	const char *fw_name;
- 	int rx_remain_len;
- 	int rx_pkt_len;
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 9dde265..453d0a8 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -331,6 +331,10 @@ static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
- 
- #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
- 
-+#define TASKLETRX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.taskletrx_stats.c++)
-+#define TASKLETRX_STAT_ADD(c, a) (hif_dev->htc_handle->drv_priv->debug.taskletrx_stats.c += a)
-+#define TASKLETRX_STAT_SET(c, a) (hif_dev->htc_handle->drv_priv->debug.taskletrx_stats.c = a)
-+
- void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
- 			   struct ath_rx_status *rs);
- 
-@@ -352,11 +356,20 @@ struct ath_skbrx_stats {
- 	u32 skb_dropped;
- };
- 
-+struct ath_taskletrx_stats {
-+	u32 taskletrx_looptimes;
-+	u32 taskletrx_highwater;
-+	u32 taskletrx_lowwater;
-+	u32 taskletrx_watermark_triggered;
-+	u32 taskletrx_urb_submit_delay;
++enum dm_dig_connect_e {
++	DIG_STA_DISCONNECT,
++	DIG_STA_CONNECT,
++	DIG_STA_BEFORE_CONNECT,
++	DIG_MULTISTA_DISCONNECT,
++	DIG_MULTISTA_CONNECT,
++	DIG_AP_DISCONNECT,
++	DIG_AP_CONNECT,
++	DIG_AP_ADD_STATION,
++	DIG_CONNECT_MAX
 +};
 +
- struct ath9k_debug {
- 	struct dentry *debugfs_phy;
- 	struct ath_tx_stats tx_stats;
- 	struct ath_rx_stats rx_stats;
- 	struct ath_skbrx_stats skbrx_stats;
-+	struct ath_taskletrx_stats taskletrx_stats;
+ extern const struct ieee80211_ops rtl_ops;
+ void rtl_fw_cb(const struct firmware *firmware, void *context);
+ void rtl_wowlan_fw_cb(const struct firmware *firmware, void *context);
+@@ -44,5 +67,6 @@ void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+ void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data);
+ bool rtl_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
+ bool rtl_btc_status_false(void);
++void rtl_dm_diginit(struct ieee80211_hw *hw, u32 cur_igval);
+ 
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+index 2aa34d9..7ebf6e0 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.c
+@@ -26,6 +26,7 @@
+ #include "../wifi.h"
+ #include "../base.h"
+ #include "../pci.h"
++#include "../core.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
+index 64f1f3ea..6217b7c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
+@@ -186,15 +186,6 @@
+ #define BW_AUTO_SWITCH_HIGH_LOW				25
+ #define BW_AUTO_SWITCH_LOW_HIGH				30
+ 
+-#define DM_DIG_THRESH_HIGH				40
+-#define DM_DIG_THRESH_LOW				35
+-
+-#define DM_FALSEALARM_THRESH_LOW			400
+-#define DM_FALSEALARM_THRESH_HIGH			1000
+-
+-#define DM_DIG_MAX					0x3e
+-#define DM_DIG_MIN					0x1e
+-
+ #define DM_DIG_MAX_AP					0x32
+ #define DM_DIG_MIN_AP					0x20
+ 
+@@ -204,10 +195,6 @@
+ #define DM_DIG_FA_TH1					0x300
+ #define DM_DIG_FA_TH2					0x400
+ 
+-#define DM_DIG_BACKOFF_MAX				12
+-#define DM_DIG_BACKOFF_MIN				-4
+-#define DM_DIG_BACKOFF_DEFAULT				10
+-
+ #define RXPATHSELECTION_SS_TH_W				30
+ #define RXPATHSELECTION_DIFF_TH				18
+ 
+@@ -296,15 +283,6 @@ enum dm_dig_ext_port_alg_e {
+ 	DIG_EXT_PORT_STAGE_MAX = 4,
  };
  
- void ath9k_htc_get_et_strings(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-index 8cef1ed..7c8322e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-@@ -286,6 +286,51 @@ static const struct file_operations fops_skb_rx = {
- 	.llseek = default_llseek,
+-enum dm_dig_connect_e {
+-	DIG_STA_DISCONNECT = 0,
+-	DIG_STA_CONNECT = 1,
+-	DIG_STA_BEFORE_CONNECT = 2,
+-	DIG_MULTISTA_DISCONNECT = 3,
+-	DIG_MULTISTA_CONNECT = 4,
+-	DIG_CONNECT_MAX
+-};
+-
+ enum pwr_track_control_method {
+ 	BBSWING,
+ 	TXAGC
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+index c3aad76..dabe18f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -32,6 +32,7 @@
+ #include "phy_common.h"
+ #include "../pci.h"
+ #include "../base.h"
++#include "../core.h"
+ 
+ #define BT_RSSI_STATE_NORMAL_POWER	BIT_OFFSET_LEN_MASK_32(0, 1)
+ #define BT_RSSI_STATE_AMDPU_OFF		BIT_OFFSET_LEN_MASK_32(1, 1)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
+index 4f232a0..55ebffd 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h
+@@ -47,25 +47,12 @@
+ #define BW_AUTO_SWITCH_HIGH_LOW			25
+ #define BW_AUTO_SWITCH_LOW_HIGH			30
+ 
+-#define DM_DIG_THRESH_HIGH			40
+-#define DM_DIG_THRESH_LOW			35
+-
+-#define DM_FALSEALARM_THRESH_LOW		400
+-#define DM_FALSEALARM_THRESH_HIGH		1000
+-
+-#define DM_DIG_MAX				0x3e
+-#define DM_DIG_MIN				0x1e
+-
+ #define DM_DIG_FA_UPPER				0x32
+ #define DM_DIG_FA_LOWER				0x20
+ #define DM_DIG_FA_TH0				0x20
+ #define DM_DIG_FA_TH1				0x100
+ #define DM_DIG_FA_TH2				0x200
+ 
+-#define DM_DIG_BACKOFF_MAX			12
+-#define DM_DIG_BACKOFF_MIN			-4
+-#define DM_DIG_BACKOFF_DEFAULT			10
+-
+ #define RXPATHSELECTION_SS_TH_lOW		30
+ #define RXPATHSELECTION_DIFF_TH			18
+ 
+@@ -157,15 +144,6 @@ enum dm_dig_ext_port_alg_e {
+ 	DIG_EXT_PORT_STAGE_MAX = 4,
  };
  
-+static ssize_t read_file_tasklet_rx(struct file *file, char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct ath9k_htc_priv *priv = file->private_data;
-+	char *buf;
-+	unsigned int len = 0, size = 1500;
-+	ssize_t retval = 0;
-+
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (buf == NULL)
-+		return -ENOMEM;
-+
-+	len += scnprintf(buf + len, size - len,
-+			"%20s : %10u\n", "Loop times",
-+			priv->debug.taskletrx_stats.taskletrx_looptimes);
-+	len += scnprintf(buf + len, size - len,
-+			"%20s : %10u\n", "High watermark",
-+			priv->debug.taskletrx_stats.taskletrx_highwater);
-+	len += scnprintf(buf + len, size - len,
-+			"%20s : %10u\n", "Low watermark",
-+			priv->debug.taskletrx_stats.taskletrx_lowwater);
-+
-+	len += scnprintf(buf + len, size - len,
-+			"%20s : %10u\n", "WM triggered",
-+			priv->debug.taskletrx_stats.taskletrx_watermark_triggered);
-+
-+	len += scnprintf(buf + len, size - len,
-+			"%20s : %10u\n", "URB delay",
-+			priv->debug.taskletrx_stats.taskletrx_urb_submit_delay);
-+	if (len > size)
-+		len = size;
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
-+}
-+
-+static const struct file_operations fops_tasklet_rx = {
-+	.read = read_file_tasklet_rx,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t read_file_slot(struct file *file, char __user *user_buf,
- 			      size_t count, loff_t *ppos)
- {
-@@ -518,7 +563,11 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
- 	debugfs_create_file("skb_rx", S_IRUSR, priv->debug.debugfs_phy,
- 			    priv, &fops_skb_rx);
+-enum dm_dig_connect_e {
+-	DIG_STA_DISCONNECT = 0,
+-	DIG_STA_CONNECT = 1,
+-	DIG_STA_BEFORE_CONNECT = 2,
+-	DIG_MULTISTA_DISCONNECT = 3,
+-	DIG_MULTISTA_CONNECT = 4,
+-	DIG_CONNECT_MAX
+-};
+-
+ void rtl92c_dm_init(struct ieee80211_hw *hw);
+ void rtl92c_dm_watchdog(struct ieee80211_hw *hw);
+ void rtl92c_dm_write_dig(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.c b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.c
+index 74f9c08..09898cf 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.c
+@@ -30,6 +30,7 @@
+ #include "../wifi.h"
+ #include "../base.h"
+ #include "../pci.h"
++#include "../core.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
+index 9c5311c..38ba707 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
+@@ -42,25 +42,12 @@
+ #define BW_AUTO_SWITCH_HIGH_LOW			25
+ #define BW_AUTO_SWITCH_LOW_HIGH			30
  
-+	debugfs_create_file("tasklet_rx", S_IRUSR, priv->debug.debugfs_phy,
-+			    priv, &fops_tasklet_rx);
-+
- 	ath9k_cmn_debug_recv(priv->debug.debugfs_phy, &priv->debug.rx_stats);
-+
- 	ath9k_cmn_debug_phy_err(priv->debug.debugfs_phy, &priv->debug.rx_stats);
+-#define DM_DIG_THRESH_HIGH			40
+-#define DM_DIG_THRESH_LOW			35
+-
+-#define DM_FALSEALARM_THRESH_LOW		400
+-#define DM_FALSEALARM_THRESH_HIGH		1000
+-
+-#define DM_DIG_MAX				0x3e
+-#define DM_DIG_MIN				0x1e
+-
+ #define DM_DIG_FA_UPPER				0x32
+ #define DM_DIG_FA_LOWER				0x20
+ #define DM_DIG_FA_TH0				0x20
+ #define DM_DIG_FA_TH1				0x100
+ #define DM_DIG_FA_TH2				0x200
  
- 	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-index a0f58e2..f5e6217 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-@@ -1061,7 +1061,28 @@ void ath9k_rx_tasklet(unsigned long data)
- 	unsigned long flags;
- 	struct ieee80211_hdr *hdr;
+-#define DM_DIG_BACKOFF_MAX			12
+-#define DM_DIG_BACKOFF_MIN			-4
+-#define DM_DIG_BACKOFF_DEFAULT			10
+-
+ #define RXPATHSELECTION_SS_TH_lOW		30
+ #define RXPATHSELECTION_DIFF_TH			18
  
-+	/* add for adaptive flow control*/
-+	int looptimes = 0;
-+	int highwatermark = ATH9K_HTC_RXBUF*3/4;
-+	int lowwatermark = ATH9K_HTC_RXBUF/4;
-+	unsigned int delay = 0;
-+
-+	struct htc_target *htc = priv->htc;
-+	struct hif_device_usb *hif_dev = htc->hif_dev;
-+
-+	TASKLETRX_STAT_SET(taskletrx_highwater, highwatermark);
-+	TASKLETRX_STAT_SET(taskletrx_lowwater, lowwatermark);
-+
- 	do {
-+		looptimes++;
-+		TASKLETRX_STAT_SET(taskletrx_looptimes, looptimes);
-+		if (looptimes > highwatermark) {
-+			delay = looptimes*10;
-+			atomic_set(&hif_dev->rx_urb_submit_delay, delay);
-+			TASKLETRX_STAT_INC(taskletrx_watermark_triggered);
-+			TASKLETRX_STAT_SET(taskletrx_urb_submit_delay, delay);
-+		}
-+
- 		spin_lock_irqsave(&priv->rx.rxbuflock, flags);
- 		list_for_each_entry(tmp_buf, &priv->rx.rxbuf, list) {
- 			if (tmp_buf->in_process) {
-@@ -1072,6 +1093,11 @@ void ath9k_rx_tasklet(unsigned long data)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+index 304c443..75643ab 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+@@ -29,6 +29,7 @@
  
- 		if (rxbuf == NULL) {
- 			spin_unlock_irqrestore(&priv->rx.rxbuflock, flags);
-+			if (looptimes < lowwatermark) {
-+				atomic_set(&hif_dev->rx_urb_submit_delay, 0);
-+				TASKLETRX_STAT_SET(taskletrx_urb_submit_delay, 0);
-+			}
-+
- 			break;
- 		}
+ #include "../wifi.h"
+ #include "../base.h"
++#include "../core.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
+index 3fea0c1..d21b3bc 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
+@@ -42,25 +42,12 @@
+ #define BW_AUTO_SWITCH_HIGH_LOW			25
+ #define BW_AUTO_SWITCH_LOW_HIGH			30
  
+-#define DM_DIG_THRESH_HIGH			40
+-#define DM_DIG_THRESH_LOW			35
+-
+-#define DM_FALSEALARM_THRESH_LOW		400
+-#define DM_FALSEALARM_THRESH_HIGH		1000
+-
+-#define DM_DIG_MAX				0x3e
+-#define DM_DIG_MIN				0x1c
+-
+ #define DM_DIG_FA_UPPER				0x32
+ #define DM_DIG_FA_LOWER				0x20
+ #define DM_DIG_FA_TH0				0x100
+ #define DM_DIG_FA_TH1				0x400
+ #define DM_DIG_FA_TH2				0x600
+ 
+-#define DM_DIG_BACKOFF_MAX			12
+-#define DM_DIG_BACKOFF_MIN			-4
+-#define DM_DIG_BACKOFF_DEFAULT			10
+-
+ #define RXPATHSELECTION_SS_TH_lOW		30
+ #define RXPATHSELECTION_DIFF_TH			18
+ 
+@@ -142,15 +129,6 @@ enum dm_dig_ext_port_alg {
+ 	DIG_EXT_PORT_STAGE_MAX = 4,
+ };
+ 
+-enum dm_dig_connect {
+-	DIG_STA_DISCONNECT = 0,
+-	DIG_STA_CONNECT = 1,
+-	DIG_STA_BEFORE_CONNECT = 2,
+-	DIG_MULTISTA_DISCONNECT = 3,
+-	DIG_MULTISTA_CONNECT = 4,
+-	DIG_CONNECT_MAX
+-};
+-
+ void rtl92d_dm_init(struct ieee80211_hw *hw);
+ void rtl92d_dm_watchdog(struct ieee80211_hw *hw);
+ void rtl92d_dm_init_edca_turbo(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
+index 2fa4c45..70e58d1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
+@@ -26,6 +26,7 @@
+ #include "../wifi.h"
+ #include "../base.h"
+ #include "../pci.h"
++#include "../core.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.h b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.h
+index 881db7d..4880e19 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.h
+@@ -189,15 +189,6 @@
+ #define BW_AUTO_SWITCH_HIGH_LOW			25
+ #define BW_AUTO_SWITCH_LOW_HIGH			30
+ 
+-#define DM_DIG_THRESH_HIGH			40
+-#define DM_DIG_THRESH_LOW			35
+-
+-#define DM_FALSEALARM_THRESH_LOW		400
+-#define DM_FALSEALARM_THRESH_HIGH		1000
+-
+-#define DM_DIG_MAX				0x3e
+-#define DM_DIG_MIN				0x1e
+-
+ #define DM_DIG_MAX_AP				0x32
+ #define DM_DIG_MIN_AP				0x20
+ 
+@@ -207,10 +198,6 @@
+ #define DM_DIG_FA_TH1				0x300
+ #define DM_DIG_FA_TH2				0x400
+ 
+-#define DM_DIG_BACKOFF_MAX			12
+-#define DM_DIG_BACKOFF_MIN			-4
+-#define DM_DIG_BACKOFF_DEFAULT			10
+-
+ #define RXPATHSELECTION_SS_TH_LOW		30
+ #define RXPATHSELECTION_DIFF_TH			18
+ 
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.c b/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
+index b3a2d5e..6cac70b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
+@@ -29,6 +29,7 @@
+ 
+ #include "../wifi.h"
+ #include "../base.h"
++#include "../core.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
+index 2e9052c..7d778d3 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
+@@ -54,16 +54,6 @@ enum dm_dig_sta {
+ 	DM_STA_DIG_MAX
+ };
+ 
+-enum dm_dig_connect {
+-	DIG_STA_DISCONNECT = 0,
+-	DIG_STA_CONNECT = 1,
+-	DIG_STA_BEFORE_CONNECT = 2,
+-	DIG_AP_DISCONNECT = 3,
+-	DIG_AP_CONNECT = 4,
+-	DIG_AP_ADD_STATION = 5,
+-	DIG_CONNECT_MAX
+-};
+-
+ enum dm_dig_ext_port_alg {
+ 	DIG_EXT_PORT_STAGE_0 = 0,
+ 	DIG_EXT_PORT_STAGE_1 = 1,
+@@ -99,22 +89,13 @@ enum dm_ratr_sta {
+ #define	TX_POWER_NEAR_FIELD_THRESH_LVL2	74
+ #define	TX_POWER_NEAR_FIELD_THRESH_LVL1	67
+ 
+-#define DM_DIG_THRESH_HIGH		40
+-#define DM_DIG_THRESH_LOW		35
+-#define	DM_FALSEALARM_THRESH_LOW	40
+-#define	DM_FALSEALARM_THRESH_HIGH	1000
+ #define	DM_DIG_HIGH_PWR_THRESH_HIGH	75
+ #define	DM_DIG_HIGH_PWR_THRESH_LOW	70
+ #define	DM_DIG_BACKOFF			12
+-#define	DM_DIG_MAX			0x3e
+-#define	DM_DIG_MIN			0x1c
+ #define	DM_DIG_MIN_Netcore		0x12
+-#define	DM_DIG_BACKOFF_MAX		12
+-#define	DM_DIG_BACKOFF_MIN		-4
+ 
+ void rtl92s_dm_watchdog(struct ieee80211_hw *hw);
+ void rtl92s_dm_init(struct ieee80211_hw *hw);
+ void rtl92s_dm_init_edca_turbo(struct ieee80211_hw *hw);
+ 
+ #endif
+-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
+index a0e8692..80f4c54 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
+@@ -26,6 +26,7 @@
+ #include "../wifi.h"
+ #include "../base.h"
+ #include "../pci.h"
++#include "../core.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
+index 6fa0feb..c54024e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.h
+@@ -42,25 +42,12 @@
+ #define BW_AUTO_SWITCH_HIGH_LOW			25
+ #define BW_AUTO_SWITCH_LOW_HIGH			30
+ 
+-#define DM_DIG_THRESH_HIGH			40
+-#define DM_DIG_THRESH_LOW			35
+-
+-#define DM_FALSEALARM_THRESH_LOW		400
+-#define DM_FALSEALARM_THRESH_HIGH		1000
+-
+-#define DM_DIG_MAX				0x3e
+-#define DM_DIG_MIN				0x1e
+-
+ #define DM_DIG_FA_UPPER				0x32
+ #define DM_DIG_FA_LOWER				0x20
+ #define DM_DIG_FA_TH0				0x20
+ #define DM_DIG_FA_TH1				0x100
+ #define DM_DIG_FA_TH2				0x200
+ 
+-#define DM_DIG_BACKOFF_MAX			12
+-#define DM_DIG_BACKOFF_MIN			-4
+-#define DM_DIG_BACKOFF_DEFAULT			10
+-
+ #define RXPATHSELECTION_SS_TH_LOW		30
+ #define RXPATHSELECTION_DIFF_TH			18
+ 
+@@ -142,15 +129,6 @@ enum dm_dig_ext_port_alg_e {
+ 	DIG_EXT_PORT_STAGE_MAX = 4,
+ };
+ 
+-enum dm_dig_connect_e {
+-	DIG_STA_DISCONNECT = 0,
+-	DIG_STA_CONNECT = 1,
+-	DIG_STA_BEFORE_CONNECT = 2,
+-	DIG_MULTISTA_DISCONNECT = 3,
+-	DIG_MULTISTA_CONNECT = 4,
+-	DIG_CONNECT_MAX
+-};
+-
+ #define BT_RSSI_STATE_NORMAL_POWER      BIT_OFFSET_LEN_MASK_32(0, 1)
+ #define BT_RSSI_STATE_AMDPU_OFF         BIT_OFFSET_LEN_MASK_32(1, 1)
+ #define BT_RSSI_STATE_SPECIAL_LOW       BIT_OFFSET_LEN_MASK_32(2, 1)
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+index b92c521e..ddf45d9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
+@@ -26,6 +26,7 @@
+ #include "../wifi.h"
+ #include "../base.h"
+ #include "../pci.h"
++#include "../core.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.h b/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
+index e4c0e8a..f3e47ab 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
+@@ -180,15 +180,6 @@
+ #define BW_AUTO_SWITCH_HIGH_LOW			25
+ #define BW_AUTO_SWITCH_LOW_HIGH			30
+ 
+-#define DM_DIG_THRESH_HIGH			40
+-#define DM_DIG_THRESH_LOW			35
+-
+-#define DM_FALSEALARM_THRESH_LOW		400
+-#define DM_FALSEALARM_THRESH_HIGH		1000
+-
+-#define DM_DIG_MAX				0x3e
+-#define DM_DIG_MIN				0x1e
+-
+ #define DM_DIG_MAX_AP				0x32
+ #define DM_DIG_MIN_AP				0x20
+ 
+@@ -198,10 +189,6 @@
+ #define DM_DIG_FA_TH1				0x300
+ #define DM_DIG_FA_TH2				0x400
+ 
+-#define DM_DIG_BACKOFF_MAX			12
+-#define DM_DIG_BACKOFF_MIN			-4
+-#define DM_DIG_BACKOFF_DEFAULT			10
+-
+ #define RXPATHSELECTION_SS_TH_LOW		30
+ #define RXPATHSELECTION_DIFF_TH			18
+ 
+@@ -260,15 +247,6 @@ enum dm_dig_ext_port_alg_e {
+ 	DIG_EXT_PORT_STAGE_MAX	= 4,
+ };
+ 
+-enum dm_dig_connect_e {
+-	DIG_STA_DISCONNECT	= 0,
+-	DIG_STA_CONNECT		= 1,
+-	DIG_STA_BEFORE_CONNECT	= 2,
+-	DIG_MULTISTA_DISCONNECT	= 3,
+-	DIG_MULTISTA_CONNECT	= 4,
+-	DIG_CONNECT_MAX
+-};
+-
+ enum pwr_track_control_method {
+ 	BBSWING,
+ 	TXAGC
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+index 8b0bfb2..4af4613 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
+@@ -26,6 +26,7 @@
+ #include "../wifi.h"
+ #include "../base.h"
+ #include "../pci.h"
++#include "../core.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "phy.h"
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
+index 9dd40dd..f311887 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
+@@ -187,9 +187,6 @@
+ #define BW_AUTO_SWITCH_HIGH_LOW		25
+ #define BW_AUTO_SWITCH_LOW_HIGH		30
+ 
+-#define DM_DIG_THRESH_HIGH			40
+-#define DM_DIG_THRESH_LOW			35
+-
+ #define DM_FALSEALARM_THRESH_LOW	400
+ #define DM_FALSEALARM_THRESH_HIGH	1000
+ 
+@@ -205,10 +202,6 @@
+ #define DM_DIG_FA_TH1				0x300
+ #define DM_DIG_FA_TH2				0x400
+ 
+-#define DM_DIG_BACKOFF_MAX			12
+-#define DM_DIG_BACKOFF_MIN			-4
+-#define DM_DIG_BACKOFF_DEFAULT		10
+-
+ #define RXPATHSELECTION_SS_TH_LOW	30
+ #define RXPATHSELECTION_DIFF_TH		18
+ 
+@@ -296,15 +289,6 @@ enum dm_dig_ext_port_alg_e {
+ 	DIG_EXT_PORT_STAGE_MAX = 4,
+ };
+ 
+-enum dm_dig_connect_e {
+-	DIG_STA_DISCONNECT = 0,
+-	DIG_STA_CONNECT = 1,
+-	DIG_STA_BEFORE_CONNECT = 2,
+-	DIG_MULTISTA_DISCONNECT = 3,
+-	DIG_MULTISTA_CONNECT = 4,
+-	DIG_CONNECT_MAX
+-};
+-
+ enum pwr_track_control_method {
+ 	BBSWING,
+ 	TXAGC,
 -- 
-1.9.1
-
+2.1.2
 
