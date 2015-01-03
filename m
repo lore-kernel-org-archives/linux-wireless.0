@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34679 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753782AbbALTmI (ORCPT
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:63209 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053AbbACSHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 14:42:08 -0500
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 4/8] ath10k:  make dbglog debug messages be 'warn' level.
-Date: Mon, 12 Jan 2015 11:41:45 -0800
-Message-Id: <1421091709-19891-4-git-send-email-greearb@candelatech.com> (sfid-20150112_204241_460112_6D4CDB4C)
-In-Reply-To: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
-References: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
+	Sat, 3 Jan 2015 13:07:34 -0500
+MIME-Version: 1.0
+In-Reply-To: <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+References: <1420297188.2397.3.camel@tiscali.nl>
+	<CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+Date: Sat, 3 Jan 2015 10:07:33 -0800
+Message-ID: <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com> (sfid-20150103_190753_657301_0209FB55)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Sat, Jan 3, 2015 at 10:02 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
+>
+> why would you revert this? It is obviously the correct change to actually select CFG80211_WEXT.
 
-This only happens on firmware crash, and it appears this
-logic is not always perfect, so make sure the information
-is printed to logs at higher level.
+I don't know about obvious, but yeah, I think the select in this case
+is actually the better idea anyway.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+We could make the CFG80211_WEXT help message be very negative so that
+people aren't encouraged to select it even if they can, but then if
+they need the ipw driver it gets selected because of that. Because the
+ipw driver is probably the more important of the two if you just
+happen to have old hardware but are upgrading yout software (and
+anybody who recompiles their own kernel is obviously doing the
+latter).
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 0f7e845..dee0d5a 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1132,9 +1132,8 @@ static void ath10k_pci_dump_dbglog(struct ath10k *ar)
- 		return;
- 	}
- 
--	ath10k_dbg(ar, ATH10K_DBG_PCI,
--		   "debug log header, dbuf: 0x%x  dropped: %i\n",
--		   le32_to_cpu(dbg_hdr.dbuf), le32_to_cpu(dbg_hdr.dropped));
-+	ath10k_warn(ar, "debug log header, dbuf: 0x%x  dropped: %i\n",
-+		    le32_to_cpu(dbg_hdr.dbuf), le32_to_cpu(dbg_hdr.dropped));
- 	dbufp = le32_to_cpu(dbg_hdr.dbuf);
- 
- 	/* i is for logging purposes and sanity check in case firmware buffers
-@@ -1154,11 +1153,10 @@ static void ath10k_pci_dump_dbglog(struct ath10k *ar)
- 
- 		len = le32_to_cpu(dbuf.length);
- 
--		ath10k_dbg(ar, ATH10K_DBG_PCI,
--			   "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
--			   i, le32_to_cpu(dbuf.next), le32_to_cpu(dbuf.buffer),
--			   le32_to_cpu(dbuf.bufsize), len,
--			   le32_to_cpu(dbuf.count), le32_to_cpu(dbuf.free));
-+		ath10k_warn(ar, "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
-+			    i, le32_to_cpu(dbuf.next), le32_to_cpu(dbuf.buffer),
-+			    le32_to_cpu(dbuf.bufsize), len,
-+			    le32_to_cpu(dbuf.count), le32_to_cpu(dbuf.free));
- 		if (dbuf.buffer == 0 || len == 0)
- 			goto next;
- 
--- 
-1.7.11.7
-
+                         Linus
