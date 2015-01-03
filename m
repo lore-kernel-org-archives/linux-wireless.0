@@ -1,69 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41247 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754359AbbAPKw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 05:52:58 -0500
-Message-ID: <1421405574.9214.3.camel@sipsolutions.net> (sfid-20150116_115302_757763_79E89BF3)
-Subject: Re: [RFCv2 3/6] mac80211: add VHT support for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 16 Jan 2015 11:52:54 +0100
-In-Reply-To: <1421404724-32326-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150116_113937_946440_684103C4)
-References: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1421404724-32326-3-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150116_113937_946440_684103C4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ie0-f193.google.com ([209.85.223.193]:51429 "EHLO
+	mail-ie0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752213AbbACPlq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Jan 2015 10:41:46 -0500
+Received: by mail-ie0-f193.google.com with SMTP id x19so4966867ier.0
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2015 07:41:45 -0800 (PST)
+Received: from mail-ie0-f170.google.com (mail-ie0-f170.google.com. [209.85.223.170])
+        by mx.google.com with ESMTPSA id k75sm21131804ioe.41.2015.01.03.07.41.44
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Sat, 03 Jan 2015 07:41:44 -0800 (PST)
+Received: by mail-ie0-f170.google.com with SMTP id rd18so17880418iec.15
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2015 07:41:44 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+icZUUfFr2PQjp4ppMNj5UQE3U7-ArmO1LSDoZZf5c1Y85OMw@mail.gmail.com>
+References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
+	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
+	<CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com>
+	<CAKXHbyO70WdWekSYCY9spMbX2+_kdKTp3JoreDKpCdUBzFwYqw@mail.gmail.com>
+	<CACna6rxTYUWvxvu0rFydWxkjbYdHfhV=o+9A+ViCpbV-LFx7fw@mail.gmail.com>
+	<CAKXHbyMqTk=k7eieBNtAD+n6+4w3weL82twHBo-o8ebm_3+wvg@mail.gmail.com>
+	<CA+icZUUJfemKC85=p7Huyw7xwfUdXBhePseJCnUKLx9edgpT4w@mail.gmail.com>
+	<CAKXHbyPm+2gy3E_FAVY82ggvJhWe-E_xtrhgeAPxUyRS-FutaA@mail.gmail.com>
+	<CA+icZUUfFr2PQjp4ppMNj5UQE3U7-ArmO1LSDoZZf5c1Y85OMw@mail.gmail.com>
+Date: Sat, 3 Jan 2015 16:41:44 +0100
+Message-ID: <CAKXHbyN2Vud5skK38KHFNo+FEG9at4SAQh8X5QYYK7qD3-34YQ@mail.gmail.com> (sfid-20150103_164150_753765_0AF605D4)
+Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Sedat Dilek <sedat.dilek@gmail.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-16 at 11:38 +0100, Janusz Dziedzic wrote:
-> Add VHT80/VHT160 support for IBSS.
-> Drivers could activate this feature by
-> setting NL80211_FEATURE_VHT_IBSS flag.
-> 
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
->  net/mac80211/ibss.c        | 11 +++++++++++
->  net/mac80211/ieee80211_i.h |  2 ++
->  net/mac80211/util.c        | 35 +++++++++++++++++++++++++++++++++++
->  3 files changed, 48 insertions(+)
-> 
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index 13b8105..1ffcfab 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -188,6 +188,15 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
->  		 */
->  		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
->  						 chandef, 0);
-> +
-> +		if (chandef->width != NL80211_CHAN_WIDTH_20 &&
-> +		    chandef->width != NL80211_CHAN_WIDTH_40 &&
-> +		    sband->vht_cap.vht_supported) {
-> +			pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
-> +							 sband->vht_cap.cap);
-> +			pos = ieee80211_ie_build_vht_oper(pos, &sband->vht_cap,
-> +							  chandef);
-> +		}
->  	}
->  
->  	if (local->hw.queues >= IEEE80211_NUM_ACS)
-> @@ -411,6 +420,8 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->  		cfg80211_chandef_create(&chandef, cbss->channel, chan_type);
->  		break;
->  	case NL80211_CHAN_WIDTH_40:
-> +	case NL80211_CHAN_WIDTH_80:
-> +	case NL80211_CHAN_WIDTH_160:
->  		cfg80211_chandef_create(&chandef, cbss->channel,
->  					NL80211_CHAN_WIDTH_20_NOHT);
->  		chandef.width = sdata->u.ibss.chandef.width;
+2015-01-03 15:51 GMT+01:00 Sedat Dilek <sedat.dilek@gmail.com>:
+> On Sat, Jan 3, 2015 at 3:45 PM, Rickard Strandqvist
+> <rickard_strandqvist@spectrumdigital.se> wrote:
+> [ ... ]
+>>> > I just got one more complaining about my subject-line in "net: wireless: "
+>>> > I use some sed call for this, so it's easy to fix. I will now remove that
+>>> > part hereinafter.
+>>> > I check in Documentation/ but did not find any clear info for this.
+>>> >
+>>>
+>>> The easiest way to make (sub)maintainers happy is to check the git-log...
+>>>
+>>> $ git log --oneline /path/to/file
+>>>
+>>> ...and look how other contributors labeled their patches.
+>>>
+>>> [1] is the 1st address to look at on how to submit patches to Linux-kernel.
+>>> To promote the good work of Greg, see [2,3] for a video and tutorial
+>>> on that topic, too.
+>>>
+>>> - Sedat -
+>>>
+>>> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches
+>>> [2] https://www.youtube.com/watch?v=XXix80GCvpo
+>>> [3] https://github.com/gregkh/kernel-tutorial
+>>
+>>
+>>
+>> Hi Sedat
+>>
+>> Thanks for the tip :)
+>>
+>> To bad with the audio in the video thow. Have read SubmittingPatches before.
+>>
+>
+> AFAICS there is another (earlier) video "Write and Submit your first
+> Linux kernel Patch" from FOSDEM 2010.
+>
+> For German readers I can recommend the book from [2] (no I get no
+> money for promotion).
+>
+> - Sedat -
+>
+> [1] https://www.youtube.com/watch?v=LLBrBBImJt4
+> [2] http://www.opensourcepress.de/de/produkte/Git/33227/978-3-95539-119-5-
+>
+>>
+>> But I have now added a line in my script that does a:
+>>
+>> git log -10 --oneline
+>>
+>> So I can at least see the other subjekt lines, and make adjustments if
+>> necessary.
+>>
+>>
+>>
+>> Kind regards
+>> Rickard Strandqvist
 
-Hmm. Must you not get a chandef from cfg80211 so you don't need this
-weird roundtrip through chandef_create()?
 
-Anyway this is more of the discussion on patch 1.
+Hi
 
-johannes
+Good video!
+Wish I had seen this a year ago.
 
+Sorry, no German for me :)
+
+
+Kind regards
+Rickard Strandqvist
