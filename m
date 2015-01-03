@@ -1,94 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:58513 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbbAVSdY (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:33120 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778AbbACGF0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 13:33:24 -0500
-Received: by mail-la0-f41.google.com with SMTP id gm9so3297621lab.0
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 10:33:23 -0800 (PST)
+	Sat, 3 Jan 2015 01:05:26 -0500
+Message-ID: <54A786A4.2050202@lwfinger.net> (sfid-20150103_070604_636723_3C205E17)
+Date: Sat, 03 Jan 2015 00:05:24 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAAk3=uv7ioMeLYU0YiChWNpWBQWJTqqEPONoMQzrJx=UoBY-1w@mail.gmail.com>
-References: <CAAk3=uumFdCe69HVPGp0TL6-RDuk58B5qxLxAsTOBCwY43fVkA@mail.gmail.com>
-	<CAAk3=uvCn84yBEa+hUoX7Wp799-O-Xy6QJFgNiQwt3rH3PLsWQ@mail.gmail.com>
-	<CANUX_P2CMvw4wZnpydPprw0=VwKMXBAcONSVyKSTcsnun=OCGQ@mail.gmail.com>
-	<CAAk3=uv7ioMeLYU0YiChWNpWBQWJTqqEPONoMQzrJx=UoBY-1w@mail.gmail.com>
-Date: Thu, 22 Jan 2015 20:33:23 +0200
-Message-ID: <CANUX_P3pjqhNuX1e0WLe-B-gxnU4PTOFp=v3iNg_4H+NhTUF8A@mail.gmail.com> (sfid-20150122_193330_091932_32DC99BC)
-Subject: Re: [iwlwifi] fail to flush all tx queues on kernel 3.17.6
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Gerlof Fokkema <gerlof.fokkema@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+CC: Kalle Valo <kvalo@adurom.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Fengguang Wu <fengguang.wu@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: wireless: rtlwifi: btcoexist: halbtc8821a2ant:
+ Remove some unused functions
+References: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+In-Reply-To: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 01/02/2015 02:26 PM, Rickard Strandqvist wrote:
+> Removes some functions that are not used anywhere:
+> ex_halbtc8821a2ant_periodical() ex_halbtc8821a2ant_halt_notify()
+> ex_halbtc8821a2ant_bt_info_notify()
+> ex_halbtc8821a2ant_special_packet_notify()
+> ex_halbtc8821a2ant_connect_notify() ex_halbtc8821a2ant_scan_notify()
+> ex_halbtc8821a2ant_lps_notify() ex_halbtc8821a2ant_ips_notify()
+> ex_halbtc8821a2ant_display_coex_info() ex_halbtc8821a2ant_init_coex_dm()
+> ex_halbtc8821a2ant_init_hwconfig()
+>
+> This was partially found by using a static code analysis program called cppcheck.
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 
-On Thu, Jan 22, 2015 at 4:14 PM, Gerlof Fokkema
-<gerlof.fokkema@gmail.com> wrote:
-> Hello Emmanuel,
->
-> First of all, thanks for your previous reply.
-> I'm glad the issue is known and being looked at.
->
-> Recently I tried linux kernel 3.18.2 on Arch linux and had the same
-> issues I previously mentioned.
-> Is there any bug report on this I can follow or any other way to be updated?
->
+I know that you have been told that including "net: wireless:" in the subject 
+line is discouraged. Please do not do this again. The staging directory is 
+different as GregKH uses "staging:" in the subject to route patches, but 
+wireless does not.
 
-This should help:
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=4e6c48e0984e28d064ee8fbc292aee7b7920c507
+As to the patch, NACK for the simple reason that I am currently working on a 
+number of changes to btcoexist. Some of these routines may end up being removed, 
+but others will not. Having your patch remove them, and one of mine adding them 
+back just constitutes a lot of churning of the source. In addition, it greatly 
+increases the probability of the source trees becoming unsynchronized and 
+getting merge conflicts.
 
->
-> On Tue, Dec 30, 2014 at 3:30 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->> Hi,
->>
->> Sorry for the delay. This one got lost in my inbox.
->>
->> On Sat, Dec 27, 2014 at 4:03 PM, Gerlof Fokkema
->> <gerlof.fokkema@gmail.com> wrote:
->>> Hi all,
->>>
->>> Since a few weeks I own a laptop with an Intel Wireless 7260 wireless adapter.
->>> I first noticed that my connection started dropping when I transferred
->>> large files over WiFi.
->>> Later on I noticed this problem when the signal strength was low as well.
->>>
->>> I seem to be experiencing the bug described here:
->>> https://bugzilla.kernel.org/show_bug.cgi?id=56581
->>
->> This bug relates to dvm - which is de-facto another driver. We made
->> this work around because
->> of firmware issues. These issues aren't supposed to happen on devices
->> supported by iwlmvm.
->> Obviously, they do. You are not the only one to report this issue.
->> I will discuss it with our firmware team.
->>
->>>
->>> However, if I read the changelogs correctly, this should've been fixed
->>> in 3.17.3.
->>>
->>> Atttached you'll find dmesg.log with the error.
->>> Excerpt:
->>> [  152.941067] iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 2
->>> [  152.941072] iwlwifi 0000:03:00.0: Current SW read_ptr 209 write_ptr 234
->>> [  152.941097] iwl data: 00000000: 00 00 00 00 00 00 00 00 00 00 00 00
->>> 00 00 00 00  ................
->>> [  152.941111] iwlwifi 0000:03:00.0: FH TRBs(0) = 0x80003000
->>> [  152.941125] iwlwifi 0000:03:00.0: FH TRBs(1) = 0xc01100f2
->>> [  152.941139] iwlwifi 0000:03:00.0: FH TRBs(2) = 0x00000000
->>> When I try reconnecting to WiFi I get dozens more of those errors.
->>>
->>> Can someone point me in the right direction for this?
->>> Is there already a bugreport for this on kernel 3.17.6?
->>> Should you need more information, I'm happy to supply.
->>>
->>> For now I've reverted to 3.16.4, since it seems to work better...
->>
->> Probably because 3.16 uses an older firmware (-9.ucode).
->> This is also an interesting input - although I heard complaints about
->> this very same issue on -9.ucode as well.
->>
->>>
->>> Kind regards,
->>> Gerlof Fokkema
+Larry
+
