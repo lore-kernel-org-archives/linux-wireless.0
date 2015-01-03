@@ -1,43 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:39716 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932363AbbAFSfr (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:38753 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750955AbbACOvc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 13:35:47 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 04/10] brcmfmac: get rid of duplicate SDIO device identifiers
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
-	<1419162233-19492-5-git-send-email-arend@broadcom.com>
-Date: Tue, 06 Jan 2015 20:35:39 +0200
-In-Reply-To: <1419162233-19492-5-git-send-email-arend@broadcom.com> (Arend van
-	Spriel's message of "Sun, 21 Dec 2014 12:43:47 +0100")
-Message-ID: <87k30zycxw.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_193550_890957_41ED3392)
+	Sat, 3 Jan 2015 09:51:32 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <CAKXHbyPm+2gy3E_FAVY82ggvJhWe-E_xtrhgeAPxUyRS-FutaA@mail.gmail.com>
+References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
+	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
+	<CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com>
+	<CAKXHbyO70WdWekSYCY9spMbX2+_kdKTp3JoreDKpCdUBzFwYqw@mail.gmail.com>
+	<CACna6rxTYUWvxvu0rFydWxkjbYdHfhV=o+9A+ViCpbV-LFx7fw@mail.gmail.com>
+	<CAKXHbyMqTk=k7eieBNtAD+n6+4w3weL82twHBo-o8ebm_3+wvg@mail.gmail.com>
+	<CA+icZUUJfemKC85=p7Huyw7xwfUdXBhePseJCnUKLx9edgpT4w@mail.gmail.com>
+	<CAKXHbyPm+2gy3E_FAVY82ggvJhWe-E_xtrhgeAPxUyRS-FutaA@mail.gmail.com>
+Date: Sat, 3 Jan 2015 15:51:30 +0100
+Message-ID: <CA+icZUUfFr2PQjp4ppMNj5UQE3U7-ArmO1LSDoZZf5c1Y85OMw@mail.gmail.com> (sfid-20150103_155136_369747_A90B01F0)
+Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
-
-> Instead of defining SDIO device identifier in brcm80211 code use
-> the defintions in linux/mmc/sdio_ids.h directly.
+On Sat, Jan 3, 2015 at 3:45 PM, Rickard Strandqvist
+<rickard_strandqvist@spectrumdigital.se> wrote:
+[ ... ]
+>> > I just got one more complaining about my subject-line in "net: wireless: "
+>> > I use some sed call for this, so it's easy to fix. I will now remove that
+>> > part hereinafter.
+>> > I check in Documentation/ but did not find any clear info for this.
+>> >
+>>
+>> The easiest way to make (sub)maintainers happy is to check the git-log...
+>>
+>> $ git log --oneline /path/to/file
+>>
+>> ...and look how other contributors labeled their patches.
+>>
+>> [1] is the 1st address to look at on how to submit patches to Linux-kernel.
+>> To promote the good work of Greg, see [2,3] for a video and tutorial
+>> on that topic, too.
+>>
+>> - Sedat -
+>>
+>> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches
+>> [2] https://www.youtube.com/watch?v=XXix80GCvpo
+>> [3] https://github.com/gregkh/kernel-tutorial
 >
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>
+>
+> Hi Sedat
+>
+> Thanks for the tip :)
+>
+> To bad with the audio in the video thow. Have read SubmittingPatches before.
+>
 
-I tried to apply this but got:
+AFAICS there is another (earlier) video "Write and Submit your first
+Linux kernel Patch" from FOSDEM 2010.
 
-Applying: brcmfmac: get rid of duplicate SDIO device identifiers
-error: patch failed: drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c:996
-error: drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c: patch does not apply
-error: patch failed: drivers/net/wireless/brcm80211/include/brcm_hw_ids.h:46
-error: drivers/net/wireless/brcm80211/include/brcm_hw_ids.h: patch does not apply
-Patch failed at 0001 brcmfmac: get rid of duplicate SDIO device identifiers
+For German readers I can recommend the book from [2] (no I get no
+money for promotion).
 
-Please resend.
+- Sedat -
 
--- 
-Kalle Valo
+[1] https://www.youtube.com/watch?v=LLBrBBImJt4
+[2] http://www.opensourcepress.de/de/produkte/Git/33227/978-3-95539-119-5-
+
+>
+> But I have now added a line in my script that does a:
+>
+> git log -10 --oneline
+>
+> So I can at least see the other subjekt lines, and make adjustments if
+> necessary.
+>
+>
+>
+> Kind regards
+> Rickard Strandqvist
