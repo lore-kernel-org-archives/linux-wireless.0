@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:54334 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166AbbASOpf (ORCPT
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:65368 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750735AbbACW2r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 09:45:35 -0500
-Date: Mon, 19 Jan 2015 16:34:57 +0200
-From: Vadim Kochan <vadim4j@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vadim Kochan <vadim4j@gmail.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
-Message-ID: <20150119143457.GA6988@angus-think.wlc.globallogic.com> (sfid-20150119_154540_660921_1755FCBA)
-References: <1421073245-20312-1-git-send-email-vadim4j@gmail.com>
- <1421225246.1950.22.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421225246.1950.22.camel@sipsolutions.net>
+	Sat, 3 Jan 2015 17:28:47 -0500
+Message-ID: <1420324124.9624.60.camel@x220> (sfid-20150103_232852_400842_25360CE9)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Sat, 03 Jan 2015 23:28:44 +0100
+In-Reply-To: <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+References: <1420297188.2397.3.camel@tiscali.nl>
+	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 14, 2015 at 09:47:26AM +0100, Johannes Berg wrote:
-> On Mon, 2015-01-12 at 16:34 +0200, Vadim Kochan wrote:
+On Sat, 2015-01-03 at 10:07 -0800, Linus Torvalds wrote:
+> On Sat, Jan 3, 2015 at 10:02 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> >
+> > why would you revert this? It is obviously the correct change to actually select CFG80211_WEXT.
 > 
-> > --- a/net/core/net_namespace.c
-> > +++ b/net/core/net_namespace.c
-> > @@ -361,6 +361,7 @@ struct net *get_net_ns_by_fd(int fd)
-> >  	return ERR_PTR(-EINVAL);
-> >  }
-> >  #endif
-> > +EXPORT_SYMBOL_GPL(get_net_ns_by_fd);
-> 
-> Does this seem OK? Vadim is adding support for using the ns-by-fd in
-> nl80211, which can be a module as part of cfg80211.
-> 
-> johannes
-> 
-PING ... in case if this email was missed ...
+> I don't know about obvious, but yeah, I think the select in this case
+> is actually the better idea anyway.
 
-Thanks,
+Obviously it wasn't obvious to me!
+
+My reasoning was that the "ipw2200: select CFG80211_WEXT" commit was
+_solely_ a workaround for the breakage introduced by that other patch.
+And since that one is now reverted the workaround wasn't needed anymore.
+
+Besied, I thought we try to avoid select-ing symbols that can also be
+set manually. As that makes it more likely to trigger circular
+dependency problems in the kconfig tools, doesn't it?
+
+> We could make the CFG80211_WEXT help message be very negative so that
+> people aren't encouraged to select it even if they can, but then if
+> they need the ipw driver it gets selected because of that. Because the
+> ipw driver is probably the more important of the two if you just
+> happen to have old hardware but are upgrading yout software (and
+> anybody who recompiles their own kernel is obviously doing the
+> latter).
+
+Side note: am I correct in thinking that there's some successor to
+CFG80211_WEXT and that the ipw2200 driver could, at least in theory, be
+ported to that successor? (ipw2200 hardware appears to be a bit old, so
+probably no one would care enough to actually do that.)
+net/wireless/kconfig doesn't mention anything like that, so probably I'm
+just confused.
+
+
+Paul Bolle
+
