@@ -1,80 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:33012 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750776AbbARS0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 13:26:25 -0500
-Message-ID: <54BBFACA.9010609@hauke-m.de> (sfid-20150118_192704_774590_B4F0D84B)
-Date: Sun, 18 Jan 2015 19:26:18 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-CC: "Saul St. John" <saul.stjohn@gmail.com>
-Subject: Re: [PATCH RFC] bcma: simplify freeing cores (internal devices structs)
-References: <1421444828-32616-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1421444828-32616-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:42993 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752648AbbADPkx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Jan 2015 10:40:53 -0500
+Received: by mail-lb0-f169.google.com with SMTP id p9so16814461lbv.0
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2015 07:40:51 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Kalle Valo <kvalo@adurom.com>, Pavel Machek <pavel@ucw.cz>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>,
+	David Gnedt <david.gnedt@davizone.at>,
+	George Spelvin <linux@horizon.com>,
+	Surendra Patil <surendra.tux@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] wl1251: Remove unused function
+Date: Sun,  4 Jan 2015 16:43:52 +0100
+Message-Id: <1420386232-12344-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150104_164133_188480_4E9E0C55)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/16/2015 10:47 PM, Rafał Miłecki wrote:
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This code was introduced by Saul in
-> ee91592711ed90a1abfbb1b2ceadded11d685164
-> bcma: don't leak memory for PCIE, MIPS, GBIT cores
-> 
-> I don't really see reason for making it in so complicated way.
-> I tested my patch for crashes, but didn't really try kmemleak.
-> Is my simple solution OK? Or am I missing something? Anyone?
+Remove the function wl1251_cmd_read_memory() that is not used anywhere.
 
-Are you sure no device driver accesses the chipcommon, pcie or mips core
-in the unregister part? If some device driver does something in his
-remove function with e.g. chipcommon it will cause problems when the
-chipcommon core was already freed.
+This was partially found by using a static code analysis program called cppcheck.
 
-Hauke
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/net/wireless/ti/wl1251/cmd.c |   40 ----------------------------------
+ drivers/net/wireless/ti/wl1251/cmd.h |    2 --
+ 2 files changed, 42 deletions(-)
 
-> ---
->  drivers/bcma/main.c | 11 ++---------
->  1 file changed, 2 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> index c3c5e0a..58dd582 100644
-> --- a/drivers/bcma/main.c
-> +++ b/drivers/bcma/main.c
-> @@ -371,6 +371,8 @@ static void bcma_unregister_cores(struct bcma_bus *bus)
->  		list_del(&core->list);
->  		if (core->dev_registered)
->  			device_unregister(&core->dev);
-> +		else
-> +			kfree(core);
->  	}
->  	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
->  		platform_device_unregister(bus->drv_cc.watchdog);
-> @@ -467,7 +469,6 @@ int bcma_bus_register(struct bcma_bus *bus)
->  
->  void bcma_bus_unregister(struct bcma_bus *bus)
->  {
-> -	struct bcma_device *cores[3];
->  	int err;
->  
->  	err = bcma_gpio_unregister(&bus->drv_cc);
-> @@ -478,15 +479,7 @@ void bcma_bus_unregister(struct bcma_bus *bus)
->  
->  	bcma_core_chipcommon_b_free(&bus->drv_cc_b);
->  
-> -	cores[0] = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
-> -	cores[1] = bcma_find_core(bus, BCMA_CORE_PCIE);
-> -	cores[2] = bcma_find_core(bus, BCMA_CORE_4706_MAC_GBIT_COMMON);
-> -
->  	bcma_unregister_cores(bus);
-> -
-> -	kfree(cores[2]);
-> -	kfree(cores[1]);
-> -	kfree(cores[0]);
->  }
->  
->  /*
-> 
+diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
+index ede31f0..26f4d74 100644
+--- a/drivers/net/wireless/ti/wl1251/cmd.c
++++ b/drivers/net/wireless/ti/wl1251/cmd.c
+@@ -346,46 +346,6 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
+-			   size_t len)
+-{
+-	struct cmd_read_write_memory *cmd;
+-	int ret = 0;
+-
+-	wl1251_debug(DEBUG_CMD, "cmd read memory");
+-
+-	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+-	if (!cmd) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	WARN_ON(len > MAX_READ_SIZE);
+-	len = min_t(size_t, len, MAX_READ_SIZE);
+-
+-	cmd->addr = addr;
+-	cmd->size = len;
+-
+-	ret = wl1251_cmd_send(wl, CMD_READ_MEMORY, cmd, sizeof(*cmd));
+-	if (ret < 0) {
+-		wl1251_error("read memory command failed: %d", ret);
+-		goto out;
+-	}
+-
+-	/* the read command got in, we can now read the answer */
+-	wl1251_mem_read(wl, wl->cmd_box_addr, cmd, sizeof(*cmd));
+-
+-	if (cmd->header.status != CMD_STATUS_SUCCESS)
+-		wl1251_error("error in read command result: %d",
+-			     cmd->header.status);
+-
+-	memcpy(answer, cmd->value, len);
+-
+-out:
+-	kfree(cmd);
+-	return ret;
+-}
+-
+ int wl1251_cmd_template_set(struct wl1251 *wl, u16 cmd_id,
+ 			    void *buf, size_t buf_len)
+ {
+diff --git a/drivers/net/wireless/ti/wl1251/cmd.h b/drivers/net/wireless/ti/wl1251/cmd.h
+index d824ff9..5f35430 100644
+--- a/drivers/net/wireless/ti/wl1251/cmd.h
++++ b/drivers/net/wireless/ti/wl1251/cmd.h
+@@ -40,8 +40,6 @@ int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable);
+ int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 		    u16 beacon_interval, u8 dtim_interval);
+ int wl1251_cmd_ps_mode(struct wl1251 *wl, u8 ps_mode);
+-int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
+-			   size_t len);
+ int wl1251_cmd_template_set(struct wl1251 *wl, u16 cmd_id,
+ 			    void *buf, size_t buf_len);
+ int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
+-- 
+1.7.10.4
 
