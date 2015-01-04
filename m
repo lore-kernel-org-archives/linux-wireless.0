@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:45169 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbbAWHQq (ORCPT
+Received: from khitomer.mortis.eu ([185.27.175.75]:11418 "EHLO
+	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752782AbbADTK3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 02:16:46 -0500
-Date: Fri, 23 Jan 2015 18:16:19 +1100
-From: James Cameron <quozl@laptop.org>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RFC PATCH] mwifiex: handle command response in aggregation
-Message-ID: <20150123071619.GA31644@us.netrek.org> (sfid-20150123_081649_486682_DE6C7913)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 4 Jan 2015 14:10:29 -0500
+From: Giel van Schijndel <me@mortis.eu>
+To: linux-kernel@vger.kernel.org
+Cc: Giel van Schijndel <me@mortis.eu>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	linux-wireless@vger.kernel.org (open list:TI WILINK WIRELES...),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
+Subject: [PATCH 1/2] Align member-assigns in a structure-copy block
+Date: Sun,  4 Jan 2015 19:00:22 +0100
+Message-Id: <1420394427-19509-1-git-send-email-me@mortis.eu> (sfid-20150104_201050_307093_211B8EC4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware does occasionally pass a command response to the host on the
-data port.  Ensure it is processed.
-
-http://dev.laptop.org/ticket/12749
+This highlights the differences (errors).
 ---
-Seen on device firmwares:
+ drivers/net/wireless/ti/wlcore/acx.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-	14.66.9.p96
-	14.66.35.p52
-
-Others not tested.
-
- drivers/net/wireless/mwifiex/sdio.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 933dae1..8fe6147 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1240,8 +1240,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
- 			/* copy pkt to deaggr buf */
- 			skb_deaggr = card->mpa_rx.skb_arr[pind];
+diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+index b924cea..beb354c 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.c
++++ b/drivers/net/wireless/ti/wlcore/acx.c
+@@ -1715,17 +1715,17 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
+ 		goto out;
+ 	}
  
--			if ((pkt_type == MWIFIEX_TYPE_DATA) && (pkt_len <=
--					 card->mpa_rx.len_arr[pind])) {
-+			if (pkt_len <= card->mpa_rx.len_arr[pind]) {
+-	acx->recover_time = cpu_to_le32(conf->recover_time);
+-	acx->hangover_period = conf->hangover_period;
+-	acx->dynamic_mode = conf->dynamic_mode;
+-	acx->early_termination_mode = conf->early_termination_mode;
+-	acx->max_period = conf->max_period;
+-	acx->min_period = conf->min_period;
+-	acx->increase_delta = conf->increase_delta;
+-	acx->decrease_delta = conf->decrease_delta;
+-	acx->quiet_time = conf->quiet_time;
+-	acx->increase_time = conf->increase_time;
+-	acx->window_size = acx->window_size;
++	acx->recover_time               = cpu_to_le32(conf->recover_time);
++	acx->hangover_period            = conf->hangover_period;
++	acx->dynamic_mode               = conf->dynamic_mode;
++	acx->early_termination_mode     = conf->early_termination_mode;
++	acx->max_period                 = conf->max_period;
++	acx->min_period                 = conf->min_period;
++	acx->increase_delta             = conf->increase_delta;
++	acx->decrease_delta             = conf->decrease_delta;
++	acx->quiet_time                 = conf->quiet_time;
++	acx->increase_time              = conf->increase_time;
++	acx->window_size                = acx->window_size;
  
- 				memcpy(skb_deaggr->data, curr_ptr, pkt_len);
- 
-@@ -1251,7 +1250,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
- 				mwifiex_decode_rx_packet(adapter, skb_deaggr,
- 							 pkt_type);
- 			} else {
--				dev_err(adapter->dev, "wrong aggr pkt:"
-+				dev_err(adapter->dev, "bad aggr pkt:"
- 					" type=%d len=%d max_len=%d\n",
- 					pkt_type, pkt_len,
- 					card->mpa_rx.len_arr[pind]);
+ 	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
+ 				   sizeof(*acx));
 -- 
-1.9.1
+2.1.4
 
-
--- 
-James Cameron
-http://quozl.linux.org.au/
