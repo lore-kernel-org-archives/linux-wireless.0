@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:36776 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751033AbbAOOa7 (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:46180 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979AbbADKNb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 09:30:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	mathias.kretschmer@fokus.fraunhofer.de, stable@vger.kernel.org
-Subject: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
-References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de>
-	<2179820.H2CYa3nAla@prime> <54B4F062.2090301@neratec.com>
-	<3155015.RnApTRDnnO@prime>
-Date: Thu, 15 Jan 2015 16:30:51 +0200
-In-Reply-To: <3155015.RnApTRDnnO@prime> (Simon Wunderlich's message of "Tue,
-	13 Jan 2015 12:04:36 +0100")
-Message-ID: <87ppagnmjo.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_153105_564588_2DBAAD0D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 4 Jan 2015 05:13:31 -0500
+Received: by mail-wg0-f53.google.com with SMTP id x13so8271152wgg.12
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2015 02:13:30 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] mac80211: always recalc_radar on chanctx changes
+Date: Sun,  4 Jan 2015 12:13:19 +0200
+Message-Id: <1420366399-31535-3-git-send-email-eliad@wizery.com> (sfid-20150104_111345_459950_75309A50)
+In-Reply-To: <1420366399-31535-1-git-send-email-eliad@wizery.com>
+References: <1420366399-31535-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simon Wunderlich <sw@simonwunderlich.de> writes:
+ieee80211_recalc_radar_chanctx() changes the global
+local->radar_detect_enabled in case of a change
+from the current chanctx radar_enabled state.
 
->> I did not dig how the hw->conf.radar_enabled flag is set in monitor mode,
->> but if it is same as for master (i.e. set for DFS channels), then it would
->> be a better approach to prevent calling ath9k_dfs_process_phyerr()
->> altogether from ath9k_rx_skb_preprocess() if not set.
->
-> Hm, you mean like - if radar_enabled then dfs_process, otherwise fft_process? 
-> That would might be more elegant indeed ...
->
-> The monitor mode does not have the radar flag enabled, 
-> cfg80211_chandef_dfs_required() returns 0 in this case.
+Thus, we need to make sure it will be called
+even if the current chanctx is going to be
+freed (so local->radar_detect_enabled will
+be cleared if needed).
 
-So are you going to send v2 or what's the plan? I didn't quite get the
-conclusion from the discussion.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/chan.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 7f83451..9261cc0 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -629,10 +629,12 @@ out:
+ 
+ 	sdata->vif.bss_conf.idle = !conf;
+ 
++	if (curr_ctx)
++		ieee80211_recalc_radar_chanctx(local, curr_ctx);
++
+ 	if (curr_ctx && ieee80211_chanctx_num_assigned(local, curr_ctx) > 0) {
+ 		ieee80211_recalc_chanctx_chantype(local, curr_ctx);
+ 		ieee80211_recalc_smps_chanctx(local, curr_ctx);
+-		ieee80211_recalc_radar_chanctx(local, curr_ctx);
+ 		ieee80211_recalc_chanctx_min_def(local, curr_ctx);
+ 	}
+ 
 -- 
-Kalle Valo
+1.8.5.2.229.g4448466.dirty
+
