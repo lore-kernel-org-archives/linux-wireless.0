@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:48081 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbbAPNb5 (ORCPT
+Received: from khitomer.mortis.eu ([185.27.175.75]:11417 "EHLO
+	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752761AbbADTK3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 08:31:57 -0500
-Received: by mail-ie0-f170.google.com with SMTP id rd18so20633906iec.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 05:31:56 -0800 (PST)
-Date: Fri, 16 Jan 2015 08:31:52 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: Avoid STA expiration timer truncation to u32
-Message-ID: <20150116133152.GC10300@localhost> (sfid-20150116_143201_498620_9431A550)
-References: <CAFk-A4kzcC9BhCtwqxjprRiXZeVPepBDXr3TvqvL6hn6J37UGw@mail.gmail.com>
- <1421389121-2841-1-git-send-email-masashi.honma@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421389121-2841-1-git-send-email-masashi.honma@gmail.com>
+	Sun, 4 Jan 2015 14:10:29 -0500
+From: Giel van Schijndel <me@mortis.eu>
+To: linux-kernel@vger.kernel.org
+Cc: Giel van Schijndel <me@mortis.eu>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	linux-wireless@vger.kernel.org (open list:TI WILINK WIRELES...),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
+Subject: [PATCH 2/2] Fix copy-paste bug: assign from src struct not dest
+Date: Sun,  4 Jan 2015 19:00:23 +0100
+Message-Id: <1420394427-19509-2-git-send-email-me@mortis.eu> (sfid-20150104_201205_499836_1F2052B2)
+In-Reply-To: <1420394427-19509-1-git-send-email-me@mortis.eu>
+References: <1420394427-19509-1-git-send-email-me@mortis.eu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 16, 2015 at 03:18:41PM +0900, Masashi Honma wrote:
-> On some combination of plink_timeout and HZ, the STA expiration timer will be
-> unexpectedly truncated to u32. Maybe there is a question "Who sets such a large
+---
+ drivers/net/wireless/ti/wlcore/acx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Nice catch!
-
-> -	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
-> +	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout *
-> +			     (unsigned long)HZ);
-
-There's a remaining problem on 32-bit platforms: there, unsigned long
-is 32 bits so 0xffffffff * HZ will still truncate to 32 bits.
-
-For normal values of HZ though, result will still be 'a rather large
-number,' so maybe it's not worth caring about that.
-
+diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+index beb354c..93a2fa8 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.c
++++ b/drivers/net/wireless/ti/wlcore/acx.c
+@@ -1725,7 +1725,7 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
+ 	acx->decrease_delta             = conf->decrease_delta;
+ 	acx->quiet_time                 = conf->quiet_time;
+ 	acx->increase_time              = conf->increase_time;
+-	acx->window_size                = acx->window_size;
++	acx->window_size                = conf->window_size;
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
+ 				   sizeof(*acx));
 -- 
-Bob Copeland %% http://bobcopeland.com/
+2.1.4
+
