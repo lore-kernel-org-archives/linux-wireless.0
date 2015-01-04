@@ -1,43 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:47955 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753916AbbAERqm (ORCPT
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:58438 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752664AbbADMoB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 12:46:42 -0500
-Message-ID: <54AACE00.8060407@lwfinger.net> (sfid-20150105_184703_627216_69FB81C8)
-Date: Mon, 05 Jan 2015 11:46:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 4 Jan 2015 07:44:01 -0500
+Received: by mail-ie0-f180.google.com with SMTP id rp18so17788600iec.25
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2015 04:44:00 -0800 (PST)
+Received: from mail-ie0-f175.google.com (mail-ie0-f175.google.com. [209.85.223.175])
+        by mx.google.com with ESMTPSA id tg9sm2191414igb.8.2015.01.04.04.43.59
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Sun, 04 Jan 2015 04:43:59 -0800 (PST)
+Received: by mail-ie0-f175.google.com with SMTP id x19so18437783ier.20
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2015 04:43:59 -0800 (PST)
 MIME-Version: 1.0
-To: nick <xerofoify@gmail.com>, Kalle Valo <kvalo@codeaurora.org>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, stefano.brivio@polimi.it,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers:net:wireless: Add proper locking for the function,
- b43_op_beacon_set_tim in main.c
-References: <1420184041-6788-1-git-send-email-xerofoify@gmail.com> <87tx05378x.fsf@kamboji.qca.qualcomm.com> <54AAC6EE.2000603@gmail.com>
-In-Reply-To: <54AAC6EE.2000603@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <54A8DBF4.4050202@lwfinger.net>
+References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<54A8DBF4.4050202@lwfinger.net>
+Date: Sun, 4 Jan 2015 13:43:59 +0100
+Message-ID: <CAKXHbyN6LH_pFw1uoLXRzgJv-NcjbTLJvMZXfwYXDwuk9QDszA@mail.gmail.com> (sfid-20150104_134406_966806_4480E20D)
+Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2015 11:16 AM, nick wrote:
-> Kalle,
-> That's fine. On the other hand I am interested in the
-> reasons why this patch was dropped so I can send in a
-> version 2 of this patch.
-> Regards Nick
+2015-01-04 7:21 GMT+01:00 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 01/03/2015 06:47 PM, Rickard Strandqvist wrote:
+>>
+>> Removes some functions that are not used anywhere:
+>> dma_txflush() dma_txsuspended()
+>>
+>> This was partially found by using a static code analysis program called
+>> cppcheck.
+>>
+>> Signed-off-by: Rickard Strandqvist
+>> <rickard_strandqvist@spectrumdigital.se>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmsmac/dma.c |   19 -------------------
+>>   drivers/net/wireless/brcm80211/brcmsmac/dma.h |    2 --
+>>   2 files changed, 21 deletions(-)
+>
+>
+> Just because file dma.c is involved, it does not need to be, nor should it
+> be in the subject line. You could specify the driver names in the file tree
+> after wireless. In this instance, one possible subject would be "brcm80211:
+> brcmsmac: Remove some unused functions". On the other hand, if you look at
+> "git log" to see past patches, the driver maintainers even leave off the
+> brcm80211 part, thus to match them, the subject should be "brcmsmac: Remove
+> some unused functions".
+>
+> As was suggested earlier, you need to look at the precedents. Keeping a
+> uniform method of patch naming helps when looking for patches in the git
+> log.
+>
+> Larry
+>
 
-Apparently you missed Michael Büsch's comment:
 
-"Thanks for the patch.
+Hi Larry
 
-However, this does not work. We are in atomic context here.
-Please see the b43-dev mailing list archives for a recent thread about that.
-I'm also pretty sure that this is safe without lock, due to the higher level 
-locks in mac80211."
+As I hope you can see I have made some changes regarding the
+subject-line. Thought it was an advantage to be able to see which file
+I actually removed something from.
+There seems to be a big focus on getting right on subject-line right
+in recent weeks.
 
-Did you actually test the patch? If Michael is right, and I trust him on this 
-matter, your patch should lock the system.
+I wonder why there is a script that takes a file name, and respond
+with an appropriate subject line?
 
-Larry
+But ok, I change my script accordingly. Should I submit the patch again?
 
+
+Kind regards
+Rickard Strandqvist
