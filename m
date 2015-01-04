@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:28917 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757033AbbA2KRM (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:40524 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbbADGVn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 05:17:12 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: implement sta keepalive command
-References: <1421749440-10457-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 29 Jan 2015 12:16:59 +0200
-In-Reply-To: <1421749440-10457-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 20 Jan 2015 11:23:59 +0100")
-Message-ID: <87vbjp3n8k.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_111721_319213_CE259A4F)
+	Sun, 4 Jan 2015 01:21:43 -0500
+Message-ID: <54A8DBF4.4050202@lwfinger.net> (sfid-20150104_072224_120372_218FAD52)
+Date: Sun, 04 Jan 2015 00:21:40 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+CC: Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@adurom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
+References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+In-Reply-To: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+On 01/03/2015 06:47 PM, Rickard Strandqvist wrote:
+> Removes some functions that are not used anywhere:
+> dma_txflush() dma_txsuspended()
 >
-> New wmi-tlv firmware for qca6174 has STA keepalive
-> service available. The service can provide
-> automatic idle connection polling via NullFunc
-> frames to AP when acting as a client.
+> This was partially found by using a static code analysis program called cppcheck.
 >
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>   drivers/net/wireless/brcm80211/brcmsmac/dma.c |   19 -------------------
+>   drivers/net/wireless/brcm80211/brcmsmac/dma.h |    2 --
+>   2 files changed, 21 deletions(-)
 
-Thanks, both patches applied to ath.git.
+Just because file dma.c is involved, it does not need to be, nor should it be in 
+the subject line. You could specify the driver names in the file tree after 
+wireless. In this instance, one possible subject would be "brcm80211: brcmsmac: 
+Remove some unused functions". On the other hand, if you look at "git log" to 
+see past patches, the driver maintainers even leave off the brcm80211 part, thus 
+to match them, the subject should be "brcmsmac: Remove some unused functions".
 
--- 
-Kalle Valo
+As was suggested earlier, you need to look at the precedents. Keeping a uniform 
+method of patch naming helps when looking for patches in the git log.
+
+Larry
+
+
