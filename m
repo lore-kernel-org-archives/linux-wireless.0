@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59295 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753292AbbAFMZ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 07:25:56 -0500
-Message-ID: <1420547148.1966.27.camel@sipsolutions.net> (sfid-20150106_132559_855218_C251C325)
-Subject: Re: [PATCH} mac80211: correction of IFTYPE_AP and IFTYPE_AP_VLAN in
- ieee80211_do_stop
-From: Johannes Berg <johannes@sipsolutions.net>
-To: wim torfs <wtorfs@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Tue, 06 Jan 2015 13:25:48 +0100
-In-Reply-To: <54ABD389.8030409@gmail.com> (sfid-20150106_132236_971222_15D2909D)
-References: <54ABD389.8030409@gmail.com>
-	 (sfid-20150106_132236_971222_15D2909D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:51439 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbbADKNa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Jan 2015 05:13:30 -0500
+Received: by mail-wg0-f49.google.com with SMTP id n12so25905816wgh.22
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2015 02:13:29 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] mac80211: don't defer scans in case of radar detection
+Date: Sun,  4 Jan 2015 12:13:18 +0200
+Message-Id: <1420366399-31535-2-git-send-email-eliad@wizery.com> (sfid-20150104_111344_824089_5D605F41)
+In-Reply-To: <1420366399-31535-1-git-send-email-eliad@wizery.com>
+References: <1420366399-31535-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-06 at 13:22 +0100, wim torfs wrote:
-> While doing a code review, I noticed that in the latest stable version 
-> of the kernel (3.18.1) the functionality of IFTYPE_AP and IFTYPE_AP_VLAN 
-> is switched in ieee80211_do_stop. In the case of IEEE80211_IFTYPE_AP, 
-> the list of devices in sdata->u.ap.vlans are closed, while in the case 
-> of IEEE80211_IFTYPE_AP_VLAN the skbs in sdata->bss->ps->bc_buf are 
-> freed. I believe this should be the other way around.
+Radar detection can last indefinite time. There is no
+point in deferring a scan request in this case - simply
+return -EBUSY.
 
-Well, you're wrong :)
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index ae84267..4525623 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -505,7 +505,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 	lockdep_assert_held(&local->mtx);
+ 
+-	if (local->scan_req)
++	if (local->scan_req || local->radar_detect_enabled)
+ 		return -EBUSY;
+ 
+ 	if (!ieee80211_can_scan(local, sdata)) {
+-- 
+1.8.5.2.229.g4448466.dirty
 
