@@ -1,93 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:52782 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751266AbbABJ22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 04:28:28 -0500
-Date: Fri, 2 Jan 2015 10:27:27 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Nicholas Krause <xerofoify@gmail.com>
-Cc: stefano.brivio@polimi.it, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	kvalo@codeaurora.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers:net:wireless: Add proper locking for the
- function, b43_op_beacon_set_tim in main.c
-Message-ID: <20150102102727.3918a684@wiggum> (sfid-20150102_102902_624690_CB5A9D2D)
-In-Reply-To: <1420184041-6788-1-git-send-email-xerofoify@gmail.com>
-References: <1420184041-6788-1-git-send-email-xerofoify@gmail.com>
+Received: from khitomer.mortis.eu ([185.27.175.75]:49846 "EHLO
+	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752834AbbADXIA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Jan 2015 18:08:00 -0500
+Date: Mon, 5 Jan 2015 00:02:09 +0100
+From: Giel van Schijndel <me@mortis.eu>
+To: linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Subject: Re: [PATCH 1/2] Align member-assigns in a structure-copy block
+Message-ID: <20150104230209.GD4806@salidar.dom.custoft.eu> (sfid-20150105_000809_721309_652E0FF7)
+References: <1420394427-19509-1-git-send-email-me@mortis.eu>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_/4=3cVwV.+4XCgS2Xp2Vl//c"; protocol="application/pgp-signature"
+	protocol="application/pgp-signature"; boundary="mJm6k4Vb/yFcL9ZU"
+In-Reply-To: <1420394427-19509-1-git-send-email-me@mortis.eu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/4=3cVwV.+4XCgS2Xp2Vl//c
-Content-Type: text/plain; charset=US-ASCII
+
+--mJm6k4Vb/yFcL9ZU
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri,  2 Jan 2015 02:34:01 -0500
-Nicholas Krause <xerofoify@gmail.com> wrote:
-
-> This adds proper locking for the function, b43_op_beacon_set_tim in main.=
-c by using the mutex lock
-> in the structure pointer wl, as embedded into this pointer as a mutex in =
-order to protect against
-> multiple access to the pointer wl when updating the templates for this po=
-inter in the function,
-> b43_update_templates internally in the function, b43_op_beacon_set_tim.
->=20
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+On Sun, Jan 04, 2015 at 19:00:22 +0100, Giel van Schijndel wrote:
+> This highlights the differences (errors).
 > ---
->  drivers/net/wireless/b43/main.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/m=
-ain.c
-> index 47731cb..d568fc8 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -5094,8 +5094,9 @@ static int b43_op_beacon_set_tim(struct ieee80211_h=
-w *hw,
->  {
->  	struct b43_wl *wl =3D hw_to_b43_wl(hw);
-> =20
-> -	/* FIXME: add locking */
-> +	mutex_lock(&wl->mutex);
->  	b43_update_templates(wl);
-> +	mutex_unlock(&wl->mutex);
-> =20
->  	return 0;
->  }
 
-Thanks for the patch.
-
-However, this does not work. We are in atomic context here.
-Please see the b43-dev mailing list archives for a recent thread about that.
-I'm also pretty sure that this is safe without lock, due to the higher leve=
-l locks in mac80211.
+Forgot to:
+Signed-off-by: Giel van Schijndel <me@mortis.eu>
 
 --=20
-Michael
+Met vriendelijke groet,
+With kind regards,
+Giel van Schijndel
+--
+"Walking on water and developing software from a specification are easy
+ if both are frozen."
+  -- Edward V Berard
 
---Sig_/4=3cVwV.+4XCgS2Xp2Vl//c
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+--mJm6k4Vb/yFcL9ZU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Version: GnuPG v1
 
-iQIcBAEBAgAGBQJUpmR/AAoJEPUyvh2QjYsO9HMP/1grj8MIOkjcTxNQzX5aAiY4
-zjYNw3NRpUq8s874oflk5gZ2Lnahg57fyjvN3uRyG+1wIlSgwi5dz+tw1+Z+RbEf
-fq+cNMbsbYTRIaQ2wIdzDi49iwuMcSshkYstxcuJIqDjYM90hkSCLE8hzkNFVeHL
-rqCqYTacbv8cnLyY9s+vr3/fNUfq+AtSphgb+DgwPzZMHr4xYNZHA7W+jwn+B2D+
-4PDMBptkY0lnMzsWwdmfJ+/wR1QGTgxkBPMmiH+FtJv9XNTOW4XL6ziIWZzCzqXJ
-GhMDNHraNAenUweClnFfAikBJao5YTn8bHiwpAZy1VUDAxIsygcc+E6q58Lzh66F
-oUEC0ORpnN9Y7IIR8lAr5BokoREuNODrckABUts+g/f5alq+75KsvK4NZYdypqOH
-e7no7waxTtEyb3cYObFZzXsIZUR+wwruILflSWYsXXimovtJEGXCNYDeC1txS4s7
-c0lD/tmIUNNljo8nr7Uo0JxEl30WzZaAgpeQNhzChXKDj/oP/Erotnn1ok3Jk2Sr
-3z4cn2PgEQAHqO9XwK+GAsO8lN6Uflmpbbi4ZHd1IhcrdvJELseOgbX7TffuJsTg
-uEANa/7kHM9lBhgCMo4R/OzXRV2P6j8m5eh5q9YMbZo0ueYCHNKud0LIfFEzbcBm
-tOgsxphhcUUPbU2ItbzG
-=Pn1c
+iEYEARECAAYFAlSpxnEACgkQZBYm/87l50LOEwCfZzeo6sQsEsmDFg2pgjLM7vgK
+xOQAoJmRJtplScu3egjU0GuXEnWRFRjg
+=XcgX
 -----END PGP SIGNATURE-----
 
---Sig_/4=3cVwV.+4XCgS2Xp2Vl//c--
+--mJm6k4Vb/yFcL9ZU--
