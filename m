@@ -1,90 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:57365 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751005AbbAKKWu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2015 05:22:50 -0500
-MIME-Version: 1.0
-In-Reply-To: <87vbkfga32.fsf@kamboji.qca.qualcomm.com>
-References: <1420394427-19509-1-git-send-email-me@mortis.eu>
-	<1420659525-22975-1-git-send-email-me@mortis.eu>
-	<1420659525-22975-2-git-send-email-me@mortis.eu>
-	<87vbkfga32.fsf@kamboji.qca.qualcomm.com>
-Date: Sun, 11 Jan 2015 12:22:49 +0200
-Message-ID: <CAB3XZEcm4+=dYC-8_m_7YRdET_wPkWUYHcDuy9mCKdxkCFEnQA@mail.gmail.com> (sfid-20150111_112255_443189_BE2AE950)
-Subject: Re: [PATCH RESEND 2/2] wlcore: align member-assigns in a
- structure-copy block
-From: Eliad Peller <eliad@wizery.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Giel van Schijndel <me@mortis.eu>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:53140 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753807AbbAEJWH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 04:22:07 -0500
+Message-ID: <1420449724.1898.1.camel@sipsolutions.net> (sfid-20150105_102218_871541_D6B3C429)
+Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device
+ via RTM_LINK
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vadim Kochan <vadim4j@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 05 Jan 2015 10:22:04 +0100
+In-Reply-To: <CAMw6YJKLWQmT-fqg1QLDHbCxnpxWyJUSX+wvOB_pFyE=8HfSfQ@mail.gmail.com> (sfid-20141224_104849_030943_677BDE3C)
+References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com>
+	 <1411075535.2034.5.camel@jlt4.sipsolutions.net>
+	 <20141014121627.GA5115@angus-think.lan>
+	 <1413798437.10246.12.camel@jlt4.sipsolutions.net>
+	 <128188DF-5A9B-47A5-8A89-974CF7CF9064@holtmann.org>
+	 <1413802344.10246.20.camel@jlt4.sipsolutions.net>
+	 <CAMw6YJKLWQmT-fqg1QLDHbCxnpxWyJUSX+wvOB_pFyE=8HfSfQ@mail.gmail.com>
+	 (sfid-20141224_104849_030943_677BDE3C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 9, 2015 at 7:03 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Giel van Schijndel <me@mortis.eu> writes:
->
->> This highlights the differences (e.g. the bug fixed in the previous
->> commit).
->>
->> Signed-off-by: Giel van Schijndel <me@mortis.eu>
->> ---
->>  drivers/net/wireless/ti/wlcore/acx.c | 22 +++++++++++-----------
->>  1 file changed, 11 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
->> index f28fa3b..93a2fa8 100644
->> --- a/drivers/net/wireless/ti/wlcore/acx.c
->> +++ b/drivers/net/wireless/ti/wlcore/acx.c
->> @@ -1715,17 +1715,17 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
->>               goto out;
->>       }
->>
->> -     acx->recover_time = cpu_to_le32(conf->recover_time);
->> -     acx->hangover_period = conf->hangover_period;
->> -     acx->dynamic_mode = conf->dynamic_mode;
->> -     acx->early_termination_mode = conf->early_termination_mode;
->> -     acx->max_period = conf->max_period;
->> -     acx->min_period = conf->min_period;
->> -     acx->increase_delta = conf->increase_delta;
->> -     acx->decrease_delta = conf->decrease_delta;
->> -     acx->quiet_time = conf->quiet_time;
->> -     acx->increase_time = conf->increase_time;
->> -     acx->window_size = conf->window_size;
->> +     acx->recover_time               = cpu_to_le32(conf->recover_time);
->> +     acx->hangover_period            = conf->hangover_period;
->> +     acx->dynamic_mode               = conf->dynamic_mode;
->> +     acx->early_termination_mode     = conf->early_termination_mode;
->> +     acx->max_period                 = conf->max_period;
->> +     acx->min_period                 = conf->min_period;
->> +     acx->increase_delta             = conf->increase_delta;
->> +     acx->decrease_delta             = conf->decrease_delta;
->> +     acx->quiet_time                 = conf->quiet_time;
->> +     acx->increase_time              = conf->increase_time;
->> +     acx->window_size                = conf->window_size;
->
-> I would like to get an ACK from one of the wlcore developers if I should
-> apply this (or not).
->
-I don't have a strong opinion here.
-However, it looks pretty much redundant to take a random blob (which
-was just fixed by a correct patch) and re-indent it.
-The rest of the file doesn't follow this style, so i don't see a good
-reason to apply it here.
+On Wed, 2014-12-24 at 11:48 +0200, Vadim Kochan wrote:
 
-I agree such indentation have some benefit, but it won't help with the
-more common use case (of copy-paste error) of copying the wrong field
-(i.e. D->a = S->b instead of D->a = S->a).
-For these cases the macros suggested by Arend and Johannes will do the
-trick. However i usually dislike such macros, as they tend to break
-some IDE features (e.g. auto completion).
-Maybe we can come up with some nice spatch to catch these cases.
+>     1) Set NETIF_F_NETNS_LOCAL for phy wireless device only if there
+> is at least one virtual interface which was created on it
 
-Just my 2c.
+You mean at least two? I'd think the behaviour becomes hard to predict,
+but I guess ultimately that'd be somewhat reasonable.
 
-Eliad.
+>     2) What about to inherit netns for newer created interfaces from
+> the phy device ?
+
+Hmm? This already happens - a given phy is only in a single netns and
+all interfaces must be created in the same netns.
+
+johannes
+
