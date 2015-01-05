@@ -1,86 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:45515 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753044AbbAPPdc (ORCPT
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:59530 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbbAER0F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 10:33:32 -0500
-Received: by mail-wg0-f54.google.com with SMTP id z12so21134033wgg.13
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 07:33:31 -0800 (PST)
+	Mon, 5 Jan 2015 12:26:05 -0500
+Received: by mail-ob0-f181.google.com with SMTP id gq1so61898775obb.12
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 09:26:03 -0800 (PST)
+Message-ID: <54AAC925.6050602@lwfinger.net> (sfid-20150105_182616_628776_9FE98A8E)
+Date: Mon, 05 Jan 2015 11:25:57 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <87iog8ryes.fsf@kamboji.qca.qualcomm.com>
-References: <20150106035319.GA4082@vaishali-Ideapad-Z570>
-	<87iog8ryes.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 16 Jan 2015 21:03:31 +0530
-Message-ID: <CAK-LDbKfK5zda00xJTEq56Wwi7eVwuFUWD=X9pf505iwexEiZw@mail.gmail.com> (sfid-20150116_163335_769922_390E766D)
-Subject: Re: [PATCH] brcmfmac: Use put_unaligned_le32
-From: Vaishali Thakkar <vthakkar1994@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
+To: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: Kernel crash while copying big files since kernel 3.18
+References: <54AA3953.20603@gmail.com>
+In-Reply-To: <54AA3953.20603@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 15, 2015 at 6:30 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Vaishali Thakkar <vthakkar1994@gmail.com> writes:
+On 01/05/2015 01:12 AM, François Valenduc wrote:
+> Hello everybody,
 >
->> This patch introduces the use of function put_unaligned_le32.
->>
->> This is done using Coccinelle and semantic patch used is as follows:
->>
->> @a@
->> typedef u32, __le32, uint32_t;
->> {u32,__le32,uint32_t} e32;
->> identifier tmp;
->> expression ptr;
->> expression y,e;
->> type T;
->> type T;
->> @@
->>
->> - tmp = cpu_to_le32(y);
->>
->> <+... when != tmp
->> (
->> - memcpy(ptr, (T)&tmp, \(4\|sizeof(u32)\|sizeof(__le32)\|sizeof(uint32_t)\|s
->> + put_unaligned_le32(y,ptr);
->> |
->> - memcpy(ptr, (T)&tmp, ...);
->> + put_unaligned_le32(y,ptr);
->> )
->> ...+>
->> ? tmp = e
->>
->> @@ type T; identifier a.tmp; @@
->>
->> - T tmp;
->> ...when != tmp
->>
->> Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+> Since kernel 3.18, I encounter a kernel crash each time when I copy a
+> big file (around 12 Gb) from an external USB drive to the harddrive of
+> my laptop.
+> I tried a bisection between kernels 3.17 and 3.18 and I was surprised to
+> find that this has to do with the driver of the wireless card
+> (rtl8188ee). However, I don't have problems if I copy the file while the
+> rtl8188 module is not loaded. Unfortunately, the results of git-bisect
+> are not totally conclusive because the kernel crash during boot when the
+> wireless connection is established. Here are the last steps of the
+> bisection:
 >
-> This failed to apply, please rebase:
+> # bad: [c151aed6aa146e9587590051aba9da68b9370f9b] rtlwifi: rtl8188ee:
+> Update driver to match Realtek release of 06282014
+> git bisect bad c151aed6aa146e9587590051aba9da68b9370f9b
+> # good: [fd09ff958777cf583d7541f180991c0fc50bd2f7] rtlwifi: Remove extra
+> workqueue for enter/leave power state
+> git bisect good fd09ff958777cf583d7541f180991c0fc50bd2f7
+> # skip: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b] rtlwifi: Modify
+> base.{c,h} for new drivers
+> git bisect skip 9afa2e44f4d8f9d031f815c32bb8f225f0f6746b
+> # skip: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd] rtlwifi: Modify
+> cam.{c,h} and efuse.{c,h} for new drivers
+> git bisect skip 3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd
+> # skip: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8] rtlwifi: Modify
+> core.c for new drivers
+> git bisect skip f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8
+> # skip: [d3feae41a3473a0f7b431d6af4e092865d586e52] rtlwifi: Update
+> power-save routines for 062814 driver
+> git bisect skip d3feae41a3473a0f7b431d6af4e092865d586e52
+> # skip: [38506ecefab911785d5e1aa5889f6eeb462e0954] rtlwifi: rtl_pci:
+> Start modification for new drivers
+> git bisect skip 38506ecefab911785d5e1aa5889f6eeb462e0954
+> # skip: [f3a97e93814aeac3f13e857a0071726acc9bd626] rtlwifi: Finish
+> modifying core routines for new drivers
+> git bisect skip f3a97e93814aeac3f13e857a0071726acc9bd626
+> # only skipped commits left to test
+> # possible first bad commit: [c151aed6aa146e9587590051aba9da68b9370f9b]
+> rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
+> # possible first bad commit: [f3a97e93814aeac3f13e857a0071726acc9bd626]
+> rtlwifi: Finish modifying core routines for new drivers
+> # possible first bad commit: [d3feae41a3473a0f7b431d6af4e092865d586e52]
+> rtlwifi: Update power-save routines for 062814 driver
+> # possible first bad commit: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd]
+> rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
+> # possible first bad commit: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b]
+> rtlwifi: Modify base.{c,h} for new drivers
+> # possible first bad commit: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8]
+> rtlwifi: Modify core.c for new drivers
+> # possible first bad commit: [38506ecefab911785d5e1aa5889f6eeb462e0954]
+> rtlwifi: rtl_pci: Start modification for new drivers
 >
-> Applying: brcmfmac: Use put_unaligned_le32
-> error: drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c: does not exist in index
-> Patch failed at 0001 brcmfmac: Use put_unaligned_le32
+> Can somebody explain what's happening ? I do the copy via Dolphin in KDE
+> and the screen becomes black and the computer becomes totally
+> unresponsive. So, I don't have access to the logs to see the trace of
+> the problem.
 >
+> Thanks in advance for your help,
 
-Yes. Sorry. Because of some technical problems with my machine, I
-couldn't be able to send new patch as I didn't have code with me.
-Actually I sent follow up mail to John about dropping this patch
-[about 6 days back] until I rebase it. But forgot to cced it to
-mailing list. I will send rebased patch.
+There is a bug in 3.18 that is triggered when an O(3) memory allocation fails. 
+There is a patch to fix this at 
+http://marc.info/?l=linux-netdev&m=141999680927473&w=2 that has been merged into 
+wireless-drivers as commit e9538cf4f90713eca71b1d6a74b4eae1d445c664. It will be 
+applied to 3.18.X when it makes it into mainline 3.19-rcY, but that has not yet 
+happened.
 
-Sorry again.
+You could manually apply that patch to your kernel source, or you could pull the 
+git repo at http://github.com/lwfinger/rtlwifi_new.git. That code has this patch 
+already applied.
 
-> --
-> Kalle Valo
+If this patch does not fix the problem, you might be able to capture at least 
+part of the backtrace by starting the transfer and then switching to the logging 
+console. When a crash happens, photograph the screen. On my system, I display it 
+with CTRL-ALT-F10. I return to the normal graphical console with CTRL-ALT-F7, 
+but your distro may use different virtual consoles.
+
+Larry
 
 
-
--- 
-Vaishali
