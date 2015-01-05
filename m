@@ -1,64 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:47162 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752494AbbAPN2s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 08:28:48 -0500
-Received: by mail-lb0-f179.google.com with SMTP id z11so18432183lbi.10
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 05:28:47 -0800 (PST)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-To: Simon Kelley <simon@thekelleys.org.uk>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: atmel: Remove open-coded and wrong strcasecmp
-Date: Fri, 16 Jan 2015 14:28:27 +0100
-Message-Id: <1421414907-26764-1-git-send-email-linux@rasmusvillemoes.dk> (sfid-20150116_142912_502545_D81231AC)
+Received: from cantor2.suse.de ([195.135.220.15]:43829 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751125AbbAEH0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 02:26:53 -0500
+Date: Mon, 5 Jan 2015 08:26:48 +0100
+From: Michal Kubecek <mkubecek@suse.cz>
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Theodore Ts'o <tytso@mit.edu>,
+	Arend van Spriel <arend@broadcom.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
+Message-ID: <20150105072648.GA30744@unicorn.suse.cz> (sfid-20150105_082713_476423_FAC33E5D)
+References: <54A3D955.6020809@broadcom.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
+ <54A3E1F1.7030807@broadcom.com>
+ <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
+ <54A41000.3040306@broadcom.com>
+ <20141231173113.GA443@thunk.org>
+ <54A45D4D.7070302@broadcom.com>
+ <20141231214421.GA29273@thunk.org>
+ <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
+ <20150101194417.GN24112@csclub.uwaterloo.ca>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150101194417.GN24112@csclub.uwaterloo.ca>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The kernel's string library does in fact have strcasecmp, at least
-since ded220bd8f08. Moreover, this open-coded version is in fact
-wrong: If the strings only differ in their last character, a and b
-have already been incremented to point to the terminating nul bytes,
-so they would be treated as equal.
+On Thu, Jan 01, 2015 at 02:44:17PM -0500, Lennart Sorensen wrote:
 
-Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
----
- drivers/net/wireless/atmel.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+> not handling IPv6 (I think that has been fixed by now), and many
+> other awfulnesses.
 
-diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
-index 9183f1cf89a7..55db9f03eb2a 100644
---- a/drivers/net/wireless/atmel.c
-+++ b/drivers/net/wireless/atmel.c
-@@ -45,7 +45,6 @@
- #include <linux/ptrace.h>
- #include <linux/slab.h>
- #include <linux/string.h>
--#include <linux/ctype.h>
- #include <linux/timer.h>
- #include <asm/byteorder.h>
- #include <asm/io.h>
-@@ -2699,16 +2698,7 @@ static int atmel_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
- 		domain[REGDOMAINSZ] = 0;
- 		rc = -EINVAL;
- 		for (i = 0; i < ARRAY_SIZE(channel_table); i++) {
--			/* strcasecmp doesn't exist in the library */
--			char *a = channel_table[i].name;
--			char *b = domain;
--			while (*a) {
--				char c1 = *a++;
--				char c2 = *b++;
--				if (tolower(c1) != tolower(c2))
--					break;
--			}
--			if (!*a && !*b) {
-+			if (!strcasecmp(channel_table[i].name, domain)) {
- 				priv->config_reg_domain = channel_table[i].reg_domain;
- 				rc = 0;
- 			}
--- 
-2.1.3
+Some basic setting can be done. But it illustrates nicely what is wrong
+with the idea of extending ifconfig to support new features. IPv6
+addresses are added and removed (which is how it really works) while
+with IPv4, ifconfig keeps pretending interface has exactly one address
+and to set more, a virtual interface must be created. In reality, both
+IPv4 and IPv6 addresses are handled in pretty much the same way.
+
+This "virtual interface" does not actually exist so that its parameters
+can't be set; and worse, if you try, ifconfig silently sets them for the
+actual interface (try e.g. "ifconfig eth0:0 mtu 1400"). You also can't
+use its name with other commands. Just google for users asking why
+iptables or tcpdump does not recognize their 'eth0:0'... and then people
+come and say that ip (unlike ifconfig) is confusing.
+
+But, yes, as the old ioctl interface can't be removed, lot of people
+will claim that ifconfig "just works" and that it must be preserved. And
+they will teach new generations of linux users to use it. So I'm afraid
+this exact discussion will be still repeated even after next 15 years.
+
+> Would be nice if all features of the ip command were actually documented,
+> but they clearly are not.
+
+As far as I can say, there may still be some missing parts but in recent
+versions, both manual pages and "ip ... help" cover the functions quite
+well (even if they are a bit too terse sometimes). On the other hand,
+"route --help" doesn't even tell me how to add a simple route.
+
+                                                        Michal Kubecek
 
