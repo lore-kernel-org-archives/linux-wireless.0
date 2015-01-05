@@ -1,83 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:43805 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131AbbALLv1 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:60712 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752887AbbAEKeg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 06:51:27 -0500
-Received: by mail-wg0-f48.google.com with SMTP id l2so18816225wgh.7
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 03:51:26 -0800 (PST)
-Message-ID: <54B3B538.5010700@googlemail.com> (sfid-20150112_125134_561815_7C7D8AB6)
-Date: Mon, 12 Jan 2015 11:51:20 +0000
-From: Chris Clayton <chris2553@googlemail.com>
+	Mon, 5 Jan 2015 05:34:36 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
+References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<54A8DBF4.4050202@lwfinger.net>
+Date: Mon, 05 Jan 2015 12:34:27 +0200
+In-Reply-To: <54A8DBF4.4050202@lwfinger.net> (Larry Finger's message of "Sun,
+	04 Jan 2015 00:21:40 -0600")
+Message-ID: <878uhh3498.fsf@kamboji.qca.qualcomm.com> (sfid-20150105_113458_286287_91D83A2C)
 MIME-Version: 1.0
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-CC: kvalo@codeaurora.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: IWLWIFI - 3.18-stable
-References: <54B272F0.70307@googlemail.com>	<54B273E1.6030306@googlemail.com>	<CANUX_P2PiGUBaw89Rb2zSuy2x8=GJN=o6XgcasdVMtvoy6kmAQ@mail.gmail.com>	<54B2DBAF.7010208@googlemail.com> <CANUX_P1Bdz4R2WUK53fx7r5CuvBmyBdqZWwR+Of=1mi7VncqZQ@mail.gmail.com>
-In-Reply-To: <CANUX_P1Bdz4R2WUK53fx7r5CuvBmyBdqZWwR+Of=1mi7VncqZQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks Emmanuel.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-On 01/12/15 06:03, Emmanuel Grumbach wrote:
-> On Sun, Jan 11, 2015 at 10:23 PM, Chris Clayton
-> <chris2553@googlemail.com> wrote:
+> On 01/03/2015 06:47 PM, Rickard Strandqvist wrote:
+>> Removes some functions that are not used anywhere:
+>> dma_txflush() dma_txsuspended()
+>>
+>> This was partially found by using a static code analysis program called cppcheck.
+>>
+>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmsmac/dma.c |   19 -------------------
+>>   drivers/net/wireless/brcm80211/brcmsmac/dma.h |    2 --
+>>   2 files changed, 21 deletions(-)
+>
+> Just because file dma.c is involved, it does not need to be, nor
+> should it be in the subject line. You could specify the driver names
+> in the file tree after wireless. In this instance, one possible
+> subject would be "brcm80211: brcmsmac: Remove some unused functions".
+> On the other hand, if you look at "git log" to see past patches, the
+> driver maintainers even leave off the brcm80211 part, thus to match
+> them, the subject should be "brcmsmac: Remove some unused functions".
 
-[snip]
+This is a handy way to check what kind of format you should use:
 
->>>
->>> The first one (c93edc639392df733c7d72db4376a9add775d18a) is tagged for stable.
->>
->> Ah, sorry I missed that.
->>
->>> Are you using bluetooth?
->>
->> Yes, I have a bluetooth mouse and use bluetooth for audio from time to time.
->>
->>> Are you able to tell me which of the two really helps?
->>
->> It's c93edc639392df733c7d72db4376a9add775d18a that helps. With that applied, I can set off a task which, in a loop,
->> continually copies a 180MB file from a server on my network. The network remained stable for over 30 minutes before I
->> killed the task. Without the patch, the network fails during the first iteration of copying the file.
->>
+$ git log --oneline --no-merges drivers/net/wireless/brcm80211/brcmsmac/dma.c | head
+a38a9ef1c064 brcm80211: use container_of to resolve dma_info from dma_pub
+67d0cf50bd32 brcmsmac: Fix WARNING caused by lack of calls to dma_mapping_error()
+55cec505559d brcmsmac: Fix possible NULL pointer dereference in _dma_ctrlflags()
+9242c7261b8c brcmsmac: Remove some noisy and uninformative debug messages
+0c9a0a1dd145 brcmsmac: Add tracepoint for AMPDU session information
+90123e045cac brcmsmac: Add brcms_dbg_dma() debug macro
+b05618deb4ac brcmsmac: Use correct descriptor count when calculating next rx descriptor
+e041f65d5f00 brcmsmac: Remove internal tx queue
+05f8a6160491 brcmsmac: Add helper function for updating txavail count
+ec5ab1dd73a4 brcmsmac: fix DMA on SoCs
 
-Just by way of confirmation, I'm now running 3.19.0-rc4 with c93edc639392df733c7d72db4376a9add775d18a applied and my
-network is stable. None of the other patches from iwlwifi-fixes that I was previously using are applied.
+> As was suggested earlier, you need to look at the precedents. Keeping
+> a uniform method of patch naming helps when looking for patches in the
+> git log.
 
-Thanks for your help.
+Yeah, and also having clean[1] patch titles makes working with patchwork
+so much easier and hence me happier :)
 
->> a9dc5060bf3a32ac3dad472f15416054b92dc5b5 doesn't seem to have any effect on the instability.
-> 
-> Ok - I am not surprised - thanks.
-> c93edc... allows to use 2 antennas instead of one only. Technically,
-> one would be enough, but apparently, in your configuration, using 2
-> antennas allows to improve reliability.
-> 
->>
->>
->>> Unless I am missing something, the first one
->>> (c93edc639392df733c7d72db4376a9add775d18a) should help only if you
->>> disabled power save. Is that the case?
->>
->> Not that I know of. The only power-related thing in my init scripts is echoing 5 to /proc/sys/vm/laptop_mode, which I
->> believe configures disk activity to save power. The mouse does have a power saving feature, however. According to the
->> manual, it reduces its power consumption in steps the longer it is inactive. As I frequently work in kde's konsole
->> terminal application, mouse inactivity is common.
->>
->> Hope this helps and feel free to request additional information.
-> 
-> Ok - I checked the code and we enable the redundancy mentioned above
-> (2 antenna instead of 1) even if power save is enabled.
-> FWIW - this redundancy is also called "diversity".
+[1] clean patch title == short, clear and unique
 
-<Smile>. Over 30 years working in the IT industry tells me that is a trick vendors have been using for a long time in
-order to try and confuse customers into buying something they've already got! :-)
-> 
-> Thanks.
-> 
->>
->> Chris
->>>
+-- 
+Kalle Valo
