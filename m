@@ -1,108 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56422 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964995AbbA1EnS (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:37196 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752838AbbAEEh3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 23:43:18 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4hIVQ031531
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:43:18 -0800
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1s49ry0gqy-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:43:18 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 4/8] mwifiex: store permanant mac address in adapter structure
-Date: Wed, 28 Jan 2015 15:42:01 +0530
-Message-ID: <1422439925-25666-5-git-send-email-patila@marvell.com> (sfid-20150128_054327_642985_6E93D0E9)
-In-Reply-To: <1422439925-25666-1-git-send-email-patila@marvell.com>
-References: <1422439925-25666-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 4 Jan 2015 23:37:29 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: Make HTT fill size configurable
+Date: Mon,  5 Jan 2015 10:09:56 +0530
+Message-Id: <1420432796-10765-1-git-send-email-sujith@msujith.org> (sfid-20150105_053734_424491_B0A0064F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This would be used to set mac address while changing virtual
-interface to different types.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+The HTT RX ring is replenished with a maximum of 16 buffers,
+but this might be insufficient when RX traffic is high.
+Not having enough RX buffers throttles the FW, resulting
+in low throughput.
+
+This patch adds a module parameter to adjust the fill size
+based on the platform/usage.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 2 +-
- drivers/net/wireless/mwifiex/cmdevt.c   | 4 +---
- drivers/net/wireless/mwifiex/init.c     | 1 +
- drivers/net/wireless/mwifiex/main.c     | 1 +
- drivers/net/wireless/mwifiex/main.h     | 1 +
- 5 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c   | 3 +++
+ drivers/net/wireless/ath/ath10k/htt.h    | 2 ++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+ 3 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 9710b23..85f5019 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -2974,7 +2974,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->cipher_suites = mwifiex_cipher_suites;
- 	wiphy->n_cipher_suites = ARRAY_SIZE(mwifiex_cipher_suites);
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 2d0671e..a74af21 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -33,14 +33,17 @@
+ unsigned int ath10k_debug_mask;
+ static bool uart_print;
+ static bool skip_otp;
++int htt_fill_size = ATH10K_HTT_MAX_NUM_REFILL;
  
--	memcpy(wiphy->perm_addr, priv->curr_addr, ETH_ALEN);
-+	ether_addr_copy(wiphy->perm_addr, adapter->perm_addr);
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME |
- 			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index 946a2f7..00586b2 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -1582,9 +1582,7 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
- 		le16_to_cpu(hw_spec->hw_if_version),
- 		le16_to_cpu(hw_spec->version));
+ module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
+ module_param(uart_print, bool, 0644);
+ module_param(skip_otp, bool, 0644);
++module_param(htt_fill_size, int, 0644);
  
--	if (priv->curr_addr[0] == 0xff)
--		memmove(priv->curr_addr, hw_spec->permanent_addr, ETH_ALEN);
--
-+	ether_addr_copy(priv->adapter->perm_addr, hw_spec->permanent_addr);
- 	adapter->region_code = le16_to_cpu(hw_spec->region_code);
+ MODULE_PARM_DESC(debug_mask, "Debugging mask");
+ MODULE_PARM_DESC(uart_print, "Uart target debugging");
+ MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
++MODULE_PARM_DESC(htt_fill_size, "HTT RX ring fill size");
  
- 	for (i = 0; i < MWIFIEX_MAX_REGION_CODE; i++)
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 8004d14..44babc3 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -297,6 +297,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->ext_scan = false;
- 	adapter->key_api_major_ver = 0;
- 	adapter->key_api_minor_ver = 0;
-+	memset(adapter->perm_addr, 0xff, ETH_ALEN);
+ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 	{
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 1bd5545..1aa5db1 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -26,6 +26,8 @@
+ #include "htc.h"
+ #include "rx_desc.h"
  
- 	setup_timer(&adapter->wakeup_timer, wakeup_timer_fn,
- 		    (unsigned long)adapter);
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 49dec6b..cb9cab2 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -975,6 +975,7 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
- 	priv->assocresp_idx = MWIFIEX_AUTO_IDX_MASK;
- 	priv->rsn_idx = MWIFIEX_AUTO_IDX_MASK;
- 	priv->num_tx_timeout = 0;
-+	ether_addr_copy(priv->curr_addr, priv->adapter->perm_addr);
- 	memcpy(dev->dev_addr, priv->curr_addr, ETH_ALEN);
- 
- 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA ||
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index a560179..45b40af 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -737,6 +737,7 @@ struct mwifiex_adapter {
- 	int winner;
- 	struct device *dev;
- 	struct wiphy *wiphy;
-+	u8 perm_addr[ETH_ALEN];
- 	bool surprise_removed;
- 	u32 fw_release_number;
- 	u16 init_wait_q_woken;
++extern int htt_fill_size;
++
+ enum htt_dbg_stats_type {
+ 	HTT_DBG_STATS_WAL_PDEV_TXRX = 1 << 0,
+ 	HTT_DBG_STATS_RX_REORDER    = 1 << 1,
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 9c782a4..1440b0e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -128,7 +128,7 @@ static void ath10k_htt_rx_msdu_buff_replenish(struct ath10k_htt *htt)
+ 	 * improves the avarage and stability. */
+ 	spin_lock_bh(&htt->rx_ring.lock);
+ 	num_deficit = htt->rx_ring.fill_level - htt->rx_ring.fill_cnt;
+-	num_to_fill = min(ATH10K_HTT_MAX_NUM_REFILL, num_deficit);
++	num_to_fill = min(htt_fill_size, num_deficit);
+ 	num_deficit -= num_to_fill;
+ 	ret = ath10k_htt_rx_ring_fill_n(htt, num_to_fill);
+ 	if (ret == -ENOMEM) {
 -- 
-1.8.1.4
+2.2.1
 
