@@ -1,211 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:38064 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754716AbbATMgs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 07:36:48 -0500
-Received: by mail-we0-f176.google.com with SMTP id w62so10383067wes.7
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 04:36:47 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFCv3 3/4] mac80211: IBSS fix scan request
-Date: Tue, 20 Jan 2015 13:35:17 +0100
-Message-Id: <1421757318-8343-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150120_133657_338962_CC6D9EA1)
-In-Reply-To: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:53472 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751227AbbAEKFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 05:05:12 -0500
+Message-ID: <1420452301.9459.3.camel@sipsolutions.net> (sfid-20150105_110517_096161_25D10129)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Mon, 05 Jan 2015 11:05:01 +0100
+In-Reply-To: <1420324124.9624.60.camel@x220> (sfid-20150103_232852_400842_25360CE9)
+References: <1420297188.2397.3.camel@tiscali.nl>
+	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+	 <1420324124.9624.60.camel@x220> (sfid-20150103_232852_400842_25360CE9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of wide bandwidth scan all channels we have
-in chandef, not only control one.
+On Sat, 2015-01-03 at 23:28 +0100, Paul Bolle wrote:
+> On Sat, 2015-01-03 at 10:07 -0800, Linus Torvalds wrote:
+> > On Sat, Jan 3, 2015 at 10:02 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
+> > >
+> > > why would you revert this? It is obviously the correct change to actually select CFG80211_WEXT.
+> > 
+> > I don't know about obvious, but yeah, I think the select in this case
+> > is actually the better idea anyway.
+> 
+> Obviously it wasn't obvious to me!
+> 
+> My reasoning was that the "ipw2200: select CFG80211_WEXT" commit was
+> _solely_ a workaround for the breakage introduced by that other patch.
+> And since that one is now reverted the workaround wasn't needed anymore.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/mac80211/ibss.c        | 80 ++++++++++++++++++++++++++++++++++++++++++++--
- net/mac80211/ieee80211_i.h |  3 +-
- net/mac80211/scan.c        | 25 +++++++++------
- 3 files changed, 96 insertions(+), 12 deletions(-)
+Well, you thought of it only as a workaround - but it makes sense. You
+shouldn't have to 
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 9fe045f..fda5e2f 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1277,7 +1277,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- 
- 	scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
- 	ieee80211_request_ibss_scan(sdata, ifibss->ssid, ifibss->ssid_len,
--				    NULL, scan_width);
-+				    NULL, 0, scan_width);
- }
- 
- static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
-@@ -1316,6 +1316,75 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
- 				  capability, 0, true);
- }
- 
-+static unsigned ibss_setup_channels(struct wiphy *wiphy,
-+				    struct ieee80211_channel **channels,
-+				    unsigned int channels_max,
-+				    u32 center_freq, u32 width)
-+{
-+	struct ieee80211_channel *chan = NULL;
-+	unsigned int n_chan = 0;
-+	u32 start_freq, end_freq, freq;
-+
-+	if (width <= 20) {
-+		start_freq = center_freq;
-+		end_freq = center_freq;
-+	} else {
-+		start_freq = center_freq - width/2 + 10;
-+		end_freq = center_freq + width/2 - 10;
-+	}
-+
-+	for (freq = start_freq; freq <= end_freq; freq += 20) {
-+		chan = ieee80211_get_channel(wiphy, freq);
-+		if (!chan)
-+			continue;
-+		if (n_chan >= channels_max)
-+			return n_chan;
-+
-+		channels[n_chan] = chan;
-+		n_chan++;
-+	}
-+
-+	return n_chan;
-+}
-+
-+static unsigned int
-+ieee80211_ibss_setup_scan_channels(struct wiphy *wiphy,
-+				   const struct cfg80211_chan_def *chandef,
-+				   struct ieee80211_channel **channels,
-+				   unsigned int channels_max)
-+{
-+	unsigned int n_chan = 0;
-+	u32 width, cf1, cf2 = 0;
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_40:
-+		width = 40;
-+		break;
-+	case NL80211_CHAN_WIDTH_80P80:
-+		cf2 = chandef->center_freq2;
-+	case NL80211_CHAN_WIDTH_80:
-+		width = 80;
-+		break;
-+	case NL80211_CHAN_WIDTH_160:
-+		width = 160;
-+		break;
-+	default:
-+		width = 20;
-+		break;
-+	}
-+
-+	cf1 = chandef->center_freq1;
-+
-+	n_chan = ibss_setup_channels(wiphy, channels, channels_max, cf1, width);
-+
-+	if (cf2)
-+		n_chan += ibss_setup_channels(wiphy, &channels[n_chan],
-+					      channels_max - n_chan, cf2,
-+					      width);
-+
-+	return n_chan;
-+}
-+
- /*
-  * This function is called with state == IEEE80211_IBSS_MLME_SEARCH
-  */
-@@ -1385,11 +1454,18 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 	/* Selected IBSS not found in current scan results - try to scan */
- 	if (time_after(jiffies, ifibss->last_scan_completed +
- 					IEEE80211_SCAN_INTERVAL)) {
-+		struct ieee80211_channel *channels[8];
-+		unsigned int num = 0;
-+
- 		sdata_info(sdata, "Trigger new scan to find an IBSS to join\n");
- 
-+		num = ieee80211_ibss_setup_scan_channels(local->hw.wiphy,
-+							 &ifibss->chandef,
-+							 channels,
-+							 ARRAY_SIZE(channels));
- 		scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
- 		ieee80211_request_ibss_scan(sdata, ifibss->ssid,
--					    ifibss->ssid_len, chan,
-+					    ifibss->ssid_len, channels, num,
- 					    scan_width);
- 	} else {
- 		int interval = IEEE80211_SCAN_INTERVAL;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cc6e964..9254546 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1558,7 +1558,8 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata);
- void ieee80211_scan_work(struct work_struct *work);
- int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 				const u8 *ssid, u8 ssid_len,
--				struct ieee80211_channel *chan,
-+				struct ieee80211_channel **channels,
-+				unsigned int n_channels,
- 				enum nl80211_bss_scan_width scan_width);
- int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
- 			   struct cfg80211_scan_request *req);
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index ae84267..f76a5d1 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -923,11 +923,12 @@ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
- 
- int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 				const u8 *ssid, u8 ssid_len,
--				struct ieee80211_channel *chan,
-+				struct ieee80211_channel **channels,
-+				unsigned int n_channels,
- 				enum nl80211_bss_scan_width scan_width)
- {
- 	struct ieee80211_local *local = sdata->local;
--	int ret = -EBUSY;
-+	int ret = -EBUSY, i, n_ch = 0;
- 	enum ieee80211_band band;
- 
- 	mutex_lock(&local->mtx);
-@@ -937,9 +938,8 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 		goto unlock;
- 
- 	/* fill internal scan request */
--	if (!chan) {
--		int i, max_n;
--		int n_ch = 0;
-+	if (!channels) {
-+		int max_n;
- 
- 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 			if (!local->hw.wiphy->bands[band])
-@@ -964,12 +964,19 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 
- 		local->int_scan_req->n_channels = n_ch;
- 	} else {
--		if (WARN_ON_ONCE(chan->flags & (IEEE80211_CHAN_NO_IR |
--						IEEE80211_CHAN_DISABLED)))
-+		for (i = 0; i < n_channels; i++) {
-+			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
-+						  IEEE80211_CHAN_DISABLED))
-+				continue;
-+
-+			local->int_scan_req->channels[n_ch] = channels[i];
-+			n_ch++;
-+		}
-+
-+		if (WARN_ON_ONCE(n_ch == 0))
- 			goto unlock;
- 
--		local->int_scan_req->channels[0] = chan;
--		local->int_scan_req->n_channels = 1;
-+		local->int_scan_req->n_channels = n_ch;
- 	}
- 
- 	local->int_scan_req->ssids = &local->scan_ssid;
--- 
-1.9.1
+> Besied, I thought we try to avoid select-ing symbols that can also be
+> set manually. As that makes it more likely to trigger circular
+> dependency problems in the kconfig tools, doesn't it?
+
+I don't think that has much to do with whether or not they can be set
+manually - it's more a question of what the dependencies of the selected
+symbol are. In this case it's a bool leaf symbol with the only
+dependency being something ipw already needs, so it's pretty much
+guaranteed to be safe.
+
+> Side note: am I correct in thinking that there's some successor to
+> CFG80211_WEXT and that the ipw2200 driver could, at least in theory, be
+> ported to that successor? (ipw2200 hardware appears to be a bit old, so
+> probably no one would care enough to actually do that.)
+> net/wireless/kconfig doesn't mention anything like that, so probably I'm
+> just confused.
+
+Well, see the big thread over there with the revert that I'm tempted to
+not even read ...
+
+The real successor, for various reasons (like simply always being able
+to connect to a single AP, no matter how many others can be found by
+scanning!), is nl80211.
+
+Many drivers have been converted to the new framework by using mac80211,
+but some drivers cannot use mac80211 because they do more in the
+device/firmware. Among those are many of the old 11b/11g ones that still
+exist in the tree, but also a few new ones (like mwifiex) that were
+already written to cfg80211 APIs.
+
+It should definitely be possible to convert all the drivers (*) to pure
+cfg80211 instead of having direct userspace wext to driver calls - but
+nobody has gone and done it.
+
+johannes
+
+(*) caveat - at least the playstation3 driver will require some new
+nl80211 API
 
