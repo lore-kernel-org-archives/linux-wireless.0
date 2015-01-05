@@ -1,64 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:23130 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933289AbbA1Emr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 23:42:47 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4ciNj028905
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:42:47 -0800
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1s49ry0gqc-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:42:47 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 1/8] mwifiex: remove redundant nick_name variable
-Date: Wed, 28 Jan 2015 15:41:58 +0530
-Message-ID: <1422439925-25666-2-git-send-email-patila@marvell.com> (sfid-20150128_054253_592439_2C269E8A)
-In-Reply-To: <1422439925-25666-1-git-send-email-patila@marvell.com>
-References: <1422439925-25666-1-git-send-email-patila@marvell.com>
+Received: from mga09.intel.com ([134.134.136.24]:52578 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753085AbbAECe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Jan 2015 21:34:26 -0500
+Message-ID: <54A9F82D.9030003@linux.intel.com> (sfid-20150105_033445_307368_0C6FE3F7)
+Date: Mon, 05 Jan 2015 10:34:21 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arend van Spriel <arend@broadcom.com>
+CC: brudley@broadcom.com, Franky Lin <frankyl@broadcom.com>,
+	meuleman@broadcom.com, kvalo@codeaurora.org,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54A3B1B4.7090705@linux.intel.com> <54A3C837.6040400@broadcom.com>
+In-Reply-To: <54A3C837.6040400@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is not used anywhere execpt initialization.
+Hi Arend,
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c | 1 -
- drivers/net/wireless/mwifiex/main.h | 1 -
- 2 files changed, 2 deletions(-)
+Where to find your patch for this?
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 9836df0..99cd360 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -968,7 +968,6 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
- 	/* Initialize private structure */
- 	priv->current_key_index = 0;
- 	priv->media_connected = false;
--	memset(&priv->nick_name, 0, sizeof(priv->nick_name));
- 	memset(priv->mgmt_ie, 0,
- 	       sizeof(struct mwifiex_ie) * MAX_MGMT_IE_INDEX);
- 	priv->beacon_idx = MWIFIEX_AUTO_IDX_MASK;
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 55273ee..99792b8 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -553,7 +553,6 @@ struct mwifiex_private {
- #ifdef CONFIG_DEBUG_FS
- 	struct dentry *dfs_dev_dir;
- #endif
--	u8 nick_name[16];
- 	u16 current_key_index;
- 	struct semaphore async_sem;
- 	struct cfg80211_scan_request *scan_request;
--- 
-1.8.1.4
+
+Thanks,
+Zhonghui
+
+On 2014/12/31 17:56, Arend van Spriel wrote:
+> On 12/31/14 09:20, Fu, Zhonghui wrote:
+>>  From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
+>> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>> Date: Mon, 29 Dec 2014 21:25:31 +0800
+>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>>
+>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>> twice suspend/resume operations for one WiFi chip to do
+>> the same things. This patch avoid this case.
+>
+> We have a patch queued up for this as well, but this one looks good enough although I personally prefer container_of() instead of dev_to_sdio_func().
+>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
+>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
+>>   1 files changed, 17 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> index 3c06e93..eee7818 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> @@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+>>   static int brcmf_ops_sdio_suspend(struct device *dev)
+>>   {
+>>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>> +    struct brcmf_sdio_dev *sdiodev;
+>>       mmc_pm_flag_t sdio_flags;
+>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>
+>>       brcmf_dbg(SDIO, "Enter\n");
+>>
+>> +    if (func->num == 2) {
+>> +        return 0;
+>> +    }
+>> +
+>> +    sdiodev = bus_if->bus_priv.sdio;
+>> +
+>>       atomic_set(&sdiodev->suspend, true);
+>>
+>>       if (sdiodev->wowl_enabled) {
+>> @@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>>   static int brcmf_ops_sdio_resume(struct device *dev)
+>>   {
+>>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>> +    struct brcmf_sdio_dev *sdiodev;
+>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>
+>>       brcmf_dbg(SDIO, "Enter\n");
+>> +
+>> +    if (func->num == 2) {
+>> +        return 0;
+>> +    }
+>> +
+>> +    sdiodev = bus_if->bus_priv.sdio;
+>> +
+>>       if (sdiodev->pdata->oob_irq_supported)
+>>           disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>>       brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+>> -- 1.7.1
+>>
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
