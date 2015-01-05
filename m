@@ -1,69 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:60078 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752869AbbAZUmY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 15:42:24 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/6 V2] Some changes for rtlwifi
-Date: Mon, 26 Jan 2015 14:42:08 -0600
-Message-Id: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150126_214232_579249_5226FA09)
+Received: from mga09.intel.com ([134.134.136.24]:41008 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753265AbbAEJLX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 04:11:23 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@adurom.com" <kvalo@adurom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2015-01-05
+Date: Mon, 5 Jan 2015 09:11:18 +0000
+Message-ID: <1420449079.12040.3.camel@egrumbacBox> (sfid-20150105_101132_393438_0B0329C1)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first of these patches changes the logging when an encryption key
-is changed. The rest are for changes in the btcoexist driver. Most
-contain the code needed to handle the RTL8812AE chips.
-
-All patches are for -next.
-
-V2 - Add license for btcoexist/halbtc8812a1ant.{c,h}
-     Improve subject and commit message for patch 5 of series.
-     Add comments explaining routine that formats and sends kernel socket.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
-
-Larry Finger (2):
-  rtlwifi: Change logging level for key change
-  rtlwifi: btcoexist: Remove typedef statements
-
-Troy Tan (4):
-  rtlwifi: btcoexist: Add routines for RTL8812AE with single antenna
-  rtlwifi: btcoexist: Add routines for RTL8812AE with dual antennae
-  rtlwifi: btcoexist: Add routines for RTL8812AE kernel socket
-  rtlwifi: btcoexist: Enable new routines for RTL8812AE
-
- drivers/net/wireless/rtlwifi/btcoexist/Makefile    |    9 +
- .../net/wireless/rtlwifi/btcoexist/halbt_precomp.h |    3 +
- .../wireless/rtlwifi/btcoexist/halbtc8192e2ant.c   |    6 +-
- .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.h   |    6 +-
- .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.c   | 2073 ++++++++++
- .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.h   |  152 +
- .../wireless/rtlwifi/btcoexist/halbtc8812a2ant.c   | 4207 ++++++++++++++++++++
- .../wireless/rtlwifi/btcoexist/halbtc8812a2ant.h   |  177 +
- .../wireless/rtlwifi/btcoexist/halbtc8812a_ext.c   |  921 +++++
- .../wireless/rtlwifi/btcoexist/halbtc8812a_ext.h   |  359 ++
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  |  713 +++-
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  |  108 +-
- drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c   |   37 +
- drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h   |    6 +-
- drivers/net/wireless/rtlwifi/cam.c                 |    2 +-
- drivers/net/wireless/rtlwifi/core.c                |   17 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |   14 -
- drivers/net/wireless/rtlwifi/wifi.h                |   12 +-
- 18 files changed, 8590 insertions(+), 232 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.h
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a2ant.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a2ant.h
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a_ext.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a_ext.h
-
--- 
-2.1.2
-
+SGkgS2FsbGUsDQoNClRoaXMgaXMgbmV3IGNvbnRlbnQgZm9yIDMuMTkuIERldGFpbHMgaW4gdGhl
+IHRhZy4gTGV0IG1lIGtub3cgaWYgeW91IGhhdmUgaXNzdWVzLg0KVGhhbmtzIQ0KDQoNClRoZSBm
+b2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQgYmFhMjFlODM0OTQxZWU1ZmJlNGJkNDIxYzg3
+MWY3YzBjNWY5YTA4NjoNCg0KICBpd2x3aWZpOiBwY2llOiBsaW1pdCBmdyBjaHVuayBzaXplcyBn
+aXZlbiB0byBmaCAoMjAxNC0xMi0xNCAxMDoyMDozMCArMDIwMCkNCg0KYXJlIGF2YWlsYWJsZSBp
+biB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIv
+c2NtL2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9pd2x3aWZpLWZpeGVzLmdpdCB0YWdzL2l3bHdp
+ZmktZm9yLWthbGxlLTIwMTUtMDEtMDUNCg0KZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRv
+IDkxZjQ5MWZkN2RmYmFlNmU1Y2U1ODg3MjkzNzIzZDgxOGFkZjdkNWQ6DQoNCiAgaXdsd2lmaTog
+YnVtcCBmaXJtd2FyZSBBUEkgZm9yIG12bSBkZXZpY2VzIHRvIDEyICgyMDE1LTAxLTA1IDExOjAy
+OjM3ICswMjAwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoqIGZpeCBmb3IgNzI2NUQgTlZNIGNoZWNrDQoqIGZpeGVz
+IGZvciBzY2FuOiBmaXggbG9uZyBzY2FubmluZyB0aW1lcyBhbmQgbmV0d29yaw0KCWRpc2NvdmVy
+eQ0KKiBuZXcgZmlybXdhcmUgQVBJIGZvciBpd2xtdm0gc3VwcG9ydGVkIGRldmljZXMNCiogZml4
+ZXMgaW4gcmF0ZSBjb250cm9sDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkFyaWsgTmVtdHNvdiAoMSk6DQogICAgICBp
+d2x3aWZpOiBwY2llOiBjb3JyZWN0bHkgZGVmaW5lIDcyNjUtRCBjZmcNCg0KRGF2aWQgU3BpbmFk
+ZWwgKDIpOg0KICAgICAgaXdsd2lmaTogbXZtOiBhZGQgYSBmbGFnIHRvIGVuYWJsZSBtYXRjaCBm
+b3VuZCBub3RpZmljYXRpb24NCiAgICAgIGl3bHdpZmk6IG12bTogc2NhbiBkd2VsbCB0aW1lIGNv
+cnJlY3Rpb25zDQoNCkVtbWFudWVsIEdydW1iYWNoICgyKToNCiAgICAgIGl3bHdpZmk6IDcwMDA6
+IGZpeCByZXBvcnRlZCBmaXJtd2FyZSBuYW1lIGZvciA3MjY1RA0KICAgICAgaXdsd2lmaTogYnVt
+cCBmaXJtd2FyZSBBUEkgZm9yIG12bSBkZXZpY2VzIHRvIDEyDQoNCkV5YWwgU2hhcGlyYSAoMik6
+DQogICAgICBpd2x3aWZpOiBtdm06IGZpeCBSeCB3aXRoIGJvdGggY2hhaW5zDQogICAgICBpd2x3
+aWZpOiBtdm06IGZpeCBvdXQgb2YgYm91bmRzIGFjY2VzcyB0byB0aWRfdG9fbWFjODAyMTFfYWMN
+Cg0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTcwMDAuYyAgICAgICAgfCAgNiAr
+KystLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC04MDAwLmMgICAgICAgIHwg
+IDIgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1mdy1maWxlLmggICAgIHwg
+IDQgKysrKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL2Z3LWFwaS1zY2FuLmgg
+fCAgMiArKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3NjYW4uYyAgICAgICAg
+fCAxOSArKysrKysrKysrKysrKy0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9t
+dm0vdHguYyAgICAgICAgICB8ICA4ICsrKysrKy0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
+d2lmaS9tdm0vdXRpbHMuYyAgICAgICB8ICAyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
+d2lmaS9wY2llL2Rydi5jICAgICAgICB8ICA0ICsrKy0NCiA4IGZpbGVzIGNoYW5nZWQsIDM0IGlu
+c2VydGlvbnMoKyksIDEzIGRlbGV0aW9ucygtKQ0KDQo=
