@@ -1,83 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:43839 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752225AbbABQ6k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 11:58:40 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
+Received: from s3.sipsolutions.net ([5.9.151.49]:53308 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753550AbbAEJcA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 04:32:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ido Yariv <idox.yariv@intel.com>,
+	Christopher Chavez <chrischavez@gmx.us>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 07/11] rtlwifi: rtl8192ee: Convert driver to use common DM table initialization
-Date: Fri,  2 Jan 2015 10:58:24 -0600
-Message-Id: <1420217908-1382-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175904_677154_CAF41C60)
-In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] Revert "mac80211: Fix accounting of the tailroom-needed counter"
+Date: Mon,  5 Jan 2015 10:31:55 +0100
+Message-Id: <1420450315-8750-1-git-send-email-johannes@sipsolutions.net> (sfid-20150105_103232_506966_BC1A450F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert driver rtl8192ee to use the common routine to initialize
-dm_digtable.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+This reverts commit ca34e3b5c808385b175650605faa29e71e91991b.
+
+It turns out that the p54 and cw2100 drivers assume that there's
+tailroom even when they don't say they really need it. However,
+there's currently no way for them to explicitly say they do need
+it, so for now revert this.
+
+Cc: stable@vger.kernel.org
+Fixes: ca34e3b5c808 ("mac80211: Fix accounting of the tailroom-needed counter")
+Reported-by: Christopher Chavez <chrischavez@gmx.us>
+Bisected-by: Larry Finger <Larry.Finger@lwfinger.net>
+Debugged-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192ee/dm.c | 32 ++---------------------------
- 1 file changed, 2 insertions(+), 30 deletions(-)
+ include/net/mac80211.h |  7 ++-----
+ net/mac80211/key.c     | 12 +++++++++---
+ 2 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
-index 70e58d1..459f3d0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
-@@ -152,35 +152,6 @@ static const u8 cckswing_table_ch14[CCK_TABLE_SIZE][8] = {
- 	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00}  /* 32, -16.0dB */
- };
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 58d719ddaa60..29c7be8808d5 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1270,8 +1270,7 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
+  *
+  * @IEEE80211_KEY_FLAG_GENERATE_IV: This flag should be set by the
+  *	driver to indicate that it requires IV generation for this
+- *	particular key. Setting this flag does not necessarily mean that SKBs
+- *	will have sufficient tailroom for ICV or MIC.
++ *	particular key.
+  * @IEEE80211_KEY_FLAG_GENERATE_MMIC: This flag should be set by
+  *	the driver for a TKIP key if it requires Michael MIC
+  *	generation in software.
+@@ -1283,9 +1282,7 @@ struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
+  * @IEEE80211_KEY_FLAG_PUT_IV_SPACE: This flag should be set by the driver
+  *	if space should be prepared for the IV, but the IV
+  *	itself should not be generated. Do not set together with
+- *	@IEEE80211_KEY_FLAG_GENERATE_IV on the same key. Setting this flag does
+- *	not necessarily mean that SKBs will have sufficient tailroom for ICV or
+- *	MIC.
++ *	@IEEE80211_KEY_FLAG_GENERATE_IV on the same key.
+  * @IEEE80211_KEY_FLAG_RX_MGMT: This key will be used to decrypt received
+  *	management frames. The flag can help drivers that have a hardware
+  *	crypto implementation that doesn't deal with management frames
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index 0bb7038121ac..bd4e46ec32bd 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -140,7 +140,9 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 	if (!ret) {
+ 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
  
--static void rtl92ee_dm_diginit(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct dig_t *dm_dig = &rtlpriv->dm_digtable;
--
--	dm_dig->cur_igvalue = rtl_get_bbreg(hw, DM_REG_IGI_A_11N,
--					    DM_BIT_IGI_11N);
--	dm_dig->rssi_lowthresh = DM_DIG_THRESH_LOW;
--	dm_dig->rssi_highthresh = DM_DIG_THRESH_HIGH;
--	dm_dig->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
--	dm_dig->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
--	dm_dig->rx_gain_max = DM_DIG_MAX;
--	dm_dig->rx_gain_min = DM_DIG_MIN;
--	dm_dig->back_val = DM_DIG_BACKOFF_DEFAULT;
--	dm_dig->back_range_max = DM_DIG_BACKOFF_MAX;
--	dm_dig->back_range_min = DM_DIG_BACKOFF_MIN;
--	dm_dig->pre_cck_cca_thres = 0xff;
--	dm_dig->cur_cck_cca_thres = 0x83;
--	dm_dig->forbidden_igi = DM_DIG_MIN;
--	dm_dig->large_fa_hit = 0;
--	dm_dig->recover_cnt = 0;
--	dm_dig->dig_min_0 = DM_DIG_MIN;
--	dm_dig->dig_min_1 = DM_DIG_MIN;
--	dm_dig->media_connect_0 = false;
--	dm_dig->media_connect_1 = false;
--	rtlpriv->dm.dm_initialgain_enable = true;
--	dm_dig->bt30_cur_igi = 0x32;
--}
--
- static void rtl92ee_dm_false_alarm_counter_statistics(struct ieee80211_hw *hw)
- {
- 	u32 ret_value;
-@@ -1089,10 +1060,11 @@ static void rtl92ee_dm_init_dynamic_atc_switch(struct ieee80211_hw *hw)
- void rtl92ee_dm_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 cur_igvalue = rtl_get_bbreg(hw, DM_REG_IGI_A_11N, DM_BIT_IGI_11N);
+-		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)))
+ 			sdata->crypto_tx_tailroom_needed_cnt--;
  
- 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
+ 		WARN_ON((key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE) &&
+@@ -188,7 +190,9 @@ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+ 	sta = key->sta;
+ 	sdata = key->sdata;
  
--	rtl92ee_dm_diginit(hw);
-+	rtl_dm_diginit(hw, cur_igvalue);
- 	rtl92ee_dm_init_rate_adaptive_mask(hw);
- 	rtl92ee_dm_init_primary_cca_check(hw);
- 	rtl92ee_dm_init_edca_turbo(hw);
+-	if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++	if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++	      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) ||
++	      (key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)))
+ 		increment_tailroom_need_count(sdata);
+ 
+ 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
+@@ -884,7 +888,9 @@ void ieee80211_remove_key(struct ieee80211_key_conf *keyconf)
+ 	if (key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE) {
+ 		key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
+ 
+-		if (!(key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC))
++		if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_IV) ||
++		      (key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)))
+ 			increment_tailroom_need_count(key->sdata);
+ 	}
+ 
 -- 
-2.1.2
+2.1.1
 
