@@ -1,37 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:44490 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757653AbbA1Ucw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 15:32:52 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/6] ath9k: Add a macro to identify PCOEM chips
-References: <1421633598-4488-1-git-send-email-sujith@msujith.org>
-	<1421633598-4488-4-git-send-email-sujith@msujith.org>
-	<21704.53700.641822.118302@gargle.gargle.HOWL>
-Date: Wed, 28 Jan 2015 14:15:19 +0200
-In-Reply-To: <21704.53700.641822.118302@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Wed, 28 Jan 2015 17:40:44 +0530")
-Message-ID: <87oapj85k8.fsf@kamboji.qca.qualcomm.com> (sfid-20150128_225040_242008_E651F2A1)
+Received: from mga11.intel.com ([192.55.52.93]:8589 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752937AbbAEChM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Jan 2015 21:37:12 -0500
+Message-ID: <54A9F8D3.1010807@linux.intel.com> (sfid-20150105_033738_285054_EEF4AC1F)
+Date: Mon, 05 Jan 2015 10:37:07 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	kvalo@codeaurora.org, linville@tuxdriver.com,
+	pieterpg@broadcom.com, hdegoede@redhat.com, wens@csie.org,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54A3B1B4.7090705@linux.intel.com> <54A3DC80.1080505@cogentembedded.com>
+In-Reply-To: <54A3DC80.1080505@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
 
-> Sujith Manoharan wrote:
->>  #define AR_SREV_9462(_ah) 0
->>  #define AR_SREV_9485(_ah) 0
->>  #define AR_SREV_9565(_ah) 0
->> +#define AR_SREV_9003_PCOEM(_ah) )
+Hi Sergei,
+
+You are right, I will apply your advice in next version of this patch.
+
+
+Thanks,
+Zhonghui
+
+On 2014/12/31 19:22, Sergei Shtylyov wrote:
+> Hello.
 >
-> Kalle, this is a typo - I'll resend the series.
+> On 12/31/2014 11:20 AM, Fu, Zhonghui wrote:
+>
+>>  From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
+>> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+>> Date: Mon, 29 Dec 2014 21:25:31 +0800
+>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>
+>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>> twice suspend/resume operations for one WiFi chip to do
+>> the same things. This patch avoid this case.
+>
+>> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+>> ---
+>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
+>>   1 files changed, 17 insertions(+), 2 deletions(-)
+>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> index 3c06e93..eee7818 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> @@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+>>   static int brcmf_ops_sdio_suspend(struct device *dev)
+>>   {
+>>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>> +    struct brcmf_sdio_dev *sdiodev;
+>>       mmc_pm_flag_t sdio_flags;
+>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>
+>>       brcmf_dbg(SDIO, "Enter\n");
+>>
+>> +    if (func->num == 2) {
+>> +        return 0;
+>> +    }
+>
+>    {} not needed.
+>
+> [...]
+>> @@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>>   static int brcmf_ops_sdio_resume(struct device *dev)
+>>   {
+>>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>> +    struct brcmf_sdio_dev *sdiodev;
+>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>
+>>       brcmf_dbg(SDIO, "Enter\n");
+>> +
+>> +    if (func->num == 2) {
+>> +        return 0;
+>> +    }
+>
+>    Same here.
+>
+> [...]
+>
+> WBR, Sergei
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Ok. I had actually put these into "Not Applicable" by accident and
-that's why I had missed them.
-
--- 
-Kalle Valo
