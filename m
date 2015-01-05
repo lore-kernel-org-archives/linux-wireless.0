@@ -1,97 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:47948 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759099AbbA3PHg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 10:07:36 -0500
-Received: by mail-ig0-f170.google.com with SMTP id l13so3665105iga.1
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 07:07:35 -0800 (PST)
-Message-ID: <54CB9E35.4060606@mojatatu.com> (sfid-20150130_160745_626329_196CFC11)
-Date: Fri, 30 Jan 2015 10:07:33 -0500
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Reply-To: info@netdev01.org
-MIME-Version: 1.0
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
-	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
-CC: info@netdev01.org, speakers@netdev01.org, attendees@netdev01.org
-Subject: NetDev 0.1 Preliminary schedule posted
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:53427 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751420AbbAEJym (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 04:54:42 -0500
+Message-ID: <1420451671.9459.1.camel@sipsolutions.net> (sfid-20150105_105500_749061_B2F71187)
+Subject: Re: [PATCH 2/2] Fix copy-paste bug: assign from src struct not dest
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Giel van Schijndel <me@mortis.eu>
+Cc: linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Date: Mon, 05 Jan 2015 10:54:31 +0100
+In-Reply-To: <1420394427-19509-2-git-send-email-me@mortis.eu> (sfid-20150104_201205_499836_1F2052B2)
+References: <1420394427-19509-1-git-send-email-me@mortis.eu>
+	 <1420394427-19509-2-git-send-email-me@mortis.eu>
+	 (sfid-20150104_201205_499836_1F2052B2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fellow netheads:
+On Sun, 2015-01-04 at 19:00 +0100, Giel van Schijndel wrote:
+> ---
+>  drivers/net/wireless/ti/wlcore/acx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+> index beb354c..93a2fa8 100644
+> --- a/drivers/net/wireless/ti/wlcore/acx.c
+> +++ b/drivers/net/wireless/ti/wlcore/acx.c
+> @@ -1725,7 +1725,7 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
+>  	acx->decrease_delta             = conf->decrease_delta;
+>  	acx->quiet_time                 = conf->quiet_time;
+>  	acx->increase_time              = conf->increase_time;
+> -	acx->window_size                = acx->window_size;
+> +	acx->window_size                = conf->window_size;
 
-Yours truly posting on behalf of rgb.
+It would be far better to fix the bug *first*, that way the bugfix can
+be cherry-picked/applied to trees that don't have the alignment.
 
-The preliminary schedule was published late yesterday.
-https://www.netdev01.org/schedule
+(And anyway I question the value of the alignment - if you really want
+to make this bug disappear you could perhaps use a macro)
 
-We wanted to get something out quickly while we make it pretty
-afterwards. There will be some minor changes later on.
-Talks are all on Mon/Tuesday and Tutorials/BoFs/Workshops are
-Sat/Sunday.
+johannes
 
-There will be a click-able version of the schedule later, for now
-please correlate the schedule against the sessions at:
-https://www.netdev01.org/sessions
-
-We appologize for the inconvinience (all volunteers are hard at
-work to make this a fantastic conference for you).
-
-If you have been waiting for the schedule to register, now is the
-time:
-https://onlineregistrations.ca/netdev01/
-
-Hotel update:
-------------
-The hotel has agreed, on a best effort basis to extend the
-netdev01 rate of $159.00 or $179.00 (depending on the type of room
-required).  Please dont procastinate and book now.  We are competing
-against a few tourist activities for hotel rooms going on around the
-area at the same time (example:
-http://www.ottawafestivals.ca/events/winterlude-2/).
-
-Avoid disappointment and do your reservations at:
-https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
-
-If you dont succeed getting the reservation, send us email at
-info at netdev01.org; we will try to bat for you but we cant guarantee
-results. We are also putting effort into talking to other local hotels.
-
-Sponsors:
-=========
-NetDev 0.1 would like to gratefully acknowledge all our sponsors:
-https://netdev01.org/sponsors
-CENGN                   http://www.cengn.ca/
-Google                  https://www.google.ca
-Qualcomm                https://www.qualcomm.com/
-Verizon                 http://www.verizon.com/
-Cumulus Networks        http://cumulusnetworks.com/
-Mojatatu Networks       https://mojatatu.com/
-
-
-Important Dates:
-==========================
-December 2, 2014        Call for Papers opens
-December 10, 2014       Registration opens
-January 23, 2015        Hotel discount rates deadline
-January 24, 2015        Call for sessions deadline
-February 12, 2015       On-line registration closes
-February 14-17, 2015    Conference days
-
--------------------------------------------------------------------------------
-THE Technical Conference on Linux Networking, February 14-17, 2015, 
-Ottawa, Canada
-https://netdev01.org/
-
-Contact:                        info@xxxxxxxxxxxxx
-Main site:                      https://www.netdev01.org/
-Announcement:                   https://www.netdev01.org/announce
-CFP:                            https://www.netdev01.org/cfp
-Travel/hotel/weather/clothing:  https://www.netdev01.org/travel
-RSS feed:                       https://netdev01.org/atom
-Follow us on Twitter: @netdev01 https://twitter.com/netdev01
-
-cheers,
-jamal (on behalf of Richard Guy Briggs)
