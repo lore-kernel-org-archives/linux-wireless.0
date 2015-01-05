@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:44074 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636AbbATKnZ (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:39512 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbbAEGey convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 05:43:25 -0500
-Received: by mail-wi0-f170.google.com with SMTP id em10so3801287wid.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 02:43:23 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] ath10k: remove sw encryption for pmf
-Date: Tue, 20 Jan 2015 11:42:42 +0100
-Message-Id: <1421750563-15945-1-git-send-email-michal.kazior@tieto.com> (sfid-20150120_114328_474945_76CFD580)
+	Mon, 5 Jan 2015 01:34:54 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAKXHbyMqTk=k7eieBNtAD+n6+4w3weL82twHBo-o8ebm_3+wvg@mail.gmail.com>
+References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
+	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
+	<CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com>
+	<CAKXHbyO70WdWekSYCY9spMbX2+_kdKTp3JoreDKpCdUBzFwYqw@mail.gmail.com>
+	<CACna6rxTYUWvxvu0rFydWxkjbYdHfhV=o+9A+ViCpbV-LFx7fw@mail.gmail.com>
+	<CAKXHbyMqTk=k7eieBNtAD+n6+4w3weL82twHBo-o8ebm_3+wvg@mail.gmail.com>
+Date: Mon, 5 Jan 2015 07:34:53 +0100
+Message-ID: <CACna6rxF1OKRZSpaL=+XzSV2kCpMH5LuB-B+eWV7zF8MJ-9tog@mail.gmail.com> (sfid-20150105_073510_759481_9377089C)
+Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Sedat Dilek <sedat.dilek@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+On 3 January 2015 at 13:28, Rickard Strandqvist
+<rickard_strandqvist@spectrumdigital.se> wrote:
+> 2015-01-02 22:34 GMT+01:00 Rafał Miłecki <zajec5@gmail.com>:
+>>
+>> 1) I gave you Ack for the changes
+>> 2) You could drop "net: wireless: " or better use something Sedat proposed
+>
+> Nice, yes I miss the Ack :)
+>
+> I just got one more complaining about my subject-line in "net: wireless: "
+> I use some sed call for this, so it's easy to fix. I will now remove that
+> part hereinafter.
 
-Software encryption was never necessary.
-Tested with fw 636 and fw 10.x.
+Will you re-send this patch with a proper subject then, please?
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9524bc5..78834c3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -58,10 +58,7 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 	switch (key->cipher) {
- 	case WLAN_CIPHER_SUITE_CCMP:
- 		arg.key_cipher = WMI_CIPHER_AES_CCM;
--		if (arvif->vdev_type == WMI_VDEV_TYPE_AP)
--			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV_MGMT;
--		else
--			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
-+		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV_MGMT;
- 		break;
- 	case WLAN_CIPHER_SUITE_TKIP:
- 		arg.key_cipher = WMI_CIPHER_TKIP;
 -- 
-1.8.5.3
-
+Rafał
