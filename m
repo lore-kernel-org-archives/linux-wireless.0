@@ -1,42 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52801 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754557AbbA3ILQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 03:11:16 -0500
-Message-ID: <1422605473.1919.1.camel@sipsolutions.net> (sfid-20150130_091119_524444_7D0FDB52)
-Subject: Re: moving the wiki
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 30 Jan 2015 09:11:13 +0100
-In-Reply-To: <CACna6rzCkJ0_BWaxv1157QyCK8g4PJgeKhfOd0CqwN=s_pbn8g@mail.gmail.com> (sfid-20150130_071914_363748_F654B606)
-References: <1392060043.4128.37.camel@jlt4.sipsolutions.net>
-	 <1422543484.6322.10.camel@sipsolutions.net>
-	 <CACna6rzCkJ0_BWaxv1157QyCK8g4PJgeKhfOd0CqwN=s_pbn8g@mail.gmail.com>
-	 (sfid-20150130_071914_363748_F654B606)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14731 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751175AbbAELDl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 06:03:41 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t05B3dn7005953
+	for <linux-wireless@vger.kernel.org>; Mon, 5 Jan 2015 03:03:40 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1rqhmq126c-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 03:03:40 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v3] cfg80211: check for carrier state only when offchanel CAC supported
+Date: Mon, 5 Jan 2015 22:03:04 +0530
+Message-ID: <1420475584-5533-1-git-send-email-patila@marvell.com> (sfid-20150105_120344_381788_A7E15DA0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-30 at 07:19 +0100, Rafał Miłecki wrote:
-> On 29 January 2015 at 15:58, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > It's actually at http://linuxwireless.sipsolutions.net/ and is just a
-> > static dump of the old wiki contents. Please don't copy content I
-> > removed from the new wiki to the old one - we didn't get permission for
-> > that content to be licensed under the new wiki's license.
-> 
-> Is this expected that in such cases whole pages were dropped? E.g.:
-> https://wireless.wiki.kernel.org/en/users/drivers/b43
-> 
-> It doesn't contain anything, not even texts e.g. from me.
+Checking for carrier state during start_radar_detection is needed
+only for devices which support offchannel CAC.
+This patch provides this additional check of extended feature offchannel
+CAC support while checking for carrier state.
 
-Sadly, yes. I couldn't really track who wrote what, and that page had a
-few contributors, among the more prolific ones Stefano, whom I couldn't
-contact to get permission to relicense.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ include/uapi/linux/nl80211.h | 3 +++
+ net/wireless/nl80211.c       | 4 +++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-If you know exactly what *you* wrote, you can obviously copy that from
-the old site - but I couldn't preserve all of it.
-
-johannes
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 735ab43..c318802 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4205,10 +4205,13 @@ enum nl80211_feature_flags {
+ /**
+  * enum nl80211_ext_feature_index - bit index of extended features.
+  *
++ * @NL80211_EXT_FEATURE_OFFCHAN_CAC: This device/driver supports
++ *	offchannel Channel Availability Check(CAC).
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+ enum nl80211_ext_feature_index {
++	NL80211_EXT_FEATURE_OFFCHAN_CAC,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 39753de..b2abb37 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6138,7 +6138,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
+ 
+-	if (netif_carrier_ok(dev))
++	if (wiphy_ext_feature_isset(&rdev->wiphy,
++				    NL80211_EXT_FEATURE_OFFCHAN_CAC) &&
++	    netif_carrier_ok(dev))
+ 		return -EBUSY;
+ 
+ 	if (wdev->cac_started)
+-- 
+1.8.1.4
 
