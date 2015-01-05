@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:12488 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752595AbbAURyx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2015 12:54:53 -0500
-Message-ID: <54BFE7EA.3090402@broadcom.com> (sfid-20150121_185516_973170_27DE98C4)
-Date: Wed, 21 Jan 2015 18:54:50 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<linux-wireless@vger.kernel.org>,
-	Avri Altman <avri.altman@intel.com>
-Subject: Re: [PATCH] mac80211: tell drivers the user TX power restriction
-References: <1421784945-7815-1-git-send-email-emmanuel.grumbach@intel.com>	 <54BEDBBA.2060305@broadcom.com> <1421858816.1900.24.camel@sipsolutions.net>
-In-Reply-To: <1421858816.1900.24.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:53570 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753182AbbAEKU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 05:20:27 -0500
+Message-ID: <1420453221.9459.5.camel@sipsolutions.net> (sfid-20150105_112047_081367_21B7564A)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Mon, 05 Jan 2015 11:20:21 +0100
+In-Reply-To: <alpine.LNX.2.00.1501051109350.16297@pobox.suse.cz>
+References: <1420297188.2397.3.camel@tiscali.nl>
+	  <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+	  <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+	  <1420324124.9624.60.camel@x220>
+	 (sfid-20150103_232852_400842_25360CE9) <1420452301.9459.3.camel@sipsolutions.net>
+	 <alpine.LNX.2.00.1501051109350.16297@pobox.suse.cz>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/21/15 17:46, Johannes Berg wrote:
-> On Tue, 2015-01-20 at 23:50 +0100, Arend van Spriel wrote:
->> On 01/20/15 21:15, Emmanuel Grumbach wrote:
->>> From: Avri Altman<avri.altman@intel.com>
->>>
->>> When a tx power restriction is set, mac80211 protects its downstream
->>> stack by taking min(user, regulatory, 11h ap). However, we should allow
->>> drivers to use that value as it is - on their own risk.
->>> This might come handy, when tx power is set per phy. As mac80211 has
->>> only a concept of "per-vif" tx power, it iterates over the active vifs,
->>> and sets their tx power limit accordingly. Allowing this value to
->>> proliferate downstream unchanged, the driver might use this legacy
->>> api differently, e.g. to set tx power for the whole device.
->>
->> Not sure if this really a good idea as default behaviour. Can't we do
->> this kind of stuff under some Kconfig. In cfg80211 we have the
->> CFG80211_CERTIFICATION_ONUS.
->
-> I don't think this is necessary. After all, it's added in a special
-> separate field that the driver author must evaluate how to use it.
->
-> In our case, it'll be used (by the driver and firmware) to limit scan TX
-> power appropriately, for example. Since scanning is done by the firmware
-> the TX power for the channel cannot be set by the driver, and if we
-> limit it to the calculated power limit for the (associated) vif then it
-> might be too low since you might be associated on a low channel.
->
-> But it doesn't have a direct effect on any driver not using it, so I
-> don't really see why it should be configurable?
+On Mon, 2015-01-05 at 11:12 +0100, Jiri Kosina wrote:
+> On Mon, 5 Jan 2015, Johannes Berg wrote:
+> 
+> > Well, see the big thread over there with the revert that I'm tempted to
+> > not even read ...
+> 
+> I'd actually like to hear from you whether you share Emmanuel's point of 
+> view that my revert of your patch was inappropriate; I was really 
+> surprised that there might be even questions about that, given the obvious 
+> userspace wreckage.
 
-Okay. Let's forget about the configurable thing. Reading the commit 
-message and I concluded that before the patch it was 'txpwr_limit = 
-min(user, regulatory, ap_11h)'. So for drivers using this value this now 
-changes to 'txpwr_limit = user', right? For those drivers it might be 
-good to have the min() operation added so their behaviour is effectively 
-unchanged by this patch.
+Let's not pollute this thread with that though ... :-)
 
-Regards,
-Arend
+I agree that the revert was the right thing to do, but from what I saw
+when I briefly glimpsed at part of the thread during my vacation (and
+then deciding I didn't want to deal with it then) a lot has been said in
+the thread that is completely wrong. I may not care enough to correct it
+though.
 
-> johannes
->
+johannes
+
 
