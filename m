@@ -1,31 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61103 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752893AbbAHMYz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 07:24:55 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Message-ID: <54AE770C.4080006@qca.qualcomm.com> (sfid-20150108_132459_210060_746EE603)
-Date: Thu, 8 Jan 2015 14:24:44 +0200
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH 17/22] wil6210: add advanced interrupt moderation
-References: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>	<1419320844-23989-18-git-send-email-qca_vkondrat@qca.qualcomm.com> <87mw5vt3fb.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87mw5vt3fb.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:53332 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752003AbbAEJdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 04:33:44 -0500
+Message-ID: <1420450414.1898.6.camel@sipsolutions.net> (sfid-20150105_103346_829868_35973638)
+Subject: Re: p54usb kernel panic on recent mainline kernels
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Christopher Chavez <chrischavez@gmx.us>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 05 Jan 2015 10:33:34 +0100
+In-Reply-To: <549EFC9F.9030504@lwfinger.net> (sfid-20141227_193826_833900_3E3C56C2)
+References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com>
+	 <loom.20141227T010207-869@post.gmane.org> <2296382.VCr2c4tJc9@debian64>
+	 <5946673.YueIgFzjsn@debian64> <549EFC9F.9030504@lwfinger.net>
+	 (sfid-20141227_193826_833900_3E3C56C2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2015 10:12 AM, Kalle Valo wrote:
-> The number of module parameters feels a little excessive, especially
-> when you add one more in the following patch. Is it really necessary for
-> the user to configure all these? Why can't the driver pick good
-> defaults?
+On Sat, 2014-12-27 at 12:38 -0600, Larry Finger wrote:
 
-Unfortunately, all these are really tunable parameters that impact 
-performance.
-I also realized it is too much. If we will find appropriate defaults for 
-some parameters, not requiting tuning, I'll upload patch removing it.
+> I had redone the bisection and found that ca34e3b was the bad commit. That was 
+> late last night (CST - UTC-5). I was pleased to find your patch in my mailbox 
+> this morning.
+> 
+> With your patch, my system has survived for about 2 hours, whereas it would have 
+> failed in 2 minutes or less. You can add
+> 
+> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+> 
+> I think this needs to be applied to 3.{17-19}.
 
-Thanks, Vladimir
+Thanks everyone. I just sent out a revert - that'll be easier to manage
+for 3.17-3.19, and we can redo the original commit properly for 3.20.
+
+johannes
+
