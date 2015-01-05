@@ -1,92 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khitomer.mortis.eu ([185.27.175.75]:19160 "EHLO
-	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754370AbbAGTSj (ORCPT
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:65107 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753130AbbAEWFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 14:18:39 -0500
-Date: Wed, 7 Jan 2015 20:18:36 +0100
-From: Giel van Schijndel <me@mortis.eu>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Eliad Peller <eliad@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 2/2] Fix copy-paste bug: assign from src struct not dest
-Message-ID: <20150107191836.GA18978@salidar.dom.custoft.eu> (sfid-20150107_201858_776156_A3801F36)
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="k1lZvvs/B4yU6o8G"
-In-Reply-To: <CAHp75Vetc+fgv=YrqPuW9YChez82h7N7VeX_5bW5tpXm2j=h7g@mail.gmail.com>
- <1420451671.9459.1.camel@sipsolutions.net>
+	Mon, 5 Jan 2015 17:05:22 -0500
+Message-ID: <1420495519.14308.29.camel@x220> (sfid-20150105_230542_024491_1956B8E4)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Mon, 05 Jan 2015 23:05:19 +0100
+In-Reply-To: <1420484224.9459.16.camel@sipsolutions.net>
+References: <1420297188.2397.3.camel@tiscali.nl>
+	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
+	 <1420479510.14308.23.camel@x220>
+	 (sfid-20150105_183907_807502_81C08416) <1420484224.9459.16.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2015-01-05 at 19:57 +0100, Johannes Berg wrote:
+> Multiple other groups of ioctls could be converted in similar patches,
+> until at the end you can completely remove ipw_wx_handlers and rely
+> entirely on cfg80211's wext compatibility.
+> 
+> So far the theory - in practice nobody cared enough to start working on
+> any of these drivers, let alone actually has the hardware today.
 
---k1lZvvs/B4yU6o8G
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+So my suggestion to make ipw2200 no longer use cfg80211_wext_giwname()
+would actually be backwards. What's actually needed, in theory, is to
+use more of what's provided under CFG80211_WEXT (and, I guess, less of
+what's provided under WIRELESS_EXT). Did I get that right?
 
-On Mon, Jan 05, 2015 at 10:54:31 +0100, Johannes Berg wrote:
-> On Sun, 2015-01-04 at 19:00 +0100, Giel van Schijndel wrote:
->> ---
->>  drivers/net/wireless/ti/wlcore/acx.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>=20
->> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless=
-/ti/wlcore/acx.c
->> index beb354c..93a2fa8 100644
->> --- a/drivers/net/wireless/ti/wlcore/acx.c
->> +++ b/drivers/net/wireless/ti/wlcore/acx.c
->> @@ -1725,7 +1725,7 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
->>  	acx->decrease_delta             =3D conf->decrease_delta;
->>  	acx->quiet_time                 =3D conf->quiet_time;
->>  	acx->increase_time              =3D conf->increase_time;
->> -	acx->window_size                =3D acx->window_size;
->> +	acx->window_size                =3D conf->window_size;
->=20
-> It would be far better to fix the bug *first*, that way the bugfix can
-> be cherry-picked/applied to trees that don't have the alignment.
+Thanks,
 
-I agree on the ordering.
 
-As for:
-> (And anyway I question the value of the alignment - if you really want
-> to make this bug disappear you could perhaps use a macro)
+Paul Bolle
 
-And:
-On Wed, Jan 07, 2015 at 20:40:57 +0200, Andy Shevchenko wrote:
-> On Sun, Jan 4, 2015 at 8:00 PM, Giel van Schijndel <me@mortis.eu> wrote:
-> > This highlights the differences (errors).
->=20
-> Seems like patch for the patch. Just fix an error like it's done here:
-> http://www.spinics.net/lists/linux-wireless/msg131667.html
-
-IMO the aligned block of code has the significant advantage of taking
-advantage of humans' ability to spot things that break a pattern. Which
-in this case becomes *very* visible when properly aligned, because
-without the alignment there is no (visual) pattern (or at least not one
-very suitable for my "visual processing system", I know the same applies
-to at least some others).
-
---=20
-Met vriendelijke groet,
-With kind regards,
-Giel van Schijndel
-
---k1lZvvs/B4yU6o8G
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlSthooACgkQZBYm/87l50JySgCfQiL/iT3PzgOr3YqVE/ItFijE
-zlQAnibAUYKjA8xW2iN1tla/QuqWiGZW
-=6l9e
------END PGP SIGNATURE-----
-
---k1lZvvs/B4yU6o8G--
