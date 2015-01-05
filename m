@@ -1,201 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14236 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934497AbbA1E4J (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:54437 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751222AbbAERid (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 23:56:09 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4tuRD006823
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:56:08 -0800
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1s49ry0h7u-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:56:08 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <gaoqs@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 10/10] mwifiex: 11h handling for AP interface
-Date: Wed, 28 Jan 2015 15:54:25 +0530
-Message-ID: <1422440665-3940-11-git-send-email-patila@marvell.com> (sfid-20150128_055615_706625_A0256987)
-In-Reply-To: <1422440665-3940-1-git-send-email-patila@marvell.com>
-References: <1422440665-3940-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Jan 2015 12:38:33 -0500
+Message-ID: <1420479510.14308.23.camel@x220> (sfid-20150105_183907_807502_81C08416)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Mon, 05 Jan 2015 18:38:30 +0100
+In-Reply-To: <54AA641C.7050307@broadcom.com>
+References: <1420297188.2397.3.camel@tiscali.nl>
+	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch enables 11h extensions in FW upon detecting DFS
-channel in start radar detection/channel switch handlers.
-Patch also takes care of disabling 11h when non DFS channels
-are to be set during start_ap handler.
+On Mon, 2015-01-05 at 11:14 +0100, Arend van Spriel wrote:
+> On 01/03/15 23:28, Paul Bolle wrote:
+> > Side note: am I correct in thinking that there's some successor to
+> > CFG80211_WEXT and that the ipw2200 driver could, at least in theory, be
+> > ported to that successor? (ipw2200 hardware appears to be a bit old, so
+> > probably no one would care enough to actually do that.)
+> > net/wireless/kconfig doesn't mention anything like that, so probably I'm
+> > just confused.
+> 
+> ipw2200 is a WEXT driver using some wext functionality (and struct 
+> wiphy) provided by cfg80211 hence it needs CFG80211_WEXT. I guess that 
+> is what makes it confusing.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/11h.c      | 18 +++++++++++++++++-
- drivers/net/wireless/mwifiex/cfg80211.c | 22 ++++++++++++++++++++++
- drivers/net/wireless/mwifiex/decl.h     |  5 +++++
- drivers/net/wireless/mwifiex/fw.h       |  2 ++
- drivers/net/wireless/mwifiex/init.c     |  2 ++
- drivers/net/wireless/mwifiex/main.h     |  5 +++++
- 6 files changed, 53 insertions(+), 1 deletion(-)
+It doesn't help that I hardly know anything about mac80211, cfg80211 and
+nl80211 (and lib80211 for that matter). To me these are mostly just
+names that end in 80211.
 
-diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
-index d794686..3ab87a8 100644
---- a/drivers/net/wireless/mwifiex/11h.c
-+++ b/drivers/net/wireless/mwifiex/11h.c
-@@ -21,6 +21,16 @@
- #include "fw.h"
- 
- 
-+void mwifiex_init_11h_params(struct mwifiex_private *priv)
-+{
-+	priv->state_11h.is_11h_enabled = true;
-+	priv->state_11h.is_11h_active = false;
-+}
-+
-+inline int mwifiex_is_11h_active(struct mwifiex_private *priv)
-+{
-+	return priv->state_11h.is_11h_active;
-+}
- /* This function appends 11h info to a buffer while joining an
-  * infrastructure BSS
-  */
-@@ -69,10 +79,14 @@ mwifiex_11h_process_infra_join(struct mwifiex_private *priv, u8 **buffer,
- }
- 
- /* Enable or disable the 11h extensions in the firmware */
--static int mwifiex_11h_activate(struct mwifiex_private *priv, bool flag)
-+int mwifiex_11h_activate(struct mwifiex_private *priv, bool flag)
- {
- 	u32 enable = flag;
- 
-+	/* enable master mode radar detection on AP interface */
-+	if ((GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_UAP) && enable)
-+		enable |= MWIFIEX_MASTER_RADAR_DET_MASK;
-+
- 	return mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
- 				HostCmd_ACT_GEN_SET, DOT11H_I, &enable, true);
- }
-@@ -91,11 +105,13 @@ void mwifiex_11h_process_join(struct mwifiex_private *priv, u8 **buffer,
- 		 * bit
- 		 */
- 		mwifiex_11h_activate(priv, true);
-+		priv->state_11h.is_11h_active = true;
- 		bss_desc->cap_info_bitmap |= WLAN_CAPABILITY_SPECTRUM_MGMT;
- 		mwifiex_11h_process_infra_join(priv, buffer, bss_desc);
- 	} else {
- 		/* Deactivate 11h functions in the firmware */
- 		mwifiex_11h_activate(priv, false);
-+		priv->state_11h.is_11h_active = false;
- 		bss_desc->cap_info_bitmap &= ~WLAN_CAPABILITY_SPECTRUM_MGMT;
- 	}
- }
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 2d1ea93..41c8e25 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1742,6 +1742,18 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 
- 	mwifiex_set_wmm_params(priv, bss_cfg, params);
- 
-+	if (mwifiex_is_11h_active(priv) &&
-+	    !cfg80211_chandef_dfs_required(wiphy, &params->chandef,
-+					   priv->bss_mode)) {
-+		dev_dbg(priv->adapter->dev, "Disable 11h extensions in FW\n");
-+		if (mwifiex_11h_activate(priv, false)) {
-+			dev_err(priv->adapter->dev,
-+				"Failed to disable 11h extensions!!");
-+			return -1;
-+		}
-+		priv->state_11h.is_11h_active = true;
-+	}
-+
- 	if (mwifiex_config_start_uap(priv, bss_cfg)) {
- 		wiphy_err(wiphy, "Failed to start AP\n");
- 		kfree(bss_cfg);
-@@ -3209,6 +3221,16 @@ mwifiex_cfg80211_start_radar_detection(struct wiphy *wiphy,
- 		return -EBUSY;
- 	}
- 
-+	if (!mwifiex_is_11h_active(priv)) {
-+		dev_dbg(priv->adapter->dev, "Enable 11h extensions in FW\n");
-+		if (mwifiex_11h_activate(priv, true)) {
-+			dev_err(priv->adapter->dev,
-+				"Failed to activate 11h extensions!!");
-+			return -1;
-+		}
-+		priv->state_11h.is_11h_active = true;
-+	}
-+
- 	memset(&radar_params, 0, sizeof(struct mwifiex_radar_params));
- 	radar_params.chandef = chandef;
- 	radar_params.cac_time_ms = cac_time_ms;
-diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
-index 68aed4e..88d0ead 100644
---- a/drivers/net/wireless/mwifiex/decl.h
-+++ b/drivers/net/wireless/mwifiex/decl.h
-@@ -248,4 +248,9 @@ struct mwifiex_radar_params {
- 	struct cfg80211_chan_def *chandef;
- 	u32 cac_time_ms;
- } __packed;
-+
-+struct mwifiex_11h_intf_state {
-+	bool is_11h_enabled;
-+	bool is_11h_active;
-+} __packed;
- #endif /* !_MWIFIEX_DECL_H_ */
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index 6d433227..df553e8 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -534,6 +534,8 @@ enum P2P_MODES {
- 
- #define MWIFIEX_FW_V15		   15
- 
-+#define MWIFIEX_MASTER_RADAR_DET_MASK BIT(1)
-+
- struct mwifiex_ie_types_header {
- 	__le16 type;
- 	__le16 len;
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index aa239a8..b77ba74 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -152,6 +152,8 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
- 	priv->check_tdls_tx = false;
- 	memcpy(priv->tos_to_tid_inv, tos_to_tid_inv, MAX_NUM_TID);
- 
-+	mwifiex_init_11h_params(priv);
-+
- 	return mwifiex_add_bss_prio_tbl(priv);
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 599698c..f0a6af1 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -595,6 +595,7 @@ struct mwifiex_private {
- 	struct workqueue_struct *dfs_chan_sw_workqueue;
- 	struct delayed_work dfs_chan_sw_work;
- 	struct cfg80211_beacon_data beacon_after;
-+	struct mwifiex_11h_intf_state state_11h;
- };
- 
- enum mwifiex_ba_status {
-@@ -1337,6 +1338,10 @@ int mwifiex_config_start_uap(struct mwifiex_private *priv,
- void mwifiex_uap_del_sta_data(struct mwifiex_private *priv,
- 			      struct mwifiex_sta_node *node);
- 
-+void mwifiex_init_11h_params(struct mwifiex_private *priv);
-+int mwifiex_is_11h_active(struct mwifiex_private *priv);
-+int mwifiex_11h_activate(struct mwifiex_private *priv, bool flag);
-+
- void mwifiex_11h_process_join(struct mwifiex_private *priv, u8 **buffer,
- 			      struct mwifiex_bssdescriptor *bss_desc);
- int mwifiex_11h_handle_event_chanswann(struct mwifiex_private *priv);
--- 
-1.8.1.4
+Anyhow, concerning, CFG80211_WEXT: it seems the only functionality
+provided by that symbol that ipw2200 uses directly is
+cfg80211_wext_giwname(). Perhaps ipw2200 could have a private version of
+that function, something like ipw2100's ipw2100_wx_get_name(). Should be
+trivial to implement (ie, it could take _me_ a day or two).
+
+But perhaps ipw2200 uses CFG80211_WEXT _indirectly_ too. Ie, in
+net/wireless/core.c I stumbled on
+    #ifdef CONFIG_CFG80211_WEXT
+            rdev->wiphy.wext = &cfg80211_wext_handler;
+    #endif
+
+
+But I net/wireless/wext-core.c I then found
+    #ifdef CONFIG_CFG80211_WEXT
+            if (dev->ieee80211_ptr && dev->ieee80211_ptr->wiphy)
+                    handlers = dev->ieee80211_ptr->wiphy->wext;
+    #endif
+    #ifdef CONFIG_WIRELESS_EXT
+            if (dev->wireless_handlers)
+                    handlers = dev->wireless_handlers;
+    #endif
+
+(There's much more to discover about WEXT, of course.) Anyhow, IPW2200
+uses both CFG80211_WEXT and WIRELESS_EXT and cfg80211_wext_handler and
+ipw2200's wireless_handlers appear to cover the same set of IOCTLS (one
+exception: SIOCSIWPMKSA). So by now I'm really puzzled how this all fits
+together.
+
+Thanks,
+
+
+Paul Bolle
 
