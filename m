@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34907 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755093AbbALTxH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 14:53:07 -0500
-Message-ID: <54B42622.5090404@candelatech.com> (sfid-20150112_205315_086941_BA32950E)
-Date: Mon, 12 Jan 2015 11:53:06 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from cantor2.suse.de ([195.135.220.15]:46237 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753168AbbAEKNB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 05:13:01 -0500
+Date: Mon, 5 Jan 2015 11:12:57 +0100 (CET)
+From: Jiri Kosina <jkosina@suse.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+cc: Paul Bolle <pebolle@tiscali.nl>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+In-Reply-To: <1420452301.9459.3.camel@sipsolutions.net>
+Message-ID: <alpine.LNX.2.00.1501051109350.16297@pobox.suse.cz> (sfid-20150105_111328_994418_FE7D9207)
+References: <1420297188.2397.3.camel@tiscali.nl>  <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>  <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>  <1420324124.9624.60.camel@x220> (sfid-20150103_232852_400842_25360CE9)
+ <1420452301.9459.3.camel@sipsolutions.net>
 MIME-Version: 1.0
-To: greearb@candelatech.com
-CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/8] ath10k: scan should handle scan-start-failed event
- properly.
-References: <1421090992-14971-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1421090992-14971-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry about the resends...had mail-server issue, should be resolved now.
+On Mon, 5 Jan 2015, Johannes Berg wrote:
+
+> Well, see the big thread over there with the revert that I'm tempted to
+> not even read ...
+
+I'd actually like to hear from you whether you share Emmanuel's point of 
+view that my revert of your patch was inappropriate; I was really 
+surprised that there might be even questions about that, given the obvious 
+userspace wreckage.
+
+Again, the only thing I really care for is the compatibility layer to 
+userspace. I don't question at all the fact nl80211 provides much better 
+functionality and its usage definitely should be encouraged.
 
 Thanks,
-Ben
-
-On 01/12/2015 11:29 AM, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> In case firmware fails to start the scan, then complete
-> the start condition and clean up so that driver does not
-> block on timeout.
-
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Jiri Kosina
+SUSE Labs
