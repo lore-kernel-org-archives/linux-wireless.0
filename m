@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:43131 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755285AbbAGR4e (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:41667 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbbAEWNN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 12:56:34 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2] brcmfmac: get rid of duplicate SDIO device identifiers
-References: <1420581774-32763-1-git-send-email-arend@broadcom.com>
-Date: Wed, 07 Jan 2015 19:56:28 +0200
-In-Reply-To: <1420581774-32763-1-git-send-email-arend@broadcom.com> (Arend van
-	Spriel's message of "Tue, 6 Jan 2015 23:02:54 +0100")
-Message-ID: <87387mqxtf.fsf@kamboji.qca.qualcomm.com> (sfid-20150107_185640_683217_F70A0519)
+	Mon, 5 Jan 2015 17:13:13 -0500
+Message-ID: <54AB0C75.1090204@broadcom.com> (sfid-20150105_231329_983764_83CD2064)
+Date: Mon, 5 Jan 2015 23:13:09 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Paul Bolle <pebolle@tiscali.nl>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+References: <1420297188.2397.3.camel@tiscali.nl>	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>	 <1420479510.14308.23.camel@x220>	 (sfid-20150105_183907_807502_81C08416) <1420484224.9459.16.camel@sipsolutions.net> <1420495519.14308.29.camel@x220>
+In-Reply-To: <1420495519.14308.29.camel@x220>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
-
-> Instead of defining SDIO device identifier in brcm80211 code use
-> the defintions in linux/mmc/sdio_ids.h directly.
+On 01/05/15 23:05, Paul Bolle wrote:
+> On Mon, 2015-01-05 at 19:57 +0100, Johannes Berg wrote:
+>> Multiple other groups of ioctls could be converted in similar patches,
+>> until at the end you can completely remove ipw_wx_handlers and rely
+>> entirely on cfg80211's wext compatibility.
+>>
+>> So far the theory - in practice nobody cared enough to start working on
+>> any of these drivers, let alone actually has the hardware today.
 >
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> Resend patch rebased on:
->
->   commit 8a40084e7bb8f0fd32a301a64fd869726516a1df
->   Author: Maithili Hinge <maithili@marvell.com>
->   Date:   Wed Dec 31 02:36:46 2014 -0800
->
->       mwifiex: Add support for wowlan disconnect
+> So my suggestion to make ipw2200 no longer use cfg80211_wext_giwname()
+> would actually be backwards. What's actually needed, in theory, is to
+> use more of what's provided under CFG80211_WEXT (and, I guess, less of
+> what's provided under WIRELESS_EXT). Did I get that right?
 
-Thanks, applied to wireless-drivers-next.git.
+Yes, but as Johannes indicated it needs consideration what to group in 
+the patches.
 
--- 
-Kalle Valo
+Regards,
+Arend
+
+> Thanks,
+>
+>
+> Paul Bolle
+>
+
