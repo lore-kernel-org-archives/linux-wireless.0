@@ -1,60 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from erley.org ([97.107.129.9]:45981 "EHLO remote.erley.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752465AbbAOUqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 15:46:04 -0500
-Message-ID: <54B82598.9060403@erley.org> (sfid-20150115_214608_607970_D88B0939)
-Date: Thu, 15 Jan 2015 14:39:52 -0600
-From: Pat Erley <pat-lkml@erley.org>
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:48884 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751387AbbAEHMd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 02:12:33 -0500
+Received: by mail-wi0-f169.google.com with SMTP id r20so3525160wiv.4
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2015 23:12:32 -0800 (PST)
+Received: from [192.168.1.2] (host-85-201-211-254.dynamic.voo.be. [85.201.211.254])
+        by mx.google.com with ESMTPSA id b10sm8742280wiw.9.2015.01.04.23.12.31
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 04 Jan 2015 23:12:31 -0800 (PST)
+Message-ID: <54AA3953.20603@gmail.com> (sfid-20150105_081236_617625_1F141B56)
+Date: Mon, 05 Jan 2015 08:12:19 +0100
+From: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>
 MIME-Version: 1.0
-To: Mike Purvis <mpurvis@clearpathrobotics.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Delivery Status Notification (Failure)
-References: <CACsJT9OOBcYNhNG6=+Q2EE4VHEvJ8_rJ3fr6gb9_3P4KpPPX3g@mail.gmail.com> <f46d043c061e8dd5c9050cb5990c@google.com> <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com>
-In-Reply-To: <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: Kernel crash while copying big files since kernel 3.18
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/15/2015 01:34 PM, Mike Purvis wrote:
-> I'm having an issue with the Centrino Advanced-N 6235 module. I'm running
-> Ubuntu Trusty, and I've tried both the 3.13 and 3.16 kernels. Haven't yet
-> tried 3.18.
->
-> What's weirdest about it is that the module actually works with full
-> functionality on an Advantech AIMB-274 (Q87 chipset) with the described
-> software configuration. However, when I plug the module into either a Gigabyte
-> J1800N or an ASRock IMB-152 (J1900), I get no bluetooth— no hci0 device
-> comes up at all in hciconfig dev or rfkill list.
+Hello everybody,
 
-I'd guess that the 6235 module has WLAN on the pci-e connector portion,
-and Bluetooth on the USB portion.  Check the docs on the board you're
-plugging it into, and I bet the mini-pcie connector doesn't have the
-USB side wired up, or it's disabled in(or by) the bios?
+Since kernel 3.18, I encounter a kernel crash each time when I copy a
+big file (around 12 Gb) from an external USB drive to the harddrive of
+my laptop.
+I tried a bisection between kernels 3.17 and 3.18 and I was surprised to
+find that this has to do with the driver of the wireless card
+(rtl8188ee). However, I don't have problems if I copy the file while the
+rtl8188 module is not loaded. Unfortunately, the results of git-bisect
+are not totally conclusive because the kernel crash during boot when the
+wireless connection is established. Here are the last steps of the
+bisection:
 
->
-> My sense is that the 6235 is a very popular module, and low-cost celeron
-> motherboards are also pretty popular, so there must be others who have run
-> into this. Maybe people just don't use bluetooth, or don't expect it to
-> work on Linux?
->
-> Anyhow, here is a gist with the dmesg boot log and lshw output:
->
-> https://gist.github.com/mikepurvis/ee7bc8fb85ff7ae64a9d
->
-> Looks like there's a crash in there related to intel integrated graphics—
-> could this be a cause? This is a headless machine, so disabling graphics
-> completely is on the table, if someone can suggest a good way to go
-> about that. Any other ideas as to what's going on here?
->
-> Thanks muchly.
->
->   --
-> Mike Purvis | Clearpath Robotics, Inc.
-> 1425 Strasburg Road, Unit 2A , Kitchener, Ontario, N2R 1H2
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+# bad: [c151aed6aa146e9587590051aba9da68b9370f9b] rtlwifi: rtl8188ee:
+Update driver to match Realtek release of 06282014
+git bisect bad c151aed6aa146e9587590051aba9da68b9370f9b
+# good: [fd09ff958777cf583d7541f180991c0fc50bd2f7] rtlwifi: Remove extra
+workqueue for enter/leave power state
+git bisect good fd09ff958777cf583d7541f180991c0fc50bd2f7
+# skip: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b] rtlwifi: Modify
+base.{c,h} for new drivers
+git bisect skip 9afa2e44f4d8f9d031f815c32bb8f225f0f6746b
+# skip: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd] rtlwifi: Modify
+cam.{c,h} and efuse.{c,h} for new drivers
+git bisect skip 3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd
+# skip: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8] rtlwifi: Modify
+core.c for new drivers
+git bisect skip f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8
+# skip: [d3feae41a3473a0f7b431d6af4e092865d586e52] rtlwifi: Update
+power-save routines for 062814 driver
+git bisect skip d3feae41a3473a0f7b431d6af4e092865d586e52
+# skip: [38506ecefab911785d5e1aa5889f6eeb462e0954] rtlwifi: rtl_pci:
+Start modification for new drivers
+git bisect skip 38506ecefab911785d5e1aa5889f6eeb462e0954
+# skip: [f3a97e93814aeac3f13e857a0071726acc9bd626] rtlwifi: Finish
+modifying core routines for new drivers
+git bisect skip f3a97e93814aeac3f13e857a0071726acc9bd626
+# only skipped commits left to test
+# possible first bad commit: [c151aed6aa146e9587590051aba9da68b9370f9b]
+rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
+# possible first bad commit: [f3a97e93814aeac3f13e857a0071726acc9bd626]
+rtlwifi: Finish modifying core routines for new drivers
+# possible first bad commit: [d3feae41a3473a0f7b431d6af4e092865d586e52]
+rtlwifi: Update power-save routines for 062814 driver
+# possible first bad commit: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd]
+rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
+# possible first bad commit: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b]
+rtlwifi: Modify base.{c,h} for new drivers
+# possible first bad commit: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8]
+rtlwifi: Modify core.c for new drivers
+# possible first bad commit: [38506ecefab911785d5e1aa5889f6eeb462e0954]
+rtlwifi: rtl_pci: Start modification for new drivers
 
+Can somebody explain what's happening ? I do the copy via Dolphin in KDE
+and the screen becomes black and the computer becomes totally
+unresponsive. So, I don't have access to the logs to see the trace of
+the problem.
+
+Thanks in advance for your help,
+
+François Valenduc
+
+PS: please use "cc" to answer because I don't have a subscription to the
+mailing list.
