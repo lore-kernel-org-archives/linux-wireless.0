@@ -1,32 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:28266 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753120AbbAZUoK (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:63465 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753884AbbAESrD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 15:44:10 -0500
-Message-ID: <54C6A717.5050804@broadcom.com> (sfid-20150126_214414_097784_ACEF0A96)
-Date: Mon, 26 Jan 2015 21:44:07 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 5 Jan 2015 13:47:03 -0500
+Received: by mail-wi0-f171.google.com with SMTP id bs8so3915286wib.4
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 10:47:01 -0800 (PST)
+Message-ID: <54AADC22.9050105@gmail.com> (sfid-20150105_194724_005372_B6E1F256)
+Date: Mon, 05 Jan 2015 19:46:58 +0100
+From: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: "backports@vger.kernel.org" <backports@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: cfg80211: Unknown symbol get_net_ns_by_fd (err 0)
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Kernel crash while copying big files since kernel 3.18
+References: <54AA3953.20603@gmail.com> <54AAC925.6050602@lwfinger.net>
+In-Reply-To: <54AAC925.6050602@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hauke,
+Le 05/01/15 18:25, Larry Finger a écrit :
+> On 01/05/2015 01:12 AM, François Valenduc wrote:
+>> Hello everybody,
+>>
+>> Since kernel 3.18, I encounter a kernel crash each time when I copy a
+>> big file (around 12 Gb) from an external USB drive to the harddrive of
+>> my laptop.
+>> I tried a bisection between kernels 3.17 and 3.18 and I was surprised to
+>> find that this has to do with the driver of the wireless card
+>> (rtl8188ee). However, I don't have problems if I copy the file while the
+>> rtl8188 module is not loaded. Unfortunately, the results of git-bisect
+>> are not totally conclusive because the kernel crash during boot when the
+>> wireless connection is established. Here are the last steps of the
+>> bisection:
+>>
+>> # bad: [c151aed6aa146e9587590051aba9da68b9370f9b] rtlwifi: rtl8188ee:
+>> Update driver to match Realtek release of 06282014
+>> git bisect bad c151aed6aa146e9587590051aba9da68b9370f9b
+>> # good: [fd09ff958777cf583d7541f180991c0fc50bd2f7] rtlwifi: Remove extra
+>> workqueue for enter/leave power state
+>> git bisect good fd09ff958777cf583d7541f180991c0fc50bd2f7
+>> # skip: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b] rtlwifi: Modify
+>> base.{c,h} for new drivers
+>> git bisect skip 9afa2e44f4d8f9d031f815c32bb8f225f0f6746b
+>> # skip: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd] rtlwifi: Modify
+>> cam.{c,h} and efuse.{c,h} for new drivers
+>> git bisect skip 3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd
+>> # skip: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8] rtlwifi: Modify
+>> core.c for new drivers
+>> git bisect skip f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8
+>> # skip: [d3feae41a3473a0f7b431d6af4e092865d586e52] rtlwifi: Update
+>> power-save routines for 062814 driver
+>> git bisect skip d3feae41a3473a0f7b431d6af4e092865d586e52
+>> # skip: [38506ecefab911785d5e1aa5889f6eeb462e0954] rtlwifi: rtl_pci:
+>> Start modification for new drivers
+>> git bisect skip 38506ecefab911785d5e1aa5889f6eeb462e0954
+>> # skip: [f3a97e93814aeac3f13e857a0071726acc9bd626] rtlwifi: Finish
+>> modifying core routines for new drivers
+>> git bisect skip f3a97e93814aeac3f13e857a0071726acc9bd626
+>> # only skipped commits left to test
+>> # possible first bad commit: [c151aed6aa146e9587590051aba9da68b9370f9b]
+>> rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
+>> # possible first bad commit: [f3a97e93814aeac3f13e857a0071726acc9bd626]
+>> rtlwifi: Finish modifying core routines for new drivers
+>> # possible first bad commit: [d3feae41a3473a0f7b431d6af4e092865d586e52]
+>> rtlwifi: Update power-save routines for 062814 driver
+>> # possible first bad commit: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd]
+>> rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
+>> # possible first bad commit: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b]
+>> rtlwifi: Modify base.{c,h} for new drivers
+>> # possible first bad commit: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8]
+>> rtlwifi: Modify core.c for new drivers
+>> # possible first bad commit: [38506ecefab911785d5e1aa5889f6eeb462e0954]
+>> rtlwifi: rtl_pci: Start modification for new drivers
+>>
+>> Can somebody explain what's happening ? I do the copy via Dolphin in KDE
+>> and the screen becomes black and the computer becomes totally
+>> unresponsive. So, I don't have access to the logs to see the trace of
+>> the problem.
+>>
+>> Thanks in advance for your help,
+>
+> There is a bug in 3.18 that is triggered when an O(3) memory
+> allocation fails. There is a patch to fix this at
+> http://marc.info/?l=linux-netdev&m=141999680927473&w=2 that has been
+> merged into wireless-drivers as commit
+> e9538cf4f90713eca71b1d6a74b4eae1d445c664. It will be applied to 3.18.X
+> when it makes it into mainline 3.19-rcY, but that has not yet happened.
+>
+> You could manually apply that patch to your kernel source, or you
+> could pull the git repo at http://github.com/lwfinger/rtlwifi_new.git.
+> That code has this patch already applied.
+>
+> If this patch does not fix the problem, you might be able to capture
+> at least part of the backtrace by starting the transfer and then
+> switching to the logging console. When a crash happens, photograph the
+> screen. On my system, I display it with CTRL-ALT-F10. I return to the
+> normal graphical console with CTRL-ALT-F7, but your distro may use
+> different virtual consoles.
+>
+> Larry
+>
+>
+Thanks for your help, it seems that your patch solves the problem. Now,
+the system doesn't crash anymore after copying the same large file than
+yesterday. I also see this message in the log:
+rtl_pci: Allocation of new skb failed in _rtl_pci_rx_interrupt which is
+added by your patch.
+Should I worry about this failure ? Or is it expected ?
 
-The commit below causes the error mentioned in the Subject: field. I 
-would like to fix this, but could use a bit of help here how to do this 
-type of things.
+François Valenduc
 
-commit 4b681c82d2f9bef121c912ffcaac89a004af3f2c
-Author: Vadim Kochan <vadim4j@gmail.com>
-Date:   Mon Jan 12 16:34:05 2015 +0200
-
-     nl80211: Allow set network namespace by fd
-
-Regards,
-Arend
