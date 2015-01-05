@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53332 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752003AbbAEJdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 04:33:44 -0500
-Message-ID: <1420450414.1898.6.camel@sipsolutions.net> (sfid-20150105_103346_829868_35973638)
-Subject: Re: p54usb kernel panic on recent mainline kernels
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Christopher Chavez <chrischavez@gmx.us>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 05 Jan 2015 10:33:34 +0100
-In-Reply-To: <549EFC9F.9030504@lwfinger.net> (sfid-20141227_193826_833900_3E3C56C2)
-References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com>
-	 <loom.20141227T010207-869@post.gmane.org> <2296382.VCr2c4tJc9@debian64>
-	 <5946673.YueIgFzjsn@debian64> <549EFC9F.9030504@lwfinger.net>
-	 (sfid-20141227_193826_833900_3E3C56C2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:32927 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040AbbAEVZ1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 16:25:27 -0500
+Received: by mail-oi0-f47.google.com with SMTP id v63so49655195oia.6
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 13:25:26 -0800 (PST)
+Message-ID: <54AB0145.3070601@lwfinger.net> (sfid-20150105_222540_428339_220A30C5)
+Date: Mon, 05 Jan 2015 15:25:25 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 23/23 V2 for 3.19]  rtlwifi: Fix error when accessing
+ unmapped memory in skb
+References: <1419711457-21469-1-git-send-email-Larry.Finger@lwfinger.net>	<87a928726w.fsf@kamboji.qca.qualcomm.com>	<549FA005.7050802@lwfinger.net> <87387p4m89.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87387p4m89.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2014-12-27 at 12:38 -0600, Larry Finger wrote:
+On 01/05/2015 03:20 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>>> 23/23? Where are patches 1-22? I don't see them in patchwork:
+>>>
+>>> https://patchwork.kernel.org/project/linux-wireless/list/
+>>
+>> Sorry. I forgot to edit the subject line. To get git to format that
+>> one patch, I had to generate a total of 23. There is only 1 of 1 that
+>> will be submitted.
+>
+> Ok, I was just worried that I had missed the other 22. But you can
+> actually get a single commit like this so no editing is needed:
+>
+> git format-patch -1 2a3e60d37fc6
 
-> I had redone the bisection and found that ca34e3b was the bad commit. That was 
-> late last night (CST - UTC-5). I was pleased to find your patch in my mailbox 
-> this morning.
-> 
-> With your patch, my system has survived for about 2 hours, whereas it would have 
-> failed in 2 minutes or less. You can add
-> 
-> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
-> 
-> I think this needs to be applied to 3.{17-19}.
+Thanks for the git lesson. Some week^H^H^H^Hmonth I should learn to use more 
+parts of that tool, but you know how that goes.
 
-Thanks everyone. I just sent out a revert - that'll be easier to manage
-for 3.17-3.19, and we can redo the original commit properly for 3.20.
+I do have an additional question on procedure. If I submit a number of patches 
+in a series, but find that only one of the series needs a V2. Is it better to 
+resubmit all N of them, or only just the one that needs changing?
 
-johannes
+Thanks,
+
+Larry
+
 
