@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:42838 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:56119 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209AbbAGRyD (ORCPT
+	with ESMTP id S1753372AbbAEJSB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 12:54:03 -0500
+	Mon, 5 Jan 2015 04:18:01 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Solomon Peachy <pizza@shaftnet.org>,
-	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 8/27] wireless: cw1200: Use setup_timer
-References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
-	<1419604558-29743-7-git-send-email-Julia.Lawall@lip6.fr>
-Date: Wed, 07 Jan 2015 19:53:57 +0200
-In-Reply-To: <1419604558-29743-7-git-send-email-Julia.Lawall@lip6.fr> (Julia
-	Lawall's message of "Fri, 26 Dec 2014 15:35:37 +0100")
-Message-ID: <87fvbmqxxm.fsf@kamboji.qca.qualcomm.com> (sfid-20150107_185444_121737_0C851AF5)
+To: Giel van Schijndel <me@mortis.eu>
+Cc: linux-kernel@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 1/2] Align member-assigns in a structure-copy block
+References: <1420394427-19509-1-git-send-email-me@mortis.eu>
+	<20150104230209.GD4806@salidar.dom.custoft.eu>
+Date: Mon, 05 Jan 2015 11:17:53 +0200
+In-Reply-To: <20150104230209.GD4806@salidar.dom.custoft.eu> (Giel van
+	Schijndel's message of "Mon, 5 Jan 2015 00:02:09 +0100")
+Message-ID: <877fx14mda.fsf@kamboji.qca.qualcomm.com> (sfid-20150105_101833_454107_8B2F5B36)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julia Lawall <Julia.Lawall@lip6.fr> writes:
+Giel van Schijndel <me@mortis.eu> writes:
 
-> Convert a call to init_timer and accompanying intializations of
-> the timer's data and function fields to a call to setup_timer.
+> On Sun, Jan 04, 2015 at 19:00:22 +0100, Giel van Schijndel wrote:
+>> This highlights the differences (errors).
+>> ---
 >
-> A simplified version of the semantic match that fixes this problem is as
-> follows: (http://coccinelle.lip6.fr/)
->
-> // <smpl>
-> @@
-> expression t,f,d;
-> @@
->
-> -init_timer(&t);
-> +setup_timer(&t,f,d);
-> -t.data = d;
-> -t.function = f;
-> // </smpl>
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> Forgot to:
+> Signed-off-by: Giel van Schijndel <me@mortis.eu>
 
-Thanks, I applied the wireless-drivers patches below to
-wireless-drivers-next.git.
-
-e4a1c3f88e65 mwifiex: 11n_rxreorder: Use setup_timer
-c6c33e772407 mwifiex: main: Use setup_timer
-99a1b74395a5 orinoco_usb: Use setup_timer
-1a94ace406ad iwl3945: Use setup_timer
-af68b87f7211 iwl4965: Use setup_timer
-0be01bf29721 cw1200: queue: Use setup_timer
-dabefea6937d cw1200: main: Use setup_timer
-983988ec0a24 wireless: cw1200: Use setup_timer
+I don't normally edit patches (don't have time for that), so please
+resend.
 
 -- 
 Kalle Valo
