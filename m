@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:40524 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbbADGVn (ORCPT
+Received: from mga14.intel.com ([192.55.52.115]:42013 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751511AbbAEKlR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2015 01:21:43 -0500
-Message-ID: <54A8DBF4.4050202@lwfinger.net> (sfid-20150104_072224_120372_218FAD52)
-Date: Sun, 04 Jan 2015 00:21:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 5 Jan 2015 05:41:17 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: pull request: iwlwifi 2015-01-05
+Date: Mon, 5 Jan 2015 10:41:12 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB31B5E24A4@hasmsx107.ger.corp.intel.com> (sfid-20150105_114120_181716_2E7FC535)
+References: <1420449079.12040.3.camel@egrumbacBox>
+ <87ppat3518.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87ppat3518.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-CC: Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@adurom.com>,
-	Fabian Frederick <fabf@skynet.be>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
-References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-In-Reply-To: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/03/2015 06:47 PM, Rickard Strandqvist wrote:
-> Removes some functions that are not used anywhere:
-> dma_txflush() dma_txsuspended()
->
-> This was partially found by using a static code analysis program called cppcheck.
->
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->   drivers/net/wireless/brcm80211/brcmsmac/dma.c |   19 -------------------
->   drivers/net/wireless/brcm80211/brcmsmac/dma.h |    2 --
->   2 files changed, 21 deletions(-)
+> 
+> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+> 
+> > This is new content for 3.19. Details in the tag. Let me know if you have
+> issues.
+> > Thanks!
+> 
+> Thanks, pulled.
+> 
+> One comment:
+> 
+> > ----------------------------------------------------------------
+> > * fix for 7265D NVM check
+> > * fixes for scan: fix long scanning times and network
+> > 	discovery
+> > * new firmware API for iwlmvm supported devices
+> > * fixes in rate control
+> >
+> > ----------------------------------------------------------------
+> > Arik Nemtsov (1):
+> >       iwlwifi: pcie: correctly define 7265-D cfg
+> >
+> > David Spinadel (2):
+> >       iwlwifi: mvm: add a flag to enable match found notification
+> >       iwlwifi: mvm: scan dwell time corrections
+> >
+> > Emmanuel Grumbach (2):
+> >       iwlwifi: 7000: fix reported firmware name for 7265D
+> >       iwlwifi: bump firmware API for mvm devices to 12
+> 
+> To me the firmware API bump is in a gray area, I don't see how it really fixes
+> anything. I would feel much more comfortable if the patch would document
+> why the bump is needed in -rc series and why it couldn't wait for -next. I'm
+> guessing it has somethign to do with the dwell time corrections, but it's not
+> obvious to me (and others).
+> 
 
-Just because file dma.c is involved, it does not need to be, nor should it be in 
-the subject line. You could specify the driver names in the file tree after 
-wireless. In this instance, one possible subject would be "brcm80211: brcmsmac: 
-Remove some unused functions". On the other hand, if you look at "git log" to 
-see past patches, the driver maintainers even leave off the brcm80211 part, thus 
-to match them, the subject should be "brcmsmac: Remove some unused functions".
-
-As was suggested earlier, you need to look at the precedents. Keeping a uniform 
-method of patch naming helps when looking for patches in the git log.
-
-Larry
-
-
+The bum firmware API is gray area - but it allows to load new firmware that typically
+have lots of bug fixes. Especially since 3.19 will probably be used by major distributions
+and I want to be able to load the new firmware there.
+The driver code in 3.19 is ready to load the 12 firmware, hence the change.
