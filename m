@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:37162 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752517AbbAYKL0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:33373 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753292AbbAEKuH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 05:11:26 -0500
-Received: by mail-wg0-f49.google.com with SMTP id k14so4456699wgh.8
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2015 02:11:24 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] bcma: add empty PCIe hostmode functions if support is disabled
-Date: Sun, 25 Jan 2015 11:11:13 +0100
-Message-Id: <1422180674-9592-1-git-send-email-zajec5@gmail.com> (sfid-20150125_111150_297762_9F672146)
+	Mon, 5 Jan 2015 05:50:07 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
+References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<54A8DBF4.4050202@lwfinger.net>
+	<CAKXHbyN6LH_pFw1uoLXRzgJv-NcjbTLJvMZXfwYXDwuk9QDszA@mail.gmail.com>
+Date: Mon, 05 Jan 2015 12:49:59 +0200
+In-Reply-To: <CAKXHbyN6LH_pFw1uoLXRzgJv-NcjbTLJvMZXfwYXDwuk9QDszA@mail.gmail.com>
+	(Rickard Strandqvist's message of "Sun, 4 Jan 2015 13:43:59 +0100")
+Message-ID: <871tn933jc.fsf@kamboji.qca.qualcomm.com> (sfid-20150105_115039_973857_9A3934FD)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows us to drop some #ifdef magic (mess).
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/bcma_private.h | 10 +++++++++-
- drivers/bcma/driver_pci.c   |  2 --
- 2 files changed, 9 insertions(+), 3 deletions(-)
+> As I hope you can see I have made some changes regarding the
+> subject-line. Thought it was an advantage to be able to see which file
+> I actually removed something from. There seems to be a big focus on
+> getting right on subject-line right in recent weeks.
+>
+> I wonder why there is a script that takes a file name, and respond
+> with an appropriate subject line?
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 3f314c9..3242655 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -92,7 +92,7 @@ extern void __exit bcma_host_soc_unregister_driver(void);
- #else
- static inline int __init bcma_host_soc_register_driver(void)
- {
--	return 0;
-+	return false;
- }
- static inline void __exit bcma_host_soc_unregister_driver(void)
- {
-@@ -107,6 +107,14 @@ extern int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc);
- #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
- bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc);
- void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
-+#else
-+static inline bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc)
-+{
-+	return 0;
-+}
-+static inline void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
-+{
-+}
- #endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
- 
- #ifdef CONFIG_BCMA_DRIVER_GPIO
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index 50329d1..b85a505 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -226,11 +226,9 @@ void bcma_core_pci_init(struct bcma_drv_pci *pc)
- 	if (pc->setup_done)
- 		return;
- 
--#ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
- 	pc->hostmode = bcma_core_pci_is_in_hostmode(pc);
- 	if (pc->hostmode)
- 		bcma_core_pci_hostmode_init(pc);
--#endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
- 
- 	if (!pc->hostmode)
- 		bcma_core_pci_clientmode_init(pc);
+I don't think you can really automate this as some drivers do this a bit
+differently. You always need to manually check the commit log.
+
+> But ok, I change my script accordingly. Should I submit the patch again?
+
+Yes, please resubmit.
+
 -- 
-1.8.4.5
-
+Kalle Valo
