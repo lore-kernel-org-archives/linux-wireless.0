@@ -1,117 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:50682 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752862AbbAXKTb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 05:19:31 -0500
-Received: by mail-pa0-f50.google.com with SMTP id rd3so2145600pab.9
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 02:19:30 -0800 (PST)
-From: Hong Xu <hong@topbug.net>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, kvalo@codeaurora.org,
-	Hong Xu <hong@topbug.net>
-Subject: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
-Date: Sat, 24 Jan 2015 02:19:05 -0800
-Message-Id: <1422094745-12718-1-git-send-email-hong@topbug.net> (sfid-20150124_111938_507580_8E3FBC80)
+Received: from s3.sipsolutions.net ([5.9.151.49]:55645 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753943AbbAES5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 13:57:18 -0500
+Message-ID: <1420484224.9459.16.camel@sipsolutions.net> (sfid-20150105_195739_239140_41C784CD)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Mon, 05 Jan 2015 19:57:04 +0100
+In-Reply-To: <1420479510.14308.23.camel@x220> (sfid-20150105_183907_807502_81C08416)
+References: <1420297188.2397.3.camel@tiscali.nl>
+	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
+	 <1420479510.14308.23.camel@x220> (sfid-20150105_183907_807502_81C08416)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k and ath9k_htc use the variable name "led_blink" to indicate
-whether the module parameter "blink" is on. This name is easy to
-conflict with other variables, thus they are renamed.
+On Mon, 2015-01-05 at 18:38 +0100, Paul Bolle wrote:
 
-Signed-off-by: Hong Xu <hong@topbug.net>
----
- drivers/net/wireless/ath/ath9k/ath9k.h        | 2 +-
- drivers/net/wireless/ath/ath9k/gpio.c         | 2 +-
- drivers/net/wireless/ath/ath9k/htc.h          | 2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++--
- drivers/net/wireless/ath/ath9k/init.c         | 4 ++--
- 6 files changed, 8 insertions(+), 8 deletions(-)
+> > ipw2200 is a WEXT driver using some wext functionality (and struct 
+> > wiphy) provided by cfg80211 hence it needs CFG80211_WEXT. I guess that 
+> > is what makes it confusing.
+> 
+> It doesn't help that I hardly know anything about mac80211, cfg80211 and
+> nl80211 (and lib80211 for that matter). To me these are mostly just
+> names that end in 80211.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 1a9fe09..e84b576 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -34,7 +34,7 @@ struct ath_vif;
- 
- extern struct ieee80211_ops ath9k_ops;
- extern int ath9k_modparam_nohwcrypt;
--extern int led_blink;
-+extern int ath9k_led_blink;
- extern bool is_ath9k_unloaded;
- extern int ath9k_use_chanctx;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 2fef7a4..da344b2 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -49,7 +49,7 @@ void ath_init_leds(struct ath_softc *sc)
- 	if (AR_SREV_9100(sc->sc_ah))
- 		return;
- 
--	if (!led_blink)
-+	if (!ath9k_led_blink)
- 		sc->led_cdev.default_trigger =
- 			ieee80211_get_radio_led_name(sc->hw);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index c43fec5..300d367 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -45,7 +45,7 @@
- extern struct ieee80211_ops ath9k_htc_ops;
- extern int htc_modparam_nohwcrypt;
- #ifdef CONFIG_MAC80211_LEDS
--extern int led_blink;
-+extern int ath9k_htc_led_blink;
- #endif
- 
- enum htc_phymode {
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 998b558..2aabcbd 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -279,7 +279,7 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
- 	else
- 		priv->ah->led_pin = ATH_LED_PIN_DEF;
- 
--	if (!led_blink)
-+	if (!ath9k_htc_led_blink)
- 		priv->led_cdev.default_trigger =
- 			ieee80211_get_radio_led_name(priv->hw);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 9470127..fd22940 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -39,8 +39,8 @@ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
- #ifdef CONFIG_MAC80211_LEDS
--int led_blink = 1;
--module_param_named(blink, led_blink, int, 0444);
-+int ath9k_htc_led_blink = 1;
-+module_param_named(blink, ath9k_htc_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
- static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index d1c3934..2aef14e 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -45,8 +45,8 @@ int ath9k_modparam_nohwcrypt;
- module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
--int led_blink;
--module_param_named(blink, led_blink, int, 0444);
-+int ath9k_led_blink;
-+module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
- static int ath9k_btcoex_enable;
--- 
-2.2.2
+:-)
+There isn't really all that much that ipw2x00 is using from cfg80211
+though - of note is that it has completely empty ops:
+
+static struct cfg80211_ops libipw_config_ops = { };
+
+IOW - all it does is register with the framework - courtesy of
+a3caa99e6c68f. It's practically useless.
+
+> Anyhow, concerning, CFG80211_WEXT: it seems the only functionality
+> provided by that symbol that ipw2200 uses directly is
+> cfg80211_wext_giwname(). Perhaps ipw2200 could have a private version of
+> that function, something like ipw2100's ipw2100_wx_get_name(). Should be
+> trivial to implement (ie, it could take _me_ a day or two).
+
+We could just revert that part of the commit above - or even completely.
+
+However, in theory at least doing *that* would now be a userspace
+regression - today you can at least discover the presence of ipw2200
+devices with nl80211, even if you can't do anything with them that way.
+
+> But perhaps ipw2200 uses CFG80211_WEXT _indirectly_ too. Ie, in
+> net/wireless/core.c I stumbled on
+>     #ifdef CONFIG_CFG80211_WEXT
+>             rdev->wiphy.wext = &cfg80211_wext_handler;
+>     #endif
+
+I don't think it does - see the note about the ops above. If it did,
+it'd have to implement the ops.
+
+> But I net/wireless/wext-core.c I then found
+>     #ifdef CONFIG_CFG80211_WEXT
+>             if (dev->ieee80211_ptr && dev->ieee80211_ptr->wiphy)
+>                     handlers = dev->ieee80211_ptr->wiphy->wext;
+>     #endif
+>     #ifdef CONFIG_WIRELESS_EXT
+>             if (dev->wireless_handlers)
+>                     handlers = dev->wireless_handlers;
+>     #endif
+> 
+> (There's much more to discover about WEXT, of course.) Anyhow, IPW2200
+> uses both CFG80211_WEXT and WIRELESS_EXT and cfg80211_wext_handler and
+> ipw2200's wireless_handlers appear to cover the same set of IOCTLS (one
+> exception: SIOCSIWPMKSA). So by now I'm really puzzled how this all fits
+> together.
+
+Well, this was meant as a transition mechanism for drivers. Ultimately,
+the way we thought how you'd convert a driver (and how we converted
+mac80211) would be to have the wext handlers like for example the scan
+ones:
+
+static iw_handler ipw_wx_handlers[] = {
+...
+        IW_HANDLER(SIOCSIWSCAN, ipw_wx_set_scan),
+        IW_HANDLER(SIOCGIWSCAN, ipw_wx_get_scan),
+...
+};
+
+Then you could make a patch that uses the cfg80211 APIs for scanning in
+the driver -- i.e. implement the cfg80211_ops.scan method, report frames
+to the cfg80211 scanning and remove all the ieee->network_list stuff
+etc. using the related cfg80211 API (e.g. cfg80211_get_bss() and friends
+for getting a network, etc.) And then you'd change the handlers to be
+
+static iw_handler ipw_wx_handlers[] = {
+...
+        IW_HANDLER(SIOCSIWSCAN, cfg80211_wext_siwscan),
+        IW_HANDLER(SIOCGIWSCAN, cfg80211_wext_giwscan),
+...
+};
+
+This part would have to be done in a single patch.
+
+Multiple other groups of ioctls could be converted in similar patches,
+until at the end you can completely remove ipw_wx_handlers and rely
+entirely on cfg80211's wext compatibility.
+
+So far the theory - in practice nobody cared enough to start working on
+any of these drivers, let alone actually has the hardware today.
+
+johannes
 
