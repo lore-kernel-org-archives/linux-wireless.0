@@ -1,37 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:40676 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbbA0NwE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:56243 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753282AbbAEJVB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 08:52:04 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] ath10k: add wmi-tlv debug event handling
-References: <1420715897-18706-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 27 Jan 2015 15:51:53 +0200
-In-Reply-To: <1420715897-18706-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 8 Jan 2015 12:18:15 +0100")
-Message-ID: <87bnlkcow6.fsf@kamboji.qca.qualcomm.com> (sfid-20150127_145208_247008_AA29FF26)
+	Mon, 5 Jan 2015 04:21:01 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Stable <stable@vger.kernel.org>,
+	Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: [PATCH 23/23 V2 for 3.19]  rtlwifi: Fix error when accessing unmapped memory in skb
+References: <1419711457-21469-1-git-send-email-Larry.Finger@lwfinger.net>
+	<87a928726w.fsf@kamboji.qca.qualcomm.com>
+	<549FA005.7050802@lwfinger.net>
+Date: Mon, 05 Jan 2015 11:20:54 +0200
+In-Reply-To: <549FA005.7050802@lwfinger.net> (Larry Finger's message of "Sun,
+	28 Dec 2014 00:15:33 -0600")
+Message-ID: <87387p4m89.fsf@kamboji.qca.qualcomm.com> (sfid-20150105_102118_538057_1CDE5F83)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> New wmi-tlv firmware will deliver debug messages
-> via new events.
+>> 23/23? Where are patches 1-22? I don't see them in patchwork:
+>>
+>> https://patchwork.kernel.org/project/linux-wireless/list/
 >
-> Note: This may yield some (trivial) conflicts
-> against my beacon/presp template patchset.
->
->
-> Michal Kazior (2):
->   ath10k: implement diag data container event
->   ath10k: implement diag event
+> Sorry. I forgot to edit the subject line. To get git to format that
+> one patch, I had to generate a total of 23. There is only 1 of 1 that
+> will be submitted.
 
-Thanks, applied to ath.git.
+Ok, I was just worried that I had missed the other 22. But you can
+actually get a single commit like this so no editing is needed:
+
+git format-patch -1 2a3e60d37fc6
 
 -- 
 Kalle Valo
