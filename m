@@ -1,32 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.bemta8.messagelabs.com ([216.82.243.194]:60578 "EHLO
-	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753906AbbAVXnX (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51577 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932093AbbAESWz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 18:43:23 -0500
-Message-ID: <54C18987.4080805@netcommwireless.com> (sfid-20150123_004326_839497_D74AC94E)
-Date: Fri, 23 Jan 2015 10:36:39 +1100
-From: Sourav <sourav.chakraborty@netcommwireless.com>
+	Mon, 5 Jan 2015 13:22:55 -0500
+Message-ID: <54AAD67C.7090900@broadcom.com> (sfid-20150105_192337_764893_E2F363F2)
+Date: Mon, 5 Jan 2015 19:22:52 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: iw wlan0 set txpower ...does not work using rt2x00 drivers
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Paul Bolle <pebolle@tiscali.nl>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	"Kalle Valo" <kvalo@codeaurora.org>, Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+References: <1420297188.2397.3.camel@tiscali.nl>	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com> <1420479510.14308.23.camel@x220>
+In-Reply-To: <1420479510.14308.23.camel@x220>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-I am using rt2x00 drivers for RT3072 chipset.......for changing tx 
-power, I am issuing "iw wlan0 set txpower fixed <value>".....The command 
-succeeds(no error from command line).
-However the driver is not setting the value of the txpower....can you 
-explain the logic of tx power setting by the driver and how to verify 
-the change in txpower?
+On 01/05/15 18:38, Paul Bolle wrote:
+> On Mon, 2015-01-05 at 11:14 +0100, Arend van Spriel wrote:
+>> On 01/03/15 23:28, Paul Bolle wrote:
+>>> Side note: am I correct in thinking that there's some successor to
+>>> CFG80211_WEXT and that the ipw2200 driver could, at least in theory, be
+>>> ported to that successor? (ipw2200 hardware appears to be a bit old, so
+>>> probably no one would care enough to actually do that.)
+>>> net/wireless/kconfig doesn't mention anything like that, so probably I'm
+>>> just confused.
+>>
+>> ipw2200 is a WEXT driver using some wext functionality (and struct
+>> wiphy) provided by cfg80211 hence it needs CFG80211_WEXT. I guess that
+>> is what makes it confusing.
+>
+> It doesn't help that I hardly know anything about mac80211, cfg80211 and
+> nl80211 (and lib80211 for that matter). To me these are mostly just
+> names that end in 80211.
 
--- 
-Warm Regards,
-Sourav
+Grapjas ;-)
 
+cfg80211 provides thin-layer API for fullmac drivers (running 802.11 
+stack on the device) and mac80211-based drivers (running 802.11 stack in 
+kernel).
 
-______________________________________________________________________
-This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
-______________________________________________________________________
+> Anyhow, concerning, CFG80211_WEXT: it seems the only functionality
+> provided by that symbol that ipw2200 uses directly is
+> cfg80211_wext_giwname(). Perhaps ipw2200 could have a private version of
+> that function, something like ipw2100's ipw2100_wx_get_name(). Should be
+> trivial to implement (ie, it could take _me_ a day or two).
+
+Indeed or even an hour or two.
+
+> But perhaps ipw2200 uses CFG80211_WEXT _indirectly_ too. Ie, in
+> net/wireless/core.c I stumbled on
+>      #ifdef CONFIG_CFG80211_WEXT
+>              rdev->wiphy.wext =&cfg80211_wext_handler;
+>      #endif
+
+This is the "wext compatibility" being enabled for any cfg80211 or 
+mac80211 based driver.
+
+>
+> But I net/wireless/wext-core.c I then found
+>      #ifdef CONFIG_CFG80211_WEXT
+>              if (dev->ieee80211_ptr&&  dev->ieee80211_ptr->wiphy)
+>                      handlers = dev->ieee80211_ptr->wiphy->wext;
+>      #endif
+
+wext-core is the WEXT framework and here it extracts WEXT handlers from 
+a cfg80211/mac80211-based driver that are store in wiphy structure.
+
+>      #ifdef CONFIG_WIRELESS_EXT
+>              if (dev->wireless_handlers)
+>                      handlers = dev->wireless_handlers;
+>      #endif
+
+Here wext-core extracts WEXT handlers from a WEXT driver. struct 
+net_device::wireless_handlers is only defined for CONFIG_WIRELESS_EXT.
+
+> (There's much more to discover about WEXT, of course.) Anyhow, IPW2200
+> uses both CFG80211_WEXT and WIRELESS_EXT and cfg80211_wext_handler and
+> ipw2200's wireless_handlers appear to cover the same set of IOCTLS (one
+> exception: SIOCSIWPMKSA). So by now I'm really puzzled how this all fits
+> together.
+
+I think ipw2200 is a bit of both worlds indeed adopting the use of 
+struct wiphy and wiphy_register() call. That seems to suggest it is a 
+cfg80211 driver, but it does not register any cfg80211 driver callbacks 
+(see libipw_config_ops in libipw_module.c). So it overrides the WEXT 
+ioctls because it needs that to interact with the device.
+
+Regards,
+Arend
+
+> Thanks,
+>
+>
+> Paul Bolle
+>
+
