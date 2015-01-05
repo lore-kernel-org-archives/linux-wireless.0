@@ -1,100 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:42993 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbbADPkx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2015 10:40:53 -0500
-Received: by mail-lb0-f169.google.com with SMTP id p9so16814461lbv.0
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2015 07:40:51 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Kalle Valo <kvalo@adurom.com>, Pavel Machek <pavel@ucw.cz>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	David Gnedt <david.gnedt@davizone.at>,
-	George Spelvin <linux@horizon.com>,
-	Surendra Patil <surendra.tux@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] wl1251: Remove unused function
-Date: Sun,  4 Jan 2015 16:43:52 +0100
-Message-Id: <1420386232-12344-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150104_164133_188480_4E9E0C55)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30160 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752003AbbAEN2R convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 08:28:17 -0500
+From: Avinash Patil <patila@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>
+Date: Mon, 5 Jan 2015 05:28:13 -0800
+Subject: RE: [PATCH v3] cfg80211: check for carrier state only when
+ offchanel CAC supported
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com> (sfid-20150105_143403_923577_F829B8B6)
+References: <1420475584-5533-1-git-send-email-patila@marvell.com>
+	 (sfid-20150105_120344_381788_A7E15DA0),<1420462674.9459.9.camel@sipsolutions.net>
+In-Reply-To: <1420462674.9459.9.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the function wl1251_cmd_read_memory() that is not used anywhere.
 
-This was partially found by using a static code analysis program called cppcheck.
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: Monday, January 05, 2015 6:27 PM
+To: Avinash Patil
+Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo
+Subject: Re: [PATCH v3] cfg80211: check for carrier state only when offchanel CAC supported
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/net/wireless/ti/wl1251/cmd.c |   40 ----------------------------------
- drivers/net/wireless/ti/wl1251/cmd.h |    2 --
- 2 files changed, 42 deletions(-)
+On Mon, 2015-01-05 at 22:03 +0530, Avinash Patil wrote:
+> Checking for carrier state during start_radar_detection is needed
+> only for devices which support offchannel CAC.
+> This patch provides this additional check of extended feature offchannel
+> CAC support while checking for carrier state.
+>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> ---
+>  include/uapi/linux/nl80211.h | 3 +++
+>  net/wireless/nl80211.c       | 4 +++-
+>  2 files changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 735ab43..c318802 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -4205,10 +4205,13 @@ enum nl80211_feature_flags {
+>  /**
+>   * enum nl80211_ext_feature_index - bit index of extended features.
+>   *
+> + * @NL80211_EXT_FEATURE_OFFCHAN_CAC: This device/driver supports
+> + *   offchannel Channel Availability Check(CAC).
+>   * @NUM_NL80211_EXT_FEATURES: number of extended features.
+>   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+>   */
+>  enum nl80211_ext_feature_index {
+> +     NL80211_EXT_FEATURE_OFFCHAN_CAC,
+>
+>       /* add new features before the definition below */
+>       NUM_NL80211_EXT_FEATURES,
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 39753de..b2abb37 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -6138,7 +6138,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+>       if (err)
+>               return err;
+>
+> -     if (netif_carrier_ok(dev))
+> +     if (wiphy_ext_feature_isset(&rdev->wiphy,
+> +                                 NL80211_EXT_FEATURE_OFFCHAN_CAC) &&
+> +         netif_carrier_ok(dev))
+>               return -EBUSY;
 
-diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
-index ede31f0..26f4d74 100644
---- a/drivers/net/wireless/ti/wl1251/cmd.c
-+++ b/drivers/net/wireless/ti/wl1251/cmd.c
-@@ -346,46 +346,6 @@ out:
- 	return ret;
- }
- 
--int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
--			   size_t len)
--{
--	struct cmd_read_write_memory *cmd;
--	int ret = 0;
--
--	wl1251_debug(DEBUG_CMD, "cmd read memory");
--
--	cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
--	if (!cmd) {
--		ret = -ENOMEM;
--		goto out;
--	}
--
--	WARN_ON(len > MAX_READ_SIZE);
--	len = min_t(size_t, len, MAX_READ_SIZE);
--
--	cmd->addr = addr;
--	cmd->size = len;
--
--	ret = wl1251_cmd_send(wl, CMD_READ_MEMORY, cmd, sizeof(*cmd));
--	if (ret < 0) {
--		wl1251_error("read memory command failed: %d", ret);
--		goto out;
--	}
--
--	/* the read command got in, we can now read the answer */
--	wl1251_mem_read(wl, wl->cmd_box_addr, cmd, sizeof(*cmd));
--
--	if (cmd->header.status != CMD_STATUS_SUCCESS)
--		wl1251_error("error in read command result: %d",
--			     cmd->header.status);
--
--	memcpy(answer, cmd->value, len);
--
--out:
--	kfree(cmd);
--	return ret;
--}
--
- int wl1251_cmd_template_set(struct wl1251 *wl, u16 cmd_id,
- 			    void *buf, size_t buf_len)
- {
-diff --git a/drivers/net/wireless/ti/wl1251/cmd.h b/drivers/net/wireless/ti/wl1251/cmd.h
-index d824ff9..5f35430 100644
---- a/drivers/net/wireless/ti/wl1251/cmd.h
-+++ b/drivers/net/wireless/ti/wl1251/cmd.h
-@@ -40,8 +40,6 @@ int wl1251_cmd_data_path_tx(struct wl1251 *wl, u8 channel, bool enable);
- int wl1251_cmd_join(struct wl1251 *wl, u8 bss_type, u8 channel,
- 		    u16 beacon_interval, u8 dtim_interval);
- int wl1251_cmd_ps_mode(struct wl1251 *wl, u8 ps_mode);
--int wl1251_cmd_read_memory(struct wl1251 *wl, u32 addr, void *answer,
--			   size_t len);
- int wl1251_cmd_template_set(struct wl1251 *wl, u16 cmd_id,
- 			    void *buf, size_t buf_len);
- int wl1251_cmd_scan(struct wl1251 *wl, u8 *ssid, size_t ssid_len,
--- 
-1.7.10.4
+>Wait - doesn't that have to be !feature_isset()?
+
+>johannes
+
+If Offchannel CAC is supported (driver has set this bit in wiphy's extended features) & carrier is ON, return EBUSY as offchannel CAC may be ongoing, isnt it?
+I am confused ..
+
+-Avinash. 
 
