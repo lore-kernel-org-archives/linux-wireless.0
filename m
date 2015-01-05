@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:36240 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761482AbbA3KpD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 05:45:03 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: yuweizheng@139.com
-Cc: linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	linux@rempel-privat.de, netdev@vger.kernel.org,
-	Yuwei Zheng <zhengyuwei@360.cn>
-Subject: Re: [PATCH] Repair soft lockup with monitor mode of ath9k_htc card
-References: <1422486872-16308-1-git-send-email-yuweizheng@139.com>
-Date: Fri, 30 Jan 2015 12:44:52 +0200
-In-Reply-To: <1422486872-16308-1-git-send-email-yuweizheng@139.com>
-	(yuweizheng@139.com's message of "Thu, 29 Jan 2015 07:14:32 +0800")
-Message-ID: <87d25wzgwr.fsf@kamboji.qca.qualcomm.com> (sfid-20150130_114543_690097_7B73F166)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:53234 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753228AbbAEJ15 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 04:27:57 -0500
+Message-ID: <1420450070.1898.5.camel@sipsolutions.net> (sfid-20150105_102800_203161_502F2DCE)
+Subject: Re: [PATCH 3.17 1/3] mac80211: add feature flag to enable resizing
+ of outgoing frames for encryption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	Larry.Finger@lwfinger.net, chrischavez@gmx.us, pizza@shaftnet.org,
+	Ido Yariv <idox.yariv@intel.com>
+Date: Mon, 05 Jan 2015 10:27:50 +0100
+In-Reply-To: <2051417.66dkbc7KnO@debian64> (sfid-20141231_111942_701497_8196DC0E)
+References: <2051417.66dkbc7KnO@debian64>
+	 (sfid-20141231_111942_701497_8196DC0E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-yuweizheng@139.com writes:
+3.17 is long gone :-)
 
-> From: Yuwei Zheng <yuweizheng@139.com>
->
-> In the environment with heavy wifi traffic, set the ar9271 into
-> monitor mode, will trigger a deadloop panic.
->  
-> The ath9k_hif_usb_rx_cb function excute on  the interrupt context, and ath9k_rx_tasklet excute
-> on the soft irq context. In other words, the ath9k_hif_usb_rx_cb have more chance to excute than
-> ath9k_rx_tasklet.  So in the worst condition,  the rx.rxbuf receive list is always full,
-> and the do {}while(true) loop will not be break. The kernel get a soft lockup panic. 
+> @@ -1673,7 +1680,7 @@ enum ieee80211_hw_flags {
+>  	IEEE80211_HW_MFP_CAPABLE			= 1<<13,
+>  	IEEE80211_HW_WANT_MONITOR_VIF			= 1<<14,
+>  	IEEE80211_HW_NO_AUTO_VIF			= 1<<15,
+> -	/* free slot */
+> +	IEEE80211_HW_TAILROOM_CRYPTO			= 1<<16,
 
-Word wrapping is too long and please prefix the title with "ath9k_htc: ".
+Why wouldn't this be a key flag?
 
--- 
-Kalle Valo
+I think I'll go and revert Ido's commit and mark that for Cc stable -
+and then we/he can reintroduce the patch while also updating the two
+drivers (p54 and cw2100) to include a new "need tailroom anyway" flag.
+
+johannes
+
