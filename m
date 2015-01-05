@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56482 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755217AbbAGXHG (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:8281 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752979AbbAEK3B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 18:07:06 -0500
-Message-ID: <54ADBC13.70100@broadcom.com> (sfid-20150108_000741_052748_744FB174)
-Date: Thu, 8 Jan 2015 00:06:59 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 5 Jan 2015 05:29:01 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Fengguang Wu <fengguang.wu@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] net: wireless: rtlwifi: btcoexist: halbtc8821a2ant: Remove some unused functions
+References: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<54A786A4.2050202@lwfinger.net>
+	<CAKXHbyOYO29uKA127qyYrCfpgQ2zoqBS9rAJME513oZ8JVdOug@mail.gmail.com>
+Date: Mon, 5 Jan 2015 12:28:48 +0200
+In-Reply-To: <CAKXHbyOYO29uKA127qyYrCfpgQ2zoqBS9rAJME513oZ8JVdOug@mail.gmail.com>
+	(Rickard Strandqvist's message of "Sat, 3 Jan 2015 13:03:02 +0100")
+Message-ID: <87d26t34in.fsf@kamboji.qca.qualcomm.com> (sfid-20150105_112929_628809_7BE7C695)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Giel van Schijndel <me@mortis.eu>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	<linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
-	Eliad Peller <eliad@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	open list: "NETWORKING DRIVERS" <netdev@vger.kernel.org>, ;
-Subject: Re: [PATCH 2/2] Fix copy-paste bug: assign from src struct not dest
-References: <20150107191836.GA18978@salidar.dom.custoft.eu> <1420668978.3407.28.camel@sipsolutions.net>
-In-Reply-To: <1420668978.3407.28.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/15 23:16, Johannes Berg wrote:
-> On Wed, 2015-01-07 at 20:18 +0100, Giel van Schijndel wrote:
->
->> IMO the aligned block of code has the significant advantage of taking
->> advantage of humans' ability to spot things that break a pattern. Which
->> in this case becomes *very* visible when properly aligned, because
->> without the alignment there is no (visual) pattern (or at least not one
->> very suitable for my "visual processing system", I know the same applies
->> to at least some others).
->
-> Yeah, well, but why even invoke that "visual processing system"?
->
-> If you look, for example, at the __skb_clone function it just uses a
-> macro:
->
-> #define C(x) n->x = skb->x
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
 
-This requires fixed names so I generally prefer to add them:
-
-#define C(d, s, f)	(d)->f = (s)->f
-
-> and then
+>     I know that you have been told that including "net: wireless:" in the
+>     subject line is discouraged. Please do not do this again. The staging
+>     directory is different as GregKH uses "staging:" in the subject to route
+>     patches, but wireless does not.
 >
-> 	C(len);
-> 	C(data_len);
-
-	C(acx, conf, window_size);
-	C(acx, conf, increase_time);
-
-Regards,
-Arend
-
+>     As to the patch, NACK for the simple reason that I am currently working on
+>     a number of changes to btcoexist. Some of these routines may end up being
+>     removed, but others will not. Having your patch remove them, and one of
+>     mine adding them back just constitutes a lot of churning of the source. In
+>     addition, it greatly increases the probability of the source trees becoming
+>     unsynchronized and getting merge conflicts.
 >
-> etc.
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> I do not recognize that there has been no diskution on the subject of "net: 
+> wireless:"
 
+I mentioned about this in one your earlier patches, but I guess you
+didn't get the mail because I got a bounce:
+
+https://lkml.org/lkml/2014/12/24/222
+
+-- 
+Kalle Valo
