@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:37975 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130AbbAWRla (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 12:41:30 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: b43: stop leds during suspend
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1421678072-28997-1-git-send-email-sd@queasysnail.net>
-To: Sabrina Dubroca <sd@queasysnail.net>
-Cc: stefano.brivio@polimi.it, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, Sabrina Dubroca <sd@queasysnail.net>
-Message-Id: <20150123174129.CB09914180B@smtp.codeaurora.org> (sfid-20150123_184134_948299_C404A514)
-Date: Fri, 23 Jan 2015 17:41:29 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:54115 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753272AbbAEM57 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 07:57:59 -0500
+Message-ID: <1420462674.9459.9.camel@sipsolutions.net> (sfid-20150105_135808_759296_2C2478B1)
+Subject: Re: [PATCH v3] cfg80211: check for carrier state only when
+ offchanel CAC supported
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <patila@marvell.com>
+Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
+	cluo@marvell.com
+Date: Mon, 05 Jan 2015 13:57:54 +0100
+In-Reply-To: <1420475584-5533-1-git-send-email-patila@marvell.com> (sfid-20150105_120344_381788_A7E15DA0)
+References: <1420475584-5533-1-git-send-email-patila@marvell.com>
+	 (sfid-20150105_120344_381788_A7E15DA0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2015-01-05 at 22:03 +0530, Avinash Patil wrote:
+> Checking for carrier state during start_radar_detection is needed
+> only for devices which support offchannel CAC.
+> This patch provides this additional check of extended feature offchannel
+> CAC support while checking for carrier state.
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> ---
+>  include/uapi/linux/nl80211.h | 3 +++
+>  net/wireless/nl80211.c       | 4 +++-
+>  2 files changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 735ab43..c318802 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -4205,10 +4205,13 @@ enum nl80211_feature_flags {
+>  /**
+>   * enum nl80211_ext_feature_index - bit index of extended features.
+>   *
+> + * @NL80211_EXT_FEATURE_OFFCHAN_CAC: This device/driver supports
+> + *	offchannel Channel Availability Check(CAC).
+>   * @NUM_NL80211_EXT_FEATURES: number of extended features.
+>   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+>   */
+>  enum nl80211_ext_feature_index {
+> +	NL80211_EXT_FEATURE_OFFCHAN_CAC,
+>  
+>  	/* add new features before the definition below */
+>  	NUM_NL80211_EXT_FEATURES,
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 39753de..b2abb37 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -6138,7 +6138,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+>  	if (err)
+>  		return err;
+>  
+> -	if (netif_carrier_ok(dev))
+> +	if (wiphy_ext_feature_isset(&rdev->wiphy,
+> +				    NL80211_EXT_FEATURE_OFFCHAN_CAC) &&
+> +	    netif_carrier_ok(dev))
+>  		return -EBUSY;
 
-> Call b43_leds_stop during suspend to avoid this WARN:
-> 
-> WARNING: CPU: 1 PID: 0 at net/mac80211/util.c:755 ieee80211_can_queue_work.isra.11+0x35/0x50 [mac80211]()
-> queueing ieee80211 work while going to suspend
-> 
->  [...]
-> 
-> Call Trace:
->  [<c165fb2a>] dump_stack+0x48/0x69
->  [<c1052f7b>] warn_slowpath_common+0x8b/0xc0
->  [<f9c30225>] ? ieee80211_can_queue_work.isra.11+0x35/0x50 [mac80211]
->  [<f9c30225>] ? ieee80211_can_queue_work.isra.11+0x35/0x50 [mac80211]
->  [<c1052fe3>] warn_slowpath_fmt+0x33/0x40
->  [<f9c30225>] ieee80211_can_queue_work.isra.11+0x35/0x50 [mac80211]
->  [<f9c30260>] ieee80211_queue_work+0x20/0x40 [mac80211]
->  [<f9f25d78>] b43_led_brightness_set+0x28/0x30 [b43]
->  [<c14f3835>] led_timer_function+0xd5/0xe0
->  [<c10cb534>] call_timer_fn+0xa4/0x4a0
-> 
-> Signed-off-by: Sabrina Dubroca <sd@queasysnail.net>
+Wait - doesn't that have to be !feature_isset()?
 
-Thanks, applied to wireless-drivers-next.git.
+johannes
 
-Kalle Valo
