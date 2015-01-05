@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:40567 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502AbbASMgJ (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:37586 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121AbbAERaY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 07:36:09 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3.19] ath9k: fix race condition in irq processing during hardware reset
-References: <1421241456-29085-1-git-send-email-nbd@openwrt.org>
-Date: Mon, 19 Jan 2015 14:36:02 +0200
-In-Reply-To: <1421241456-29085-1-git-send-email-nbd@openwrt.org> (Felix
-	Fietkau's message of "Wed, 14 Jan 2015 14:17:36 +0100")
-Message-ID: <87sif7j6bx.fsf@kamboji.qca.qualcomm.com> (sfid-20150119_133613_675851_4B78B2C3)
+	Mon, 5 Jan 2015 12:30:24 -0500
+Received: by mail-ob0-f174.google.com with SMTP id nt9so68526183obb.5
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 09:30:24 -0800 (PST)
+Message-ID: <54AACA29.3060709@lwfinger.net> (sfid-20150105_183027_540086_600C4E5D)
+Date: Mon, 05 Jan 2015 11:30:17 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Christian Lamparter <chunkeey@googlemail.com>,
+	Christopher Chavez <chrischavez@gmx.us>,
+	linux-wireless@vger.kernel.org
+Subject: Re: p54usb kernel panic on recent mainline kernels
+References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com>	 <loom.20141227T010207-869@post.gmane.org> <2296382.VCr2c4tJc9@debian64>	 <5946673.YueIgFzjsn@debian64> <549EFC9F.9030504@lwfinger.net>	 (sfid-20141227_193826_833900_3E3C56C2) <1420450414.1898.6.camel@sipsolutions.net>
+In-Reply-To: <1420450414.1898.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@openwrt.org> writes:
-
-> To fix invalid hardware accesses, the commit
-> "ath9k: do not access hardware on IRQs during reset" made the irq
-> handler ignore interrupts emitted after queueing a hardware reset (which
-> disables the IRQ). This left a small time window for the IRQ to get
-> re-enabled by the tasklet, which caused IRQ storms.
-> Instead of returning IRQ_NONE when ATH_OP_HW_RESET is set, disable the
-> IRQ entirely for the duration of the reset.
+On 01/05/2015 03:33 AM, Johannes Berg wrote:
+> On Sat, 2014-12-27 at 12:38 -0600, Larry Finger wrote:
 >
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> I had redone the bisection and found that ca34e3b was the bad commit. That was
+>> late last night (CST - UTC-5). I was pleased to find your patch in my mailbox
+>> this morning.
+>>
+>> With your patch, my system has survived for about 2 hours, whereas it would have
+>> failed in 2 minutes or less. You can add
+>>
+>> Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>
+>> I think this needs to be applied to 3.{17-19}.
+>
+> Thanks everyone. I just sent out a revert - that'll be easier to manage
+> for 3.17-3.19, and we can redo the original commit properly for 3.20.
 
-Thanks, applied to wireless-drivers.git. I made a small change and added
-the commit id to the commit log:
+That sounds good.
 
-commit e3f31175a3eeb492a6ab788e4fa136c19b43aab4
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Wed Jan 14 14:17:36 2015 +0100
+Larry
 
-    ath9k: fix race condition in irq processing during hardware reset
-    
-    To fix invalid hardware accesses, the commit 872b5d814f99 ("ath9k: do not
-    access hardware on IRQs during reset") made the irq handler ignore interrupts
-    emitted after queueing a hardware reset (which disables the IRQ). This left a
-    small time window for the IRQ to get re-enabled by the tasklet, which caused
-    IRQ storms.  Instead of returning IRQ_NONE when ATH_OP_HW_RESET is set, disable
-    the IRQ entirely for the duration of the reset.
-    
-    Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-    Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
--- 
-Kalle Valo
