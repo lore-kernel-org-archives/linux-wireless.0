@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dub004-omc2s35.hotmail.com ([157.55.1.174]:60745 "EHLO
-	DUB004-OMC2S35.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750985AbbAGKHj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 05:07:39 -0500
-Message-ID: <DUB128-W345D981A960C3908C59FE99C460@phx.gbl> (sfid-20150107_110744_021087_97EF480B)
-From: David Binderman <dcb314@hotmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: brcm80211/brcmsmac/phy/phy_n.c: problem with ? : code
-Date: Wed, 7 Jan 2015 10:07:37 +0000
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:47955 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753916AbbAERqm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 12:46:42 -0500
+Message-ID: <54AACE00.8060407@lwfinger.net> (sfid-20150105_184703_627216_69FB81C8)
+Date: Mon, 05 Jan 2015 11:46:40 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+To: nick <xerofoify@gmail.com>, Kalle Valo <kvalo@codeaurora.org>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, stefano.brivio@polimi.it,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers:net:wireless: Add proper locking for the function,
+ b43_op_beacon_set_tim in main.c
+References: <1420184041-6788-1-git-send-email-xerofoify@gmail.com> <87tx05378x.fsf@kamboji.qca.qualcomm.com> <54AAC6EE.2000603@gmail.com>
+In-Reply-To: <54AAC6EE.2000603@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello there,
+On 01/05/2015 11:16 AM, nick wrote:
+> Kalle,
+> That's fine. On the other hand I am interested in the
+> reasons why this patch was dropped so I can send in a
+> version 2 of this patch.
+> Regards Nick
 
-[linux-3.19-rc3/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c:27027]: (style) Same expression in both branches of ternary operator.
+Apparently you missed Michael Büsch's comment:
 
-Source code is
+"Thanks for the patch.
 
-    desired_log2_pwr = (cal_type == 0) ? 13 : 13;
+However, this does not work. We are in atomic context here.
+Please see the b43-dev mailing list archives for a recent thread about that.
+I'm also pretty sure that this is safe without lock, due to the higher level 
+locks in mac80211."
 
-Suggest code rework.
+Did you actually test the patch? If Michael is right, and I trust him on this 
+matter, your patch should lock the system.
 
-Regards
+Larry
 
-David Binderman
-
- 		 	   		  
