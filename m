@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:35417 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755490AbbAWRMr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 12:12:47 -0500
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:23771 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753480AbbAEK7x convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Jan 2015 05:59:53 -0500
+From: Avinash Patil <patila@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>
+Date: Mon, 5 Jan 2015 02:58:30 -0800
+Subject: RE: [PATCH] cfg80211: check for carrier state only when offchanel
+ CAC supported
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A67@SC-VEXCH2.marvell.com> (sfid-20150105_115958_068680_0D7AB1CC)
+References: <1419425236-17457-1-git-send-email-patila@marvell.com>,<1420449663.1898.0.camel@sipsolutions.net>
+In-Reply-To: <1420449663.1898.0.camel@sipsolutions.net>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: [1/8] wcn36xx: initialize device defaults on start
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1420830952-9624-2-git-send-email-me@bobcopeland.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-Message-Id: <20150123171246.81A2B1414A1@smtp.codeaurora.org> (sfid-20150123_181254_492477_791B392F)
-Date: Fri, 23 Jan 2015 17:12:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> Set up default configuration for the device when we call start.
-> The defaults come from dumps from the prima driver for the same
-> hardware.
-> 
-> This fixes transmit A-MPDU; previously only one MPDU would be
-> sent per A-MPDU due to missing MAX_MPDUS_IN_AMPDU setting.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: Monday, January 05, 2015 2:51 PM
+To: Avinash Patil
+Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo; janusz.dziedzic@tieto.com
+Subject: Re: [PATCH] cfg80211: check for carrier state only when offchanel CAC supported
 
-Thanks, 8 patches applied to wireless-drivers-next.git:
+On Wed, 2014-12-24 at 04:47 -0800, Avinash Patil wrote:
 
-69a88cc7b164 wcn36xx: initialize device defaults on start
-f786a6d4af92 wcn36xx: use !! when assigning int as a boolean
-232ddcd80fa5 wcn36xx: let device generate qos seq numbers
-bfa6696b39ae wcn36xx: don't process 'valid' descriptors
-90dccb73e985 wcn36xx: initialize skb_lock
-4b12462a3a7f wcn36xx: initialize dxe lock
-5f3f928585b2 wcn36xx: move set_tx_pdu inside set_tx_data/mgmt
-e26dc173a66a wcn36xx: initiate TX BA sessions
+> + * @NL80211_EXT_FEATURE_OFFCHAN_CAC: This device/driver supports
+> + * offchannel Channel Availibility Check(CAC).
 
-Kalle Valo
+>as Arend said, please indent (with a tab)
+
+>You're also mis-spelling "availability" :)
+
+>   * @NUM_NL80211_EXT_FEATURES: number of extended features.
+>   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+>   */
+>  enum nl80211_ext_feature_index {
+>
+> +     NL80211_EXT_FEATURE_OFFCHAN_CAC,
+
+>Better add it before rather than after the blank line.
+
+>johannes
+
+Thanks for review, Johannes.
+Will send v3 with your comments addressed.
+
+Thanks,
+Avinash.
+
