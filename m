@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:53055 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbbAPFSJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:52993 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511AbbAEIIA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 00:18:09 -0500
-Received: by mail-pd0-f173.google.com with SMTP id ft15so20600728pdb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2015 21:18:08 -0800 (PST)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: me@bobcopeland.com, Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH] mesh: Avoid STA expiration timer truncation to u32
-Date: Fri, 16 Jan 2015 14:17:40 +0900
-Message-Id: <1421385460-3126-1-git-send-email-masashi.honma@gmail.com> (sfid-20150116_061833_559228_21852CD5)
+	Mon, 5 Jan 2015 03:08:00 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Stable <stable@vger.kernel.org>,
+	Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: [PATCH V3 for 3.19]  rtlwifi: Fix error when accessing unmapped memory in skb
+References: <1419996787-17395-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Mon, 05 Jan 2015 10:07:51 +0200
+In-Reply-To: <1419996787-17395-1-git-send-email-Larry.Finger@lwfinger.net>
+	(Larry Finger's message of "Tue, 30 Dec 2014 21:33:07 -0600")
+Message-ID: <87oaqd4pm0.fsf@kamboji.qca.qualcomm.com> (sfid-20150105_090811_002670_C7FA2AAA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On some combination of plink_timeout and HZ, the STA expiration timer will be
-unexpectedly truncated to u32. Maybe there is a question "Who sets such a large
-number to plink_timeout ?". At least wpa_supplicant will set 0xffffffff to
-plink_timeout to disable this timer because wpa_supplicant has it's own
-expiration mechanism.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- net/mac80211/mesh.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> These drivers use 9100-byte receive buffers, thus allocating an skb requires
+> an O(3) memory allocation. Under heavy memory loads and fragmentation, such
+> a request can fail. Previous versions of the driver have dropped the packet
+> and reused the old buffer; however, the new version introduced a bug in that
+> it released the old buffer before trying to allocate a new one. The previous
+> method is implemented here. The skb is unmapped before any attempt is made to
+> allocate another.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>  [v3.18]
+> Reported-by: Eric Biggers <ebiggers3@gmail.com>
+> Cc: Eric Biggers <ebiggers3@gmail.com>
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0c8b2a7..bb721a0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -574,7 +574,8 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	u32 changed;
- 
--	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
-+	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout *
-+			     (unsigned long)HZ);
- 	mesh_path_expire(sdata);
- 
- 	changed = mesh_accept_plinks_update(sdata);
+Thanks, applied to wireless-drivers.git.
+
 -- 
-2.1.0
-
+Kalle Valo
