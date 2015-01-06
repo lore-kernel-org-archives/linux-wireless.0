@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:41399 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751595AbbAVLoE (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:15919 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753179AbbAFLGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 06:44:04 -0500
-Date: Thu, 22 Jan 2015 13:32:59 +0200
-From: Vadim Kochan <vadim4j@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vadim Kochan <vadim4j@gmail.com>,
-	"Eric W. Biederman" <ebiederm@xmission.com>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
-Message-ID: <20150122113259.GA20706@angus-think.local> (sfid-20150122_124410_277312_D1753058)
-References: <1421073245-20312-1-git-send-email-vadim4j@gmail.com>
- <1421225246.1950.22.camel@sipsolutions.net>
- <20150119143457.GA6988@angus-think.wlc.globallogic.com>
+	Tue, 6 Jan 2015 06:06:22 -0500
+Message-ID: <54ABC19C.3080600@broadcom.com> (sfid-20150106_120625_430369_05A9AC6C)
+Date: Tue, 6 Jan 2015 12:06:04 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150119143457.GA6988@angus-think.wlc.globallogic.com>
+To: Thomas Vincent-Cross <me@tvc.id.au>
+CC: "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: BCM43602 support in brcm80211, is BCM4360 support possible?
+References: <SNT150-W949AB8EED942D9FBB6CF968A500@phx.gbl>
+In-Reply-To: <SNT150-W949AB8EED942D9FBB6CF968A500@phx.gbl>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 19, 2015 at 04:34:57PM +0200, Vadim Kochan wrote:
-> On Wed, Jan 14, 2015 at 09:47:26AM +0100, Johannes Berg wrote:
-> > On Mon, 2015-01-12 at 16:34 +0200, Vadim Kochan wrote:
-> > 
-> > > --- a/net/core/net_namespace.c
-> > > +++ b/net/core/net_namespace.c
-> > > @@ -361,6 +361,7 @@ struct net *get_net_ns_by_fd(int fd)
-> > >  	return ERR_PTR(-EINVAL);
-> > >  }
-> > >  #endif
-> > > +EXPORT_SYMBOL_GPL(get_net_ns_by_fd);
-> > 
-> > Does this seem OK? Vadim is adding support for using the ns-by-fd in
-> > nl80211, which can be a module as part of cfg80211.
-> > 
-> > johannes
-> > 
-> PING ... in case if this email was missed ...
-> 
-> Thanks,
++ linux-wireless
 
-Hi Johannes,
+On 12/28/14 14:02, Thomas Vincent-Cross wrote:
+> Hi Broadcom devs,
+>
+> I see that support for your new 3x3 802.11ac chip, the BCM43602, has
+> been added to the brcm80211 driver. I understand this is an "updated"
+> chip that is almost a drop in replacement for the original BCM4360. I'm
+> wondering since the support has been added for the newer chip to the
+> open source driver, does that mean it's possible for support to be added
+> for the older one? The BCM4360 is already featured in a tonne of
+> devices, and would open the door for firmwares like OpenWrt to support
+> devices like the Netgear R7000 and the Asus RT-AC68U. Now I don't know
+> if the reason support hasn't been added is because of licensing issues
+> with all of these already available devices, if so let me know.
 
-Does it mean that patch will be rejected in case if no one answer on
-this ?:)
+Hi Thomas,
 
-Thanks,
+Bit late response, but I play the holiday-excuse card ;-) . From 
+hardware perspective they are pin compatible (if I am not mistaken). 
+However, from a driver/firmware perspective they are totally different. 
+4360 uses a softmac driver (802.11 stack running in kernel) whereas 
+43602 uses a fullmac driver (802.11 stack running on device). We do not 
+have ok to release 4360 driver upstream at the moment and we have not 
+started working on that. The brcm80211 softmac driver (brcmsmac) does 
+not support any 11ac chips so that is a big task.
+
+> I'm unsure whether emailing directly like this is the best way to ask,
+> but I thought it'd be more direct than posting to the linux-wireless
+> mailing list.
+
+No worries. You could have Cc'ed linux-wireless, which I added in this 
+reply.
+
+Regards,
+Arend
+
+> Cheers,
+> Thomas
+
