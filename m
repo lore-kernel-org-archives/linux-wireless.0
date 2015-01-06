@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37990 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599AbbATKbz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 05:31:55 -0500
-Message-ID: <54BE2E98.1030109@broadcom.com> (sfid-20150120_113158_442768_E9578571)
-Date: Tue, 20 Jan 2015 11:31:52 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Vasiliy Tolstov <v.tolstov@selfip.ru>
-CC: <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: b43 bcm43228 and linux 3.18.3
-References: <CACaajQsqPMzwD=EqdD5_XfWAPmkn-52VVNHF1ntFZ6ofEH4D-w@mail.gmail.com> <CACaajQs1r1tE-GXv7cmAL9w8q2cwn_iiDttp6tLFB7BdSBNDPw@mail.gmail.com> <54BD2684.30701@broadcom.com> <CACaajQuCfe-POEecGmet7R3GG8sg5KPzdteU+sHD8Vs5TBLzyA@mail.gmail.com>
-In-Reply-To: <CACaajQuCfe-POEecGmet7R3GG8sg5KPzdteU+sHD8Vs5TBLzyA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:58512 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753217AbbAFKK1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 05:10:27 -0500
+Message-ID: <1420539019.1966.7.camel@sipsolutions.net> (sfid-20150106_111044_720458_1D4DB713)
+Subject: Re: [PATCH] rfkill: parameters documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Clausen <andrew.p.clausen@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Date: Tue, 06 Jan 2015 11:10:19 +0100
+In-Reply-To: <CAAXZBWJD02F81gJkhvLFZcpCzJahr-qsUUgbqheUfrc_BP0CjA@mail.gmail.com> (sfid-20150105_110329_183833_77EE0F7B)
+References: <CAAXZBWLOKL8Uu9No_tQga34nFurmeK2HP9qixO1jCXw1Y0t5HA@mail.gmail.com>
+	 <1420449884.1898.3.camel@sipsolutions.net>
+	 <CAAXZBWJD02F81gJkhvLFZcpCzJahr-qsUUgbqheUfrc_BP0CjA@mail.gmail.com>
+	 (sfid-20150105_110329_183833_77EE0F7B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/15 11:24, Vasiliy Tolstov wrote:
-> 2015-01-19 18:45 GMT+03:00 Arend van Spriel<arend@broadcom.com>:
->> What do you mean by "moved from 5Ghz to 2.4Ghz..". You mean it is roaming
->> between the two bands?
->
-> Yes, i have zyxel keenetic start that supports b/g/n
+On Mon, 2015-01-05 at 10:03 +0000, Andrew Clausen wrote:
+> Hi Johannes,
+> 
+> On 5 January 2015 at 09:24, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > Looks fine to me (though the commit message shouldn't contain the email
+> > "boilerplate" of "hi all" etc - should just be
+> 
+> Ah, sorry for the extra noise.
+> 
+> > However I'm not sure I should apply this through my tree?
+> 
+> I think you're right -- it makes sense to put it in your tree, and
+> merge it down the track.  (I don't think I've submitted a kernel patch
+> since pre-git days, so sorry for the confusion.)
 
-'b/g' is in 2.4G band. 'n' is in both 2.4G and 5G band. Assume it can do 
-'a' as well. Anyway, does that router let you specify the SSID for both 
-2.4G and 5G. Are you using same SSID for both?
+I'll take it.
 
-Regards,
-Arend
+However, please resend with an adjust commit message, and please diff it
+against my mac80211-next tree (it doesn't apply as is)
 
->> Anyway, there is a b43 specific mailing list which I
->> added.
->
->
-> Thanks. I don't know about this list.
->
+johannes
 
