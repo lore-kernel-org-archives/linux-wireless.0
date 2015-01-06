@@ -1,77 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:38582 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752689AbbARRs6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:36636 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbbAFSBR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 12:48:58 -0500
-Message-ID: <54BBF207.2030708@broadcom.com> (sfid-20150118_184905_849660_1036D732)
-Date: Sun, 18 Jan 2015 18:48:55 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 6 Jan 2015 13:01:17 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH 0/5] ath9k patches
+References: <1418951039-12309-1-git-send-email-sujith@msujith.org>
+Date: Tue, 06 Jan 2015 20:01:10 +0200
+In-Reply-To: <1418951039-12309-1-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Fri, 19 Dec 2014 06:33:54 +0530")
+Message-ID: <87a91vzt3t.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_190121_355088_1EE63672)
 MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>,
-	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Subject: Re: Wireless scanning while turning off the radio problem..
-References: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com>	<CANUX_P0LCr3fzqLyjKQbZ-P2hAV-Nk6=AMm=oFOWCLW34cRg2w@mail.gmail.com> <CA+55aFzEr-R1anNm91pnM=ujfhBstJikZBVtduphff1PtccHDw@mail.gmail.com>
-In-Reply-To: <CA+55aFzEr-R1anNm91pnM=ujfhBstJikZBVtduphff1PtccHDw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/18/15 17:53, Linus Torvalds wrote:
-> On Sun, Jan 18, 2015 at 11:24 PM, Emmanuel Grumbach<egrumbach@gmail.com>  wrote:
->>
->> we have different scan flows based on the firmware version you have,
->> so it would help if you could tell me what firmware you have.
->
-> Sure. It's the larest one I could find
->
->     iwlwifi 0000:01:00.0: loaded firmware version 23.11.10.0 op_mode iwlmvm
->
-> with the actual firmware file being 'iwlwifi-7260-10.ucode' from the
-> current linux-firmware tree.
->
-> Iin a different email Arend van Spriel<arend@broadcom.com>  wrote:
->>
->> The function iwl_trans_pcie_stop_device() put device in low-power and
->> resets the cpu on the device.  So iwl_op_mode_hw_rf_kill ends up in
->> iwl_mvm_set_hw_rfkill_state which schedules cfg80211_rfkill_sync_work
->> and returns true if firmware is running.  The patch below might work.
->
-> Any suggestions for how to best try to trigger this for testing?
-> Looking at my logs, it turns out that I actually got this three times,
-> but they were all on the same boot, and I think the first case might
-> just have triggered the later ones.
->
-> The trigger was turning off wifi from the wifi settings app due to
-> being in an airplane when they were closing the doors. I don't *think*
-> there was actually any wifi around at the time, which may or may not
-> have made the scanning take longer and made it easier to trigger.
->
-> But I've done it before (although this machine has been upgraded to
-> F21 reasonably recently, and I did update the ucode file before the
-> trip). And I did it afterwards to test. And it happened that one time
-> (and then apparently kept happening during suspend/resume/shutdown,
-> but as mentioned, I blame that on some sticky problem from the first
-> time, and those events in turn happened because I couldn't get
-> wireless to work afterwards).
->
-> IOW, I'm not at all sure I can recreate it, so your "analyzing the
-> source code for how this could happen" may be the only good way..
+Sujith Manoharan <sujith@msujith.org> writes:
 
-Your issue occurs when firmware is instructed by user-space, ie. 
-wpa_supplicant(?), to do "scheduled scan". This type of scanning is done 
-entirely in the device. Typically, this type of scanning is done by 
-wpa_supplicant after 3 normal scans in which no configured networks were 
-found. The idea is that the host can be idle while the device does the 
-scanning and wakes up the host when a configured network is found.
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> Pending patches for ath9k, rebased over wireless-drivers-next.
+> All of these are for -next.
+>
+> The patch "ath9k: Fix no-ack frame status" depends on two commits
+> that have been merged in mac80211-next, so it needs to be pulled
+> into wireless-drivers-next.
 
-So as you indicated you were in location where none of your configured 
-networks were available. Flipping the rfkill switch in that situation is 
-the way to trigger the issue.
+What are the dependency patches exactly?
 
-Regards,
-Arend
+-- 
+Kalle Valo
