@@ -1,105 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:51577 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932093AbbAESWz (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:53302 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472AbbAFSI4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 13:22:55 -0500
-Message-ID: <54AAD67C.7090900@broadcom.com> (sfid-20150105_192337_764893_E2F363F2)
-Date: Mon, 5 Jan 2015 19:22:52 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 6 Jan 2015 13:08:56 -0500
+Message-ID: <54AC2497.3050703@lwfinger.net> (sfid-20150106_190930_327701_06C3D99D)
+Date: Tue, 06 Jan 2015 12:08:23 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	"Kalle Valo" <kvalo@codeaurora.org>, Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-References: <1420297188.2397.3.camel@tiscali.nl>	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com> <1420479510.14308.23.camel@x220>
-In-Reply-To: <1420479510.14308.23.camel@x220>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+CC: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] b43legacy: Remove unused function
+References: <1420567175-17323-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+In-Reply-To: <1420567175-17323-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/15 18:38, Paul Bolle wrote:
-> On Mon, 2015-01-05 at 11:14 +0100, Arend van Spriel wrote:
->> On 01/03/15 23:28, Paul Bolle wrote:
->>> Side note: am I correct in thinking that there's some successor to
->>> CFG80211_WEXT and that the ipw2200 driver could, at least in theory, be
->>> ported to that successor? (ipw2200 hardware appears to be a bit old, so
->>> probably no one would care enough to actually do that.)
->>> net/wireless/kconfig doesn't mention anything like that, so probably I'm
->>> just confused.
->>
->> ipw2200 is a WEXT driver using some wext functionality (and struct
->> wiphy) provided by cfg80211 hence it needs CFG80211_WEXT. I guess that
->> is what makes it confusing.
+On 01/06/2015 11:59 AM, Rickard Strandqvist wrote:
+> Remove the function b43legacy_radio_set_tx_iq() that is not used anywhere.
 >
-> It doesn't help that I hardly know anything about mac80211, cfg80211 and
-> nl80211 (and lib80211 for that matter). To me these are mostly just
-> names that end in 80211.
+> This was partially found by using a static code analysis program called cppcheck.
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>   drivers/net/wireless/b43legacy/radio.c |   19 -------------------
+>   drivers/net/wireless/b43legacy/radio.h |    1 -
+>   2 files changed, 20 deletions(-)
 
-Grapjas ;-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-cfg80211 provides thin-layer API for fullmac drivers (running 802.11 
-stack on the device) and mac80211-based drivers (running 802.11 stack in 
-kernel).
-
-> Anyhow, concerning, CFG80211_WEXT: it seems the only functionality
-> provided by that symbol that ipw2200 uses directly is
-> cfg80211_wext_giwname(). Perhaps ipw2200 could have a private version of
-> that function, something like ipw2100's ipw2100_wx_get_name(). Should be
-> trivial to implement (ie, it could take _me_ a day or two).
-
-Indeed or even an hour or two.
-
-> But perhaps ipw2200 uses CFG80211_WEXT _indirectly_ too. Ie, in
-> net/wireless/core.c I stumbled on
->      #ifdef CONFIG_CFG80211_WEXT
->              rdev->wiphy.wext =&cfg80211_wext_handler;
->      #endif
-
-This is the "wext compatibility" being enabled for any cfg80211 or 
-mac80211 based driver.
+Larry
 
 >
-> But I net/wireless/wext-core.c I then found
->      #ifdef CONFIG_CFG80211_WEXT
->              if (dev->ieee80211_ptr&&  dev->ieee80211_ptr->wiphy)
->                      handlers = dev->ieee80211_ptr->wiphy->wext;
->      #endif
-
-wext-core is the WEXT framework and here it extracts WEXT handlers from 
-a cfg80211/mac80211-based driver that are store in wiphy structure.
-
->      #ifdef CONFIG_WIRELESS_EXT
->              if (dev->wireless_handlers)
->                      handlers = dev->wireless_handlers;
->      #endif
-
-Here wext-core extracts WEXT handlers from a WEXT driver. struct 
-net_device::wireless_handlers is only defined for CONFIG_WIRELESS_EXT.
-
-> (There's much more to discover about WEXT, of course.) Anyhow, IPW2200
-> uses both CFG80211_WEXT and WIRELESS_EXT and cfg80211_wext_handler and
-> ipw2200's wireless_handlers appear to cover the same set of IOCTLS (one
-> exception: SIOCSIWPMKSA). So by now I'm really puzzled how this all fits
-> together.
-
-I think ipw2200 is a bit of both worlds indeed adopting the use of 
-struct wiphy and wiphy_register() call. That seems to suggest it is a 
-cfg80211 driver, but it does not register any cfg80211 driver callbacks 
-(see libipw_config_ops in libipw_module.c). So it overrides the WEXT 
-ioctls because it needs that to interact with the device.
-
-Regards,
-Arend
-
-> Thanks,
+> diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
+> index 8961776..9501420 100644
+> --- a/drivers/net/wireless/b43legacy/radio.c
+> +++ b/drivers/net/wireless/b43legacy/radio.c
+> @@ -1743,25 +1743,6 @@ u16 freq_r3A_value(u16 frequency)
+>   	return value;
+>   }
 >
+> -void b43legacy_radio_set_tx_iq(struct b43legacy_wldev *dev)
+> -{
+> -	static const u8 data_high[5] = { 0x00, 0x40, 0x80, 0x90, 0xD0 };
+> -	static const u8 data_low[5]  = { 0x00, 0x01, 0x05, 0x06, 0x0A };
+> -	u16 tmp = b43legacy_radio_read16(dev, 0x001E);
+> -	int i;
+> -	int j;
+> -
+> -	for (i = 0; i < 5; i++) {
+> -		for (j = 0; j < 5; j++) {
+> -			if (tmp == (data_high[i] | data_low[j])) {
+> -				b43legacy_phy_write(dev, 0x0069, (i - j) << 8 |
+> -						    0x00C0);
+> -				return;
+> -			}
+> -		}
+> -	}
+> -}
+> -
+>   int b43legacy_radio_selectchannel(struct b43legacy_wldev *dev,
+>   				  u8 channel,
+>   				  int synthetic_pu_workaround)
+> diff --git a/drivers/net/wireless/b43legacy/radio.h b/drivers/net/wireless/b43legacy/radio.h
+> index bccb3d7..dd2976d 100644
+> --- a/drivers/net/wireless/b43legacy/radio.h
+> +++ b/drivers/net/wireless/b43legacy/radio.h
+> @@ -92,7 +92,6 @@ void b43legacy_nrssi_hw_write(struct b43legacy_wldev *dev, u16 offset, s16 val);
+>   void b43legacy_nrssi_hw_update(struct b43legacy_wldev *dev, u16 val);
+>   void b43legacy_nrssi_mem_update(struct b43legacy_wldev *dev);
 >
-> Paul Bolle
+> -void b43legacy_radio_set_tx_iq(struct b43legacy_wldev *dev);
+>   u16 b43legacy_radio_calibrationvalue(struct b43legacy_wldev *dev);
+>
+>   #endif /* B43legacy_RADIO_H_ */
 >
 
