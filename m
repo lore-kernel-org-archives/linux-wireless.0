@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46276 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60877 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757580AbbAIKto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 05:49:44 -0500
+	id S1751194AbbAFTDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 14:03:00 -0500
+Message-ID: <1420570976.1966.34.camel@sipsolutions.net> (sfid-20150106_200304_519943_B9662663)
+Subject: Re: [PATCH 1/3] mac80211: consider only relevant vifs for
+ radar_required calculation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] mac80211_hwsim: fix PS debugfs file locking
-Date: Fri,  9 Jan 2015 11:49:38 +0100
-Message-Id: <1420800579-18723-1-git-send-email-johannes@sipsolutions.net> (sfid-20150109_114948_632204_935B5E3F)
+To: Eliad Peller <eliad@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 06 Jan 2015 20:02:56 +0100
+In-Reply-To: <CAB3XZEctcBuPG6f4ZrZFV5O3Z7+hi+ShFdwvFXdJovG2KeAufQ@mail.gmail.com> (sfid-20150106_195729_910977_930DB9CB)
+References: <1420366399-31535-1-git-send-email-eliad@wizery.com>
+	 <1420542274.1966.21.camel@sipsolutions.net>
+	 <1420553111.1966.32.camel@sipsolutions.net>
+	 <1420553688.1966.33.camel@sipsolutions.net>
+	 <CAB3XZEctcBuPG6f4ZrZFV5O3Z7+hi+ShFdwvFXdJovG2KeAufQ@mail.gmail.com>
+	 (sfid-20150106_195729_910977_930DB9CB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2015-01-06 at 20:57 +0200, Eliad Peller wrote:
+> On Tue, Jan 6, 2015 at 4:14 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2015-01-06 at 15:05 +0100, Johannes Berg wrote:
+> >> On Tue, 2015-01-06 at 12:04 +0100, Johannes Berg wrote:
+> >> > all three applied.
+> >>
+> >> Nope, dropped patch 2 again
+> >
+> > And dropped the other two also - with them the sequence of two tests I
+> > was looking at never completes.
+> >
+> err... sorry about that.
+> i'll look into it.
 
-The functions called within the iterators must be called with
-tasklets disabled, so use atomic iteration like the rest of
-the code and disable tasklets around the whole operation.
+I think there's probably two bugs - the test suite should wait for all
+the DFS stuff to finish.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+But the fact that it never completes now is strange, maybe somehow radar
+detection doesn't get turned off properly after your patches?
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 057a99e01637..74f4e1c18322 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -626,22 +626,22 @@ static int hwsim_fops_ps_write(void *dat, u64 val)
- 	old_ps = data->ps;
- 	data->ps = val;
- 
-+	local_bh_disable();
- 	if (val == PS_MANUAL_POLL) {
--		ieee80211_iterate_active_interfaces(data->hw,
--						    IEEE80211_IFACE_ITER_NORMAL,
--						    hwsim_send_ps_poll, data);
-+		ieee80211_iterate_active_interfaces_atomic(
-+			data->hw, IEEE80211_IFACE_ITER_NORMAL,
-+			hwsim_send_ps_poll, data);
- 		data->ps_poll_pending = true;
- 	} else if (old_ps == PS_DISABLED && val != PS_DISABLED) {
--		ieee80211_iterate_active_interfaces(data->hw,
--						    IEEE80211_IFACE_ITER_NORMAL,
--						    hwsim_send_nullfunc_ps,
--						    data);
-+		ieee80211_iterate_active_interfaces_atomic(
-+			data->hw, IEEE80211_IFACE_ITER_NORMAL,
-+			hwsim_send_nullfunc_ps, data);
- 	} else if (old_ps != PS_DISABLED && val == PS_DISABLED) {
--		ieee80211_iterate_active_interfaces(data->hw,
--						    IEEE80211_IFACE_ITER_NORMAL,
--						    hwsim_send_nullfunc_no_ps,
--						    data);
-+		ieee80211_iterate_active_interfaces_atomic(
-+			data->hw, IEEE80211_IFACE_ITER_NORMAL,
-+			hwsim_send_nullfunc_no_ps, data);
- 	}
-+	local_bh_enable();
- 
- 	return 0;
- }
--- 
-2.1.1
+johannes
 
