@@ -1,96 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:35323 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59747 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751490AbbAIMER (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 07:04:17 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Clement Perrochaud <clement.perrochaud@nxp.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH 1/2] NFC: pn544: GPIO access that may sleep
-Date: Fri,  9 Jan 2015 14:02:16 +0200
-Message-Id: <1420804937-10787-1-git-send-email-robert.dolca@intel.com> (sfid-20150109_130457_103808_59BB53DD)
+	id S1753929AbbAFN7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 08:59:08 -0500
+Message-ID: <1420552744.1966.31.camel@sipsolutions.net> (sfid-20150106_145912_427896_C2846FB3)
+Subject: Re: [PATCH 2/2] cfg80211: avoid reg-hints in self-managed only
+ systems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Tue, 06 Jan 2015 14:59:04 +0100
+In-Reply-To: <1420541766.1966.18.camel@sipsolutions.net> (sfid-20150106_115615_591316_7E790C4F)
+References: <1420112563-3981-1-git-send-email-arik@wizery.com>
+	 <1420112563-3981-2-git-send-email-arik@wizery.com>
+	 (sfid-20150101_124249_204906_78CCC525) <1420541766.1966.18.camel@sipsolutions.net>
+	 (sfid-20150106_115615_591316_7E790C4F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gpio_set_value was replaced with gpio_set_value_cansleep in order
-to allow GPIO access that may sleep. This is particularelly useful
-when GPIO is accessed using busses like I2C, SPI, USB
+On Tue, 2015-01-06 at 11:56 +0100, Johannes Berg wrote:
+> On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
+> > When a system contains only self-managed regulatory devices all hints
+> > from the regulatory core are ignored. Stop hint processing early in this
+> > case. These systems usually don't have CRDA deployed, which results in
+> > endless (irrelevent) logs of the form:
+> > cfg80211: Calling CRDA to update world regulatory domain
+> 
+> Applied.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
----
- drivers/nfc/pn544/i2c.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+I take that back - dropped again. This was causing spurious messages in
+the hwsim test run VM, saying something like "couldn't set reg domain:
+-7". Maybe at that point not a single wiphy existed?
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index fc02e8d..5f4b9c1 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -195,18 +195,18 @@ static void pn544_hci_i2c_platform_init(struct pn544_i2c_phy *phy)
- 	nfc_info(&phy->i2c_dev->dev, "Detecting nfc_en polarity\n");
- 
- 	/* Disable fw download */
--	gpio_set_value(phy->gpio_fw, 0);
-+	gpio_set_value_cansleep(phy->gpio_fw, 0);
- 
- 	for (polarity = 0; polarity < 2; polarity++) {
- 		phy->en_polarity = polarity;
- 		retry = 3;
- 		while (retry--) {
- 			/* power off */
--			gpio_set_value(phy->gpio_en, !phy->en_polarity);
-+			gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
- 			usleep_range(10000, 15000);
- 
- 			/* power on */
--			gpio_set_value(phy->gpio_en, phy->en_polarity);
-+			gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
- 			usleep_range(10000, 15000);
- 
- 			/* send reset */
-@@ -225,13 +225,13 @@ static void pn544_hci_i2c_platform_init(struct pn544_i2c_phy *phy)
- 		"Could not detect nfc_en polarity, fallback to active high\n");
- 
- out:
--	gpio_set_value(phy->gpio_en, !phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
- }
- 
- static void pn544_hci_i2c_enable_mode(struct pn544_i2c_phy *phy, int run_mode)
- {
--	gpio_set_value(phy->gpio_fw, run_mode == PN544_FW_MODE ? 1 : 0);
--	gpio_set_value(phy->gpio_en, phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_fw, run_mode == PN544_FW_MODE ? 1 : 0);
-+	gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
- 	usleep_range(10000, 15000);
- 
- 	phy->run_mode = run_mode;
-@@ -254,14 +254,14 @@ static void pn544_hci_i2c_disable(void *phy_id)
- {
- 	struct pn544_i2c_phy *phy = phy_id;
- 
--	gpio_set_value(phy->gpio_fw, 0);
--	gpio_set_value(phy->gpio_en, !phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_fw, 0);
-+	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
- 	usleep_range(10000, 15000);
- 
--	gpio_set_value(phy->gpio_en, phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
- 	usleep_range(10000, 15000);
- 
--	gpio_set_value(phy->gpio_en, !phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
- 	usleep_range(10000, 15000);
- 
- 	phy->powered = 0;
--- 
-1.9.1
+johannes
 
