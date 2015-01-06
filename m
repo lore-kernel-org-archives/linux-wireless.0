@@ -1,48 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbbAYIxe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:42733 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbbAFTVT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 03:53:34 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 06/10] wil6210: interrupt moderation configuration update
-Date: Sun, 25 Jan 2015 10:52:47 +0200
-Message-Id: <1422175971-8075-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_095341_395118_0DFB4966)
-In-Reply-To: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 6 Jan 2015 14:21:19 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Maithili Hinge <maithili@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>
+Subject: Re: [PATCH 0/9] mwifiex enhancements
+References: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
+Date: Tue, 06 Jan 2015 21:21:11 +0200
+In-Reply-To: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
+	(Amitkumar Karwar's message of "Wed, 31 Dec 2014 02:36:37 -0800")
+Message-ID: <87k30zww9k.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_202127_698551_B1B888FF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-Due to HW limitation, inter-packet gap timeout max value is 13 usec.
-Update of current thresholds from 15 to 13 usec.
+> This patch series adds couple of fixes, recovery mechanism
+> when host fails to wakeup the firmware and wowlan disconnect
+> feature.
+>
+> Amitkumar Karwar (5):
+>   mwifiex: remove redundant flag MWIFIEX_HW_STATUS_FW_READY
+>   mwifiex: add wakeup timer based recovery mechanism
+>   mwifiex: wakeup pending wait queues
+>   mwifiex: do not release lock during list_for_each_entry_safe()
+>   mwifiex: Increase priority of firmware download message
+>
+> Maithili Hinge (2):
+>   mwifiex: Move code for wowlan magic-packet and patterns to a function
+>   mwifiex: Add support for wowlan disconnect
+>
+> Marc Yang (2):
+>   Adjust calling place of mwifiex_terminate_workqueue
+>   mwifiex: increase delay during card reset
 
-Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wil6210.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks, all patches applied to wireless-drivers-next.git.
 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 2521ba1..3575b5d 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -78,8 +78,8 @@ static inline u32 wil_mtu2macbuf(u32 mtu)
- #define WIL_MAX_ETH_MTU		(IEEE80211_MAX_DATA_LEN_DMG - 8)
- /* Max supported by wil6210 value for interrupt threshold is 5sec. */
- #define WIL6210_ITR_TRSH_MAX (5000000)
--#define WIL6210_ITR_TX_INTERFRAME_TIMEOUT_DEFAULT (15) /* usec */
--#define WIL6210_ITR_RX_INTERFRAME_TIMEOUT_DEFAULT (15) /* usec */
-+#define WIL6210_ITR_TX_INTERFRAME_TIMEOUT_DEFAULT (13) /* usec */
-+#define WIL6210_ITR_RX_INTERFRAME_TIMEOUT_DEFAULT (13) /* usec */
- #define WIL6210_ITR_TX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
- #define WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
- #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
 -- 
-2.1.0
-
+Kalle Valo
