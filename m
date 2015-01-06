@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:60014 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753580AbbAONF5 (ORCPT
+Received: from toccata2.tricolour.ca ([204.225.221.17]:59702 "EHLO
+	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751286AbbAFNjf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 08:05:57 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] orinoco/hermes: select CFG80211_WEXT
-References: <1420548417-17650-1-git-send-email-johannes@sipsolutions.net>
-Date: Thu, 15 Jan 2015 15:05:50 +0200
-In-Reply-To: <1420548417-17650-1-git-send-email-johannes@sipsolutions.net>
-	(Johannes Berg's message of "Tue, 6 Jan 2015 13:46:57 +0100")
-Message-ID: <87y4p4qjm9.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_140602_304833_FA1B1362)
+	Tue, 6 Jan 2015 08:39:35 -0500
+Date: Tue, 6 Jan 2015 08:39:30 -0500
+From: Richard Guy Briggs <rgb@tricolour.ca>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
+	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: NetDev 0.1 Hotel guaranteed rate expiry fast approaching
+Message-ID: <20150106133930.GT1343@toccata2.tricolour.ca> (sfid-20150106_143951_227435_FBFA14E3)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hotel guaranteed rate expiry fast approaching
 
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> It makes no sense to require the user to find and enable
-> CFG80211_WEXT before the driver can be selected, make the
-> driver select the needed Kconfig symbol itself.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+The Westin Hotel is holding a block of rooms for Netdev01 at a guaranteed rate
+of $159.00 or $179.00 (depending on the type of room required). That guarantee
+expires on January 23, so book now to avoid disappointment and get the low
+rate. The rooms are going faster than we expected!
 
-Thanks, applied to wireless-drivers-next.git.
+Hotel room reservation link:
+	https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
 
--- 
-Kalle Valo
+
+Registration: (closes Feb 12)	https://onlineregistrations.ca/netdev01
+Main site:                      https://www.netdev01.org/
+Announcement:                   https://www.netdev01.org/announce
+CFP:                            https://www.netdev01.org/cfp
+Travel/hotel/weather/clothing:  https://www.netdev01.org/travel
+
+netdev 0.1 is the community-driven Linux networking conference held
+back-to-back with netconf in Ottawa, Canada, February 14-17, 2015.
+
+
+	slainte mhath, RGB
+
+--
+Richard Guy Briggs               --  ~\    -- ~\             <hpv.tricolour.ca>
+<www.TriColour.ca>                 --  \___   o \@      @        Ride yer bike!
+Ottawa, ON, CANADA                  --  Lo_>__M__\\/\%__\\/\%
+Vote! -- <greenparty.ca>_____GTVS6#790__(*)__(*)________(*)(*)_________________
