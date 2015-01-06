@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:64141 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751467AbbAPGSy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:34018 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756107AbbAFRiF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 01:18:54 -0500
-Received: by mail-pa0-f48.google.com with SMTP id rd3so22323671pab.7
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2015 22:18:54 -0800 (PST)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: me@bobcopeland.com, Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH v2] mac80211: Avoid STA expiration timer truncation to u32
-Date: Fri, 16 Jan 2015 15:18:41 +0900
-Message-Id: <1421389121-2841-1-git-send-email-masashi.honma@gmail.com> (sfid-20150116_071906_004801_7605EEB2)
-In-Reply-To: <CAFk-A4kzcC9BhCtwqxjprRiXZeVPepBDXr3TvqvL6hn6J37UGw@mail.gmail.com>
-References: <CAFk-A4kzcC9BhCtwqxjprRiXZeVPepBDXr3TvqvL6hn6J37UGw@mail.gmail.com>
+	Tue, 6 Jan 2015 12:38:05 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2012-12-30
+References: <1419948357.21410.4.camel@egrumbacBox>
+Date: Tue, 06 Jan 2015 19:37:57 +0200
+In-Reply-To: <1419948357.21410.4.camel@egrumbacBox> (Emmanuel Grumbach's
+	message of "Tue, 30 Dec 2014 14:05:57 +0000")
+Message-ID: <87sifnzu6i.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_183811_109742_8E025525)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On some combination of plink_timeout and HZ, the STA expiration timer will be
-unexpectedly truncated to u32. Maybe there is a question "Who sets such a large
-number to plink_timeout ?". At least wpa_supplicant will set 0xffffffff to
-plink_timeout to disable this timer because wpa_supplicant has it's own
-expiration mechanism.
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- net/mac80211/mesh.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> Here is a pull request for -next. Details below.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0c8b2a7..bb721a0 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -574,7 +574,8 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	u32 changed;
- 
--	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
-+	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout *
-+			     (unsigned long)HZ);
- 	mesh_path_expire(sdata);
- 
- 	changed = mesh_accept_plinks_update(sdata);
+Thanks, pulled.
+
+> I tried to adopt the format you requested.
+
+This is much better, thank you.
+
 -- 
-2.1.0
-
+Kalle Valo
