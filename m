@@ -1,99 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:61678 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752663AbbAGPuV (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59885 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756338AbbAFWDI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 10:50:21 -0500
-Received: by mail-wg0-f41.google.com with SMTP id l18so1447158wgh.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 07:50:20 -0800 (PST)
-Received: from muse.ger.corp.intel.com (93-172-181-114.bb.netvision.net.il. [93.172.181.114])
-        by mx.google.com with ESMTPSA id o1sm2567110wjf.41.2015.01.07.07.50.18
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Wed, 07 Jan 2015 07:50:19 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/3] mac80211: consider only relevant vifs for radar_required calculation
-Date: Wed,  7 Jan 2015 17:50:10 +0200
-Message-Id: <1420645811-17877-2-git-send-email-eliad@wizery.com> (sfid-20150107_165026_282798_F372C15C)
-In-Reply-To: <1420645811-17877-1-git-send-email-eliad@wizery.com>
-References: <1420645811-17877-1-git-send-email-eliad@wizery.com>
+	Tue, 6 Jan 2015 17:03:08 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2] brcmfmac: get rid of duplicate SDIO device identifiers
+Date: Tue, 6 Jan 2015 23:02:54 +0100
+Message-ID: <1420581774-32763-1-git-send-email-arend@broadcom.com> (sfid-20150106_230311_977302_E834B57D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ctx->conf.radar_enabled should reflect whether radar
-detection is enabled for the channel context.
+Instead of defining SDIO device identifier in brcm80211 code use
+the defintions in linux/mmc/sdio_ids.h directly.
 
-When calculating it, make it consider only the vifs
-that have this context assigned (instead of all the
-vifs).
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-v1->v2: 
-* add a new function (instead of replacing existing one)
-* init ctx->conf.radar_enabled to false
+Resend patch rebased on:
 
- net/mac80211/chan.c | 32 ++++++++++++++++++++++++++++++--
- 1 file changed, 30 insertions(+), 2 deletions(-)
+  commit 8a40084e7bb8f0fd32a301a64fd869726516a1df
+  Author: Maithili Hinge <maithili@marvell.com>
+  Date:   Wed Dec 31 02:36:46 2014 -0800
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index f5d08d5..28da444 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -406,6 +406,34 @@ bool ieee80211_is_radar_required(struct ieee80211_local *local)
- 	return false;
+      mwifiex: Add support for wowlan disconnect
+
+Regards,
+Arend
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   | 22 +++++++++++-----------
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c     |  2 +-
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   | 13 -------------
+ 3 files changed, 12 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index dffd9e4..00ba90b8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -996,20 +996,20 @@ out:
  }
  
-+static bool
-+ieee80211_chanctx_radar_required(struct ieee80211_local *local,
-+				 struct ieee80211_chanctx *ctx)
-+{
-+	struct ieee80211_chanctx_conf *conf = &ctx->conf;
-+	struct ieee80211_sub_if_data *sdata;
-+	bool required = false;
-+
-+	lockdep_assert_held(&local->chanctx_mtx);
-+	lockdep_assert_held(&local->mtx);
-+
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
-+		if (!ieee80211_sdata_running(sdata))
-+			continue;
-+		if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf)
-+			continue;
-+		if (!sdata->radar_required)
-+			continue;
-+
-+		required = true;
-+		break;
-+	}
-+	rcu_read_unlock();
-+
-+	return required;
-+}
-+
- static struct ieee80211_chanctx *
- ieee80211_alloc_chanctx(struct ieee80211_local *local,
- 			const struct cfg80211_chan_def *chandef,
-@@ -425,7 +453,7 @@ ieee80211_alloc_chanctx(struct ieee80211_local *local,
- 	ctx->conf.rx_chains_static = 1;
- 	ctx->conf.rx_chains_dynamic = 1;
- 	ctx->mode = mode;
--	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
-+	ctx->conf.radar_enabled = false;
- 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ #define BRCMF_SDIO_DEVICE(dev_id)	\
+-	{SDIO_DEVICE(BRCM_SDIO_VENDOR_ID_BROADCOM, dev_id)}
++	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, dev_id)}
  
- 	return ctx;
-@@ -570,7 +598,7 @@ static void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
- 	/* for ieee80211_is_radar_required */
- 	lockdep_assert_held(&local->mtx);
+ /* devices we support, null terminated */
+ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43143_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43241_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4329_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4330_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4334_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43340_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43341_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_43362_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4335_4339_DEVICE_ID),
+-	BRCMF_SDIO_DEVICE(BRCM_SDIO_4354_DEVICE_ID),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43143),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43241),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4329),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4330),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4334),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43340),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43341),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43362),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4335_4339),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
+ 	{ /* end: all zeroes */ }
+ };
+ MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 551da35..99a3776 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -3816,7 +3816,7 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
+ 	u32 val, rev;
  
--	radar_enabled = ieee80211_is_radar_required(local);
-+	radar_enabled = ieee80211_chanctx_radar_required(local, chanctx);
+ 	val = brcmf_sdiod_regrl(sdiodev, addr, NULL);
+-	if (sdiodev->func[0]->device == BRCM_SDIO_4335_4339_DEVICE_ID &&
++	if (sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 &&
+ 	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
+ 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
+ 		if (rev >= 2) {
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index 00215ef..2124a17 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -22,7 +22,6 @@
  
- 	if (radar_enabled == chanctx->conf.radar_enabled)
- 		return;
+ #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
+ #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
+-#define BRCM_SDIO_VENDOR_ID_BROADCOM	SDIO_VENDOR_ID_BROADCOM
+ 
+ /* Chipcommon Core Chip IDs */
+ #define BRCM_CC_43143_CHIP_ID		43143
+@@ -46,18 +45,6 @@
+ #define BRCM_CC_43570_CHIP_ID		43570
+ #define BRCM_CC_43602_CHIP_ID		43602
+ 
+-/* SDIO Device IDs */
+-#define BRCM_SDIO_43143_DEVICE_ID	BRCM_CC_43143_CHIP_ID
+-#define BRCM_SDIO_43241_DEVICE_ID	BRCM_CC_43241_CHIP_ID
+-#define BRCM_SDIO_4329_DEVICE_ID	BRCM_CC_4329_CHIP_ID
+-#define BRCM_SDIO_4330_DEVICE_ID	BRCM_CC_4330_CHIP_ID
+-#define BRCM_SDIO_4334_DEVICE_ID	BRCM_CC_4334_CHIP_ID
+-#define BRCM_SDIO_43340_DEVICE_ID	BRCM_CC_43340_CHIP_ID
+-#define BRCM_SDIO_43341_DEVICE_ID	43341
+-#define BRCM_SDIO_43362_DEVICE_ID	BRCM_CC_43362_CHIP_ID
+-#define BRCM_SDIO_4335_4339_DEVICE_ID	BRCM_CC_4335_CHIP_ID
+-#define BRCM_SDIO_4354_DEVICE_ID	BRCM_CC_4354_CHIP_ID
+-
+ /* USB Device IDs */
+ #define BRCM_USB_43143_DEVICE_ID	0xbd1e
+ #define BRCM_USB_43236_DEVICE_ID	0xbd17
 -- 
-1.8.5.2.229.g4448466.dirty
+1.9.1
 
