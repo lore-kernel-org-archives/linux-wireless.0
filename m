@@ -1,82 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20433 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751219AbbAOIJf (ORCPT
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:58163 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019AbbAFP6X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 03:09:35 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
-	<21685.35179.110539.780864@gargle.gargle.HOWL>
-	<87bnm01ojf.fsf@kamboji.qca.qualcomm.com>
-	<21687.29026.962216.812998@gargle.gargle.HOWL>
-Date: Thu, 15 Jan 2015 10:09:22 +0200
-In-Reply-To: <21687.29026.962216.812998@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Thu, 15 Jan 2015 13:20:58 +0530")
-Message-ID: <87vbk8zcr1.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_090939_139338_E5F7A85C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 6 Jan 2015 10:58:23 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 00/11 V2] rtlwifi: A set of patches that simplify the drivers
+Date: Tue,  6 Jan 2015 09:58:01 -0600
+Message-Id: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165950_068285_8F0C4579)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+Happy New Year.
 
-> Kalle Valo wrote:
->> Did you read at all what I wrote above? For example, what if we later
->> don't actually use ATH10K_HTT_MAX_NUM_REFILL anymore?
->> 
->> And the fundamental problem is that I still don't know what fill value
->> you think is the best to use here, and that means neither will the
->> users. That's why the values need to be within ath10k, not expose driver
->> internals and use some magic numbers which are not available anywhere.
->
-> What magic numbers ?
->
-> How is 16 less a magic number than 128 or 96 or the original 1000 ?
+This set of patches, which are intended for the 3.20 stream, are intended to
+simplify the drivers. In particular, each of them has a separate routine that
+initilizes the dynamic power manipulation variables. Ten of these patches convert
+the drivers to use a common copy of this code. The other patch updates the
+parameter descriptions of rtl8723be to clarify usage.
 
-Magic number for the _user_. With an user I mean an engineer installing
-ath10k to his device/distro/whatever.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-Of course an ath10k developer will understand the internal numbers
-inside out, but we are not here talking about ath10k developers.
+V2 - only patch 02/11 is changed to fix the problem noted by Sergei Shylyov
+     <sergei.shtylyov@cogentembedded.com> concerning a line that was dropped.
 
->> We are not limitting anything more. That's not any different from what
->> your patch does, just that the parameter name is different and the user
->> doesn't have direct access to the internal parameter. Let me explain a
->> bit more how that would work in this HTT fill case:
->> 
->> profile 0 (auto):
->> profile 1 (slow):
->>         htt_fill_size = ATH10K_HTT_MAX_NUM_REFILL
->>         break:
->> profile 2 (fast):
->>         htt_fill_size = 77 /* or whatever */
->>         break;
->> 
->> So in this method the user can still choose optimal settings for a
->> certain platform, I assume AP148 in this case, and not know about driver
->> internals. And if there are more parameters we need to change in the
->> future, we can use the same modparam to change that as well.
->
-> You seem to be fixated on some imaginary user that is going to be
-> confused by a module parameter.
+Larry Finger (11):
+  rtlwifi: Unify variable naming for all drivers
+  rtlwifi: rtl8723be: Improve modinfo output
+  rtlwifi: Create new routine to initialize the DM tables
+  rtlwifi: rtl8188ee: Convert driver to use the common DM table init
+    routine
+  rtlwifi: rtl8192c-common: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8192de: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8192ee: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8723ae: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8723be: Convert driver to use common DM table
+    initialization
+  rtlwifi: rtl8821ae: Convert driver to use common DM table
+    initialization
+  rtlwifi: Move macro definitions to core
 
-Imaginary? You should do some IT support sometime to see how it really
-is like there :) People have even problems installing firmware images.
-
-> I don't see how adding more complexity by adding profiles and such
-> is going to make a user less confused.
-
-Because it's easy to document three values, or actually two in this
-case. I STILL don't know what values you think people should use with
-the htt_fill parameter.
-
-But of course I would prefer that there would be no need to configure
-any module parameters at all and ath10k would work in optimal speed out
-of box. That's what we should strive for.
+ drivers/net/wireless/rtlwifi/core.c               | 37 +++++++++++++++
+ drivers/net/wireless/rtlwifi/core.h               | 41 ++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.c       | 36 ++------------
+ drivers/net/wireless/rtlwifi/rtl8188ee/dm.h       | 41 ----------------
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 45 ++++--------------
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h | 38 ---------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.c       |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.h       | 13 -----
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 33 ++-----------
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.h       | 38 ---------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.c       | 55 ++++++---------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/dm.h       | 16 -------
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |  7 +--
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.h       | 28 -----------
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.c       | 42 ++++------------
+ drivers/net/wireless/rtlwifi/rtl8723ae/dm.h       | 38 ---------------
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.c       | 55 ++++++---------------
+ drivers/net/wireless/rtlwifi/rtl8723be/dm.h       | 33 -------------
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c       | 11 +++--
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 58 +++++++----------------
+ drivers/net/wireless/rtlwifi/rtl8821ae/dm.h       | 41 ----------------
+ drivers/net/wireless/rtlwifi/wifi.h               |  2 -
+ 22 files changed, 157 insertions(+), 552 deletions(-)
 
 -- 
-Kalle Valo
+2.1.2
+
