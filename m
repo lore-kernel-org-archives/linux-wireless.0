@@ -1,30 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:57722 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbbA2BVq (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:43113 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756041AbbAFP63 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:21:46 -0500
-MIME-Version: 1.0
-In-Reply-To: <1422424187-19059-1-git-send-email-pramod.gurav@smartplayin.com>
-References: <1422424187-19059-1-git-send-email-pramod.gurav@smartplayin.com>
-Date: Wed, 28 Jan 2015 08:13:54 +0100
-Message-ID: <CACna6rw5uqB=KZjcao8kLvQ0rgCuqOo7KkyReMF3ZoT0ZH4U=Q@mail.gmail.com> (sfid-20150129_045048_442980_F3DF079B)
-Subject: Re: [PATCH RESEND] ssb: Fix Sparse error in main
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Pramod Gurav <pramod.gurav@smartplayin.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	John Linville <linville@tuxdriver.com>,
-	Michael Buesch <m@bues.ch>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 6 Jan 2015 10:58:29 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 06/11 V2] rtlwifi: rtl8192de: Convert driver to use common DM table initialization
+Date: Tue,  6 Jan 2015 09:58:07 -0600
+Message-Id: <1420559892-12384-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165855_647653_0E44C845)
+In-Reply-To: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 January 2015 at 06:49, Pramod Gurav <pramod.gurav@smartplayin.com> wrote:
-> This change fixes below sparse error:
-> drivers/ssb/main.c:94:16: warning: symbol 'ssb_sdio_func_to_bus'
-> was not declared. Should it be static?
+This patch converts driver rtl8192de to use the common routine to
+initialize dm_digtable.
 
-Seems like it was never used. Looks OK.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+
+V2 - unchanged from V1
+---
+
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c | 32 +++--------------------------
+ 1 file changed, 3 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+index 75643ab..a1be5a6 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+@@ -156,34 +156,6 @@ static const u8 cckswing_table_ch14[CCK_TABLE_SIZE][8] = {
+ 	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00}     /* 32, -16.0dB */
+ };
+ 
+-static void rtl92d_dm_diginit(struct ieee80211_hw *hw)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	struct dig_t *de_digtable = &rtlpriv->dm_digtable;
+-
+-	de_digtable->dig_enable_flag = true;
+-	de_digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
+-	de_digtable->cur_igvalue = 0x20;
+-	de_digtable->pre_igvalue = 0x0;
+-	de_digtable->cursta_cstate = DIG_STA_DISCONNECT;
+-	de_digtable->presta_cstate = DIG_STA_DISCONNECT;
+-	de_digtable->curmultista_cstate = DIG_MULTISTA_DISCONNECT;
+-	de_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
+-	de_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
+-	de_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
+-	de_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
+-	de_digtable->rx_gain_max = DM_DIG_FA_UPPER;
+-	de_digtable->rx_gain_min = DM_DIG_FA_LOWER;
+-	de_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
+-	de_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
+-	de_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
+-	de_digtable->pre_cck_pd_state = CCK_PD_STAGE_LOWRSSI;
+-	de_digtable->cur_cck_pd_state = CCK_PD_STAGE_MAX;
+-	de_digtable->large_fa_hit = 0;
+-	de_digtable->recover_cnt = 0;
+-	de_digtable->forbidden_igi = DM_DIG_FA_LOWER;
+-}
+-
+ static void rtl92d_dm_false_alarm_counter_statistics(struct ieee80211_hw *hw)
+ {
+ 	u32 ret_value;
+@@ -1306,7 +1278,9 @@ void rtl92d_dm_init(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 
+ 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
+-	rtl92d_dm_diginit(hw);
++	rtl_dm_diginit(hw, 0x20);
++	rtlpriv->dm_digtable.rx_gain_max = DM_DIG_FA_UPPER;
++	rtlpriv->dm_digtable.rx_gain_min = DM_DIG_FA_LOWER;
+ 	rtl92d_dm_init_dynamic_txpower(hw);
+ 	rtl92d_dm_init_edca_turbo(hw);
+ 	rtl92d_dm_init_rate_adaptive_mask(hw);
+-- 
+2.1.2
+
