@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58794 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59203 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752973AbbAFLIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 06:08:43 -0500
-Message-ID: <1420542520.1966.22.camel@sipsolutions.net> (sfid-20150106_120846_288398_08EA776F)
-Subject: Re: [PATCH v2 1/2] cfg80211: Add API to change the indoor
- regulatory setting
+	id S1755038AbbAFMPv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 07:15:51 -0500
+Message-ID: <1420546548.1966.26.camel@sipsolutions.net> (sfid-20150106_131556_262629_EDF84BA3)
+Subject: pull-request: mac80211 2015-01-06
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, mcgrof@suse.com,
-	Arik Nemtsov <arik@wizery.com>
-Date: Tue, 06 Jan 2015 12:08:40 +0100
-In-Reply-To: <1420519942-16109-1-git-send-email-ilan.peer@intel.com> (sfid-20150106_115554_035119_41B9E557)
-References: <1420519942-16109-1-git-send-email-ilan.peer@intel.com>
-	 (sfid-20150106_115554_035119_41B9E557)
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 06 Jan 2015 13:15:48 +0100
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 23:52 -0500, Ilan Peer wrote:
-> As the operating environment of a device can change, add
-> API for user space to indicate a change of indoor settings.
-> In addition modify the handling of the indoor processing as
-> follows:
-> 
-> 1. Directly update the indoor setting without wrapping it as a
->    regulatory request.
-> 2. Track the socket on which the indoor hint is issued, and reset
->    indoor setting if the socket was released.
+Here's just a single fix - a revert of a patch that broke the
+p54 and cw2100 drivers (arguably due to bad assumptions there.)
+Since this affects kernels since 3.17, I decided to revert for
+now and we'll revisit this optimisation properly for -next.
 
-This probably needs to be wrapped with a request flag from userspace to
-have the new behaviour - but if not then at least explain why not?
 
+Also -- happy New Year, and sorry about the genl issue :(
+
+I'm still a bit confused about whether you wanted the pull request with
+the text in the email or in the tag, or branch, or something - I
+interpreted what you said to Kalle differently to what you said to me.
+I've duplicated it for now :)
+
+Thanks,
 johannes
+
+The following changes since commit 28a9bc68124c319b2b3dc861e80828a8865fd1ba:
+
+  mac80211: free management frame keys when removing station (2014-12-17 14:00:17 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-01-06
+
+for you to fetch changes up to 1e359a5de861a57aa04d92bb620f52a5c1d7f8b1:
+
+  Revert "mac80211: Fix accounting of the tailroom-needed counter" (2015-01-05 10:33:46 +0100)
+
+----------------------------------------------------------------
+Here's just a single fix - a revert of a patch that broke the
+p54 and cw2100 drivers (arguably due to bad assumptions there.)
+Since this affects kernels since 3.17, I decided to revert for
+now and we'll revisit this optimisation properly for -next.
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      Revert "mac80211: Fix accounting of the tailroom-needed counter"
+
+ include/net/mac80211.h |  7 ++-----
+ net/mac80211/key.c     | 12 +++++++++---
+ 2 files changed, 11 insertions(+), 8 deletions(-)
+
 
