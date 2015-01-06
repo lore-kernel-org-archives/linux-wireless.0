@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gn237.zone.eu ([217.146.67.237]:36810 "EHLO gn237.zone.eu"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58595 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751427AbbA0G6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 01:58:09 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH 5/7] rtlwifi: Remove unused defines from cam.h
-Date: Tue, 27 Jan 2015 08:49:31 +0200
-Message-Id: <1422341373-22196-5-git-send-email-plaes@plaes.org> (sfid-20150127_075833_485188_686737D4)
-In-Reply-To: <1422341373-22196-1-git-send-email-plaes@plaes.org>
-References: <1422341373-22196-1-git-send-email-plaes@plaes.org>
+	id S1752900AbbAFKgA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 05:36:00 -0500
+Message-ID: <1420540556.1966.11.camel@sipsolutions.net> (sfid-20150106_113605_122847_6B6B2E30)
+Subject: Re: [PATCH] cfg80211: add extensible feature flag attribute
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Gautam Kumar Shukla <gautams@broadcom.com>,
+	Avinash Patil <patila@marvell.com>
+Date: Tue, 06 Jan 2015 11:35:56 +0100
+In-Reply-To: <1419350119-29166-1-git-send-email-arend@broadcom.com>
+References: <1419350119-29166-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Priit Laes <plaes@plaes.org>
----
- drivers/net/wireless/rtlwifi/cam.h | 2 --
- 1 file changed, 2 deletions(-)
+On Tue, 2014-12-23 at 16:55 +0100, Arend van Spriel wrote:
+> From: Gautam Kumar Shukla <gautams@broadcom.com>
+> 
+> With the wiphy::features flag being used up this patch adds a
+> new field wiphy::ext_features. Considering extensibility this
+> new field is declared as a byte array. This extensible flag is
+> exposed to user-space by NL80211_ATTR_EXT_FEATURES.
 
-diff --git a/drivers/net/wireless/rtlwifi/cam.h b/drivers/net/wireless/rtlwifi/cam.h
-index 3550808..e2e647d 100644
---- a/drivers/net/wireless/rtlwifi/cam.h
-+++ b/drivers/net/wireless/rtlwifi/cam.h
-@@ -28,13 +28,11 @@
- 
- #define CAM_CONTENT_COUNT				8
- 
--#define CFG_DEFAULT_KEY					BIT(5)
- #define CFG_VALID					BIT(15)
- 
- #define PAIRWISE_KEYIDX					0
- #define CAM_PAIRWISE_KEY_POSITION			4
- 
--#define	CAM_CONFIG_USEDK				1
- #define	CAM_CONFIG_NO_USEDK				0
- 
- void rtl_cam_reset_all_entry(struct ieee80211_hw *hw);
--- 
-2.2.2
+Since it's quite clear that *somebody* will soon use this, I've applied
+it now.
+
+Thanks.
+
+johannes
 
