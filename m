@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62937 "EHLO mga11.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58728 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751960AbbAMMSP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 07:18:15 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@adurom.com" <kvalo@adurom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2015-01-13
-Date: Tue, 13 Jan 2015 12:17:53 +0000
-Message-ID: <1421151474.2601.10.camel@egrumbacBox> (sfid-20150113_131818_409766_87C75E46)
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S932158AbbAFK4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 05:56:09 -0500
+Message-ID: <1420541766.1966.18.camel@sipsolutions.net> (sfid-20150106_115615_591316_7E790C4F)
+Subject: Re: [PATCH 2/2] cfg80211: avoid reg-hints in self-managed only
+ systems
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Tue, 06 Jan 2015 11:56:06 +0100
+In-Reply-To: <1420112563-3981-2-git-send-email-arik@wizery.com> (sfid-20150101_124249_204906_78CCC525)
+References: <1420112563-3981-1-git-send-email-arik@wizery.com>
+	 <1420112563-3981-2-git-send-email-arik@wizery.com>
+	 (sfid-20150101_124249_204906_78CCC525)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNClRoaXMgaXMgYSBwdWxsIHJlcXVlc3QgZm9yIDMuMTkuIEFzIHVzdWFsLCB0
-aGUgZGVzY3JpcHRpb24gaXMgaW4gdGhlIHRhZw0KaXRzZWxmLiBUaGlzIHRpbWUsIHdlIGFyZSBh
-bHJlYWR5IGluIC1yYzQsIG5vIGdyYXkgYXJlYSBwYXRjaGVzLiBUaGVzZQ0KYXJlIGFsbCByZWFs
-IGJ1ZyBmaXhlcy4NCkxldCBtZSBrbm93IGlmIHlvdSBoYXZlIGlzc3VlcyB3aXRoIHRoaXMuDQoN
-CkJUVyAtIGlmIHlvdSB3aXNoLCBJIGNhbiBhZGQgdGhlIGRpZmYgaW4gdGhlIHB1bGwgcmVxdWVz
-dCBmb3IgLXJjIGN5Y2xlLg0KSm9obiB1c2VkIHRvIGRvIHRoYXQuIExldCBtZSBrbm93IGlmIHlv
-dSB3aXNoIG1lIHRvIGRvIHNvLg0KDQpUaGFua3MhDQoNClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBz
-aW5jZSBjb21taXQgOTFmNDkxZmQ3ZGZiYWU2ZTVjZTU4ODcyOTM3MjNkODE4YWRmN2Q1ZDoNCg0K
-ICBpd2x3aWZpOiBidW1wIGZpcm13YXJlIEFQSSBmb3IgbXZtIGRldmljZXMgdG8gMTIgKDIwMTUt
-MDEtMDUgMTE6MDI6MzcgKzAyMDApDQoNCmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0
-b3J5IGF0Og0KDQogIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwv
-Z2l0L2l3bHdpZmkvaXdsd2lmaS1maXhlcy5naXQgdGFncy9pd2x3aWZpLWZvci1rYWxsZS0yMDE1
-LTAxLTEzDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byA5YjNiNDNkOGQxMzAwYzM2
-YmE1OTQ1YzEyZmQ1MDU0MDllYWY0ODA3Og0KDQogIGl3bHdpZmk6IG12bTogc2V0IHRoZSB0eCBj
-bWQgdGlkIGZvciBCQVIgZnJhbWUgY29ycmVjdGx5ICgyMDE1LTAxLTEzIDA4OjUzOjIzICswMjAw
-KQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tDQoqIEEgZml4IGZvciBzY2FuIHRoYXQgZml4ZXMgYSBmaXJtd2FyZSBhc3Nl
-cnRpb24NCiogQSBmaXggdGhhdCBpbXByb3ZlcyByb2FtaW5nIGJlaGF2aW9yLiBTYW1lIGZpeCBo
-YXMgYmVlbiB0ZXN0ZWQgZm9yDQogIGEgd2hpbGUgaW4gaXdsZHZtLiBUaGlzIGlzIGEgYml0IG9m
-IGEgd29yayBhcm91bmQsIGJ1dCB0aGUgcmVhbCBmaXgNCiAgc2hvdWxkIGJlIGluIG1hYzgwMjEx
-IGFuZCB3aWxsIGNvbWUgbGF0ZXIuDQoqIEEgZml4IGZvciBCQVJzIHRoYXQgYXZvaWRzIGEgV0FS
-TklORy4NCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQ0KRGF2aWQgU3BpbmFkZWwgKDEpOg0KICAgICAgaXdsd2lmaTogbXZt
-OiBmaXggRUJTIG9uIHNpbmdsZSBzY2FuDQoNCkVtbWFudWVsIEdydW1iYWNoICgxKToNCiAgICAg
-IGl3bHdpZmk6IG12bTogZHJvcCBub24gVk8gZnJhbWVzIHdoZW4gZmx1c2hpbmcNCg0KRXlhbCBT
-aGFwaXJhICgxKToNCiAgICAgIGl3bHdpZmk6IG12bTogc2V0IHRoZSB0eCBjbWQgdGlkIGZvciBC
-QVIgZnJhbWUgY29ycmVjdGx5DQoNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1m
-dy1maWxlLmggICAgIHwgIDIgKysNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9m
-dy1hcGktc2Nhbi5oIHwgIDcgKysrKystLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-bXZtL21hYzgwMjExLmMgICAgfCAyMCArKysrKysrKystLS0tLS0tLS0tLQ0KIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3NjYW4uYyAgICAgICAgfCA0NiArKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
-d2lmaS9tdm0vdHguYyAgICAgICAgICB8IDExICsrKysrKysrKy0tDQogNSBmaWxlcyBjaGFuZ2Vk
-LCA1OSBpbnNlcnRpb25zKCspLCAyNyBkZWxldGlvbnMoLSkNCg0K
+On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
+> When a system contains only self-managed regulatory devices all hints
+> from the regulatory core are ignored. Stop hint processing early in this
+> case. These systems usually don't have CRDA deployed, which results in
+> endless (irrelevent) logs of the form:
+> cfg80211: Calling CRDA to update world regulatory domain
+
+Applied.
+
+johannes
+
