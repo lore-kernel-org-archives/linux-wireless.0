@@ -1,102 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:34848 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762646AbbA3RXI (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:53566 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752019AbbAFP6Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 12:23:08 -0500
-Received: by mail-wg0-f54.google.com with SMTP id b13so27998112wgh.13
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 09:23:07 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 4/4] bcma: enable support for PCIe Gen 2 host devices
-Date: Fri, 30 Jan 2015 18:22:46 +0100
-Message-Id: <1422638566-7593-4-git-send-email-zajec5@gmail.com> (sfid-20150130_182313_646444_3EBE401A)
-In-Reply-To: <1422638566-7593-1-git-send-email-zajec5@gmail.com>
-References: <1422638566-7593-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 6 Jan 2015 10:58:25 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, sergei.shtylyov@cogentembedded.com
+Subject: [PATCH 02/11 V2] rtlwifi: rtl8723be: Improve modinfo output
+Date: Tue,  6 Jan 2015 09:58:03 -0600
+Message-Id: <1420559892-12384-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165934_826173_C505DC2F)
+In-Reply-To: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+The description of the power-save variables for this driver is not as
+clear as for the others. The wording is changed to match the others.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/bcma/bcma_private.h |  1 +
- drivers/bcma/host_pci.c     | 15 ++++++++++++++-
- drivers/bcma/main.c         |  2 +-
- 3 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 3692912..29565e3 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -26,6 +26,7 @@ bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
- 		     int timeout);
- void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
- void bcma_init_bus(struct bcma_bus *bus);
-+void bcma_unregister_cores(struct bcma_bus *bus);
- int bcma_bus_register(struct bcma_bus *bus);
- void bcma_bus_unregister(struct bcma_bus *bus);
- int __init bcma_bus_early_register(struct bcma_bus *bus);
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 5fb87a8..a62a2f9 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -213,16 +213,26 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
- 	/* Initialize struct, detect chip */
- 	bcma_init_bus(bus);
- 
-+	/* Scan bus to find out generation of PCIe core */
-+	err = bcma_bus_scan(bus);
-+	if (err)
-+		goto err_pci_unmap_mmio;
-+
-+	if (bcma_find_core(bus, BCMA_CORE_PCIE2))
-+		bus->host_is_pcie2 = true;
-+
- 	/* Register */
- 	err = bcma_bus_register(bus);
- 	if (err)
--		goto err_pci_unmap_mmio;
-+		goto err_unregister_cores;
- 
- 	pci_set_drvdata(dev, bus);
- 
- out:
- 	return err;
- 
-+err_unregister_cores:
-+	bcma_unregister_cores(bus);
- err_pci_unmap_mmio:
- 	pci_iounmap(dev, bus->mmio);
- err_pci_release_regions:
-@@ -283,9 +293,12 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4358) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4360) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4365) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a0) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43b1) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43227) },	/* 0xa8db, BCM43217 (sic!) */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43228) },	/* 0xa8dc */
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 38bde6e..9635f10 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -363,7 +363,7 @@ static int bcma_register_devices(struct bcma_bus *bus)
- 	return 0;
- }
- 
--static void bcma_unregister_cores(struct bcma_bus *bus)
-+void bcma_unregister_cores(struct bcma_bus *bus)
- {
- 	struct bcma_device *core, *tmp;
- 
--- 
-1.8.4.5
+V2 - only patch 02/11 is changed to fix the problem noted by Sergei Shylyov
+     <sergei.shtylyov@cogentembedded.com> concerning a line that was dropped.
+---
 
+ drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+Index: wireless-drivers/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+===================================================================
+--- wireless-drivers.orig/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
++++ wireless-drivers/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
+@@ -386,12 +386,14 @@ module_param_named(swlps, rtl8723be_mod_
+ module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
+ module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
+ 		   bool, 0444);
+-MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
+-MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
+-MODULE_PARM_DESC(fwlps, "using linked fw control power save (default 1 is open)\n");
++MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
++MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
++MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
++MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
+ MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+-MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
++MODULE_PARM_DESC(disable_watchdog,
++		 "Set to 1 to disable the watchdog (default 0)\n");
+ 
+ static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
+ 
