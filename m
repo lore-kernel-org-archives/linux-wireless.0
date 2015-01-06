@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60845 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752134AbbA0X2j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 18:28:39 -0500
-Date: Wed, 28 Jan 2015 00:28:36 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Robert Dolca <robert.dolca@intel.com>
-Cc: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Berg Johannes <johannes.berg@intel.com>,
-	Clement Perrochaud <clement.perrochaud@nxp.com>
-Subject: Re: [PATCH v2 2/2] NFC: Add ACPI support for NXP PN544
-Message-ID: <20150127232836.GB32667@ribalta.mp.intel.com> (sfid-20150128_002858_073176_D27EF725)
-References: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
- <1422270817-10950-3-git-send-email-robert.dolca@intel.com>
+Received: from smtp.codeaurora.org ([198.145.11.231]:48937 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754572AbbAFIKd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 03:10:33 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 23/23 V2 for 3.19]  rtlwifi: Fix error when accessing unmapped memory in skb
+References: <1419711457-21469-1-git-send-email-Larry.Finger@lwfinger.net>
+	<87a928726w.fsf@kamboji.qca.qualcomm.com>
+	<549FA005.7050802@lwfinger.net>
+	<87387p4m89.fsf@kamboji.qca.qualcomm.com>
+	<54AB0145.3070601@lwfinger.net>
+Date: Tue, 06 Jan 2015 10:10:26 +0200
+In-Reply-To: <54AB0145.3070601@lwfinger.net> (Larry Finger's message of "Mon,
+	05 Jan 2015 15:25:25 -0600")
+Message-ID: <871tn81g99.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_091036_344663_B9AF5BCE)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422270817-10950-3-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Robert,
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-On Mon, Jan 26, 2015 at 01:13:37PM +0200, Robert Dolca wrote:
-> @@ -1022,9 +1127,12 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
->  			    PN544_I2C_FRAME_HEADROOM, PN544_I2C_FRAME_TAILROOM,
->  			    PN544_HCI_I2C_LLC_MAX_PAYLOAD,
->  			    pn544_hci_i2c_fw_download, &phy->hdev);
-> -	if (r < 0)
-> +	if (r < 0) {
-> +		nfc_err(&client->dev, "HCI Probing error\n");
->  		goto err_hci;
-> +	}
->  
-> +	nfc_info(&client->dev, "NFC I2C driver loaded\n");
->  	return 0;
-This is unrelated to this patch, so I removed that part.
+> On 01/05/2015 03:20 AM, Kalle Valo wrote:
+>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>>
+>>>> 23/23? Where are patches 1-22? I don't see them in patchwork:
+>>>>
+>>>> https://patchwork.kernel.org/project/linux-wireless/list/
+>>>
+>>> Sorry. I forgot to edit the subject line. To get git to format that
+>>> one patch, I had to generate a total of 23. There is only 1 of 1 that
+>>> will be submitted.
+>>
+>> Ok, I was just worried that I had missed the other 22. But you can
+>> actually get a single commit like this so no editing is needed:
+>>
+>> git format-patch -1 2a3e60d37fc6
+>
+> Thanks for the git lesson. Some week^H^H^H^Hmonth I should learn to
+> use more parts of that tool, but you know how that goes.
 
-Cheers,
-Samuel.
+I have the exactly same situation with python :)
+
+> I do have an additional question on procedure. If I submit a number of
+> patches in a series, but find that only one of the series needs a V2.
+> Is it better to resubmit all N of them, or only just the one that
+> needs changing?
+
+Please resubmit the whole series. It's just so much easier and more
+reliable for me to handle changes that way.
+
+-- 
+Kalle Valo
