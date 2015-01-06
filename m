@@ -1,44 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:36543 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbbANCX4 (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:34501 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011AbbAFDx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 21:23:56 -0500
-Received: by mail-pd0-f179.google.com with SMTP id fp1so6834247pdb.10
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 18:23:56 -0800 (PST)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: me@bobcopeland.com, Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH] mesh: Skip STA expiration on user_mpm mode
-Date: Wed, 14 Jan 2015 11:23:09 +0900
-Message-Id: <1421202189-4020-1-git-send-email-masashi.honma@gmail.com> (sfid-20150114_032400_064529_7F0D8181)
+	Mon, 5 Jan 2015 22:53:27 -0500
+Received: by mail-pa0-f47.google.com with SMTP id kq14so30080083pab.20
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 19:53:26 -0800 (PST)
+Date: Tue, 6 Jan 2015 09:23:19 +0530
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] brcmfmac: Use put_unaligned_le32
+Message-ID: <20150106035319.GA4082@vaishali-Ideapad-Z570> (sfid-20150106_045332_129360_16BDF6D2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mesh STA expiration processing works even if user_mpm mode. This causes
-unexpected STA disconnection.
+This patch introduces the use of function put_unaligned_le32.
 
-This patch skips STA expiration processing on user_mpm mode.
+This is done using Coccinelle and semantic patch used is as follows:
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+@a@
+typedef u32, __le32, uint32_t;
+{u32,__le32,uint32_t} e32;
+identifier tmp;
+expression ptr;
+expression y,e;
+type T;
+type T;
+@@
+
+- tmp = cpu_to_le32(y);
+
+<+... when != tmp
+(
+- memcpy(ptr, (T)&tmp, \(4\|sizeof(u32)\|sizeof(__le32)\|sizeof(uint32_t)\|s
++ put_unaligned_le32(y,ptr);
+|
+- memcpy(ptr, (T)&tmp, ...);
++ put_unaligned_le32(y,ptr);
+)
+...+>
+? tmp = e
+
+@@ type T; identifier a.tmp; @@
+
+- T tmp;
+...when != tmp
+
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
 ---
- net/mac80211/mesh.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0c8b2a7..50174fd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -574,7 +574,8 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	u32 changed;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 28fa25b..6d37618 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -3550,17 +3550,12 @@ static u32
+ brcmf_vndr_ie(u8 *iebuf, s32 pktflag, u8 *ie_ptr, u32 ie_len, s8 *add_del_cmd)
+ {
  
--	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
-+	if (!ifmsh->user_mpm)
-+		ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
- 	mesh_path_expire(sdata);
+-	__le32 iecount_le;
+-	__le32 pktflag_le;
+-
+ 	strncpy(iebuf, add_del_cmd, VNDR_IE_CMD_LEN - 1);
+ 	iebuf[VNDR_IE_CMD_LEN - 1] = '\0';
  
- 	changed = mesh_accept_plinks_update(sdata);
+-	iecount_le = cpu_to_le32(1);
+-	memcpy(&iebuf[VNDR_IE_COUNT_OFFSET], &iecount_le, sizeof(iecount_le));
++	put_unaligned_le32(1, &iebuf[VNDR_IE_COUNT_OFFSET]);
+ 
+-	pktflag_le = cpu_to_le32(pktflag);
+-	memcpy(&iebuf[VNDR_IE_PKTFLAG_OFFSET], &pktflag_le, sizeof(pktflag_le));
++	put_unaligned_le32(pktflag, &iebuf[VNDR_IE_PKTFLAG_OFFSET]);
+ 
+ 	memcpy(&iebuf[VNDR_IE_VSIE_OFFSET], ie_ptr, ie_len);
+ 
 -- 
-2.1.0
+1.9.1
 
