@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:39929 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755139AbbAHLMw (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:64662 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753121AbbAFOFE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 06:12:52 -0500
-Received: by mail-wg0-f48.google.com with SMTP id l2so1970285wgh.7
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:12:51 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 0/5] ath10k: implement beacon offload
-Date: Thu,  8 Jan 2015 12:12:25 +0100
-Message-Id: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com> (sfid-20150108_121255_919395_363D4C7A)
+	Tue, 6 Jan 2015 09:05:04 -0500
+Received: by mail-wi0-f174.google.com with SMTP id h11so5407361wiw.13
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 06:05:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1420552744.1966.31.camel@sipsolutions.net>
+References: <1420112563-3981-1-git-send-email-arik@wizery.com>
+ <1420112563-3981-2-git-send-email-arik@wizery.com> <1420541766.1966.18.camel@sipsolutions.net>
+ <1420552744.1966.31.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 6 Jan 2015 16:04:47 +0200
+Message-ID: <CA+XVXfcAW19fzEpAV8R=hDbBdXEgJmrT8m4mqFg8tUhdx1XvKQ@mail.gmail.com> (sfid-20150106_150510_381710_0C6B011B)
+Subject: Re: [PATCH 2/2] cfg80211: avoid reg-hints in self-managed only systems
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, Jan 6, 2015 at 3:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2015-01-06 at 11:56 +0100, Johannes Berg wrote:
+>> On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
+>> > When a system contains only self-managed regulatory devices all hints
+>> > from the regulatory core are ignored. Stop hint processing early in this
+>> > case. These systems usually don't have CRDA deployed, which results in
+>> > endless (irrelevent) logs of the form:
+>> > cfg80211: Calling CRDA to update world regulatory domain
+>>
+>> Applied.
+>
+> I take that back - dropped again. This was causing spurious messages in
+> the hwsim test run VM, saying something like "couldn't set reg domain:
+> -7". Maybe at that point not a single wiphy existed?
 
-New wmi-tlv firmware will support beacon/presp
-offloading. This patchset adds appropriate
-support.
+Interesting. I guess I should fix this to only drop the request in
+case there's at least one self-managed wiphy.
 
-These patches of mine were originally posted by
-Bartosz before christmas after I went on my
-holidays.
-
-v2:
- * add a comment in patch 5
-
-
-Michal Kazior (5):
-  ath10k: implement new beacon tx status event
-  ath10k: implement beacon template command
-  ath10k: implement prb tmpl wmi command
-  ath10k: implement p2p bcn ie command
-  ath10k: implement support for ap beacon offloading
-
- drivers/net/wireless/ath/ath10k/mac.c     | 162 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  57 +++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 206 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  34 +++++
- drivers/net/wireless/ath/ath10k/wmi.c     |   9 ++
- 5 files changed, 468 insertions(+)
-
--- 
-1.8.5.3
-
+Arik
