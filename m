@@ -1,159 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:4245 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758247AbbA3K3e (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42822 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932821AbbAFTpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 05:29:34 -0500
-Message-ID: <54CB5D08.2070906@broadcom.com> (sfid-20150130_112949_367376_F514CCDB)
-Date: Fri, 30 Jan 2015 11:29:28 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	<eyalpe@dev.mellanox.co.il>
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com> <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-In-Reply-To: <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Tue, 6 Jan 2015 14:45:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: uninitialized return val in __ieee80211_sta_handle_tspec_ac_params
+Date: Tue,  6 Jan 2015 14:39:33 -0500
+Message-Id: <1420573173-741-1-git-send-email-linville@tuxdriver.com> (sfid-20150106_204527_394658_5FFC7A5D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/15 14:14, Eric Dumazet wrote:
-> On Thu, 2015-01-29 at 12:48 +0100, Michal Kazior wrote:
->> Hi,
->>
->> I'm not subscribed to netdev list and I can't find the message-id so I
->> can't reply directly to the original thread `BW regression after "tcp:
->> refine TSO autosizing"`.
->>
->> I've noticed a big TCP performance drop with ath10k
->> (drivers/net/wireless/ath/ath10k) on 3.19-rc5. Instead of 500mbps I
->> get 250mbps in my testbed.
->>
->> After bisecting I ended up at `tcp: refine TSO autosizing`. Reverting
->> `tcp: refine TSO autosizing` and `tcp: Do not apply TSO segment limit
->> to non-TSO packets` (for conflict free reverts) fixes the problem.
->>
->> My testing setup is as follows:
->>
->>   a) ath10k AP, github.com/kvalo/ath/tree/master 3.19-rc5, w/ reverts
->>   b) ath10k STA connected to (a), github.com/kvalo/ath/tree/master
->> 3.19-rc5, w/ reverts
->>   c) (b) w/o reverts
->>
->> Devices are 3x3 (AP) and 2x2 (Client) and are RF cabled. 11ac@80MHz
->> 2x2 has 866mbps modulation rate. In practice this should deliver
->> ~700mbps of real UDP traffic.
->>
->> Here are some numbers:
->>
->> UDP: (b) ->  (a): 672mbps
->> UDP: (a) ->  (b): 687mbps
->> TCP: (b) ->  (a): 526mbps
->> TCP: (a) ->  (b): 500mbps
->>
->> UDP: (c) ->  (a): 669mbps*
->> UDP: (a) ->  (c): 689mbps*
->> TCP: (c) ->  (a): 240mbps**
->> TCP: (a) ->  (c): 490mbps*
->>
->> * no changes/within error margin
->> ** the performance drop
->>
->> I'm using iperf:
->>    UDP: iperf -i1 -s -u vs iperf -i1 -c XX -u -B 200M -P5 -t 20
->>    TCP: iperf -i1 -s vs iperf -i1 -c XX -P5 -t 20
->>
->> Result values were obtained at the receiver side.
->>
->> Iperf reports a few frames lost and out-of-order at each UDP test
->> start (during first second) but later has no packet loss and no
->> out-of-order. This shouldn't have any effect on a TCP session, right?
->>
->> The device delivers batched up tx/rx completions (no way to change
->> that). I suppose this could be an issue for timing sensitive
->> algorithms. Also keep in mind 802.11n and 802.11ac devices have frame
->> aggregation windows so there's an inherent extra (and non-uniform)
->> latency when compared to, e.g. ethernet devices.
->>
->> The driver doesn't have GRO. I have an internal patch which implements
->> it. It improves overall TCP traffic (more stable, up to 600mbps TCP
->> which is ~100mbps more than without GRO) but the TCP: (c) ->  (a)
->> performance drop remains unaffected regardless.
->>
->> I've tried applying stretch ACK patchset (v2) on both machines and
->> re-run the above tests. I got no measurable difference in performance.
->>
->> I've also run these tests with iwlwifi 7260 (also a 2x2) as (b) and
->> (c). It didn't seem to be affected by the TSO patch at all (it runs at
->> ~360mbps of TCP regardless of the TSO patch).
->>
->> Any hints/ideas?
->>
->
-> Hi Michal
->
-> This patch restored original TSQ behavior, because the 1ms worth of data
-> per flow had totally destroyed TSQ intent.
->
-> vi +630 Documentation/networking/ip-sysctl.txt
->
-> tcp_limit_output_bytes - INTEGER
->          Controls TCP Small Queue limit per tcp socket.
->          TCP bulk sender tends to increase packets in flight until it
->          gets losses notifications. With SNDBUF autotuning, this can
->          result in a large amount of packets queued in qdisc/device
->          on the local machine, hurting latency of other flows, for
->          typical pfifo_fast qdiscs.
->          tcp_limit_output_bytes limits the number of bytes on qdisc
->          or device to reduce artificial RTT/cwnd and reduce bufferbloat.
->          Default: 131072
->
-> This is why I suggested to Eyal Perry to change the TX interrupt
-> mitigation parameters as in :
->
-> ethtool -C eth0 tx-frames 4 rx-frames 4
->
-> With this change and the stretch ack fixes, I got 37Gbps of throughput
-> on a single flow, on a 40Gbit NIC (mlx4)
->
-> If a driver needs to buffer more than tcp_limit_output_bytes=131072 to
-> get line rate, I suggest that you either :
->
-> 1) tweak tcp_limit_output_bytes, but its not practical from a driver.
->
-> 2) change the driver, knowing what are its exact requirements, by
-> removing a fraction of skb->truesize at ndo_start_xmit() time as in :
->
-> if ((skb->destructor == sock_wfree ||
->       skb->restuctor == tcp_wfree)&&
->      skb->sk) {
->      u32 fraction = skb->truesize / 2;
->
->      skb->truesize -= fraction;
->      atomic_sub(fraction,&skb->sk->sk_wmem_alloc);
-> }
+Coverity: CID 1260096
 
-Hi Eric,
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ net/mac80211/mlme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Your suggestions are still based on the fact that you consider wireless 
-networking to be similar to ethernet, but as Michal indicated there are 
-some fundamental differences starting with CSMA/CD versus CSMA/CA. Also 
-the medium conditions are far from comparable. There is no shielding so 
-it needs to deal with interference and dynamically drops the link rate 
-so transmission of packets can take several milliseconds. Then with 11n 
-they came up with aggregation with sends up to 64 packets in a single 
-transmit over the air at worst case 6.5 Mbps (if I am not mistaken). The 
-parameter value for tcp_limit_output_bytes of 131072 means that it 
-allows queuing for about 1ms on a 1Gbps link, but I hope you can see 
-this is not realistic for dealing with all variances of the wireless 
-medium/standard. I suggested this as topic for the wireless workshop in 
-Otawa [1], but I can not attend there. Still hope that there will be 
-some discussions to get more awareness.
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2c36c4765f47..837a406a9dd6 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1643,7 +1643,7 @@ __ieee80211_sta_handle_tspec_ac_params(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	bool ret;
++	bool ret = false;
+ 	int ac;
+ 
+ 	if (local->hw.queues < IEEE80211_NUM_ACS)
+-- 
+2.1.0
 
-Regards,
-Arend
-
-[1] http://mid.gmane.org/54BE9791.1070706@broadcom.com
