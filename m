@@ -1,40 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:43827 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750701AbbAAGw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2015 01:52:58 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Y6Zcq-0007Ro-T9
-	for linux-wireless@vger.kernel.org; Thu, 01 Jan 2015 07:52:53 +0100
-Received: from cpe-67-11-235-53.satx.res.rr.com ([67.11.235.53])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Jan 2015 07:52:52 +0100
-Received: from chrischavez by cpe-67-11-235-53.satx.res.rr.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Jan 2015 07:52:52 +0100
-To: linux-wireless@vger.kernel.org
-From: Christopher Chavez <chrischavez@gmx.us>
-Subject: Re: p54usb kernel panic on recent mainline kernels
-Date: Thu, 1 Jan 2015 06:52:37 +0000 (UTC)
-Message-ID: <loom.20150101T051652-786@post.gmane.org> (sfid-20150101_075316_149054_109903E7)
-References: <CAAFQ00kq-5+TFkH+i5fMXATxVCy-DeLP4G+D6+dxDSRo-fh6Xw@mail.gmail.com> <loom.20141227T010207-869@post.gmane.org> <2296382.VCr2c4tJc9@debian64> <5946673.YueIgFzjsn@debian64> <549EFC9F.9030504@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:46222 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625AbbAFKss (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 05:48:48 -0500
+Received: by mail-wg0-f44.google.com with SMTP id b13so29346570wgh.31
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 02:48:47 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2] iw: fix android build
+Date: Tue,  6 Jan 2015 12:48:45 +0200
+Message-Id: <1420541325-24052-1-git-send-email-arik@wizery.com> (sfid-20150106_114852_291644_686E598F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@...> writes:
+Don't define "iw" build target in the regular Makefile which gets
+included. This confuses the Android build system (coincides with module
+name).
+
+Also correct libnl_2 to a be static library, as compiled on Android.
+
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ Android.mk | 3 ++-
+ Makefile   | 2 ++
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Android.mk b/Android.mk
+index 8afda1d..735b236 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -3,6 +3,7 @@ IW_SOURCE_DIR := $(LOCAL_PATH)
  
-> I think this needs to be applied to 3.{17-19}.
-
-I finally tested the patch on 3.18.1, and it works. It would be nice to have 
-this available in 3.17 and 3.18 -stable.
-
-Tested-by: Christopher Chavez <chrischavez@gmx.us>
-
-nohwcrypt=1 also worked.
-
-Thanks
+ include $(CLEAR_VARS)
+ 
++IW_ANDROID_BUILD=y
+ NO_PKG_CONFIG=y
+ include $(LOCAL_PATH)/Makefile
+ 
+@@ -16,7 +17,7 @@ LOCAL_CFLAGS += -DCONFIG_LIBNL20
+ LOCAL_LDFLAGS := -Wl,--no-gc-sections
+ #LOCAL_MODULE_TAGS := optional
+ LOCAL_MODULE_TAGS := eng
+-LOCAL_SHARED_LIBRARIES := libnl_2
++LOCAL_STATIC_LIBRARIES := libnl_2
+ LOCAL_MODULE := iw
+ 
+ $(IW_SOURCE_DIR)/version.c:
+diff --git a/Makefile b/Makefile
+index 5bf955d..58755dc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -101,9 +101,11 @@ version.c: version.sh $(patsubst %.o,%.c,$(VERSION_OBJS)) nl80211.h iw.h Makefil
+ 	@$(NQ) ' CC  ' $@
+ 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+ 
++ifeq ($(IW_ANDROID_BUILD),)
+ iw:	$(OBJS)
+ 	@$(NQ) ' CC  ' iw
+ 	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
++endif
+ 
+ check:
+ 	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
+-- 
+2.1.0
 
