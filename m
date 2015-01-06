@@ -1,50 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:33779 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754559AbbAVUel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 15:34:41 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S1754883AbbAFKuN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 05:50:13 -0500
+From: Ilan Peer <ilan.peer@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 32/38] iwlwifi: mvm: Do not consider invalid HW queues in queue mask
-Date: Thu, 22 Jan 2015 22:33:23 +0200
-Message-Id: <1421958809-3371-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214446_588645_DE17EEAC)
-In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
-References: <1421958313.6424.2.camel@egrumbacBox>
+Cc: mcgrof@suse.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v2 2/2] cfg80211: Schedule timeout for all CRDA calls
+Date: Mon,  5 Jan 2015 23:52:22 -0500
+Message-Id: <1420519942-16109-2-git-send-email-ilan.peer@intel.com> (sfid-20150106_115607_476225_0D1289F9)
+In-Reply-To: <1420519942-16109-1-git-send-email-ilan.peer@intel.com>
+References: <1420519942-16109-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+Timeout was scheduled only in case CRDA was called due to user hints,
+but was not scheduled for other cases. This can result in regulatory
+hint processing getting stuck in case that there is no CRDA configured.
 
-The iwl_mvm_mac_get_queues_mask() added vif->hw_queue[ac] to the
-queue mask although it might be set to IEEE80211_INVAL_HW_QUEUE.
-Fix it.
+Change this by scheduling a timeout every time CRDA is called. In
+addition, in restore_regulatory_settings() all pending requests are
+restored (and not only the user ones).
 
 Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ net/wireless/reg.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-index a3e9cd9..8bf78fa 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
-@@ -208,8 +208,10 @@ u32 iwl_mvm_mac_get_queues_mask(struct ieee80211_vif *vif)
- 	if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
- 		return BIT(IWL_MVM_OFFCHANNEL_QUEUE);
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 6b0da81..fa71c34 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -552,6 +552,9 @@ reg_call_crda(struct regulatory_request *request)
+ {
+ 	if (call_crda(request->alpha2))
+ 		return REG_REQ_IGNORE;
++
++	queue_delayed_work(system_power_efficient_wq,
++			   &reg_timeout, msecs_to_jiffies(3142));
+ 	return REG_REQ_OK;
+ }
  
--	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
--		qmask |= BIT(vif->hw_queue[ac]);
-+	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-+		if (vif->hw_queue[ac] != IEEE80211_INVAL_HW_QUEUE)
-+			qmask |= BIT(vif->hw_queue[ac]);
-+	}
+@@ -1773,8 +1776,7 @@ static void reg_set_request_processed(void)
+ 		need_more_processing = true;
+ 	spin_unlock(&reg_requests_lock);
  
- 	if (vif->type == NL80211_IFTYPE_AP)
- 		qmask |= BIT(vif->cab_queue);
+-	if (lr->initiator == NL80211_REGDOM_SET_BY_USER)
+-		cancel_delayed_work(&reg_timeout);
++	cancel_delayed_work(&reg_timeout);
+ 
+ 	if (need_more_processing)
+ 		schedule_work(&reg_work);
+@@ -2053,8 +2055,6 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 		if (treatment == REG_REQ_IGNORE ||
+ 		    treatment == REG_REQ_ALREADY_SET)
+ 			return;
+-		queue_delayed_work(system_power_efficient_wq,
+-				   &reg_timeout, msecs_to_jiffies(3142));
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+ 		if (!wiphy)
+@@ -2454,7 +2454,6 @@ static void restore_regulatory_settings(bool reset_user)
+ 	char alpha2[2];
+ 	char world_alpha2[2];
+ 	struct reg_beacon *reg_beacon, *btmp;
+-	struct regulatory_request *reg_request, *tmp;
+ 	LIST_HEAD(tmp_reg_req_list);
+ 	struct cfg80211_registered_device *rdev;
+ 
+@@ -2470,11 +2469,7 @@ static void restore_regulatory_settings(bool reset_user)
+ 	 * settings.
+ 	 */
+ 	spin_lock(&reg_requests_lock);
+-	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
+-		if (reg_request->initiator != NL80211_REGDOM_SET_BY_USER)
+-			continue;
+-		list_move_tail(&reg_request->list, &tmp_reg_req_list);
+-	}
++	list_splice_tail_init(&reg_requests_list, &tmp_reg_req_list);
+ 	spin_unlock(&reg_requests_lock);
+ 
+ 	/* Clear beacon hints */
 -- 
-1.9.1
+1.8.3.2
 
