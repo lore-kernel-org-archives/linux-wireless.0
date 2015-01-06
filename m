@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60995 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbbALVP2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 16:15:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59377 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751451AbbAFMrB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 07:47:01 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath10k: document switch case fall-through in __ath10k_scan_finish
-Date: Mon, 12 Jan 2015 16:07:02 -0500
-Message-Id: <1421096822-28698-1-git-send-email-linville@tuxdriver.com> (sfid-20150112_221532_487295_1C6AAA1E)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] orinoco/hermes: select CFG80211_WEXT
+Date: Tue,  6 Jan 2015 13:46:57 +0100
+Message-Id: <1420548417-17650-1-git-send-email-johannes@sipsolutions.net> (sfid-20150106_134705_726093_182565FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add a comment for indicating that the ATH10K_SCAN_RUNNING case falls
-through to the ATH10K_SCAN_ABORTING case in __ath10k_scan_finish.  This
-will document that the lack of a break is intentional.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Coverity: CID 1260017
+It makes no sense to require the user to find and enable
+CFG80211_WEXT before the driver can be selected, make the
+driver select the needed Kconfig symbol itself.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/orinoco/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index c4005670cba2..695222e57728 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2213,6 +2213,7 @@ void __ath10k_scan_finish(struct ath10k *ar)
- 	case ATH10K_SCAN_RUNNING:
- 		if (ar->scan.is_roc)
- 			ieee80211_remain_on_channel_expired(ar->hw);
-+		/* fall through */
- 	case ATH10K_SCAN_ABORTING:
- 		if (!ar->scan.is_roc)
- 			ieee80211_scan_completed(ar->hw,
+diff --git a/drivers/net/wireless/orinoco/Kconfig b/drivers/net/wireless/orinoco/Kconfig
+index 60698b020851..6d831d4d1b5f 100644
+--- a/drivers/net/wireless/orinoco/Kconfig
++++ b/drivers/net/wireless/orinoco/Kconfig
+@@ -1,7 +1,8 @@
+ config HERMES
+ 	tristate "Hermes chipset 802.11b support (Orinoco/Prism2/Symbol)"
+ 	depends on (PPC_PMAC || PCI || PCMCIA)
+-	depends on CFG80211 && CFG80211_WEXT
++	depends on CFG80211
++	select CFG80211_WEXT
+ 	select WIRELESS_EXT
+ 	select WEXT_SPY
+ 	select WEXT_PRIV
 -- 
-2.1.0
+2.1.1
 
