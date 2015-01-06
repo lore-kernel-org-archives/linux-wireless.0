@@ -1,83 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50538 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751783AbbAGL7Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 06:59:25 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t07BxIPv008663
-	for <linux-wireless@vger.kernel.org>; Wed, 7 Jan 2015 03:59:24 -0800
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1rs21qrfmn-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 03:59:24 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: check driver status in connect and scan handlers
-Date: Wed, 7 Jan 2015 03:57:39 -0800
-Message-ID: <1420631859-29004-1-git-send-email-akarwar@marvell.com> (sfid-20150107_125928_871033_301FD224)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:58736 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751912AbbAFK5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 05:57:07 -0500
+Message-ID: <1420541824.1966.19.camel@sipsolutions.net> (sfid-20150106_115711_594708_E184290A)
+Subject: Re: [PATCH] mac80211: skip disabled channels in VHT check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 06 Jan 2015 11:57:04 +0100
+In-Reply-To: <1420112597-4035-1-git-send-email-arik@wizery.com> (sfid-20150101_124319_618976_59CFCC95)
+References: <1420112597-4035-1-git-send-email-arik@wizery.com>
+	 (sfid-20150101_124319_618976_59CFCC95)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ignore scan and connection requests from cfg80211 when driver
-unload is in process or previous command has timed out due to
-a firmware bug. This patch fixes corner case system crash
-issues.
+On Thu, 2015-01-01 at 13:43 +0200, Arik Nemtsov wrote:
+> The patch "40a11ca mac80211: check if channels allow 80 MHz for VHT
+> probe requests" considered disabled channels as VHT enabled, and
+> mistakenly sent out probe-requests with the VHT IE.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c | 8 ++++++++
- drivers/net/wireless/mwifiex/scan.c     | 6 ++++++
- 2 files changed, 14 insertions(+)
+Applied.
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 93ab36f..06feb44 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1784,6 +1784,7 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 			 struct cfg80211_connect_params *sme)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	struct mwifiex_adapter *adapter = priv->adapter;
- 	int ret;
- 
- 	if (GET_BSS_ROLE(priv) != MWIFIEX_BSS_ROLE_STA) {
-@@ -1798,6 +1799,13 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 		return -EALREADY;
- 	}
- 
-+	if (adapter->surprise_removed || adapter->is_cmd_timedout) {
-+		wiphy_err(wiphy,
-+			  "%s: Ignore connection. Card removed or FW in bad state\n",
-+			  dev->name);
-+		return -EFAULT;
-+	}
-+
- 	wiphy_dbg(wiphy, "info: Trying to associate to %s and bssid %pM\n",
- 		  (char *) sme->ssid, sme->bssid);
- 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 984a7a4..e304f07 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1429,6 +1429,12 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
- 		return -EBUSY;
- 	}
- 
-+	if (adapter->surprise_removed || adapter->is_cmd_timedout) {
-+		dev_err(adapter->dev,
-+			"Ignore scan. Card removed or firmware in bad state\n");
-+		return -EFAULT;
-+	}
-+
- 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 	adapter->scan_processing = true;
- 	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
--- 
-1.8.1.4
+johannes
 
