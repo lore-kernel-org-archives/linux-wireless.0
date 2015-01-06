@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:59005 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752133AbbAOMr7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 07:47:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
-Subject: Re: [PATCH 0/3] add TPC capability for AR9002 based chips
-References: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
-Date: Thu, 15 Jan 2015 14:47:51 +0200
-In-Reply-To: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	(Lorenzo Bianconi's message of "Tue, 30 Dec 2014 23:10:17 +0100")
-Message-ID: <87bnm0tdl4.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_134802_166463_9B360CD1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:59612 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755445AbbAFN0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 08:26:53 -0500
+Message-ID: <1420550805.1966.30.camel@sipsolutions.net> (sfid-20150106_142723_567644_46241808)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Tue, 06 Jan 2015 14:26:45 +0100
+In-Reply-To: <1420532617.1966.2.camel@sipsolutions.net> (sfid-20150106_092406_190634_68A6D76E)
+References: <1420297188.2397.3.camel@tiscali.nl>
+	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
+	 <1420479510.14308.23.camel@x220>
+	 (sfid-20150105_183907_807502_81C08416) <1420484224.9459.16.camel@sipsolutions.net>
+	 <1420495519.14308.29.camel@x220> <1420532617.1966.2.camel@sipsolutions.net>
+	 (sfid-20150106_092406_190634_68A6D76E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> writes:
+On Tue, 2015-01-06 at 09:23 +0100, Johannes Berg wrote:
 
-> This patchset adds TPC capability to ath9k for AR9002 based chips
->
-> *[PATCH 1/3]: add TX power per-rate tables to cap TX power in TX descriptor path
-> *[PATCH 2/3]: cap per-packet TX power according to TX power per-rate tables
-> *[PATCH 3/3]: enable per-packet TPC on AR9002 based chips by default
->
-> This pachset is based on Adrian Chadd's hints
-> (https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg10396.html)
->
-> Changes since RFC:
-> - fix compilation error
->
-> Lorenzo Bianconi (3):
->   ath9k: add power per-rate tables for AR9002 chips
->   ath9k: add TPC to TX path for AR9002 based chips
->   ath9k: enable per-packet TPC on AR9002 based chips
+> Yours is the theoretical, hopefully-forward-looking one where we still
+> expect the driver to actually be modified to take advantage of the new
+> frameworks (which is independent of wext support towards userspace). In
+> that scenario, yes, it should use more until it uses all, and then it
+> can stop concerning itself with wext (which would be a win because
+> driver/wext interaction is always finicky) (*)
 
-Thanks, applied to wireless-drivers-next.git
+I just realized that in order to actually do this you'd have to revert
+04b0c5c6995103eef56391c163e970ab1f03b59f first, but that would be pretty
+simple.
 
--- 
-Kalle Valo
+johannes
+
