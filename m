@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:32927 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754040AbbAEVZ1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 16:25:27 -0500
-Received: by mail-oi0-f47.google.com with SMTP id v63so49655195oia.6
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 13:25:26 -0800 (PST)
-Message-ID: <54AB0145.3070601@lwfinger.net> (sfid-20150105_222540_428339_220A30C5)
-Date: Mon, 05 Jan 2015 15:25:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 23/23 V2 for 3.19]  rtlwifi: Fix error when accessing
- unmapped memory in skb
-References: <1419711457-21469-1-git-send-email-Larry.Finger@lwfinger.net>	<87a928726w.fsf@kamboji.qca.qualcomm.com>	<549FA005.7050802@lwfinger.net> <87387p4m89.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87387p4m89.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:58757 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753313AbbAFK7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 05:59:24 -0500
+Message-ID: <1420541961.1966.20.camel@sipsolutions.net> (sfid-20150106_115927_695691_459EB811)
+Subject: Re: [PATCH v2 2/2] cfg80211: Schedule timeout for all CRDA calls
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, mcgrof@suse.com
+Date: Tue, 06 Jan 2015 11:59:21 +0100
+In-Reply-To: <1420519942-16109-2-git-send-email-ilan.peer@intel.com> (sfid-20150106_115607_476225_0D1289F9)
+References: <1420519942-16109-1-git-send-email-ilan.peer@intel.com>
+	 <1420519942-16109-2-git-send-email-ilan.peer@intel.com>
+	 (sfid-20150106_115607_476225_0D1289F9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2015 03:20 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->>> 23/23? Where are patches 1-22? I don't see them in patchwork:
->>>
->>> https://patchwork.kernel.org/project/linux-wireless/list/
->>
->> Sorry. I forgot to edit the subject line. To get git to format that
->> one patch, I had to generate a total of 23. There is only 1 of 1 that
->> will be submitted.
->
-> Ok, I was just worried that I had missed the other 22. But you can
-> actually get a single commit like this so no editing is needed:
->
-> git format-patch -1 2a3e60d37fc6
+On Mon, 2015-01-05 at 23:52 -0500, Ilan Peer wrote:
+> Timeout was scheduled only in case CRDA was called due to user hints,
+> but was not scheduled for other cases. This can result in regulatory
+> hint processing getting stuck in case that there is no CRDA configured.
 
-Thanks for the git lesson. Some week^H^H^H^Hmonth I should learn to use more 
-parts of that tool, but you know how that goes.
+I can understand this part.
 
-I do have an additional question on procedure. If I submit a number of patches 
-in a series, but find that only one of the series needs a V2. Is it better to 
-resubmit all N of them, or only just the one that needs changing?
+> Change this by scheduling a timeout every time CRDA is called. In
+> addition, in restore_regulatory_settings() all pending requests are
+> restored (and not only the user ones).
 
-Thanks,
+Care to explain why, and why this should be in the same patch?
 
-Larry
-
+johannes
 
