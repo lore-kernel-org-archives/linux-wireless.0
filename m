@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39976 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041AbbAMF7N (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:41772 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbbAFTHh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 00:59:13 -0500
-Date: Mon, 12 Jan 2015 19:32:19 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/6] staging: vt6655: set_channel replace parameter with
- ieee80211_channel
-Message-ID: <20150113033219.GA31093@kroah.com> (sfid-20150113_065917_166312_B03FE7B7)
-References: <1417731167-3231-1-git-send-email-tvboxspy@gmail.com>
- <54920EDC.4090007@gmail.com>
+	Tue, 6 Jan 2015 14:07:37 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Rob Herring <rob.herring@linaro.org>,
+	John Stultz <john.stultz@linaro.org>
+Subject: Re: [PATCH V2 3/10] brcmfmac: Add support for bcm43340/1 wireless chipsets
+References: <1419357863-2018-1-git-send-email-arend@broadcom.com>
+Date: Tue, 06 Jan 2015 21:07:31 +0200
+In-Reply-To: <1419357863-2018-1-git-send-email-arend@broadcom.com> (Arend van
+	Spriel's message of "Tue, 23 Dec 2014 19:04:23 +0100")
+Message-ID: <87sifnwwwc.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_200741_364861_2E89B739)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54920EDC.4090007@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 17, 2014 at 11:16:44PM +0000, Malcolm Priestley wrote:
-> 
-> 
-> On 04/12/14 22:12, Malcolm Priestley wrote:
-> >replacing uConnectionChannel for hw_value as set in vnt_init_bands.
-> >
-> >This allows other signaling of ieee80211_channel to move deeper into
-> >driver.
-> >
-> >Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-> >---
-> Hi greg
-> 
-> Can you drop this patch series altogether.
-> 
-> I will repost these later after some needed bug fixes for 3.19
+Arend van Spriel <arend@broadcom.com> writes:
 
-Now dropped.
+> This patch adds support for the bcm43340 and bcm43341 wireless
+> chipsets. These two chipsets are identical from wireless parts
+> perspective. As such they use the same firmware image.
+>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> Cc: Rob Herring <rob.herring@linaro.org>
+> Signed-off-by: John Stultz <john.stultz@linaro.org>
+> [arend@broadcom.com: squash to single commit, remove 43341 chipid]
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Changes since V1:
+>   - change values for sdio device ids to hex format
+
+Thanks, applied to wireless-drivers-next.git.
+
+-- 
+Kalle Valo
