@@ -1,157 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:52367 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756041AbbAFP6e (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:39147 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785AbbAFQ2l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:58:34 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 11/11 V2] rtlwifi: Move macro definitions to core
-Date: Tue,  6 Jan 2015 09:58:12 -0600
-Message-Id: <1420559892-12384-12-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165841_836622_412584FC)
-In-Reply-To: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 6 Jan 2015 11:28:41 -0500
+Received: by mail-wi0-f172.google.com with SMTP id n3so5689632wiv.11
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 08:28:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1420540894.1966.13.camel@sipsolutions.net>
+References: <1419412868-28938-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1420540894.1966.13.camel@sipsolutions.net>
+Date: Tue, 6 Jan 2015 17:28:40 +0100
+Message-ID: <CAA2SeNK3ak7OPP2uqtSrzqFQTf1PMvjP_d14RjGmU2VFNfDhWw@mail.gmail.com> (sfid-20150106_172844_872288_6E3D3091)
+Subject: Re: [PATCHv3] mac80211: enable TPC through mac80211 stack
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several of the drivers still were defining their own copies of various
-macros. These are all moved into the core.
+> On Wed, 2014-12-24 at 10:21 +0100, Lorenzo Bianconi wrote:
+>> -     list_for_each_entry(sdata, &local->interfaces, list)
+>> +     list_for_each_entry(sdata, &local->interfaces, list) {
+>>               sdata->user_power_level = local->user_power_level;
+>> +             if (!update_tpc && type != sdata->vif.bss_conf.txpower_type)
+>> +                     update_tpc = true;
+>
+> Why bother checking - if it's already true then setting it to true won't
+> matter, and IMHO makes the code easier to read.
+>
+> I also think "update_tpc" is a bad name - transmit power control is the
+> actual usage here, but you really mean "update_txp_type" or so.
+>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+ack. V4 on the way
 
-V2 - unchanged from V1
----
+> johannes
+>
 
- drivers/net/wireless/rtlwifi/core.h         | 1 +
- drivers/net/wireless/rtlwifi/rtl8188ee/dm.h | 3 ---
- drivers/net/wireless/rtlwifi/rtl8192ee/dm.h | 3 ---
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c | 6 +++---
- drivers/net/wireless/rtlwifi/rtl8192se/dm.h | 1 -
- drivers/net/wireless/rtlwifi/rtl8723be/dm.h | 3 ---
- drivers/net/wireless/rtlwifi/rtl8821ae/dm.h | 9 ---------
- 7 files changed, 4 insertions(+), 22 deletions(-)
+Best regards,
+Lorenzo
 
-diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
-index 1cde356..7b64e34 100644
---- a/drivers/net/wireless/rtlwifi/core.h
-+++ b/drivers/net/wireless/rtlwifi/core.h
-@@ -42,6 +42,7 @@
- 
- #define DM_DIG_MAX			0x3e
- #define DM_DIG_MIN			0x1e
-+#define DM_DIG_MAX_AP			0x32
- #define DM_DIG_BACKOFF_MAX		12
- #define DM_DIG_BACKOFF_MIN		-4
- #define DM_DIG_BACKOFF_DEFAULT		10
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
-index 51ad3f9..071ccee 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/dm.h
-@@ -186,9 +186,6 @@
- #define BW_AUTO_SWITCH_HIGH_LOW				25
- #define BW_AUTO_SWITCH_LOW_HIGH				30
- 
--#define DM_DIG_MAX_AP					0x32
--#define DM_DIG_MIN_AP					0x20
--
- #define DM_DIG_FA_UPPER					0x3e
- #define DM_DIG_FA_LOWER					0x1e
- #define DM_DIG_FA_TH0					0x200
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.h b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.h
-index 4880e19..107d5a4 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.h
-@@ -189,9 +189,6 @@
- #define BW_AUTO_SWITCH_HIGH_LOW			25
- #define BW_AUTO_SWITCH_LOW_HIGH			30
- 
--#define DM_DIG_MAX_AP				0x32
--#define DM_DIG_MIN_AP				0x20
--
- #define DM_DIG_FA_UPPER				0x3e
- #define DM_DIG_FA_LOWER				0x1e
- #define DM_DIG_FA_TH0				0x200
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.c b/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
-index 6cac70b..575980b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.c
-@@ -470,7 +470,7 @@ static void _rtl92s_dm_initial_gain_sta_beforeconnect(struct ieee80211_hw *hw)
- 			if (digtable->backoff_enable_flag)
- 				rtl92s_backoff_enable_flag(hw);
- 			else
--				digtable->back_val = DM_DIG_BACKOFF;
-+				digtable->back_val = DM_DIG_BACKOFF_MAX;
- 
- 			if ((digtable->rssi_val + 10 - digtable->back_val) >
- 				digtable->rx_gain_max)
-@@ -504,7 +504,7 @@ static void _rtl92s_dm_initial_gain_sta_beforeconnect(struct ieee80211_hw *hw)
- 		digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
- 		rtl92s_phy_set_fw_cmd(hw, FW_CMD_DIG_ENABLE);
- 
--		digtable->back_val = DM_DIG_BACKOFF;
-+		digtable->back_val = DM_DIG_BACKOFF_MAX;
- 		digtable->cur_igvalue = rtlpriv->phy.default_initialgain[0];
- 		digtable->pre_igvalue = 0;
- 		return;
-@@ -692,7 +692,7 @@ static void _rtl92s_dm_init_dig(struct ieee80211_hw *hw)
- 
- 	/* for dig debug rssi value */
- 	digtable->rssi_val = 50;
--	digtable->back_val = DM_DIG_BACKOFF;
-+	digtable->back_val = DM_DIG_BACKOFF_MAX;
- 	digtable->rx_gain_max = DM_DIG_MAX;
- 
- 	digtable->rx_gain_min = DM_DIG_MIN;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
-index be07d81..de6ac79 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/dm.h
-@@ -83,7 +83,6 @@ enum dm_ratr_sta {
- 
- #define	DM_DIG_HIGH_PWR_THRESH_HIGH	75
- #define	DM_DIG_HIGH_PWR_THRESH_LOW	70
--#define	DM_DIG_BACKOFF			12
- #define	DM_DIG_MIN_Netcore		0x12
- 
- void rtl92s_dm_watchdog(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.h b/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
-index 533b4f2..f752a2c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.h
-@@ -180,9 +180,6 @@
- #define BW_AUTO_SWITCH_HIGH_LOW			25
- #define BW_AUTO_SWITCH_LOW_HIGH			30
- 
--#define DM_DIG_MAX_AP				0x32
--#define DM_DIG_MIN_AP				0x20
--
- #define DM_DIG_FA_UPPER				0x3e
- #define DM_DIG_FA_LOWER				0x1e
- #define DM_DIG_FA_TH0				0x200
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
-index 5516557..625a6bb 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.h
-@@ -187,15 +187,6 @@
- #define BW_AUTO_SWITCH_HIGH_LOW		25
- #define BW_AUTO_SWITCH_LOW_HIGH		30
- 
--#define DM_FALSEALARM_THRESH_LOW	400
--#define DM_FALSEALARM_THRESH_HIGH	1000
--
--#define DM_DIG_MAX					0x3e
--#define DM_DIG_MIN					0x1e
--
--#define DM_DIG_MAX_AP				0x32
--#define DM_DIG_MIN_AP				0x20
--
- #define DM_DIG_FA_UPPER				0x3e
- #define DM_DIG_FA_LOWER				0x1e
- #define DM_DIG_FA_TH0				200
 -- 
-2.1.2
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
