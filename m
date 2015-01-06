@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:47132 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756430AbbAWUMg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 15:12:36 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 5/6] rtlwifi: btcoexist: Add routines for RTL8812AE - all configs
-References: <1422033044-7461-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1422033044-7461-6-git-send-email-Larry.Finger@lwfinger.net>
-Date: Fri, 23 Jan 2015 22:12:30 +0200
-In-Reply-To: <1422033044-7461-6-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Fri, 23 Jan 2015 11:10:43 -0600")
-Message-ID: <87mw59jlxt.fsf@kamboji.qca.qualcomm.com> (sfid-20150123_211241_178548_A5C53A90)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:58062 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752231AbbAFIT2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 03:19:28 -0500
+Message-ID: <1420532359.1966.0.camel@sipsolutions.net> (sfid-20150106_091933_197397_40967C23)
+Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Paul Bolle <pebolle@tiscali.nl>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jiri Kosina <jkosina@suse.cz>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Tue, 06 Jan 2015 09:19:19 +0100
+In-Reply-To: <54AB0C75.1090204@broadcom.com>
+References: <1420297188.2397.3.camel@tiscali.nl>
+		 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
+		 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
+		 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
+		 <1420479510.14308.23.camel@x220>
+		 (sfid-20150105_183907_807502_81C08416) <1420484224.9459.16.camel@sipsolutions.net>
+	 <1420495519.14308.29.camel@x220> <54AB0C75.1090204@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Mon, 2015-01-05 at 23:13 +0100, Arend van Spriel wrote:
+> On 01/05/15 23:05, Paul Bolle wrote:
+> > On Mon, 2015-01-05 at 19:57 +0100, Johannes Berg wrote:
+> >> Multiple other groups of ioctls could be converted in similar patches,
+> >> until at the end you can completely remove ipw_wx_handlers and rely
+> >> entirely on cfg80211's wext compatibility.
+> >>
+> >> So far the theory - in practice nobody cared enough to start working on
+> >> any of these drivers, let alone actually has the hardware today.
+> >
+> > So my suggestion to make ipw2200 no longer use cfg80211_wext_giwname()
+> > would actually be backwards. What's actually needed, in theory, is to
+> > use more of what's provided under CFG80211_WEXT (and, I guess, less of
+> > what's provided under WIRELESS_EXT). Did I get that right?
+> 
+> Yes, but as Johannes indicated it needs consideration what to group in 
+> the patches.
 
-> From: Troy Tan <troy_tan@realsil.com.cn>
->
-> This patch adds the routines used for all antenna configurations.
->
-> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Oh, that's not strictly necessary - that was just so it would actually
+work after each single patch. If you wanted to, you could do it all in a
+single huge patch as well :-) I was explaining though why we did the
+cfg80211-wext code the way it is - which enables making smaller changes
+that don't break the driver.
 
-The commit log is REALLY vague...
+johannes
 
-> +static u8 rtl_btcoex_create_kernel_socket(struct rtl_priv *rtlpriv,
-> +					  u8 is_invite)
-> +{
-> +	struct bt_coex_info *pcoex_info = &rtlpriv->coex_info;
-> +	s8 kernel_socket_err;
-> +
-> +	BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
-> +		  "%s CONNECT_PORT %d\n", __func__, CONNECT_PORT);
-> +
-> +	if (!pcoex_info) {
-> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL, "coex_info: NULL\n");
-> +		return _FAIL;
-> +	}
-> +
-> +	kernel_socket_err = sock_create(PF_INET, SOCK_DGRAM, 0,
-> +					&pcoex_info->udpsock);
-> +	BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
-> +		  "binding socket, err = %d\n", kernel_socket_err);
-> +
-> +	if (kernel_socket_err < 0) {
-> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
-> +			  "Error during creation of socket error:%d\n",
-> +			  kernel_socket_err);
-> +		return _FAIL;
-> +	}
-> +	memset(&pcoex_info->sin, 0, sizeof(pcoex_info->sin));
-> +	pcoex_info->sin.sin_family = AF_INET;
-> +	pcoex_info->sin.sin_port = htons(CONNECT_PORT);
-> +	pcoex_info->sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-
-...and then I see stuff like this. What an earth does this do?
-
--- 
-Kalle Valo
