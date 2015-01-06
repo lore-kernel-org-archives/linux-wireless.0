@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:34222 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755146AbbAOTVb (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:56477 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142AbbAFSTx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 14:21:31 -0500
-Date: Thu, 15 Jan 2015 14:21:27 -0500
-From: Kyle McMartin <kyle@infradead.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org,
-	Troy Tan <troy_tan@realsil.com.cn>, netdev@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192ee: New firmware from Realtek
-Message-ID: <20150115192127.GA30928@merlin.infradead.org> (sfid-20150115_202139_801336_2B8BEDE2)
-References: <1421270679-3029-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 6 Jan 2015 13:19:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421270679-3029-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1420567175-17323-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+References: <1420567175-17323-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Date: Tue, 6 Jan 2015 19:19:52 +0100
+Message-ID: <CACna6ryS_+eYi3ODXMngCxwoe8JLuWQyaCNNmhJFHM+g7H_Xzw@mail.gmail.com> (sfid-20150106_192024_366115_F7AB1C56)
+Subject: Re: [PATCH] b43legacy: Remove unused function
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Stefano Brivio <stefano.brivio@polimi.it>,
+	Network Development <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 14, 2015 at 03:24:39PM -0600, Larry Finger wrote:
-> From: Troy Tan <troy_tan@realsil.com.cn>
-> 
-> Recent testing by Realtek found bugs in both the driver and firmware for
-> the RTL8192EE chips.
-> 
-> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  WHENCE                  |   5 ++++-
->  rtlwifi/rtl8192eefw.bin | Bin 32754 -> 31818 bytes
->  2 files changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/WHENCE b/WHENCE
-> index df2dffa..c6f650e 100644
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -2115,7 +2115,10 @@ Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
->  
->  Driver: rtl8192ee - Realtek 802.11n WLAN driver for RTL8192EE
->  
-> -Info: Taken from Realtek version rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013
-> +Info: Initial version taken from Realtek version
-> +      rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013
-> +      Updated Jan. 14, 2015 with file added by Realtek to
-> +      http://github.com/lwfinger/rtlwifi_new.git.
->  File: rtlwifi/rtl8192eefw.bin
->  
+On 6 January 2015 at 18:59, Rickard Strandqvist
+<rickard_strandqvist@spectrumdigital.se> wrote:
+> Remove the function b43legacy_radio_set_tx_iq() that is not used anywhere.
+>
+> This was partially found by using a static code analysis program called cppcheck.
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 
-Looks good, applied. Thanks Larry.
-
-regards, Kyle
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
