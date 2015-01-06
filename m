@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39810 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752289AbbAHHsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 02:48:22 -0500
-Message-ID: <1420703288.2029.4.camel@sipsolutions.net> (sfid-20150108_084825_102331_66D5C3CC)
-Subject: Re: [PATCHv4] mac80211: enable TPC through mac80211 stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Thomas =?ISO-8859-1?Q?H=FChn?= <thomas@net.t-labs.tu-berlin.de>
-Date: Thu, 08 Jan 2015 08:48:08 +0100
-In-Reply-To: <CAA2SeN+KZqXcBpOuW=J_vyznOn03NceuH8RDdmcB30-7-9xyQw@mail.gmail.com> (sfid-20150107_153952_445561_A5BF7DBF)
-References: <1420566070-25336-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1420639929.3407.18.camel@sipsolutions.net>
-	 <CAA2SeN+KZqXcBpOuW=J_vyznOn03NceuH8RDdmcB30-7-9xyQw@mail.gmail.com>
-	 (sfid-20150107_153952_445561_A5BF7DBF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from gw01.mail.saunalahti.fi ([195.197.172.115]:35283 "EHLO
+	gw01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932449AbbAFVzE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Jan 2015 16:55:04 -0500
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH] wlcore: fix copy'n'paste error
+Date: Tue,  6 Jan 2015 23:46:43 +0200
+Message-Id: <1420580803-25562-1-git-send-email-andy.shevchenko@gmail.com> (sfid-20150106_225509_092013_9043F4C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-07 at 15:39 +0100, Lorenzo Bianconi wrote:
+There is no assignment of window_size in wl12xx_acx_config_hangover. The
+patch fixes the issue.
 
-> > Does it really make sense to ask the driver to do "automatic"? After
-> > all, there are other limits in mac80211 (like 11h from the AP and
-> > regulatory) that need to be considered. So perhaps if userspace says
-> > "automatic", the driver should still see only "limited"?
-> >
-> 
-> IMHO "automatic" means lower driver has to take into account just
-> channel/regulatory constraints (that is ath9k behavior), since the
-> user/mac80211 does not cap TX power, whereas "limited" means the
-> user/mac80211 has set a limit for emitted power, so that configuration
-> has to be taken into account. 
+Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
+ drivers/net/wireless/ti/wlcore/acx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Well, mac80211 always gives you a max TX power value though - and if
-it's only the maximum regulatory permitted on that channel. So there's
-always a valid upper bound - unlike the userspace API where "automatic"
-means that you have no idea of an upper bound. Inside the kernel you
-always have an upper bound, so "automatic" doesn't make that much sense?
-
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+index b924cea..f28fa3b 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.c
++++ b/drivers/net/wireless/ti/wlcore/acx.c
+@@ -1725,7 +1725,7 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
+ 	acx->decrease_delta = conf->decrease_delta;
+ 	acx->quiet_time = conf->quiet_time;
+ 	acx->increase_time = conf->increase_time;
+-	acx->window_size = acx->window_size;
++	acx->window_size = conf->window_size;
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
+ 				   sizeof(*acx));
+-- 
+1.8.3.101.g727a46b
 
