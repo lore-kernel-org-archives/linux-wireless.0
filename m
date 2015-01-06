@@ -1,121 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:42447 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbbANKgd (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:52292 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756192AbbAFSaY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 05:36:33 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAFMg4WBnNhVWf8ouFqWVwpbp5TQ0XrxTC_8vvLDSVBemA0N-Kw@mail.gmail.com>
-References: <1421224274.2012.2.camel@gmail.com>
-	<1421224818.2012.4.camel@gmail.com>
-	<CANUX_P1DwErJr6O2OGR7Sr12g3-OKYKEBTQ+wSZiSS=NUoCqEw@mail.gmail.com>
-	<CAFMg4WBnNhVWf8ouFqWVwpbp5TQ0XrxTC_8vvLDSVBemA0N-Kw@mail.gmail.com>
-Date: Wed, 14 Jan 2015 12:36:31 +0200
-Message-ID: <CANUX_P2-=HmRyxUukG5YyVu+=P4YtsDwQjJFZEj6_L6EQoNLtA@mail.gmail.com> (sfid-20150114_113639_270864_B9745FFD)
-Subject: Re: [REGRESSION] iwlfiwi with Intel Centrino N1000 won't work with power_save
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Igor Gnatenko <i.gnatenko.brain@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Wysocki, Rafael" <rafael@kernel.org>,
-	Alex Nik <rage.iz.me@gmail.com>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 6 Jan 2015 13:30:24 -0500
+Date: Tue, 06 Jan 2015 13:30:22 -0500 (EST)
+Message-Id: <20150106.133022.1374471134166201756.davem@davemloft.net> (sfid-20150106_193037_122056_8D40EAE4)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2015-01-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1420546548.1966.26.camel@sipsolutions.net>
+References: <1420546548.1966.26.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>> Hi,
->>>>
->>>> I got report from people that on Intel Centrino N1000 wifi won't
->>>> work after
->>>> updating to 3.17.8. I see in that release Fedora maints enabled
->>>> POWERCAP and
->>>> INTEL RAPL. We got working wifi only after disabling powersave via
->>>> `iw dev wlp2s0 set power_save off`.
->>
->> What kernel version did you have before?
->> BTW - for this device, power save is supposed to be disabled by
->> default, but I need to check
-> 3.17.4
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 06 Jan 2015 13:15:48 +0100
 
-$ git log --oneline v3.17.4..v3.17.8 -- drivers/net/wireless/iwlwifi/
-fb14996 iwlwifi: mvm: check TLV flag before trying to use hotspot
-firmware commands
-4e709ff iwlwifi: mvm: ROC - bug fixes around time events and locking
-85ebf94 iwlwifi: pcie: fix prph dump length
+> Here's just a single fix - a revert of a patch that broke the
+> p54 and cw2100 drivers (arguably due to bad assumptions there.)
+> Since this affects kernels since 3.17, I decided to revert for
+> now and we'll revisit this optimisation properly for -next.
 
-none of these are related to the device your are reporting about.
+Pulled, thanks Johannes.
 
->>>>
->>>> How we can debug this?
->>>>
->>>> lspci above.
->>>>
->>>> 02:00.0 Network controller [0280]: Intel Corporation Centrino
->>>> Wireless- N 1000 [Condor Peak] [8086:0084]
->>>>         Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN
->>>> [8086:1315]
->>>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>>> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast
->>>> >TAbort-
->>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>>         Latency: 0, Cache Line Size: 64 bytes
->>>>         Interrupt: pin A routed to IRQ 28
->>>>         Region 0: Memory at d1500000 (64-bit, non-prefetchable)
->>>> [size=8K]
->>>>         Capabilities: [c8] Power Management version 3
->>>>                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
->>>> PME(D0+,D1-
->>>> ,D2-,D3hot+,D3cold+)
->>>>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0
->>>> PME-
->>>>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->>>>                 Address: 00000000fee0800c  Data: 4122
->>>>         Capabilities: [e0] Express (v1) Endpoint, MSI 00
->>>>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency
->>>> L0s
->>>> <512ns, L1 unlimited
->>>>                 ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
->>>>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
->>>> Unsupported-
->>>>                 RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
->>>>                 MaxPayload 128 bytes, MaxReadReq 128 bytes
->>>>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
->>>> AuxPwr+ TransPend-
->>>>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s
->>>> L1,
->>>> Exit Latency L0s <128ns, L1 <32us
->>>>                 ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
->>>>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled-
->>>> CommClk+
->>>>                 ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
->>>>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
->>>> SlotClk+ DLActive- BWMgmt- ABWMgmt-
->>>>         Capabilities: [100 v1] Advanced Error Reporting
->>>>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
->>>> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>>>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
->>>> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>>>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
->>>> UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->>>>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
->>>> NonFatalErr-
->>>>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
->>>> NonFatalErr+
->>>>                 AERCap: First Error Pointer: 00, GenCap- CGenEn-
->>>> ChkCap- ChkEn-
->>>>         Capabilities: [140 v1] Device Serial Number 74-e5-0b-ff-ff-
->>>> cc-
->>>> 82-24
->>>>         Kernel driver in use: iwlwifi
->>>>         Kernel modules: iwlwifi
->>>> --
->>>> -Igor Gnatenko
->>> CC linux-pm@
->>> --
->>> -Igor Gnatenko
->
->
->
-> --
-> -Igor Gnatenko
+> Also -- happy New Year, and sorry about the genl issue :(
+
+No problem.
+
+> I'm still a bit confused about whether you wanted the pull request with
+> the text in the email or in the tag, or branch, or something - I
+> interpreted what you said to Kalle differently to what you said to me.
+> I've duplicated it for now :)
+
+If you put it in the tag, that's fine, I'll just add my signoff to
+it.
