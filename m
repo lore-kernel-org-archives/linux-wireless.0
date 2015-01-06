@@ -1,111 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:34144 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757128AbbAPTTP (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:49897 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbbAFRlN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 14:19:15 -0500
-Received: by mail-wg0-f45.google.com with SMTP id y19so22240223wgg.4
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 11:19:14 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: clean bus initialiation code
-Date: Fri, 16 Jan 2015 20:18:49 +0100
-Message-Id: <1421435929-21499-1-git-send-email-zajec5@gmail.com> (sfid-20150116_201940_730633_8A467042)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 6 Jan 2015 12:41:13 -0500
+Received: by mail-wg0-f54.google.com with SMTP id z12so11923866wgg.13
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 09:41:12 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCHv4] mac80211: enable TPC through mac80211 stack
+Date: Tue,  6 Jan 2015 18:41:10 +0100
+Message-Id: <1420566070-25336-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150106_184117_077567_3ED2C6A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves main bus init code to the main.c and renames old function to
-make its purpose clear.
-Thanks to this change we'll also be able to separate scanning from
-registration (and support PCIe Gen 2 devices) in the future.
+Control per packet Transmit Power Control (TPC) in lower drivers
+according to TX power settings configured by the user. In particular TPC is
+enabled if value passed in enum nl80211_tx_power_setting is
+NL80211_TX_POWER_AUTOMATIC (no limit from userspace) or
+NL80211_TX_POWER_LIMITED (allow using less than specified from userspace),
+whereas TPC is disabled if nl80211_tx_power_setting is set to
+NL80211_TX_POWER_FIXED (use value configured from userspace)
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/bcma/bcma_private.h |  3 ++-
- drivers/bcma/main.c         | 16 ++++++++++++----
- drivers/bcma/scan.c         |  5 +----
- 3 files changed, 15 insertions(+), 9 deletions(-)
+ include/net/mac80211.h     |  8 ++++++++
+ net/mac80211/cfg.c         | 16 +++++++++++++---
+ net/mac80211/chan.c        |  4 ++--
+ net/mac80211/ieee80211_i.h |  3 ++-
+ net/mac80211/iface.c       |  5 +++--
+ 5 files changed, 28 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 314ae40..08fa58a 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -25,6 +25,7 @@ struct bcma_bus;
- bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
- 		     int timeout);
- void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
-+void bcma_init_bus(struct bcma_bus *bus);
- int bcma_bus_register(struct bcma_bus *bus);
- void bcma_bus_unregister(struct bcma_bus *bus);
- int __init bcma_bus_early_register(struct bcma_bus *bus,
-@@ -40,7 +41,7 @@ int bcma_bus_scan(struct bcma_bus *bus);
- int __init bcma_bus_scan_early(struct bcma_bus *bus,
- 			       struct bcma_device_id *match,
- 			       struct bcma_device *core);
--void bcma_init_bus(struct bcma_bus *bus);
-+void bcma_detect_chip(struct bcma_bus *bus);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 4913c00..e47fdbc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -376,6 +376,13 @@ enum ieee80211_rssi_event {
+  * @ssid_len: Length of SSID given in @ssid.
+  * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
+  * @txpower: TX power in dBm
++ * @txpower_type: TX power adjustment used to control per packet Transmit
++ *	Power Control (TPC) in lower driver for the current vif. In particular
++ *	TPC is enabled if value passed in %txpower_type is
++ *	NL80211_TX_POWER_AUTOMATIC (no limit from userspace) or
++ *	NL80211_TX_POWER_LIMITED (allow using less than specified from
++ *	userspace), whereas TPC is disabled if %txpower_type is set to
++ *	NL80211_TX_POWER_FIXED (use value configured from userspace)
+  * @p2p_noa_attr: P2P NoA attribute for P2P powersave
+  */
+ struct ieee80211_bss_conf {
+@@ -411,6 +418,7 @@ struct ieee80211_bss_conf {
+ 	size_t ssid_len;
+ 	bool hidden_ssid;
+ 	int txpower;
++	enum nl80211_tx_power_setting txpower_type;
+ 	struct ieee80211_p2p_noa_attr p2p_noa_attr;
+ };
  
- /* sprom.c */
- int bcma_sprom_get(struct bcma_bus *bus);
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 534e133..c166d44 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -268,6 +268,18 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1696658..9c7e1ee 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2103,6 +2103,7 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 	struct ieee80211_sub_if_data *sdata;
++	bool update_txp_type = false;
+ 
+ 	if (wdev) {
+ 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+@@ -2119,7 +2120,12 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ 			break;
+ 		}
+ 
+-		ieee80211_recalc_txpower(sdata);
++		if (type != sdata->vif.bss_conf.txpower_type) {
++			update_txp_type = true;
++			sdata->vif.bss_conf.txpower_type = type;
++		}
++
++		ieee80211_recalc_txpower(sdata, update_txp_type);
+ 
+ 		return 0;
  	}
- }
+@@ -2137,10 +2143,14 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
+ 	}
  
-+void bcma_init_bus(struct bcma_bus *bus)
-+{
-+	mutex_lock(&bcma_buses_mutex);
-+	bus->num = bcma_bus_next_num++;
-+	mutex_unlock(&bcma_buses_mutex);
-+
-+	INIT_LIST_HEAD(&bus->cores);
-+	bus->nr_cores = 0;
-+
-+	bcma_detect_chip(bus);
-+}
-+
- static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- {
- 	int err;
-@@ -369,10 +381,6 @@ int bcma_bus_register(struct bcma_bus *bus)
- 	int err;
- 	struct bcma_device *core;
+ 	mutex_lock(&local->iflist_mtx);
+-	list_for_each_entry(sdata, &local->interfaces, list)
++	list_for_each_entry(sdata, &local->interfaces, list) {
+ 		sdata->user_power_level = local->user_power_level;
++		if (type != sdata->vif.bss_conf.txpower_type)
++			update_txp_type = true;
++		sdata->vif.bss_conf.txpower_type = type;
++	}
+ 	list_for_each_entry(sdata, &local->interfaces, list)
+-		ieee80211_recalc_txpower(sdata);
++		ieee80211_recalc_txpower(sdata, update_txp_type);
+ 	mutex_unlock(&local->iflist_mtx);
  
--	mutex_lock(&bcma_buses_mutex);
--	bus->num = bcma_bus_next_num++;
--	mutex_unlock(&bcma_buses_mutex);
--
- 	/* Scan for devices (cores) */
- 	err = bcma_bus_scan(bus);
- 	if (err) {
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 9175207..5328ee5 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -435,15 +435,12 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
  	return 0;
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 5d6dae9..a881370 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -628,7 +628,7 @@ out:
+ 	}
+ 
+ 	if (new_ctx && ieee80211_chanctx_num_assigned(local, new_ctx) > 0) {
+-		ieee80211_recalc_txpower(sdata);
++		ieee80211_recalc_txpower(sdata, false);
+ 		ieee80211_recalc_chanctx_min_def(local, new_ctx);
+ 	}
+ 
+@@ -1356,7 +1356,7 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
+ 				ieee80211_bss_info_change_notify(sdata,
+ 								 changed);
+ 
+-			ieee80211_recalc_txpower(sdata);
++			ieee80211_recalc_txpower(sdata, false);
+ 		}
+ 
+ 		ieee80211_recalc_chanctx_chantype(local, ctx);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 4f45cab..486dbc5d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1623,7 +1623,8 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local);
+ void ieee80211_del_virtual_monitor(struct ieee80211_local *local);
+ 
+ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata);
+-void ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata);
++void ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata,
++			      bool update_bss);
+ 
+ static inline bool ieee80211_sdata_running(struct ieee80211_sub_if_data *sdata)
+ {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 4173553..bc885e2 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -73,9 +73,10 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
+ 	return false;
  }
  
--void bcma_init_bus(struct bcma_bus *bus)
-+void bcma_detect_chip(struct bcma_bus *bus)
+-void ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
++void ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata,
++			      bool update_bss)
  {
- 	s32 tmp;
- 	struct bcma_chipinfo *chipinfo = &(bus->chipinfo);
- 	char chip_id[8];
+-	if (__ieee80211_recalc_txpower(sdata))
++	if (__ieee80211_recalc_txpower(sdata) || update_bss)
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_TXPOWER);
+ }
  
--	INIT_LIST_HEAD(&bus->cores);
--	bus->nr_cores = 0;
--
- 	bcma_scan_switch_core(bus, BCMA_ADDR_BASE);
- 
- 	tmp = bcma_scan_read32(bus, 0, BCMA_CC_ID);
 -- 
-1.8.4.5
+2.1.0
 
