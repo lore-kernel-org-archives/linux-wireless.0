@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:50606 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755791AbbAWRKx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:37549 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716AbbAFSOI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 12:10:53 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 0/6] Some changes for rtlwifi
-Date: Fri, 23 Jan 2015 11:10:38 -0600
-Message-Id: <1422033044-7461-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150123_181140_872568_AE3723BF)
+	Tue, 6 Jan 2015 13:14:08 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Fengguang Wu <fengguang.wu@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: wireless: rtlwifi: btcoexist: halbtc8821a2ant:  Remove some unused functions
+References: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Date: Tue, 06 Jan 2015 20:14:01 +0200
+In-Reply-To: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	(Rickard Strandqvist's message of "Fri, 2 Jan 2015 21:26:01 +0100")
+Message-ID: <871tn7zsie.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_191437_219153_DEC62382)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first of these patches changes the logging when an encryption key
-is changed. The rest are for changes in the btcoexist driver. Most
-contain the code needed to handle the RTL8812AE chips.
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
 
-All patches are for -next.
+> Removes some functions that are not used anywhere:
+> ex_halbtc8821a2ant_periodical() ex_halbtc8821a2ant_halt_notify()
+> ex_halbtc8821a2ant_bt_info_notify()
+> ex_halbtc8821a2ant_special_packet_notify()
+> ex_halbtc8821a2ant_connect_notify() ex_halbtc8821a2ant_scan_notify()
+> ex_halbtc8821a2ant_lps_notify() ex_halbtc8821a2ant_ips_notify()
+> ex_halbtc8821a2ant_display_coex_info() ex_halbtc8821a2ant_init_coex_dm()
+> ex_halbtc8821a2ant_init_hwconfig()
+>
+> This was partially found by using a static code analysis program called cppcheck.
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Rickard, I have dropped all your patches because I lost track which I
+should apply and which not and I do not want to waste half an hour
+figuring out. Please resend the ones which are still valid.
 
-Larry Finger (2):
-  rtlwifi: Change logging level for key change
-  rtlwifi: btcoexist: Remove typedef statements
-
-Troy Tan (4):
-  rtlwifi: btcoexist: Add routines for RTL8812AE with single antenna
-  rtlwifi: btcoexist: Add routines for RTL8812AE with dual antennae
-  rtlwifi: btcoexist: Add routines for RTL8812AE - all configs
-  rtlwifi: btcoexist: Enable new routines for RTL8812AE
-
- drivers/net/wireless/rtlwifi/btcoexist/Makefile    |    9 +
- .../net/wireless/rtlwifi/btcoexist/halbt_precomp.h |    3 +
- .../wireless/rtlwifi/btcoexist/halbtc8192e2ant.c   |    6 +-
- .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.h   |    6 +-
- .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.c   | 2073 ++++++++++
- .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.h   |  152 +
- .../wireless/rtlwifi/btcoexist/halbtc8812a2ant.c   | 4207 ++++++++++++++++++++
- .../wireless/rtlwifi/btcoexist/halbtc8812a2ant.h   |  177 +
- .../wireless/rtlwifi/btcoexist/halbtc8812a_ext.c   |  921 +++++
- .../wireless/rtlwifi/btcoexist/halbtc8812a_ext.h   |  359 ++
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  |  713 +++-
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  |  108 +-
- drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c   |   37 +
- drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h   |    6 +-
- drivers/net/wireless/rtlwifi/cam.c                 |    2 +-
- drivers/net/wireless/rtlwifi/core.c                |   17 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |   14 -
- drivers/net/wireless/rtlwifi/wifi.h                |   12 +-
- 18 files changed, 8590 insertions(+), 232 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.h
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a2ant.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a2ant.h
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a_ext.c
- create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a_ext.h
+And to make it easier for everyone please group these wireless-drivers
+cleanup patches into a larger patchset (like 10-15 patches max per
+patchset). That way it's a lot easier for me tomanage them. Sending one
+patch a day is not recommended, especially when we are talking trivial
+cleanup patches like this.
 
 -- 
-2.1.2
-
+Kalle Valo
