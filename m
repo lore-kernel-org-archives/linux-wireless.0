@@ -1,43 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35514 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751121AbbAWJ4o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 04:56:44 -0500
-Message-ID: <1422006994.2728.22.camel@sipsolutions.net> (sfid-20150123_105648_268778_2C24FEE0)
-Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 23 Jan 2015 10:56:34 +0100
-In-Reply-To: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from toccata2.tricolour.ca ([204.225.221.17]:41359 "EHLO
+	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753497AbbAGSED (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 13:04:03 -0500
+Date: Wed, 7 Jan 2015 13:03:58 -0500
+From: Richard Guy Briggs <rgb@tricolour.ca>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
+	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
+Subject: NetDev 0.1 Deadline Extension(Jan 24) and Talk Summary
+Message-ID: <20150107180358.GU1343@toccata2.tricolour.ca> (sfid-20150107_190424_093672_95DDBF5E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-01-22 at 23:30 +0200, Emmanuel Grumbach wrote:
-> When mac80211 disconnects, it drops all the packets on the
-> queues. This happens after the net stack has been notified
-> that we have no link anymore (netif_carrier_off).
-> netif_carrier_off ensures that no new packets are sent to
-> xmit() callback, but we might have older packets in the
-> middle of the Tx path. These packets will land in the
-> driver's queues after the latter have been flushed.
-> Synchronize_net() between netif_carrier_off and drv_flush()
-> will fix this.
-> 
-> Note that we can't call synchronize_net inside
-> ieee80211_flush_queues since there are flows that call
-> ieee80211_flush_queues and don't need synchronize_net()
-> which is an expensive operation.
+Fellow netheads:
 
-I'm -- with a heavy heart -- applying this for now. TI/wizery spent a
-lot of time optimising the time it takes to roam, and this single line
-will introduce a potential for hundreds of ms of latency into the
-roaming flow.
+Due to several submitter requests we would like to accomodate, we have extended
+the proposal submission deadline to Jan 24.  https://netdev01.org/cfp 
 
-You (we) really need to think about how to avoid that.
 
-johannes
+A reminder that the Westin Hotel is holding a block of rooms for Netdev01 at a
+guaranteed rate of $159.00 or $179.00 (depending on the type of room required)
+and the rooms are going fast due to Winterlude bookings.  That guarantee
+expires on January 23, so book now to avoid disappointment and get the low
+rate. The rooms are going faster than we expected!
+Reservations: https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
 
+
+Here is a post-holiday update of the activity so far in NetDev 0.1 you may have
+missed if you aren't following the RSS feed or twitter:
+
+
+Confirmed keynote speaker:
+==========================
+David S. Miller - The Current State of Linux kernel Networking.
+
+
+Accepted talks: (All listed: https://www.netdev01.org/sessions )
+===============
+Rocker: switchdev prototyping vehicle
+Scott Feldman
+https://www.netdev01.org/sessions/2
+
+How to not just do a demo with DPDK or Lessons learned making a software dataplane
+Stephen Hemminger
+https://www.netdev01.org/sessions/3
+
+Picking low hanging fruit from the FIB tree
+Alexander Duyck
+https://www.netdev01.org/sessions/4
+
+Rtnetlink dump filtering in the kernel
+Roopa Prabhu
+https://www.netdev01.org/sessions/5
+
+Hardware Switches - The Opensource Approach 
+Jiri Pirko
+https://www.netdev01.org/sessions/6
+
+hello UML, meet LibOS and friends - h/w independent unadulterated reuse of Linux kernel networking code in userspace
+Hajime Tazaki
+https://www.netdev01.org/sessions/7
+
+Distributing Linux tc filter-action packet processing across disparate nodes
+Jamal Hadi Salim and Damascene M. Joachimpillai
+https://www.netdev01.org/sessions/9
+
+All About UDP Encapsulation
+Tom Herbert
+https://www.netdev01.org/sessions/11
+
+Accepted workshops:
+===================
+Wireless Workshop
+https://www.netdev01.org/sessions/1
+
+Hardware Offloading BoF
+https://www.netdev01.org/sessions/10
+
+All of the accepted proposals are new work.  A couple of proposals have been
+returned for rework prior to acceptance.  There are many more excellent
+proposals currently making their way through the technical committee vetting
+process.  The committee has so far been very impressed with the quality of
+proposals submitted.
+
+
+Registration https://onlineregistrations.ca/netdev01/
+$100/day, or $350 for 4 days (Cdn dollars). (online reg closes Feb 12th)
+Registering helps us plan properly for numbers of attendees,
+ensuring venue sizes and supplies are appropriate without
+wasting resources.
+
+
+Travel advice: https://netdev01.org/travel
+
+Sponsors: https://netdev01.org/sponsors
+Verizon http://www.verizon.com/
+Cumulus Networks http://cumulusnetworks.com/ 
+Mojatatu Networks http://mojatatu.com/ 
+
+THE Technical Conference on Linux Networking, February 14-17, 2015, Ottawa, Canada
+https://netdev01.org/
+
+RSS feed: https://netdev01.org/atom
+Follow us on Twitter: @netdev01 https://twitter.com/netdev01
