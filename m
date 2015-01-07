@@ -1,33 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:56026 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbbAPA2V (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:41848 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650AbbAGNyE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 19:28:21 -0500
-Date: Thu, 15 Jan 2015 19:28:20 -0500 (EST)
-Message-Id: <20150115.192820.2095761147762961625.davem@davemloft.net> (sfid-20150116_012829_256929_95745648)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2015-01-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1421325902.1962.8.camel@sipsolutions.net>
-References: <1421325902.1962.8.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 7 Jan 2015 08:54:04 -0500
+Received: by mail-wg0-f53.google.com with SMTP id x13so1224986wgg.12
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 05:54:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1420638161.3407.12.camel@sipsolutions.net>
+References: <1420112563-3981-1-git-send-email-arik@wizery.com>
+ <1420112563-3981-2-git-send-email-arik@wizery.com> <1420541766.1966.18.camel@sipsolutions.net>
+ <1420552744.1966.31.camel@sipsolutions.net> <CA+XVXfcAW19fzEpAV8R=hDbBdXEgJmrT8m4mqFg8tUhdx1XvKQ@mail.gmail.com>
+ <CA+XVXfdKq1tUoUrbH+9BE=LX_Nf+tNNeoHLYMa4NfX41cMoysg@mail.gmail.com> <1420638161.3407.12.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 7 Jan 2015 15:45:50 +0200
+Message-ID: <CA+XVXfex6L8-6FbKys07VAstTC3NeqtJPykUc-zxS0ZZp3nWnw@mail.gmail.com> (sfid-20150107_145412_101033_E020C1D8)
+Subject: Re: [PATCH 2/2] cfg80211: avoid reg-hints in self-managed only systems
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 15 Jan 2015 13:45:02 +0100
+On Wed, Jan 7, 2015 at 3:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2015-01-07 at 15:38 +0200, Arik Nemtsov wrote:
+>> On Tue, Jan 6, 2015 at 4:04 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>> > On Tue, Jan 6, 2015 at 3:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> >> On Tue, 2015-01-06 at 11:56 +0100, Johannes Berg wrote:
+>> >>> On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
+>> >>> > When a system contains only self-managed regulatory devices all hints
+>> >>> > from the regulatory core are ignored. Stop hint processing early in this
+>> >>> > case. These systems usually don't have CRDA deployed, which results in
+>> >>> > endless (irrelevent) logs of the form:
+>> >>> > cfg80211: Calling CRDA to update world regulatory domain
+>> >>>
+>> >>> Applied.
+>> >>
+>> >> I take that back - dropped again. This was causing spurious messages in
+>> >> the hwsim test run VM, saying something like "couldn't set reg domain:
+>> >> -7". Maybe at that point not a single wiphy existed?
+>> >
+>> > Interesting. I guess I should fix this to only drop the request in
+>> > case there's at least one self-managed wiphy.
+>>
+>> Could you point me to the hwsim test that failed for you?
+>
+> I don't think it was a specific test case - the message seems to have
+> come during boot. OTOH, I also reverted some of Eliad's patches, so
+> perhaps I should retest without those?
 
-> My first pull request for -next, sorry I dragged my feet on this.
-> 
-> I merged mac80211.git to avoid some conflicts, but the content was in
-> net-next already anyway.
-> 
-> Let me know if there's any issue or any format changes you'd like to make.
+It's a good check to add anyway (at least one self-managed device).
+Since the regulatory queues us the world-update core hint right away..
+Not sure why I haven't encountered it, I'll try to introduce some
+sleep() calls to reproduce. It's a real bug I believe.
 
-I had to resolve a minor merge conflict, please take a look to make sure
-I got it right.
+>
+>> Also where is that message coming from? I don't see it in wpa_s or the kernel.
+>
+> I have no idea! I can't even explain where the -7 (-E2BIG) came from!
 
-Pulled, thanks.
+Yea that's what I was after as well. :)
+
+Arik
