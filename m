@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36133 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753212AbbAGNh4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:37:56 -0500
-Message-ID: <1420637871.3407.10.camel@sipsolutions.net> (sfid-20150107_143759_361227_F44D63FB)
-Subject: Re: [PATCH] cfg80211: fix deadlock during reg chan check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Wed, 07 Jan 2015 14:37:51 +0100
-In-Reply-To: <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com> (sfid-20150107_143425_279464_1C23BEE0)
-References: <1419847199-25493-1-git-send-email-arik@wizery.com>
-	 <1420541514.1966.16.camel@sipsolutions.net>
-	 <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com>
-	 (sfid-20150107_143425_279464_1C23BEE0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:38627 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304AbbAGN2n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 08:28:43 -0500
+Received: by mail-wi0-f179.google.com with SMTP id ex7so1612324wid.6
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 05:28:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1420541023.1966.14.camel@sipsolutions.net>
+References: <1419847143-25447-1-git-send-email-arik@wizery.com> <1420541023.1966.14.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 7 Jan 2015 15:28:26 +0200
+Message-ID: <CA+XVXfd3nXSm3KZ0-46QUiC4CnCW2O8RXoW9OpXZaiL4u6CVow@mail.gmail.com> (sfid-20150107_142846_474166_463D27AE)
+Subject: Re: [PATCH] mac80211: add TDLS supported channels correctly
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-07 at 15:34 +0200, Arik Nemtsov wrote:
+On Tue, Jan 6, 2015 at 12:43 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2014-12-29 at 11:59 +0200, Arik Nemtsov wrote:
+>> The function adding the supported channels IE during a TDLS connection had
+>> several issues:
+>> 1. If the entire subband is usable, the function exitted the loop without
+>> adding it
+>> 2. The function only checked chandef_usable, ignoring flags like RADAR
+>> which would prevent TDLS off-channel communcation.
+>> 3. HT20 was explicitly required in the chandef, while not a requirement
+>> for TDLS off-channel.
+>
+>
+> That's a strangely formatted commit message ... :)
 
-> > I'm not convinced this is the right thing to do. When checking for the
-> > current wdev that it can use a channel, then it seems that it's own
-> > current BSS connection (if any) shouldn't actually be taken into account
-> > - ergo the lock shouldn't have to be taken, that interface should be
-> > excluded from the "can beacon due to concurrent check" anyway.
-> 
-> We have a couple of checks we want to add in the pipeline that also
-> need "this" wdev in the concurrent check, so I'd prefer to avoid this.
+I thought it's clearer this way. You disagree?
 
-Why would you need to check "this" wdev when doing something for "this"
-wdev? Seems odd? But I'm willing to learn :)
+>
+>
+>> +                     if (cfg80211_reg_can_beacon(sdata->local->hw.wiphy,
+>> +                                                 &chandef,
+>> +                                                 sdata->wdev.iftype)) {
+>>                               ch_cnt++;
+>>                               continue;
+>
+> With some thinking, I can understand it - but that means you need a
+> comment here.
 
-> Unless we treat the exclude_wdev as "already locked wdev", which I
-> think is unglier than what I do here.
+Sure.
 
-Yeah that doesn't seem right, agree.
-
-> > Also, the only reason this can happen anyway is when you call "can
-> > beacon" for a station interface - which seems nonsensical. Given that
-> 
-> This is not true. This happens with current code for a p2p-go
-> interface during channel validity checks in reg.c.
-
-Not sure I see this? The only thing doing wdev locking is
-cfg80211_go_permissive_chan(), no? And that only for station interfaces.
-
-johannes
-
+Arik
