@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:33398 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234AbbABQ6l (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20153 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752635AbbAGREp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 11:58:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 08/11] rtlwifi: rtl8723ae: Convert driver to use common DM table initialization
-Date: Fri,  2 Jan 2015 10:58:25 -0600
-Message-Id: <1420217908-1382-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175927_075894_97DFA1D1)
-In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 7 Jan 2015 12:04:45 -0500
+Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Yanbo Li <yanbol@qca.qualcomm.com>,
+	Ben Greear <greearb@candelatech.com>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Nicholas Mc Guire <der.herr@hofr.at>
+Subject: Re: [PATCH v2] ath10k: fixup wait_for_completion_timeout return handling
+References: <1419968660-17404-1-git-send-email-der.herr@hofr.at>
+Date: Wed, 7 Jan 2015 19:04:36 +0200
+In-Reply-To: <1419968660-17404-1-git-send-email-der.herr@hofr.at> (Nicholas Mc
+	Guire's message of "Tue, 30 Dec 2014 14:44:20 -0500")
+Message-ID: <87sifmsesb.fsf@kamboji.qca.qualcomm.com> (sfid-20150107_180534_523790_B2C4B7BE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert driver rtl8723ae to use common routine rtl_dm_diginit().
+Nicholas Mc Guire <der.herr@hofr.at> writes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.c | 27 +--------------------------
- 1 file changed, 1 insertion(+), 26 deletions(-)
+> wait_for_completion_timeout does not return negative values so the tests
+> for <= 0 are not needed and the case differentiation in the error handling
+> path unnecessary.
+>
+> v2: all wait_for_completion_timeout changes in a single patch
+>
+> patch was only compile tested x86_64_defconfig + CONFIG_ATH_CARDS=m
+> CONFIG_ATH10K=m
+>
+> patch is against linux-next 3.19.0-rc1 -next-20141226
+>
+> None of the proposed cleanups are critical.
+> All changes should only be removing unreachable cases.
+>
+> Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+> ---
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-index 8bd124c..4c1c96c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-@@ -147,31 +147,6 @@ static const u8 cckswing_table_ch14[CCK_TABLE_SIZE][8] = {
- 	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00}
- };
- 
--static void rtl8723e_dm_diginit(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
--
--	dm_digtable->dig_enable_flag = true;
--	dm_digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
--	dm_digtable->cur_igvalue = 0x20;
--	dm_digtable->pre_igvalue = 0x0;
--	dm_digtable->cursta_cstate = DIG_STA_DISCONNECT;
--	dm_digtable->presta_cstate = DIG_STA_DISCONNECT;
--	dm_digtable->curmultista_cstate = DIG_MULTISTA_DISCONNECT;
--	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
--	dm_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
--	dm_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
--	dm_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
--	dm_digtable->rx_gain_max = DM_DIG_MAX;
--	dm_digtable->rx_gain_min = DM_DIG_MIN;
--	dm_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
--	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
--	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
--	dm_digtable->pre_cck_pd_state = CCK_PD_STAGE_MAX;
--	dm_digtable->cur_cck_pd_state = CCK_PD_STAGE_MAX;
--}
--
- static u8 rtl8723e_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -819,7 +794,7 @@ void rtl8723e_dm_init(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
- 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
--	rtl8723e_dm_diginit(hw);
-+	rtl_dm_diginit(hw, 0x20);
- 	rtl8723_dm_init_dynamic_txpower(hw);
- 	rtl8723_dm_init_edca_turbo(hw);
- 	rtl8723e_dm_init_rate_adaptive_mask(hw);
+All the comments after "v2:" should be here, under the "---" line so
+that git-am can automatically discard them.
+
 -- 
-2.1.2
-
+Kalle Valo
