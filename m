@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:46179 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751693AbbAGLSV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 06:18:21 -0500
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80 characters per line
-From: =?utf-8?Q?=C3=92scar_Forner_Mart=C3=ADnez?=
-	<oscar.forner.martinez@gmail.com>
-In-Reply-To: <8761cv6i42.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 7 Jan 2015 11:18:09 +0000
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Message-Id: <B4179D1B-BF97-469D-9BBE-ED8059E1D3A9@gmail.com> (sfid-20150107_121838_374420_73F98835)
-References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com> <CACna6rz4ue2PFQR-=nKxmCJSw9O8pKU=S7LqxA68OY1D0obvKg@mail.gmail.com> <8761cv6i42.fsf@kamboji.qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38153 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751539AbbAGWQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 17:16:40 -0500
+Message-ID: <1420668978.3407.28.camel@sipsolutions.net> (sfid-20150107_231701_511926_BFE1771A)
+Subject: Re: [PATCH 2/2] Fix copy-paste bug: assign from src struct not dest
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Giel van Schijndel <me@mortis.eu>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
+	linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Date: Wed, 07 Jan 2015 23:16:18 +0100
+In-Reply-To: <20150107191836.GA18978@salidar.dom.custoft.eu>
+References: <20150107191836.GA18978@salidar.dom.custoft.eu>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That e-mail is just to remind that this patch stills waiting.
+On Wed, 2015-01-07 at 20:18 +0100, Giel van Schijndel wrote:
 
-On 29 Dec 2014, at 07:16, Kalle Valo <kvalo@codeaurora.org> wrote:
+> IMO the aligned block of code has the significant advantage of taking
+> advantage of humans' ability to spot things that break a pattern. Which
+> in this case becomes *very* visible when properly aligned, because
+> without the alignment there is no (visual) pattern (or at least not one
+> very suitable for my "visual processing system", I know the same applies
+> to at least some others).
 
-> Rafał Miłecki <zajec5@gmail.com> writes:
-> 
->> On 27 December 2014 at 20:24, Oscar Forner Martinez
->> <oscar.forner.martinez@gmail.com> wrote:
->>> Three lines with more than 80 characters per line have been split in several lines.
->>> 
->>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
->> 
->> Acked-by: Rafał Miłecki <zajec5@gmail.com>
->> 
->> Kalle: will you pick this patch?
-> 
-> Most likely yes, but let's wait first for John's opinion about how to
-> handle bcma patches.
-> 
-> -- 
-> Kalle Valo
+Yeah, well, but why even invoke that "visual processing system"?
+
+If you look, for example, at the __skb_clone function it just uses a
+macro:
+
+#define C(x) n->x = skb->x
+
+and then
+
+	C(len);
+	C(data_len);
+
+etc.
+
+johannes
 
