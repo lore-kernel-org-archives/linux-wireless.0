@@ -1,74 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:60712 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752887AbbAEKeg (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:53265 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbbAGKXj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 05:34:36 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Fabian Frederick <fabf@skynet.be>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
-References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<54A8DBF4.4050202@lwfinger.net>
-Date: Mon, 05 Jan 2015 12:34:27 +0200
-In-Reply-To: <54A8DBF4.4050202@lwfinger.net> (Larry Finger's message of "Sun,
-	04 Jan 2015 00:21:40 -0600")
-Message-ID: <878uhh3498.fsf@kamboji.qca.qualcomm.com> (sfid-20150105_113458_286287_91D83A2C)
+	Wed, 7 Jan 2015 05:23:39 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Message-ID: <21677.2491.857663.473071@gargle.gargle.HOWL> (sfid-20150107_112343_992420_FAAD84F0)
+Date: Wed, 7 Jan 2015 15:56:03 +0530
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Fix DMA burst size
+In-Reply-To: <CA+BoTQ=Vt8BTzZcgxqq4eU+RKhMwNbGrZOOFGL9TcBA3KnrerQ@mail.gmail.com>
+References: <1419834066-11802-1-git-send-email-sujith@msujith.org>
+	<CA+BoTQ=Vt8BTzZcgxqq4eU+RKhMwNbGrZOOFGL9TcBA3KnrerQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Michal Kazior wrote:
+> Since it's for cards/chips why do you enable it for 10.2 only? There's
+> 10.1, main and tlv as well which could possibly benefit from this.
 
-> On 01/03/2015 06:47 PM, Rickard Strandqvist wrote:
->> Removes some functions that are not used anywhere:
->> dma_txflush() dma_txsuspended()
->>
->> This was partially found by using a static code analysis program called cppcheck.
->>
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>   drivers/net/wireless/brcm80211/brcmsmac/dma.c |   19 -------------------
->>   drivers/net/wireless/brcm80211/brcmsmac/dma.h |    2 --
->>   2 files changed, 21 deletions(-)
->
-> Just because file dma.c is involved, it does not need to be, nor
-> should it be in the subject line. You could specify the driver names
-> in the file tree after wireless. In this instance, one possible
-> subject would be "brcm80211: brcmsmac: Remove some unused functions".
-> On the other hand, if you look at "git log" to see past patches, the
-> driver maintainers even leave off the brcm80211 part, thus to match
-> them, the subject should be "brcmsmac: Remove some unused functions".
+I've not tested it with any of the FW versions other than 10.2 and
+am not sure if older FW support this properly. We could try it
+with 10.1, I guess - but even that is in 'maintenance mode'
+internally.
 
-This is a handy way to check what kind of format you should use:
-
-$ git log --oneline --no-merges drivers/net/wireless/brcm80211/brcmsmac/dma.c | head
-a38a9ef1c064 brcm80211: use container_of to resolve dma_info from dma_pub
-67d0cf50bd32 brcmsmac: Fix WARNING caused by lack of calls to dma_mapping_error()
-55cec505559d brcmsmac: Fix possible NULL pointer dereference in _dma_ctrlflags()
-9242c7261b8c brcmsmac: Remove some noisy and uninformative debug messages
-0c9a0a1dd145 brcmsmac: Add tracepoint for AMPDU session information
-90123e045cac brcmsmac: Add brcms_dbg_dma() debug macro
-b05618deb4ac brcmsmac: Use correct descriptor count when calculating next rx descriptor
-e041f65d5f00 brcmsmac: Remove internal tx queue
-05f8a6160491 brcmsmac: Add helper function for updating txavail count
-ec5ab1dd73a4 brcmsmac: fix DMA on SoCs
-
-> As was suggested earlier, you need to look at the precedents. Keeping
-> a uniform method of patch naming helps when looking for patches in the
-> git log.
-
-Yeah, and also having clean[1] patch titles makes working with patchwork
-so much easier and hence me happier :)
-
-[1] clean patch title == short, clear and unique
-
--- 
-Kalle Valo
+Sujith
