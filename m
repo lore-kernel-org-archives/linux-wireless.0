@@ -1,81 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:20052 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752382AbbATDbX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 22:31:23 -0500
-Message-ID: <54BDCC06.8090107@linux.intel.com> (sfid-20150120_043142_157940_E98FAEFE)
-Date: Tue, 20 Jan 2015 11:31:18 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:35159 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002AbbAGJGw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 04:06:52 -0500
+Received: by mail-wg0-f45.google.com with SMTP id b13so778183wgh.18
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 01:06:51 -0800 (PST)
 MIME-Version: 1.0
-To: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	kvalo@codeaurora.org, linville@tuxdriver.com,
-	pieterpg@broadcom.com, hdegoede@redhat.com, wens@csie.org,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87lhm3iusl.fsf@kamboji.qca.qualcomm.com>
+References: <1418829711-19713-1-git-send-email-bartosz.markowski@tieto.com>
+	<1418829711-19713-6-git-send-email-bartosz.markowski@tieto.com>
+	<87lhm3iusl.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 7 Jan 2015 10:06:51 +0100
+Message-ID: <CA+BoTQmJ3Z0LvBKb9ibpqR=YX_boMRTuvoU58-UJQt6+1mRGzg@mail.gmail.com> (sfid-20150107_100700_750532_3917BC52)
+Subject: Re: [PATCH 5/5] ath10k: implement support for ap beacon offloading
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Bartosz Markowski <bartosz.markowski@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From 04d3fa673897ca4ccbea6c76836d0092dba2484a Mon Sep 17 00:00:00 2001
-From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
-Date: Tue, 20 Jan 2015 11:14:13 +0800
-Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+On 19 December 2014 at 15:22, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+>
+>> From: Michal Kazior <michal.kazior@tieto.com>
+>>
+>> New firmware revisions support beacon and probe
+>> response templates instead. This means SWBA events
+>> are no longer delivered for these firmware
+>> revisions.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> [...]
+>
+>> +     ret = ath10k_mac_setup_bcn_p2p_ie(arvif, bcn);
+>> +     if (ret) {
+>> +             ath10k_warn(ar, "failed to setup p2p go bcn ie: %d\n", ret);
+>> +             kfree_skb(bcn);
+>> +             return ret;
+>> +     }
+>> +
+>> +     ath10k_mac_remove_vendor_ie(bcn, WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P,
+>> +                                 offsetof(struct ieee80211_mgmt,
+>> +                                          u.beacon.variable));
+>
+> A comment would be nice why you are removing the P2P IE. I guess because
+> there's a different command to set that IE?
 
-WiFi chip has 2 SDIO functions, and PM core will trigger
-twice suspend/resume operations for one WiFi chip to do
-the same things. This patch avoid this case.
+Correct - ath10k_wmi_p2p_go_bcn_ie() (called by
+ath10k_mac_setup_bcn_p2p_ie) is that command. The removal avoids
+duplicate P2P IE in Beacons. I'll add a comment.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   17 +++++++++++++++--
- 1 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 9880dae..618b545 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -1139,11 +1139,17 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
- static int brcmf_ops_sdio_suspend(struct device *dev)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
--	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct brcmf_sdio_dev *sdiodev;
- 	mmc_pm_flag_t sdio_flags;
-+	struct sdio_func *func = dev_to_sdio_func(dev);
- 
- 	brcmf_dbg(SDIO, "Enter\n");
- 
-+	if (func->num == 2)
-+		return 0;
-+
-+	sdiodev = bus_if->bus_priv.sdio;
-+
- 	atomic_set(&sdiodev->suspend, true);
- 
- 	if (sdiodev->wowl_enabled) {
-@@ -1164,9 +1170,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
- static int brcmf_ops_sdio_resume(struct device *dev)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
--	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-+	struct brcmf_sdio_dev *sdiodev;
-+	struct sdio_func *func = dev_to_sdio_func(dev);
- 
- 	brcmf_dbg(SDIO, "Enter\n");
-+
-+	if (func->num == 2)
-+		return 0;
-+
-+	sdiodev = bus_if->bus_priv.sdio;
-+
- 	if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
- 		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
- 	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
--- 1.7.1
-
+Michał
