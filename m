@@ -1,87 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:61782 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756139AbbAFP63 (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:53901 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265AbbAGOpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:58:29 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 07/11 V2] rtlwifi: rtl8192ee: Convert driver to use common DM table initialization
-Date: Tue,  6 Jan 2015 09:58:08 -0600
-Message-Id: <1420559892-12384-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165912_131833_1FD6813D)
-In-Reply-To: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 7 Jan 2015 09:45:11 -0500
+Received: by mail-we0-f171.google.com with SMTP id u56so1299915wes.16
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 06:45:10 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v3] mac80211: add TDLS supported channels correctly
+Date: Wed,  7 Jan 2015 16:45:07 +0200
+Message-Id: <1420641907-4350-1-git-send-email-arik@wizery.com> (sfid-20150107_154515_405862_2676C2EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert driver rtl8192ee to use the common routine to initialize
-dm_digtable.
+The function adding the supported channels IE during a TDLS connection had
+several issues:
+1. If the entire subband is usable, the function exitted the loop without
+   adding it
+2. The function only checked chandef_usable, ignoring flags like RADAR
+   which would prevent TDLS off-channel communcation.
+3. HT20 was explicitly required in the chandef, while not a requirement
+   for TDLS off-channel.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ net/mac80211/tdls.c | 26 +++++++++++++++++++++-----
+ 1 file changed, 21 insertions(+), 5 deletions(-)
 
-V2 - unchanged from V1
----
-
- drivers/net/wireless/rtlwifi/rtl8192ee/dm.c | 32 ++---------------------------
- 1 file changed, 2 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
-index 70e58d1..459f3d0 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/dm.c
-@@ -152,35 +152,6 @@ static const u8 cckswing_table_ch14[CCK_TABLE_SIZE][8] = {
- 	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00}  /* 32, -16.0dB */
- };
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 55ddd77..9b789c6 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -68,17 +68,24 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
+ 		ch = ieee80211_get_channel(sdata->local->hw.wiphy, i);
+ 		if (ch) {
+ 			/* we will be active on the channel */
+-			u32 flags = IEEE80211_CHAN_DISABLED |
+-				    IEEE80211_CHAN_NO_IR;
+ 			cfg80211_chandef_create(&chandef, ch,
+-						NL80211_CHAN_HT20);
+-			if (cfg80211_chandef_usable(sdata->local->hw.wiphy,
+-						    &chandef, flags)) {
++						NL80211_CHAN_NO_HT);
++			if (cfg80211_reg_can_beacon(sdata->local->hw.wiphy,
++						    &chandef,
++						    sdata->wdev.iftype)) {
+ 				ch_cnt++;
++				/*
++				 * check if the next channel is also part of
++				 * this allowed range
++				 */
+ 				continue;
+ 			}
+ 		}
  
--static void rtl92ee_dm_diginit(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct dig_t *dm_dig = &rtlpriv->dm_digtable;
--
--	dm_dig->cur_igvalue = rtl_get_bbreg(hw, DM_REG_IGI_A_11N,
--					    DM_BIT_IGI_11N);
--	dm_dig->rssi_lowthresh = DM_DIG_THRESH_LOW;
--	dm_dig->rssi_highthresh = DM_DIG_THRESH_HIGH;
--	dm_dig->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
--	dm_dig->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
--	dm_dig->rx_gain_max = DM_DIG_MAX;
--	dm_dig->rx_gain_min = DM_DIG_MIN;
--	dm_dig->back_val = DM_DIG_BACKOFF_DEFAULT;
--	dm_dig->back_range_max = DM_DIG_BACKOFF_MAX;
--	dm_dig->back_range_min = DM_DIG_BACKOFF_MIN;
--	dm_dig->pre_cck_cca_thres = 0xff;
--	dm_dig->cur_cck_cca_thres = 0x83;
--	dm_dig->forbidden_igi = DM_DIG_MIN;
--	dm_dig->large_fa_hit = 0;
--	dm_dig->recover_cnt = 0;
--	dm_dig->dig_min_0 = DM_DIG_MIN;
--	dm_dig->dig_min_1 = DM_DIG_MIN;
--	dm_dig->media_connect_0 = false;
--	dm_dig->media_connect_1 = false;
--	rtlpriv->dm.dm_initialgain_enable = true;
--	dm_dig->bt30_cur_igi = 0x32;
--}
--
- static void rtl92ee_dm_false_alarm_counter_statistics(struct ieee80211_hw *hw)
- {
- 	u32 ret_value;
-@@ -1089,10 +1060,11 @@ static void rtl92ee_dm_init_dynamic_atc_switch(struct ieee80211_hw *hw)
- void rtl92ee_dm_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 cur_igvalue = rtl_get_bbreg(hw, DM_REG_IGI_A_11N, DM_BIT_IGI_11N);
++		/*
++		 * we've reached the end of a range, with allowed channels
++		 * found
++		 */
+ 		if (ch_cnt) {
+ 			u8 *pos = skb_put(skb, 2);
+ 			*pos++ = ieee80211_frequency_to_channel(subband_start);
+@@ -89,6 +96,15 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
  
- 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
++	/* all channels in the requested range are allowed - add them here */
++	if (ch_cnt) {
++		u8 *pos = skb_put(skb, 2);
++		*pos++ = ieee80211_frequency_to_channel(subband_start);
++		*pos++ = ch_cnt;
++
++		subband_cnt++;
++	}
++
+ 	return subband_cnt;
+ }
  
--	rtl92ee_dm_diginit(hw);
-+	rtl_dm_diginit(hw, cur_igvalue);
- 	rtl92ee_dm_init_rate_adaptive_mask(hw);
- 	rtl92ee_dm_init_primary_cca_check(hw);
- 	rtl92ee_dm_init_edca_turbo(hw);
 -- 
-2.1.2
+2.1.0
 
