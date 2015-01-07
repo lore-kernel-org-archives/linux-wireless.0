@@ -1,54 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42471 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754346AbbAVUdt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 15:33:49 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/38] iwlwifi: mvm: rs: allow to disable MIMO for P2P only
-Date: Thu, 22 Jan 2015 22:32:59 +0200
-Message-Id: <1421958809-3371-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_213403_495086_F681F93B)
-In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
-References: <1421958313.6424.2.camel@egrumbacBox>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8843 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756510AbbAGI6P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 03:58:15 -0500
+Message-ID: <54ACF523.2030706@broadcom.com> (sfid-20150107_095836_159381_B33FE820)
+Date: Wed, 7 Jan 2015 09:58:11 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Julia Lawall <julia.lawall@lip6.fr>
+CC: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"Brett Rudley" <brudley@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
+References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <54A8DBF4.4050202@lwfinger.net> <CAKXHbyN6LH_pFw1uoLXRzgJv-NcjbTLJvMZXfwYXDwuk9QDszA@mail.gmail.com> <871tn933jc.fsf@kamboji.qca.qualcomm.com> <54AA7042.50207@broadcom.com> <CAKXHbyNBV6=DPF4n0onzhEqAuS-PqLS5pwZj_OitRuYMvgpjvw@mail.gmail.com> <alpine.DEB.2.02.1501070726320.2058@localhost6.localdomain6>
+In-Reply-To: <alpine.DEB.2.02.1501070726320.2058@localhost6.localdomain6>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is to work around interoperability bugs with devices
-that don't hanle MIMO properly.
+On 01/07/15 07:29, Julia Lawall wrote:
+>
+>
+> On Wed, 7 Jan 2015, Rickard Strandqvist wrote:
+>
+>> 2015-01-05 12:06 GMT+01:00 Arend van Spriel<arend@broadcom.com>:
+>>> On 01/05/15 11:49, Kalle Valo wrote:
+>>>>
+>>>> Rickard Strandqvist<rickard_strandqvist@spectrumdigital.se>   writes:
+>>>>
+>>>>> As I hope you can see I have made some changes regarding the
+>>>>> subject-line. Thought it was an advantage to be able to see which file
+>>>>> I actually removed something from. There seems to be a big focus on
+>>>>> getting right on subject-line right in recent weeks.
+>>>>>
+>>>>> I wonder why there is a script that takes a file name, and respond
+>>>>> with an appropriate subject line?
+>>>
+>>>
+>>> Is there a script for this? Anyway, I would say driver name is enough.
+>>> Enough about the subject line ;-) I would like to give some general remarks
+>>> as you seem to touch a lot of kernel code. First off, I think it is good to
+>>> remove unused stuff. However, I would like some more explanation on your
+>>> methodology apart from "partially found by using a static code analysis
+>>> program". So a cover-letter explaining that would have been nice (maybe
+>>> still is). Things like Kconfig option can affect whether function are used
+>>> or not so how did you cover that.
+>>>
+>>> Regards,
+>>> Arend
+>>>
+>>>
+>>>> I don't think you can really automate this as some drivers do this a bit
+>>>> differently. You always need to manually check the commit log.
+>>>>
+>>>>> But ok, I change my script accordingly. Should I submit the patch again?
+>>>>
+>>>>
+>>>> Yes, please resubmit.
+>>>>
+>>>
+>>
+>> Hi Arend
+>>
+>> Yes, a script that had been excellent, I think!
+>> I have one as part of my git send-email script, until a week ago, it
+>> was enough that I removed the "drivers/" and changed all "/" to ": "
+>> I have now been expanded my sed pipe a lot (tell me if anyone is interested)
+>> But now I've seen everything from uppercase and [DIR], etc.
+>> So I can not understand how anyone should be able to get the right
+>> name without a good help.
+>>
+>> Sure i like to share how I use cppcheck, but is very hesitant to write
+>> this with each patch mails I send though!
+>>
+>> I run:
+>> cppcheck --force --quiet --enable=all .
+>>
+>> Or a specific file instead of .
+>>
+>> This will include, among other things get a lot of error message such,
+>> +4000 for the kernel.
+>> (style) The function 'xxx' is never used
+>>
+>> For these I made a script that searched through all the files after
+>> the function name (cppcheck missed a few). And save the rest so I go
+>> through them and possibly send patches.
+>
+> I think that the question was about what methodology is cppcheck using to
+> find the given issue.  But probably cppcheck is a black box that does
+> whatever it does, so the user doesn't know what the rationale is.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/constants.h | 2 +-
- drivers/net/wireless/iwlwifi/mvm/rs.c        | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+That would have been nice, but I also wanted to know what his subsequent 
+steps were to validate the output from cppcheck. I went through some 
+cppcheck web pages, but they only elaborate on what is can do and not 
+the how. But hey, it is an open-source tool so there is always the code 
+to check.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
-index 2d8e7e3..f98f3ef 100644
---- a/drivers/net/wireless/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
-@@ -101,7 +101,7 @@
- #define IWL_MVM_FW_BCAST_FILTER_PASS_ALL	0
- #define IWL_MVM_QUOTA_THRESHOLD			8
- #define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
--#define IWL_MVM_RS_DISABLE_MIMO			0
-+#define IWL_MVM_RS_DISABLE_P2P_MIMO		0
- #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
- #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE      2
- #define IWL_MVM_RS_HT_VHT_RETRIES_PER_RATE_TW   1
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 4747224..57a6094 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -2763,7 +2763,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			lq_sta->stbc = true;
- 	}
- 
--	if (IWL_MVM_RS_DISABLE_MIMO)
-+	if (IWL_MVM_RS_DISABLE_P2P_MIMO && sta_priv->vif->p2p)
- 		lq_sta->active_mimo2_rate = 0;
- 
- 	lq_sta->max_legacy_rate_idx =
--- 
-1.9.1
+> However, I think you mentioned that cppcheck found only some of the
+> issues.  You could thus describe what was the methodology for finding the
+> other ones.
+
+Maybe upon removing an unused function it had a ripple effect on others 
+becoming unused as well? Still this is speculating and with this kind of 
+cleanup effort all over the place it is better to review the methodology.
+
+Regards,
+Arend
+
+> julia
 
