@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25784 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751042AbbA2X3G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 18:29:06 -0500
-Date: Fri, 30 Jan 2015 00:28:59 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: clement.perrochaud@effinnov.com
-Cc: linux-nfc@lists.01.org,
-	=?iso-8859-1?Q?Cl=E9ment?= Perrochaud
-	<clement.perrochaud@nxp.com>, sunil.jogi@nxp.com,
-	jerome.pele@nxp.com, Charles.Gorand-Effinnov@nxp.com,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	davem@davemloft.net, grant.likely@linaro.org, lefrique@marvell.com,
-	christophe.ricard@gmail.com, cuissard@marvell.com,
-	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 1/4] NFC: nci: Add FWDL support
-Message-ID: <20150129232859.GA20998@ribalta.ger.corp.intel.com> (sfid-20150130_003003_942439_5E740FBC)
-References: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com>
- <1421940460-14049-2-git-send-email-clement.perrochaud@effinnov.com>
+Received: from smtp.codeaurora.org ([198.145.11.231]:43841 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754000AbbAGSFI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 13:05:08 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH] ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file entries
+References: <1419685980-4728-1-git-send-email-arend@broadcom.com>
+Date: Wed, 07 Jan 2015 20:05:00 +0200
+In-Reply-To: <1419685980-4728-1-git-send-email-arend@broadcom.com> (Arend van
+	Spriel's message of "Sat, 27 Dec 2014 14:13:00 +0100")
+Message-ID: <87bnmapiur.fsf@kamboji.qca.qualcomm.com> (sfid-20150107_190512_156386_0B81F0DE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1421940460-14049-2-git-send-email-clement.perrochaud@effinnov.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Clement,
+Arend van Spriel <arend@broadcom.com> writes:
 
-On Thu, Jan 22, 2015 at 04:27:37PM +0100, clement.perrochaud@effinnov.com wrote:
-> From: Clément Perrochaud <clement.perrochaud@nxp.com>
+> Use the helper to get rid of the file operations per debugfs file. The
+> device driver data contains struct ieee80211_hw pointer and the
+> struct ath9k_softc pointer is assigned to ieee80211_hw::priv so it can
+> be accessed in the seq_file read operation.
+>
+> Cc: ath9k-devel@lists.ath9k.org
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> Hi Kalle,
+>
+> This patch was reverted in the driver-core repository as I overlooked
+> the use of driver data and caused ath9k driver to crash. I believe this
+> revised patch properly uses it now although I have no ath9k hardware to
+> test this. So I hope some ath9k developers out there can give this patch
+> a run for its money. It compiles and no checkpatch or sparse warnings.
+>
+> The patch applies to the master branch of the wireless-drivers-next
+> repository.
 
-- It really is not obvious that FWDL actually means firmware download
-- A small commit message explaining why you need this (Mostly for the
-  NXP chipset for now) would be nice.
+Can someone with ath9k hardware test this, please? I'm hesitant to apply
+this without testing.
 
-Cheers,
-Samuel.
+-- 
+Kalle Valo
