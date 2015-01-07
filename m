@@ -1,22 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:42049 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211AbbAVK3e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 05:29:34 -0500
-Received: by mail-wi0-f181.google.com with SMTP id fb4so1662545wid.2
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 02:29:33 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 22 Jan 2015 18:29:33 +0800
-Message-ID: <CAEFj985fTqqjde_RX6Ec4PmXR_wzN1iccckZWygxNfccKumFQw@mail.gmail.com> (sfid-20150122_112938_363392_D3B32844)
-Subject: Re: [PATCH] rtlwifi: add support to send beacon frame.
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:35060 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751247AbbAGHk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 02:40:58 -0500
+Message-ID: <1420616453.3407.0.camel@sipsolutions.net> (sfid-20150107_084101_077660_6B2E996E)
+Subject: Re: [PATCH] mwifiex: do not emit messages while holding spinlock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <patila@marvell.com>
+Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
+	cluo@marvell.com
+Date: Wed, 07 Jan 2015 08:40:53 +0100
+In-Reply-To: <1420634425-28306-1-git-send-email-patila@marvell.com> (sfid-20150107_081059_683326_970C28B9)
+References: <1420634425-28306-1-git-send-email-patila@marvell.com>
+	 (sfid-20150107_081059_683326_970C28B9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Which firmware that you used to test this? And which chipset?
+On Wed, 2015-01-07 at 18:10 +0530, Avinash Patil wrote:
+> Avoid printing dev_{warn/dbg} messages while holding spinlock.
 
-----
-Chun-Yeow
+Err, why? There's normally no particular reason to worry about this, so
+explaining that might be good.
+
+johannes
+
