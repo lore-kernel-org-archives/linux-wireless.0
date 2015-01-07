@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:49569 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbbAXGjU (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:63581 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbbAGOrZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 01:39:20 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Hong Xu <hong@topbug.net>
-Cc: kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [wireless-drivers-next:master 119/130] drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
-References: <201501240432.liRbf02o%fengguang.wu@intel.com>
-	<87lhkskjen.fsf@home.hong.me>
-Date: Sat, 24 Jan 2015 08:39:12 +0200
-In-Reply-To: <87lhkskjen.fsf@home.hong.me> (Hong Xu's message of "Fri, 23 Jan
-	2015 18:21:52 -0800")
-Message-ID: <8761bwk7hr.fsf@kamboji.qca.qualcomm.com> (sfid-20150124_074142_877959_6430CEEC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 7 Jan 2015 09:47:25 -0500
+Received: by mail-we0-f170.google.com with SMTP id w61so1292886wes.29
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 06:47:24 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 2/2] cfg80211: avoid reg-hints in self-managed only systems
+Date: Wed,  7 Jan 2015 16:47:20 +0200
+Message-Id: <1420642040-4530-2-git-send-email-arik@wizery.com> (sfid-20150107_154729_209737_F020E345)
+In-Reply-To: <1420642040-4530-1-git-send-email-arik@wizery.com>
+References: <1420642040-4530-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Adding linux-wireless)
+When a system contains only self-managed regulatory devices all hints
+from the regulatory core are ignored. Stop hint processing early in this
+case. These systems usually don't have CRDA deployed, which results in
+endless (irrelevent) logs of the form:
+cfg80211: Calling CRDA to update world regulatory domain
 
-Hong Xu <hong@topbug.net> writes:
+Make sure there's at least one self-managed device before discarding a
+hint, in order to prevent initial hints from disappearing on CRDA
+managed systems.
 
-> kbuild test robot <fengguang.wu@intel.com> writes:
->
->> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
->> head:   c5ed1df781cb544d4e4d189bb5b6ec7336d8888c
->> commit: 3a939a671225909c19b09bfcb6e4761109e913d9 [119/130] ath9k_htc: Add a module parameter to disable blink
->> config: xtensa-allyesconfig (attached as .config)
->> reproduce:
->>   wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->>   chmod +x ~/bin/make.cross
->>   git checkout 3a939a671225909c19b09bfcb6e4761109e913d9
->>   # save the attached .config to linux build tree
->>   make.cross ARCH=xtensa 
->>
->> All error/warnings:
->>
->>>> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
->>    drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
->>
->
-> This should not be a problem if the driver is built as a module. If you
-> consider this is a problem we can simply change the variable name.
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+---
+ net/wireless/reg.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-This is a problem, please send a fix which I can apply to
-wireless-drivers-next.
-
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 521f3a4..588e45f 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2120,6 +2120,26 @@ out_free:
+ 	reg_free_request(reg_request);
+ }
+ 
++static bool reg_only_self_managed_wiphys(void)
++{
++	struct cfg80211_registered_device *rdev;
++	struct wiphy *wiphy;
++	bool self_managed_found = false;
++
++	ASSERT_RTNL();
++
++	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
++		wiphy = &rdev->wiphy;
++		if (wiphy->regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED)
++			self_managed_found = true;
++		else
++			return false;
++	}
++
++	/* make sure at least one self-managed wiphy exists */
++	return self_managed_found;
++}
++
+ /*
+  * Processes regulatory hints, this is all the NL80211_REGDOM_SET_BY_*
+  * Regulatory hints come on a first come first serve basis and we
+@@ -2151,6 +2171,11 @@ static void reg_process_pending_hints(void)
+ 
+ 	spin_unlock(&reg_requests_lock);
+ 
++	if (reg_only_self_managed_wiphys()) {
++		reg_free_request(reg_request);
++		return;
++	}
++
+ 	reg_process_hint(reg_request);
+ }
+ 
 -- 
-Kalle Valo
+2.1.0
+
