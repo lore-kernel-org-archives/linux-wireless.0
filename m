@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:38239 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751844AbbAWQnI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 11:43:08 -0500
-Received: by mail-oi0-f43.google.com with SMTP id z81so7354733oif.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 08:43:07 -0800 (PST)
-Message-ID: <54C27A19.80102@lwfinger.net> (sfid-20150123_174312_217337_05D22401)
-Date: Fri, 23 Jan 2015 10:43:05 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	linux-wireless@vger.kernel.org
-CC: linville@tuxdriver.com
-Subject: Re: [PATCH] rtl8192cu: fix the mesh beaconing
-References: <1422003564-22414-1-git-send-email-yeohchunyeow@gmail.com>
-In-Reply-To: <1422003564-22414-1-git-send-email-yeohchunyeow@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:36141 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752196AbbAGNkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 08:40:03 -0500
+Message-ID: <1420637996.3407.11.camel@sipsolutions.net> (sfid-20150107_144008_895608_58CB7230)
+Subject: Re: [PATCH] mac80211: Re-fix accounting of the tailroom-needed
+ counter
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ido Yariv <ido@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Ido Yariv <idox.yariv@intel.com>,
+	Christopher Chavez <chrischavez@gmx.us>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Solomon Peachy <pizza@shaftnet.org>
+Date: Wed, 07 Jan 2015 14:39:56 +0100
+In-Reply-To: <1420551542-21981-1-git-send-email-ido@wizery.com> (sfid-20150106_143921_495850_B1F9FB69)
+References: <54AACA29.3060709@lwfinger.net>
+	 <1420551542-21981-1-git-send-email-ido@wizery.com>
+	 (sfid-20150106_143921_495850_B1F9FB69)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/2015 02:59 AM, Chun-Yeow Yeoh wrote:
-> Patch "rtlwifi: add support to send beacon frame" allows
-> the beaconing of rtl8192cu. But mesh beaconing is not
-> working. Fix this.
->
-> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 1 +
->   1 file changed, 1 insertion(+)
+On Tue, 2015-01-06 at 08:39 -0500, Ido Yariv wrote:
+> When hw acceleration is enabled, the GENERATE_IV or PUT_IV_SPACE flags
+> only require headroom space. Therefore, the tailroom-needed counter can
+> safely be decremented for most drivers.
+> 
+> The older incarnation of this patch (ca34e3b5) assumed that the above
+> holds true for all drivers. As reported by Christopher Chavez and
+> researched by Christian Lamparter and Larry Finger, this isn't a valid
+> assumption for p54 and cw1200.
+> 
+> Drivers that still require tailroom for ICV/MIC even when HW encryption
+> is enabled can use IEEE80211_KEY_FLAG_RESERVE_TAILROOM to indicate it.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Applied. Let's hope it sticks this time :)
 
-Thanks,
-
-Larry
-
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> index 5513217..e5a7c4f 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> @@ -1509,6 +1509,7 @@ void rtl92cu_set_beacon_related_registers(struct ieee80211_hw *hw)
->   	/* TODO: Modify later (Find the right parameters)
->   	 * NOTE: Fix test chip's bug (about contention windows's randomness) */
->   	if ((mac->opmode == NL80211_IFTYPE_ADHOC) ||
-> +	    (mac->opmode == NL80211_IFTYPE_MESH_POINT) ||
->   	    (mac->opmode == NL80211_IFTYPE_AP)) {
->   		rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_CCK, 0x50);
->   		rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_OFDM, 0x50);
->
+johannes
 
