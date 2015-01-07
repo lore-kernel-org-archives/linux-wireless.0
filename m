@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:36126 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256AbbAOIOP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 03:14:15 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:1952 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751952AbbAGNOO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 08:14:14 -0500
+From: Avinash Patil <patila@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>
+Date: Wed, 7 Jan 2015 05:12:57 -0800
+Subject: RE: [PATCH v3] cfg80211: check for carrier state only when
+ offchanel CAC supported
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A82@SC-VEXCH2.marvell.com> (sfid-20150107_141417_842824_13E36D91)
+References: <1420475584-5533-1-git-send-email-patila@marvell.com>
+	 (sfid-20150105_120344_381788_A7E15DA0),<1420462674.9459.9.camel@sipsolutions.net>
+	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com>,<1420635832.3407.7.camel@sipsolutions.net>
+In-Reply-To: <1420635832.3407.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21687.30578.746681.850817@gargle.gargle.HOWL> (sfid-20150115_091419_031275_86C0C29F)
-Date: Thu, 15 Jan 2015 13:46:50 +0530
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-In-Reply-To: <87vbk8zcr1.fsf@kamboji.qca.qualcomm.com>
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
-	<21685.35179.110539.780864@gargle.gargle.HOWL>
-	<87bnm01ojf.fsf@kamboji.qca.qualcomm.com>
-	<21687.29026.962216.812998@gargle.gargle.HOWL>
-	<87vbk8zcr1.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> I STILL don't know what values you think people should use with
-> the htt_fill parameter.
+Sure Johannes.
 
-None. The default stays the same. But, it can be adjusted based
-on the platform, if higher throughput is desired.
+We need to fix carrier state handling in ndo_open and this patch would not be needed.
 
-Sujith
+Thanks,
+Avinash
+________________________________________
+From: Johannes Berg [johannes@sipsolutions.net]
+Sent: Wednesday, January 07, 2015 6:33 PM
+To: Avinash Patil
+Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo
+Subject: Re: [PATCH v3] cfg80211: check for carrier state only when offchanel CAC supported
+
+Based on our discussion, you don't actually want to support something
+like off-channel CAC (which doesn't make much sense anyway), you just
+have some issues with the carrier handling in the driver and bring up
+the carrier ON by default rather than OFF.
+
+I'll drop this completely for now.
+
+johannes
+
