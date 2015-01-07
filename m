@@ -1,48 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59612 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755445AbbAFN0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 08:26:53 -0500
-Message-ID: <1420550805.1966.30.camel@sipsolutions.net> (sfid-20150106_142723_567644_46241808)
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Tue, 06 Jan 2015 14:26:45 +0100
-In-Reply-To: <1420532617.1966.2.camel@sipsolutions.net> (sfid-20150106_092406_190634_68A6D76E)
-References: <1420297188.2397.3.camel@tiscali.nl>
-	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
-	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
-	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
-	 <1420479510.14308.23.camel@x220>
-	 (sfid-20150105_183907_807502_81C08416) <1420484224.9459.16.camel@sipsolutions.net>
-	 <1420495519.14308.29.camel@x220> <1420532617.1966.2.camel@sipsolutions.net>
-	 (sfid-20150106_092406_190634_68A6D76E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:6278 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752455AbbAGHK4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 02:10:56 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0779G8l012337
+	for <linux-wireless@vger.kernel.org>; Tue, 6 Jan 2015 23:10:55 -0800
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1rqrtjpf41-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 23:10:55 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH] mwifiex: do not emit messages while holding spinlock
+Date: Wed, 7 Jan 2015 18:10:25 +0530
+Message-ID: <1420634425-28306-1-git-send-email-patila@marvell.com> (sfid-20150107_081059_683326_970C28B9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-06 at 09:23 +0100, Johannes Berg wrote:
+Avoid printing dev_{warn/dbg} messages while holding spinlock.
 
-> Yours is the theoretical, hopefully-forward-looking one where we still
-> expect the driver to actually be modified to take advantage of the new
-> frameworks (which is independent of wext support towards userspace). In
-> that scenario, yes, it should use more until it uses all, and then it
-> can stop concerning itself with wext (which would be a win because
-> driver/wext interaction is always finicky) (*)
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/11n.c           | 2 +-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-I just realized that in order to actually do this you'd have to revert
-04b0c5c6995103eef56391c163e970ab1f03b59f first, but that would be pretty
-simple.
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 9d4786e..c5c83cf 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -558,10 +558,10 @@ int mwifiex_send_addba(struct mwifiex_private *priv, int tid, u8 *peer_mac)
+ 		spin_lock_irqsave(&priv->sta_list_spinlock, flags);
+ 		sta_ptr = mwifiex_get_sta_entry(priv, peer_mac);
+ 		if (!sta_ptr) {
++			spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+ 			dev_warn(priv->adapter->dev,
+ 				 "BA setup with unknown TDLS peer %pM!\n",
+ 				peer_mac);
+-			spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+ 			return -1;
+ 		}
+ 		if (sta_ptr->is_11ac_enabled)
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index d73fda3..8c60f18 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -353,9 +353,6 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
+ 
+ 	spin_lock_irqsave(&priv->sta_list_spinlock, flags);
+ 	if (mwifiex_queuing_ra_based(priv)) {
+-		dev_dbg(priv->adapter->dev,
+-			"info: AP/ADHOC:last_seq=%d start_win=%d\n",
+-			last_seq, new_node->start_win);
+ 		if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP) {
+ 			node = mwifiex_get_sta_entry(priv, ta);
+ 			if (node)
+@@ -370,6 +367,9 @@ mwifiex_11n_create_rx_reorder_tbl(struct mwifiex_private *priv, u8 *ta,
+ 	}
+ 	spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+ 
++	dev_dbg(priv->adapter->dev, "info: last_seq=%d start_win=%d\n",
++		last_seq, new_node->start_win);
++
+ 	if (last_seq != MWIFIEX_DEF_11N_RX_SEQ_NUM &&
+ 	    last_seq >= new_node->start_win) {
+ 		new_node->start_win = last_seq + 1;
+@@ -468,10 +468,10 @@ int mwifiex_cmd_11n_addba_rsp_gen(struct mwifiex_private *priv,
+ 		sta_ptr = mwifiex_get_sta_entry(priv,
+ 						cmd_addba_req->peer_mac_addr);
+ 		if (!sta_ptr) {
++			spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+ 			dev_warn(priv->adapter->dev,
+ 				 "BA setup with unknown TDLS peer %pM!\n",
+ 				 cmd_addba_req->peer_mac_addr);
+-			spin_unlock_irqrestore(&priv->sta_list_spinlock, flags);
+ 			return -1;
+ 		}
+ 		if (sta_ptr->is_11ac_enabled)
+-- 
+1.8.1.4
 
