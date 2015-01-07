@@ -1,119 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [62.179.121.45] ([62.179.121.45]:64263 "EHLO
-	fep25.mx.upcmail.net" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751964AbbAFHDQ (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:38980 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751133AbbAGOVt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 02:03:16 -0500
-Received: from edge02.upcmail.net ([192.168.13.237])
-          by viefep25-int.chello.at
-          (InterMail vM.8.01.05.05 201-2260-151-110-20120111) with ESMTP
-          id <20150106070244.GNST16167.viefep25-int.chello.at@edge02.upcmail.net>
-          for <linux-wireless@vger.kernel.org>;
-          Tue, 6 Jan 2015 08:02:44 +0100
-Received: from [194.124.158.2] (jupiter.think.ch [194.124.158.2])
-	(authenticated bits=0)
-	by luna.think.ch (8.14.3/8.14.3) with ESMTP id t0672g2T025761
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Tue, 6 Jan 2015 08:02:43 +0100
-Message-ID: <54AB8895.1020301@think.ch> (sfid-20150106_080322_176111_E355C87A)
-Date: Tue, 06 Jan 2015 08:02:45 +0100
-From: Erich Titl <erich.titl@think.ch>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: b43 driver and WEP (solved)
-References: <54AA5438.9070902@think.ch> <54AAFFB1.8030109@lwfinger.net> <54AB2405.3050602@think.ch> <54AB31EB.6020801@lwfinger.net>
-In-Reply-To: <54AB31EB.6020801@lwfinger.net>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms000601080506080705060609"
+	Wed, 7 Jan 2015 09:21:49 -0500
+Received: by mail-we0-f171.google.com with SMTP id u56so1241165wes.30
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 06:21:48 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2] mac80211: add TDLS supported channels correctly
+Date: Wed,  7 Jan 2015 16:21:45 +0200
+Message-Id: <1420640505-16838-1-git-send-email-arik@wizery.com> (sfid-20150107_152152_381899_29FE9C4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+The function adding the supported channels IE during a TDLS connection had
+several issues:
+1. If the entire subband is usable, the function exitted the loop without
+   adding it
+2. The function only checked chandef_usable, ignoring flags like RADAR
+   which would prevent TDLS off-channel communcation.
+3. HT20 was explicitly required in the chandef, while not a requirement
+   for TDLS off-channel.
 
---------------ms000601080506080705060609
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/tdls.c | 26 +++++++++++++++++++++-----
+ 1 file changed, 21 insertions(+), 5 deletions(-)
 
-Am 06.01.2015 um 01:52 schrieb Larry Finger:
-> On 01/05/2015 05:53 PM, Erich Titl wrote:
->> Hi Larry
->>
->> Am 05.01.2015 um 22:18 schrieb Larry Finger:
->>> On 01/05/2015 03:07 AM, Erich Titl wrote:
->> ...
->>>
->>> I then generated a 3.10.63 kernel, rebooted and retested. It also wor=
-ks.
->>>
->>> One thing would be to try disabling hardware encryption using option
->>> "nohwcrypt=3D1". You might also check to determine what key slot your=
- AP
->>> is expecting to use. My AP has only a single key setup. It calls it #=
-1
->>> while Linux is using #0, but that is expected.
->>
->> Thanks a lot for coming back on this issue. I have been digging into t=
-he
->> code and found the culprit tonight. The arc4 module was not loaded and=
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index 55ddd77..c5c4342 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -68,17 +68,24 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
+ 		ch = ieee80211_get_channel(sdata->local->hw.wiphy, i);
+ 		if (ch) {
+ 			/* we will be active on the channel */
+-			u32 flags = IEEE80211_CHAN_DISABLED |
+-				    IEEE80211_CHAN_NO_IR;
+ 			cfg80211_chandef_create(&chandef, ch,
+-						NL80211_CHAN_HT20);
+-			if (cfg80211_chandef_usable(sdata->local->hw.wiphy,
+-						    &chandef, flags)) {
++						NL80211_CHAN_NO_HT);
++			if (cfg80211_reg_can_beacon(sdata->local->hw.wiphy,
++						    &chandef,
++						    sdata->wdev.iftype)) {
+ 				ch_cnt++;
++				/*
++				 * check if the next channel is also part of
++				 * this allowed range */
++				 *
+ 				continue;
+ 			}
+ 		}
+ 
++		/*
++		 * we've reached the end of a range, with allowed channels
++		 * found
++		 */
+ 		if (ch_cnt) {
+ 			u8 *pos = skb_put(skb, 2);
+ 			*pos++ = ieee80211_frequency_to_channel(subband_start);
+@@ -89,6 +96,15 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
++	/* all channels in the requested range are allowed - add them here */
++	if (ch_cnt) {
++		u8 *pos = skb_put(skb, 2);
++		*pos++ = ieee80211_frequency_to_channel(subband_start);
++		*pos++ = ch_cnt;
++
++		subband_cnt++;
++	}
++
+ 	return subband_cnt;
+ }
+ 
+-- 
+2.1.0
 
->> WEP could not be initialized. The puzzling thing is, the outgoing dhcp=
-
->> packet passed.... weird.
->=20
-> Glad you found it. Strange that loading mac80211 did not force loading.=
-
-> Have you run 'depmod -a' on the modules?
-
-This is an embedded device with quite a small footprint. It does not
-have all the drivers by default. Yes, I ran depmod -a, but depmod
-produces only one line for arc4, so no luck.
-
-kernel/crypto/arc4.ko.gz:
-
-cheers
-
-Erich
-
-
---------------ms000601080506080705060609
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-1GmMP9nPAtGrpglNAAAAAAAA
---------------ms000601080506080705060609--
