@@ -1,53 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:41667 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752619AbbAEWNN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 17:13:13 -0500
-Message-ID: <54AB0C75.1090204@broadcom.com> (sfid-20150105_231329_983764_83CD2064)
-Date: Mon, 5 Jan 2015 23:13:09 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-References: <1420297188.2397.3.camel@tiscali.nl>	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>	 <1420479510.14308.23.camel@x220>	 (sfid-20150105_183907_807502_81C08416) <1420484224.9459.16.camel@sipsolutions.net> <1420495519.14308.29.camel@x220>
-In-Reply-To: <1420495519.14308.29.camel@x220>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:36041 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751861AbbAGNDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 08:03:55 -0500
+Message-ID: <1420635832.3407.7.camel@sipsolutions.net> (sfid-20150107_140358_532033_F1D23EB4)
+Subject: Re: [PATCH v3] cfg80211: check for carrier state only when
+ offchanel CAC supported
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avinash Patil <patila@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>
+Date: Wed, 07 Jan 2015 14:03:52 +0100
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com>
+References: <1420475584-5533-1-git-send-email-patila@marvell.com>
+	 (sfid-20150105_120344_381788_A7E15DA0),<1420462674.9459.9.camel@sipsolutions.net>
+	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/15 23:05, Paul Bolle wrote:
-> On Mon, 2015-01-05 at 19:57 +0100, Johannes Berg wrote:
->> Multiple other groups of ioctls could be converted in similar patches,
->> until at the end you can completely remove ipw_wx_handlers and rely
->> entirely on cfg80211's wext compatibility.
->>
->> So far the theory - in practice nobody cared enough to start working on
->> any of these drivers, let alone actually has the hardware today.
->
-> So my suggestion to make ipw2200 no longer use cfg80211_wext_giwname()
-> would actually be backwards. What's actually needed, in theory, is to
-> use more of what's provided under CFG80211_WEXT (and, I guess, less of
-> what's provided under WIRELESS_EXT). Did I get that right?
+Based on our discussion, you don't actually want to support something
+like off-channel CAC (which doesn't make much sense anyway), you just
+have some issues with the carrier handling in the driver and bring up
+the carrier ON by default rather than OFF.
 
-Yes, but as Johannes indicated it needs consideration what to group in 
-the patches.
+I'll drop this completely for now.
 
-Regards,
-Arend
-
-> Thanks,
->
->
-> Paul Bolle
->
+johannes
 
