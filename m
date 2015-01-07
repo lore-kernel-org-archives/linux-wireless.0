@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55300 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:42838 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbbAOMDY convert rfc822-to-8bit (ORCPT
+	with ESMTP id S932209AbbAGRyD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 07:03:24 -0500
+	Wed, 7 Jan 2015 12:54:03 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?B?6LCt5p2t5rOi?= <troy_tan@realsil.com.cn>
-Cc: "larry.finger" <Larry.Finger@lwfinger.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH for 3.19 3/3] rtlwifi: rtl8192ee: Fix several bugs
-References: <1421257036-5382-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1421257036-5382-4-git-send-email-Larry.Finger@lwfinger.net>
-	<87bnm0xoar.fsf@kamboji.qca.qualcomm.com>
-	<C11178B3EB8EC446A461ADCC3E27182146C9AA38@rsex2.realsil.com.cn>
-Date: Thu, 15 Jan 2015 14:03:16 +0200
-In-Reply-To: <C11178B3EB8EC446A461ADCC3E27182146C9AA38@rsex2.realsil.com.cn>
-	(=?utf-8?B?IuiwreadreazoiIncw==?= message of "Thu, 15 Jan 2015 11:51:00
- +0000")
-Message-ID: <87twzsw8sb.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_130331_155594_E1D5E78E)
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Solomon Peachy <pizza@shaftnet.org>,
+	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 8/27] wireless: cw1200: Use setup_timer
+References: <1419604558-29743-1-git-send-email-Julia.Lawall@lip6.fr>
+	<1419604558-29743-7-git-send-email-Julia.Lawall@lip6.fr>
+Date: Wed, 07 Jan 2015 19:53:57 +0200
+In-Reply-To: <1419604558-29743-7-git-send-email-Julia.Lawall@lip6.fr> (Julia
+	Lawall's message of "Fri, 26 Dec 2014 15:35:37 +0100")
+Message-ID: <87fvbmqxxm.fsf@kamboji.qca.qualcomm.com> (sfid-20150107_185444_121737_0C851AF5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-谭杭波 <troy_tan@realsil.com.cn> writes:
+Julia Lawall <Julia.Lawall@lip6.fr> writes:
 
-> I think a have located the bug reported, but the code
-> seems so unclean, so after the bug fix I modified the code 
-> and tried to make it more easy to understand.
+> Convert a call to init_timer and accompanying intializations of
+> the timer's data and function fields to a call to setup_timer.
+>
+> A simplified version of the semantic match that fixes this problem is as
+> follows: (http://coccinelle.lip6.fr/)
+>
+> // <smpl>
+> @@
+> expression t,f,d;
+> @@
+>
+> -init_timer(&t);
+> +setup_timer(&t,f,d);
+> -t.data = d;
+> -t.function = f;
+> // </smpl>
+>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-That's good, but I cannot send cleanup patches to 3.19. Even if the
-cleanup fixes something. It's better to do bug fixes and cleanup in
-separate patches.
+Thanks, I applied the wireless-drivers patches below to
+wireless-drivers-next.git.
+
+e4a1c3f88e65 mwifiex: 11n_rxreorder: Use setup_timer
+c6c33e772407 mwifiex: main: Use setup_timer
+99a1b74395a5 orinoco_usb: Use setup_timer
+1a94ace406ad iwl3945: Use setup_timer
+af68b87f7211 iwl4965: Use setup_timer
+0be01bf29721 cw1200: queue: Use setup_timer
+dabefea6937d cw1200: main: Use setup_timer
+983988ec0a24 wireless: cw1200: Use setup_timer
 
 -- 
 Kalle Valo
