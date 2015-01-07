@@ -1,36 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55756 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752937AbbAOMJy (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:18381 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932240AbbAGI5x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 07:09:54 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2015-01-13
-References: <1421151474.2601.10.camel@egrumbacBox>
-Date: Thu, 15 Jan 2015 14:09:48 +0200
-In-Reply-To: <1421151474.2601.10.camel@egrumbacBox> (Emmanuel Grumbach's
-	message of "Tue, 13 Jan 2015 12:17:53 +0000")
-Message-ID: <87mw5kw8hf.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_130957_307863_CB342B20)
+	Wed, 7 Jan 2015 03:57:53 -0500
+Message-ID: <54ACF50D.1050502@broadcom.com> (sfid-20150107_095857_665451_1E4818D3)
+Date: Wed, 7 Jan 2015 09:57:49 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Hante Meuleman" <meuleman@broadcom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
+References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>	<54A8DBF4.4050202@lwfinger.net>	<CAKXHbyN6LH_pFw1uoLXRzgJv-NcjbTLJvMZXfwYXDwuk9QDszA@mail.gmail.com>	<871tn933jc.fsf@kamboji.qca.qualcomm.com>	<54AA7042.50207@broadcom.com> <CAKXHbyNBV6=DPF4n0onzhEqAuS-PqLS5pwZj_OitRuYMvgpjvw@mail.gmail.com>
+In-Reply-To: <CAKXHbyNBV6=DPF4n0onzhEqAuS-PqLS5pwZj_OitRuYMvgpjvw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+On 01/07/15 00:33, Rickard Strandqvist wrote:
+> 2015-01-05 12:06 GMT+01:00 Arend van Spriel<arend@broadcom.com>:
+>> On 01/05/15 11:49, Kalle Valo wrote:
+>>>
+>>> Rickard Strandqvist<rickard_strandqvist@spectrumdigital.se>   writes:
+>>>
+>>>> As I hope you can see I have made some changes regarding the
+>>>> subject-line. Thought it was an advantage to be able to see which file
+>>>> I actually removed something from. There seems to be a big focus on
+>>>> getting right on subject-line right in recent weeks.
+>>>>
+>>>> I wonder why there is a script that takes a file name, and respond
+>>>> with an appropriate subject line?
+>>
+>>
+>> Is there a script for this? Anyway, I would say driver name is enough.
+>> Enough about the subject line ;-) I would like to give some general remarks
+>> as you seem to touch a lot of kernel code. First off, I think it is good to
+>> remove unused stuff. However, I would like some more explanation on your
+>> methodology apart from "partially found by using a static code analysis
+>> program". So a cover-letter explaining that would have been nice (maybe
+>> still is). Things like Kconfig option can affect whether function are used
+>> or not so how did you cover that.
+>>
+>> Regards,
+>> Arend
+>>
+>>
+>>> I don't think you can really automate this as some drivers do this a bit
+>>> differently. You always need to manually check the commit log.
+>>>
+>>>> But ok, I change my script accordingly. Should I submit the patch again?
+>>>
+>>>
+>>> Yes, please resubmit.
+>>>
+>>
+>
+> Hi Arend
+>
+> Yes, a script that had been excellent, I think!
+> I have one as part of my git send-email script, until a week ago, it
+> was enough that I removed the "drivers/" and changed all "/" to ": "
+> I have now been expanded my sed pipe a lot (tell me if anyone is interested)
+> But now I've seen everything from uppercase and [DIR], etc.
+> So I can not understand how anyone should be able to get the right
+> name without a good help.
+>
+> Sure i like to share how I use cppcheck, but is very hesitant to write
+> this with each patch mails I send though!
+>
+> I run:
+> cppcheck --force --quiet --enable=all .
 
-> This is a pull request for 3.19. As usual, the description is in the
-> tag itself. This time, we are already in -rc4, no gray area patches.
-> These are all real bug fixes. Let me know if you have issues with
-> this.
+And . is the top-level directory in the kernel repo? I am not familiar 
+with cppcheck, but does it invoke the kernel Makefile. From a quick 
+glance on cppcheck webpage I guess you could enable only the unused 
+function checker.
 
-Thanks, pulled.
+> Or a specific file instead of .
+>
+> This will include, among other things get a lot of error message such,
+> +4000 for the kernel.
+> (style) The function 'xxx' is never used
+>
+> For these I made a script that searched through all the files after
+> the function name (cppcheck missed a few). And save the rest so I go
+> through them and possibly send patches.
 
-> BTW - if you wish, I can add the diff in the pull request for -rc cycle.
-> John used to do that. Let me know if you wish me to do so.
+All the file? Within the same driver or kernel-wide. So now "go through 
+them" means compile testing with applicable Kconfig selections?
 
-There's no need, at least for now.
-
--- 
-Kalle Valo
+Gr. AvS
