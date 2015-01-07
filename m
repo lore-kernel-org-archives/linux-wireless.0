@@ -1,42 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36141 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36151 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752196AbbAGNkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:40:03 -0500
-Message-ID: <1420637996.3407.11.camel@sipsolutions.net> (sfid-20150107_144008_895608_58CB7230)
-Subject: Re: [PATCH] mac80211: Re-fix accounting of the tailroom-needed
- counter
+	id S1752609AbbAGNmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 08:42:50 -0500
+Message-ID: <1420638161.3407.12.camel@sipsolutions.net> (sfid-20150107_144254_022718_FE5738E1)
+Subject: Re: [PATCH 2/2] cfg80211: avoid reg-hints in self-managed only
+ systems
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ido Yariv <ido@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Ido Yariv <idox.yariv@intel.com>,
-	Christopher Chavez <chrischavez@gmx.us>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Solomon Peachy <pizza@shaftnet.org>
-Date: Wed, 07 Jan 2015 14:39:56 +0100
-In-Reply-To: <1420551542-21981-1-git-send-email-ido@wizery.com> (sfid-20150106_143921_495850_B1F9FB69)
-References: <54AACA29.3060709@lwfinger.net>
-	 <1420551542-21981-1-git-send-email-ido@wizery.com>
-	 (sfid-20150106_143921_495850_B1F9FB69)
+To: Arik Nemtsov <arik@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Wed, 07 Jan 2015 14:42:41 +0100
+In-Reply-To: <CA+XVXfdKq1tUoUrbH+9BE=LX_Nf+tNNeoHLYMa4NfX41cMoysg@mail.gmail.com> (sfid-20150107_143849_596007_E296D7AF)
+References: <1420112563-3981-1-git-send-email-arik@wizery.com>
+	 <1420112563-3981-2-git-send-email-arik@wizery.com>
+	 <1420541766.1966.18.camel@sipsolutions.net>
+	 <1420552744.1966.31.camel@sipsolutions.net>
+	 <CA+XVXfcAW19fzEpAV8R=hDbBdXEgJmrT8m4mqFg8tUhdx1XvKQ@mail.gmail.com>
+	 <CA+XVXfdKq1tUoUrbH+9BE=LX_Nf+tNNeoHLYMa4NfX41cMoysg@mail.gmail.com>
+	 (sfid-20150107_143849_596007_E296D7AF)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-06 at 08:39 -0500, Ido Yariv wrote:
-> When hw acceleration is enabled, the GENERATE_IV or PUT_IV_SPACE flags
-> only require headroom space. Therefore, the tailroom-needed counter can
-> safely be decremented for most drivers.
+On Wed, 2015-01-07 at 15:38 +0200, Arik Nemtsov wrote:
+> On Tue, Jan 6, 2015 at 4:04 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> > On Tue, Jan 6, 2015 at 3:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >> On Tue, 2015-01-06 at 11:56 +0100, Johannes Berg wrote:
+> >>> On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
+> >>> > When a system contains only self-managed regulatory devices all hints
+> >>> > from the regulatory core are ignored. Stop hint processing early in this
+> >>> > case. These systems usually don't have CRDA deployed, which results in
+> >>> > endless (irrelevent) logs of the form:
+> >>> > cfg80211: Calling CRDA to update world regulatory domain
+> >>>
+> >>> Applied.
+> >>
+> >> I take that back - dropped again. This was causing spurious messages in
+> >> the hwsim test run VM, saying something like "couldn't set reg domain:
+> >> -7". Maybe at that point not a single wiphy existed?
+> >
+> > Interesting. I guess I should fix this to only drop the request in
+> > case there's at least one self-managed wiphy.
 > 
-> The older incarnation of this patch (ca34e3b5) assumed that the above
-> holds true for all drivers. As reported by Christopher Chavez and
-> researched by Christian Lamparter and Larry Finger, this isn't a valid
-> assumption for p54 and cw1200.
-> 
-> Drivers that still require tailroom for ICV/MIC even when HW encryption
-> is enabled can use IEEE80211_KEY_FLAG_RESERVE_TAILROOM to indicate it.
+> Could you point me to the hwsim test that failed for you?
 
-Applied. Let's hope it sticks this time :)
+I don't think it was a specific test case - the message seems to have
+come during boot. OTOH, I also reverted some of Eliad's patches, so
+perhaps I should retest without those?
+
+> Also where is that message coming from? I don't see it in wpa_s or the kernel.
+
+I have no idea! I can't even explain where the -7 (-E2BIG) came from!
 
 johannes
 
