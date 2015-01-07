@@ -1,72 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754580AbbAVUeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 15:34:36 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 30/38] iwlwifi: mvm: support family 8000 C step
-Date: Thu, 22 Jan 2015 22:33:21 +0200
-Message-Id: <1421958809-3371-30-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214447_498401_8F25E305)
-In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
-References: <1421958313.6424.2.camel@egrumbacBox>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:58008 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024AbbAGOBb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 09:01:31 -0500
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH] bcma: fix three coding style issues, more than 80 characters per line
+From: =?utf-8?Q?=C3=92scar_Forner_Mart=C3=ADnez?=
+	<oscar.forner.martinez@gmail.com>
+In-Reply-To: <87a91uu20u.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 7 Jan 2015 14:01:26 +0000
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Message-Id: <5A7028D9-7822-4E60-BE8D-E7D91A9D9222@gmail.com> (sfid-20150107_150147_791181_BB04322A)
+References: <1419708268-14114-1-git-send-email-oscar.forner.martinez@gmail.com> <CACna6rz4ue2PFQR-=nKxmCJSw9O8pKU=S7LqxA68OY1D0obvKg@mail.gmail.com> <8761cv6i42.fsf@kamboji.qca.qualcomm.com> <B4179D1B-BF97-469D-9BBE-ED8059E1D3A9@gmail.com> <87a91uu20u.fsf@kamboji.qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+I know my patch is not urgent at all. My e-mail was just to remind that stills there. I do not know how much time I have to wait until I should remind a patch.
 
-C step functionality in the driver is exactly the same as
-B step besides the ucode name that present as iwlwifi-8000C-xx.ucode
-instead of iwlwifi-8000B-xx.ucode
+On 7 Jan 2015, at 13:57, Kalle Valo <kvalo@codeaurora.org> wrote:
 
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-csr.h    | 1 +
- drivers/net/wireless/iwlwifi/mvm/nvm.c    | 2 +-
- drivers/net/wireless/iwlwifi/pcie/trans.c | 2 +-
- 3 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-csr.h b/drivers/net/wireless/iwlwifi/iwl-csr.h
-index 7f40cf3..faa17f2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-csr.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-csr.h
-@@ -307,6 +307,7 @@
- enum {
- 	SILICON_A_STEP = 0,
- 	SILICON_B_STEP,
-+	SILICON_C_STEP,
- };
- 
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-index d8ac01d..5383429 100644
---- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
-@@ -356,7 +356,7 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
- 		max_section_size = IWL_MAX_NVM_SECTION_SIZE;
- 	else if (CSR_HW_REV_STEP(mvm->trans->hw_rev) == SILICON_A_STEP)
- 		max_section_size = IWL_MAX_NVM_8000A_SECTION_SIZE;
--	else /* Family 8000 B-step */
-+	else /* Family 8000 B-step or C-step */
- 		max_section_size = IWL_MAX_NVM_8000B_SECTION_SIZE;
- 
- 	/*
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 95c2ab1..49e3206 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -982,7 +982,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 
- 	/* Load the given image to the HW */
- 	if ((trans->cfg->device_family == IWL_DEVICE_FAMILY_8000) &&
--	    (CSR_HW_REV_STEP(trans->hw_rev) == SILICON_B_STEP))
-+	    (CSR_HW_REV_STEP(trans->hw_rev) != SILICON_A_STEP))
- 		return iwl_pcie_load_given_ucode_8000b(trans, fw);
- 	else
- 		return iwl_pcie_load_given_ucode(trans, fw);
--- 
-1.9.1
+> Òscar Forner Martínez <oscar.forner.martinez@gmail.com> writes:
+> 
+>> That e-mail is just to remind that this patch stills waiting.
+> 
+> Just like the other 150 patches as of yesterday. All I can say please wait
+> patiently and follow the status in patchwork. Your patch isn't urgent in
+> any way.
+> 
+>> On 29 Dec 2014, at 07:16, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Rafał Miłecki <zajec5@gmail.com> writes:
+>>> 
+>>>> Acked-by: Rafał Miłecki <zajec5@gmail.com>
+>>>> 
+>>>> Kalle: will you pick this patch?
+>>> 
+>>> Most likely yes, but let's wait first for John's opinion about how to
+>>> handle bcma patches.
+> 
+> I talked with John about this and I'll start taking bcma patches from
+> now on.
+> 
+> -- 
+> Kalle Valo
 
