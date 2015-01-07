@@ -1,62 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:33586 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932263AbbAILOs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 06:14:48 -0500
-Received: by mail-we0-f171.google.com with SMTP id u56so7350932wes.2
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 03:14:47 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 2/8] ath10k: allow empty ssid vdev config
-Date: Fri,  9 Jan 2015 12:14:03 +0100
-Message-Id: <1420802049-11962-3-git-send-email-michal.kazior@tieto.com> (sfid-20150109_121453_774893_0B886F6A)
-In-Reply-To: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com>
-References: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36133 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753212AbbAGNh4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 08:37:56 -0500
+Message-ID: <1420637871.3407.10.camel@sipsolutions.net> (sfid-20150107_143759_361227_F44D63FB)
+Subject: Re: [PATCH] cfg80211: fix deadlock during reg chan check
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Wed, 07 Jan 2015 14:37:51 +0100
+In-Reply-To: <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com> (sfid-20150107_143425_279464_1C23BEE0)
+References: <1419847199-25493-1-git-send-email-arik@wizery.com>
+	 <1420541514.1966.16.camel@sipsolutions.net>
+	 <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com>
+	 (sfid-20150107_143425_279464_1C23BEE0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to reject a valid
-firmware configuration combination.
+On Wed, 2015-01-07 at 15:34 +0200, Arik Nemtsov wrote:
 
-Since SSID isn't known early on it might make
-sense to allow driver to start vdev without SSID
-and restart it later.
+> > I'm not convinced this is the right thing to do. When checking for the
+> > current wdev that it can use a channel, then it seems that it's own
+> > current BSS connection (if any) shouldn't actually be taken into account
+> > - ergo the lock shouldn't have to be taken, that interface should be
+> > excluded from the "can beacon due to concurrent check" anyway.
+> 
+> We have a couple of checks we want to add in the pipeline that also
+> need "this" wdev in the concurrent check, so I'd prefer to avoid this.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
- 2 files changed, 4 deletions(-)
+Why would you need to check "this" wdev when doing something for "this"
+wdev? Seems odd? But I'm willing to learn :)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index df3ddb9..ea7fe78 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1295,8 +1295,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- 	void *ptr;
- 	u32 flags = 0;
- 
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 1570feb..cf90f86 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4092,8 +4092,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
- 	const char *cmdname;
- 	u32 flags = 0;
- 
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
--- 
-1.8.5.3
+> Unless we treat the exclude_wdev as "already locked wdev", which I
+> think is unglier than what I do here.
+
+Yeah that doesn't seem right, agree.
+
+> > Also, the only reason this can happen anyway is when you call "can
+> > beacon" for a station interface - which seems nonsensical. Given that
+> 
+> This is not true. This happens with current code for a p2p-go
+> interface during channel validity checks in reg.c.
+
+Not sure I see this? The only thing doing wdev locking is
+cfg80211_go_permissive_chan(), no? And that only for station interfaces.
+
+johannes
 
