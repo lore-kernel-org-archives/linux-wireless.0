@@ -1,46 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:43861 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123AbbASSZA (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50538 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751783AbbAGL7Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 13:25:00 -0500
-Received: by mail-wg0-f47.google.com with SMTP id n12so3112397wgh.6
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 10:24:59 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/6] staging: vt6655: device_init_registers alway set initial antenna mode
-Date: Mon, 19 Jan 2015 18:24:13 +0000
-Message-Id: <1421691855-2927-4-git-send-email-tvboxspy@gmail.com> (sfid-20150119_192505_343641_3A0B97E8)
-In-Reply-To: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
-References: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 7 Jan 2015 06:59:25 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t07BxIPv008663
+	for <linux-wireless@vger.kernel.org>; Wed, 7 Jan 2015 03:59:24 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1rs21qrfmn-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 03:59:24 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: check driver status in connect and scan handlers
+Date: Wed, 7 Jan 2015 03:57:39 -0800
+Message-ID: <1420631859-29004-1-git-send-email-akarwar@marvell.com> (sfid-20150107_125928_871033_301FD224)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BBvSetTxAntennaMode and BBvSetRxAntennaMode need to be set correcty
-on start up
+Ignore scan and connection requests from cfg80211 when driver
+unload is in process or previous command has timed out due to
+a firmware bug. This patch fixes corner case system crash
+issues.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/staging/vt6655/device_main.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/mwifiex/cfg80211.c | 8 ++++++++
+ drivers/net/wireless/mwifiex/scan.c     | 6 ++++++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 3093276..9e68f20 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -323,6 +323,10 @@ static void device_init_registers(struct vnt_private *pDevice)
- 		}
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 93ab36f..06feb44 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1784,6 +1784,7 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 			 struct cfg80211_connect_params *sme)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++	struct mwifiex_adapter *adapter = priv->adapter;
+ 	int ret;
+ 
+ 	if (GET_BSS_ROLE(priv) != MWIFIEX_BSS_ROLE_STA) {
+@@ -1798,6 +1799,13 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		return -EALREADY;
  	}
  
-+	/* Set initial antenna mode */
-+	BBvSetTxAntennaMode(pDevice, pDevice->byTxAntennaMode);
-+	BBvSetRxAntennaMode(pDevice, pDevice->byRxAntennaMode);
++	if (adapter->surprise_removed || adapter->is_cmd_timedout) {
++		wiphy_err(wiphy,
++			  "%s: Ignore connection. Card removed or FW in bad state\n",
++			  dev->name);
++		return -EFAULT;
++	}
 +
- 	/* zonetype initial */
- 	pDevice->byOriginalZonetype = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
+ 	wiphy_dbg(wiphy, "info: Trying to associate to %s and bssid %pM\n",
+ 		  (char *) sme->ssid, sme->bssid);
  
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 984a7a4..e304f07 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1429,6 +1429,12 @@ int mwifiex_scan_networks(struct mwifiex_private *priv,
+ 		return -EBUSY;
+ 	}
+ 
++	if (adapter->surprise_removed || adapter->is_cmd_timedout) {
++		dev_err(adapter->dev,
++			"Ignore scan. Card removed or firmware in bad state\n");
++		return -EFAULT;
++	}
++
+ 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 	adapter->scan_processing = true;
+ 	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
 -- 
-2.1.0
+1.8.1.4
 
