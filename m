@@ -1,81 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:53302 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472AbbAFSI4 (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:52146 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752698AbbAGNeZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 13:08:56 -0500
-Message-ID: <54AC2497.3050703@lwfinger.net> (sfid-20150106_190930_327701_06C3D99D)
-Date: Tue, 06 Jan 2015 12:08:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 7 Jan 2015 08:34:25 -0500
+Received: by mail-wg0-f43.google.com with SMTP id k14so1202387wgh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 05:34:24 -0800 (PST)
 MIME-Version: 1.0
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-CC: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43legacy: Remove unused function
-References: <1420567175-17323-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-In-Reply-To: <1420567175-17323-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1420541514.1966.16.camel@sipsolutions.net>
+References: <1419847199-25493-1-git-send-email-arik@wizery.com> <1420541514.1966.16.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 7 Jan 2015 15:34:09 +0200
+Message-ID: <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com> (sfid-20150107_143434_337089_7877A8AC)
+Subject: Re: [PATCH] cfg80211: fix deadlock during reg chan check
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2015 11:59 AM, Rickard Strandqvist wrote:
-> Remove the function b43legacy_radio_set_tx_iq() that is not used anywhere.
+On Tue, Jan 6, 2015 at 12:51 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2014-12-29 at 11:59 +0200, Arik Nemtsov wrote:
+>> If a P2P GO is active, the cfg80211_reg_can_beacon function will take
+>> the wdev lock, in its call to cfg80211_go_permissive_chan. But the wdev lock
+>> is already taken by the parent channel-checking function, causing a
+>> deadlock.
+>> Split the checking code into two parts. The first part will check if the
+>> wdev is active and saves the channel under the wdev lock. The second part
+>> will check actual channel validity according to type.
 >
-> This was partially found by using a static code analysis program called cppcheck.
->
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->   drivers/net/wireless/b43legacy/radio.c |   19 -------------------
->   drivers/net/wireless/b43legacy/radio.h |    1 -
->   2 files changed, 20 deletions(-)
+> I'm not convinced this is the right thing to do. When checking for the
+> current wdev that it can use a channel, then it seems that it's own
+> current BSS connection (if any) shouldn't actually be taken into account
+> - ergo the lock shouldn't have to be taken, that interface should be
+> excluded from the "can beacon due to concurrent check" anyway.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+We have a couple of checks we want to add in the pipeline that also
+need "this" wdev in the concurrent check, so I'd prefer to avoid this.
 
-Larry
+Unless we treat the exclude_wdev as "already locked wdev", which I
+think is unglier than what I do here.
 
 >
-> diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
-> index 8961776..9501420 100644
-> --- a/drivers/net/wireless/b43legacy/radio.c
-> +++ b/drivers/net/wireless/b43legacy/radio.c
-> @@ -1743,25 +1743,6 @@ u16 freq_r3A_value(u16 frequency)
->   	return value;
->   }
->
-> -void b43legacy_radio_set_tx_iq(struct b43legacy_wldev *dev)
-> -{
-> -	static const u8 data_high[5] = { 0x00, 0x40, 0x80, 0x90, 0xD0 };
-> -	static const u8 data_low[5]  = { 0x00, 0x01, 0x05, 0x06, 0x0A };
-> -	u16 tmp = b43legacy_radio_read16(dev, 0x001E);
-> -	int i;
-> -	int j;
-> -
-> -	for (i = 0; i < 5; i++) {
-> -		for (j = 0; j < 5; j++) {
-> -			if (tmp == (data_high[i] | data_low[j])) {
-> -				b43legacy_phy_write(dev, 0x0069, (i - j) << 8 |
-> -						    0x00C0);
-> -				return;
-> -			}
-> -		}
-> -	}
-> -}
-> -
->   int b43legacy_radio_selectchannel(struct b43legacy_wldev *dev,
->   				  u8 channel,
->   				  int synthetic_pu_workaround)
-> diff --git a/drivers/net/wireless/b43legacy/radio.h b/drivers/net/wireless/b43legacy/radio.h
-> index bccb3d7..dd2976d 100644
-> --- a/drivers/net/wireless/b43legacy/radio.h
-> +++ b/drivers/net/wireless/b43legacy/radio.h
-> @@ -92,7 +92,6 @@ void b43legacy_nrssi_hw_write(struct b43legacy_wldev *dev, u16 offset, s16 val);
->   void b43legacy_nrssi_hw_update(struct b43legacy_wldev *dev, u16 val);
->   void b43legacy_nrssi_mem_update(struct b43legacy_wldev *dev);
->
-> -void b43legacy_radio_set_tx_iq(struct b43legacy_wldev *dev);
->   u16 b43legacy_radio_calibrationvalue(struct b43legacy_wldev *dev);
->
->   #endif /* B43legacy_RADIO_H_ */
->
+> Also, the only reason this can happen anyway is when you call "can
+> beacon" for a station interface - which seems nonsensical. Given that
 
+This is not true. This happens with current code for a p2p-go
+interface during channel validity checks in reg.c.
+
+Arik
