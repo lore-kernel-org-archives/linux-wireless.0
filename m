@@ -1,124 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59885 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756338AbbAFWDI (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:40962 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754275AbbAGSMb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 17:03:08 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2] brcmfmac: get rid of duplicate SDIO device identifiers
-Date: Tue, 6 Jan 2015 23:02:54 +0100
-Message-ID: <1420581774-32763-1-git-send-email-arend@broadcom.com> (sfid-20150106_230311_977302_E834B57D)
+	Wed, 7 Jan 2015 13:12:31 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87bnmaqxvs.fsf@kamboji.qca.qualcomm.com>
+References: <1419766622-10911-1-git-send-email-oscar.forner.martinez@gmail.com>
+	<87bnmaqxvs.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 7 Jan 2015 19:12:30 +0100
+Message-ID: <CACna6rzWaHg=M15q=swf+yqMEB3smRRANuLHkSK1dU1MtG8jgg@mail.gmail.com> (sfid-20150107_191337_008830_5ED596AF)
+Subject: Re: [PATCH v4] bcma: fix two coding style issues, more than 80
+ characters per line.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of defining SDIO device identifier in brcm80211 code use
-the defintions in linux/mmc/sdio_ids.h directly.
+On 7 January 2015 at 18:55, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Oscar Forner Martinez <oscar.forner.martinez@gmail.com> writes:
+>
+>> Two lines with more than 80 characters per line have been split in several lines.
+>>
+>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+>
+> Thanks, applied to wireless-drivers-next.git.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Resend patch rebased on:
+Could you still replace it (V4) with an older version (V3)? Before I
+explained V3 was OK Oscar already sent this (worse) V4.
 
-  commit 8a40084e7bb8f0fd32a301a64fd869726516a1df
-  Author: Maithili Hinge <maithili@marvell.com>
-  Date:   Wed Dec 31 02:36:46 2014 -0800
+This is not critical though, we can always send separated patch for
+one more line > 80 chars.
 
-      mwifiex: Add support for wowlan disconnect
-
-Regards,
-Arend
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   | 22 +++++++++++-----------
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c     |  2 +-
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   | 13 -------------
- 3 files changed, 12 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index dffd9e4..00ba90b8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -996,20 +996,20 @@ out:
- }
- 
- #define BRCMF_SDIO_DEVICE(dev_id)	\
--	{SDIO_DEVICE(BRCM_SDIO_VENDOR_ID_BROADCOM, dev_id)}
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, dev_id)}
- 
- /* devices we support, null terminated */
- static const struct sdio_device_id brcmf_sdmmc_ids[] = {
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43143_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43241_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4329_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4330_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4334_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43340_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43341_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_43362_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4335_4339_DEVICE_ID),
--	BRCMF_SDIO_DEVICE(BRCM_SDIO_4354_DEVICE_ID),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43143),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43241),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4329),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4330),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4334),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43340),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43341),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43362),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4335_4339),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
- 	{ /* end: all zeroes */ }
- };
- MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index 551da35..99a3776 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -3816,7 +3816,7 @@ static u32 brcmf_sdio_buscore_read32(void *ctx, u32 addr)
- 	u32 val, rev;
- 
- 	val = brcmf_sdiod_regrl(sdiodev, addr, NULL);
--	if (sdiodev->func[0]->device == BRCM_SDIO_4335_4339_DEVICE_ID &&
-+	if (sdiodev->func[0]->device == SDIO_DEVICE_ID_BROADCOM_4335_4339 &&
- 	    addr == CORE_CC_REG(SI_ENUM_BASE, chipid)) {
- 		rev = (val & CID_REV_MASK) >> CID_REV_SHIFT;
- 		if (rev >= 2) {
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 00215ef..2124a17 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -22,7 +22,6 @@
- 
- #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
- #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
--#define BRCM_SDIO_VENDOR_ID_BROADCOM	SDIO_VENDOR_ID_BROADCOM
- 
- /* Chipcommon Core Chip IDs */
- #define BRCM_CC_43143_CHIP_ID		43143
-@@ -46,18 +45,6 @@
- #define BRCM_CC_43570_CHIP_ID		43570
- #define BRCM_CC_43602_CHIP_ID		43602
- 
--/* SDIO Device IDs */
--#define BRCM_SDIO_43143_DEVICE_ID	BRCM_CC_43143_CHIP_ID
--#define BRCM_SDIO_43241_DEVICE_ID	BRCM_CC_43241_CHIP_ID
--#define BRCM_SDIO_4329_DEVICE_ID	BRCM_CC_4329_CHIP_ID
--#define BRCM_SDIO_4330_DEVICE_ID	BRCM_CC_4330_CHIP_ID
--#define BRCM_SDIO_4334_DEVICE_ID	BRCM_CC_4334_CHIP_ID
--#define BRCM_SDIO_43340_DEVICE_ID	BRCM_CC_43340_CHIP_ID
--#define BRCM_SDIO_43341_DEVICE_ID	43341
--#define BRCM_SDIO_43362_DEVICE_ID	BRCM_CC_43362_CHIP_ID
--#define BRCM_SDIO_4335_4339_DEVICE_ID	BRCM_CC_4335_CHIP_ID
--#define BRCM_SDIO_4354_DEVICE_ID	BRCM_CC_4354_CHIP_ID
--
- /* USB Device IDs */
- #define BRCM_USB_43143_DEVICE_ID	0xbd1e
- #define BRCM_USB_43236_DEVICE_ID	0xbd17
 -- 
-1.9.1
-
+Rafał
