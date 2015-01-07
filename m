@@ -1,91 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34820 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753249AbbALTsp (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:48436 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752378AbbAGNtM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 14:48:45 -0500
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/8] ath10k: scan should handle scan-start-failed event properly.
-Date: Mon, 12 Jan 2015 11:29:45 -0800
-Message-Id: <1421090992-14971-1-git-send-email-greearb@candelatech.com> (sfid-20150112_204851_373150_88D03472)
+	Wed, 7 Jan 2015 08:49:12 -0500
+Received: by mail-wi0-f178.google.com with SMTP id em10so1647730wid.5
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 05:49:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1420638389.3407.13.camel@sipsolutions.net>
+References: <1419847199-25493-1-git-send-email-arik@wizery.com>
+ <1420541514.1966.16.camel@sipsolutions.net> <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com>
+ <1420637871.3407.10.camel@sipsolutions.net> <CA+XVXfezPYoyEv-HVq_Xy9HHyRKeqDZMxOWDXLTQMHprkbM0ng@mail.gmail.com>
+ <1420638389.3407.13.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 7 Jan 2015 15:48:56 +0200
+Message-ID: <CA+XVXffmhz969NFRTyvKxJjBtHat-aO+GOCSo_MfJROCiWqQ7g@mail.gmail.com> (sfid-20150107_144916_647491_C51944D1)
+Subject: Re: [PATCH] cfg80211: fix deadlock during reg chan check
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+>
+>> >
+>> >> > Also, the only reason this can happen anyway is when you call "can
+>> >> > beacon" for a station interface - which seems nonsensical. Given that
+>> >>
+>> >> This is not true. This happens with current code for a p2p-go
+>> >> interface during channel validity checks in reg.c.
+>> >
+>> > Not sure I see this? The only thing doing wdev locking is
+>> > cfg80211_go_permissive_chan(), no? And that only for station interfaces.
+>>
+>> cfg80211_go_permissive_chan is called from cfg80211_reg_can_beacon,
+>> currently only for GO interfaces, but for STA also in the future
+>> (hopefully).
+>> The latter is called during channel validity checks for GO.
+>
+> Ok.
+>
+> Should I just apply the patch as it is then?
 
-In case firmware fails to start the scan, then complete
-the start condition and clean up so that driver does not
-block on timeout.
+It fixes a real existing deadlock, so I think so, yea.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 11 +++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c | 20 ++++++++++++++++++++
- 2 files changed, 31 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 249107d..924879f 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2375,6 +2375,17 @@ static int ath10k_start_scan(struct ath10k *ar,
- 		return -ETIMEDOUT;
- 	}
- 
-+	/* If we failed to start the scan, return error code at
-+	 * this point.  This is probably due to some issue in the
-+	 * firmware, but no need to wedge the driver due to that...
-+	 */
-+	spin_lock_bh(&ar->data_lock);
-+	if (ar->scan.state == ATH10K_SCAN_IDLE) {
-+		spin_unlock_bh(&ar->data_lock);
-+		return -EINVAL;
-+	}
-+	spin_unlock_bh(&ar->data_lock);
-+
- 	/* Add a 200ms margin to account for event/command processing */
- 	ieee80211_queue_delayed_work(ar->hw, &ar->scan.timeout,
- 				     msecs_to_jiffies(arg->max_scan_time+200));
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 6e4ece0..203bcb9 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -916,6 +916,25 @@ static void ath10k_wmi_event_scan_started(struct ath10k *ar)
- 	}
- }
- 
-+static void ath10k_wmi_event_scan_start_failed(struct ath10k *ar)
-+{
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	switch (ar->scan.state) {
-+	case ATH10K_SCAN_IDLE:
-+	case ATH10K_SCAN_RUNNING:
-+	case ATH10K_SCAN_ABORTING:
-+		ath10k_warn(ar, "received scan start failed event in an invalid scan state: %s (%d)\n",
-+			    ath10k_scan_state_str(ar->scan.state),
-+			    ar->scan.state);
-+		break;
-+	case ATH10K_SCAN_STARTING:
-+		complete(&ar->scan.started);
-+		__ath10k_scan_finish(ar);
-+		break;
-+	}
-+}
-+
- static void ath10k_wmi_event_scan_completed(struct ath10k *ar)
- {
- 	lockdep_assert_held(&ar->data_lock);
-@@ -1057,6 +1076,7 @@ static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	case WMI_SCAN_EVENT_START_FAILED:
- 		ath10k_warn(ar, "received scan start failure event\n");
-+		ath10k_wmi_event_scan_start_failed(ar);
- 		break;
- 	case WMI_SCAN_EVENT_DEQUEUED:
- 	case WMI_SCAN_EVENT_PREEMPTED:
--- 
-1.7.11.7
-
+Arik
