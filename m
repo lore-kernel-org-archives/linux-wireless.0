@@ -1,65 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:65095 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754560AbbAHLHM (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:24687 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751105AbbAGG3U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 06:07:12 -0500
-Received: by mail-wi0-f174.google.com with SMTP id h11so2475828wiw.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:07:11 -0800 (PST)
+	Wed, 7 Jan 2015 01:29:20 -0500
+Date: Wed, 7 Jan 2015 07:29:17 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+cc: Arend van Spriel <arend@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Brett Rudley <brudley@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
+In-Reply-To: <CAKXHbyNBV6=DPF4n0onzhEqAuS-PqLS5pwZj_OitRuYMvgpjvw@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1501070726320.2058@localhost6.localdomain6> (sfid-20150107_072950_529579_945B64E3)
+References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se> <54A8DBF4.4050202@lwfinger.net> <CAKXHbyN6LH_pFw1uoLXRzgJv-NcjbTLJvMZXfwYXDwuk9QDszA@mail.gmail.com> <871tn933jc.fsf@kamboji.qca.qualcomm.com> <54AA7042.50207@broadcom.com>
+ <CAKXHbyNBV6=DPF4n0onzhEqAuS-PqLS5pwZj_OitRuYMvgpjvw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1420703288.2029.4.camel@sipsolutions.net>
-References: <1420566070-25336-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1420639929.3407.18.camel@sipsolutions.net>
-	<CAA2SeN+KZqXcBpOuW=J_vyznOn03NceuH8RDdmcB30-7-9xyQw@mail.gmail.com>
-	<1420703288.2029.4.camel@sipsolutions.net>
-Date: Thu, 8 Jan 2015 12:07:05 +0100
-Message-ID: <CAA2SeNL76Pd3ft4biBsHD9oTA4JOpD7oa5E+5ajk37irSDPhtw@mail.gmail.com> (sfid-20150108_120716_938800_6C56A43B)
-Subject: Re: [PATCHv4] mac80211: enable TPC through mac80211 stack
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Wed, 2015-01-07 at 15:39 +0100, Lorenzo Bianconi wrote:
->
->> > Does it really make sense to ask the driver to do "automatic"? After
->> > all, there are other limits in mac80211 (like 11h from the AP and
->> > regulatory) that need to be considered. So perhaps if userspace says
->> > "automatic", the driver should still see only "limited"?
->> >
->>
->> IMHO "automatic" means lower driver has to take into account just
->> channel/regulatory constraints (that is ath9k behavior), since the
->> user/mac80211 does not cap TX power, whereas "limited" means the
->> user/mac80211 has set a limit for emitted power, so that configuration
->> has to be taken into account.
->
-> Well, mac80211 always gives you a max TX power value though - and if
-> it's only the maximum regulatory permitted on that channel. So there's
-> always a valid upper bound - unlike the userspace API where "automatic"
-> means that you have no idea of an upper bound. Inside the kernel you
-> always have an upper bound, so "automatic" doesn't make that much sense?
->
 
-Sounds good, now I have clearer vision :)
-I will overwrite bss_conf nl80211_tx_power_setting value in
-ieee80211_set_tx_power() when txpower type is set to
-NL80211_TX_POWER_AUTOMATIC from userspace. Moreover should we set
-nl80211_tx_power_setting to NL80211_TX_POWER_LIMITED in
-ieee80211_handle_pwr_constr() when the station receives a power
-constraint in beacon frames? What do you think?
 
-> johannes
->
+On Wed, 7 Jan 2015, Rickard Strandqvist wrote:
 
-Regards,
-Lorenzo
+> 2015-01-05 12:06 GMT+01:00 Arend van Spriel <arend@broadcom.com>:
+> > On 01/05/15 11:49, Kalle Valo wrote:
+> >>
+> >> Rickard Strandqvist<rickard_strandqvist@spectrumdigital.se>  writes:
+> >>
+> >>> As I hope you can see I have made some changes regarding the
+> >>> subject-line. Thought it was an advantage to be able to see which file
+> >>> I actually removed something from. There seems to be a big focus on
+> >>> getting right on subject-line right in recent weeks.
+> >>>
+> >>> I wonder why there is a script that takes a file name, and respond
+> >>> with an appropriate subject line?
+> >
+> >
+> > Is there a script for this? Anyway, I would say driver name is enough.
+> > Enough about the subject line ;-) I would like to give some general remarks
+> > as you seem to touch a lot of kernel code. First off, I think it is good to
+> > remove unused stuff. However, I would like some more explanation on your
+> > methodology apart from "partially found by using a static code analysis
+> > program". So a cover-letter explaining that would have been nice (maybe
+> > still is). Things like Kconfig option can affect whether function are used
+> > or not so how did you cover that.
+> >
+> > Regards,
+> > Arend
+> >
+> >
+> >> I don't think you can really automate this as some drivers do this a bit
+> >> differently. You always need to manually check the commit log.
+> >>
+> >>> But ok, I change my script accordingly. Should I submit the patch again?
+> >>
+> >>
+> >> Yes, please resubmit.
+> >>
+> >
+> 
+> Hi Arend
+> 
+> Yes, a script that had been excellent, I think!
+> I have one as part of my git send-email script, until a week ago, it
+> was enough that I removed the "drivers/" and changed all "/" to ": "
+> I have now been expanded my sed pipe a lot (tell me if anyone is interested)
+> But now I've seen everything from uppercase and [DIR], etc.
+> So I can not understand how anyone should be able to get the right
+> name without a good help.
+> 
+> Sure i like to share how I use cppcheck, but is very hesitant to write
+> this with each patch mails I send though!
+> 
+> I run:
+> cppcheck --force --quiet --enable=all .
+> 
+> Or a specific file instead of .
+> 
+> This will include, among other things get a lot of error message such,
+> +4000 for the kernel.
+> (style) The function 'xxx' is never used
+> 
+> For these I made a script that searched through all the files after
+> the function name (cppcheck missed a few). And save the rest so I go
+> through them and possibly send patches.
 
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+I think that the question was about what methodology is cppcheck using to 
+find the given issue.  But probably cppcheck is a black box that does 
+whatever it does, so the user doesn't know what the rationale is.  
+However, I think you mentioned that cppcheck found only some of the 
+issues.  You could thus describe what was the methodology for finding the 
+other ones.
+
+julia
