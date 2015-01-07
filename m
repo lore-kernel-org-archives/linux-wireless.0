@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:44797 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754074AbbA0UBB (ORCPT
+Received: from khitomer.mortis.eu ([185.27.175.75]:20284 "EHLO
+	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754084AbbAGTjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 15:01:01 -0500
-MIME-Version: 1.0
-In-Reply-To: <20150118051100.31866.37997.stgit@114-36-241-182.dynamic.hinet.net>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051100.31866.37997.stgit@114-36-241-182.dynamic.hinet.net>
-Date: Tue, 27 Jan 2015 20:01:00 +0000
-Message-ID: <CAFSJ42ZydByi_u0auSGDx2A6_ObZGfjV7+kR_CzFYLORRHQ5wg@mail.gmail.com> (sfid-20150127_210111_350313_CDE4A9F0)
-Subject: Re: [PATCH 4/7] net: wireless: wcn36xx: introduce WCN36XX_HAL_AVOID_FREQ_RANGE_IND
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Andy Green <andy.green@linaro.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 7 Jan 2015 14:39:02 -0500
+From: Giel van Schijndel <me@mortis.eu>
+To: linux-kernel@vger.kernel.org
+Cc: Giel van Schijndel <me@mortis.eu>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	linux-wireless@vger.kernel.org (open list:TI WILINK WIRELES...),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
+Subject: [PATCH RESEND 1/2] wlcore: fix copy-paste bug: assign from src struct not dest
+Date: Wed,  7 Jan 2015 20:38:37 +0100
+Message-Id: <1420659525-22975-1-git-send-email-me@mortis.eu> (sfid-20150107_203945_765462_F5A9C480)
+In-Reply-To: <1420394427-19509-1-git-send-email-me@mortis.eu>
+References: <1420394427-19509-1-git-send-email-me@mortis.eu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do you know when is this message used? sounds important.
+Signed-off-by: Giel van Schijndel <me@mortis.eu>
+Reported-at: http://www.viva64.com/en/b/0299/
+---
+ drivers/net/wireless/ti/wlcore/acx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-2015-01-18 5:11 GMT+00:00 Andy Green <andy.green@linaro.org>:
-> WCN3620 firmware introduces a new async indication, we need to
-> add it as a known message type so we can accept it
->
-> Signed-off-by: Andy Green <andy.green@linaro.org>
-> ---
->  drivers/net/wireless/ath/wcn36xx/hal.h |    2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-> index a1f1127..b947de0 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/hal.h
-> +++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-> @@ -345,6 +345,8 @@ enum wcn36xx_hal_host_msg_type {
->         WCN36XX_HAL_DHCP_START_IND = 189,
->         WCN36XX_HAL_DHCP_STOP_IND = 190,
->
-> +       WCN36XX_HAL_AVOID_FREQ_RANGE_IND = 233,
-> +
->         WCN36XX_HAL_MSG_MAX = WCN36XX_HAL_MSG_TYPE_MAX_ENUM_SIZE
->  };
->
->
-
-
-
+diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+index b924cea..f28fa3b 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.c
++++ b/drivers/net/wireless/ti/wlcore/acx.c
+@@ -1725,7 +1725,7 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
+ 	acx->decrease_delta = conf->decrease_delta;
+ 	acx->quiet_time = conf->quiet_time;
+ 	acx->increase_time = conf->increase_time;
+-	acx->window_size = acx->window_size;
++	acx->window_size = conf->window_size;
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
+ 				   sizeof(*acx));
 -- 
-Best regards,
-Eugene
+2.1.4
+
