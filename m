@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58075 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754241AbbAFIXo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 03:23:44 -0500
-Message-ID: <1420532617.1966.2.camel@sipsolutions.net> (sfid-20150106_092406_190634_68A6D76E)
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Tue, 06 Jan 2015 09:23:37 +0100
-In-Reply-To: <1420495519.14308.29.camel@x220>
-References: <1420297188.2397.3.camel@tiscali.nl>
-	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
-	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
-	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
-	 <1420479510.14308.23.camel@x220>
-	 (sfid-20150105_183907_807502_81C08416) <1420484224.9459.16.camel@sipsolutions.net>
-	 <1420495519.14308.29.camel@x220>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4278 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209AbbAGK5X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 05:57:23 -0500
+Message-ID: <54AD103B.40002@qti.qualcomm.com> (sfid-20150107_115726_718450_7FF56308)
+Date: Wed, 7 Jan 2015 16:23:47 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>,
+	Sujith Manoharan <sujith@msujith.org>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org> <CA+BoTQ=HqF0vBj4chXfoY9GKcFBP8Xh37HXo5etDDZ1XCg6O4w@mail.gmail.com>
+In-Reply-To: <CA+BoTQ=HqF0vBj4chXfoY9GKcFBP8Xh37HXo5etDDZ1XCg6O4w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 23:05 +0100, Paul Bolle wrote:
-> On Mon, 2015-01-05 at 19:57 +0100, Johannes Berg wrote:
-> > Multiple other groups of ioctls could be converted in similar patches,
-> > until at the end you can completely remove ipw_wx_handlers and rely
-> > entirely on cfg80211's wext compatibility.
-> > 
-> > So far the theory - in practice nobody cared enough to start working on
-> > any of these drivers, let alone actually has the hardware today.
-> 
-> So my suggestion to make ipw2200 no longer use cfg80211_wext_giwname()
-> would actually be backwards. What's actually needed, in theory, is to
-> use more of what's provided under CFG80211_WEXT (and, I guess, less of
-> what's provided under WIRELESS_EXT). Did I get that right?
 
-Yes, though I'd argue there are multiple levels of truth here.
 
-Yours is the theoretical, hopefully-forward-looking one where we still
-expect the driver to actually be modified to take advantage of the new
-frameworks (which is independent of wext support towards userspace). In
-that scenario, yes, it should use more until it uses all, and then it
-can stop concerning itself with wext (which would be a win because
-driver/wext interaction is always finicky) (*)
+On Wednesday 07 January 2015 03:44 PM, Michal Kazior wrote:
+> On 5 January 2015 at 05:39, Sujith Manoharan <sujith@msujith.org> wrote:
+>> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>>
+>> The HTT RX ring is replenished with a maximum of 16 buffers,
+>> but this might be insufficient when RX traffic is high.
+>> Not having enough RX buffers throttles the FW, resulting
+>> in low throughput.
+>>
+>> This patch adds a module parameter to adjust the fill size
+>> based on the platform/usage.
+>
+> I don't think this should be adjustable.
 
-Then there's the other level that you were looking at earlier - simply
-removing all of this again from this driver because nobody is going to
-work on it. That'd actually make sense and shrink the driver footprint
-(no need to load cfg80211 for using almost nothing of it) but this is no
-longer feasible since it would again break userspace API - as I said you
-can today discover the presence of this device/driver with nl80211 -
-that would be broken by removing cfg80211 from here.
+Default value of 16 causes rx ring corruption within 1 hour of stress
+testing. Increasing this limit to 1000 solves the issue, not sure what
+max value in > 16 and <= 1000 works. This lower value obviously has issues
+on some platforms.
 
-And then there's the practical third version that's likely to happen -
-i.e. nothing :-)
-
-johannes
-
-(*) FWIW, if done to all drivers it would allow shrinking cfg80211-wext
-by a lot because all the EXPORT_SYMBOL would no longer be needed - but
-come to think of it we can fix that differently.
-
+Vasanth
