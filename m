@@ -1,121 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:41817 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932519AbbA3Ncz (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:61678 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752663AbbAGPuV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 08:32:55 -0500
-Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YHBgs-004FiR-6C
-	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:54 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 11/17] ath9k: Simplify user pattern configuration
-Date: Fri, 30 Jan 2015 19:05:31 +0530
-Message-Id: <1422624937-4810-12-git-send-email-sujith@msujith.org> (sfid-20150130_143258_974603_65327208)
-In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
-References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+	Wed, 7 Jan 2015 10:50:21 -0500
+Received: by mail-wg0-f41.google.com with SMTP id l18so1447158wgh.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 07:50:20 -0800 (PST)
+Received: from muse.ger.corp.intel.com (93-172-181-114.bb.netvision.net.il. [93.172.181.114])
+        by mx.google.com with ESMTPSA id o1sm2567110wjf.41.2015.01.07.07.50.18
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 07 Jan 2015 07:50:19 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/3] mac80211: consider only relevant vifs for radar_required calculation
+Date: Wed,  7 Jan 2015 17:50:10 +0200
+Message-Id: <1420645811-17877-2-git-send-email-eliad@wizery.com> (sfid-20150107_165026_282798_F372C15C)
+In-Reply-To: <1420645811-17877-1-git-send-email-eliad@wizery.com>
+References: <1420645811-17877-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+ctx->conf.radar_enabled should reflect whether radar
+detection is enabled for the channel context.
 
-There is no need to allocate a new structure and
-free it for every user pattern, instead use local
-variables.
+When calculating it, make it consider only the vifs
+that have this context assigned (instead of all the
+vifs).
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  6 -----
- drivers/net/wireless/ath/ath9k/wow.c   | 49 +++++++++-------------------------
- 2 files changed, 12 insertions(+), 43 deletions(-)
+v1->v2: 
+* add a new function (instead of replacing existing one)
+* init ctx->conf.radar_enabled to false
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 20216c5..0f8e946 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -830,12 +830,6 @@ static inline void ath_fill_led_pin(struct ath_softc *sc)
- /* Wake on Wireless LAN */
- /************************/
- 
--struct ath9k_wow_pattern {
--	u8 pattern_bytes[MAX_PATTERN_SIZE];
--	u8 mask_bytes[MAX_PATTERN_SIZE];
--	u32 pattern_len;
--};
--
- #ifdef CONFIG_ATH9K_WOW
- void ath9k_init_wow(struct ieee80211_hw *hw);
- void ath9k_deinit_wow(struct ieee80211_hw *hw);
-diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
-index 4b3b565..da52b1f 100644
---- a/drivers/net/wireless/ath/ath9k/wow.c
-+++ b/drivers/net/wireless/ath/ath9k/wow.c
-@@ -128,50 +128,25 @@ static void ath9k_wow_add_pattern(struct ath_softc *sc,
- 				  struct cfg80211_wowlan *wowlan)
- {
- 	struct ath_hw *ah = sc->sc_ah;
--	struct ath9k_wow_pattern *wow_pattern = NULL;
- 	struct cfg80211_pkt_pattern *patterns = wowlan->patterns;
-+	u8 wow_pattern[MAX_PATTERN_SIZE];
-+	u8 wow_mask[MAX_PATTERN_SIZE];
- 	int mask_len;
- 	s8 i = 0;
- 
--	if (!wowlan->n_patterns)
--		return;
--
--	/*
--	 * Add the new user configured patterns
--	 */
- 	for (i = 0; i < wowlan->n_patterns; i++) {
--
--		wow_pattern = kzalloc(sizeof(*wow_pattern), GFP_KERNEL);
--
--		if (!wow_pattern)
--			return;
--
--		/*
--		 * TODO: convert the generic user space pattern to
--		 * appropriate chip specific/802.11 pattern.
--		 */
--
--		mask_len = DIV_ROUND_UP(wowlan->patterns[i].pattern_len, 8);
--		memset(wow_pattern->pattern_bytes, 0, MAX_PATTERN_SIZE);
--		memset(wow_pattern->mask_bytes, 0, MAX_PATTERN_SIZE);
--		memcpy(wow_pattern->pattern_bytes, patterns[i].pattern,
--		       patterns[i].pattern_len);
--		memcpy(wow_pattern->mask_bytes, patterns[i].mask, mask_len);
--		wow_pattern->pattern_len = patterns[i].pattern_len;
--
--		/*
--		 * just need to take care of deauth and disssoc pattern,
--		 * make sure we don't overwrite them.
--		 */
--
--		ath9k_hw_wow_apply_pattern(ah, wow_pattern->pattern_bytes,
--					   wow_pattern->mask_bytes,
-+		mask_len = DIV_ROUND_UP(patterns[i].pattern_len, 8);
-+		memset(wow_pattern, 0, MAX_PATTERN_SIZE);
-+		memset(wow_mask, 0, MAX_PATTERN_SIZE);
-+		memcpy(wow_pattern, patterns[i].pattern, patterns[i].pattern_len);
-+		memcpy(wow_mask, patterns[i].mask, mask_len);
-+
-+		ath9k_hw_wow_apply_pattern(ah,
-+					   wow_pattern,
-+					   wow_mask,
- 					   i + 2,
--					   wow_pattern->pattern_len);
--		kfree(wow_pattern);
--
-+					   patterns[i].pattern_len);
- 	}
--
+ net/mac80211/chan.c | 32 ++++++++++++++++++++++++++++++--
+ 1 file changed, 30 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index f5d08d5..28da444 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -406,6 +406,34 @@ bool ieee80211_is_radar_required(struct ieee80211_local *local)
+ 	return false;
  }
  
- int ath9k_suspend(struct ieee80211_hw *hw,
++static bool
++ieee80211_chanctx_radar_required(struct ieee80211_local *local,
++				 struct ieee80211_chanctx *ctx)
++{
++	struct ieee80211_chanctx_conf *conf = &ctx->conf;
++	struct ieee80211_sub_if_data *sdata;
++	bool required = false;
++
++	lockdep_assert_held(&local->chanctx_mtx);
++	lockdep_assert_held(&local->mtx);
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		if (!ieee80211_sdata_running(sdata))
++			continue;
++		if (rcu_access_pointer(sdata->vif.chanctx_conf) != conf)
++			continue;
++		if (!sdata->radar_required)
++			continue;
++
++		required = true;
++		break;
++	}
++	rcu_read_unlock();
++
++	return required;
++}
++
+ static struct ieee80211_chanctx *
+ ieee80211_alloc_chanctx(struct ieee80211_local *local,
+ 			const struct cfg80211_chan_def *chandef,
+@@ -425,7 +453,7 @@ ieee80211_alloc_chanctx(struct ieee80211_local *local,
+ 	ctx->conf.rx_chains_static = 1;
+ 	ctx->conf.rx_chains_dynamic = 1;
+ 	ctx->mode = mode;
+-	ctx->conf.radar_enabled = ieee80211_is_radar_required(local);
++	ctx->conf.radar_enabled = false;
+ 	ieee80211_recalc_chanctx_min_def(local, ctx);
+ 
+ 	return ctx;
+@@ -570,7 +598,7 @@ static void ieee80211_recalc_radar_chanctx(struct ieee80211_local *local,
+ 	/* for ieee80211_is_radar_required */
+ 	lockdep_assert_held(&local->mtx);
+ 
+-	radar_enabled = ieee80211_is_radar_required(local);
++	radar_enabled = ieee80211_chanctx_radar_required(local, chanctx);
+ 
+ 	if (radar_enabled == chanctx->conf.radar_enabled)
+ 		return;
 -- 
-2.2.2
+1.8.5.2.229.g4448466.dirty
 
