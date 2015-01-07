@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:48065 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750949AbbAIBAu (ORCPT
+Received: from mail-yk0-f174.google.com ([209.85.160.174]:64205 "EHLO
+	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751451AbbAGSk6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 20:00:50 -0500
-Message-ID: <54AF283A.5020104@windriver.com> (sfid-20150109_020059_155872_CC22731B)
-Date: Fri, 9 Jan 2015 09:00:42 +0800
-From: Ying Xue <ying.xue@windriver.com>
+	Wed, 7 Jan 2015 13:40:58 -0500
 MIME-Version: 1.0
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	<johannes@sipsolutions.net>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH net-next] mac80211: silent build warnings
-References: <1420700655-9427-1-git-send-email-ying.xue@windriver.com> <54AE7F3F.3070802@cogentembedded.com>
-In-Reply-To: <54AE7F3F.3070802@cogentembedded.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1420394427-19509-1-git-send-email-me@mortis.eu>
+References: <1420394427-19509-1-git-send-email-me@mortis.eu>
+Date: Wed, 7 Jan 2015 20:40:57 +0200
+Message-ID: <CAHp75Vetc+fgv=YrqPuW9YChez82h7N7VeX_5bW5tpXm2j=h7g@mail.gmail.com> (sfid-20150107_194101_169599_06DAC25D)
+Subject: Re: [PATCH 1/2] Align member-assigns in a structure-copy block
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Giel van Schijndel <me@mortis.eu>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/08/2015 08:59 PM, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 1/8/2015 10:04 AM, Ying Xue wrote:
-> 
->> Silent the following build warnings:
-> 
->> net/mac80211/mlme.c: In function ‘ieee80211_rx_mgmt_beacon’:
->> net/mac80211/mlme.c:1348:3: warning: ‘pwr_level_cisco’ may be used
->> uninitialized in this function [-Wuninitialized]
->> net/mac80211/mlme.c:1315:6: note: ‘pwr_level_cisco’ was declared here
-> 
->> Signed-off-by: Ying Xue <ying.xue@windriver.com>
->> ---
->>   net/mac80211/mlme.c |    2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 2c36c47..13b5506 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -1312,7 +1312,7 @@ static u32 ieee80211_handle_pwr_constr(struct
->> ieee80211_sub_if_data *sdata,
->>   {
->>       bool has_80211h_pwr = false, has_cisco_pwr = false;
->>       int chan_pwr = 0, pwr_reduction_80211h = 0;
->> -    int pwr_level_cisco, pwr_level_80211h;
->> +    int pwr_level_cisco = 0, pwr_level_80211h = 0;
-> 
->    OK, but why are you also initializing the second variable?
-> 
+On Sun, Jan 4, 2015 at 8:00 PM, Giel van Schijndel <me@mortis.eu> wrote:
+> This highlights the differences (errors).
 
-Although the second variable is not warned in above compile warning
-message, but it should be if we take a look at the code associated with it.
+Seems like patch for the patch. Just fix an error like it's done here:
+http://www.spinics.net/lists/linux-wireless/msg131667.html
 
-However, as Johannes confirmed, the first change is unnecessary at all.
-So please ignore the patch.
 
-Thanks,
-Ying
-
-> WBR, Sergei
-> 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> ---
+>  drivers/net/wireless/ti/wlcore/acx.c | 22 +++++++++++-----------
+>  1 file changed, 11 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+> index b924cea..beb354c 100644
+> --- a/drivers/net/wireless/ti/wlcore/acx.c
+> +++ b/drivers/net/wireless/ti/wlcore/acx.c
+> @@ -1715,17 +1715,17 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
+>                 goto out;
+>         }
+>
+> -       acx->recover_time = cpu_to_le32(conf->recover_time);
+> -       acx->hangover_period = conf->hangover_period;
+> -       acx->dynamic_mode = conf->dynamic_mode;
+> -       acx->early_termination_mode = conf->early_termination_mode;
+> -       acx->max_period = conf->max_period;
+> -       acx->min_period = conf->min_period;
+> -       acx->increase_delta = conf->increase_delta;
+> -       acx->decrease_delta = conf->decrease_delta;
+> -       acx->quiet_time = conf->quiet_time;
+> -       acx->increase_time = conf->increase_time;
+> -       acx->window_size = acx->window_size;
+> +       acx->recover_time               = cpu_to_le32(conf->recover_time);
+> +       acx->hangover_period            = conf->hangover_period;
+> +       acx->dynamic_mode               = conf->dynamic_mode;
+> +       acx->early_termination_mode     = conf->early_termination_mode;
+> +       acx->max_period                 = conf->max_period;
+> +       acx->min_period                 = conf->min_period;
+> +       acx->increase_delta             = conf->increase_delta;
+> +       acx->decrease_delta             = conf->decrease_delta;
+> +       acx->quiet_time                 = conf->quiet_time;
+> +       acx->increase_time              = conf->increase_time;
+> +       acx->window_size                = acx->window_size;
+>
+>         ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
+>                                    sizeof(*acx));
+> --
+> 2.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> Please read the FAQ at  http://www.tux.org/lkml/
 
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
