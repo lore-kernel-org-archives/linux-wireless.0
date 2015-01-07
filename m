@@ -1,90 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:47307 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754657AbbA0KuG convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:60261 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbbAGO3J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 05:50:06 -0500
-From: "Dedy Lansky" <dlansky@codeaurora.org>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	"'Vladimir Kondratiev'" <qca_vkondrat@qca.qualcomm.com>
-References: <1422345312-2963-1-git-send-email-dlansky@codeaurora.org> <1422347067.1890.49.camel@sipsolutions.net>
-In-Reply-To: <1422347067.1890.49.camel@sipsolutions.net>
-Subject: RE: [PATCH] cfg80211: PBSS basic support
-Date: Tue, 27 Jan 2015 12:50:00 +0200
-Message-ID: <002501d03a1f$024d1e30$06e75a90$@codeaurora.org> (sfid-20150127_115018_927937_09B058B8)
+	Wed, 7 Jan 2015 09:29:09 -0500
+Received: by mail-wi0-f175.google.com with SMTP id l15so7594381wiw.8
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 06:29:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
+In-Reply-To: <1420640505-16838-1-git-send-email-arik@wizery.com>
+References: <1420640505-16838-1-git-send-email-arik@wizery.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 7 Jan 2015 16:28:52 +0200
+Message-ID: <CA+XVXfdcG+dz04UvgE4+cmkzciO6f92jXqAuqOJyEgrOU4SFpA@mail.gmail.com> (sfid-20150107_152912_919580_AD46DD6A)
+Subject: Re: [PATCH v2] mac80211: add TDLS supported channels correctly
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arik@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg [mailto:johannes@sipsolutions.net] 
-Sent: Tuesday, January 27, 2015 10:24 AM
+On Wed, Jan 7, 2015 at 4:21 PM, Arik Nemtsov <arik@wizery.com> wrote:
+> The function adding the supported channels IE during a TDLS connection had
+> several issues:
+> 1. If the entire subband is usable, the function exitted the loop without
+>    adding it
+> 2. The function only checked chandef_usable, ignoring flags like RADAR
+>    which would prevent TDLS off-channel communcation.
+> 3. HT20 was explicitly required in the chandef, while not a requirement
+>    for TDLS off-channel.
+>
+> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+> Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  net/mac80211/tdls.c | 26 +++++++++++++++++++++-----
+>  1 file changed, 21 insertions(+), 5 deletions(-)
+>
+> diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+> index 55ddd77..c5c4342 100644
+> --- a/net/mac80211/tdls.c
+> +++ b/net/mac80211/tdls.c
+> @@ -68,17 +68,24 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
+>                 ch = ieee80211_get_channel(sdata->local->hw.wiphy, i);
+>                 if (ch) {
+>                         /* we will be active on the channel */
+> -                       u32 flags = IEEE80211_CHAN_DISABLED |
+> -                                   IEEE80211_CHAN_NO_IR;
+>                         cfg80211_chandef_create(&chandef, ch,
+> -                                               NL80211_CHAN_HT20);
+> -                       if (cfg80211_chandef_usable(sdata->local->hw.wiphy,
+> -                                                   &chandef, flags)) {
+> +                                               NL80211_CHAN_NO_HT);
+> +                       if (cfg80211_reg_can_beacon(sdata->local->hw.wiphy,
+> +                                                   &chandef,
+> +                                                   sdata->wdev.iftype)) {
+>                                 ch_cnt++;
+> +                               /*
+> +                                * check if the next channel is also part of
+> +                                * this allowed range */
+> +                                *
 
-> On Tue, 2015-01-27 at 09:55 +0200, Dedy Lansky wrote:
-> 
-> > --- a/include/linux/ieee80211.h
-> > +++ b/include/linux/ieee80211.h
-> > @@ -1602,6 +1602,15 @@ enum {
-> >  	IEEE80211_BANDID_60G   = 5, /* 60 GHz */
-> >  };
-> >  
-> > +/* BSS Type, 802.11ad #6.3.3.2 */
-> > +enum ieee80211_bsstype {
-> > +	IEEE80211_BSS_TYPE_ESS,
-> > +	IEEE80211_BSS_TYPE_PBSS,
-> > +	IEEE80211_BSS_TYPE_IBSS,
-> > +	IEEE80211_BSS_TYPE_MBSS,
-> > +	IEEE80211_BSS_TYPE_ANY
-> > +};
-> 
-> Technically the standard defines this, but not as over the air bits as everything else in this file. I think this should therefore be moved into cfg80211.h as a local enum, we don't use the exact definitions from clause 6 anywhere anyway.
-
-OK. Will take care of that.
-
-> 
-> > @@ -4007,6 +4009,7 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
-> >  				      struct ieee80211_channel *channel,
-> >  				      const u8 *bssid,
-> >  				      const u8 *ssid, size_t ssid_len,
-> > +				      enum ieee80211_bsstype bss_type,
-> >  				      u16 capa_mask, u16 capa_val);
-> 
-> As far as I can tell, the only remaining use for capa_mask/val is the privacy -- for some reason some drivers like ath6kl don't specify it and don't care (which is odd) but it'd be nicer to remove capa_mask/val now and add a privacy enum allowing UNSPEC, ON and OFF or so. That'll make the callers clearer.
-
-Sure. I guess this enum should go into cfg80211.h as well.
-
-> 
-> >  
-> >  	list_for_each_entry(bss, &rdev->bss_list, list) {
-> > +		if (!cfg80211_bss_type_to_capa(bss_type,
-> > +					       bss->pub.channel->band,
-> > +					       &capa_val, &capa_mask))
-> > +			continue;
-> 
-> This doesn't make any sense - you're also storing the bss_type in the bss struct, so why translate here to match?
-
-See below.
-
-> 
-> > @@ -896,6 +949,7 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
-> >  	struct cfg80211_bss_ies *ies;
-> >  	struct ieee80211_channel *channel;
-> >  	struct cfg80211_internal_bss tmp = {}, *res;
-> > +	int bss_type;
-> 
-> enum.
-> 
-> Except that you actually forgot to store the BSS type ...
-> 
-> Actually - you didn't add it to the bss struct, but to wdev? Why is it needed there?? I don't see you using it?
-
-wdev->bss_type refers to the BSS that we are connecting/connected to (Maybe rename to "conn_bss_type"?).
-This member is used in sme.c. It was introduced because once the connect is complete and driver calls cfg80211_connect_result(), cfg needs to find the BSS being connected to.
-
-> 
-johannes
-
-
-
+argh. resending. this wasn't compiled properly :)
