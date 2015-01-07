@@ -1,56 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:33602 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753577AbbAONtl (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56482 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755217AbbAGXHG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 08:49:41 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Masanari Iida <standby24x7@gmail.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] rtlwifi: btcoexist: Remove some unused functions
-References: <1420907079-27102-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<54B15D57.5060709@lwfinger.net>
-Date: Thu, 15 Jan 2015 15:49:33 +0200
-In-Reply-To: <54B15D57.5060709@lwfinger.net> (Larry Finger's message of "Sat,
-	10 Jan 2015 11:11:51 -0600")
-Message-ID: <87twzsnogi.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_145003_336993_4CE817A2)
+	Wed, 7 Jan 2015 18:07:06 -0500
+Message-ID: <54ADBC13.70100@broadcom.com> (sfid-20150108_000741_052748_744FB174)
+Date: Thu, 8 Jan 2015 00:06:59 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Giel van Schijndel <me@mortis.eu>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	<linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	open list: "NETWORKING DRIVERS" <netdev@vger.kernel.org>, ;
+Subject: Re: [PATCH 2/2] Fix copy-paste bug: assign from src struct not dest
+References: <20150107191836.GA18978@salidar.dom.custoft.eu> <1420668978.3407.28.camel@sipsolutions.net>
+In-Reply-To: <1420668978.3407.28.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-
-> On 01/10/2015 10:24 AM, Rickard Strandqvist wrote:
->> Removes some functions that are not used anywhere:
->> ex_halbtc8821a1ant_periodical() ex_halbtc8821a1ant_pnp_notify()
->> ex_halbtc8821a1ant_halt_notify() ex_halbtc8821a1ant_bt_info_notify()
->> ex_halbtc8821a1ant_special_packet_notify() ex_halbtc8821a1ant_connect_notify()
->> ex_halbtc8821a1ant_scan_notify() ex_halbtc8821a1ant_lps_notify()
->> ex_halbtc8821a1ant_ips_notify() ex_halbtc8821a1ant_display_coex_info()
->> ex_halbtc8821a1ant_init_coex_dm() ex_halbtc8821a1ant_init_hwconfig()
->>
->> This was partially found by using a static code analysis program called cppcheck.
->>
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+On 01/07/15 23:16, Johannes Berg wrote:
+> On Wed, 2015-01-07 at 20:18 +0100, Giel van Schijndel wrote:
 >
-> NACK!!!!!!!!!
+>> IMO the aligned block of code has the significant advantage of taking
+>> advantage of humans' ability to spot things that break a pattern. Which
+>> in this case becomes *very* visible when properly aligned, because
+>> without the alignment there is no (visual) pattern (or at least not one
+>> very suitable for my "visual processing system", I know the same applies
+>> to at least some others).
 >
-> I told you to stay away from these routines until I finish my update.
-> Not only might you remove some functions that I will be needing later,
-> but you run the risk of merge complications.
+> Yeah, well, but why even invoke that "visual processing system"?
 >
-> Kalle: Please ignore EVERYTHING from this person. Obviously, he is
-> incapable of understanding even the simplest instructions.
+> If you look, for example, at the __skb_clone function it just uses a
+> macro:
+>
+> #define C(x) n->x = skb->x
 
-Yeah, I have to agree with that. I think he is just too fixated creating
-the patches automatically.
+This requires fixed names so I generally prefer to add them:
 
-I have dropped the patches.
+#define C(d, s, f)	(d)->f = (s)->f
 
--- 
-Kalle Valo
+> and then
+>
+> 	C(len);
+> 	C(data_len);
+
+	C(acx, conf, window_size);
+	C(acx, conf, increase_time);
+
+Regards,
+Arend
+
+>
+> etc.
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+
