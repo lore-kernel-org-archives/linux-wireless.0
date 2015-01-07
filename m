@@ -1,198 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:38571 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760362AbbA2CqL (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:46263 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750851AbbAGOrY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 21:46:11 -0500
-Received: by mail-wi0-f169.google.com with SMTP id h11so3171767wiw.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2015 18:46:10 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/2] ath10k: change dma beacon cmd prototype
-Date: Wed, 28 Jan 2015 11:22:04 +0100
-Message-Id: <1422440525-11115-1-git-send-email-michal.kazior@tieto.com> (sfid-20150129_034624_975892_8DF94F9E)
-In-Reply-To: <1421412811-6387-1-git-send-email-michal.kazior@tieto.com>
-References: <1421412811-6387-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 7 Jan 2015 09:47:24 -0500
+Received: by mail-wg0-f53.google.com with SMTP id x13so1318156wgg.12
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 06:47:23 -0800 (PST)
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>,
+	Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH v2 1/2] cfg80211: introduce sync regdom set API for self-managed
+Date: Wed,  7 Jan 2015 16:47:19 +0200
+Message-Id: <1420642040-4530-1-git-send-email-arik@wizery.com> (sfid-20150107_154727_340148_6B0E2F51)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The command logic shouldn't really care about
-arvif structure.
+A self-managed device will sometimes need to set its regdomain synchronously.
+Notably it should be set before usermode has a chance to query it. Expose
+a new API to accomplish this which requires the RTNL.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Reviewed-by: Ilan Peer <ilan.peer@intel.com>
+Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 14 ++++++++++----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 20 +++++++++++---------
- drivers/net/wireless/ath/ath10k/wmi.c     | 27 +++++++++++++++++----------
- 3 files changed, 38 insertions(+), 23 deletions(-)
+ include/net/cfg80211.h | 14 ++++++++++++++
+ net/wireless/reg.c     | 31 +++++++++++++++++++++++++++++--
+ 2 files changed, 43 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 80bd28a..06062cf 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -102,7 +102,10 @@ struct wmi_ops {
- 					 u32 value);
- 	struct sk_buff *(*gen_scan_chan_list)(struct ath10k *ar,
- 					      const struct wmi_scan_chan_list_arg *arg);
--	struct sk_buff *(*gen_beacon_dma)(struct ath10k_vif *arvif);
-+	struct sk_buff *(*gen_beacon_dma)(struct ath10k *ar, u32 vdev_id,
-+					  const void *bcn, size_t bcn_len,
-+					  u32 bcn_paddr, bool dtim_zero,
-+					  bool deliver_cab);
- 	struct sk_buff *(*gen_pdev_set_wmm)(struct ath10k *ar,
- 					    const struct wmi_pdev_set_wmm_params_arg *arg);
- 	struct sk_buff *(*gen_request_stats)(struct ath10k *ar,
-@@ -749,16 +752,19 @@ ath10k_wmi_peer_assoc(struct ath10k *ar,
- }
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index f38645f..39d102d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3830,6 +3830,20 @@ int regulatory_set_wiphy_regd(struct wiphy *wiphy,
+ 			      struct ieee80211_regdomain *rd);
  
- static inline int
--ath10k_wmi_beacon_send_ref_nowait(struct ath10k_vif *arvif)
-+ath10k_wmi_beacon_send_ref_nowait(struct ath10k *ar, u32 vdev_id,
-+				  const void *bcn, size_t bcn_len,
-+				  u32 bcn_paddr, bool dtim_zero,
-+				  bool deliver_cab)
- {
--	struct ath10k *ar = arvif->ar;
- 	struct sk_buff *skb;
- 	int ret;
- 
- 	if (!ar->wmi.ops->gen_beacon_dma)
- 		return -EOPNOTSUPP;
- 
--	skb = ar->wmi.ops->gen_beacon_dma(arvif);
-+	skb = ar->wmi.ops->gen_beacon_dma(ar, vdev_id, bcn, bcn_len, bcn_paddr,
-+					  dtim_zero, deliver_cab);
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index d3cf91dc..c3d077f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1906,13 +1906,15 @@ ath10k_wmi_tlv_op_gen_scan_chan_list(struct ath10k *ar,
- }
- 
- static struct sk_buff *
--ath10k_wmi_tlv_op_gen_beacon_dma(struct ath10k_vif *arvif)
-+ath10k_wmi_tlv_op_gen_beacon_dma(struct ath10k *ar, u32 vdev_id,
-+				 const void *bcn, size_t bcn_len,
-+				 u32 bcn_paddr, bool dtim_zero,
-+				 bool deliver_cab)
+ /**
++ * regulatory_set_wiphy_regd_sync_rtnl - set regdom for self-managed drivers
++ * @wiphy: the wireless device we want to process the regulatory domain on
++ * @rd: the regulatory domain information to use for this wiphy
++ *
++ * This functions requires the RTNL to be held and applies the new regdomain
++ * synchronously to this wiphy. For more details see
++ * regulatory_set_wiphy_regd().
++ *
++ * Return: 0 on success. -EINVAL, -EPERM
++ */
++int regulatory_set_wiphy_regd_sync_rtnl(struct wiphy *wiphy,
++					struct ieee80211_regdomain *rd);
 +
++/**
+  * wiphy_apply_custom_regulatory - apply a custom driver regulatory domain
+  * @wiphy: the wireless device we want to process the regulatory domain on
+  * @regd: the custom regulatory domain to use for this wiphy
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index fde4e17..521f3a4 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -2909,8 +2909,8 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 	return 0;
+ }
+ 
+-int regulatory_set_wiphy_regd(struct wiphy *wiphy,
+-			      struct ieee80211_regdomain *rd)
++static int __regulatory_set_wiphy_regd(struct wiphy *wiphy,
++				       struct ieee80211_regdomain *rd)
  {
--	struct ath10k *ar = arvif->ar;
- 	struct wmi_bcn_tx_ref_cmd *cmd;
- 	struct wmi_tlv *tlv;
- 	struct sk_buff *skb;
--	struct sk_buff *beacon = arvif->beacon;
- 	struct ieee80211_hdr *hdr;
- 	u16 fc;
+ 	const struct ieee80211_regdomain *regd;
+ 	const struct ieee80211_regdomain *prev_regd;
+@@ -2940,12 +2940,39 @@ int regulatory_set_wiphy_regd(struct wiphy *wiphy,
+ 	spin_unlock(&reg_requests_lock);
  
-@@ -1920,24 +1922,24 @@ ath10k_wmi_tlv_op_gen_beacon_dma(struct ath10k_vif *arvif)
- 	if (!skb)
- 		return ERR_PTR(-ENOMEM);
+ 	kfree(prev_regd);
++	return 0;
++}
++
++int regulatory_set_wiphy_regd(struct wiphy *wiphy,
++			      struct ieee80211_regdomain *rd)
++{
++	int ret = __regulatory_set_wiphy_regd(wiphy, rd);
++
++	if (ret)
++		return ret;
  
--	hdr = (struct ieee80211_hdr *)beacon->data;
-+	hdr = (struct ieee80211_hdr *)bcn;
- 	fc = le16_to_cpu(hdr->frame_control);
+ 	schedule_work(&reg_work);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(regulatory_set_wiphy_regd);
  
- 	tlv = (void *)skb->data;
- 	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_BCN_SEND_FROM_HOST_CMD);
- 	tlv->len = __cpu_to_le16(sizeof(*cmd));
- 	cmd = (void *)tlv->value;
--	cmd->vdev_id = __cpu_to_le32(arvif->vdev_id);
--	cmd->data_len = __cpu_to_le32(beacon->len);
--	cmd->data_ptr = __cpu_to_le32(ATH10K_SKB_CB(beacon)->paddr);
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	cmd->data_len = __cpu_to_le32(bcn_len);
-+	cmd->data_ptr = __cpu_to_le32(bcn_paddr);
- 	cmd->msdu_id = 0;
- 	cmd->frame_control = __cpu_to_le32(fc);
- 	cmd->flags = 0;
- 
--	if (ATH10K_SKB_CB(beacon)->bcn.dtim_zero)
-+	if (dtim_zero)
- 		cmd->flags |= __cpu_to_le32(WMI_BCN_TX_REF_FLAG_DTIM_ZERO);
- 
--	if (ATH10K_SKB_CB(beacon)->bcn.deliver_cab)
-+	if (deliver_cab)
- 		cmd->flags |= __cpu_to_le32(WMI_BCN_TX_REF_FLAG_DELIVER_CAB);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv beacon dma\n");
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d340361..459b203 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -956,6 +956,8 @@ err_pull:
- 
- static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
++int regulatory_set_wiphy_regd_sync_rtnl(struct wiphy *wiphy,
++					struct ieee80211_regdomain *rd)
++{
++	int ret;
++
++	ASSERT_RTNL();
++
++	ret = __regulatory_set_wiphy_regd(wiphy, rd);
++	if (ret)
++		return ret;
++
++	/* process the request immediately */
++	reg_process_self_managed_hints();
++	return 0;
++}
++EXPORT_SYMBOL(regulatory_set_wiphy_regd_sync_rtnl);
++
+ void wiphy_regulatory_register(struct wiphy *wiphy)
  {
-+	struct sk_buff *bcn;
-+	struct ath10k_skb_cb *cb;
- 	int ret;
- 
- 	lockdep_assert_held(&arvif->ar->data_lock);
-@@ -966,7 +968,12 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
- 	if (arvif->beacon_sent)
- 		return;
- 
--	ret = ath10k_wmi_beacon_send_ref_nowait(arvif);
-+	bcn = arvif->beacon;
-+	cb = ATH10K_SKB_CB(bcn);
-+	ret = ath10k_wmi_beacon_send_ref_nowait(arvif->ar, arvif->vdev_id,
-+						bcn->data, bcn->len, cb->paddr,
-+						cb->bcn.dtim_zero,
-+						cb->bcn.deliver_cab);
- 	if (ret)
- 		return;
- 
-@@ -4856,12 +4863,12 @@ ath10k_wmi_10_2_op_gen_pdev_get_temperature(struct ath10k *ar)
- 
- /* This function assumes the beacon is already DMA mapped */
- static struct sk_buff *
--ath10k_wmi_op_gen_beacon_dma(struct ath10k_vif *arvif)
-+ath10k_wmi_op_gen_beacon_dma(struct ath10k *ar, u32 vdev_id, const void *bcn,
-+			     size_t bcn_len, u32 bcn_paddr, bool dtim_zero,
-+			     bool deliver_cab)
- {
--	struct ath10k *ar = arvif->ar;
- 	struct wmi_bcn_tx_ref_cmd *cmd;
- 	struct sk_buff *skb;
--	struct sk_buff *beacon = arvif->beacon;
- 	struct ieee80211_hdr *hdr;
- 	u16 fc;
- 
-@@ -4869,22 +4876,22 @@ ath10k_wmi_op_gen_beacon_dma(struct ath10k_vif *arvif)
- 	if (!skb)
- 		return ERR_PTR(-ENOMEM);
- 
--	hdr = (struct ieee80211_hdr *)beacon->data;
-+	hdr = (struct ieee80211_hdr *)bcn;
- 	fc = le16_to_cpu(hdr->frame_control);
- 
- 	cmd = (struct wmi_bcn_tx_ref_cmd *)skb->data;
--	cmd->vdev_id = __cpu_to_le32(arvif->vdev_id);
--	cmd->data_len = __cpu_to_le32(beacon->len);
--	cmd->data_ptr = __cpu_to_le32(ATH10K_SKB_CB(beacon)->paddr);
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	cmd->data_len = __cpu_to_le32(bcn_len);
-+	cmd->data_ptr = __cpu_to_le32(bcn_paddr);
- 	cmd->msdu_id = 0;
- 	cmd->frame_control = __cpu_to_le32(fc);
- 	cmd->flags = 0;
- 	cmd->antenna_mask = __cpu_to_le32(WMI_BCN_TX_REF_DEF_ANTENNA);
- 
--	if (ATH10K_SKB_CB(beacon)->bcn.dtim_zero)
-+	if (dtim_zero)
- 		cmd->flags |= __cpu_to_le32(WMI_BCN_TX_REF_FLAG_DTIM_ZERO);
- 
--	if (ATH10K_SKB_CB(beacon)->bcn.deliver_cab)
-+	if (deliver_cab)
- 		cmd->flags |= __cpu_to_le32(WMI_BCN_TX_REF_FLAG_DELIVER_CAB);
- 
- 	return skb;
+ 	struct regulatory_request *lr;
 -- 
-1.8.5.3
+2.1.0
 
