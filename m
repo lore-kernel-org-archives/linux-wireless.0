@@ -1,27 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:60370 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbbAPGMU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 01:12:20 -0500
-Received: by mail-ig0-f176.google.com with SMTP id hl2so99596igb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2015 22:12:20 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87iog7nukb.fsf@kamboji.qca.qualcomm.com>
-References: <1421385460-3126-1-git-send-email-masashi.honma@gmail.com>
-	<87iog7nukb.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 16 Jan 2015 15:12:20 +0900
-Message-ID: <CAFk-A4kzcC9BhCtwqxjprRiXZeVPepBDXr3TvqvL6hn6J37UGw@mail.gmail.com> (sfid-20150116_071224_067697_2492F75E)
-Subject: Re: [PATCH] mesh: Avoid STA expiration timer truncation to u32
-From: Masashi Honma <masashi.honma@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bob Copeland <me@bobcopeland.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:41359 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751298AbbAHO0r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2015 09:26:47 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Y9E2w-0002Xy-2c
+	for linux-wireless@vger.kernel.org; Thu, 08 Jan 2015 15:26:46 +0100
+Message-ID: <1420727204.2029.7.camel@sipsolutions.net> (sfid-20150108_152650_896675_4DC29ED1)
+Subject: Re: [PATCH 0/9] cfg80211/mac80211 statistics cleanups & features
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Thu, 08 Jan 2015 15:26:44 +0100
+In-Reply-To: <1418824679-31530-1-git-send-email-johannes@sipsolutions.net> (sfid-20141217_145808_697234_0CC4B481)
+References: <1418824679-31530-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20141217_145808_697234_0CC4B481)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-01-16 14:49 GMT+09:00 Kalle Valo <kvalo@codeaurora.org>:
-> For mac80211 patches please use prefix "mac80211: ".
+On Wed, 2014-12-17 at 14:57 +0100, Johannes Berg wrote:
+> This series of patches consists of major cleanups to the statistics
+> framework, and the following new features:
+>  * non-channel-specific 'survey' data for allowing drivers to report
+>    global radio statistics (like the newly added scan time)
+>  * allow scan time reporting in survey
+>  * include statistics in station delete event so a userspace process
+>    listening can actually keep track of more global packet statistics
+>  * allow drivers to report some statistics, which is needed e.g. when
+>    beacon filtering is done, or similar (replacing get_rssi that the
+>    TI driver used)
 
-Thanks. I will fix it.
+I applied these now. The per-rate statistics I've been building on top
+is still WIP.
+
+johannes
+
