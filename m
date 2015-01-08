@@ -1,151 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:36421 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753014AbbAMGJe (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:54749 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756124AbbAHLSK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 01:09:34 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0D64lUt022552
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:09:33 -0800
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1rv520k6c9-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:09:33 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 7/8] mwifiex: handle PS events on AP interface as well
-Date: Tue, 13 Jan 2015 17:08:49 +0530
-Message-ID: <1421149130-5889-8-git-send-email-patila@marvell.com> (sfid-20150113_070939_126039_66B8711D)
-In-Reply-To: <1421149130-5889-1-git-send-email-patila@marvell.com>
-References: <1421149130-5889-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 8 Jan 2015 06:18:10 -0500
+Received: by mail-wi0-f180.google.com with SMTP id n3so2545213wiv.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:18:08 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 5/5] ath10k: implement support for ap beacon offloading
+Date: Thu,  8 Jan 2015 12:12:30 +0100
+Message-Id: <1420715550-16017-6-git-send-email-michal.kazior@tieto.com> (sfid-20150108_121814_361134_8A0ADC58)
+In-Reply-To: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+References: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support to handle PS events on AP interface as well.
+New firmware revisions support beacon and probe
+response templates instead. This means SWBA events
+are no longer delivered for these firmware
+revisions.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/mwifiex/cmdevt.c    | 36 ++++++++++++-----------------
- drivers/net/wireless/mwifiex/uap_event.c | 39 ++++++++++++++++++++++++++++++++
- 2 files changed, 53 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index ea04a5c..dcc8589 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -315,22 +315,19 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
- 		adapter->dbg.num_cmd_sleep_cfm_host_to_card_failure++;
- 		return -1;
- 	}
--	if (GET_BSS_ROLE(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY))
--	    == MWIFIEX_BSS_ROLE_STA) {
--		if (!le16_to_cpu(sleep_cfm_buf->resp_ctrl))
--			/* Response is not needed for sleep
--			   confirm command */
--			adapter->ps_state = PS_STATE_SLEEP;
--		else
--			adapter->ps_state = PS_STATE_SLEEP_CFM;
--
--		if (!le16_to_cpu(sleep_cfm_buf->resp_ctrl) &&
--		    (adapter->is_hs_configured &&
--		     !adapter->sleep_period.period)) {
--			adapter->pm_wakeup_card_req = true;
--			mwifiex_hs_activated_event(mwifiex_get_priv
--					(adapter, MWIFIEX_BSS_ROLE_STA), true);
--		}
-+
-+	if (!le16_to_cpu(sleep_cfm_buf->resp_ctrl))
-+		/* Response is not needed for sleep confirm command */
-+		adapter->ps_state = PS_STATE_SLEEP;
-+	else
-+		adapter->ps_state = PS_STATE_SLEEP_CFM;
-+
-+	if (!le16_to_cpu(sleep_cfm_buf->resp_ctrl) &&
-+	    (adapter->is_hs_configured &&
-+	     !adapter->sleep_period.period)) {
-+		adapter->pm_wakeup_card_req = true;
-+		mwifiex_hs_activated_event(mwifiex_get_priv
-+				(adapter, MWIFIEX_BSS_ROLE_ANY), true);
- 	}
- 
+Notes:
+    v2:
+     * add a comment why P2P IE is stripped from beacon template [Kalle]
+
+ drivers/net/wireless/ath/ath10k/mac.c | 162 ++++++++++++++++++++++++++++++++++
+ 1 file changed, 162 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5085f55..b4d4fec 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -967,6 +967,143 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
  	return ret;
-@@ -450,6 +447,7 @@ int mwifiex_process_event(struct mwifiex_adapter *adapter)
- 				      EVENT_GET_BSS_TYPE(eventcause));
- 	if (!priv)
- 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ }
+ 
++static int ath10k_mac_setup_bcn_p2p_ie(struct ath10k_vif *arvif,
++				       struct sk_buff *bcn)
++{
++	struct ath10k *ar = arvif->ar;
++	struct ieee80211_mgmt *mgmt;
++	const u8 *p2p_ie;
++	int ret;
 +
- 	/* Clear BSS_NO_BITS from event */
- 	eventcause &= EVENT_ID_MASK;
- 	adapter->event_cause = eventcause;
-@@ -462,12 +460,6 @@ int mwifiex_process_event(struct mwifiex_adapter *adapter)
++	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
++		return 0;
++
++	if (arvif->vdev_subtype != WMI_VDEV_SUBTYPE_P2P_GO)
++		return 0;
++
++	mgmt = (void *)bcn->data;
++	p2p_ie = cfg80211_find_vendor_ie(WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P,
++					 mgmt->u.beacon.variable,
++					 bcn->len - (mgmt->u.beacon.variable -
++						     bcn->data));
++	if (!p2p_ie)
++		return -ENOENT;
++
++	ret = ath10k_wmi_p2p_go_bcn_ie(ar, arvif->vdev_id, p2p_ie);
++	if (ret) {
++		ath10k_warn(ar, "failed to submit p2p go bcn ie for vdev %i: %d\n",
++			    arvif->vdev_id, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int ath10k_mac_remove_vendor_ie(struct sk_buff *skb, unsigned int oui,
++				       u8 oui_type, size_t ie_offset)
++{
++	size_t len;
++	const u8 *next;
++	const u8 *end;
++	u8 *ie;
++
++	if (WARN_ON(skb->len < ie_offset))
++		return -EINVAL;
++
++	ie = (u8 *)cfg80211_find_vendor_ie(oui, oui_type,
++					   skb->data + ie_offset,
++					   skb->len - ie_offset);
++	if (!ie)
++		return -ENOENT;
++
++	len = ie[1] + 2;
++	end = skb->data + skb->len;
++	next = ie + len;
++
++	if (WARN_ON(next > end))
++		return -EINVAL;
++
++	memmove(ie, next, end - next);
++	skb_trim(skb, skb->len - len);
++
++	return 0;
++}
++
++static int ath10k_mac_setup_bcn_tmpl(struct ath10k_vif *arvif)
++{
++	struct ath10k *ar = arvif->ar;
++	struct ieee80211_hw *hw = ar->hw;
++	struct ieee80211_vif *vif = arvif->vif;
++	struct ieee80211_mutable_offsets offs = {};
++	struct sk_buff *bcn;
++	int ret;
++
++	if (!test_bit(WMI_SERVICE_BEACON_OFFLOAD, ar->wmi.svc_map))
++		return 0;
++
++	bcn = ieee80211_beacon_get_template(hw, vif, &offs);
++	if (!bcn) {
++		ath10k_warn(ar, "failed to get beacon template from mac80211\n");
++		return -EPERM;
++	}
++
++	ret = ath10k_mac_setup_bcn_p2p_ie(arvif, bcn);
++	if (ret) {
++		ath10k_warn(ar, "failed to setup p2p go bcn ie: %d\n", ret);
++		kfree_skb(bcn);
++		return ret;
++	}
++
++	/* P2P IE is inserted by firmware automatically (as configured above)
++	 * so remove it from the base beacon template to avoid duplicate P2P
++	 * IEs in beacon frames.
++	 */
++	ath10k_mac_remove_vendor_ie(bcn, WLAN_OUI_WFA, WLAN_OUI_TYPE_WFA_P2P,
++				    offsetof(struct ieee80211_mgmt,
++					     u.beacon.variable));
++
++	ret = ath10k_wmi_bcn_tmpl(ar, arvif->vdev_id, offs.tim_offset, bcn, 0,
++				  0, NULL, 0);
++	kfree_skb(bcn);
++
++	if (ret) {
++		ath10k_warn(ar, "failed to submit beacon template command: %d\n",
++			    ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static int ath10k_mac_setup_prb_tmpl(struct ath10k_vif *arvif)
++{
++	struct ath10k *ar = arvif->ar;
++	struct ieee80211_hw *hw = ar->hw;
++	struct ieee80211_vif *vif = arvif->vif;
++	struct sk_buff *prb;
++	int ret;
++
++	if (!test_bit(WMI_SERVICE_BEACON_OFFLOAD, ar->wmi.svc_map))
++		return 0;
++
++	prb = ieee80211_proberesp_get(hw, vif);
++	if (!prb) {
++		ath10k_warn(ar, "failed to get probe resp template from mac80211\n");
++		return -EPERM;
++	}
++
++	ret = ath10k_wmi_prb_tmpl(ar, arvif->vdev_id, prb);
++	kfree_skb(prb);
++
++	if (ret) {
++		ath10k_warn(ar, "failed to submit probe resp template command: %d\n",
++			    ret);
++		return ret;
++	}
++
++	return 0;
++}
++
+ static void ath10k_control_beaconing(struct ath10k_vif *arvif,
+ 				     struct ieee80211_bss_conf *info)
+ {
+@@ -3283,6 +3420,18 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 		if (ret)
+ 			ath10k_warn(ar, "failed to set beacon mode for vdev %d: %i\n",
+ 				    arvif->vdev_id, ret);
++
++		ret = ath10k_mac_setup_bcn_tmpl(arvif);
++		if (ret)
++			ath10k_warn(ar, "failed to update beacon template: %d\n",
++				    ret);
++	}
++
++	if (changed & BSS_CHANGED_AP_PROBE_RESP) {
++		ret = ath10k_mac_setup_prb_tmpl(arvif);
++		if (ret)
++			ath10k_warn(ar, "failed to setup probe resp template on vdev %i: %d\n",
++				    arvif->vdev_id, ret);
  	}
  
- 	dev_dbg(adapter->dev, "EVENT: cause: %#x\n", eventcause);
--	if (eventcause == EVENT_PS_SLEEP || eventcause == EVENT_PS_AWAKE) {
--		/* Handle PS_SLEEP/AWAKE events on STA */
--		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
--		if (!priv)
--			priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
--	}
+ 	if (changed & BSS_CHANGED_BEACON_INFO) {
+@@ -5127,6 +5276,19 @@ int ath10k_mac_register(struct ath10k *ar)
  
- 	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
- 		ret = mwifiex_process_uap_event(priv);
-diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
-index f31086c..ec40be8 100644
---- a/drivers/net/wireless/mwifiex/uap_event.c
-+++ b/drivers/net/wireless/mwifiex/uap_event.c
-@@ -179,6 +179,45 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
- 		dev_dbg(adapter->dev, "event: TX_STATUS Report\n");
- 		mwifiex_parse_tx_status_event(priv, adapter->event_body);
- 		break;
-+	case EVENT_PS_SLEEP:
-+		dev_dbg(adapter->dev, "info: EVENT: SLEEP\n");
+ 	ar->hw->max_listen_interval = ATH10K_MAX_HW_LISTEN_INTERVAL;
+ 
++	if (test_bit(WMI_SERVICE_BEACON_OFFLOAD, ar->wmi.svc_map)) {
++		ar->hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
 +
-+		adapter->ps_state = PS_STATE_PRE_SLEEP;
++		/* Firmware delivers WPS/P2P Probe Requests frames to driver so
++		 * that userspace (e.g. wpa_supplicant/hostapd) can generate
++		 * correct Probe Responses. This is more of a hack advert..
++		 */
++		ar->hw->wiphy->probe_resp_offload |=
++			NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
++			NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
++			NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
++	}
 +
-+		mwifiex_check_ps_cond(adapter);
-+		break;
-+
-+	case EVENT_PS_AWAKE:
-+		dev_dbg(adapter->dev, "info: EVENT: AWAKE\n");
-+		if (!adapter->pps_uapsd_mode &&
-+		    priv->media_connected && adapter->sleep_period.period) {
-+				adapter->pps_uapsd_mode = true;
-+				dev_dbg(adapter->dev,
-+					"event: PPS/UAPSD mode activated\n");
-+		}
-+		adapter->tx_lock_flag = false;
-+		if (adapter->pps_uapsd_mode && adapter->gen_null_pkt) {
-+			if (mwifiex_check_last_packet_indication(priv)) {
-+				if (adapter->data_sent) {
-+					adapter->ps_state = PS_STATE_AWAKE;
-+					adapter->pm_wakeup_card_req = false;
-+					adapter->pm_wakeup_fw_try = false;
-+					break;
-+				}
-+				if (!mwifiex_send_null_packet
-+					(priv,
-+					 MWIFIEX_TxPD_POWER_MGMT_NULL_PACKET |
-+					 MWIFIEX_TxPD_POWER_MGMT_LAST_PACKET))
-+						adapter->ps_state =
-+							PS_STATE_SLEEP;
-+					return 0;
-+			}
-+		}
-+		adapter->ps_state = PS_STATE_AWAKE;
-+		adapter->pm_wakeup_card_req = false;
-+		adapter->pm_wakeup_fw_try = false;
-+
-+		break;
- 	default:
- 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
- 			eventcause);
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
+ 	ar->hw->wiphy->max_remain_on_channel_duration = 5000;
 -- 
-1.8.1.4
+1.8.5.3
 
