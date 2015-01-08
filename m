@@ -1,84 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:59469 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221AbbAXLKc (ORCPT
+Received: from mail-we0-f171.google.com ([74.125.82.171]:63742 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756528AbbAHLM5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 06:10:32 -0500
-Received: by mail-pd0-f178.google.com with SMTP id y10so2759683pdj.9
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 03:10:31 -0800 (PST)
-References: <1422094745-12718-1-git-send-email-hong@topbug.net> <87k30ciiir.fsf@kamboji.qca.qualcomm.com> <CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
-From: Hong Xu <hong@topbug.net>
-To: sedat.dilek@gmail.com
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
-In-reply-to: <CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
-Date: Sat, 24 Jan 2015 03:10:23 -0800
-Message-ID: <87twzgmo2o.fsf@home.hong.me> (sfid-20150124_121038_251721_7034B2AA)
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+	Thu, 8 Jan 2015 06:12:57 -0500
+Received: by mail-we0-f171.google.com with SMTP id u56so1849328wes.2
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:12:56 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 3/5] ath10k: implement prb tmpl wmi command
+Date: Thu,  8 Jan 2015 12:12:28 +0100
+Message-Id: <1420715550-16017-4-git-send-email-michal.kazior@tieto.com> (sfid-20150108_121303_825373_8F00DDA9)
+In-Reply-To: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+References: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
+New firmware revisions with beacon templates need
+probe templates as well because they don't forward
+probe requests to host at all.
 
+This is required for new firmware to work with
+direct probe requests (notably required by hidden
+ssid AP).
 
-Sedat Dilek <sedat.dilek@gmail.com> writes:
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 17 +++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 50 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  5 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |  3 ++
+ 4 files changed, 75 insertions(+)
 
-> On Sat, Jan 24, 2015 at 11:23 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Hong Xu <hong@topbug.net> writes:
->>
->>> ath9k and ath9k_htc use the variable name "led_blink" to indicate
->>> whether the module parameter "blink" is on. This name is easy to
->>> conflict with other variables, thus they are renamed.
->>
->> Please state clearly that this fixes a compiler error found by kbuild.
->> Also it's very much recommended to add the actual compiler error to the
->> commit log:
->>
->> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
->> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
->>
->
-> Some more things...
->
-> If you post a vN (referring to your v3) of a patch, please add a
-> history of changes.
->
-> 2nd, use the Fixes tag [2] in this case with a reference to the
-> culprit commit [1].
->
-> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
->
-> Last but not least, honour credits like Reported-by/Tested-by (plus
-> some infos like broken in Linux-next $VERSION).
->
-Thanks for your comments, I should have been more careful with the
-guideline. I guess we shouldn't credit kbuild for reporting in this case?
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 2ef75ef..148a44a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -123,6 +123,8 @@ struct wmi_ops {
+ 					u32 tim_ie_offset, struct sk_buff *bcn,
+ 					u32 prb_caps, u32 prb_erp,
+ 					void *prb_ies, size_t prb_ies_len);
++	struct sk_buff *(*gen_prb_tmpl)(struct ath10k *ar, u32 vdev_id,
++					struct sk_buff *bcn);
+ };
+ 
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -880,4 +882,19 @@ ath10k_wmi_bcn_tmpl(struct ath10k *ar, u32 vdev_id, u32 tim_ie_offset,
+ 	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->bcn_tmpl_cmdid);
+ }
+ 
++static inline int
++ath10k_wmi_prb_tmpl(struct ath10k *ar, u32 vdev_id, struct sk_buff *prb)
++{
++	struct sk_buff *skb;
++
++	if (!ar->wmi.ops->gen_prb_tmpl)
++		return -EOPNOTSUPP;
++
++	skb = ar->wmi.ops->gen_prb_tmpl(ar, vdev_id, prb);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->prb_tmpl_cmdid);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 11be2d5..1713f8c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2036,6 +2036,55 @@ ath10k_wmi_tlv_op_gen_bcn_tmpl(struct ath10k *ar, u32 vdev_id,
+ 	return skb;
+ }
+ 
++static struct sk_buff *
++ath10k_wmi_tlv_op_gen_prb_tmpl(struct ath10k *ar, u32 vdev_id,
++			       struct sk_buff *prb)
++{
++	struct wmi_tlv_prb_tmpl_cmd *cmd;
++	struct wmi_tlv_bcn_prb_info *info;
++	struct wmi_tlv *tlv;
++	struct sk_buff *skb;
++	void *ptr;
++	size_t len;
++
++	len = sizeof(*tlv) + sizeof(*cmd) +
++	      sizeof(*tlv) + sizeof(*info) +
++	      sizeof(*tlv) + roundup(prb->len, 4);
++	skb = ath10k_wmi_alloc_skb(ar, len);
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	ptr = (void *)skb->data;
++	tlv = ptr;
++	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_PRB_TMPL_CMD);
++	tlv->len = __cpu_to_le16(sizeof(*cmd));
++	cmd = (void *)tlv->value;
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	cmd->buf_len = __cpu_to_le32(prb->len);
++
++	ptr += sizeof(*tlv);
++	ptr += sizeof(*cmd);
++
++	tlv = ptr;
++	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_BCN_PRB_INFO);
++	tlv->len = __cpu_to_le16(sizeof(*info));
++	info = (void *)tlv->value;
++	info->caps = 0;
++	info->erp = 0;
++
++	ptr += sizeof(*tlv);
++	ptr += sizeof(*info);
++
++	tlv = ptr;
++	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_BYTE);
++	tlv->len = __cpu_to_le16(roundup(prb->len, 4));
++	memcpy(tlv->value, prb->data, prb->len);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv prb tmpl vdev_id %i\n",
++		   vdev_id);
++	return skb;
++}
++
+ /****************/
+ /* TLV mappings */
+ /****************/
+@@ -2322,6 +2371,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	/* .gen_pdev_set_quiet_mode not implemented */
+ 	/* .gen_pdev_get_temperature not implemented */
+ 	.gen_bcn_tmpl = ath10k_wmi_tlv_op_gen_bcn_tmpl,
++	.gen_prb_tmpl = ath10k_wmi_tlv_op_gen_prb_tmpl,
+ };
+ 
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index c477365..5772519 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1399,6 +1399,11 @@ struct wmi_tlv_bcn_tmpl_cmd {
+ 	__le32 buf_len;
+ } __packed;
+ 
++struct wmi_tlv_prb_tmpl_cmd {
++	__le32 vdev_id;
++	__le32 buf_len;
++} __packed;
++
+ void ath10k_wmi_tlv_attach(struct ath10k *ar);
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 491c18c..8c46de1 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4929,6 +4929,7 @@ static const struct wmi_ops wmi_ops = {
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	/* .gen_pdev_get_temperature not implemented */
+ 	/* .gen_bcn_tmpl not implemented */
++	/* .gen_prb_tmpl not implemented */
+ };
+ 
+ static const struct wmi_ops wmi_10_1_ops = {
+@@ -4984,6 +4985,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	/* .gen_bcn_tmpl not implemented */
++	/* .gen_prb_tmpl not implemented */
+ };
+ 
+ static const struct wmi_ops wmi_10_2_ops = {
+@@ -5095,6 +5097,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
+ 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
+ 	/* .gen_bcn_tmpl not implemented */
++	/* .gen_prb_tmpl not implemented */
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
+-- 
+1.8.5.3
 
-Hong
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJUw32fAAoJECZsfTOCL4R4tpcQAI1RPkdZWO1SrtqvXhXP8YUB
-97ZRGL1/1pFiAu+1WGm94PQHC7X8L6Jv2e7iRCIfSqKQmjBpBqVMJUpvnGMF/S6n
-P09a+7mqk2rPafKa6aLt8cHgQG7GLigHpv/1qEy8ag/G3PbYdFpdiiQZbmI/BfRB
-H2dM1HBaP1YhdxF2ONpb6OTS506IQ5si79t4lUitmnTrRS0i0xC6QrBGaKq8G+Ql
-P7oAwEyRtOAV/dcqbPwfcMBD1eDc/iTfrH5MxcMdVgqwe8+qaHCIOJzidqp/JR7u
-NGUBneDeYETG/t5XRkbhIjJH16wy5D+iRZi9nbaZ4r+w3ohOss8uwTkTyb3OGmzK
-1DTrKI8PYka/VG5jWRIuim1w+8y8W8sxa9ymuPRaqbf4k4I4vlFwOzxrNGu3VIR/
-EvAYR75pJHBc1zV82Y+yGfUG7XQIMVlPewaFF9wSyypXiZRh5advq/zpvyHTBxxt
-EwqGcJB3zb2AGgMH5/sXPZPWTd9Rw6lx+xUcxOH2ysSXND743pW5OvKbFa0rF4ZG
-+rR4inrJojb2giqMr1QGG8kn82QN2d3q6/TOnmqWBraKNiBqhOFOdflypUEVjpwh
-aEE3UeTv6CnBlOVlKUyI7eJlpeg5YsUiGGNdNM/JQquHWMj82D3+QBuxF71Np3x2
-sivnr4TqPo70RD1Hf+mE
-=nBCV
------END PGP SIGNATURE-----
---=-=-=--
