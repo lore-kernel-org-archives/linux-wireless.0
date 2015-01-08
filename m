@@ -1,76 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:37736 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249AbbAWLgI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 06:36:08 -0500
-Received: by mail-lb0-f171.google.com with SMTP id u14so6536122lbd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 03:36:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1422009226.2728.31.camel@sipsolutions.net>
-References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1422006994.2728.22.camel@sipsolutions.net>
-	<1422008312.13429.5.camel@egrumbacBox>
-	<1422009226.2728.31.camel@sipsolutions.net>
-Date: Fri, 23 Jan 2015 13:36:06 +0200
-Message-ID: <CANUX_P0wvnNKV+-TtGV62ujMxtDDbJ=uEhaxKQF2ePvBcvyOnA@mail.gmail.com> (sfid-20150123_123612_009003_CC8C8C03)
-Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from www.osadl.org ([62.245.132.105]:39187 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753069AbbAHMgT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2015 07:36:19 -0500
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Ben Greear <greearb@candelatech.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Yanbo Li <yanbol@qti.qualcomm.com>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH v3] ath10k: fixup wait_for_completion_timeout return handling
+Date: Thu,  8 Jan 2015 13:27:34 +0100
+Message-Id: <1420720054-27870-1-git-send-email-der.herr@hofr.at> (sfid-20150108_133641_488021_B80C5937)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2015 at 12:33 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2015-01-23 at 10:18 +0000, Grumbach, Emmanuel wrote:
->
->> I don't think it will introduce that much of latency.
->> Note that there is a call to flush() right after that, this means that
->> any driver which implements this call needs to wait there. So you have
->> the latency in either place. The only additional latency it adds is for
->> other RCU sections / packets on other interfaces.
->
-> This is correct.
->
->> Also - since we just stopped the netif, there can possibly be only one
->> packet for each vif / ac processing. This is not too much data to
->> process.
->
-> But this is the wrong conclusion.
->
-> synchronize_rcu() is expensive, no matter what, especially if you have
-> multiple cores. The RCU grace periods will practically never line up,
-> and it needs to wait for every CPU to go through one.
->
+wait_for_completion_timeout does not return negative values so the tests
+for <= 0 are not needed and the case differentiation in the error handling
+path unnecessary.
 
-I know.
+v2: all wait_for_completion_timeout changes in a single patch
+v3: patch formatting cleanups - no change of actual patch
 
-> It's not actually just "one packet for each vif/ac" - it's a whole tail
-> of whatever other RCU usages there are. Back when this was discussed,
-> the wizery people measured this to hundreds of ms in many not too
-> uncommon cases.
->
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+---
+patch was only compile tested x86_64_defconfig + CONFIG_ATH_CARDS=m
+CONFIG_ATH10K=m
 
-That's the part I didn't know. I wasn't aware that this
-synchronize_net() was there and that someone removed it.
+patch is against linux-next 3.19.0-rc1 -next-20141226
 
->> Your call, but to honest, I have been optimizing the roaming as well (as
->> you know). And it was really bad for drivers that implements the flush()
->> callback. Especially in cases where you are already far from the AP you
->> want to roam from. This is why I added the drop parameter and other
->> optimizations (don't flush() after probing etc...)
->
-> Well, yes, but that's an upper bound - here with the synchronize_net()
-> we're more talking about a lower bound.
->
+None of the proposed cleanups are critical.
+All changes should only be removing unreachable cases.
 
-I also have to admit I was wrong earlier: the flush() call in
-set_disassoc has drop set to true, so this call will return
-immediately.
+ drivers/net/wireless/ath/ath10k/debug.c |    2 +-
+ drivers/net/wireless/ath/ath10k/htc.c   |    6 ++----
+ drivers/net/wireless/ath/ath10k/htt.c   |    2 +-
+ drivers/net/wireless/ath/ath10k/mac.c   |    2 +-
+ 4 files changed, 5 insertions(+), 7 deletions(-)
 
-I just wonder how we handle the case where we still have packets in
-the Tx path and we bring everything down. I can check the code, but
-not right now.
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index a716758..7e1fe93 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -373,7 +373,7 @@ static int ath10k_debug_fw_stats_request(struct ath10k *ar)
+ 
+ 		ret = wait_for_completion_timeout(&ar->debug.fw_stats_complete,
+ 						  1*HZ);
+-		if (ret <= 0)
++		if (ret == 0)
+ 			return -ETIMEDOUT;
+ 
+ 		spin_lock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index f1946a6..2fd9e18 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -703,11 +703,9 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 	/* wait for response */
+ 	status = wait_for_completion_timeout(&htc->ctl_resp,
+ 					     ATH10K_HTC_CONN_SVC_TIMEOUT_HZ);
+-	if (status <= 0) {
+-		if (status == 0)
+-			status = -ETIMEDOUT;
++	if (status == 0) {
+ 		ath10k_err(ar, "Service connect timeout: %d\n", status);
+-		return status;
++		return -ETIMEDOUT;
+ 	}
+ 
+ 	/* we controlled the buffer creation, it's aligned */
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 56cb4ac..58b6fc1 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -102,7 +102,7 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 
+ 	status = wait_for_completion_timeout(&htt->target_version_received,
+ 					     HTT_TARGET_VERSION_TIMEOUT_HZ);
+-	if (status <= 0) {
++	if (status == 0) {
+ 		ath10k_warn(ar, "htt version request timed out\n");
+ 		return -ETIMEDOUT;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index c400567..f9d7dbb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2151,7 +2151,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 
+ 		ret = wait_for_completion_timeout(&ar->offchan_tx_completed,
+ 						  3 * HZ);
+-		if (ret <= 0)
++		if (ret == 0)
+ 			ath10k_warn(ar, "timed out waiting for offchannel skb %p\n",
+ 				    skb);
+ 
+-- 
+1.7.10.4
+
