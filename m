@@ -1,64 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37138 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755342AbbAWOvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 09:51:47 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: support beacon statistics
-Date: Fri, 23 Jan 2015 15:51:43 +0100
-Message-Id: <1422024703-27225-1-git-send-email-johannes@sipsolutions.net> (sfid-20150123_155151_748135_47DE0A89)
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:65095 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754560AbbAHLHM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Jan 2015 06:07:12 -0500
+Received: by mail-wi0-f174.google.com with SMTP id h11so2475828wiw.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:07:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1420703288.2029.4.camel@sipsolutions.net>
+References: <1420566070-25336-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1420639929.3407.18.camel@sipsolutions.net>
+	<CAA2SeN+KZqXcBpOuW=J_vyznOn03NceuH8RDdmcB30-7-9xyQw@mail.gmail.com>
+	<1420703288.2029.4.camel@sipsolutions.net>
+Date: Thu, 8 Jan 2015 12:07:05 +0100
+Message-ID: <CAA2SeNL76Pd3ft4biBsHD9oTA4JOpD7oa5E+5ajk37irSDPhtw@mail.gmail.com> (sfid-20150108_120716_938800_6C56A43B)
+Subject: Re: [PATCHv4] mac80211: enable TPC through mac80211 stack
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> On Wed, 2015-01-07 at 15:39 +0100, Lorenzo Bianconi wrote:
+>
+>> > Does it really make sense to ask the driver to do "automatic"? After
+>> > all, there are other limits in mac80211 (like 11h from the AP and
+>> > regulatory) that need to be considered. So perhaps if userspace says
+>> > "automatic", the driver should still see only "limited"?
+>> >
+>>
+>> IMHO "automatic" means lower driver has to take into account just
+>> channel/regulatory constraints (that is ath9k behavior), since the
+>> user/mac80211 does not cap TX power, whereas "limited" means the
+>> user/mac80211 has set a limit for emitted power, so that configuration
+>> has to be taken into account.
+>
+> Well, mac80211 always gives you a max TX power value though - and if
+> it's only the maximum regulatory permitted on that channel. So there's
+> always a valid upper bound - unlike the userspace API where "automatic"
+> means that you have no idea of an upper bound. Inside the kernel you
+> always have an upper bound, so "automatic" doesn't make that much sense?
+>
 
-For drivers without beacon filtering, support beacon statistics
-entirely, i.e. report the number of beacons and average signal.
+Sounds good, now I have clearer vision :)
+I will overwrite bss_conf nl80211_tx_power_setting value in
+ieee80211_set_tx_power() when txpower type is set to
+NL80211_TX_POWER_AUTOMATIC from userspace. Moreover should we set
+nl80211_tx_power_setting to NL80211_TX_POWER_LIMITED in
+ieee80211_handle_pwr_constr() when the station receives a power
+constraint in beacon frames? What do you think?
 
-For drivers with beacon filtering, give them the number of beacons
-received by mac80211 -- in case the device reports only the number
-of filtered beacons then driver doesn't have to count all beacons
-again as mac80211 already does.
+> johannes
+>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Regards,
+Lorenzo
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 79383ef0c264..00ca8dcc2bcf 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1764,6 +1764,13 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 
- 	sinfo->generation = sdata->local->sta_generation;
- 
-+	/* do before driver, so beacon filtering drivers have a
-+	 * chance to e.g. just add the number of filtered beacons
-+	 * (or just modify the value entirely, of course)
-+	 */
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		sinfo->rx_beacon = sdata->u.mgd.count_beacon_signal;
-+
- 	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
- 
- 	sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
-@@ -1816,6 +1823,13 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	sinfo->rx_dropped_misc = sta->rx_dropped;
- 	sinfo->beacon_loss_count = sta->beacon_loss_count;
- 
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    !(sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)) {
-+		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_RX) |
-+				 BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
-+		sinfo->rx_beacon_signal_avg = ieee80211_ave_rssi(&sdata->vif);
-+	}
-+
- 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
- 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
- 		if (!(sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL))) {
 -- 
-2.1.4
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
