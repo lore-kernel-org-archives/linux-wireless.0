@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f177.google.com ([209.85.223.177]:55265 "EHLO
-	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754398AbbAGQmw (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:39929 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139AbbAHLMw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 11:42:52 -0500
-Received: by mail-ie0-f177.google.com with SMTP id rd18so4586528iec.8
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 08:42:51 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1420648358.3407.19.camel@sipsolutions.net>
-References: <1420366399-31535-1-git-send-email-eliad@wizery.com>
-	<1420542274.1966.21.camel@sipsolutions.net>
-	<1420553111.1966.32.camel@sipsolutions.net>
-	<1420553688.1966.33.camel@sipsolutions.net>
-	<CAB3XZEctcBuPG6f4ZrZFV5O3Z7+hi+ShFdwvFXdJovG2KeAufQ@mail.gmail.com>
-	<1420570976.1966.34.camel@sipsolutions.net>
-	<CAB3XZEdWsDsnVr_bJ3ScSYy6MEQ7VXvWw4VC36zheYN-B=yLrA@mail.gmail.com>
-	<CAB3XZEdJw=vaLVO+5YXkH1ZPerKYC4s-_+E0nzL+XUXMiZQLkw@mail.gmail.com>
-	<1420648358.3407.19.camel@sipsolutions.net>
-Date: Wed, 7 Jan 2015 18:42:51 +0200
-Message-ID: <CAB3XZEeef1X6KcKByFQVknkjwjV8r3V5ya+xWw9SfGs6c6RWog@mail.gmail.com> (sfid-20150107_174306_417288_CB8D9A97)
-Subject: Re: [PATCH 1/3] mac80211: consider only relevant vifs for
- radar_required calculation
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 8 Jan 2015 06:12:52 -0500
+Received: by mail-wg0-f48.google.com with SMTP id l2so1970285wgh.7
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:12:51 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/5] ath10k: implement beacon offload
+Date: Thu,  8 Jan 2015 12:12:25 +0100
+Message-Id: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com> (sfid-20150108_121255_919395_363D4C7A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 7, 2015 at 6:32 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2015-01-07 at 17:58 +0200, Eliad Peller wrote:
->> ap_ht_40mhz_intolerant_ap still seems to fail here, but it fails even
->> when running only this test, without any of my patches applied.
->> now i get the same error with my patches applied ("Exception: AP did
->> not move to 40 MHz channel") instead of the EBUSY one.
->>
->> i'll try debugging this issue as well.
->
-> Well, if you want to :)
-> It's not related to your patches I think, and I saw it passing w/o your
-> patches applied.
->
-thanks.
-looks like something bad in my setup.
-i recompiled hostapd and it seems to pass now :)
+Hi,
 
-Eliad.
+New wmi-tlv firmware will support beacon/presp
+offloading. This patchset adds appropriate
+support.
+
+These patches of mine were originally posted by
+Bartosz before christmas after I went on my
+holidays.
+
+v2:
+ * add a comment in patch 5
+
+
+Michal Kazior (5):
+  ath10k: implement new beacon tx status event
+  ath10k: implement beacon template command
+  ath10k: implement prb tmpl wmi command
+  ath10k: implement p2p bcn ie command
+  ath10k: implement support for ap beacon offloading
+
+ drivers/net/wireless/ath/ath10k/mac.c     | 162 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  57 +++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 206 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  34 +++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |   9 ++
+ 5 files changed, 468 insertions(+)
+
+-- 
+1.8.5.3
+
