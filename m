@@ -1,69 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:50620 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750756AbbATFeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 00:34:13 -0500
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <der.herr@hofr.at>
-Subject: [PATCH] wireless: p54pci: add handling of signal case
-Date: Tue, 20 Jan 2015 06:26:17 +0100
-Message-Id: <1421731577-13324-1-git-send-email-der.herr@hofr.at> (sfid-20150120_063431_760723_EC8DA2D0)
+Received: from s72.web-hosting.com ([198.187.29.22]:54892 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755881AbbAHDQl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Jan 2015 22:16:41 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21677.63268.657151.679992@gargle.gargle.HOWL> (sfid-20150108_041646_416344_C25842CA)
+Date: Thu, 8 Jan 2015 08:49:00 +0530
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH] ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file entries
+In-Reply-To: <87bnmapiur.fsf@kamboji.qca.qualcomm.com>
+References: <1419685980-4728-1-git-send-email-arend@broadcom.com>
+	<87bnmapiur.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-if(!wait_for_completion_interruptible_timeout(...))
-only handles the timeout case - this patch adds handling the
-signal case the same as timeout.
+> Arend van Spriel <arend@broadcom.com> writes:
+> 
+> > Use the helper to get rid of the file operations per debugfs file. The
+> > device driver data contains struct ieee80211_hw pointer and the
+> > struct ath9k_softc pointer is assigned to ieee80211_hw::priv so it can
+> > be accessed in the seq_file read operation.
+> >
+> > Cc: ath9k-devel@lists.ath9k.org
+> > Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
----
+Thanks for the patch.
 
-Only the timeout case was being handled, the signal case 
-(-ERESTARTSYS) was treated just like the case of successful 
-completion, which is most likely not reasonable.
+> Can someone with ath9k hardware test this, please? I'm hesitant to apply
+> this without testing.
 
-The callsite for p54p_open() in p54p_firmware_step2() expect !=0 to 
-indicate error so both -ERESTARTSYS and -ETIMEDOUT should be fine 
-for the current handling.
+I tested it and there were no crashes.
 
-Patch was only compild tested with x86_64_defcofnig +
-CONFIG_P54_COMMON=m, CONFIG_P54_PCI=m
-
-Patch is against 3.19.0-rc5 -next-20150119
-
- drivers/net/wireless/p54/p54pci.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
-index d4aee64..27a4906 100644
---- a/drivers/net/wireless/p54/p54pci.c
-+++ b/drivers/net/wireless/p54/p54pci.c
-@@ -431,6 +431,7 @@ static int p54p_open(struct ieee80211_hw *dev)
- {
- 	struct p54p_priv *priv = dev->priv;
- 	int err;
-+	long timeout;
- 
- 	init_completion(&priv->boot_comp);
- 	err = request_irq(priv->pdev->irq, p54p_interrupt,
-@@ -468,10 +469,12 @@ static int p54p_open(struct ieee80211_hw *dev)
- 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
- 	P54P_READ(dev_int);
- 
--	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ)) {
-+	timeout = wait_for_completion_interruptible_timeout(
-+			&priv->boot_comp, HZ);
-+	if (timeout <= 0) {
- 		wiphy_err(dev->wiphy, "Cannot boot firmware!\n");
- 		p54p_stop(dev);
--		return -ETIMEDOUT;
-+		return timeout ? -ERESTARTSYS : -ETIMEDOUT;
- 	}
- 
- 	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_UPDATE));
--- 
-1.7.10.4
-
+Sujith
