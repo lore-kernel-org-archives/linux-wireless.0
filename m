@@ -1,139 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:36820 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753566AbbA2NPA (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:40867 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754141AbbAHL3v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 08:15:00 -0500
-Message-ID: <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150129_141512_103971_1F536019)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Thu, 29 Jan 2015 05:14:57 -0800
-In-Reply-To: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 8 Jan 2015 06:29:51 -0500
+Received: by mail-wg0-f51.google.com with SMTP id x12so2045877wgg.10
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:29:50 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: add additional fw build version to info print
+Date: Thu,  8 Jan 2015 12:29:32 +0100
+Message-Id: <1420716572-23826-1-git-send-email-michal.kazior@tieto.com> (sfid-20150108_122956_772288_CBA3FCC4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-01-29 at 12:48 +0100, Michal Kazior wrote:
-> Hi,
-> 
-> I'm not subscribed to netdev list and I can't find the message-id so I
-> can't reply directly to the original thread `BW regression after "tcp:
-> refine TSO autosizing"`.
-> 
-> I've noticed a big TCP performance drop with ath10k
-> (drivers/net/wireless/ath/ath10k) on 3.19-rc5. Instead of 500mbps I
-> get 250mbps in my testbed.
-> 
-> After bisecting I ended up at `tcp: refine TSO autosizing`. Reverting
-> `tcp: refine TSO autosizing` and `tcp: Do not apply TSO segment limit
-> to non-TSO packets` (for conflict free reverts) fixes the problem.
-> 
-> My testing setup is as follows:
-> 
->  a) ath10k AP, github.com/kvalo/ath/tree/master 3.19-rc5, w/ reverts
->  b) ath10k STA connected to (a), github.com/kvalo/ath/tree/master
-> 3.19-rc5, w/ reverts
->  c) (b) w/o reverts
-> 
-> Devices are 3x3 (AP) and 2x2 (Client) and are RF cabled. 11ac@80MHz
-> 2x2 has 866mbps modulation rate. In practice this should deliver
-> ~700mbps of real UDP traffic.
-> 
-> Here are some numbers:
-> 
-> UDP: (b) -> (a): 672mbps
-> UDP: (a) -> (b): 687mbps
-> TCP: (b) -> (a): 526mbps
-> TCP: (a) -> (b): 500mbps
-> 
-> UDP: (c) -> (a): 669mbps*
-> UDP: (a) -> (c): 689mbps*
-> TCP: (c) -> (a): 240mbps**
-> TCP: (a) -> (c): 490mbps*
-> 
-> * no changes/within error margin
-> ** the performance drop
-> 
-> I'm using iperf:
->   UDP: iperf -i1 -s -u vs iperf -i1 -c XX -u -B 200M -P5 -t 20
->   TCP: iperf -i1 -s vs iperf -i1 -c XX -P5 -t 20
-> 
-> Result values were obtained at the receiver side.
-> 
-> Iperf reports a few frames lost and out-of-order at each UDP test
-> start (during first second) but later has no packet loss and no
-> out-of-order. This shouldn't have any effect on a TCP session, right?
-> 
-> The device delivers batched up tx/rx completions (no way to change
-> that). I suppose this could be an issue for timing sensitive
-> algorithms. Also keep in mind 802.11n and 802.11ac devices have frame
-> aggregation windows so there's an inherent extra (and non-uniform)
-> latency when compared to, e.g. ethernet devices.
-> 
-> The driver doesn't have GRO. I have an internal patch which implements
-> it. It improves overall TCP traffic (more stable, up to 600mbps TCP
-> which is ~100mbps more than without GRO) but the TCP: (c) -> (a)
-> performance drop remains unaffected regardless.
-> 
-> I've tried applying stretch ACK patchset (v2) on both machines and
-> re-run the above tests. I got no measurable difference in performance.
-> 
-> I've also run these tests with iwlwifi 7260 (also a 2x2) as (b) and
-> (c). It didn't seem to be affected by the TSO patch at all (it runs at
-> ~360mbps of TCP regardless of the TSO patch).
-> 
-> Any hints/ideas?
-> 
+The wmi-tlv firmware contains additional
+versioning info. It may help reporting/debugging.
 
-Hi Michal
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h  | 4 ++++
+ drivers/net/wireless/ath/ath10k/debug.c | 8 ++++++--
+ drivers/net/wireless/ath/ath10k/wmi.c   | 4 ++++
+ 3 files changed, 14 insertions(+), 2 deletions(-)
 
-This patch restored original TSQ behavior, because the 1ms worth of data
-per flow had totally destroyed TSQ intent.
-
-vi +630 Documentation/networking/ip-sysctl.txt
-
-tcp_limit_output_bytes - INTEGER
-        Controls TCP Small Queue limit per tcp socket.
-        TCP bulk sender tends to increase packets in flight until it
-        gets losses notifications. With SNDBUF autotuning, this can
-        result in a large amount of packets queued in qdisc/device
-        on the local machine, hurting latency of other flows, for
-        typical pfifo_fast qdiscs.
-        tcp_limit_output_bytes limits the number of bytes on qdisc
-        or device to reduce artificial RTT/cwnd and reduce bufferbloat.
-        Default: 131072
-
-This is why I suggested to Eyal Perry to change the TX interrupt
-mitigation parameters as in :
-
-ethtool -C eth0 tx-frames 4 rx-frames 4
-
-With this change and the stretch ack fixes, I got 37Gbps of throughput
-on a single flow, on a 40Gbit NIC (mlx4)
-
-If a driver needs to buffer more than tcp_limit_output_bytes=131072 to
-get line rate, I suggest that you either :
-
-1) tweak tcp_limit_output_bytes, but its not practical from a driver.
-
-2) change the driver, knowing what are its exact requirements, by
-removing a fraction of skb->truesize at ndo_start_xmit() time as in :
-
-if ((skb->destructor == sock_wfree ||
-     skb->restuctor == tcp_wfree) &&
-    skb->sk) {
-    u32 fraction = skb->truesize / 2;
-
-    skb->truesize -= fraction;
-    atomic_sub(fraction, &skb->sk->sk_wmem_alloc);
-}
-
-Thanks.
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 7b6d9e4..aa12c8a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -458,6 +458,10 @@ struct ath10k {
+ 	u32 fw_version_minor;
+ 	u16 fw_version_release;
+ 	u16 fw_version_build;
++	u32 fw_build_major;
++	u32 fw_build_minor;
++	u32 fw_build_si;
++	u32 fw_build_crm;
+ 	u32 phy_capability;
+ 	u32 hw_min_tx_power;
+ 	u32 hw_max_tx_power;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 6ca2442..9a6b358 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -124,7 +124,7 @@ EXPORT_SYMBOL(ath10k_info);
+ 
+ void ath10k_print_driver_info(struct ath10k *ar)
+ {
+-	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d\n",
++	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d build %u.%u.%u.%u\n",
+ 		    ar->hw_params.name,
+ 		    ar->target_version,
+ 		    ar->chip_id,
+@@ -134,7 +134,11 @@ void ath10k_print_driver_info(struct ath10k *ar)
+ 		    ar->htt.target_version_minor,
+ 		    ar->wmi.op_version,
+ 		    ath10k_cal_mode_str(ar->cal_mode),
+-		    ar->max_num_stations);
++		    ar->max_num_stations,
++		    ar->fw_build_major,
++		    ar->fw_build_minor,
++		    ar->fw_build_si,
++		    ar->fw_build_crm);
+ 	ath10k_info(ar, "debug %d debugfs %d tracing %d dfs %d testmode %d\n",
+ 		    config_enabled(CONFIG_ATH10K_DEBUG),
+ 		    config_enabled(CONFIG_ATH10K_DEBUGFS),
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index ac74290..8c26c2a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2907,6 +2907,10 @@ void ath10k_wmi_event_service_ready(struct ath10k *ar, struct sk_buff *skb)
+ 	ar->fw_version_release =
+ 		(__le32_to_cpu(arg.sw_ver1) & 0xffff0000) >> 16;
+ 	ar->fw_version_build = (__le32_to_cpu(arg.sw_ver1) & 0x0000ffff);
++	ar->fw_build_major = (__le32_to_cpu(arg.fw_build) & 0xf0000000) >> 28;
++	ar->fw_build_minor = (__le32_to_cpu(arg.fw_build) & 0x0f000000) >> 24;
++	ar->fw_build_si = (__le32_to_cpu(arg.fw_build) & 0x00f00000) >> 20;
++	ar->fw_build_crm = (__le32_to_cpu(arg.fw_build) & 0x00007fff) >> 0;
+ 	ar->phy_capability = __le32_to_cpu(arg.phy_capab);
+ 	ar->num_rf_chains = __le32_to_cpu(arg.num_rf_chains);
+ 	ar->ath_common.regulatory.current_rd = __le32_to_cpu(arg.eeprom_rd);
+-- 
+1.8.5.3
 
