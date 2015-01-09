@@ -1,86 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:53901 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265AbbAGOpL (ORCPT
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:49998 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758175AbbAITS2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 09:45:11 -0500
-Received: by mail-we0-f171.google.com with SMTP id u56so1299915wes.16
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 06:45:10 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v3] mac80211: add TDLS supported channels correctly
-Date: Wed,  7 Jan 2015 16:45:07 +0200
-Message-Id: <1420641907-4350-1-git-send-email-arik@wizery.com> (sfid-20150107_154515_405862_2676C2EE)
+	Fri, 9 Jan 2015 14:18:28 -0500
+Received: by mail-oi0-f54.google.com with SMTP id u20so13178366oif.13
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 11:18:27 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/8] wcn36xx: use !! when assigning int as a boolean
+Date: Fri,  9 Jan 2015 14:15:46 -0500
+Message-Id: <1420830952-9624-3-git-send-email-me@bobcopeland.com> (sfid-20150109_201833_465095_97632AF9)
+In-Reply-To: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
+References: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function adding the supported channels IE during a TDLS connection had
-several issues:
-1. If the entire subband is usable, the function exitted the loop without
-   adding it
-2. The function only checked chandef_usable, ignoring flags like RADAR
-   which would prevent TDLS off-channel communcation.
-3. HT20 was explicitly required in the chandef, while not a requirement
-   for TDLS off-channel.
+bd->tx_comp is a single bit in a bitfield, so assigning
+"info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS" only happens
+to work because TX_STATUS is defined to BIT(0); if it were
+any other bit this assignment would fail.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- net/mac80211/tdls.c | 26 +++++++++++++++++++++-----
- 1 file changed, 21 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/txrx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 55ddd77..9b789c6 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -68,17 +68,24 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
- 		ch = ieee80211_get_channel(sdata->local->hw.wiphy, i);
- 		if (ch) {
- 			/* we will be active on the channel */
--			u32 flags = IEEE80211_CHAN_DISABLED |
--				    IEEE80211_CHAN_NO_IR;
- 			cfg80211_chandef_create(&chandef, ch,
--						NL80211_CHAN_HT20);
--			if (cfg80211_chandef_usable(sdata->local->hw.wiphy,
--						    &chandef, flags)) {
-+						NL80211_CHAN_NO_HT);
-+			if (cfg80211_reg_can_beacon(sdata->local->hw.wiphy,
-+						    &chandef,
-+						    sdata->wdev.iftype)) {
- 				ch_cnt++;
-+				/*
-+				 * check if the next channel is also part of
-+				 * this allowed range
-+				 */
- 				continue;
- 			}
- 		}
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+index 32bb26a..f701873 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -237,7 +237,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
  
-+		/*
-+		 * we've reached the end of a range, with allowed channels
-+		 * found
-+		 */
- 		if (ch_cnt) {
- 			u8 *pos = skb_put(skb, 2);
- 			*pos++ = ieee80211_frequency_to_channel(subband_start);
-@@ -89,6 +96,15 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
+ 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
  
-+	/* all channels in the requested range are allowed - add them here */
-+	if (ch_cnt) {
-+		u8 *pos = skb_put(skb, 2);
-+		*pos++ = ieee80211_frequency_to_channel(subband_start);
-+		*pos++ = ch_cnt;
-+
-+		subband_cnt++;
-+	}
-+
- 	return subband_cnt;
- }
- 
+-	bd->tx_comp = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
++	bd->tx_comp = !!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS);
+ 	if (bd->tx_comp) {
+ 		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested\n");
+ 		spin_lock_irqsave(&wcn->dxe_lock, flags);
 -- 
-2.1.0
+1.7.10.4
 
