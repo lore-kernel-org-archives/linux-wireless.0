@@ -1,101 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:52578 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753085AbbAECe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2015 21:34:26 -0500
-Message-ID: <54A9F82D.9030003@linux.intel.com> (sfid-20150105_033445_307368_0C6FE3F7)
-Date: Mon, 05 Jan 2015 10:34:21 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: brudley@broadcom.com, Franky Lin <frankyl@broadcom.com>,
-	meuleman@broadcom.com, kvalo@codeaurora.org,
-	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
-	wens@csie.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
-References: <54A3B1B4.7090705@linux.intel.com> <54A3C837.6040400@broadcom.com>
-In-Reply-To: <54A3C837.6040400@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:46092 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751064AbbAITSU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2015 14:18:20 -0500
+Received: by mail-ob0-f180.google.com with SMTP id wp4so14624199obc.11
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 11:18:20 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 0/8] wcn36xx locking and a-mpdu fixes
+Date: Fri,  9 Jan 2015 14:15:44 -0500
+Message-Id: <1420830952-9624-1-git-send-email-me@bobcopeland.com> (sfid-20150109_201823_977616_B9063CDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Hello,
 
-Where to find your patch for this?
+These patches have been merged into the wcn36xx github tree but have
+been collecting dust for some time.  I pinged Eugene (CCed) who said I
+could just go ahead and send them upstream.  Rebased and re-tested on
+an Android target (and newer checkpatch warnings removed).
 
+At some point I can go through other patches (not by me) that aren't yet
+upstream and send them along as well, unless someone else wants to do that.
 
-Thanks,
-Zhonghui
+Bob Copeland (8):
+  wcn36xx: initialize device defaults on start
+  wcn36xx: use !! when assigning int as a boolean
+  wcn36xx: let device generate qos seq numbers
+  wcn36xx: don't process 'valid' descriptors
+  wcn36xx: initialize skb_lock
+  wcn36xx: initialize dxe lock
+  wcn36xx: move set_tx_pdu inside set_tx_data/mgmt
+  wcn36xx: initiate TX BA sessions
 
-On 2014/12/31 17:56, Arend van Spriel wrote:
-> On 12/31/14 09:20, Fu, Zhonghui wrote:
->>  From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
->> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
->> Date: Mon, 29 Dec 2014 21:25:31 +0800
->> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
->>
->> WiFi chip has 2 SDIO functions, and PM core will trigger
->> twice suspend/resume operations for one WiFi chip to do
->> the same things. This patch avoid this case.
->
-> We have a patch queued up for this as well, but this one looks good enough although I personally prefer container_of() instead of dev_to_sdio_func().
->
-> Acked-by: Arend van Spriel <arend@broadcom.com>
->> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
->> ---
->>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
->>   1 files changed, 17 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> index 3c06e93..eee7818 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> @@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
->>   static int brcmf_ops_sdio_suspend(struct device *dev)
->>   {
->>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
->> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
->> +    struct brcmf_sdio_dev *sdiodev;
->>       mmc_pm_flag_t sdio_flags;
->> +    struct sdio_func *func = dev_to_sdio_func(dev);
->>
->>       brcmf_dbg(SDIO, "Enter\n");
->>
->> +    if (func->num == 2) {
->> +        return 0;
->> +    }
->> +
->> +    sdiodev = bus_if->bus_priv.sdio;
->> +
->>       atomic_set(&sdiodev->suspend, true);
->>
->>       if (sdiodev->wowl_enabled) {
->> @@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
->>   static int brcmf_ops_sdio_resume(struct device *dev)
->>   {
->>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
->> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
->> +    struct brcmf_sdio_dev *sdiodev;
->> +    struct sdio_func *func = dev_to_sdio_func(dev);
->>
->>       brcmf_dbg(SDIO, "Enter\n");
->> +
->> +    if (func->num == 2) {
->> +        return 0;
->> +    }
->> +
->> +    sdiodev = bus_if->bus_priv.sdio;
->> +
->>       if (sdiodev->pdata->oob_irq_supported)
->>           disable_irq_wake(sdiodev->pdata->oob_irq_nr);
->>       brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
->> -- 1.7.1
->>
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/net/wireless/ath/wcn36xx/dxe.c     |    3 +
+ drivers/net/wireless/ath/wcn36xx/main.c    |   16 +++++-
+ drivers/net/wireless/ath/wcn36xx/smd.c     |   73 +++++++++++++++++++++++-
+ drivers/net/wireless/ath/wcn36xx/txrx.c    |   83 ++++++++++++++++++++++------
+ drivers/net/wireless/ath/wcn36xx/txrx.h    |    9 ++-
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   20 +++++++
+ 6 files changed, 182 insertions(+), 22 deletions(-)
+
+-- 
+1.7.10.4
 
