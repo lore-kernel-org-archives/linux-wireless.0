@@ -1,67 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f178.google.com ([209.85.214.178]:62418 "EHLO
-	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbbAOROx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 12:14:53 -0500
-Message-ID: <54B7F58B.7010604@lwfinger.net> (sfid-20150115_181457_824975_2C7E9407)
-Date: Thu, 15 Jan 2015 11:14:51 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	=?UTF-8?B?6LCt5p2t5rOi?= <troy_tan@realsil.com.cn>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH for 3.19 2/3] rtlwifi: Fix handling of new style descriptors
-References: <1421257036-5382-1-git-send-email-Larry.Finger@lwfinger.net>	<1421257036-5382-3-git-send-email-Larry.Finger@lwfinger.net>	<877fwoxo7g.fsf@kamboji.qca.qualcomm.com>	<C11178B3EB8EC446A461ADCC3E27182146C9A9F8@rsex2.realsil.com.cn> <87y4p4w8wb.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87y4p4w8wb.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:46276 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757580AbbAIKto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2015 05:49:44 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] mac80211_hwsim: fix PS debugfs file locking
+Date: Fri,  9 Jan 2015 11:49:38 +0100
+Message-Id: <1420800579-18723-1-git-send-email-johannes@sipsolutions.net> (sfid-20150109_114948_632204_935B5E3F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/15/2015 06:00 AM, Kalle Valo wrote:
-> Hi Troy,
->
-> please avoid top-posting.
->
-> 谭杭波 <troy_tan@realsil.com.cn> writes:
->
->> You can find get_available_desc here:
->>
->> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/
->> pci.c
->> index e25faac..a62170e 100644
->> --- a/drivers/net/wireless/rtlwifi/pci.c
->> +++ b/drivers/net/wireless/rtlwifi/pci.c
->> @@ -578,6 +578,13 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int
->> prio)
->>                  else
->>                          entry = (u8 *)(&ring->desc[ring->idx]);
->>
->> +               if (rtlpriv->cfg->ops->get_available_desc &&
->> +                   rtlpriv->cfg->ops->get_available_desc(hw, prio) <= 1) {
->> +                       RT_TRACE(rtlpriv, (COMP_INTR | COMP_SEND), DBG_DMESG,
->> +                                "no available desc!\n");
->> +                       return;
->> +               }
->
-> I don't see rtlpriv->cfg->ops->get_available_desc set here, only being
-> called?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Only one of the drivers (rtl8192ee) needs to implement that routine, which is 
-the reason it is checked for non-NULL before it is called. The implementation is 
-in patch 3 in file rtl8192ee/sw.c where it says:
+The functions called within the iterators must be called with
+tasklets disabled, so use atomic iteration like the rest of
+the code and disable tasklets around the whole operation.
 
-@@ -241,6 +239,7 @@ static struct rtl_hal_ops rtl8192ee_hal_ops = {
-  	.set_desc = rtl92ee_set_desc,
-  	.get_desc = rtl92ee_get_desc,
-  	.is_tx_desc_closed = rtl92ee_is_tx_desc_closed,
-+	.get_available_desc = rtl92ee_get_available_desc,
-  	.tx_polling = rtl92ee_tx_polling,
-  	.enable_hw_sec = rtl92ee_enable_hw_security_config,
-  	.init_sw_leds = rtl92ee_init_sw_leds,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-Larry
-
-
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 057a99e01637..74f4e1c18322 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -626,22 +626,22 @@ static int hwsim_fops_ps_write(void *dat, u64 val)
+ 	old_ps = data->ps;
+ 	data->ps = val;
+ 
++	local_bh_disable();
+ 	if (val == PS_MANUAL_POLL) {
+-		ieee80211_iterate_active_interfaces(data->hw,
+-						    IEEE80211_IFACE_ITER_NORMAL,
+-						    hwsim_send_ps_poll, data);
++		ieee80211_iterate_active_interfaces_atomic(
++			data->hw, IEEE80211_IFACE_ITER_NORMAL,
++			hwsim_send_ps_poll, data);
+ 		data->ps_poll_pending = true;
+ 	} else if (old_ps == PS_DISABLED && val != PS_DISABLED) {
+-		ieee80211_iterate_active_interfaces(data->hw,
+-						    IEEE80211_IFACE_ITER_NORMAL,
+-						    hwsim_send_nullfunc_ps,
+-						    data);
++		ieee80211_iterate_active_interfaces_atomic(
++			data->hw, IEEE80211_IFACE_ITER_NORMAL,
++			hwsim_send_nullfunc_ps, data);
+ 	} else if (old_ps != PS_DISABLED && val == PS_DISABLED) {
+-		ieee80211_iterate_active_interfaces(data->hw,
+-						    IEEE80211_IFACE_ITER_NORMAL,
+-						    hwsim_send_nullfunc_no_ps,
+-						    data);
++		ieee80211_iterate_active_interfaces_atomic(
++			data->hw, IEEE80211_IFACE_ITER_NORMAL,
++			hwsim_send_nullfunc_no_ps, data);
+ 	}
++	local_bh_enable();
+ 
+ 	return 0;
+ }
+-- 
+2.1.1
 
