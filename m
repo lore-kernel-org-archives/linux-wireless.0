@@ -1,59 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:43558 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771AbbABMW4 convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:35585 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758119AbbAIRXn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 07:22:56 -0500
-Received: by mail-wi0-f171.google.com with SMTP id bs8so27666760wib.10
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2015 04:22:54 -0800 (PST)
+	Fri, 9 Jan 2015 12:23:43 -0500
+Received: by mail-ig0-f174.google.com with SMTP id hn15so2669157igb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 09:23:41 -0800 (PST)
+Received: from mail-ie0-f176.google.com (mail-ie0-f176.google.com. [209.85.223.176])
+        by mx.google.com with ESMTPSA id r12sm4070406ioe.43.2015.01.09.09.23.41
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Fri, 09 Jan 2015 09:23:41 -0800 (PST)
+Received: by mail-ie0-f176.google.com with SMTP id tr6so16175097ieb.7
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 09:23:41 -0800 (PST)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
-References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
-	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
-Date: Fri, 2 Jan 2015 13:14:47 +0100
-Message-ID: <CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com> (sfid-20150102_133201_067727_AEC85B74)
-Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
+In-Reply-To: <871tn7zsie.fsf@kamboji.qca.qualcomm.com>
+References: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<871tn7zsie.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 9 Jan 2015 18:23:40 +0100
+Message-ID: <CAKXHbyM2JXBgknL+WqVqkLcPMfWHHF4D8j44Cqenj76Gvd8PXQ@mail.gmail.com> (sfid-20150109_182402_291334_5C0E3DEE)
+Subject: Re: [PATCH] net: wireless: rtlwifi: btcoexist: halbtc8821a2ant:
+ Remove some unused functions
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Fengguang Wu <fengguang.wu@intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 2, 2015 at 1:06 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 2 January 2015 at 13:05, Rafał Miłecki <zajec5@gmail.com> wrote:
->> On 1 January 2015 at 16:46, Rickard Strandqvist
->> <rickard_strandqvist@spectrumdigital.se> wrote:
->>> Remove the function b43legacy_radio_set_tx_iq() that is not used anywhere.
->>>
->>> This was partially found by using a static code analysis program called cppcheck.
->>
->> It seems to be for A-PHY based hardware (with 0x2060 radio id) which
->> is not handled by b43legacy. Should be safe to drop this code (we
->> won't likely need it).
->>
->> Ack
+Hi All
+
+Yes I use sed as Julian said. I have it as part of my git send-email
+script, until a few week ago, it was enough that I removed the
+"drivers/" and changed all "/" to ": "
+I have now been expanded my sed pipe a lot (tell me if anyone is interested).
+But a real script to do this would have been very good I think!
+
+It may be, there was some mail problems during the holiday season :-(
+There is not a total consensus on how patcher will was designed.
+I have previously received complaints that I made for large patches of
+too many files.
+Have since tried to make small patches, and it also fit better to have
+more specific paths in the subject line.
+
+But I'll try to gather all in one patchset instead this weekend.
+
+
+Kind regards
+Rickard Strandqvist
+
+
+
+2015-01-06 19:14 GMT+01:00 Kalle Valo <kvalo@codeaurora.org>:
+> Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
 >
-> For future, we prefix patches with just a driver name. So this could
-> be simply called
-> b43legacy: radio.c: Remove unused function
+>> Removes some functions that are not used anywhere:
+>> ex_halbtc8821a2ant_periodical() ex_halbtc8821a2ant_halt_notify()
+>> ex_halbtc8821a2ant_bt_info_notify()
+>> ex_halbtc8821a2ant_special_packet_notify()
+>> ex_halbtc8821a2ant_connect_notify() ex_halbtc8821a2ant_scan_notify()
+>> ex_halbtc8821a2ant_lps_notify() ex_halbtc8821a2ant_ips_notify()
+>> ex_halbtc8821a2ant_display_coex_info() ex_halbtc8821a2ant_init_coex_dm()
+>> ex_halbtc8821a2ant_init_hwconfig()
+>>
+>> This was partially found by using a static code analysis program called cppcheck.
+>>
+>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 >
-
-Alternatively...
-
-"b43legacy: Remove unused function in radio.c"
-
-BTW, as Arnd Bergmann pointed out [1] how did you test with cppcheck
-to get such stuff?
-
-- Sedat -
-
-[1] https://lkml.org/lkml/2015/1/2/51
+> Rickard, I have dropped all your patches because I lost track which I
+> should apply and which not and I do not want to waste half an hour
+> figuring out. Please resend the ones which are still valid.
+>
+> And to make it easier for everyone please group these wireless-drivers
+> cleanup patches into a larger patchset (like 10-15 patches max per
+> patchset). That way it's a lot easier for me tomanage them. Sending one
+> patch a day is not recommended, especially when we are talking trivial
+> cleanup patches like this.
+>
+> --
+> Kalle Valo
