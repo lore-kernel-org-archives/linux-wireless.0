@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:33618 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618AbbAGNnB (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:57949 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752338AbbAIS5k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:43:01 -0500
-Received: by mail-wg0-f45.google.com with SMTP id b13so1212546wgh.18
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 05:43:00 -0800 (PST)
+	Fri, 9 Jan 2015 13:57:40 -0500
+Message-ID: <54B024A1.4040809@broadcom.com> (sfid-20150109_195747_960618_0D21C704)
+Date: Fri, 9 Jan 2015 19:57:37 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1420637871.3407.10.camel@sipsolutions.net>
-References: <1419847199-25493-1-git-send-email-arik@wizery.com>
- <1420541514.1966.16.camel@sipsolutions.net> <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com>
- <1420637871.3407.10.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 7 Jan 2015 15:42:44 +0200
-Message-ID: <CA+XVXfezPYoyEv-HVq_Xy9HHyRKeqDZMxOWDXLTQMHprkbM0ng@mail.gmail.com> (sfid-20150107_144305_595889_35DE733C)
-Subject: Re: [PATCH] cfg80211: fix deadlock during reg chan check
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Content-Type: text/plain; charset=UTF-8
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<kvalo@qca.qualcomm.com>, <mathias.kretschmer@fokus.fraunhofer.de>,
+	<stable@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
+References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de>
+In-Reply-To: <1420822458-531-1-git-send-email-sw@simonwunderlich.de>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 7, 2015 at 3:37 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2015-01-07 at 15:34 +0200, Arik Nemtsov wrote:
->
->> > I'm not convinced this is the right thing to do. When checking for the
->> > current wdev that it can use a channel, then it seems that it's own
->> > current BSS connection (if any) shouldn't actually be taken into account
->> > - ergo the lock shouldn't have to be taken, that interface should be
->> > excluded from the "can beacon due to concurrent check" anyway.
->>
->> We have a couple of checks we want to add in the pipeline that also
->> need "this" wdev in the concurrent check, so I'd prefer to avoid this.
->
-> Why would you need to check "this" wdev when doing something for "this"
-> wdev? Seems odd? But I'm willing to learn :)
+On 01/09/15 17:54, Simon Wunderlich wrote:
+> Performing spectral scans on 5 GHz channels may result in PHY errors
+> sent by the hardware, even if DFS support is not enabled in the driver
+> (e.g. channel scanning or passive monitoring). In that case channels may
+> falsely get marked as 'unusable'. To fix that, only process radar PHY
+> errors when radar is explicitly enabled in the driver.
 
-There's some convoluted regulatory logic where if this GO (or any
-other) are operating on this GO_CONCURRENT (and not indoor-only)
-channel, then it may continue in its operation even after the STA that
-operated concurrently has disconnected.
+Hi Simon,
 
+Not an ath9k expert, but I would think those channels would already be 
+marked as unusable, because DFS is disabled in the driver. Or does this 
+also affect 5G channels that do not require DFS.
+
+Regards,
+Arend
+
+> Cc: Stable<stable@vger.kernel.org>  [v3.10+]
+> Reported-by: Mathias Kretschmer<mathias.kretschmer@fokus.fraunhofer.de>
+> Signed-off-by: Simon Wunderlich<sw@simonwunderlich.de>
+> ---
+>   drivers/net/wireless/ath/ath9k/dfs.c | 6 ++++++
+>   1 file changed, 6 insertions(+)
 >
->> > Also, the only reason this can happen anyway is when you call "can
->> > beacon" for a station interface - which seems nonsensical. Given that
->>
->> This is not true. This happens with current code for a p2p-go
->> interface during channel validity checks in reg.c.
+> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+> index 726271c..3d04905 100644
+> --- a/drivers/net/wireless/ath/ath9k/dfs.c
+> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
+> @@ -152,6 +152,12 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
+>   		return;
+>   	}
 >
-> Not sure I see this? The only thing doing wdev locking is
-> cfg80211_go_permissive_chan(), no? And that only for station interfaces.
+> +	if (!sc->hw->conf.radar_enabled) {
+> +		ath_dbg(common, DFS,
+> +			"Error: received radar phyerr while radar was disabled\n");
+> +		return;
+> +	}
+> +
+>   	datalen = rs->rs_datalen;
+>   	if (datalen == 0) {
+>   		DFS_STAT_INC(sc, datalen_discards);
 
-cfg80211_go_permissive_chan is called from cfg80211_reg_can_beacon,
-currently only for GO interfaces, but for STA also in the future
-(hopefully).
-The latter is called during channel validity checks for GO.
-
-Arik
