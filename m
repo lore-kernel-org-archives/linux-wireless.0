@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:39817 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbbALG4D (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32544 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758119AbbAIRXe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 01:56:03 -0500
-Received: by mail-ig0-f180.google.com with SMTP id h15so10249704igd.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 22:56:02 -0800 (PST)
-Date: Mon, 12 Jan 2015 01:54:45 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Hong Xu <hong@topbug.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
-Message-ID: <20150112065445.GB29484@localhost> (sfid-20150112_075607_006427_29606D94)
-References: <1420968029-1222-1-git-send-email-hong@topbug.net>
+	Fri, 9 Jan 2015 12:23:34 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH RESEND] ath10k: Fix potential Rx ring corruption
+Date: Fri, 9 Jan 2015 22:49:46 +0530
+Message-ID: <1420823986-29503-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150109_182345_905840_113C9637)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420968029-1222-1-git-send-email-hong@topbug.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 11, 2015 at 01:20:29AM -0800, Hong Xu wrote:
-> Add an option "blink" to enable or disable the LED blink. The default
-> value is set to 1 so that existing users would not experience any
-> unexpected changes.
+When replenishing Rx buffers driver updates the address of the
+buffer and the index of rx buffer in rx ring to the firmware.
+Change in order by CPU can cause rx ring corruption. Add memory
+barrier before updating rx buffer index to guarantee the order.
 
-Been a while since I looked, but isn't there a way to achieve same
-result by just echoing 'none' into the relevant LED's sysfs file
-(something like /sys/class/leds/phy0-led/trigger)?
+This could fix some instances of rx ring corruption due to done
+bit in rx attention flag not set.
 
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 9c782a4..baa1c44 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -97,6 +97,11 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+ 	}
+ 
+ fail:
++	/*
++	 * Make sure the rx buffer is updated before available buffer
++	 * index to avoid any potential rx ring corruption.
++	 */
++	mb();
+ 	*htt->rx_ring.alloc_idx.vaddr = __cpu_to_le32(idx);
+ 	return ret;
+ }
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.7.9.5
+
