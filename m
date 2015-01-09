@@ -1,76 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:42246 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751AbbAAMZy (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:59315 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932263AbbAILOq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2015 07:25:54 -0500
-Message-ID: <54A53CCE.1060906@broadcom.com> (sfid-20150101_132626_600644_005363B3)
-Date: Thu, 1 Jan 2015 13:25:50 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Andreas Hartmann <andihartmann@freenet.de>
-CC: Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-References: <alpine.LNX.2.00.1412301427430.31609@pobox.suse.cz> <CANUX_P0=wJiKrR4cUgEN=LO+eQ2byprz0K9m9QxzJc+kf4+_bA@mail.gmail.com> <54A2B807.1020202@hurleysoftware.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DC915@hasmsx107.ger.corp.intel.com> <alpine.LNX.2.00.1412301610320.31609@pobox.suse.cz> <1419971304.30412.0.camel@egrumbacBox> <alpine.LNX.2.00.1412302135520.31609@pobox.suse.cz> <20141230212326.GA29263@pd.tnic> <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com> <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> <54A412CE.6010803@maya.org> <54A45309.6080606@broadcom.com> <54A527CE.4000407@maya.org>
-In-Reply-To: <54A527CE.4000407@maya.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Fri, 9 Jan 2015 06:14:46 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so1567503wiv.0
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 03:14:45 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 0/8] ath10k: add multi-channel support
+Date: Fri,  9 Jan 2015 12:14:01 +0100
+Message-Id: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com> (sfid-20150109_121451_528392_50CE6BBE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/01/15 11:56, Andreas Hartmann wrote:
-> Arend van Spriel wrote:
->> On 12/31/14 16:14, Andreas Hartmann wrote:
-> [...]
->>> All in all:
->>> If you want to get rid of wext, you still have to go a *very* long way
->>> to get the same *stable* and high throughput quality with *all* chips
->>> depending on mac80211 and not just a few flagship drivers like Atheros.
->>
->> Hi Andreas,
->>
->> That's a nice list of unrelated stuff. This has all nothing to do with
->> WEXT. Actually, you can build rt5572sta with cfg80211 support
->> (RT_CFG80211_SUPPORT).
->
-> You seem to know sources I don't know off. Could you please tell me,
-> where to find them?
->
-> I have DPO_RT5572_LinuxSTA_2.6.0.1_20120629 which doesn't compile with
-> HAS_CFG80211_SUPPORT=y because -DCONFIG_AP_SUPPORT, on which
-> RT_CFG80211_SUPPORT relies, is broken.
->
-> DPO_RT5572_LinuxSTA_2.6.1.3_20121022 removed the necessary broken AP
-> code completely.
+New wmi-tlv firmware and new hardware will support
+multi-channel operation.
 
-Nice.
+This prepares the driver by implementing chanctx,
+improves tx queue locking and introduces initial
+interface combinations.
 
->> This thread is about the configuration API and
->> not about driver performance.
->
-> I know.
->
-> I tried to show, why WEXT as a whole is still necessary even if there is
-> a mac80211 based driver, because of the weakness of rt2800usb:
-> Nip it in the bud.
+I'm posting this as an RFC first because I'd like
+to get some early feedback (if possible) while I
+upstream other patches this patchset is basing on.
 
-Yes. WEXT needs to stay for a while. Not arguing that. Just saying this 
-is really about cfg80211 providing "WEXT compatibility" so WEXT 
-user-space apps can interact with cfg80211-based drivers and how to come 
-up with a plan to phase out "WEXT compatibility", not WEXT.
 
-Regards,
-Arend
+Michal Kazior (8):
+  ath10k: defer AP self-peer removal wait
+  ath10k: allow empty ssid vdev config
+  ath10k: implement chanctx API
+  ath10k: implement adaptive qcs command
+  ath10k: protect ar->arvifs linking with data_lock
+  ath10k: rework tx queue locking
+  ath10k: implement tx pause wmi event
+  ath10k: add proper wmi-tlv combinations
 
-> Kind regards,
-> Andreas
+ drivers/net/wireless/ath/ath10k/core.c    |   1 +
+ drivers/net/wireless/ath/ath10k/core.h    |  16 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c  |  80 +++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c  |   9 +-
+ drivers/net/wireless/ath/ath10k/mac.c     | 692 ++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/mac.h     |  57 +++
+ drivers/net/wireless/ath/ath10k/txrx.c    |   6 +
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  16 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 118 ++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  46 ++
+ drivers/net/wireless/ath/ath10k/wmi.c     |  18 +-
+ drivers/net/wireless/ath/ath10k/wmi.h     |   1 +
+ 12 files changed, 975 insertions(+), 85 deletions(-)
+
+-- 
+1.8.5.3
 
