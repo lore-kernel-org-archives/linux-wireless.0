@@ -1,103 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37009 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752127AbbAOPRD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 10:17:03 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/3] mac80211: remove 80+80 MHz rate reporting
-Date: Thu, 15 Jan 2015 16:16:55 +0100
-Message-Id: <1421335017-7409-1-git-send-email-johannes@sipsolutions.net> (sfid-20150115_161709_339027_A4D093F1)
+Received: from dedo.coelho.fi ([88.198.205.34]:44249 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932668AbbAIMGm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2015 07:06:42 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Fri,  9 Jan 2015 14:06:37 +0200
+Message-Id: <1420805197-5831-1-git-send-email-luca@coelho.fi> (sfid-20150109_130646_449119_8E5C851A)
+Subject: [PATCH] nl80211: send netdetect configuration info in NL80211_CMD_GET_WOWLAN
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-These rates are treated the same as 160 MHz in the spec,
-so it makes no sense to distinguish them. As no driver
-uses them yet, this is also not a problem, just remove
-them.
+Send the netdetect configuration information in the response to
+NL8021_CMD_GET_WOWLAN commands.  This includes the scan interval,
+SSIDs to match and frequencies to scan.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Additionally, add the NL80211_WOWLAN_TRIG_NET_DETECT with
+NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- include/net/mac80211.h | 6 ++----
- net/mac80211/cfg.c     | 2 --
- net/mac80211/rx.c      | 5 -----
- net/mac80211/util.c    | 2 --
- 4 files changed, 2 insertions(+), 13 deletions(-)
+ include/uapi/linux/nl80211.h |  4 +++-
+ net/wireless/nl80211.c       | 52 ++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 55 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 123f2308958a..275ee56152ad 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -931,15 +931,13 @@ enum mac80211_rx_flags {
-  * These flags are used with the @vht_flag member of
-  *	&struct ieee80211_rx_status.
-  * @RX_VHT_FLAG_80MHZ: 80 MHz was used
-- * @RX_VHT_FLAG_80P80MHZ: 80+80 MHz was used
-  * @RX_VHT_FLAG_160MHZ: 160 MHz was used
-  * @RX_VHT_FLAG_BF: packet was beamformed
-  */
- enum mac80211_rx_vht_flags {
- 	RX_VHT_FLAG_80MHZ		= BIT(0),
--	RX_VHT_FLAG_80P80MHZ		= BIT(1),
--	RX_VHT_FLAG_160MHZ		= BIT(2),
--	RX_VHT_FLAG_BF			= BIT(3),
-+	RX_VHT_FLAG_160MHZ		= BIT(1),
-+	RX_VHT_FLAG_BF			= BIT(2),
- };
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index a963d48..b6c1a00 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3734,7 +3734,9 @@ struct nl80211_pattern_support {
+  *	same attributes used with @NL80211_CMD_START_SCHED_SCAN.  It
+  *	specifies how the scan is performed (e.g. the interval and the
+  *	channels to scan) as well as the scan results that will
+- *	trigger a wake (i.e. the matchsets).
++ *	trigger a wake (i.e. the matchsets).  This attribute is also
++ *	sent in a response to @NL80211_CMD_GET_WIPHY, indicating the
++ *	number of match sets supported by the driver (u32).
+  * @NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS: nested attribute
+  *	containing an array with information about what triggered the
+  *	wake up.  If no elements are present in the array, it means
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7c2ce26..38078437 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1088,6 +1088,11 @@ static int nl80211_send_wowlan(struct sk_buff *msg,
+ 			return -ENOBUFS;
+ 	}
  
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fd6860d7f557..6d5076fbf87a 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -465,8 +465,6 @@ void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
- 		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
- 	if (sta->last_rx_rate_vht_flag & RX_VHT_FLAG_80MHZ)
- 		rinfo->flags |= RATE_INFO_FLAGS_80_MHZ_WIDTH;
--	if (sta->last_rx_rate_vht_flag & RX_VHT_FLAG_80P80MHZ)
--		rinfo->flags |= RATE_INFO_FLAGS_80P80_MHZ_WIDTH;
- 	if (sta->last_rx_rate_vht_flag & RX_VHT_FLAG_160MHZ)
- 		rinfo->flags |= RATE_INFO_FLAGS_160_MHZ_WIDTH;
++	if ((rdev->wiphy.wowlan->flags & WIPHY_WOWLAN_NET_DETECT) &&
++	    nla_put_u32(msg, NL80211_WOWLAN_TRIG_NET_DETECT,
++			rdev->wiphy.wowlan->max_nd_match_sets))
++		return -ENOBUFS;
++
+ 	if (large && nl80211_send_wowlan_tcp_caps(rdev, msg))
+ 		return -ENOBUFS;
+ 
+@@ -8747,6 +8752,48 @@ static int nl80211_send_wowlan_tcp(struct sk_buff *msg,
+ 	return 0;
  }
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 3a1a3ba40bd8..3d79d498e7f6 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -361,9 +361,6 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 		u16 known = local->hw.radiotap_vht_details;
  
- 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_VHT);
--		/* known field - how to handle 80+80? */
--		if (status->vht_flag & RX_VHT_FLAG_80P80MHZ)
--			known &= ~IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH;
- 		put_unaligned_le16(known, pos);
- 		pos += 2;
- 		/* flags */
-@@ -378,8 +375,6 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 		/* bandwidth */
- 		if (status->vht_flag & RX_VHT_FLAG_80MHZ)
- 			*pos++ = 4;
--		else if (status->vht_flag & RX_VHT_FLAG_80P80MHZ)
--			*pos++ = 0; /* marked not known above */
- 		else if (status->vht_flag & RX_VHT_FLAG_160MHZ)
- 			*pos++ = 11;
- 		else if (status->flag & RX_FLAG_40MHZ)
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 83ba6cd9cf8d..db7216124736 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2552,8 +2552,6 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
- 			ri.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
- 		if (status->vht_flag & RX_VHT_FLAG_80MHZ)
- 			ri.flags |= RATE_INFO_FLAGS_80_MHZ_WIDTH;
--		if (status->vht_flag & RX_VHT_FLAG_80P80MHZ)
--			ri.flags |= RATE_INFO_FLAGS_80P80_MHZ_WIDTH;
- 		if (status->vht_flag & RX_VHT_FLAG_160MHZ)
- 			ri.flags |= RATE_INFO_FLAGS_160_MHZ_WIDTH;
- 		if (status->flag & RX_FLAG_SHORT_GI)
++static int nl80211_send_wowlan_nd(struct sk_buff *msg,
++				  struct cfg80211_sched_scan_request *req)
++{
++	struct nlattr *nd, *freqs, *matches, *match;
++	int i;
++
++	if (!req)
++		return 0;
++
++	nd = nla_nest_start(msg, NL80211_WOWLAN_TRIG_NET_DETECT);
++	if (!nd)
++		return -ENOBUFS;
++
++	if (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_INTERVAL, req->interval))
++		return -ENOBUFS;
++
++	freqs = nla_nest_start(msg, NL80211_ATTR_SCAN_FREQUENCIES);
++	if (!freqs)
++		return -ENOBUFS;
++
++	for (i = 0; i < req->n_channels; i++)
++		nla_put_u32(msg, i, req->channels[i]->center_freq);
++
++	nla_nest_end(msg, freqs);
++
++	if (req->n_match_sets) {
++		matches = nla_nest_start(msg, NL80211_ATTR_SCHED_SCAN_MATCH);
++		for (i = 0; i < req->n_match_sets; i++) {
++			match = nla_nest_start(msg, i);
++			nla_put(msg, NL80211_SCHED_SCAN_MATCH_ATTR_SSID,
++				req->match_sets[i].ssid.ssid_len,
++				req->match_sets[i].ssid.ssid);
++			nla_nest_end(msg, match);
++		}
++		nla_nest_end(msg, matches);
++	}
++
++	nla_nest_end(msg, nd);
++
++	return 0;
++}
++
+ static int nl80211_get_wowlan(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -8804,6 +8851,11 @@ static int nl80211_get_wowlan(struct sk_buff *skb, struct genl_info *info)
+ 					    rdev->wiphy.wowlan_config->tcp))
+ 			goto nla_put_failure;
+ 
++		if (nl80211_send_wowlan_nd(
++			    msg,
++			    rdev->wiphy.wowlan_config->nd_config))
++			goto nla_put_failure;
++
+ 		nla_nest_end(msg, nl_wowlan);
+ 	}
+ 
 -- 
 2.1.4
 
