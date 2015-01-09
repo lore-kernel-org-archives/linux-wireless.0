@@ -1,40 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55865 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752506AbbA3Tlb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 14:41:31 -0500
-Message-ID: <1422646885.1919.38.camel@sipsolutions.net> (sfid-20150130_204135_114218_0CDA8072)
-Subject: Re: cfg80211: Unknown symbol get_net_ns_by_fd (err 0)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 30 Jan 2015 20:41:25 +0100
-In-Reply-To: <54CBCFB6.2030003@broadcom.com> (sfid-20150130_193850_855908_3048A8D9)
-References: <54C6A717.5050804@broadcom.com> <54CBCADA.4050801@broadcom.com>
-	 <54CBCE5A.9080404@hauke-m.de> <54CBCFB6.2030003@broadcom.com>
-	 (sfid-20150130_193850_855908_3048A8D9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.11.231]:57445 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756468AbbAIQbg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Jan 2015 11:31:36 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2015-01-09
+Date: Fri, 09 Jan 2015 18:31:30 +0200
+Message-ID: <87lhlbj4pp.fsf@kamboji.qca.qualcomm.com> (sfid-20150109_173155_662946_76EC3AF4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-30 at 19:38 +0100, Arend van Spriel wrote:
-> On 01/30/15 19:32, Hauke Mehrtens wrote:
-> > Or we just backport this version every time:
-> >
-> > struct net *get_net_ns_by_fd(int fd)
-> > {
-> > 	return ERR_PTR(-EINVAL);
-> > }
-> >
-> 
-> I was going for the easy way out over here. Either way is fine by me, 
-> but is net namespace support can not be properly backported I would say 
-> got for the version above.
+Hi Dave,
 
-I agree, I think we should go for the always-fail one.
+here are few more fixes to 3.19. Please let me know if there are any
+problems.
 
-johannes
+Kalle
 
+The following changes since commit 7ce67a38f799d1fb332f672b117efbadedaa5352:
+
+  net: ethernet: cpsw: fix hangs with interrupts (2015-01-04 22:18:34 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-01-09
+
+for you to fetch changes up to c702674f99e612a22cf6e8f9b4bec341257970c0:
+
+  Merge tag 'iwlwifi-for-kalle-2015-01-05' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-01-05 12:07:04 +0200)
+
+----------------------------------------------------------------
+
+* rtlwifi: fix a regression in large skb allocation failure
+
+iwlwifi:
+
+* fix for 7265D NVM check
+* fixes for scan: fix long scanning times and network discovery
+* new firmware API for iwlmvm supported devices
+* fixes in rate control
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      iwlwifi: pcie: correctly define 7265-D cfg
+
+David Spinadel (2):
+      iwlwifi: mvm: add a flag to enable match found notification
+      iwlwifi: mvm: scan dwell time corrections
+
+Emmanuel Grumbach (2):
+      iwlwifi: 7000: fix reported firmware name for 7265D
+      iwlwifi: bump firmware API for mvm devices to 12
+
+Eyal Shapira (2):
+      iwlwifi: mvm: fix Rx with both chains
+      iwlwifi: mvm: fix out of bounds access to tid_to_mac80211_ac
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2015-01-05' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Larry Finger (1):
+      rtlwifi: Fix error when accessing unmapped memory in skb
+
+ drivers/net/wireless/iwlwifi/iwl-7000.c        |    6 ++---
+ drivers/net/wireless/iwlwifi/iwl-8000.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h     |    4 +++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |    2 ++
+ drivers/net/wireless/iwlwifi/mvm/scan.c        |   19 ++++++++++----
+ drivers/net/wireless/iwlwifi/mvm/tx.c          |    8 ++++--
+ drivers/net/wireless/iwlwifi/mvm/utils.c       |    2 +-
+ drivers/net/wireless/iwlwifi/pcie/drv.c        |    4 ++-
+ drivers/net/wireless/rtlwifi/pci.c             |   32 ++++++++++++++++++------
+ 9 files changed, 58 insertions(+), 21 deletions(-)
+
+-- 
+Kalle Valo
