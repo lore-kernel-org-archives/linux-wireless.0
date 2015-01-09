@@ -1,73 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:42003 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755347AbbA2Quo (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:33536 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbbAITSV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 11:50:44 -0500
-Message-ID: <54CA64E2.2050502@candelatech.com> (sfid-20150129_175048_004808_A7F9341C)
-Date: Thu, 29 Jan 2015 08:50:42 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: YanBo <dreamfly281@gmail.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFTv2 2/5] ath10k: fix wmi-htc tx credit starvation
-References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com> <1397040531-6224-1-git-send-email-michal.kazior@tieto.com> <1397040531-6224-3-git-send-email-michal.kazior@tieto.com> <CAFuUQkiVB7DVXpBCrSy_LFMCm3CX9wPi_awq3x16FHDB2OmasA@mail.gmail.com> <CA+BoTQnXPMT3xQ=kmV5hdXgffZUB=tBvVnsawvzLATajPzoYsg@mail.gmail.com>
-In-Reply-To: <CA+BoTQnXPMT3xQ=kmV5hdXgffZUB=tBvVnsawvzLATajPzoYsg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 9 Jan 2015 14:18:21 -0500
+Received: by mail-oi0-f52.google.com with SMTP id a3so13232572oib.11
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 11:18:20 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/8] wcn36xx: let device generate qos seq numbers
+Date: Fri,  9 Jan 2015 14:15:47 -0500
+Message-Id: <1420830952-9624-4-git-send-email-me@bobcopeland.com> (sfid-20150109_201847_796962_CCDEF60D)
+In-Reply-To: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
+References: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/28/2015 11:57 PM, Michal Kazior wrote:
-> On 29 January 2015 at 02:32, YanBo <dreamfly281@gmail.com> wrote:
->> Hi Michal,
->>
->> What the conclusion about this patch, it  looks like this patch not be
->> merged into ath10K due to introduce some unstable issue, I'v got
->> another issue that when move the station enter hibernate mode. the AP
->> will continue report message like before
->> [ 3958.681293] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
->> 00:03:7f:40:04:5b
->> [ 3959.681449] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
->> 00:03:7f:40:04:5b
->> [ 3960.681696] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
->> 00:03:7f:40:04:5b
->> [ 3961.681877] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
->> 00:03:7f:40:04:5b
->> [ 3962.682080] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
->> 00:03:7f:40:04:5b
->> [ 3963.682361] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
->> 00:03:7f:40:04:5b
->> [ 3964.682550] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
->> 00:03:7f:40:04:5b
->> [ 3965.682743] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
->> 00:03:7f:40:04:5b
-> 
-> The spurious STA kickout alone is most likely an aftermath of HTX Tx
-> credit starvation when client was detected as inactive by hostapd and
-> was subsequently disassociated. However due to starvation
-> wmi-peer-delete was never sent to firmware so fw thinks the peer is
-> still there.
-> 
-> I suppose fw should be restarted when ath10k is unable to submit a
-> configuration command like wmi-peer-delete. It doesn't make sense to
-> continue since fw-host state loses coherency and weird things can
-> start to happen (spurious sta kickout is the best known example).
+wcn36xx currently sends an incorrect sequence number into the BA session
+setup firmware command: it should be saving or updating the ssn in the
+TX_START ampdu_action callback instead of waiting until TX_OPERATIONAL.
+However, we can sidestep the issue by letting the hardware generate the
+sequence numbers for QoS frames, as is done in prima, so do that.
 
-At least some of the tx-credits problem is in firmware, but
-regardless of that:
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/wcn36xx/txrx.c |    1 +
+ drivers/net/wireless/ath/wcn36xx/txrx.h |    9 ++++++++-
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
-Instead of restarting firmware in this case, maybe change the
-'wait-for-3-seconds' timeout to 3 1-second timeouts, and
-on second timeout force a flush, ignoring tx-credits if
-required?  That may not be pretty, but seems better than resetting
-firmware if it works.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
+index f701873..277bc39 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.c
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
+@@ -93,6 +93,7 @@ static void wcn36xx_set_tx_pdu(struct wcn36xx_tx_bd *bd,
+ 		bd->pdu.mpdu_header_off;
+ 	bd->pdu.mpdu_len = len;
+ 	bd->pdu.tid = tid;
++	bd->pdu.bd_ssn = WCN36XX_TXBD_SSN_FILL_DPU_QOS;
+ }
+ 
+ static inline struct wcn36xx_vif *get_vif_by_addr(struct wcn36xx *wcn,
+diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.h b/drivers/net/wireless/ath/wcn36xx/txrx.h
+index bbfbcf8..032216e 100644
+--- a/drivers/net/wireless/ath/wcn36xx/txrx.h
++++ b/drivers/net/wireless/ath/wcn36xx/txrx.h
+@@ -32,6 +32,12 @@
+ #define WCN36XX_BD_RATE_MGMT 2
+ #define WCN36XX_BD_RATE_CTRL 3
+ 
++enum wcn36xx_txbd_ssn_type {
++	WCN36XX_TXBD_SSN_FILL_HOST = 0,
++	WCN36XX_TXBD_SSN_FILL_DPU_NON_QOS = 1,
++	WCN36XX_TXBD_SSN_FILL_DPU_QOS = 2,
++};
++
+ struct wcn36xx_pdu {
+ 	u32	dpu_fb:8;
+ 	u32	adu_fb:8;
+@@ -50,7 +56,8 @@ struct wcn36xx_pdu {
+ 	/* 0x0c*/
+ 	u32	reserved4:8;
+ 	u32	tid:4;
+-	u32	reserved3:4;
++	u32	bd_ssn:2;
++	u32	reserved3:2;
+ 	u32	mpdu_len:16;
+ };
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.10.4
 
