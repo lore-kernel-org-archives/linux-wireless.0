@@ -1,94 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:40346 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751257AbbALOog (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:42547 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753311AbbAIOED convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 09:44:36 -0500
-Received: by mail-lb0-f178.google.com with SMTP id u14so17865381lbd.9
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 06:44:34 -0800 (PST)
-From: Vadim Kochan <vadim4j@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Vadim Kochan <vadim4j@gmail.com>
-Subject: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
-Date: Mon, 12 Jan 2015 16:34:05 +0200
-Message-Id: <1421073245-20312-1-git-send-email-vadim4j@gmail.com> (sfid-20150112_154439_462402_28679D27)
+	Fri, 9 Jan 2015 09:04:03 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4] bcma: fix two coding style issues, more than 80 characters per line.
+References: <1419766622-10911-1-git-send-email-oscar.forner.martinez@gmail.com>
+	<87bnmaqxvs.fsf@kamboji.qca.qualcomm.com>
+	<CACna6rzWaHg=M15q=swf+yqMEB3smRRANuLHkSK1dU1MtG8jgg@mail.gmail.com>
+	<87y4peo2of.fsf@kamboji.qca.qualcomm.com>
+	<CACna6rzdtx2pBHE-00uocUEqNrbopShUW83R0dYeQBD26eC=NA@mail.gmail.com>
+Date: Fri, 09 Jan 2015 16:03:55 +0200
+In-Reply-To: <CACna6rzdtx2pBHE-00uocUEqNrbopShUW83R0dYeQBD26eC=NA@mail.gmail.com>
+	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Wed, 7 Jan 2015
+ 21:54:04 +0100")
+Message-ID: <87387kjbjo.fsf@kamboji.qca.qualcomm.com> (sfid-20150109_150407_848629_AC900B61)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vadim Kochan <vadim4j@gmail.com>
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-Added new NL80211_ATTR_NETNS_FD which allows to
-set namespace via nl80211 by fd.
+> On 7 January 2015 at 19:39, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Rafał Miłecki <zajec5@gmail.com> writes:
+>>
+>>> On 7 January 2015 at 18:55, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>> Oscar Forner Martinez <oscar.forner.martinez@gmail.com> writes:
+>>>>
+>>>>> Two lines with more than 80 characters per line have been split in several lines.
+>>>>>
+>>>>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
+>>>>
+>>>> Thanks, applied to wireless-drivers-next.git.
+>>>
+>>> Could you still replace it (V4) with an older version (V3)? Before I
+>>> explained V3 was OK Oscar already sent this (worse) V4.
+>>
+>> No. I'm not going to rebase a public git tree unless there's a huge
+>> disaster.
+>
+> I was pretty sure you didn't push it yet, that's why I asked.
 
-Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
----
- include/uapi/linux/nl80211.h |  2 ++
- net/core/net_namespace.c     |  1 +
- net/wireless/nl80211.c       | 16 +++++++++++-----
- 3 files changed, 14 insertions(+), 5 deletions(-)
+Heh, we got lucky. So I had actually run 'git push' but missed that the
+authenticate had failed. A good thing you pointed out this. So I know
+dropped this patch from my tree and pushed rest of the patches I had
+applied.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index a963d48..47757cb 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2098,6 +2098,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SURVEY_RADIO_STATS,
- 
-+	NL80211_ATTR_NETNS_FD,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/core/net_namespace.c b/net/core/net_namespace.c
-index 7f15517..5d5ee8f 100644
---- a/net/core/net_namespace.c
-+++ b/net/core/net_namespace.c
-@@ -361,6 +361,7 @@ struct net *get_net_ns_by_fd(int fd)
- 	return ERR_PTR(-EINVAL);
- }
- #endif
-+EXPORT_SYMBOL_GPL(get_net_ns_by_fd);
- 
- struct net *get_net_ns_by_pid(pid_t pid)
- {
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7c2ce26..dfa3284 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -397,6 +397,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_NETNS_FD] = { .type = NLA_U32 },
- };
- 
- /* policy for the key attributes */
-@@ -7744,14 +7745,19 @@ static int nl80211_wiphy_netns(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct net *net;
- 	int err;
--	u32 pid;
- 
--	if (!info->attrs[NL80211_ATTR_PID])
--		return -EINVAL;
-+	if (info->attrs[NL80211_ATTR_PID]) {
-+		u32 pid = nla_get_u32(info->attrs[NL80211_ATTR_PID]);
-+
-+		net = get_net_ns_by_pid(pid);
-+	} else if (info->attrs[NL80211_ATTR_NETNS_FD]) {
-+		u32 fd = nla_get_u32(info->attrs[NL80211_ATTR_NETNS_FD]);
- 
--	pid = nla_get_u32(info->attrs[NL80211_ATTR_PID]);
-+		net = get_net_ns_by_fd(fd);
-+	} else {
-+		return -EINVAL;
-+	}
- 
--	net = get_net_ns_by_pid(pid);
- 	if (IS_ERR(net))
- 		return PTR_ERR(net);
- 
+Rafal, is this the patch I should apply:
+
+https://patchwork.kernel.org/patch/5545021/
+
+Please confirm.
+
 -- 
-2.1.3
-
+Kalle Valo
