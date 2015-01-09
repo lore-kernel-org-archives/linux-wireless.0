@@ -1,67 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:60438 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752307AbbAYUYZ (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:53920 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932468AbbAILOr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 15:24:25 -0500
-Received: by mail-oi0-f41.google.com with SMTP id z81so4628330oif.0
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2015 12:24:24 -0800 (PST)
-Message-ID: <54C550F7.8080908@lwfinger.net> (sfid-20150125_212431_075216_74C8E1CF)
-Date: Sun, 25 Jan 2015 14:24:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel crash while copying big files since kernel 3.18
-References: <54AA3953.20603@gmail.com> <54AAC925.6050602@lwfinger.net> <54AADC22.9050105@gmail.com> <54AAE532.6050104@lwfinger.net> <54B28A3F.3000904@gmail.com> <54B2AC1B.8030107@lwfinger.net> <54C54642.7000108@gmail.com>
-In-Reply-To: <54C54642.7000108@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Fri, 9 Jan 2015 06:14:47 -0500
+Received: by mail-we0-f178.google.com with SMTP id p10so7346877wes.9
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 03:14:46 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC 1/8] ath10k: defer AP self-peer removal wait
+Date: Fri,  9 Jan 2015 12:14:02 +0100
+Message-Id: <1420802049-11962-2-git-send-email-michal.kazior@tieto.com> (sfid-20150109_121452_426648_0148D6F6)
+In-Reply-To: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com>
+References: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/25/2015 01:38 PM, François Valenduc wrote:
-> Le 11/01/15 18:00, Larry Finger a écrit :
->> On 01/11/2015 08:35 AM, François Valenduc wrote:
->>> Do you still intend to remove the line about allocation failure in the
->>> log ? I made a backup of my root partition compressed with pixz and that
->>> line appeared 1350 times. So I removed the code which add this line. Is
->>> it really expected that it occurs so often ? pixz use multithreading to
->>> compress files and therefore at least 3 of the 4 CPU are used during
->>> around 20 minutes, but are you sure there is no other problems ?
->>
->> Yes, I do intend to remove that line; however, I want to keep it for a
->> while just in case there are other crashes. If this message never
->> appears in that case, then there is another bug.
->>
->> You are, of course, free to remove it from your system. BTW, how much
->> memory do you have?
->>
->> Larry
->>
->>
-> Sorry for having forgotten to answer. I have 4 Gb of RAM. Taking a
-> backup of a DVD with k9copy also produces so much messages (1479 with a
-> patch using rate_limit).
-> Is it really expected that skb allocation fails so often ? Could there
-> be another problem ?
+Some firmware revisions don't notify host about
+self-bss-peer removal until after associated vdev
+is deleted.
 
-It is a matter of memory fragmentation. The driver uses a 9100-byte buffer, thus 
-the allocation is of order 3. After a system has been running for a while, the 
-number of memory blocks of that size may be small. I have not looked at the 
-source of k9copy, but I suspect it also allocates large buffers. On a 4G system, 
-both DMA and regular allocations come from the same pool of memory.
+This fixes AP teardown slowdowns and prevents
+warnings:
 
-I have submitted a patch to remove the printout. You should drop it from your 
-system.
+ ath10k_pci 0000:00:05.0: failed to remove peer for AP vdev 0: -110
+ ath10k_pci 0000:00:05.0: removing stale peer xx:xx:xx:xx:xx:xx from vdev_id 0
+ ath10k_pci 0000:00:05.0: peer-unmap-event: unknown peer id 24
+ ath10k_pci 0000:00:05.0: peer-unmap-event: unknown peer id 8
 
-I am considering a slightly different approach to skb allocation that would 
-pre-allocate a number of buffers in a storage pool when the driver was started. 
-When the interrupt routine needed one, it would extract it from the pool, which 
-would be kept refilled by a work queue routine. If and when I prepare that 
-patch, your workload would be a good test. When you used k9copy, was the DVD 
-driver local and the destination remote, or were both local? If the latter, you 
-are just suffering from memory starvation.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b4d4fec..e3ec6b6 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3325,9 +3325,10 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 	list_del(&arvif->list);
+ 
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+-		ret = ath10k_peer_delete(arvif->ar, arvif->vdev_id, vif->addr);
++		ret = ath10k_wmi_peer_delete(arvif->ar, arvif->vdev_id,
++					     vif->addr);
+ 		if (ret)
+-			ath10k_warn(ar, "failed to remove peer for AP vdev %i: %d\n",
++			ath10k_warn(ar, "failed to submit AP self-peer removal on vdev %i: %d\n",
+ 				    arvif->vdev_id, ret);
+ 
+ 		kfree(arvif->u.ap.noa_data);
+@@ -3341,6 +3342,21 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 		ath10k_warn(ar, "failed to delete WMI vdev %i: %d\n",
+ 			    arvif->vdev_id, ret);
+ 
++	/* Some firmware revisions don't notify host about self-peer removal
++	 * until after associated vdev is deleted.
++	 */
++	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
++		ret = ath10k_wait_for_peer_deleted(ar, arvif->vdev_id,
++						   vif->addr);
++		if (ret)
++			ath10k_warn(ar, "failed to remove AP self-peer on vdev %i: %d\n",
++				    arvif->vdev_id, ret);
++
++		spin_lock_bh(&ar->data_lock);
++		ar->num_peers--;
++		spin_unlock_bh(&ar->data_lock);
++	}
++
+ 	ath10k_peer_cleanup(ar, arvif->vdev_id);
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+-- 
+1.8.5.3
 
