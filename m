@@ -1,45 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:35506 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbbARFLS (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:46048 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751568AbbAJTBo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 00:11:18 -0500
-Subject: [PATCH 6/7] net: wireless: wcn36xx: remove powersaving for wcn3620
-From: Andy Green <andy.green@linaro.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Sun, 18 Jan 2015 13:11:11 +0800
-Message-ID: <20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061127_787748_B723037D)
-In-Reply-To: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+	Sat, 10 Jan 2015 14:01:44 -0500
+Message-ID: <54B17716.40609@candelatech.com> (sfid-20150110_200148_417659_65A2D480)
+Date: Sat, 10 Jan 2015 11:01:42 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH RESEND] ath10k: Fix potential Rx ring corruption
+References: <1420823986-29503-1-git-send-email-vthiagar@qti.qualcomm.com> <54B07420.8090600@candelatech.com>
+In-Reply-To: <54B07420.8090600@candelatech.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WCN3620 powersaving mode is not stable.  Disable it if we're
-on a wcn3620 chip type.
+Well, problem is not solved after all.  Had total of 5 crashes on overnight run, must have
+all been before midnight, because that is the earliest logs I see (journald was not configured
+to use enough space...fixed for next time) and no crashes since then.
 
-Signed-off-by: Andy Green <andy.green@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c |    4 ++++
- 1 file changed, 4 insertions(+)
+Still, it is at least no worse.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index c4178c7..569d45b 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -924,6 +924,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 		IEEE80211_HW_AMPDU_AGGREGATION |
- 		IEEE80211_HW_TIMING_BEACON_ONLY;
- 
-+	/* 3620 powersaving currently unstable */
-+	if (wcn->chip_version == WCN36XX_CHIP_3620)
-+		wcn->hw->flags &= ~IEEE80211_HW_SUPPORTS_PS;
-+
- 	wcn->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_AP) |
- 		BIT(NL80211_IFTYPE_ADHOC) |
+I wonder if similar wb() is needed in the firmware somewhere?
 
+Thanks,
+Ben
+
+On 01/09/2015 04:36 PM, Ben Greear wrote:
+> I added this to my tree (and a bunch more debug stuff to track
+> CE transport-ids), and I've done about 4500 station reconnects over
+> the last 2 hours and no tx-credits hang issue so far.
+>
+> Could be my debugging code or that I'm getting lucky, but I'm hopeful
+> that your patch actually fixed the problem I was seeing!
+>
+> Thanks,
+> Ben
+>
+>
+> On 01/09/2015 09:19 AM, Vasanthakumar Thiagarajan wrote:
+>> When replenishing Rx buffers driver updates the address of the
+>> buffer and the index of rx buffer in rx ring to the firmware.
+>> Change in order by CPU can cause rx ring corruption. Add memory
+>> barrier before updating rx buffer index to guarantee the order.
+>>
+>> This could fix some instances of rx ring corruption due to done
+>> bit in rx attention flag not set.
+>>
+>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/ath10k/htt_rx.c |    5 +++++
+>>   1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> index 9c782a4..baa1c44 100644
+>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> @@ -97,6 +97,11 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+>>   	}
+>>
+>>   fail:
+>> +	/*
+>> +	 * Make sure the rx buffer is updated before available buffer
+>> +	 * index to avoid any potential rx ring corruption.
+>> +	 */
+>> +	mb();
+>>   	*htt->rx_ring.alloc_idx.vaddr = __cpu_to_le32(idx);
+>>   	return ret;
+>>   }
+>>
+>
+>
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
