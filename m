@@ -1,75 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:6728 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752854AbbAEKO4 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63110 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887AbbAKJkX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 05:14:56 -0500
-Message-ID: <54AA641C.7050307@broadcom.com> (sfid-20150105_111527_330460_1F50CF0B)
-Date: Mon, 5 Jan 2015 11:14:52 +0100
+	Sun, 11 Jan 2015 04:40:23 -0500
+Message-ID: <54B24504.60105@broadcom.com> (sfid-20150111_104032_964955_5D483223)
+Date: Sun, 11 Jan 2015 10:40:20 +0100
 From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Paul Bolle <pebolle@tiscali.nl>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	"Kalle Valo" <kvalo@codeaurora.org>, Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-References: <1420297188.2397.3.camel@tiscali.nl>	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com> <1420324124.9624.60.camel@x220>
-In-Reply-To: <1420324124.9624.60.camel@x220>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Hong Xu <hong@topbug.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
+References: <1420968029-1222-1-git-send-email-hong@topbug.net>
+In-Reply-To: <1420968029-1222-1-git-send-email-hong@topbug.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/03/15 23:28, Paul Bolle wrote:
-> On Sat, 2015-01-03 at 10:07 -0800, Linus Torvalds wrote:
->> On Sat, Jan 3, 2015 at 10:02 AM, Marcel Holtmann<marcel@holtmann.org>  wrote:
->>>
->>> why would you revert this? It is obviously the correct change to actually select CFG80211_WEXT.
->>
->> I don't know about obvious, but yeah, I think the select in this case
->> is actually the better idea anyway.
+On 01/11/15 10:20, Hong Xu wrote:
+> Add an option "blink" to enable or disable the LED blink. The default
+> value is set to 1 so that existing users would not experience any
+> unexpected changes.
+> ---
+>   drivers/net/wireless/ath/ath9k/htc.h          | 1 +
+>   drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 4 ++++
+>   drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++++
+>   3 files changed, 9 insertions(+)
 >
-> Obviously it wasn't obvious to me!
+> diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+> index 9dde265..5697097 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc.h
+> +++ b/drivers/net/wireless/ath/ath9k/htc.h
+> @@ -44,6 +44,7 @@
 >
-> My reasoning was that the "ipw2200: select CFG80211_WEXT" commit was
-> _solely_ a workaround for the breakage introduced by that other patch.
-> And since that one is now reverted the workaround wasn't needed anymore.
+>   extern struct ieee80211_ops ath9k_htc_ops;
+>   extern int htc_modparam_nohwcrypt;
+> +extern int led_blink;
 >
-> Besied, I thought we try to avoid select-ing symbols that can also be
-> set manually. As that makes it more likely to trigger circular
-> dependency problems in the kconfig tools, doesn't it?
+>   enum htc_phymode {
+>   	HTC_MODE_11NA		= 0,
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+> index 50f74a2..998b558 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+> @@ -279,6 +279,10 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
+>   	else
+>   		priv->ah->led_pin = ATH_LED_PIN_DEF;
 >
->> We could make the CFG80211_WEXT help message be very negative so that
->> people aren't encouraged to select it even if they can, but then if
->> they need the ipw driver it gets selected because of that. Because the
->> ipw driver is probably the more important of the two if you just
->> happen to have old hardware but are upgrading yout software (and
->> anybody who recompiles their own kernel is obviously doing the
->> latter).
+> +	if (!led_blink)
+> +		priv->led_cdev.default_trigger =
+> +			ieee80211_get_radio_led_name(priv->hw);
+> +
+>   	ath9k_configure_leds(priv);
 >
-> Side note: am I correct in thinking that there's some successor to
-> CFG80211_WEXT and that the ipw2200 driver could, at least in theory, be
-> ported to that successor? (ipw2200 hardware appears to be a bit old, so
-> probably no one would care enough to actually do that.)
-> net/wireless/kconfig doesn't mention anything like that, so probably I'm
-> just confused.
+>   	snprintf(priv->led_name, sizeof(priv->led_name),
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> index e8fa944..c762d84 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> @@ -38,6 +38,10 @@ static int ath9k_ps_enable;
+>   module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+>   MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+>
+> +int led_blink = 1;
+> +module_param_named(blink, led_blink, int, 0444);
+> +MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+> +
 
-ipw2200 is a WEXT driver using some wext functionality (and struct 
-wiphy) provided by cfg80211 hence it needs CFG80211_WEXT. I guess that 
-is what makes it confusing.
+Seems like this module parameter is only applicable if 
+CONFIG_MAC80211_LEDS is set.
 
 Regards,
 Arend
 
-
-> Paul Bolle
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+>   #ifdef CONFIG_MAC80211_LEDS
+>   static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
+>   	{ .throughput = 0 * 1024, .blink_time = 334 },
 
