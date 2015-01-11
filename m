@@ -1,78 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:58163 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752019AbbAFP6X (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:50749 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751048AbbAKPdI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:58:23 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 00/11 V2] rtlwifi: A set of patches that simplify the drivers
-Date: Tue,  6 Jan 2015 09:58:01 -0600
-Message-Id: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165950_068285_8F0C4579)
+	Sun, 11 Jan 2015 10:33:08 -0500
+Message-ID: <54B297B2.8000502@candelatech.com> (sfid-20150111_163312_840743_42662E8D)
+Date: Sun, 11 Jan 2015 07:33:06 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH RESEND] ath10k: Fix potential Rx ring corruption
+References: <1420823986-29503-1-git-send-email-vthiagar@qti.qualcomm.com> <54B07420.8090600@candelatech.com>,<54B17716.40609@candelatech.com> <1420969591846.36256@qti.qualcomm.com> <54B24B42.30700@qti.qualcomm.com>
+In-Reply-To: <54B24B42.30700@qti.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Happy New Year.
 
-This set of patches, which are intended for the 3.20 stream, are intended to
-simplify the drivers. In particular, each of them has a separate routine that
-initilizes the dynamic power manipulation variables. Ten of these patches convert
-the drivers to use a common copy of this code. The other patch updates the
-parameter descriptions of rtl8723be to clarify usage.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On 01/11/2015 02:06 AM, Vasanthakumar Thiagarajan wrote:
+>
+>
+>
+>> Well, problem is not solved after all.  Had total of 5 crashes on overnight run, must have
+>> all been before midnight, because that is the earliest logs I see (journald was not configured
+>> to use enough space...fixed for next time) and no crashes since then.
+>
+> Not sure about the crash you are originally seeing. This commit fixes rx ring buffer corruption,
+> this could make some difference in buffer corruption in copy engine 1.
 
-V2 - only patch 02/11 is changed to fix the problem noted by Sergei Shylyov
-     <sergei.shtylyov@cogentembedded.com> concerning a line that was dropped.
+Well, it wasn't a crash until I added keep-alive timer and assert, what I mean is that
+the WMI transport hangs, apparently due to lost message (or ack) or two between firmware
+and host.
 
-Larry Finger (11):
-  rtlwifi: Unify variable naming for all drivers
-  rtlwifi: rtl8723be: Improve modinfo output
-  rtlwifi: Create new routine to initialize the DM tables
-  rtlwifi: rtl8188ee: Convert driver to use the common DM table init
-    routine
-  rtlwifi: rtl8192c-common: Convert driver to use common DM table
-    initialization
-  rtlwifi: rtl8192de: Convert driver to use common DM table
-    initialization
-  rtlwifi: rtl8192ee: Convert driver to use common DM table
-    initialization
-  rtlwifi: rtl8723ae: Convert driver to use common DM table
-    initialization
-  rtlwifi: rtl8723be: Convert driver to use common DM table
-    initialization
-  rtlwifi: rtl8821ae: Convert driver to use common DM table
-    initialization
-  rtlwifi: Move macro definitions to core
+Slow to debug, because the second-to-last dbglog message from firmware is sent towards host
+but never seen by host.  So I am going to have to play some more tricks to see the missing dbglog messages.
 
- drivers/net/wireless/rtlwifi/core.c               | 37 +++++++++++++++
- drivers/net/wireless/rtlwifi/core.h               | 41 ++++++++++++++++
- drivers/net/wireless/rtlwifi/rtl8188ee/dm.c       | 36 ++------------
- drivers/net/wireless/rtlwifi/rtl8188ee/dm.h       | 41 ----------------
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 45 ++++--------------
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h | 38 ---------------
- drivers/net/wireless/rtlwifi/rtl8192ce/dm.c       |  1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/dm.h       | 13 -----
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 33 ++-----------
- drivers/net/wireless/rtlwifi/rtl8192de/dm.h       | 38 ---------------
- drivers/net/wireless/rtlwifi/rtl8192ee/dm.c       | 55 ++++++---------------
- drivers/net/wireless/rtlwifi/rtl8192ee/dm.h       | 16 -------
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c       |  7 +--
- drivers/net/wireless/rtlwifi/rtl8192se/dm.h       | 28 -----------
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.c       | 42 ++++------------
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.h       | 38 ---------------
- drivers/net/wireless/rtlwifi/rtl8723be/dm.c       | 55 ++++++---------------
- drivers/net/wireless/rtlwifi/rtl8723be/dm.h       | 33 -------------
- drivers/net/wireless/rtlwifi/rtl8723be/sw.c       | 11 +++--
- drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 58 +++++++----------------
- drivers/net/wireless/rtlwifi/rtl8821ae/dm.h       | 41 ----------------
- drivers/net/wireless/rtlwifi/wifi.h               |  2 -
- 22 files changed, 157 insertions(+), 552 deletions(-)
+Thanks,
+Ben
+
+
+>> Still, it is at least no worse.
+>>
+>> I wonder if similar wb() is needed in the firmware somewhere?
+>
+> Unlikely, there will be enough time for host to see the updated index and
+> rx buffer after fw updates them while sending htt rx indication. Host accesses
+> them only when processing the htt message.
+
+
+>
+> Vasanth
+>
+>>
+>> Thanks,
+>> Ben
+>>
+>> On 01/09/2015 04:36 PM, Ben Greear wrote:
+>>> I added this to my tree (and a bunch more debug stuff to track
+>>> CE transport-ids), and I've done about 4500 station reconnects over
+>>> the last 2 hours and no tx-credits hang issue so far.
+>>>
+>>> Could be my debugging code or that I'm getting lucky, but I'm hopeful
+>>> that your patch actually fixed the problem I was seeing!
+>>>
+>>> Thanks,
+>>> Ben
+>>>
+>>>
+>>> On 01/09/2015 09:19 AM, Vasanthakumar Thiagarajan wrote:
+>>>> When replenishing Rx buffers driver updates the address of the
+>>>> buffer and the index of rx buffer in rx ring to the firmware.
+>>>> Change in order by CPU can cause rx ring corruption. Add memory
+>>>> barrier before updating rx buffer index to guarantee the order.
+>>>>
+>>>> This could fix some instances of rx ring corruption due to done
+>>>> bit in rx attention flag not set.
+>>>>
+>>>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+>>>> ---
+>>>>    drivers/net/wireless/ath/ath10k/htt_rx.c |    5 +++++
+>>>>    1 file changed, 5 insertions(+)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>>> index 9c782a4..baa1c44 100644
+>>>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>>> @@ -97,6 +97,11 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+>>>>       }
+>>>>
+>>>>    fail:
+>>>> +    /*
+>>>> +     * Make sure the rx buffer is updated before available buffer
+>>>> +     * index to avoid any potential rx ring corruption.
+>>>> +     */
+>>>> +    mb();
+>>>>       *htt->rx_ring.alloc_idx.vaddr = __cpu_to_le32(idx);
+>>>>       return ret;
+>>>>    }
+>>>>
+>>>
+>>>
+>>
+>> --
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+>>
+>
 
 -- 
-2.1.2
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
