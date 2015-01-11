@@ -1,144 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53877 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932612AbbA3NdC (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:38133 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751820AbbAKOfr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 08:33:02 -0500
-Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YHBgy-004FiR-TJ
-	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:33:01 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 16/17] ath9k: Cleanup reg_wow.h
-Date: Fri, 30 Jan 2015 19:05:36 +0530
-Message-Id: <1422624937-4810-17-git-send-email-sujith@msujith.org> (sfid-20150130_143630_074785_DF68BE02)
-In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
-References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+	Sun, 11 Jan 2015 09:35:47 -0500
+Received: by mail-wi0-f176.google.com with SMTP id ex7so10135963wid.3
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 06:35:46 -0800 (PST)
+Message-ID: <54B28A3F.3000904@gmail.com> (sfid-20150111_153551_422571_D1481621)
+Date: Sun, 11 Jan 2015 15:35:43 +0100
+From: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Kernel crash while copying big files since kernel 3.18
+References: <54AA3953.20603@gmail.com> <54AAC925.6050602@lwfinger.net> <54AADC22.9050105@gmail.com> <54AAE532.6050104@lwfinger.net>
+In-Reply-To: <54AAE532.6050104@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Le 05/01/15 20:25, Larry Finger a écrit :
+> On 01/05/2015 12:46 PM, François Valenduc wrote:
+>> Le 05/01/15 18:25, Larry Finger a écrit :
+>>> On 01/05/2015 01:12 AM, François Valenduc wrote:
+>>>> Hello everybody,
+>>>>
+>>>> Since kernel 3.18, I encounter a kernel crash each time when I copy a
+>>>> big file (around 12 Gb) from an external USB drive to the harddrive of
+>>>> my laptop.
+>>>> I tried a bisection between kernels 3.17 and 3.18 and I was
+>>>> surprised to
+>>>> find that this has to do with the driver of the wireless card
+>>>> (rtl8188ee). However, I don't have problems if I copy the file
+>>>> while the
+>>>> rtl8188 module is not loaded. Unfortunately, the results of git-bisect
+>>>> are not totally conclusive because the kernel crash during boot
+>>>> when the
+>>>> wireless connection is established. Here are the last steps of the
+>>>> bisection:
+>>>>
+>>>> # bad: [c151aed6aa146e9587590051aba9da68b9370f9b] rtlwifi: rtl8188ee:
+>>>> Update driver to match Realtek release of 06282014
+>>>> git bisect bad c151aed6aa146e9587590051aba9da68b9370f9b
+>>>> # good: [fd09ff958777cf583d7541f180991c0fc50bd2f7] rtlwifi: Remove
+>>>> extra
+>>>> workqueue for enter/leave power state
+>>>> git bisect good fd09ff958777cf583d7541f180991c0fc50bd2f7
+>>>> # skip: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b] rtlwifi: Modify
+>>>> base.{c,h} for new drivers
+>>>> git bisect skip 9afa2e44f4d8f9d031f815c32bb8f225f0f6746b
+>>>> # skip: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd] rtlwifi: Modify
+>>>> cam.{c,h} and efuse.{c,h} for new drivers
+>>>> git bisect skip 3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd
+>>>> # skip: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8] rtlwifi: Modify
+>>>> core.c for new drivers
+>>>> git bisect skip f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8
+>>>> # skip: [d3feae41a3473a0f7b431d6af4e092865d586e52] rtlwifi: Update
+>>>> power-save routines for 062814 driver
+>>>> git bisect skip d3feae41a3473a0f7b431d6af4e092865d586e52
+>>>> # skip: [38506ecefab911785d5e1aa5889f6eeb462e0954] rtlwifi: rtl_pci:
+>>>> Start modification for new drivers
+>>>> git bisect skip 38506ecefab911785d5e1aa5889f6eeb462e0954
+>>>> # skip: [f3a97e93814aeac3f13e857a0071726acc9bd626] rtlwifi: Finish
+>>>> modifying core routines for new drivers
+>>>> git bisect skip f3a97e93814aeac3f13e857a0071726acc9bd626
+>>>> # only skipped commits left to test
+>>>> # possible first bad commit:
+>>>> [c151aed6aa146e9587590051aba9da68b9370f9b]
+>>>> rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
+>>>> # possible first bad commit:
+>>>> [f3a97e93814aeac3f13e857a0071726acc9bd626]
+>>>> rtlwifi: Finish modifying core routines for new drivers
+>>>> # possible first bad commit:
+>>>> [d3feae41a3473a0f7b431d6af4e092865d586e52]
+>>>> rtlwifi: Update power-save routines for 062814 driver
+>>>> # possible first bad commit:
+>>>> [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd]
+>>>> rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
+>>>> # possible first bad commit:
+>>>> [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b]
+>>>> rtlwifi: Modify base.{c,h} for new drivers
+>>>> # possible first bad commit:
+>>>> [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8]
+>>>> rtlwifi: Modify core.c for new drivers
+>>>> # possible first bad commit:
+>>>> [38506ecefab911785d5e1aa5889f6eeb462e0954]
+>>>> rtlwifi: rtl_pci: Start modification for new drivers
+>>>>
+>>>> Can somebody explain what's happening ? I do the copy via Dolphin
+>>>> in KDE
+>>>> and the screen becomes black and the computer becomes totally
+>>>> unresponsive. So, I don't have access to the logs to see the trace of
+>>>> the problem.
+>>>>
+>>>> Thanks in advance for your help,
+>>>
+>>> There is a bug in 3.18 that is triggered when an O(3) memory
+>>> allocation fails. There is a patch to fix this at
+>>> http://marc.info/?l=linux-netdev&m=141999680927473&w=2 that has been
+>>> merged into wireless-drivers as commit
+>>> e9538cf4f90713eca71b1d6a74b4eae1d445c664. It will be applied to 3.18.X
+>>> when it makes it into mainline 3.19-rcY, but that has not yet happened.
+>>>
+>>> You could manually apply that patch to your kernel source, or you
+>>> could pull the git repo at http://github.com/lwfinger/rtlwifi_new.git.
+>>> That code has this patch already applied.
+>>>
+>>> If this patch does not fix the problem, you might be able to capture
+>>> at least part of the backtrace by starting the transfer and then
+>>> switching to the logging console. When a crash happens, photograph the
+>>> screen. On my system, I display it with CTRL-ALT-F10. I return to the
+>>> normal graphical console with CTRL-ALT-F7, but your distro may use
+>>> different virtual consoles.
+>>>
+>>> Larry
+>>>
+>>>
+>> Thanks for your help, it seems that your patch solves the problem. Now,
+>> the system doesn't crash anymore after copying the same large file than
+>> yesterday. I also see this message in the log:
+>> rtl_pci: Allocation of new skb failed in _rtl_pci_rx_interrupt which is
+>> added by your patch.
+>> Should I worry about this failure ? Or is it expected ?
+>
+> That is the positive proof that the new patch worked. Getting to that
+> condition without the patch would have crashed the system. That printk
+> is there to see if we were actually getting the condition and
+> recovering. As the code is obviously working now, that line will be
+> removed soon.
+>
+> Thanks,
+>
+> Larry
+>
+Do you still intend to remove the line about allocation failure in the
+log ? I made a backup of my root partition compressed with pixz and that
+line appeared 1350 times. So I removed the code which add this line. Is
+it really expected that it occurs so often ? pixz use multithreading to
+compress files and therefore at least 3 of the 4 CPU are used during
+around 20 minutes, but are you sure there is no other problems ?
 
-* Remove unnecessary comments.
-* Remove unused macros.
-* Indent the macros.
+Thanks for your help,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/reg_wow.h | 68 +++++++-------------------------
- 1 file changed, 15 insertions(+), 53 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/reg_wow.h b/drivers/net/wireless/ath/ath9k/reg_wow.h
-index 780553a..e6de4a3 100644
---- a/drivers/net/wireless/ath/ath9k/reg_wow.h
-+++ b/drivers/net/wireless/ath/ath9k/reg_wow.h
-@@ -25,10 +25,8 @@
- #define AR_WOW_KEEP_ALIVE               0x827c
- #define AR_WOW_KEEP_ALIVE_DELAY         0x8288
- #define AR_WOW_PATTERN_MATCH            0x828c
--
- #define AR_WOW_LENGTH1                  0x8360
- #define AR_WOW_LENGTH2                  0X8364
--/* register to enable match for less than 256 bytes packets */
- #define AR_WOW_PATTERN_MATCH_LT_256B    0x8368
- 
- #define AR_SW_WOW_CONTROL               0x20018
-@@ -40,7 +38,6 @@
- #define AR_CLR_MAC_INTERRUPT            0x20
- #define AR_CLR_KA_INTERRUPT             0x40
- 
--/* AR_WOW_PATTERN register values */
- #define AR_WOW_BACK_OFF_SHIFT(x)        ((x & 0xf) << 28) /* in usecs */
- #define AR_WOW_MAC_INTR_EN              0x00040000
- #define AR_WOW_MAGIC_EN                 0x00010000
-@@ -63,69 +60,34 @@
-                                                AR_WOW_BEACON_FAIL |	\
-                                                AR_WOW_KEEP_ALIVE_FAIL))
- 
--/* AR_WOW_COUNT register values */
- #define AR_WOW_AIFS_CNT(x)              (x & 0xff)
- #define AR_WOW_SLOT_CNT(x)              ((x & 0xff) << 8)
- #define AR_WOW_KEEP_ALIVE_CNT(x)        ((x & 0xff) << 16)
- 
--/* AR_WOW_BCN_EN register */
- #define AR_WOW_BEACON_FAIL_EN           0x00000001
--
--/* AR_WOW_BCN_TIMO rgister */
--#define AR_WOW_BEACON_TIMO              0x40000000 /* valid if BCN_EN is set */
--
--/* AR_WOW_KEEP_ALIVE_TIMO register */
--#define AR_WOW_KEEP_ALIVE_TIMO_VALUE
-+#define AR_WOW_BEACON_TIMO              0x40000000
- #define AR_WOW_KEEP_ALIVE_NEVER         0xffffffff
--
--/* AR_WOW_KEEP_ALIVE register  */
- #define AR_WOW_KEEP_ALIVE_AUTO_DIS      0x00000001
- #define AR_WOW_KEEP_ALIVE_FAIL_DIS      0x00000002
--
--/* AR_WOW_KEEP_ALIVE_DELAY register */
- #define AR_WOW_KEEP_ALIVE_DELAY_VALUE   0x000003e8 /* 1 msec */
--
--
--/*
-- * keep it long for beacon workaround - ensure no false alarm
-- */
- #define AR_WOW_BMISSTHRESHOLD           0x20
--
--/* AR_WOW_PATTERN_MATCH register */
- #define AR_WOW_PAT_END_OF_PKT(x)        (x & 0xf)
- #define AR_WOW_PAT_OFF_MATCH(x)         ((x & 0xf) << 8)
--
--/*
-- * default values for Wow Configuration for backoff, aifs, slot, keep-alive
-- * to be programmed into various registers.
-- */
--#define AR_WOW_PAT_BACKOFF      0x00000004 /* AR_WOW_PATTERN_REG */
--#define AR_WOW_CNT_AIFS_CNT     0x00000022 /* AR_WOW_COUNT_REG */
--#define AR_WOW_CNT_SLOT_CNT     0x00000009 /* AR_WOW_COUNT_REG */
--/*
-- * Keepalive count applicable for AR9280 2.0 and above.
-- */
--#define AR_WOW_CNT_KA_CNT 0x00000008    /* AR_WOW_COUNT register */
--
--/* WoW - Transmit buffer for keep alive frames */
--#define AR_WOW_TRANSMIT_BUFFER  0xe000 /* E000 - EFFC */
--
--#define AR_WOW_TXBUF(i)         (AR_WOW_TRANSMIT_BUFFER + ((i) << 2))
--
--#define AR_WOW_KA_DESC_WORD2    0xe000
--
--#define AR_WOW_KA_DATA_WORD0    0xe030
--
--/* WoW Transmit Buffer for patterns */
--#define AR_WOW_TB_PATTERN(i)    (0xe100 + (i << 8))
--#define AR_WOW_TB_MASK(i)       (0xec00 + (i << 5))
--
--/* Currently Pattern 0-7 are supported - so bit 0-7 are set */
-+#define AR_WOW_PAT_BACKOFF              0x00000004
-+#define AR_WOW_CNT_AIFS_CNT             0x00000022
-+#define AR_WOW_CNT_SLOT_CNT             0x00000009
-+#define AR_WOW_CNT_KA_CNT               0x00000008
-+
-+#define AR_WOW_TRANSMIT_BUFFER          0xe000
-+#define AR_WOW_TXBUF(i)                 (AR_WOW_TRANSMIT_BUFFER + ((i) << 2))
-+#define AR_WOW_KA_DESC_WORD2            0xe000
-+#define AR_WOW_TB_PATTERN(i)            (0xe100 + (i << 8))
-+#define AR_WOW_TB_MASK(i)               (0xec00 + (i << 5))
- #define AR_WOW_PATTERN_SUPPORTED        0xff
- #define AR_WOW_LENGTH_MAX               0xff
--#define AR_WOW_LEN1_SHIFT(_i)   ((0x3 - ((_i) & 0x3)) << 0x3)
--#define AR_WOW_LENGTH1_MASK(_i) (AR_WOW_LENGTH_MAX << AR_WOW_LEN1_SHIFT(_i))
--#define AR_WOW_LEN2_SHIFT(_i)   ((0x7 - ((_i) & 0x7)) << 0x3)
--#define AR_WOW_LENGTH2_MASK(_i) (AR_WOW_LENGTH_MAX << AR_WOW_LEN2_SHIFT(_i))
-+#define AR_WOW_LEN1_SHIFT(_i)           ((0x3 - ((_i) & 0x3)) << 0x3)
-+#define AR_WOW_LENGTH1_MASK(_i)         (AR_WOW_LENGTH_MAX << AR_WOW_LEN1_SHIFT(_i))
-+#define AR_WOW_LEN2_SHIFT(_i)           ((0x7 - ((_i) & 0x7)) << 0x3)
-+#define AR_WOW_LENGTH2_MASK(_i)         (AR_WOW_LENGTH_MAX << AR_WOW_LEN2_SHIFT(_i))
- 
- #endif /* REG_WOW_H */
--- 
-2.2.2
-
+François Valenduc
