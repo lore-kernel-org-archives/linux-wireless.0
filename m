@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:59581 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbbASNNj (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:35828 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887AbbAKJVM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 08:13:39 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so15489599wiv.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 05:13:33 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix nullfunc workaround
-Date: Mon, 19 Jan 2015 14:12:57 +0100
-Message-Id: <1421673177-2245-1-git-send-email-michal.kazior@tieto.com> (sfid-20150119_141343_030936_2948DC52)
+	Sun, 11 Jan 2015 04:21:12 -0500
+Received: by mail-pa0-f50.google.com with SMTP id bj1so26723774pad.9
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 01:21:11 -0800 (PST)
+From: Hong Xu <hong@topbug.net>
+To: linux-wireless@vger.kernel.org
+Cc: Hong Xu <hong@topbug.net>
+Subject: [PATCH] ath9k_htc: Add a module parameter to disable blink
+Date: Sun, 11 Jan 2015 01:20:29 -0800
+Message-Id: <1420968029-1222-1-git-send-email-hong@topbug.net> (sfid-20150111_102126_177139_F21BCD5F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The workaround couldn't work correctly because the
-802.11 header wasn't properly stripped of QoS Data
-bit so it wasn't recognized in the later parts of
-tx path as NullFunc frame and ended up in HTT Tx
-instead of HTT Mgmt Tx.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Add an option "blink" to enable or disable the LED blink. The default
+value is set to 1 so that existing users would not experience any
+unexpected changes.
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath9k/htc.h          | 1 +
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 4 ++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++++
+ 3 files changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9524bc5..82c567d 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2145,6 +2145,7 @@ static void ath10k_tx_h_nwifi(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	 * used only for CQM purposes (e.g. hostapd station keepalive ping) so
- 	 * it is safe to downgrade to NullFunc.
- 	 */
-+	hdr = (void *)skb->data;
- 	if (ieee80211_is_qos_nullfunc(hdr->frame_control)) {
- 		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
- 		cb->htt.tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 9dde265..5697097 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -44,6 +44,7 @@
+ 
+ extern struct ieee80211_ops ath9k_htc_ops;
+ extern int htc_modparam_nohwcrypt;
++extern int led_blink;
+ 
+ enum htc_phymode {
+ 	HTC_MODE_11NA		= 0,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 50f74a2..998b558 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -279,6 +279,10 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
+ 	else
+ 		priv->ah->led_pin = ATH_LED_PIN_DEF;
+ 
++	if (!led_blink)
++		priv->led_cdev.default_trigger =
++			ieee80211_get_radio_led_name(priv->hw);
++
+ 	ath9k_configure_leds(priv);
+ 
+ 	snprintf(priv->led_name, sizeof(priv->led_name),
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index e8fa944..c762d84 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -38,6 +38,10 @@ static int ath9k_ps_enable;
+ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+ MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+ 
++int led_blink = 1;
++module_param_named(blink, led_blink, int, 0444);
++MODULE_PARM_DESC(blink, "Enable LED blink on activity");
++
+ #ifdef CONFIG_MAC80211_LEDS
+ static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
+ 	{ .throughput = 0 * 1024, .blink_time = 334 },
 -- 
-1.8.5.3
+2.2.1
 
