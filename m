@@ -1,110 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:40254 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751511AbbAEKsP (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:57365 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbAKKWu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 05:48:15 -0500
-Message-ID: <54AA6BEB.9060207@broadcom.com> (sfid-20150105_114838_679272_B6431A87)
-Date: Mon, 5 Jan 2015 11:48:11 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Sun, 11 Jan 2015 05:22:50 -0500
 MIME-Version: 1.0
-To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-CC: <brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
-	<meuleman@broadcom.com>, <kvalo@codeaurora.org>,
-	<linville@tuxdriver.com>, <pieterpg@broadcom.com>,
-	<hdegoede@redhat.com>, <wens@csie.org>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
-References: <54A3B1B4.7090705@linux.intel.com> <54A3C837.6040400@broadcom.com> <54A9F82D.9030003@linux.intel.com>
-In-Reply-To: <54A9F82D.9030003@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <87vbkfga32.fsf@kamboji.qca.qualcomm.com>
+References: <1420394427-19509-1-git-send-email-me@mortis.eu>
+	<1420659525-22975-1-git-send-email-me@mortis.eu>
+	<1420659525-22975-2-git-send-email-me@mortis.eu>
+	<87vbkfga32.fsf@kamboji.qca.qualcomm.com>
+Date: Sun, 11 Jan 2015 12:22:49 +0200
+Message-ID: <CAB3XZEcm4+=dYC-8_m_7YRdET_wPkWUYHcDuy9mCKdxkCFEnQA@mail.gmail.com> (sfid-20150111_112255_443189_BE2AE950)
+Subject: Re: [PATCH RESEND 2/2] wlcore: align member-assigns in a
+ structure-copy block
+From: Eliad Peller <eliad@wizery.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Giel van Schijndel <me@mortis.eu>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/15 03:34, Fu, Zhonghui wrote:
-> Hi Arend,
+On Fri, Jan 9, 2015 at 7:03 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Giel van Schijndel <me@mortis.eu> writes:
 >
-> Where to find your patch for this?
-
-Well, we did not submit it. Hence my "Acked-by:" to your patch below.
-
-Regards,
-Arend
-
->
-> Thanks,
-> Zhonghui
->
-> On 2014/12/31 17:56, Arend van Spriel wrote:
->> On 12/31/14 09:20, Fu, Zhonghui wrote:
->>>    From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
->>> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
->>> Date: Mon, 29 Dec 2014 21:25:31 +0800
->>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
->>>
->>> WiFi chip has 2 SDIO functions, and PM core will trigger
->>> twice suspend/resume operations for one WiFi chip to do
->>> the same things. This patch avoid this case.
+>> This highlights the differences (e.g. the bug fixed in the previous
+>> commit).
 >>
->> We have a patch queued up for this as well, but this one looks good enough although I personally prefer container_of() instead of dev_to_sdio_func().
+>> Signed-off-by: Giel van Schijndel <me@mortis.eu>
+>> ---
+>>  drivers/net/wireless/ti/wlcore/acx.c | 22 +++++++++++-----------
+>>  1 file changed, 11 insertions(+), 11 deletions(-)
 >>
->> Acked-by: Arend van Spriel<arend@broadcom.com>
->>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
->>> ---
->>>    drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
->>>    1 files changed, 17 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> index 3c06e93..eee7818 100644
->>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> @@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
->>>    static int brcmf_ops_sdio_suspend(struct device *dev)
->>>    {
->>>        struct brcmf_bus *bus_if = dev_get_drvdata(dev);
->>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
->>> +    struct brcmf_sdio_dev *sdiodev;
->>>        mmc_pm_flag_t sdio_flags;
->>> +    struct sdio_func *func = dev_to_sdio_func(dev);
->>>
->>>        brcmf_dbg(SDIO, "Enter\n");
->>>
->>> +    if (func->num == 2) {
->>> +        return 0;
->>> +    }
->>> +
->>> +    sdiodev = bus_if->bus_priv.sdio;
->>> +
->>>        atomic_set(&sdiodev->suspend, true);
->>>
->>>        if (sdiodev->wowl_enabled) {
->>> @@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
->>>    static int brcmf_ops_sdio_resume(struct device *dev)
->>>    {
->>>        struct brcmf_bus *bus_if = dev_get_drvdata(dev);
->>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
->>> +    struct brcmf_sdio_dev *sdiodev;
->>> +    struct sdio_func *func = dev_to_sdio_func(dev);
->>>
->>>        brcmf_dbg(SDIO, "Enter\n");
->>> +
->>> +    if (func->num == 2) {
->>> +        return 0;
->>> +    }
->>> +
->>> +    sdiodev = bus_if->bus_priv.sdio;
->>> +
->>>        if (sdiodev->pdata->oob_irq_supported)
->>>            disable_irq_wake(sdiodev->pdata->oob_irq_nr);
->>>        brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
->>> -- 1.7.1
->>>
+>> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+>> index f28fa3b..93a2fa8 100644
+>> --- a/drivers/net/wireless/ti/wlcore/acx.c
+>> +++ b/drivers/net/wireless/ti/wlcore/acx.c
+>> @@ -1715,17 +1715,17 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
+>>               goto out;
+>>       }
 >>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> -     acx->recover_time = cpu_to_le32(conf->recover_time);
+>> -     acx->hangover_period = conf->hangover_period;
+>> -     acx->dynamic_mode = conf->dynamic_mode;
+>> -     acx->early_termination_mode = conf->early_termination_mode;
+>> -     acx->max_period = conf->max_period;
+>> -     acx->min_period = conf->min_period;
+>> -     acx->increase_delta = conf->increase_delta;
+>> -     acx->decrease_delta = conf->decrease_delta;
+>> -     acx->quiet_time = conf->quiet_time;
+>> -     acx->increase_time = conf->increase_time;
+>> -     acx->window_size = conf->window_size;
+>> +     acx->recover_time               = cpu_to_le32(conf->recover_time);
+>> +     acx->hangover_period            = conf->hangover_period;
+>> +     acx->dynamic_mode               = conf->dynamic_mode;
+>> +     acx->early_termination_mode     = conf->early_termination_mode;
+>> +     acx->max_period                 = conf->max_period;
+>> +     acx->min_period                 = conf->min_period;
+>> +     acx->increase_delta             = conf->increase_delta;
+>> +     acx->decrease_delta             = conf->decrease_delta;
+>> +     acx->quiet_time                 = conf->quiet_time;
+>> +     acx->increase_time              = conf->increase_time;
+>> +     acx->window_size                = conf->window_size;
 >
+> I would like to get an ACK from one of the wlcore developers if I should
+> apply this (or not).
+>
+I don't have a strong opinion here.
+However, it looks pretty much redundant to take a random blob (which
+was just fixed by a correct patch) and re-indent it.
+The rest of the file doesn't follow this style, so i don't see a good
+reason to apply it here.
 
+I agree such indentation have some benefit, but it won't help with the
+more common use case (of copy-paste error) of copying the wrong field
+(i.e. D->a = S->b instead of D->a = S->a).
+For these cases the macros suggested by Arend and Johannes will do the
+trick. However i usually dislike such macros, as they tend to break
+some IDE features (e.g. auto completion).
+Maybe we can come up with some nice spatch to catch these cases.
+
+Just my 2c.
+
+Eliad.
