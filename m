@@ -1,137 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:45339 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762233AbbA3PSk (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60674 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbbAKKKi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 10:18:40 -0500
-Message-ID: <54CBA0CE.8030800@lwfinger.net> (sfid-20150130_161850_204616_D94D232A)
-Date: Fri, 30 Jan 2015 09:18:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 11 Jan 2015 05:10:38 -0500
+Message-ID: <54B24B42.30700@qti.qualcomm.com> (sfid-20150111_111059_354310_F027A5CE)
+Date: Sun, 11 Jan 2015 15:36:58 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-To: Marcel Holtmann <marcel@holtmann.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-	netdev@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: [PATCH V2 5/6] rtlwifi: btcoexist: Add routines for RTL8812AE
- kernel socket communications
-References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net> <1422304934-9239-6-git-send-email-Larry.Finger@lwfinger.net> <87h9v8zkuh.fsf@kamboji.qca.qualcomm.com> <EC423C22-AEA0-4232-A452-7A131C41780A@holtmann.org>
-In-Reply-To: <EC423C22-AEA0-4232-A452-7A131C41780A@holtmann.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Ben Greear <greearb@candelatech.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH RESEND] ath10k: Fix potential Rx ring corruption
+References: <1420823986-29503-1-git-send-email-vthiagar@qti.qualcomm.com> <54B07420.8090600@candelatech.com>,<54B17716.40609@candelatech.com> <1420969591846.36256@qti.qualcomm.com>
+In-Reply-To: <1420969591846.36256@qti.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2015 03:57 AM, Marcel Holtmann wrote:
 
-Marcel,
 
-> Hi Kalle,
+
+> Well, problem is not solved after all.  Had total of 5 crashes on overnight run, must have
+> all been before midnight, because that is the earliest logs I see (journald was not configured
+> to use enough space...fixed for next time) and no crashes since then.
+
+Not sure about the crash you are originally seeing. This commit fixes rx ring buffer corruption,
+this could make some difference in buffer corruption in copy engine 1.
+
 >
->> I'm adding bluetooth list to the discussion. Full patch is available
->> here:
+> Still, it is at least no worse.
+>
+> I wonder if similar wb() is needed in the firmware somewhere?
+
+Unlikely, there will be enough time for host to see the updated index and
+rx buffer after fw updates them while sending htt rx indication. Host accesses
+them only when processing the htt message.
+
+Vasanth
+
+>
+> Thanks,
+> Ben
+>
+> On 01/09/2015 04:36 PM, Ben Greear wrote:
+>> I added this to my tree (and a bunch more debug stuff to track
+>> CE transport-ids), and I've done about 4500 station reconnects over
+>> the last 2 hours and no tx-credits hang issue so far.
 >>
->> https://patchwork.kernel.org/patch/5712591/
+>> Could be my debugging code or that I'm getting lucky, but I'm hopeful
+>> that your patch actually fixed the problem I was seeing!
 >>
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>> Thanks,
+>> Ben
 >>
->>> From: Troy Tan <troy_tan@realsil.com.cn>
+>>
+>> On 01/09/2015 09:19 AM, Vasanthakumar Thiagarajan wrote:
+>>> When replenishing Rx buffers driver updates the address of the
+>>> buffer and the index of rx buffer in rx ring to the firmware.
+>>> Change in order by CPU can cause rx ring corruption. Add memory
+>>> barrier before updating rx buffer index to guarantee the order.
 >>>
->>> This patch adds the routines used to communicate between the RTL8812AE (wifi)
->>> device and the RTL8761AU (bluetooth) device that are part of the same chip.
->>> Unlike other similar dual-function devices, this chip does not contain special
->>> hardware that lets the firmware pass coexistence info from one part to the
->>> other. As a result, this driver implements such communication as a kernel
->>> socket.
+>>> This could fix some instances of rx ring corruption due to done
+>>> bit in rx attention flag not set.
 >>>
->>> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 >>> ---
->>> V2 - Add comments explaining the routine that sends a message via the
->>> socket.
+>>>    drivers/net/wireless/ath/ath10k/htt_rx.c |    5 +++++
+>>>    1 file changed, 5 insertions(+)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>> index 9c782a4..baa1c44 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>>> @@ -97,6 +97,11 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+>>>       }
+>>>
+>>>    fail:
+>>> +    /*
+>>> +     * Make sure the rx buffer is updated before available buffer
+>>> +     * index to avoid any potential rx ring corruption.
+>>> +     */
+>>> +    mb();
+>>>       *htt->rx_ring.alloc_idx.vaddr = __cpu_to_le32(idx);
+>>>       return ret;
+>>>    }
+>>>
 >>
->> The commit log is not still explaining that much about the actual
->> functionality, so I investigated on my own:
 >>
->>> +static u8 rtl_btcoex_create_kernel_socket(struct rtl_priv *rtlpriv,
->>> +					  u8 is_invite)
->>> +{
->>> +	struct bt_coex_info *pcoex_info = &rtlpriv->coex_info;
->>> +	s8 kernel_socket_err;
->>> +
->>> +	BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
->>> +		  "%s CONNECT_PORT %d\n", __func__, CONNECT_PORT);
->>> +
->>> +	if (!pcoex_info) {
->>> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL, "coex_info: NULL\n");
->>> +		return _FAIL;
->>> +	}
->>> +
->>> +	kernel_socket_err = sock_create(PF_INET, SOCK_DGRAM, 0,
->>> +					&pcoex_info->udpsock);
->>> +	BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
->>> +		  "binding socket, err = %d\n", kernel_socket_err);
->>> +
->>> +	if (kernel_socket_err < 0) {
->>> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
->>> +			  "Error during creation of socket error:%d\n",
->>> +			  kernel_socket_err);
->>> +		return _FAIL;
->>> +	}
->>> +	memset(&pcoex_info->sin, 0, sizeof(pcoex_info->sin));
->>> +	pcoex_info->sin.sin_family = AF_INET;
->>> +	pcoex_info->sin.sin_port = htons(CONNECT_PORT);
->>> +	pcoex_info->sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
->>> +
->>> +	memset(&pcoex_info->bt_addr, 0, sizeof(pcoex_info->bt_addr));
->>> +	pcoex_info->bt_addr.sin_family = AF_INET;
->>> +	pcoex_info->bt_addr.sin_port = htons(CONNECT_PORT_BT);
->>> +	pcoex_info->bt_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
->>> +
->>> +	pcoex_info->sk_store = NULL;
->>> +
->>> +	kernel_socket_err =
->>> +	   pcoex_info->udpsock->ops->bind(pcoex_info->udpsock,
->>> +					  (struct sockaddr *)&pcoex_info->sin,
->>> +					  sizeof(pcoex_info->sin));
->>> +	if (kernel_socket_err == 0) {
->>> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
->>> +			  "binding socket success\n");
->>> +		pcoex_info->udpsock->sk->sk_data_ready =
->>> +			rtl_btcoex_recvmsg_int;
->>> +		pcoex_info->sock_open |=  KERNEL_SOCKET_OK;
->>> +		pcoex_info->bt_attend = false;
->>> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
->>> +			  "WIFI sending attend_req\n");
->>> +		rtl_btcoex_sendmsgbysocket(rtlpriv, attend_req,
->>> +					   sizeof(attend_req), true);
->>> +		return _SUCCESS;
->>
->> So the wireless driver communicates with the bluetooth driver (which is
->> not in upstream) via a localhost UDP connection?
 >
-> I think the first order of business should be to get the Bluetooth driver upstream. Until that has happened this is all kinda pointless discussion.
-
-I agree with this; however, the last time I tried to submit a BT driver for 
-Realtek, I was told that this driver should use some (as yet included) feature. 
-I have watched the driver development, and if that feature was ever included, it 
-was in a form that I did not recognize. I'm sorry that this is vague, but this 
-happened a long time ago.
-
---snip--
-
->> I know there's a general need for something similar like this, but it
->> needs to properly discussed and designed.
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
 >
-> This is just insane. Clear NAK.
->
-> Two kernel modules will not use UDP ports over the loopback interface to communicate with each other.
-
-I will work on combining the latest BT drivers from Realtek with btusb to see if 
-I can achieve a patch that will both work with the Realtek hardware, and get 
-approval from the reviewers.
-
-What would be an approved method of communicating between two kernel modules? Is 
-there some example in the kernel that I could study?
-
-Larry
-
-
