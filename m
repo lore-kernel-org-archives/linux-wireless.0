@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:48823 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752397AbbAXQvz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62466 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750971AbbALLmb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 11:51:55 -0500
-Received: by mail-ob0-f170.google.com with SMTP id wp4so2336765obc.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 08:51:54 -0800 (PST)
-Message-ID: <54C3CDA9.3060401@lwfinger.net> (sfid-20150124_175158_265481_BAE428E9)
-Date: Sat, 24 Jan 2015 10:51:53 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 12 Jan 2015 06:42:31 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 6/8] ath10k: add support to send addba request
+References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<1419407949-32367-7-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Mon, 12 Jan 2015 13:42:20 +0200
+In-Reply-To: <1419407949-32367-7-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Wed, 24 Dec 2014 13:29:07 +0530")
+Message-ID: <87387gfco3.fsf@kamboji.qca.qualcomm.com> (sfid-20150112_124235_032133_6173BF93)
 MIME-Version: 1.0
-To: Taehee Yoo <ap420073@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Set fw_ready flag
-References: <1422100540-6338-1-git-send-email-ap420073@gmail.com>
-In-Reply-To: <1422100540-6338-1-git-send-email-ap420073@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/24/2015 05:55 AM, Taehee Yoo wrote:
-> After rtl8192cu download firmware routine, set fw_ready flag.
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+
+> This per-station debugfs entry helps to send addba request in manual
+> mode. Need to pass two configuration parameters (tid, buffer size)
+> as input.
 >
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 3 +++
->   1 file changed, 3 insertions(+)
-
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Thanks,
-
-Larry
-
+> To send addba,
 >
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> index 5513217..2468850 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> @@ -1000,6 +1000,7 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
->   	local_save_flags(flags);
->   	local_irq_enable();
+> echo 1 32 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
+> 	   stations/XX:XX:XX:XX:XX:XX/addba
 >
-> +	rtlhal->fw_ready = false;
->   	rtlhal->hw_type = HARDWARE_TYPE_RTL8192CU;
->   	err = _rtl92cu_init_mac(hw);
->   	if (err) {
-> @@ -1013,6 +1014,8 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
->   		err = 1;
->   		goto exit;
->   	}
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+
+[...]
+
+> +	ret = sscanf(buf, "%u %u", &tid, &buf_size);
+> +	if (ret != 2) {
+> +		ath10k_warn(ar, "ex: echo <tid> <buffer size> >addba\n");
+> +		return -EINVAL;
+> +	}
 > +
-> +	rtlhal->fw_ready = true;
->   	rtlhal->last_hmeboxnum = 0; /* h2c */
->   	_rtl92cu_phy_param_tab_init(hw);
->   	rtl92cu_phy_mac_config(hw);
->
+> +	/* Valid TID values are 0 through 15 */
+> +	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
+> +		ath10k_warn(ar, "Invalid TID %u\n", tid);
+> +		return -EINVAL;
+> +	}
 
+It's preferred that the driver doesn't print anything based on wrong
+user input, so I removed these two warning messages:
+
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -97,16 +97,12 @@ static ssize_t ath10k_dbg_sta_write_addba(struct file *file,
+        buf[sizeof(buf) - 1] = '\0';
+ 
+        ret = sscanf(buf, "%u %u", &tid, &buf_size);
+-       if (ret != 2) {
+-               ath10k_warn(ar, "ex: echo <tid> <buffer size> >addba\n");
++       if (ret != 2)
+                return -EINVAL;
+-       }
+ 
+        /* Valid TID values are 0 through 15 */
+-       if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
+-               ath10k_warn(ar, "Invalid TID %u\n", tid);
++       if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2)
+                return -EINVAL;
+-       }
+ 
+        mutex_lock(&ar->conf_mutex);
+        if ((ar->state != ATH10K_STATE_ON) ||
+
+-- 
+Kalle Valo
