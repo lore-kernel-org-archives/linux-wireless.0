@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:64662 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753121AbbAFOFE (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:43765 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751204AbbALNKn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 09:05:04 -0500
-Received: by mail-wi0-f174.google.com with SMTP id h11so5407361wiw.13
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 06:05:03 -0800 (PST)
+	Mon, 12 Jan 2015 08:10:43 -0500
+Received: by mail-wg0-f51.google.com with SMTP id x12so19145153wgg.10
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 05:10:42 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1420552744.1966.31.camel@sipsolutions.net>
-References: <1420112563-3981-1-git-send-email-arik@wizery.com>
- <1420112563-3981-2-git-send-email-arik@wizery.com> <1420541766.1966.18.camel@sipsolutions.net>
- <1420552744.1966.31.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 6 Jan 2015 16:04:47 +0200
-Message-ID: <CA+XVXfcAW19fzEpAV8R=hDbBdXEgJmrT8m4mqFg8tUhdx1XvKQ@mail.gmail.com> (sfid-20150106_150510_381710_0C6B011B)
-Subject: Re: [PATCH 2/2] cfg80211: avoid reg-hints in self-managed only systems
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
+In-Reply-To: <87vbkccg3s.fsf@kamboji.qca.qualcomm.com>
+References: <1420716572-23826-1-git-send-email-michal.kazior@tieto.com>
+	<87vbkccg3s.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 12 Jan 2015 14:10:41 +0100
+Message-ID: <CA+BoTQk6W1+qi3PY4PjG209L+SZsFc6ktd=eQMKqhrSYpi2AUw@mail.gmail.com> (sfid-20150112_141046_498642_E0968CED)
+Subject: Re: [PATCH] ath10k: add additional fw build version to info print
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 6, 2015 at 3:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2015-01-06 at 11:56 +0100, Johannes Berg wrote:
->> On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
->> > When a system contains only self-managed regulatory devices all hints
->> > from the regulatory core are ignored. Stop hint processing early in this
->> > case. These systems usually don't have CRDA deployed, which results in
->> > endless (irrelevent) logs of the form:
->> > cfg80211: Calling CRDA to update world regulatory domain
->>
->> Applied.
+On 12 January 2015 at 13:56, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+[...]
+>>  void ath10k_print_driver_info(struct ath10k *ar)
+>>  {
+>> -     ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d\n",
+>> +     ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d build %u.%u.%u.%u\n",
+[...]
 >
-> I take that back - dropped again. This was causing spurious messages in
-> the hwsim test run VM, saying something like "couldn't set reg domain:
-> -7". Maybe at that point not a single wiphy existed?
+> So now we print two different firmware versions to the user? That's just
+> confusing. It's ok to print this build id in debug level, but not in
+> info level. From user's point of view we should have only one firmware
+> version.
 
-Interesting. I guess I should fix this to only drop the request in
-case there's at least one self-managed wiphy.
+I guess we shouldn't be printing htt version then too. Nevertheless I
+understand your concern.
 
-Arik
+
+> I would rather make sure that ATH10K_FW_IE_FW_VERSION always contains
+> the correct version string and then developers map whatever they need
+> from that string.
+
+Right. Let's drop this for now then.
+
+
+Michał
