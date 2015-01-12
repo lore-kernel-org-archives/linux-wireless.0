@@ -1,63 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:38791 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752317AbbA0Ljt (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:47057 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752008AbbALMUV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 06:39:49 -0500
-Received: by mail-ie0-f180.google.com with SMTP id rl12so14549157iec.11
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 03:39:49 -0800 (PST)
+	Mon, 12 Jan 2015 07:20:21 -0500
+Received: by mail-la0-f49.google.com with SMTP id hs14so23720818lab.8
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 04:20:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1422354271.1890.62.camel@sipsolutions.net>
-References: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1422348243-4928-3-git-send-email-janusz.dziedzic@tieto.com>
-	<1422354271.1890.62.camel@sipsolutions.net>
-Date: Tue, 27 Jan 2015 12:39:49 +0100
-Message-ID: <CALhHN=oGGR=6bq90DB3wEN4Sq7rCCXEZLFR8x0sxot2+3JE=Aw@mail.gmail.com> (sfid-20150127_123953_214609_50B5F96B)
-Subject: Re: [RFCv4 3/3] mac80211: add VHT support for IBSS
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <54B3B538.5010700@googlemail.com>
+References: <54B272F0.70307@googlemail.com>
+	<54B273E1.6030306@googlemail.com>
+	<CANUX_P2PiGUBaw89Rb2zSuy2x8=GJN=o6XgcasdVMtvoy6kmAQ@mail.gmail.com>
+	<54B2DBAF.7010208@googlemail.com>
+	<CANUX_P1Bdz4R2WUK53fx7r5CuvBmyBdqZWwR+Of=1mi7VncqZQ@mail.gmail.com>
+	<54B3B538.5010700@googlemail.com>
+Date: Mon, 12 Jan 2015 14:20:20 +0200
+Message-ID: <CANUX_P3012KuL8KvAvotVShuUqNXSgnW5g571xpGo1NGhmyNOg@mail.gmail.com> (sfid-20150112_132027_690098_2F09F0AF)
+Subject: Re: IWLWIFI - 3.18-stable
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Chris Clayton <chris2553@googlemail.com>
+Cc: kvalo@codeaurora.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 January 2015 at 11:24, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2015-01-27 at 09:44 +0100, Janusz Dziedzic wrote:
+> [snip]
 >
->> +u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
->> +                             const struct cfg80211_chan_def *chandef)
+>>>>
+>>>> The first one (c93edc639392df733c7d72db4376a9add775d18a) is tagged for stable.
+>>>
+>>> Ah, sorry I missed that.
+>>>
+>>>> Are you using bluetooth?
+>>>
+>>> Yes, I have a bluetooth mouse and use bluetooth for audio from time to time.
+>>>
+>>>> Are you able to tell me which of the two really helps?
+>>>
+>>> It's c93edc639392df733c7d72db4376a9add775d18a that helps. With that applied, I can set off a task which, in a loop,
+>>> continually copies a 180MB file from a server on my network. The network remained stable for over 30 minutes before I
+>>> killed the task. Without the patch, the network fails during the first iteration of copying the file.
+>>>
 >
->> +     /* 1 stream, MCS0-7 as a min Basic VHT MCS rates */
->> +     vht_oper->basic_mcs_set = cpu_to_le16(0xfffc);
+> Just by way of confirmation, I'm now running 3.19.0-rc4 with c93edc639392df733c7d72db4376a9add775d18a applied and my
+> network is stable. None of the other patches from iwlwifi-fixes that I was previously using are applied.
 >
-> Unless I'm mistaken in my reading of the spec, this will make any
-> well-behaved client (i.e. not mac80211) not join this network since it
-> supports VHT MCSes.
+> Thanks for your help.
 >
-> We seem to do the same for HT:
+>>> a9dc5060bf3a32ac3dad472f15416054b92dc5b5 doesn't seem to have any effect on the instability.
+>>
+>> Ok - I am not surprised - thanks.
+>> c93edc... allows to use 2 antennas instead of one only. Technically,
+>> one would be enough, but apparently, in your configuration, using 2
+>> antennas allows to improve reliability.
+>>
+>>>
+>>>
+>>>> Unless I am missing something, the first one
+>>>> (c93edc639392df733c7d72db4376a9add775d18a) should help only if you
+>>>> disabled power save. Is that the case?
+>>>
+>>> Not that I know of. The only power-related thing in my init scripts is echoing 5 to /proc/sys/vm/laptop_mode, which I
+>>> believe configures disk activity to save power. The mouse does have a power saving feature, however. According to the
+>>> manual, it reduces its power consumption in steps the longer it is inactive. As I frequently work in kde's konsole
+>>> terminal application, mouse inactivity is common.
+>>>
+>>> Hope this helps and feel free to request additional information.
+>>
+>> Ok - I checked the code and we enable the redundancy mentioned above
+>> (2 antenna instead of 1) even if power save is enabled.
+>> FWIW - this redundancy is also called "diversity".
 >
->         /* It seems that Basic MCS set and Supported MCS set
->            are identical for the first 10 bytes */
->         memset(&ht_oper->basic_set, 0, 16);
->         memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
->
-> but I'm not convinced it's right. It probably only works because nobody
-> ever tested against a well-behaved non-HT client? Or perhaps there isn't
-> even one?
->
-for HT (spec, 20.3.5) - MCS0 .. MSC7 are mandatory - but this is for
-all stations (not sure about ibss)
-for VHT (22.5, table 22-30) - MCS0...MCS7 are mandatory for nss=1 (20,40,80)
-Seems such set is secure?
+> <Smile>. Over 30 years working in the IT industry tells me that is a trick vendors have been using for a long time in
+> order to try and confuse customers into buying something they've already got! :-)
+>>
 
-If I understand correctly case you describe with non-HT client:
-non-HT client should not understand HT ies, and HT-only client should
-not understand VHT ies?
-
-> I for one am not really comfortable with this restriction - there's very
-> little point in making such a restriction in IBSS since if you have it
-> then the other node will just form its own network on the same channel
-> and you've won nothing - only lost interoperability.
->
-> johannes
->
+Oh - we do that all the time, but this is something else :)
+It is not very easy to take the good system decision: have the
+antennas on all the time and you'll waste power, switch off antennas
+and you will lose link quality.
+The best would be to make it depend on the network as a whole. This is
+what 11k is supposed to solve, but we don't really implement this.
