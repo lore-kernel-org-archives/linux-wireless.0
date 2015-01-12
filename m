@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:48302 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756437AbbAWTQ6 convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34833 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753800AbbALTsq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 14:16:58 -0500
-Received: by mail-la0-f50.google.com with SMTP id hs14so2659953lab.9
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 11:16:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87h9vhl743.fsf@kamboji.qca.qualcomm.com>
-References: <1421435929-21499-1-git-send-email-zajec5@gmail.com>
-	<1421438379-26211-1-git-send-email-zajec5@gmail.com>
-	<87h9vhl743.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 23 Jan 2015 20:16:56 +0100
-Message-ID: <CACna6ryPpezpP2YUAC02omReuMHagAT2G9rEwh_NYpaOQK8uJA@mail.gmail.com> (sfid-20150123_201710_475466_DC1DC3DE)
-Subject: Re: [PATCH V2] bcma: clean bus initialization code
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 12 Jan 2015 14:48:46 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 4/8] ath10k:  make dbglog debug messages be 'warn' level.
+Date: Mon, 12 Jan 2015 10:32:40 -0800
+Message-Id: <1421087564-10384-4-git-send-email-greearb@candelatech.com> (sfid-20150112_204857_634089_CD881797)
+In-Reply-To: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
+References: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 January 2015 at 18:49, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
->
->> This moves main bus init code to the main.c and renames old function to
->> make its purpose clear.
->> Thanks to this change we'll also be able to separate scanning from
->> registration (and support PCIe Gen 2 devices) in the future.
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->> V2: Fix typo (s/initialiation/initialization/)
->>     Put bcma_detect_chip earlier in .h to match order in .c
->
-> Thanks, applied to wireless-drivers-next.git. But to avoid any UTF-8
-> problems I applied this one manually from email. 'git log' and gitk look
-> good to me, but please do check still that the log is valid.
+From: Ben Greear <greearb@candelatech.com>
 
-Looks great, thanks.
+This only happens on firmware crash, and it appears this
+logic is not always perfect, so make sure the information
+is printed to logs at higher level.
 
-I hope kernel.org team will upgrade patchwork soon so I can send more patches :|
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 0f7e845..dee0d5a 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1132,9 +1132,8 @@ static void ath10k_pci_dump_dbglog(struct ath10k *ar)
+ 		return;
+ 	}
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_PCI,
+-		   "debug log header, dbuf: 0x%x  dropped: %i\n",
+-		   le32_to_cpu(dbg_hdr.dbuf), le32_to_cpu(dbg_hdr.dropped));
++	ath10k_warn(ar, "debug log header, dbuf: 0x%x  dropped: %i\n",
++		    le32_to_cpu(dbg_hdr.dbuf), le32_to_cpu(dbg_hdr.dropped));
+ 	dbufp = le32_to_cpu(dbg_hdr.dbuf);
+ 
+ 	/* i is for logging purposes and sanity check in case firmware buffers
+@@ -1154,11 +1153,10 @@ static void ath10k_pci_dump_dbglog(struct ath10k *ar)
+ 
+ 		len = le32_to_cpu(dbuf.length);
+ 
+-		ath10k_dbg(ar, ATH10K_DBG_PCI,
+-			   "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
+-			   i, le32_to_cpu(dbuf.next), le32_to_cpu(dbuf.buffer),
+-			   le32_to_cpu(dbuf.bufsize), len,
+-			   le32_to_cpu(dbuf.count), le32_to_cpu(dbuf.free));
++		ath10k_warn(ar, "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
++			    i, le32_to_cpu(dbuf.next), le32_to_cpu(dbuf.buffer),
++			    le32_to_cpu(dbuf.bufsize), len,
++			    le32_to_cpu(dbuf.count), le32_to_cpu(dbuf.free));
+ 		if (dbuf.buffer == 0 || len == 0)
+ 			goto next;
+ 
 -- 
-Rafał
+1.7.11.7
+
