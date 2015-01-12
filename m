@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42146 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353AbbAPMWg (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:59247 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752311AbbALLyx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 07:22:36 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 0/8] ath10k: add multi-channel support
-References: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 16 Jan 2015 14:22:28 +0200
-In-Reply-To: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 9 Jan 2015 12:14:01 +0100")
-Message-ID: <877fwmnce3.fsf@kamboji.qca.qualcomm.com> (sfid-20150116_132241_521282_3547E0DD)
+	Mon, 12 Jan 2015 06:54:53 -0500
+Received: by mail-wg0-f43.google.com with SMTP id k14so18794054wgh.2
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 03:54:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <5492CFF5.9060107@open-mesh.com>
+References: <5492CFF5.9060107@open-mesh.com>
+Date: Mon, 12 Jan 2015 12:54:52 +0100
+Message-ID: <CA+BoTQm1H9jAszUH_gQCjcEk-GCQG0r9r7Jb2VdpM1CQF7jXeg@mail.gmail.com> (sfid-20150112_125501_327665_F9F185F7)
+Subject: Re: ath10k: fw_stats not reporting peer_stats with 10.2
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Antonio Quartulli <antonio@open-mesh.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 18 December 2014 at 14:00, Antonio Quartulli <antonio@open-mesh.com> wrote:
+> Hello,
 
-> New wmi-tlv firmware and new hardware will support
-> multi-channel operation.
->
-> This prepares the driver by implementing chanctx,
-> improves tx queue locking and introduces initial
-> interface combinations.
->
-> I'm posting this as an RFC first because I'd like
-> to get some early feedback (if possible) while I
-> upstream other patches this patchset is basing on.
->
->
-> Michal Kazior (8):
->   ath10k: defer AP self-peer removal wait
->   ath10k: allow empty ssid vdev config
->   ath10k: implement chanctx API
->   ath10k: implement adaptive qcs command
->   ath10k: protect ar->arvifs linking with data_lock
->   ath10k: rework tx queue locking
->   ath10k: implement tx pause wmi event
->   ath10k: add proper wmi-tlv combinations
+Hi,
 
->From a quick review looks good to me. Sorry for taking so long with
-this.
+Sorry for the late reply.
 
--- 
-Kalle Valo
+
+> (line grabbed from dmesg at boot time)
+>
+> On my device I have configured 2 AP vifs and for each of them I would
+> like to read the last TX rate of the associated stations.
+>
+> As I've read on wireless.kernel.org this is not possible through the
+> standard nl/cfg80211 interface and therefore I have been trying to read
+> /sys/kernel/debug/ieee80211/phy1/ath10k/fw_stats  , but this file always
+> reports "ath10k PEER stats (0)" (no peers..).
+>
+> I tried printing some debug messages here and there and the only useful
+> information I got is that in "ath10k_wmi_10x_pull_fw_stats()" the value
+> of "ev->num_peer_stats" is always 0.
+>
+> Is this yet another fw limitation?
+
+Firmware stats has a very fragile ABI. Apparently 10.2 changed it
+again and thus is broken. I'll try to look into it more if time
+permits.
+
+
+> I also realized that upon station connection ath10k receives the
+> WMI_10_2_PEER_RATECODE_LIST_EVENTID event but it is not handled as no
+> handler is implemented. Might it be related with my problem ?
+
+No. That's not the problem.
+
+
+Michał
