@@ -1,78 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:59641 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754342AbbAFP6a (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:54568 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751969AbbALJ5T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:58:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 08/11 V2] rtlwifi: rtl8723ae: Convert driver to use common DM table initialization
-Date: Tue,  6 Jan 2015 09:58:09 -0600
-Message-Id: <1420559892-12384-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165904_356017_A3B53C8F)
-In-Reply-To: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 12 Jan 2015 04:57:19 -0500
+Received: by mail-we0-f178.google.com with SMTP id p10so18013615wes.9
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 01:57:18 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1421055751.1891.10.camel@sipsolutions.net>
+References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com>
+	<1411075535.2034.5.camel@jlt4.sipsolutions.net>
+	<20141014121627.GA5115@angus-think.lan>
+	<1413798437.10246.12.camel@jlt4.sipsolutions.net>
+	<128188DF-5A9B-47A5-8A89-974CF7CF9064@holtmann.org>
+	<1413802344.10246.20.camel@jlt4.sipsolutions.net>
+	<CAMw6YJKLWQmT-fqg1QLDHbCxnpxWyJUSX+wvOB_pFyE=8HfSfQ@mail.gmail.com>
+	<1420449724.1898.1.camel@sipsolutions.net>
+	<CAMw6YJJgPJw7jizR=Qe_2SOK=S0UKrm9AyE7MHUg1-wODEab2g@mail.gmail.com>
+	<1421055751.1891.10.camel@sipsolutions.net>
+Date: Mon, 12 Jan 2015 11:57:18 +0200
+Message-ID: <CAMw6YJJjt4W2JFnUunWgXKL+uUf87dn2LnNSWF6-o2VrXpqiHw@mail.gmail.com> (sfid-20150112_105723_207397_C834185E)
+Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device
+ via RTM_LINK
+From: Vadim Kochan <vadim4j@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert driver rtl8723ae to use common routine rtl_dm_diginit().
+Thank you! Seems reasonably for me.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+The question is not related to the thread:
+     May be this is not very good idea to copy behavior from other
+tools but what do you think about
+     add the same ability to use named network namespaces as it is
+done in iproute2 - from /var/run/netns ?
 
-V2 - unchanged from V1
----
+Thanks,
 
- drivers/net/wireless/rtlwifi/rtl8723ae/dm.c | 27 +--------------------------
- 1 file changed, 1 insertion(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-index 8bd124c..4c1c96c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/dm.c
-@@ -147,31 +147,6 @@ static const u8 cckswing_table_ch14[CCK_TABLE_SIZE][8] = {
- 	{0x09, 0x08, 0x07, 0x04, 0x00, 0x00, 0x00, 0x00}
- };
- 
--static void rtl8723e_dm_diginit(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
--
--	dm_digtable->dig_enable_flag = true;
--	dm_digtable->dig_ext_port_stage = DIG_EXT_PORT_STAGE_MAX;
--	dm_digtable->cur_igvalue = 0x20;
--	dm_digtable->pre_igvalue = 0x0;
--	dm_digtable->cursta_cstate = DIG_STA_DISCONNECT;
--	dm_digtable->presta_cstate = DIG_STA_DISCONNECT;
--	dm_digtable->curmultista_cstate = DIG_MULTISTA_DISCONNECT;
--	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
--	dm_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
--	dm_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
--	dm_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
--	dm_digtable->rx_gain_max = DM_DIG_MAX;
--	dm_digtable->rx_gain_min = DM_DIG_MIN;
--	dm_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
--	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
--	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
--	dm_digtable->pre_cck_pd_state = CCK_PD_STAGE_MAX;
--	dm_digtable->cur_cck_pd_state = CCK_PD_STAGE_MAX;
--}
--
- static u8 rtl8723e_dm_initial_gain_min_pwdb(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -819,7 +794,7 @@ void rtl8723e_dm_init(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
- 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
--	rtl8723e_dm_diginit(hw);
-+	rtl_dm_diginit(hw, 0x20);
- 	rtl8723_dm_init_dynamic_txpower(hw);
- 	rtl8723_dm_init_edca_turbo(hw);
- 	rtl8723e_dm_init_rate_adaptive_mask(hw);
--- 
-2.1.2
-
+On Mon, Jan 12, 2015 at 11:42 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2015-01-12 at 11:07 +0200, Vadim Kochan wrote:
+>
+>> Would you please explain why wireless devs related to the same phy
+>> can't live in separated network namespaces ?
+>
+> Well, they interact very deeply, for example the # of virtual interfaces
+> is often severely limited, and they often have to be using a single
+> channel, etc. It thus doesn't really make sense to try to separate them.
+>
+> Also, if you really want to use it reliably, you should use a single
+> hostapd or wpa_supplicant process controlling all virtual interfaces,
+> which clearly isn't possible in multiple network namespaces.
+>
+> johannes
+>
