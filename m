@@ -1,42 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:52834 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752850AbbAWI7i (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:55150 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103AbbALKBJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 03:59:38 -0500
-Received: by mail-pa0-f53.google.com with SMTP id kx10so4588770pab.12
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 00:59:37 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Larry.Finger@lwfinger.net, linville@tuxdriver.com,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] rtl8192cu: fix the mesh beaconing
-Date: Fri, 23 Jan 2015 16:59:24 +0800
-Message-Id: <1422003564-22414-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150123_095941_462681_1D88744E)
+	Mon, 12 Jan 2015 05:01:09 -0500
+Message-ID: <54B39B59.8000907@broadcom.com> (sfid-20150112_110131_416155_98FFAD88)
+Date: Mon, 12 Jan 2015 11:00:57 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+CC: <brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
+	<meuleman@broadcom.com>, <kvalo@codeaurora.org>,
+	<linville@tuxdriver.com>, <pieterpg@broadcom.com>,
+	<hdegoede@redhat.com>, <wens@csie.org>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54B36C88.3030609@linux.intel.com>
+In-Reply-To: <54B36C88.3030609@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch "rtlwifi: add support to send beacon frame" allows
-the beaconing of rtl8192cu. But mesh beaconing is not
-working. Fix this.
+On 01/12/15 07:41, Fu, Zhonghui wrote:
+>  From 8685c3c2746b4275fc808d9db23c364b2f54b52a Mon Sep 17 00:00:00 2001
+> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+> Date: Mon, 12 Jan 2015 14:25:46 +0800
+> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>
+> WiFi chip has 2 SDIO functions, and PM core will trigger
+> twice suspend/resume operations for one WiFi chip to do
+> the same things. This patch avoid this case.
+>
+> Acked-by: Arend van Spriel<arend@broadcom.com>
+> Acked-by: Sergei Shtylyov<sergei.shtylyov@cogentembedded.com>
+> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 1 +
- 1 file changed, 1 insertion(+)
+This patch needs to be rebased.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 5513217..e5a7c4f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1509,6 +1509,7 @@ void rtl92cu_set_beacon_related_registers(struct ieee80211_hw *hw)
- 	/* TODO: Modify later (Find the right parameters)
- 	 * NOTE: Fix test chip's bug (about contention windows's randomness) */
- 	if ((mac->opmode == NL80211_IFTYPE_ADHOC) ||
-+	    (mac->opmode == NL80211_IFTYPE_MESH_POINT) ||
- 	    (mac->opmode == NL80211_IFTYPE_AP)) {
- 		rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_CCK, 0x50);
- 		rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_OFDM, 0x50);
--- 
-2.2.2
+Kalle,
+
+Please drop this one.
+
+Regards,
+Arend
+
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   21 +++++++++++++++++----
+>   1 files changed, 17 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> index 9880dae..8f71485 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> @@ -1070,7 +1070,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>   	 */
+>   	if ((sdio_get_host_pm_caps(sdiodev->func[1])&  MMC_PM_KEEP_POWER)&&
+>   	((sdio_get_host_pm_caps(sdiodev->func[1])&  MMC_PM_WAKE_SDIO_IRQ) ||
+> -	     (sdiodev->pdata&&  sdiodev->pdata->oob_irq_supported)))
+> +	     (sdiodev->pdata->oob_irq_supported)))
+>   		bus_if->wowl_supported = true;
+>   #endif
+>
+> @@ -1139,11 +1139,17 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+>   static int brcmf_ops_sdio_suspend(struct device *dev)
+>   {
+>   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+> +	struct brcmf_sdio_dev *sdiodev;
+>   	mmc_pm_flag_t sdio_flags;
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>
+>   	brcmf_dbg(SDIO, "Enter\n");
+>
+> +	if (func->num == 2)
+> +		return 0;
+> +
+> +	sdiodev = bus_if->bus_priv.sdio;
+> +
+>   	atomic_set(&sdiodev->suspend, true);
+>
+>   	if (sdiodev->wowl_enabled) {
+> @@ -1164,10 +1170,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>   static int brcmf_ops_sdio_resume(struct device *dev)
+>   {
+>   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+> +	struct brcmf_sdio_dev *sdiodev;
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>
+>   	brcmf_dbg(SDIO, "Enter\n");
+> -	if (sdiodev->pdata&&  sdiodev->pdata->oob_irq_supported)
+> +
+> +	if (func->num == 2)
+> +		return 0;
+> +
+> +	sdiodev = bus_if->bus_priv.sdio;
+> +
+> +	if (sdiodev->pdata->oob_irq_supported)
+>   		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>   	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+>   	atomic_set(&sdiodev->suspend, false);
+> -- 1.7.1
+>
 
