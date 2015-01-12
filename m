@@ -1,614 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:55016 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751844AbbASSY7 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34818 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751582AbbALTsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 13:24:59 -0500
-Received: by mail-wg0-f52.google.com with SMTP id l2so11127023wgh.11
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 10:24:57 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+	Mon, 12 Jan 2015 14:48:45 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/6] staging: vt6655: remove antenna diversity functions
-Date: Mon, 19 Jan 2015 18:24:12 +0000
-Message-Id: <1421691855-2927-3-git-send-email-tvboxspy@gmail.com> (sfid-20150119_192508_769666_8C3F6314)
-In-Reply-To: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
-References: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 7/8] ath10k:  start using htt/pci/ce transfer_id properly.
+Date: Mon, 12 Jan 2015 10:32:43 -0800
+Message-Id: <1421087564-10384-7-git-send-email-greearb@candelatech.com> (sfid-20150112_204849_625515_13CAB049)
+In-Reply-To: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
+References: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The vendor had disabled these functions in their last version.
+From: Ben Greear <greearb@candelatech.com>
 
-On test this can be troublesome, so remove this from the driver along
-with its macros and timers.
+Upstream firmware may ingore, but someone hacking on firmware
+can use this (and similar instrumentation on the firmware side)
+to help determine what is happening when there are communication
+issues between firmware and host.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/staging/vt6655/baseband.c    | 340 -----------------------------------
- drivers/staging/vt6655/baseband.h    |  17 --
- drivers/staging/vt6655/device.h      |  23 ---
- drivers/staging/vt6655/device_main.c |  56 ------
- drivers/staging/vt6655/dpc.c         |   6 -
- 5 files changed, 442 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c     |  1 +
+ drivers/net/wireless/ath/ath10k/ce.h     |  7 +++++++
+ drivers/net/wireless/ath/ath10k/htc.c    |  2 +-
+ drivers/net/wireless/ath/ath10k/htc.h    |  1 +
+ drivers/net/wireless/ath/ath10k/htt.h    |  1 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  6 ++++--
+ drivers/net/wireless/ath/ath10k/pci.c    | 31 +++++++++++++++++++++++--------
+ 7 files changed, 38 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/staging/vt6655/baseband.c b/drivers/staging/vt6655/baseband.c
-index ecf7dac..565ba18 100644
---- a/drivers/staging/vt6655/baseband.c
-+++ b/drivers/staging/vt6655/baseband.c
-@@ -1699,46 +1699,6 @@ static const unsigned short awcFrameTime[MAX_RATE] = {
- 		10, 20, 55, 110, 24, 36, 48, 72, 96, 144, 192, 216
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index a156e6e..ecc6d0c 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -319,6 +319,7 @@ int ath10k_ce_send_nolock(struct ath10k_ce_pipe *ce_state,
+ 		ath10k_ce_src_ring_write_index_set(ar, ctrl_addr, write_index);
+ 
+ 	src_ring->write_index = write_index;
++	ce_state->last_tx_transfer_id = transfer_id;
+ exit:
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 617a151..f4919e9 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -120,6 +120,13 @@ struct ath10k_ce_pipe {
+ 	unsigned int src_sz_max;
+ 	struct ath10k_ce_ring *src_ring;
+ 	struct ath10k_ce_ring *dest_ring;
++
++	/* Some fields used for debugging */
++	unsigned int last_rx_transfer_id;
++	unsigned int last_ce_send_done_transfer_id;
++	unsigned int last_tx_transfer_id;
++	unsigned int last_bmi_send_done_transfer_id;
++	unsigned int last_bmi_recv_transfer_id;
  };
  
--/*---------------------  Static Functions  --------------------------*/
--
--static
--unsigned long
--s_ulGetRatio(struct vnt_private *priv);
--
--static
--void
--s_vChangeAntenna(
--	struct vnt_private *priv
--);
--
--static
--void
--s_vChangeAntenna(
--	struct vnt_private *priv
--)
--{
--	if (priv->dwRxAntennaSel == 0) {
--		priv->dwRxAntennaSel = 1;
--		if (priv->bTxRxAntInv == true)
--			BBvSetRxAntennaMode(priv, ANT_A);
--		else
--			BBvSetRxAntennaMode(priv, ANT_B);
--	} else {
--		priv->dwRxAntennaSel = 0;
--		if (priv->bTxRxAntInv == true)
--			BBvSetRxAntennaMode(priv, ANT_B);
--		else
--			BBvSetRxAntennaMode(priv, ANT_A);
--	}
--	if (priv->dwTxAntennaSel == 0) {
--		priv->dwTxAntennaSel = 1;
--		BBvSetTxAntennaMode(priv, ANT_B);
--	} else {
--		priv->dwTxAntennaSel = 0;
--		BBvSetTxAntennaMode(priv, ANT_A);
--	}
--}
--
- /*---------------------  Export Variables  --------------------------*/
- /*
-  * Description: Calculate data frame transmitting time
-@@ -2413,303 +2373,3 @@ BBvExitDeepSleep(struct vnt_private *priv, unsigned char byLocalID)
- 	BBbWriteEmbedded(priv, 0x0C, 0x00); /* CR12 */
- 	BBbWriteEmbedded(priv, 0x0D, 0x01); /* CR13 */
- }
--
--static
--unsigned long
--s_ulGetRatio(struct vnt_private *priv)
--{
--	unsigned long ulRatio = 0;
--	unsigned long ulMaxPacket;
--	unsigned long ulPacketNum;
--
--	/* This is a thousand-ratio */
--	ulMaxPacket = priv->uNumSQ3[RATE_54M];
--	if (priv->uNumSQ3[RATE_54M] != 0) {
--		ulPacketNum = priv->uNumSQ3[RATE_54M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_54M;
--	}
--	if (priv->uNumSQ3[RATE_48M] > ulMaxPacket) {
--		ulPacketNum = priv->uNumSQ3[RATE_54M] + priv->uNumSQ3[RATE_48M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_48M;
--		ulMaxPacket = priv->uNumSQ3[RATE_48M];
--	}
--	if (priv->uNumSQ3[RATE_36M] > ulMaxPacket) {
--		ulPacketNum = priv->uNumSQ3[RATE_54M] + priv->uNumSQ3[RATE_48M] +
--			priv->uNumSQ3[RATE_36M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_36M;
--		ulMaxPacket = priv->uNumSQ3[RATE_36M];
--	}
--	if (priv->uNumSQ3[RATE_24M] > ulMaxPacket) {
--		ulPacketNum = priv->uNumSQ3[RATE_54M] + priv->uNumSQ3[RATE_48M] +
--			priv->uNumSQ3[RATE_36M] + priv->uNumSQ3[RATE_24M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_24M;
--		ulMaxPacket = priv->uNumSQ3[RATE_24M];
--	}
--	if (priv->uNumSQ3[RATE_18M] > ulMaxPacket) {
--		ulPacketNum = priv->uNumSQ3[RATE_54M] + priv->uNumSQ3[RATE_48M] +
--			priv->uNumSQ3[RATE_36M] + priv->uNumSQ3[RATE_24M] +
--			priv->uNumSQ3[RATE_18M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_18M;
--		ulMaxPacket = priv->uNumSQ3[RATE_18M];
--	}
--	if (priv->uNumSQ3[RATE_12M] > ulMaxPacket) {
--		ulPacketNum = priv->uNumSQ3[RATE_54M] + priv->uNumSQ3[RATE_48M] +
--			priv->uNumSQ3[RATE_36M] + priv->uNumSQ3[RATE_24M] +
--			priv->uNumSQ3[RATE_18M] + priv->uNumSQ3[RATE_12M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_12M;
--		ulMaxPacket = priv->uNumSQ3[RATE_12M];
--	}
--	if (priv->uNumSQ3[RATE_11M] > ulMaxPacket) {
--		ulPacketNum = priv->uDiversityCnt - priv->uNumSQ3[RATE_1M] -
--			priv->uNumSQ3[RATE_2M] - priv->uNumSQ3[RATE_5M] -
--			priv->uNumSQ3[RATE_6M] - priv->uNumSQ3[RATE_9M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_11M;
--		ulMaxPacket = priv->uNumSQ3[RATE_11M];
--	}
--	if (priv->uNumSQ3[RATE_9M] > ulMaxPacket) {
--		ulPacketNum = priv->uDiversityCnt - priv->uNumSQ3[RATE_1M] -
--			priv->uNumSQ3[RATE_2M] - priv->uNumSQ3[RATE_5M] -
--			priv->uNumSQ3[RATE_6M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_9M;
--		ulMaxPacket = priv->uNumSQ3[RATE_9M];
--	}
--	if (priv->uNumSQ3[RATE_6M] > ulMaxPacket) {
--		ulPacketNum = priv->uDiversityCnt - priv->uNumSQ3[RATE_1M] -
--			priv->uNumSQ3[RATE_2M] - priv->uNumSQ3[RATE_5M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_6M;
--		ulMaxPacket = priv->uNumSQ3[RATE_6M];
--	}
--	if (priv->uNumSQ3[RATE_5M] > ulMaxPacket) {
--		ulPacketNum = priv->uDiversityCnt - priv->uNumSQ3[RATE_1M] -
--			priv->uNumSQ3[RATE_2M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_55M;
--		ulMaxPacket = priv->uNumSQ3[RATE_5M];
--	}
--	if (priv->uNumSQ3[RATE_2M] > ulMaxPacket) {
--		ulPacketNum = priv->uDiversityCnt - priv->uNumSQ3[RATE_1M];
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_2M;
--		ulMaxPacket = priv->uNumSQ3[RATE_2M];
--	}
--	if (priv->uNumSQ3[RATE_1M] > ulMaxPacket) {
--		ulPacketNum = priv->uDiversityCnt;
--		ulRatio = (ulPacketNum * 1000 / priv->uDiversityCnt);
--		ulRatio += TOP_RATE_1M;
--	}
--
--	return ulRatio;
--}
--
--void
--BBvClearAntDivSQ3Value(struct vnt_private *priv)
--{
--	unsigned int ii;
--
--	priv->uDiversityCnt = 0;
--	for (ii = 0; ii < MAX_RATE; ii++)
--		priv->uNumSQ3[ii] = 0;
--}
--
--/*
-- * Description: Antenna Diversity
-- *
-- * Parameters:
-- *  In:
-- *      priv          - Device Structure
-- *      byRSR            - RSR from received packet
-- *      bySQ3            - SQ3 value from received packet
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- */
--
--void BBvAntennaDiversity(struct vnt_private *priv,
--			 unsigned char byRxRate, unsigned char bySQ3)
--{
--	if ((byRxRate >= MAX_RATE) || (priv->wAntDiversityMaxRate >= MAX_RATE))
--		return;
--
--	priv->uDiversityCnt++;
--
--	priv->uNumSQ3[byRxRate]++;
--
--	if (priv->byAntennaState == 0) {
--		if (priv->uDiversityCnt > priv->ulDiversityNValue) {
--			pr_debug("ulDiversityNValue=[%d],54M-[%d]\n",
--				 (int)priv->ulDiversityNValue,
--				 (int)priv->uNumSQ3[(int)priv->wAntDiversityMaxRate]);
--
--			if (priv->uNumSQ3[priv->wAntDiversityMaxRate] < priv->uDiversityCnt/2) {
--				priv->ulRatio_State0 = s_ulGetRatio(priv);
--				pr_debug("SQ3_State0, rate = [%08x]\n",
--					 (int)priv->ulRatio_State0);
--
--				if (priv->byTMax == 0)
--					return;
--				pr_debug("1.[%08x], uNumSQ3[%d]=%d, %d\n",
--					 (int)priv->ulRatio_State0,
--					 (int)priv->wAntDiversityMaxRate,
--					 (int)priv->uNumSQ3[(int)priv->wAntDiversityMaxRate],
--					 (int)priv->uDiversityCnt);
--
--				s_vChangeAntenna(priv);
--				priv->byAntennaState = 1;
--				del_timer(&priv->TimerSQ3Tmax3);
--				del_timer(&priv->TimerSQ3Tmax2);
--				priv->TimerSQ3Tmax1.expires =  RUN_AT(priv->byTMax * HZ);
--				add_timer(&priv->TimerSQ3Tmax1);
--
--			} else {
--				priv->TimerSQ3Tmax3.expires =  RUN_AT(priv->byTMax3 * HZ);
--				add_timer(&priv->TimerSQ3Tmax3);
--			}
--			BBvClearAntDivSQ3Value(priv);
--
--		}
--	} else { /* byAntennaState == 1 */
--
--		if (priv->uDiversityCnt > priv->ulDiversityMValue) {
--			del_timer(&priv->TimerSQ3Tmax1);
--
--			priv->ulRatio_State1 = s_ulGetRatio(priv);
--			pr_debug("RX:SQ3_State1, rate0 = %08x,rate1 = %08x\n",
--				 (int)priv->ulRatio_State0,
--				 (int)priv->ulRatio_State1);
--
--			if (priv->ulRatio_State1 < priv->ulRatio_State0) {
--				pr_debug("2.[%08x][%08x], uNumSQ3[%d]=%d, %d\n",
--					 (int)priv->ulRatio_State0,
--					 (int)priv->ulRatio_State1,
--					 (int)priv->wAntDiversityMaxRate,
--					 (int)priv->uNumSQ3[(int)priv->wAntDiversityMaxRate],
--					 (int)priv->uDiversityCnt);
--
--				s_vChangeAntenna(priv);
--				priv->TimerSQ3Tmax3.expires =  RUN_AT(priv->byTMax3 * HZ);
--				priv->TimerSQ3Tmax2.expires =  RUN_AT(priv->byTMax2 * HZ);
--				add_timer(&priv->TimerSQ3Tmax3);
--				add_timer(&priv->TimerSQ3Tmax2);
--			}
--			priv->byAntennaState = 0;
--			BBvClearAntDivSQ3Value(priv);
--		}
--	} /* byAntennaState */
--}
--
--/*+
-- *
-- * Description:
-- *  Timer for SQ3 antenna diversity
-- *
-- * Parameters:
-- *  In:
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- -*/
--
--void
--TimerSQ3CallBack(
--	unsigned long data
--)
--{
--	struct vnt_private *priv = (struct vnt_private *)data;
--	unsigned long flags;
--
--	pr_debug("TimerSQ3CallBack...\n");
--
--	spin_lock_irqsave(&priv->lock, flags);
--
--	pr_debug("3.[%08x][%08x], %d\n",
--		 (int)priv->ulRatio_State0, (int)priv->ulRatio_State1,
--		 (int)priv->uDiversityCnt);
--
--	s_vChangeAntenna(priv);
--	priv->byAntennaState = 0;
--	BBvClearAntDivSQ3Value(priv);
--
--	priv->TimerSQ3Tmax3.expires =  RUN_AT(priv->byTMax3 * HZ);
--	priv->TimerSQ3Tmax2.expires =  RUN_AT(priv->byTMax2 * HZ);
--	add_timer(&priv->TimerSQ3Tmax3);
--	add_timer(&priv->TimerSQ3Tmax2);
--
--	spin_unlock_irqrestore(&priv->lock, flags);
--}
--
--/*+
-- *
-- * Description:
-- *  Timer for SQ3 antenna diversity
-- *
-- * Parameters:
-- *  In:
-- *      pvSysSpec1
-- *      hDeviceContext - Pointer to the adapter
-- *      pvSysSpec2
-- *      pvSysSpec3
-- *  Out:
-- *      none
-- *
-- * Return Value: none
-- *
-- -*/
--
--void
--TimerState1CallBack(
--	unsigned long data
--)
--{
--	struct vnt_private *priv = (struct vnt_private *)data;
--	unsigned long flags;
--
--	pr_debug("TimerState1CallBack...\n");
--
--	spin_lock_irqsave(&priv->lock, flags);
--
--	if (priv->uDiversityCnt < priv->ulDiversityMValue/100) {
--		s_vChangeAntenna(priv);
--		priv->TimerSQ3Tmax3.expires =  RUN_AT(priv->byTMax3 * HZ);
--		priv->TimerSQ3Tmax2.expires =  RUN_AT(priv->byTMax2 * HZ);
--		add_timer(&priv->TimerSQ3Tmax3);
--		add_timer(&priv->TimerSQ3Tmax2);
--	} else {
--		priv->ulRatio_State1 = s_ulGetRatio(priv);
--		pr_debug("SQ3_State1, rate0 = %08x,rate1 = %08x\n",
--			 (int)priv->ulRatio_State0,
--			 (int)priv->ulRatio_State1);
--
--		if (priv->ulRatio_State1 < priv->ulRatio_State0) {
--			pr_debug("2.[%08x][%08x], uNumSQ3[%d]=%d, %d\n",
--				 (int)priv->ulRatio_State0,
--				 (int)priv->ulRatio_State1,
--				 (int)priv->wAntDiversityMaxRate,
--				 (int)priv->uNumSQ3[(int)priv->wAntDiversityMaxRate],
--				 (int)priv->uDiversityCnt);
--
--			s_vChangeAntenna(priv);
--
--			priv->TimerSQ3Tmax3.expires =  RUN_AT(priv->byTMax3 * HZ);
--			priv->TimerSQ3Tmax2.expires =  RUN_AT(priv->byTMax2 * HZ);
--			add_timer(&priv->TimerSQ3Tmax3);
--			add_timer(&priv->TimerSQ3Tmax2);
--		}
--	}
--	priv->byAntennaState = 0;
--	BBvClearAntDivSQ3Value(priv);
--
--	spin_unlock_irqrestore(&priv->lock, flags);
--}
-diff --git a/drivers/staging/vt6655/baseband.h b/drivers/staging/vt6655/baseband.h
-index d9f6d63..43a4fb1 100644
---- a/drivers/staging/vt6655/baseband.h
-+++ b/drivers/staging/vt6655/baseband.h
-@@ -93,21 +93,4 @@ void BBvSetRxAntennaMode(struct vnt_private *, unsigned char byAntennaMode);
- void BBvSetDeepSleep(struct vnt_private *, unsigned char byLocalID);
- void BBvExitDeepSleep(struct vnt_private *, unsigned char byLocalID);
+ /* Copy Engine settable attributes */
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 16b939a..97139ce 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -160,7 +160,7 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 	if (ret)
+ 		goto err_credits;
  
--/* timer for antenna diversity */
--
--void
--TimerSQ3CallBack(
--	unsigned long
--);
--
--void
--TimerState1CallBack(
--	unsigned long
--);
--
--void BBvAntennaDiversity(struct vnt_private *,
--			 unsigned char byRxRate, unsigned char bySQ3);
--void
--BBvClearAntDivSQ3Value(struct vnt_private *);
--
- #endif /* __BASEBAND_H__ */
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 96d8e62..440537e4 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -407,29 +407,6 @@ struct vnt_private {
- 	unsigned char byBBCR88;
- 	unsigned char byBBCR09;
+-	sg_item.transfer_id = ep->eid;
++	sg_item.transfer_id = ep->next_transfer_id++;
+ 	sg_item.transfer_context = skb;
+ 	sg_item.vaddr = skb->data;
+ 	sg_item.paddr = skb_cb->paddr;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 527179c..db99593 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -316,6 +316,7 @@ struct ath10k_htc_ep {
+ 	int dl_is_polled; /* call HIF to fetch rx (not implemented) */
  
--	bool bDiversityRegCtlON;
--	bool bDiversityEnable;
--	unsigned long ulDiversityNValue;
--	unsigned long ulDiversityMValue;
--	unsigned char byTMax;
--	unsigned char byTMax2;
--	unsigned char byTMax3;
--	unsigned long ulSQ3TH;
--
--	/* ANT diversity */
--	unsigned long uDiversityCnt;
--	unsigned char byAntennaState;
--	unsigned long ulRatio_State0;
--	unsigned long ulRatio_State1;
--
--	/* SQ3 functions for antenna diversity */
--	struct timer_list           TimerSQ3Tmax1;
--	struct timer_list           TimerSQ3Tmax2;
--	struct timer_list           TimerSQ3Tmax3;
--
--	unsigned long uNumSQ3[MAX_RATE];
--	unsigned short wAntDiversityMaxRate;
--
- 	unsigned char abyEEPROM[EEP_MAX_CONTEXT_SIZE]; /* unsigned long alignment */
+ 	u8 seq_no; /* for debugging */
++	u16 next_transfer_id; /* for debugging */
+ 	int tx_credits;
+ 	int tx_credit_size;
+ 	int tx_credits_per_max_message;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 4dede95..5ebf968 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1223,6 +1223,7 @@ struct ath10k_htt {
+ 	int max_throughput_mbps;
+ 	u8 target_version_major;
+ 	u8 target_version_minor;
++	u16 htt_transfer_id;
+ 	struct completion target_version_received;
  
- 	unsigned short wBeaconInterval;
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index b010184..3093276 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -126,10 +126,6 @@ DEVICE_PARAM(LongRetryLimit, "long frame retry limits");
+ 	struct {
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index b7937b9..bd1236e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -456,6 +456,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	dma_addr_t paddr;
+ 	u32 frags_paddr;
+ 	bool use_frags;
++	unsigned int htt_transfer_id;
  
- DEVICE_PARAM(BasebandType, "baseband type");
- 
--#define DIVERSITY_ANT_DEF     0
--
--DEVICE_PARAM(bDiversityANTEnable, "ANT diversity mode");
--
- //
- // Static vars definitions
- //
-@@ -152,7 +148,6 @@ static void vt6655_init_info(struct pci_dev *pcid,
- static void device_free_info(struct vnt_private *pDevice);
- static bool device_get_pci_info(struct vnt_private *, struct pci_dev *pcid);
- static void device_print_info(struct vnt_private *pDevice);
--static void device_init_diversity_timer(struct vnt_private *pDevice);
- static  irqreturn_t  device_intr(int irq,  void *dev_instance);
- 
- #ifdef CONFIG_PM
-@@ -216,7 +211,6 @@ static void device_get_options(struct vnt_private *pDevice)
- 	pOpts->short_retry = SHORT_RETRY_DEF;
- 	pOpts->long_retry = LONG_RETRY_DEF;
- 	pOpts->bbp_type = BBP_TYPE_DEF;
--	pOpts->flags |= DEVICE_FLAGS_DiversityANT;
- }
- 
- static void
-@@ -224,7 +218,6 @@ device_set_options(struct vnt_private *pDevice)
- {
- 	pDevice->byShortRetryLimit = pDevice->sOpts.short_retry;
- 	pDevice->byLongRetryLimit = pDevice->sOpts.long_retry;
--	pDevice->bDiversityRegCtlON = (pDevice->sOpts.flags & DEVICE_FLAGS_DiversityANT) ? 1 : 0;
- 	pDevice->byBBType = pDevice->sOpts.bbp_type;
- 	pDevice->byPacketType = pDevice->byBBType;
- 	pDevice->byAutoFBCtrl = AUTO_FB_0;
-@@ -236,8 +229,6 @@ device_set_options(struct vnt_private *pDevice)
- 	pr_debug(" byPreambleType= %d\n", (int)pDevice->byPreambleType);
- 	pr_debug(" byShortPreamble= %d\n", (int)pDevice->byShortPreamble);
- 	pr_debug(" byBBType= %d\n", (int)pDevice->byBBType);
--	pr_debug(" pDevice->bDiversityRegCtlON= %d\n",
--		 (int)pDevice->bDiversityRegCtlON);
- }
- 
- //
-@@ -249,7 +240,6 @@ static void device_init_registers(struct vnt_private *pDevice)
- 	unsigned long flags;
- 	unsigned int ii;
- 	unsigned char byValue;
--	unsigned char byValue1;
- 	unsigned char byCCKPwrdBm = 0;
- 	unsigned char byOFDMPwrdBm = 0;
- 
-@@ -301,13 +291,6 @@ static void device_init_registers(struct vnt_private *pDevice)
- 	if (byValue == 0)
- 		byValue = (EEP_ANTENNA_AUX | EEP_ANTENNA_MAIN);
- 
--	pDevice->ulDiversityNValue = 100*260;
--	pDevice->ulDiversityMValue = 100*16;
--	pDevice->byTMax = 1;
--	pDevice->byTMax2 = 4;
--	pDevice->ulSQ3TH = 0;
--	pDevice->byTMax3 = 64;
--
- 	if (byValue == (EEP_ANTENNA_AUX | EEP_ANTENNA_MAIN)) {
- 		pDevice->byAntennaCount = 2;
- 		pDevice->byTxAntennaMode = ANT_B;
-@@ -318,16 +301,7 @@ static void device_init_registers(struct vnt_private *pDevice)
- 			pDevice->byRxAntennaMode = ANT_A;
- 		else
- 			pDevice->byRxAntennaMode = ANT_B;
--
--		byValue1 = SROMbyReadEmbedded(pDevice->PortOffset,
--					      EEP_OFS_ANTENNA);
--
--		if ((byValue1 & 0x08) == 0)
--			pDevice->bDiversityEnable = false;
--		else
--			pDevice->bDiversityEnable = true;
- 	} else  {
--		pDevice->bDiversityEnable = false;
- 		pDevice->byAntennaCount = 1;
- 		pDevice->dwTxAntennaSel = 0;
- 		pDevice->dwRxAntennaSel = 0;
-@@ -349,11 +323,6 @@ static void device_init_registers(struct vnt_private *pDevice)
- 		}
+ 	res = ath10k_htt_tx_inc_pending(htt);
+ 	if (res)
+@@ -469,6 +470,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
  	}
+ 	msdu_id = res;
+ 	htt->pending_tx[msdu_id] = msdu;
++	htt_transfer_id = htt->htt_transfer_id++;
+ 	spin_unlock_bh(&htt->tx_lock);
  
--	pr_debug("bDiversityEnable=[%d],NValue=[%d],MValue=[%d],TMax=[%d],TMax2=[%d]\n",
--		 pDevice->bDiversityEnable, (int)pDevice->ulDiversityNValue,
--		 (int)pDevice->ulDiversityMValue, pDevice->byTMax,
--		 pDevice->byTMax2);
--
- 	/* zonetype initial */
- 	pDevice->byOriginalZonetype = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
+ 	prefetch_len = min(htt->prefetch_len, msdu->len);
+@@ -569,7 +571,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	trace_ath10k_tx_hdr(ar, msdu->data, msdu->len);
+ 	trace_ath10k_tx_payload(ar, msdu->data, msdu->len);
  
-@@ -493,24 +462,6 @@ static void device_init_registers(struct vnt_private *pDevice)
- 	MACvStart(pDevice->PortOffset);
+-	sg_items[0].transfer_id = 0;
++	sg_items[0].transfer_id = htt_transfer_id;
+ 	sg_items[0].transfer_context = NULL;
+ 	sg_items[0].vaddr = &skb_cb->htt.txbuf->htc_hdr;
+ 	sg_items[0].paddr = skb_cb->htt.txbuf_paddr +
+@@ -578,7 +580,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 			  sizeof(skb_cb->htt.txbuf->cmd_hdr) +
+ 			  sizeof(skb_cb->htt.txbuf->cmd_tx);
+ 
+-	sg_items[1].transfer_id = 0;
++	sg_items[1].transfer_id = sg_items[0].transfer_id;
+ 	sg_items[1].transfer_context = NULL;
+ 	sg_items[1].vaddr = msdu->data;
+ 	sg_items[1].paddr = skb_cb->paddr;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index dee0d5a..b35590e 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -846,11 +846,11 @@ static void ath10k_pci_ce_send_done(struct ath10k_ce_pipe *ce_state)
+ 	struct sk_buff *skb;
+ 	u32 ce_data;
+ 	unsigned int nbytes;
+-	unsigned int transfer_id;
+ 
+ 	__skb_queue_head_init(&list);
+ 	while (ath10k_ce_completed_send_next(ce_state, (void **)&skb, &ce_data,
+-					     &nbytes, &transfer_id) == 0) {
++					     &nbytes,
++					     &ce_state->last_ce_send_done_transfer_id) == 0) {
+ 		/* no need to call tx completion for NULL pointers */
+ 		if (skb == NULL)
+ 			continue;
+@@ -874,12 +874,11 @@ static void ath10k_pci_ce_recv_data(struct ath10k_ce_pipe *ce_state)
+ 	void *transfer_context;
+ 	u32 ce_data;
+ 	unsigned int nbytes, max_nbytes;
+-	unsigned int transfer_id;
+ 	unsigned int flags;
+ 
+ 	__skb_queue_head_init(&list);
+ 	while (ath10k_ce_completed_recv_next(ce_state, &transfer_context,
+-					     &ce_data, &nbytes, &transfer_id,
++					     &ce_data, &nbytes, &ce_state->last_rx_transfer_id,
+ 					     &flags) == 0) {
+ 		skb = transfer_context;
+ 		max_nbytes = skb->len + skb_tailroom(skb);
+@@ -1209,6 +1208,8 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_crash_data *crash_data;
+ 	char uuid[50];
++	struct ath10k_pci *pci;
++	int i;
+ 
+ 	spin_lock_bh(&ar->data_lock);
+ 
+@@ -1234,6 +1235,19 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+ 
++	/* Print out some info on the CE pipes */
++	pci = ath10k_pci_priv(ar);
++	for (i = 0; i<CE_COUNT_MAX; i++) {
++		ath10k_err(ar, "ce-pipe [%i] rx-id: %i  ce-send-done: %d tx-id: %d bmi-send-done: %d bmi-recv: %d\n",
++			   i,
++			   pci->ce_states[i].last_rx_transfer_id,
++			   pci->ce_states[i].last_ce_send_done_transfer_id,
++			   pci->ce_states[i].last_tx_transfer_id,
++			   pci->ce_states[i].last_bmi_send_done_transfer_id,
++			   pci->ce_states[i].last_bmi_recv_transfer_id);
++	}
++	ath10k_err(ar, "last htt-tx-id: %d\n", ar->htt.htt_transfer_id);
++
+ 	queue_work(ar->workqueue, &ar->restart_work);
  }
  
--static void device_init_diversity_timer(struct vnt_private *pDevice)
--{
--	init_timer(&pDevice->TimerSQ3Tmax1);
--	pDevice->TimerSQ3Tmax1.data = (unsigned long) pDevice;
--	pDevice->TimerSQ3Tmax1.function = TimerSQ3CallBack;
--	pDevice->TimerSQ3Tmax1.expires = RUN_AT(HZ);
--
--	init_timer(&pDevice->TimerSQ3Tmax2);
--	pDevice->TimerSQ3Tmax2.data = (unsigned long) pDevice;
--	pDevice->TimerSQ3Tmax2.function = TimerSQ3CallBack;
--	pDevice->TimerSQ3Tmax2.expires = RUN_AT(HZ);
--
--	init_timer(&pDevice->TimerSQ3Tmax3);
--	pDevice->TimerSQ3Tmax3.data = (unsigned long) pDevice;
--	pDevice->TimerSQ3Tmax3.function = TimerState1CallBack;
--	pDevice->TimerSQ3Tmax3.expires = RUN_AT(HZ);
--}
--
- static void device_print_info(struct vnt_private *pDevice)
- {
- 	dev_info(&pDevice->pcid->dev, "%s\n", get_chip_name(pDevice->chip_id));
-@@ -1348,8 +1299,6 @@ static int vnt_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+@@ -1640,10 +1654,10 @@ static void ath10k_pci_bmi_send_done(struct ath10k_ce_pipe *ce_state)
+ 	struct bmi_xfer *xfer;
+ 	u32 ce_data;
+ 	unsigned int nbytes;
+-	unsigned int transfer_id;
  
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		if (priv->bDiversityRegCtlON)
--			device_init_diversity_timer(priv);
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		MACvRegBitsOff(priv->PortOffset, MAC_REG_RCR, RCR_UNICAST);
-@@ -1379,11 +1328,6 @@ static void vnt_remove_interface(struct ieee80211_hw *hw,
+ 	if (ath10k_ce_completed_send_next(ce_state, (void **)&xfer, &ce_data,
+-					  &nbytes, &transfer_id))
++					  &nbytes,
++					  &ce_state->last_bmi_send_done_transfer_id))
+ 		return;
  
- 	switch (vif->type) {
- 	case NL80211_IFTYPE_STATION:
--		if (priv->bDiversityRegCtlON) {
--			del_timer(&priv->TimerSQ3Tmax1);
--			del_timer(&priv->TimerSQ3Tmax2);
--			del_timer(&priv->TimerSQ3Tmax3);
--		}
- 		break;
- 	case NL80211_IFTYPE_ADHOC:
- 		MACvRegBitsOff(priv->PortOffset, MAC_REG_TCR, TCR_AUTOBCNTX);
-diff --git a/drivers/staging/vt6655/dpc.c b/drivers/staging/vt6655/dpc.c
-index 977683c..11cc090 100644
---- a/drivers/staging/vt6655/dpc.c
-+++ b/drivers/staging/vt6655/dpc.c
-@@ -116,12 +116,6 @@ static bool vnt_rx_data(struct vnt_private *priv, struct sk_buff *skb,
- 			rx_status.flag = RX_FLAG_DECRYPTED;
- 	}
+ 	xfer->tx_done = true;
+@@ -1655,11 +1669,12 @@ static void ath10k_pci_bmi_recv_data(struct ath10k_ce_pipe *ce_state)
+ 	struct bmi_xfer *xfer;
+ 	u32 ce_data;
+ 	unsigned int nbytes;
+-	unsigned int transfer_id;
+ 	unsigned int flags;
  
--	if (priv->vif && priv->bDiversityEnable) {
--		if (ieee80211_is_data(fc) &&
--		    (frame_size > 50) && priv->vif->bss_conf.assoc)
--			BBvAntennaDiversity(priv, priv->rx_rate, 0);
--	}
--
- 	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
+ 	if (ath10k_ce_completed_recv_next(ce_state, (void **)&xfer, &ce_data,
+-					  &nbytes, &transfer_id, &flags))
++					  &nbytes,
++					  &ce_state->last_bmi_recv_transfer_id,
++					  &flags))
+ 		return;
  
- 	ieee80211_rx_irqsafe(priv->hw, skb);
+ 	if (WARN_ON_ONCE(!xfer))
 -- 
-2.1.0
+1.7.11.7
 
