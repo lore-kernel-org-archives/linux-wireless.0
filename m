@@ -1,44 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22368 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbbAMFu3 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34677 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674AbbALTmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 00:50:29 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix hwmon temperature input units
-Date: Tue, 13 Jan 2015 11:20:07 +0530
-Message-ID: <1421128207-28641-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150113_065033_360224_C03C8950)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 12 Jan 2015 14:42:08 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 3/8] ath10k:  fix spelling mistakes and add details to mac logging.
+Date: Mon, 12 Jan 2015 11:41:44 -0800
+Message-Id: <1421091709-19891-3-git-send-email-greearb@candelatech.com> (sfid-20150112_204238_754034_047191FF)
+In-Reply-To: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
+References: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To be compliant with the hwmon interface the unit needs to be
-millidegree Celsius. Fix that.
+From: Ben Greear <greearb@candelatech.com>
 
-Reported-by: Matthias Kaehlcke <mka@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+A bit of general cleanup to make debug messages more useful.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/ath/ath10k/thermal.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index b14ae8d..3c4a3d8 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -160,7 +160,8 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
- 	temperature = ar->thermal.temperature;
- 	spin_unlock_bh(&ar->data_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 924879f..85abb8a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -604,7 +604,7 @@ static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
  
--	ret = snprintf(buf, PAGE_SIZE, "%d", temperature);
-+	/* display in millidegree celcius */
-+	ret = snprintf(buf, PAGE_SIZE, "%d", temperature * 1000);
- out:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to synchronize setup for monitor vdev %i: %d\n",
++		ath10k_warn(ar, "failed to synchronize setup for monitor vdev %i: %d (start)\n",
+ 			    vdev_id, ret);
+ 		return ret;
+ 	}
+@@ -651,7 +651,7 @@ static int ath10k_monitor_vdev_stop(struct ath10k *ar)
+ 
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret)
+-		ath10k_warn(ar, "failed to synchronise monitor vdev %i: %d\n",
++		ath10k_warn(ar, "failed to synchronize monitor vdev %i: %d (stop)\n",
+ 			    ar->monitor_vdev_id, ret);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac monitor vdev %i stopped\n",
+@@ -936,8 +936,8 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+ 
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to synchronise setup for vdev %i: %d\n",
+-			    arg.vdev_id, ret);
++		ath10k_warn(ar, "failed to synchronize setup for vdev %i: %d (restart %d)\n",
++			    arg.vdev_id, ret, restart);
+ 		return ret;
+ 	}
+ 
+@@ -975,7 +975,7 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
+ 
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
++		ath10k_warn(ar, "failed to synchronize setup for vdev %i: %d (stop)\n",
+ 			    arvif->vdev_id, ret);
+ 		return ret;
+ 	}
 -- 
-2.2.1
+1.7.11.7
 
