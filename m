@@ -1,159 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:36524 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbbARAiQ (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:45908 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751607AbbALOG4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Jan 2015 19:38:16 -0500
-Received: by mail-we0-f181.google.com with SMTP id q58so25900367wes.12
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2015 16:38:14 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Vaishali Thakkar <vthakkar1994@gmail.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] staging: rtl8723au: os_dep: usb_intf: Remove unused functions
-Date: Sun, 18 Jan 2015 01:41:23 +0100
-Message-Id: <1421541683-17523-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150118_013820_894619_5A83E864)
+	Mon, 12 Jan 2015 09:06:56 -0500
+Received: by mail-la0-f46.google.com with SMTP id q1so24284000lam.5
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 06:06:54 -0800 (PST)
+Message-ID: <54B3D4FC.1090806@cogentembedded.com> (sfid-20150112_150725_139287_DA7323D7)
+Date: Mon, 12 Jan 2015 17:06:52 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>, brudley@broadcom.com,
+	"arend@broadcom.com >> Arend van Spriel" <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	kvalo@codeaurora.org, linville@tuxdriver.com,
+	pieterpg@broadcom.com, hdegoede@redhat.com, wens@csie.org,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54B36C88.3030609@linux.intel.com>
+In-Reply-To: <54B36C88.3030609@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removes some functions that are not used anywhere:
-rtw_hw_resume23a() rtw_hw_suspend23a()
+Hello.
 
-This was partially found by using a static code analysis program called cppcheck.
+On 1/12/2015 9:41 AM, Fu, Zhonghui wrote:
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/staging/rtl8723au/include/osdep_intf.h |    3 -
- drivers/staging/rtl8723au/os_dep/usb_intf.c    |   98 ------------------------
- 2 files changed, 101 deletions(-)
+>  From 8685c3c2746b4275fc808d9db23c364b2f54b52a Mon Sep 17 00:00:00 2001
+> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> Date: Mon, 12 Jan 2015 14:25:46 +0800
+> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
 
-diff --git a/drivers/staging/rtl8723au/include/osdep_intf.h b/drivers/staging/rtl8723au/include/osdep_intf.h
-index 33afa62..a157eb2 100644
---- a/drivers/staging/rtl8723au/include/osdep_intf.h
-+++ b/drivers/staging/rtl8723au/include/osdep_intf.h
-@@ -19,9 +19,6 @@
- #include <osdep_service.h>
- #include <drv_types.h>
- 
--int rtw_hw_suspend23a(struct rtw_adapter *padapter);
--int rtw_hw_resume23a(struct rtw_adapter *padapter);
--
- int rtw_init_drv_sw23a(struct rtw_adapter *padapter);
- int rtw_free_drv_sw23a(struct rtw_adapter *padapter);
- int rtw_reset_drv_sw23a(struct rtw_adapter *padapter);
-diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c b/drivers/staging/rtl8723au/os_dep/usb_intf.c
-index 373a617..936414d 100644
---- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
-+++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
-@@ -273,104 +273,6 @@ static void rtw_dev_unload(struct rtw_adapter *padapter)
- 	RT_TRACE(_module_hci_intfs_c_, _drv_err_, ("-rtw_dev_unload\n"));
- }
- 
--int rtw_hw_suspend23a(struct rtw_adapter *padapter)
--{
--	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
--	struct net_device *pnetdev = padapter->pnetdev;
--	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
--
--	if ((!padapter->bup) || (padapter->bDriverStopped) ||
--	    (padapter->bSurpriseRemoved)) {
--		DBG_8723A("padapter->bup =%d bDriverStopped =%d bSurpriseRemoved = %d\n",
--			  padapter->bup, padapter->bDriverStopped,
--			  padapter->bSurpriseRemoved);
--		goto error_exit;
--	}
--
--	if (padapter) { /* system suspend */
--		LeaveAllPowerSaveMode23a(padapter);
--
--		DBG_8723A("==> rtw_hw_suspend23a\n");
--		down(&pwrpriv->lock);
--		pwrpriv->bips_processing = true;
--		/* padapter->net_closed = true; */
--		/* s1. */
--		if (pnetdev) {
--			netif_carrier_off(pnetdev);
--			netif_tx_stop_all_queues(pnetdev);
--		}
--
--		/* s2. */
--		rtw_disassoc_cmd23a(padapter, 500, false);
--
--		/* s2-2.  indicate disconnect to os */
--		/* rtw_indicate_disconnect23a(padapter); */
--		if (check_fwstate(pmlmepriv, _FW_LINKED)) {
--			_clr_fwstate_(pmlmepriv, _FW_LINKED);
--
--			rtw_os_indicate_disconnect23a(padapter);
--
--			/* donnot enqueue cmd */
--			rtw_lps_ctrl_wk_cmd23a(padapter,
--					       LPS_CTRL_DISCONNECT, 0);
--		}
--		/* s2-3. */
--		rtw_free_assoc_resources23a(padapter, 1);
--
--		/* s2-4. */
--		rtw_free_network_queue23a(padapter);
--		rtw_ips_dev_unload23a(padapter);
--		pwrpriv->rf_pwrstate = rf_off;
--		pwrpriv->bips_processing = false;
--		up(&pwrpriv->lock);
--	} else {
--		goto error_exit;
--	}
--	return 0;
--error_exit:
--	DBG_8723A("%s, failed\n", __func__);
--	return -1;
--}
--
--int rtw_hw_resume23a(struct rtw_adapter *padapter)
--{
--	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
--	struct net_device *pnetdev = padapter->pnetdev;
--
--	if (padapter) { /* system resume */
--		DBG_8723A("==> rtw_hw_resume23a\n");
--		down(&pwrpriv->lock);
--		pwrpriv->bips_processing = true;
--		rtw_reset_drv_sw23a(padapter);
--
--		if (pm_netdev_open23a(pnetdev, false)) {
--			up(&pwrpriv->lock);
--			goto error_exit;
--		}
--
--		netif_device_attach(pnetdev);
--		netif_carrier_on(pnetdev);
--
--		if (!rtw_netif_queue_stopped(pnetdev))
--			netif_tx_start_all_queues(pnetdev);
--		else
--			netif_tx_wake_all_queues(pnetdev);
--
--		pwrpriv->bkeepfwalive = false;
--
--		pwrpriv->rf_pwrstate = rf_on;
--		pwrpriv->bips_processing = false;
--
--		up(&pwrpriv->lock);
--	} else {
--		goto error_exit;
--	}
--	return 0;
--error_exit:
--	DBG_8723A("%s, Open net dev failed\n", __func__);
--	return -1;
--}
--
- static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
- {
- 	struct dvobj_priv *dvobj = usb_get_intfdata(pusb_intf);
--- 
-1.7.10.4
+    The lines above are not needed.
+
+> WiFi chip has 2 SDIO functions, and PM core will trigger
+> twice suspend/resume operations for one WiFi chip to do
+> the same things. This patch avoid this case.
+
+> Acked-by: Arend van Spriel<arend@broadcom.com>
+> Acked-by: Sergei Shtylyov<sergei.shtylyov@cogentembedded.com>
+> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   21 +++++++++++++++++----
+>   1 files changed, 17 insertions(+), 4 deletions(-)
+
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> index 9880dae..8f71485 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> @@ -1070,7 +1070,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+>   	 */
+>   	if ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_KEEP_POWER) &&
+>   	    ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_WAKE_SDIO_IRQ) ||
+> -	     (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)))
+> +	     (sdiodev->pdata->oob_irq_supported)))
+
+    Inner parens not needed on this line.
+
+[...]
+
+WBR, Sergei
 
