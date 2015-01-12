@@ -1,57 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:59315 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932263AbbAILOq (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34820 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753249AbbALTsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 06:14:46 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so1567503wiv.0
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 03:14:45 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
+	Mon, 12 Jan 2015 14:48:45 -0500
+From: greearb@candelatech.com
 To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 0/8] ath10k: add multi-channel support
-Date: Fri,  9 Jan 2015 12:14:01 +0100
-Message-Id: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com> (sfid-20150109_121451_528392_50CE6BBE)
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/8] ath10k: scan should handle scan-start-failed event properly.
+Date: Mon, 12 Jan 2015 11:29:45 -0800
+Message-Id: <1421090992-14971-1-git-send-email-greearb@candelatech.com> (sfid-20150112_204851_373150_88D03472)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New wmi-tlv firmware and new hardware will support
-multi-channel operation.
+From: Ben Greear <greearb@candelatech.com>
 
-This prepares the driver by implementing chanctx,
-improves tx queue locking and introduces initial
-interface combinations.
+In case firmware fails to start the scan, then complete
+the start condition and clean up so that driver does not
+block on timeout.
 
-I'm posting this as an RFC first because I'd like
-to get some early feedback (if possible) while I
-upstream other patches this patchset is basing on.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 11 +++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c | 20 ++++++++++++++++++++
+ 2 files changed, 31 insertions(+)
 
-
-Michal Kazior (8):
-  ath10k: defer AP self-peer removal wait
-  ath10k: allow empty ssid vdev config
-  ath10k: implement chanctx API
-  ath10k: implement adaptive qcs command
-  ath10k: protect ar->arvifs linking with data_lock
-  ath10k: rework tx queue locking
-  ath10k: implement tx pause wmi event
-  ath10k: add proper wmi-tlv combinations
-
- drivers/net/wireless/ath/ath10k/core.c    |   1 +
- drivers/net/wireless/ath/ath10k/core.h    |  16 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  |  80 +++-
- drivers/net/wireless/ath/ath10k/htt_tx.c  |   9 +-
- drivers/net/wireless/ath/ath10k/mac.c     | 692 ++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/mac.h     |  57 +++
- drivers/net/wireless/ath/ath10k/txrx.c    |   6 +
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  16 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 118 ++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  46 ++
- drivers/net/wireless/ath/ath10k/wmi.c     |  18 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |   1 +
- 12 files changed, 975 insertions(+), 85 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 249107d..924879f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2375,6 +2375,17 @@ static int ath10k_start_scan(struct ath10k *ar,
+ 		return -ETIMEDOUT;
+ 	}
+ 
++	/* If we failed to start the scan, return error code at
++	 * this point.  This is probably due to some issue in the
++	 * firmware, but no need to wedge the driver due to that...
++	 */
++	spin_lock_bh(&ar->data_lock);
++	if (ar->scan.state == ATH10K_SCAN_IDLE) {
++		spin_unlock_bh(&ar->data_lock);
++		return -EINVAL;
++	}
++	spin_unlock_bh(&ar->data_lock);
++
+ 	/* Add a 200ms margin to account for event/command processing */
+ 	ieee80211_queue_delayed_work(ar->hw, &ar->scan.timeout,
+ 				     msecs_to_jiffies(arg->max_scan_time+200));
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6e4ece0..203bcb9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -916,6 +916,25 @@ static void ath10k_wmi_event_scan_started(struct ath10k *ar)
+ 	}
+ }
+ 
++static void ath10k_wmi_event_scan_start_failed(struct ath10k *ar)
++{
++	lockdep_assert_held(&ar->data_lock);
++
++	switch (ar->scan.state) {
++	case ATH10K_SCAN_IDLE:
++	case ATH10K_SCAN_RUNNING:
++	case ATH10K_SCAN_ABORTING:
++		ath10k_warn(ar, "received scan start failed event in an invalid scan state: %s (%d)\n",
++			    ath10k_scan_state_str(ar->scan.state),
++			    ar->scan.state);
++		break;
++	case ATH10K_SCAN_STARTING:
++		complete(&ar->scan.started);
++		__ath10k_scan_finish(ar);
++		break;
++	}
++}
++
+ static void ath10k_wmi_event_scan_completed(struct ath10k *ar)
+ {
+ 	lockdep_assert_held(&ar->data_lock);
+@@ -1057,6 +1076,7 @@ static int ath10k_wmi_event_scan(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
+ 	case WMI_SCAN_EVENT_START_FAILED:
+ 		ath10k_warn(ar, "received scan start failure event\n");
++		ath10k_wmi_event_scan_start_failed(ar);
+ 		break;
+ 	case WMI_SCAN_EVENT_DEQUEUED:
+ 	case WMI_SCAN_EVENT_PREEMPTED:
 -- 
-1.8.5.3
+1.7.11.7
 
