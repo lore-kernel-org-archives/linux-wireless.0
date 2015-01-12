@@ -1,238 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:6596 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965163AbbA1EzW (ORCPT
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:61657 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbbALMuK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 23:55:22 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4sPBj006239
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:55:22 -0800
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1s49ry0h6y-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:55:22 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <gaoqs@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 04/10] mwifiex: refactor start_ap handler
-Date: Wed, 28 Jan 2015 15:54:19 +0530
-Message-ID: <1422440665-3940-5-git-send-email-patila@marvell.com> (sfid-20150128_055530_590628_B05EB627)
-In-Reply-To: <1422440665-3940-1-git-send-email-patila@marvell.com>
-References: <1422440665-3940-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 12 Jan 2015 07:50:10 -0500
+From: Rostislav Lisovy <lisovy@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	bernd.lehmann@volkswagen.de, lisovy@gmail.com,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Subject: [PATCH] iw: Add OCB mode handling
+Date: Mon, 12 Jan 2015 13:49:57 +0100
+Message-Id: <1421066997-8676-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20150112_135032_025191_68192A90)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactor mwifiex_cfg80211_start_ap by creating separate function
-to set AP channel and another for configuring other AP parameters
-and starting AP.
+Since the commit 6e0bd6c35b021dc73a81ebd1ef79761233c48b50
+("cfg80211: 802.11p OCB mode handling") and
+239281f803e2efdb77d906ef296086b6917e5d71
+("mac80211: 802.11p OCB mode support")
+does the Linux kernel support OCB mode. This commit adds
+proper OCB mode handling.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Modify the command for device type setting to support OCB mode.
+Add commands for "joining" and "leaving" the OCB mode network.
+When joining two arguments are mandatory -- frequency and
+channel bandwidth (5 or 10 MHz).
+
+Signed-off-by: Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 68 ++++-----------------------------
- drivers/net/wireless/mwifiex/main.h     |  4 ++
- drivers/net/wireless/mwifiex/uap_cmd.c  | 65 +++++++++++++++++++++++++++++++
- 3 files changed, 77 insertions(+), 60 deletions(-)
+ Makefile    |  2 +-
+ interface.c |  3 +++
+ ocb.c       | 76 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ util.c      |  1 +
+ 4 files changed, 81 insertions(+), 1 deletion(-)
+ create mode 100644 ocb.c
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index ceeaeac..2e0834c 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1677,7 +1677,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- {
- 	struct mwifiex_uap_bss_param *bss_cfg;
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
--	u8 config_bands = 0;
+diff --git a/Makefile b/Makefile
+index 58755dc..548591a 100644
+--- a/Makefile
++++ b/Makefile
+@@ -13,7 +13,7 @@ CFLAGS ?= -O2 -g
+ CFLAGS += -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs -fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
  
- 	if (GET_BSS_ROLE(priv) != MWIFIEX_BSS_ROLE_UAP)
- 		return -1;
-@@ -1697,6 +1696,11 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		memcpy(bss_cfg->ssid.ssid, params->ssid, params->ssid_len);
- 		bss_cfg->ssid.ssid_len = params->ssid_len;
- 	}
-+	if (params->inactivity_timeout > 0) {
-+		/* sta_ao_timer/ps_sta_ao_timer is in unit of 100ms */
-+		bss_cfg->sta_ao_timer = 10 * params->inactivity_timeout;
-+		bss_cfg->ps_sta_ao_timer = 10 * params->inactivity_timeout;
-+	}
- 
- 	switch (params->hidden_ssid) {
- 	case NL80211_HIDDEN_SSID_NOT_IN_USE:
-@@ -1712,31 +1716,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		return -EINVAL;
- 	}
- 
--	bss_cfg->channel = ieee80211_frequency_to_channel(
--				params->chandef.chan->center_freq);
--
--	/* Set appropriate bands */
--	if (params->chandef.chan->band == IEEE80211_BAND_2GHZ) {
--		bss_cfg->band_cfg = BAND_CONFIG_BG;
--		config_bands = BAND_B | BAND_G;
--
--		if (params->chandef.width > NL80211_CHAN_WIDTH_20_NOHT)
--			config_bands |= BAND_GN;
--	} else {
--		bss_cfg->band_cfg = BAND_CONFIG_A;
--		config_bands = BAND_A;
--
--		if (params->chandef.width > NL80211_CHAN_WIDTH_20_NOHT)
--			config_bands |= BAND_AN;
--
--		if (params->chandef.width > NL80211_CHAN_WIDTH_40)
--			config_bands |= BAND_AAC;
--	}
--
--	if (!((config_bands | priv->adapter->fw_bands) &
--	      ~priv->adapter->fw_bands))
--		priv->adapter->config_bands = config_bands;
--
-+	mwifiex_uap_set_channel(bss_cfg, params->chandef);
- 	mwifiex_set_uap_rates(bss_cfg, params);
- 
- 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
-@@ -1760,23 +1740,8 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 
- 	mwifiex_set_wmm_params(priv, bss_cfg, params);
- 
--	if (params->inactivity_timeout > 0) {
--		/* sta_ao_timer/ps_sta_ao_timer is in unit of 100ms */
--		bss_cfg->sta_ao_timer = 10 * params->inactivity_timeout;
--		bss_cfg->ps_sta_ao_timer = 10 * params->inactivity_timeout;
--	}
--
--	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
--			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
--		wiphy_err(wiphy, "Failed to stop the BSS\n");
--		kfree(bss_cfg);
--		return -1;
--	}
--
--	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_SYS_CONFIG,
--			     HostCmd_ACT_GEN_SET,
--			     UAP_BSS_PARAMS_I, bss_cfg, false)) {
--		wiphy_err(wiphy, "Failed to set the SSID\n");
-+	if (mwifiex_config_start_uap(priv, bss_cfg)) {
-+		wiphy_err(wiphy, "Failed to start AP\n");
- 		kfree(bss_cfg);
- 		return -1;
- 	}
-@@ -1786,23 +1751,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 
- 	memcpy(&priv->bss_cfg, bss_cfg, sizeof(priv->bss_cfg));
- 	kfree(bss_cfg);
--
--	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
--			     HostCmd_ACT_GEN_SET, 0, NULL, false)) {
--		wiphy_err(wiphy, "Failed to start the BSS\n");
--		return -1;
--	}
--
--	if (priv->sec_info.wep_enabled)
--		priv->curr_pkt_filter |= HostCmd_ACT_MAC_WEP_ENABLE;
--	else
--		priv->curr_pkt_filter &= ~HostCmd_ACT_MAC_WEP_ENABLE;
--
--	if (mwifiex_send_cmd(priv, HostCmd_CMD_MAC_CONTROL,
--			     HostCmd_ACT_GEN_SET, 0,
--			     &priv->curr_pkt_filter, true))
--		return -1;
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 673252a..0c75eff 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1321,6 +1321,10 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
- 			 struct cfg80211_beacon_data *data);
- int mwifiex_del_mgmt_ies(struct mwifiex_private *priv);
- u8 *mwifiex_11d_code_2_region(u8 code);
-+void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
-+			     struct cfg80211_chan_def chandef);
-+int mwifiex_config_start_uap(struct mwifiex_private *priv,
-+			     struct mwifiex_uap_bss_param *bss_cfg);
- void mwifiex_uap_del_sta_data(struct mwifiex_private *priv,
- 			      struct mwifiex_sta_node *node);
- 
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index 0f347fd..baf5314 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -769,3 +769,68 @@ int mwifiex_uap_prepare_cmd(struct mwifiex_private *priv, u16 cmd_no,
- 
- 	return 0;
- }
+ OBJS = iw.o genl.o event.o info.o phy.o \
+-	interface.o ibss.o station.o survey.o util.o \
++	interface.o ibss.o station.o survey.o util.o ocb.o \
+ 	mesh.o mpath.o mpp.o scan.o reg.o version.o \
+ 	reason.o status.o connect.o link.o offch.o ps.o cqm.o \
+ 	bitrate.o wowlan.o coalesce.o roc.o p2p.o vendor.o
+diff --git a/interface.c b/interface.c
+index f8e39b3..80437bd 100644
+--- a/interface.c
++++ b/interface.c
+@@ -104,6 +104,9 @@ static int get_if_type(int *argc, char ***argv, enum nl80211_iftype *type,
+ 	    strcmp(tpstr, "ibss") == 0) {
+ 		*type = NL80211_IFTYPE_ADHOC;
+ 		return 0;
++	} else if (strcmp(tpstr, "ocb") == 0) {
++		*type = NL80211_IFTYPE_OCB;
++		return 0;
+ 	} else if (strcmp(tpstr, "monitor") == 0) {
+ 		*type = NL80211_IFTYPE_MONITOR;
+ 		return 0;
+diff --git a/ocb.c b/ocb.c
+new file mode 100644
+index 0000000..7da05d1
+--- /dev/null
++++ b/ocb.c
+@@ -0,0 +1,76 @@
++#include <net/if.h>
++#include <errno.h>
++#include <string.h>
 +
-+void mwifiex_uap_set_channel(struct mwifiex_uap_bss_param *bss_cfg,
-+			     struct cfg80211_chan_def chandef)
++#include "nl80211.h"
++#include "iw.h"
++
++SECTION(ocb);
++
++static int join_ocb(struct nl80211_state *state, struct nl_cb *cb,
++		    struct nl_msg *msg, int argc, char **argv,
++		    enum id_input id)
 +{
-+	u8 config_bands = 0;
++	unsigned long freq;
++	char *end;
++	int i;
++	static const struct {
++		const char *name;
++		unsigned int width;
++	} *chanmode_selected, chanmode[] = {
++		{ .name = "5MHZ",
++		  .width = NL80211_CHAN_WIDTH_5	},
++		{ .name = "10MHZ",
++		  .width = NL80211_CHAN_WIDTH_10 },
++	};
 +
-+	bss_cfg->channel = ieee80211_frequency_to_channel(
-+						     chandef.chan->center_freq);
++	if (argc < 2)
++		return 1;
 +
-+	/* Set appropriate bands */
-+	if (chandef.chan->band == IEEE80211_BAND_2GHZ) {
-+		bss_cfg->band_cfg = BAND_CONFIG_BG;
-+		config_bands = BAND_B | BAND_G;
++	/* freq */
++	freq = strtoul(argv[0], &end, 10);
++	if (*end != '\0')
++		return 1;
 +
-+		if (chandef.width > NL80211_CHAN_WIDTH_20_NOHT)
-+			config_bands |= BAND_GN;
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++	argv++;
++	argc--;
++
++	/* channel width */
++	for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
++		if (strcasecmp(chanmode[i].name, argv[0]) == 0) {
++			chanmode_selected = &chanmode[i];
++			break;
++		}
++	}
++	if (chanmode_selected) {
++		NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH,
++			    chanmode_selected->width);
++		NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1, freq);
++
++		argv++;
++		argc--;
 +	} else {
-+		bss_cfg->band_cfg = BAND_CONFIG_A;
-+		config_bands = BAND_A;
-+
-+		if (chandef.width > NL80211_CHAN_WIDTH_20_NOHT)
-+			config_bands |= BAND_AN;
-+
-+		if (chandef.width > NL80211_CHAN_WIDTH_40)
-+			config_bands |= BAND_AAC;
++		return 1;
 +	}
++
++	return 0;
++
++nla_put_failure:
++	return -ENOBUFS;
 +}
++COMMAND(ocb, join, "<freq in MHz> <5MHZ|10MHZ>",
++	NL80211_CMD_JOIN_OCB, 0, CIB_NETDEV, join_ocb,
++	"Join the OCB mode network.");
 +
-+int mwifiex_config_start_uap(struct mwifiex_private *priv,
-+			     struct mwifiex_uap_bss_param *bss_cfg)
++static int leave_ocb(struct nl80211_state *state, struct nl_cb *cb,
++		     struct nl_msg *msg, int argc, char **argv,
++		     enum id_input id)
 +{
-+	if (mwifiex_del_mgmt_ies(priv))
-+		dev_err(priv->adapter->dev, "Failed to delete mgmt IEs!\n");
-+
-+	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, true)) {
-+		dev_err(priv->adapter->dev, "Failed to stop the BSS\n");
-+		return -1;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_SYS_CONFIG,
-+			     HostCmd_ACT_GEN_SET,
-+			     UAP_BSS_PARAMS_I, bss_cfg, false)) {
-+		dev_err(priv->adapter->dev, "Failed to set the SSID\n");
-+		return -1;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
-+			     HostCmd_ACT_GEN_SET, 0, NULL, false)) {
-+		dev_err(priv->adapter->dev, "Failed to start the BSS\n");
-+		return -1;
-+	}
-+
-+	if (priv->sec_info.wep_enabled)
-+		priv->curr_pkt_filter |= HostCmd_ACT_MAC_WEP_ENABLE;
-+	else
-+		priv->curr_pkt_filter &= ~HostCmd_ACT_MAC_WEP_ENABLE;
-+
-+	if (mwifiex_send_cmd(priv, HostCmd_CMD_MAC_CONTROL,
-+			     HostCmd_ACT_GEN_SET, 0,
-+			     &priv->curr_pkt_filter, true))
-+		return -1;
++	if (argc)
++		return 1;
 +
 +	return 0;
 +}
++COMMAND(ocb, leave, NULL, NL80211_CMD_LEAVE_OCB, 0, CIB_NETDEV, leave_ocb,
++	"Leave the OCB mode network.");
+diff --git a/util.c b/util.c
+index 7b51b23..411fea1 100644
+--- a/util.c
++++ b/util.c
+@@ -133,6 +133,7 @@ static const char *ifmodes[NL80211_IFTYPE_MAX + 1] = {
+ 	"P2P-client",
+ 	"P2P-GO",
+ 	"P2P-device",
++	"outside context of a BSS",
+ };
+ 
+ static char modebuf[100];
 -- 
-1.8.1.4
+2.0.0.rc4
 
