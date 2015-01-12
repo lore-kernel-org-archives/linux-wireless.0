@@ -1,45 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:39863 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753325AbbAFAxB (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:60298 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260AbbALL4b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 19:53:01 -0500
-Received: by mail-ob0-f172.google.com with SMTP id va8so63549311obc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 16:53:01 -0800 (PST)
-Message-ID: <54AB31EB.6020801@lwfinger.net> (sfid-20150106_015306_425223_200E98E0)
-Date: Mon, 05 Jan 2015 18:52:59 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 12 Jan 2015 06:56:31 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Enable RX batching
+References: <1419834084-11859-1-git-send-email-sujith@msujith.org>
+Date: Mon, 12 Jan 2015 13:56:20 +0200
+In-Reply-To: <1419834084-11859-1-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Mon, 29 Dec 2014 11:51:24 +0530")
+Message-ID: <87h9vwdxgb.fsf@kamboji.qca.qualcomm.com> (sfid-20150112_125635_153204_ABA6E4DB)
 MIME-Version: 1.0
-To: Erich Titl <erich.titl@think.ch>, linux-wireless@vger.kernel.org
-Subject: Re: b43 driver and WEP (solved)
-References: <54AA5438.9070902@think.ch> <54AAFFB1.8030109@lwfinger.net> <54AB2405.3050602@think.ch>
-In-Reply-To: <54AB2405.3050602@think.ch>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2015 05:53 PM, Erich Titl wrote:
-> Hi Larry
+Sujith Manoharan <sujith@msujith.org> writes:
+
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 >
-> Am 05.01.2015 um 22:18 schrieb Larry Finger:
->> On 01/05/2015 03:07 AM, Erich Titl wrote:
-> ...
->>
->> I then generated a 3.10.63 kernel, rebooted and retested. It also works.
->>
->> One thing would be to try disabling hardware encryption using option
->> "nohwcrypt=1". You might also check to determine what key slot your AP
->> is expecting to use. My AP has only a single key setup. It calls it #1
->> while Linux is using #0, but that is expected.
+> This feature allows the FW to batch RX indications,
+> reducing the rate of host interrupt generation, which
+> in turn reduces CPU load. Currently, this is enabled
+> only for the 10.2 firmware.
 >
-> Thanks a lot for coming back on this issue. I have been digging into the
-> code and found the culprit tonight. The arc4 module was not loaded and
-> WEP could not be initialized. The puzzling thing is, the outgoing dhcp
-> packet passed.... weird.
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Glad you found it. Strange that loading mac80211 did not force loading. Have you 
-run 'depmod -a' on the modules?
+Thanks, applied.
 
-Larry
-
-
+-- 
+Kalle Valo
