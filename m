@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:8281 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752979AbbAEK3B (ORCPT
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:39614 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103AbbALJfP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 05:29:01 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Fengguang Wu <fengguang.wu@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] net: wireless: rtlwifi: btcoexist: halbtc8821a2ant: Remove some unused functions
-References: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<54A786A4.2050202@lwfinger.net>
-	<CAKXHbyOYO29uKA127qyYrCfpgQ2zoqBS9rAJME513oZ8JVdOug@mail.gmail.com>
-Date: Mon, 5 Jan 2015 12:28:48 +0200
-In-Reply-To: <CAKXHbyOYO29uKA127qyYrCfpgQ2zoqBS9rAJME513oZ8JVdOug@mail.gmail.com>
-	(Rickard Strandqvist's message of "Sat, 3 Jan 2015 13:03:02 +0100")
-Message-ID: <87d26t34in.fsf@kamboji.qca.qualcomm.com> (sfid-20150105_112929_628809_7BE7C695)
+	Mon, 12 Jan 2015 04:35:15 -0500
+Received: by mail-qa0-f49.google.com with SMTP id v8so4456835qal.8
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 01:35:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
+References: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
+Date: Mon, 12 Jan 2015 09:35:13 +0000
+Message-ID: <CAFSJ42Z2VagmLsq_+BB217CDU1-_GVcSGQ=0UWBFzvcbMq7cug@mail.gmail.com> (sfid-20150112_103519_645568_0D0C84D7)
+Subject: Re: [PATCH 0/8] wcn36xx locking and a-mpdu fixes
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+Looks good to me!
 
->     I know that you have been told that including "net: wireless:" in the
->     subject line is discouraged. Please do not do this again. The staging
->     directory is different as GregKH uses "staging:" in the subject to route
->     patches, but wireless does not.
+2015-01-09 19:15 GMT+00:00 Bob Copeland <me@bobcopeland.com>:
+> Hello,
 >
->     As to the patch, NACK for the simple reason that I am currently working on
->     a number of changes to btcoexist. Some of these routines may end up being
->     removed, but others will not. Having your patch remove them, and one of
->     mine adding them back just constitutes a lot of churning of the source. In
->     addition, it greatly increases the probability of the source trees becoming
->     unsynchronized and getting merge conflicts.
+> These patches have been merged into the wcn36xx github tree but have
+> been collecting dust for some time.  I pinged Eugene (CCed) who said I
+> could just go ahead and send them upstream.  Rebased and re-tested on
+> an Android target (and newer checkpatch warnings removed).
 >
-> I do not recognize that there has been no diskution on the subject of "net: 
-> wireless:"
+> At some point I can go through other patches (not by me) that aren't yet
+> upstream and send them along as well, unless someone else wants to do that.
+>
+> Bob Copeland (8):
+>   wcn36xx: initialize device defaults on start
+>   wcn36xx: use !! when assigning int as a boolean
+>   wcn36xx: let device generate qos seq numbers
+>   wcn36xx: don't process 'valid' descriptors
+>   wcn36xx: initialize skb_lock
+>   wcn36xx: initialize dxe lock
+>   wcn36xx: move set_tx_pdu inside set_tx_data/mgmt
+>   wcn36xx: initiate TX BA sessions
+>
+>  drivers/net/wireless/ath/wcn36xx/dxe.c     |    3 +
+>  drivers/net/wireless/ath/wcn36xx/main.c    |   16 +++++-
+>  drivers/net/wireless/ath/wcn36xx/smd.c     |   73 +++++++++++++++++++++++-
+>  drivers/net/wireless/ath/wcn36xx/txrx.c    |   83 ++++++++++++++++++++++------
+>  drivers/net/wireless/ath/wcn36xx/txrx.h    |    9 ++-
+>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   20 +++++++
+>  6 files changed, 182 insertions(+), 22 deletions(-)
+>
+> --
+> 1.7.10.4
+>
 
-I mentioned about this in one your earlier patches, but I guess you
-didn't get the mail because I got a bounce:
 
-https://lkml.org/lkml/2014/12/24/222
 
 -- 
-Kalle Valo
+Best regards,
+Eugene
