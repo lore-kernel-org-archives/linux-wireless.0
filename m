@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35619 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39950 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbbAGKmD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 05:42:03 -0500
-Message-ID: <1420627315.3407.2.camel@sipsolutions.net> (sfid-20150107_114207_941779_89F8887E)
-Subject: Re: [PATCH] wireless extensions should default to Y
+	id S1750860AbbALP0s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2015 10:26:48 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1YAgtD-0005Fe-8R
+	for linux-wireless@vger.kernel.org; Mon, 12 Jan 2015 16:26:47 +0100
+Message-ID: <1421076401.1891.29.camel@sipsolutions.net> (sfid-20150112_162651_462101_CB2DAB00)
+Subject: Re: (re)licensing the wireless wiki
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: jikos@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Wed, 07 Jan 2015 11:41:55 +0100
-In-Reply-To: <20150107101903.GA6563@amd>
-References: <20150107101903.GA6563@amd>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 12 Jan 2015 16:26:41 +0100
+In-Reply-To: <1421061360.1891.21.camel@sipsolutions.net> (sfid-20150112_121607_327018_99B6CF3A)
+References: <1421061360.1891.21.camel@sipsolutions.net>
+	 (sfid-20150112_121607_327018_99B6CF3A)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-07 at 11:19 +0100, Pavel Machek wrote:
-> Do we need following patch on top of
-> 24a0aa212ee2dbe44360288684478d76a8e20a0a revert?
-> 
-> I updated kernel today, and (probably because extensions were not
-> selectable before), the default choice was "N", which is wrong:
-> oldconfig should result in compatible choices being made, for example
-> to help bisect.
+On Mon, 2015-01-12 at 12:16 +0100, Johannes Berg wrote:
 
-I don't believe we need this. It has been defaulting to N for a long
-time, it's just that it got thrown out of your config due to building
-inbetween the patch and its revert. Had you built only before and after
-that wouldn't be an issue.
+> I've emailed every contributor who I could find an email address for,
+> but some (~40) don't have an email address and I already have a bunch of
+> bounces (~50).
 
-If we default to Y now we send the wrong signal. If you really need to
-bisect something wext related you have far bigger issues I'd think, the
-code hasn't changed *forever*.
+Additionally, gmail has apparently decided that I was spamming -- so you
+may find my message in your spam folder there.
 
 johannes
 
