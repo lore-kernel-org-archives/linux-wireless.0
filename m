@@ -1,79 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:39006 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751573AbbAAUOQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2015 15:14:16 -0500
+Received: from mga01.intel.com ([192.55.52.88]:61029 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750753AbbALGnn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2015 01:43:43 -0500
+Message-ID: <54B36D1A.40608@linux.intel.com> (sfid-20150112_074401_671259_38D00462)
+Date: Mon, 12 Jan 2015 14:43:38 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20150101194417.GN24112@csclub.uwaterloo.ca>
-References: <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
-	<54A3D955.6020809@broadcom.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
-	<54A3E1F1.7030807@broadcom.com>
-	<alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
-	<54A41000.3040306@broadcom.com>
-	<20141231173113.GA443@thunk.org>
-	<54A45D4D.7070302@broadcom.com>
-	<20141231214421.GA29273@thunk.org>
-	<CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
-	<20150101194417.GN24112@csclub.uwaterloo.ca>
-Date: Thu, 1 Jan 2015 12:14:15 -0800
-Message-ID: <CA+55aFzFT94xrfC+4tdeQOxDnPaxy0f72N+HEQ7NgRxHdvqbGQ@mail.gmail.com> (sfid-20150101_211434_970363_ABE1EEC0)
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: "Theodore Ts'o" <tytso@mit.edu>,
-	Arend van Spriel <arend@broadcom.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>
+CC: brudley@broadcom.com, Franky Lin <frankyl@broadcom.com>,
+	meuleman@broadcom.com, kvalo@codeaurora.org,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54A3B1B4.7090705@linux.intel.com> <54A3C837.6040400@broadcom.com> <54A9F82D.9030003@linux.intel.com> <54AA6BEB.9060207@broadcom.com>
+In-Reply-To: <54AA6BEB.9060207@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 1, 2015 at 11:44 AM, Lennart Sorensen
-<lsorense@csclub.uwaterloo.ca> wrote:
+
+I sent a new version of this patch in another mail.
+
+
+Thanks,
+Zhonghui
+
+
+On 2015/1/5 18:48, Arend van Spriel wrote:
+> On 01/05/15 03:34, Fu, Zhonghui wrote:
+>> Hi Arend,
+>>
+>> Where to find your patch for this?
 >
-> ifconfig seems to just be broken for many cases of perfectly nice features
-> in the kernel.
+> Well, we did not submit it. Hence my "Acked-by:" to your patch below.
+>
+> Regards,
+> Arend
+>
+>>
+>> Thanks,
+>> Zhonghui
+>>
+>> On 2014/12/31 17:56, Arend van Spriel wrote:
+>>> On 12/31/14 09:20, Fu, Zhonghui wrote:
+>>>>    From e34419970a07bfcd365f9c66bdfa552188a0cd26 Mon Sep 17 00:00:00 2001
+>>>> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>>> Date: Mon, 29 Dec 2014 21:25:31 +0800
+>>>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>>>>
+>>>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>>>> twice suspend/resume operations for one WiFi chip to do
+>>>> the same things. This patch avoid this case.
+>>>
+>>> We have a patch queued up for this as well, but this one looks good enough although I personally prefer container_of() instead of dev_to_sdio_func().
+>>>
+>>> Acked-by: Arend van Spriel<arend@broadcom.com>
+>>>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>>> ---
+>>>>    drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   19 +++++++++++++++++--
+>>>>    1 files changed, 17 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>>> index 3c06e93..eee7818 100644
+>>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>>> @@ -1139,11 +1139,18 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+>>>>    static int brcmf_ops_sdio_suspend(struct device *dev)
+>>>>    {
+>>>>        struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>>>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>>>> +    struct brcmf_sdio_dev *sdiodev;
+>>>>        mmc_pm_flag_t sdio_flags;
+>>>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>>>
+>>>>        brcmf_dbg(SDIO, "Enter\n");
+>>>>
+>>>> +    if (func->num == 2) {
+>>>> +        return 0;
+>>>> +    }
+>>>> +
+>>>> +    sdiodev = bus_if->bus_priv.sdio;
+>>>> +
+>>>>        atomic_set(&sdiodev->suspend, true);
+>>>>
+>>>>        if (sdiodev->wowl_enabled) {
+>>>> @@ -1164,9 +1171,17 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>>>>    static int brcmf_ops_sdio_resume(struct device *dev)
+>>>>    {
+>>>>        struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>>>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>>>> +    struct brcmf_sdio_dev *sdiodev;
+>>>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>>>
+>>>>        brcmf_dbg(SDIO, "Enter\n");
+>>>> +
+>>>> +    if (func->num == 2) {
+>>>> +        return 0;
+>>>> +    }
+>>>> +
+>>>> +    sdiodev = bus_if->bus_priv.sdio;
+>>>> +
+>>>>        if (sdiodev->pdata->oob_irq_supported)
+>>>>            disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>>>>        brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+>>>> -- 1.7.1
+>>>>
+>>>
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-So I'm not saying "ifconfig is wonderful". It's not.
-
-But I *am* saying that "changing user interfaces and then expecting
-people to change is f*cking stupid".
-
-The fact is, ifconfig is simple for the simple cases, but more
-importantly, a lot of people learnt how to use it. Saying "you should
-all change, because we made up a new syntax" is not good policy.
-
-The people who did "ip" could have fairly easily have done a wrapper
-around the same code that also left the old "ifconfig" syntax. Then,
-distros could have trivially just dropped the old "ifconfig" package,
-and entirely replaced it with the new "ip" package.
-
-As it is, we have two different models, and they'll basically stay
-around forever.
-
-For something like ifconfig, very few people care. But *all* the same
-arguments are true wrt "iw" and "iwconfig".
-
-The people who are trying to deprecate the WEXT interfaces should put
-the blame firmly where it belongs - on the people who thought that
-"we'll just ignore all old history".
-
-Because people who think that "we'll just redesign everything" are
-actually f*cking morons. Really.
-
-There's a real reason the kernel has the "no regression" policy. And
-that reason is that I'm not a moron.
-
-History matter. Legacy uses matter.
-
-                          Linus
