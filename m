@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59302 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751052AbbAMOUs (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:39817 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057AbbALG4D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 09:20:48 -0500
-Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Yanbo Li <yanbol@qca.qualcomm.com>,
-	Ben Greear <greearb@candelatech.com>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Nicholas Mc Guire <der.herr@hofr.at>
-Subject: Re: [PATCH v3] ath10k: fixup wait_for_completion_timeout return handling
-References: <1420720054-27870-1-git-send-email-der.herr@hofr.at>
-Date: Tue, 13 Jan 2015 16:20:27 +0200
-In-Reply-To: <1420720054-27870-1-git-send-email-der.herr@hofr.at> (Nicholas Mc
-	Guire's message of "Thu, 8 Jan 2015 13:27:34 +0100")
-Message-ID: <87d26i69uc.fsf@kamboji.qca.qualcomm.com> (sfid-20150113_152108_953386_CF295FD3)
+	Mon, 12 Jan 2015 01:56:03 -0500
+Received: by mail-ig0-f180.google.com with SMTP id h15so10249704igd.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 22:56:02 -0800 (PST)
+Date: Mon, 12 Jan 2015 01:54:45 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Hong Xu <hong@topbug.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
+Message-ID: <20150112065445.GB29484@localhost> (sfid-20150112_075607_006427_29606D94)
+References: <1420968029-1222-1-git-send-email-hong@topbug.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1420968029-1222-1-git-send-email-hong@topbug.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicholas Mc Guire <der.herr@hofr.at> writes:
+On Sun, Jan 11, 2015 at 01:20:29AM -0800, Hong Xu wrote:
+> Add an option "blink" to enable or disable the LED blink. The default
+> value is set to 1 so that existing users would not experience any
+> unexpected changes.
 
-> wait_for_completion_timeout does not return negative values so the tests
-> for <= 0 are not needed and the case differentiation in the error handling
-> path unnecessary.
->
-> Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
-
-Thanks, applied to ath.git.
+Been a while since I looked, but isn't there a way to achieve same
+result by just echoing 'none' into the relevant LED's sysfs file
+(something like /sys/class/leds/phy0-led/trigger)?
 
 -- 
-Kalle Valo
+Bob Copeland %% http://bobcopeland.com/
