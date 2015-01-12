@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27854 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751470AbbAOKe0 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34822 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168AbbALTsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 05:34:26 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix duration calculation for quiet param
-References: <1421140934-16109-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Thu, 15 Jan 2015 12:34:16 +0200
-In-Reply-To: <1421140934-16109-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Tue, 13 Jan 2015 14:52:14 +0530")
-Message-ID: <871tmwz61j.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_113430_060893_4C32A297)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 12 Jan 2015 14:48:45 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/8] ath10k:  add wmi-id to htc credits debugging.
+Date: Mon, 12 Jan 2015 10:32:38 -0800
+Message-Id: <1421087564-10384-2-git-send-email-greearb@candelatech.com> (sfid-20150112_204852_571737_3DE6A4EF)
+In-Reply-To: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
+References: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> The duty cycle (% of quiet duration) is used to put the device
-> in quiet mode for the given period. Currently the quiet duration
-> is wrongly calculated which results in not enabling quiet mode.
-> Fix the calculation as below
->
->      duration = (period * duty cycle) / 100
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+This helps when trying to figure out exactly which commands
+are consuming credits when trying to debug wmi credit hangs.
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-Thanks, applied.
-
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index d56e7f6..16b939a 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -137,9 +137,18 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 			goto err_pull;
+ 		}
+ 		ep->tx_credits -= credits;
+-		ath10k_dbg(ar, ATH10K_DBG_HTC,
+-			   "htc ep %d consumed %d credits (total %d)\n",
+-			   eid, credits, ep->tx_credits);
++		if (eid == ar->wmi.eid) {
++			struct wmi_cmd_hdr* hdr;
++			hdr = (struct wmi_cmd_hdr*)(skb->data + sizeof(struct ath10k_htc_hdr));
++			ath10k_dbg(ar, ATH10K_DBG_HTC,
++				   "htc ep %d consumed %d credits (total %d, wmi-cmd 0x%x)\n",
++				   eid, credits, ep->tx_credits, __le32_to_cpu(hdr->cmd_id));
++		}
++		else {
++			ath10k_dbg(ar, ATH10K_DBG_HTC,
++				   "htc ep %d consumed %d credits (total %d)\n",
++				   eid, credits, ep->tx_credits);
++		}
+ 		spin_unlock_bh(&htc->tx_lock);
+ 	}
+ 
 -- 
-Kalle Valo
+1.7.11.7
+
