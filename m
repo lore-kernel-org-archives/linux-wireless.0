@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60546 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933229AbbA2Bwj (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34824 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751931AbbALTsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:52:39 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21704.57262.573728.929633@gargle.gargle.HOWL> (sfid-20150129_025250_228308_4B94F41E)
-Date: Wed, 28 Jan 2015 18:40:06 +0530
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/6] ath9k: Add a macro to identify PCOEM chips
-In-Reply-To: <87fvav83jc.fsf@kamboji.qca.qualcomm.com>
-References: <1421633598-4488-1-git-send-email-sujith@msujith.org>
-	<1421633598-4488-4-git-send-email-sujith@msujith.org>
-	<21704.53700.641822.118302@gargle.gargle.HOWL>
-	<87oapj85k8.fsf@kamboji.qca.qualcomm.com>
-	<21704.54622.181818.695588@gargle.gargle.HOWL>
-	<87fvav83jc.fsf@kamboji.qca.qualcomm.com>
+	Mon, 12 Jan 2015 14:48:45 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 3/8] ath10k:  fix spelling mistakes and add details to mac logging.
+Date: Mon, 12 Jan 2015 10:32:39 -0800
+Message-Id: <1421087564-10384-3-git-send-email-greearb@candelatech.com> (sfid-20150112_204854_702211_7FF8D695)
+In-Reply-To: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
+References: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> For ath10k there's currently a separate patchwork project (I haven't
-> bothered to change that yet), but for all other drivers you should see
-> the patches from this link:
-> 
-> https://patchwork.kernel.org/project/linux-wireless/list/
-> 
-> If the patch is not in the list, it's not commited and there's no clear
-> reason why it was dropped, the chances are that I did a mistake. Like in
-> this case and also with one of the mwifiex patch earlier this week. I'll
-> need to be more careful with the states.
+From: Ben Greear <greearb@candelatech.com>
 
-Ok, thanks.
+A bit of general cleanup to make debug messages more useful.
 
-Sujith
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 924879f..85abb8a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -604,7 +604,7 @@ static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
+ 
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to synchronize setup for monitor vdev %i: %d\n",
++		ath10k_warn(ar, "failed to synchronize setup for monitor vdev %i: %d (start)\n",
+ 			    vdev_id, ret);
+ 		return ret;
+ 	}
+@@ -651,7 +651,7 @@ static int ath10k_monitor_vdev_stop(struct ath10k *ar)
+ 
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret)
+-		ath10k_warn(ar, "failed to synchronise monitor vdev %i: %d\n",
++		ath10k_warn(ar, "failed to synchronize monitor vdev %i: %d (stop)\n",
+ 			    ar->monitor_vdev_id, ret);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac monitor vdev %i stopped\n",
+@@ -936,8 +936,8 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+ 
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to synchronise setup for vdev %i: %d\n",
+-			    arg.vdev_id, ret);
++		ath10k_warn(ar, "failed to synchronize setup for vdev %i: %d (restart %d)\n",
++			    arg.vdev_id, ret, restart);
+ 		return ret;
+ 	}
+ 
+@@ -975,7 +975,7 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
+ 
+ 	ret = ath10k_vdev_setup_sync(ar);
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
++		ath10k_warn(ar, "failed to synchronize setup for vdev %i: %d (stop)\n",
+ 			    arvif->vdev_id, ret);
+ 		return ret;
+ 	}
+-- 
+1.7.11.7
+
