@@ -1,105 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46278 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757443AbbAIKto (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 05:49:44 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] mac80211: fix handling TIM IE when stations disconnect
-Date: Fri,  9 Jan 2015 11:49:39 +0100
-Message-Id: <1420800579-18723-2-git-send-email-johannes@sipsolutions.net> (sfid-20150109_114950_282481_DEB18313)
-In-Reply-To: <1420800579-18723-1-git-send-email-johannes@sipsolutions.net>
-References: <1420800579-18723-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:40346 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257AbbALOog (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2015 09:44:36 -0500
+Received: by mail-lb0-f178.google.com with SMTP id u14so17865381lbd.9
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 06:44:34 -0800 (PST)
+From: Vadim Kochan <vadim4j@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Vadim Kochan <vadim4j@gmail.com>
+Subject: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
+Date: Mon, 12 Jan 2015 16:34:05 +0200
+Message-Id: <1421073245-20312-1-git-send-email-vadim4j@gmail.com> (sfid-20150112_154439_462402_28679D27)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Vadim Kochan <vadim4j@gmail.com>
 
-When a station disconnects with frames still pending, we clear
-the TIM bit, but too late - it's only cleared when the station
-is already removed from the driver, and thus the driver can get
-confused (and hwsim will loudly complain.)
+Added new NL80211_ATTR_NETNS_FD which allows to
+set namespace via nl80211 by fd.
 
-Fix this by clearing the TIM bit earlier, when the station has
-been unlinked but not removed from the driver yet. To do this,
-refactor the TIM recalculation to in that case ignore traffic
-and simply assume no pending traffic - this is correct for the
-disconnected station even though the frames haven't been freed
-yet at that point.
-
-This patch isn't needed for current drivers though as they don't
-check the station argument to the set_tim() operation and thus
-don't really run into the possible confusion.
-
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
 ---
- net/mac80211/sta_info.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+ include/uapi/linux/nl80211.h |  2 ++
+ net/core/net_namespace.c     |  1 +
+ net/wireless/nl80211.c       | 16 +++++++++++-----
+ 3 files changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index dc352fcdd469..79383ef0c264 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -116,7 +116,6 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 		clear_sta_flag(sta, WLAN_STA_PS_DELIVER);
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index a963d48..47757cb 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2098,6 +2098,8 @@ enum nl80211_attrs {
  
- 		atomic_dec(&ps->num_sta_ps);
--		sta_info_recalc_tim(sta);
- 	}
+ 	NL80211_ATTR_SURVEY_RADIO_STATS,
  
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
-@@ -625,7 +624,7 @@ static unsigned long ieee80211_tids_for_ac(int ac)
- 	}
++	NL80211_ATTR_NETNS_FD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/core/net_namespace.c b/net/core/net_namespace.c
+index 7f15517..5d5ee8f 100644
+--- a/net/core/net_namespace.c
++++ b/net/core/net_namespace.c
+@@ -361,6 +361,7 @@ struct net *get_net_ns_by_fd(int fd)
+ 	return ERR_PTR(-EINVAL);
  }
+ #endif
++EXPORT_SYMBOL_GPL(get_net_ns_by_fd);
  
--void sta_info_recalc_tim(struct sta_info *sta)
-+static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
+ struct net *get_net_ns_by_pid(pid_t pid)
  {
- 	struct ieee80211_local *local = sta->local;
- 	struct ps_data *ps;
-@@ -667,6 +666,9 @@ void sta_info_recalc_tim(struct sta_info *sta)
- 	if (ignore_for_tim == BIT(IEEE80211_NUM_ACS) - 1)
- 		ignore_for_tim = 0;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 7c2ce26..dfa3284 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -397,6 +397,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
+ 	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
++	[NL80211_ATTR_NETNS_FD] = { .type = NLA_U32 },
+ };
  
-+	if (ignore_pending)
-+		ignore_for_tim = BIT(IEEE80211_NUM_ACS) - 1;
+ /* policy for the key attributes */
+@@ -7744,14 +7745,19 @@ static int nl80211_wiphy_netns(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net *net;
+ 	int err;
+-	u32 pid;
+ 
+-	if (!info->attrs[NL80211_ATTR_PID])
+-		return -EINVAL;
++	if (info->attrs[NL80211_ATTR_PID]) {
++		u32 pid = nla_get_u32(info->attrs[NL80211_ATTR_PID]);
 +
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		unsigned long tids;
++		net = get_net_ns_by_pid(pid);
++	} else if (info->attrs[NL80211_ATTR_NETNS_FD]) {
++		u32 fd = nla_get_u32(info->attrs[NL80211_ATTR_NETNS_FD]);
  
-@@ -695,7 +697,7 @@ void sta_info_recalc_tim(struct sta_info *sta)
- 	else
- 		__bss_tim_clear(ps->tim, id);
+-	pid = nla_get_u32(info->attrs[NL80211_ATTR_PID]);
++		net = get_net_ns_by_fd(fd);
++	} else {
++		return -EINVAL;
++	}
  
--	if (local->ops->set_tim) {
-+	if (local->ops->set_tim && !WARN_ON(sta->dead)) {
- 		local->tim_in_locked_section = true;
- 		drv_set_tim(local, &sta->sta, indicate_tim);
- 		local->tim_in_locked_section = false;
-@@ -705,6 +707,11 @@ out_unlock:
- 	spin_unlock_bh(&local->tim_lock);
- }
+-	net = get_net_ns_by_pid(pid);
+ 	if (IS_ERR(net))
+ 		return PTR_ERR(net);
  
-+void sta_info_recalc_tim(struct sta_info *sta)
-+{
-+	__sta_info_recalc_tim(sta, false);
-+}
-+
- static bool sta_info_buffer_expired(struct sta_info *sta, struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *info;
-@@ -888,6 +895,9 @@ static void __sta_info_destroy_part2(struct sta_info *sta)
- 	/* now keys can no longer be reached */
- 	ieee80211_free_sta_keys(local, sta);
- 
-+	/* disable TIM bit - last chance to tell driver */
-+	__sta_info_recalc_tim(sta, true);
-+
- 	sta->dead = true;
- 
- 	local->num_sta--;
 -- 
-2.1.1
+2.1.3
 
