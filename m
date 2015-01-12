@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:39478 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752941AbbAOXDa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 18:03:30 -0500
-Received: by mail-wi0-f176.google.com with SMTP id z2so609289wiv.3
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2015 15:03:29 -0800 (PST)
+Received: from erley.org ([97.107.129.9]:57920 "EHLO remote.erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753675AbbALTBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2015 14:01:36 -0500
+Message-ID: <54B4192E.9010202@erley.org> (sfid-20150112_200142_995012_70D8F9F9)
+Date: Mon, 12 Jan 2015 12:57:50 -0600
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-In-Reply-To: <21687.32167.596541.729136@gargle.gargle.HOWL>
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
- <87r3uy4t9y.fsf@kamboji.qca.qualcomm.com> <21685.35179.110539.780864@gargle.gargle.HOWL>
- <87bnm01ojf.fsf@kamboji.qca.qualcomm.com> <21687.29026.962216.812998@gargle.gargle.HOWL>
- <87vbk8zcr1.fsf@kamboji.qca.qualcomm.com> <21687.30578.746681.850817@gargle.gargle.HOWL>
- <87mw5kzbog.fsf@kamboji.qca.qualcomm.com> <21687.32167.596541.729136@gargle.gargle.HOWL>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 16 Jan 2015 10:03:08 +1100
-Message-ID: <CAGRGNgUB3K6KG1Stst9vwQsGQ03DXGBx_fs6NZ+KEGA1HS2npA@mail.gmail.com> (sfid-20150116_000333_762155_321401AB)
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: (re)licensing the wireless wiki
+References: <1421061360.1891.21.camel@sipsolutions.net>	 (sfid-20150112_121607_327018_99B6CF3A) <1421076401.1891.29.camel@sipsolutions.net>
+In-Reply-To: <1421076401.1891.29.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sujith,
-
-On Thu, Jan 15, 2015 at 7:43 PM, Sujith Manoharan <sujith@msujith.org> wrote:
-> Kalle Valo wrote:
->> Yeah, but everyone want higher throughput (including me). So what value
->> is best in your opinion?
+On 01/12/2015 09:26 AM, Johannes Berg wrote:
+> On Mon, 2015-01-12 at 12:16 +0100, Johannes Berg wrote:
 >
-> Lower throughput has been okay for all this time, with a value
-> of 16. I suppose the value can be retained to not cause regressions
-> on AP135 or other platforms with a low-powered CPU. As Michal mentioned,
-> this value allows AP135 to function without the watchdog rebooting
-> the board.
+>> I've emailed every contributor who I could find an email address for,
+>> but some (~40) don't have an email address and I already have a bunch of
+>> bounces (~50).
+>
+> Additionally, gmail has apparently decided that I was spamming -- so you
+> may find my message in your spam folder there.
+>
 
-Can we detect if this parameter is too high / low and adjust / limit
-it on the fly?
+Hmm, I swear I had setup an e-mail address way back when I made some 
+edits.  I'm pretty sure my account was PatErley on there(would see edits 
+on hostapd and the multiple vif iw sections, from my recollection). 
+Anyways, do you need an ack or is just saying:
 
-Thanks,
+You have my permission to add the license to my works.
 
--- 
-Julian Calaby
+Enough?
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Pat Erley
+
