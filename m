@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3369 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299AbbAVMcC (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34826 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753370AbbALTsp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 07:32:02 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: David Miller <davem@davemloft.net>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: pull-request: wireless-drivers-next 2015-01-22
-References: <87h9vjnic4.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 22 Jan 2015 14:31:53 +0200
-In-Reply-To: <87h9vjnic4.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Thu, 22 Jan 2015 13:52:11 +0200")
-Message-ID: <8761bznghy.fsf@kamboji.qca.qualcomm.com> (sfid-20150122_133212_048845_E8F243E1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 12 Jan 2015 14:48:45 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 8/8] ath10k:  fix CE_DESC_FLAGS_META_DATA_LSB definition.
+Date: Mon, 12 Jan 2015 10:32:44 -0800
+Message-Id: <1421087564-10384-8-git-send-email-greearb@candelatech.com> (sfid-20150112_204853_790604_03DB9424)
+In-Reply-To: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
+References: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> Hi Dave,
->
-> now a bigger pull request for net-next. Rafal found a UTF-8 bug in
-> patchwork[1] and because of that two commits (d0c102f70aec and
-> d0f66df5392a) have his name corrupted:
->
->     Acked-by: Rafa? Mi?ecki <zajec5@gmail.com>
->
-> Somehow I failed to spot that when I commited the patches. As rebasing
-> public git trees is bad, I thought we can live with these and decided
-> not to rebase. But I'll pay close attention to this in the future to
-> make sure that it won't happen again. Also we requested an update to
-> patchwork.kernel.org, the latest patchwork doesn't seem to have this
-> bug.
->
-> Also please note this pull request also adds one DT binding doc, but
-> this was reviewed in the device tree list:
->
->  .../bindings/net/wireless/qcom,ath10k.txt          |   30 +
->
-> Please let me know if you have any issues.
+The value was off by one.  The error probably has no negative
+affect on any upstream firmware, but should be fixed anyway
+in case it comes into use in the future.
 
-I almost missed that there's actually a small conflict with net-next:
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/ce.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/wil6210/cfg80211.c
-
-Please fix it like this in wil_cid_fill_sinfo():
-
-	if (test_bit(wil_status_fwconnected, wil->status)) {
-		sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-		sinfo->signal = reply.evt.sqi;
-	}
-
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index f4919e9..b92610b 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -39,7 +39,7 @@ struct ath10k_ce_pipe;
+ #define CE_DESC_FLAGS_GATHER         (1 << 0)
+ #define CE_DESC_FLAGS_BYTE_SWAP      (1 << 1)
+ #define CE_DESC_FLAGS_META_DATA_MASK 0xFFFC
+-#define CE_DESC_FLAGS_META_DATA_LSB  3
++#define CE_DESC_FLAGS_META_DATA_LSB  2
+ 
+ struct ce_desc {
+ 	__le32 addr;
 -- 
-Kalle Valo
+1.7.11.7
+
