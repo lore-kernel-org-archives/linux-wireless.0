@@ -1,92 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60743 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750846AbbALCMm (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:35038 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751557AbbALMcE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2015 21:12:42 -0500
-Message-ID: <1421028743.19708.44.camel@decadent.org.uk> (sfid-20150112_031252_276806_10823D09)
-Subject: Re: [PATCH V3 for 3.19]  rtlwifi: Fix error when accessing unmapped
- memory in skb
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Eric Biggers <ebiggers3@gmail.com>, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Stable <stable@vger.kernel.org>
-Date: Mon, 12 Jan 2015 02:12:23 +0000
-In-Reply-To: <54A4665A.8090906@lwfinger.net>
-References: <1419996787-17395-1-git-send-email-Larry.Finger@lwfinger.net>
-	 <20141231050735.GA20639@zzz> <54A4665A.8090906@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-FW9pGIs1+k9b/6UhnRV7"
-Mime-Version: 1.0
+	Mon, 12 Jan 2015 07:32:04 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/5] ath10k: implement beacon offload
+References: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 12 Jan 2015 14:31:54 +0200
+In-Reply-To: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 8 Jan 2015 12:12:25 +0100")
+Message-ID: <87d26kdvt1.fsf@kamboji.qca.qualcomm.com> (sfid-20150112_133209_612879_6321B247)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
---=-FW9pGIs1+k9b/6UhnRV7
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> Hi,
+>
+> New wmi-tlv firmware will support beacon/presp
+> offloading. This patchset adds appropriate
+> support.
+>
+> These patches of mine were originally posted by
+> Bartosz before christmas after I went on my
+> holidays.
+>
+> v2:
+>  * add a comment in patch 5
+>
+>
+> Michal Kazior (5):
+>   ath10k: implement new beacon tx status event
+>   ath10k: implement beacon template command
+>   ath10k: implement prb tmpl wmi command
+>   ath10k: implement p2p bcn ie command
+>   ath10k: implement support for ap beacon offloading
 
-On Wed, 2014-12-31 at 15:10 -0600, Larry Finger wrote:
-> On 12/30/2014 11:07 PM, Eric Biggers wrote:
-> > On Tue, Dec 30, 2014 at 09:33:07PM -0600, Larry Finger wrote:
-> >> v3 - Unmap skb before trying to allocate a new one so as to not leak m=
-apping.
-> >
-> > Looks good to me, although I'm not sure about the handling of DMA mappi=
-ng errors
-> > (perhaps that's something that drivers typically don't even try to hand=
-le?).
-> > Anyway, the skb allocation issue appears to be resolved now.  I am runn=
-ing your
-> > patch with an extra hack to inject some occasional skb allocation failu=
-res, and
-> > I haven't noticed any problems except dropped packets.
->=20
-> The last time I saw any DMA mapping errors were for some early BCM43xx ca=
-rds=20
-> that only had 20 bits of DMA addressing space. These Realtek devices have=
- a full=20
-> 32 bits of addressing, thus any physical address in the first 4GB of RAM =
-will be=20
-> OK. I suppose that it might be possible to get a physical address outside=
- this=20
-> range for machines with a lot of RAM, but they are unlikely to have wifi =
-interfaces.
-[...]
+While applying this I had few trivial commits with wmi ops. Can you
+double check my resolution from ath-next-test, please? (It might take an
+hour before I push the patches.)
 
-Really, you don't think laptops and desktops come with 4GB RAM or more?
-Besides that, DMA mapping may involve calling an IOMMU driver that may
-fail for some reason.
+Pushing patch "ath10k-implement-new-beacon-tx" ... done
+Pushing patch "ath10k-implement-beacon-templa" ... 
+  CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi.c
+  CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
+  CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-ops.h
+Error: The merge failed during "push".
+       Revert the operation with "stg undo".
+stg rebase: 3 conflict(s)
 
-Drivers need to check for DMA mapping errors, it is not optional.
 
-Ben.
-
---=20
-Ben Hutchings
-The world is coming to an end.	Please log off.
-
---=-FW9pGIs1+k9b/6UhnRV7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIVAwUAVLMtjOe/yOyVhhEJAQqoVxAAx9+0J947zdypTcKNcmKK3dHsKrCe2Hk8
-QmIH5eokTtDB7sv/KYFpy+cG+l74bJdX84lOd82E3dOrXhpghBbKHpC04PIz18Ve
-RxVXdLHv3CQYzLjqNUrL82Yn5S2Sk7Nl3+4JyVFt3vErwrSE2wFSmqf+J5XB4z9O
-TFq/W6XVToceZ45IaKl3+8QEhgoFy3zUVhyNTXI7mxMakh9QwTz55ZuhSVUg4fgX
-KdrLVeEXM/en46G6ba3HA+iaxMfu20lGHQvhgLSHDCcLJ2SjAqnELdm3mupkBEb+
-gcQSOC01xuaMPSJ6P3rjLnJU7rhZzFwIHmHj1hKm9DotpB+6hNq2SEbFrl8M8MKe
-w2Wgt0DSMdG0jqlC8KcKWseo4McL+dRtg2VC2d/FHSHQBkM1ULobGPvuZ1zW3DYU
-KCfP0jvlLqIvCf5NiR4Zp/Gm1nmhjHYeI5x2Dpdx5U+jl29607UXZH6cPdQ5uE4w
-bQLL3cbnCGbb9bfB29yR8LGy8nQdGAHBIiqjwvUe3yNcWX9YDn1/2ZNLht1kCice
-6u8qW93GxN624pY6INAHNFjm0owjyIEOZuZBAvHa852DHCK1FXPHmTFfD28wL39G
-2IpYsFFtZ0bLUfxXHR04o0Exc8QkCQ4gmO/0MT/HJSP5dEypbnIlOmjQHmuuipVC
-tpa++vyNORs=
-=vD59
------END PGP SIGNATURE-----
-
---=-FW9pGIs1+k9b/6UhnRV7--
+-- 
+Kalle Valo
