@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:57471 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815AbbABVes convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:44508 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233AbbALN0m convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 16:34:48 -0500
+	Mon, 12 Jan 2015 08:26:42 -0500
+Received: by mail-wg0-f43.google.com with SMTP id k14so19238743wgh.2
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 05:26:41 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAKXHbyO70WdWekSYCY9spMbX2+_kdKTp3JoreDKpCdUBzFwYqw@mail.gmail.com>
-References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
-	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
-	<CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com>
-	<CAKXHbyO70WdWekSYCY9spMbX2+_kdKTp3JoreDKpCdUBzFwYqw@mail.gmail.com>
-Date: Fri, 2 Jan 2015 22:34:47 +0100
-Message-ID: <CACna6rxTYUWvxvu0rFydWxkjbYdHfhV=o+9A+ViCpbV-LFx7fw@mail.gmail.com> (sfid-20150102_223512_945954_FAD7AE56)
-Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Sedat Dilek <sedat.dilek@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <87d26kdvt1.fsf@kamboji.qca.qualcomm.com>
+References: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+	<87d26kdvt1.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 12 Jan 2015 14:26:34 +0100
+Message-ID: <CA+BoTQ=3oY4hrotrNcNVP9AUMM1E_DayC25O0f_iD+oJ1d2LSQ@mail.gmail.com> (sfid-20150112_142646_179634_6C8CB5B7)
+Subject: Re: [PATCH v2 0/5] ath10k: implement beacon offload
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 January 2015 at 18:46, Rickard Strandqvist
-<rickard_strandqvist@spectrumdigital.se> wrote:
-> 2015-01-02 13:14 GMT+01:00 Sedat Dilek <sedat.dilek@gmail.com>:
->>
->> On Fri, Jan 2, 2015 at 1:06 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
->> > On 2 January 2015 at 13:05, Rafał Miłecki <zajec5@gmail.com> wrote:
->> >> On 1 January 2015 at 16:46, Rickard Strandqvist
->> >> <rickard_strandqvist@spectrumdigital.se> wrote:
->> >>> Remove the function b43legacy_radio_set_tx_iq() that is not used
->> >>> anywhere.
->> >>>
->> >>> This was partially found by using a static code analysis program
->> >>> called cppcheck.
->> >>
->> >> It seems to be for A-PHY based hardware (with 0x2060 radio id) which
->> >> is not handled by b43legacy. Should be safe to drop this code (we
->> >> won't likely need it).
->> >>
->> >> Ack
->> >
->> > For future, we prefix patches with just a driver name. So this could
->> > be simply called
->> > b43legacy: radio.c: Remove unused function
->> >
->>
->> Alternatively...
->>
->> "b43legacy: Remove unused function in radio.c"
->>
->> BTW, as Arnd Bergmann pointed out [1] how did you test with cppcheck
->> to get such stuff?
->>
->> - Sedat -
->>
->> [1] https://lkml.org/lkml/2015/1/2/51
+On 12 January 2015 at 13:31, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+[...]
+>> Michal Kazior (5):
+>>   ath10k: implement new beacon tx status event
+>>   ath10k: implement beacon template command
+>>   ath10k: implement prb tmpl wmi command
+>>   ath10k: implement p2p bcn ie command
+>>   ath10k: implement support for ap beacon offloading
 >
+> While applying this I had few trivial commits with wmi ops. Can you
+> double check my resolution from ath-next-test, please? (It might take an
+> hour before I push the patches.)
 >
->
-> Hi Rafal and Sedat
->
-> Rafal do you mean I should remove the entire b43legacy part?
+> Pushing patch "ath10k-implement-new-beacon-tx" ... done
+> Pushing patch "ath10k-implement-beacon-templa" ...
+>   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi.c
+>   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
+>   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-ops.h
+> Error: The merge failed during "push".
+>        Revert the operation with "stg undo".
+> stg rebase: 3 conflict(s)
 
-1) I gave you Ack for the changes
-2) You could drop "net: wireless: " or better use something Sedat proposed
+Looks good, thanks!
 
--- 
-Rafał
+
+Michał
