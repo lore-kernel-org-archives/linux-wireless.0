@@ -1,31 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49911 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735AbbABIuJ (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34675 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753578AbbALTmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 03:50:09 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Enable RX batching
-References: <1419834084-11859-1-git-send-email-sujith@msujith.org>
-	<87fvbt62x9.fsf@kamboji.qca.qualcomm.com>
-	<21670.22986.926659.849716@gargle.gargle.HOWL>
-Date: Fri, 2 Jan 2015 10:49:58 +0200
-In-Reply-To: <21670.22986.926659.849716@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Fri, 2 Jan 2015 14:11:46 +0530")
-Message-ID: <87bnmh5zyh.fsf@kamboji.qca.qualcomm.com> (sfid-20150102_095025_531035_42B5BA69)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 12 Jan 2015 14:42:08 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/8] ath10k:  add wmi-id to htc credits debugging.
+Date: Mon, 12 Jan 2015 11:41:43 -0800
+Message-Id: <1421091709-19891-2-git-send-email-greearb@candelatech.com> (sfid-20150112_204238_106594_33F56034)
+In-Reply-To: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
+References: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> Along with the other patch and an internal fix,
-> UDP RX increased to about 950 Mbps.
+This helps when trying to figure out exactly which commands
+are consuming credits when trying to debug wmi credit hangs.
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-What was the number before?
-
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index d56e7f6..16b939a 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -137,9 +137,18 @@ int ath10k_htc_send(struct ath10k_htc *htc,
+ 			goto err_pull;
+ 		}
+ 		ep->tx_credits -= credits;
+-		ath10k_dbg(ar, ATH10K_DBG_HTC,
+-			   "htc ep %d consumed %d credits (total %d)\n",
+-			   eid, credits, ep->tx_credits);
++		if (eid == ar->wmi.eid) {
++			struct wmi_cmd_hdr* hdr;
++			hdr = (struct wmi_cmd_hdr*)(skb->data + sizeof(struct ath10k_htc_hdr));
++			ath10k_dbg(ar, ATH10K_DBG_HTC,
++				   "htc ep %d consumed %d credits (total %d, wmi-cmd 0x%x)\n",
++				   eid, credits, ep->tx_credits, __le32_to_cpu(hdr->cmd_id));
++		}
++		else {
++			ath10k_dbg(ar, ATH10K_DBG_HTC,
++				   "htc ep %d consumed %d credits (total %d)\n",
++				   eid, credits, ep->tx_credits);
++		}
+ 		spin_unlock_bh(&htc->tx_lock);
+ 	}
+ 
 -- 
-Kalle Valo
+1.7.11.7
+
