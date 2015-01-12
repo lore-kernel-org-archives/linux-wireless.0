@@ -1,57 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:48540 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752637AbbA3JsU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 04:48:20 -0500
-Received: by mail-we0-f178.google.com with SMTP id k48so26083800wev.9
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 01:48:19 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/4] ath10k: implement fw stats for wmi-tlv
-Date: Fri, 30 Jan 2015 10:47:20 +0100
-Message-Id: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com> (sfid-20150130_104825_698752_1270236E)
+Received: from mout.gmx.net ([212.227.17.21]:56365 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752508AbbALKfV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2015 05:35:21 -0500
+Message-ID: <54B3A360.2080003@rempel-privat.de> (sfid-20150112_113524_316370_5B901A5F)
+Date: Mon, 12 Jan 2015 11:35:12 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>, Hong Xu <hong@topbug.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath9k_htc: Add a module parameter to disable blink
+References: <1421005553-19447-1-git-send-email-hong@topbug.net> <54B39888.2080701@broadcom.com>
+In-Reply-To: <54B39888.2080701@broadcom.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="0BS59tMm1I8SiDo9TOtVRBA7R9GGUHH47"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are some slight differences in fw stats
-(sic) in wmi-tlv.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--0BS59tMm1I8SiDo9TOtVRBA7R9GGUHH47
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Firmware has changed the querying scheme and no
-longer requires the ping-pong to get all stats.
-The patchset doesn't change this behaviour so with
-wmi-tlv it's possible to see the following
-warnings when reading fw stats:
+Am 12.01.2015 um 10:48 schrieb Arend van Spriel:
+> On 01/11/15 20:45, Hong Xu wrote:
+>> Add an option "blink" to enable or disable the LED blink. The default
+>> value is set to 1 so that existing users would not experience any
+>> unexpected changes.
+>>
+>> Signed-off-by: Hong Xu<hong@topbug.net>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/htc.h          | 3 +++
+>>   drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 4 ++++
+>>   drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++++
+>>   3 files changed, 11 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc.h
+>> b/drivers/net/wireless/ath/ath9k/htc.h
+>> index 9dde265..c43fec5 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc.h
+>> +++ b/drivers/net/wireless/ath/ath9k/htc.h
+>> @@ -44,6 +44,9 @@
+>>
+>>   extern struct ieee80211_ops ath9k_htc_ops;
+>>   extern int htc_modparam_nohwcrypt;
+>> +#ifdef CONFIG_MAC80211_LEDS
+>> +extern int led_blink;
+>> +#endif
+>>
+>>   enum htc_phymode {
+>>       HTC_MODE_11NA        =3D 0,
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+>> b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+>> index 50f74a2..998b558 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+>> @@ -279,6 +279,10 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)=
 
- ath10k_pci 0000:00:06.0: received unsolicited stats update event
+>>       else
+>>           priv->ah->led_pin =3D ATH_LED_PIN_DEF;
+>>
+>> +    if (!led_blink)
+>> +        priv->led_cdev.default_trigger =3D
+>> +            ieee80211_get_radio_led_name(priv->hw);
+>> +
+>=20
+> So is this function/file also conditionally compiled on
+> CONFIG_MAC80211_LEDS. In my tree it is not so you will get a warning an=
+d
+> loading the module will probably fail.
 
-The logic in ath10k still produces correct results
-so this is harmless.
+It is conditionally compiled on CONFIG_MAC80211_LEDS.
 
-I wonder how to deal with this in a sane way. An
-`if (op_ver == WMI_TLV)` is a little bad but
-having a new ar->fw_feature flag just for a debug
-facility like this is a bit silly. Or we can just
-drop the warning and leave a comment. Ideas?
+> Regards,
+> Arend
+>=20
+>>       ath9k_configure_leds(priv);
+>>
+>>       snprintf(priv->led_name, sizeof(priv->led_name),
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+>> b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+>> index e8fa944..9470127 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+>> @@ -39,6 +39,10 @@ module_param_named(ps_enable, ath9k_ps_enable, int,=
+
+>> 0444);
+>>   MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+>>
+>>   #ifdef CONFIG_MAC80211_LEDS
+>> +int led_blink =3D 1;
+>> +module_param_named(blink, led_blink, int, 0444);
+>> +MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+>> +
+>>   static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] =3D {
+>>       { .throughput =3D 0 * 1024, .blink_time =3D 334 },
+>>       { .throughput =3D 1 * 1024, .blink_time =3D 260 },
+>=20
 
 
-Michal Kazior (4):
-  ath10k: add vdev stats processing
-  ath10k: change request stats command prototype
-  ath10k: add more wmi fw stat defines
-  ath10k: implement fw stats for wmi-tlv
+--=20
+Regards,
+Oleksij
 
- drivers/net/wireless/ath/ath10k/core.h    |  20 +++++
- drivers/net/wireless/ath/ath10k/debug.c   | 101 +++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi-ops.h |   7 +-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 117 ++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |   9 +++
- drivers/net/wireless/ath/ath10k/wmi.c     |   7 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |  10 ++-
- 7 files changed, 254 insertions(+), 17 deletions(-)
 
--- 
-1.8.5.3
+--0BS59tMm1I8SiDo9TOtVRBA7R9GGUHH47
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlSzo2AACgkQHwImuRkmbWkKXQD/TeeT42SbSAtoHl1Nq9hpZaK+
+Km5NbURGbPSsXald350A/2i7faaB0XXZjjmaN6MH9t1XIeQclOEo5/GvPZMAoHaU
+=lf6a
+-----END PGP SIGNATURE-----
+
+--0BS59tMm1I8SiDo9TOtVRBA7R9GGUHH47--
