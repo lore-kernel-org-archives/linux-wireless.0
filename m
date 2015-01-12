@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:33872 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753485AbbAMXnF (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50703 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750964AbbALGzR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 18:43:05 -0500
-Received: by mail-wg0-f48.google.com with SMTP id l2so5915713wgh.7
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 15:43:04 -0800 (PST)
+	Mon, 12 Jan 2015 01:55:17 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH] mwifiex: set netif carrier off in ndo_open
+Date: Mon, 12 Jan 2015 17:54:56 +0530
+Message-ID: <1421065496-1968-1-git-send-email-patila@marvell.com> (sfid-20150112_075523_686139_C5D813D1)
 MIME-Version: 1.0
-In-Reply-To: <54B4192E.9010202@erley.org>
-References: <1421061360.1891.21.camel@sipsolutions.net>
-	<1421076401.1891.29.camel@sipsolutions.net>
-	<54B4192E.9010202@erley.org>
-Date: Wed, 14 Jan 2015 01:43:03 +0200
-Message-ID: <CAFtRNNxDm1FO4wABkmTuE8F1hRWTwKwsMs5G7++d7Zz3J_VXoA@mail.gmail.com> (sfid-20150114_004309_784233_4402C175)
-Subject: Re: (re)licensing the wireless wiki
-From: Nick Kossifidis <mickflemm@gmail.com>
-To: Pat Erley <pat-lkml@erley.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-01-12 20:57 GMT+02:00 Pat Erley <pat-lkml@erley.org>:
-> On 01/12/2015 09:26 AM, Johannes Berg wrote:
->>
->> On Mon, 2015-01-12 at 12:16 +0100, Johannes Berg wrote:
->>
->>> I've emailed every contributor who I could find an email address for,
->>> but some (~40) don't have an email address and I already have a bunch of
->>> bounces (~50).
->>
->>
->> Additionally, gmail has apparently decided that I was spamming -- so you
->> may find my message in your spam folder there.
->>
->
-> Hmm, I swear I had setup an e-mail address way back when I made some edits.
-> I'm pretty sure my account was PatErley on there(would see edits on hostapd
-> and the multiple vif iw sections, from my recollection). Anyways, do you
-> need an ack or is just saying:
->
-> You have my permission to add the license to my works.
->
-> Enough?
->
-> Pat Erley
->
+From: Johannes Berg <johannes@sipsolutions.net>
 
-Sorry for the delay, I missed this one.
+This patch adds fix to set carrier state off during ndo_open.
+Carrier should be set to ON when device is ready to send data.
+In case of station/adhoc interface device is able to transfer
+data after successful association/join operation.
+For AP this would be after bss_active event.
 
-So you have my permission to add the license to my works too. Thanks a
-lot for the notice and keep up the good work ;-)
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index effea6e..48e7c63 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -562,7 +562,8 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter)
+ static int
+ mwifiex_open(struct net_device *dev)
+ {
+-	netif_tx_start_all_queues(dev);
++	netif_carrier_off(dev);
++
+ 	return 0;
+ }
+ 
 -- 
-GPG ID: 0xEE878588
-As you read this post global entropy rises. Have Fun ;-)
-Nick
+1.8.1.4
+
