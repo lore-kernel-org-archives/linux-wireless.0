@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:44446 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757247AbbAIOnJ convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:43692 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbbALJHt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 09:43:09 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4] bcma: fix two coding style issues, more than 80 characters per line.
-References: <1419766622-10911-1-git-send-email-oscar.forner.martinez@gmail.com>
-	<87bnmaqxvs.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rzWaHg=M15q=swf+yqMEB3smRRANuLHkSK1dU1MtG8jgg@mail.gmail.com>
-	<87y4peo2of.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rzdtx2pBHE-00uocUEqNrbopShUW83R0dYeQBD26eC=NA@mail.gmail.com>
-	<87387kjbjo.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rz6xGLKxVHMka-PTOM0ybi_fbu1-AtUqF9jU2aFHZRODQ@mail.gmail.com>
-Date: Fri, 09 Jan 2015 16:43:04 +0200
-In-Reply-To: <CACna6rz6xGLKxVHMka-PTOM0ybi_fbu1-AtUqF9jU2aFHZRODQ@mail.gmail.com>
-	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Fri, 9 Jan 2015
- 15:38:19 +0100")
-Message-ID: <87y4pchv5z.fsf@kamboji.qca.qualcomm.com> (sfid-20150109_154341_609949_27126F30)
+	Mon, 12 Jan 2015 04:07:49 -0500
+Received: by mail-wi0-f180.google.com with SMTP id n3so13094274wiv.1
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 01:07:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1420449724.1898.1.camel@sipsolutions.net>
+References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com>
+	<1411075535.2034.5.camel@jlt4.sipsolutions.net>
+	<20141014121627.GA5115@angus-think.lan>
+	<1413798437.10246.12.camel@jlt4.sipsolutions.net>
+	<128188DF-5A9B-47A5-8A89-974CF7CF9064@holtmann.org>
+	<1413802344.10246.20.camel@jlt4.sipsolutions.net>
+	<CAMw6YJKLWQmT-fqg1QLDHbCxnpxWyJUSX+wvOB_pFyE=8HfSfQ@mail.gmail.com>
+	<1420449724.1898.1.camel@sipsolutions.net>
+Date: Mon, 12 Jan 2015 11:07:48 +0200
+Message-ID: <CAMw6YJJgPJw7jizR=Qe_2SOK=S0UKrm9AyE7MHUg1-wODEab2g@mail.gmail.com> (sfid-20150112_100756_220356_EA661295)
+Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device
+ via RTM_LINK
+From: Vadim Kochan <vadim4j@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
-
->> Rafal, is this the patch I should apply:
->>
->> https://patchwork.kernel.org/patch/5545021/
->>
->> Please confirm.
+On Mon, Jan 5, 2015 at 11:22 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2014-12-24 at 11:48 +0200, Vadim Kochan wrote:
 >
-> That's correct.
+>>     1) Set NETIF_F_NETNS_LOCAL for phy wireless device only if there
+>> is at least one virtual interface which was created on it
+>
+> You mean at least two? I'd think the behaviour becomes hard to predict,
+> but I guess ultimately that'd be somewhat reasonable.
+>
+>>     2) What about to inherit netns for newer created interfaces from
+>> the phy device ?
+>
+> Hmm? This already happens - a given phy is only in a single netns and
+> all interfaces must be created in the same netns.
+>
+> johannes
+>
+Hi,
 
-Thanks. I marked it as 'Under Review' in patchwork and will apply in my
-next commit round.
+Would you please explain why wireless devs related to the same phy
+can't live in separated network namespaces ?
 
--- 
-Kalle Valo
+Thanks,
