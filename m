@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56032 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753167AbbA3UfO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 15:35:14 -0500
-Message-ID: <1422650111.1919.45.camel@sipsolutions.net> (sfid-20150130_213519_446632_034E8D75)
-Subject: Re: [IWLMVM] Firmware restart issue with 3.19-rc6-wl with AC 3160,
- REV=0x164
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Fri, 30 Jan 2015 21:35:11 +0100
-In-Reply-To: <CAAd0S9BwPQZhOZSzt2NU1SGjzv8i6685Y7Zb6qRQ1BzJ0P92SA@mail.gmail.com> (sfid-20150130_212341_718339_20307764)
-References: <CAAd0S9BwPQZhOZSzt2NU1SGjzv8i6685Y7Zb6qRQ1BzJ0P92SA@mail.gmail.com>
-	 (sfid-20150130_212341_718339_20307764)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:34679 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753782AbbALTmI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2015 14:42:08 -0500
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 4/8] ath10k:  make dbglog debug messages be 'warn' level.
+Date: Mon, 12 Jan 2015 11:41:45 -0800
+Message-Id: <1421091709-19891-4-git-send-email-greearb@candelatech.com> (sfid-20150112_204241_460112_6D4CDB4C)
+In-Reply-To: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
+References: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-30 at 21:23 +0100, Christian Lamparter wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> [    6.274625] iwlwifi 0000:01:00.0: 0x00000038 | BAD_COMMAND
+This only happens on firmware crash, and it appears this
+logic is not always perfect, so make sure the information
+is printed to logs at higher level.
 
-> [    6.275034] iwlwifi 0000:01:00.0: FW error in SYNC CMD SCD_QUEUE_CFG
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-WTF. How did the firmware even announce support for this command??
-
-Perhaps I missed it in the log, but which firmware are you using? Any
-chance you also upgraded that? Because I can't imagine this code is new
-in the tree...
-
-Anyway, make this change:
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 979ac23522f2..5b8c969f457e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -874,7 +874,7 @@ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 0f7e845..dee0d5a 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1132,9 +1132,8 @@ static void ath10k_pci_dump_dbglog(struct ath10k *ar)
+ 		return;
+ 	}
  
- static inline bool iwl_mvm_is_scd_cfg_supported(struct iwl_mvm *mvm)
- {
--	return mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_API_SCD_CFG;
-+	return false;
- }
+-	ath10k_dbg(ar, ATH10K_DBG_PCI,
+-		   "debug log header, dbuf: 0x%x  dropped: %i\n",
+-		   le32_to_cpu(dbg_hdr.dbuf), le32_to_cpu(dbg_hdr.dropped));
++	ath10k_warn(ar, "debug log header, dbuf: 0x%x  dropped: %i\n",
++		    le32_to_cpu(dbg_hdr.dbuf), le32_to_cpu(dbg_hdr.dropped));
+ 	dbufp = le32_to_cpu(dbg_hdr.dbuf);
  
- extern const u8 iwl_mvm_ac_to_tx_fifo[];
-
-I guess Emmanuel will look at it on Sunday :)
-
-johannes
+ 	/* i is for logging purposes and sanity check in case firmware buffers
+@@ -1154,11 +1153,10 @@ static void ath10k_pci_dump_dbglog(struct ath10k *ar)
+ 
+ 		len = le32_to_cpu(dbuf.length);
+ 
+-		ath10k_dbg(ar, ATH10K_DBG_PCI,
+-			   "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
+-			   i, le32_to_cpu(dbuf.next), le32_to_cpu(dbuf.buffer),
+-			   le32_to_cpu(dbuf.bufsize), len,
+-			   le32_to_cpu(dbuf.count), le32_to_cpu(dbuf.free));
++		ath10k_warn(ar, "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
++			    i, le32_to_cpu(dbuf.next), le32_to_cpu(dbuf.buffer),
++			    le32_to_cpu(dbuf.bufsize), len,
++			    le32_to_cpu(dbuf.count), le32_to_cpu(dbuf.free));
+ 		if (dbuf.buffer == 0 || len == 0)
+ 			goto next;
+ 
+-- 
+1.7.11.7
 
