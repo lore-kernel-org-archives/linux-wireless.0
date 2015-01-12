@@ -1,50 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:44508 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233AbbALN0m convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 08:26:42 -0500
-Received: by mail-wg0-f43.google.com with SMTP id k14so19238743wgh.2
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 05:26:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87d26kdvt1.fsf@kamboji.qca.qualcomm.com>
-References: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
-	<87d26kdvt1.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 12 Jan 2015 14:26:34 +0100
-Message-ID: <CA+BoTQ=3oY4hrotrNcNVP9AUMM1E_DayC25O0f_iD+oJ1d2LSQ@mail.gmail.com> (sfid-20150112_142646_179634_6C8CB5B7)
-Subject: Re: [PATCH v2 0/5] ath10k: implement beacon offload
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:36158 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752538AbbALLQD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Jan 2015 06:16:03 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1YAcyX-0005oJ-6b
+	for linux-wireless@vger.kernel.org; Mon, 12 Jan 2015 12:16:01 +0100
+Message-ID: <1421061360.1891.21.camel@sipsolutions.net> (sfid-20150112_121607_327018_99B6CF3A)
+Subject: (re)licensing the wireless wiki
+From: Johannes Berg <johannes@sipsolutions.net>
+Reply-To: wireless-wiki@sipsolutions.net
+To: linux-wireless@vger.kernel.org
+Date: Mon, 12 Jan 2015 12:16:00 +0100
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-Oz1JIhe7z1l6fY9xy/EO"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 January 2015 at 13:31, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
-[...]
->> Michal Kazior (5):
->>   ath10k: implement new beacon tx status event
->>   ath10k: implement beacon template command
->>   ath10k: implement prb tmpl wmi command
->>   ath10k: implement p2p bcn ie command
->>   ath10k: implement support for ap beacon offloading
->
-> While applying this I had few trivial commits with wmi ops. Can you
-> double check my resolution from ath-next-test, please? (It might take an
-> hour before I push the patches.)
->
-> Pushing patch "ath10k-implement-new-beacon-tx" ... done
-> Pushing patch "ath10k-implement-beacon-templa" ...
->   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi.c
->   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
->   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-ops.h
-> Error: The merge failed during "push".
->        Revert the operation with "stg undo".
-> stg rebase: 3 conflict(s)
 
-Looks good, thanks!
+--=-Oz1JIhe7z1l6fY9xy/EO
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+Hi,
 
-Michał
+I've been working on moving the wireless wiki over to kernel.org
+infrastructure (https://wireless.wiki.kernel.org/), and we're going to
+need to tag the content with an explicit license there.
+
+As the previous wiki didn't have an explicit license, we can't do so
+easily. For the new license we've selected the creative commons "by" 4.0
+license: http://creativecommons.org/licenses/by/4.0/ which should have
+adequate permission and protection for the existing content.
+
+As noted on the website, this license does not apply to pages/files that
+have a different explicit license, for example GPL code or firmware
+tarballs uploaded to the website.
+
+I've emailed every contributor who I could find an email address for,
+but some (~40) don't have an email address and I already have a bunch of
+bounces (~50). If you have contributed and haven't received a direct
+email from me, please let me know separately (reply privately to the
+reply-to please) - but make sure to include the username that you used.
+
+Thanks,
+Johannes
+
+--=-Oz1JIhe7z1l6fY9xy/EO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJUs6zwAAoJEDBSmw7B7bqrpqgQAI4DbBwRPdVnVn5S1+pvDvs2
+CZq6cZP95I+UPjUS7FR6kDU8nauvkrwwQxuYBQSx0/QBJnQM1rWRuVqn03EkYT5u
+0yILhDgorNe/xgpofXPKmYFBawqMkJLEUBWaw6ZhGMKc2EACmpn86Ne819/DtUid
+rOdBCYj7i4EHgHxUNDt18WvRnIbB6zGS4MtLeHZmPhEH2x/0H8jqGF4x6CfTiVBx
+2R6svz147YZc8Y0OrfLriwenvb+dEgx6H7AqaWD6xS0UA+KSQuJbaMV3E8XfWTZd
+9JTs4b80ALCWXoMIfy2k44E9Y8enA4CSRQ2RsdQMDkTeqxnewEVltDXbH7Tv7vEp
+nZou8wdEN7GqHoC7pa1U2wAW3/ZZZ/YxAZRN3sIcQ9n33phqtBnsGxLxdB27OSJT
+CT4nnt1M3Q1BEHBouKXWanwb09aobalmH195MTr9ChXtV8jFSG5Em8S7cJPvsrPL
+3opjQMccolzvvfhRsS5y/K+n7ySOEYzRyNtvgGGk1/kOOxAVRRo+tQYjbcFZUt8V
+5NWWrCvwlcg0LSZWTmbg4G3HSTfMsXKFwa/91kkHIwKFYGpF+91MHqmDUBl8/LQq
+KmQ+Tr8JZkGwLiJDkwWge5kEvS+SloqgxBRO+nPkCzR7QD0T78JacdDQNTeI1Fuh
+0+gBDeHXOmGf23K7eezs
+=kMn+
+-----END PGP SIGNATURE-----
+
+--=-Oz1JIhe7z1l6fY9xy/EO--
+
