@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37444 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754545AbbAWQEe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 11:04:34 -0500
-Message-ID: <1422029065.2728.40.camel@sipsolutions.net> (sfid-20150123_170437_703306_C6C1D139)
-Subject: Re: [RFC iw next] phy: Allow set netns by fd
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vadim Kochan <vadim4j@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 23 Jan 2015 17:04:25 +0100
-In-Reply-To: <20150123154731.GA9454@angus-think.wlc.globallogic.com> (sfid-20150123_165824_857317_15B252D3)
-References: <1422026027-5806-1-git-send-email-vadim4j@gmail.com>
-	 <1422027267.2728.39.camel@sipsolutions.net>
-	 <20150123154731.GA9454@angus-think.wlc.globallogic.com>
-	 (sfid-20150123_165824_857317_15B252D3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:57414 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbbAMHOo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 02:14:44 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2] ath10k: fix hwmon temperature input units
+Date: Tue, 13 Jan 2015 12:44:24 +0530
+Message-ID: <1421133264-21278-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150113_081447_208542_26F2759D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-23 at 17:47 +0200, Vadim Kochan wrote:
+To be compliant with the hwmon interface the unit needs to be
+millidegree Celsius. Fix that.
 
-> OK, just to clarify with nl80211.h - you will update it including new
-> NL80211_ATTR_NETNS_FD ? If yes - I will wait for this change.
+Reported-by: Matthias Kaehlcke <mka@google.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+v2: added new line for better readability.
+ drivers/net/wireless/ath/ath10k/thermal.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-No, don't wait for it - just commit it locally separately for testing,
-but send me only the actual code changes. I'll then do the update when I
-apply your patch.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index b14ae8d..e915178 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -160,7 +160,8 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
+ 	temperature = ar->thermal.temperature;
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+-	ret = snprintf(buf, PAGE_SIZE, "%d", temperature);
++	/* display in millidegree celcius */
++	ret = snprintf(buf, PAGE_SIZE, "%d\n", temperature * 1000);
+ out:
+ 	mutex_unlock(&ar->conf_mutex);
+ 	return ret;
+-- 
+2.2.1
 
