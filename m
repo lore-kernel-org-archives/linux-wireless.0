@@ -1,72 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14731 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751175AbbAELDl (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42221 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318AbbAMOoz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 06:03:41 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t05B3dn7005953
-	for <linux-wireless@vger.kernel.org>; Mon, 5 Jan 2015 03:03:40 -0800
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1rqhmq126c-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 03:03:40 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH v3] cfg80211: check for carrier state only when offchanel CAC supported
-Date: Mon, 5 Jan 2015 22:03:04 +0530
-Message-ID: <1420475584-5533-1-git-send-email-patila@marvell.com> (sfid-20150105_120344_381788_A7E15DA0)
+	Tue, 13 Jan 2015 09:44:55 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
+	<CA+BoTQ=HqF0vBj4chXfoY9GKcFBP8Xh37HXo5etDDZ1XCg6O4w@mail.gmail.com>
+	<21677.3195.451116.244389@gargle.gargle.HOWL>
+Date: Tue, 13 Jan 2015 16:44:42 +0200
+In-Reply-To: <21677.3195.451116.244389@gargle.gargle.HOWL> (Sujith Manoharan's
+	message of "Wed, 7 Jan 2015 16:07:47 +0530")
+Message-ID: <87zj9m4u5h.fsf@kamboji.qca.qualcomm.com> (sfid-20150113_154506_360943_B676E70D)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Checking for carrier state during start_radar_detection is needed
-only for devices which support offchannel CAC.
-This patch provides this additional check of extended feature offchannel
-CAC support while checking for carrier state.
+Sujith Manoharan <sujith@msujith.org> writes:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/nl80211.c       | 4 +++-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+>> I have a patch internally which removes the replenishment tasklet and
+>> I wonder how will it behave with rx batching then, hmm..
+>
+> I tried that earlier and could see only marginal improvement. The biggest
+> increase came when I replaced netif_receive_skb() with netif_rx()
+> in mac80211/rx.c.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 735ab43..c318802 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4205,10 +4205,13 @@ enum nl80211_feature_flags {
- /**
-  * enum nl80211_ext_feature_index - bit index of extended features.
-  *
-+ * @NL80211_EXT_FEATURE_OFFCHAN_CAC: This device/driver supports
-+ *	offchannel Channel Availability Check(CAC).
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
- enum nl80211_ext_feature_index {
-+	NL80211_EXT_FEATURE_OFFCHAN_CAC,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 39753de..b2abb37 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6138,7 +6138,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (err)
- 		return err;
- 
--	if (netif_carrier_ok(dev))
-+	if (wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_OFFCHAN_CAC) &&
-+	    netif_carrier_ok(dev))
- 		return -EBUSY;
- 
- 	if (wdev->cac_started)
+Any ideas why that increases throughput?
+
 -- 
-1.8.1.4
-
+Kalle Valo
