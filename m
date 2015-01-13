@@ -1,72 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:44110 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057AbbAPMIY (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:50771 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750985AbbAMHLz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 07:08:24 -0500
-Received: by mail-ie0-f175.google.com with SMTP id x19so20281960ier.6
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 04:08:24 -0800 (PST)
+	Tue, 13 Jan 2015 02:11:55 -0500
+Received: by mail-wg0-f53.google.com with SMTP id x13so1110721wgg.12
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 23:11:54 -0800 (PST)
+Message-ID: <54B4C507.1030102@open-mesh.com> (sfid-20150113_081158_887232_8D810038)
+Date: Tue, 13 Jan 2015 08:11:03 +0100
+From: Antonio Quartulli <antonio@open-mesh.com>
 MIME-Version: 1.0
-In-Reply-To: <1421405703.9214.4.camel@sipsolutions.net>
-References: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1421404724-32326-6-git-send-email-janusz.dziedzic@tieto.com>
-	<1421405703.9214.4.camel@sipsolutions.net>
-Date: Fri, 16 Jan 2015 13:08:23 +0100
-Message-ID: <CALhHN=pkvz9qiQNWvXF6xwfhpmmhbUaW0PVnOWDhgWYT0nVY=w@mail.gmail.com> (sfid-20150116_130829_669101_760EA176)
-Subject: Re: [RFCv2 6/6] mac80211: IBSS setup correctly BW for VHT
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k: fw_stats not reporting peer_stats with 10.2
+References: <5492CFF5.9060107@open-mesh.com> <CA+BoTQm1H9jAszUH_gQCjcEk-GCQG0r9r7Jb2VdpM1CQF7jXeg@mail.gmail.com>
+In-Reply-To: <CA+BoTQm1H9jAszUH_gQCjcEk-GCQG0r9r7Jb2VdpM1CQF7jXeg@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="SfPJnV8AxjQwDn3ub0C0L3GhEPo05FrbC"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 January 2015 at 11:55, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2015-01-16 at 11:38 +0100, Janusz Dziedzic wrote:
->
->> +                             /* we both use VHT */
->> +                             struct ieee80211_vht_cap vhtcap_ie;
->> +                             struct ieee80211_sta_vht_cap vht_cap = sta->sta.vht_cap;
->> +
->> +                             ieee80211_vht_oper_to_chandef(channel,
->> +                                                           elems->vht_operation,
->> +                                                           &chandef);
->
-> Ok maybe I'm missing something - but can't this erroneously configure
-> the local HW to 160 MHz when it doesn't even support it, or so?
->
-I will check this more. But seems chandef (sta chandef) is a local
-variable here, not used by the way.
-So, our chandef is form cfg80211 (sdata->u.ibss.chandef) and we don't
-change this.
-Orginaly this sta chandef was used to compare with ibss->chandef.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--SfPJnV8AxjQwDn3ub0C0L3GhEPo05FrbC
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
--                       if (chandef.center_freq1 !=
--                           sdata->u.ibss.chandef.center_freq1)
--                               htcap_ie.cap_info &=
--
-cpu_to_le16(~IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+On 12/01/15 12:54, Michal Kazior wrote:
+> On 18 December 2014 at 14:00, Antonio Quartulli <antonio@open-mesh.com>=
+ wrote:
+>> I tried printing some debug messages here and there and the only usefu=
+l
+>> information I got is that in "ath10k_wmi_10x_pull_fw_stats()" the valu=
+e
+>> of "ev->num_peer_stats" is always 0.
+>>
+>> Is this yet another fw limitation?
+>=20
+> Firmware stats has a very fragile ABI. Apparently 10.2 changed it
+> again and thus is broken. I'll try to look into it more if time
+> permits.
 
-But for me this check seems as not needed, eg.
-We support VHT80 and other ibss have only HT40 support - so we will
-have different center_freq1 - but still could operate, while sta_add
-and correct rates for sta configured.
-One I think we could check here is, if our chandef and sta chandef overlap.
+Thank Micha=C5=82!
+I will be happy to test any change you might be able to provide.
 
-Anyway, I am not sure I understand your question correctly, you mean eg.
-we work in VHT80 mode and other ibss join in VHT160 mode? Does it
-really matter while we will use sta_add for this new V160 "station"
-and configure supported rates for this station?
+Cheers,
 
-BR
-Janusz
 
->> +                             memcpy(&vhtcap_ie, elems->vht_cap_elem, sizeof(vhtcap_ie));
->> +                             ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband, &vhtcap_ie, sta);
->> +                             if (memcmp(&vht_cap, &sta->sta.vht_cap, sizeof(vht_cap)))
->> +                                             rates_updated |= true;
->
-> Indentation is wrong here.
->
-> johannes
->
+--=20
+Antonio Quartulli
+
+
+--SfPJnV8AxjQwDn3ub0C0L3GhEPo05FrbC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJUtMUOAAoJEJgn97Bh2u9epwsQAKoKbrBq3FgmGy35F45JqCSh
+KZ/pYNx0ilflVMAUDr6v0SDYoYcGEHZcW+gliLtagbjx8H6lgqCl6tB4uGSHNyUQ
+fYPtzx32mMEQB4f2VjXAONvdb8DzQHXzqd6wUDRHBHOgYL65TSLSG8qzvkQixwwU
+KxOM3rAq8hYlt8kgFTiczyIpLdxoo6LIo0wXko+erYTY9wRIQTVLyYbhf8Mct/cH
+MjDjmX31AlmtbigBwOZLbNIbjIkwG8oJfzRycGb24pwZya5XOLDOBoDLaKRyOSHl
+Lp/oSz6IqyoBSh+Kr6NwiWVHLBIW05LT9g+klIadE4VK8S6OoZxvIitDn1QWHgt/
+77KRwFzyj6v+eCJbe5XGlGUNfoYJ+UeK/rxCLHdZtxDx/d4LB1SHxoaHH6tfPcUF
+YOIDUUL+Eq1IUeIh6WRzD2ryL3861Pc/9DDo/CWgohUl8+Jp8VV1bTe2Dc1bxGGh
+OuyIrgy6r1Kf0zyM343j8zgO5HNpFyXndAzyPtn5jSuGONlWLYqCTgQqtT5BwQSL
+XWyQS5+Q62B53ek9RvJQN4FMJMmbfFVR1B+faByv1orBXNxqKSOplMf8rnGMCmKW
+QY0Mk8w2OIPOmx91IkI3X7/uF/GkobwWwQ34ZdR+n15RnZlZF/earz3kj6VPykIS
+O5z7QlxaTi/aT5oleHwd
+=fb4b
+-----END PGP SIGNATURE-----
+
+--SfPJnV8AxjQwDn3ub0C0L3GhEPo05FrbC--
