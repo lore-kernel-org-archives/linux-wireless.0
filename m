@@ -1,66 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toccata2.tricolour.ca ([204.225.221.17]:41929 "EHLO
-	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbbA1Dns (ORCPT
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:53528 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106AbbAMSZZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 22:43:48 -0500
-Date: Tue, 27 Jan 2015 22:43:40 -0500
-From: Richard Guy Briggs <rgb@tricolour.ca>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
-	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
-Cc: info@netdev01.org, speakers@netdev01.org, attendees@netdev01.org
-Subject: NetDev 0.1 Hotel special rates extended
-Message-ID: <20150128034340.GN30763@toccata2.tricolour.ca> (sfid-20150128_044357_246138_35366E25)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 13 Jan 2015 13:25:25 -0500
+Received: by mail-wg0-f46.google.com with SMTP id x13so4594596wgg.5
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 10:25:24 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Axel Lin <axel.lin@ingics.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: hci: llc: Remove unused function
+Date: Tue, 13 Jan 2015 19:28:31 +0100
+Message-Id: <1421173711-4320-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150113_192549_960913_D0BD347E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fellow netheads:
+Remove the function nfc_llc_unregister() that is not used anywhere.
 
+This was partially found by using a static code analysis program called cppcheck.
 
-Hotel discount rates deadline extended
-==========================
-We've been able to negotiate an extention to the block of rooms at the
-hotel earlybird special rates beyond this past Friday, but when they are
-gone, they are gone.
-The Westin Hotel is still holding a block of rooms for Netdev01 at a
-guaranteed rate of $159.00 or $179.00 (depending on the type of room
-required) and there are still a few rooms available.
-Make your reservations at:
-https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
-There are lots of big and small hotels in Ottawa, but they will fill up
-fast as Winterlude approaches, so book something soon.  There may be
-some possibilities to billet locally, but don't leave it last minute.
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ net/nfc/hci/llc.c |   13 -------------
+ net/nfc/hci/llc.h |    1 -
+ 2 files changed, 14 deletions(-)
 
+diff --git a/net/nfc/hci/llc.c b/net/nfc/hci/llc.c
+index 1b90c05..91b71e8 100644
+--- a/net/nfc/hci/llc.c
++++ b/net/nfc/hci/llc.c
+@@ -85,19 +85,6 @@ static struct nfc_llc_engine *nfc_llc_name_to_engine(const char *name)
+ 	return NULL;
+ }
+ 
+-void nfc_llc_unregister(const char *name)
+-{
+-	struct nfc_llc_engine *llc_engine;
+-
+-	llc_engine = nfc_llc_name_to_engine(name);
+-	if (llc_engine == NULL)
+-		return;
+-
+-	list_del(&llc_engine->entry);
+-	kfree(llc_engine->name);
+-	kfree(llc_engine);
+-}
+-
+ struct nfc_llc *nfc_llc_allocate(const char *name, struct nfc_hci_dev *hdev,
+ 				 xmit_to_drv_t xmit_to_drv,
+ 				 rcv_to_hci_t rcv_to_hci, int tx_headroom,
+diff --git a/net/nfc/hci/llc.h b/net/nfc/hci/llc.h
+index 5dad4c5..f8ac1dc 100644
+--- a/net/nfc/hci/llc.h
++++ b/net/nfc/hci/llc.h
+@@ -51,7 +51,6 @@ struct nfc_llc {
+ void *nfc_llc_get_data(struct nfc_llc *llc);
+ 
+ int nfc_llc_register(const char *name, struct nfc_llc_ops *ops);
+-void nfc_llc_unregister(const char *name);
+ 
+ int nfc_llc_nop_register(void);
+ 
+-- 
+1.7.10.4
 
-Registration:
-==========================
-https://onlineregistrations.ca/netdev01/
-$100/day, or $350 for 4 days (Cdn dollars). (online reg closes Feb 12th)
-Please register as early as practical.  Registering helps us plan properly for
-numbers of attendees, ensuring venue sizes and supplies are appropriate without
-wasting resources.
-
-
-Sponsors:
-=========
-NetDev 0.1 would like to gratefully acknowledge all our sponsors: 
-https://netdev01.org/sponsors
-CENGN			http://www.cengn.ca/
-Google			https://www.google.ca
-Qualcomm		https://www.qualcomm.com/
-Verizon			http://www.verizon.com/
-Cumulus Networks	http://cumulusnetworks.com/
-Mojatatu Networks	http://mojatatu.com/
-
--------------------------------------------------------------------------------
-THE Technical Conference on Linux Networking, February 14-17, 2015, Ottawa, Canada
-https://netdev01.org/
-
-Contact:			info@netdev01.info
-Main site:			https://www.netdev01.org/
-Travel/hotel/weather/clothing:	https://www.netdev01.org/travel
-RSS feed:			https://netdev01.org/atom
-Follow us on Twitter: @netdev01	https://twitter.com/netdev01
