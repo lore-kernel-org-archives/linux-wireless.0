@@ -1,101 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:62766 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbbATGuG (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24701 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752748AbbAMGJZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 01:50:06 -0500
-Received: by mail-pa0-f45.google.com with SMTP id lf10so43741081pab.4
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 22:50:05 -0800 (PST)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org, Taehee Yoo <ap420073@gmail.com>
-Subject: [PATCH] rtl8192cu : add support to send beacon frame.
-Date: Tue, 20 Jan 2015 15:49:54 +0900
-Message-Id: <1421736594-28262-1-git-send-email-ap420073@gmail.com> (sfid-20150120_075014_966903_3E087BFB)
+	Tue, 13 Jan 2015 01:09:25 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0D64ich022549
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:09:24 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1rv520k6bt-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:09:24 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 5/8] mwifiex: add init parameter to init command routine
+Date: Tue, 13 Jan 2015 17:08:47 +0530
+Message-ID: <1421149130-5889-6-git-send-email-patila@marvell.com> (sfid-20150113_070929_884189_0A766380)
+In-Reply-To: <1421149130-5889-1-git-send-email-patila@marvell.com>
+References: <1421149130-5889-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In AP mode, beacon frame is necessary to keep connection.
-this patch adds a sending beacon frame routine in initialize routine.
+FW initialization routine can also be called while changing
+virtual interface types.
+This patch adds bool parameter "init" to init command routine
+so as to differentiate between initialization during driver load
+and change virtual interface handler.
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/rtlwifi/core.c          |  3 +++
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c  |  1 +
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 11 +++++++++++
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.h |  1 +
- drivers/net/wireless/rtlwifi/wifi.h          |  2 ++
- 5 files changed, 18 insertions(+)
+ drivers/net/wireless/mwifiex/init.c      |  3 ++-
+ drivers/net/wireless/mwifiex/main.h      |  2 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c   | 13 ++++++++-----
+ drivers/net/wireless/mwifiex/sta_ioctl.c |  2 +-
+ 4 files changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index eb20316..2ebd1fd 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -1040,6 +1040,9 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index e9eec12..ae42cd9 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -534,7 +534,8 @@ int mwifiex_init_fw(struct mwifiex_adapter *adapter)
  
- 				if (rtlpriv->cfg->ops->linked_set_reg)
- 					rtlpriv->cfg->ops->linked_set_reg(hw);
-+				if (rtlpriv->cfg->ops->set_bcn_frame)
-+					rtlpriv->cfg->ops->set_bcn_frame(hw,
-+							vif);
- 			}
- 		}
- 		if ((changed & BSS_CHANGED_BEACON_ENABLED &&
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index 90a714c..d88ee35 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -155,6 +155,7 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
- 	.dm_dynamic_txpower = rtl92cu_dm_dynamic_txpower,
- 	.fill_h2c_cmd = rtl92c_fill_h2c_cmd,
- 	.get_btc_status = rtl92cu_get_btc_status,
-+	.set_bcn_frame = rtl92cu_set_bcn_frame,
- };
+ 	for (i = 0; i < adapter->priv_num; i++) {
+ 		if (adapter->priv[i]) {
+-			ret = mwifiex_sta_init_cmd(adapter->priv[i], first_sta);
++			ret = mwifiex_sta_init_cmd(adapter->priv[i], first_sta,
++						   true);
+ 			if (ret == -1)
+ 				return -1;
  
- static struct rtl_mod_params rtl92cu_mod_params = {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index cbead00..e27da8f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -684,3 +684,14 @@ bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index f270e24..b2fe220 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -989,7 +989,7 @@ void mwifiex_wmm_del_peer_ra_list(struct mwifiex_private *priv,
+ 				  const u8 *ra_addr);
+ void *mwifiex_process_sta_txpd(struct mwifiex_private *, struct sk_buff *skb);
+ void *mwifiex_process_uap_txpd(struct mwifiex_private *, struct sk_buff *skb);
+-int mwifiex_sta_init_cmd(struct mwifiex_private *, u8 first_sta);
++int mwifiex_sta_init_cmd(struct mwifiex_private *, u8 first_sta, bool init);
+ int mwifiex_cmd_802_11_scan(struct host_cmd_ds_command *cmd,
+ 			    struct mwifiex_scan_cmd_config *scan_cfg);
+ void mwifiex_queue_scan_cmd(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index f7b920d..92a66e8 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -1911,6 +1911,8 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+  *
+  * This is called after firmware download to bring the card to
+  * working state.
++ * Function is also called during reinitialization of virtual
++ * interfaces.
+  *
+  * The following commands are issued sequentially -
+  *      - Set PCI-Express host buffer configuration (PCIE only)
+@@ -1925,7 +1927,7 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+  *      - Set 11d control
+  *      - Set MAC control (this must be the last command to initialize firmware)
+  */
+-int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta)
++int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
  {
- 	return true;
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	int ret;
+@@ -2059,9 +2061,6 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta)
+ 				"11D: failed to enable 11D\n");
+ 	}
+ 
+-	/* set last_init_cmd before sending the command */
+-	priv->adapter->last_init_cmd = HostCmd_CMD_11N_CFG;
+-
+ 	/* Send cmd to FW to configure 11n specific configuration
+ 	 * (Short GI, Channel BW, Green field support etc.) for transmit
+ 	 */
+@@ -2069,7 +2068,11 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta)
+ 	ret = mwifiex_send_cmd(priv, HostCmd_CMD_11N_CFG,
+ 			       HostCmd_ACT_GEN_SET, 0, &tx_cfg, true);
+ 
+-	ret = -EINPROGRESS;
++	if (init) {
++		/* set last_init_cmd before sending the command */
++		priv->adapter->last_init_cmd = HostCmd_CMD_11N_CFG;
++		ret = -EINPROGRESS;
++	}
+ 
+ 	return ret;
  }
-+
-+void rtl92cu_set_bcn_frame(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
-+
-+	if (skb == NULL)
-+		return;
-+
-+	rtlpriv->intf_ops->adapter_tx(hw, NULL, skb, NULL);
-+}
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
-index fd8051d..0d57431 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
-@@ -431,5 +431,6 @@ void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
- 			     u8 *pdesc, bool b_firstseg,
- 			     bool b_lastseg, struct sk_buff *skb);
- bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
-+void rtl92cu_set_bcn_frame(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 329cd51..2faa517 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -1162,7 +1162,7 @@ mwifiex_set_bss_role(struct mwifiex_private *priv, u8 bss_role)
+ 	mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
+ 			 HostCmd_ACT_GEN_SET, 0, NULL, true);
  
- #endif
-diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-index b53d9dd..daf8142 100644
---- a/drivers/net/wireless/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/rtlwifi/wifi.h
-@@ -2182,6 +2182,8 @@ struct rtl_hal_ops {
- 	void (*add_wowlan_pattern)(struct ieee80211_hw *hw,
- 				   struct rtl_wow_pattern *rtl_pattern,
- 				   u8 index);
-+	void (*set_bcn_frame) (struct ieee80211_hw *hw,
-+			       struct ieee80211_vif *vif);
- };
+-	return mwifiex_sta_init_cmd(priv, false);
++	return mwifiex_sta_init_cmd(priv, false, false);
+ }
  
- struct rtl_intf_ops {
+ /*
 -- 
-1.9.1
+1.8.1.4
 
