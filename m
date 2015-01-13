@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:39824 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752177AbbA2BIN convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:29474 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751058AbbAMGJN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:08:13 -0500
-Received: by mail-wi0-f179.google.com with SMTP id l15so17773124wiw.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2015 17:08:12 -0800 (PST)
+	Tue, 13 Jan 2015 01:09:13 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0D69DmR010866
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:09:13 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1rubhvwnv2-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:09:12 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 0/8] mwifiex change virtual interface enhancements
+Date: Tue, 13 Jan 2015 17:08:42 +0530
+Message-ID: <1421149130-5889-1-git-send-email-patila@marvell.com> (sfid-20150113_070917_423049_DA66CD88)
 MIME-Version: 1.0
-In-Reply-To: <87h9vb9uzo.fsf@kamboji.qca.qualcomm.com>
-References: <1421749440-10457-1-git-send-email-michal.kazior@tieto.com>
-	<87h9vb9uzo.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 28 Jan 2015 09:49:47 +0100
-Message-ID: <CA+BoTQkbN1jM22KO+BP9L+E8GCfp6QssTa2xD2G=gy7WOe4MAg@mail.gmail.com> (sfid-20150129_020853_905527_8F714D8D)
-Subject: Re: [PATCH 1/2] ath10k: implement sta keepalive command
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 January 2015 at 09:20, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->>
->> New wmi-tlv firmware for qca6174 has STA keepalive
->> service available. The service can provide
->> automatic idle connection polling via NullFunc
->> frames to AP when acting as a client.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> I had a trivial conflict, please check my resolution from the pending
-> branch:
->
-> Applying: ath10k: implement sta keepalive command
-> Using index info to reconstruct a base tree...
-> Falling back to patching base and 3-way merge...
-> Auto-merging drivers/net/wireless/ath/ath10k/wmi.h
-> Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.h
-> CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.h
-> Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> Auto-merging drivers/net/wireless/ath/ath10k/wmi-ops.h
-> CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-ops.h
-> Failed to merge in the changes.
-> Patch failed at 0001 ath10k: implement sta keepalive command
+This patch series is enhancement for change virtual interface
+handling in mwifiex. With this series in, now we remove coupling
+between netdev and FW supported interface combination. Now conversion
+from any type of supported interface types to any other type is possible.
 
-Looks good. Thanks!
+Avinash Patil (8):
+  mwifiex: remove redundant nick_name variable
+  mwifiex: set wiphy params only once
+  mwifiex: do not declare wdev as pointer
+  mwifiex: store permanant mac address in adapter structure
+  mwifiex: add init parameter to init command routine
+  mwifiex: manage virtual interface limits efficiently
+  mwifiex: handle PS events on AP interface as well
+  mwifiex: support conversion to any virtual interface type
 
+ drivers/net/wireless/mwifiex/11h.c           |   2 +-
+ drivers/net/wireless/mwifiex/11n.c           |   4 +-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      | 584 ++++++++++++++++++++-------
+ drivers/net/wireless/mwifiex/cfp.c           |   4 +-
+ drivers/net/wireless/mwifiex/cmdevt.c        |  40 +-
+ drivers/net/wireless/mwifiex/decl.h          |  10 +
+ drivers/net/wireless/mwifiex/init.c          |   8 +-
+ drivers/net/wireless/mwifiex/main.c          |   9 +-
+ drivers/net/wireless/mwifiex/main.h          |  29 +-
+ drivers/net/wireless/mwifiex/scan.c          |  10 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c       |  13 +-
+ drivers/net/wireless/mwifiex/sta_event.c     |   2 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c     |  32 +-
+ drivers/net/wireless/mwifiex/txrx.c          |   2 +-
+ drivers/net/wireless/mwifiex/uap_event.c     |  39 ++
+ drivers/net/wireless/mwifiex/util.c          |   2 +-
+ 17 files changed, 560 insertions(+), 232 deletions(-)
 
-Michał
+-- 
+1.8.1.4
+
