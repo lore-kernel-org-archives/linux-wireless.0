@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:53782 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751617AbbAGHOr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 02:14:47 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [PATCH 0/5] ath9k patches
-References: <1418951039-12309-1-git-send-email-sujith@msujith.org>
-	<87a91vzt3t.fsf@kamboji.qca.qualcomm.com>
-	<21676.33246.233235.411880@gargle.gargle.HOWL>
-Date: Wed, 07 Jan 2015 09:14:39 +0200
-In-Reply-To: <21676.33246.233235.411880@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Wed, 7 Jan 2015 06:16:22 +0530")
-Message-ID: <878uhfuko0.fsf@kamboji.qca.qualcomm.com> (sfid-20150107_081450_820006_E4F07F2B)
+Received: from mga11.intel.com ([192.55.52.93]:62937 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751960AbbAMMSP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 07:18:15 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@adurom.com" <kvalo@adurom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2015-01-13
+Date: Tue, 13 Jan 2015 12:17:53 +0000
+Message-ID: <1421151474.2601.10.camel@egrumbacBox> (sfid-20150113_131818_409766_87C75E46)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
-
-> Kalle Valo wrote:
->> What are the dependency patches exactly?
->
-> commit 5cf16616e152dd5c274a65954c77f64892d025a8
-> Author: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> Date:   Wed Dec 10 21:26:11 2014 +0530
->
->     mac80211: Fix accounting of multicast frames
->
-> commit 6b127c71fbdd3daacfd8b9f80b8e6ebfb70a889e
-> Author: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> Date:   Wed Dec 10 21:26:10 2014 +0530
->
->     mac80211: Move IEEE80211_TX_CTL_PS_RESPONSE
-
-Ok, I don't have these yet so I'll wait more.
-
--- 
-Kalle Valo
+SGkgS2FsbGUsDQoNClRoaXMgaXMgYSBwdWxsIHJlcXVlc3QgZm9yIDMuMTkuIEFzIHVzdWFsLCB0
+aGUgZGVzY3JpcHRpb24gaXMgaW4gdGhlIHRhZw0KaXRzZWxmLiBUaGlzIHRpbWUsIHdlIGFyZSBh
+bHJlYWR5IGluIC1yYzQsIG5vIGdyYXkgYXJlYSBwYXRjaGVzLiBUaGVzZQ0KYXJlIGFsbCByZWFs
+IGJ1ZyBmaXhlcy4NCkxldCBtZSBrbm93IGlmIHlvdSBoYXZlIGlzc3VlcyB3aXRoIHRoaXMuDQoN
+CkJUVyAtIGlmIHlvdSB3aXNoLCBJIGNhbiBhZGQgdGhlIGRpZmYgaW4gdGhlIHB1bGwgcmVxdWVz
+dCBmb3IgLXJjIGN5Y2xlLg0KSm9obiB1c2VkIHRvIGRvIHRoYXQuIExldCBtZSBrbm93IGlmIHlv
+dSB3aXNoIG1lIHRvIGRvIHNvLg0KDQpUaGFua3MhDQoNClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBz
+aW5jZSBjb21taXQgOTFmNDkxZmQ3ZGZiYWU2ZTVjZTU4ODcyOTM3MjNkODE4YWRmN2Q1ZDoNCg0K
+ICBpd2x3aWZpOiBidW1wIGZpcm13YXJlIEFQSSBmb3IgbXZtIGRldmljZXMgdG8gMTIgKDIwMTUt
+MDEtMDUgMTE6MDI6MzcgKzAyMDApDQoNCmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0
+b3J5IGF0Og0KDQogIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwv
+Z2l0L2l3bHdpZmkvaXdsd2lmaS1maXhlcy5naXQgdGFncy9pd2x3aWZpLWZvci1rYWxsZS0yMDE1
+LTAxLTEzDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byA5YjNiNDNkOGQxMzAwYzM2
+YmE1OTQ1YzEyZmQ1MDU0MDllYWY0ODA3Og0KDQogIGl3bHdpZmk6IG12bTogc2V0IHRoZSB0eCBj
+bWQgdGlkIGZvciBCQVIgZnJhbWUgY29ycmVjdGx5ICgyMDE1LTAxLTEzIDA4OjUzOjIzICswMjAw
+KQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tDQoqIEEgZml4IGZvciBzY2FuIHRoYXQgZml4ZXMgYSBmaXJtd2FyZSBhc3Nl
+cnRpb24NCiogQSBmaXggdGhhdCBpbXByb3ZlcyByb2FtaW5nIGJlaGF2aW9yLiBTYW1lIGZpeCBo
+YXMgYmVlbiB0ZXN0ZWQgZm9yDQogIGEgd2hpbGUgaW4gaXdsZHZtLiBUaGlzIGlzIGEgYml0IG9m
+IGEgd29yayBhcm91bmQsIGJ1dCB0aGUgcmVhbCBmaXgNCiAgc2hvdWxkIGJlIGluIG1hYzgwMjEx
+IGFuZCB3aWxsIGNvbWUgbGF0ZXIuDQoqIEEgZml4IGZvciBCQVJzIHRoYXQgYXZvaWRzIGEgV0FS
+TklORy4NCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLQ0KRGF2aWQgU3BpbmFkZWwgKDEpOg0KICAgICAgaXdsd2lmaTogbXZt
+OiBmaXggRUJTIG9uIHNpbmdsZSBzY2FuDQoNCkVtbWFudWVsIEdydW1iYWNoICgxKToNCiAgICAg
+IGl3bHdpZmk6IG12bTogZHJvcCBub24gVk8gZnJhbWVzIHdoZW4gZmx1c2hpbmcNCg0KRXlhbCBT
+aGFwaXJhICgxKToNCiAgICAgIGl3bHdpZmk6IG12bTogc2V0IHRoZSB0eCBjbWQgdGlkIGZvciBC
+QVIgZnJhbWUgY29ycmVjdGx5DQoNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1m
+dy1maWxlLmggICAgIHwgIDIgKysNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9m
+dy1hcGktc2Nhbi5oIHwgIDcgKysrKystLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
+bXZtL21hYzgwMjExLmMgICAgfCAyMCArKysrKysrKystLS0tLS0tLS0tLQ0KIGRyaXZlcnMvbmV0
+L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3NjYW4uYyAgICAgICAgfCA0NiArKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
+d2lmaS9tdm0vdHguYyAgICAgICAgICB8IDExICsrKysrKysrKy0tDQogNSBmaWxlcyBjaGFuZ2Vk
+LCA1OSBpbnNlcnRpb25zKCspLCAyNyBkZWxldGlvbnMoLSkNCg0K
