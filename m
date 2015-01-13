@@ -1,62 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:23233 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220AbbAMOPs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 09:15:48 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/8] ath10k: add per station debugfs support
-References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Tue, 13 Jan 2015 16:15:34 +0200
-In-Reply-To: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Wed, 24 Dec 2014 13:29:01 +0530")
-Message-ID: <87twzu6a2h.fsf@kamboji.qca.qualcomm.com> (sfid-20150113_151551_782093_9A49C856)
+Received: from mail.neratec.com ([46.140.151.2]:43143 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751630AbbAMKQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 05:16:05 -0500
+Message-ID: <54B4F062.2090301@neratec.com> (sfid-20150113_111617_057968_EC3D7101)
+Date: Tue, 13 Jan 2015 11:16:02 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Simon Wunderlich <sw@simonwunderlich.de>,
+	Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
+References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de> <54B024A1.4040809@broadcom.com> <2179820.H2CYa3nAla@prime>
+In-Reply-To: <2179820.H2CYa3nAla@prime>
+Content-Type: multipart/mixed;
+ boundary="------------020208060408090800080909"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+This is a multi-part message in MIME format.
+--------------020208060408090800080909
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 
-> The following patches add support for sending addba/addba response/delba
-> for every station entries. These commands are purely for testing purpose.
->
-> Before using any of the above aggregation commands, the mode should be moved
-> to manual. To disable automatic aggretation in target
->
-> echo 1 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
->         stations/XX:XX:XX:XX:XX:XX/aggr_mode
->
-> Then for sending addba request,
->
-> echo 1 32 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
->         stations/XX:XX:XX:XX:XX:XX/addba
->
-> To send addba response,
->
-> echo 0 25 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
->         stations/XX:XX:XX:XX:XX:XX/addba_resp
->
-> And for delba,
->
-> echo 0 1 37 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
->         stations/XX:XX:XX:XX:XX:XX/delba
->
-> v2: Rebased on top of 10.2.4 WMI ops support
->
-> Rajkumar Manoharan (8):
->   ath10k: add wmi support for addba_clear_resp
->   ath10k: add wmi support for addba_send
->   ath10k: add wmi support for addba_set_resp
->   ath10k: add wmi support for delba_send
->   ath10k: Implement sta_add_debugfs
->   ath10k: add support to send addba request
->   ath10k: add support to send addba response
->   ath10k: add support to send delba
+On 01/10/2015 05:26 PM, Simon Wunderlich wrote:
+> On Friday 09 January 2015 19:57:37 Arend van Spriel wrote:
+>> On 01/09/15 17:54, Simon Wunderlich wrote:
+>>> Performing spectral scans on 5 GHz channels may result in PHY errors
+>>> sent by the hardware, even if DFS support is not enabled in the driver
+>>> (e.g. channel scanning or passive monitoring). In that case channels may
+>>> falsely get marked as 'unusable'. To fix that, only process radar PHY
+>>> errors when radar is explicitly enabled in the driver.
+>>
+>> Hi Simon,
+>>
+>> Not an ath9k expert, but I would think those channels would already be
+>> marked as unusable, because DFS is disabled in the driver. Or does this
+>> also affect 5G channels that do not require DFS.
+>>
+>> Regards,
+>> Arend
+> 
+> Hey Arend,
+> 
+> maybe that was not really clear, but this is talking about the DFS state 
+> "unusable". By default, channels are marked in DFS state "usable", and after 
+> the clear channel assessment (which is done e.g. when starting AP mode) they 
+> are marked as "available". As soon as radar is detected they are marked as 
+> "unusable".
+> 
+> These DFS state changes should only happen while there is something operating 
+> with radar enabled, e.g. AP mode. It should not happen if we just have monitor 
+> mode or scan for channels. These channels should then stay in their previous 
+> DFS state (e.g. 'usable'). This was borked and this patch tries to fix it. :)
+> 
+> Cheers,
+>      Simon
+> 
+Hi,
 
-Thanks, all eight patches applied to ath.git.
+the issue here is that DFS and spectral use the same PHY_ERROR reporting
+mechanism, and the dfs module is still in its initial state prior the spectral
+support was added. With that, feeding the dfs detector with PHY_ERROR frames
+generated by spectral scanner might cause false radar detections.
 
--- 
-Kalle Valo
+I did not dig how the hw->conf.radar_enabled flag is set in monitor mode, but if
+it is same as for master (i.e. set for DFS channels), then it would be a better
+approach to prevent calling ath9k_dfs_process_phyerr() altogether from
+ath9k_rx_skb_preprocess() if not set.
+
+And while you're at that: slaves do not need to scan for radar, might be worth
+checking if it makes sense to selectively disable radar detection in STA mode. I
+am using attached private OpenWRT patch for that - which still would interfere
+with spectral scanning. Generally, the PHY_ERROR processing should be reworked but
+becomes quite complicated when you take into account special use-cases. Think of
+radar events being treated differently depending on whether a master or a monitor
+detected them (OC-CAC vs. ISM).
+
+
+Cheers,
+Zefir
+
+
+--------------020208060408090800080909
+Content-Type: text/x-patch;
+ name="999-0001-ath9k-do-not-enable-radar-pulse-detection-in-STA-mod.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="999-0001-ath9k-do-not-enable-radar-pulse-detection-in-STA-mo";
+ filename*1="d.patch"
+
+>From 089ab0d624d4b6f3a206ea8a81b4a3e061cf3edb Mon Sep 17 00:00:00 2001
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Date: Thu, 30 Jan 2014 13:33:50 +0100
+Subject: [PATCH] ath9k: do not enable radar pulse detection in STA mode
+
+---
+ drivers/net/wireless/ath/ath9k/recv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -384,7 +384,7 @@ u32 ath_calcrxfilter(struct ath_softc *s
+ 		| ATH9K_RX_FILTER_MCAST;
+ 
+ 	/* if operating on a DFS channel, enable radar pulse detection */
+-	if (sc->hw->conf.radar_enabled)
++	if (sc->hw->conf.radar_enabled && sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
+ 		rfilt |= ATH9K_RX_FILTER_PHYRADAR | ATH9K_RX_FILTER_PHYERR;
+ 
+ 	spin_lock_bh(&sc->chan_lock);
+
+--------------020208060408090800080909--
