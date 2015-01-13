@@ -1,52 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47723 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753039AbbAVVaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 16:30:55 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:47170 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751004AbbAMOTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 09:19:32 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: synchronize_net() before flushing the queues
-Date: Thu, 22 Jan 2015 23:30:19 +0200
-Message-Id: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_223058_210779_E754A085)
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Jan 2015 16:19:15 +0200
+Message-Id: <1421158755-23411-1-git-send-email-luca@coelho.fi> (sfid-20150113_151934_852550_2C0F9279)
+Subject: [PATCH iw] Read number of supported net-detect matches
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When mac80211 disconnects, it drops all the packets on the
-queues. This happens after the net stack has been notified
-that we have no link anymore (netif_carrier_off).
-netif_carrier_off ensures that no new packets are sent to
-xmit() callback, but we might have older packets in the
-middle of the Tx path. These packets will land in the
-driver's queues after the latter have been flushed.
-Synchronize_net() between netif_carrier_off and drv_flush()
-will fix this.
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Note that we can't call synchronize_net inside
-ieee80211_flush_queues since there are flows that call
-ieee80211_flush_queues and don't need synchronize_net()
-which is an expensive operation.
+Instead of just printing whether netdetect is supported, parse the
+attribute and report the maximum number of matchsets the driver
+supports.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/mlme.c | 3 +++
- 1 file changed, 3 insertions(+)
+ info.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1d6bf01..1eafa63 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2016,6 +2016,9 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 	/* disable per-vif ps */
- 	ieee80211_recalc_ps_vif(sdata);
- 
-+	/* flush out all packets */
-+	synchronize_net();
-+
- 	/*
- 	 * drop any frame before deauth/disassoc, this can be data or
- 	 * management frame. Since we are disconnecting, we should not
+diff --git a/info.c b/info.c
+index 6e21e45..1df503f 100644
+--- a/info.c
++++ b/info.c
+@@ -455,7 +455,7 @@ broken_combination:
+ 			[NL80211_WOWLAN_TRIG_EAP_IDENT_REQUEST] = { .type = NLA_FLAG },
+ 			[NL80211_WOWLAN_TRIG_4WAY_HANDSHAKE] = { .type = NLA_FLAG },
+ 			[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
+-			[NL80211_WOWLAN_TRIG_NET_DETECT] = { .type = NLA_FLAG },
++			[NL80211_WOWLAN_TRIG_NET_DETECT] = { .type = NLA_U32 },
+ 			[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
+ 		};
+ 		struct nl80211_pattern_support *pat;
+@@ -494,7 +494,8 @@ broken_combination:
+ 			if (tb_wowlan[NL80211_WOWLAN_TRIG_RFKILL_RELEASE])
+ 				printf("\t\t * wake up on rfkill release\n");
+ 			if (tb_wowlan[NL80211_WOWLAN_TRIG_NET_DETECT])
+-				printf("\t\t * wake up on network detection\n");
++				printf("\t\t * wake up on network detection, up to %d match sets\n",
++				       nla_get_u32(tb_wowlan[NL80211_WOWLAN_TRIG_NET_DETECT]));
+ 			if (tb_wowlan[NL80211_WOWLAN_TRIG_TCP_CONNECTION])
+ 				printf("\t\t * wake up on TCP connection\n");
+ 		}
 -- 
-1.9.1
+2.1.4
 
