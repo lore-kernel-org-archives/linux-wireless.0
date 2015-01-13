@@ -1,56 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35644 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752957AbbAWKdw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 05:33:52 -0500
-Message-ID: <1422009226.2728.31.camel@sipsolutions.net> (sfid-20150123_113356_969685_0F555C2D)
-Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 23 Jan 2015 11:33:46 +0100
-In-Reply-To: <1422008312.13429.5.camel@egrumbacBox>
-References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1422006994.2728.22.camel@sipsolutions.net>
-	 <1422008312.13429.5.camel@egrumbacBox>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:45163 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285AbbAMQPD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 11:15:03 -0500
+Message-ID: <54B54485.50803@candelatech.com> (sfid-20150113_171507_688440_112E4037)
+Date: Tue, 13 Jan 2015 08:15:01 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/8] ath10k: scan should handle scan-start-failed event
+ properly.
+References: <1421090992-14971-1-git-send-email-greearb@candelatech.com>	<54B42622.5090404@candelatech.com> <874mru7q5a.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <874mru7q5a.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-23 at 10:18 +0000, Grumbach, Emmanuel wrote:
 
-> I don't think it will introduce that much of latency.
-> Note that there is a call to flush() right after that, this means that
-> any driver which implements this call needs to wait there. So you have
-> the latency in either place. The only additional latency it adds is for
-> other RCU sections / packets on other interfaces.
 
-This is correct.
+On 01/13/2015 05:42 AM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+>
+>> Sorry about the resends...had mail-server issue, should be resolved now.
+>
+> So which one should I look at? Or are the patches the same in both sets?
 
-> Also - since we just stopped the netif, there can possibly be only one
-> packet for each vif / ac processing. This is not too much data to
-> process.
+All the same.
 
-But this is the wrong conclusion.
+Ben
 
-synchronize_rcu() is expensive, no matter what, especially if you have
-multiple cores. The RCU grace periods will practically never line up,
-and it needs to wait for every CPU to go through one.
+>
 
-It's not actually just "one packet for each vif/ac" - it's a whole tail
-of whatever other RCU usages there are. Back when this was discussed,
-the wizery people measured this to hundreds of ms in many not too
-uncommon cases.
-
-> Your call, but to honest, I have been optimizing the roaming as well (as
-> you know). And it was really bad for drivers that implements the flush()
-> callback. Especially in cases where you are already far from the AP you
-> want to roam from. This is why I added the drop parameter and other
-> optimizations (don't flush() after probing etc...)
-
-Well, yes, but that's an upper bound - here with the synchronize_net()
-we're more talking about a lower bound.
-
-johannes
-
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
