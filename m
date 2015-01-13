@@ -1,130 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gn237.zone.eu ([217.146.67.237]:36802 "EHLO gn237.zone.eu"
+Received: from mail.neratec.com ([46.140.151.2]:11733 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949AbbA0G6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 01:58:09 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH 3/7] rtlwifi: Remove unused RF6052_MAX_REG define
-Date: Tue, 27 Jan 2015 08:49:29 +0200
-Message-Id: <1422341373-22196-3-git-send-email-plaes@plaes.org> (sfid-20150127_075821_916772_EDEAF14F)
-In-Reply-To: <1422341373-22196-1-git-send-email-plaes@plaes.org>
-References: <1422341373-22196-1-git-send-email-plaes@plaes.org>
+	id S1751406AbbAMMIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 07:08:06 -0500
+Message-ID: <54B50AA1.3040402@neratec.com> (sfid-20150113_130810_581201_AB38DD9C)
+Date: Tue, 13 Jan 2015 13:08:01 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+MIME-Version: 1.0
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	stable@vger.kernel.org
+Subject: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
+References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de> <2179820.H2CYa3nAla@prime> <54B4F062.2090301@neratec.com> <3155015.RnApTRDnnO@prime>
+In-Reply-To: <3155015.RnApTRDnnO@prime>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Priit Laes <plaes@plaes.org>
----
- drivers/net/wireless/rtlwifi/rtl8188ee/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8192de/def.h | 1 -
- drivers/net/wireless/rtlwifi/rtl8192ee/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8723be/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8821ae/rf.h  | 1 -
- 8 files changed, 8 deletions(-)
+On 01/13/2015 12:04 PM, Simon Wunderlich wrote:
+> On Tuesday 13 January 2015 11:16:02 Zefir Kurtisi wrote:
+>> [...]
+>>
+>> I did not dig how the hw->conf.radar_enabled flag is set in monitor mode,
+>> but if it is same as for master (i.e. set for DFS channels), then it would
+>> be a better approach to prevent calling ath9k_dfs_process_phyerr()
+>> altogether from ath9k_rx_skb_preprocess() if not set.
+> 
+> Hm, you mean like - if radar_enabled then dfs_process, otherwise fft_process? 
+> That would might be more elegant indeed ...
+> 
+More concrete / restrictive:
+* if radar_enabled
+ - spectral must not be enabled
+ - only ath9k_dfs_process_phyerr() has to be processed
+* if !radar_enabled
+ - don't process ath9k_dfs_process_phyerr()
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
-index 5c1472d..0eca030 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL92C_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 				     u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-index d8fe68b..ebd72ca 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-@@ -31,7 +31,6 @@
- #define __RTL92C_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- #define RF6052_MAX_PATH			2
- 
- void rtl92ce_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
-index 11b439d..6f987de 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
-@@ -31,7 +31,6 @@
- #define __RTL92CU_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- #define RF6052_MAX_PATH			2
- 
- void rtl92cu_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-index 4ca1fe1..0a443ed 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-@@ -35,7 +35,6 @@
- #define	MAX_MSS_DENSITY_1T				0x0A
- 
- #define RF6052_MAX_TX_PWR				0x3F
--#define RF6052_MAX_REG					0x3F
- #define RF6052_MAX_PATH					2
- 
- #define	PHY_RSSI_SLID_WIN_MAX				100
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
-index 8bdeed3..039c013 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL92E_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl92ee_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 				      u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
-index f3f45b1..7b44ebc 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL8723E_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl8723e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 				       u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/rf.h b/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
-index a6fea10..f423e15 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL8723BE_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl8723be_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 					u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
-index d9582ee..efd22bd 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL8821AE_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl8821ae_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 					u8 bandwidth);
--- 
-2.2.2
+> The monitor mode does not have the radar flag enabled, 
+> cfg80211_chandef_dfs_required() returns 0 in this case.
+> 
+Ah, which then means you can not do (supplemental) CACs with a monitor
+out-of-the-box? For that, radar_enabled would need to be set for monitor, which
+basically should not harm for a fully passive interface.
+
+>>
+>> And while you're at that: slaves do not need to scan for radar, might be
+>> worth checking if it makes sense to selectively disable radar detection in
+>> STA mode. I am using attached private OpenWRT patch for that - which still
+>> would interfere with spectral scanning. Generally, the PHY_ERROR processing
+>> should be reworked but becomes quite complicated when you take into account
+>> special use-cases. Think of radar events being treated differently
+>> depending on whether a master or a monitor detected them (OC-CAC vs. ISM).
+> 
+> I didn't check if that is enforced correctly, but 
+> cfg80211_chandef_dfs_required() returns if radar is required for the various 
+> interface types - AP, Adhoc and Mesh have it enabled if its a DFS channel, 
+> client, monitor, etc don't have it enabled. That gets marked in the sdata-
+>> radar_required, and ieee80211_is_radar_required() checks all interfaces if 
+> there is any interface which needs radar. So that should have been taken care 
+> of.
+> 
+> Therefore I think that this is already handled in cfg80211/mac80211 and ath9k 
+> should not check the iftype at all, but only check the radar_enabled flag.
+> 
+Ok, thanks for clarifying that - one private patch less to handle :)
+
 
