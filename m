@@ -1,47 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52840 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753982AbbA3IRn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 03:17:43 -0500
-Message-ID: <1422605861.1919.3.camel@sipsolutions.net> (sfid-20150130_091745_611813_1A94EFF5)
-Subject: Re: moving the wiki
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 30 Jan 2015 09:17:41 +0100
-In-Reply-To: <1422605517.1919.2.camel@sipsolutions.net> (sfid-20150130_091202_226222_1D871A9F)
-References: <1392060043.4128.37.camel@jlt4.sipsolutions.net>
-	 <1422543484.6322.10.camel@sipsolutions.net>
-	 <CACna6rzvhJGgQNWBZvfTSz4bsFRsTPcZNiKoZ+po==u6K8gEEg@mail.gmail.com>
-	 (sfid-20150130_071550_392649_560599F3) <1422605517.1919.2.camel@sipsolutions.net>
-	 (sfid-20150130_091202_226222_1D871A9F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from packetmixer.de ([79.140.42.25]:39981 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750856AbbAMLEx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 06:04:53 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
+	stable@vger.kernel.org
+Subject: Re: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
+Date: Tue, 13 Jan 2015 12:04:36 +0100
+Message-ID: <3155015.RnApTRDnnO@prime> (sfid-20150113_120457_868254_929A14E0)
+In-Reply-To: <54B4F062.2090301@neratec.com>
+References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de> <2179820.H2CYa3nAla@prime> <54B4F062.2090301@neratec.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart2736888.Wla5bBU8Ms"; micalg="pgp-sha1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-30 at 09:11 +0100, Johannes Berg wrote:
-> On Fri, 2015-01-30 at 07:15 +0100, Rafał Miłecki wrote:
-> > On 29 January 2015 at 15:58, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > >> Obviously, another consequence is that the wiki markup will change
-> > >> somewhat. Moin and Mediawiki aren't too far from each other (except for
-> > >> table syntax), but there are some things that are different that you'll
-> > >> have to get used to when editing.
-> > >
-> > > Again, dokuwiki - slightly different from moinmoin.
+
+--nextPart2736888.Wla5bBU8Ms
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="ISO-8859-1"
+
+On Tuesday 13 January 2015 11:16:02 Zefir Kurtisi wrote:
+> On 01/10/2015 05:26 PM, Simon Wunderlich wrote:
+> > On Friday 09 January 2015 19:57:37 Arend van Spriel wrote:
+> >> On 01/09/15 17:54, Simon Wunderlich wrote:
+> >>> Performing spectral scans on 5 GHz channels may result in PHY errors
+> >>> sent by the hardware, even if DFS support is not enabled in the driver
+> >>> (e.g. channel scanning or passive monitoring). In that case channels may
+> >>> falsely get marked as 'unusable'. To fix that, only process radar PHY
+> >>> errors when radar is explicitly enabled in the driver.
+> >> 
+> >> Hi Simon,
+> >> 
+> >> Not an ath9k expert, but I would think those channels would already be
+> >> marked as unusable, because DFS is disabled in the driver. Or does this
+> >> also affect 5G channels that do not require DFS.
+> >> 
+> >> Regards,
+> >> Arend
 > > 
-> > Tables using colspans were not moved correctly, see e.g.:
-> > https://wireless.wiki.kernel.org/en/users/Drivers/b43/soc
+> > Hey Arend,
 > > 
-> > It displays "–colspan=3–Chip" in a table cell.
+> > maybe that was not really clear, but this is talking about the DFS state
+> > "unusable". By default, channels are marked in DFS state "usable", and
+> > after the clear channel assessment (which is done e.g. when starting AP
+> > mode) they are marked as "available". As soon as radar is detected they
+> > are marked as "unusable".
+> > 
+> > These DFS state changes should only happen while there is something
+> > operating with radar enabled, e.g. AP mode. It should not happen if we
+> > just have monitor mode or scan for channels. These channels should then
+> > stay in their previous DFS state (e.g. 'usable'). This was borked and
+> > this patch tries to fix it. :)
+> > 
+> > Cheers,
+> > 
+> >      Simon
 > 
-> I thought I fixed colspan/rowspan in my conversion, but I guess I didn't
-> get that right...
+> Hi,
+> 
+> the issue here is that DFS and spectral use the same PHY_ERROR reporting
+> mechanism, and the dfs module is still in its initial state prior the
+> spectral support was added. With that, feeding the dfs detector with
+> PHY_ERROR frames generated by spectral scanner might cause false radar
+> detections.
 
-Ah, two things - I left some debug thing (the --colspan=x--) and I
-messed up when it's combined col/rowspan.
+Yup, that's right - we noticed that too, and its written in various places 
+that the FFT and DFS hardware logic is shared. :)
+> 
+> I did not dig how the hw->conf.radar_enabled flag is set in monitor mode,
+> but if it is same as for master (i.e. set for DFS channels), then it would
+> be a better approach to prevent calling ath9k_dfs_process_phyerr()
+> altogether from ath9k_rx_skb_preprocess() if not set.
 
-I'll see if I can fix it.
+Hm, you mean like - if radar_enabled then dfs_process, otherwise fft_process? 
+That would might be more elegant indeed ...
 
-johannes
+The monitor mode does not have the radar flag enabled, 
+cfg80211_chandef_dfs_required() returns 0 in this case.
+
+> 
+> And while you're at that: slaves do not need to scan for radar, might be
+> worth checking if it makes sense to selectively disable radar detection in
+> STA mode. I am using attached private OpenWRT patch for that - which still
+> would interfere with spectral scanning. Generally, the PHY_ERROR processing
+> should be reworked but becomes quite complicated when you take into account
+> special use-cases. Think of radar events being treated differently
+> depending on whether a master or a monitor detected them (OC-CAC vs. ISM).
+
+I didn't check if that is enforced correctly, but 
+cfg80211_chandef_dfs_required() returns if radar is required for the various 
+interface types - AP, Adhoc and Mesh have it enabled if its a DFS channel, 
+client, monitor, etc don't have it enabled. That gets marked in the sdata-
+>radar_required, and ieee80211_is_radar_required() checks all interfaces if 
+there is any interface which needs radar. So that should have been taken care 
+of.
+
+Therefore I think that this is already handled in cfg80211/mac80211 and ath9k 
+should not check the iftype at all, but only check the radar_enabled flag.
+
+Off-channel CAC is certainly a different beast, but as far as I know we 
+currently don't support that anyway. :)
+
+Cheers,
+    Simon
+--nextPart2736888.Wla5bBU8Ms
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEABECAAYFAlS0+8wACgkQrzg/fFk7axZTDwCggxuMV81TfE30wDNFut0GVGM6
+TuIAoOPt8OV4VBBBSDfc+J/zIHXOszRy
+=5VUA
+-----END PGP SIGNATURE-----
+
+--nextPart2736888.Wla5bBU8Ms--
 
