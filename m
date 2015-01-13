@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25554 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751465AbbAOIfP (ORCPT
+Received: from mail-la0-f53.google.com ([209.85.215.53]:51143 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751190AbbAMKLV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 03:35:15 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
-	<21685.35179.110539.780864@gargle.gargle.HOWL>
-	<87bnm01ojf.fsf@kamboji.qca.qualcomm.com>
-	<21687.29026.962216.812998@gargle.gargle.HOWL>
-	<87vbk8zcr1.fsf@kamboji.qca.qualcomm.com>
-	<21687.30578.746681.850817@gargle.gargle.HOWL>
-	<21687.30881.260644.741211@gargle.gargle.HOWL>
-Date: Thu, 15 Jan 2015 10:35:02 +0200
-In-Reply-To: <21687.30881.260644.741211@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Thu, 15 Jan 2015 13:51:53 +0530")
-Message-ID: <87iog8zbk9.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_093521_683090_489EE400)
+	Tue, 13 Jan 2015 05:11:21 -0500
+Received: by mail-la0-f53.google.com with SMTP id gm9so1737731lab.12
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 02:11:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAGRGNgV1EeZ9Qz995wTqs6CnKmbhu1OTob3_k1h4mKYW1Oh7tw@mail.gmail.com>
+References: <1420642040-4530-1-git-send-email-arik@wizery.com>
+ <1420642040-4530-2-git-send-email-arik@wizery.com> <CAGRGNgV1EeZ9Qz995wTqs6CnKmbhu1OTob3_k1h4mKYW1Oh7tw@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 13 Jan 2015 12:11:04 +0200
+Message-ID: <CA+XVXfdyxCm2-2rfPCmye7AF5VxHeWzWLPKHi3jej23rAHCb2A@mail.gmail.com> (sfid-20150113_111126_477906_84646363)
+Subject: Re: [PATCH v2 2/2] cfg80211: avoid reg-hints in self-managed only systems
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
-
-> Sujith Manoharan wrote:
->> None. The default stays the same. But, it can be adjusted based
->> on the platform, if higher throughput is desired.
+On Tue, Jan 13, 2015 at 6:26 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Arik,
 >
-> But, anyway, this patch can be dropped. We'll change the fill level
-> restriction internally, based on the customer's platform.
+> On Thu, Jan 8, 2015 at 1:47 AM, Arik Nemtsov <arik@wizery.com> wrote:
+>> When a system contains only self-managed regulatory devices all hints
+>> from the regulatory core are ignored. Stop hint processing early in this
+>> case. These systems usually don't have CRDA deployed, which results in
+>> endless (irrelevent) logs of the form:
+>> cfg80211: Calling CRDA to update world regulatory domain
+>>
+>> Make sure there's at least one self-managed device before discarding a
+>> hint, in order to prevent initial hints from disappearing on CRDA
+>> managed systems.
+>>
+>> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+>> ---
+>>  net/wireless/reg.c | 25 +++++++++++++++++++++++++
+>>  1 file changed, 25 insertions(+)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index 521f3a4..588e45f 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -2120,6 +2120,26 @@ out_free:
+>>         reg_free_request(reg_request);
+>>  }
+>>
+>> +static bool reg_only_self_managed_wiphys(void)
+>> +{
+>> +       struct cfg80211_registered_device *rdev;
+>> +       struct wiphy *wiphy;
+>> +       bool self_managed_found = false;
+>> +
+>> +       ASSERT_RTNL();
+>
+> Would it make sense to quickly return false here if the list is empty
+> rather than the whole mess with the new variable?
 
-I'm sad to hear that, now others cannot benefit from your work.
+I'm thinking the "mess" isn't really such a mess - are you expecting a
+real performance hit?
 
-What was wrong with my proposal? Would it help if I write an RFC patch?
-Just tell me what HTT fill value I should use.
+Also this is a corner case - you won't really get regulatory updates
+when no network cards are presents. You only get a single update to
+the core.
 
--- 
-Kalle Valo
+Arik
