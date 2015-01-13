@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54360 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750793AbbAZI0P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 03:26:15 -0500
-Message-ID: <1422260772.1890.7.camel@sipsolutions.net> (sfid-20150126_092618_647347_C3BEEB7B)
-Subject: Re: [RFCv3 4/4] mac80211: add VHT support for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Jan 2015 09:26:12 +0100
-In-Reply-To: <CA+XVXfd=dh4_n30y8JzAdo1jNB9eO=qk8mwpzB6vGbSnsk59zg@mail.gmail.com> (sfid-20150125_113036_230083_24A4666B)
-References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1421757318-8343-4-git-send-email-janusz.dziedzic@tieto.com>
-	 <CA+XVXfd=dh4_n30y8JzAdo1jNB9eO=qk8mwpzB6vGbSnsk59zg@mail.gmail.com>
-	 (sfid-20150125_113036_230083_24A4666B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:59085 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751971AbbAMRTl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 12:19:41 -0500
+Message-ID: <54B553AA.50505@lwfinger.net> (sfid-20150113_182003_359601_B150A52F)
+Date: Tue, 13 Jan 2015 11:19:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Colin King <colin.king@canonical.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi/rtl8192de: remove redundant else if check
+References: <1421158054-22566-1-git-send-email-colin.king@canonical.com>
+In-Reply-To: <1421158054-22566-1-git-send-email-colin.king@canonical.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-01-25 at 12:30 +0200, Arik Nemtsov wrote:
+On 01/13/2015 08:07 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> The else if check condition checks for the opposite of the
+> if check, hence the else if check is redundant and can be
+> replaced with a simple else:
+>
+> if (rtlpriv->rtlhal.macphymode == SINGLEMAC_SINGLEPHY) {
+> 	..
+> } else if (rtlpriv->rtlhal.macphymode != SINGLEMAC_SINGLEPHY) {
+> 	..
+> }
+>
+> replaced with:
+>
+> if (rtlpriv->rtlhal.macphymode == SINGLEMAC_SINGLEPHY) {
+> 	..
+> } else {
+> 	..
+> }
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-> > +       switch (chandef->width) {
-> > +       case NL80211_CHAN_WIDTH_80:
-> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80MHZ;
-> > +               break;
-> > +       case NL80211_CHAN_WIDTH_80P80:
-> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80P80MHZ;
-> > +               vht_oper->center_freq_seg2_idx =
-> > +                       ieee80211_frequency_to_channel(chandef->center_freq2);
-> > +               break;
-> > +       case NL80211_CHAN_WIDTH_160:
-> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_160MHZ;
-> > +               break;
-> > +       default:
-> > +               return pos;
-> > +       }
-> 
-> Shouldn't you also set vht_oper->basic_mcs_set here? Of course if you
-> have no use for it in IBSS I can add it later.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Why would you want to require VHT rates?
+Thanks,
 
-johannes
+Larry
+
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192de/hw.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> index 280c3da..01bcc2d 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> @@ -546,7 +546,7 @@ static bool _rtl92de_llt_table_init(struct ieee80211_hw *hw)
+>   		txpktbuf_bndy = 246;
+>   		value8 = 0;
+>   		value32 = 0x80bf0d29;
+> -	} else if (rtlpriv->rtlhal.macphymode != SINGLEMAC_SINGLEPHY) {
+> +	} else {
+>   		maxPage = 127;
+>   		txpktbuf_bndy = 123;
+>   		value8 = 0;
+>
 
