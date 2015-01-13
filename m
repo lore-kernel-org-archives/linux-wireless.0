@@ -1,81 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:58533 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249AbbABQ6l (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:54190 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751240AbbAMNeo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 11:58:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 09/11] rtlwifi: rtl8723be: Convert driver to use common DM table initialization
-Date: Fri,  2 Jan 2015 10:58:26 -0600
-Message-Id: <1420217908-1382-10-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175912_713119_D0D24AAC)
-In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 13 Jan 2015 08:34:44 -0500
+Received: by mail-wg0-f54.google.com with SMTP id z12so2934770wgg.13
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 05:34:43 -0800 (PST)
+Received: from [192.168.5.12] (5ED13663.cm-7-2a.dynamic.ziggo.nl. [94.209.54.99])
+        by mx.google.com with ESMTPSA id q10sm25747421wjx.34.2015.01.13.05.34.42
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Tue, 13 Jan 2015 05:34:42 -0800 (PST)
+Message-ID: <54B51EF1.60200@gmail.com> (sfid-20150113_143449_177754_A67107E7)
+Date: Tue, 13 Jan 2015 14:34:41 +0100
+From: wim torfs <wtorfs@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: mwifiex - question
+References: <1421065496-1968-1-git-send-email-patila@marvell.com>
+In-Reply-To: <1421065496-1968-1-git-send-email-patila@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert driver rtl8723be to use routine rtl_dm_diginit().
+Hi,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8723be/dm.c | 32 ++---------------------------
- 1 file changed, 2 insertions(+), 30 deletions(-)
+I just noticed - from the mails passing through - that mwifiex is 
+located in net/wireless and that it contains its own functions besides 
+those of mac80211, while the description on the wiki mentions that it is 
+a driver for Marvell SDIO chips.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
-index ddf45d9..2367e8f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
-@@ -212,35 +212,6 @@ void rtl8723be_dm_txpower_track_adjust(struct ieee80211_hw *hw, u8 type,
- 		(pwr_val << 16) | (pwr_val << 24);
- }
- 
--static void rtl8723be_dm_diginit(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
--
--	dm_digtable->dig_enable_flag = true;
--	dm_digtable->cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
--	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
--	dm_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
--	dm_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
--	dm_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
--	dm_digtable->rx_gain_max = DM_DIG_MAX;
--	dm_digtable->rx_gain_min = DM_DIG_MIN;
--	dm_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
--	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
--	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
--	dm_digtable->pre_cck_cca_thres = 0xff;
--	dm_digtable->cur_cck_cca_thres = 0x83;
--	dm_digtable->forbidden_igi = DM_DIG_MIN;
--	dm_digtable->large_fa_hit = 0;
--	dm_digtable->recover_cnt = 0;
--	dm_digtable->dig_min_0 = DM_DIG_MIN;
--	dm_digtable->dig_min_1 = DM_DIG_MIN;
--	dm_digtable->media_connect_0 = false;
--	dm_digtable->media_connect_1 = false;
--	rtlpriv->dm.dm_initialgain_enable = true;
--	dm_digtable->bt30_cur_igi = 0x32;
--}
--
- void rtl8723be_dm_init_rate_adaptive_mask(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -294,9 +265,10 @@ static void rtl8723be_dm_init_dynamic_atc_switch(struct ieee80211_hw *hw)
- void rtl8723be_dm_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
- 
- 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
--	rtl8723be_dm_diginit(hw);
-+	rtl_dm_diginit(hw, cur_igvalue);
- 	rtl8723be_dm_init_rate_adaptive_mask(hw);
- 	rtl8723_dm_init_edca_turbo(hw);
- 	rtl8723_dm_init_dynamic_bb_powersaving(hw);
--- 
-2.1.2
+Is there any specific reason why it is not using mac80211 and why it is 
+located in net/wireless instead of drivers/net/wireless, or is this an 
+artifact of past choices that need to be cleaned up?
+
+Thanks,
+Wim.
 
