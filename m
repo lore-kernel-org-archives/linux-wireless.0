@@ -1,76 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:49185 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756263AbbAFR4e (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:40204 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598AbbAMNul (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 12:56:34 -0500
-Received: by mail-wi0-f175.google.com with SMTP id l15so5875321wiw.2
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 09:56:33 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] b43legacy: Remove unused function
-Date: Tue,  6 Jan 2015 18:59:35 +0100
-Message-Id: <1420567175-17323-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150106_185638_704366_DD5C6BC7)
+	Tue, 13 Jan 2015 08:50:41 -0500
+Received: by mail-wg0-f50.google.com with SMTP id a1so3030664wgh.9
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 05:50:40 -0800 (PST)
+Message-ID: <54B522AC.6050901@gmail.com> (sfid-20150113_145045_993386_4743A738)
+Date: Tue, 13 Jan 2015 14:50:36 +0100
+From: wim torfs <wtorfs@gmail.com>
+MIME-Version: 1.0
+To: Avinash Patil <patila@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mwifiex - question
+References: <1421065496-1968-1-git-send-email-patila@marvell.com>,<54B51EF1.60200@gmail.com> <CBACCFA0AEB13A41977475BCF3E896FC66736E7AC0@SC-VEXCH2.marvell.com>
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7AC0@SC-VEXCH2.marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the function b43legacy_radio_set_tx_iq() that is not used anywhere.
+Hi Avinash,
 
-This was partially found by using a static code analysis program called cppcheck.
+Thanks for the clarification.
+Obviously I missed the most important part of the path, which caused the 
+confusion.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/net/wireless/b43legacy/radio.c |   19 -------------------
- drivers/net/wireless/b43legacy/radio.h |    1 -
- 2 files changed, 20 deletions(-)
+Thanks,
+Wim.
 
-diff --git a/drivers/net/wireless/b43legacy/radio.c b/drivers/net/wireless/b43legacy/radio.c
-index 8961776..9501420 100644
---- a/drivers/net/wireless/b43legacy/radio.c
-+++ b/drivers/net/wireless/b43legacy/radio.c
-@@ -1743,25 +1743,6 @@ u16 freq_r3A_value(u16 frequency)
- 	return value;
- }
- 
--void b43legacy_radio_set_tx_iq(struct b43legacy_wldev *dev)
--{
--	static const u8 data_high[5] = { 0x00, 0x40, 0x80, 0x90, 0xD0 };
--	static const u8 data_low[5]  = { 0x00, 0x01, 0x05, 0x06, 0x0A };
--	u16 tmp = b43legacy_radio_read16(dev, 0x001E);
--	int i;
--	int j;
--
--	for (i = 0; i < 5; i++) {
--		for (j = 0; j < 5; j++) {
--			if (tmp == (data_high[i] | data_low[j])) {
--				b43legacy_phy_write(dev, 0x0069, (i - j) << 8 |
--						    0x00C0);
--				return;
--			}
--		}
--	}
--}
--
- int b43legacy_radio_selectchannel(struct b43legacy_wldev *dev,
- 				  u8 channel,
- 				  int synthetic_pu_workaround)
-diff --git a/drivers/net/wireless/b43legacy/radio.h b/drivers/net/wireless/b43legacy/radio.h
-index bccb3d7..dd2976d 100644
---- a/drivers/net/wireless/b43legacy/radio.h
-+++ b/drivers/net/wireless/b43legacy/radio.h
-@@ -92,7 +92,6 @@ void b43legacy_nrssi_hw_write(struct b43legacy_wldev *dev, u16 offset, s16 val);
- void b43legacy_nrssi_hw_update(struct b43legacy_wldev *dev, u16 val);
- void b43legacy_nrssi_mem_update(struct b43legacy_wldev *dev);
- 
--void b43legacy_radio_set_tx_iq(struct b43legacy_wldev *dev);
- u16 b43legacy_radio_calibrationvalue(struct b43legacy_wldev *dev);
- 
- #endif /* B43legacy_RADIO_H_ */
--- 
-1.7.10.4
 
+On 01/13/2015 02:44 PM, Avinash Patil wrote:
+> Hi Wim,
+>
+> Mwifiex is FullMac driver; we have our own thick FW for managing MLME.  This is reason why we do not use mac80211.
+> Mwifiex is very much located under drivers/net/wireless; its not in net/wireless. net/wireless has cfg80211 driver.
+>
+> Thanks,
+> Avinash.
+> ________________________________________
+> From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of wim torfs [wtorfs@gmail.com]
+> Sent: Tuesday, January 13, 2015 7:04 PM
+> To: linux-wireless@vger.kernel.org
+> Subject: mwifiex - question
+>
+> Hi,
+>
+> I just noticed - from the mails passing through - that mwifiex is
+> located in net/wireless and that it contains its own functions besides
+> those of mac80211, while the description on the wiki mentions that it is
+> a driver for Marvell SDIO chips.
+>
+> Is there any specific reason why it is not using mac80211 and why it is
+> located in net/wireless instead of drivers/net/wireless, or is this an
+> artifact of past choices that need to be cleaned up?
+>
+> Thanks,
+> Wim.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
