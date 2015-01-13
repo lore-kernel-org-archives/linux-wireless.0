@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:50357 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbbAPVrU (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50211 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbbAMOQv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 16:47:20 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so5223917wiv.0
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 13:47:19 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Saul St. John" <saul.stjohn@gmail.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH RFC] bcma: simplify freeing cores (internal devices structs)
-Date: Fri, 16 Jan 2015 22:47:08 +0100
-Message-Id: <1421444828-32616-1-git-send-email-zajec5@gmail.com> (sfid-20150116_224723_494408_88736BFF)
+	Tue, 13 Jan 2015 09:16:51 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+CC: <linux-wireless@vger.kernel.org>,
+	<kernel-janitors@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<ath10k@lists.infradead.org>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH 8/8] ath10k: fix error return code
+References: <1419872683-32709-1-git-send-email-Julia.Lawall@lip6.fr>
+	<1419872683-32709-9-git-send-email-Julia.Lawall@lip6.fr>
+Date: Tue, 13 Jan 2015 16:16:40 +0200
+In-Reply-To: <1419872683-32709-9-git-send-email-Julia.Lawall@lip6.fr> (Julia
+	Lawall's message of "Mon, 29 Dec 2014 18:04:43 +0100")
+Message-ID: <87ppai6a0n.fsf@kamboji.qca.qualcomm.com> (sfid-20150113_151732_243081_1AAB3BC3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-This code was introduced by Saul in
-ee91592711ed90a1abfbb1b2ceadded11d685164
-bcma: don't leak memory for PCIE, MIPS, GBIT cores
+Julia Lawall <Julia.Lawall@lip6.fr> writes:
 
-I don't really see reason for making it in so complicated way.
-I tested my patch for crashes, but didn't really try kmemleak.
-Is my simple solution OK? Or am I missing something? Anyone?
----
- drivers/bcma/main.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+> Return a negative error code on failure.
+>
+> A simplified version of the semantic match that finds this problem is as
+> follows: (http://coccinelle.lip6.fr/)
+>
+> // <smpl>
+> @@
+> identifier ret; expression e1,e2;
+> @@
+> (
+> if (\(ret < 0\|ret != 0\))
+>  { ... return ret; }
+> |
+> ret = 0
+> )
+> ... when != ret = e1
+>     when != &ret
+> *if(...)
+> {
+>   ... when != ret = e2
+>       when forall
+>  return ret;
+> }
+> // </smpl>
+>
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index c3c5e0a..58dd582 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -371,6 +371,8 @@ static void bcma_unregister_cores(struct bcma_bus *bus)
- 		list_del(&core->list);
- 		if (core->dev_registered)
- 			device_unregister(&core->dev);
-+		else
-+			kfree(core);
- 	}
- 	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
- 		platform_device_unregister(bus->drv_cc.watchdog);
-@@ -467,7 +469,6 @@ int bcma_bus_register(struct bcma_bus *bus)
- 
- void bcma_bus_unregister(struct bcma_bus *bus)
- {
--	struct bcma_device *cores[3];
- 	int err;
- 
- 	err = bcma_gpio_unregister(&bus->drv_cc);
-@@ -478,15 +479,7 @@ void bcma_bus_unregister(struct bcma_bus *bus)
- 
- 	bcma_core_chipcommon_b_free(&bus->drv_cc_b);
- 
--	cores[0] = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
--	cores[1] = bcma_find_core(bus, BCMA_CORE_PCIE);
--	cores[2] = bcma_find_core(bus, BCMA_CORE_4706_MAC_GBIT_COMMON);
--
- 	bcma_unregister_cores(bus);
--
--	kfree(cores[2]);
--	kfree(cores[1]);
--	kfree(cores[0]);
- }
- 
- /*
+Thanks, applied to ath.git.
+
 -- 
-1.8.4.5
-
+Kalle Valo
