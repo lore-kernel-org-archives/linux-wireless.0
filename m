@@ -1,50 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:39147 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751785AbbAFQ2l (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:35989 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751192AbbAMVG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 11:28:41 -0500
-Received: by mail-wi0-f172.google.com with SMTP id n3so5689632wiv.11
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 08:28:40 -0800 (PST)
+	Tue, 13 Jan 2015 16:06:26 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <1420540894.1966.13.camel@sipsolutions.net>
-References: <1419412868-28938-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1420540894.1966.13.camel@sipsolutions.net>
-Date: Tue, 6 Jan 2015 17:28:40 +0100
-Message-ID: <CAA2SeNK3ak7OPP2uqtSrzqFQTf1PMvjP_d14RjGmU2VFNfDhWw@mail.gmail.com> (sfid-20150106_172844_872288_6E3D3091)
-Subject: Re: [PATCHv3] mac80211: enable TPC through mac80211 stack
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21685.35179.110539.780864@gargle.gargle.HOWL> (sfid-20150113_220629_479496_B7F10A1D)
+Date: Wed, 14 Jan 2015 02:38:59 +0530
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+In-Reply-To: <87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
+	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Wed, 2014-12-24 at 10:21 +0100, Lorenzo Bianconi wrote:
->> -     list_for_each_entry(sdata, &local->interfaces, list)
->> +     list_for_each_entry(sdata, &local->interfaces, list) {
->>               sdata->user_power_level = local->user_power_level;
->> +             if (!update_tpc && type != sdata->vif.bss_conf.txpower_type)
->> +                     update_tpc = true;
->
-> Why bother checking - if it's already true then setting it to true won't
-> matter, and IMHO makes the code easier to read.
->
-> I also think "update_tpc" is a bad name - transmit power control is the
-> actual usage here, but you really mean "update_txp_type" or so.
->
+Kalle Valo wrote:
+> I'm not sure if I really like this path of having interfaces to
+> configure driver internals. I suspect that if we add this, we will have
+> even more later. It's a lot more documenting for us and more work to the
+> users to understand what parameters they should use. Also this means
+> that testing will be more challenging as people will use different
+> values and results won't be comparable.
+> 
+> Isn't there any other way to solve the problem? Like automatically
+> changing the value somehow (no idea how) or some other means?
 
-ack. V4 on the way
+We are limiting performance by restricting the fill size. A user
+will just use the default, which is still the same and remains
+unchanged. But, having a way to adjust this based on the platform
+seems reasonable to me and I think trying to change this value dynamically
+is overkill.
 
-> johannes
->
+> Or if nothing else helps, a crazy idea is to have some sort of platform
+> profile parameter:
+> 
+> 0 = auto
+> 1 = slow
+> 2 = fast
+> 3 = superfast (x86)
+> 
+> And then we would have preset values (not just htt_fill_size) within
+> ath10k and they get chosen based on the profile configured.
 
-Best regards,
-Lorenzo
+I don't think a network driver should limit its performance with
+such profiles. Moreover, x86 can be slow too - at least, my 4 year
+old machine is. :-)
 
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+Sujith
