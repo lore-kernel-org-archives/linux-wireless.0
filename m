@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34826 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753370AbbALTsp (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:50948 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751132AbbAMIwE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 14:48:45 -0500
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 8/8] ath10k:  fix CE_DESC_FLAGS_META_DATA_LSB definition.
-Date: Mon, 12 Jan 2015 10:32:44 -0800
-Message-Id: <1421087564-10384-8-git-send-email-greearb@candelatech.com> (sfid-20150112_204853_790604_03DB9424)
-In-Reply-To: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
-References: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
+	Tue, 13 Jan 2015 03:52:04 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: fix config_enabled check for hwmon
+Date: Tue, 13 Jan 2015 14:21:45 +0530
+Message-ID: <1421139105-32025-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150113_095208_104086_9CE86FCB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Because of wrong macro check in config_enabled, hwmon never be
+enabled. Fix that.
 
-The value was off by one.  The error probably has no negative
-affect on any upstream firmware, but should be fixed anyway
-in case it comes into use in the future.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/ce.h | 2 +-
+ drivers/net/wireless/ath/ath10k/thermal.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
-index f4919e9..b92610b 100644
---- a/drivers/net/wireless/ath/ath10k/ce.h
-+++ b/drivers/net/wireless/ath/ath10k/ce.h
-@@ -39,7 +39,7 @@ struct ath10k_ce_pipe;
- #define CE_DESC_FLAGS_GATHER         (1 << 0)
- #define CE_DESC_FLAGS_BYTE_SWAP      (1 << 1)
- #define CE_DESC_FLAGS_META_DATA_MASK 0xFFFC
--#define CE_DESC_FLAGS_META_DATA_LSB  3
-+#define CE_DESC_FLAGS_META_DATA_LSB  2
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index e915178..edecc6c 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -216,7 +216,7 @@ int ath10k_thermal_register(struct ath10k *ar)
  
- struct ce_desc {
- 	__le32 addr;
+ 	/* Avoid linking error on devm_hwmon_device_register_with_groups, I
+ 	 * guess linux/hwmon.h is missing proper stubs. */
+-	if (!config_enabled(HWMON))
++	if (!config_enabled(CONFIG_HWMON))
+ 		return 0;
+ 
+ 	hwmon_dev = devm_hwmon_device_register_with_groups(ar->dev,
 -- 
-1.7.11.7
+2.2.1
 
