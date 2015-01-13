@@ -1,70 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:44924 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752536AbbATJVO convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:60676 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079AbbAMGEn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 04:21:14 -0500
-Received: by mail-wi0-f176.google.com with SMTP id em10so3643966wid.3
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 01:21:13 -0800 (PST)
+	Tue, 13 Jan 2015 01:04:43 -0500
+Received: by mail-pa0-f47.google.com with SMTP id kq14so1643197pab.6
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 22:04:42 -0800 (PST)
+References: <1420968029-1222-1-git-send-email-hong@topbug.net> <20150112065445.GB29484@localhost> <87a91oeaq7.fsf@home.hong.me> <CAGRGNgUdEemrqnrYnJzTQEuce4yjQUjOW3B_eWSHkENkPwO9UQ@mail.gmail.com>
+From: Hong Xu <hong@topbug.net>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
+Date: Mon, 12 Jan 2015 21:21:12 -0800
+Message-ID: <87vbkbjm8s.fsf@home.hong.me> (sfid-20150113_070447_907916_5879D392)
+In-reply-to: <CAGRGNgUdEemrqnrYnJzTQEuce4yjQUjOW3B_eWSHkENkPwO9UQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEFj984fjXUuRsNghr2Q4+397AS1TEO-K392YitUuZ5ztTF8iA@mail.gmail.com>
-References: <54B97B96.4040903@darmstadt.freifunk.net>
-	<1421658833-13311-1-git-send-email-michal.kazior@tieto.com>
-	<54BDDB3B.3020902@candelatech.com>
-	<CAEFj984fjXUuRsNghr2Q4+397AS1TEO-K392YitUuZ5ztTF8iA@mail.gmail.com>
-Date: Tue, 20 Jan 2015 10:21:12 +0100
-Message-ID: <CA+BoTQnjfsp3pjB4OyDvbqpQQ4TbYM+NHtTeNPCrgUJWfL-d+Q@mail.gmail.com> (sfid-20150120_102130_376143_59869A0D)
-Subject: Re: [RFC/RFT] ath10k: enable IBSS in multi-vif
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Martin Weinelt <martin@darmstadt.freifunk.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 January 2015 at 10:14, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> Experienced firmware crashed in 636 firmware immediately after
-> bringing up the AP interface.
+--=-=-=
+Content-Type: text/plain
+
+
+Julian Calaby <julian.calaby@gmail.com> writes:
+
+> Hi Hong,
 >
-> The partial log is listed here:
-[...]
-> [  291.380000] ath10k_pci 0000:00:00.0: firmware register dump:
-> [  291.380000] ath10k_pci 0000:00:00.0: [00]: 0x4100016C 0x00000000
-> 0x009C4521 0x00000000
-> [  291.390000] ath10k_pci 0000:00:00.0: [04]: 0x009C4521 0x00060330
-> 0x00000019 0x00955A00
-> [  291.400000] ath10k_pci 0000:00:00.0: [08]: 0x00046A4E 0x00000000
-> 0x0040CC94 0x00000020
-> [  291.410000] ath10k_pci 0000:00:00.0: [12]: 0x00000000 0x00000000
-> 0x00958360 0x0095836B
-> [  291.420000] ath10k_pci 0000:00:00.0: [16]: 0x809A0978 0x0040AD94
-> 0x00439304 0x0040D074
-> [  291.420000] ath10k_pci 0000:00:00.0: [20]: 0x0000FFFF 0x00000000
-> 0x0041B618 0x00000000
-> [  291.430000] ath10k_pci 0000:00:00.0: [24]: 0x809A0978 0x0040AD94
-> 0x00439304 0x11A93B77
-> [  291.440000] ath10k_pci 0000:00:00.0: [28]: 0x809AD1A2 0x0040ADE4
-> 0x00439304 0x0043F68C
-> [  291.450000] ath10k_pci 0000:00:00.0: [32]: 0x00000001 0x00000000
-> 0x00000000 0x00430D74
-> [  291.460000] ath10k_pci 0000:00:00.0: [36]: 0x00000000 0x00000000
-> 0x00000000 0x00000000
-> [  291.460000] ath10k_pci 0000:00:00.0: [40]: 0x00000000 0x00000000
-> 0x000000AB 0x00412700
-> [  291.470000] ath10k_pci 0000:00:00.0: [44]: 0x00439BB8 0x00000000
-> 0x00000000 0x00400000
-> [  291.480000] ath10k_pci 0000:00:00.0: [48]: 0x809AE0B4 0x0040AE04
-> 0x00400000 0x0043F68C
-> [  291.490000] ath10k_pci 0000:00:00.0: [52]: 0x00000001 0x00000000
-> 0x004231F0 0x00400000
-> [  291.500000] ath10k_pci 0000:00:00.0: [56]: 0x809AE17E 0x0040AE44
-> 0x0040FE6C 0x0040D310
+> On Mon, Jan 12, 2015 at 6:09 PM, Hong Xu <hong@topbug.net> wrote:
+>>
+>> Bob Copeland <me@bobcopeland.com> writes:
+>>
+>>> On Sun, Jan 11, 2015 at 01:20:29AM -0800, Hong Xu wrote:
+>>>> Add an option "blink" to enable or disable the LED blink. The default
+>>>> value is set to 1 so that existing users would not experience any
+>>>> unexpected changes.
+>>>
+>>> Been a while since I looked, but isn't there a way to achieve same
+>>> result by just echoing 'none' into the relevant LED's sysfs file
+>>> (something like /sys/class/leds/phy0-led/trigger)?
+>>
+>> It's a bit different. echo 'none' to the trigger would cause the LED
+>> light to be dark, but if turn off the blink option here, the LED is
+>> bright but without blinking.
+>>
+>> Hong
+>
+> I.e. it doesn't blink, it's just on when linked (isn't there a trigger
+> for that?) or is on solid? (echo 255 >
+> /sys/class/leds/phy0-led/brightness)
 
-Yeah.. This is monitor vdev related crash (due to bridging, no?). I
-haven't found a way around it.
+It is solid on, but will be off if you turn off wifi (which echo 255 >
+/.../brightness will not do). Replace ieee80211_get_radio_led_name with
+ieee80211_get_assoc_led_name will use the linking trigger. I think using
+linking makes more sense.
 
+Hong
 
-Michał
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJUtLT3AAoJECZsfTOCL4R4TcYQAIG1c3wlz5Dqb3wW7NXjR7BY
+wyHw+x+Xp0E7XgQrxk34jac3JcmEx2E1Kw31IHAuTQdy/WXKtxOtKcmPGw8CV2X2
+70KuxOasyUyBRLpzl23w+ENqzaDhqM6pU4Rw8eo+IC9rQEMS2KwCb8Q/uKSSnUwM
+pJ2YROF9qlDSDJrh7MCTnzPWoJUchW+NgfzWJ7Pp82EoW9XAbcRAgurM0nukyNhA
+PiKY8o40qI85ZOuMhv8/Fgb/0MgLVvL1VtWw01xOVF3+TeXC3t5UPQnoeZtxHUnP
+045rpb9swqmqFO8ZDZlnmQ7sKdMx0J6U/Uh5Q2ptMYABNx9dpe9WPz2PWfO9ZzFl
+01ecY7Hy74AUyZH/KFwN4hGi92cUbN4hBzH6g8rW7QwfFJsFeOR2xM6orzjsKruC
+4zbkFHOmfOHo/BmH9fmgS/9Ux7pY0v1RVbFPFoIuB2VS+6JhhzjdCMiGVnCbOvd6
+9bbab9KCMeYB5mumUp06QZdYbSQz6UF1eBI0kiSsdJfz6GRvmZyJErWy2zPRNkK+
+3wEtDZIDnIPI2D0QL9HuRqyxfcbpQ1fZgusTUx6zSwN9dFgqJgyrFBetoTW9ifZg
+vHt/eWoYlw0xDyiw/8BBbTuAAHN+OLMPdz4XvNBlrZf10W3ixRBkppPswLLN3oV2
+dXkl3PNB1KBTw6q6FL3l
+=xoEy
+-----END PGP SIGNATURE-----
+--=-=-=--
