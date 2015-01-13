@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36645 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754151AbbAWNUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 08:20:16 -0500
-Message-ID: <1422019208.2728.34.camel@sipsolutions.net> (sfid-20150123_142020_266482_9668F400)
-Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 23 Jan 2015 14:20:08 +0100
-In-Reply-To: <CANUX_P0wvnNKV+-TtGV62ujMxtDDbJ=uEhaxKQF2ePvBcvyOnA@mail.gmail.com> (sfid-20150123_123607_358282_F98B1290)
-References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1422006994.2728.22.camel@sipsolutions.net>
-	 <1422008312.13429.5.camel@egrumbacBox>
-	 <1422009226.2728.31.camel@sipsolutions.net>
-	 <CANUX_P0wvnNKV+-TtGV62ujMxtDDbJ=uEhaxKQF2ePvBcvyOnA@mail.gmail.com>
-	 (sfid-20150123_123607_358282_F98B1290)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:33872 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753485AbbAMXnF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Jan 2015 18:43:05 -0500
+Received: by mail-wg0-f48.google.com with SMTP id l2so5915713wgh.7
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 15:43:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <54B4192E.9010202@erley.org>
+References: <1421061360.1891.21.camel@sipsolutions.net>
+	<1421076401.1891.29.camel@sipsolutions.net>
+	<54B4192E.9010202@erley.org>
+Date: Wed, 14 Jan 2015 01:43:03 +0200
+Message-ID: <CAFtRNNxDm1FO4wABkmTuE8F1hRWTwKwsMs5G7++d7Zz3J_VXoA@mail.gmail.com> (sfid-20150114_004309_784233_4402C175)
+Subject: Re: (re)licensing the wireless wiki
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-23 at 13:36 +0200, Emmanuel Grumbach wrote:
+2015-01-12 20:57 GMT+02:00 Pat Erley <pat-lkml@erley.org>:
+> On 01/12/2015 09:26 AM, Johannes Berg wrote:
+>>
+>> On Mon, 2015-01-12 at 12:16 +0100, Johannes Berg wrote:
+>>
+>>> I've emailed every contributor who I could find an email address for,
+>>> but some (~40) don't have an email address and I already have a bunch of
+>>> bounces (~50).
+>>
+>>
+>> Additionally, gmail has apparently decided that I was spamming -- so you
+>> may find my message in your spam folder there.
+>>
+>
+> Hmm, I swear I had setup an e-mail address way back when I made some edits.
+> I'm pretty sure my account was PatErley on there(would see edits on hostapd
+> and the multiple vif iw sections, from my recollection). Anyways, do you
+> need an ack or is just saying:
+>
+> You have my permission to add the license to my works.
+>
+> Enough?
+>
+> Pat Erley
+>
 
-> > It's not actually just "one packet for each vif/ac" - it's a whole tail
-> > of whatever other RCU usages there are. Back when this was discussed,
-> > the wizery people measured this to hundreds of ms in many not too
-> > uncommon cases.
-> 
-> That's the part I didn't know. I wasn't aware that this
-> synchronize_net() was there and that someone removed it.
+Sorry for the delay, I missed this one.
 
-This particular one might not have been there - I don't remember. There
-were some in this path and we removed quite a few. However, if you have
-keys, wpa_s is currently clearing them, which calls it for every single
-key. I once had worked on an optimisation here (telling wpa_s not to
-clear keys because we handle that when stations are deleted anyway) but
-so far that didn't really go anywhere.
+So you have my permission to add the license to my works too. Thanks a
+lot for the notice and keep up the good work ;-)
 
-> I just wonder how we handle the case where we still have packets in
-> the Tx path and we bring everything down. I can check the code, but
-> not right now.
 
-Well - I didn't expect you to check anything now :-)
-
-I was more noting this down for 'future work'. It's possible, perhaps,
-that we cannot do anything else here, but then we should think about the
-other optimisations again...
-
-johannes
-
+-- 
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
