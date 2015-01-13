@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:46374 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431AbbAZW1A (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:28450 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751052AbbAMOsm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 17:27:00 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: Replace ioread with wmb for data sync
-Date: Mon, 26 Jan 2015 14:25:18 -0800
-Message-ID: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150126_232704_088501_BB1F803F)
+	Tue, 13 Jan 2015 09:48:42 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	Sujith Manoharan <sujith@msujith.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
+	<CA+BoTQ=HqF0vBj4chXfoY9GKcFBP8Xh37HXo5etDDZ1XCg6O4w@mail.gmail.com>
+	<54AD103B.40002@qti.qualcomm.com>
+Date: Tue, 13 Jan 2015 16:48:29 +0200
+In-Reply-To: <54AD103B.40002@qti.qualcomm.com> (Vasanthakumar Thiagarajan's
+	message of "Wed, 7 Jan 2015 16:23:47 +0530")
+Message-ID: <87vbka4tz6.fsf@kamboji.qca.qualcomm.com> (sfid-20150113_154846_151517_305FEFF5)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using ioread() to perform data sync is excessive.
-Use compact API, wmb(), that intended to be used for the case.
-It reduces total 14 CPU clocks per interrupt.
+Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+>>> This patch adds a module parameter to adjust the fill size
+>>> based on the platform/usage.
+>>
+>> I don't think this should be adjustable.
+>
+> Default value of 16 causes rx ring corruption within 1 hour of stress
+> testing. Increasing this limit to 1000 solves the issue, not sure what
+> max value in > 16 and <= 1000 works.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 3b40a86..c353a2c 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -346,10 +346,8 @@ static void ath10k_pci_disable_and_clear_legacy_irq(struct ath10k *ar)
- 	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_CLR_ADDRESS,
- 			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
- 
--	/* IMPORTANT: this extra read transaction is required to
--	 * flush the posted write buffer. */
--	(void)ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				PCIE_INTR_ENABLE_ADDRESS);
-+	/* invoke data sync barrier */
-+	wmb();
- }
- 
- static void ath10k_pci_enable_legacy_irq(struct ath10k *ar)
-@@ -358,10 +356,8 @@ static void ath10k_pci_enable_legacy_irq(struct ath10k *ar)
- 			   PCIE_INTR_ENABLE_ADDRESS,
- 			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
- 
--	/* IMPORTANT: this extra read transaction is required to
--	 * flush the posted write buffer. */
--	(void)ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				PCIE_INTR_ENABLE_ADDRESS);
-+	/* invoke data sync barrier */
-+	wmb();
- }
- 
- static inline const char *ath10k_pci_get_irq_method(struct ath10k *ar)
+Does the patch below fix that issue? Or is this issue still open?
+
+5de6dfc82f71 ath10k: Fix potential Rx ring corruption
+
 -- 
-1.9.1
-
+Kalle Valo
