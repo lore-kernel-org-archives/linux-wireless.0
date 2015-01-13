@@ -1,126 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:39981 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856AbbAMLEx (ORCPT
+Received: from mail-la0-f45.google.com ([209.85.215.45]:62919 "EHLO
+	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955AbbAMKfq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 06:04:53 -0500
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@qca.qualcomm.com, mathias.kretschmer@fokus.fraunhofer.de,
-	stable@vger.kernel.org
-Subject: Re: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
-Date: Tue, 13 Jan 2015 12:04:36 +0100
-Message-ID: <3155015.RnApTRDnnO@prime> (sfid-20150113_120457_868254_929A14E0)
-In-Reply-To: <54B4F062.2090301@neratec.com>
-References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de> <2179820.H2CYa3nAla@prime> <54B4F062.2090301@neratec.com>
+	Tue, 13 Jan 2015 05:35:46 -0500
+Received: by mail-la0-f45.google.com with SMTP id gq15so1857800lab.4
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 02:35:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2736888.Wla5bBU8Ms"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+In-Reply-To: <CAGRGNgVb2Roq51dooFeboha_UxOHx4+hGJypyxuvRb_8ka-ZfA@mail.gmail.com>
+References: <1420642040-4530-1-git-send-email-arik@wizery.com>
+ <1420642040-4530-2-git-send-email-arik@wizery.com> <CAGRGNgV1EeZ9Qz995wTqs6CnKmbhu1OTob3_k1h4mKYW1Oh7tw@mail.gmail.com>
+ <CA+XVXfdyxCm2-2rfPCmye7AF5VxHeWzWLPKHi3jej23rAHCb2A@mail.gmail.com> <CAGRGNgVb2Roq51dooFeboha_UxOHx4+hGJypyxuvRb_8ka-ZfA@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 13 Jan 2015 12:35:29 +0200
+Message-ID: <CA+XVXfe1te8k1Em5_z5uO92EHj5jE8EGrQn8N7DyieVt33pq6g@mail.gmail.com> (sfid-20150113_113549_505871_E3D6AC3F)
+Subject: Re: [PATCH v2 2/2] cfg80211: avoid reg-hints in self-managed only systems
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"Luis R. Rodriguez" <mcgrof@suse.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Jan 13, 2015 at 12:30 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Arik,
+>
+> On Tue, Jan 13, 2015 at 9:11 PM, Arik Nemtsov <arik@wizery.com> wrote:
+>> On Tue, Jan 13, 2015 at 6:26 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>>> Hi Arik,
+>>>
+>>> On Thu, Jan 8, 2015 at 1:47 AM, Arik Nemtsov <arik@wizery.com> wrote:
+>>>> When a system contains only self-managed regulatory devices all hints
+>>>> from the regulatory core are ignored. Stop hint processing early in this
+>>>> case. These systems usually don't have CRDA deployed, which results in
+>>>> endless (irrelevent) logs of the form:
+>>>> cfg80211: Calling CRDA to update world regulatory domain
+>>>>
+>>>> Make sure there's at least one self-managed device before discarding a
+>>>> hint, in order to prevent initial hints from disappearing on CRDA
+>>>> managed systems.
+>>>>
+>>>> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+>>>> ---
+>>>>  net/wireless/reg.c | 25 +++++++++++++++++++++++++
+>>>>  1 file changed, 25 insertions(+)
+>>>>
+>>>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>>>> index 521f3a4..588e45f 100644
+>>>> --- a/net/wireless/reg.c
+>>>> +++ b/net/wireless/reg.c
+>>>> @@ -2120,6 +2120,26 @@ out_free:
+>>>>         reg_free_request(reg_request);
+>>>>  }
+>>>>
+>>>> +static bool reg_only_self_managed_wiphys(void)
+>>>> +{
+>>>> +       struct cfg80211_registered_device *rdev;
+>>>> +       struct wiphy *wiphy;
+>>>> +       bool self_managed_found = false;
+>>>> +
+>>>> +       ASSERT_RTNL();
+>>>
+>>> Would it make sense to quickly return false here if the list is empty
+>>> rather than the whole mess with the new variable?
+>>
+>> I'm thinking the "mess" isn't really such a mess - are you expecting a
+>> real performance hit?
+>
+> Personally, purely for readability, I prefer the style of checking and
+> returning as early as possible.
 
---nextPart2736888.Wla5bBU8Ms
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="ISO-8859-1"
+Actually I thought readability was on my side - wanted to point out
+the shorter version of the code is more legible.
+I guess it's a matter of personal taste :)
 
-On Tuesday 13 January 2015 11:16:02 Zefir Kurtisi wrote:
-> On 01/10/2015 05:26 PM, Simon Wunderlich wrote:
-> > On Friday 09 January 2015 19:57:37 Arend van Spriel wrote:
-> >> On 01/09/15 17:54, Simon Wunderlich wrote:
-> >>> Performing spectral scans on 5 GHz channels may result in PHY errors
-> >>> sent by the hardware, even if DFS support is not enabled in the driver
-> >>> (e.g. channel scanning or passive monitoring). In that case channels may
-> >>> falsely get marked as 'unusable'. To fix that, only process radar PHY
-> >>> errors when radar is explicitly enabled in the driver.
-> >> 
-> >> Hi Simon,
-> >> 
-> >> Not an ath9k expert, but I would think those channels would already be
-> >> marked as unusable, because DFS is disabled in the driver. Or does this
-> >> also affect 5G channels that do not require DFS.
-> >> 
-> >> Regards,
-> >> Arend
-> > 
-> > Hey Arend,
-> > 
-> > maybe that was not really clear, but this is talking about the DFS state
-> > "unusable". By default, channels are marked in DFS state "usable", and
-> > after the clear channel assessment (which is done e.g. when starting AP
-> > mode) they are marked as "available". As soon as radar is detected they
-> > are marked as "unusable".
-> > 
-> > These DFS state changes should only happen while there is something
-> > operating with radar enabled, e.g. AP mode. It should not happen if we
-> > just have monitor mode or scan for channels. These channels should then
-> > stay in their previous DFS state (e.g. 'usable'). This was borked and
-> > this patch tries to fix it. :)
-> > 
-> > Cheers,
-> > 
-> >      Simon
-> 
-> Hi,
-> 
-> the issue here is that DFS and spectral use the same PHY_ERROR reporting
-> mechanism, and the dfs module is still in its initial state prior the
-> spectral support was added. With that, feeding the dfs detector with
-> PHY_ERROR frames generated by spectral scanner might cause false radar
-> detections.
+>
+> Arguably doing it my way trades speed for memory efficiency and your
+> way trades memory efficiency for speed, but it's so small (and this is
+> so far from a hot path) that there's no real argument either way
+> whatsoever.
 
-Yup, that's right - we noticed that too, and its written in various places 
-that the FFT and DFS hardware logic is shared. :)
-> 
-> I did not dig how the hw->conf.radar_enabled flag is set in monitor mode,
-> but if it is same as for master (i.e. set for DFS channels), then it would
-> be a better approach to prevent calling ath9k_dfs_process_phyerr()
-> altogether from ath9k_rx_skb_preprocess() if not set.
+Agree it doesn't matter for these reasons.
 
-Hm, you mean like - if radar_enabled then dfs_process, otherwise fft_process? 
-That would might be more elegant indeed ...
-
-The monitor mode does not have the radar flag enabled, 
-cfg80211_chandef_dfs_required() returns 0 in this case.
-
-> 
-> And while you're at that: slaves do not need to scan for radar, might be
-> worth checking if it makes sense to selectively disable radar detection in
-> STA mode. I am using attached private OpenWRT patch for that - which still
-> would interfere with spectral scanning. Generally, the PHY_ERROR processing
-> should be reworked but becomes quite complicated when you take into account
-> special use-cases. Think of radar events being treated differently
-> depending on whether a master or a monitor detected them (OC-CAC vs. ISM).
-
-I didn't check if that is enforced correctly, but 
-cfg80211_chandef_dfs_required() returns if radar is required for the various 
-interface types - AP, Adhoc and Mesh have it enabled if its a DFS channel, 
-client, monitor, etc don't have it enabled. That gets marked in the sdata-
->radar_required, and ieee80211_is_radar_required() checks all interfaces if 
-there is any interface which needs radar. So that should have been taken care 
-of.
-
-Therefore I think that this is already handled in cfg80211/mac80211 and ath9k 
-should not check the iftype at all, but only check the radar_enabled flag.
-
-Off-channel CAC is certainly a different beast, but as far as I know we 
-currently don't support that anyway. :)
-
-Cheers,
-    Simon
---nextPart2736888.Wla5bBU8Ms
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEABECAAYFAlS0+8wACgkQrzg/fFk7axZTDwCggxuMV81TfE30wDNFut0GVGM6
-TuIAoOPt8OV4VBBBSDfc+J/zIHXOszRy
-=5VUA
------END PGP SIGNATURE-----
-
---nextPart2736888.Wla5bBU8Ms--
-
+Arik
