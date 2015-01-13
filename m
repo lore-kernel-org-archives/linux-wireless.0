@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:44140 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752568AbbAWCSV (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:65020 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752307AbbAMCzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 21:18:21 -0500
-Received: by mail-wg0-f45.google.com with SMTP id x12so5046621wgg.4
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 18:18:20 -0800 (PST)
+	Mon, 12 Jan 2015 21:55:35 -0500
+Received: by mail-wi0-f173.google.com with SMTP id em10so2597583wid.0
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 18:55:34 -0800 (PST)
 MIME-Version: 1.0
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Thu, 22 Jan 2015 21:17:57 -0500
-Message-ID: <CAHqTa-0BYeQtwYBUAYwjx-zhitUq0q=m_-fMWbx4KM7TjeqhOQ@mail.gmail.com> (sfid-20150123_031824_948243_310025AD)
-Subject: Re: REMINDER: wireless workshop in Ottawa
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Dave Taht <dave.taht@gmail.com>
+In-Reply-To: <87a91oeaq7.fsf@home.hong.me>
+References: <1420968029-1222-1-git-send-email-hong@topbug.net>
+ <20150112065445.GB29484@localhost> <87a91oeaq7.fsf@home.hong.me>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 13 Jan 2015 13:55:13 +1100
+Message-ID: <CAGRGNgUdEemrqnrYnJzTQEuce4yjQUjOW3B_eWSHkENkPwO9UQ@mail.gmail.com> (sfid-20150113_035539_200096_10CCFAF2)
+Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
+To: Hong Xu <hong@topbug.net>
+Cc: Bob Copeland <me@bobcopeland.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> wrote:
-> I am afraid I will be "committing a netdev crime" [1] because I will
-> not attend. Still there is one topic that would be interesting for
-> this conf/workshop. Recent experiences with 11ac devices has shown us
-> that the congestion control mechanisms in the networking subsystem are
-> not optimal for wireless in general which becomes even more visible
-> with 11ac (or it is just our devices :-p ). If there are people in the
-> community working in this area it would be great to collaborate on it.
-> Let me know. I know Dave Taht is the usual suspect to talk to about
-> this so Cc'ed him explicitly.
+Hi Hong,
 
-I'm planning to be there, and I work with Dave Taht regularly about
-such things.  I would love to have a discussion about these issues
-with whoever is willing to listen :)
+On Mon, Jan 12, 2015 at 6:09 PM, Hong Xu <hong@topbug.net> wrote:
+>
+> Bob Copeland <me@bobcopeland.com> writes:
+>
+>> On Sun, Jan 11, 2015 at 01:20:29AM -0800, Hong Xu wrote:
+>>> Add an option "blink" to enable or disable the LED blink. The default
+>>> value is set to 1 so that existing users would not experience any
+>>> unexpected changes.
+>>
+>> Been a while since I looked, but isn't there a way to achieve same
+>> result by just echoing 'none' into the relevant LED's sysfs file
+>> (something like /sys/class/leds/phy0-led/trigger)?
+>
+> It's a bit different. echo 'none' to the trigger would cause the LED
+> light to be dark, but if turn off the blink option here, the LED is
+> bright but without blinking.
+>
+> Hong
 
-Also, you have not experienced congestion control problems until
-you've tried to get TCP to do a gigabit per second with 30+
-milliseconds of latency on a slightly lossy network.
+I.e. it doesn't blink, it's just on when linked (isn't there a trigger
+for that?) or is on solid? (echo 255 >
+/sys/class/leds/phy0-led/brightness)
 
-Have fun,
+Thanks,
 
-Avery
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
