@@ -1,138 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:37952 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbbASSY5 (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:37961 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924AbbANJxK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 13:24:57 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so17705960wiv.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 10:24:55 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 2/6] staging: vt6655: common variable size channel numbers to ieee80211_channel->hw_value
-Date: Mon, 19 Jan 2015 18:24:11 +0000
-Message-Id: <1421691855-2927-2-git-send-email-tvboxspy@gmail.com> (sfid-20150119_192502_347730_F43BCC7E)
-In-Reply-To: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
-References: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 14 Jan 2015 04:53:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <1421224818.2012.4.camel@gmail.com>
+References: <1421224274.2012.2.camel@gmail.com>
+	<1421224818.2012.4.camel@gmail.com>
+Date: Wed, 14 Jan 2015 11:53:08 +0200
+Message-ID: <CANUX_P1DwErJr6O2OGR7Sr12g3-OKYKEBTQ+wSZiSS=NUoCqEw@mail.gmail.com> (sfid-20150114_105319_873950_427B4995)
+Subject: Re: [REGRESSION] iwlfiwi with Intel Centrino N1000 won't work with power_save
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Igor Gnatenko <i.gnatenko.brain@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Wysocki, Rafael" <rafael@kernel.org>,
+	Alex Nik <rage.iz.me@gmail.com>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hw_value is u16 so fix all to the same size.
+On Wed, Jan 14, 2015 at 10:40 AM, Igor Gnatenko
+<i.gnatenko.brain@gmail.com> wrote:
+> On Wed, 2015-01-14 at 11:31 +0300, Igor Gnatenko wrote:
+>> Hi,
+>>
+>> I got report from people that on Intel Centrino N1000 wifi won't
+>> work after
+>> updating to 3.17.8. I see in that release Fedora maints enabled
+>> POWERCAP and
+>> INTEL RAPL. We got working wifi only after disabling powersave via
+>> `iw dev wlp2s0 set power_save off`.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/channel.c |  6 +++---
- drivers/staging/vt6655/device.h  |  2 +-
- drivers/staging/vt6655/rf.c      | 12 +++++++-----
- drivers/staging/vt6655/rf.h      |  8 ++++----
- 4 files changed, 15 insertions(+), 13 deletions(-)
+What kernel version did you have before?
+BTW - for this device, power save is supposed to be disabled by
+default, but I need to check
 
-diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
-index 3fc09f4..3c17725 100644
---- a/drivers/staging/vt6655/channel.c
-+++ b/drivers/staging/vt6655/channel.c
-@@ -197,11 +197,11 @@ bool set_channel(void *pDeviceHandler, struct ieee80211_channel *ch)
- 
- 	if (pDevice->byRFType == RF_AIROHA7230)
- 		RFbAL7230SelectChannelPostProcess(pDevice, pDevice->byCurrentCh,
--						  (unsigned char)ch->hw_value);
-+						  ch->hw_value);
- 
--	pDevice->byCurrentCh = (unsigned char)ch->hw_value;
-+	pDevice->byCurrentCh = ch->hw_value;
- 	bResult &= RFbSelectChannel(pDevice, pDevice->byRFType,
--				    (unsigned char)ch->hw_value);
-+				    ch->hw_value);
- 
- 	/* Init Synthesizer Table */
- 	if (pDevice->bEnablePSMode)
-diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
-index 83efbfb..96d8e62 100644
---- a/drivers/staging/vt6655/device.h
-+++ b/drivers/staging/vt6655/device.h
-@@ -367,7 +367,7 @@ struct vnt_private {
- 	bool bIsBeaconBufReadySet;
- 	unsigned int	cbBeaconBufReadySetCnt;
- 	bool bFixRate;
--	unsigned char byCurrentCh;
-+	u16 byCurrentCh;
- 
- 	bool bAES;
- 
-diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
-index 32ef993..27841aa 100644
---- a/drivers/staging/vt6655/rf.c
-+++ b/drivers/staging/vt6655/rf.c
-@@ -651,7 +651,8 @@ bool RFbInit(
-  * Return Value: true if succeeded; false if failed.
-  *
-  */
--bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType, unsigned char byChannel)
-+bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType,
-+		      u16 byChannel)
- {
- 	bool bResult = true;
- 
-@@ -687,7 +688,8 @@ bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType, unsigned
-  * Return Value: None.
-  *
-  */
--bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType, unsigned int uChannel)
-+bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType,
-+			 u16 uChannel)
- {
- 	void __iomem *dwIoBase = priv->PortOffset;
- 	int   ii;
-@@ -767,7 +769,7 @@ bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType, unsig
- bool RFbSetPower(
- 	struct vnt_private *priv,
- 	unsigned int uRATE,
--	unsigned int uCH
-+	u16 uCH
- )
- {
- 	bool bResult = true;
-@@ -937,8 +939,8 @@ RFvRSSITodBm(
- /* Post processing for the 11b/g and 11a.
-  * for save time on changing Reg2,3,5,7,10,12,15 */
- bool RFbAL7230SelectChannelPostProcess(struct vnt_private *priv,
--				       unsigned char byOldChannel,
--				       unsigned char byNewChannel)
-+				       u16 byOldChannel,
-+				       u16 byNewChannel)
- {
- 	bool bResult;
- 
-diff --git a/drivers/staging/vt6655/rf.h b/drivers/staging/vt6655/rf.h
-index 8a6e2cf..2ea21e2 100644
---- a/drivers/staging/vt6655/rf.h
-+++ b/drivers/staging/vt6655/rf.h
-@@ -74,12 +74,12 @@
- /*---------------------  Export Functions  --------------------------*/
- 
- bool IFRFbWriteEmbedded(struct vnt_private *, unsigned long dwData);
--bool RFbSelectChannel(struct vnt_private *, unsigned char byRFType, unsigned char byChannel);
-+bool RFbSelectChannel(struct vnt_private *, unsigned char byRFType, u16);
- bool RFbInit(
- 	struct vnt_private *
- );
--bool RFvWriteWakeProgSyn(struct vnt_private *, unsigned char byRFType, unsigned int uChannel);
--bool RFbSetPower(struct vnt_private *, unsigned int uRATE, unsigned int uCH);
-+bool RFvWriteWakeProgSyn(struct vnt_private *, unsigned char byRFType, u16);
-+bool RFbSetPower(struct vnt_private *, unsigned int uRATE, u16);
- bool RFbRawSetPower(
- 	struct vnt_private *,
- 	unsigned char byPwr,
-@@ -94,7 +94,7 @@ RFvRSSITodBm(
- );
- 
- //{{ RobertYu: 20050104
--bool RFbAL7230SelectChannelPostProcess(struct vnt_private *, unsigned char byOldChannel, unsigned char byNewChannel);
-+bool RFbAL7230SelectChannelPostProcess(struct vnt_private *, u16, u16);
- //}} RobertYu
- 
- #endif // __RF_H__
--- 
-2.1.0
-
+>>
+>> How we can debug this?
+>>
+>> lspci above.
+>>
+>> 02:00.0 Network controller [0280]: Intel Corporation Centrino
+>> Wireless- N 1000 [Condor Peak] [8086:0084]
+>>         Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN
+>> [8086:1315]
+>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast
+>> >TAbort-
+>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>         Latency: 0, Cache Line Size: 64 bytes
+>>         Interrupt: pin A routed to IRQ 28
+>>         Region 0: Memory at d1500000 (64-bit, non-prefetchable)
+>> [size=8K]
+>>         Capabilities: [c8] Power Management version 3
+>>                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
+>> PME(D0+,D1-
+>> ,D2-,D3hot+,D3cold+)
+>>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0
+>> PME-
+>>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>                 Address: 00000000fee0800c  Data: 4122
+>>         Capabilities: [e0] Express (v1) Endpoint, MSI 00
+>>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency
+>> L0s
+>> <512ns, L1 unlimited
+>>                 ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+>>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+>> Unsupported-
+>>                 RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+>>                 MaxPayload 128 bytes, MaxReadReq 128 bytes
+>>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
+>> AuxPwr+ TransPend-
+>>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s
+>> L1,
+>> Exit Latency L0s <128ns, L1 <32us
+>>                 ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
+>>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled-
+>> CommClk+
+>>                 ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+>>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
+>> SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>>         Capabilities: [100 v1] Advanced Error Reporting
+>>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+>> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+>> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
+>> UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+>> NonFatalErr-
+>>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+>> NonFatalErr+
+>>                 AERCap: First Error Pointer: 00, GenCap- CGenEn-
+>> ChkCap- ChkEn-
+>>         Capabilities: [140 v1] Device Serial Number 74-e5-0b-ff-ff-
+>> cc-
+>> 82-24
+>>         Kernel driver in use: iwlwifi
+>>         Kernel modules: iwlwifi
+>> --
+>> -Igor Gnatenko
+> CC linux-pm@
+> --
+> -Igor Gnatenko
