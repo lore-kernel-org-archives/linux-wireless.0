@@ -1,27 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:44405 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952AbbALFYH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 00:24:07 -0500
-Date: Mon, 12 Jan 2015 00:24:05 -0500 (EST)
-Message-Id: <20150112.002405.468448503179324247.davem@davemloft.net> (sfid-20150112_062412_046747_C576F2AF)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers 2015-01-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87lhlbj4pp.fsf@kamboji.qca.qualcomm.com>
-References: <87lhlbj4pp.fsf@kamboji.qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58120 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752753AbbANIrb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2015 03:47:31 -0500
+Message-ID: <1421225246.1950.22.camel@sipsolutions.net> (sfid-20150114_094758_399588_39BB0BA8)
+Subject: Re: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vadim Kochan <vadim4j@gmail.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>
+Cc: linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Date: Wed, 14 Jan 2015 09:47:26 +0100
+In-Reply-To: <1421073245-20312-1-git-send-email-vadim4j@gmail.com> (sfid-20150112_154435_236040_68404050)
+References: <1421073245-20312-1-git-send-email-vadim4j@gmail.com>
+	 (sfid-20150112_154435_236040_68404050)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Fri, 09 Jan 2015 18:31:30 +0200
+On Mon, 2015-01-12 at 16:34 +0200, Vadim Kochan wrote:
 
-> here are few more fixes to 3.19. Please let me know if there are any
-> problems.
+> --- a/net/core/net_namespace.c
+> +++ b/net/core/net_namespace.c
+> @@ -361,6 +361,7 @@ struct net *get_net_ns_by_fd(int fd)
+>  	return ERR_PTR(-EINVAL);
+>  }
+>  #endif
+> +EXPORT_SYMBOL_GPL(get_net_ns_by_fd);
 
-Pulled, thanks Kalle.
+Does this seem OK? Vadim is adding support for using the ns-by-fd in
+nl80211, which can be a module as part of cfg80211.
+
+johannes
+
