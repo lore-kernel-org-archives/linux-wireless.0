@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:41415 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220AbbALM4e (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53875 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751862AbbANKq1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 07:56:34 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add additional fw build version to info print
-References: <1420716572-23826-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 12 Jan 2015 14:56:23 +0200
-In-Reply-To: <1420716572-23826-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 8 Jan 2015 12:29:32 +0100")
-Message-ID: <87vbkccg3s.fsf@kamboji.qca.qualcomm.com> (sfid-20150112_135637_717216_3ACFAC10)
+	Wed, 14 Jan 2015 05:46:27 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0EAOPIw023688
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 02:46:26 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1rv520pv15-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 02:46:26 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<gaoqs@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 01/10] mwifiex: do not send regulatory update while starting AP
+Date: Wed, 14 Jan 2015 21:45:29 +0530
+Message-ID: <1421252138-30157-2-git-send-email-patila@marvell.com> (sfid-20150114_114629_867755_7624A662)
+In-Reply-To: <1421252138-30157-1-git-send-email-patila@marvell.com>
+References: <1421252138-30157-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+When regulatory domain changes, cfg80211 already issues request
+to change regulatory domain to driver via reg_notifier.
+There is no need to set regulatory again during start_ap.
 
-> The wmi-tlv firmware contains additional
-> versioning info. It may help reporting/debugging.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-[...]
-
->  void ath10k_print_driver_info(struct ath10k *ar)
->  {
-> -	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d\n",
-> +	ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d build %u.%u.%u.%u\n",
->  		    ar->hw_params.name,
->  		    ar->target_version,
->  		    ar->chip_id,
-> @@ -134,7 +134,11 @@ void ath10k_print_driver_info(struct ath10k *ar)
->  		    ar->htt.target_version_minor,
->  		    ar->wmi.op_version,
->  		    ath10k_cal_mode_str(ar->cal_mode),
-> -		    ar->max_num_stations);
-> +		    ar->max_num_stations,
-> +		    ar->fw_build_major,
-> +		    ar->fw_build_minor,
-> +		    ar->fw_build_si,
-> +		    ar->fw_build_crm);
-
-So now we print two different firmware versions to the user? That's just
-confusing. It's ok to print this build id in debug level, but not in
-info level. From user's point of view we should have only one firmware
-version.
-
-I would rather make sure that ATH10K_FW_IE_FW_VERSION always contains
-the correct version string and then developers map whatever they need
-from that string.
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 56e50d6..85795f9 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1737,7 +1737,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 		priv->adapter->config_bands = config_bands;
+ 
+ 	mwifiex_set_uap_rates(bss_cfg, params);
+-	mwifiex_send_domain_info_cmd_fw(wiphy);
+ 
+ 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
+ 		kfree(bss_cfg);
 -- 
-Kalle Valo
+1.8.1.4
+
