@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35322 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434AbbALJ61 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 04:58:27 -0500
-Message-ID: <1421056704.1891.18.camel@sipsolutions.net> (sfid-20150112_105832_779322_03F31584)
-Subject: Re: [PATCH net-next] Allow to set net namespace for wireless device
- via RTM_LINK
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vadim Kochan <vadim4j@gmail.com>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 12 Jan 2015 10:58:24 +0100
-In-Reply-To: <CAMw6YJJjt4W2JFnUunWgXKL+uUf87dn2LnNSWF6-o2VrXpqiHw@mail.gmail.com> (sfid-20150112_105719_498905_EF48834D)
-References: <1410467723-2550-1-git-send-email-vadim4j@gmail.com>
-	 <1411075535.2034.5.camel@jlt4.sipsolutions.net>
-	 <20141014121627.GA5115@angus-think.lan>
-	 <1413798437.10246.12.camel@jlt4.sipsolutions.net>
-	 <128188DF-5A9B-47A5-8A89-974CF7CF9064@holtmann.org>
-	 <1413802344.10246.20.camel@jlt4.sipsolutions.net>
-	 <CAMw6YJKLWQmT-fqg1QLDHbCxnpxWyJUSX+wvOB_pFyE=8HfSfQ@mail.gmail.com>
-	 <1420449724.1898.1.camel@sipsolutions.net>
-	 <CAMw6YJJgPJw7jizR=Qe_2SOK=S0UKrm9AyE7MHUg1-wODEab2g@mail.gmail.com>
-	 <1421055751.1891.10.camel@sipsolutions.net>
-	 <CAMw6YJJjt4W2JFnUunWgXKL+uUf87dn2LnNSWF6-o2VrXpqiHw@mail.gmail.com>
-	 (sfid-20150112_105719_498905_EF48834D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35632 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752249AbbANKqr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2015 05:46:47 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0EAOBUv027959
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 02:46:47 -0800
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1rwj838p1h-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 02:46:46 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<gaoqs@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 03/10] mwifiex: update IEs after AP has started
+Date: Wed, 14 Jan 2015 21:45:31 +0530
+Message-ID: <1421252138-30157-4-git-send-email-patila@marvell.com> (sfid-20150114_114650_117765_7895E766)
+In-Reply-To: <1421252138-30157-1-git-send-email-patila@marvell.com>
+References: <1421252138-30157-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-12 at 11:57 +0200, Vadim Kochan wrote:
-> Thank you! Seems reasonably for me.
-> 
-> The question is not related to the thread:
->      May be this is not very good idea to copy behavior from other
-> tools but what do you think about
->      add the same ability to use named network namespaces as it is
-> done in iproute2 - from /var/run/netns ?
+This patch moves IE management routine to end of start_ap handler.
+IEs now would be updated after AP has started.
 
-I have no objection to that of course - I believe it didn't exist back
-when I wrote this code, or at least I didn't know about it then :)
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 9dde975..6143625 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1679,8 +1679,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 
+ 	if (GET_BSS_ROLE(priv) != MWIFIEX_BSS_ROLE_UAP)
+ 		return -1;
+-	if (mwifiex_set_mgmt_ies(priv, &params->beacon))
+-		return -1;
+ 
+ 	bss_cfg = kzalloc(sizeof(struct mwifiex_uap_bss_param), GFP_KERNEL);
+ 	if (!bss_cfg)
+@@ -1781,6 +1779,9 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 		return -1;
+ 	}
+ 
++	if (mwifiex_set_mgmt_ies(priv, &params->beacon))
++		return -1;
++
+ 	memcpy(&priv->bss_cfg, bss_cfg, sizeof(priv->bss_cfg));
+ 	kfree(bss_cfg);
+ 
+-- 
+1.8.1.4
 
