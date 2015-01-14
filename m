@@ -1,114 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:40694 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754357AbbANIb1 (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:46419 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbbANJWr convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 03:31:27 -0500
-Received: by mail-la0-f41.google.com with SMTP id hv19so6858131lab.0
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 00:31:26 -0800 (PST)
-Message-ID: <1421224274.2012.2.camel@gmail.com> (sfid-20150114_093134_357949_241203B4)
-Subject: [REGRESSION] iwlfiwi with Intel Centrino N1000 won't work with
- power_save
-From: Igor Gnatenko <i.gnatenko.brain@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: "Wysocki, Rafael" <rafael@kernel.org>,
-	Alex Nik <rage.iz.me@gmail.com>
-Date: Wed, 14 Jan 2015 11:31:14 +0300
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-xgx9/UWtC7LqQyOAEWfc"
-Mime-Version: 1.0
+	Wed, 14 Jan 2015 04:22:47 -0500
+Received: by mail-wg0-f43.google.com with SMTP id k14so7709841wgh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 01:22:46 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <21685.35179.110539.780864@gargle.gargle.HOWL>
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
+	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
+	<21685.35179.110539.780864@gargle.gargle.HOWL>
+Date: Wed, 14 Jan 2015 10:22:46 +0100
+Message-ID: <CA+BoTQmNkVKyeWB0fCFhG2MfMZYTz6Dp4+cs44Dm4HCKjTc3Zw@mail.gmail.com> (sfid-20150114_102253_010823_B8765D04)
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 13 January 2015 at 22:08, Sujith Manoharan <sujith@msujith.org> wrote:
+> Kalle Valo wrote:
+>> I'm not sure if I really like this path of having interfaces to
+>> configure driver internals. I suspect that if we add this, we will have
+>> even more later. It's a lot more documenting for us and more work to the
+>> users to understand what parameters they should use. Also this means
+>> that testing will be more challenging as people will use different
+>> values and results won't be comparable.
+>>
+>> Isn't there any other way to solve the problem? Like automatically
+>> changing the value somehow (no idea how) or some other means?
+>
+> We are limiting performance by restricting the fill size. A user
+> will just use the default, which is still the same and remains
+> unchanged. But, having a way to adjust this based on the platform
+> seems reasonable to me and I think trying to change this value dynamically
+> is overkill.
 
---=-xgx9/UWtC7LqQyOAEWfc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+We should just fix the tx/rx processing instead. The HTT throttling
+limit was originally introduced to deal with watchdog issues we've
+seen on AP135. Tasklets were starving system too much.
 
-Hi,
+I've been playing around with threaded irqs in ath10k in my tree and
+I've seen improvement with Rx. However Tx instead becomes broken in
+the process and I'm yet to find a definite and final answer why that
+is the case. My suspicion is that NAPI, which is used by the ethernet
+driver, runs in tasklets and they aren't frequent enough to trigger
+ksoftirqd so they starve the system. The current non-threaded irq
+approach yields more tasklet schedules for Tx and hits ksoftirqd more
+often making it nice on userspace. If that's the case I don't really
+have an idea how to solve this now.
 
-I got report from people that on Intel Centrino N1000 wifi won't work=20
-after
-updating to 3.17.8. I see in that release Fedora maints enabled=20
-POWERCAP and
-INTEL RAPL. We got working wifi only after disabling powersave via `iw=20
-dev wlp2s0 set power_save off`.
 
-How we can debug this?
-
-lspci above.
-
-02:00.0 Network controller [0280]: Intel Corporation Centrino Wireless-
-N 1000 [Condor Peak] [8086:0084]
-        Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN=20
-[8086:1315]
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-=20
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-=
-=20
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 28
-        Region 0: Memory at d1500000 (64-bit, non-prefetchable)=20
-[size=3D8K]
-        Capabilities: [c8] Power Management version 3
-                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=3D0mA PME(D0+,D1-
-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-        Capabilities: [d0] MSI: Enable+ Count=3D1/1 Maskable- 64bit+
-                Address: 00000000fee0800c  Data: 4122
-        Capabilities: [e0] Express (v1) Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s=20
-<512ns, L1 unlimited
-                ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-=20
-Unsupported-
-                RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
-                MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-=20
-AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1,=20
-Exit Latency L0s <128ns, L1 <32us
-                ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
-                ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-=20
-SlotClk+ DLActive- BWMgmt- ABWMgmt-
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-=20
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-=20
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-=20
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-=20
-NonFatalErr-
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-=20
-NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn-=20
-ChkCap- ChkEn-
-        Capabilities: [140 v1] Device Serial Number 74-e5-0b-ff-ff-cc-
-82-24
-        Kernel driver in use: iwlwifi
-        Kernel modules: iwlwifi
---
--Igor Gnatenko
---=-xgx9/UWtC7LqQyOAEWfc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAABAgAGBQJUtilZAAoJEGmy9zExMnyPSroIAIUkQxua+p36iEyO/t9Qqhhy
-1SFfLstUw+8GzzbxzTeLqLh3Kdl9pGYQsSD4MnN7RqHCpZAsZFvYSh+j3dG568Ee
-i4nSplmmXot1xyDDFvEuBYhZGAkNPG46KLSot9I2pLsITVGMtK3oJqtEWqDGMABV
-A/45UiOJar/5wBWmARXvQ/Ro1DM7HnJStvfzMQdd2VoVxOds4zNagR/YCZ+RREXA
-Sz5PlahIrhFncSflBJO2tRD9G8d6K+TBF0+o7geR0mjD1IyEHPVmP5BIDPisaEFj
-q5MAtA67brJX+14gUQsdwf2be0fVleoH6Hbr9I/JYEZxgVYm2tbmFZy1zgstuKs=
-=ScnQ
------END PGP SIGNATURE-----
-
---=-xgx9/UWtC7LqQyOAEWfc--
-
+Michał
