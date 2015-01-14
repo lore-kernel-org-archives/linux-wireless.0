@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:54816 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751674AbbAXKj0 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33338 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751060AbbANKqP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 05:39:26 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: sedat.dilek@gmail.com
-Cc: Hong Xu <hong@topbug.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
-References: <1422094745-12718-1-git-send-email-hong@topbug.net>
-	<87k30ciiir.fsf@kamboji.qca.qualcomm.com>
-	<CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
-Date: Sat, 24 Jan 2015 12:39:19 +0200
-In-Reply-To: <CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
-	(Sedat Dilek's message of "Sat, 24 Jan 2015 11:33:48 +0100")
-Message-ID: <87bnloiht4.fsf@kamboji.qca.qualcomm.com> (sfid-20150124_113934_851111_79417476)
+	Wed, 14 Jan 2015 05:46:15 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0EAO4BI027901
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 02:46:14 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1rwj838nyj-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 02:46:14 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<gaoqs@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 00/10] mwifiex: DFS support for mwifiex AP
+Date: Wed, 14 Jan 2015 21:45:28 +0530
+Message-ID: <1421252138-30157-1-git-send-email-patila@marvell.com> (sfid-20150114_114618_940147_23530639)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(I'll drop ath9k-devel as someone from there seems to be spamming with
-vacation responses)
+This patch series adds DFS support for mwifiex AP. Series include
+patches to handle cfg80211 start_radar_detection and channel_switch
+handlers. First 5 patches are actually refactoring effort. Patch6-10
+add these handlers and other DFS handling.
 
-Sedat Dilek <sedat.dilek@gmail.com> writes:
+Avinash Patil (10):
+  mwifiex: do not send regulatory update while starting AP
+  mwifiex: store AP configuration in private structure
+  mwifiex: update IEs after AP has started
+  mwifiex: refactor start_ap handler
+  mwifiex: separate function for parsing head and tail IEs
+  mwifiex: add cfg80211 start_radar_detection handler
+  mwifiex: support for channel report for radar detection
+  mwifiex: handle radar detect event from FW
+  mwifiex: channel switch support for mwifiex
+  mwifiex: 11h handling for AP interface
 
-> 2nd, use the Fixes tag [2] in this case with a reference to the
-> culprit commit [1].
->
-> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
-
-Good point. I just found a handy tip from SubmittingPatches, just add
-this to ~/.gitconfig:
-
-	[core]
-		abbrev = 12
-	[pretty]
-		fixes = Fixes: %h (\"%s\")
-
-And then you get the fixes line automatically formatted for whatever
-commit you want:
-
-$ git log --format=fixes | head -5
-Fixes: fa1270678ce4 ("ath10k: Enable the MCS8 and MCS9 at 2.4G band")
-Fixes: 296f98ed02dd ("ath10k: fix pmf for wmi-tlv on qca6174")
-Fixes: 3443aaf6f11d ("ath10k: remove sw encryption for pmf")
-Fixes: d541c931dc93 ("ath10k: disable irqs after fw crash")
-Fixes: 9f282daeedc9 ("ath10k: disable uapsd autotrigger")
-
-Yet another reason why git is so awesome.
+ drivers/net/wireless/mwifiex/11h.c         | 196 +++++++++++++++++++++++-
+ drivers/net/wireless/mwifiex/cfg80211.c    | 232 +++++++++++++++++++++--------
+ drivers/net/wireless/mwifiex/decl.h        |  11 ++
+ drivers/net/wireless/mwifiex/fw.h          |  58 ++++++++
+ drivers/net/wireless/mwifiex/ie.c          |  89 ++++++-----
+ drivers/net/wireless/mwifiex/init.c        |   3 +
+ drivers/net/wireless/mwifiex/main.c        |   2 +-
+ drivers/net/wireless/mwifiex/main.h        |  31 +++-
+ drivers/net/wireless/mwifiex/sta_cmd.c     |   4 +
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |   2 +
+ drivers/net/wireless/mwifiex/sta_event.c   |  10 ++
+ drivers/net/wireless/mwifiex/uap_cmd.c     |  70 +++++++++
+ drivers/net/wireless/mwifiex/uap_event.c   |   8 +
+ 13 files changed, 619 insertions(+), 97 deletions(-)
 
 -- 
-Kalle Valo
+1.8.1.4
+
