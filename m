@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20867 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753253AbbAWDtV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 22:49:21 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Avinash Patil <patila@marvell.com>, Cathy Luo <cluo@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 22 Jan 2015 19:49:16 -0800
-Subject: RE: [PATCH] mwifiex: check driver status in connect and scan
- handlers
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B16481C36@SC-VEXCH1.marvell.com> (sfid-20150123_044925_060329_43A4C034)
-References: <1420631859-29004-1-git-send-email-akarwar@marvell.com>
-	<CAEhWJFnr28=Q4TFwzwcNoWPQRbUY0+mWu8nbocs3789v8X1PHw@mail.gmail.com>
-	<5FF020A1CFFEEC49BD1E09530C4FF5951B1633A3FA@SC-VEXCH1.marvell.com>
- <87lhkunbss.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87lhkunbss.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:58133 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932183AbbANIy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2015 03:54:27 -0500
+Message-ID: <1421225664.1950.27.camel@sipsolutions.net> (sfid-20150114_095436_056175_718B4353)
+Subject: Re: [RFC 2/2] mac80211: add VHT support for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 14 Jan 2015 09:54:24 +0100
+In-Reply-To: <1421138124-7661-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150113_093621_137245_E694964D)
+References: <1421138124-7661-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1421138124-7661-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20150113_093621_137245_E694964D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbG8sDQoNCj5vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBLYWxsZSBW
-YWxvDQo+U2VudDogMjIgSmFudWFyeSAyMDE1IDE5OjQzDQo+VG86IEFtaXRrdW1hciBLYXJ3YXIN
-Cj5DYzogQXZpbmFzaCBQYXRpbDsgQ2F0aHkgTHVvOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
-bC5vcmcNCj5TdWJqZWN0OiBSZTogW1BBVENIXSBtd2lmaWV4OiBjaGVjayBkcml2ZXIgc3RhdHVz
-IGluIGNvbm5lY3QgYW5kIHNjYW4NCj5oYW5kbGVycw0KPg0KPkFtaXRrdW1hciBLYXJ3YXIgPGFr
-YXJ3YXJAbWFydmVsbC5jb20+IHdyaXRlczoNCj4NCj4+IEhpIEthbGxlLA0KPj4NCj4+Pk9uIFdl
-ZCwgSmFuIDcsIDIwMTUgYXQgNToyNyBQTSwgQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2
-ZWxsLmNvbT4NCj53cm90ZToNCj4+Pklnbm9yZSBzY2FuIGFuZCBjb25uZWN0aW9uIHJlcXVlc3Rz
-IGZyb20gY2ZnODAyMTEgd2hlbiBkcml2ZXIgdW5sb2FkDQo+Pj5pcyBpbiBwcm9jZXNzIG9yIHBy
-ZXZpb3VzIGNvbW1hbmQgaGFzIHRpbWVkIG91dCBkdWUgdG8gYSBmaXJtd2FyZSBidWcuDQo+Pj5U
-aGlzIHBhdGNoIGZpeGVzIGNvcm5lciBjYXNlIHN5c3RlbSBjcmFzaCBpc3N1ZXMuDQo+Pg0KPj4+
-U2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4+
-PlNpZ25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4+Pi0tLQ0KPj4+
-wqBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMgfCA4ICsrKysrKysrDQo+
-Pj7CoGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jwqAgwqAgwqB8IDYgKysrKysr
-DQo+Pj7CoDIgZmlsZXMgY2hhbmdlZCwgMTQgaW5zZXJ0aW9ucygrKQ0KPj4NCj4+IENvdWxkIHlv
-dSBwbGVhc2UgY2hlY2sgdGhpcyBwYXRjaD8gTGV0IG1lIGtub3cgaWYgeW91IHdhbnQgbWUgdG8N
-Cj4+IHJlc2VuZCBpdC4NCj4NCj5VbmZvcnR1bmF0ZWx5IEknbSBsYWdnaW5nIGJlaGluZCBiZWNh
-dXNlIEkgZGVjaWRlZCB0byB3b3JrIG9uIGF1dG9tYXRpbmcNCj50aGUgcGF0Y2ggaGFuZGxpbmcu
-IEknbSBob3BpbmcgdGhhdCBtYWtlcyBpdCBlYXNpZXIgZm9yIG1lIHRvIHN0YXkgdXAtDQo+dG8t
-ZGF0ZS4NCj4NCj5BbHNvIGl0IHdvdWxkIGhlbHAgbWUgdGhhdCBpbnN0ZWFkIG9mIG1haWxpbmcg
-bWUgcGVvcGxlIHdvdWxkIGNoZWNrIHRoZQ0KPnN0YXR1cyBmcm9tIHRoZSBwYXRjaHdvcms6DQo+
-DQo+aHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wcm9qZWN0L2xpbnV4LXdpcmVsZXNzL2xp
-c3QvDQo+DQo+SWYgdGhlIHBhdGNoIGlzIGRlbGVnYXRlZCB0byBtZSBhbmQgc3RhdGUgaXMgb25l
-IG9mICJOZXciLCAiVW5kZXINCj5SZXZpZXciIG9yICJBd2FpdGluZyBVcHN0cmVhbSIgaXQgbWVh
-bnMgdGhhdCB0aGUgcGF0Y2ggaXMgaW4gcXVldWUgb2YNCj5wYXRjaGVzIHRvIHByb2Nlc3MuIElm
-IGl0J3MgYW55dGhpbmcgZWxzZSBpdCBtZWFucyB0aGF0IHRoZSBwYXRjaCBpcw0KPmRyb3BwZWQg
-ZHVlIHRvIHNvbWUgcmVhc29uLCBlaXRoZXIgZm9yIGEgcmVhc29uIChpc3N1ZXMgZm91bmQgZHVy
-aW5nDQo+cmV2aWV3IGV0Yykgb3IgYWNjaWRlbnRhbGx5ICh3aGljaCBjYW4gYWxzbyBoYXBwZW4g
-aW4gcmFyZSBjYXNlcykuDQo+DQo+VGhpcyBwYXRjaCBpcyBpbiAnVW5kZXIgUmV2aWV3JyBzdGF0
-ZSBzbyBJIHdpbGwgZ2V0IHRvIGl0IGV2ZW50dWFsbHk6DQo+DQo+aHR0cHM6Ly9wYXRjaHdvcmsu
-a2VybmVsLm9yZy9wYXRjaC81NTg0MzUxLw0KPg0KDQpUaGFua3MgZm9yIHlvdXIgcmVwbHkuIFNv
-dW5kcyBnb29kIHRvIG1lLiANCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0K
+On Tue, 2015-01-13 at 09:35 +0100, Janusz Dziedzic wrote:
+
+> +++ b/net/mac80211/main.c
+> @@ -549,6 +549,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+>  		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
+>  				   NL80211_FEATURE_AP_SCAN;
+>  
+> +	wiphy_ext_feature_set(wiphy, NL80211_FEATURE_VHT_IBSS);
+
+Maybe we should leave this to the driver?
+
+And it should certainly depend on actual VHT capability, I'd say? Seems
+confusing if we ended up with a driver that doesn't have VHT but says it
+has VHT_IBSS :)
+
+> +++ b/net/mac80211/util.c
+> @@ -2329,6 +2329,41 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+>  	return pos + sizeof(struct ieee80211_ht_operation);
+>  }
+>  
+> +u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+> +				const struct cfg80211_chan_def *chandef)
+
+For now that'll only be used by IBSS (perhaps mesh in the future?), but
+maybe it should just be in ibss.c until it's used more?
+
+johannes
+
+
