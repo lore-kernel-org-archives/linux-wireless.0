@@ -1,44 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:38532 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874AbbABMGc convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:42447 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501AbbANKgd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 07:06:32 -0500
+	Wed, 14 Jan 2015 05:36:33 -0500
 MIME-Version: 1.0
-In-Reply-To: <CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
-References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
-Date: Fri, 2 Jan 2015 13:06:31 +0100
-Message-ID: <CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com> (sfid-20150102_130652_331361_FA419494)
-Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
+In-Reply-To: <CAFMg4WBnNhVWf8ouFqWVwpbp5TQ0XrxTC_8vvLDSVBemA0N-Kw@mail.gmail.com>
+References: <1421224274.2012.2.camel@gmail.com>
+	<1421224818.2012.4.camel@gmail.com>
+	<CANUX_P1DwErJr6O2OGR7Sr12g3-OKYKEBTQ+wSZiSS=NUoCqEw@mail.gmail.com>
+	<CAFMg4WBnNhVWf8ouFqWVwpbp5TQ0XrxTC_8vvLDSVBemA0N-Kw@mail.gmail.com>
+Date: Wed, 14 Jan 2015 12:36:31 +0200
+Message-ID: <CANUX_P2-=HmRyxUukG5YyVu+=P4YtsDwQjJFZEj6_L6EQoNLtA@mail.gmail.com> (sfid-20150114_113639_270864_B9745FFD)
+Subject: Re: [REGRESSION] iwlfiwi with Intel Centrino N1000 won't work with power_save
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Igor Gnatenko <i.gnatenko.brain@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Wysocki, Rafael" <rafael@kernel.org>,
+	Alex Nik <rage.iz.me@gmail.com>,
+	Linux PM list <linux-pm@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 January 2015 at 13:05, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 1 January 2015 at 16:46, Rickard Strandqvist
-> <rickard_strandqvist@spectrumdigital.se> wrote:
->> Remove the function b43legacy_radio_set_tx_iq() that is not used anywhere.
+>>>> Hi,
+>>>>
+>>>> I got report from people that on Intel Centrino N1000 wifi won't
+>>>> work after
+>>>> updating to 3.17.8. I see in that release Fedora maints enabled
+>>>> POWERCAP and
+>>>> INTEL RAPL. We got working wifi only after disabling powersave via
+>>>> `iw dev wlp2s0 set power_save off`.
 >>
->> This was partially found by using a static code analysis program called cppcheck.
->
-> It seems to be for A-PHY based hardware (with 0x2060 radio id) which
-> is not handled by b43legacy. Should be safe to drop this code (we
-> won't likely need it).
->
-> Ack
+>> What kernel version did you have before?
+>> BTW - for this device, power save is supposed to be disabled by
+>> default, but I need to check
+> 3.17.4
 
-For future, we prefix patches with just a driver name. So this could
-be simply called
-b43legacy: radio.c: Remove unused function
+$ git log --oneline v3.17.4..v3.17.8 -- drivers/net/wireless/iwlwifi/
+fb14996 iwlwifi: mvm: check TLV flag before trying to use hotspot
+firmware commands
+4e709ff iwlwifi: mvm: ROC - bug fixes around time events and locking
+85ebf94 iwlwifi: pcie: fix prph dump length
 
--- 
-Rafał
+none of these are related to the device your are reporting about.
+
+>>>>
+>>>> How we can debug this?
+>>>>
+>>>> lspci above.
+>>>>
+>>>> 02:00.0 Network controller [0280]: Intel Corporation Centrino
+>>>> Wireless- N 1000 [Condor Peak] [8086:0084]
+>>>>         Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN
+>>>> [8086:1315]
+>>>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>>>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast
+>>>> >TAbort-
+>>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>>         Latency: 0, Cache Line Size: 64 bytes
+>>>>         Interrupt: pin A routed to IRQ 28
+>>>>         Region 0: Memory at d1500000 (64-bit, non-prefetchable)
+>>>> [size=8K]
+>>>>         Capabilities: [c8] Power Management version 3
+>>>>                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
+>>>> PME(D0+,D1-
+>>>> ,D2-,D3hot+,D3cold+)
+>>>>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0
+>>>> PME-
+>>>>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>>>                 Address: 00000000fee0800c  Data: 4122
+>>>>         Capabilities: [e0] Express (v1) Endpoint, MSI 00
+>>>>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency
+>>>> L0s
+>>>> <512ns, L1 unlimited
+>>>>                 ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+>>>>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
+>>>> Unsupported-
+>>>>                 RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+>>>>                 MaxPayload 128 bytes, MaxReadReq 128 bytes
+>>>>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
+>>>> AuxPwr+ TransPend-
+>>>>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s
+>>>> L1,
+>>>> Exit Latency L0s <128ns, L1 <32us
+>>>>                 ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
+>>>>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled-
+>>>> CommClk+
+>>>>                 ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+>>>>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
+>>>> SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>>>>         Capabilities: [100 v1] Advanced Error Reporting
+>>>>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+>>>> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>>>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
+>>>> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>>>>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
+>>>> UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>>>>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+>>>> NonFatalErr-
+>>>>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
+>>>> NonFatalErr+
+>>>>                 AERCap: First Error Pointer: 00, GenCap- CGenEn-
+>>>> ChkCap- ChkEn-
+>>>>         Capabilities: [140 v1] Device Serial Number 74-e5-0b-ff-ff-
+>>>> cc-
+>>>> 82-24
+>>>>         Kernel driver in use: iwlwifi
+>>>>         Kernel modules: iwlwifi
+>>>> --
+>>>> -Igor Gnatenko
+>>> CC linux-pm@
+>>> --
+>>> -Igor Gnatenko
+>
+>
+>
+> --
+> -Igor Gnatenko
