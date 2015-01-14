@@ -1,85 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:52552 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756041AbbAFP6c (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:44221 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755269AbbANIBN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:58:32 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 09/11 V2] rtlwifi: rtl8723be: Convert driver to use common DM table initialization
-Date: Tue,  6 Jan 2015 09:58:10 -0600
-Message-Id: <1420559892-12384-10-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165855_035862_581D5991)
-In-Reply-To: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 14 Jan 2015 03:01:13 -0500
+Received: by mail-wi0-f180.google.com with SMTP id n3so8967697wiv.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 00:01:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAFtRNNxDm1FO4wABkmTuE8F1hRWTwKwsMs5G7++d7Zz3J_VXoA@mail.gmail.com>
+References: <1421061360.1891.21.camel@sipsolutions.net>
+	<1421076401.1891.29.camel@sipsolutions.net>
+	<54B4192E.9010202@erley.org>
+	<CAFtRNNxDm1FO4wABkmTuE8F1hRWTwKwsMs5G7++d7Zz3J_VXoA@mail.gmail.com>
+Date: Wed, 14 Jan 2015 08:56:04 +0100
+Message-ID: <CAA2SeNL1x567sskKSKPcsEg6p08LP8DRg9F-2r6k6TUo0efTNA@mail.gmail.com> (sfid-20150114_090121_320449_E48307C1)
+Subject: Re: (re)licensing the wireless wiki
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Nick Kossifidis <mickflemm@gmail.com>
+Cc: Pat Erley <pat-lkml@erley.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert driver rtl8723be to use routine rtl_dm_diginit().
+> 2015-01-12 20:57 GMT+02:00 Pat Erley <pat-lkml@erley.org>:
+>> On 01/12/2015 09:26 AM, Johannes Berg wrote:
+>>>
+>>> On Mon, 2015-01-12 at 12:16 +0100, Johannes Berg wrote:
+>>>
+>>>> I've emailed every contributor who I could find an email address for,
+>>>> but some (~40) don't have an email address and I already have a bunch of
+>>>> bounces (~50).
+>>>
+>>>
+>>> Additionally, gmail has apparently decided that I was spamming -- so you
+>>> may find my message in your spam folder there.
+>>>
+>>
+>> Hmm, I swear I had setup an e-mail address way back when I made some edits.
+>> I'm pretty sure my account was PatErley on there(would see edits on hostapd
+>> and the multiple vif iw sections, from my recollection). Anyways, do you
+>> need an ack or is just saying:
+>>
+>> You have my permission to add the license to my works.
+>>
+>> Enough?
+>>
+>> Pat Erley
+>>
+>
+> Sorry for the delay, I missed this one.
+>
+> So you have my permission to add the license to my works too. Thanks a
+> lot for the notice and keep up the good work ;-)
+>
+>
+> --
+> GPG ID: 0xEE878588
+> As you read this post global entropy rises. Have Fun ;-)
+> Nick
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Sorry Johannes, I missed the email since it was in spam.
+You have my permission to add the license to my work.
 
-V2 - unchanged from V1
----
+Thanks, best regsrds
+Lorenzo
 
- drivers/net/wireless/rtlwifi/rtl8723be/dm.c | 32 ++---------------------------
- 1 file changed, 2 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
-index ddf45d9..2367e8f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/dm.c
-@@ -212,35 +212,6 @@ void rtl8723be_dm_txpower_track_adjust(struct ieee80211_hw *hw, u8 type,
- 		(pwr_val << 16) | (pwr_val << 24);
- }
- 
--static void rtl8723be_dm_diginit(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
--
--	dm_digtable->dig_enable_flag = true;
--	dm_digtable->cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
--	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
--	dm_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
--	dm_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
--	dm_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
--	dm_digtable->rx_gain_max = DM_DIG_MAX;
--	dm_digtable->rx_gain_min = DM_DIG_MIN;
--	dm_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
--	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
--	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
--	dm_digtable->pre_cck_cca_thres = 0xff;
--	dm_digtable->cur_cck_cca_thres = 0x83;
--	dm_digtable->forbidden_igi = DM_DIG_MIN;
--	dm_digtable->large_fa_hit = 0;
--	dm_digtable->recover_cnt = 0;
--	dm_digtable->dig_min_0 = DM_DIG_MIN;
--	dm_digtable->dig_min_1 = DM_DIG_MIN;
--	dm_digtable->media_connect_0 = false;
--	dm_digtable->media_connect_1 = false;
--	rtlpriv->dm.dm_initialgain_enable = true;
--	dm_digtable->bt30_cur_igi = 0x32;
--}
--
- void rtl8723be_dm_init_rate_adaptive_mask(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -294,9 +265,10 @@ static void rtl8723be_dm_init_dynamic_atc_switch(struct ieee80211_hw *hw)
- void rtl8723be_dm_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u32 cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
- 
- 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
--	rtl8723be_dm_diginit(hw);
-+	rtl_dm_diginit(hw, cur_igvalue);
- 	rtl8723be_dm_init_rate_adaptive_mask(hw);
- 	rtl8723_dm_init_edca_turbo(hw);
- 	rtl8723_dm_init_dynamic_bb_powersaving(hw);
 -- 
-2.1.2
-
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
