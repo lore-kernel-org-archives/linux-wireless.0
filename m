@@ -1,73 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43829 "EHLO mx2.suse.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58140 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751125AbbAEH0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 02:26:53 -0500
-Date: Mon, 5 Jan 2015 08:26:48 +0100
-From: Michal Kubecek <mkubecek@suse.cz>
-To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Theodore Ts'o <tytso@mit.edu>,
-	Arend van Spriel <arend@broadcom.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-Message-ID: <20150105072648.GA30744@unicorn.suse.cz> (sfid-20150105_082713_476423_FAC33E5D)
-References: <54A3D955.6020809@broadcom.com>
- <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
- <54A3E1F1.7030807@broadcom.com>
- <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
- <54A41000.3040306@broadcom.com>
- <20141231173113.GA443@thunk.org>
- <54A45D4D.7070302@broadcom.com>
- <20141231214421.GA29273@thunk.org>
- <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
- <20150101194417.GN24112@csclub.uwaterloo.ca>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150101194417.GN24112@csclub.uwaterloo.ca>
+	id S932330AbbANIzP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Jan 2015 03:55:15 -0500
+Message-ID: <1421225707.1950.28.camel@sipsolutions.net> (sfid-20150114_095544_198117_A4226043)
+Subject: Re: [PATCH] iw: Add OCB mode handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rostislav Lisovy <lisovy@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Michal Sojka <sojkam1@fel.cvut.cz>, s.sander@nordsys.de,
+	jan-niklas.meier@volkswagen.de, burak.simsek@volkswagen.de,
+	bernd.lehmann@volkswagen.de,
+	Rostislav Lisovy <rostislav.lisovy@fel.cvut.cz>
+Date: Wed, 14 Jan 2015 09:55:07 +0100
+In-Reply-To: <1421066997-8676-1-git-send-email-rostislav.lisovy@fel.cvut.cz> (sfid-20150112_135009_513914_2ADE15D0)
+References: <1421066997-8676-1-git-send-email-rostislav.lisovy@fel.cvut.cz>
+	 (sfid-20150112_135009_513914_2ADE15D0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 01, 2015 at 02:44:17PM -0500, Lennart Sorensen wrote:
+On Mon, 2015-01-12 at 13:49 +0100, Rostislav Lisovy wrote:
+> Since the commit 6e0bd6c35b021dc73a81ebd1ef79761233c48b50
+> ("cfg80211: 802.11p OCB mode handling") and
+> 239281f803e2efdb77d906ef296086b6917e5d71
+> ("mac80211: 802.11p OCB mode support")
+> does the Linux kernel support OCB mode. This commit adds
+> proper OCB mode handling.
+> 
+> Modify the command for device type setting to support OCB mode.
+> Add commands for "joining" and "leaving" the OCB mode network.
+> When joining two arguments are mandatory -- frequency and
+> channel bandwidth (5 or 10 MHz).
 
-> not handling IPv6 (I think that has been fixed by now), and many
-> other awfulnesses.
+Applied, thanks.
 
-Some basic setting can be done. But it illustrates nicely what is wrong
-with the idea of extending ifconfig to support new features. IPv6
-addresses are added and removed (which is how it really works) while
-with IPv4, ifconfig keeps pretending interface has exactly one address
-and to set more, a virtual interface must be created. In reality, both
-IPv4 and IPv6 addresses are handled in pretty much the same way.
-
-This "virtual interface" does not actually exist so that its parameters
-can't be set; and worse, if you try, ifconfig silently sets them for the
-actual interface (try e.g. "ifconfig eth0:0 mtu 1400"). You also can't
-use its name with other commands. Just google for users asking why
-iptables or tcpdump does not recognize their 'eth0:0'... and then people
-come and say that ip (unlike ifconfig) is confusing.
-
-But, yes, as the old ioctl interface can't be removed, lot of people
-will claim that ifconfig "just works" and that it must be preserved. And
-they will teach new generations of linux users to use it. So I'm afraid
-this exact discussion will be still repeated even after next 15 years.
-
-> Would be nice if all features of the ip command were actually documented,
-> but they clearly are not.
-
-As far as I can say, there may still be some missing parts but in recent
-versions, both manual pages and "ip ... help" cover the functions quite
-well (even if they are a bit too terse sometimes). On the other hand,
-"route --help" doesn't even tell me how to add a simple route.
-
-                                                        Michal Kubecek
+johannes
 
