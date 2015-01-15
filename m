@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:65020 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752307AbbAMCzf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51340 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751502AbbAOHUl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 21:55:35 -0500
-Received: by mail-wi0-f173.google.com with SMTP id em10so2597583wid.0
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 18:55:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87a91oeaq7.fsf@home.hong.me>
-References: <1420968029-1222-1-git-send-email-hong@topbug.net>
- <20150112065445.GB29484@localhost> <87a91oeaq7.fsf@home.hong.me>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 13 Jan 2015 13:55:13 +1100
-Message-ID: <CAGRGNgUdEemrqnrYnJzTQEuce4yjQUjOW3B_eWSHkENkPwO9UQ@mail.gmail.com> (sfid-20150113_035539_200096_10CCFAF2)
-Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
-To: Hong Xu <hong@topbug.net>
-Cc: Bob Copeland <me@bobcopeland.com>,
+	Thu, 15 Jan 2015 02:20:41 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: Sujith Manoharan <sujith@msujith.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
+	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
+	<21685.35179.110539.780864@gargle.gargle.HOWL>
+	<CA+BoTQmNkVKyeWB0fCFhG2MfMZYTz6Dp4+cs44Dm4HCKjTc3Zw@mail.gmail.com>
+	<21686.15337.153726.847995@gargle.gargle.HOWL>
+	<CA+BoTQkX1KFxpyiotADSaFaEea5BrmgvWLTaSRgMbKzHHP=a2Q@mail.gmail.com>
+Date: Thu, 15 Jan 2015 09:19:57 +0200
+In-Reply-To: <CA+BoTQkX1KFxpyiotADSaFaEea5BrmgvWLTaSRgMbKzHHP=a2Q@mail.gmail.com>
+	(Michal Kazior's message of "Wed, 14 Jan 2015 11:12:37 +0100")
+Message-ID: <87fvbc1peq.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_082044_983029_E58437BA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hong,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-On Mon, Jan 12, 2015 at 6:09 PM, Hong Xu <hong@topbug.net> wrote:
->
-> Bob Copeland <me@bobcopeland.com> writes:
->
->> On Sun, Jan 11, 2015 at 01:20:29AM -0800, Hong Xu wrote:
->>> Add an option "blink" to enable or disable the LED blink. The default
->>> value is set to 1 so that existing users would not experience any
->>> unexpected changes.
->>
->> Been a while since I looked, but isn't there a way to achieve same
->> result by just echoing 'none' into the relevant LED's sysfs file
->> (something like /sys/class/leds/phy0-led/trigger)?
->
-> It's a bit different. echo 'none' to the trigger would cause the LED
-> light to be dark, but if turn off the blink option here, the LED is
-> bright but without blinking.
->
-> Hong
+> I'm starting to think tasklets are plain evil for network drivers :P
 
-I.e. it doesn't blink, it's just on when linked (isn't there a trigger
-for that?) or is on solid? (echo 255 >
-/sys/class/leds/phy0-led/brightness)
-
-Thanks,
+They are. Actually I remember years ago seeing a discussion about
+removing tasklets altogether. But obviously it didn't go anywhere as we
+still have them.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Kalle Valo
