@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:30229 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614AbbATJDp (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:33119 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751879AbbAOTe1 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 04:03:45 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: David Miller <davem@davemloft.net>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: pull-request: wireless-drivers 2015-01-20
-Date: Tue, 20 Jan 2015 11:03:33 +0200
-Message-ID: <87oapt3jtm.fsf@kamboji.qca.qualcomm.com> (sfid-20150120_100415_420213_DAAEC440)
+	Thu, 15 Jan 2015 14:34:27 -0500
+Received: by mail-wi0-f170.google.com with SMTP id z2so285987wiv.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2015 11:34:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <f46d043c061e8dd5c9050cb5990c@google.com>
+References: <CACsJT9OOBcYNhNG6=+Q2EE4VHEvJ8_rJ3fr6gb9_3P4KpPPX3g@mail.gmail.com>
+ <f46d043c061e8dd5c9050cb5990c@google.com>
+From: Mike Purvis <mpurvis@clearpathrobotics.com>
+Date: Thu, 15 Jan 2015 14:34:06 -0500
+Message-ID: <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com> (sfid-20150115_203431_236422_43DE85C0)
+Subject: Re: Delivery Status Notification (Failure)
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+I'm having an issue with the Centrino Advanced-N 6235 module. I'm running
+Ubuntu Trusty, and I've tried both the 3.13 and 3.16 kernels. Haven't yet
+tried 3.18.
 
-more fixes for 3.19, I hope these are still appropriate. Please let me
-know if there are any issues.
+What's weirdest about it is that the module actually works with full
+functionality on an Advantech AIMB-274 (Q87 chipset) with the described
+software configuration. However, when I plug the module into either a Gigabyte
+J1800N or an ASRock IMB-152 (J1900), I get no bluetooth— no hci0 device
+comes up at all in hciconfig dev or rfkill list.
 
-Kalle
+My sense is that the 6235 is a very popular module, and low-cost celeron
+motherboards are also pretty popular, so there must be others who have run
+into this. Maybe people just don't use bluetooth, or don't expect it to
+work on Linux?
 
-The following changes since commit 16dde0d6ac159531a5e03cd3f8bc8a401d9f3fb6:
+Anyhow, here is a gist with the dmesg boot log and lshw output:
 
-  be2net: Allow GRE to work concurrently while a VxLAN tunnel is configured (2015-01-15 01:55:05 -0500)
+https://gist.github.com/mikepurvis/ee7bc8fb85ff7ae64a9d
 
-are available in the git repository at:
+Looks like there's a crash in there related to intel integrated graphics—
+could this be a cause? This is a headless machine, so disabling graphics
+completely is on the table, if someone can suggest a good way to go
+about that. Any other ideas as to what's going on here?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-01-20
+Thanks muchly.
 
-for you to fetch changes up to e3f31175a3eeb492a6ab788e4fa136c19b43aab4:
-
-  ath9k: fix race condition in irq processing during hardware reset (2015-01-19 14:32:29 +0200)
-
-----------------------------------------------------------------
-ath9k:
-
-* fix an IRQ storm caused by commit 872b5d814f99
-
-iwlwifi:
-
-* A fix for scan that fixes a firmware assertion
-
-* A fix that improves roaming behavior. Same fix has been tested for
-  a while in iwldvm. This is a bit of a work around, but the real fix
-  should be in mac80211 and will come later.
-
-* A fix for BARs that avoids a WARNING.
-
-* one fix for rfkill while scheduled scan is running.
-  Linus's system hit this issue. WiFi would be unavailable
-  after this has happpened because of bad state in cfg80211.
-
-----------------------------------------------------------------
-David Spinadel (1):
-      iwlwifi: mvm: fix EBS on single scan
-
-Emmanuel Grumbach (2):
-      iwlwifi: mvm: drop non VO frames when flushing
-      iwlwifi: mvm: abort scheduled scan upon RFKILL
-
-Eyal Shapira (1):
-      iwlwifi: mvm: set the tx cmd tid for BAR frame correctly
-
-Felix Fietkau (1):
-      ath9k: fix race condition in irq processing during hardware reset
-
-Kalle Valo (2):
-      Merge tag 'iwlwifi-for-kalle-2015-01-13' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-      Merge tag 'iwlwifi-for-kalle-2015-01-15' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
- drivers/net/wireless/ath/ath9k/main.c          |    7 ++--
- drivers/net/wireless/iwlwifi/iwl-fw-file.h     |    2 +
- drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |    7 +++-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c    |   20 ++++-----
- drivers/net/wireless/iwlwifi/mvm/scan.c        |   53 ++++++++++++++++++------
- drivers/net/wireless/iwlwifi/mvm/tx.c          |   11 ++++-
- 6 files changed, 69 insertions(+), 31 deletions(-)
-
--- 
-Kalle Valo
+ --
+Mike Purvis | Clearpath Robotics, Inc.
+1425 Strasburg Road, Unit 2A , Kitchener, Ontario, N2R 1H2
