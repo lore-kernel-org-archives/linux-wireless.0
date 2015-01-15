@@ -1,54 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:55740 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751208AbbAZLgU (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:49364 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbbAOJG6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 06:36:20 -0500
-Received: by mail-wi0-f174.google.com with SMTP id n3so9259231wiv.1
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 03:36:19 -0800 (PST)
+	Thu, 15 Jan 2015 04:06:58 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <54C5FEB0.1000609@neratec.com>
-References: <CAF4BKcCggD23NHD_1156bqLsqMjDWp+8ASJaxJdLXUXcXaaddQ@mail.gmail.com>
- <54C5FEB0.1000609@neratec.com>
-From: "Christopher M. Penalver" <christopher.m.penalver@gmail.com>
-Date: Mon, 26 Jan 2015 05:35:39 -0600
-Message-ID: <CAF4BKcAs9XTPFAu4h7PmtcW0Uhb+rbX8qmxG_hGoSotWeGdsfg@mail.gmail.com> (sfid-20150126_123624_424522_AFDE433F)
-Subject: Re: Inquiry on sudo iw dev wlan1 set txpower fixed 14 -> command
- failed: Invalid argument (-22)
-To: Matthias May <matthias.may@neratec.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21687.33741.794518.335502@gargle.gargle.HOWL> (sfid-20150115_100704_649572_135217E7)
+Date: Thu, 15 Jan 2015 14:39:33 +0530
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Subject: Re: [PATCH 3.19] ath9k: fix race condition in irq processing during hardware reset
+In-Reply-To: <1421241456-29085-1-git-send-email-nbd@openwrt.org>
+References: <1421241456-29085-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matthias May, thanks for the quick response.
+Felix Fietkau wrote:
+> To fix invalid hardware accesses, the commit
+> "ath9k: do not access hardware on IRQs during reset" made the irq
+> handler ignore interrupts emitted after queueing a hardware reset (which
+> disables the IRQ). This left a small time window for the IRQ to get
+> re-enabled by the tasklet, which caused IRQ storms.
+> Instead of returning IRQ_NONE when ATH_OP_HW_RESET is set, disable the
+> IRQ entirely for the duration of the reset.
 
-I was already aware that it's mBm, not dBm, and had previously tried
-140, instead of 14 and lower before my initial e-mail.
+Doesn't this make the kill_interrupts() that was added in the earlier
+commit unnecessary now ?
 
-However, 1400, 14000, and 140000 all produce the same error message.
-
-Not to tangent off topic, but the way the article/man page reads, one
-should be able to adjust the txpower from the maximum the chipset
-could handle or maximum for the regulatory domain, whichever is lower,
-all the way down to just above 0, if not 0 itself.
-
-Christopher M. Penalver
-E-Mail: christopher.m.penalver@gmail.com
-
-
-On Mon, Jan 26, 2015 at 2:45 AM, Matthias May <matthias.may@neratec.com> wrote:
-> On 26/01/15 03:00, Christopher M. Penalver wrote:
->>
->> Attempting to follow
->> http://wireless.kernel.org/en/users/Documentation/iw#Setting_TX_power
->> I get:
->> sudo iw dev wlan1 set txpower fixed 14
->> command failed: Invalid argument (-22)
->>
->>
->
-> iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
->
-> This is set in mBm and not in dBm.
-> Try sudo iw dev wlan1 set txpower fixed 1400.
+Sujith
