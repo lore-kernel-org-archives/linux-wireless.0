@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59747 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753929AbbAFN7I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 08:59:08 -0500
-Message-ID: <1420552744.1966.31.camel@sipsolutions.net> (sfid-20150106_145912_427896_C2846FB3)
-Subject: Re: [PATCH 2/2] cfg80211: avoid reg-hints in self-managed only
- systems
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Tue, 06 Jan 2015 14:59:04 +0100
-In-Reply-To: <1420541766.1966.18.camel@sipsolutions.net> (sfid-20150106_115615_591316_7E790C4F)
-References: <1420112563-3981-1-git-send-email-arik@wizery.com>
-	 <1420112563-3981-2-git-send-email-arik@wizery.com>
-	 (sfid-20150101_124249_204906_78CCC525) <1420541766.1966.18.camel@sipsolutions.net>
-	 (sfid-20150106_115615_591316_7E790C4F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.11.231]:54208 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751433AbbAOLnA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2015 06:43:00 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH for 3.19 3/3] rtlwifi: rtl8192ee: Fix several bugs
+References: <1421257036-5382-1-git-send-email-Larry.Finger@lwfinger.net>
+	<1421257036-5382-4-git-send-email-Larry.Finger@lwfinger.net>
+Date: Thu, 15 Jan 2015 13:42:52 +0200
+In-Reply-To: <1421257036-5382-4-git-send-email-Larry.Finger@lwfinger.net>
+	(Larry Finger's message of "Wed, 14 Jan 2015 11:37:16 -0600")
+Message-ID: <87bnm0xoar.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_124308_600605_5BB11301)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-06 at 11:56 +0100, Johannes Berg wrote:
-> On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
-> > When a system contains only self-managed regulatory devices all hints
-> > from the regulatory core are ignored. Stop hint processing early in this
-> > case. These systems usually don't have CRDA deployed, which results in
-> > endless (irrelevent) logs of the form:
-> > cfg80211: Calling CRDA to update world regulatory domain
-> 
-> Applied.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-I take that back - dropped again. This was causing spurious messages in
-the hwsim test run VM, saying something like "couldn't set reg domain:
--7". Maybe at that point not a single wiphy existed?
+> From: Troy Tan <troy_tan@realsil.com.cn>
+>
+> The following bugs are fixed in this driver:
+> 1. Problems parsing C2H CMD
+> 2. An ad-hoc connection can cause a TX freeze.
+> 3. There are additional conditions that cause a TX freeze.
+> 4. The previous code failed to handle situations where an RX
+>    descriptor was unavailable.
+>
+> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-johannes
+Is this really so important that it should go to 3.19? A patch titled
+"Fix several bugs" immediately makes me cautious and then I look at the
+patch itself I see rewriting functions instead of simple bug fixes. From
+a quick look this looks more -next material than 3.19.
 
+-- 
+Kalle Valo
