@@ -1,55 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34822 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752168AbbALTsp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:60629 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbbAONXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 14:48:45 -0500
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/8] ath10k:  add wmi-id to htc credits debugging.
-Date: Mon, 12 Jan 2015 10:32:38 -0800
-Message-Id: <1421087564-10384-2-git-send-email-greearb@candelatech.com> (sfid-20150112_204852_571737_3DE6A4EF)
-In-Reply-To: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
-References: <1421087564-10384-1-git-send-email-greearb@candelatech.com>
+	Thu, 15 Jan 2015 08:23:50 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Giel van Schijndel <me@mortis.eu>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	"open list\:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	"open list\:NETWORKING DRIVERS" <netdev@vger.kernel.org>
+Subject: Re: [PATCH RESEND 2/2] wlcore: align member-assigns in a structure-copy block
+References: <1420394427-19509-1-git-send-email-me@mortis.eu>
+	<1420659525-22975-1-git-send-email-me@mortis.eu>
+	<1420659525-22975-2-git-send-email-me@mortis.eu>
+	<87vbkfga32.fsf@kamboji.qca.qualcomm.com>
+	<CAB3XZEcm4+=dYC-8_m_7YRdET_wPkWUYHcDuy9mCKdxkCFEnQA@mail.gmail.com>
+Date: Thu, 15 Jan 2015 15:23:41 +0200
+In-Reply-To: <CAB3XZEcm4+=dYC-8_m_7YRdET_wPkWUYHcDuy9mCKdxkCFEnQA@mail.gmail.com>
+	(Eliad Peller's message of "Sun, 11 Jan 2015 12:22:49 +0200")
+Message-ID: <87twzsqisi.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_142432_000650_76CCC58C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Eliad Peller <eliad@wizery.com> writes:
 
-This helps when trying to figure out exactly which commands
-are consuming credits when trying to debug wmi credit hangs.
----
- drivers/net/wireless/ath/ath10k/htc.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+> On Fri, Jan 9, 2015 at 7:03 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Giel van Schijndel <me@mortis.eu> writes:
+>>
+>>> This highlights the differences (e.g. the bug fixed in the previous
+>>> commit).
+>>>
+>>> Signed-off-by: Giel van Schijndel <me@mortis.eu>
+>>> ---
+>>>  drivers/net/wireless/ti/wlcore/acx.c | 22 +++++++++++-----------
+>>>  1 file changed, 11 insertions(+), 11 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+>>> index f28fa3b..93a2fa8 100644
+>>> --- a/drivers/net/wireless/ti/wlcore/acx.c
+>>> +++ b/drivers/net/wireless/ti/wlcore/acx.c
+>>> @@ -1715,17 +1715,17 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
+>>>               goto out;
+>>>       }
+>>>
+>>> -     acx->recover_time = cpu_to_le32(conf->recover_time);
+>>> -     acx->hangover_period = conf->hangover_period;
+>>> -     acx->dynamic_mode = conf->dynamic_mode;
+>>> -     acx->early_termination_mode = conf->early_termination_mode;
+>>> -     acx->max_period = conf->max_period;
+>>> -     acx->min_period = conf->min_period;
+>>> -     acx->increase_delta = conf->increase_delta;
+>>> -     acx->decrease_delta = conf->decrease_delta;
+>>> -     acx->quiet_time = conf->quiet_time;
+>>> -     acx->increase_time = conf->increase_time;
+>>> -     acx->window_size = conf->window_size;
+>>> +     acx->recover_time               = cpu_to_le32(conf->recover_time);
+>>> +     acx->hangover_period            = conf->hangover_period;
+>>> +     acx->dynamic_mode               = conf->dynamic_mode;
+>>> +     acx->early_termination_mode     = conf->early_termination_mode;
+>>> +     acx->max_period                 = conf->max_period;
+>>> +     acx->min_period                 = conf->min_period;
+>>> +     acx->increase_delta             = conf->increase_delta;
+>>> +     acx->decrease_delta             = conf->decrease_delta;
+>>> +     acx->quiet_time                 = conf->quiet_time;
+>>> +     acx->increase_time              = conf->increase_time;
+>>> +     acx->window_size                = conf->window_size;
+>>
+>> I would like to get an ACK from one of the wlcore developers if I should
+>> apply this (or not).
+>
+> I don't have a strong opinion here. However, it looks pretty much
+> redundant to take a random blob (which was just fixed by a correct
+> patch) and re-indent it. The rest of the file doesn't follow this
+> style, so i don't see a good reason to apply it here.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index d56e7f6..16b939a 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -137,9 +137,18 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 			goto err_pull;
- 		}
- 		ep->tx_credits -= credits;
--		ath10k_dbg(ar, ATH10K_DBG_HTC,
--			   "htc ep %d consumed %d credits (total %d)\n",
--			   eid, credits, ep->tx_credits);
-+		if (eid == ar->wmi.eid) {
-+			struct wmi_cmd_hdr* hdr;
-+			hdr = (struct wmi_cmd_hdr*)(skb->data + sizeof(struct ath10k_htc_hdr));
-+			ath10k_dbg(ar, ATH10K_DBG_HTC,
-+				   "htc ep %d consumed %d credits (total %d, wmi-cmd 0x%x)\n",
-+				   eid, credits, ep->tx_credits, __le32_to_cpu(hdr->cmd_id));
-+		}
-+		else {
-+			ath10k_dbg(ar, ATH10K_DBG_HTC,
-+				   "htc ep %d consumed %d credits (total %d)\n",
-+				   eid, credits, ep->tx_credits);
-+		}
- 		spin_unlock_bh(&htc->tx_lock);
- 	}
- 
+Yeah, this should be a driver decision and not just a single change in
+one function. Hence I'm dropping patch 2.
+
 -- 
-1.7.11.7
-
+Kalle Valo
