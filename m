@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:47984 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121AbbAROSB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51884 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683AbbAOKdJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 09:18:01 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andy Green <andy.green@linaro.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 1/7] net: wireless: wcn36xx: add wcn3620 chip type definition
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051043.31866.53087.stgit@114-36-241-182.dynamic.hinet.net>
-Date: Sun, 18 Jan 2015 16:17:54 +0200
-In-Reply-To: <20150118051043.31866.53087.stgit@114-36-241-182.dynamic.hinet.net>
-	(Andy Green's message of "Sun, 18 Jan 2015 13:10:43 +0800")
-Message-ID: <878uh06ulp.fsf@kamboji.qca.qualcomm.com> (sfid-20150118_151811_995875_78836FD0)
+	Thu, 15 Jan 2015 05:33:09 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/5] ath10k: implement beacon offload
+References: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 15 Jan 2015 12:32:59 +0200
+In-Reply-To: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 8 Jan 2015 12:12:25 +0100")
+Message-ID: <8761c8z63o.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_113313_643071_A923C9DA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Green <andy.green@linaro.org> writes:
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Convert the list of chip types to an enum, add the default
-> UNKNOWN type and a type for WCN3620 chip
+> Hi,
 >
-> Signed-off-by: Andy Green <andy.green@linaro.org>
+> New wmi-tlv firmware will support beacon/presp
+> offloading. This patchset adds appropriate
+> support.
+>
+> These patches of mine were originally posted by
+> Bartosz before christmas after I went on my
+> holidays.
+>
+> v2:
+>  * add a comment in patch 5
+>
+>
+> Michal Kazior (5):
+>   ath10k: implement new beacon tx status event
+>   ath10k: implement beacon template command
+>   ath10k: implement prb tmpl wmi command
+>   ath10k: implement p2p bcn ie command
+>   ath10k: implement support for ap beacon offloading
 
-Please just use "wcn36xx: ", you should drop "net: wireless: " entirely.
+Thanks, all five applied.
 
 -- 
 Kalle Valo
