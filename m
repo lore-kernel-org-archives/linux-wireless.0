@@ -1,32 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:33731 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:57946 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755833AbbAWRD1 (ORCPT
+	with ESMTP id S1753318AbbAOMha (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 12:03:27 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: mwifiex: check driver status in connect and scan handlers
+	Thu, 15 Jan 2015 07:37:30 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1420631859-29004-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20150123170327.4E86214125D@smtp.codeaurora.org> (sfid-20150123_180350_036823_7A604121)
-Date: Fri, 23 Jan 2015 17:03:27 +0000 (UTC)
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 00/22] wil6210 patches
+References: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Thu, 15 Jan 2015 14:37:23 +0200
+In-Reply-To: <1419320844-23989-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Tue, 23 Dec 2014 09:47:02 +0200")
+Message-ID: <87sifcte2j.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_133737_497450_144C2E82)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-> Ignore scan and connection requests from cfg80211 when driver
-> unload is in process or previous command has timed out due to
-> a firmware bug. This patch fixes corner case system crash
-> issues.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Several topics:
+> - block ack with secure and insecure connection
+> - MTU
+> - some infrastructure fixes
+> - some debugfs changes
+>
+> Vladimir Kondratiev (22):
+>   wil6210: ADDBA/DELBA flows
+>   wil6210: simple ADDBA on originator (Tx) side
+>   wil6210: allow to configure ADDBA request
+>   wil6210: improve debugfs for reorder buffer
+>   wil6210: fix disconnect 1 STA in AP
+>   wil6210: improve debugfs for VRING
+>   wil6210: control AMSDU on Tx side of Block Ack
+>   wil6210: delba for responder
+>   wil6210: fix max. MPDU size
+>   wil6210: consider SNAP header in MTU calculations
+>   wil6210: Increase number of associated stations
+>   wil6210: use bitmap API for "status"
+>   wil6210: fix Tx VRING for STA mode
+>   wil6210: rework debugfs for BACK
+>   wil6210: detect HW capabilities
+>   wil6210: use HW capabilities mask in reset
+>   wil6210: add advanced interrupt moderation
+>   wil6210: RX high threshold interrupt configuration
+>   wil6210: fix reordering for MCAST
+>   wil6210: Tx/Rx descriptors documentation
+>   wil6210: workaround for BACK establishment race
+>   wil6210: relax spinlocks in rx reorder
 
-Thanks, applied to wireless-drivers-next.git.
+Thanks, all 22 applied.
 
+-- 
 Kalle Valo
