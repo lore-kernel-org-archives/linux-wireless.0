@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:1744 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751623AbbASOxM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 09:53:12 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: delete the assoc/auth timer upon suspend
-Date: Mon, 19 Jan 2015 16:53:06 +0200
-Message-Id: <1421679186-10898-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150119_155319_333226_10864298)
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:49710 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921AbbAORFX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2015 12:05:23 -0500
+Message-ID: <54B7F350.4040203@lwfinger.net> (sfid-20150115_180530_467760_426AB5A3)
+Date: Thu, 15 Jan 2015 11:05:20 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH for 3.19 3/3] rtlwifi: rtl8192ee: Fix several bugs
+References: <1421257036-5382-1-git-send-email-Larry.Finger@lwfinger.net>	<1421257036-5382-4-git-send-email-Larry.Finger@lwfinger.net> <87bnm0xoar.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87bnm0xoar.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While suspending, we destroy the authentication /
-association that might be taking place. While doing so, we
-forgot to delete the timer which can be firing after
-local->suspended is already set, producing the warning below.
+On 01/15/2015 05:42 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> From: Troy Tan <troy_tan@realsil.com.cn>
+>>
+>> The following bugs are fixed in this driver:
+>> 1. Problems parsing C2H CMD
+>> 2. An ad-hoc connection can cause a TX freeze.
+>> 3. There are additional conditions that cause a TX freeze.
+>> 4. The previous code failed to handle situations where an RX
+>>     descriptor was unavailable.
+>>
+>> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>
+> Is this really so important that it should go to 3.19? A patch titled
+> "Fix several bugs" immediately makes me cautious and then I look at the
+> patch itself I see rewriting functions instead of simple bug fixes. From
+> a quick look this looks more -next material than 3.19.
 
-Fix that by deleting the timer.
+It is not a simple rewrite of functions. Tho mishandling of the descriptor ring 
+buffer locks up the device and requires a cold boot. These patches prevent that 
+from happening.
 
-[66722.825487] WARNING: CPU: 2 PID: 5612 at net/mac80211/util.c:755 ieee80211_can_queue_work.isra.18+0x32/0x40 [mac80211]()
-[66722.825487] queueing ieee80211 work while going to suspend
-[66722.825529] CPU: 2 PID: 5612 Comm: kworker/u16:69 Tainted: G        W  O  3.16.1+ #24
-[66722.825537] Workqueue: events_unbound async_run_entry_fn
-[66722.825545] Call Trace:
-[66722.825552]  <IRQ>  [<ffffffff817edbb2>] dump_stack+0x4d/0x66
-[66722.825556]  [<ffffffff81075cad>] warn_slowpath_common+0x7d/0xa0
-[66722.825572]  [<ffffffffa06b5b90>] ? ieee80211_sta_bcn_mon_timer+0x50/0x50 [mac80211]
-[66722.825573]  [<ffffffff81075d1c>] warn_slowpath_fmt+0x4c/0x50
-[66722.825586]  [<ffffffffa06977a2>] ieee80211_can_queue_work.isra.18+0x32/0x40 [mac80211]
-[66722.825598]  [<ffffffffa06977d5>] ieee80211_queue_work+0x25/0x50 [mac80211]
-[66722.825611]  [<ffffffffa06b5bac>] ieee80211_sta_timer+0x1c/0x20 [mac80211]
-[66722.825614]  [<ffffffff8108655a>] call_timer_fn+0x8a/0x300
+Yes, the patches are rather larger than I would like at the -rc4 stage, and I 
+defer to your judgement. At least we have an external source of corrected code 
+for users of 3.18 and 3.19.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/mlme.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Larry
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1d6bf01..cd86dd4 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2458,6 +2458,12 @@ static void ieee80211_destroy_auth_data(struct ieee80211_sub_if_data *sdata,
- 	sdata_assert_lock(sdata);
- 
- 	if (!assoc) {
-+		/*
-+		 * we are not authenticated yet, the only timer that could be
-+		 * running is the timeout for the authentication response which
-+		 * which is not relevant anymore.
-+		 */
-+		del_timer_sync(&sdata->u.mgd.timer);
- 		sta_info_destroy_addr(sdata, auth_data->bss->bssid);
- 
- 		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
-@@ -2765,6 +2771,12 @@ static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
- 	sdata_assert_lock(sdata);
- 
- 	if (!assoc) {
-+		/*
-+		 * we are not associated yet, the only timer that could be
-+		 * running is the timeout for the association response which
-+		 * which is not relevant anymore.
-+		 */
-+		del_timer_sync(&sdata->u.mgd.timer);
- 		sta_info_destroy_addr(sdata, assoc_data->bss->bssid);
- 
- 		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
--- 
-1.9.1
 
