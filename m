@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61174 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752902AbbAOKfh (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:32790 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126AbbAOBPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 05:35:37 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: prevent fw reg dump spam
-References: <1421072977-22688-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 15 Jan 2015 12:35:26 +0200
-In-Reply-To: <1421072977-22688-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 12 Jan 2015 15:29:37 +0100")
-Message-ID: <87wq4oxrf5.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_113549_863454_52E402E9)
+	Wed, 14 Jan 2015 20:15:39 -0500
+Received: by mail-oi0-f42.google.com with SMTP id g201so10192838oib.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 17:15:38 -0800 (PST)
+Message-ID: <54B714B8.4020904@lwfinger.net> (sfid-20150115_021542_253329_A472FEE1)
+Date: Wed, 14 Jan 2015 19:15:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Bryan Quigley <gquigs@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: Packet loss on rtl8188ee
+References: <CAAWf5=sCKA3w_snEqJzNSCk8DSCVc5Bv1HXooGLicg3GFX9xBQ@mail.gmail.com>
+In-Reply-To: <CAAWf5=sCKA3w_snEqJzNSCk8DSCVc5Bv1HXooGLicg3GFX9xBQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> Originally the explicit fw register dump was added
-> to wait_for_target_init because interrupts are
-> masked early during power_up.
+On 01/14/2015 04:20 PM, Bryan Quigley wrote:
+> Hi there,
 >
-> Due to some changes in power_up/reset sequences
-> sometimes when fw crashed ath10k would print the
-> dump more than once via hif_stop -> warm_reset ->
-> wait_for_target_init, possibly with different
-> values each.
+> I've been seeing packet loss on this laptop using a rtl8188ee wireless
+> card on Ubuntu 14.10 with compat-wireless 3.19rc4 kernel. I've tried
+> it with two routers and many different settings.  My test case is ping
+> -i 0.02 -c 100 with the laptop next to the router, and I run it at
+> least 3 times to be certain.
 >
-> Prevent this by doing the explicit fw register
-> dump only during power_up instead of
-> wait_for_target_init.
+> On other devices I can do this over and over again with no packet loss
+> to the same router.
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> I've been debugging it here:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1401741
+>
+> I've tried enabling debug options (but nothing obvious when packets
+> are dropped), changing channels (6 seemed to be best), changing Wifi
+> Security, changing module options, but still get some dropped packets.
+> it does *seem* better running compat-wireless 3.19rc4, but that might
+> be in my head..
+>
+> Is there a better test case for packet loss?  Just ping for longer?
+> The debug logs I've been able to generate don't appear to do anything
+> special on packet loss.  Any suggestions?
+>
+> The packet loss greatly effects web apps during light to moderate
+> usage (think Email and a few websites) to the point of making it
+> unusable.
 
-Thanks, applied.
+The drivers in compat-wireless will match the ones in the wireless-drivers git 
+repo. There are some newer parts than found in mainline where a lot of 3.20 
+stuff is accumulating.
 
--- 
-Kalle Valo
+You might try the drivers found at http://github.com/lwfinger/rtlwifi_new.git. 
+That is the version that came from Realtek. It should be the same as 
+wireless-drivers, but errors might have crept in. In addition, some of the 
+Realtek devices have problems with power saving. Try loading the driver with the 
+"ips=0" option. The debug options only control the amount of stuff that gets logged.
+
+For me, rtl8188ee works fine. Possible reasons for my result being different 
+could be the noisiness of the environment.
+
+Larry
+
+
