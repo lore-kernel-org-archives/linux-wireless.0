@@ -1,69 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:59085 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971AbbAMRTl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:58316 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581AbbAOMj5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 12:19:41 -0500
-Message-ID: <54B553AA.50505@lwfinger.net> (sfid-20150113_182003_359601_B150A52F)
-Date: Tue, 13 Jan 2015 11:19:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 15 Jan 2015 07:39:57 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH] ath: ath9k: use debugfs_create_devm_seqfile() helper for seq_file entries
+References: <1419685980-4728-1-git-send-email-arend@broadcom.com>
+Date: Thu, 15 Jan 2015 14:39:50 +0200
+In-Reply-To: <1419685980-4728-1-git-send-email-arend@broadcom.com> (Arend van
+	Spriel's message of "Sat, 27 Dec 2014 14:13:00 +0100")
+Message-ID: <87oaq0tdyh.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_134000_813889_3DF97531)
 MIME-Version: 1.0
-To: Colin King <colin.king@canonical.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi/rtl8192de: remove redundant else if check
-References: <1421158054-22566-1-git-send-email-colin.king@canonical.com>
-In-Reply-To: <1421158054-22566-1-git-send-email-colin.king@canonical.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/13/2015 08:07 AM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->
-> The else if check condition checks for the opposite of the
-> if check, hence the else if check is redundant and can be
-> replaced with a simple else:
->
-> if (rtlpriv->rtlhal.macphymode == SINGLEMAC_SINGLEPHY) {
-> 	..
-> } else if (rtlpriv->rtlhal.macphymode != SINGLEMAC_SINGLEPHY) {
-> 	..
-> }
->
-> replaced with:
->
-> if (rtlpriv->rtlhal.macphymode == SINGLEMAC_SINGLEPHY) {
-> 	..
-> } else {
-> 	..
-> }
->
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Arend van Spriel <arend@broadcom.com> writes:
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Thanks,
-
-Larry
-
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192de/hw.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> Use the helper to get rid of the file operations per debugfs file. The
+> device driver data contains struct ieee80211_hw pointer and the
+> struct ath9k_softc pointer is assigned to ieee80211_hw::priv so it can
+> be accessed in the seq_file read operation.
 >
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> index 280c3da..01bcc2d 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> @@ -546,7 +546,7 @@ static bool _rtl92de_llt_table_init(struct ieee80211_hw *hw)
->   		txpktbuf_bndy = 246;
->   		value8 = 0;
->   		value32 = 0x80bf0d29;
-> -	} else if (rtlpriv->rtlhal.macphymode != SINGLEMAC_SINGLEPHY) {
-> +	} else {
->   		maxPage = 127;
->   		txpktbuf_bndy = 123;
->   		value8 = 0;
->
+> Cc: ath9k-devel@lists.ath9k.org
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
+Thanks, applied to wireless-drivers-next.git.
+
+-- 
+Kalle Valo
