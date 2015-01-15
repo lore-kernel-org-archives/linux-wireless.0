@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:63706 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbbATOFM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:36776 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751033AbbAOOa7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 09:05:12 -0500
-Received: by mail-we0-f171.google.com with SMTP id u56so37553847wes.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 06:05:11 -0800 (PST)
-Message-ID: <54BE6094.6010001@gmail.com> (sfid-20150120_150516_389663_9D96EF75)
-Date: Tue, 20 Jan 2015 15:05:08 +0100
-From: Mathy Vanhoef <vanhoefm@gmail.com>
+	Thu, 15 Jan 2015 09:30:59 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	mathias.kretschmer@fokus.fraunhofer.de, stable@vger.kernel.org
+Subject: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
+References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de>
+	<2179820.H2CYa3nAla@prime> <54B4F062.2090301@neratec.com>
+	<3155015.RnApTRDnnO@prime>
+Date: Thu, 15 Jan 2015 16:30:51 +0200
+In-Reply-To: <3155015.RnApTRDnnO@prime> (Simon Wunderlich's message of "Tue,
+	13 Jan 2015 12:04:36 +0100")
+Message-ID: <87ppagnmjo.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_153105_564588_2DBAAD0D)
 MIME-Version: 1.0
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: properly set CCK flag in radiotap
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix a regression introduced by commit a5e70697d0c4 ("mac80211: add radiotap flag
-and handling for 5/10 MHz") where the IEEE80211_CHAN_CCK channel type flag was
-incorrectly replaced by the IEEE80211_CHAN_OFDM flag. This commit fixes that by
-using the CCK flag again.
+Simon Wunderlich <sw@simonwunderlich.de> writes:
 
-Signed-off-by: Mathy Vanhoef <vanhoefm@gmail.com>
----
- net/mac80211/rx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> I did not dig how the hw->conf.radar_enabled flag is set in monitor mode,
+>> but if it is same as for master (i.e. set for DFS channels), then it would
+>> be a better approach to prevent calling ath9k_dfs_process_phyerr()
+>> altogether from ath9k_rx_skb_preprocess() if not set.
+>
+> Hm, you mean like - if radar_enabled then dfs_process, otherwise fft_process? 
+> That would might be more elegant indeed ...
+>
+> The monitor mode does not have the radar flag enabled, 
+> cfg80211_chandef_dfs_required() returns 0 in this case.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index a37f9af..2d23d33 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -235,7 +235,7 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
- 	else if (rate && rate->flags & IEEE80211_RATE_ERP_G)
- 		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
- 	else if (rate)
--		channel_flags |= IEEE80211_CHAN_OFDM | IEEE80211_CHAN_2GHZ;
-+		channel_flags |= IEEE80211_CHAN_CCK | IEEE80211_CHAN_2GHZ;
- 	else
- 		channel_flags |= IEEE80211_CHAN_2GHZ;
- 	put_unaligned_le16(channel_flags, pos);
+So are you going to send v2 or what's the plan? I didn't quite get the
+conclusion from the discussion.
+
 -- 
-1.7.10.4
+Kalle Valo
