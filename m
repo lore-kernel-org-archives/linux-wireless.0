@@ -1,85 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35631 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753605AbbAWK1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 05:27:38 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: suppress smatch warnings
-Date: Fri, 23 Jan 2015 11:27:33 +0100
-Message-Id: <1422008853-520-1-git-send-email-johannes@sipsolutions.net> (sfid-20150123_112741_953323_C06E767A)
+Received: from mail-we0-f176.google.com ([74.125.82.176]:63138 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932157AbbAOVdw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2015 16:33:52 -0500
+Message-ID: <54B8323D.6020304@gmail.com> (sfid-20150115_223414_584751_4815E9E7)
+Date: Thu, 15 Jan 2015 22:33:49 +0100
+From: "christophe.ricard" <christophe.ricard@gmail.com>
+MIME-Version: 1.0
+To: Anda-Maria Nicolae <anda-maria.nicolae@intel.com>,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH] NFC: st21nfcb: Avoid use of skb after free
+References: <1421317857-1713-1-git-send-email-anda-maria.nicolae@intel.com>
+In-Reply-To: <1421317857-1713-1-git-send-email-anda-maria.nicolae@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Anda-Maria,
 
-smatch warns that we once checked request->ssids in two functions
-and then unconditionally used it later again.
+I agree with your fix. I have built and tested it successfully.
+I will include it in a new patch series with a:
+Acked-by: Christophe Ricard <christophe-h.ricard@st.com>
 
-This is actually fine, because the code has a relationship between
-attrs[NL80211_ATTR_SCAN_SSIDS], n_ssids and request->ssids, but
-smatch isn't smart enough to realize that.
-
-Suppress the warnings by always checking just n_ssids - that way
-smatch won't know that request->ssids could be NULL, and since it
-is only NULL when n_ssids is 0 we still check everything correctly.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 4542e8683beb..454d7a079d03 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5776,7 +5776,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 		request->ssids = (void *)&request->channels[n_channels];
- 	request->n_ssids = n_ssids;
- 	if (ie_len) {
--		if (request->ssids)
-+		if (n_ssids)
- 			request->ie = (void *)(request->ssids + n_ssids);
- 		else
- 			request->ie = (void *)(request->channels + n_channels);
-@@ -5832,7 +5832,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	request->n_channels = i;
- 
- 	i = 0;
--	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
-+	if (n_ssids) {
- 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
- 			if (nla_len(attr) > IEEE80211_MAX_SSID_LEN) {
- 				err = -EINVAL;
-@@ -6030,7 +6030,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		request->ssids = (void *)&request->channels[n_channels];
- 	request->n_ssids = n_ssids;
- 	if (ie_len) {
--		if (request->ssids)
-+		if (n_ssids)
- 			request->ie = (void *)(request->ssids + n_ssids);
- 		else
- 			request->ie = (void *)(request->channels + n_channels);
-@@ -6039,7 +6039,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	if (n_match_sets) {
- 		if (request->ie)
- 			request->match_sets = (void *)(request->ie + ie_len);
--		else if (request->ssids)
-+		else if (n_ssids)
- 			request->match_sets =
- 				(void *)(request->ssids + n_ssids);
- 		else
-@@ -6098,7 +6098,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	request->n_channels = i;
- 
- 	i = 0;
--	if (attrs[NL80211_ATTR_SCAN_SSIDS]) {
-+	if (n_ssids) {
- 		nla_for_each_nested(attr, attrs[NL80211_ATTR_SCAN_SSIDS],
- 				    tmp) {
- 			if (nla_len(attr) > IEEE80211_MAX_SSID_LEN) {
--- 
-2.1.4
+Thanks a lot.
+Christophe
+On 15/01/2015 11:30, Anda-Maria Nicolae wrote:
+> Do not insert in send queue the skb that contains unknown Packet Control Byte
+>
+> Signed-off-by: Anda-Maria Nicolae <anda-maria.nicolae@intel.com>
+> ---
+> Only compile tested, please have a look
+>
+>   drivers/nfc/st21nfcb/ndlc.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/nfc/st21nfcb/ndlc.c b/drivers/nfc/st21nfcb/ndlc.c
+> index bac50e8..72659a3 100644
+> --- a/drivers/nfc/st21nfcb/ndlc.c
+> +++ b/drivers/nfc/st21nfcb/ndlc.c
+> @@ -138,7 +138,7 @@ static void llt_ndlc_requeue_data_pending(struct llt_ndlc *ndlc)
+>   		default:
+>   			pr_err("UNKNOWN Packet Control Byte=%d\n", pcb);
+>   			kfree_skb(skb);
+> -			break;
+> +			continue;
+>   		}
+>   		skb_queue_head(&ndlc->send_q, skb);
+>   	}
 
