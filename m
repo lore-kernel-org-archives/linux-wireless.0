@@ -1,55 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:50423 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752666AbbANJsN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:55091 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253AbbAOMA7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 04:48:13 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 15 Jan 2015 07:00:59 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?B?6LCt5p2t5rOi?= <troy_tan@realsil.com.cn>
+Cc: "larry.finger" <Larry.Finger@lwfinger.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH for 3.19 2/3] rtlwifi: Fix handling of new style descriptors
+References: <1421257036-5382-1-git-send-email-Larry.Finger@lwfinger.net>
+	<1421257036-5382-3-git-send-email-Larry.Finger@lwfinger.net>
+	<877fwoxo7g.fsf@kamboji.qca.qualcomm.com>
+	<C11178B3EB8EC446A461ADCC3E27182146C9A9F8@rsex2.realsil.com.cn>
+Date: Thu, 15 Jan 2015 14:00:52 +0200
+In-Reply-To: <C11178B3EB8EC446A461ADCC3E27182146C9A9F8@rsex2.realsil.com.cn>
+	(=?utf-8?B?IuiwreadreazoiIncw==?= message of "Thu, 15 Jan 2015 11:46:55
+ +0000")
+Message-ID: <87y4p4w8wb.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_130109_726659_117107B7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21686.15337.153726.847995@gargle.gargle.HOWL> (sfid-20150114_104819_108745_D5312B42)
-Date: Wed, 14 Jan 2015 15:20:33 +0530
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"ath10k\@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-In-Reply-To: <CA+BoTQmNkVKyeWB0fCFhG2MfMZYTz6Dp4+cs44Dm4HCKjTc3Zw@mail.gmail.com>
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
-	<21685.35179.110539.780864@gargle.gargle.HOWL>
-	<CA+BoTQmNkVKyeWB0fCFhG2MfMZYTz6Dp4+cs44Dm4HCKjTc3Zw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior wrote:
-> We should just fix the tx/rx processing instead. The HTT throttling
-> limit was originally introduced to deal with watchdog issues we've
-> seen on AP135. Tasklets were starving system too much.
+Hi Troy,
 
-Then the fill limit restriction is a workaround for AP135
-and shouldn't be applicable for other platforms ?
+please avoid top-posting.
 
-> I've been playing around with threaded irqs in ath10k in my tree and
-> I've seen improvement with Rx. However Tx instead becomes broken in
-> the process and I'm yet to find a definite and final answer why that
-> is the case. My suspicion is that NAPI, which is used by the ethernet
-> driver, runs in tasklets and they aren't frequent enough to trigger
-> ksoftirqd so they starve the system. The current non-threaded irq
-> approach yields more tasklet schedules for Tx and hits ksoftirqd more
-> often making it nice on userspace. If that's the case I don't really
-> have an idea how to solve this now.
+谭杭波 <troy_tan@realsil.com.cn> writes:
 
-I haven't looked at the TX path in detail, but regarding RX, these
-were the bottlenecks:
+> You can find get_available_desc here:
+>
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/
+> pci.c
+> index e25faac..a62170e 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -578,6 +578,13 @@ static void _rtl_pci_tx_isr(struct ieee80211_hw *hw, int
+> prio)
+>                 else
+>                         entry = (u8 *)(&ring->desc[ring->idx]);
+>
+> +               if (rtlpriv->cfg->ops->get_available_desc &&
+> +                   rtlpriv->cfg->ops->get_available_desc(hw, prio) <= 1) {
+> +                       RT_TRACE(rtlpriv, (COMP_INTR | COMP_SEND), DBG_DMESG,
+> +                                "no available desc!\n");
+> +                       return;
+> +               }
 
-* RX batch indication.
-* HTT fill level.
-* netif_receive_skb() usage instead of netif_rx().
+I don't see rtlpriv->cfg->ops->get_available_desc set here, only being
+called?
 
-AFAIK, the internal driver schedules only one tasklet for a CE interrupt
-and everything is done in that context, along with refilling HTT.
-ath10k has several stages: ISR -> CE tasklet -> HTT tasklet -> Replenish tasklet.
-The softirq count/load will definitely be high with so many tasklets ?
-
-Sujith
+-- 
+Kalle Valo
