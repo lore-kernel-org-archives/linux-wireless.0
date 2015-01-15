@@ -1,85 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.csclub.uwaterloo.ca ([129.97.134.52]:51380 "EHLO
-	mail.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbbABEEk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52741 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094AbbAOHi4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2015 23:04:40 -0500
-From: "Lennart Sorensen" <lsorense@csclub.uwaterloo.ca>
-Date: Thu, 1 Jan 2015 23:04:37 -0500
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Theodore Ts'o <tytso@mit.edu>,
-	Arend van Spriel <arend@broadcom.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-Message-ID: <20150102040437.GS24110@csclub.uwaterloo.ca> (sfid-20150102_050509_010267_E90380DE)
-References: <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
- <54A3E1F1.7030807@broadcom.com>
- <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
- <54A41000.3040306@broadcom.com>
- <20141231173113.GA443@thunk.org>
- <54A45D4D.7070302@broadcom.com>
- <20141231214421.GA29273@thunk.org>
- <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
- <20150101194417.GN24112@csclub.uwaterloo.ca>
- <CA+55aFzFT94xrfC+4tdeQOxDnPaxy0f72N+HEQ7NgRxHdvqbGQ@mail.gmail.com>
+	Thu, 15 Jan 2015 02:38:56 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
+	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
+	<21685.35179.110539.780864@gargle.gargle.HOWL>
+Date: Thu, 15 Jan 2015 09:38:44 +0200
+In-Reply-To: <21685.35179.110539.780864@gargle.gargle.HOWL> (Sujith
+	Manoharan's message of "Wed, 14 Jan 2015 02:38:59 +0530")
+Message-ID: <87bnm01ojf.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_083859_963161_CDBADDC9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFzFT94xrfC+4tdeQOxDnPaxy0f72N+HEQ7NgRxHdvqbGQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 01, 2015 at 12:14:15PM -0800, Linus Torvalds wrote:
-> So I'm not saying "ifconfig is wonderful". It's not.
-> 
-> But I *am* saying that "changing user interfaces and then expecting
-> people to change is f*cking stupid".
-> 
-> The fact is, ifconfig is simple for the simple cases, but more
-> importantly, a lot of people learnt how to use it. Saying "you should
-> all change, because we made up a new syntax" is not good policy.
+Sujith Manoharan <sujith@msujith.org> writes:
 
-Perhaps it would be good to at least fix the buggy bits of ifconfig and
-perhaps make it work with netlink instead of parsing /proc.  Maybe not
-add features, but at least fix the broken bits and make it use modern
-interfaces.  The interface to the user can stay.  And of course if it
-happens to encounter a really old kernel, it should still remember how
-to speak to it with the old interface.
+> Kalle Valo wrote:
+>> I'm not sure if I really like this path of having interfaces to
+>> configure driver internals. I suspect that if we add this, we will have
+>> even more later. It's a lot more documenting for us and more work to the
+>> users to understand what parameters they should use. Also this means
+>> that testing will be more challenging as people will use different
+>> values and results won't be comparable.
+>> 
+>> Isn't there any other way to solve the problem? Like automatically
+>> changing the value somehow (no idea how) or some other means?
+>
+> We are limiting performance by restricting the fill size. A user
+> will just use the default, which is still the same and remains
+> unchanged. But, having a way to adjust this based on the platform
+> seems reasonable to me and I think trying to change this value dynamically
+> is overkill.
 
-> The people who did "ip" could have fairly easily have done a wrapper
-> around the same code that also left the old "ifconfig" syntax. Then,
-> distros could have trivially just dropped the old "ifconfig" package,
-> and entirely replaced it with the new "ip" package.
+Did you read at all what I wrote above? For example, what if we later
+don't actually use ATH10K_HTT_MAX_NUM_REFILL anymore?
 
-Hmm, that might be a better idea.
+And the fundamental problem is that I still don't know what fill value
+you think is the best to use here, and that means neither will the
+users. That's why the values need to be within ath10k, not expose driver
+internals and use some magic numbers which are not available anywhere.
 
-> As it is, we have two different models, and they'll basically stay
-> around forever.
-> 
-> For something like ifconfig, very few people care. But *all* the same
-> arguments are true wrt "iw" and "iwconfig".
-> 
-> The people who are trying to deprecate the WEXT interfaces should put
-> the blame firmly where it belongs - on the people who thought that
-> "we'll just ignore all old history".
-> 
-> Because people who think that "we'll just redesign everything" are
-> actually f*cking morons. Really.
-> 
-> There's a real reason the kernel has the "no regression" policy. And
-> that reason is that I'm not a moron.
-> 
-> History matter. Legacy uses matter.
+>> Or if nothing else helps, a crazy idea is to have some sort of platform
+>> profile parameter:
+>> 
+>> 0 = auto
+>> 1 = slow
+>> 2 = fast
+>> 3 = superfast (x86)
+>> 
+>> And then we would have preset values (not just htt_fill_size) within
+>> ath10k and they get chosen based on the profile configured.
+>
+> I don't think a network driver should limit its performance with
+> such profiles. Moreover, x86 can be slow too - at least, my 4 year
+> old machine is. :-)
 
-Sounds good to me.
+We are not limitting anything more. That's not any different from what
+your patch does, just that the parameter name is different and the user
+doesn't have direct access to the internal parameter. Let me explain a
+bit more how that would work in this HTT fill case:
+
+profile 0 (auto):
+profile 1 (slow):
+        htt_fill_size = ATH10K_HTT_MAX_NUM_REFILL
+        break:
+profile 2 (fast):
+        htt_fill_size = 77 /* or whatever */
+        break;
+
+So in this method the user can still choose optimal settings for a
+certain platform, I assume AP148 in this case, and not know about driver
+internals. And if there are more parameters we need to change in the
+future, we can use the same modparam to change that as well.
 
 -- 
-Len Sorensen
+Kalle Valo
