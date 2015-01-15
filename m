@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:55209 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090AbbASEE6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25554 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751465AbbAOIfP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 23:04:58 -0500
-Received: by mail-pd0-f177.google.com with SMTP id y13so9175971pdi.8
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 20:04:58 -0800 (PST)
-From: Fred Chou <fred.chou.nd@gmail.com>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: Fred Chou <fred.chou.nd@gmail.com>
-Subject: [PATCH] mac80211: correct header length calculation
-Date: Mon, 19 Jan 2015 12:07:40 +0800
-Message-Id: <1421640460-5094-1-git-send-email-fred.chou.nd@gmail.com> (sfid-20150119_050502_087999_EF99FC2E)
+	Thu, 15 Jan 2015 03:35:15 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
+	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
+	<21685.35179.110539.780864@gargle.gargle.HOWL>
+	<87bnm01ojf.fsf@kamboji.qca.qualcomm.com>
+	<21687.29026.962216.812998@gargle.gargle.HOWL>
+	<87vbk8zcr1.fsf@kamboji.qca.qualcomm.com>
+	<21687.30578.746681.850817@gargle.gargle.HOWL>
+	<21687.30881.260644.741211@gargle.gargle.HOWL>
+Date: Thu, 15 Jan 2015 10:35:02 +0200
+In-Reply-To: <21687.30881.260644.741211@gargle.gargle.HOWL> (Sujith
+	Manoharan's message of "Thu, 15 Jan 2015 13:51:53 +0530")
+Message-ID: <87iog8zbk9.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_093521_683090_489EE400)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fred Chou <fred.chou.nd@gmail.com>
+Sujith Manoharan <sujith@msujith.org> writes:
 
-HT Control field may also be present in management frames, as defined
-in 8.2.4.1.10 of 802.11-2012. Account for this in calculation of 
-header length.
+> Sujith Manoharan wrote:
+>> None. The default stays the same. But, it can be adjusted based
+>> on the platform, if higher throughput is desired.
+>
+> But, anyway, this patch can be dropped. We'll change the fill level
+> restriction internally, based on the customer's platform.
 
-Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
----
- net/wireless/util.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+I'm sad to hear that, now others cannot benefit from your work.
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 1d2fcfa..ce9617c 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -297,6 +297,12 @@ unsigned int __attribute_const__ ieee80211_hdrlen(__le16 fc)
- {
- 	unsigned int hdrlen = 24;
- 
-+	if (ieee80211_is_mgmt(fc)) {
-+		if (ieee80211_has_order(fc))
-+			hdrlen += IEEE80211_HT_CTL_LEN;
-+		goto out;
-+	}
-+
- 	if (ieee80211_is_data(fc)) {
- 		if (ieee80211_has_a4(fc))
- 			hdrlen = 30;
+What was wrong with my proposal? Would it help if I write an RFC patch?
+Just tell me what HTT fill value I should use.
+
 -- 
-1.9.1
-
+Kalle Valo
