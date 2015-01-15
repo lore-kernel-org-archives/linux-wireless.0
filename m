@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36201 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755070AbbA2NUR (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:46461 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753323AbbAOP6b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 08:20:17 -0500
-Date: Thu, 29 Jan 2015 18:49:49 +0530
-From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH-RESEND] ath10k: add log level configuration for fw_dbglog
-Message-ID: <20150129131947.GA12684@senthilj-ThinkPad-L430> (sfid-20150129_142026_793474_0984161B)
-References: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com>
- <87vbjp2219.fsf@kamboji.qca.qualcomm.com>
+	Thu, 15 Jan 2015 10:58:31 -0500
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	mathias.kretschmer@fokus.fraunhofer.de, stable@vger.kernel.org
+Subject: Re: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
+Date: Thu, 15 Jan 2015 16:58:23 +0100
+Message-ID: <3234042.vtm90oWCeY@prime> (sfid-20150115_165835_881800_1F500F93)
+In-Reply-To: <87ppagnmjo.fsf@kamboji.qca.qualcomm.com>
+References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de> <3155015.RnApTRDnnO@prime> <87ppagnmjo.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <87vbjp2219.fsf@kamboji.qca.qualcomm.com>
+Content-Type: multipart/signed; boundary="nextPart2445890.MTfX3xZkqq"; micalg="pgp-sha1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 29, 2015 at 02:40:18PM +0200, Kalle Valo wrote:
-> SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com> writes:
-> 
-> > Introduce optional log level configuration for
-> > existing debugfs fw_dbglog.
-> >
-> > It allow users to configure desired log level
-> > for firmware debugs.
-> >
-> > To configure log level as WARN
-> >
-> > echo 0xffffffff  2 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
-> >
-> > Loglevel	Value
-> > VERBOSE		0
-> > INFO		1
-> > WARN		2
-> > ERR		3
-> >
-> > Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-> 
-> I did cosmetic changes to the log in the pending branch.
-> 
-> > @@ -1331,19 +1331,30 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
-> >  				      size_t count, loff_t *ppos)
-> >  {
-> >  	struct ath10k *ar = file->private_data;
-> > -	unsigned long mask;
-> >  	int ret;
-> > +	char buf[64];
-> > +	unsigned int log_level, mask;
-> >
-> > -	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
-> > -	if (ret)
-> > -		return ret;
-> > +	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-> > +
-> > +	/* make sure that buf is null terminated */
-> > +	buf[sizeof(buf) - 1] = 0;
-> > +
-> > +	ret = sscanf(buf, "%x %u", &mask, &log_level);
-> > +
-> > +	if (!ret)
-> > +		return -EINVAL;
-> >
-> >  	mutex_lock(&ar->conf_mutex);
-> >
-> >  	ar->debug.fw_dbglog_mask = mask;
-> > +	ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
-> > +				     log_level;
-> 
-> And I simplified this a bit, please review. Full patch in pending
-> branch.
->
 
-I have looked at the changes in pending branch, it looks good.
+--nextPart2445890.MTfX3xZkqq
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Thanks,
-SenthilJ 
+Hey Kalle,
+
+On Thursday 15 January 2015 16:30:51 Kalle Valo wrote:
+> Simon Wunderlich <sw@simonwunderlich.de> writes:
+> >> I did not dig how the hw->conf.radar_enabled flag is set in monitor mode,
+> >> but if it is same as for master (i.e. set for DFS channels), then it
+> >> would
+> >> be a better approach to prevent calling ath9k_dfs_process_phyerr()
+> >> altogether from ath9k_rx_skb_preprocess() if not set.
+> > 
+> > Hm, you mean like - if radar_enabled then dfs_process, otherwise
+> > fft_process? That would might be more elegant indeed ...
+> > 
+> > The monitor mode does not have the radar flag enabled,
+> > cfg80211_chandef_dfs_required() returns 0 in this case.
+> 
+> So are you going to send v2 or what's the plan? I didn't quite get the
+> conclusion from the discussion.
+
+sorry for the silence - yes, please drop this version, I'll send v2.
+
+Thanks
+    Simon
+--nextPart2445890.MTfX3xZkqq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEABECAAYFAlS346IACgkQrzg/fFk7axZW3ACg2r6dj/EUqdeYY5L8Xp0ieHGD
+oMQAoJ3BZq69xbXaCnKNeDvzDA67RgX7
+=otcX
+-----END PGP SIGNATURE-----
+
+--nextPart2445890.MTfX3xZkqq--
+
