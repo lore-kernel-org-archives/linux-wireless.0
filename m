@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:34508 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752378AbbAGNwj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:52:39 -0500
-Received: by mail-wg0-f49.google.com with SMTP id n12so1205835wgh.22
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 05:52:37 -0800 (PST)
+Received: from erley.org ([97.107.129.9]:45981 "EHLO remote.erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752465AbbAOUqE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2015 15:46:04 -0500
+Message-ID: <54B82598.9060403@erley.org> (sfid-20150115_214608_607970_D88B0939)
+Date: Thu, 15 Jan 2015 14:39:52 -0600
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-In-Reply-To: <1420638611.3407.14.camel@sipsolutions.net>
-References: <1419847199-25493-1-git-send-email-arik@wizery.com>
- <1420541514.1966.16.camel@sipsolutions.net> <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com>
- <1420637871.3407.10.camel@sipsolutions.net> <CA+XVXfezPYoyEv-HVq_Xy9HHyRKeqDZMxOWDXLTQMHprkbM0ng@mail.gmail.com>
- <1420638389.3407.13.camel@sipsolutions.net> <CA+XVXffmhz969NFRTyvKxJjBtHat-aO+GOCSo_MfJROCiWqQ7g@mail.gmail.com>
- <1420638611.3407.14.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 7 Jan 2015 15:52:22 +0200
-Message-ID: <CA+XVXfeEsDGAZkHb0ZjPSqDtRguxPjyiS0+4KpAehQCws7O7uQ@mail.gmail.com> (sfid-20150107_145241_999922_F9BF3ED5)
-Subject: Re: [PATCH] cfg80211: fix deadlock during reg chan check
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Content-Type: text/plain; charset=UTF-8
+To: Mike Purvis <mpurvis@clearpathrobotics.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Delivery Status Notification (Failure)
+References: <CACsJT9OOBcYNhNG6=+Q2EE4VHEvJ8_rJ3fr6gb9_3P4KpPPX3g@mail.gmail.com> <f46d043c061e8dd5c9050cb5990c@google.com> <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com>
+In-Reply-To: <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 7, 2015 at 3:50 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2015-01-07 at 15:48 +0200, Arik Nemtsov wrote:
->> >
->> >> >
->> >> >> > Also, the only reason this can happen anyway is when you call "can
->> >> >> > beacon" for a station interface - which seems nonsensical. Given that
->> >> >>
->> >> >> This is not true. This happens with current code for a p2p-go
->> >> >> interface during channel validity checks in reg.c.
->> >> >
->> >> > Not sure I see this? The only thing doing wdev locking is
->> >> > cfg80211_go_permissive_chan(), no? And that only for station interfaces.
->> >>
->> >> cfg80211_go_permissive_chan is called from cfg80211_reg_can_beacon,
->> >> currently only for GO interfaces, but for STA also in the future
->> >> (hopefully).
->> >> The latter is called during channel validity checks for GO.
->> >
->> > Ok.
->> >
->> > Should I just apply the patch as it is then?
->>
->> It fixes a real existing deadlock, so I think so, yea.
+On 01/15/2015 01:34 PM, Mike Purvis wrote:
+> I'm having an issue with the Centrino Advanced-N 6235 module. I'm running
+> Ubuntu Trusty, and I've tried both the 3.13 and 3.16 kernels. Haven't yet
+> tried 3.18.
 >
-> Is it needed on 3.19?
+> What's weirdest about it is that the module actually works with full
+> functionality on an Advantech AIMB-274 (Q87 chipset) with the described
+> software configuration. However, when I plug the module into either a Gigabyte
+> J1800N or an ASRock IMB-152 (J1900), I get no bluetooth— no hci0 device
+> comes up at all in hciconfig dev or rfkill list.
 
-Yes, since the channel validity checking is already there. Basically
-everyone that sets up a GO and has some regulatory change afterwards
-might deadlock..
+I'd guess that the 6235 module has WLAN on the pci-e connector portion,
+and Bluetooth on the USB portion.  Check the docs on the board you're
+plugging it into, and I bet the mini-pcie connector doesn't have the
+USB side wired up, or it's disabled in(or by) the bios?
 
-Arik
+>
+> My sense is that the 6235 is a very popular module, and low-cost celeron
+> motherboards are also pretty popular, so there must be others who have run
+> into this. Maybe people just don't use bluetooth, or don't expect it to
+> work on Linux?
+>
+> Anyhow, here is a gist with the dmesg boot log and lshw output:
+>
+> https://gist.github.com/mikepurvis/ee7bc8fb85ff7ae64a9d
+>
+> Looks like there's a crash in there related to intel integrated graphics—
+> could this be a cause? This is a headless machine, so disabling graphics
+> completely is on the table, if someone can suggest a good way to go
+> about that. Any other ideas as to what's going on here?
+>
+> Thanks muchly.
+>
+>   --
+> Mike Purvis | Clearpath Robotics, Inc.
+> 1425 Strasburg Road, Unit 2A , Kitchener, Ontario, N2R 1H2
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
