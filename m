@@ -1,143 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f195.google.com ([209.85.223.195]:48514 "EHLO
-	mail-ie0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbbACOpg convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:59005 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752133AbbAOMr7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jan 2015 09:45:36 -0500
-Received: by mail-ie0-f195.google.com with SMTP id rd18so4952086iec.6
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2015 06:45:35 -0800 (PST)
-Received: from mail-ie0-f181.google.com (mail-ie0-f181.google.com. [209.85.223.181])
-        by mx.google.com with ESMTPSA id e3sm1007821igg.16.2015.01.03.06.45.34
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sat, 03 Jan 2015 06:45:34 -0800 (PST)
-Received: by mail-ie0-f181.google.com with SMTP id rl12so15870121iec.12
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2015 06:45:34 -0800 (PST)
+	Thu, 15 Jan 2015 07:47:59 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
+	thomas@net.t-labs.tu-berlin.de, adrian@freebsd.org
+Subject: Re: [PATCH 0/3] add TPC capability for AR9002 based chips
+References: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
+Date: Thu, 15 Jan 2015 14:47:51 +0200
+In-Reply-To: <1419977420-23732-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	(Lorenzo Bianconi's message of "Tue, 30 Dec 2014 23:10:17 +0100")
+Message-ID: <87bnm0tdl4.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_134802_166463_9B360CD1)
 MIME-Version: 1.0
-In-Reply-To: <CA+icZUUJfemKC85=p7Huyw7xwfUdXBhePseJCnUKLx9edgpT4w@mail.gmail.com>
-References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
-	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
-	<CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com>
-	<CAKXHbyO70WdWekSYCY9spMbX2+_kdKTp3JoreDKpCdUBzFwYqw@mail.gmail.com>
-	<CACna6rxTYUWvxvu0rFydWxkjbYdHfhV=o+9A+ViCpbV-LFx7fw@mail.gmail.com>
-	<CAKXHbyMqTk=k7eieBNtAD+n6+4w3weL82twHBo-o8ebm_3+wvg@mail.gmail.com>
-	<CA+icZUUJfemKC85=p7Huyw7xwfUdXBhePseJCnUKLx9edgpT4w@mail.gmail.com>
-Date: Sat, 3 Jan 2015 15:45:33 +0100
-Message-ID: <CAKXHbyPm+2gy3E_FAVY82ggvJhWe-E_xtrhgeAPxUyRS-FutaA@mail.gmail.com> (sfid-20150103_154611_445762_429897DD)
-Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Sedat Dilek <sedat.dilek@gmail.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-01-03 14:19 GMT+01:00 Sedat Dilek <sedat.dilek@gmail.com>:
+Lorenzo Bianconi <lorenzo.bianconi83@gmail.com> writes:
+
+> This patchset adds TPC capability to ath9k for AR9002 based chips
 >
-> On Sat, Jan 3, 2015 at 1:28 PM, Rickard Strandqvist
-> <rickard_strandqvist@spectrumdigital.se> wrote:
-> > 2015-01-02 22:34 GMT+01:00 Rafał Miłecki <zajec5@gmail.com>:
-> >>
-> >> On 2 January 2015 at 18:46, Rickard Strandqvist
-> >> <rickard_strandqvist@spectrumdigital.se> wrote:
-> >> > 2015-01-02 13:14 GMT+01:00 Sedat Dilek <sedat.dilek@gmail.com>:
-> >> >>
-> >> >> On Fri, Jan 2, 2015 at 1:06 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> >> >> > On 2 January 2015 at 13:05, Rafał Miłecki <zajec5@gmail.com> wrote:
-> >> >> >> On 1 January 2015 at 16:46, Rickard Strandqvist
-> >> >> >> <rickard_strandqvist@spectrumdigital.se> wrote:
-> >> >> >>> Remove the function b43legacy_radio_set_tx_iq() that is not used
-> >> >> >>> anywhere.
-> >> >> >>>
-> >> >> >>> This was partially found by using a static code analysis program
-> >> >> >>> called cppcheck.
-> >> >> >>
-> >> >> >> It seems to be for A-PHY based hardware (with 0x2060 radio id) which
-> >> >> >> is not handled by b43legacy. Should be safe to drop this code (we
-> >> >> >> won't likely need it).
-> >> >> >>
-> >> >> >> Ack
-> >> >> >
-> >> >> > For future, we prefix patches with just a driver name. So this could
-> >> >> > be simply called
-> >> >> > b43legacy: radio.c: Remove unused function
-> >> >> >
-> >> >>
-> >> >> Alternatively...
-> >> >>
-> >> >> "b43legacy: Remove unused function in radio.c"
-> >> >>
-> >> >> BTW, as Arnd Bergmann pointed out [1] how did you test with cppcheck
-> >> >> to get such stuff?
-> >> >>
-> >> >> - Sedat -
-> >> >>
-> >> >> [1] https://lkml.org/lkml/2015/1/2/51
-> >> >
-> >> >
-> >> >
-> >> > Hi Rafal and Sedat
-> >> >
-> >> > Rafal do you mean I should remove the entire b43legacy part?
-> >>
-> >> 1) I gave you Ack for the changes
-> >> 2) You could drop "net: wireless: " or better use something Sedat proposed
-> >>
-> >> --
-> >> Rafał
-> >
-> >
-> >
-> > Hi
-> >
-> > Nice, yes I miss the Ack :)
-> >
-> > I just got one more complaining about my subject-line in "net: wireless: "
-> > I use some sed call for this, so it's easy to fix. I will now remove that
-> > part hereinafter.
-> > I check in Documentation/ but did not find any clear info for this.
-> >
+> *[PATCH 1/3]: add TX power per-rate tables to cap TX power in TX descriptor path
+> *[PATCH 2/3]: cap per-packet TX power according to TX power per-rate tables
+> *[PATCH 3/3]: enable per-packet TPC on AR9002 based chips by default
 >
-> The easiest way to make (sub)maintainers happy is to check the git-log...
+> This pachset is based on Adrian Chadd's hints
+> (https://www.mail-archive.com/ath9k-devel@lists.ath9k.org/msg10396.html)
 >
-> $ git log --oneline /path/to/file
+> Changes since RFC:
+> - fix compilation error
 >
-> ...and look how other contributors labeled their patches.
->
-> [1] is the 1st address to look at on how to submit patches to Linux-kernel.
-> To promote the good work of Greg, see [2,3] for a video and tutorial
-> on that topic, too.
->
-> - Sedat -
->
-> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches
-> [2] https://www.youtube.com/watch?v=XXix80GCvpo
-> [3] https://github.com/gregkh/kernel-tutorial
+> Lorenzo Bianconi (3):
+>   ath9k: add power per-rate tables for AR9002 chips
+>   ath9k: add TPC to TX path for AR9002 based chips
+>   ath9k: enable per-packet TPC on AR9002 based chips
 
+Thanks, applied to wireless-drivers-next.git
 
-
-Hi Sedat
-
-Thanks for the tip :)
-
-To bad with the audio in the video thow. Have read SubmittingPatches before.
-
-
-But I have now added a line in my script that does a:
-
-git log -10 --oneline
-
-So I can at least see the other subjekt lines, and make adjustments if
-necessary.
-
-
-
-Kind regards
-Rickard Strandqvist
+-- 
+Kalle Valo
