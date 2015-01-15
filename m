@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41008 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753265AbbAEJLX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 04:11:23 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@adurom.com" <kvalo@adurom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2015-01-05
-Date: Mon, 5 Jan 2015 09:11:18 +0000
-Message-ID: <1420449079.12040.3.camel@egrumbacBox> (sfid-20150105_101132_393438_0B0329C1)
-Content-Type: text/plain; charset="utf-8"
+Received: from merlin.infradead.org ([205.233.59.134]:34222 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755146AbbAOTVb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Jan 2015 14:21:31 -0500
+Date: Thu, 15 Jan 2015 14:21:27 -0500
+From: Kyle McMartin <kyle@infradead.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org,
+	Troy Tan <troy_tan@realsil.com.cn>, netdev@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192ee: New firmware from Realtek
+Message-ID: <20150115192127.GA30928@merlin.infradead.org> (sfid-20150115_202139_801336_2B8BEDE2)
+References: <1421270679-3029-1-git-send-email-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421270679-3029-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNClRoaXMgaXMgbmV3IGNvbnRlbnQgZm9yIDMuMTkuIERldGFpbHMgaW4gdGhl
-IHRhZy4gTGV0IG1lIGtub3cgaWYgeW91IGhhdmUgaXNzdWVzLg0KVGhhbmtzIQ0KDQoNClRoZSBm
-b2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQgYmFhMjFlODM0OTQxZWU1ZmJlNGJkNDIxYzg3
-MWY3YzBjNWY5YTA4NjoNCg0KICBpd2x3aWZpOiBwY2llOiBsaW1pdCBmdyBjaHVuayBzaXplcyBn
-aXZlbiB0byBmaCAoMjAxNC0xMi0xNCAxMDoyMDozMCArMDIwMCkNCg0KYXJlIGF2YWlsYWJsZSBp
-biB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6DQoNCiAgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIv
-c2NtL2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9pd2x3aWZpLWZpeGVzLmdpdCB0YWdzL2l3bHdp
-ZmktZm9yLWthbGxlLTIwMTUtMDEtMDUNCg0KZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRv
-IDkxZjQ5MWZkN2RmYmFlNmU1Y2U1ODg3MjkzNzIzZDgxOGFkZjdkNWQ6DQoNCiAgaXdsd2lmaTog
-YnVtcCBmaXJtd2FyZSBBUEkgZm9yIG12bSBkZXZpY2VzIHRvIDEyICgyMDE1LTAxLTA1IDExOjAy
-OjM3ICswMjAwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoqIGZpeCBmb3IgNzI2NUQgTlZNIGNoZWNrDQoqIGZpeGVz
-IGZvciBzY2FuOiBmaXggbG9uZyBzY2FubmluZyB0aW1lcyBhbmQgbmV0d29yaw0KCWRpc2NvdmVy
-eQ0KKiBuZXcgZmlybXdhcmUgQVBJIGZvciBpd2xtdm0gc3VwcG9ydGVkIGRldmljZXMNCiogZml4
-ZXMgaW4gcmF0ZSBjb250cm9sDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkFyaWsgTmVtdHNvdiAoMSk6DQogICAgICBp
-d2x3aWZpOiBwY2llOiBjb3JyZWN0bHkgZGVmaW5lIDcyNjUtRCBjZmcNCg0KRGF2aWQgU3BpbmFk
-ZWwgKDIpOg0KICAgICAgaXdsd2lmaTogbXZtOiBhZGQgYSBmbGFnIHRvIGVuYWJsZSBtYXRjaCBm
-b3VuZCBub3RpZmljYXRpb24NCiAgICAgIGl3bHdpZmk6IG12bTogc2NhbiBkd2VsbCB0aW1lIGNv
-cnJlY3Rpb25zDQoNCkVtbWFudWVsIEdydW1iYWNoICgyKToNCiAgICAgIGl3bHdpZmk6IDcwMDA6
-IGZpeCByZXBvcnRlZCBmaXJtd2FyZSBuYW1lIGZvciA3MjY1RA0KICAgICAgaXdsd2lmaTogYnVt
-cCBmaXJtd2FyZSBBUEkgZm9yIG12bSBkZXZpY2VzIHRvIDEyDQoNCkV5YWwgU2hhcGlyYSAoMik6
-DQogICAgICBpd2x3aWZpOiBtdm06IGZpeCBSeCB3aXRoIGJvdGggY2hhaW5zDQogICAgICBpd2x3
-aWZpOiBtdm06IGZpeCBvdXQgb2YgYm91bmRzIGFjY2VzcyB0byB0aWRfdG9fbWFjODAyMTFfYWMN
-Cg0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTcwMDAuYyAgICAgICAgfCAgNiAr
-KystLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC04MDAwLmMgICAgICAgIHwg
-IDIgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1mdy1maWxlLmggICAgIHwg
-IDQgKysrKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL2Z3LWFwaS1zY2FuLmgg
-fCAgMiArKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3NjYW4uYyAgICAgICAg
-fCAxOSArKysrKysrKysrKysrKy0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9t
-dm0vdHguYyAgICAgICAgICB8ICA4ICsrKysrKy0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
-d2lmaS9tdm0vdXRpbHMuYyAgICAgICB8ICAyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
-d2lmaS9wY2llL2Rydi5jICAgICAgICB8ICA0ICsrKy0NCiA4IGZpbGVzIGNoYW5nZWQsIDM0IGlu
-c2VydGlvbnMoKyksIDEzIGRlbGV0aW9ucygtKQ0KDQo=
+On Wed, Jan 14, 2015 at 03:24:39PM -0600, Larry Finger wrote:
+> From: Troy Tan <troy_tan@realsil.com.cn>
+> 
+> Recent testing by Realtek found bugs in both the driver and firmware for
+> the RTL8192EE chips.
+> 
+> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  WHENCE                  |   5 ++++-
+>  rtlwifi/rtl8192eefw.bin | Bin 32754 -> 31818 bytes
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/WHENCE b/WHENCE
+> index df2dffa..c6f650e 100644
+> --- a/WHENCE
+> +++ b/WHENCE
+> @@ -2115,7 +2115,10 @@ Licence: Redistributable. See LICENCE.rtlwifi_firmware.txt for details.
+>  
+>  Driver: rtl8192ee - Realtek 802.11n WLAN driver for RTL8192EE
+>  
+> -Info: Taken from Realtek version rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013
+> +Info: Initial version taken from Realtek version
+> +      rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013
+> +      Updated Jan. 14, 2015 with file added by Realtek to
+> +      http://github.com/lwfinger/rtlwifi_new.git.
+>  File: rtlwifi/rtl8192eefw.bin
+>  
+
+Looks good, applied. Thanks Larry.
+
+regards, Kyle
