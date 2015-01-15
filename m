@@ -1,120 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:42132 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754794AbbAPT7z (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8764 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045AbbAOIcr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 14:59:55 -0500
-Received: by mail-wi0-f178.google.com with SMTP id z2so6083558wiv.5
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 11:59:54 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2] bcma: clean bus initialization code
-Date: Fri, 16 Jan 2015 20:59:39 +0100
-Message-Id: <1421438379-26211-1-git-send-email-zajec5@gmail.com> (sfid-20150116_210000_194596_34AD8881)
-In-Reply-To: <1421435929-21499-1-git-send-email-zajec5@gmail.com>
-References: <1421435929-21499-1-git-send-email-zajec5@gmail.com>
+	Thu, 15 Jan 2015 03:32:47 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
+References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
+	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
+	<21685.35179.110539.780864@gargle.gargle.HOWL>
+	<87bnm01ojf.fsf@kamboji.qca.qualcomm.com>
+	<21687.29026.962216.812998@gargle.gargle.HOWL>
+	<87vbk8zcr1.fsf@kamboji.qca.qualcomm.com>
+	<21687.30578.746681.850817@gargle.gargle.HOWL>
+Date: Thu, 15 Jan 2015 10:32:31 +0200
+In-Reply-To: <21687.30578.746681.850817@gargle.gargle.HOWL> (Sujith
+	Manoharan's message of "Thu, 15 Jan 2015 13:46:50 +0530")
+Message-ID: <87mw5kzbog.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_093250_893071_930B3331)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This moves main bus init code to the main.c and renames old function to
-make its purpose clear.
-Thanks to this change we'll also be able to separate scanning from
-registration (and support PCIe Gen 2 devices) in the future.
+Sujith Manoharan <sujith@msujith.org> writes:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Fix typo (s/initialiation/initialization/)
-    Put bcma_detect_chip earlier in .h to match order in .c
----
- drivers/bcma/bcma_private.h |  3 ++-
- drivers/bcma/main.c         | 16 ++++++++++++----
- drivers/bcma/scan.c         |  5 +----
- 3 files changed, 15 insertions(+), 9 deletions(-)
+> Kalle Valo wrote:
+>> I STILL don't know what values you think people should use with
+>> the htt_fill parameter.
+>
+> None. The default stays the same. But, it can be adjusted based
+> on the platform, if higher throughput is desired.
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 314ae40..59422b5 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -25,6 +25,7 @@ struct bcma_bus;
- bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
- 		     int timeout);
- void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
-+void bcma_init_bus(struct bcma_bus *bus);
- int bcma_bus_register(struct bcma_bus *bus);
- void bcma_bus_unregister(struct bcma_bus *bus);
- int __init bcma_bus_early_register(struct bcma_bus *bus,
-@@ -36,11 +37,11 @@ int bcma_bus_resume(struct bcma_bus *bus);
- #endif
- 
- /* scan.c */
-+void bcma_detect_chip(struct bcma_bus *bus);
- int bcma_bus_scan(struct bcma_bus *bus);
- int __init bcma_bus_scan_early(struct bcma_bus *bus,
- 			       struct bcma_device_id *match,
- 			       struct bcma_device *core);
--void bcma_init_bus(struct bcma_bus *bus);
- 
- /* sprom.c */
- int bcma_sprom_get(struct bcma_bus *bus);
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 534e133..c166d44 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -268,6 +268,18 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
- 	}
- }
- 
-+void bcma_init_bus(struct bcma_bus *bus)
-+{
-+	mutex_lock(&bcma_buses_mutex);
-+	bus->num = bcma_bus_next_num++;
-+	mutex_unlock(&bcma_buses_mutex);
-+
-+	INIT_LIST_HEAD(&bus->cores);
-+	bus->nr_cores = 0;
-+
-+	bcma_detect_chip(bus);
-+}
-+
- static void bcma_register_core(struct bcma_bus *bus, struct bcma_device *core)
- {
- 	int err;
-@@ -369,10 +381,6 @@ int bcma_bus_register(struct bcma_bus *bus)
- 	int err;
- 	struct bcma_device *core;
- 
--	mutex_lock(&bcma_buses_mutex);
--	bus->num = bcma_bus_next_num++;
--	mutex_unlock(&bcma_buses_mutex);
--
- 	/* Scan for devices (cores) */
- 	err = bcma_bus_scan(bus);
- 	if (err) {
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 9175207..5328ee5 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -435,15 +435,12 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 	return 0;
- }
- 
--void bcma_init_bus(struct bcma_bus *bus)
-+void bcma_detect_chip(struct bcma_bus *bus)
- {
- 	s32 tmp;
- 	struct bcma_chipinfo *chipinfo = &(bus->chipinfo);
- 	char chip_id[8];
- 
--	INIT_LIST_HEAD(&bus->cores);
--	bus->nr_cores = 0;
--
- 	bcma_scan_switch_core(bus, BCMA_ADDR_BASE);
- 
- 	tmp = bcma_scan_read32(bus, 0, BCMA_CC_ID);
+Yeah, but everyone want higher throughput (including me). So what value
+is best in your opinion?
+
 -- 
-1.8.4.5
-
+Kalle Valo
