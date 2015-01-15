@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:55465 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:57148 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832AbbAVNuB (ORCPT
+	with ESMTP id S1753904AbbAOM3i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 08:50:01 -0500
+	Thu, 15 Jan 2015 07:29:38 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: "Fu\, Zhonghui" <zhonghui.fu@linux.intel.com>
-Cc: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
-	wens@csie.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
-References: <54BDCC06.8090107@linux.intel.com>
-Date: Thu, 22 Jan 2015 15:49:52 +0200
-In-Reply-To: <54BDCC06.8090107@linux.intel.com> (Zhonghui Fu's message of
-	"Tue, 20 Jan 2015 11:31:18 +0800")
-Message-ID: <87twzincvz.fsf@kamboji.qca.qualcomm.com> (sfid-20150122_145007_300964_0DC92631)
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH 0/5] ath9k patches
+References: <1418951039-12309-1-git-send-email-sujith@msujith.org>
+Date: Thu, 15 Jan 2015 14:29:31 +0200
+In-Reply-To: <1418951039-12309-1-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Fri, 19 Dec 2014 06:33:54 +0530")
+Message-ID: <87d26gut04.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_133000_202244_3261BA2E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Fu, Zhonghui" <zhonghui.fu@linux.intel.com> writes:
+Sujith Manoharan <sujith@msujith.org> writes:
 
->>From 04d3fa673897ca4ccbea6c76836d0092dba2484a Mon Sep 17 00:00:00 2001
-> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
-> Date: Tue, 20 Jan 2015 11:14:13 +0800
-> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 >
-> WiFi chip has 2 SDIO functions, and PM core will trigger
-> twice suspend/resume operations for one WiFi chip to do
-> the same things. This patch avoid this case.
+> Pending patches for ath9k, rebased over wireless-drivers-next.
+> All of these are for -next.
 >
-> Acked-by: Arend van Spriel <arend@broadcom.com>
-> Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> Acked-by: Kalle Valo <kvalo@codeaurora.org>
-> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> The patch "ath9k: Fix no-ack frame status" depends on two commits
+> that have been merged in mac80211-next, so it needs to be pulled
+> into wireless-drivers-next.
+>
+> Sujith
+>
+> Miaoqing Pan (4):
+>   ath9k: Add HW IDs for QCA956x
+>   ath9k: Add initvals for QCA956x
+>   ath9k: Fix register definitions for QCA956x
+>   ath9k: Add QCA956x HW support
 
-I don't remember giving Acked-by to this (or for matter to anything for
-a long time). What about Sergei or Arend?
+I have applied these patches.
 
-Please do not add Acked-by, Signed-off-by or any other tags unless
-explicitly specified by the person in question. I'm dropping this,
-please resend with real Acked-by lines.
+> Sujith Manoharan (1):
+>   ath9k: Fix no-ack frame status
+
+This patch is still pending for the mac80211 patch.
 
 -- 
 Kalle Valo
