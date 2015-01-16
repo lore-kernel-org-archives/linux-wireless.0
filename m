@@ -1,27 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:60217 "EHLO
+Received: from shards.monkeyblade.net ([149.20.54.216]:56034 "EHLO
 	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814AbbAYFzt (ORCPT
+	with ESMTP id S1754063AbbAPA3L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 00:55:49 -0500
-Date: Sat, 24 Jan 2015 21:55:48 -0800 (PST)
-Message-Id: <20150124.215548.1758091420226281690.davem@davemloft.net> (sfid-20150125_065612_689747_FB1EB084)
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers 2015-01-20
+	Thu, 15 Jan 2015 19:29:11 -0500
+Date: Thu, 15 Jan 2015 19:29:10 -0500 (EST)
+Message-Id: <20150115.192910.43338553625977336.davem@davemloft.net> (sfid-20150116_012919_490931_F3CD799E)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2015-01-15
 From: David Miller <davem@davemloft.net>
-In-Reply-To: <87oapt3jtm.fsf@kamboji.qca.qualcomm.com>
-References: <87oapt3jtm.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <1421326080.1962.10.camel@sipsolutions.net>
+References: <1421326080.1962.10.camel@sipsolutions.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Date: Tue, 20 Jan 2015 11:03:33 +0200
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 15 Jan 2015 13:48:00 +0100
 
-> more fixes for 3.19, I hope these are still appropriate. Please let me
-> know if there are any issues.
+> Hope it's not too late for 3.19 - we found two more issues, pull request
+> below.
 
-Pulled, thanks.
+Pulled, thanks Johannes.
