@@ -1,247 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:40315 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751535AbbASJAD (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:64518 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627AbbAPLRw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 04:00:03 -0500
-Received: by mail-qg0-f50.google.com with SMTP id z60so24099989qgd.9
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 01:00:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAFSJ42b2WaYcbvaW1RmBLdfU9t4C0ALXM_n_T=VXygpYNPPp9w@mail.gmail.com>
-References: <20150118051222.32019.32719.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051650.32019.49483.stgit@114-36-241-182.dynamic.hinet.net>
-	<CAFSJ42YW5RNpeWA-VDjUT9Ct0MSCxaLNY8XQHUdo9NKzLbCjMg@mail.gmail.com>
-	<CAAfg0W6osNyLB1zPbbhVwQV1OsP_1K1stUK8zkyZygavNjmxGw@mail.gmail.com>
-	<CAFSJ42b2WaYcbvaW1RmBLdfU9t4C0ALXM_n_T=VXygpYNPPp9w@mail.gmail.com>
-Date: Mon, 19 Jan 2015 17:00:01 +0800
-Message-ID: <CAAfg0W4uPeSUxngVB5nU3y66JNDUA4TrZ_J2eALwcpKryKiMQg@mail.gmail.com> (sfid-20150119_100014_550352_6C2AADB1)
-Subject: Re: [PATCH 2/2] net wireless wcn36xx adapt wcnss platform to select
- module by DT
-From: Andy Green <andy.green@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 16 Jan 2015 06:17:52 -0500
+Received: by mail-wi0-f180.google.com with SMTP id bs8so3139037wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 03:17:50 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: introduce struct ath10k_skb_rxcb
+Date: Fri, 16 Jan 2015 12:17:08 +0100
+Message-Id: <1421407029-23967-1-git-send-email-michal.kazior@tieto.com> (sfid-20150116_121755_989087_F5C7B77C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 January 2015 at 16:49, Eugene Krasnikov <k.eugene.e@gmail.com> wrote:
-> Have you tested this code on any device other than wcn3620?
+It doesn't make much sense to share the
+ath10k_skb_cb with Rx path. The Rx path doesn't
+need to keep any mac80211's data.
 
-No... the only hardware I have is 3620.  But the only code we're
-adding to mainline is the patch with the ops to get the chip type.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h   | 10 ++++++++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 10 +++++-----
+ drivers/net/wireless/ath/ath10k/pci.c    |  6 +++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
 
-The two-patch series just shows one way to set that (which will
-certainly work for all three defined compatible types, if it works for
-one).  And this code cannot go upstream.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c5686122..739d9d69 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -97,6 +97,10 @@ struct ath10k_skb_cb {
+ 	} bcn;
+ } __packed;
+ 
++struct ath10k_skb_rxcb {
++	dma_addr_t paddr;
++};
++
+ static inline struct ath10k_skb_cb *ATH10K_SKB_CB(struct sk_buff *skb)
+ {
+ 	BUILD_BUG_ON(sizeof(struct ath10k_skb_cb) >
+@@ -104,6 +108,12 @@ static inline struct ath10k_skb_cb *ATH10K_SKB_CB(struct sk_buff *skb)
+ 	return (struct ath10k_skb_cb *)&IEEE80211_SKB_CB(skb)->driver_data;
+ }
+ 
++static inline struct ath10k_skb_rxcb *ATH10K_SKB_RXCB(struct sk_buff *skb)
++{
++	BUILD_BUG_ON(sizeof(struct ath10k_skb_rxcb) > sizeof(skb->cb));
++	return (struct ath10k_skb_rxcb *)skb->cb;
++}
++
+ static inline u32 host_interest_item_address(u32 item_offset)
+ {
+ 	return QCA988X_HOST_INTEREST_ADDRESS + item_offset;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index baa1c44..2e55ed7 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -37,12 +37,12 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr);
+ static void ath10k_htt_rx_ring_free(struct ath10k_htt *htt)
+ {
+ 	struct sk_buff *skb;
+-	struct ath10k_skb_cb *cb;
++	struct ath10k_skb_rxcb *cb;
+ 	int i;
+ 
+ 	for (i = 0; i < htt->rx_ring.fill_cnt; i++) {
+ 		skb = htt->rx_ring.netbufs_ring[i];
+-		cb = ATH10K_SKB_CB(skb);
++		cb = ATH10K_SKB_RXCB(skb);
+ 		dma_unmap_single(htt->ar->dev, cb->paddr,
+ 				 skb->len + skb_tailroom(skb),
+ 				 DMA_FROM_DEVICE);
+@@ -86,7 +86,7 @@ static int __ath10k_htt_rx_ring_fill_n(struct ath10k_htt *htt, int num)
+ 			goto fail;
+ 		}
+ 
+-		ATH10K_SKB_CB(skb)->paddr = paddr;
++		ATH10K_SKB_RXCB(skb)->paddr = paddr;
+ 		htt->rx_ring.netbufs_ring[idx] = skb;
+ 		htt->rx_ring.paddrs_ring[idx] = __cpu_to_le32(paddr);
+ 		htt->rx_ring.fill_cnt++;
+@@ -168,7 +168,7 @@ static void ath10k_htt_rx_ring_clean_up(struct ath10k_htt *htt)
+ 		if (!skb)
+ 			continue;
+ 
+-		dma_unmap_single(htt->ar->dev, ATH10K_SKB_CB(skb)->paddr,
++		dma_unmap_single(htt->ar->dev, ATH10K_SKB_RXCB(skb)->paddr,
+ 				 skb->len + skb_tailroom(skb),
+ 				 DMA_FROM_DEVICE);
+ 		dev_kfree_skb_any(skb);
+@@ -224,7 +224,7 @@ static inline struct sk_buff *ath10k_htt_rx_netbuf_pop(struct ath10k_htt *htt)
+ 	htt->rx_ring.fill_cnt--;
+ 
+ 	dma_unmap_single(htt->ar->dev,
+-			 ATH10K_SKB_CB(msdu)->paddr,
++			 ATH10K_SKB_RXCB(msdu)->paddr,
+ 			 msdu->len + skb_tailroom(msdu),
+ 			 DMA_FROM_DEVICE);
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt rx netbuf pop: ",
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 3b40a86..b98354c 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -403,7 +403,7 @@ static int __ath10k_pci_rx_post_buf(struct ath10k_pci_pipe *pipe)
+ 		return -EIO;
+ 	}
+ 
+-	ATH10K_SKB_CB(skb)->paddr = paddr;
++	ATH10K_SKB_RXCB(skb)->paddr = paddr;
+ 
+ 	ret = __ath10k_ce_rx_post_buf(ce_pipe, skb, paddr);
+ 	if (ret) {
+@@ -872,7 +872,7 @@ static void ath10k_pci_ce_recv_data(struct ath10k_ce_pipe *ce_state)
+ 					     &flags) == 0) {
+ 		skb = transfer_context;
+ 		max_nbytes = skb->len + skb_tailroom(skb);
+-		dma_unmap_single(ar->dev, ATH10K_SKB_CB(skb)->paddr,
++		dma_unmap_single(ar->dev, ATH10K_SKB_RXCB(skb)->paddr,
+ 				 max_nbytes, DMA_FROM_DEVICE);
+ 
+ 		if (unlikely(max_nbytes < nbytes)) {
+@@ -1238,7 +1238,7 @@ static void ath10k_pci_rx_pipe_cleanup(struct ath10k_pci_pipe *pci_pipe)
+ 
+ 		ce_ring->per_transfer_context[i] = NULL;
+ 
+-		dma_unmap_single(ar->dev, ATH10K_SKB_CB(skb)->paddr,
++		dma_unmap_single(ar->dev, ATH10K_SKB_RXCB(skb)->paddr,
+ 				 skb->len + skb_tailroom(skb),
+ 				 DMA_FROM_DEVICE);
+ 		dev_kfree_skb_any(skb);
+-- 
+1.8.5.3
 
-So the only decision to make is around whether adding the platform op
-is a good way (or, eg, directly add DT support to wcn36xx and
-eliminate the 'device regeneration' part of the OOT -msm code).
-
-At the moment the detect code does not work for 3620, so something
-needs to be done.
-
--Andy
-
-> 2015-01-19 8:44 GMT+00:00 Andy Green <andy.green@linaro.org>:
->> On 19 January 2015 at 16:34, Eugene Krasnikov <k.eugene.e@gmail.com> wrote:
->>
->>> So how do we insmod wcn36xx_msm with a parameter specifying what type
->>> of hardware do we use?
->>
->> The type of chip is defined in the DT "compatible" which also delivers
->> the resource information.
->>
->>         qcom,wcn36xx@0a000000 {
->>                 compatible = "qcom,wcn3620";
->>                 reg = <0x0a000000 0x280000>;
->>                 reg-names = "wcnss_mmio";
->>
->>                 interrupts = <0 145 0 0 146 0>;
->>                 interrupt-names = "wcnss_wlantx_irq", "wcnss_wlanrx_irq";
->> ...
->>
->> This bit based on your code can't go in mainline until there's some
->> kind of PIL support.
->>
->> So the only things we can discuss about it for mainline purpose is
->> whether using a platform ops is a good way to interface to the
->> mainline driver.
->>
->> If you're OK with that and you want a module parameter then this can
->> grow a module parameter and prefer to deliver the chip type from that
->> if given, without modifying the platform op interface.
->>
->> But with or without a module parameter this can't be upstreamed right
->> now due to PIL.
->>
->> -Andy
->>
->>> 2015-01-18 5:16 GMT+00:00 Andy Green <andy.green@linaro.org>:
->>>> Simplify the resource handling and use DT to indicate which chip type
->>>> we are dealing with
->>>>
->>>> Signed-off-by: Andy Green <andy.green@linaro.org>
->>>> ---
->>>>  drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c |  101 ++++++++++++------------
->>>>  1 file changed, 52 insertions(+), 49 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c b/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
->>>> index f6f6c83..c9250e0 100644
->>>> --- a/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
->>>> +++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
->>>> @@ -42,7 +42,10 @@ struct wcn36xx_msm {
->>>>         struct completion       smd_compl;
->>>>         smd_channel_t           *smd_ch;
->>>>         struct pinctrl *pinctrl;
->>>> -} wmsm;
->>>> +       enum wcn36xx_chip_type chip_type;
->>>> +};
->>>> +
->>>> +static struct wcn36xx_msm wmsm;
->>>>
->>>>  static int wcn36xx_msm_smsm_change_state(u32 clear_mask, u32 set_mask)
->>>>  {
->>>> @@ -217,14 +220,47 @@ int wcn36xx_msm_powerup(const struct subsys_desc *desc)
->>>>         return 0;
->>>>  }
->>>>
->>>> +static const struct of_device_id wcn36xx_msm_match_table[] = {
->>>> +       { .compatible = "qcom,wcn3660", .data = (void *)WCN36XX_CHIP_3660 },
->>>> +       { .compatible = "qcom,wcn3680", .data = (void *)WCN36XX_CHIP_3680 },
->>>> +       { .compatible = "qcom,wcn3620", .data = (void *)WCN36XX_CHIP_3620 },
->>>> +       { }
->>>> +};
->>>> +
->>>> +static int wcn36xx_msm_get_chip_type(void)
->>>> +{
->>>> +       return wmsm.chip_type;
->>>> +}
->>>> +
->>>> +static struct wcn36xx_msm wmsm = {
->>>> +       .ctrl_ops = {
->>>> +               .open = wcn36xx_msm_smd_open,
->>>> +               .close = wcn36xx_msm_smd_close,
->>>> +               .tx = wcn36xx_msm_smd_send_and_wait,
->>>> +               .get_hw_mac = wcn36xx_msm_get_hw_mac,
->>>> +               .smsm_change_state = wcn36xx_msm_smsm_change_state,
->>>> +               .get_chip_type = wcn36xx_msm_get_chip_type,
->>>> +       },
->>>> +};
->>>> +
->>>>  static int wcn36xx_msm_probe(struct platform_device *pdev)
->>>>  {
->>>>         int ret;
->>>> -       struct resource *wcnss_memory;
->>>> -       struct resource *tx_irq;
->>>> -       struct resource *rx_irq;
->>>> +       const struct of_device_id *of_id;
->>>> +       struct resource *r;
->>>>         struct resource res[3];
->>>>         struct pinctrl_state *ps;
->>>> +       static const char const *rnames[] = {
->>>> +               "wcnss_mmio", "wcnss_wlantx_irq", "wcnss_wlanrx_irq" };
->>>> +       static const int rtype[] = {
->>>> +               IORESOURCE_MEM, IORESOURCE_IRQ, IORESOURCE_IRQ };
->>>> +       int n;
->>>> +
->>>> +       of_id = of_match_node(wcn36xx_msm_match_table, pdev->dev.of_node);
->>>> +       if (!of_id)
->>>> +               return -EINVAL;
->>>> +
->>>> +       wmsm.chip_type = (enum wcn36xx_chip_type)of_id->data;
->>>>
->>>>         wmsm.pinctrl = devm_pinctrl_get(&pdev->dev);
->>>>         if (IS_ERR_OR_NULL(wmsm.pinctrl))
->>>> @@ -240,52 +276,23 @@ static int wcn36xx_msm_probe(struct platform_device *pdev)
->>>>
->>>>         if (IS_ERR_OR_NULL(pil))
->>>>                 pil = subsystem_get("wcnss");
->>>> -               if (IS_ERR_OR_NULL(pil))
->>>> -                       return PTR_ERR(pil);
->>>> +       if (IS_ERR_OR_NULL(pil))
->>>> +               return PTR_ERR(pil);
->>>>
->>>>         wmsm.core = platform_device_alloc("wcn36xx", -1);
->>>>
->>>> -       //dev_err(&pdev->dev, "%s starting\n", __func__);
->>>> -
->>>> -       memset(res, 0x00, sizeof(res));
->>>> -       wmsm.ctrl_ops.open = wcn36xx_msm_smd_open;
->>>> -       wmsm.ctrl_ops.close = wcn36xx_msm_smd_close;
->>>> -       wmsm.ctrl_ops.tx = wcn36xx_msm_smd_send_and_wait;
->>>> -       wmsm.ctrl_ops.get_hw_mac = wcn36xx_msm_get_hw_mac;
->>>> -       wmsm.ctrl_ops.smsm_change_state = wcn36xx_msm_smsm_change_state;
->>>> -       wcnss_memory =
->>>> -               platform_get_resource_byname(pdev,
->>>> -                                             IORESOURCE_MEM,
->>>> -                                             "wcnss_mmio");
->>>> -       if (wcnss_memory == NULL) {
->>>> -               dev_err(&wmsm.core->dev,
->>>> -                       "Failed to get wcnss wlan memory map.\n");
->>>> -               ret = -ENOMEM;
->>>> -               return ret;
->>>> -       }
->>>> -       memcpy(&res[0], wcnss_memory, sizeof(*wcnss_memory));
->>>> -
->>>> -       tx_irq = platform_get_resource_byname(pdev,
->>>> -                                             IORESOURCE_IRQ,
->>>> -                                             "wcnss_wlantx_irq");
->>>> -       if (tx_irq == NULL) {
->>>> -               dev_err(&wmsm.core->dev, "Failed to get wcnss tx_irq");
->>>> -               ret = -ENOMEM;
->>>> -               return ret;
->>>> -       }
->>>> -       memcpy(&res[1], tx_irq, sizeof(*tx_irq));
->>>> -
->>>> -       rx_irq = platform_get_resource_byname(pdev,
->>>> -                                             IORESOURCE_IRQ,
->>>> -                                             "wcnss_wlanrx_irq");
->>>> -       if (rx_irq == NULL) {
->>>> -               dev_err(&wmsm.core->dev, "Failed to get wcnss rx_irq");
->>>> -               ret = -ENOMEM;
->>>> -               return ret;
->>>> +       for (n = 0; n < ARRAY_SIZE(rnames); n++) {
->>>> +               r = platform_get_resource_byname(pdev, rtype[n], rnames[n]);
->>>> +               if (!r) {
->>>> +                       dev_err(&wmsm.core->dev,
->>>> +                               "Missing resource %s'\n", rnames[n]);
->>>> +                       ret = -ENOMEM;
->>>> +                       return ret;
->>>> +               }
->>>> +               res[n] = *r;
->>>>         }
->>>> -       memcpy(&res[2], rx_irq, sizeof(*rx_irq));
->>>>
->>>> -       platform_device_add_resources(wmsm.core, res, ARRAY_SIZE(res));
->>>> +       platform_device_add_resources(wmsm.core, res, n);
->>>>
->>>>         ret = platform_device_add_data(wmsm.core, &wmsm.ctrl_ops,
->>>>                                        sizeof(wmsm.ctrl_ops));
->>>> @@ -319,10 +326,6 @@ static int wcn36xx_msm_remove(struct platform_device *pdev)
->>>>         return 0;
->>>>  }
->>>>
->>>> -static const struct of_device_id wcn36xx_msm_match_table[] = {
->>>> -       { .compatible = "qcom,wcn36xx" },
->>>> -       { }
->>>> -};
->>>>  MODULE_DEVICE_TABLE(of, wcn36xx_msm_match_table);
->>>>
->>>>  static struct platform_driver wcn36xx_msm_driver = {
->>>>
->>>
->>>
->>>
->>> --
->>> Best regards,
->>> Eugene
->
->
->
-> --
-> Best regards,
-> Eugene
