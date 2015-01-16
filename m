@@ -1,195 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbbAYIx0 (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:42448 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754584AbbAPOab (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 03:53:26 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 02/10] wil6210: fix timing of netif_carrier_on indication
-Date: Sun, 25 Jan 2015 10:52:43 +0200
-Message-Id: <1422175971-8075-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_095334_551454_58C048EA)
-In-Reply-To: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Fri, 16 Jan 2015 09:30:31 -0500
+Received: by mail-wi0-f171.google.com with SMTP id ho1so4509516wib.4
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 06:30:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1421356430.1962.15.camel@sipsolutions.net>
+References: <CACsJT9OOBcYNhNG6=+Q2EE4VHEvJ8_rJ3fr6gb9_3P4KpPPX3g@mail.gmail.com>
+ <f46d043c061e8dd5c9050cb5990c@google.com> <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com>
+ <54B82598.9060403@erley.org> <1421356430.1962.15.camel@sipsolutions.net>
+From: Mike Purvis <mpurvis@clearpathrobotics.com>
+Date: Fri, 16 Jan 2015 09:30:09 -0500
+Message-ID: <CACsJT9PsyW1EJmkNJSaQe7Y7S_2qkupn3cr0QRS8DSwRvTU86g@mail.gmail.com> (sfid-20150116_153035_367906_2D6EBBDC)
+Subject: Re: Delivery Status Notification (Failure)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Pat Erley <pat-lkml@erley.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Okay, captured the configuration from the working machine:
 
-netif_carrier_on indication was too late. In case Rx packet received
-before netif_carrier_on indication, upper layers could not send
-Tx packet back.
+https://gist.github.com/mikepurvis/d8977be6865cebd18ff3
 
-The fix is to indicate netif_carrier_on earlier:
-for STA, indicate netif_carrier_on when association starts.
-for AP/PCP, indicate netif_carrier_on upon starting AP/PCP.
+Looks like 8087:07da is the centrino bluetooth component, but it's not
+at all obvious!
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c |  8 +++++---
- drivers/net/wireless/ath/wil6210/main.c     | 30 ++++++-----------------------
- drivers/net/wireless/ath/wil6210/netdev.c   |  4 +---
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 --
- drivers/net/wireless/ath/wil6210/wmi.c      |  2 --
- 5 files changed, 12 insertions(+), 34 deletions(-)
+Thanks very much for the assistance.
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index bd013fd..553aa2e 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -454,6 +454,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 
- 	rc = wmi_send(wil, WMI_CONNECT_CMDID, &conn, sizeof(conn));
- 	if (rc == 0) {
-+		netif_carrier_on(ndev);
- 		/* Connect can take lots of time */
- 		mod_timer(&wil->connect_timer,
- 			  jiffies + msecs_to_jiffies(2000));
-@@ -757,12 +758,12 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 
- 	wil->secure_pcp = info->privacy;
- 
-+	netif_carrier_on(ndev);
-+
- 	rc = wmi_pcp_start(wil, info->beacon_interval, wmi_nettype,
- 			   channel->hw_value);
- 	if (rc)
--		goto out;
--
--	netif_carrier_on(ndev);
-+		netif_carrier_off(ndev);
- 
- out:
- 	mutex_unlock(&wil->mutex);
-@@ -777,6 +778,7 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
- 
- 	wil_dbg_misc(wil, "%s()\n", __func__);
- 
-+	netif_carrier_off(ndev);
- 	wil_set_recovery_state(wil, fw_recovery_idle);
- 
- 	mutex_lock(&wil->mutex);
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 62dc241..00c9b0f 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -248,7 +248,9 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_P2P_CLIENT:
--		wil_link_off(wil);
-+		netif_tx_stop_all_queues(ndev);
-+		netif_carrier_off(ndev);
-+
- 		if (test_bit(wil_status_fwconnected, wil->status)) {
- 			clear_bit(wil_status_fwconnected, wil->status);
- 			cfg80211_disconnected(ndev, reason_code,
-@@ -395,6 +397,8 @@ static void wil_connect_worker(struct work_struct *work)
- 	int rc;
- 	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
- 						connect_worker);
-+	struct net_device *ndev = wil_to_ndev(wil);
-+
- 	int cid = wil->pending_connect_cid;
- 	int ringid = wil_find_free_vring(wil);
- 
-@@ -409,7 +413,7 @@ static void wil_connect_worker(struct work_struct *work)
- 	wil->pending_connect_cid = -1;
- 	if (rc == 0) {
- 		wil->sta[cid].status = wil_sta_connected;
--		wil_link_on(wil);
-+		netif_tx_wake_all_queues(ndev);
- 	} else {
- 		wil->sta[cid].status = wil_sta_unused;
- 	}
-@@ -741,28 +745,6 @@ void wil_fw_error_recovery(struct wil6210_priv *wil)
- 	schedule_work(&wil->fw_error_worker);
- }
- 
--void wil_link_on(struct wil6210_priv *wil)
--{
--	struct net_device *ndev = wil_to_ndev(wil);
--
--	wil_dbg_misc(wil, "%s()\n", __func__);
--
--	netif_carrier_on(ndev);
--	wil_dbg_misc(wil, "netif_tx_wake : link on\n");
--	netif_tx_wake_all_queues(ndev);
--}
--
--void wil_link_off(struct wil6210_priv *wil)
--{
--	struct net_device *ndev = wil_to_ndev(wil);
--
--	wil_dbg_misc(wil, "%s()\n", __func__);
--
--	netif_tx_stop_all_queues(ndev);
--	wil_dbg_misc(wil, "netif_tx_stop : link off\n");
--	netif_carrier_off(ndev);
--}
--
- int __wil_up(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index e81703c..f1f9e51 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -174,7 +174,7 @@ void *wil_if_alloc(struct device *dev, void __iomem *csr)
- 	netif_napi_add(ndev, &wil->napi_tx, wil6210_netdev_poll_tx,
- 		       WIL6210_NAPI_BUDGET);
- 
--	wil_link_off(wil);
-+	netif_tx_stop_all_queues(ndev);
- 
- 	return wil;
- 
-@@ -217,8 +217,6 @@ int wil_if_add(struct wil6210_priv *wil)
- 		return rc;
- 	}
- 
--	wil_link_off(wil);
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index da3fe78..b4404e7 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -649,8 +649,6 @@ void wil_priv_deinit(struct wil6210_priv *wil);
- int wil_reset(struct wil6210_priv *wil);
- void wil_fw_error_recovery(struct wil6210_priv *wil);
- void wil_set_recovery_state(struct wil6210_priv *wil, int state);
--void wil_link_on(struct wil6210_priv *wil);
--void wil_link_off(struct wil6210_priv *wil);
- int wil_up(struct wil6210_priv *wil);
- int __wil_up(struct wil6210_priv *wil);
- int wil_down(struct wil6210_priv *wil);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 097d78b..0f3e433 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -566,7 +566,6 @@ static void wil_addba_tx_cid(struct wil6210_priv *wil, u8 cid, u16 wsize)
- 
- static void wmi_evt_linkup(struct wil6210_priv *wil, int id, void *d, int len)
- {
--	struct net_device *ndev = wil_to_ndev(wil);
- 	struct wmi_data_port_open_event *evt = d;
- 	u8 cid = evt->cid;
- 
-@@ -580,7 +579,6 @@ static void wmi_evt_linkup(struct wil6210_priv *wil, int id, void *d, int len)
- 	wil->sta[cid].data_port_open = true;
- 	if (agg_wsize >= 0)
- 		wil_addba_tx_cid(wil, cid, agg_wsize);
--	netif_carrier_on(ndev);
- }
- 
- static void wmi_evt_linkdown(struct wil6210_priv *wil, int id, void *d, int len)
--- 
-2.1.0
+Mike
 
+On 15 January 2015 at 16:13, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2015-01-15 at 14:39 -0600, Pat Erley wrote:
+>
+>> I'd guess that the 6235 module has WLAN on the pci-e connector portion,
+>> and Bluetooth on the USB portion.
+>
+> Yes, that's the case for all Intel wifi modules that have BT.
+>
+> johannes
+>
