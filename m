@@ -1,35 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58713 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932266AbbAFKzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 05:55:01 -0500
-Message-ID: <1420541693.1966.17.camel@sipsolutions.net> (sfid-20150106_115517_768698_98A98091)
-Subject: Re: [PATCH 1/2] cfg80211: introduce sync regdom set API for
- self-managed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Tue, 06 Jan 2015 11:54:53 +0100
-In-Reply-To: <1420112563-3981-1-git-send-email-arik@wizery.com> (sfid-20150101_124249_166524_7BBD3A2A)
-References: <1420112563-3981-1-git-send-email-arik@wizery.com>
-	 (sfid-20150101_124249_166524_7BBD3A2A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:45515 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753044AbbAPPdc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2015 10:33:32 -0500
+Received: by mail-wg0-f54.google.com with SMTP id z12so21134033wgg.13
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 07:33:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87iog8ryes.fsf@kamboji.qca.qualcomm.com>
+References: <20150106035319.GA4082@vaishali-Ideapad-Z570>
+	<87iog8ryes.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 16 Jan 2015 21:03:31 +0530
+Message-ID: <CAK-LDbKfK5zda00xJTEq56Wwi7eVwuFUWD=X9pf505iwexEiZw@mail.gmail.com> (sfid-20150116_163335_769922_390E766D)
+Subject: Re: [PATCH] brcmfmac: Use put_unaligned_le32
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
-> A self-managed device will sometimes need to set its regdomain synchronously.
-> Notably it should be set before usermode has a chance to query it. Expose
-> a new API to accomplish this which requires the RTNL.
+On Thu, Jan 15, 2015 at 6:30 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Vaishali Thakkar <vthakkar1994@gmail.com> writes:
+>
+>> This patch introduces the use of function put_unaligned_le32.
+>>
+>> This is done using Coccinelle and semantic patch used is as follows:
+>>
+>> @a@
+>> typedef u32, __le32, uint32_t;
+>> {u32,__le32,uint32_t} e32;
+>> identifier tmp;
+>> expression ptr;
+>> expression y,e;
+>> type T;
+>> type T;
+>> @@
+>>
+>> - tmp = cpu_to_le32(y);
+>>
+>> <+... when != tmp
+>> (
+>> - memcpy(ptr, (T)&tmp, \(4\|sizeof(u32)\|sizeof(__le32)\|sizeof(uint32_t)\|s
+>> + put_unaligned_le32(y,ptr);
+>> |
+>> - memcpy(ptr, (T)&tmp, ...);
+>> + put_unaligned_le32(y,ptr);
+>> )
+>> ...+>
+>> ? tmp = e
+>>
+>> @@ type T; identifier a.tmp; @@
+>>
+>> - T tmp;
+>> ...when != tmp
+>>
+>> Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+>
+> This failed to apply, please rebase:
+>
+> Applying: brcmfmac: Use put_unaligned_le32
+> error: drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c: does not exist in index
+> Patch failed at 0001 brcmfmac: Use put_unaligned_le32
+>
 
-> +	ret = regulatory_set_wiphy_regd(wiphy, rd);
-> +	if (ret)
-> +		return ret;
+Yes. Sorry. Because of some technical problems with my machine, I
+couldn't be able to send new patch as I didn't have code with me.
+Actually I sent follow up mail to John about dropping this patch
+[about 6 days back] until I rebase it. But forgot to cced it to
+mailing list. I will send rebased patch.
 
-It seems to me you should refactor that and avoid scheduling the work
-struct when you're going to run the necessary work below by hand.
+Sorry again.
 
-johannes
+> --
+> Kalle Valo
 
+
+
+-- 
+Vaishali
