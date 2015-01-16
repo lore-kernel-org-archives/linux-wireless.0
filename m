@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:42733 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751939AbbAFTVT (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:57972 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751492AbbAPSRO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 14:21:19 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Maithili Hinge <maithili@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>
-Subject: Re: [PATCH 0/9] mwifiex enhancements
-References: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
-Date: Tue, 06 Jan 2015 21:21:11 +0200
-In-Reply-To: <1420022206-11435-1-git-send-email-akarwar@marvell.com>
-	(Amitkumar Karwar's message of "Wed, 31 Dec 2014 02:36:37 -0800")
-Message-ID: <87k30zww9k.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_202127_698551_B1B888FF)
+	Fri, 16 Jan 2015 13:17:14 -0500
+Received: by mail-lb0-f180.google.com with SMTP id f15so10222832lbj.11
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 10:17:12 -0800 (PST)
+Message-ID: <54B955A5.3090901@cogentembedded.com> (sfid-20150116_191729_470349_7257DE67)
+Date: Fri, 16 Jan 2015 21:17:09 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Simon Kelley <simon@thekelleys.org.uk>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: wireless: atmel: Remove open-coded and wrong strcasecmp
+References: <1421414907-26764-1-git-send-email-linux@rasmusvillemoes.dk>
+In-Reply-To: <1421414907-26764-1-git-send-email-linux@rasmusvillemoes.dk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> writes:
+Hello.
 
-> This patch series adds couple of fixes, recovery mechanism
-> when host fails to wakeup the firmware and wowlan disconnect
-> feature.
->
-> Amitkumar Karwar (5):
->   mwifiex: remove redundant flag MWIFIEX_HW_STATUS_FW_READY
->   mwifiex: add wakeup timer based recovery mechanism
->   mwifiex: wakeup pending wait queues
->   mwifiex: do not release lock during list_for_each_entry_safe()
->   mwifiex: Increase priority of firmware download message
->
-> Maithili Hinge (2):
->   mwifiex: Move code for wowlan magic-packet and patterns to a function
->   mwifiex: Add support for wowlan disconnect
->
-> Marc Yang (2):
->   Adjust calling place of mwifiex_terminate_workqueue
->   mwifiex: increase delay during card reset
+On 01/16/2015 04:28 PM, Rasmus Villemoes wrote:
 
-Thanks, all patches applied to wireless-drivers-next.git.
+> The kernel's string library does in fact have strcasecmp, at least
+> since ded220bd8f08. Moreover, this open-coded version is in fact
 
--- 
-Kalle Valo
+    Please also specify that commit's summary line in parens.
+
+> wrong: If the strings only differ in their last character, a and b
+> have already been incremented to point to the terminating nul bytes,
+
+    NUL.
+
+> so they would be treated as equal.
+
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+
+[...]
+
+WBR, Sergei
+
