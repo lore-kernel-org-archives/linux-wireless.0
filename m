@@ -1,64 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:48632 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751164AbbASI1B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 03:27:01 -0500
-Date: Mon, 19 Jan 2015 09:26:57 +0100 (CET)
-From: Rico Derrer <rico.derrer@neratec.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Message-ID: <1748015898.90209.1421656017853.JavaMail.zimbra@neratec.com> (sfid-20150119_092705_220075_E90D773A)
-In-Reply-To: <1998405401.90208.1421656011302.JavaMail.zimbra@neratec.com>
-References: <1421241456-29085-1-git-send-email-nbd@openwrt.org> <377854068.83121.1421395226029.JavaMail.zimbra@neratec.com> <54B8EAD9.5050200@openwrt.org>
-Subject: Re: [PATCH 3.19] ath9k: fix race condition in irq processing during
- hardware reset
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:55566 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751980AbbAPKjh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2015 05:39:37 -0500
+Received: by mail-wi0-f182.google.com with SMTP id n3so1221856wiv.3
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 02:39:36 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFCv2 2/6] cfg80211: add VHT support for IBSS
+Date: Fri, 16 Jan 2015 11:38:40 +0100
+Message-Id: <1421404724-32326-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150116_113943_556197_6AAC2326)
+In-Reply-To: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 2015-01-16 09:00, Rico Derrer wrote:
->> Hi Felix
->> 
->> Felix Fietkau wrote:
->>> diff --git a/drivers/net/wireless/ath/ath9k/main.c
->>> b/drivers/net/wireless/ath/ath9k/main.c
->>> index 9a72640..62b0bf4 100644
->>> --- a/drivers/net/wireless/ath/ath9k/main.c
->>> +++ b/drivers/net/wireless/ath/ath9k/main.c
->>> @@ -285,6 +285,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct
->>> ath9k_channel *hchan)
->>> 
->>> __ath_cancel_work(sc);
->>> 
->>> + disable_irq(sc->irq);
->>> tasklet_disable(&sc->intr_tq);
->>> tasklet_disable(&sc->bcon_tasklet);
->>> spin_lock_bh(&sc->sc_pcu_lock);
->>> @@ -331,6 +332,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct
->>> ath9k_channel *hchan)
->>> r = -EIO;
->>> 
->>> out:
->>> + enable_irq(sc->irq);
->>> spin_unlock_bh(&sc->sc_pcu_lock);
->>> tasklet_enable(&sc->bcon_tasklet);
->>> tasklet_enable(&sc->intr_tq);
->> 
->> This part completely blocks the system on a AR9350. Loading the
->> module works but configuring it hangs the system until watchdog restarts it.
-> What kernel/software are you running on there? When I committed this
-> patch to OpenWrt, it uncovered IRQ handling bugs in MIPS kernel code
-> (both generic and in the ath79 platform code).
-> 
-> You can find the fixes that I've made here:
-> http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=target/linux/generic/patches-3.14/130-mips_cpu_irq_disable.patch
-> http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=target/linux/ar71xx/patches-3.14/736-MIPS-ath79-fix-chained-irq-disable.patch
-> 
-> I've already submitted the first one to linux-mips.
-> 
-> - Felix
+Add NL80211_FEATURE_VHT_IBSS flag and VHT
+support for IBSS.
 
-Thank you, these patches fixed the problem.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/nl80211.c       | 14 ++++++++++++--
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-Rico
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b6c1a00..8f7422e 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4308,11 +4308,13 @@ enum nl80211_feature_flags {
+ 
+ /**
+  * enum nl80211_ext_feature_index - bit index of extended features.
++ * @NL80211_FEATURE_VHT_IBSS: This driver supports IBSS with VHT datarates.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+ enum nl80211_ext_feature_index {
++	NL80211_FEATURE_VHT_IBSS,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 38078437..4b79340 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7240,8 +7240,18 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		break;
+ 	case NL80211_CHAN_WIDTH_20:
+ 	case NL80211_CHAN_WIDTH_40:
+-		if (rdev->wiphy.features & NL80211_FEATURE_HT_IBSS)
+-			break;
++		if (!(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
++			return -EINVAL;
++		break;
++	case NL80211_CHAN_WIDTH_80:
++	case NL80211_CHAN_WIDTH_80P80:
++	case NL80211_CHAN_WIDTH_160:
++		if (!(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
++			return -EINVAL;
++		if (!wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_FEATURE_VHT_IBSS))
++			return -EINVAL;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
+-- 
+1.9.1
+
