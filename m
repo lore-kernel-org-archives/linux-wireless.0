@@ -1,59 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:59247 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311AbbALLyx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 06:54:53 -0500
-Received: by mail-wg0-f43.google.com with SMTP id k14so18794054wgh.2
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 03:54:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5492CFF5.9060107@open-mesh.com>
-References: <5492CFF5.9060107@open-mesh.com>
-Date: Mon, 12 Jan 2015 12:54:52 +0100
-Message-ID: <CA+BoTQm1H9jAszUH_gQCjcEk-GCQG0r9r7Jb2VdpM1CQF7jXeg@mail.gmail.com> (sfid-20150112_125501_327665_F9F185F7)
-Subject: Re: ath10k: fw_stats not reporting peer_stats with 10.2
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Antonio Quartulli <antonio@open-mesh.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:41622 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753633AbbAPMSa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2015 07:18:30 -0500
+Message-ID: <1421410704.9214.10.camel@sipsolutions.net> (sfid-20150116_131833_191959_4565E6E2)
+Subject: Re: [RFCv2 6/6] mac80211: IBSS setup correctly BW for VHT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 16 Jan 2015 13:18:24 +0100
+In-Reply-To: <CALhHN=pkvz9qiQNWvXF6xwfhpmmhbUaW0PVnOWDhgWYT0nVY=w@mail.gmail.com> (sfid-20150116_130825_163251_43ACF8D0)
+References: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1421404724-32326-6-git-send-email-janusz.dziedzic@tieto.com>
+	 <1421405703.9214.4.camel@sipsolutions.net>
+	 <CALhHN=pkvz9qiQNWvXF6xwfhpmmhbUaW0PVnOWDhgWYT0nVY=w@mail.gmail.com>
+	 (sfid-20150116_130825_163251_43ACF8D0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 December 2014 at 14:00, Antonio Quartulli <antonio@open-mesh.com> wrote:
-> Hello,
+On Fri, 2015-01-16 at 13:08 +0100, Janusz Dziedzic wrote:
+> On 16 January 2015 at 11:55, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Fri, 2015-01-16 at 11:38 +0100, Janusz Dziedzic wrote:
+> >
+> >> +                             /* we both use VHT */
+> >> +                             struct ieee80211_vht_cap vhtcap_ie;
+> >> +                             struct ieee80211_sta_vht_cap vht_cap = sta->sta.vht_cap;
+> >> +
+> >> +                             ieee80211_vht_oper_to_chandef(channel,
+> >> +                                                           elems->vht_operation,
+> >> +                                                           &chandef);
+> >
+> > Ok maybe I'm missing something - but can't this erroneously configure
+> > the local HW to 160 MHz when it doesn't even support it, or so?
+> >
+> I will check this more. But seems chandef (sta chandef) is a local
+> variable here, not used by the way.
+> So, our chandef is form cfg80211 (sdata->u.ibss.chandef) and we don't
+> change this.
+> Orginaly this sta chandef was used to compare with ibss->chandef.
+> 
+> -                       if (chandef.center_freq1 !=
+> -                           sdata->u.ibss.chandef.center_freq1)
+> -                               htcap_ie.cap_info &=
+> -
+> cpu_to_le16(~IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+> 
+> But for me this check seems as not needed, eg.
+> We support VHT80 and other ibss have only HT40 support - so we will
+> have different center_freq1 - but still could operate, while sta_add
+> and correct rates for sta configured.
+> One I think we could check here is, if our chandef and sta chandef overlap.
+> 
+> Anyway, I am not sure I understand your question correctly, you mean eg.
+> we work in VHT80 mode and other ibss join in VHT160 mode? Does it
+> really matter while we will use sta_add for this new V160 "station"
+> and configure supported rates for this station?
 
-Hi,
+Well like I said - I might not understand this correctly. But the
+ieee80211_vht_oper_to_chandef() function doesn't - iirc - take into
+account local capabilities. As a consequence, if a VHT160 station joins
+the chandef might be 160 while we're only supporting 80?
 
-Sorry for the late reply.
+But anyway - I see that at least what I originally thought was wrong -
+this code isn't concerned with picking up the channel from the peer to
+join the networks together, I guess. That's what I was worried about.
+That code I haven't seen and checked though - so perhaps you can look
+there if it correctly handles trying to form a network when the peer has
+higher capabilities than the local hw.
 
+johannes
 
-> (line grabbed from dmesg at boot time)
->
-> On my device I have configured 2 AP vifs and for each of them I would
-> like to read the last TX rate of the associated stations.
->
-> As I've read on wireless.kernel.org this is not possible through the
-> standard nl/cfg80211 interface and therefore I have been trying to read
-> /sys/kernel/debug/ieee80211/phy1/ath10k/fw_stats  , but this file always
-> reports "ath10k PEER stats (0)" (no peers..).
->
-> I tried printing some debug messages here and there and the only useful
-> information I got is that in "ath10k_wmi_10x_pull_fw_stats()" the value
-> of "ev->num_peer_stats" is always 0.
->
-> Is this yet another fw limitation?
-
-Firmware stats has a very fragile ABI. Apparently 10.2 changed it
-again and thus is broken. I'll try to look into it more if time
-permits.
-
-
-> I also realized that upon station connection ath10k receives the
-> WMI_10_2_PEER_RATECODE_LIST_EVENTID event but it is not handled as no
-> handler is implemented. Might it be related with my problem ?
-
-No. That's not the problem.
-
-
-Michał
