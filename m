@@ -1,40 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:35871 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752166AbbASPsF (ORCPT
+Received: from mail-ie0-f170.google.com ([209.85.223.170]:48081 "EHLO
+	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbbAPNb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 10:48:05 -0500
-Message-ID: <54BD2733.6090305@broadcom.com> (sfid-20150119_164812_328853_D90E019A)
-Date: Mon, 19 Jan 2015 16:48:03 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 16 Jan 2015 08:31:57 -0500
+Received: by mail-ie0-f170.google.com with SMTP id rd18so20633906iec.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 05:31:56 -0800 (PST)
+Date: Fri, 16 Jan 2015 08:31:52 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211: Avoid STA expiration timer truncation to u32
+Message-ID: <20150116133152.GC10300@localhost> (sfid-20150116_143201_498620_9431A550)
+References: <CAFk-A4kzcC9BhCtwqxjprRiXZeVPepBDXr3TvqvL6hn6J37UGw@mail.gmail.com>
+ <1421389121-2841-1-git-send-email-masashi.honma@gmail.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcmsmac: regression in transmit throughput since 3.19-rc1
-References: <54BBB46C.8000401@broadcom.com> <1421671947.1965.27.camel@sipsolutions.net>
-In-Reply-To: <1421671947.1965.27.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421389121-2841-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/19/15 13:52, Johannes Berg wrote:
-> Hi Arend,
->
->> On our nightly test setups I found that STA->AP TCP iperf showed a
->> regression in brcmsmac after I upgraded them from 3.18-rc5
->> wireless-testing (f638577)to 3.19-rc1 wireless-testing (f9e7c6c). The
->> attached pictures are historic results showing clear drop on the last run.
->>
->> Has there been any report on there since 3.19-rc1 and would you have a
->> pointer on where to start looking. The changes in brcmsmac look trivial
->> so looking at mac80211 now. There are some changes in minstrel and
->> brcmsmac is using minstrel_ht rate control.
->
-> I haven't heard of anything like that yet. No idea where to look either
-> - but the drop is significant enough that perhaps you can bisect?
+On Fri, Jan 16, 2015 at 03:18:41PM +0900, Masashi Honma wrote:
+> On some combination of plink_timeout and HZ, the STA expiration timer will be
+> unexpectedly truncated to u32. Maybe there is a question "Who sets such a large
 
-Bisect it is. Was hoping for some obvious change to avoid that.
+Nice catch!
 
-Regards,
-Arend
+> -	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
+> +	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout *
+> +			     (unsigned long)HZ);
+
+There's a remaining problem on 32-bit platforms: there, unsigned long
+is 32 bits so 0xffffffff * HZ will still truncate to 32 bits.
+
+For normal values of HZ though, result will still be 'a rather large
+number,' so maybe it's not worth caring about that.
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
