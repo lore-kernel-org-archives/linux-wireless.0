@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:57107 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754804AbbATRBs (ORCPT
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:45105 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755954AbbAPCEb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 12:01:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH V2 for 3.19 5/7] rtlwifi: rtl8192ee: Fix parsing of received packet
-Date: Tue, 20 Jan 2015 11:01:24 -0600
-Message-Id: <1421773286-1039-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180454_948505_720AFC49)
-In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 15 Jan 2015 21:04:31 -0500
+Received: by mail-ig0-f175.google.com with SMTP id r2so1233583igi.2
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2015 18:04:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAEKwDSDPTiZH1NO8Hi-bdPp=25yARr1iUFK7ntnnS6Ae05ULaA@mail.gmail.com>
+References: <1421202189-4020-1-git-send-email-masashi.honma@gmail.com>
+	<CAEKwDSDPTiZH1NO8Hi-bdPp=25yARr1iUFK7ntnnS6Ae05ULaA@mail.gmail.com>
+Date: Fri, 16 Jan 2015 11:04:30 +0900
+Message-ID: <CAFk-A4ko5S_+SFNk8RWvrWJ9k-kEQnqKCEKrTZs0GrZ9QScMJA@mail.gmail.com> (sfid-20150116_030440_427840_863EF931)
+Subject: Re: [PATCH] mesh: Skip STA expiration on user_mpm mode
+From: Masashi Honma <masashi.honma@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Troy Tan <troy_tan@realsil.com.cn>
+2015-01-15 12:14 GMT+09:00 Bob Copeland <me@bobcopeland.com>:
+> I took a look at what authsae is doing, and it looks like it's just
+> prepared to handle the NL80211_CMD_DEL_STATION events generated from
+> cfg80211_del_sta() -- is there a reason that couldn't work for wpa_s
+> too?  Then you'd only need the patch to configure that timeout on the
+> client, and you can simplify it by not caring about user_mpm.
 
-The firmware supplies two kinds of packets via the RX mechanism. Besides the
-normal data received over the air, these packets may contain bluetooth status
-and other information. The present code fails to detect which kind of
-information was received.
+Thank you for your review.
 
-Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [V3.18]
----
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 4 ++++
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.h | 2 ++
- 2 files changed, 6 insertions(+)
+Indeed wpa_supplicant do nothing even if it receivced NL80211_CMD_DEL_STATION.
+But the mismatch (wpa_supplicant recognizes STA is alive, mac80211
+recognizes STA leaved) is not so good.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-index 1535680..cb3cbb6 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-@@ -354,6 +354,10 @@ bool rtl92ee_rx_query_desc(struct ieee80211_hw *hw,
- 	struct ieee80211_hdr *hdr;
- 	u32 phystatus = GET_RX_DESC_PHYST(pdesc);
- 
-+	if (GET_RX_STATUS_DESC_RPT_SEL(pdesc) == 0)
-+		status->packet_report_type = NORMAL_RX;
-+	else
-+		status->packet_report_type = C2H_PACKET;
- 	status->length = (u16)GET_RX_DESC_PKT_LEN(pdesc);
- 	status->rx_drvinfo_size = (u8)GET_RX_DESC_DRV_INFO_SIZE(pdesc) *
- 				  RX_DRV_INFO_SIZE_UNIT;
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
-index c56f305..8f78ac9 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
-@@ -542,6 +542,8 @@
- 	LE_BITS_TO_4BYTE(__pdesc+8, 12, 4)
- #define GET_RX_DESC_RX_IS_QOS(__pdesc)			\
- 	LE_BITS_TO_4BYTE(__pdesc+8, 16, 1)
-+#define GET_RX_STATUS_DESC_RPT_SEL(__pdesc)		\
-+	LE_BITS_TO_4BYTE(__pdesc+8, 28, 1)
- 
- #define GET_RX_DESC_RXMCS(__pdesc)			\
- 	LE_BITS_TO_4BYTE(__pdesc+12, 0, 7)
--- 
-2.1.2
-
+Anyway I have not considered authsae user land application.
+Does authsae have it's own inactivity timer ?
+If not, I will drop this patch.
