@@ -1,79 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:58625 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222AbbA0U54 (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:64265 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbbAPNNF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 15:57:56 -0500
-Received: by mail-qa0-f51.google.com with SMTP id f12so13281578qad.10
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 12:57:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAFSJ42ZydByi_u0auSGDx2A6_ObZGfjV7+kR_CzFYLORRHQ5wg@mail.gmail.com>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051100.31866.37997.stgit@114-36-241-182.dynamic.hinet.net>
-	<CAFSJ42ZydByi_u0auSGDx2A6_ObZGfjV7+kR_CzFYLORRHQ5wg@mail.gmail.com>
-Date: Wed, 28 Jan 2015 04:57:49 +0800
-Message-ID: <CAAfg0W606C+=dkKRE1quaaeAUBg1nvy3L5+873F2=oAOT=Bm5w@mail.gmail.com> (sfid-20150127_215800_213036_CCC8826E)
-Subject: Re: [PATCH 4/7] net: wireless: wcn36xx: introduce WCN36XX_HAL_AVOID_FREQ_RANGE_IND
-From: Andy Green <andy.green@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 16 Jan 2015 08:13:05 -0500
+Received: by mail-wi0-f180.google.com with SMTP id bs8so3751922wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 05:13:03 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, antonio@open-mesh.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/2] ath10k: fix 10.2 fw stats
+Date: Fri, 16 Jan 2015 14:12:06 +0100
+Message-Id: <1421413928-7282-1-git-send-email-michal.kazior@tieto.com> (sfid-20150116_141309_829852_41ABCD38)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 January 2015 at 04:01, Eugene Krasnikov <k.eugene.e@gmail.com> wrote:
-> Do you know when is this message used? sounds important.
+I've tested this briefly with main 636, 10.1.467,
+10.2-00082-4 and 10.2.4.20. However I may have
+missed something so I'd be glad if someone can
+double-check me :-)
 
-It's related to BT coexistance or radar... prima expects this payload with it
 
-#define WLAN_HAL_MAX_AVOID_FREQ_RANGE           4
+Michal Kazior (2):
+  ath10k: split fw pdev stats parsing
+  ath10k: fix 10.2 fw stats parsing
 
-typedef PACKED_PRE struct PACKED_POST
-{
-   tANI_U32     startFreq;
-   tANI_U32     endFreq;
-}  tHalFreqRange, *tpHalFreqRange;
+ drivers/net/wireless/ath/ath10k/wmi.c | 279 +++++++++++++++++++++++++++-------
+ drivers/net/wireless/ath/ath10k/wmi.h | 107 ++++++++++---
+ 2 files changed, 312 insertions(+), 74 deletions(-)
 
-typedef PACKED_PRE struct PACKED_POST
-{
-   tANI_U32         avoidCnt;
-   tHalFreqRange    avoidRange[WLAN_HAL_MAX_AVOID_FREQ_RANGE];
+-- 
+1.8.5.3
 
-Basically wcn firmware can propose up to 4 frequency ranges to not use
-for whatever reason... prima looks like it tries to disable channels
-accordingly.
-
--Andy
-
-> 2015-01-18 5:11 GMT+00:00 Andy Green <andy.green@linaro.org>:
->> WCN3620 firmware introduces a new async indication, we need to
->> add it as a known message type so we can accept it
->>
->> Signed-off-by: Andy Green <andy.green@linaro.org>
->> ---
->>  drivers/net/wireless/ath/wcn36xx/hal.h |    2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
->> index a1f1127..b947de0 100644
->> --- a/drivers/net/wireless/ath/wcn36xx/hal.h
->> +++ b/drivers/net/wireless/ath/wcn36xx/hal.h
->> @@ -345,6 +345,8 @@ enum wcn36xx_hal_host_msg_type {
->>         WCN36XX_HAL_DHCP_START_IND = 189,
->>         WCN36XX_HAL_DHCP_STOP_IND = 190,
->>
->> +       WCN36XX_HAL_AVOID_FREQ_RANGE_IND = 233,
->> +
->>         WCN36XX_HAL_MSG_MAX = WCN36XX_HAL_MSG_TYPE_MAX_ENUM_SIZE
->>  };
->>
->>
->
->
->
-> --
-> Best regards,
-> Eugene
