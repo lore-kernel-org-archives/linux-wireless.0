@@ -1,89 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:63442 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753492AbbA3Njq convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:59516 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189AbbAPVIX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 08:39:46 -0500
-Received: by mail-wi0-f170.google.com with SMTP id bs8so2981443wib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 05:39:45 -0800 (PST)
+	Fri, 16 Jan 2015 16:08:23 -0500
+Received: by mail-wi0-f182.google.com with SMTP id n3so4659176wiv.3
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 13:08:22 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: use standard bus scanning during early register
+Date: Fri, 16 Jan 2015 22:08:13 +0100
+Message-Id: <1421442493-32133-1-git-send-email-zajec5@gmail.com> (sfid-20150116_220901_910212_688125DA)
 MIME-Version: 1.0
-In-Reply-To: <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Fri, 30 Jan 2015 14:39:45 +0100
-Message-ID: <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com> (sfid-20150130_143949_935186_D83BE586)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 January 2015 at 14:14, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Thu, 2015-01-29 at 12:48 +0100, Michal Kazior wrote:
->> Hi,
->>
->> I'm not subscribed to netdev list and I can't find the message-id so I
->> can't reply directly to the original thread `BW regression after "tcp:
->> refine TSO autosizing"`.
->>
->> I've noticed a big TCP performance drop with ath10k
->> (drivers/net/wireless/ath/ath10k) on 3.19-rc5. Instead of 500mbps I
->> get 250mbps in my testbed.
->>
->> After bisecting I ended up at `tcp: refine TSO autosizing`. Reverting
->> `tcp: refine TSO autosizing` and `tcp: Do not apply TSO segment limit
->> to non-TSO packets` (for conflict free reverts) fixes the problem.
-[...]
->> Any hints/ideas?
->>
->
-> Hi Michal
->
-> This patch restored original TSQ behavior, because the 1ms worth of data
-> per flow had totally destroyed TSQ intent.
->
-> vi +630 Documentation/networking/ip-sysctl.txt
-[...]
-> With this change and the stretch ack fixes, I got 37Gbps of throughput
-> on a single flow, on a 40Gbit NIC (mlx4)
->
-> If a driver needs to buffer more than tcp_limit_output_bytes=131072 to
-> get line rate, I suggest that you either :
->
-> 1) tweak tcp_limit_output_bytes, but its not practical from a driver.
+Starting with kernel 3.19-rc1 early registration of bcma on MIPS is done
+a bit later, with memory allocator available. This allows us to simplify
+code by using standard bus scanning method.
 
-I've briefly tried playing with this knob to no avail unfortunately. I
-tried 256K, 1M - it didn't improve TCP performance. When I tried to
-make it smaller (e.g. 16K) the traffic dropped even more so it does
-have an effect. It seems there's some other limiting factor in this
-case.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/bcma_private.h   |  7 +----
+ drivers/bcma/host_soc.c       |  2 +-
+ drivers/bcma/main.c           | 33 +++++++----------------
+ drivers/bcma/scan.c           | 61 +++----------------------------------------
+ include/linux/bcma/bcma_soc.h |  2 --
+ 5 files changed, 14 insertions(+), 91 deletions(-)
 
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 59422b5..3f314c9 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -28,9 +28,7 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
+ void bcma_init_bus(struct bcma_bus *bus);
+ int bcma_bus_register(struct bcma_bus *bus);
+ void bcma_bus_unregister(struct bcma_bus *bus);
+-int __init bcma_bus_early_register(struct bcma_bus *bus,
+-				   struct bcma_device *core_cc,
+-				   struct bcma_device *core_mips);
++int __init bcma_bus_early_register(struct bcma_bus *bus);
+ #ifdef CONFIG_PM
+ int bcma_bus_suspend(struct bcma_bus *bus);
+ int bcma_bus_resume(struct bcma_bus *bus);
+@@ -39,9 +37,6 @@ int bcma_bus_resume(struct bcma_bus *bus);
+ /* scan.c */
+ void bcma_detect_chip(struct bcma_bus *bus);
+ int bcma_bus_scan(struct bcma_bus *bus);
+-int __init bcma_bus_scan_early(struct bcma_bus *bus,
+-			       struct bcma_device_id *match,
+-			       struct bcma_device *core);
+ 
+ /* sprom.c */
+ int bcma_sprom_get(struct bcma_bus *bus);
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+index 335cbcf..2dce347 100644
+--- a/drivers/bcma/host_soc.c
++++ b/drivers/bcma/host_soc.c
+@@ -193,7 +193,7 @@ int __init bcma_host_soc_init(struct bcma_soc *soc)
+ 	int err;
+ 
+ 	/* Scan bus and initialize it */
+-	err = bcma_bus_early_register(bus, &soc->core_cc, &soc->core_mips);
++	err = bcma_bus_early_register(bus);
+ 	if (err)
+ 		iounmap(bus->mmio);
+ 
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index c166d44..c3c5e0a 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -489,35 +489,20 @@ void bcma_bus_unregister(struct bcma_bus *bus)
+ 	kfree(cores[0]);
+ }
+ 
+-int __init bcma_bus_early_register(struct bcma_bus *bus,
+-				   struct bcma_device *core_cc,
+-				   struct bcma_device *core_mips)
++/*
++ * This is a special version of bus registration function designed for SoCs.
++ * It scans bus and performs basic initialization of main cores only.
++ * Please note it requires memory allocation, however it won't try to sleep.
++ */
++int __init bcma_bus_early_register(struct bcma_bus *bus)
+ {
+ 	int err;
+ 	struct bcma_device *core;
+-	struct bcma_device_id match;
+-
+-	match.manuf = BCMA_MANUF_BCM;
+-	match.id = bcma_cc_core_id(bus);
+-	match.class = BCMA_CL_SIM;
+-	match.rev = BCMA_ANY_REV;
+-
+-	/* Scan for chip common core */
+-	err = bcma_bus_scan_early(bus, &match, core_cc);
+-	if (err) {
+-		bcma_err(bus, "Failed to scan for common core: %d\n", err);
+-		return -1;
+-	}
+-
+-	match.manuf = BCMA_MANUF_MIPS;
+-	match.id = BCMA_CORE_MIPS_74K;
+-	match.class = BCMA_CL_SIM;
+-	match.rev = BCMA_ANY_REV;
+ 
+-	/* Scan for mips core */
+-	err = bcma_bus_scan_early(bus, &match, core_mips);
++	/* Scan for devices (cores) */
++	err = bcma_bus_scan(bus);
+ 	if (err) {
+-		bcma_err(bus, "Failed to scan for mips core: %d\n", err);
++		bcma_err(bus, "Failed to scan bus: %d\n", err);
+ 		return -1;
+ 	}
+ 
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 5328ee5..1138226 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -461,6 +461,9 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 
+ 	int err, core_num = 0;
+ 
++	if (bus->nr_cores)
++		return 0;
++
+ 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
+ 	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
+ 		eromptr = ioremap_nocache(erombase, BCMA_CORE_SIZE);
+@@ -519,61 +522,3 @@ out:
+ 
+ 	return err;
+ }
+-
+-int __init bcma_bus_scan_early(struct bcma_bus *bus,
+-			       struct bcma_device_id *match,
+-			       struct bcma_device *core)
+-{
+-	u32 erombase;
+-	u32 __iomem *eromptr, *eromend;
+-
+-	int err = -ENODEV;
+-	int core_num = 0;
+-
+-	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
+-	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
+-		eromptr = ioremap_nocache(erombase, BCMA_CORE_SIZE);
+-		if (!eromptr)
+-			return -ENOMEM;
+-	} else {
+-		eromptr = bus->mmio;
+-	}
+-
+-	eromend = eromptr + BCMA_CORE_SIZE / sizeof(u32);
+-
+-	bcma_scan_switch_core(bus, erombase);
+-
+-	while (eromptr < eromend) {
+-		memset(core, 0, sizeof(*core));
+-		INIT_LIST_HEAD(&core->list);
+-		core->bus = bus;
+-
+-		err = bcma_get_next_core(bus, &eromptr, match, core_num, core);
+-		if (err == -ENODEV) {
+-			core_num++;
+-			continue;
+-		} else if (err == -ENXIO)
+-			continue;
+-		else if (err == -ESPIPE)
+-			break;
+-		else if (err < 0)
+-			goto out;
+-
+-		core->core_index = core_num++;
+-		bus->nr_cores++;
+-		bcma_info(bus, "Core %d found: %s (manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
+-			  core->core_index, bcma_device_name(&core->id),
+-			  core->id.manuf, core->id.id, core->id.rev,
+-			  core->id.class);
+-
+-		list_add_tail(&core->list, &bus->cores);
+-		err = 0;
+-		break;
+-	}
+-
+-out:
+-	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
+-		iounmap(eromptr);
+-
+-	return err;
+-}
+diff --git a/include/linux/bcma/bcma_soc.h b/include/linux/bcma/bcma_soc.h
+index f24d245..1b5fc0c 100644
+--- a/include/linux/bcma/bcma_soc.h
++++ b/include/linux/bcma/bcma_soc.h
+@@ -5,8 +5,6 @@
+ 
+ struct bcma_soc {
+ 	struct bcma_bus bus;
+-	struct bcma_device core_cc;
+-	struct bcma_device core_mips;
+ };
+ 
+ int __init bcma_host_soc_register(struct bcma_soc *soc);
+-- 
+1.8.4.5
 
-> 2) change the driver, knowing what are its exact requirements, by
-> removing a fraction of skb->truesize at ndo_start_xmit() time as in :
->
-> if ((skb->destructor == sock_wfree ||
->      skb->restuctor == tcp_wfree) &&
->     skb->sk) {
->     u32 fraction = skb->truesize / 2;
->
->     skb->truesize -= fraction;
->     atomic_sub(fraction, &skb->sk->sk_wmem_alloc);
-> }
-
-tcp_wfree isn't exported so I went and just did a quick hack and used
-`if (skb->sk)` as the condition. Didn't help with TCP.
-
-I wonder if this TSO patch is the single thing to blame. Maybe it's
-just the trigger and something else is broken? I've been seeing some
-UDP performance inconsistencies in 3.19 (I don't recall seeing these
-in 3.18) - but maybe my perception is failing on me.
-
-Anyway, thanks for the tips so far.
-
-
-Michał
