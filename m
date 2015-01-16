@@ -1,45 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29473 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753250AbbA3AIn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 19:08:43 -0500
-Date: Fri, 30 Jan 2015 01:08:33 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: clement.perrochaud@effinnov.com
-Cc: linux-nfc@lists.01.org,
-	=?iso-8859-1?Q?Cl=E9ment?= Perrochaud
-	<clement.perrochaud@nxp.com>, sunil.jogi@nxp.com,
-	jerome.pele@nxp.com, Charles.Gorand-Effinnov@nxp.com,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	davem@davemloft.net, grant.likely@linaro.org, lefrique@marvell.com,
-	christophe.ricard@gmail.com, cuissard@marvell.com,
-	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 4/4] NFC: nxp-nci: Allow module removal during download
-Message-ID: <20150130000833.GC20998@ribalta.ger.corp.intel.com> (sfid-20150130_010902_394482_F472622A)
-References: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com>
- <1421940460-14049-5-git-send-email-clement.perrochaud@effinnov.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1421940460-14049-5-git-send-email-clement.perrochaud@effinnov.com>
+Received: from mail-we0-f171.google.com ([74.125.82.171]:53391 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754087AbbAPLVF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Jan 2015 06:21:05 -0500
+Received: by mail-we0-f171.google.com with SMTP id u56so19696720wes.2
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 03:21:04 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: reset chip before reading chip_id in probe
+Date: Fri, 16 Jan 2015 12:20:35 +0100
+Message-Id: <1421407237-24159-1-git-send-email-michal.kazior@tieto.com> (sfid-20150116_122110_692009_02BC9D73)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Clement,
+There are some very rare cases with some hardware
+configuration that the device doesn't init quickly
+enough in which case reading chip_id yielded 0.
+This caused driver to subsequently fail to setup
+the device.
 
-On Thu, Jan 22, 2015 at 04:27:40PM +0100, clement.perrochaud@effinnov.com wrote:
-> From: Clément Perrochaud <clement.perrochaud@nxp.com>
-> 
-> Signed-off-by: Clément Perrochaud <clement.perrochaud@nxp.com>
-> Signed-off-by: Clément Perrochaud <clement.perrochaud@effinnov.com>
-> ---
->  drivers/nfc/nxp-nci/core.c     | 7 +++----
->  drivers/nfc/nxp-nci/firmware.c | 9 ++++++---
->  2 files changed, 9 insertions(+), 7 deletions(-)
-Please squash that one into the first patch.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 30 ++++++++++++++++++------------
+ 1 file changed, 18 insertions(+), 12 deletions(-)
 
-Cheers,
-Samuel.
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 3b40a86..6a512fb 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2544,18 +2544,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_release;
+ 	}
+ 
+-	chip_id = ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
+-	if (chip_id == 0xffffffff) {
+-		ath10k_err(ar, "failed to get chip id\n");
+-		goto err_sleep;
+-	}
+-
+-	if (!ath10k_pci_chip_is_supported(pdev->device, chip_id)) {
+-		ath10k_err(ar, "device %04x with chip_id %08x isn't supported\n",
+-			   pdev->device, chip_id);
+-		goto err_sleep;
+-	}
+-
+ 	ret = ath10k_pci_alloc_pipes(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to allocate copy engine pipes: %d\n",
+@@ -2582,6 +2570,24 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_deinit_irq;
+ 	}
+ 
++	ret = ath10k_pci_chip_reset(ar);
++	if (ret) {
++		ath10k_err(ar, "failed to reset chip: %d\n", ret);
++		goto err_free_irq;
++	}
++
++	chip_id = ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
++	if (chip_id == 0xffffffff) {
++		ath10k_err(ar, "failed to get chip id\n");
++		goto err_free_irq;
++	}
++
++	if (!ath10k_pci_chip_is_supported(pdev->device, chip_id)) {
++		ath10k_err(ar, "device %04x with chip_id %08x isn't supported\n",
++			   pdev->device, chip_id);
++		goto err_sleep;
++	}
++
+ 	ath10k_pci_sleep(ar);
+ 
+ 	ret = ath10k_core_register(ar, chip_id);
+-- 
+1.8.5.3
+
