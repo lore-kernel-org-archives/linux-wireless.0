@@ -1,144 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60254 "EHLO sipsolutions.net"
+Received: from s4.neomailbox.net ([5.148.176.50]:1415 "EHLO s4.neomailbox.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752579AbbA0IYd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 03:24:33 -0500
-Message-ID: <1422347067.1890.49.camel@sipsolutions.net> (sfid-20150127_092436_281282_C38E7099)
-Subject: Re: [PATCH] cfg80211: PBSS basic support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dedy Lansky <dlansky@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Tue, 27 Jan 2015 09:24:27 +0100
-In-Reply-To: <1422345312-2963-1-git-send-email-dlansky@codeaurora.org>
-References: <1422345312-2963-1-git-send-email-dlansky@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750710AbbARG3V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 01:29:21 -0500
+Message-ID: <54BAC569.3040202@meshcoding.com> (sfid-20150118_072925_182285_5434DEA4)
+Date: Sat, 17 Jan 2015 21:26:17 +0100
+From: Antonio Quartulli <antonio@meshcoding.com>
+MIME-Version: 1.0
+To: Beat Meier <mbe_ml@swiss-wireless.com.ar>,
+	Pat Erley <pat-lkml@erley.org>,
+	"linux-wireless@vger.kernel.org >> Linux Wireless List"
+	<linux-wireless@vger.kernel.org>
+Subject: Re: Cannot use ap and sta mode on same interface with ath9k and kernel
+ 3.8.13 :-(
+References: <54B990BC.1060604@swiss-wireless.com.ar> <54B99BEA.9080103@erley.org> <54B9A225.1080307@swiss-wireless.com.ar>
+In-Reply-To: <54B9A225.1080307@swiss-wireless.com.ar>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="9vtXH4UcwIfGFnLc3OX8a0tW5Mvwh84Jh"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-27 at 09:55 +0200, Dedy Lansky wrote:
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--9vtXH4UcwIfGFnLc3OX8a0tW5Mvwh84Jh
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-> --- a/include/linux/ieee80211.h
-> +++ b/include/linux/ieee80211.h
-> @@ -1602,6 +1602,15 @@ enum {
->  	IEEE80211_BANDID_60G   = 5, /* 60 GHz */
->  };
->  
-> +/* BSS Type, 802.11ad #6.3.3.2 */
-> +enum ieee80211_bsstype {
-> +	IEEE80211_BSS_TYPE_ESS,
-> +	IEEE80211_BSS_TYPE_PBSS,
-> +	IEEE80211_BSS_TYPE_IBSS,
-> +	IEEE80211_BSS_TYPE_MBSS,
-> +	IEEE80211_BSS_TYPE_ANY
-> +};
+On 17/01/15 00:43, Beat Meier wrote:
+> On 01/16/2015 08:16 PM, Pat Erley wrote:
+>> On 01/16/2015 04:29 PM, Beat Meier wrote:
+>>> Hi
+>>>
+>>> I'm using an WLM200NX card in master mode ath1 and want to do scannin=
+g
+>>> on the same interface.
+>>> I'm using ath9k on 3.8.13 kernel (voyage-linux)
+>>>
+>>> So I setup an additional  interface in sta mode with
+>>>    iw phy phy1 interface add ath2 type managed
+>>> This works but the interface is not coming up.
+>>> I tried several things like
+>>> auto ath2
+>>> iface ath2 inet static
+>>>          address 10.58.1.1
+>>>          netmask 255.255.255.0
+>>>          wireless-mode Managed
+>>>          wpa-conf /etc/wpa_supplicant.conf.WPA-PSK
+>>>
+>>> But wpa_spplicant comes with error:
+>>>    wpa_supplicant: /sbin/wpa_supplicant daemon failed to start
+>>>    run-parts: /etc/network/if-pre-up.d/wpasupplicant exited with retu=
+rn
+>>> code 1
+>>>    RTNETLINK answers: Name not unique on network
+>>>    Failed to bring up ath2.
+>>>
+>>> I can setup monitor mode but I want to scan to see what other equipme=
+nt
+>>> is on which channel ...
+>>>
+>>> What's the problem? With ath9k I cannot use ap and sta mode together?=
+??
+>>>
+>>
+>> You need to assign a different mac address to the new interface.
+>>
+>> [Resend, accidentally dropped mailing list]
+>>
+>=20
+> This solved the problem.
+> Would be nice to add a comment in
+>   http://wireless.kernel.org/en/users/Documentation/iw/vif#station
 
-Technically the standard defines this, but not as over the air bits as
-everything else in this file. I think this should therefore be moved
-into cfg80211.h as a local enum, we don't use the exact definitions from
-clause 6 anywhere anyway.
+By the way, you can scan also with a master interface. You just need to
+pass the ap-force flag to the scan command.
 
-> @@ -4007,6 +4009,7 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
->  				      struct ieee80211_channel *channel,
->  				      const u8 *bssid,
->  				      const u8 *ssid, size_t ssid_len,
-> +				      enum ieee80211_bsstype bss_type,
->  				      u16 capa_mask, u16 capa_val);
+Cheers,
 
-As far as I can tell, the only remaining use for capa_mask/val is the
-privacy -- for some reason some drivers like ath6kl don't specify it and
-don't care (which is odd) but it'd be nicer to remove capa_mask/val now
-and add a privacy enum allowing UNSPEC, ON and OFF or so. That'll make
-the callers clearer.
 
-> +static bool cfg80211_bss_type_to_capa(enum ieee80211_bsstype bss_type,
-> +				      enum ieee80211_band band,
-> +				      u16 *capa_mask, u16 *capa_val)
-> +{
-> +	bool ret = true;
-> +
-> +	if (bss_type == IEEE80211_BSS_TYPE_ANY)
-> +		return ret;
-> +
-> +	if (band == IEEE80211_BAND_60GHZ) {
-> +		*capa_val &= ~WLAN_CAPABILITY_DMG_TYPE_MASK;
-> +		*capa_mask |= WLAN_CAPABILITY_DMG_TYPE_MASK;
-> +		switch (bss_type) {
-> +		case IEEE80211_BSS_TYPE_ESS:
-> +			*capa_val |= WLAN_CAPABILITY_DMG_TYPE_AP;
-> +			break;
-> +		case IEEE80211_BSS_TYPE_PBSS:
-> +			*capa_val |= WLAN_CAPABILITY_DMG_TYPE_PBSS;
-> +			break;
-> +		case IEEE80211_BSS_TYPE_IBSS:
-> +			*capa_val |= WLAN_CAPABILITY_DMG_TYPE_IBSS;
-> +			break;
-> +		default:
-> +			ret = false;
-> +			break;
-> +		}
-> +	} else {
-> +		*capa_val &= ~(WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS);
-> +		*capa_mask |= WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS;
-> +		switch (bss_type) {
-> +		case IEEE80211_BSS_TYPE_ESS:
-> +			*capa_val |= WLAN_CAPABILITY_ESS;
-> +			break;
-> +		case IEEE80211_BSS_TYPE_IBSS:
-> +			*capa_val |= WLAN_CAPABILITY_IBSS;
-> +			break;
-> +		case IEEE80211_BSS_TYPE_MBSS:
-> +			break;
-> +		default:
-> +			ret = false;
-> +			break;
-> +		}
-> +	}
-> +
-> +	return ret;
-> +}
-> +
->  /* Returned bss is reference counted and must be cleaned up appropriately. */
->  struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
->  				      struct ieee80211_channel *channel,
->  				      const u8 *bssid,
->  				      const u8 *ssid, size_t ssid_len,
-> +				      enum ieee80211_bsstype bss_type,
->  				      u16 capa_mask, u16 capa_val)
->  {
->  	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
->  	struct cfg80211_internal_bss *bss, *res = NULL;
->  	unsigned long now = jiffies;
->  
-> -	trace_cfg80211_get_bss(wiphy, channel, bssid, ssid, ssid_len, capa_mask,
-> -			       capa_val);
-> +	trace_cfg80211_get_bss(wiphy, channel, bssid, ssid, ssid_len, bss_type,
-> +			       capa_mask, capa_val);
->  
->  	spin_lock_bh(&rdev->bss_lock);
->  
->  	list_for_each_entry(bss, &rdev->bss_list, list) {
-> +		if (!cfg80211_bss_type_to_capa(bss_type,
-> +					       bss->pub.channel->band,
-> +					       &capa_val, &capa_mask))
-> +			continue;
+--=20
+Antonio Quartulli
 
-This doesn't make any sense - you're also storing the bss_type in the
-bss struct, so why translate here to match?
 
-> @@ -896,6 +949,7 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
->  	struct cfg80211_bss_ies *ies;
->  	struct ieee80211_channel *channel;
->  	struct cfg80211_internal_bss tmp = {}, *res;
-> +	int bss_type;
+--9vtXH4UcwIfGFnLc3OX8a0tW5Mvwh84Jh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-enum.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Except that you actually forgot to store the BSS type ...
+iQIcBAEBCAAGBQJUusVyAAoJEJgn97Bh2u9e63QQAMI1aJQ0XX36R61KnH+8kGPq
+2Nq8zUr10T6cb5uTajJfX5ir8SJWGAPaMfQMsYUvnm0FcAzwY3qMYRLbwj+HjnVP
+ctpoxjwn2PWlK+C4Z9JES2dCSo4TeMkmSbfEJMDCEslEf6pn6J3t5vj+TiaqF7YR
+HfqqtktbFbBUUSpUxV6QFH8PG/Drbe0K4sMBW9uL8fxE6QVCR8hBoG5ooTVY+mMg
+r0wtKj7TeAQYWjMVmAUE76Z8At3RPtLF0eH2XZ1SLK1h27pU+KC1d0r6/feSh8Tf
+4YOwPX0hoETEZDaZnbJ2Cq8KW3IJxLt+EnILfnUgw74PYmgVnU/FkOZbjyqOCPOd
+4SsxoKoJPhTvgy76vR9dCl7/0J+b+/tl04hxqzqy3owR9WFAM9+bcp4KkQKc4dEJ
+CHfwLm/1nQnCriyb6xmrnAI/GbJh3LnTC7eyZXcwKP2PNEvg297N117eqDYH/cs5
+ZwEesbxFbYHsFCBwHK05GSroBCva8CZu/C2kZ+ZdSGjxvxCdgQwUyLbo6iShF0ZU
+cemNLPM+UYNyC25vSsVvyyD8qLcm8kOmuYbBQVapDwtnCuC6m0jU0IKnBcjWX0vm
+27cKzS3qCWfbfNFeXfcEE9xEltFB6JL5KOx1n39Cfa5wYYhcaDAADVwaaO4VxfH2
+FQVLpVji819vrRM67JhQ
+=Dbbq
+-----END PGP SIGNATURE-----
 
-Actually - you didn't add it to the bss struct, but to wdev? Why is it
-needed there?? I don't see you using it?
-
-johannes
-
+--9vtXH4UcwIfGFnLc3OX8a0tW5Mvwh84Jh--
