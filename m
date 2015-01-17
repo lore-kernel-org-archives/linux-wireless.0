@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:13031 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753085AbbA0OWX (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53394 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbbAQO6r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 09:22:23 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: implement uapsd autotrigger command
-References: <1421749497-10553-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 27 Jan 2015 16:22:12 +0200
-In-Reply-To: <1421749497-10553-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 20 Jan 2015 11:24:56 +0100")
-Message-ID: <87egqgb8x7.fsf@kamboji.qca.qualcomm.com> (sfid-20150127_152227_097867_40FFF898)
+	Sat, 17 Jan 2015 09:58:47 -0500
+Date: Sat, 17 Jan 2015 06:58:46 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Peter Poklop <peter.poklop@gmail.com>
+Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Staging: rtl8723au: fix space coding style issue in
+ os_intfs.c
+Message-ID: <20150117145846.GA26836@kroah.com> (sfid-20150117_155911_254334_58ABC871)
+References: <1421506365-9171-1-git-send-email-peter.poklop@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421506365-9171-1-git-send-email-peter.poklop@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Sat, Jan 17, 2015 at 03:52:45PM +0100, Peter Poklop wrote:
+> From: Peter <peter.poklop@gmail.com>
 
-> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->
-> New wmi-tlv firmware for qca6174 has u-UAPSD
-> autotrigger service. If it is enabled firmware
-> generates trigger frames automatically as
-> configured.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+This name doesn't match up with:
 
-Thanks, applied to ath.git.
+> 
+> This patch fixes the checkpatch.pl warning:
+> 
+> WARNING: space prohibited before semicolon
+> 
+> Signed-off-by: Peter Poklop <peter.poklop@gmail.com>
 
--- 
-Kalle Valo
+this name, why?
+
+Please fix up and resend.
+
+Or better yet, don't even include the first "From:" line, as it's not
+needed in this case, right?
+
+thanks,
+
+greg k-h
