@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45163 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285AbbAMQPD (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55248 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752112AbbAQWUS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 11:15:03 -0500
-Message-ID: <54B54485.50803@candelatech.com> (sfid-20150113_171507_688440_112E4037)
-Date: Tue, 13 Jan 2015 08:15:01 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Sat, 17 Jan 2015 17:20:18 -0500
+Date: Sat, 17 Jan 2015 13:58:39 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: hal: rtl8723au_led.c:  Remove some
+ unused functions
+Message-ID: <20150117215839.GA18538@kroah.com> (sfid-20150117_232022_567285_D6EB5ADB)
+References: <1419166779-2619-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/8] ath10k: scan should handle scan-start-failed event
- properly.
-References: <1421090992-14971-1-git-send-email-greearb@candelatech.com>	<54B42622.5090404@candelatech.com> <874mru7q5a.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <874mru7q5a.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1419166779-2619-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Dec 21, 2014 at 01:59:39PM +0100, Rickard Strandqvist wrote:
+> Removes some functions that are not used anywhere:
+> rtl8723au_DeInitSwLeds() rtl8723au_InitSwLeds()
+> 
+> This was partially found by using a static code analysis program called cppcheck.
+> 
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/staging/rtl8723au/hal/rtl8723au_led.c    |   23 ----------------------
+>  drivers/staging/rtl8723au/include/rtl8723a_led.h |    2 --
+>  2 files changed, 25 deletions(-)
 
-
-On 01/13/2015 05:42 AM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> Sorry about the resends...had mail-server issue, should be resolved now.
->
-> So which one should I look at? Or are the patches the same in both sets?
-
-All the same.
-
-Ben
-
->
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+These files aren't even in the tree anymore :(
