@@ -1,30 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50219 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752306AbbAUQgC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2015 11:36:02 -0500
-Message-ID: <1421858158.1900.17.camel@sipsolutions.net> (sfid-20150121_173606_460838_ECEC5A69)
-Subject: Re: [PATCH 3/3] mwifiex: selectively choose ext_scan support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com, yogeshp@marvell.com, nishants@marvell.com,
-	frankh@marvell.com
-Date: Wed, 21 Jan 2015 17:35:58 +0100
-In-Reply-To: <1421858531-4536-3-git-send-email-patila@marvell.com> (sfid-20150121_121353_128877_AC22EEF3)
-References: <1421858531-4536-1-git-send-email-patila@marvell.com>
-	 <1421858531-4536-3-git-send-email-patila@marvell.com>
-	 (sfid-20150121_121353_128877_AC22EEF3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:55202 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751956AbbAQWOA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Jan 2015 17:14:00 -0500
+Date: Sat, 17 Jan 2015 13:50:40 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Emil Renner Berthing <kernel@esmil.dk>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: staging: rtl8723au: get rid of unneeded
+ memset/memcpy
+Message-ID: <20150117215040.GA16839@kroah.com> (sfid-20150117_231423_173747_1D7FCBDE)
+References: <1417963040-9014-1-git-send-email-kernel@esmil.dk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1417963040-9014-1-git-send-email-kernel@esmil.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-21 at 22:12 +0530, Avinash Patil wrote:
+On Sun, Dec 07, 2014 at 03:37:20PM +0100, Emil Renner Berthing wrote:
+> This also fixes a sparse warning.
 
-> +	u8 ext_scan_support;
+What sparse warning?  What's wrong with the original code?  Unless Jes
+resends this to me, I don't see the need to apply it, sorry.
 
-bool.
-
-johannes
-
+greg k-h
