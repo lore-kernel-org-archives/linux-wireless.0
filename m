@@ -1,54 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:34141 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753774AbbATKn0 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:40799 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122AbbAQBvk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 05:43:26 -0500
-Received: by mail-we0-f169.google.com with SMTP id p10so12778657wes.0
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 02:43:25 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Fri, 16 Jan 2015 20:51:40 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21689.49345.803049.938915@gargle.gargle.HOWL> (sfid-20150117_025143_179879_AD06FD81)
+Date: Sat, 17 Jan 2015 07:24:09 +0530
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: fix pmf for wmi-tlv on qca6174
-Date: Tue, 20 Jan 2015 11:42:43 +0100
-Message-Id: <1421750563-15945-2-git-send-email-michal.kazior@tieto.com> (sfid-20150120_114330_062597_3D4EB444)
-In-Reply-To: <1421750563-15945-1-git-send-email-michal.kazior@tieto.com>
-References: <1421750563-15945-1-git-send-email-michal.kazior@tieto.com>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [RFC 2/2] mac80211: support RX rate statistics
+In-Reply-To: <1421401708-8123-2-git-send-email-johannes@sipsolutions.net>
+References: <1421401708-8123-1-git-send-email-johannes@sipsolutions.net>
+	<1421401708-8123-2-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Add support for RX rate statistics to mac80211. This tracks the number
+> of MSDUs received per rate, if rate statistics are enabled.
+> 
+> As the number of rates is very high (as explained in the commit log of
+> the cfg80211 patch) mac80211 tracks at most 36 different rates at once.
+> This is done with a very simple hash table format (3 * index) array to
+> track three different NSS/SGI/bw combinations, plus a few more entries
+> acting as "escape" when all three different combinations are filled.
+> 
+> Counters are limited to 16-bit to reduce memory consumption and when a
+> limit of 64000 is reached the process to send them out to userspace is
+> scheduled. The same happens when the escape entries need to be used.
+> 
+> The data structure itself is stored for each station, accessible under
+> RCU, and sending them to userspace is combined with freeing so that no
+> RCU-accessor (really only the synchronized RX path anyway though) can
+> still see them when they're transmitted out. This ensures a consistent
+> view is transmitted right before being discarded; it also ensures that
+> the RX path isn't blocked by any configuration paths for this.
+> 
+> Note that TX statistics (tx, retries, failures) aren't covered. Those
+> need tighter integration with the driver or rate scaling as not all
+> drivers are able to fully encode the necessary information in the TX
+> status data due to the size limit there.
 
-New wmi-tlv firmware uses HTT 3.0 protocol which
-uses TX_FRM command for management frames (instead
-of a dedicated command). To support PMF it is
-necessary to provide explicit tailroom.
+Nice. :)
 
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+We were doing simple RX statistics collection inside ath9k
+(CONFIG_ATH9K_STATION_STATISTICS), which can be removed once this goes
+in. Is there any way a driver can pass custom data, like per-frame
+antenna details ?
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 5c64139..5780b87 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -481,6 +481,12 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	}
- 	skb_cb->htt.txbuf_paddr = paddr;
- 
-+	if ((ieee80211_is_action(hdr->frame_control) ||
-+	     ieee80211_is_deauth(hdr->frame_control) ||
-+	     ieee80211_is_disassoc(hdr->frame_control)) &&
-+	     ieee80211_has_protected(hdr->frame_control))
-+		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
-+
- 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
- 				       DMA_TO_DEVICE);
- 	res = dma_mapping_error(dev, skb_cb->paddr);
--- 
-1.8.5.3
-
+Sujith
