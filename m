@@ -1,174 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:60749 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbbARFQ5 (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:36524 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbbARAiQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 00:16:57 -0500
-Subject: [PATCH 2/2] net wireless wcn36xx adapt wcnss platform to select
- module by DT
-From: Andy Green <andy.green@linaro.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Sun, 18 Jan 2015 13:16:52 +0800
-Message-ID: <20150118051650.32019.49483.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061709_268096_DB1BCBD2)
-In-Reply-To: <20150118051222.32019.32719.stgit@114-36-241-182.dynamic.hinet.net>
-References: <20150118051222.32019.32719.stgit@114-36-241-182.dynamic.hinet.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Sat, 17 Jan 2015 19:38:16 -0500
+Received: by mail-we0-f181.google.com with SMTP id q58so25900367wes.12
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Jan 2015 16:38:14 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Vaishali Thakkar <vthakkar1994@gmail.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] staging: rtl8723au: os_dep: usb_intf: Remove unused functions
+Date: Sun, 18 Jan 2015 01:41:23 +0100
+Message-Id: <1421541683-17523-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150118_013820_894619_5A83E864)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify the resource handling and use DT to indicate which chip type
-we are dealing with
+Removes some functions that are not used anywhere:
+rtw_hw_resume23a() rtw_hw_suspend23a()
 
-Signed-off-by: Andy Green <andy.green@linaro.org>
+This was partially found by using a static code analysis program called cppcheck.
+
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c |  101 ++++++++++++------------
- 1 file changed, 52 insertions(+), 49 deletions(-)
+ drivers/staging/rtl8723au/include/osdep_intf.h |    3 -
+ drivers/staging/rtl8723au/os_dep/usb_intf.c    |   98 ------------------------
+ 2 files changed, 101 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c b/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
-index f6f6c83..c9250e0 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
-@@ -42,7 +42,10 @@ struct wcn36xx_msm {
- 	struct completion	smd_compl;
- 	smd_channel_t		*smd_ch;
- 	struct pinctrl *pinctrl;
--} wmsm;
-+	enum wcn36xx_chip_type chip_type;
-+};
-+
-+static struct wcn36xx_msm wmsm;
+diff --git a/drivers/staging/rtl8723au/include/osdep_intf.h b/drivers/staging/rtl8723au/include/osdep_intf.h
+index 33afa62..a157eb2 100644
+--- a/drivers/staging/rtl8723au/include/osdep_intf.h
++++ b/drivers/staging/rtl8723au/include/osdep_intf.h
+@@ -19,9 +19,6 @@
+ #include <osdep_service.h>
+ #include <drv_types.h>
  
- static int wcn36xx_msm_smsm_change_state(u32 clear_mask, u32 set_mask)
- {
-@@ -217,14 +220,47 @@ int wcn36xx_msm_powerup(const struct subsys_desc *desc)
- 	return 0;
+-int rtw_hw_suspend23a(struct rtw_adapter *padapter);
+-int rtw_hw_resume23a(struct rtw_adapter *padapter);
+-
+ int rtw_init_drv_sw23a(struct rtw_adapter *padapter);
+ int rtw_free_drv_sw23a(struct rtw_adapter *padapter);
+ int rtw_reset_drv_sw23a(struct rtw_adapter *padapter);
+diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+index 373a617..936414d 100644
+--- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
++++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+@@ -273,104 +273,6 @@ static void rtw_dev_unload(struct rtw_adapter *padapter)
+ 	RT_TRACE(_module_hci_intfs_c_, _drv_err_, ("-rtw_dev_unload\n"));
  }
  
-+static const struct of_device_id wcn36xx_msm_match_table[] = {
-+	{ .compatible = "qcom,wcn3660", .data = (void *)WCN36XX_CHIP_3660 },
-+	{ .compatible = "qcom,wcn3680", .data = (void *)WCN36XX_CHIP_3680 },
-+	{ .compatible = "qcom,wcn3620", .data = (void *)WCN36XX_CHIP_3620 },
-+	{ }
-+};
-+
-+static int wcn36xx_msm_get_chip_type(void)
-+{
-+	return wmsm.chip_type;
-+}
-+
-+static struct wcn36xx_msm wmsm = {
-+	.ctrl_ops = {
-+		.open = wcn36xx_msm_smd_open,
-+		.close = wcn36xx_msm_smd_close,
-+		.tx = wcn36xx_msm_smd_send_and_wait,
-+		.get_hw_mac = wcn36xx_msm_get_hw_mac,
-+		.smsm_change_state = wcn36xx_msm_smsm_change_state,
-+		.get_chip_type = wcn36xx_msm_get_chip_type,
-+	},
-+};
-+
- static int wcn36xx_msm_probe(struct platform_device *pdev)
+-int rtw_hw_suspend23a(struct rtw_adapter *padapter)
+-{
+-	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
+-	struct net_device *pnetdev = padapter->pnetdev;
+-	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+-
+-	if ((!padapter->bup) || (padapter->bDriverStopped) ||
+-	    (padapter->bSurpriseRemoved)) {
+-		DBG_8723A("padapter->bup =%d bDriverStopped =%d bSurpriseRemoved = %d\n",
+-			  padapter->bup, padapter->bDriverStopped,
+-			  padapter->bSurpriseRemoved);
+-		goto error_exit;
+-	}
+-
+-	if (padapter) { /* system suspend */
+-		LeaveAllPowerSaveMode23a(padapter);
+-
+-		DBG_8723A("==> rtw_hw_suspend23a\n");
+-		down(&pwrpriv->lock);
+-		pwrpriv->bips_processing = true;
+-		/* padapter->net_closed = true; */
+-		/* s1. */
+-		if (pnetdev) {
+-			netif_carrier_off(pnetdev);
+-			netif_tx_stop_all_queues(pnetdev);
+-		}
+-
+-		/* s2. */
+-		rtw_disassoc_cmd23a(padapter, 500, false);
+-
+-		/* s2-2.  indicate disconnect to os */
+-		/* rtw_indicate_disconnect23a(padapter); */
+-		if (check_fwstate(pmlmepriv, _FW_LINKED)) {
+-			_clr_fwstate_(pmlmepriv, _FW_LINKED);
+-
+-			rtw_os_indicate_disconnect23a(padapter);
+-
+-			/* donnot enqueue cmd */
+-			rtw_lps_ctrl_wk_cmd23a(padapter,
+-					       LPS_CTRL_DISCONNECT, 0);
+-		}
+-		/* s2-3. */
+-		rtw_free_assoc_resources23a(padapter, 1);
+-
+-		/* s2-4. */
+-		rtw_free_network_queue23a(padapter);
+-		rtw_ips_dev_unload23a(padapter);
+-		pwrpriv->rf_pwrstate = rf_off;
+-		pwrpriv->bips_processing = false;
+-		up(&pwrpriv->lock);
+-	} else {
+-		goto error_exit;
+-	}
+-	return 0;
+-error_exit:
+-	DBG_8723A("%s, failed\n", __func__);
+-	return -1;
+-}
+-
+-int rtw_hw_resume23a(struct rtw_adapter *padapter)
+-{
+-	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
+-	struct net_device *pnetdev = padapter->pnetdev;
+-
+-	if (padapter) { /* system resume */
+-		DBG_8723A("==> rtw_hw_resume23a\n");
+-		down(&pwrpriv->lock);
+-		pwrpriv->bips_processing = true;
+-		rtw_reset_drv_sw23a(padapter);
+-
+-		if (pm_netdev_open23a(pnetdev, false)) {
+-			up(&pwrpriv->lock);
+-			goto error_exit;
+-		}
+-
+-		netif_device_attach(pnetdev);
+-		netif_carrier_on(pnetdev);
+-
+-		if (!rtw_netif_queue_stopped(pnetdev))
+-			netif_tx_start_all_queues(pnetdev);
+-		else
+-			netif_tx_wake_all_queues(pnetdev);
+-
+-		pwrpriv->bkeepfwalive = false;
+-
+-		pwrpriv->rf_pwrstate = rf_on;
+-		pwrpriv->bips_processing = false;
+-
+-		up(&pwrpriv->lock);
+-	} else {
+-		goto error_exit;
+-	}
+-	return 0;
+-error_exit:
+-	DBG_8723A("%s, Open net dev failed\n", __func__);
+-	return -1;
+-}
+-
+ static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
  {
- 	int ret;
--	struct resource *wcnss_memory;
--	struct resource *tx_irq;
--	struct resource *rx_irq;
-+	const struct of_device_id *of_id;
-+	struct resource *r;
- 	struct resource res[3];
- 	struct pinctrl_state *ps;
-+	static const char const *rnames[] = {
-+		"wcnss_mmio", "wcnss_wlantx_irq", "wcnss_wlanrx_irq" };
-+	static const int rtype[] = {
-+		IORESOURCE_MEM, IORESOURCE_IRQ, IORESOURCE_IRQ };
-+	int n;
-+
-+	of_id = of_match_node(wcn36xx_msm_match_table, pdev->dev.of_node);
-+	if (!of_id)
-+		return -EINVAL;
-+
-+	wmsm.chip_type = (enum wcn36xx_chip_type)of_id->data;
- 
- 	wmsm.pinctrl = devm_pinctrl_get(&pdev->dev);
- 	if (IS_ERR_OR_NULL(wmsm.pinctrl))
-@@ -240,52 +276,23 @@ static int wcn36xx_msm_probe(struct platform_device *pdev)
- 
- 	if (IS_ERR_OR_NULL(pil))
- 		pil = subsystem_get("wcnss");
--		if (IS_ERR_OR_NULL(pil))
--			return PTR_ERR(pil);
-+	if (IS_ERR_OR_NULL(pil))
-+		return PTR_ERR(pil);
- 
- 	wmsm.core = platform_device_alloc("wcn36xx", -1);
- 
--	//dev_err(&pdev->dev, "%s starting\n", __func__);
--
--	memset(res, 0x00, sizeof(res));
--	wmsm.ctrl_ops.open = wcn36xx_msm_smd_open;
--	wmsm.ctrl_ops.close = wcn36xx_msm_smd_close;
--	wmsm.ctrl_ops.tx = wcn36xx_msm_smd_send_and_wait;
--	wmsm.ctrl_ops.get_hw_mac = wcn36xx_msm_get_hw_mac;
--	wmsm.ctrl_ops.smsm_change_state = wcn36xx_msm_smsm_change_state;
--	wcnss_memory =
--		platform_get_resource_byname(pdev,
--					      IORESOURCE_MEM,
--					      "wcnss_mmio");
--	if (wcnss_memory == NULL) {
--		dev_err(&wmsm.core->dev,
--			"Failed to get wcnss wlan memory map.\n");
--		ret = -ENOMEM;
--		return ret;
--	}
--	memcpy(&res[0], wcnss_memory, sizeof(*wcnss_memory));
--
--	tx_irq = platform_get_resource_byname(pdev,
--					      IORESOURCE_IRQ,
--					      "wcnss_wlantx_irq");
--	if (tx_irq == NULL) {
--		dev_err(&wmsm.core->dev, "Failed to get wcnss tx_irq");
--		ret = -ENOMEM;
--		return ret;
--	}
--	memcpy(&res[1], tx_irq, sizeof(*tx_irq));
--
--	rx_irq = platform_get_resource_byname(pdev,
--					      IORESOURCE_IRQ,
--					      "wcnss_wlanrx_irq");
--	if (rx_irq == NULL) {
--		dev_err(&wmsm.core->dev, "Failed to get wcnss rx_irq");
--		ret = -ENOMEM;
--		return ret;
-+	for (n = 0; n < ARRAY_SIZE(rnames); n++) {
-+		r = platform_get_resource_byname(pdev, rtype[n], rnames[n]);
-+		if (!r) {
-+			dev_err(&wmsm.core->dev,
-+				"Missing resource %s'\n", rnames[n]);
-+			ret = -ENOMEM;
-+			return ret;
-+		}
-+		res[n] = *r;
- 	}
--	memcpy(&res[2], rx_irq, sizeof(*rx_irq));
- 
--	platform_device_add_resources(wmsm.core, res, ARRAY_SIZE(res));
-+	platform_device_add_resources(wmsm.core, res, n);
- 
- 	ret = platform_device_add_data(wmsm.core, &wmsm.ctrl_ops,
- 				       sizeof(wmsm.ctrl_ops));
-@@ -319,10 +326,6 @@ static int wcn36xx_msm_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
--static const struct of_device_id wcn36xx_msm_match_table[] = {
--	{ .compatible = "qcom,wcn36xx" },
--	{ }
--};
- MODULE_DEVICE_TABLE(of, wcn36xx_msm_match_table);
- 
- static struct platform_driver wcn36xx_msm_driver = {
+ 	struct dvobj_priv *dvobj = usb_get_intfdata(pusb_intf);
+-- 
+1.7.10.4
 
