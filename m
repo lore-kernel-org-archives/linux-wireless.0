@@ -1,35 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32649 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711AbbABHlS (ORCPT
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:38430 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbbARFLZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 02:41:18 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix DMA burst size
-References: <1419834066-11802-1-git-send-email-sujith@msujith.org>
-Date: Fri, 2 Jan 2015 09:41:08 +0200
-In-Reply-To: <1419834066-11802-1-git-send-email-sujith@msujith.org> (Sujith
-	Manoharan's message of "Mon, 29 Dec 2014 11:51:06 +0530")
-Message-ID: <87k3156357.fsf@kamboji.qca.qualcomm.com> (sfid-20150102_084145_313679_6E8162E5)
+	Sun, 18 Jan 2015 00:11:25 -0500
+Subject: [PATCH 7/7] net: wireless: wcn36xx: handle new trigger_ba format
+From: Andy Green <andy.green@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 18 Jan 2015 13:11:17 +0800
+Message-ID: <20150118051117.31866.68634.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061135_864447_C51C52E3)
+In-Reply-To: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+wcn3620 has a new message structure for the reply to trigger_ba
+We don't know what to do with the candidate list he sends back,
+but we can at least accept and ignore it nicely instead of dying.
 
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> A value of zero indicates that 128B is the maximum
-> DMA request size for read/writes. But PCI cards based
-> on AR9880 can support 256B, so enable this for
-> the 10.2 firmware.
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Andy Green <andy.green@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c |   28 ++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/wcn36xx/smd.h |    9 +++++++++
+ 2 files changed, 35 insertions(+), 2 deletions(-)
 
-Did you see any throughput improvements with this?
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 819741c..dc24e1b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -243,8 +243,31 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
+ 	rsp = (struct wcn36xx_fw_msg_status_rsp *)
+ 		(buf + sizeof(struct wcn36xx_hal_msg_header));
+ 
+-	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
++	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
++		pr_err("%s: bad status, len = %d\n", __func__, len);
++		return rsp->status;
++	}
++
++	return 0;
++}
++
++static int wcn36xx_smd_rsp_status_check_bav2(struct wcn36xx *wcn, void *buf,
++					     size_t len)
++{
++	struct wcn36xx_fw_msg_status_rspv2 *rsp;
++
++	if (wcn->chip_version != WCN36XX_CHIP_3620)
++		return wcn36xx_smd_rsp_status_check(buf, len);
++
++	if (len < sizeof(struct wcn36xx_hal_msg_header) + sizeof(*rsp))
++		return -EIO;
++
++	rsp = buf + sizeof(struct wcn36xx_hal_msg_header);
++
++	if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
++		pr_err("%s: bad status, len = %d\n", __func__, len);
+ 		return rsp->status;
++	}
+ 
+ 	return 0;
+ }
+@@ -1884,7 +1907,8 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
+ 		wcn36xx_err("Sending hal_trigger_ba failed\n");
+ 		goto out;
+ 	}
+-	ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
++	ret = wcn36xx_smd_rsp_status_check_bav2(wcn, wcn->hal_buf,
++						wcn->hal_rsp_len);
+ 	if (ret) {
+ 		wcn36xx_err("hal_trigger_ba response failed err=%d\n", ret);
+ 		goto out;
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+index 008d034..432d3b8 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.h
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -44,6 +44,15 @@ struct wcn36xx_fw_msg_status_rsp {
+ 	u32	status;
+ } __packed;
+ 
++/* wcn3620 returns this for tigger_ba */
++
++struct wcn36xx_fw_msg_status_rspv2 {
++	u8	bss_id[6];
++	u32	status __packed;
++	u16	count_following_candidates __packed;
++	/* candidate list follows */
++};
++
+ struct wcn36xx_hal_ind_msg {
+ 	struct list_head list;
+ 	u8 *msg;
 
--- 
-Kalle Valo
