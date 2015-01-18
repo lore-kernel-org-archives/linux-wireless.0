@@ -1,30 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35673 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46720 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751677AbbASR7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 12:59:11 -0500
-Message-ID: <1421690349.1965.40.camel@sipsolutions.net> (sfid-20150119_185915_445043_236CD851)
-Subject: Re: [PATCH] mac80211: delete the assoc/auth timer upon suspend
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 19 Jan 2015 18:59:09 +0100
-In-Reply-To: <1421679186-10898-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1421679186-10898-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751924AbbARPYj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 10:24:39 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Emil Renner Berthing <kernel@esmil.dk>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: staging: rtl8723au: get rid of unneeded memset/memcpy
+References: <1417963040-9014-1-git-send-email-kernel@esmil.dk>
+	<20150117215040.GA16839@kroah.com>
+Date: Sun, 18 Jan 2015 10:24:28 -0500
+In-Reply-To: <20150117215040.GA16839@kroah.com> (Greg Kroah-Hartman's message
+	of "Sat, 17 Jan 2015 13:50:40 -0800")
+Message-ID: <wrfjzj9gt8lv.fsf@redhat.com> (sfid-20150118_162453_278500_A87E658F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-19 at 16:53 +0200, Emmanuel Grumbach wrote:
-> While suspending, we destroy the authentication /
-> association that might be taking place. While doing so, we
-> forgot to delete the timer which can be firing after
-> local->suspended is already set, producing the warning below.
-> 
-> Fix that by deleting the timer.
+Greg Kroah-Hartman <gregkh@linuxfoundation.org> writes:
+> On Sun, Dec 07, 2014 at 03:37:20PM +0100, Emil Renner Berthing wrote:
+>> This also fixes a sparse warning.
+>
+> What sparse warning?  What's wrong with the original code?  Unless Jes
+> resends this to me, I don't see the need to apply it, sorry.
 
-Applied.
+I agree, I cannot see what this is fixing, it does however add an ugly
+cast.
 
-johannes
+If you want to change the paramters passed to FillH2CCmd() then change
+the prototype and create something like struct h2c_cmd_arg{} and apply
+that across the board.
 
+NACK
+
+Jes
