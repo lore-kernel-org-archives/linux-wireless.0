@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khitomer.mortis.eu ([185.27.175.75]:11418 "EHLO
-	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752782AbbADTK3 (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34223 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726AbbARFQq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2015 14:10:29 -0500
-From: Giel van Schijndel <me@mortis.eu>
-To: linux-kernel@vger.kernel.org
-Cc: Giel van Schijndel <me@mortis.eu>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Eliad Peller <eliad@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	linux-wireless@vger.kernel.org (open list:TI WILINK WIRELES...),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS)
-Subject: [PATCH 1/2] Align member-assigns in a structure-copy block
-Date: Sun,  4 Jan 2015 19:00:22 +0100
-Message-Id: <1420394427-19509-1-git-send-email-me@mortis.eu> (sfid-20150104_201050_307093_211B8EC4)
+	Sun, 18 Jan 2015 00:16:46 -0500
+Subject: [PATCH 0/2] net: wireless: wcn36xx: OOT platform reference patch
+ for msm8916 / wcn36xx
+From: Andy Green <andy.green@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 18 Jan 2015 13:16:39 +0800
+Message-ID: <20150118051222.32019.32719.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061707_790525_11E57787)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This highlights the differences (errors).
----
- drivers/net/wireless/ti/wlcore/acx.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
+These patches are not intended for upstreaming.  They are
+included as a reference to show how to hook up wcn36xx to
+msm platforms using the OOT PIL support needed.
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index b924cea..beb354c 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -1715,17 +1715,17 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
- 		goto out;
- 	}
- 
--	acx->recover_time = cpu_to_le32(conf->recover_time);
--	acx->hangover_period = conf->hangover_period;
--	acx->dynamic_mode = conf->dynamic_mode;
--	acx->early_termination_mode = conf->early_termination_mode;
--	acx->max_period = conf->max_period;
--	acx->min_period = conf->min_period;
--	acx->increase_delta = conf->increase_delta;
--	acx->decrease_delta = conf->decrease_delta;
--	acx->quiet_time = conf->quiet_time;
--	acx->increase_time = conf->increase_time;
--	acx->window_size = acx->window_size;
-+	acx->recover_time               = cpu_to_le32(conf->recover_time);
-+	acx->hangover_period            = conf->hangover_period;
-+	acx->dynamic_mode               = conf->dynamic_mode;
-+	acx->early_termination_mode     = conf->early_termination_mode;
-+	acx->max_period                 = conf->max_period;
-+	acx->min_period                 = conf->min_period;
-+	acx->increase_delta             = conf->increase_delta;
-+	acx->decrease_delta             = conf->decrease_delta;
-+	acx->quiet_time                 = conf->quiet_time;
-+	acx->increase_time              = conf->increase_time;
-+	acx->window_size                = acx->window_size;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
- 				   sizeof(*acx));
--- 
-2.1.4
+The following series adds Eugene's OOT msm platform shim to
+wcn36xx and modifies it to provide wcn36xx platform data
+about chip type from Device Tree.
+
+It's useful as an example for how to implement on msm
+platforms that do not have all the necessary support
+upstreamed yet.
+
+This was tested on msm8916-QRD "phone" dev platform.
+
+---
+
+Andy Green (1):
+      net wireless wcn36xx adapt wcnss platform to select module by DT
+
+Eugene Krasnikov (1):
+      net wireless wcn36xx add wcnss platform code
+
+
+ drivers/net/wireless/ath/wcn36xx/Makefile      |    2 
+ drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c |  360 ++++++++++++++++++++++++
+ 2 files changed, 361 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
+
+--
 
