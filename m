@@ -1,68 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37317 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755613AbbAWPdS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 10:33:18 -0500
-Message-ID: <1422027188.2728.37.camel@sipsolutions.net> (sfid-20150123_163331_453529_0914EEB9)
-Subject: pull-request: mac80211 2015-01-23
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Date: Fri, 23 Jan 2015 16:33:08 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:60749 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751104AbbARFQ5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 00:16:57 -0500
+Subject: [PATCH 2/2] net wireless wcn36xx adapt wcnss platform to select
+ module by DT
+From: Andy Green <andy.green@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 18 Jan 2015 13:16:52 +0800
+Message-ID: <20150118051650.32019.49483.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061709_268096_DB1BCBD2)
+In-Reply-To: <20150118051222.32019.32719.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118051222.32019.32719.stgit@114-36-241-182.dynamic.hinet.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Simplify the resource handling and use DT to indicate which chip type
+we are dealing with
 
-I have a few more fixes that seemed relevant for the current cycle and
-low enough impact to merge at this point.
+Signed-off-by: Andy Green <andy.green@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c |  101 ++++++++++++------------
+ 1 file changed, 52 insertions(+), 49 deletions(-)
 
-However, I can live with all of this going to -next as well since most
-are difficult to hit in practice.
-
-johannes
-
-
-The following changes since commit 20658702e08ecd693236b443837d28863b93e872:
-
-  cfg80211: fix deadlock during reg chan check (2015-01-07 14:53:46 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-01-23
-
-for you to fetch changes up to 0fa7b39131576dd1baa6ca17fca53c65d7f62249:
-
-  nl80211: fix per-station group key get/del and memory leak (2015-01-23 11:21:02 +0100)
-
-----------------------------------------------------------------
-Another set of last-minute fixes:
- * fix station double-removal when suspending while associating
- * fix the HT (802.11n) header length calculation
- * fix the CCK radiotap flag used for monitoring, a pretty
-   old regression but a simple one-liner
- * fix per-station group-key handling
-
-----------------------------------------------------------------
-Fred Chou (1):
-      mac80211: correct header length calculation
-
-Johannes Berg (1):
-      nl80211: fix per-station group key get/del and memory leak
-
-Luciano Coelho (1):
-      mac80211: only roll back station states for WDS when suspending
-
-Mathy Vanhoef (1):
-      mac80211: properly set CCK flag in radiotap
-
- net/mac80211/pm.c      | 29 +++++++++++++++--------------
- net/mac80211/rx.c      |  2 +-
- net/wireless/nl80211.c |  9 ++++-----
- net/wireless/util.c    |  6 ++++++
- 4 files changed, 26 insertions(+), 20 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c b/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
+index f6f6c83..c9250e0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
+@@ -42,7 +42,10 @@ struct wcn36xx_msm {
+ 	struct completion	smd_compl;
+ 	smd_channel_t		*smd_ch;
+ 	struct pinctrl *pinctrl;
+-} wmsm;
++	enum wcn36xx_chip_type chip_type;
++};
++
++static struct wcn36xx_msm wmsm;
+ 
+ static int wcn36xx_msm_smsm_change_state(u32 clear_mask, u32 set_mask)
+ {
+@@ -217,14 +220,47 @@ int wcn36xx_msm_powerup(const struct subsys_desc *desc)
+ 	return 0;
+ }
+ 
++static const struct of_device_id wcn36xx_msm_match_table[] = {
++	{ .compatible = "qcom,wcn3660", .data = (void *)WCN36XX_CHIP_3660 },
++	{ .compatible = "qcom,wcn3680", .data = (void *)WCN36XX_CHIP_3680 },
++	{ .compatible = "qcom,wcn3620", .data = (void *)WCN36XX_CHIP_3620 },
++	{ }
++};
++
++static int wcn36xx_msm_get_chip_type(void)
++{
++	return wmsm.chip_type;
++}
++
++static struct wcn36xx_msm wmsm = {
++	.ctrl_ops = {
++		.open = wcn36xx_msm_smd_open,
++		.close = wcn36xx_msm_smd_close,
++		.tx = wcn36xx_msm_smd_send_and_wait,
++		.get_hw_mac = wcn36xx_msm_get_hw_mac,
++		.smsm_change_state = wcn36xx_msm_smsm_change_state,
++		.get_chip_type = wcn36xx_msm_get_chip_type,
++	},
++};
++
+ static int wcn36xx_msm_probe(struct platform_device *pdev)
+ {
+ 	int ret;
+-	struct resource *wcnss_memory;
+-	struct resource *tx_irq;
+-	struct resource *rx_irq;
++	const struct of_device_id *of_id;
++	struct resource *r;
+ 	struct resource res[3];
+ 	struct pinctrl_state *ps;
++	static const char const *rnames[] = {
++		"wcnss_mmio", "wcnss_wlantx_irq", "wcnss_wlanrx_irq" };
++	static const int rtype[] = {
++		IORESOURCE_MEM, IORESOURCE_IRQ, IORESOURCE_IRQ };
++	int n;
++
++	of_id = of_match_node(wcn36xx_msm_match_table, pdev->dev.of_node);
++	if (!of_id)
++		return -EINVAL;
++
++	wmsm.chip_type = (enum wcn36xx_chip_type)of_id->data;
+ 
+ 	wmsm.pinctrl = devm_pinctrl_get(&pdev->dev);
+ 	if (IS_ERR_OR_NULL(wmsm.pinctrl))
+@@ -240,52 +276,23 @@ static int wcn36xx_msm_probe(struct platform_device *pdev)
+ 
+ 	if (IS_ERR_OR_NULL(pil))
+ 		pil = subsystem_get("wcnss");
+-		if (IS_ERR_OR_NULL(pil))
+-			return PTR_ERR(pil);
++	if (IS_ERR_OR_NULL(pil))
++		return PTR_ERR(pil);
+ 
+ 	wmsm.core = platform_device_alloc("wcn36xx", -1);
+ 
+-	//dev_err(&pdev->dev, "%s starting\n", __func__);
+-
+-	memset(res, 0x00, sizeof(res));
+-	wmsm.ctrl_ops.open = wcn36xx_msm_smd_open;
+-	wmsm.ctrl_ops.close = wcn36xx_msm_smd_close;
+-	wmsm.ctrl_ops.tx = wcn36xx_msm_smd_send_and_wait;
+-	wmsm.ctrl_ops.get_hw_mac = wcn36xx_msm_get_hw_mac;
+-	wmsm.ctrl_ops.smsm_change_state = wcn36xx_msm_smsm_change_state;
+-	wcnss_memory =
+-		platform_get_resource_byname(pdev,
+-					      IORESOURCE_MEM,
+-					      "wcnss_mmio");
+-	if (wcnss_memory == NULL) {
+-		dev_err(&wmsm.core->dev,
+-			"Failed to get wcnss wlan memory map.\n");
+-		ret = -ENOMEM;
+-		return ret;
+-	}
+-	memcpy(&res[0], wcnss_memory, sizeof(*wcnss_memory));
+-
+-	tx_irq = platform_get_resource_byname(pdev,
+-					      IORESOURCE_IRQ,
+-					      "wcnss_wlantx_irq");
+-	if (tx_irq == NULL) {
+-		dev_err(&wmsm.core->dev, "Failed to get wcnss tx_irq");
+-		ret = -ENOMEM;
+-		return ret;
+-	}
+-	memcpy(&res[1], tx_irq, sizeof(*tx_irq));
+-
+-	rx_irq = platform_get_resource_byname(pdev,
+-					      IORESOURCE_IRQ,
+-					      "wcnss_wlanrx_irq");
+-	if (rx_irq == NULL) {
+-		dev_err(&wmsm.core->dev, "Failed to get wcnss rx_irq");
+-		ret = -ENOMEM;
+-		return ret;
++	for (n = 0; n < ARRAY_SIZE(rnames); n++) {
++		r = platform_get_resource_byname(pdev, rtype[n], rnames[n]);
++		if (!r) {
++			dev_err(&wmsm.core->dev,
++				"Missing resource %s'\n", rnames[n]);
++			ret = -ENOMEM;
++			return ret;
++		}
++		res[n] = *r;
+ 	}
+-	memcpy(&res[2], rx_irq, sizeof(*rx_irq));
+ 
+-	platform_device_add_resources(wmsm.core, res, ARRAY_SIZE(res));
++	platform_device_add_resources(wmsm.core, res, n);
+ 
+ 	ret = platform_device_add_data(wmsm.core, &wmsm.ctrl_ops,
+ 				       sizeof(wmsm.ctrl_ops));
+@@ -319,10 +326,6 @@ static int wcn36xx_msm_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static const struct of_device_id wcn36xx_msm_match_table[] = {
+-	{ .compatible = "qcom,wcn36xx" },
+-	{ }
+-};
+ MODULE_DEVICE_TABLE(of, wcn36xx_msm_match_table);
+ 
+ static struct platform_driver wcn36xx_msm_driver = {
 
