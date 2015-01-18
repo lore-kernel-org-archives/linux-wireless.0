@@ -1,37 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:42221 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318AbbAMOoz (ORCPT
+Received: from mail-la0-f44.google.com ([209.85.215.44]:59765 "EHLO
+	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbbARTNP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 09:44:55 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<CA+BoTQ=HqF0vBj4chXfoY9GKcFBP8Xh37HXo5etDDZ1XCg6O4w@mail.gmail.com>
-	<21677.3195.451116.244389@gargle.gargle.HOWL>
-Date: Tue, 13 Jan 2015 16:44:42 +0200
-In-Reply-To: <21677.3195.451116.244389@gargle.gargle.HOWL> (Sujith Manoharan's
-	message of "Wed, 7 Jan 2015 16:07:47 +0530")
-Message-ID: <87zj9m4u5h.fsf@kamboji.qca.qualcomm.com> (sfid-20150113_154506_360943_B676E70D)
+	Sun, 18 Jan 2015 14:13:15 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CANUX_P1pmB2PD00N2r2LgjNL4fG6RuTPxsO8G2weU+8EeENPTg@mail.gmail.com>
+References: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com>
+	<CANUX_P0LCr3fzqLyjKQbZ-P2hAV-Nk6=AMm=oFOWCLW34cRg2w@mail.gmail.com>
+	<CA+55aFzEr-R1anNm91pnM=ujfhBstJikZBVtduphff1PtccHDw@mail.gmail.com>
+	<54BBF207.2030708@broadcom.com>
+	<CA+55aFws=-MY+rUsEny=DsBx9gct93BnfeGXSnOCLxEFtvDj8A@mail.gmail.com>
+	<CANUX_P1pmB2PD00N2r2LgjNL4fG6RuTPxsO8G2weU+8EeENPTg@mail.gmail.com>
+Date: Sun, 18 Jan 2015 21:13:13 +0200
+Message-ID: <CANUX_P3kv5ofQJLGyEvRSgetHg=TJsaVennLJWq3ummgRJHWgg@mail.gmail.com> (sfid-20150118_201323_530777_85FE86D1)
+Subject: Re: Wireless scanning while turning off the radio problem..
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
-
->> I have a patch internally which removes the replenishment tasklet and
->> I wonder how will it behave with rx batching then, hmm..
+On Sun, Jan 18, 2015 at 8:52 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Sun, Jan 18, 2015 at 8:40 PM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+>> On Mon, Jan 19, 2015 at 5:48 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>>>
+>>> So as you indicated you were in location where none of your configured
+>>> networks were available. Flipping the rfkill switch in that situation is the
+>>> way to trigger the issue.
+>>
+>> So you certainly seem to be able to explain the behavior I saw under
+>> the circumstances they happened.
+>>
+>> I suspect the best thing to do is to just apply your patch. I may not
+>> be able to really test it much for the next few days anyway. Emmanuel?
+>>
 >
-> I tried that earlier and could see only marginal improvement. The biggest
-> increase came when I replaced netif_receive_skb() with netif_rx()
-> in mac80211/rx.c.
+> Sorry - I was a bit busy.
+> The patch seems wrong, we can't really call that function from the
+> rfkill interrupt - it will blow up.
+> The good news is that I could reproduce the bug based on what Arend
+> pointed. I totally missed the fact
+> that it was scheduled scan - thanks Arend for that.
+>
+> So the system I have here doesn't have HW rfkill so I had to implement
+> a hook that fakes it,
+> but I can't reproduce the problem.
+> I'll come up with a patch.
 
-Any ideas why that increases throughput?
 
--- 
-Kalle Valo
+Ok - Here is the patch:
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c
+b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 384eefd..bbd8054 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -867,6 +867,9 @@ static bool iwl_mvm_set_hw_rfkill_state(struct
+iwl_op_mode *op_mode, bool state)
+        if (calibrating)
+                iwl_abort_notification_waits(&mvm->notif_wait);
+
++       if (state)
++               mvm->scan_status = IWL_MVM_SCAN_NONE;
++
+        /*
+         * Stop the device if we run OPERATIONAL firmware or if we are in the
+         * middle of the calibrations.
+
+
+I will send that for internal review, because I am not all that much
+familiar with this and I want the guy who wrote that code to take a
+look before I send a pull request, but that should help.
+
+In any case, Linus, until you get the fix (which should be sent to
+upstream in 12 hours) you can restart the whole wifi stack instead of
+rebooting:
+
+sudo modprobe -r iwlwifi
+sudo modprobe iwlwifi
+sudo killall wpa_supplicant
+
+
+that should bring your wifi back without the need to reboot.
