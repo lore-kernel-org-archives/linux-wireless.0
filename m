@@ -1,45 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:8295 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750999AbbAWFLY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 00:11:24 -0500
-Message-ID: <1422009676.29681.3.camel@pe-lt950> (sfid-20150123_061127_438575_45CA21CF)
-Subject: Re: [PATCH 3/3] mwifiex: selectively choose ext_scan support
-From: Avinash Patil <patila@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Fri, 23 Jan 2015 16:11:16 +0530
-In-Reply-To: <1421858191.1900.18.camel@sipsolutions.net>
-References: <1421858531-4536-1-git-send-email-patila@marvell.com>
-	 <1421858531-4536-3-git-send-email-patila@marvell.com>
-	 (sfid-20150121_121353_128877_AC22EEF3) <1421858158.1900.17.camel@sipsolutions.net>
-	 (sfid-20150121_173606_460838_ECEC5A69) <1421858191.1900.18.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from vps0.lunn.ch ([178.209.37.122]:57447 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751590AbbARQ0e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 11:26:34 -0500
+Received: from andrew by vps0.lunn.ch with local (Exim 4.80)
+	(envelope-from <andrew@lunn.ch>)
+	id 1YCseM-0004DI-9D
+	for linux-wireless@vger.kernel.org; Sun, 18 Jan 2015 17:24:30 +0100
+Date: Sun, 18 Jan 2015 17:24:30 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: linux-wireless@vger.kernel.org
+Subject: Firmware for Marvell SD8786?
+Message-ID: <20150118162430.GF19604@lunn.ch> (sfid-20150118_172637_694798_CC77FC07)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-21 at 08:36 -0800, Johannes Berg wrote:
-> On Wed, 2015-01-21 at 17:35 +0100, Johannes Berg wrote:
-> > On Wed, 2015-01-21 at 22:12 +0530, Avinash Patil wrote:
-> > 
-> > > +	u8 ext_scan_support;
-> > 
-> > bool.
-> 
-> Oh, there are also two more places it seems :)
-> 
-> johannes
-> 
-Hmm..:)
-I will send another follow-up patch to fix this later.
+Hi Folks
 
-Thanks,
-Avinash
+Is there a firmware somewhere for the Marvell SD8786 device?
 
+There is nothing in the linux firmware tree. I found one old firmware
+image which works for kernels around 3.5, but since then, it appears
+the mwifiex driver has gained some regressions with respect to this
+firmware.
+
+Thanks
+	Andrew
