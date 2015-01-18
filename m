@@ -1,56 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vc0-f179.google.com ([209.85.220.179]:39766 "EHLO
-	mail-vc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750849AbbAALcK (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:48813 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223AbbARSDL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2015 06:32:10 -0500
+	Sun, 18 Jan 2015 13:03:11 -0500
+Message-ID: <54BBF55C.7070704@broadcom.com> (sfid-20150118_190315_815576_7FA49430)
+Date: Sun, 18 Jan 2015 19:03:08 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1412311620140.3337@nftneq.ynat.uz>
-References: <54A328C2.5080606@lwfinger.net>
-	<alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz>
-	<alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz>
-	<54A3D955.6020809@broadcom.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
-	<54A3E1F1.7030807@broadcom.com>
-	<alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz>
-	<54A41000.3040306@broadcom.com>
-	<20141231173113.GA443@thunk.org>
-	<54A45D4D.7070302@broadcom.com>
-	<20141231214421.GA29273@thunk.org>
-	<CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
-	<54A47B7F.9000403@broadcom.com>
-	<alpine.DEB.2.02.1412311620140.3337@nftneq.ynat.uz>
-Date: Thu, 1 Jan 2015 12:32:09 +0100
-Message-ID: <CAFLxGvxTYkCdUAxePjGi3HkJuG5MihSCxdU+F7vE+H8gWxpiPg@mail.gmail.com> (sfid-20150101_123231_453888_A0B37C71)
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility unselectable"
-From: Richard Weinberger <richard.weinberger@gmail.com>
-To: David Lang <david@lang.hm>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Theodore Ts'o" <tytso@mit.edu>, Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: Wireless scanning while turning off the radio problem..
+References: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com>	<CANUX_P0LCr3fzqLyjKQbZ-P2hAV-Nk6=AMm=oFOWCLW34cRg2w@mail.gmail.com> <CA+55aFzEr-R1anNm91pnM=ujfhBstJikZBVtduphff1PtccHDw@mail.gmail.com> <54BBF207.2030708@broadcom.com>
+In-Reply-To: <54BBF207.2030708@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 1, 2015 at 1:22 AM, David Lang <david@lang.hm> wrote:
-> there are things that you can do with "ip" that you can't do with
-> "ifconfig", but they tend to be rather esoteric things (hundreds of IP
-> addresses on "eth0" without using eth0:1, eth0:2, etc as one example)
+On 01/18/15 18:48, Arend van Spriel wrote:
+> On 01/18/15 17:53, Linus Torvalds wrote:
+>> On Sun, Jan 18, 2015 at 11:24 PM, Emmanuel
+>> Grumbach<egrumbach@gmail.com> wrote:
+>>>
+>>> we have different scan flows based on the firmware version you have,
+>>> so it would help if you could tell me what firmware you have.
+>>
+>> Sure. It's the larest one I could find
+>>
+>> iwlwifi 0000:01:00.0: loaded firmware version 23.11.10.0 op_mode iwlmvm
+>>
+>> with the actual firmware file being 'iwlwifi-7260-10.ucode' from the
+>> current linux-firmware tree.
+>>
+>> Iin a different email Arend van Spriel<arend@broadcom.com> wrote:
+>>>
+>>> The function iwl_trans_pcie_stop_device() put device in low-power and
+>>> resets the cpu on the device. So iwl_op_mode_hw_rf_kill ends up in
+>>> iwl_mvm_set_hw_rfkill_state which schedules cfg80211_rfkill_sync_work
+>>> and returns true if firmware is running. The patch below might work.
+>>
+>> Any suggestions for how to best try to trigger this for testing?
+>> Looking at my logs, it turns out that I actually got this three times,
+>> but they were all on the same boot, and I think the first case might
+>> just have triggered the later ones.
+>>
+>> The trigger was turning off wifi from the wifi settings app due to
+>> being in an airplane when they were closing the doors. I don't *think*
+>> there was actually any wifi around at the time, which may or may not
+>> have made the scanning take longer and made it easier to trigger.
+>>
+>> But I've done it before (although this machine has been upgraded to
+>> F21 reasonably recently, and I did update the ucode file before the
+>> trip). And I did it afterwards to test. And it happened that one time
+>> (and then apparently kept happening during suspend/resume/shutdown,
+>> but as mentioned, I blame that on some sticky problem from the first
+>> time, and those events in turn happened because I couldn't get
+>> wireless to work afterwards).
+>>
+>> IOW, I'm not at all sure I can recreate it, so your "analyzing the
+>> source code for how this could happen" may be the only good way..
 >
-> The trouble is that doing simple things is harder with "ip" than "ifconfig"
+> Your issue occurs when firmware is instructed by user-space, ie.
+> wpa_supplicant(?), to do "scheduled scan". This type of scanning is done
+> entirely in the device. Typically, this type of scanning is done by
+> wpa_supplicant after 3 normal scans in which no configured networks were
+> found. The idea is that the host can be idle while the device does the
+> scanning and wakes up the host when a configured network is found.
+>
+> So as you indicated you were in location where none of your configured
+> networks were available. Flipping the rfkill switch in that situation is
+> the way to trigger the issue.
 
-Jan did a nice overview:
-http://inai.de/2008/02/19
+After a scheduled scan has been set by wpa_supplicant, which is 
+difficult to tell from user-space. Checking the nl80211 code it seems 
+that kernel sends a netlink event for this so if you run 'iw event' you 
+should be able to see the "start_sched_scan" event.
 
--- 
-Thanks,
-//richard
+Regards,
+Arend
+
+> Regards,
+> Arend
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+
