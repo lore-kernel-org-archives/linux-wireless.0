@@ -1,42 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32085 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168AbbALLwB (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:42176 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197AbbARFKz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 06:52:01 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Fix DMA burst size
-References: <1419834066-11802-1-git-send-email-sujith@msujith.org>
-	<CA+BoTQ=Vt8BTzZcgxqq4eU+RKhMwNbGrZOOFGL9TcBA3KnrerQ@mail.gmail.com>
-	<21677.2491.857663.473071@gargle.gargle.HOWL>
-Date: Mon, 12 Jan 2015 13:51:48 +0200
-In-Reply-To: <21677.2491.857663.473071@gargle.gargle.HOWL> (Sujith Manoharan's
-	message of "Wed, 7 Jan 2015 15:56:03 +0530")
-Message-ID: <87ppakdxnv.fsf@kamboji.qca.qualcomm.com> (sfid-20150112_125222_789252_2E635CD7)
+	Sun, 18 Jan 2015 00:10:55 -0500
+Subject: [PATCH 2/7] net: wireless: wcn36xx: get chip type from platform ops
+From: Andy Green <andy.green@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 18 Jan 2015 13:10:49 +0800
+Message-ID: <20150118051049.31866.47265.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061102_443231_974DA626)
+In-Reply-To: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+Autodetecting the chip type does not work well.
+Stop attempting to do it and require a platform op
+that tells us what the chip is.
 
-> Michal Kazior wrote:
->> Since it's for cards/chips why do you enable it for 10.2 only? There's
->> 10.1, main and tlv as well which could possibly benefit from this.
->
-> I've not tested it with any of the FW versions other than 10.2 and
-> am not sure if older FW support this properly. We could try it
-> with 10.1, I guess - but even that is in 'maintenance mode'
-> internally.
+Signed-off-by: Andy Green <andy.green@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c    |   18 +++++-------------
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |    1 +
+ 2 files changed, 6 insertions(+), 13 deletions(-)
 
-Yeah, I don't see much point of trying to improve our 10.1 support as
-all the new development happens on 10.2 branch. Most important is that
-we don't break 10.1 support ("no regressions" rule), but it in no way
-does 10.1 need to be in feature parity with 10.2.
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 7dd8873..c4178c7 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -221,17 +221,6 @@ static void wcn36xx_feat_caps_info(struct wcn36xx *wcn)
+ 	}
+ }
+ 
+-static void wcn36xx_detect_chip_version(struct wcn36xx *wcn)
+-{
+-	if (get_feat_caps(wcn->fw_feat_caps, DOT11AC)) {
+-		wcn36xx_info("Chip is 3680\n");
+-		wcn->chip_version = WCN36XX_CHIP_3680;
+-	} else {
+-		wcn36xx_info("Chip is 3660\n");
+-		wcn->chip_version = WCN36XX_CHIP_3660;
+-	}
+-}
+-
+ static int wcn36xx_start(struct ieee80211_hw *hw)
+ {
+ 	struct wcn36xx *wcn = hw->priv;
+@@ -286,8 +275,6 @@ static int wcn36xx_start(struct ieee80211_hw *hw)
+ 			wcn36xx_feat_caps_info(wcn);
+ 	}
+ 
+-	wcn36xx_detect_chip_version(wcn);
+-
+ 	/* DMA channel initialization */
+ 	ret = wcn36xx_dxe_init(wcn);
+ 	if (ret) {
+@@ -1023,6 +1010,11 @@ static int wcn36xx_probe(struct platform_device *pdev)
+ 	wcn->hw = hw;
+ 	wcn->dev = &pdev->dev;
+ 	wcn->ctrl_ops = pdev->dev.platform_data;
++	if (!wcn->ctrl_ops->get_chip_type) {
++		dev_err(&pdev->dev, "Missing ops->get_chip_type\n");
++		return -EINVAL;
++	}
++	wcn->chip_version = wcn->ctrl_ops->get_chip_type();
+ 
+ 	mutex_init(&wcn->hal_mutex);
+ 
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index a5366b6..04793c6 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -110,6 +110,7 @@ struct wcn36xx_platform_ctrl_ops {
+ 	void (*close)(void);
+ 	int (*tx)(char *buf, size_t len);
+ 	int (*get_hw_mac)(u8 *addr);
++	int (*get_chip_type)(void);
+ 	int (*smsm_change_state)(u32 clear_mask, u32 set_mask);
+ };
+ 
 
--- 
-Kalle Valo
