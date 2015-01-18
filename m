@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:49998 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758175AbbAITS2 (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:33065 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752827AbbARLrN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 14:18:28 -0500
-Received: by mail-oi0-f54.google.com with SMTP id u20so13178366oif.13
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 11:18:27 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/8] wcn36xx: use !! when assigning int as a boolean
-Date: Fri,  9 Jan 2015 14:15:46 -0500
-Message-Id: <1420830952-9624-3-git-send-email-me@bobcopeland.com> (sfid-20150109_201833_465095_97632AF9)
-In-Reply-To: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
-References: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
+	Sun, 18 Jan 2015 06:47:13 -0500
+Received: by mail-lb0-f173.google.com with SMTP id p9so1054696lbv.4
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 03:47:12 -0800 (PST)
+Message-ID: <54BB9D3C.90306@cogentembedded.com> (sfid-20150118_124720_838505_98F9EBED)
+Date: Sun, 18 Jan 2015 14:47:08 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Andy Green <andy.green@linaro.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+CC: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 5/7] net: wireless: wcn36xx: swallow two wcn3620 IND messages
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net> <20150118051105.31866.43889.stgit@114-36-241-182.dynamic.hinet.net>
+In-Reply-To: <20150118051105.31866.43889.stgit@114-36-241-182.dynamic.hinet.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bd->tx_comp is a single bit in a bitfield, so assigning
-"info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS" only happens
-to work because TX_STATUS is defined to BIT(0); if it were
-any other bit this assignment would fail.
+Hello.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/wcn36xx/txrx.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 1/18/2015 8:11 AM, Andy Green wrote:
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index 32bb26a..f701873 100644
---- a/drivers/net/wireless/ath/wcn36xx/txrx.c
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -237,7 +237,7 @@ int wcn36xx_start_tx(struct wcn36xx *wcn,
- 
- 	bd->dpu_rf = WCN36XX_BMU_WQ_TX;
- 
--	bd->tx_comp = info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS;
-+	bd->tx_comp = !!(info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS);
- 	if (bd->tx_comp) {
- 		wcn36xx_dbg(WCN36XX_DBG_DXE, "TX_ACK status requested\n");
- 		spin_lock_irqsave(&wcn->dxe_lock, flags);
--- 
-1.7.10.4
+> WCN3620 can asynchronously send two new kinds of indication message,
+> since we can't handle them just accept them quietly.
+
+> Signed-off-by: Andy Green <andy.green@linaro.org>
+> ---
+>   drivers/net/wireless/ath/wcn36xx/smd.c |    6 ++++++
+>   1 file changed, 6 insertions(+)
+
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index 6398693..819741c 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+[...]
+> @@ -2107,6 +2109,10 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+>   	msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
+>
+>   	switch (msg_header->msg_type) {
+> +	case WCN36XX_HAL_COEX_IND:
+> +		break;
+> +	case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
+> +		break;
+
+    Can't you merge these 2 cases, so that there's only one *break*?
+
+[...]
+
+WBR, Sergei
 
