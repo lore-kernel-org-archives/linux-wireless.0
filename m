@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f51.google.com ([74.125.82.51]:43765 "EHLO
-	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204AbbALNKn convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:51765 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbbARFLA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 08:10:43 -0500
-Received: by mail-wg0-f51.google.com with SMTP id x12so19145153wgg.10
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 05:10:42 -0800 (PST)
+	Sun, 18 Jan 2015 00:11:00 -0500
+Subject: [PATCH 3/7] net: wireless: wcn36xx: use 3680 dxe regs for 3620
+From: Andy Green <andy.green@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 18 Jan 2015 13:10:54 +0800
+Message-ID: <20150118051054.31866.79113.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061110_653209_75C84765)
+In-Reply-To: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
 MIME-Version: 1.0
-In-Reply-To: <87vbkccg3s.fsf@kamboji.qca.qualcomm.com>
-References: <1420716572-23826-1-git-send-email-michal.kazior@tieto.com>
-	<87vbkccg3s.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 12 Jan 2015 14:10:41 +0100
-Message-ID: <CA+BoTQk6W1+qi3PY4PjG209L+SZsFc6ktd=eQMKqhrSYpi2AUw@mail.gmail.com> (sfid-20150112_141046_498642_E0968CED)
-Subject: Re: [PATCH] ath10k: add additional fw build version to info print
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 January 2015 at 13:56, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-[...]
->>  void ath10k_print_driver_info(struct ath10k *ar)
->>  {
->> -     ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d\n",
->> +     ath10k_info(ar, "%s (0x%08x, 0x%08x) fw %s api %d htt %d.%d wmi %d cal %s max_sta %d build %u.%u.%u.%u\n",
-[...]
->
-> So now we print two different firmware versions to the user? That's just
-> confusing. It's ok to print this build id in debug level, but not in
-> info level. From user's point of view we should have only one firmware
-> version.
+Between 3620, 3660 and 3680, only 3660 has a different dxe register
 
-I guess we shouldn't be printing htt version then too. Nevertheless I
-understand your concern.
+Signed-off-by: Andy Green <andy.green@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/dxe.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
+index 73f12f1..334f265 100644
+--- a/drivers/net/wireless/ath/wcn36xx/dxe.c
++++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
+@@ -46,7 +46,7 @@ static void wcn36xx_dxe_write_register(struct wcn36xx *wcn, int addr, int data)
+ 
+ #define wcn36xx_dxe_write_register_x(wcn, reg, reg_data)		 \
+ do {									 \
+-	if (wcn->chip_version == WCN36XX_CHIP_3680)			 \
++	if (wcn->chip_version != WCN36XX_CHIP_3660)			 \
+ 		wcn36xx_dxe_write_register(wcn, reg ## _3680, reg_data); \
+ 	else								 \
+ 		wcn36xx_dxe_write_register(wcn, reg ## _3660, reg_data); \
 
-> I would rather make sure that ATH10K_FW_IE_FW_VERSION always contains
-> the correct version string and then developers map whatever they need
-> from that string.
-
-Right. Let's drop this for now then.
-
-
-Michał
