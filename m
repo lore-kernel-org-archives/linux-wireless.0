@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:56847 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689AbbA2KOZ (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:51191 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbbARFLH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 05:14:25 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k: move wmm param storage to vif
-References: <1421657623-11706-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 29 Jan 2015 12:14:12 +0200
-In-Reply-To: <1421657623-11706-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 19 Jan 2015 09:53:41 +0100")
-Message-ID: <87zj913nd7.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_111432_739954_AA0F892A)
+	Sun, 18 Jan 2015 00:11:07 -0500
+Subject: [PATCH 4/7] net: wireless: wcn36xx: introduce
+ WCN36XX_HAL_AVOID_FREQ_RANGE_IND
+From: Andy Green <andy.green@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 18 Jan 2015 13:11:00 +0800
+Message-ID: <20150118051100.31866.37997.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061120_108926_DAE5C28D)
+In-Reply-To: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+WCN3620 firmware introduces a new async indication, we need to
+add it as a known message type so we can accept it
 
-> mac80211 already requests WMM per vif but firmware
-> wasn't able to handle this until now. However new
-> wmi-tlv firmware for qca6174 is capable of this.
->
-> This prepares per-vif WMM param setup.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Andy Green <andy.green@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/hal.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks, all three patches applied to ath.git.
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index a1f1127..b947de0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -345,6 +345,8 @@ enum wcn36xx_hal_host_msg_type {
+ 	WCN36XX_HAL_DHCP_START_IND = 189,
+ 	WCN36XX_HAL_DHCP_STOP_IND = 190,
+ 
++	WCN36XX_HAL_AVOID_FREQ_RANGE_IND = 233,
++
+ 	WCN36XX_HAL_MSG_MAX = WCN36XX_HAL_MSG_TYPE_MAX_ENUM_SIZE
+ };
+ 
 
--- 
-Kalle Valo
