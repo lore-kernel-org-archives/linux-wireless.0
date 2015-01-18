@@ -1,127 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:33624 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984AbbABN7w (ORCPT
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:56655 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225AbbARDZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 08:59:52 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: wireless-drivers-next 2015-01-02
-Date: Fri, 02 Jan 2015 15:59:44 +0200
-Message-ID: <87zja1471r.fsf@kamboji.qca.qualcomm.com> (sfid-20150102_150002_291126_99710385)
+	Sat, 17 Jan 2015 22:25:07 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Sun, 18 Jan 2015 15:25:06 +1200
+Message-ID: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com> (sfid-20150118_042528_347003_8F97CC09)
+Subject: Wireless scanning while turning off the radio problem..
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+So there seems to be some issue with unlucky timing when turning off
+wireless while the driver is busy scanning. I can't reproduce this, so
+it's a one-off, but it's not just ugly warnings, the kernel woudln't
+scan any wireless on that device afterwards and I had to reboot to get
+networking back, so there is some long-term damage.
 
-here's the first pull request for net-next. This time a slow start with
-just few patches so it's easier to iron out any issues. I have a lot
-more pending in patchwork and will send them later.
+This is with Intel wireless (iwlwifi, it's a iwl N7260 thing, rev
+0x144 if anybody cares) , but the warning callbacks don't seem to be
+iwl-specific.
 
-Please let me know if there are any issues.
+This was a recent top-of-git kernel (3.19.0-rc4-00241-gfc7f0dd38172 to
+be exact).
 
-Kalle
+Anybody have any ideas? Anything in particular I should try out to
+help possibly get more information?
 
-The following changes since commit b8fb4e0648a2ab3734140342002f68fb0c7d1602:
+              Linus
 
-  net: Reset secmark when scrubbing packet (2014-12-24 00:21:43 -0500)
+---
+[  204.361145] iwlwifi 0000:01:00.0: RF_KILL bit toggled to disable radio.
+[  204.362358] ------------[ cut here ]------------
+[  204.362383] WARNING: CPU: 0 PID: 37 at net/wireless/core.c:1011
+cfg80211_netdev_notifier_call+0x491/0x500 [cfg80211]()
+[  204.362385] Modules linked in: ccm rfcomm fuse ip6t_rpfilter
+ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6
+nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ebtable_nat
+ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_mangle
+ip6table_security ip6table_raw ip6table_filter ip6_tables
+iptable_mangle iptable_security iptable_raw bnep arc4 vfat fat
+x86_pkg_temp_thermal pn544_mei mei_phy pn544 coretemp hci kvm_intel
+nfc iTCO_wdt iTCO_vendor_support kvm iwlmvm uvcvideo
+snd_hda_codec_realtek microcode snd_hda_codec_generic
+snd_hda_codec_hdmi mac80211 videobuf2_vmalloc videobuf2_memops
+videobuf2_core v4l2_common snd_hda_intel videodev snd_hda_controller
+joydev btusb media hid_multitouch i2c_i801 snd_hda_codec serio_raw
+iwlwifi bluetooth snd_hwdep snd_seq cfg80211 snd_seq_device
+[  204.362432]  snd_pcm sony_laptop rfkill mei_me snd_timer mei snd
+lpc_ich mfd_core shpchp soundcore dm_crypt i915 crct10dif_pclmul
+crc32_pclmul crc32c_intel i2c_algo_bit ghash_clmulni_intel
+drm_kms_helper drm i2c_core video
+[  204.362453] CPU: 0 PID: 37 Comm: kworker/0:1 Not tainted
+3.19.0-rc4-00241-gfc7f0dd38172 #14
+[  204.362455] Hardware name: Sony Corporation SVP11213CXB/VAIO, BIOS
+R0270V7 05/17/2013
+[  204.362464] Workqueue: events cfg80211_rfkill_sync_work [cfg80211]
+[  204.362467]  0000000000000000 ffffffffc0375870 ffffffff815eb39a
+0000000000000000
+[  204.362471]  ffffffff8106c357 ffff8800d3b12890 ffff8800d9e08260
+0000000000000002
+[  204.362475]  ffff8800d3b12000 ffff8800d9e08000 ffffffffc0350161
+ffff8800d365dc00
+[  204.362479] Call Trace:
+[  204.362490]  [<ffffffff815eb39a>] ? dump_stack+0x40/0x50
+[  204.362496]  [<ffffffff8106c357>] ? warn_slowpath_common+0x77/0xb0
+[  204.362506]  [<ffffffffc0350161>] ?
+cfg80211_netdev_notifier_call+0x491/0x500 [cfg80211]
+[  204.362513]  [<ffffffff814f3769>] ? __dev_remove_pack+0x39/0xa0
+[  204.362538]  [<ffffffff815d9d0c>] ? __unregister_prot_hook+0xcc/0xd0
+[  204.362542]  [<ffffffff815da89c>] ? packet_notifier+0x15c/0x1b0
+[  204.362549]  [<ffffffff81086e65>] ? notifier_call_chain+0x45/0x70
+[  204.362552]  [<ffffffff814f41a9>] ? dev_close_many+0xb9/0x110
+[  204.362556]  [<ffffffff814f65da>] ? dev_close.part.87+0x2a/0x40
+[  204.362559]  [<ffffffff814f6609>] ? dev_close+0x19/0x20
+[  204.362569]  [<ffffffffc034f76d>] ?
+cfg80211_shutdown_all_interfaces+0x3d/0xb0 [cfg80211]
+[  204.362577]  [<ffffffffc034f809>] ?
+cfg80211_rfkill_sync_work+0x29/0x30 [cfg80211]
+[  204.362580]  [<ffffffff81081335>] ? process_one_work+0x135/0x370
+[  204.362585]  [<ffffffff8107e927>] ? pwq_activate_delayed_work+0x27/0x40
+[  204.362589]  [<ffffffff810818c3>] ? worker_thread+0x63/0x480
+[  204.362592]  [<ffffffff81081860>] ? rescuer_thread+0x2f0/0x2f0
+[  204.362596]  [<ffffffff8108606e>] ? kthread+0xce/0xf0
+[  204.362600]  [<ffffffff81085fa0>] ? kthread_create_on_node+0x180/0x180
+[  204.362605]  [<ffffffff815f0eac>] ? ret_from_fork+0x7c/0xb0
+[  204.362609]  [<ffffffff81085fa0>] ? kthread_create_on_node+0x180/0x180
+[  204.362612] ---[ end trace d0ac2826f7d2747f ]---
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2015-01-02
-
-for you to fetch changes up to 354f473ee2c5d01c1cf90f747f95218ee3e73e95:
-
-  ath9k: fix typo (2014-12-24 19:14:44 +0200)
-
-----------------------------------------------------------------
-Changes:
-
-* ath9k: enable Transmit Power Control (TPC) for ar9003 chips
-
-* rtlwifi: cleanup and updates from the vendor driver
-
-* rsi: fix memory leak related to firmware image
-
-* ath: parameter fix for FCC DFS pattern
-
-----------------------------------------------------------------
-Alexey Khoroshilov (1):
-      rsi: fix memory leak in rsi_load_ta_instructions()
-
-Larry Finger (15):
-      rtlwifi: rtl8821ae: Fix typos in power-sequence macro
-      rtlwifi: rtl8192ce: Add code to set the keep-alive operation
-      rtlwifi: rtl8192ce: Update setting of the media status
-      rtlwifi: rtl8192ce: Update rate setting routines
-      rtlwifi: rtl8192ce: Improve RF sleep routine
-      rtlwifi: Remove extraneous argument for rate mapping
-      rtlwifi: rtl8723be: Switch to use common rate-mapping routine
-      rtlwifi: rtl8188ee: Switch to use common rate-mapping routine
-      rtlwifi: rtl8723ae: Modify driver to use rate-mapping routine in core
-      rtlwifi: rtl8192ee: Convert driver to use common rate-mapping code
-      rtlwifi: Convert all drivers to use a common set of rate descriptors
-      rtlwifi: rtl8821ae: Add VHT rate descriptors
-      rtlwifi: rtl8192cu: Rework calls to rate-control routine
-      rtlwifi: rtl8192de: Rework calls to rate-control routine
-      rtlwifi: rtl8821ae: Switch to use common rate control routine
-
-Lorenzo Bianconi (3):
-      ath9k: enable TPC by default
-      ath9k: add debugfs support for hw TPC
-      ath9k: fix typo
-
-Peter Oh (1):
-      ath: fix incorrect PPB on FCC radar type 5
-
-Rickard Strandqvist (3):
-      rtlwifi: rtl8192de: fw.c: Remove unused function
-      rtlwifi: rtl8192ee: trx.c: Remove unused function
-      rtlwifi: rtl8723be: phy.c: Remove unused function
-
-Troy Tan (1):
-      rtlwifi: rtl8821ae: Simplify loading of WOWLAN firmware
-
- drivers/net/wireless/ath/ath9k/debug.c            |   71 +++++++
- drivers/net/wireless/ath/ath9k/hw.c               |    3 +
- drivers/net/wireless/ath/ath9k/xmit.c             |    2 +-
- drivers/net/wireless/ath/dfs_pattern_detector.c   |    2 +-
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c       |    4 +-
- drivers/net/wireless/rtlwifi/base.c               |  156 ++++++++++----
- drivers/net/wireless/rtlwifi/base.h               |    4 +-
- drivers/net/wireless/rtlwifi/core.c               |   24 ++-
- drivers/net/wireless/rtlwifi/core.h               |    1 +
- drivers/net/wireless/rtlwifi/rtl8188ee/trx.c      |  162 +-------------
- drivers/net/wireless/rtlwifi/rtl8192c/fw_common.h |    1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c       |  165 +++++++--------
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c      |    5 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c       |   30 +--
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c      |   13 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c      |    4 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c       |   28 +--
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c      |   20 +-
- drivers/net/wireless/rtlwifi/rtl8192de/fw.c       |   17 --
- drivers/net/wireless/rtlwifi/rtl8192de/fw.h       |    1 -
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c       |   30 +--
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c      |   27 ++-
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c      |  196 +----------------
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.h      |    9 +-
- drivers/net/wireless/rtlwifi/rtl8192se/def.h      |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c       |   30 +--
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c      |   23 +-
- drivers/net/wireless/rtlwifi/rtl8723ae/trx.c      |  162 +-------------
- drivers/net/wireless/rtlwifi/rtl8723be/phy.c      |   25 ---
- drivers/net/wireless/rtlwifi/rtl8723be/phy.h      |    2 -
- drivers/net/wireless/rtlwifi/rtl8723be/trx.c      |  162 +-------------
- drivers/net/wireless/rtlwifi/rtl8821ae/def.h      |   54 -----
- drivers/net/wireless/rtlwifi/rtl8821ae/pwrseq.h   |    4 +-
- drivers/net/wireless/rtlwifi/rtl8821ae/sw.c       |   74 +++----
- drivers/net/wireless/rtlwifi/rtl8821ae/trx.c      |  232 +--------------------
- drivers/net/wireless/rtlwifi/wifi.h               |   96 +++++----
- 36 files changed, 510 insertions(+), 1337 deletions(-)
-
--- 
-Kalle Valo
+[  204.362614] ------------[ cut here ]------------
+[  204.362628] WARNING: CPU: 0 PID: 37 at net/mac80211/driver-ops.h:12
+ieee80211_request_sched_scan_stop+0xdd/0xf0 [mac80211]()
+[  204.362630] wlp1s0:  Failed check-sdata-in-driver check, flags: 0x4
+[  204.362631] Modules linked in: ccm rfcomm fuse ip6t_rpfilter
+ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6
+nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ebtable_nat
+ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_mangle
+ip6table_security ip6table_raw ip6table_filter ip6_tables
+iptable_mangle iptable_security iptable_raw bnep arc4 vfat fat
+x86_pkg_temp_thermal pn544_mei mei_phy pn544 coretemp hci kvm_intel
+nfc iTCO_wdt iTCO_vendor_support kvm iwlmvm uvcvideo
+snd_hda_codec_realtek microcode snd_hda_codec_generic
+snd_hda_codec_hdmi mac80211 videobuf2_vmalloc videobuf2_memops
+videobuf2_core v4l2_common snd_hda_intel videodev snd_hda_controller
+joydev btusb media hid_multitouch i2c_i801 snd_hda_codec serio_raw
+iwlwifi bluetooth snd_hwdep snd_seq cfg80211 snd_seq_device
+[  204.362677]  snd_pcm sony_laptop rfkill mei_me snd_timer mei snd
+lpc_ich mfd_core shpchp soundcore dm_crypt i915 crct10dif_pclmul
+crc32_pclmul crc32c_intel i2c_algo_bit ghash_clmulni_intel
+drm_kms_helper drm i2c_core video
+[  204.362695] CPU: 0 PID: 37 Comm: kworker/0:1 Tainted: G        W
+  3.19.0-rc4-00241-gfc7f0dd38172 #14
+[  204.362697] Hardware name: Sony Corporation SVP11213CXB/VAIO, BIOS
+R0270V7 05/17/2013
+[  204.362703] Workqueue: events cfg80211_rfkill_sync_work [cfg80211]
+[  204.362705]  0000000000000000 ffffffffc04e3491 ffffffff815eb39a
+ffff88011a697c18
+[  204.362709]  ffffffff8106c357 ffff8800d9e08660 ffff8800d3b12880
+00000000fffffffb
+[  204.362713]  ffff8800d9e09618 ffff8800d9e08000 ffffffff8106c3d5
+ffffffffc04e0e78
+[  204.362717] Call Trace:
+[  204.362723]  [<ffffffff815eb39a>] ? dump_stack+0x40/0x50
+[  204.362726]  [<ffffffff8106c357>] ? warn_slowpath_common+0x77/0xb0
+[  204.362730]  [<ffffffff8106c3d5>] ? warn_slowpath_fmt+0x45/0x50
+[  204.362743]  [<ffffffffc049374d>] ?
+ieee80211_request_sched_scan_stop+0xdd/0xf0 [mac80211]
+[  204.362755]  [<ffffffffc0357a33>] ?
+__cfg80211_stop_sched_scan+0x73/0xb0 [cfg80211]
+[  204.362763]  [<ffffffffc035016b>] ?
+cfg80211_netdev_notifier_call+0x49b/0x500 [cfg80211]
+[  204.362768]  [<ffffffff814f3769>] ? __dev_remove_pack+0x39/0xa0
+[  204.362772]  [<ffffffff815d9d0c>] ? __unregister_prot_hook+0xcc/0xd0
+[  204.362776]  [<ffffffff815da89c>] ? packet_notifier+0x15c/0x1b0
+[  204.362781]  [<ffffffff81086e65>] ? notifier_call_chain+0x45/0x70
+[  204.362785]  [<ffffffff814f41a9>] ? dev_close_many+0xb9/0x110
+[  204.362788]  [<ffffffff814f65da>] ? dev_close.part.87+0x2a/0x40
+[  204.362792]  [<ffffffff814f6609>] ? dev_close+0x19/0x20
+[  204.362800]  [<ffffffffc034f76d>] ?
+cfg80211_shutdown_all_interfaces+0x3d/0xb0 [cfg80211]
+[  204.362807]  [<ffffffffc034f809>] ?
+cfg80211_rfkill_sync_work+0x29/0x30 [cfg80211]
+[  204.362811]  [<ffffffff81081335>] ? process_one_work+0x135/0x370
+[  204.362815]  [<ffffffff8107e927>] ? pwq_activate_delayed_work+0x27/0x40
+[  204.362819]  [<ffffffff810818c3>] ? worker_thread+0x63/0x480
+[  204.362822]  [<ffffffff81081860>] ? rescuer_thread+0x2f0/0x2f0
+[  204.362826]  [<ffffffff8108606e>] ? kthread+0xce/0xf0
+[  204.362830]  [<ffffffff81085fa0>] ? kthread_create_on_node+0x180/0x180
+[  204.362834]  [<ffffffff815f0eac>] ? ret_from_fork+0x7c/0xb0
+[  204.362838]  [<ffffffff81085fa0>] ? kthread_create_on_node+0x180/0x180
+[  204.362840] ---[ end trace d0ac2826f7d27480 ]---
