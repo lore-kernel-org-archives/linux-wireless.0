@@ -1,47 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbbAYIxX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 03:53:23 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 00/10] wil6210 patches
-Date: Sun, 25 Jan 2015 10:52:41 +0200
-Message-Id: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_095333_115202_D75473CE)
+Received: from mga14.intel.com ([192.55.52.115]:33794 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751972AbbARUSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 15:18:09 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] iwlwifi: mvm: abort scheduled scan upon RFKILL
+Date: Sun, 18 Jan 2015 22:18:03 +0200
+Message-Id: <1421612283-27012-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150118_211813_633737_55C9423C)
+In-Reply-To: <1421612183.26502.1.camel@egrumbacBox>
+References: <1421612183.26502.1.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Performance tuning; some AP features; some small fixes
+When we have an active scheduled scan, and the RFKILL
+interrupt kicks in, the stack will cancel the scheduled
+scan as part of the down flow. But cancelling scheduled
+scan usually implies sending a command to the firwmare
+which has been killed as part of the RFKILL interrupt
+handling.
+Because of that, we returned an error to mac80211 when
+it asked to stop the scheduled scan and didn't notify the
+end of the scheduled scan. Besides a fat warning, this led
+to a situation in which cfg80211 would refuse any new scan
+request.
 
-Dedy Lansky (2):
-  wil6210: fix timing of netif_carrier_on indication
-  wil6210: ignore firmware failure to gracefully stop AP
+To disentangle this, fake that the scheduled scan has been
+stopped without sending the command to the firwmare, return
+0 after having properly let cfg80211 know that the scan
+has been cancelled.
 
-Vladimir Kondratiev (4):
-  wil6210: sync WMI with firmware
-  wil6210: Tx status
-  wil6210: probe_client
-  wil6210: move Rx reorder buffer allocation out of spinlock
+This is basically the same as:
+commit 9b520d84957d63348e87c0f2cbd21d86e1e8f2f2
+Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Date:   Tue Nov 4 15:54:11 2014 +0200
 
-Vladimir Shulman (4):
-  wil6210: Add Tx queue len configuration
-  wil6210: tuning rings size
-  wil6210: interrupt moderation configuration update
-  wil6210: remove unnecessary interrupt moderation module parameters
+    iwlwifi: mvm: abort scan upon RFKILL
 
- drivers/net/wireless/ath/wil6210/cfg80211.c   | 112 ++++++++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/main.c       |  73 ++++-------------
- drivers/net/wireless/ath/wil6210/netdev.c     |  15 ++--
- drivers/net/wireless/ath/wil6210/rx_reorder.c |   8 +-
- drivers/net/wireless/ath/wil6210/txrx.c       |  19 ++++-
- drivers/net/wireless/ath/wil6210/wil6210.h    |  25 ++++--
- drivers/net/wireless/ath/wil6210/wmi.c        |  17 ++--
- drivers/net/wireless/ath/wil6210/wmi.h        |  58 +++++++++++--
- 8 files changed, 227 insertions(+), 100 deletions(-)
+    This code existed but not for all the different FW APIs
+    we support.
+    Fix this.
 
+but for the scheduled scan case.
+
+Link: http://permalink.gmane.org/gmane.linux.kernel.wireless.general/133232
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 3fbba4b..844bf7c 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -1107,6 +1107,12 @@ int iwl_mvm_scan_offload_stop(struct iwl_mvm *mvm, bool notify)
+ 		return iwl_umac_scan_stop(mvm, IWL_UMAC_SCAN_UID_SCHED_SCAN,
+ 					  notify);
+ 
++	if (mvm->scan_status == IWL_MVM_SCAN_NONE)
++		return 0;
++
++	if (iwl_mvm_is_radio_killed(mvm))
++		goto out;
++
+ 	if (mvm->scan_status != IWL_MVM_SCAN_SCHED &&
+ 	    (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_LMAC_SCAN) ||
+ 	     mvm->scan_status != IWL_MVM_SCAN_OS)) {
+@@ -1143,6 +1149,7 @@ int iwl_mvm_scan_offload_stop(struct iwl_mvm *mvm, bool notify)
+ 	if (mvm->scan_status == IWL_MVM_SCAN_OS)
+ 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
+ 
++out:
+ 	mvm->scan_status = IWL_MVM_SCAN_NONE;
+ 
+ 	if (notify) {
 -- 
-2.1.0
+1.9.1
 
