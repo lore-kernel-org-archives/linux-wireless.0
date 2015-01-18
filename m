@@ -1,86 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:40155 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832AbbAaOz3 (ORCPT
+Received: from mail-qc0-f177.google.com ([209.85.216.177]:49151 "EHLO
+	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751462AbbARM74 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2015 09:55:29 -0500
-Received: by mail-wg0-f49.google.com with SMTP id k14so31545660wgh.8
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 06:55:27 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: core: rtw_mlme: Removed variables that is never used
-Date: Sat, 31 Jan 2015 15:58:49 +0100
-Message-Id: <1422716329-3718-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150131_155545_510684_A0CA1BA7)
+	Sun, 18 Jan 2015 07:59:56 -0500
+Received: by mail-qc0-f177.google.com with SMTP id x3so22824071qcv.8
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 04:59:55 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <54BB9D3C.90306@cogentembedded.com>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+	<20150118051105.31866.43889.stgit@114-36-241-182.dynamic.hinet.net>
+	<54BB9D3C.90306@cogentembedded.com>
+Date: Sun, 18 Jan 2015 20:59:55 +0800
+Message-ID: <CAAfg0W7nD9Jb7M3vhnkM6KaOrVOo+A_zvuQy1XUYM36KBzUH_Q@mail.gmail.com> (sfid-20150118_140000_562949_D364F804)
+Subject: Re: [PATCH 5/7] net: wireless: wcn36xx: swallow two wcn3620 IND messages
+From: Andy Green <andy.green@linaro.org>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Variable was assigned a value that was never used.
-I have also removed all the code that thereby serves no purpose.
+On 18 January 2015 at 19:47, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> Hello.
+>
+> On 1/18/2015 8:11 AM, Andy Green wrote:
+>
+>> WCN3620 can asynchronously send two new kinds of indication message,
+>> since we can't handle them just accept them quietly.
+>
+>
+>> Signed-off-by: Andy Green <andy.green@linaro.org>
+>> ---
+>>   drivers/net/wireless/ath/wcn36xx/smd.c |    6 ++++++
+>>   1 file changed, 6 insertions(+)
+>
+>
+>> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c
+>> b/drivers/net/wireless/ath/wcn36xx/smd.c
+>> index 6398693..819741c 100644
+>> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+>> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+>
+> [...]
+>>
+>> @@ -2107,6 +2109,10 @@ static void wcn36xx_ind_smd_work(struct work_struct
+>> *work)
+>>         msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
+>>
+>>         switch (msg_header->msg_type) {
+>> +       case WCN36XX_HAL_COEX_IND:
+>> +               break;
+>> +       case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
+>> +               break;
+>
+>
+>    Can't you merge these 2 cases, so that there's only one *break*?
 
-This was found using a static code analysis program called cppcheck
+Yes will do.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/staging/rtl8723au/core/rtw_mlme.c |   21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+-Andy
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
-index 7299ef0..8b2db4b 100644
---- a/drivers/staging/rtl8723au/core/rtw_mlme.c
-+++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
-@@ -2123,7 +2123,6 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
- {
- 	u32 out_len;
- 	int max_rx_ampdu_factor;
--	unsigned char *pframe;
- 	const u8 *p;
- 	struct ieee80211_ht_cap ht_capie;
- 	u8 WMM_IE[7] = {0x00, 0x50, 0xf2, 0x02, 0x00, 0x01, 0x00};
-@@ -2139,10 +2138,10 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
- 
- 		if (pmlmepriv->qos_option == 0) {
- 			out_len = *pout_len;
--			pframe = rtw_set_ie23a(out_ie + out_len,
--					       WLAN_EID_VENDOR_SPECIFIC,
--					       sizeof(WMM_IE), WMM_IE,
--					       pout_len);
-+			rtw_set_ie23a(out_ie + out_len,
-+						WLAN_EID_VENDOR_SPECIFIC,
-+						sizeof(WMM_IE), WMM_IE,
-+						pout_len);
- 
- 			pmlmepriv->qos_option = 1;
- 		}
-@@ -2172,18 +2171,18 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
- 			ht_capie.ampdu_params_info |=
- 				(IEEE80211_HT_AMPDU_PARM_DENSITY & 0x00);
- 
--		pframe = rtw_set_ie23a(out_ie + out_len, WLAN_EID_HT_CAPABILITY,
--				    sizeof(struct ieee80211_ht_cap),
--				    (unsigned char *)&ht_capie, pout_len);
-+		rtw_set_ie23a(out_ie + out_len, WLAN_EID_HT_CAPABILITY,
-+				sizeof(struct ieee80211_ht_cap),
-+				(unsigned char *)&ht_capie, pout_len);
- 
- 		phtpriv->ht_option = true;
- 
- 		p = cfg80211_find_ie(WLAN_EID_HT_OPERATION, in_ie, in_len);
- 		if (p && (p[1] == sizeof(struct ieee80211_ht_operation))) {
- 			out_len = *pout_len;
--			pframe = rtw_set_ie23a(out_ie + out_len,
--					       WLAN_EID_HT_OPERATION,
--					       p[1], p + 2 , pout_len);
-+			rtw_set_ie23a(out_ie + out_len,
-+					WLAN_EID_HT_OPERATION,
-+					p[1], p + 2, pout_len);
- 		}
- 	}
- 
--- 
-1.7.10.4
-
+> [...]
+>
+> WBR, Sergei
+>
