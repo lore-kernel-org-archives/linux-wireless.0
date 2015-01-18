@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36209 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752378AbbAGNuU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:50:20 -0500
-Message-ID: <1420638611.3407.14.camel@sipsolutions.net> (sfid-20150107_145022_838895_79F0BC76)
-Subject: Re: [PATCH] cfg80211: fix deadlock during reg chan check
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Wed, 07 Jan 2015 14:50:11 +0100
-In-Reply-To: <CA+XVXffmhz969NFRTyvKxJjBtHat-aO+GOCSo_MfJROCiWqQ7g@mail.gmail.com> (sfid-20150107_144913_204913_20AF85C1)
-References: <1419847199-25493-1-git-send-email-arik@wizery.com>
-	 <1420541514.1966.16.camel@sipsolutions.net>
-	 <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com>
-	 <1420637871.3407.10.camel@sipsolutions.net>
-	 <CA+XVXfezPYoyEv-HVq_Xy9HHyRKeqDZMxOWDXLTQMHprkbM0ng@mail.gmail.com>
-	 <1420638389.3407.13.camel@sipsolutions.net>
-	 <CA+XVXffmhz969NFRTyvKxJjBtHat-aO+GOCSo_MfJROCiWqQ7g@mail.gmail.com>
-	 (sfid-20150107_144913_204913_20AF85C1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:64482 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752642AbbARKzk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 05:55:40 -0500
+Message-ID: <54BB9129.5010103@broadcom.com> (sfid-20150118_115606_657429_5B6C00B0)
+Date: Sun, 18 Jan 2015 11:55:37 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Subject: Re: Wireless scanning while turning off the radio problem..
+References: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com>
+In-Reply-To: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-07 at 15:48 +0200, Arik Nemtsov wrote:
-> >
-> >> >
-> >> >> > Also, the only reason this can happen anyway is when you call "can
-> >> >> > beacon" for a station interface - which seems nonsensical. Given that
-> >> >>
-> >> >> This is not true. This happens with current code for a p2p-go
-> >> >> interface during channel validity checks in reg.c.
-> >> >
-> >> > Not sure I see this? The only thing doing wdev locking is
-> >> > cfg80211_go_permissive_chan(), no? And that only for station interfaces.
-> >>
-> >> cfg80211_go_permissive_chan is called from cfg80211_reg_can_beacon,
-> >> currently only for GO interfaces, but for STA also in the future
-> >> (hopefully).
-> >> The latter is called during channel validity checks for GO.
-> >
-> > Ok.
-> >
-> > Should I just apply the patch as it is then?
-> 
-> It fixes a real existing deadlock, so I think so, yea.
+On 01/18/15 04:25, Linus Torvalds wrote:
+> So there seems to be some issue with unlucky timing when turning off
+> wireless while the driver is busy scanning. I can't reproduce this, so
+> it's a one-off, but it's not just ugly warnings, the kernel woudln't
+> scan any wireless on that device afterwards and I had to reboot to get
+> networking back, so there is some long-term damage.
+>
+> This is with Intel wireless (iwlwifi, it's a iwl N7260 thing, rev
+> 0x144 if anybody cares) , but the warning callbacks don't seem to be
+> iwl-specific.
+>
+> This was a recent top-of-git kernel (3.19.0-rc4-00241-gfc7f0dd38172 to
+> be exact).
+>
+> Anybody have any ideas? Anything in particular I should try out to
+> help possibly get more information?
 
-Is it needed on 3.19?
+If I am not mistaken the "iwl N7260 thing" is a PCIe device.
 
-johannes
+iwl_pcie_irq_handler
+	iwl_trans_pcie_rf_kill
+		if (iwl_op_mode_hw_rf_kill)
+			iwl_trans_pcie_stop_device
 
+The function iwl_trans_pcie_stop_device() put device in low-power and 
+resets the cpu on the device. So iwl_op_mode_hw_rf_kill ends up in
+iwl_mvm_set_hw_rfkill_state which schedules cfg80211_rfkill_sync_work 
+and returns true if firmware is running. The patch below might work.
+
+Regards,
+Arend
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c 
+b/drivers/net/wireless/iwlwi
+index 97dfba5..685217a 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -779,6 +779,9 @@ static bool iwl_mvm_set_hw_rfkill_state(struct 
+iwl_op_mode *
+         if (calibrating)
+                 iwl_abort_notification_waits(&mvm->notif_wait);
+
++       /* stop scheduled scan */
++       iwl_mvm_scan_offload_stop(mvm, true);
++
+         /*
+          * Stop the device if we run OPERATIONAL firmware or if we are 
+in the
+          * middle of the calibrations.
