@@ -1,49 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58133 "EHLO sipsolutions.net"
+Received: from hauke-m.de ([5.39.93.123]:33012 "EHLO hauke-m.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932183AbbANIy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 03:54:27 -0500
-Message-ID: <1421225664.1950.27.camel@sipsolutions.net> (sfid-20150114_095436_056175_718B4353)
-Subject: Re: [RFC 2/2] mac80211: add VHT support for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 14 Jan 2015 09:54:24 +0100
-In-Reply-To: <1421138124-7661-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150113_093621_137245_E694964D)
-References: <1421138124-7661-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1421138124-7661-2-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150113_093621_137245_E694964D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750776AbbARS0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 13:26:25 -0500
+Message-ID: <54BBFACA.9010609@hauke-m.de> (sfid-20150118_192704_774590_B4F0D84B)
+Date: Sun, 18 Jan 2015 19:26:18 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org
+CC: "Saul St. John" <saul.stjohn@gmail.com>
+Subject: Re: [PATCH RFC] bcma: simplify freeing cores (internal devices structs)
+References: <1421444828-32616-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1421444828-32616-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-13 at 09:35 +0100, Janusz Dziedzic wrote:
+On 01/16/2015 10:47 PM, Rafał Miłecki wrote:
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> This code was introduced by Saul in
+> ee91592711ed90a1abfbb1b2ceadded11d685164
+> bcma: don't leak memory for PCIE, MIPS, GBIT cores
+> 
+> I don't really see reason for making it in so complicated way.
+> I tested my patch for crashes, but didn't really try kmemleak.
+> Is my simple solution OK? Or am I missing something? Anyone?
 
-> +++ b/net/mac80211/main.c
-> @@ -549,6 +549,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
->  		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
->  				   NL80211_FEATURE_AP_SCAN;
+Are you sure no device driver accesses the chipcommon, pcie or mips core
+in the unregister part? If some device driver does something in his
+remove function with e.g. chipcommon it will cause problems when the
+chipcommon core was already freed.
+
+Hauke
+
+> ---
+>  drivers/bcma/main.c | 11 ++---------
+>  1 file changed, 2 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> index c3c5e0a..58dd582 100644
+> --- a/drivers/bcma/main.c
+> +++ b/drivers/bcma/main.c
+> @@ -371,6 +371,8 @@ static void bcma_unregister_cores(struct bcma_bus *bus)
+>  		list_del(&core->list);
+>  		if (core->dev_registered)
+>  			device_unregister(&core->dev);
+> +		else
+> +			kfree(core);
+>  	}
+>  	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
+>  		platform_device_unregister(bus->drv_cc.watchdog);
+> @@ -467,7 +469,6 @@ int bcma_bus_register(struct bcma_bus *bus)
 >  
-> +	wiphy_ext_feature_set(wiphy, NL80211_FEATURE_VHT_IBSS);
-
-Maybe we should leave this to the driver?
-
-And it should certainly depend on actual VHT capability, I'd say? Seems
-confusing if we ended up with a driver that doesn't have VHT but says it
-has VHT_IBSS :)
-
-> +++ b/net/mac80211/util.c
-> @@ -2329,6 +2329,41 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
->  	return pos + sizeof(struct ieee80211_ht_operation);
+>  void bcma_bus_unregister(struct bcma_bus *bus)
+>  {
+> -	struct bcma_device *cores[3];
+>  	int err;
+>  
+>  	err = bcma_gpio_unregister(&bus->drv_cc);
+> @@ -478,15 +479,7 @@ void bcma_bus_unregister(struct bcma_bus *bus)
+>  
+>  	bcma_core_chipcommon_b_free(&bus->drv_cc_b);
+>  
+> -	cores[0] = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
+> -	cores[1] = bcma_find_core(bus, BCMA_CORE_PCIE);
+> -	cores[2] = bcma_find_core(bus, BCMA_CORE_4706_MAC_GBIT_COMMON);
+> -
+>  	bcma_unregister_cores(bus);
+> -
+> -	kfree(cores[2]);
+> -	kfree(cores[1]);
+> -	kfree(cores[0]);
 >  }
 >  
-> +u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-> +				const struct cfg80211_chan_def *chandef)
-
-For now that'll only be used by IBSS (perhaps mesh in the future?), but
-maybe it should just be in ibss.c until it's used more?
-
-johannes
-
+>  /*
+> 
 
