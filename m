@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42244 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755575AbbA1USk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 15:18:40 -0500
-Message-ID: <1422430643.1973.1.camel@sipsolutions.net> (sfid-20150128_230953_458583_5D948B2A)
-Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Oh <poh@qca.qualcomm.com>
-Cc: Bob Copeland <me@bobcopeland.com>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Date: Wed, 28 Jan 2015 08:37:23 +0100
-In-Reply-To: <54C875FD.3070101@qca.qualcomm.com> (sfid-20150128_064104_435635_7E681844)
-References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com>
-	 <20150127213349.GA24933@localhost> <54C824DC.5080804@qca.qualcomm.com>
-	 <20150128043005.GB24933@localhost> <54C875FD.3070101@qca.qualcomm.com>
-	 (sfid-20150128_064104_435635_7E681844)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:39370 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbbARFLM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 00:11:12 -0500
+Subject: [PATCH 5/7] net: wireless: wcn36xx: swallow two wcn3620 IND messages
+From: Andy Green <andy.green@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 18 Jan 2015 13:11:05 +0800
+Message-ID: <20150118051105.31866.43889.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061122_640931_B438AC44)
+In-Reply-To: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-27 at 21:39 -0800, Peter Oh wrote:
+WCN3620 can asynchronously send two new kinds of indication message,
+since we can't handle them just accept them quietly.
 
-> > Ok, sure, but I/O ordering two different writes, and ensuring device
-> > has seen a posted write, are related but different things, no?
-> yes, they are different and wmb guarantees both.
+Signed-off-by: Andy Green <andy.green@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-No, wmb() doesn't. I'd be very surprised if it had any side effect on
-the PCI bus even on ARM. Read Documentation/memory-barriers.txt.
-
-And to understand (PCI) posted writes, wikipedia helps:
-http://en.wikipedia.org/wiki/Posted_write
-
-johannes
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 6398693..819741c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2061,6 +2061,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+ 		complete(&wcn->hal_rsp_compl);
+ 		break;
+ 
++	case WCN36XX_HAL_COEX_IND:
++	case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
+ 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
+ 	case WCN36XX_HAL_MISSED_BEACON_IND:
+ 	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
+@@ -2107,6 +2109,10 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 	msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
+ 
+ 	switch (msg_header->msg_type) {
++	case WCN36XX_HAL_COEX_IND:
++		break;
++	case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
++		break;
+ 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
+ 		wcn36xx_smd_tx_compl_ind(wcn,
+ 					 hal_ind_msg->msg,
 
