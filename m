@@ -1,33 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58088 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751913AbbAFI3i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 03:29:38 -0500
-Message-ID: <1420532972.1966.4.camel@sipsolutions.net> (sfid-20150106_092942_350423_E509F98E)
-Subject: Re: b43 driver and WEP (solved)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Erich Titl <erich.titl@think.ch>, linux-wireless@vger.kernel.org
-Date: Tue, 06 Jan 2015 09:29:32 +0100
-In-Reply-To: <54AB31EB.6020801@lwfinger.net> (sfid-20150106_015306_425223_200E98E0)
-References: <54AA5438.9070902@think.ch> <54AAFFB1.8030109@lwfinger.net>
-	 <54AB2405.3050602@think.ch> <54AB31EB.6020801@lwfinger.net>
-	 (sfid-20150106_015306_425223_200E98E0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:50117 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197AbbARFKt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Jan 2015 00:10:49 -0500
+Subject: [PATCH 1/7] net: wireless: wcn36xx: add wcn3620 chip type definition
+From: Andy Green <andy.green@linaro.org>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Date: Sun, 18 Jan 2015 13:10:43 +0800
+Message-ID: <20150118051043.31866.53087.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061057_372044_57461993)
+In-Reply-To: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 18:52 -0600, Larry Finger wrote:
+Convert the list of chip types to an enum, add the default
+UNKNOWN type and a type for WCN3620 chip
 
-> Glad you found it. Strange that loading mac80211 did not force loading. Have you 
-> run 'depmod -a' on the modules?
+Signed-off-by: Andy Green <andy.green@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-I believe that mac80211 doesn't have a strong dependency on the module -
-it just loads the crypto algorithm at runtime.
-
-In fact, IIRC this was even required/desired for FIPS mode in RHEL or
-so.
-
-johannes
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index f0fb81d..a5366b6 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -93,6 +93,13 @@ struct nv_data {
+ 	u8	table;
+ };
+ 
++enum wcn36xx_chip_type {
++	WCN36XX_CHIP_UNKNOWN,
++	WCN36XX_CHIP_3660,
++	WCN36XX_CHIP_3680,
++	WCN36XX_CHIP_3620,
++};
++
+ /* Interface for platform control path
+  *
+  * @open: hook must be called when wcn36xx wants to open control channel.
+@@ -179,7 +186,7 @@ struct wcn36xx {
+ 	u8			fw_minor;
+ 	u8			fw_major;
+ 	u32			fw_feat_caps[WCN36XX_HAL_CAPS_SIZE];
+-	u32			chip_version;
++	enum wcn36xx_chip_type	chip_version;
+ 
+ 	/* extra byte for the NULL termination */
+ 	u8			crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
+@@ -227,9 +234,6 @@ struct wcn36xx {
+ 
+ };
+ 
+-#define WCN36XX_CHIP_3660	0
+-#define WCN36XX_CHIP_3680	1
+-
+ static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
+ 					 u8 major,
+ 					 u8 minor,
 
