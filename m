@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:52146 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752698AbbAGNeZ (ORCPT
+Received: from mail-qg0-f42.google.com ([209.85.192.42]:52215 "EHLO
+	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751479AbbARQxZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:34:25 -0500
-Received: by mail-wg0-f43.google.com with SMTP id k14so1202387wgh.2
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 05:34:24 -0800 (PST)
+	Sun, 18 Jan 2015 11:53:25 -0500
 MIME-Version: 1.0
-In-Reply-To: <1420541514.1966.16.camel@sipsolutions.net>
-References: <1419847199-25493-1-git-send-email-arik@wizery.com> <1420541514.1966.16.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 7 Jan 2015 15:34:09 +0200
-Message-ID: <CA+XVXfeFWbVLCpebTQpv9FZPaDUEt1NJ6GpnyRoZ1UG91nMymw@mail.gmail.com> (sfid-20150107_143434_337089_7877A8AC)
-Subject: Re: [PATCH] cfg80211: fix deadlock during reg chan check
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
+In-Reply-To: <CANUX_P0LCr3fzqLyjKQbZ-P2hAV-Nk6=AMm=oFOWCLW34cRg2w@mail.gmail.com>
+References: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com>
+	<CANUX_P0LCr3fzqLyjKQbZ-P2hAV-Nk6=AMm=oFOWCLW34cRg2w@mail.gmail.com>
+Date: Mon, 19 Jan 2015 04:53:24 +1200
+Message-ID: <CA+55aFzEr-R1anNm91pnM=ujfhBstJikZBVtduphff1PtccHDw@mail.gmail.com> (sfid-20150118_175334_553365_51A8BF5B)
+Subject: Re: Wireless scanning while turning off the radio problem..
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 6, 2015 at 12:51 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2014-12-29 at 11:59 +0200, Arik Nemtsov wrote:
->> If a P2P GO is active, the cfg80211_reg_can_beacon function will take
->> the wdev lock, in its call to cfg80211_go_permissive_chan. But the wdev lock
->> is already taken by the parent channel-checking function, causing a
->> deadlock.
->> Split the checking code into two parts. The first part will check if the
->> wdev is active and saves the channel under the wdev lock. The second part
->> will check actual channel validity according to type.
+On Sun, Jan 18, 2015 at 11:24 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
 >
-> I'm not convinced this is the right thing to do. When checking for the
-> current wdev that it can use a channel, then it seems that it's own
-> current BSS connection (if any) shouldn't actually be taken into account
-> - ergo the lock shouldn't have to be taken, that interface should be
-> excluded from the "can beacon due to concurrent check" anyway.
+> we have different scan flows based on the firmware version you have,
+> so it would help if you could tell me what firmware you have.
 
-We have a couple of checks we want to add in the pipeline that also
-need "this" wdev in the concurrent check, so I'd prefer to avoid this.
+Sure. It's the larest one I could find
 
-Unless we treat the exclude_wdev as "already locked wdev", which I
-think is unglier than what I do here.
+   iwlwifi 0000:01:00.0: loaded firmware version 23.11.10.0 op_mode iwlmvm
 
+with the actual firmware file being 'iwlwifi-7260-10.ucode' from the
+current linux-firmware tree.
+
+Iin a different email Arend van Spriel <arend@broadcom.com> wrote:
 >
-> Also, the only reason this can happen anyway is when you call "can
-> beacon" for a station interface - which seems nonsensical. Given that
+> The function iwl_trans_pcie_stop_device() put device in low-power and
+> resets the cpu on the device.  So iwl_op_mode_hw_rf_kill ends up in
+> iwl_mvm_set_hw_rfkill_state which schedules cfg80211_rfkill_sync_work
+> and returns true if firmware is running.  The patch below might work.
 
-This is not true. This happens with current code for a p2p-go
-interface during channel validity checks in reg.c.
+Any suggestions for how to best try to trigger this for testing?
+Looking at my logs, it turns out that I actually got this three times,
+but they were all on the same boot, and I think the first case might
+just have triggered the later ones.
 
-Arik
+The trigger was turning off wifi from the wifi settings app due to
+being in an airplane when they were closing the doors. I don't *think*
+there was actually any wifi around at the time, which may or may not
+have made the scanning take longer and made it easier to trigger.
+
+But I've done it before (although this machine has been upgraded to
+F21 reasonably recently, and I did update the ucode file before the
+trip). And I did it afterwards to test. And it happened that one time
+(and then apparently kept happening during suspend/resume/shutdown,
+but as mentioned, I blame that on some sticky problem from the first
+time, and those events in turn happened because I couldn't get
+wireless to work afterwards).
+
+IOW, I'm not at all sure I can recreate it, so your "analyzing the
+source code for how this could happen" may be the only good way..
+
+               Linus
