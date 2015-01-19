@@ -1,77 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35717 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751853AbbASSGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 13:06:25 -0500
-Message-ID: <1421690782.1965.43.camel@sipsolutions.net> (sfid-20150119_190631_075059_B2086908)
-Subject: pull-request: mac80211-next 2015-01-19
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Jan 2015 19:06:22 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:43493 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996AbbASSYz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 13:24:55 -0500
+Received: by mail-wi0-f180.google.com with SMTP id bs8so18151648wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 10:24:53 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/6] staging: vt6655: set_channel replace parameter with ieee80211_channel
+Date: Mon, 19 Jan 2015 18:24:10 +0000
+Message-Id: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com> (sfid-20150119_192458_502381_3D2E3BDF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+replacing uConnectionChannel for hw_value as set in vnt_init_bands.
 
-Please excuse the quick succession of pull requests - two issues were
-found in the code from the previous one that we'd like to fix quickly,
-along with less than a handful of other changes described below.
+This allows other signaling of ieee80211_channel to move deeper into
+driver.
 
-Thanks,
-johannes
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/channel.c     | 12 ++++++------
+ drivers/staging/vt6655/channel.h     |  2 +-
+ drivers/staging/vt6655/device_main.c |  2 +-
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-The following changes since commit baf1b99ba169bdd3324ac9d99bc2a00c25534429:
-
-  cfg80211: docs: remove station_info_flags (2015-01-14 13:57:36 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-01-19
-
-for you to fetch changes up to c1e140bf79d817d4a7aa9932eb98b0359c87af33:
-
-  mac80211: delete the assoc/auth timer upon suspend (2015-01-19 18:59:20 +0100)
-
-----------------------------------------------------------------
-Some further updates for net-next:
- * fix network-manager which was broken by the previous changes
- * fix delete-station events, which were broken by me making the
-   genlmsg_end() mistake
- * fix a timer left running during suspend in some race conditions
-   that would cause an annoying (but harmless) warning
- * (less important, but in the tree already) remove 80+80 MHz rate
-   reporting since the spec doesn't distinguish it from 160 MHz;
-   as the bitrate they're both 160 MHz bandwidth
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-      mac80211: delete the assoc/auth timer upon suspend
-
-Johannes Berg (6):
-      mac80211: remove 80+80 MHz rate reporting
-      cfg80211: remove 80+80 MHz rate reporting
-      cfg80211: change bandwidth reporting to explicit field
-      mac80211: remove doubled semicolon
-      cfg80211: fix checking nl80211_send_station() return value
-      Revert "wireless: Support of IFLA_INFO_KIND rtnl attribute"
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  3 +-
- drivers/net/wireless/mwifiex/cfg80211.c    | 11 ++++----
- include/net/cfg80211.h                     | 35 ++++++++++++++++-------
- include/net/mac80211.h                     |  6 ++--
- include/uapi/linux/nl80211.h               | 11 +++++++-
- net/mac80211/cfg.c                         | 33 +++++++++++++---------
- net/mac80211/mlme.c                        | 12 ++++++++
- net/mac80211/rx.c                          |  5 ----
- net/mac80211/status.c                      |  2 +-
- net/mac80211/util.c                        | 27 +++++++++++-------
- net/wireless/core.c                        |  6 ----
- net/wireless/nl80211.c                     | 45 +++++++++++++++++++-----------
- net/wireless/util.c                        | 25 +++++++++++++----
- 13 files changed, 143 insertions(+), 78 deletions(-)
-
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index d593f5f..3fc09f4 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -174,12 +174,12 @@ void vnt_init_bands(struct vnt_private *priv)
+  * Return Value: true if succeeded; false if failed.
+  *
+  */
+-bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel)
++bool set_channel(void *pDeviceHandler, struct ieee80211_channel *ch)
+ {
+ 	struct vnt_private *pDevice = pDeviceHandler;
+ 	bool bResult = true;
+ 
+-	if (pDevice->byCurrentCh == uConnectionChannel)
++	if (pDevice->byCurrentCh == ch->hw_value)
+ 		return bResult;
+ 
+ 	/* Set VGA to max sensitivity */
+@@ -197,15 +197,15 @@ bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel)
+ 
+ 	if (pDevice->byRFType == RF_AIROHA7230)
+ 		RFbAL7230SelectChannelPostProcess(pDevice, pDevice->byCurrentCh,
+-						  (unsigned char)uConnectionChannel);
++						  (unsigned char)ch->hw_value);
+ 
+-	pDevice->byCurrentCh = (unsigned char)uConnectionChannel;
++	pDevice->byCurrentCh = (unsigned char)ch->hw_value;
+ 	bResult &= RFbSelectChannel(pDevice, pDevice->byRFType,
+-				    (unsigned char)uConnectionChannel);
++				    (unsigned char)ch->hw_value);
+ 
+ 	/* Init Synthesizer Table */
+ 	if (pDevice->bEnablePSMode)
+-		RFvWriteWakeProgSyn(pDevice, pDevice->byRFType, uConnectionChannel);
++		RFvWriteWakeProgSyn(pDevice, pDevice->byRFType, ch->hw_value);
+ 
+ 	BBvSoftwareReset(pDevice);
+ 
+diff --git a/drivers/staging/vt6655/channel.h b/drivers/staging/vt6655/channel.h
+index 4f4264e..e2be6fc 100644
+--- a/drivers/staging/vt6655/channel.h
++++ b/drivers/staging/vt6655/channel.h
+@@ -27,6 +27,6 @@
+ 
+ void vnt_init_bands(struct vnt_private *);
+ 
+-bool set_channel(void *pDeviceHandler, unsigned int uConnectionChannel);
++bool set_channel(void *pDeviceHandler, struct ieee80211_channel *);
+ 
+ #endif /* _CHANNEL_H_ */
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index c755ec2..b010184 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -1420,7 +1420,7 @@ static int vnt_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	if ((changed & IEEE80211_CONF_CHANGE_CHANNEL) ||
+ 	    (conf->flags & IEEE80211_CONF_OFFCHANNEL)) {
+-		set_channel(priv, conf->chandef.chan->hw_value);
++		set_channel(priv, conf->chandef.chan);
+ 
+ 		if (conf->chandef.chan->band == IEEE80211_BAND_5GHZ)
+ 			bb_type = BB_TYPE_11A;
+-- 
+2.1.0
 
