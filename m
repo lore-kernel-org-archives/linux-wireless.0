@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:48903 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753772AbbAEOUn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 09:20:43 -0500
-From: Avinash Patil <patila@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>
-Date: Mon, 5 Jan 2015 06:20:38 -0800
-Subject: RE: [PATCH v3] cfg80211: check for carrier state only when
- offchanel CAC supported
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A6A@SC-VEXCH2.marvell.com> (sfid-20150105_152052_300671_2B3FB3EF)
-References: <1420475584-5533-1-git-send-email-patila@marvell.com>
-	 (sfid-20150105_120344_381788_A7E15DA0),<1420462674.9459.9.camel@sipsolutions.net>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com>
-	 (sfid-20150105_143403_923577_F829B8B6),<1420465645.9459.13.camel@sipsolutions.net>
-In-Reply-To: <1420465645.9459.13.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:60578 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752158AbbASJz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 04:55:26 -0500
+Message-ID: <1421661324.1965.16.camel@sipsolutions.net> (sfid-20150119_105550_049569_80ABB568)
+Subject: Re: [RFC 2/2] mac80211: support RX rate statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, Eyal Shapira <eyal@wizery.com>
+Date: Mon, 19 Jan 2015 10:55:24 +0100
+In-Reply-To: <21689.49345.803049.938915@gargle.gargle.HOWL>
+References: <1421401708-8123-1-git-send-email-johannes@sipsolutions.net>
+	 <1421401708-8123-2-git-send-email-johannes@sipsolutions.net>
+	 <21689.49345.803049.938915@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2015-01-17 at 07:24 +0530, Sujith Manoharan wrote:
 
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of Johannes Berg [johannes@sipsolutions.net]
-Sent: Monday, January 05, 2015 7:17 PM
-To: Avinash Patil
-Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo
-Subject: Re: [PATCH v3] cfg80211: check for carrier state only when offchanel CAC supported
+> We were doing simple RX statistics collection inside ath9k
+> (CONFIG_ATH9K_STATION_STATISTICS), which can be removed once this goes
+> in. Is there any way a driver can pass custom data, like per-frame
+> antenna details ?
 
-On Mon, 2015-01-05 at 05:28 -0800, Avinash Patil wrote:
+Not right now - and there's practically no space left in the rate u16 to
+store it.
 
-> > -     if (netif_carrier_ok(dev))
-> > +     if (wiphy_ext_feature_isset(&rdev->wiphy,
-> > +                                 NL80211_EXT_FEATURE_OFFCHAN_CAC) &&
-> > +         netif_carrier_ok(dev))
-> >               return -EBUSY;
->
-> >Wait - doesn't that have to be !feature_isset()?
->
-> >johannes
->
-> If Offchannel CAC is supported (driver has set this bit in wiphy's
-> extended features) & carrier is ON, return EBUSY as offchannel CAC may
-> be ongoing, isnt it?
+Eyal also commented that perhaps not just antennas but also
+STBC/LDPC/beamforming should be tracked.
 
->Well, my thinking is this - a new feature flag should allow something
->new.
+We can achieve this by increasing the size of the rate field to u32, but
+then we also have far more combinations so probably need to increase the
+size of the buffer from 36 entries to more since otherwise we just end
+up sending the data out to userspace too frequently? Antennas for
+example could change frequently for single stream rates.
 
->Therefore, the patch should essentially be this:
+This capability right now is mostly intended for Android Lollipop's
+statistics requirements, where the rate only matters.
 
->+ if (!new_feature)
->if (do_old_check)
+If others want to use it for more, I'm certainly not averse to adding
+it, but it'd also mean adding more userspace API (where it might be a
+bit strange to add "antennas" to the "rate" since that doesn't impact
+the actual rate?)
 
->Now wrapping that into a single if gives
+johannes
 
->- if (do_old_check)
->+ if (!new_feature && do_old_check)
-
->so the patch looks wrong to me.
-
-I think here we want to  do_old_check only when new_feature is supported; because old check is causing issue for device where new feature is not supported.
-
-Earlier it was:
-- if (do_old_check)
-Now it is:
-+if (new_feature && do_old_check)
-
-I think check is still correct. As you suggested we can nest it...
-
-Please correct me if I am wrong.
-
--Avinash.
