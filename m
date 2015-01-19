@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:58391 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752081AbbAXNQg (ORCPT
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:50008 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604AbbASBbh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 08:16:36 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: sedat.dilek@gmail.com
-Cc: Hong Xu <hong@topbug.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4] ath9k and ath9k_htc: rename variable "led_blink"
-References: <1422099243-20321-1-git-send-email-hong@topbug.net>
-	<CA+icZUWtwQoBxWu+LSgva4sKgx1dLgAvxNXWxu2QN0s1zm-tWQ@mail.gmail.com>
-Date: Sat, 24 Jan 2015 15:16:28 +0200
-In-Reply-To: <CA+icZUWtwQoBxWu+LSgva4sKgx1dLgAvxNXWxu2QN0s1zm-tWQ@mail.gmail.com>
-	(Sedat Dilek's message of "Sat, 24 Jan 2015 12:51:19 +0100")
-Message-ID: <873870iaj7.fsf@kamboji.qca.qualcomm.com> (sfid-20150124_141640_561718_373DCA24)
+	Sun, 18 Jan 2015 20:31:37 -0500
+Received: by mail-ie0-f178.google.com with SMTP id vy18so28570608iec.9
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 17:31:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+A7n+gzarweW+ENOfx+QmCGHy+0Vu6qzPM70cPMxe5FTMwCUw@mail.gmail.com>
+References: <CA+A7n+jFWWs-U2DapExRqYgK=e2kGowPzFHJPh72DRwzBmVggg@mail.gmail.com>
+	<54991B32.2010105@rempel-privat.de>
+	<CA+A7n+hbr2ctPkSta9-MWT1opAT2hCB9jYHvFu7N3C_ZvxXSzw@mail.gmail.com>
+	<5499A391.2060705@rempel-privat.de>
+	<CA+A7n+iHKBxy3qfjzrnN7GdZhJ-WwoDdi6hjw8RSaDs8TBznvw@mail.gmail.com>
+	<549E6C1A.7010805@rempel-privat.de>
+	<CA+A7n+gP6h1HT5F7oDY-SDrrAAjbtTHAtY0683Fe7QdVb7byfQ@mail.gmail.com>
+	<CA+A7n+jQQNWk2CqoS9QQFODRsi8k4asjWE=5_q681E6PTiQM+A@mail.gmail.com>
+	<54B69807.9030906@rempel-privat.de>
+	<CA+A7n+gzarweW+ENOfx+QmCGHy+0Vu6qzPM70cPMxe5FTMwCUw@mail.gmail.com>
+Date: Sun, 18 Jan 2015 20:31:36 -0500
+Message-ID: <CA+A7n+j4dcsRc9yb6PyWAJZD-eUu2SQsy+R_Rk0NbSmfN_RVeA@mail.gmail.com> (sfid-20150119_023143_287206_EDC23CE9)
+Subject: Re: bug report for ath9k_htc driver
+From: Jeremy Audet <ichimonji10@gmail.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless@vger.kernel.org, Adrian Chadd <adrian@freebsd.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sedat Dilek <sedat.dilek@gmail.com> writes:
+No luck. [1] For what it's worth, the TL-WN722N's LEDs did not light
+up after executing `ip link set dev $device up`, so I am pretty sure
+that the `echo none > ...` command worked. I do see that version 1.4
+of the firmware may be released. [2] I can build and install the
+firmware and see what happens. Is that worth doing? I'm not 100% which
+firmware version is provided by your repo. [3]
 
-> On Sat, Jan 24, 2015 at 12:34 PM, Hong Xu <hong@topbug.net> wrote:
->> ath9k and ath9k_htc use the variable name "led_blink" to indicate
->> whether the module parameter "blink" is on. This name is easy to
->> conflict with other variables, and has caused a compiler error found
->> by kbuild test bot. The compiler error is as following:
->>
->> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
->> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
->>
->> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
->> Reported-by: kbuild test robot <fengguang.wu@intel.com>
->> Signed-off-by: Hong Xu <hong@topbug.net>
->> ---
->> Compared to previous versions, the commit message is improved to fit
->> the contribution guideline (again).
->> ---
->
-> This looks good.
+[1] http://www.ichimonji10.name/downloads/2015-01-18.txt
+[2] https://github.com/qca/open-ath9k-htc-firmware/issues/65
+[3] https://github.com/olerem/ath9k-htc-firmware-blob
 
-Indeed.
-
-> I have one thing for followers of (linux-wireless) mailing-lists in
-> general. If your patch is against a special Git tree, please add a
-> "subject-prefix" and/or put a note in the commit-body. For example:
-> "This patch is against wireless-drivers-next or linux-next
-> (next-2015-01-23)." This is very helpful.
-
-I don't think that's necessary as by default driver patches go to
-wireless-drivers-next. But if the patch should go to an -rc release for
-whatever (good) reasons it's best to mark the patch like "[PATCH 3.19]"
-or similar, that way I can easily see that it should go to 3.19. Larry
-does that and it's really helpful.
-
--- 
-Kalle Valo
+—Jeremy 'Ichimonji10' Audet
