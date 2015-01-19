@@ -1,40 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gw01.mail.saunalahti.fi ([195.197.172.115]:35283 "EHLO
-	gw01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932449AbbAFVzE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 16:55:04 -0500
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH] wlcore: fix copy'n'paste error
-Date: Tue,  6 Jan 2015 23:46:43 +0200
-Message-Id: <1420580803-25562-1-git-send-email-andy.shevchenko@gmail.com> (sfid-20150106_225509_092013_9043F4C5)
+Received: from mx1.redhat.com ([209.132.183.28]:40702 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751691AbbASTWM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 14:22:12 -0500
+Message-ID: <1421695324.23826.9.camel@dcbw.local> (sfid-20150119_202219_711122_37FA9C3A)
+Subject: Re: [PATCH] Revert "wireless: Support of IFLA_INFO_KIND rtnl
+ attribute"
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Mon, 19 Jan 2015 13:22:04 -0600
+In-Reply-To: <1421689943-13264-1-git-send-email-johannes@sipsolutions.net>
+References: <1421689943-13264-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no assignment of window_size in wl12xx_acx_config_hangover. The
-patch fixes the issue.
+On Mon, 2015-01-19 at 18:52 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> This reverts commit ba1debdfed974f25aa598c283567878657b292ee.
+> 
+> Oliver reported that it breaks network-manager, for some reason with
+> this patch NM decides that the device isn't wireless but "generic"
+> (ethernet), sees no carrier (as expected with wifi) and fails to do
+> anything else with it.
 
-Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/net/wireless/ti/wlcore/acx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hmm, which NM version?  NM uses either DEVTYPE (from 'uevent' in sysfs),
+the phy80211 link in sysfs, or (if enabled) WEXT to figure out whether a
+network interface with arptype=1 is WiFi or not.  I can't think of why
+IFLA_INFO_KIND would break that...  what are the userspace visible
+effects of the patch before reversion?
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index b924cea..f28fa3b 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -1725,7 +1725,7 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
- 	acx->decrease_delta = conf->decrease_delta;
- 	acx->quiet_time = conf->quiet_time;
- 	acx->increase_time = conf->increase_time;
--	acx->window_size = acx->window_size;
-+	acx->window_size = conf->window_size;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_CONFIG_HANGOVER, acx,
- 				   sizeof(*acx));
--- 
-1.8.3.101.g727a46b
+Dan
+
+> Revert this to unbreak userspace.
+> 
+> Reported-by: Oliver Hartkopp <socketcan@hartkopp.net>
+> Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/wireless/core.c | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 456e4c38c279..3af0ecf1cc16 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -21,7 +21,6 @@
+>  #include <linux/sched.h>
+>  #include <net/genetlink.h>
+>  #include <net/cfg80211.h>
+> -#include <net/rtnetlink.h>
+>  #include "nl80211.h"
+>  #include "core.h"
+>  #include "sysfs.h"
+> @@ -964,10 +963,6 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+>  }
+>  EXPORT_SYMBOL(cfg80211_stop_iface);
+>  
+> -static const struct rtnl_link_ops wireless_link_ops = {
+> -	.kind = "wlan",
+> -};
+> -
+>  static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+>  					 unsigned long state, void *ptr)
+>  {
+> @@ -986,7 +981,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+>  	switch (state) {
+>  	case NETDEV_POST_INIT:
+>  		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
+> -		dev->rtnl_link_ops = &wireless_link_ops;
+>  		break;
+>  	case NETDEV_REGISTER:
+>  		/*
+
 
