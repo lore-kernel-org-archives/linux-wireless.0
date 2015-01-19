@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:50392 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762644AbbA3PQU (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:37564 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849AbbASCKq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 10:16:20 -0500
-Received: by mail-oi0-f49.google.com with SMTP id a3so34973564oib.8
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 07:16:19 -0800 (PST)
-Date: Fri, 30 Jan 2015 09:16:05 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
+	Sun, 18 Jan 2015 21:10:46 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 To: linux-wireless@vger.kernel.org
-Cc: wireless-regdb@lists.infradead.org
-Subject: [ANN] wireless-regdb: master-2015-01-30
-Message-ID: <20150130151605.GD124346@ubuntu-hedt> (sfid-20150130_161623_162711_26909D9A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: ath9k-devel@qca.qualcomm.com
+Subject: [PATCH 0/6] ath9k patches
+Date: Mon, 19 Jan 2015 07:43:12 +0530
+Message-Id: <1421633598-4488-1-git-send-email-sujith@msujith.org> (sfid-20150119_031111_608106_7D249238)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new release of wireless-regdb (master-2015-01-30) is available at:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.01.30.tar.gz
+ath9k patches for -next.
 
-Note that this is the first release signed with my key. As of yet there
-is no release of CRDA which by default trusts a regulatory.bin signed
-with my key, but in most cases it will still trust regulatory.bin by
-virtue of having the corresponding public key installed in e.g.
-/lib/crda/pubkeys.
+Sujith Manoharan (6):
+  ath9k: Update QCA953x initvals
+  ath9k: Update AR955x initvals
+  ath9k: Add a macro to identify PCOEM chips
+  ath9k: Fix manual peak calibration initialization
+  ath9k: Set correct peak detect threshold
+  ath9k: Enable manual peak detect calibration
 
-The short log of changes included since the 2014-11-18 release is below.
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c      | 61 +++++++++++++++++-----
+ drivers/net/wireless/ath/ath9k/ar953x_initvals.h   |  4 +-
+ .../net/wireless/ath/ath9k/ar955x_1p0_initvals.h   |  4 +-
+ drivers/net/wireless/ath/ath9k/reg.h               |  3 ++
+ 4 files changed, 55 insertions(+), 17 deletions(-)
 
-Seth
-
----
-
-Daiwei Li (1):
-      wireless-regdb: Add back regulatory rules for US
-
-Jouni Malinen (4):
-      wireless-regdb: Disable VHT80 where 40/80 MHz on 5 GHz is not allowed
-      wireless-regdb: Add regulatory rules for Nigeria (NG)
-      wireless-regdb: Add regulatory rules for Samoa (WS)
-      wireless-regdb: Add regulatory rules for Tanzania (TZ)
-
-Seth Forshee (2):
-      wireless-regdb: Update keys and maintainer information
-      wireless-regdb: update regulatory.bin based on preceding changes
+-- 
+2.2.2
 
