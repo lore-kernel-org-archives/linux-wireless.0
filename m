@@ -1,95 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752691AbbAYIxg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 03:53:36 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 07/10] wil6210: remove unnecessary interrupt moderation module parameters
-Date: Sun, 25 Jan 2015 10:52:48 +0200
-Message-Id: <1422175971-8075-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_095343_698391_A8614DEB)
-In-Reply-To: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mout.gmx.net ([212.227.15.19]:51991 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750728AbbASHDX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 02:03:23 -0500
+Message-ID: <54BCAC37.1030807@rempel-privat.de> (sfid-20150119_080328_073726_DE3AAEBC)
+Date: Mon, 19 Jan 2015 08:03:19 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Jeremy Audet <ichimonji10@gmail.com>
+CC: linux-wireless@vger.kernel.org, Adrian Chadd <adrian@freebsd.org>
+Subject: Re: bug report for ath9k_htc driver
+References: <CA+A7n+jFWWs-U2DapExRqYgK=e2kGowPzFHJPh72DRwzBmVggg@mail.gmail.com>	<54991B32.2010105@rempel-privat.de>	<CA+A7n+hbr2ctPkSta9-MWT1opAT2hCB9jYHvFu7N3C_ZvxXSzw@mail.gmail.com>	<5499A391.2060705@rempel-privat.de>	<CA+A7n+iHKBxy3qfjzrnN7GdZhJ-WwoDdi6hjw8RSaDs8TBznvw@mail.gmail.com>	<549E6C1A.7010805@rempel-privat.de>	<CA+A7n+gP6h1HT5F7oDY-SDrrAAjbtTHAtY0683Fe7QdVb7byfQ@mail.gmail.com>	<CA+A7n+jQQNWk2CqoS9QQFODRsi8k4asjWE=5_q681E6PTiQM+A@mail.gmail.com>	<54B69807.9030906@rempel-privat.de> <CA+A7n+gzarweW+ENOfx+QmCGHy+0Vu6qzPM70cPMxe5FTMwCUw@mail.gmail.com>
+In-Reply-To: <CA+A7n+gzarweW+ENOfx+QmCGHy+0Vu6qzPM70cPMxe5FTMwCUw@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="vjSsiNDBswad8ejF6jgL5242c69s8bfSP"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--vjSsiNDBswad8ejF6jgL5242c69s8bfSP
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Interrupt moderation parameters will never be passed as module
-parameters. For product, they will be hard-coded after lab testing,
-and for debugging, they can be altered via debugfs.
+Am 19.01.2015 um 01:35 schrieb Jeremy Audet:
+> Gaaaaah! Damn it, gmail. I'm sending this email again. The first copy
+> of this email was rejected by the ML's spam filter, due to the
+> presence of an HTML part. I'm sorry for spamming y'all.
+>=20
+>> Looks like with the hub it can work at least some hours. Correct?
+>=20
+> There was an ~18 hour timespan between when the device was physically
+> plugged in and when freaky error messages were dumped to the kernel
+> log, so that's good. However, it's worth noting the device wasn't
+> really "available" that entire time. The kernel log shows that the
+> device appears to be physically disconnected and reconnected five or
+> six times in that timespan. (The device remained physically
+> untouched.) The device is set up as a high-speed USB device again
+> after each disconnect, which is good, but those disconnects shouldn't
+> happen in the first place.
 
-Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 38 +++++----------------------------
- 1 file changed, 5 insertions(+), 33 deletions(-)
+There is one HW or FW not fixed issue which may cause FW restarts, but
+proper restarting was introduced by 1.4. And, if FW triggered a restart
+you will get something like this:
+> [ 3501.052975] usb 1-2: ath: firmware panic! exccause: 0x0000000d; pc:
+> 0x0090a641; badvaddr: 0x12345678.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 00c9b0f..d259416 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2012-2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -33,34 +33,6 @@ static bool no_fw_load = true;
- module_param(no_fw_load, bool, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(no_fw_load, " do not download FW, use one in on-card flash.");
- 
--static unsigned int tx_interframe_timeout =
--		WIL6210_ITR_TX_INTERFRAME_TIMEOUT_DEFAULT;
--
--module_param(tx_interframe_timeout, uint, S_IRUGO);
--MODULE_PARM_DESC(tx_interframe_timeout,
--		 " Interrupt moderation TX interframe timeout, usecs.");
--
--static unsigned int rx_interframe_timeout =
--		WIL6210_ITR_RX_INTERFRAME_TIMEOUT_DEFAULT;
--
--module_param(rx_interframe_timeout, uint, S_IRUGO);
--MODULE_PARM_DESC(rx_interframe_timeout,
--		 " Interrupt moderation RX interframe timeout, usecs.");
--
--static unsigned int tx_max_burst_duration =
--		WIL6210_ITR_TX_MAX_BURST_DURATION_DEFAULT;
--
--module_param(tx_max_burst_duration, uint, S_IRUGO);
--MODULE_PARM_DESC(tx_max_burst_duration,
--		 " Interrupt moderation TX max burst duration, usecs.");
--
--static unsigned int rx_max_burst_duration =
--		WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT;
--
--module_param(rx_max_burst_duration, uint, S_IRUGO);
--MODULE_PARM_DESC(rx_max_burst_duration,
--		 " Interrupt moderation RX max burst duration, usecs.");
--
- /* if not set via modparam, will be set to default value of 1/8 of
-  * rx ring size during init flow
-  */
-@@ -463,10 +435,10 @@ int wil_priv_init(struct wil6210_priv *wil)
- 		goto out_wmi_wq;
- 
- 	wil->last_fw_recovery = jiffies;
--	wil->tx_interframe_timeout = tx_interframe_timeout;
--	wil->rx_interframe_timeout = rx_interframe_timeout;
--	wil->tx_max_burst_duration = tx_max_burst_duration;
--	wil->rx_max_burst_duration = rx_max_burst_duration;
-+	wil->tx_interframe_timeout = WIL6210_ITR_TX_INTERFRAME_TIMEOUT_DEFAULT;
-+	wil->rx_interframe_timeout = WIL6210_ITR_RX_INTERFRAME_TIMEOUT_DEFAULT;
-+	wil->tx_max_burst_duration = WIL6210_ITR_TX_MAX_BURST_DURATION_DEFAULT;
-+	wil->rx_max_burst_duration = WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT;
- 
- 	if (rx_ring_overflow_thrsh == WIL6210_RX_HIGH_TRSH_INIT)
- 		rx_ring_overflow_thrsh = WIL6210_RX_HIGH_TRSH_DEFAULT;
--- 
-2.1.0
+> I'm doing as you've suggested:
+>=20
+> 1. Start collecting log messages with `journalctl -k --follow -n 0 >
+> mylogfile.txt`
+> 2. Plug in USB hub.
+> 3. Plug in TL-WN722N.
+> 4. Execute `sudo bash -c 'echo none > /sys/class/leds/ath9k_htc-phy11/t=
+rigger'`
+> 5. `sudo ip link set dev wlp0s19f2u4u2 up`
+> 6. Wait.
+>=20
+> I'm currently on step six. I'll post an update when appropriate.
 
+This means, we may have some usb protocol related issue. Without proper
+investigation i can't say what is happening. Currently we can find some
+more or less good workaround (or dirty hack :D).
+
+--=20
+Regards,
+Oleksij
+
+
+--vjSsiNDBswad8ejF6jgL5242c69s8bfSP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlS8rDcACgkQHwImuRkmbWl1uQEAhIeYvSAQ6V5KajjmibF2Lm7K
+1vo9kOlfcO6Ag0oAeUgA/AiKn/f9VyuUuIs+vyX00VtLVeMT1BhpXE7IRP1ZuYOl
+=rDcR
+-----END PGP SIGNATURE-----
+
+--vjSsiNDBswad8ejF6jgL5242c69s8bfSP--
