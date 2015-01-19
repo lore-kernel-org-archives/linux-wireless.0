@@ -1,74 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:48105 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752123AbbASSZD (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:53955 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751947AbbASNzD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 13:25:03 -0500
-Received: by mail-we0-f179.google.com with SMTP id q59so9368130wes.10
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 10:25:02 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/6] staging: vt6655: RFbSetPower remove unused variable byPwrdBm
-Date: Mon, 19 Jan 2015 18:24:15 +0000
-Message-Id: <1421691855-2927-6-git-send-email-tvboxspy@gmail.com> (sfid-20150119_192512_011333_85AAD3E8)
-In-Reply-To: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
-References: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 19 Jan 2015 08:55:03 -0500
+Received: by mail-wg0-f44.google.com with SMTP id y19so31893827wgg.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 05:55:01 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CACZYS+qEBf+GfcyQRugc7=3899qdPjQPynj2d+Pi10U3mdM9oA@mail.gmail.com>
+References: <CACZYS+o80M7OkxUTOumCf1VhPRjM-U0zj8xebGQ8-1W_qPDo5Q@mail.gmail.com>
+	<CACZYS+qEBf+GfcyQRugc7=3899qdPjQPynj2d+Pi10U3mdM9oA@mail.gmail.com>
+Date: Mon, 19 Jan 2015 13:55:01 +0000
+Message-ID: <CACZYS+piiVRdqCKei+Jvv7p4eCmvGwYvoxjP8gBoVrmQY4fBkg@mail.gmail.com> (sfid-20150119_145515_122585_39033171)
+Subject: Re: nl80211: send_and_recv->nl_recvmsgs failed: -33
+From: Notes Jonny <jongmob@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-byPwrdBm is set but never used.
+Hello
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rf.c | 12 ------------
- 1 file changed, 12 deletions(-)
+Let me know if anyone would like to look into this.
 
-diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
-index a6eabde..941b2ad 100644
---- a/drivers/staging/vt6655/rf.c
-+++ b/drivers/staging/vt6655/rf.c
-@@ -775,7 +775,6 @@ bool RFbSetPower(
- 	bool bResult = true;
- 	unsigned char byPwr = 0;
- 	unsigned char byDec = 0;
--	unsigned char byPwrdBm = 0;
- 
- 	if (priv->dwDiagRefCount != 0)
- 		return true;
-@@ -792,7 +791,6 @@ bool RFbSetPower(
- 			return false;
- 
- 		byPwr = priv->abyCCKPwrTbl[uCH];
--		byPwrdBm = priv->abyCCKDefaultPwr[uCH];
- 		break;
- 	case RATE_6M:
- 	case RATE_9M:
-@@ -806,15 +804,6 @@ bool RFbSetPower(
- 		if (byDec >= priv->byMaxPwrLevel)
- 			byDec = priv->byMaxPwrLevel-1;
- 
--		if (priv->byRFType == RF_UW2452) {
--			byPwrdBm = byDec - byPwr;
--			byPwrdBm /= 3;
--		} else {
--			byPwrdBm = byDec - byPwr;
--			byPwrdBm >>= 1;
--		}
--
--		byPwrdBm += priv->abyOFDMDefaultPwr[uCH];
- 		byPwr = byDec;
- 		break;
- 	case RATE_24M:
-@@ -822,7 +811,6 @@ bool RFbSetPower(
- 	case RATE_48M:
- 	case RATE_54M:
- 		byPwr = priv->abyOFDMPwrTbl[uCH];
--		byPwrdBm = priv->abyOFDMDefaultPwr[uCH];
- 		break;
- 	}
- 
--- 
-2.1.0
+If it's already solved, let me know so I can unsubscribe...
 
+Regards Jonny
+
+
+On Tue, Dec 23, 2014 at 12:24 PM, Notes Jonny <jongmob@gmail.com> wrote:
+> Hello
+>
+> Let me know if anyone would like to look into this.
+>
+> If it's already solved, let me know
+>
+> Regards Jonny
+>
+> Hello
+>
+> I am seeing this error message quite often in syslog. Was wondering if
+> it is something I can fix. Not sure if related, but the laptop drops
+> off the established wifi at this location (that problem happens ever
+> few days).
+>
+> Could the -33 be replaced with an error string? I wonder what -33 is,
+> perhaps -EDOM?
+>
+> Regards, Jonny
+>
+> Dec 20 00:07:28 ubuntu1404 NetworkManager[749]: <info> Activation
+> (wlan0) Stage 4 of 5 (IPv6 Configure Timeout) started...
+> Dec 20 00:07:28 ubuntu1404 NetworkManager[749]: <info> Activation
+> (wlan0) Stage 4 of 5 (IPv6 Configure Timeout) complete.
+> Dec 20 00:07:28 ubuntu1404 wpa_supplicant[1095]: wlan0:
+> CTRL-EVENT-SCAN-STARTED
+> Dec 20 00:07:29 ubuntu1404 wpa_supplicant[1095]: nl80211:
+> send_and_recv->nl_recvmsgs failed: -33
+> Dec 20 00:08:11 ubuntu1404 wpa_supplicant[1095]: wlan0:
+> CTRL-EVENT-SCAN-STARTED
+> Dec 20 00:08:12 ubuntu1404 wpa_supplicant[1095]: nl80211:
+> send_and_recv->nl_recvmsgs failed: -33
+> Dec 20 00:09:14 ubuntu1404 wpa_supplicant[1095]: wlan0:
+> CTRL-EVENT-SCAN-STARTED
+> Dec 20 00:09:15 ubuntu1404 wpa_supplicant[1095]: nl80211:
+> send_and_recv->nl_recvmsgs failed: -33
+> Dec 20 00:09:45 ubuntu1404 wpa_supplicant[1095]: wlan0: WPA: Group
+> rekeying completed with xxxxxxxxxxxxxx [GTK=TKIP]
+> Dec 20 00:10:37 ubuntu1404 wpa_supplicant[1095]: wlan0:
+> CTRL-EVENT-SCAN-STARTED
+> Dec 20 00:10:38 ubuntu1404 wpa_supplicant[1095]: nl80211:
+> send_and_recv->nl_recvmsgs failed: -33
+> Dec 20 00:12:20 ubuntu1404 wpa_supplicant[1095]: wlan0:
+> CTRL-EVENT-SCAN-STARTED
+> Dec 20 00:12:21 ubuntu1404 wpa_supplicant[1095]: nl80211:
+> send_and_recv->nl_recvmsgs failed: -33
