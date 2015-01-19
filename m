@@ -1,77 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:53955 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947AbbASNzD (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:62765 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751341AbbASPpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 08:55:03 -0500
-Received: by mail-wg0-f44.google.com with SMTP id y19so31893827wgg.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 05:55:01 -0800 (PST)
+	Mon, 19 Jan 2015 10:45:11 -0500
+Message-ID: <54BD2684.30701@broadcom.com> (sfid-20150119_164515_987458_4AA5BC3D)
+Date: Mon, 19 Jan 2015 16:45:08 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CACZYS+qEBf+GfcyQRugc7=3899qdPjQPynj2d+Pi10U3mdM9oA@mail.gmail.com>
-References: <CACZYS+o80M7OkxUTOumCf1VhPRjM-U0zj8xebGQ8-1W_qPDo5Q@mail.gmail.com>
-	<CACZYS+qEBf+GfcyQRugc7=3899qdPjQPynj2d+Pi10U3mdM9oA@mail.gmail.com>
-Date: Mon, 19 Jan 2015 13:55:01 +0000
-Message-ID: <CACZYS+piiVRdqCKei+Jvv7p4eCmvGwYvoxjP8gBoVrmQY4fBkg@mail.gmail.com> (sfid-20150119_145515_122585_39033171)
-Subject: Re: nl80211: send_and_recv->nl_recvmsgs failed: -33
-From: Notes Jonny <jongmob@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Vasiliy Tolstov <v.tolstov@selfip.ru>
+CC: <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: b43 bcm43228 and linux 3.18.3
+References: <CACaajQsqPMzwD=EqdD5_XfWAPmkn-52VVNHF1ntFZ6ofEH4D-w@mail.gmail.com> <CACaajQs1r1tE-GXv7cmAL9w8q2cwn_iiDttp6tLFB7BdSBNDPw@mail.gmail.com>
+In-Reply-To: <CACaajQs1r1tE-GXv7cmAL9w8q2cwn_iiDttp6tLFB7BdSBNDPw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
++ b43-dev@lists.infradead.org
 
-Let me know if anyone would like to look into this.
+On 01/19/15 13:20, Vasiliy Tolstov wrote:
+> Anybody can helps me debug this?
+>
+> 2015-01-17 20:59 GMT+03:00 Vasiliy Tolstov<v.tolstov@selfip.ru>:
+>> Hi all. I have 3.18.3 kernel and bcm43228, firstly all works fine, but
+>> after connection with my zyxel router i can't ping it ip (after 1-2
+>> min). Connection worked fin, but nothing transmitted =(.
+>> I'm try to disable qos, but this not helps, i'm try to enable
+>> verbose=3, but in dmesg nothing interesting. Time after time b43
+>> driver moved from 5Ghz to 2.4Ghz to 5Ghz and so.
 
-If it's already solved, let me know so I can unsubscribe...
+What do you mean by "moved from 5Ghz to 2.4Ghz..". You mean it is 
+roaming between the two bands? Anyway, there is a b43 specific mailing 
+list which I added.
 
-Regards Jonny
+Regards,
+Arend
 
+>> How can i debug this issue? I'm realy love free opensource drivers.
+>> Thanks
+>>
+>> --
+>> Vasiliy Tolstov,
+>> e-mail: v.tolstov@selfip.ru
+>> jabber: vase@selfip.ru
+>
+>
+>
 
-On Tue, Dec 23, 2014 at 12:24 PM, Notes Jonny <jongmob@gmail.com> wrote:
-> Hello
->
-> Let me know if anyone would like to look into this.
->
-> If it's already solved, let me know
->
-> Regards Jonny
->
-> Hello
->
-> I am seeing this error message quite often in syslog. Was wondering if
-> it is something I can fix. Not sure if related, but the laptop drops
-> off the established wifi at this location (that problem happens ever
-> few days).
->
-> Could the -33 be replaced with an error string? I wonder what -33 is,
-> perhaps -EDOM?
->
-> Regards, Jonny
->
-> Dec 20 00:07:28 ubuntu1404 NetworkManager[749]: <info> Activation
-> (wlan0) Stage 4 of 5 (IPv6 Configure Timeout) started...
-> Dec 20 00:07:28 ubuntu1404 NetworkManager[749]: <info> Activation
-> (wlan0) Stage 4 of 5 (IPv6 Configure Timeout) complete.
-> Dec 20 00:07:28 ubuntu1404 wpa_supplicant[1095]: wlan0:
-> CTRL-EVENT-SCAN-STARTED
-> Dec 20 00:07:29 ubuntu1404 wpa_supplicant[1095]: nl80211:
-> send_and_recv->nl_recvmsgs failed: -33
-> Dec 20 00:08:11 ubuntu1404 wpa_supplicant[1095]: wlan0:
-> CTRL-EVENT-SCAN-STARTED
-> Dec 20 00:08:12 ubuntu1404 wpa_supplicant[1095]: nl80211:
-> send_and_recv->nl_recvmsgs failed: -33
-> Dec 20 00:09:14 ubuntu1404 wpa_supplicant[1095]: wlan0:
-> CTRL-EVENT-SCAN-STARTED
-> Dec 20 00:09:15 ubuntu1404 wpa_supplicant[1095]: nl80211:
-> send_and_recv->nl_recvmsgs failed: -33
-> Dec 20 00:09:45 ubuntu1404 wpa_supplicant[1095]: wlan0: WPA: Group
-> rekeying completed with xxxxxxxxxxxxxx [GTK=TKIP]
-> Dec 20 00:10:37 ubuntu1404 wpa_supplicant[1095]: wlan0:
-> CTRL-EVENT-SCAN-STARTED
-> Dec 20 00:10:38 ubuntu1404 wpa_supplicant[1095]: nl80211:
-> send_and_recv->nl_recvmsgs failed: -33
-> Dec 20 00:12:20 ubuntu1404 wpa_supplicant[1095]: wlan0:
-> CTRL-EVENT-SCAN-STARTED
-> Dec 20 00:12:21 ubuntu1404 wpa_supplicant[1095]: nl80211:
-> send_and_recv->nl_recvmsgs failed: -33
