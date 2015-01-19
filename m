@@ -1,40 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gn237.zone.eu ([217.146.67.237]:36825 "EHLO gn237.zone.eu"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35623 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751833AbbA0G6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 01:58:11 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH 4/7] rtlwifi: Remove unused RTL_SUPPORTED_CTRL_FILTER define
-Date: Tue, 27 Jan 2015 08:49:30 +0200
-Message-Id: <1422341373-22196-4-git-send-email-plaes@plaes.org> (sfid-20150127_075837_192785_45E1F24B)
-In-Reply-To: <1422341373-22196-1-git-send-email-plaes@plaes.org>
-References: <1422341373-22196-1-git-send-email-plaes@plaes.org>
+	id S1751853AbbASRwc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 12:52:32 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] Revert "wireless: Support of IFLA_INFO_KIND rtnl attribute"
+Date: Mon, 19 Jan 2015 18:52:23 +0100
+Message-Id: <1421689943-13264-1-git-send-email-johannes@sipsolutions.net> (sfid-20150119_185234_968564_95BB0018)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Priit Laes <plaes@plaes.org>
----
- drivers/net/wireless/rtlwifi/core.h | 2 --
- 1 file changed, 2 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
-index 624e1dc..3b37557 100644
---- a/drivers/net/wireless/rtlwifi/core.h
-+++ b/drivers/net/wireless/rtlwifi/core.h
-@@ -33,8 +33,6 @@
- 	FIF_FCSFAIL | \
- 	FIF_BCN_PRBRESP_PROMISC)
+This reverts commit ba1debdfed974f25aa598c283567878657b292ee.
+
+Oliver reported that it breaks network-manager, for some reason with
+this patch NM decides that the device isn't wireless but "generic"
+(ethernet), sees no carrier (as expected with wifi) and fails to do
+anything else with it.
+
+Revert this to unbreak userspace.
+
+Reported-by: Oliver Hartkopp <socketcan@hartkopp.net>
+Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.c | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 456e4c38c279..3af0ecf1cc16 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -21,7 +21,6 @@
+ #include <linux/sched.h>
+ #include <net/genetlink.h>
+ #include <net/cfg80211.h>
+-#include <net/rtnetlink.h>
+ #include "nl80211.h"
+ #include "core.h"
+ #include "sysfs.h"
+@@ -964,10 +963,6 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+ }
+ EXPORT_SYMBOL(cfg80211_stop_iface);
  
--#define RTL_SUPPORTED_CTRL_FILTER	0xFF
+-static const struct rtnl_link_ops wireless_link_ops = {
+-	.kind = "wlan",
+-};
 -
- extern const struct ieee80211_ops rtl_ops;
- void rtl_fw_cb(const struct firmware *firmware, void *context);
- void rtl_addr_delay(u32 addr);
+ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 					 unsigned long state, void *ptr)
+ {
+@@ -986,7 +981,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 	switch (state) {
+ 	case NETDEV_POST_INIT:
+ 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
+-		dev->rtnl_link_ops = &wireless_link_ops;
+ 		break;
+ 	case NETDEV_REGISTER:
+ 		/*
 -- 
-2.2.2
+2.1.4
 
