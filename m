@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:41461 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167AbbASHxI (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40339 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752215AbbASEzS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 02:53:08 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "torvalds\@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2015-01-15
-References: <1421612183.26502.1.camel@egrumbacBox>
-Date: Mon, 19 Jan 2015 09:53:01 +0200
-In-Reply-To: <1421612183.26502.1.camel@egrumbacBox> (Emmanuel Grumbach's
-	message of "Sun, 18 Jan 2015 20:16:23 +0000")
-Message-ID: <871tmr6wbm.fsf@kamboji.qca.qualcomm.com> (sfid-20150119_085312_785608_5BC02556)
+	Sun, 18 Jan 2015 23:55:18 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Stable <stable@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2] mwifiex: set netif carrier off in ndo_open
+Date: Mon, 19 Jan 2015 15:54:36 +0530
+Message-ID: <1421663076-32291-1-git-send-email-patila@marvell.com> (sfid-20150119_055528_595709_277438D0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+From: Johannes Berg <johannes@sipsolutions.net>
 
-> One single patch in there, but since it hit Linus's system, and we are
-> in -rc5 already, I didn't want to wait until more stuff accumulates.
-> This is a patch for the bug that Linus reported. Let me know if you
-> have issues!
+This patch adds fix to set carrier state off during ndo_open.
+Carrier should be set to ON when device is ready to send data.
+In case of station/adhoc interface device is able to transfer
+data after successful association/join operation.
+For AP this would be after bss_active event.
 
-Thanks, pulled.
+Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 6125d1c..a16c293 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -562,7 +562,8 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter)
+ static int
+ mwifiex_open(struct net_device *dev)
+ {
+-	netif_tx_start_all_queues(dev);
++	netif_carrier_off(dev);
++
+ 	return 0;
+ }
+ 
 -- 
-Kalle Valo
+1.8.1.4
+
