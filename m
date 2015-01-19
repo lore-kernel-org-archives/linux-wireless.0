@@ -1,40 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:52292 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756192AbbAFSaY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 13:30:24 -0500
-Date: Tue, 06 Jan 2015 13:30:22 -0500 (EST)
-Message-Id: <20150106.133022.1374471134166201756.davem@davemloft.net> (sfid-20150106_193037_122056_8D40EAE4)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2015-01-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1420546548.1966.26.camel@sipsolutions.net>
-References: <1420546548.1966.26.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mga03.intel.com ([134.134.136.65]:25917 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750713AbbASF5X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 00:57:23 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "arend@broadcom.com" <arend@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: mvm: abort scheduled scan upon RFKILL
+Date: Mon, 19 Jan 2015 05:57:02 +0000
+Message-ID: <1421647023.4601.2.camel@egrumbacBox> (sfid-20150119_065728_496799_E80EC14E)
+References: <1421612183.26502.1.camel@egrumbacBox>
+	 <1421612283-27012-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <54BC3031.7060308@broadcom.com>
+In-Reply-To: <54BC3031.7060308@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 06 Jan 2015 13:15:48 +0100
-
-> Here's just a single fix - a revert of a patch that broke the
-> p54 and cw2100 drivers (arguably due to bad assumptions there.)
-> Since this affects kernels since 3.17, I decided to revert for
-> now and we'll revisit this optimisation properly for -next.
-
-Pulled, thanks Johannes.
-
-> Also -- happy New Year, and sorry about the genl issue :(
-
-No problem.
-
-> I'm still a bit confused about whether you wanted the pull request with
-> the text in the email or in the tag, or branch, or something - I
-> interpreted what you said to Kalle differently to what you said to me.
-> I've duplicated it for now :)
-
-If you put it in the tag, that's fine, I'll just add my signoff to
-it.
+T24gU3VuLCAyMDE1LTAxLTE4IGF0IDIzOjE0ICswMTAwLCBBcmVuZCB2YW4gU3ByaWVsIHdyb3Rl
+Og0KPiBPbiAwMS8xOC8xNSAyMToxOCwgRW1tYW51ZWwgR3J1bWJhY2ggd3JvdGU6DQo+ID4gV2hl
+biB3ZSBoYXZlIGFuIGFjdGl2ZSBzY2hlZHVsZWQgc2NhbiwgYW5kIHRoZSBSRktJTEwNCj4gPiBp
+bnRlcnJ1cHQga2lja3MgaW4sIHRoZSBzdGFjayB3aWxsIGNhbmNlbCB0aGUgc2NoZWR1bGVkDQo+
+ID4gc2NhbiBhcyBwYXJ0IG9mIHRoZSBkb3duIGZsb3cuIEJ1dCBjYW5jZWxsaW5nIHNjaGVkdWxl
+ZA0KPiA+IHNjYW4gdXN1YWxseSBpbXBsaWVzIHNlbmRpbmcgYSBjb21tYW5kIHRvIHRoZSBmaXJ3
+bWFyZQ0KPiA+IHdoaWNoIGhhcyBiZWVuIGtpbGxlZCBhcyBwYXJ0IG9mIHRoZSBSRktJTEwgaW50
+ZXJydXB0DQo+ID4gaGFuZGxpbmcuDQo+ID4gQmVjYXVzZSBvZiB0aGF0LCB3ZSByZXR1cm5lZCBh
+biBlcnJvciB0byBtYWM4MDIxMSB3aGVuDQo+ID4gaXQgYXNrZWQgdG8gc3RvcCB0aGUgc2NoZWR1
+bGVkIHNjYW4gYW5kIGRpZG4ndCBub3RpZnkgdGhlDQo+ID4gZW5kIG9mIHRoZSBzY2hlZHVsZWQg
+c2Nhbi4gQmVzaWRlcyBhIGZhdCB3YXJuaW5nLCB0aGlzIGxlZA0KPiA+IHRvIGEgc2l0dWF0aW9u
+IGluIHdoaWNoIGNmZzgwMjExIHdvdWxkIHJlZnVzZSBhbnkgbmV3IHNjYW4NCj4gPiByZXF1ZXN0
+Lg0KPiA+DQo+ID4gVG8gZGlzZW50YW5nbGUgdGhpcywgZmFrZSB0aGF0IHRoZSBzY2hlZHVsZWQg
+c2NhbiBoYXMgYmVlbg0KPiA+IHN0b3BwZWQgd2l0aG91dCBzZW5kaW5nIHRoZSBjb21tYW5kIHRv
+IHRoZSBmaXJ3bWFyZSwgcmV0dXJuDQo+ID4gMCBhZnRlciBoYXZpbmcgcHJvcGVybHkgbGV0IGNm
+ZzgwMjExIGtub3cgdGhhdCB0aGUgc2Nhbg0KPiA+IGhhcyBiZWVuIGNhbmNlbGxlZC4NCj4gPg0K
+PiA+IFRoaXMgaXMgYmFzaWNhbGx5IHRoZSBzYW1lIGFzOg0KPiA+IGNvbW1pdCA5YjUyMGQ4NDk1
+N2Q2MzM0OGU4N2MwZjJjYmQyMWQ4NmUxZThmMmYyDQo+ID4gQXV0aG9yOiBFbW1hbnVlbCBHcnVt
+YmFjaDxlbW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+DQo+ID4gRGF0ZTogICBUdWUgTm92IDQg
+MTU6NTQ6MTEgMjAxNCArMDIwMA0KPiA+DQo+ID4gICAgICBpd2x3aWZpOiBtdm06IGFib3J0IHNj
+YW4gdXBvbiBSRktJTEwNCj4gPg0KPiA+ICAgICAgVGhpcyBjb2RlIGV4aXN0ZWQgYnV0IG5vdCBm
+b3IgYWxsIHRoZSBkaWZmZXJlbnQgRlcgQVBJcw0KPiA+ICAgICAgd2Ugc3VwcG9ydC4NCj4gPiAg
+ICAgIEZpeCB0aGlzLg0KPiA+DQo+ID4gYnV0IGZvciB0aGUgc2NoZWR1bGVkIHNjYW4gY2FzZS4N
+Cj4gDQo+IFNvIGxvb2tpbmcgYXQgdGhlIHBhdGNoIEkgZ3Vlc3MgY2ZnODAyMTEgd2lsbCBzdGls
+bCBpc3N1ZXMgYSBXQVJOX09OLCByaWdodD8NCj4gDQoNCldoeT8NCmNmZzgwMjExIGdldHMgbm90
+aWZpZWQgYWJvdXQgdGhlIHNjYW4gY29tcGxldGlvbiwgc28gbm8gc2Nhbm5pbmcgc2hvdWxkDQpy
+ZW1haW4gYWN0aXZlIHdoZW4gdGhlIGRvd24gZmxvdyBpcyBvdmVyLg0KDQo+ID4gTGluazogaHR0
+cDovL3Blcm1hbGluay5nbWFuZS5vcmcvZ21hbmUubGludXgua2VybmVsLndpcmVsZXNzLmdlbmVy
+YWwvMTMzMjMyDQo+ID4gUmVwb3J0ZWQtYnk6IExpbnVzIFRvcnZhbGRzPHRvcnZhbGRzQGxpbnV4
+LWZvdW5kYXRpb24ub3JnPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEVtbWFudWVsIEdydW1iYWNoPGVt
+bWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4NCj4gPiAtLS0NCj4gPiAgIGRyaXZlcnMvbmV0L3dp
+cmVsZXNzL2l3bHdpZmkvbXZtL3NjYW4uYyB8IDcgKysrKysrKw0KPiA+ICAgMSBmaWxlIGNoYW5n
+ZWQsIDcgaW5zZXJ0aW9ucygrKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL2l3bHdpZmkvbXZtL3NjYW4uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
+bXZtL3NjYW4uYw0KPiA+IGluZGV4IDNmYmJhNGIuLjg0NGJmN2MgMTAwNjQ0DQo+ID4gLS0tIGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vc2Nhbi5jDQo+ID4gKysrIGIvZHJpdmVy
+cy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vc2Nhbi5jDQo+ID4gQEAgLTExMDcsNiArMTEwNywx
+MiBAQCBpbnQgaXdsX212bV9zY2FuX29mZmxvYWRfc3RvcChzdHJ1Y3QgaXdsX212bSAqbXZtLCBi
+b29sIG5vdGlmeSkNCj4gPiAgIAkJcmV0dXJuIGl3bF91bWFjX3NjYW5fc3RvcChtdm0sIElXTF9V
+TUFDX1NDQU5fVUlEX1NDSEVEX1NDQU4sDQo+ID4gICAJCQkJCSAgbm90aWZ5KTsNCj4gPg0KPiA+
+ICsJaWYgKG12bS0+c2Nhbl9zdGF0dXMgPT0gSVdMX01WTV9TQ0FOX05PTkUpDQo+ID4gKwkJcmV0
+dXJuIDA7DQo+ID4gKw0KPiA+ICsJaWYgKGl3bF9tdm1faXNfcmFkaW9fa2lsbGVkKG12bSkpDQo+
+ID4gKwkJZ290byBvdXQ7DQo+ID4gKw0KPiA+ICAgCWlmIChtdm0tPnNjYW5fc3RhdHVzICE9IElX
+TF9NVk1fU0NBTl9TQ0hFRCYmDQo+ID4gICAJKCEobXZtLT5mdy0+dWNvZGVfY2FwYS5hcGlbMF0m
+ICBJV0xfVUNPREVfVExWX0FQSV9MTUFDX1NDQU4pIHx8DQo+ID4gICAJICAgICBtdm0tPnNjYW5f
+c3RhdHVzICE9IElXTF9NVk1fU0NBTl9PUykpIHsNCj4gPiBAQCAtMTE0Myw2ICsxMTQ5LDcgQEAg
+aW50IGl3bF9tdm1fc2Nhbl9vZmZsb2FkX3N0b3Aoc3RydWN0IGl3bF9tdm0gKm12bSwgYm9vbCBu
+b3RpZnkpDQo+ID4gICAJaWYgKG12bS0+c2Nhbl9zdGF0dXMgPT0gSVdMX01WTV9TQ0FOX09TKQ0K
+PiA+ICAgCQlpd2xfbXZtX3VucmVmKG12bSwgSVdMX01WTV9SRUZfU0NBTik7DQo+ID4NCj4gPiAr
+b3V0Og0KPiA+ICAgCW12bS0+c2Nhbl9zdGF0dXMgPSBJV0xfTVZNX1NDQU5fTk9ORTsNCj4gPg0K
+PiA+ICAgCWlmIChub3RpZnkpIHsNCj4gDQoNCg==
