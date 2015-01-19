@@ -1,115 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:59044 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932531AbbA3Ncv (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:34887 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbbASHax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 08:32:51 -0500
-Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YHBgo-004FiR-1s
-	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:50 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 08/17] ath9k: Remove unused BMISS processing
-Date: Fri, 30 Jan 2015 19:05:28 +0530
-Message-Id: <1422624937-4810-9-git-send-email-sujith@msujith.org> (sfid-20150130_143351_257656_E640C6CF)
-In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
-References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+	Mon, 19 Jan 2015 02:30:53 -0500
+Received: by mail-we0-f170.google.com with SMTP id x3so3328446wes.1
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 23:30:52 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2] bcma: use standard bus scanning during early register
+Date: Mon, 19 Jan 2015 08:30:30 +0100
+Message-Id: <1421652630-26665-1-git-send-email-zajec5@gmail.com> (sfid-20150119_083056_834282_387EE5AC)
+In-Reply-To: <1421442493-32133-1-git-send-email-zajec5@gmail.com>
+References: <1421442493-32133-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Starting with kernel 3.19-rc1 early registration of bcma on MIPS is done
+a bit later, with memory allocator available. This allows us to simplify
+code by using standard bus scanning method.
 
-The various variables tracking bmiss interrupts
-are not really used anywhere except in a debug
-message. Remove them since they have no functional
-purpose.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  2 --
- drivers/net/wireless/ath/ath9k/main.c  |  9 ---------
- drivers/net/wireless/ath/ath9k/wow.c   | 18 ------------------
- 3 files changed, 29 deletions(-)
+V2: Add comment about skipping scanning for the 2nd time
+---
+ drivers/bcma/bcma_private.h   |  7 +----
+ drivers/bcma/host_soc.c       |  2 +-
+ drivers/bcma/main.c           | 33 +++++++----------------
+ drivers/bcma/scan.c           | 62 +++----------------------------------------
+ include/linux/bcma/bcma_soc.h |  2 --
+ 5 files changed, 15 insertions(+), 91 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 4209d7b..803a7d4 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -1043,8 +1043,6 @@ struct ath_softc {
- 	s16 tx99_power;
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 59422b5..3f314c9 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -28,9 +28,7 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
+ void bcma_init_bus(struct bcma_bus *bus);
+ int bcma_bus_register(struct bcma_bus *bus);
+ void bcma_bus_unregister(struct bcma_bus *bus);
+-int __init bcma_bus_early_register(struct bcma_bus *bus,
+-				   struct bcma_device *core_cc,
+-				   struct bcma_device *core_mips);
++int __init bcma_bus_early_register(struct bcma_bus *bus);
+ #ifdef CONFIG_PM
+ int bcma_bus_suspend(struct bcma_bus *bus);
+ int bcma_bus_resume(struct bcma_bus *bus);
+@@ -39,9 +37,6 @@ int bcma_bus_resume(struct bcma_bus *bus);
+ /* scan.c */
+ void bcma_detect_chip(struct bcma_bus *bus);
+ int bcma_bus_scan(struct bcma_bus *bus);
+-int __init bcma_bus_scan_early(struct bcma_bus *bus,
+-			       struct bcma_device_id *match,
+-			       struct bcma_device *core);
  
- #ifdef CONFIG_ATH9K_WOW
--	atomic_t wow_got_bmiss_intr;
--	atomic_t wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
- 	u32 wow_intr_before_sleep;
- #endif
- };
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 62b0bf4..9ede991 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -555,15 +555,6 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	    (status & ATH9K_INT_BB_WATCHDOG))
- 		goto chip_reset;
+ /* sprom.c */
+ int bcma_sprom_get(struct bcma_bus *bus);
+diff --git a/drivers/bcma/host_soc.c b/drivers/bcma/host_soc.c
+index 335cbcf..2dce347 100644
+--- a/drivers/bcma/host_soc.c
++++ b/drivers/bcma/host_soc.c
+@@ -193,7 +193,7 @@ int __init bcma_host_soc_init(struct bcma_soc *soc)
+ 	int err;
  
--#ifdef CONFIG_ATH9K_WOW
--	if (status & ATH9K_INT_BMISS) {
--		if (atomic_read(&sc->wow_sleep_proc_intr) == 0) {
--			atomic_inc(&sc->wow_got_bmiss_intr);
--			atomic_dec(&sc->wow_sleep_proc_intr);
--		}
--	}
--#endif
--
- 	if (status & ATH9K_INT_SWBA)
- 		tasklet_schedule(&sc->bcon_tasklet);
+ 	/* Scan bus and initialize it */
+-	err = bcma_bus_early_register(bus, &soc->core_cc, &soc->core_mips);
++	err = bcma_bus_early_register(bus);
+ 	if (err)
+ 		iounmap(bus->mmio);
  
-diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
-index c0c564d..fa60dbb 100644
---- a/drivers/net/wireless/ath/ath9k/wow.c
-+++ b/drivers/net/wireless/ath/ath9k/wow.c
-@@ -269,7 +269,6 @@ int ath9k_suspend(struct ieee80211_hw *hw,
- 
- 	ath9k_ps_restore(sc);
- 	ath_dbg(common, WOW, "Suspend with WoW triggers: 0x%x\n", triggers);
--	atomic_inc(&sc->wow_sleep_proc_intr);
- 
- 	set_bit(ATH_OP_WOW_ENABLED, &common->op_flags);
- fail_wow:
-@@ -299,19 +298,6 @@ int ath9k_resume(struct ieee80211_hw *hw)
- 
- 	wow_status = ath9k_hw_wow_wakeup(ah);
- 
--	if (atomic_read(&sc->wow_got_bmiss_intr) == 0) {
--		/*
--		 * some devices may not pick beacon miss
--		 * as the reason they woke up so we add
--		 * that here for that shortcoming.
--		 */
--		wow_status |= AH_WOW_BEACON_MISS;
--		atomic_dec(&sc->wow_got_bmiss_intr);
--		ath_dbg(common, ANY, "Beacon miss interrupt picked up during WoW sleep\n");
--	}
--
--	atomic_dec(&sc->wow_sleep_proc_intr);
--
- 	if (wow_status) {
- 		ath_dbg(common, ANY, "Waking up due to WoW triggers %s with WoW status = %x\n",
- 			ath9k_hw_wow_event_to_string(wow_status), wow_status);
-@@ -347,10 +333,6 @@ void ath9k_init_wow(struct ieee80211_hw *hw)
- 
- 	if (sc->driver_data & ATH9K_PCI_WOW) {
- 		hw->wiphy->wowlan = &ath9k_wowlan_support;
--
--		atomic_set(&sc->wow_sleep_proc_intr, -1);
--		atomic_set(&sc->wow_got_bmiss_intr, -1);
--
- 		device_init_wakeup(sc->dev, 1);
- 	}
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index c166d44..c3c5e0a 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -489,35 +489,20 @@ void bcma_bus_unregister(struct bcma_bus *bus)
+ 	kfree(cores[0]);
  }
+ 
+-int __init bcma_bus_early_register(struct bcma_bus *bus,
+-				   struct bcma_device *core_cc,
+-				   struct bcma_device *core_mips)
++/*
++ * This is a special version of bus registration function designed for SoCs.
++ * It scans bus and performs basic initialization of main cores only.
++ * Please note it requires memory allocation, however it won't try to sleep.
++ */
++int __init bcma_bus_early_register(struct bcma_bus *bus)
+ {
+ 	int err;
+ 	struct bcma_device *core;
+-	struct bcma_device_id match;
+-
+-	match.manuf = BCMA_MANUF_BCM;
+-	match.id = bcma_cc_core_id(bus);
+-	match.class = BCMA_CL_SIM;
+-	match.rev = BCMA_ANY_REV;
+-
+-	/* Scan for chip common core */
+-	err = bcma_bus_scan_early(bus, &match, core_cc);
+-	if (err) {
+-		bcma_err(bus, "Failed to scan for common core: %d\n", err);
+-		return -1;
+-	}
+-
+-	match.manuf = BCMA_MANUF_MIPS;
+-	match.id = BCMA_CORE_MIPS_74K;
+-	match.class = BCMA_CL_SIM;
+-	match.rev = BCMA_ANY_REV;
+ 
+-	/* Scan for mips core */
+-	err = bcma_bus_scan_early(bus, &match, core_mips);
++	/* Scan for devices (cores) */
++	err = bcma_bus_scan(bus);
+ 	if (err) {
+-		bcma_err(bus, "Failed to scan for mips core: %d\n", err);
++		bcma_err(bus, "Failed to scan bus: %d\n", err);
+ 		return -1;
+ 	}
+ 
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 5328ee5..df806b9 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -461,6 +461,10 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 
+ 	int err, core_num = 0;
+ 
++	/* Skip if bus was already scanned (e.g. during early register) */
++	if (bus->nr_cores)
++		return 0;
++
+ 	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
+ 	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
+ 		eromptr = ioremap_nocache(erombase, BCMA_CORE_SIZE);
+@@ -519,61 +523,3 @@ out:
+ 
+ 	return err;
+ }
+-
+-int __init bcma_bus_scan_early(struct bcma_bus *bus,
+-			       struct bcma_device_id *match,
+-			       struct bcma_device *core)
+-{
+-	u32 erombase;
+-	u32 __iomem *eromptr, *eromend;
+-
+-	int err = -ENODEV;
+-	int core_num = 0;
+-
+-	erombase = bcma_scan_read32(bus, 0, BCMA_CC_EROM);
+-	if (bus->hosttype == BCMA_HOSTTYPE_SOC) {
+-		eromptr = ioremap_nocache(erombase, BCMA_CORE_SIZE);
+-		if (!eromptr)
+-			return -ENOMEM;
+-	} else {
+-		eromptr = bus->mmio;
+-	}
+-
+-	eromend = eromptr + BCMA_CORE_SIZE / sizeof(u32);
+-
+-	bcma_scan_switch_core(bus, erombase);
+-
+-	while (eromptr < eromend) {
+-		memset(core, 0, sizeof(*core));
+-		INIT_LIST_HEAD(&core->list);
+-		core->bus = bus;
+-
+-		err = bcma_get_next_core(bus, &eromptr, match, core_num, core);
+-		if (err == -ENODEV) {
+-			core_num++;
+-			continue;
+-		} else if (err == -ENXIO)
+-			continue;
+-		else if (err == -ESPIPE)
+-			break;
+-		else if (err < 0)
+-			goto out;
+-
+-		core->core_index = core_num++;
+-		bus->nr_cores++;
+-		bcma_info(bus, "Core %d found: %s (manuf 0x%03X, id 0x%03X, rev 0x%02X, class 0x%X)\n",
+-			  core->core_index, bcma_device_name(&core->id),
+-			  core->id.manuf, core->id.id, core->id.rev,
+-			  core->id.class);
+-
+-		list_add_tail(&core->list, &bus->cores);
+-		err = 0;
+-		break;
+-	}
+-
+-out:
+-	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
+-		iounmap(eromptr);
+-
+-	return err;
+-}
+diff --git a/include/linux/bcma/bcma_soc.h b/include/linux/bcma/bcma_soc.h
+index f24d245..1b5fc0c 100644
+--- a/include/linux/bcma/bcma_soc.h
++++ b/include/linux/bcma/bcma_soc.h
+@@ -5,8 +5,6 @@
+ 
+ struct bcma_soc {
+ 	struct bcma_bus bus;
+-	struct bcma_device core_cc;
+-	struct bcma_device core_mips;
+ };
+ 
+ int __init bcma_host_soc_register(struct bcma_soc *soc);
 -- 
-2.2.2
+1.8.4.5
 
