@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f170.google.com ([74.125.82.170]:64220 "EHLO
-	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221AbbAXLHF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 06:07:05 -0500
-Received: by mail-we0-f170.google.com with SMTP id x3so1702862wes.1
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 03:07:02 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CA+icZUWmBnpb2K0_Eyoe6x7gwZUN7DpXhjf3X7kuV19WVFY8Hw@mail.gmail.com>
-References: <1422094745-12718-1-git-send-email-hong@topbug.net>
-	<87k30ciiir.fsf@kamboji.qca.qualcomm.com>
-	<CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
-	<87bnloiht4.fsf@kamboji.qca.qualcomm.com>
-	<CA+icZUWmBnpb2K0_Eyoe6x7gwZUN7DpXhjf3X7kuV19WVFY8Hw@mail.gmail.com>
-Date: Sat, 24 Jan 2015 12:07:02 +0100
-Message-ID: <CA+icZUUqw20KFxFA7-LWcM-UdLWrkQgE7E8vhnC_b-nOig_FMQ@mail.gmail.com> (sfid-20150124_120715_180459_5EE95516)
-Subject: Re: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Hong Xu <hong@topbug.net>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:60454 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751427AbbASJlv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 04:41:51 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1YD8qD-0004Hh-5b
+	for linux-wireless@vger.kernel.org; Mon, 19 Jan 2015 10:41:49 +0100
+Message-ID: <1421660507.1965.8.camel@sipsolutions.net> (sfid-20150119_104157_382814_1CD1A3CA)
+Subject: REMINDER: wireless workshop in Ottawa
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Mon, 19 Jan 2015 10:41:47 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[...]
-> Working with tig I have to check the tipps of Peter Hutterer in his
-> blog for my local ~/.tigrc again.
-> This got lost when changing to Ubuntu/precise.
->
+We're holding a wireless workshop at the netdev0.1 conference
+(https://www.netdev01.org/) on the first day (Feb 14th)
 
-For tigrc... [2] has [1] included.
+As the wiki is currently locked down for editing for the migration,
+please send agenda proposals to this thread - I'll put it up on the
+wiki. I'd also appreciate (private!) email if you're planning to attend.
 
-[3] and [4] as a reference to tig ("...is an ncurses-based text-mode
-interface for git.).
+If you haven't registered, make sure you do so. There's an option for a
+single day and for the whole 4-day conference. The hotel room rate also
+expires this Friday.
 
-- Sedat -
+johannes
 
-[1] http://who-t.blogspot.de/2009/04/git-format-patch-for-single-commit.html
-[2] http://who-t.blogspot.de/2014/03/using-git-next-level.html
-[3] http://jonas.nitro.dk/tig/
-[4] http://jonas.nitro.dk/tig/manual.html
