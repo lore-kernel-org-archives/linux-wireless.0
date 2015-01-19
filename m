@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35692 "EHLO sipsolutions.net"
+Received: from mail.neratec.com ([46.140.151.2]:48632 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750773AbbAGLGy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 06:06:54 -0500
-Message-ID: <1420628802.3407.4.camel@sipsolutions.net> (sfid-20150107_120657_629328_15E356DB)
-Subject: Re: [PATCH] wireless extensions should default to Y
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: jikos@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Wed, 07 Jan 2015 12:06:42 +0100
-In-Reply-To: <20150107110323.GB7368@amd>
-References: <20150107101903.GA6563@amd>
-	 <1420627315.3407.2.camel@sipsolutions.net> <20150107110323.GB7368@amd>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751164AbbASI1B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 03:27:01 -0500
+Date: Mon, 19 Jan 2015 09:26:57 +0100 (CET)
+From: Rico Derrer <rico.derrer@neratec.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Message-ID: <1748015898.90209.1421656017853.JavaMail.zimbra@neratec.com> (sfid-20150119_092705_220075_E90D773A)
+In-Reply-To: <1998405401.90208.1421656011302.JavaMail.zimbra@neratec.com>
+References: <1421241456-29085-1-git-send-email-nbd@openwrt.org> <377854068.83121.1421395226029.JavaMail.zimbra@neratec.com> <54B8EAD9.5050200@openwrt.org>
+Subject: Re: [PATCH 3.19] ath9k: fix race condition in irq processing during
+ hardware reset
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-07 at 12:03 +0100, Pavel Machek wrote:
-> On Wed 2015-01-07 11:41:55, Johannes Berg wrote:
-> > On Wed, 2015-01-07 at 11:19 +0100, Pavel Machek wrote:
-> > > Do we need following patch on top of
-> > > 24a0aa212ee2dbe44360288684478d76a8e20a0a revert?
-> > > 
-> > > I updated kernel today, and (probably because extensions were not
-> > > selectable before), the default choice was "N", which is wrong:
-> > > oldconfig should result in compatible choices being made, for example
-> > > to help bisect.
-> > 
-> > I don't believe we need this. It has been defaulting to N for a long
-> > time, it's just that it got thrown out of your config due to building
-> > inbetween the patch and its revert. Had you built only before and after
-> > that wouldn't be an issue.
+> On 2015-01-16 09:00, Rico Derrer wrote:
+>> Hi Felix
+>> 
+>> Felix Fietkau wrote:
+>>> diff --git a/drivers/net/wireless/ath/ath9k/main.c
+>>> b/drivers/net/wireless/ath/ath9k/main.c
+>>> index 9a72640..62b0bf4 100644
+>>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>>> @@ -285,6 +285,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct
+>>> ath9k_channel *hchan)
+>>> 
+>>> __ath_cancel_work(sc);
+>>> 
+>>> + disable_irq(sc->irq);
+>>> tasklet_disable(&sc->intr_tq);
+>>> tasklet_disable(&sc->bcon_tasklet);
+>>> spin_lock_bh(&sc->sc_pcu_lock);
+>>> @@ -331,6 +332,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct
+>>> ath9k_channel *hchan)
+>>> r = -EIO;
+>>> 
+>>> out:
+>>> + enable_irq(sc->irq);
+>>> spin_unlock_bh(&sc->sc_pcu_lock);
+>>> tasklet_enable(&sc->bcon_tasklet);
+>>> tasklet_enable(&sc->intr_tq);
+>> 
+>> This part completely blocks the system on a AR9350. Loading the
+>> module works but configuring it hangs the system until watchdog restarts it.
+> What kernel/software are you running on there? When I committed this
+> patch to OpenWrt, it uncovered IRQ handling bugs in MIPS kernel code
+> (both generic and in the ath79 platform code).
 > 
-> Well, I clearly hit the issue. If someone had _not_ build in between,
-> the "default y" does not change anything for him, as he will not be
-> asked thequestion. If someone starts config from scratch, Y is the
-> safe answer.
+> You can find the fixes that I've made here:
+> http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=target/linux/generic/patches-3.14/130-mips_cpu_irq_disable.patch
+> http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=target/linux/ar71xx/patches-3.14/736-MIPS-ath79-fix-chained-irq-disable.patch
+> 
+> I've already submitted the first one to linux-mips.
+> 
+> - Felix
 
-We've long stated that if really starting from scratch it's the wrong
-thing to do and had a default N, so I don't really know why we'd revert
-that only to make a short period of bisect slightly happier?
+Thank you, these patches fixed the problem.
 
-I really don't want to merge this patch and encourage more people to
-build with wext enabled.
-
-johannes
-
+Rico
