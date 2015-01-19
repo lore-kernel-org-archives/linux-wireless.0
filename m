@@ -1,74 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:41539 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752600AbbAPMS6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 07:18:58 -0500
-Received: by mail-ig0-f181.google.com with SMTP id r2so2944456igi.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 04:18:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1421408863.9214.7.camel@sipsolutions.net>
-References: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1421405364.9214.1.camel@sipsolutions.net>
-	<CALhHN=payu27bPU+G5txsFkm6N=w_FL+LA8dVZAO96bwXXqiAg@mail.gmail.com>
-	<1421408863.9214.7.camel@sipsolutions.net>
-Date: Fri, 16 Jan 2015 13:18:57 +0100
-Message-ID: <CALhHN=q=kpDnW1vj07k8Ar2bWYQGK_L-NcnxvnMttmDgN1FqFQ@mail.gmail.com> (sfid-20150116_131902_765944_E5F7C58D)
-Subject: Re: [RFCv2 1/6] mac80211: ibss, fix chandef setup for HT40
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:1744 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751623AbbASOxM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 09:53:12 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: delete the assoc/auth timer upon suspend
+Date: Mon, 19 Jan 2015 16:53:06 +0200
+Message-Id: <1421679186-10898-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150119_155319_333226_10864298)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 January 2015 at 12:47, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2015-01-16 at 12:24 +0100, Janusz Dziedzic wrote:
->> On 16 January 2015 at 11:49, Johannes Berg <johannes@sipsolutions.net> wrote:
->> > On Fri, 2015-01-16 at 11:38 +0100, Janusz Dziedzic wrote:
->> >> In some cases when used HT40+/HT40-, center_freq1
->> >> was configured incorrectly. Next this couse
->> >
->> > couse?
->> >
->> >> @@ -407,10 +407,15 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
->> >>       switch (sdata->u.ibss.chandef.width) {
->> >>       case NL80211_CHAN_WIDTH_20_NOHT:
->> >>       case NL80211_CHAN_WIDTH_20:
->> >> -     case NL80211_CHAN_WIDTH_40:
->> >>               chan_type = cfg80211_get_chandef_type(&sdata->u.ibss.chandef);
->> >>               cfg80211_chandef_create(&chandef, cbss->channel, chan_type);
->> >>               break;
->> >
->> > Sorry, I don't see the bug. "Sometimes"?
->> >
->> > cfg80211_get_chandef_type() will return HT40+/- correctly according to
->> > the chandef, and then you'll use it again to create the chandef - should be OK.
->> >
->> >> +       case NL80211_CHAN_WIDTH_40:
->> >> +               cfg80211_chandef_create(&chandef, cbss->channel,
->> >> +                                       NL80211_CHAN_WIDTH_20_NOHT);
->> >> +               chandef.width = sdata->u.ibss.chandef.width;
->> >> +               chandef.center_freq1 =
->> >> sdata->u.ibss.chandef.center_freq1;
->> >> +               break;
->> >
->> > Please don't mix chantype stuff and chandef stuff ... just create the
->> > chandef manually if you must. I really think the code above should have
->> > worked though, unless it's using the wrong inputs somehow.
->> >
->> This is scenario:
->>
->> 1) first ibss HT20 run on 5180
->> 2) second ibss configured HT40+ using 36 channel
->> 3) supplicant detect OBSS and decide to switch 40 and HT40-
->> 4) this code confgure chandef->center_freq1 = 5170
->> 5) reg_can_beacon() then fail and we fall back to NOHT_20
->
-> Sounds more like we store and use invalid data?
->
-I will check supplicant code then, and maybe skip obss scan when IBSS
-already exist in scan results.
+While suspending, we destroy the authentication /
+association that might be taking place. While doing so, we
+forgot to delete the timer which can be firing after
+local->suspended is already set, producing the warning below.
 
-BR
-Janusz
+Fix that by deleting the timer.
+
+[66722.825487] WARNING: CPU: 2 PID: 5612 at net/mac80211/util.c:755 ieee80211_can_queue_work.isra.18+0x32/0x40 [mac80211]()
+[66722.825487] queueing ieee80211 work while going to suspend
+[66722.825529] CPU: 2 PID: 5612 Comm: kworker/u16:69 Tainted: G        W  O  3.16.1+ #24
+[66722.825537] Workqueue: events_unbound async_run_entry_fn
+[66722.825545] Call Trace:
+[66722.825552]  <IRQ>  [<ffffffff817edbb2>] dump_stack+0x4d/0x66
+[66722.825556]  [<ffffffff81075cad>] warn_slowpath_common+0x7d/0xa0
+[66722.825572]  [<ffffffffa06b5b90>] ? ieee80211_sta_bcn_mon_timer+0x50/0x50 [mac80211]
+[66722.825573]  [<ffffffff81075d1c>] warn_slowpath_fmt+0x4c/0x50
+[66722.825586]  [<ffffffffa06977a2>] ieee80211_can_queue_work.isra.18+0x32/0x40 [mac80211]
+[66722.825598]  [<ffffffffa06977d5>] ieee80211_queue_work+0x25/0x50 [mac80211]
+[66722.825611]  [<ffffffffa06b5bac>] ieee80211_sta_timer+0x1c/0x20 [mac80211]
+[66722.825614]  [<ffffffff8108655a>] call_timer_fn+0x8a/0x300
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/mlme.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1d6bf01..cd86dd4 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2458,6 +2458,12 @@ static void ieee80211_destroy_auth_data(struct ieee80211_sub_if_data *sdata,
+ 	sdata_assert_lock(sdata);
+ 
+ 	if (!assoc) {
++		/*
++		 * we are not authenticated yet, the only timer that could be
++		 * running is the timeout for the authentication response which
++		 * which is not relevant anymore.
++		 */
++		del_timer_sync(&sdata->u.mgd.timer);
+ 		sta_info_destroy_addr(sdata, auth_data->bss->bssid);
+ 
+ 		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
+@@ -2765,6 +2771,12 @@ static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
+ 	sdata_assert_lock(sdata);
+ 
+ 	if (!assoc) {
++		/*
++		 * we are not associated yet, the only timer that could be
++		 * running is the timeout for the association response which
++		 * which is not relevant anymore.
++		 */
++		del_timer_sync(&sdata->u.mgd.timer);
+ 		sta_info_destroy_addr(sdata, assoc_data->bss->bssid);
+ 
+ 		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
+-- 
+1.9.1
+
