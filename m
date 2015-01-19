@@ -1,57 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:33047 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754649AbbAFKty (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:37952 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996AbbASSY5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 05:49:54 -0500
-Received: by mail-wg0-f45.google.com with SMTP id b13so29070040wgh.4
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Jan 2015 02:49:53 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] iw: don't define iw target in Android build
-Date: Tue,  6 Jan 2015 12:41:32 +0200
-Message-Id: <1420540892-21478-1-git-send-email-arik@wizery.com> (sfid-20150106_115640_300589_0417E6DA)
+	Mon, 19 Jan 2015 13:24:57 -0500
+Received: by mail-wi0-f173.google.com with SMTP id r20so17705960wiv.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 10:24:55 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/6] staging: vt6655: common variable size channel numbers to ieee80211_channel->hw_value
+Date: Mon, 19 Jan 2015 18:24:11 +0000
+Message-Id: <1421691855-2927-2-git-send-email-tvboxspy@gmail.com> (sfid-20150119_192502_347730_F43BCC7E)
+In-Reply-To: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
+References: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise Android gets confused and tries to build the Makefile target
+hw_value is u16 so fix all to the same size.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- Android.mk | 1 +
- Makefile   | 2 ++
- 2 files changed, 3 insertions(+)
+ drivers/staging/vt6655/channel.c |  6 +++---
+ drivers/staging/vt6655/device.h  |  2 +-
+ drivers/staging/vt6655/rf.c      | 12 +++++++-----
+ drivers/staging/vt6655/rf.h      |  8 ++++----
+ 4 files changed, 15 insertions(+), 13 deletions(-)
 
-diff --git a/Android.mk b/Android.mk
-index 8afda1d..00c8c49 100644
---- a/Android.mk
-+++ b/Android.mk
-@@ -3,6 +3,7 @@ IW_SOURCE_DIR := $(LOCAL_PATH)
+diff --git a/drivers/staging/vt6655/channel.c b/drivers/staging/vt6655/channel.c
+index 3fc09f4..3c17725 100644
+--- a/drivers/staging/vt6655/channel.c
++++ b/drivers/staging/vt6655/channel.c
+@@ -197,11 +197,11 @@ bool set_channel(void *pDeviceHandler, struct ieee80211_channel *ch)
  
- include $(CLEAR_VARS)
+ 	if (pDevice->byRFType == RF_AIROHA7230)
+ 		RFbAL7230SelectChannelPostProcess(pDevice, pDevice->byCurrentCh,
+-						  (unsigned char)ch->hw_value);
++						  ch->hw_value);
  
-+IW_ANDROID_BUILD=y
- NO_PKG_CONFIG=y
- include $(LOCAL_PATH)/Makefile
+-	pDevice->byCurrentCh = (unsigned char)ch->hw_value;
++	pDevice->byCurrentCh = ch->hw_value;
+ 	bResult &= RFbSelectChannel(pDevice, pDevice->byRFType,
+-				    (unsigned char)ch->hw_value);
++				    ch->hw_value);
  
-diff --git a/Makefile b/Makefile
-index 5bf955d..58755dc 100644
---- a/Makefile
-+++ b/Makefile
-@@ -101,9 +101,11 @@ version.c: version.sh $(patsubst %.o,%.c,$(VERSION_OBJS)) nl80211.h iw.h Makefil
- 	@$(NQ) ' CC  ' $@
- 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+ 	/* Init Synthesizer Table */
+ 	if (pDevice->bEnablePSMode)
+diff --git a/drivers/staging/vt6655/device.h b/drivers/staging/vt6655/device.h
+index 83efbfb..96d8e62 100644
+--- a/drivers/staging/vt6655/device.h
++++ b/drivers/staging/vt6655/device.h
+@@ -367,7 +367,7 @@ struct vnt_private {
+ 	bool bIsBeaconBufReadySet;
+ 	unsigned int	cbBeaconBufReadySetCnt;
+ 	bool bFixRate;
+-	unsigned char byCurrentCh;
++	u16 byCurrentCh;
  
-+ifeq ($(IW_ANDROID_BUILD),)
- iw:	$(OBJS)
- 	@$(NQ) ' CC  ' iw
- 	$(Q)$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o iw
-+endif
+ 	bool bAES;
  
- check:
- 	$(Q)$(MAKE) all CC="REAL_CC=$(CC) CHECK=\"sparse -Wall\" cgcc"
+diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
+index 32ef993..27841aa 100644
+--- a/drivers/staging/vt6655/rf.c
++++ b/drivers/staging/vt6655/rf.c
+@@ -651,7 +651,8 @@ bool RFbInit(
+  * Return Value: true if succeeded; false if failed.
+  *
+  */
+-bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType, unsigned char byChannel)
++bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType,
++		      u16 byChannel)
+ {
+ 	bool bResult = true;
+ 
+@@ -687,7 +688,8 @@ bool RFbSelectChannel(struct vnt_private *priv, unsigned char byRFType, unsigned
+  * Return Value: None.
+  *
+  */
+-bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType, unsigned int uChannel)
++bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType,
++			 u16 uChannel)
+ {
+ 	void __iomem *dwIoBase = priv->PortOffset;
+ 	int   ii;
+@@ -767,7 +769,7 @@ bool RFvWriteWakeProgSyn(struct vnt_private *priv, unsigned char byRFType, unsig
+ bool RFbSetPower(
+ 	struct vnt_private *priv,
+ 	unsigned int uRATE,
+-	unsigned int uCH
++	u16 uCH
+ )
+ {
+ 	bool bResult = true;
+@@ -937,8 +939,8 @@ RFvRSSITodBm(
+ /* Post processing for the 11b/g and 11a.
+  * for save time on changing Reg2,3,5,7,10,12,15 */
+ bool RFbAL7230SelectChannelPostProcess(struct vnt_private *priv,
+-				       unsigned char byOldChannel,
+-				       unsigned char byNewChannel)
++				       u16 byOldChannel,
++				       u16 byNewChannel)
+ {
+ 	bool bResult;
+ 
+diff --git a/drivers/staging/vt6655/rf.h b/drivers/staging/vt6655/rf.h
+index 8a6e2cf..2ea21e2 100644
+--- a/drivers/staging/vt6655/rf.h
++++ b/drivers/staging/vt6655/rf.h
+@@ -74,12 +74,12 @@
+ /*---------------------  Export Functions  --------------------------*/
+ 
+ bool IFRFbWriteEmbedded(struct vnt_private *, unsigned long dwData);
+-bool RFbSelectChannel(struct vnt_private *, unsigned char byRFType, unsigned char byChannel);
++bool RFbSelectChannel(struct vnt_private *, unsigned char byRFType, u16);
+ bool RFbInit(
+ 	struct vnt_private *
+ );
+-bool RFvWriteWakeProgSyn(struct vnt_private *, unsigned char byRFType, unsigned int uChannel);
+-bool RFbSetPower(struct vnt_private *, unsigned int uRATE, unsigned int uCH);
++bool RFvWriteWakeProgSyn(struct vnt_private *, unsigned char byRFType, u16);
++bool RFbSetPower(struct vnt_private *, unsigned int uRATE, u16);
+ bool RFbRawSetPower(
+ 	struct vnt_private *,
+ 	unsigned char byPwr,
+@@ -94,7 +94,7 @@ RFvRSSITodBm(
+ );
+ 
+ //{{ RobertYu: 20050104
+-bool RFbAL7230SelectChannelPostProcess(struct vnt_private *, unsigned char byOldChannel, unsigned char byNewChannel);
++bool RFbAL7230SelectChannelPostProcess(struct vnt_private *, u16, u16);
+ //}} RobertYu
+ 
+ #endif // __RF_H__
 -- 
 2.1.0
 
