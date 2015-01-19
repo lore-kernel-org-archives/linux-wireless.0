@@ -1,85 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:48945 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752258AbbABQ6m (ORCPT
+Received: from mail-qa0-f42.google.com ([209.85.216.42]:34123 "EHLO
+	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525AbbASIo7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 11:58:42 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 10/11] rtlwifi: rtl8821ae: Convert driver to use common DM table initialization
-Date: Fri,  2 Jan 2015 10:58:27 -0600
-Message-Id: <1420217908-1382-11-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175859_258965_3AFA1C1B)
-In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 19 Jan 2015 03:44:59 -0500
+Received: by mail-qa0-f42.google.com with SMTP id dc16so22919430qab.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 00:44:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAFSJ42YW5RNpeWA-VDjUT9Ct0MSCxaLNY8XQHUdo9NKzLbCjMg@mail.gmail.com>
+References: <20150118051222.32019.32719.stgit@114-36-241-182.dynamic.hinet.net>
+	<20150118051650.32019.49483.stgit@114-36-241-182.dynamic.hinet.net>
+	<CAFSJ42YW5RNpeWA-VDjUT9Ct0MSCxaLNY8XQHUdo9NKzLbCjMg@mail.gmail.com>
+Date: Mon, 19 Jan 2015 16:44:59 +0800
+Message-ID: <CAAfg0W6osNyLB1zPbbhVwQV1OsP_1K1stUK8zkyZygavNjmxGw@mail.gmail.com> (sfid-20150119_094512_234155_9ED9D182)
+Subject: Re: [PATCH 2/2] net wireless wcn36xx adapt wcnss platform to select
+ module by DT
+From: Andy Green <andy.green@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert driver to use routine rtl_dm_diginit().
+On 19 January 2015 at 16:34, Eugene Krasnikov <k.eugene.e@gmail.com> wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8821ae/dm.c | 31 ++---------------------------
- 1 file changed, 2 insertions(+), 29 deletions(-)
+> So how do we insmod wcn36xx_msm with a parameter specifying what type
+> of hardware do we use?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-index 4af4613..0b2082d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-@@ -520,34 +520,6 @@ void rtl8821ae_dm_initialize_txpower_tracking_thermalmeter(
- 	}
- }
- 
--static void rtl8821ae_dm_diginit(struct ieee80211_hw *hw)
--{
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct dig_t *dm_digtable = &rtlpriv->dm_digtable;
--
--	dm_digtable->cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
--	dm_digtable->rssi_lowthresh = DM_DIG_THRESH_LOW;
--	dm_digtable->rssi_highthresh = DM_DIG_THRESH_HIGH;
--	dm_digtable->fa_lowthresh = DM_FALSEALARM_THRESH_LOW;
--	dm_digtable->fa_highthresh = DM_FALSEALARM_THRESH_HIGH;
--	dm_digtable->rx_gain_max = DM_DIG_MAX;
--	dm_digtable->rx_gain_min = DM_DIG_MIN;
--	dm_digtable->back_val = DM_DIG_BACKOFF_DEFAULT;
--	dm_digtable->back_range_max = DM_DIG_BACKOFF_MAX;
--	dm_digtable->back_range_min = DM_DIG_BACKOFF_MIN;
--	dm_digtable->pre_cck_cca_thres = 0xff;
--	dm_digtable->cur_cck_cca_thres = 0x83;
--	dm_digtable->forbidden_igi = DM_DIG_MIN;
--	dm_digtable->large_fa_hit = 0;
--	dm_digtable->recover_cnt = 0;
--	dm_digtable->dig_min_0 = DM_DIG_MIN;
--	dm_digtable->dig_min_1 = DM_DIG_MIN;
--	dm_digtable->media_connect_0 = false;
--	dm_digtable->media_connect_1 = false;
--	rtlpriv->dm.dm_initialgain_enable = true;
--	dm_digtable->bt30_cur_igi = 0x32;
--}
--
- void rtl8821ae_dm_init_edca_turbo(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -607,6 +579,7 @@ void rtl8821ae_dm_init(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &rtlpriv->phy;
-+	u32 cur_igvalue = rtl_get_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f);
- 
- 	spin_lock(&rtlpriv->locks.iqk_lock);
- 	rtlphy->lck_inprogress = false;
-@@ -614,7 +587,7 @@ void rtl8821ae_dm_init(struct ieee80211_hw *hw)
- 
- 	rtlpriv->dm.dm_type = DM_TYPE_BYDRIVER;
- 	rtl8821ae_dm_common_info_self_init(hw);
--	rtl8821ae_dm_diginit(hw);
-+	rtl_dm_diginit(hw, cur_igvalue);
- 	rtl8821ae_dm_init_rate_adaptive_mask(hw);
- 	rtl8821ae_dm_init_edca_turbo(hw);
- 	rtl8821ae_dm_initialize_txpower_tracking_thermalmeter(hw);
--- 
-2.1.2
+The type of chip is defined in the DT "compatible" which also delivers
+the resource information.
 
+        qcom,wcn36xx@0a000000 {
+                compatible = "qcom,wcn3620";
+                reg = <0x0a000000 0x280000>;
+                reg-names = "wcnss_mmio";
+
+                interrupts = <0 145 0 0 146 0>;
+                interrupt-names = "wcnss_wlantx_irq", "wcnss_wlanrx_irq";
+...
+
+This bit based on your code can't go in mainline until there's some
+kind of PIL support.
+
+So the only things we can discuss about it for mainline purpose is
+whether using a platform ops is a good way to interface to the
+mainline driver.
+
+If you're OK with that and you want a module parameter then this can
+grow a module parameter and prefer to deliver the chip type from that
+if given, without modifying the platform op interface.
+
+But with or without a module parameter this can't be upstreamed right
+now due to PIL.
+
+-Andy
+
+> 2015-01-18 5:16 GMT+00:00 Andy Green <andy.green@linaro.org>:
+>> Simplify the resource handling and use DT to indicate which chip type
+>> we are dealing with
+>>
+>> Signed-off-by: Andy Green <andy.green@linaro.org>
+>> ---
+>>  drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c |  101 ++++++++++++------------
+>>  1 file changed, 52 insertions(+), 49 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c b/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
+>> index f6f6c83..c9250e0 100644
+>> --- a/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
+>> +++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx-msm.c
+>> @@ -42,7 +42,10 @@ struct wcn36xx_msm {
+>>         struct completion       smd_compl;
+>>         smd_channel_t           *smd_ch;
+>>         struct pinctrl *pinctrl;
+>> -} wmsm;
+>> +       enum wcn36xx_chip_type chip_type;
+>> +};
+>> +
+>> +static struct wcn36xx_msm wmsm;
+>>
+>>  static int wcn36xx_msm_smsm_change_state(u32 clear_mask, u32 set_mask)
+>>  {
+>> @@ -217,14 +220,47 @@ int wcn36xx_msm_powerup(const struct subsys_desc *desc)
+>>         return 0;
+>>  }
+>>
+>> +static const struct of_device_id wcn36xx_msm_match_table[] = {
+>> +       { .compatible = "qcom,wcn3660", .data = (void *)WCN36XX_CHIP_3660 },
+>> +       { .compatible = "qcom,wcn3680", .data = (void *)WCN36XX_CHIP_3680 },
+>> +       { .compatible = "qcom,wcn3620", .data = (void *)WCN36XX_CHIP_3620 },
+>> +       { }
+>> +};
+>> +
+>> +static int wcn36xx_msm_get_chip_type(void)
+>> +{
+>> +       return wmsm.chip_type;
+>> +}
+>> +
+>> +static struct wcn36xx_msm wmsm = {
+>> +       .ctrl_ops = {
+>> +               .open = wcn36xx_msm_smd_open,
+>> +               .close = wcn36xx_msm_smd_close,
+>> +               .tx = wcn36xx_msm_smd_send_and_wait,
+>> +               .get_hw_mac = wcn36xx_msm_get_hw_mac,
+>> +               .smsm_change_state = wcn36xx_msm_smsm_change_state,
+>> +               .get_chip_type = wcn36xx_msm_get_chip_type,
+>> +       },
+>> +};
+>> +
+>>  static int wcn36xx_msm_probe(struct platform_device *pdev)
+>>  {
+>>         int ret;
+>> -       struct resource *wcnss_memory;
+>> -       struct resource *tx_irq;
+>> -       struct resource *rx_irq;
+>> +       const struct of_device_id *of_id;
+>> +       struct resource *r;
+>>         struct resource res[3];
+>>         struct pinctrl_state *ps;
+>> +       static const char const *rnames[] = {
+>> +               "wcnss_mmio", "wcnss_wlantx_irq", "wcnss_wlanrx_irq" };
+>> +       static const int rtype[] = {
+>> +               IORESOURCE_MEM, IORESOURCE_IRQ, IORESOURCE_IRQ };
+>> +       int n;
+>> +
+>> +       of_id = of_match_node(wcn36xx_msm_match_table, pdev->dev.of_node);
+>> +       if (!of_id)
+>> +               return -EINVAL;
+>> +
+>> +       wmsm.chip_type = (enum wcn36xx_chip_type)of_id->data;
+>>
+>>         wmsm.pinctrl = devm_pinctrl_get(&pdev->dev);
+>>         if (IS_ERR_OR_NULL(wmsm.pinctrl))
+>> @@ -240,52 +276,23 @@ static int wcn36xx_msm_probe(struct platform_device *pdev)
+>>
+>>         if (IS_ERR_OR_NULL(pil))
+>>                 pil = subsystem_get("wcnss");
+>> -               if (IS_ERR_OR_NULL(pil))
+>> -                       return PTR_ERR(pil);
+>> +       if (IS_ERR_OR_NULL(pil))
+>> +               return PTR_ERR(pil);
+>>
+>>         wmsm.core = platform_device_alloc("wcn36xx", -1);
+>>
+>> -       //dev_err(&pdev->dev, "%s starting\n", __func__);
+>> -
+>> -       memset(res, 0x00, sizeof(res));
+>> -       wmsm.ctrl_ops.open = wcn36xx_msm_smd_open;
+>> -       wmsm.ctrl_ops.close = wcn36xx_msm_smd_close;
+>> -       wmsm.ctrl_ops.tx = wcn36xx_msm_smd_send_and_wait;
+>> -       wmsm.ctrl_ops.get_hw_mac = wcn36xx_msm_get_hw_mac;
+>> -       wmsm.ctrl_ops.smsm_change_state = wcn36xx_msm_smsm_change_state;
+>> -       wcnss_memory =
+>> -               platform_get_resource_byname(pdev,
+>> -                                             IORESOURCE_MEM,
+>> -                                             "wcnss_mmio");
+>> -       if (wcnss_memory == NULL) {
+>> -               dev_err(&wmsm.core->dev,
+>> -                       "Failed to get wcnss wlan memory map.\n");
+>> -               ret = -ENOMEM;
+>> -               return ret;
+>> -       }
+>> -       memcpy(&res[0], wcnss_memory, sizeof(*wcnss_memory));
+>> -
+>> -       tx_irq = platform_get_resource_byname(pdev,
+>> -                                             IORESOURCE_IRQ,
+>> -                                             "wcnss_wlantx_irq");
+>> -       if (tx_irq == NULL) {
+>> -               dev_err(&wmsm.core->dev, "Failed to get wcnss tx_irq");
+>> -               ret = -ENOMEM;
+>> -               return ret;
+>> -       }
+>> -       memcpy(&res[1], tx_irq, sizeof(*tx_irq));
+>> -
+>> -       rx_irq = platform_get_resource_byname(pdev,
+>> -                                             IORESOURCE_IRQ,
+>> -                                             "wcnss_wlanrx_irq");
+>> -       if (rx_irq == NULL) {
+>> -               dev_err(&wmsm.core->dev, "Failed to get wcnss rx_irq");
+>> -               ret = -ENOMEM;
+>> -               return ret;
+>> +       for (n = 0; n < ARRAY_SIZE(rnames); n++) {
+>> +               r = platform_get_resource_byname(pdev, rtype[n], rnames[n]);
+>> +               if (!r) {
+>> +                       dev_err(&wmsm.core->dev,
+>> +                               "Missing resource %s'\n", rnames[n]);
+>> +                       ret = -ENOMEM;
+>> +                       return ret;
+>> +               }
+>> +               res[n] = *r;
+>>         }
+>> -       memcpy(&res[2], rx_irq, sizeof(*rx_irq));
+>>
+>> -       platform_device_add_resources(wmsm.core, res, ARRAY_SIZE(res));
+>> +       platform_device_add_resources(wmsm.core, res, n);
+>>
+>>         ret = platform_device_add_data(wmsm.core, &wmsm.ctrl_ops,
+>>                                        sizeof(wmsm.ctrl_ops));
+>> @@ -319,10 +326,6 @@ static int wcn36xx_msm_remove(struct platform_device *pdev)
+>>         return 0;
+>>  }
+>>
+>> -static const struct of_device_id wcn36xx_msm_match_table[] = {
+>> -       { .compatible = "qcom,wcn36xx" },
+>> -       { }
+>> -};
+>>  MODULE_DEVICE_TABLE(of, wcn36xx_msm_match_table);
+>>
+>>  static struct platform_driver wcn36xx_msm_driver = {
+>>
+>
+>
+>
+> --
+> Best regards,
+> Eugene
