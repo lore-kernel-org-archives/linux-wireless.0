@@ -1,79 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34025 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759948AbbAYTbu (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:62235 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751959AbbASP2W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 14:31:50 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 09/14] brcmutil: use define for boardrev string function
-Date: Sun, 25 Jan 2015 20:31:38 +0100
-Message-ID: <1422214303-7816-10-git-send-email-arend@broadcom.com> (sfid-20150125_203227_587813_C5B6D7FB)
-In-Reply-To: <1422214303-7816-1-git-send-email-arend@broadcom.com>
-References: <1422214303-7816-1-git-send-email-arend@broadcom.com>
+	Mon, 19 Jan 2015 10:28:22 -0500
+Received: by mail-ig0-f178.google.com with SMTP id hl2so11161372igb.5
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 07:28:21 -0800 (PST)
+Message-ID: <54BD2294.2000207@mojatatu.com> (sfid-20150119_162829_890122_19C57974)
+Date: Mon, 19 Jan 2015 10:28:20 -0500
+From: Jamal Hadi Salim <jhs@mojatatu.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
+	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
+CC: Richard Guy Briggs <rgb@tricolour.ca>, info@netdev01.org
+Subject: NetDev 0.1 conference new proposals accepted + misc updates
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introducing a define that the caller of brcmu_boardrev_str() can
-use to allocate enough room for buffer passed to the function.
+Fellow netheads:
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/debug.c      | 2 +-
- drivers/net/wireless/brcm80211/brcmutil/utils.c      | 5 +++--
- drivers/net/wireless/brcm80211/include/brcmu_utils.h | 2 ++
- 3 files changed, 6 insertions(+), 3 deletions(-)
+On behalf of rgb, yours truly is sending out the weekly announcement.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/debug.c b/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-index c9a8b93..7a1fbb2 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/debug.c
-@@ -78,7 +78,7 @@ int brcms_debugfs_hardware_read(struct seq_file *s, void *data)
- 	struct brcms_hardware *hw = drvr->wlc->hw;
- 	struct bcma_device *core = hw->d11core;
- 	struct bcma_bus *bus = core->bus;
--	char boardrev[10];
-+	char boardrev[BRCMU_BOARDREV_LEN];
- 
- 	seq_printf(s, "chipnum 0x%x\n"
- 		   "chiprev 0x%x\n"
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-index 906e89d..34937d8 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-@@ -267,10 +267,11 @@ char *brcmu_boardrev_str(u32 brev, char *buf)
- 	char c;
- 
- 	if (brev < 0x100) {
--		snprintf(buf, 8, "%d.%d", (brev & 0xf0) >> 4, brev & 0xf);
-+		snprintf(buf, BRCMU_BOARDREV_LEN, "%d.%d",
-+			 (brev & 0xf0) >> 4, brev & 0xf);
- 	} else {
- 		c = (brev & 0xf000) == 0x1000 ? 'P' : 'A';
--		snprintf(buf, 8, "%c%03x", c, brev & 0xfff);
-+		snprintf(buf, BRCMU_BOARDREV_LEN, "%c%03x", c, brev & 0xfff);
- 	}
- 	return buf;
- }
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-index a043e29..197317b 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-@@ -218,6 +218,8 @@ void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...)
- }
- #endif
- 
-+#define BRCMU_BOARDREV_LEN	8
-+
- char *brcmu_boardrev_str(u32 brev, char *buf);
- 
- #endif				/* _BRCMU_UTILS_H_ */
--- 
-1.9.1
+This conference is turning out to be _the best ever_ Linux networking
+content put together under one roof. You will be committing a netdev
+crime if you dont show up!
+Please spread the news. Forward this email appropriately.
 
+First things first.
+
+A reminder that the Westin Hotel is still holding a block of rooms for
+Netdev01 at a guaranteed rate of $159.00 or $179.00 (depending on the 
+type of room required) and there are still rooms available.
+That guarantee expires on January 23, so please dont procastinate
+and book now. The rates *WILL* go up.
+Reservations: 
+https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
+
+Please register soon to help us plan this event better.
+Registration https://onlineregistrations.ca/netdev01/
+$100/day, or $350 for 4 days (Cdn dollars, reel cheep).
+(online reg closes Feb 12th). Again:
+Registering helps us plan properly for numbers of attendees,
+ensuring venue sizes and supplies are appropriate without
+wasting resources.
+
+NetDev 0.1 would like to gratefully acknowledge our sponsors: 
+https://netdev01.org/sponsors
+Google https://www.google.ca
+Qualcomm  https://www.qualcomm.com/
+Verizon http://www.verizon.com/
+Cumulus Networks http://cumulusnetworks.com/
+Mojatatu Networks http://mojatatu.com/
+
+There are a few more talks and tutorials and BOFs/workshops
+in the pipeline (we will close acceptance at the end of the week,
+so if you want to submit, please do it NOW).
+
+Here is an update on new proposals accepted this past week for NetDev
+0.1 that you may have missed if you aren't following the RSS feed or
+twitter:
+
+New Sponsors (All listed at: https://www.netdev01.org/sponsors)
+=============
+Qualcomm - Without sponsors like Qualcomm netdev 0.1 couldnt have
+have happened. Thanks Qualcomm for your support of the open source
+community.
+Google - Google is a giant in the open source world. We thank them
+for their sponsorship.
+
+
+Accepted talks: (All listed: https://www.netdev01.org/sessions )
+===============
+1) Breaking Open Linux Switching Drivers by Andy Gospodarek
+Andy will talk about taking an evolutionary path of a compromise
+to integrate between vendor SDKs and the Linux kernel for hardware
+offload. Graphics cards all over again? Come and find out.
+https://www.netdev01.org/sessions/19
+
+2) Weighing Three Methods of Scaling UDP Applications by Alan Dekok
+Alan, the maintainer of FreeRadius, has had to battle UDP for years.
+In this talk he will describe his experiences on 3 different approaches
+he has recently taken to try and scale UDP applications on Linux
+https://www.netdev01.org/sessions/20
+
+3) TC Classifier Action Subsystem by Jamal Hadi Salim
+Jamal will describe the tc classifier-action subsystem in details (A 
+decade too late?). He claims to be inspired by two talks at netdev01
+which refer to this subsystem. He also claims it is a better
+architecture than OF and P4. Come beat up on him.
+https://www.netdev01.org/sessions/21
+
+4)  MLAG (or Multi-Chassis Link aggregation Group) integration with 
+Linux by Matty Kadosh
+Mellanox MLAG implementation at  https://github.com/open-ethernet/MLAG
+will be discussed in this talk. Matty will talk about experiences and
+will try to convince us that it is time to mainstream MLAG.
+https://www.netdev01.org/sessions/22
+
+5) MLAG on Linux - Lessons Learned by Scott Emery
+Cumulus Networks has extensive MLAG deployment on Linux using hardware 
+offloads on high speed hardware.
+They have had to battle dragons in many dungeons and slay
+many monsters along the way. Come hear all that experience in one talk.
+https://www.netdev01.org/sessions/23
+
+Accepted Tutorials (All listed: https://www.netdev01.org/sessions )
+===================
+1)Hardware Accelerating Linux Network Functions by
+  Roopa Prabhu and Toshiaki Makita
+
+Everything you ever wanted to know about using Linux bridging
+variations for virtualization, data centre & enterprise, L3, ACLs and 
+more. How well do you know how to use bridge/brctl/ip/ethtool and
+their friends to setup a desired network(bridge, SRIOV, Macvlan etc)?
+Roopa and Toshiaki will try to guide you through this vast ocean of 
+knowledge. You will get to learn about how to learn the theory
+and practise and beauty of using these toolsets consistently
+whether on a NIC, offloaded-NIC or multi-terabit capacity switch
+hardware.
+https://www.netdev01.org/sessions/24
+
+
+More coming in future updates.
+If youve got this far reading - please go and register.
+
+cheers,
+jamal (on behalf of Richard Guy Briggs)
