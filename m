@@ -1,55 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:50071 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751523AbbAAPwQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2015 10:52:16 -0500
-Received: by mail-wg0-f48.google.com with SMTP id y19so23301101wgg.35
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Jan 2015 07:52:15 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@adurom.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: ipw2x00: ipw2100.c:  Remove some unused functions
-Date: Thu,  1 Jan 2015 16:32:53 +0100
-Message-Id: <1420126373-27344-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150101_165219_386698_A7A44771)
+Received: from mx1.redhat.com ([209.132.183.28]:50051 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751596AbbASVvb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 16:51:31 -0500
+Message-ID: <1421704287.23826.14.camel@dcbw.local> (sfid-20150119_225144_604493_A76101F2)
+Subject: Re: [PATCH] Revert "wireless: Support of IFLA_INFO_KIND rtnl
+ attribute"
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Date: Mon, 19 Jan 2015 15:51:27 -0600
+In-Reply-To: <1421701745.23826.13.camel@dcbw.local>
+References: <1421689943-13264-1-git-send-email-johannes@sipsolutions.net>
+	 <1421695324.23826.9.camel@dcbw.local>
+	 <1421701745.23826.13.camel@dcbw.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removes some functions that are not used anywhere:
-write_nic_dword_auto_inc() write_nic_auto_inc_address()
+On Mon, 2015-01-19 at 15:09 -0600, Dan Williams wrote:
+> On Mon, 2015-01-19 at 13:22 -0600, Dan Williams wrote:
+> > On Mon, 2015-01-19 at 18:52 +0100, Johannes Berg wrote:
+> > > From: Johannes Berg <johannes.berg@intel.com>
+> > > 
+> > > This reverts commit ba1debdfed974f25aa598c283567878657b292ee.
+> > > 
+> > > Oliver reported that it breaks network-manager, for some reason with
+> > > this patch NM decides that the device isn't wireless but "generic"
+> > > (ethernet), sees no carrier (as expected with wifi) and fails to do
+> > > anything else with it.
+> > 
+> > Hmm, which NM version?  NM uses either DEVTYPE (from 'uevent' in sysfs),
+> > the phy80211 link in sysfs, or (if enabled) WEXT to figure out whether a
+> > network interface with arptype=1 is WiFi or not.  I can't think of why
+> > IFLA_INFO_KIND would break that...  what are the userspace visible
+> > effects of the patch before reversion?
+> 
+> So with the patch, libnl will return 'wlan' from rtnl_link_get_type().
+> NetworkManager was relying on the fact that this would return NULL for
+> WiFi devices and was not falling back to alternate WiFi detection
+> mechanisms (sysfs, DEVTYPE, etc) when an unknown IFLA_INFO_KIND was
+> found.
+> 
+> NM 0.9.10+ have this bug.
+> 
+> I'll submit a patch upstream for review, which will get backported to
+> 0.9.10 and later when approved.
 
-This was partially found by using a static code analysis program called cppcheck.
+https://bugzilla.gnome.org/show_bug.cgi?id=743209
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/net/wireless/ipw2x00/ipw2100.c |   11 -----------
- 1 file changed, 11 deletions(-)
+Dan
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 6fabea0..fa88839 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -433,17 +433,6 @@ static inline void write_nic_byte(struct net_device *dev, u32 addr, u8 val)
- 	write_register_byte(dev, IPW_REG_INDIRECT_ACCESS_DATA, val);
- }
- 
--static inline void write_nic_auto_inc_address(struct net_device *dev, u32 addr)
--{
--	write_register(dev, IPW_REG_AUTOINCREMENT_ADDRESS,
--		       addr & IPW_REG_INDIRECT_ADDR_MASK);
--}
--
--static inline void write_nic_dword_auto_inc(struct net_device *dev, u32 val)
--{
--	write_register(dev, IPW_REG_AUTOINCREMENT_DATA, val);
--}
--
- static void write_nic_memory(struct net_device *dev, u32 addr, u32 len,
- 				    const u8 * buf)
- {
--- 
-1.7.10.4
+> Dan
+> 
+> > Dan
+> > 
+> > > Revert this to unbreak userspace.
+> > > 
+> > > Reported-by: Oliver Hartkopp <socketcan@hartkopp.net>
+> > > Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
+> > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > > ---
+> > >  net/wireless/core.c | 6 ------
+> > >  1 file changed, 6 deletions(-)
+> > > 
+> > > diff --git a/net/wireless/core.c b/net/wireless/core.c
+> > > index 456e4c38c279..3af0ecf1cc16 100644
+> > > --- a/net/wireless/core.c
+> > > +++ b/net/wireless/core.c
+> > > @@ -21,7 +21,6 @@
+> > >  #include <linux/sched.h>
+> > >  #include <net/genetlink.h>
+> > >  #include <net/cfg80211.h>
+> > > -#include <net/rtnetlink.h>
+> > >  #include "nl80211.h"
+> > >  #include "core.h"
+> > >  #include "sysfs.h"
+> > > @@ -964,10 +963,6 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
+> > >  }
+> > >  EXPORT_SYMBOL(cfg80211_stop_iface);
+> > >  
+> > > -static const struct rtnl_link_ops wireless_link_ops = {
+> > > -	.kind = "wlan",
+> > > -};
+> > > -
+> > >  static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+> > >  					 unsigned long state, void *ptr)
+> > >  {
+> > > @@ -986,7 +981,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+> > >  	switch (state) {
+> > >  	case NETDEV_POST_INIT:
+> > >  		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
+> > > -		dev->rtnl_link_ops = &wireless_link_ops;
+> > >  		break;
+> > >  	case NETDEV_REGISTER:
+> > >  		/*
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
