@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59771 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755355AbbAFOFO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 09:05:14 -0500
-Message-ID: <1420553111.1966.32.camel@sipsolutions.net> (sfid-20150106_150519_011633_F895ABF1)
-Subject: Re: [PATCH 1/3] mac80211: consider only relevant vifs for
- radar_required calculation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 06 Jan 2015 15:05:11 +0100
-In-Reply-To: <1420542274.1966.21.camel@sipsolutions.net> (sfid-20150106_120447_628454_273C3B51)
-References: <1420366399-31535-1-git-send-email-eliad@wizery.com>
-	 (sfid-20150104_111329_158953_6FBC20BD) <1420542274.1966.21.camel@sipsolutions.net>
-	 (sfid-20150106_120447_628454_273C3B51)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:44074 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753636AbbATKnZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2015 05:43:25 -0500
+Received: by mail-wi0-f170.google.com with SMTP id em10so3801287wid.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 02:43:23 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: remove sw encryption for pmf
+Date: Tue, 20 Jan 2015 11:42:42 +0100
+Message-Id: <1421750563-15945-1-git-send-email-michal.kazior@tieto.com> (sfid-20150120_114328_474945_76CFD580)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-06 at 12:04 +0100, Johannes Berg wrote:
-> all three applied.
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 
-Nope, dropped patch 2 again - it was causing issues when running the
-hwsim tests:
+Software encryption was never necessary.
+Tested with fw 636 and fw 10.x.
 
-$ ./vm-run.sh dfs ap_ht_40mhz_intolerant_ap
-Starting test run in a virtual machine
-./run-all.sh: passing the following args to run-tests.py: dfs
-ap_ht_40mhz_intolerant_ap 
-START dfs 1/2
-19
-703
-PASS dfs 65.148949 2015-01-06 14:02:54.263314
-START ap_ht_40mhz_intolerant_ap 2/2
-19
-719
-command failed: Device or resource busy (-16)
-Exception: AP startup failed
-FAIL ap_ht_40mhz_intolerant_ap 15.53641 2015-01-06 14:03:09.842131
-failed tests: ap_ht_40mhz_intolerant_ap
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Maybe the tests don't clean up properly, or something, but I'm not going
-to investigate this now.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9524bc5..78834c3 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -58,10 +58,7 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+ 	switch (key->cipher) {
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		arg.key_cipher = WMI_CIPHER_AES_CCM;
+-		if (arvif->vdev_type == WMI_VDEV_TYPE_AP)
+-			key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV_MGMT;
+-		else
+-			key->flags |= IEEE80211_KEY_FLAG_SW_MGMT_TX;
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV_MGMT;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		arg.key_cipher = WMI_CIPHER_TKIP;
+-- 
+1.8.5.3
 
