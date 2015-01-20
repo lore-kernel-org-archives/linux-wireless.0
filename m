@@ -1,86 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:62919 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751955AbbAMKfq (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59926 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525AbbATEgN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 05:35:46 -0500
-Received: by mail-la0-f45.google.com with SMTP id gq15so1857800lab.4
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 02:35:44 -0800 (PST)
+	Mon, 19 Jan 2015 23:36:13 -0500
+Message-ID: <54BDDB3B.3020902@candelatech.com> (sfid-20150120_053615_980046_EDCF449E)
+Date: Mon, 19 Jan 2015 20:36:11 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgVb2Roq51dooFeboha_UxOHx4+hGJypyxuvRb_8ka-ZfA@mail.gmail.com>
-References: <1420642040-4530-1-git-send-email-arik@wizery.com>
- <1420642040-4530-2-git-send-email-arik@wizery.com> <CAGRGNgV1EeZ9Qz995wTqs6CnKmbhu1OTob3_k1h4mKYW1Oh7tw@mail.gmail.com>
- <CA+XVXfdyxCm2-2rfPCmye7AF5VxHeWzWLPKHi3jej23rAHCb2A@mail.gmail.com> <CAGRGNgVb2Roq51dooFeboha_UxOHx4+hGJypyxuvRb_8ka-ZfA@mail.gmail.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 13 Jan 2015 12:35:29 +0200
-Message-ID: <CA+XVXfe1te8k1Em5_z5uO92EHj5jE8EGrQn8N7DyieVt33pq6g@mail.gmail.com> (sfid-20150113_113549_505871_E3D6AC3F)
-Subject: Re: [PATCH v2 2/2] cfg80211: avoid reg-hints in self-managed only systems
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Content-Type: text/plain; charset=UTF-8
+To: Michal Kazior <michal.kazior@tieto.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org, martin@darmstadt.freifunk.net
+Subject: Re: [RFC/RFT] ath10k: enable IBSS in multi-vif
+References: <54B97B96.4040903@darmstadt.freifunk.net> <1421658833-13311-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1421658833-13311-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 13, 2015 at 12:30 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Arik,
->
-> On Tue, Jan 13, 2015 at 9:11 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> On Tue, Jan 13, 2015 at 6:26 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
->>> Hi Arik,
->>>
->>> On Thu, Jan 8, 2015 at 1:47 AM, Arik Nemtsov <arik@wizery.com> wrote:
->>>> When a system contains only self-managed regulatory devices all hints
->>>> from the regulatory core are ignored. Stop hint processing early in this
->>>> case. These systems usually don't have CRDA deployed, which results in
->>>> endless (irrelevent) logs of the form:
->>>> cfg80211: Calling CRDA to update world regulatory domain
->>>>
->>>> Make sure there's at least one self-managed device before discarding a
->>>> hint, in order to prevent initial hints from disappearing on CRDA
->>>> managed systems.
->>>>
->>>> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
->>>> ---
->>>>  net/wireless/reg.c | 25 +++++++++++++++++++++++++
->>>>  1 file changed, 25 insertions(+)
->>>>
->>>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->>>> index 521f3a4..588e45f 100644
->>>> --- a/net/wireless/reg.c
->>>> +++ b/net/wireless/reg.c
->>>> @@ -2120,6 +2120,26 @@ out_free:
->>>>         reg_free_request(reg_request);
->>>>  }
->>>>
->>>> +static bool reg_only_self_managed_wiphys(void)
->>>> +{
->>>> +       struct cfg80211_registered_device *rdev;
->>>> +       struct wiphy *wiphy;
->>>> +       bool self_managed_found = false;
->>>> +
->>>> +       ASSERT_RTNL();
->>>
->>> Would it make sense to quickly return false here if the list is empty
->>> rather than the whole mess with the new variable?
->>
->> I'm thinking the "mess" isn't really such a mess - are you expecting a
->> real performance hit?
->
-> Personally, purely for readability, I prefer the style of checking and
-> returning as early as possible.
 
-Actually I thought readability was on my side - wanted to point out
-the shorter version of the code is more legible.
-I guess it's a matter of personal taste :)
+
+On 01/19/2015 01:13 AM, Michal Kazior wrote:
+> The 999.999.0.636 firmware seems to support
+> concurrent IBSS + AP/STA. At least basic stuff
+> works so enable it since some people are
+> interested in this stuff.
+>
+> If it's broken we can fix, restrict or disable it
+> later.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+> Hi Martin,
+>
+> Feel free to take this patch and run whatever case
+> you had in mind. If this proves to work for you
+> without any major issues (like notorious crashes,
+> traffic issues and such) I guess we could try
+> pulling this upstream.
+>
+> Make sure you use 999.999.0.636 firmware. The 10.x
+> doesn't support IBSS at all.
+
+Likely my 10.1.467 based CT firmware will support this as well...
+
+Ben
 
 >
-> Arguably doing it my way trades speed for memory efficiency and your
-> way trades memory efficiency for speed, but it's so small (and this is
-> so far from a hot path) that there's no real argument either way
-> whatsoever.
+>
+>   drivers/net/wireless/ath/ath10k/mac.c | 4 ++++
+>   1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 9524bc5..11170ce 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -5032,6 +5032,10 @@ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
+>   	.max	= 7,
+>   	.types	= BIT(NL80211_IFTYPE_AP)
+>   	},
+> +	{
+> +	.max	= 1,
+> +	.types	= BIT(NL80211_IFTYPE_ADHOC)
+> +	},
+>   };
+>
+>   static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
+>
 
-Agree it doesn't matter for these reasons.
-
-Arik
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
