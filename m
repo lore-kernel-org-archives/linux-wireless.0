@@ -1,73 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:53777 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751031AbbAMMTv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 07:19:51 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 2/3] iwlwifi: mvm: drop non VO frames when flushing
-Date: Tue, 13 Jan 2015 14:19:46 +0200
-Message-Id: <1421151587-10437-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150113_131956_854938_12B78D8F)
-In-Reply-To: <1421151474.2601.10.camel@egrumbacBox>
-References: <1421151474.2601.10.camel@egrumbacBox>
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:43379 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755385AbbATRBv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2015 12:01:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH V2 for 3.19 7/7] rtlwifi: rtl8192ee: Fix DMA stalls
+Date: Tue, 20 Jan 2015 11:01:26 -0600
+Message-Id: <1421773286-1039-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180357_451548_C8C14104)
+In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This change has already been implemented in iwldvm:
+From: Troy Tan <troy_tan@realsil.com.cn>
 
-commit a260e7b3f0307878b99d57ed1406cf2d497923b8
-Author: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date:   Sun Oct 5 09:11:14 2014 +0300
+There are instances where the DMA engine stalls. The new code detects
+such stalls and restarts DMA without needing a power reset.
 
-    iwlwifi: dvm: drop non VO frames when flushing
-
-Since I added the flush() callback implementation in mvm,
-we got reports that the queues are stuck while roaming
-or suspending.
-This commit above helped much for iwldvm, implement the
-same behavior for iwlmvm.
-
-CC: <stable@vger.kernel.org> [3.16+]
-Fixes: c5b0e7c0565a ("iwlwifi: mvm: implement mac80211's flush callback")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [3.18]
 ---
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192ee/hw.c  | 140 +++++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/reg.h |   2 +
+ 2 files changed, 142 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index e880f9d..2091558 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -3343,18 +3343,16 @@ static void iwl_mvm_mac_flush(struct ieee80211_hw *hw,
- 		msk |= mvmsta->tfd_queue_msk;
- 	}
- 
--	if (drop) {
--		if (iwl_mvm_flush_tx_path(mvm, msk, true))
--			IWL_ERR(mvm, "flush request fail\n");
--		mutex_unlock(&mvm->mutex);
--	} else {
--		mutex_unlock(&mvm->mutex);
-+	msk &= ~BIT(vif->hw_queue[IEEE80211_AC_VO]);
- 
--		/* this can take a while, and we may need/want other operations
--		 * to succeed while doing this, so do it without the mutex held
--		 */
--		iwl_trans_wait_tx_queue_empty(mvm->trans, msk);
--	}
-+	if (iwl_mvm_flush_tx_path(mvm, msk, true))
-+		IWL_ERR(mvm, "flush request fail\n");
-+	mutex_unlock(&mvm->mutex);
-+
-+	/* this can take a while, and we may need/want other operations
-+	 * to succeed while doing this, so do it without the mutex held
-+	 */
-+	iwl_trans_wait_tx_queue_empty(mvm->trans, msk);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+index 9199559..09bc43e 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+@@ -1137,6 +1137,139 @@ void rtl92ee_enable_hw_security_config(struct ieee80211_hw *hw)
+ 	rtlpriv->cfg->ops->set_hw_reg(hw, HW_VAR_WPA_CONFIG, &sec_reg_value);
  }
  
- const struct ieee80211_ops iwl_mvm_hw_ops = {
++static bool _rtl8192ee_check_pcie_dma_hang(struct rtl_priv *rtlpriv)
++{
++	u8 tmp;
++
++	/* write reg 0x350 Bit[26]=1. Enable debug port. */
++	tmp = rtl_read_byte(rtlpriv, REG_BACKDOOR_DBI_DATA + 3);
++	if (!(tmp & BIT(2))) {
++		rtl_write_byte(rtlpriv, REG_BACKDOOR_DBI_DATA + 3,
++			       tmp | BIT(2));
++		mdelay(100); /* Suggested by DD Justin_tsai. */
++	}
++
++	/* read reg 0x350 Bit[25] if 1 : RX hang
++	 * read reg 0x350 Bit[24] if 1 : TX hang
++	 */
++	tmp = rtl_read_byte(rtlpriv, REG_BACKDOOR_DBI_DATA + 3);
++	if ((tmp & BIT(0)) || (tmp & BIT(1))) {
++		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
++			 "CheckPcieDMAHang8192EE(): true!!\n");
++		return true;
++	}
++	return false;
++}
++
++static void _rtl8192ee_reset_pcie_interface_dma(struct rtl_priv *rtlpriv,
++						bool mac_power_on)
++{
++	u8 tmp;
++	bool release_mac_rx_pause;
++	u8 backup_pcie_dma_pause;
++
++	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
++		 "ResetPcieInterfaceDMA8192EE()\n");
++
++	/* Revise Note: Follow the document "PCIe RX DMA Hang Reset Flow_v03"
++	 * released by SD1 Alan.
++	 */
++
++	/* 1. disable register write lock
++	 *	write 0x1C bit[1:0] = 2'h0
++	 *	write 0xCC bit[2] = 1'b1
++	 */
++	tmp = rtl_read_byte(rtlpriv, REG_RSV_CTRL);
++	tmp &= ~(BIT(1) | BIT(0));
++	rtl_write_byte(rtlpriv, REG_RSV_CTRL, tmp);
++	tmp = rtl_read_byte(rtlpriv, REG_PMC_DBG_CTRL2);
++	tmp |= BIT(2);
++	rtl_write_byte(rtlpriv, REG_PMC_DBG_CTRL2, tmp);
++
++	/* 2. Check and pause TRX DMA
++	 *	write 0x284 bit[18] = 1'b1
++	 *	write 0x301 = 0xFF
++	 */
++	tmp = rtl_read_byte(rtlpriv, REG_RXDMA_CONTROL);
++	if (tmp & BIT(2)) {
++		/* Already pause before the function for another reason. */
++		release_mac_rx_pause = false;
++	} else {
++		rtl_write_byte(rtlpriv, REG_RXDMA_CONTROL, (tmp | BIT(2)));
++		release_mac_rx_pause = true;
++	}
++
++	backup_pcie_dma_pause = rtl_read_byte(rtlpriv, REG_PCIE_CTRL_REG + 1);
++	if (backup_pcie_dma_pause != 0xFF)
++		rtl_write_byte(rtlpriv, REG_PCIE_CTRL_REG + 1, 0xFF);
++
++	if (mac_power_on) {
++		/* 3. reset TRX function
++		 *	write 0x100 = 0x00
++		 */
++		rtl_write_byte(rtlpriv, REG_CR, 0);
++	}
++
++	/* 4. Reset PCIe DMA
++	 *	write 0x003 bit[0] = 0
++	 */
++	tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
++	tmp &= ~(BIT(0));
++	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN + 1, tmp);
++
++	/* 5. Enable PCIe DMA
++	 *	write 0x003 bit[0] = 1
++	 */
++	tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
++	tmp |= BIT(0);
++	rtl_write_byte(rtlpriv, REG_SYS_FUNC_EN + 1, tmp);
++
++	if (mac_power_on) {
++		/* 6. enable TRX function
++		 *	write 0x100 = 0xFF
++		 */
++		rtl_write_byte(rtlpriv, REG_CR, 0xFF);
++
++		/* We should init LLT & RQPN and
++		 * prepare Tx/Rx descrptor address later
++		 * because MAC function is reset.
++		 */
++	}
++
++	/* 7. Restore PCIe autoload down bit
++	 *	write 0xF8 bit[17] = 1'b1
++	 */
++	tmp = rtl_read_byte(rtlpriv, REG_MAC_PHY_CTRL_NORMAL + 2);
++	tmp |= BIT(1);
++	rtl_write_byte(rtlpriv, REG_MAC_PHY_CTRL_NORMAL + 2, tmp);
++
++	/* In MAC power on state, BB and RF maybe in ON state,
++	 * if we release TRx DMA here
++	 * it will cause packets to be started to Tx/Rx,
++	 * so we release Tx/Rx DMA later.
++	 */
++	if (!mac_power_on) {
++		/* 8. release TRX DMA
++		 *	write 0x284 bit[18] = 1'b0
++		 *	write 0x301 = 0x00
++		 */
++		if (release_mac_rx_pause) {
++			tmp = rtl_read_byte(rtlpriv, REG_RXDMA_CONTROL);
++			rtl_write_byte(rtlpriv, REG_RXDMA_CONTROL,
++				       (tmp & (~BIT(2))));
++		}
++		rtl_write_byte(rtlpriv, REG_PCIE_CTRL_REG + 1,
++			       backup_pcie_dma_pause);
++	}
++
++	/* 9. lock system register
++	 *	write 0xCC bit[2] = 1'b0
++	 */
++	tmp = rtl_read_byte(rtlpriv, REG_PMC_DBG_CTRL2);
++	tmp &= ~(BIT(2));
++	rtl_write_byte(rtlpriv, REG_PMC_DBG_CTRL2, tmp);
++}
++
+ int rtl92ee_hw_init(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -1162,6 +1295,13 @@ int rtl92ee_hw_init(struct ieee80211_hw *hw)
+ 		rtlhal->fw_ps_state = FW_PS_STATE_ALL_ON_92E;
+ 	}
+ 
++	if (_rtl8192ee_check_pcie_dma_hang(rtlpriv)) {
++		RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "92ee dma hang!\n");
++		_rtl8192ee_reset_pcie_interface_dma(rtlpriv,
++						    rtlhal->mac_func_enable);
++		rtlhal->mac_func_enable = false;
++	}
++
+ 	rtstatus = _rtl92ee_init_mac(hw);
+ 
+ 	rtl_write_byte(rtlpriv, 0x577, 0x03);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ee/reg.h
+index 3f2a959..1eaa1fa 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/reg.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/reg.h
+@@ -77,9 +77,11 @@
+ #define REG_HIMRE				0x00B8
+ #define REG_HISRE				0x00BC
+ 
++#define REG_PMC_DBG_CTRL2			0x00CC
+ #define REG_EFUSE_ACCESS			0x00CF
+ #define REG_HPON_FSM				0x00EC
+ #define REG_SYS_CFG1				0x00F0
++#define REG_MAC_PHY_CTRL_NORMAL			0x00F8
+ #define REG_SYS_CFG2				0x00FC
+ 
+ #define REG_CR					0x0100
 -- 
-1.9.1
+2.1.2
 
