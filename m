@@ -1,44 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:42448 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754584AbbAPOab (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:44924 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752536AbbATJVO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 09:30:31 -0500
-Received: by mail-wi0-f171.google.com with SMTP id ho1so4509516wib.4
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 06:30:30 -0800 (PST)
+	Tue, 20 Jan 2015 04:21:14 -0500
+Received: by mail-wi0-f176.google.com with SMTP id em10so3643966wid.3
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 01:21:13 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1421356430.1962.15.camel@sipsolutions.net>
-References: <CACsJT9OOBcYNhNG6=+Q2EE4VHEvJ8_rJ3fr6gb9_3P4KpPPX3g@mail.gmail.com>
- <f46d043c061e8dd5c9050cb5990c@google.com> <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com>
- <54B82598.9060403@erley.org> <1421356430.1962.15.camel@sipsolutions.net>
-From: Mike Purvis <mpurvis@clearpathrobotics.com>
-Date: Fri, 16 Jan 2015 09:30:09 -0500
-Message-ID: <CACsJT9PsyW1EJmkNJSaQe7Y7S_2qkupn3cr0QRS8DSwRvTU86g@mail.gmail.com> (sfid-20150116_153035_367906_2D6EBBDC)
-Subject: Re: Delivery Status Notification (Failure)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Pat Erley <pat-lkml@erley.org>, linux-wireless@vger.kernel.org
+In-Reply-To: <CAEFj984fjXUuRsNghr2Q4+397AS1TEO-K392YitUuZ5ztTF8iA@mail.gmail.com>
+References: <54B97B96.4040903@darmstadt.freifunk.net>
+	<1421658833-13311-1-git-send-email-michal.kazior@tieto.com>
+	<54BDDB3B.3020902@candelatech.com>
+	<CAEFj984fjXUuRsNghr2Q4+397AS1TEO-K392YitUuZ5ztTF8iA@mail.gmail.com>
+Date: Tue, 20 Jan 2015 10:21:12 +0100
+Message-ID: <CA+BoTQnjfsp3pjB4OyDvbqpQQ4TbYM+NHtTeNPCrgUJWfL-d+Q@mail.gmail.com> (sfid-20150120_102130_376143_59869A0D)
+Subject: Re: [RFC/RFT] ath10k: enable IBSS in multi-vif
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Martin Weinelt <martin@darmstadt.freifunk.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Okay, captured the configuration from the working machine:
-
-https://gist.github.com/mikepurvis/d8977be6865cebd18ff3
-
-Looks like 8087:07da is the centrino bluetooth component, but it's not
-at all obvious!
-
-Thanks very much for the assistance.
-
-Mike
-
-On 15 January 2015 at 16:13, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2015-01-15 at 14:39 -0600, Pat Erley wrote:
+On 20 January 2015 at 10:14, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
+> Experienced firmware crashed in 636 firmware immediately after
+> bringing up the AP interface.
 >
->> I'd guess that the 6235 module has WLAN on the pci-e connector portion,
->> and Bluetooth on the USB portion.
->
-> Yes, that's the case for all Intel wifi modules that have BT.
->
-> johannes
->
+> The partial log is listed here:
+[...]
+> [  291.380000] ath10k_pci 0000:00:00.0: firmware register dump:
+> [  291.380000] ath10k_pci 0000:00:00.0: [00]: 0x4100016C 0x00000000
+> 0x009C4521 0x00000000
+> [  291.390000] ath10k_pci 0000:00:00.0: [04]: 0x009C4521 0x00060330
+> 0x00000019 0x00955A00
+> [  291.400000] ath10k_pci 0000:00:00.0: [08]: 0x00046A4E 0x00000000
+> 0x0040CC94 0x00000020
+> [  291.410000] ath10k_pci 0000:00:00.0: [12]: 0x00000000 0x00000000
+> 0x00958360 0x0095836B
+> [  291.420000] ath10k_pci 0000:00:00.0: [16]: 0x809A0978 0x0040AD94
+> 0x00439304 0x0040D074
+> [  291.420000] ath10k_pci 0000:00:00.0: [20]: 0x0000FFFF 0x00000000
+> 0x0041B618 0x00000000
+> [  291.430000] ath10k_pci 0000:00:00.0: [24]: 0x809A0978 0x0040AD94
+> 0x00439304 0x11A93B77
+> [  291.440000] ath10k_pci 0000:00:00.0: [28]: 0x809AD1A2 0x0040ADE4
+> 0x00439304 0x0043F68C
+> [  291.450000] ath10k_pci 0000:00:00.0: [32]: 0x00000001 0x00000000
+> 0x00000000 0x00430D74
+> [  291.460000] ath10k_pci 0000:00:00.0: [36]: 0x00000000 0x00000000
+> 0x00000000 0x00000000
+> [  291.460000] ath10k_pci 0000:00:00.0: [40]: 0x00000000 0x00000000
+> 0x000000AB 0x00412700
+> [  291.470000] ath10k_pci 0000:00:00.0: [44]: 0x00439BB8 0x00000000
+> 0x00000000 0x00400000
+> [  291.480000] ath10k_pci 0000:00:00.0: [48]: 0x809AE0B4 0x0040AE04
+> 0x00400000 0x0043F68C
+> [  291.490000] ath10k_pci 0000:00:00.0: [52]: 0x00000001 0x00000000
+> 0x004231F0 0x00400000
+> [  291.500000] ath10k_pci 0000:00:00.0: [56]: 0x809AE17E 0x0040AE44
+> 0x0040FE6C 0x0040D310
+
+Yeah.. This is monitor vdev related crash (due to bridging, no?). I
+haven't found a way around it.
+
+
+Michał
