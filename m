@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:33385 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbbAZIhV (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:56448 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752115AbbATErb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 03:37:21 -0500
-Received: by mail-lb0-f176.google.com with SMTP id z12so6346854lbi.7
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 00:37:20 -0800 (PST)
+	Mon, 19 Jan 2015 23:47:31 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <1422260772.1890.7.camel@sipsolutions.net>
-References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
- <1421757318-8343-4-git-send-email-janusz.dziedzic@tieto.com>
- <CA+XVXfd=dh4_n30y8JzAdo1jNB9eO=qk8mwpzB6vGbSnsk59zg@mail.gmail.com> <1422260772.1890.7.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Mon, 26 Jan 2015 10:37:04 +0200
-Message-ID: <CA+XVXfdCobu73WOdCDPLuW1XBHQ7otsJG235zwD=DJccaKN2=w@mail.gmail.com> (sfid-20150126_093725_257863_6962C238)
-Subject: Re: [RFCv3 4/4] mac80211: add VHT support for IBSS
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21693.56960.568269.420520@gargle.gargle.HOWL> (sfid-20150120_054734_680798_29D508E3)
+Date: Tue, 20 Jan 2015 10:20:08 +0530
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless@vger.kernel.org, Eyal Shapira <eyal@wizery.com>
+Subject: Re: [RFC 2/2] mac80211: support RX rate statistics
+In-Reply-To: <1421661324.1965.16.camel@sipsolutions.net>
+References: <1421401708-8123-1-git-send-email-johannes@sipsolutions.net>
+	<1421401708-8123-2-git-send-email-johannes@sipsolutions.net>
+	<21689.49345.803049.938915@gargle.gargle.HOWL>
+	<1421661324.1965.16.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 26, 2015 at 10:26 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2015-01-25 at 12:30 +0200, Arik Nemtsov wrote:
->
->> > +       switch (chandef->width) {
->> > +       case NL80211_CHAN_WIDTH_80:
->> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80MHZ;
->> > +               break;
->> > +       case NL80211_CHAN_WIDTH_80P80:
->> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80P80MHZ;
->> > +               vht_oper->center_freq_seg2_idx =
->> > +                       ieee80211_frequency_to_channel(chandef->center_freq2);
->> > +               break;
->> > +       case NL80211_CHAN_WIDTH_160:
->> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_160MHZ;
->> > +               break;
->> > +       default:
->> > +               return pos;
->> > +       }
->>
->> Shouldn't you also set vht_oper->basic_mcs_set here? Of course if you
->> have no use for it in IBSS I can add it later.
->
-> Why would you want to require VHT rates?
+Johannes Berg wrote:
+> Not right now - and there's practically no space left in the rate u16 to
+> store it.
+> 
+> Eyal also commented that perhaps not just antennas but also
+> STBC/LDPC/beamforming should be tracked.
+> 
+> We can achieve this by increasing the size of the rate field to u32, but
+> then we also have far more combinations so probably need to increase the
+> size of the buffer from 36 entries to more since otherwise we just end
+> up sending the data out to userspace too frequently? Antennas for
+> example could change frequently for single stream rates.
+> 
+> This capability right now is mostly intended for Android Lollipop's
+> statistics requirements, where the rate only matters.
 
-Are you sure it's required and no the other way around in this case?
-As in specifying which rates are not supported.
-Not sure it means the same thing as in the HT instance.
+Ok.
 
-Arik
+> If others want to use it for more, I'm certainly not averse to adding
+> it, but it'd also mean adding more userspace API (where it might be a
+> bit strange to add "antennas" to the "rate" since that doesn't impact
+> the actual rate?)
+
+Having a well-defined API to export statistics seems useful, but
+I guess that can be added later.
+
+Sujith
