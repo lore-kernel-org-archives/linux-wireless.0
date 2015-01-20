@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:38321 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751906AbbAVPZ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 10:25:57 -0500
-Received: by mail-ie0-f173.google.com with SMTP id tr6so1897531ieb.4
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 07:25:56 -0800 (PST)
+Received: from mga09.intel.com ([134.134.136.24]:64550 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752219AbbATDe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 22:34:28 -0500
+Message-ID: <54BDCCC0.2080805@linux.intel.com> (sfid-20150120_043449_982905_4B6B3DDE)
+Date: Tue, 20 Jan 2015 11:34:24 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Date: Thu, 22 Jan 2015 16:25:56 +0100
-Message-ID: <CAGXE3d9YGt=z1oKs8h+di9u6+uOuyNkiM6z0q+viBp5DnYZdNg@mail.gmail.com> (sfid-20150122_162600_465418_A6BE20A9)
-Subject: DFS issue on ath10k
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Arend van Spriel <arend@broadcom.com>
+CC: brudley@broadcom.com, Franky Lin <frankyl@broadcom.com>,
+	meuleman@broadcom.com, linville@tuxdriver.com,
+	pieterpg@broadcom.com, hdegoede@redhat.com, wens@csie.org,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54B36C88.3030609@linux.intel.com> <54B39B59.8000907@broadcom.com> <877fwotddy.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <877fwotddy.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-I've been seeing some issues with DFS on ath10k but this could
-also affect ath9k.
-
-In the end of the CAC period there seems to be a time window in
-which ath10k won't detect any radar pulses (<1sec) before starting
-operation on this channel. Reason is that the channel context for
-CAC is getting removed and it takes some time for hostapd to
-finish the hw setup so a new channel context gets set.
-
-This is no suitable patch but provides some more insight into
-this issue:
-
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -494,9 +494,9 @@
-
-  if (!local->use_chanctx) {
-  struct cfg80211_chan_def *chandef = &local->_oper_chandef;
-- chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
-+ /*chandef->width = NL80211_CHAN_WIDTH_20_NOHT;
-  chandef->center_freq1 = chandef->chan->center_freq;
-- chandef->center_freq2 = 0;
-+ chandef->center_freq2 = 0;*/
-
-  /* NOTE: Disabling radar is only valid here for
-  * single channel context. To be sure, check it ...
-@@ -504,7 +504,7 @@
-  WARN_ON(local->hw.conf.radar_enabled &&
-  !list_empty(&local->chanctx_list));
-
-- local->hw.conf.radar_enabled = false;
-+ local->hw.conf.radar_enabled =
-cfg80211_chandef_dfs_required(local->hw.wiphy, chandef,
-NL80211_IFTYPE_AP);
-
-  ieee80211_hw_config(local, IEEE80211_CONF_CHANGE_CHANNEL);
-  } else {
-
-
-Not sure how to get this race free. hostapd might have to configure
-the channel before the CAC period is finished so there is no
-window without channel context.
-
-Did anyone else notice this? Any ideas?
+On 2015/1/15 20:52, Kalle Valo wrote:
+> Arend van Spriel <arend@broadcom.com> writes:
+>
+>> On 01/12/15 07:41, Fu, Zhonghui wrote:
+>>>  From 8685c3c2746b4275fc808d9db23c364b2f54b52a Mon Sep 17 00:00:00 2001
+>>> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>> Date: Mon, 12 Jan 2015 14:25:46 +0800
+>>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>>>
+>>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>>> twice suspend/resume operations for one WiFi chip to do
+>>> the same things. This patch avoid this case.
+>>>
+>>> Acked-by: Arend van Spriel<arend@broadcom.com>
+>>> Acked-by: Sergei Shtylyov<sergei.shtylyov@cogentembedded.com>
+>>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>> This patch needs to be rebased.
+>>
+>> Kalle,
+>>
+>> Please drop this one.
+> Ok, dropped. I'll wait for the rebase.
+I have re-based this patch and sent it in another mail with the same subject.
 
 Thanks,
-Helmut
+Zhonghui
+>
+
