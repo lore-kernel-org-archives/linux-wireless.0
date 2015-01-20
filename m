@@ -1,53 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14143 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965057AbbA1Eyt (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:43530 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755462AbbATRBt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 23:54:49 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4o6ZW024539
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:54:48 -0800
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1s50eqxb50-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:54:48 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <gaoqs@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 01/10] mwifiex: do not send regulatory update while starting AP
-Date: Wed, 28 Jan 2015 15:54:16 +0530
-Message-ID: <1422440665-3940-2-git-send-email-patila@marvell.com> (sfid-20150128_055454_349953_E7226672)
-In-Reply-To: <1422440665-3940-1-git-send-email-patila@marvell.com>
-References: <1422440665-3940-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Jan 2015 12:01:49 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH V2 for 3.19 6/7] rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
+Date: Tue, 20 Jan 2015 11:01:25 -0600
+Message-Id: <1421773286-1039-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180156_708729_2AC909C2)
+In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When regulatory domain changes, cfg80211 already issues request
-to change regulatory domain to driver via reg_notifier.
-There is no need to set regulatory again during start_ap.
+This driver utilizes a FIFO buffer for RX descriptors. There are four places
+in the code where it calculates the number of free slots. Several of those
+locations do the calculation incorrectly. To fix these and to prevent future
+mistakes, a common inline routine is created.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [V3.18]
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/rtlwifi/pci.h           |  7 +++++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 26 ++++++--------------------
+ 2 files changed, 13 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 30ea94a..1acccc5 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1739,7 +1739,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		priv->adapter->config_bands = config_bands;
+diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
+index 5e83230..d4567d1 100644
+--- a/drivers/net/wireless/rtlwifi/pci.h
++++ b/drivers/net/wireless/rtlwifi/pci.h
+@@ -325,4 +325,11 @@ static inline void pci_write32_async(struct rtl_priv *rtlpriv,
+ 	writel(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
+ }
  
- 	mwifiex_set_uap_rates(bss_cfg, params);
--	mwifiex_send_domain_info_cmd_fw(wiphy);
++static inline u16 calc_fifo_space(u16 rp, u16 wp)
++{
++	if (rp <= wp)
++		return RTL_PCI_MAX_RX_COUNT - 1 + rp - wp;
++	return rp - wp - 1;
++}
++
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+index cb3cbb6..80658bdf 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+@@ -499,14 +499,7 @@ u16 rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw, u8 queue_index)
+ 	if (!start_rx)
+ 		return 0;
  
- 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
- 		kfree(bss_cfg);
+-	if ((last_read_point > (RX_DESC_NUM_92E / 2)) &&
+-	    (read_point <= (RX_DESC_NUM_92E / 2))) {
+-		remind_cnt = RX_DESC_NUM_92E - write_point;
+-	} else {
+-		remind_cnt = (read_point >= write_point) ?
+-			     (read_point - write_point) :
+-			     (RX_DESC_NUM_92E - write_point + read_point);
+-	}
++	remind_cnt = calc_fifo_space(read_point, write_point);
+ 
+ 	if (remind_cnt == 0)
+ 		return 0;
+@@ -568,10 +561,8 @@ u16 rtl92ee_get_available_desc(struct ieee80211_hw *hw, u8 q_idx)
+ 	current_tx_read_point = (u16)((tmp_4byte >> 16) & 0x0fff);
+ 	current_tx_write_point = (u16)((tmp_4byte) & 0x0fff);
+ 
+-	point_diff = ((current_tx_read_point > current_tx_write_point) ?
+-		      (current_tx_read_point - current_tx_write_point) :
+-		      (TX_DESC_NUM_92E - current_tx_write_point +
+-		       current_tx_read_point));
++	point_diff = calc_fifo_space(current_tx_read_point,
++				     current_tx_write_point);
+ 
+ 	rtlpci->tx_ring[q_idx].avl_desc = point_diff;
+ 	return point_diff;
+@@ -973,11 +964,8 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 
+ 				ring->cur_tx_wp = cur_tx_wp;
+ 				ring->cur_tx_rp = cur_tx_rp;
+-				point_diff = ((cur_tx_rp > cur_tx_wp) ?
+-					      (cur_tx_rp - cur_tx_wp) :
+-					      (TX_DESC_NUM_92E - 1 -
+-					       cur_tx_wp + cur_tx_rp));
+-
++				point_diff = calc_fifo_space(cur_tx_rp,
++							     cur_tx_wp);
+ 				ring->avl_desc = point_diff;
+ 			}
+ 		}
+@@ -1066,9 +1054,7 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
+ 
+ 		ring->cur_tx_wp = cur_tx_wp;
+ 		ring->cur_tx_rp = cur_tx_rp;
+-		point_diff = ((cur_tx_rp > cur_tx_wp) ?
+-			      (cur_tx_rp - cur_tx_wp) :
+-			      (TX_DESC_NUM_92E - cur_tx_wp + cur_tx_rp));
++		point_diff = calc_fifo_space(cur_tx_rp, cur_tx_wp);
+ 
+ 		ring->avl_desc = point_diff;
+ 	}
 -- 
-1.8.1.4
+2.1.2
 
