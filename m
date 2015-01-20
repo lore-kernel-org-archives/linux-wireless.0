@@ -1,62 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:57949 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338AbbAIS5k (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:44571 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751956AbbATQBx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 13:57:40 -0500
-Message-ID: <54B024A1.4040809@broadcom.com> (sfid-20150109_195747_960618_0D21C704)
-Date: Fri, 9 Jan 2015 19:57:37 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 20 Jan 2015 11:01:53 -0500
+Received: by mail-ie0-f177.google.com with SMTP id at20so11062607iec.8
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 08:01:52 -0800 (PST)
+Date: Tue, 20 Jan 2015 11:01:38 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: REMINDER: wireless workshop in Ottawa
+Message-ID: <20150120160138.GA20241@localhost> (sfid-20150120_170207_500012_02C93D2A)
+References: <1421660507.1965.8.camel@sipsolutions.net>
 MIME-Version: 1.0
-To: Simon Wunderlich <sw@simonwunderlich.de>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<kvalo@qca.qualcomm.com>, <mathias.kretschmer@fokus.fraunhofer.de>,
-	<stable@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: ignore radar PHY errors when DFS is not enabled
-References: <1420822458-531-1-git-send-email-sw@simonwunderlich.de>
-In-Reply-To: <1420822458-531-1-git-send-email-sw@simonwunderlich.de>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1421660507.1965.8.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/15 17:54, Simon Wunderlich wrote:
-> Performing spectral scans on 5 GHz channels may result in PHY errors
-> sent by the hardware, even if DFS support is not enabled in the driver
-> (e.g. channel scanning or passive monitoring). In that case channels may
-> falsely get marked as 'unusable'. To fix that, only process radar PHY
-> errors when radar is explicitly enabled in the driver.
+On Mon, Jan 19, 2015 at 10:41:47AM +0100, Johannes Berg wrote:
+> We're holding a wireless workshop at the netdev0.1 conference
+> (https://www.netdev01.org/) on the first day (Feb 14th)
+> 
+> As the wiki is currently locked down for editing for the migration,
+> please send agenda proposals to this thread - I'll put it up on the
+> wiki. I'd also appreciate (private!) email if you're planning to attend.
 
-Hi Simon,
+I can spend about 15 minutes on the following if there is interest:
 
-Not an ath9k expert, but I would think those channels would already be 
-marked as unusable, because DFS is disabled in the driver. Or does this 
-also affect 5G channels that do not require DFS.
+ - current state of 802.11s including recent userspace work, and
+   some out-of-tree kernel odds and ends
 
-Regards,
-Arend
+ - my embryonic wmediumd fork, particularly would like some feedback as
+   to how it might be made useful (or not) for automated test cases
 
-> Cc: Stable<stable@vger.kernel.org>  [v3.10+]
-> Reported-by: Mathias Kretschmer<mathias.kretschmer@fokus.fraunhofer.de>
-> Signed-off-by: Simon Wunderlich<sw@simonwunderlich.de>
-> ---
->   drivers/net/wireless/ath/ath9k/dfs.c | 6 ++++++
->   1 file changed, 6 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-> index 726271c..3d04905 100644
-> --- a/drivers/net/wireless/ath/ath9k/dfs.c
-> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
-> @@ -152,6 +152,12 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
->   		return;
->   	}
->
-> +	if (!sc->hw->conf.radar_enabled) {
-> +		ath_dbg(common, DFS,
-> +			"Error: received radar phyerr while radar was disabled\n");
-> +		return;
-> +	}
-> +
->   	datalen = rs->rs_datalen;
->   	if (datalen == 0) {
->   		DFS_STAT_INC(sc, datalen_discards);
-
+-- 
+Bob Copeland %% http://bobcopeland.com/
