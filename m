@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53963 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754418AbbA3NES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 08:04:18 -0500
-Message-ID: <1422623054.1919.18.camel@sipsolutions.net> (sfid-20150130_140421_431785_12082A48)
-Subject: Re: [PATCH v2 2/7] ath10k: implement chanctx API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 30 Jan 2015 14:04:14 +0100
-In-Reply-To: <CA+BoTQkdszYWbNJcV+1dDFsaSJ3aoTuC=ORUMr_aJx7_aQmcqw@mail.gmail.com> (sfid-20150130_140219_266074_71EA76C0)
-References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
-	 <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
-	 <1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
-	 <1422621903.1919.7.camel@sipsolutions.net>
-	 <CA+BoTQkdszYWbNJcV+1dDFsaSJ3aoTuC=ORUMr_aJx7_aQmcqw@mail.gmail.com>
-	 (sfid-20150130_140219_266074_71EA76C0)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:57107 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804AbbATRBs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2015 12:01:48 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH V2 for 3.19 5/7] rtlwifi: rtl8192ee: Fix parsing of received packet
+Date: Tue, 20 Jan 2015 11:01:24 -0600
+Message-Id: <1421773286-1039-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180454_948505_720AFC49)
+In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-30 at 14:02 +0100, Michal Kazior wrote:
+From: Troy Tan <troy_tan@realsil.com.cn>
 
-> I recall that at least there's one case where using these helpers is
-> impossible: drv_config() which can be called while mac80211 is already
-> holding iflist_mtx. ath10k needs to iterate over vifs and issue
-> blocking commands sometimes so it can't use atomic/rcu versions
-> either.
+The firmware supplies two kinds of packets via the RX mechanism. Besides the
+normal data received over the air, these packets may contain bluetooth status
+and other information. The present code fails to detect which kind of
+information was received.
 
-If you wanted to use it, I wouldn't be averse to adding a locked version
-that can only be used inside a few of such callbacks. With appropriate
-lockdep warnings that would be safe enough, I think.
+Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [V3.18]
+---
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 4 ++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.h | 2 ++
+ 2 files changed, 6 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+index 1535680..cb3cbb6 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+@@ -354,6 +354,10 @@ bool rtl92ee_rx_query_desc(struct ieee80211_hw *hw,
+ 	struct ieee80211_hdr *hdr;
+ 	u32 phystatus = GET_RX_DESC_PHYST(pdesc);
+ 
++	if (GET_RX_STATUS_DESC_RPT_SEL(pdesc) == 0)
++		status->packet_report_type = NORMAL_RX;
++	else
++		status->packet_report_type = C2H_PACKET;
+ 	status->length = (u16)GET_RX_DESC_PKT_LEN(pdesc);
+ 	status->rx_drvinfo_size = (u8)GET_RX_DESC_DRV_INFO_SIZE(pdesc) *
+ 				  RX_DRV_INFO_SIZE_UNIT;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
+index c56f305..8f78ac9 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.h
+@@ -542,6 +542,8 @@
+ 	LE_BITS_TO_4BYTE(__pdesc+8, 12, 4)
+ #define GET_RX_DESC_RX_IS_QOS(__pdesc)			\
+ 	LE_BITS_TO_4BYTE(__pdesc+8, 16, 1)
++#define GET_RX_STATUS_DESC_RPT_SEL(__pdesc)		\
++	LE_BITS_TO_4BYTE(__pdesc+8, 28, 1)
+ 
+ #define GET_RX_DESC_RXMCS(__pdesc)			\
+ 	LE_BITS_TO_4BYTE(__pdesc+12, 0, 7)
+-- 
+2.1.2
 
