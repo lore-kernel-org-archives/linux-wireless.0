@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40613 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751485AbbAMNrJ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 08:47:09 -0500
-From: Avinash Patil <patila@marvell.com>
-To: wim torfs <wtorfs@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 13 Jan 2015 05:44:01 -0800
-Subject: RE: mwifiex - question
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7AC0@SC-VEXCH2.marvell.com> (sfid-20150113_144717_857979_FD805831)
-References: <1421065496-1968-1-git-send-email-patila@marvell.com>,<54B51EF1.60200@gmail.com>
-In-Reply-To: <54B51EF1.60200@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:63998 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852AbbATK1V (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2015 05:27:21 -0500
+Received: by mail-wi0-f169.google.com with SMTP id bs8so22312865wib.0
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 02:27:19 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: disable irqs after fw crash
+Date: Tue, 20 Jan 2015 11:26:43 +0100
+Message-Id: <1421749603-11424-1-git-send-email-michal.kazior@tieto.com> (sfid-20150120_112723_884840_8CAEFCB9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Wim,
+It makes little sense to keep handling irqs if fw
+is dead.
 
-Mwifiex is FullMac driver; we have our own thick FW for managing MLME.  This is reason why we do not use mac80211.
-Mwifiex is very much located under drivers/net/wireless; its not in net/wireless. net/wireless has cfg80211 driver.
+This prevents multiple fw register dumps upon
+crash on some devices (seen on QCA6174).
 
-Thanks,
-Avinash.
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of wim torfs [wtorfs@gmail.com]
-Sent: Tuesday, January 13, 2015 7:04 PM
-To: linux-wireless@vger.kernel.org
-Subject: mwifiex - question
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Hi,
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 3b40a86..fba6618 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2047,6 +2047,7 @@ static void ath10k_msi_err_tasklet(unsigned long data)
+ 		return;
+ 	}
+ 
++	ath10k_pci_irq_disable(ar);
+ 	ath10k_pci_fw_crashed_clear(ar);
+ 	ath10k_pci_fw_crashed_dump(ar);
+ }
+@@ -2116,6 +2117,7 @@ static void ath10k_pci_tasklet(unsigned long data)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 
+ 	if (ath10k_pci_has_fw_crashed(ar)) {
++		ath10k_pci_irq_disable(ar);
+ 		ath10k_pci_fw_crashed_clear(ar);
+ 		ath10k_pci_fw_crashed_dump(ar);
+ 		return;
+-- 
+1.8.5.3
 
-I just noticed - from the mails passing through - that mwifiex is
-located in net/wireless and that it contains its own functions besides
-those of mac80211, while the description on the wiki mentions that it is
-a driver for Marvell SDIO chips.
-
-Is there any specific reason why it is not using mac80211 and why it is
-located in net/wireless instead of drivers/net/wireless, or is this an
-artifact of past choices that need to be cleaned up?
-
-Thanks,
-Wim.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
