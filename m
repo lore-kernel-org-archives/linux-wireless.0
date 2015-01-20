@@ -1,73 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:43322 "EHLO mail.hofr.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750902AbbAWM1I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 07:27:08 -0500
-Date: Fri, 23 Jan 2015 13:27:05 +0100
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless: p54: add handling of the signal case
-Message-ID: <20150123122705.GA26214@opentech.at> (sfid-20150123_132711_699317_58D4BBA0)
-References: <1421731543-13290-1-git-send-email-der.herr@hofr.at> <12702639.FEnIjGW6UW@debian64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <12702639.FEnIjGW6UW@debian64>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:40203 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751465AbbATCOq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Jan 2015 21:14:46 -0500
+Received: by mail-pd0-f175.google.com with SMTP id fl12so6929961pdb.6
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 18:14:46 -0800 (PST)
+From: Fred Chou <fred.chou.nd@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Fred Chou <fred.chou.nd@gmail.com>
+Subject: [PATCH v2] mac80211: correct header length calculation
+Date: Tue, 20 Jan 2015 10:17:27 +0800
+Message-Id: <1421720247-19787-1-git-send-email-fred.chou.nd@gmail.com> (sfid-20150120_031456_615514_A5B72059)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 22 Jan 2015, Christian Lamparter wrote:
+From: Fred Chou <fred.chou.nd@gmail.com>
 
-> On Tuesday, January 20, 2015 06:25:43 AM Nicholas Mc Guire wrote:
-> > if(!wait_for_completion_interruptible_timeout(...))
-> > only handles the timeout case - this patch adds handling the
-> > signal case the same as timeout.
-> > 
-> > Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
-> Acked-by: Christian Lamparter <chunkeey@googlemail.com>
-> 
-> > diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-> > index bc065e8..5367d51 100644
-> > --- a/drivers/net/wireless/p54/fwio.c
-> > +++ b/drivers/net/wireless/p54/fwio.c
-> > @@ -249,9 +250,11 @@ int p54_download_eeprom(struct p54_common *priv, void *buf,
-> >  
-> >  	p54_tx(priv, skb);
-> >  
-> > -	if (!wait_for_completion_interruptible_timeout(
-> > -	     &priv->eeprom_comp, HZ)) {
-> > -		wiphy_err(priv->hw->wiphy, "device does not respond!\n");
-> > +	timeout = wait_for_completion_interruptible_timeout(
-> > +			&priv->eeprom_comp, HZ);
-> > +	if (timeout <= 0) {
-> > +		wiphy_err(priv->hw->wiphy,
-> > +			"device does not respond or signal received!\n");
-> >  		ret = -EBUSY;
-> >  	}
-> >  	priv->eeprom = NULL;
-> > 
-> 
-> CHECK: Alignment should match open parenthesis
-> #98: FILE: drivers/net/wireless/p54/fwio.c:257:
-> +               wiphy_err(priv->hw->wiphy,
-> +                       "device does not respond or signal received!\n");
-> 
-> total: 0 errors, 0 warnings, 1 checks, 21 lines checked
-> 
+HT Control field may also be present in management frames, as defined
+in 8.2.4.1.10 of 802.11-2012. Account for this in calculation of header
+length.
 
-Tried fixing this up - but simply no clue what coding style
-rule that might have violated - and my attempts to fix this
-did not succeed - allignment seems righta - the complete siequence is:
+Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
+---
+v2: insert management frame header length calculation after data
 
-        timeout = wait_for_completion_interruptible_timeout(
-                        &priv->eeprom_comp, HZ);
-        if (timeout <= 0) {
-                wiphy_err(priv->hw->wiphy,
-                        "device does not respond or signal received!\n");
-                ret = -EBUSY;
-        }
+ net/wireless/util.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-what am I overlooking ?
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 3535e8a..e2ae2d7 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -308,6 +308,12 @@ unsigned int __attribute_const__ ieee80211_hdrlen(__le16 fc)
+ 		goto out;
+ 	}
+ 
++	if (ieee80211_is_mgmt(fc)) {
++		if (ieee80211_has_order(fc))
++			hdrlen += IEEE80211_HT_CTL_LEN;
++		goto out;
++	}
++
+ 	if (ieee80211_is_ctl(fc)) {
+ 		/*
+ 		 * ACK and CTS are 10 bytes, all others 16. To see how
+-- 
+1.9.1
 
-thx!
-hofrat
