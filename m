@@ -1,41 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:50946 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554AbbAWGNn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 01:13:43 -0500
-Date: Fri, 23 Jan 2015 17:13:28 +1100
-From: James Cameron <quozl@laptop.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com, yogeshp@marvell.com, nishants@marvell.com,
-	frankh@marvell.com
-Subject: Re: [PATCH v2 1/3] mwifiex: add support for SD8801
-Message-ID: <20150123061328.GB25167@us.netrek.org> (sfid-20150123_071346_367990_C9C60B7B)
-References: <1422013159-3093-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422013159-3093-1-git-send-email-patila@marvell.com>
+Received: from www.osadl.org ([62.245.132.105]:50620 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750756AbbATFeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2015 00:34:13 -0500
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <der.herr@hofr.at>
+Subject: [PATCH] wireless: p54pci: add handling of signal case
+Date: Tue, 20 Jan 2015 06:26:17 +0100
+Message-Id: <1421731577-13324-1-git-send-email-der.herr@hofr.at> (sfid-20150120_063431_760723_EC8DA2D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2015 at 05:09:17PM +0530, Avinash Patil wrote:
-> From: Yogesh Ashok Powar <yogeshp@marvell.com>
-> 
-> SD8801 is Marvell's 1x1 802.11bgn offering.
-> This patch adds Device IDs for SD8801 and also defines card
-> structure which has definition for register offsets, buffer sizes etc.
-> 
-> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-> Signed-off-by: Avinash Patil <patila@marvell.com>
-> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Frank Huang <frankh@marvell.com>
+if(!wait_for_completion_interruptible_timeout(...))
+only handles the timeout case - this patch adds handling the
+signal case the same as timeout.
 
-Reviewed-by: James Cameron <quozl@laptop.org>
+Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+---
 
-(Not tested, still on 8787 with 3.5).
+Only the timeout case was being handled, the signal case 
+(-ERESTARTSYS) was treated just like the case of successful 
+completion, which is most likely not reasonable.
 
+The callsite for p54p_open() in p54p_firmware_step2() expect !=0 to 
+indicate error so both -ERESTARTSYS and -ETIMEDOUT should be fine 
+for the current handling.
+
+Patch was only compild tested with x86_64_defcofnig +
+CONFIG_P54_COMMON=m, CONFIG_P54_PCI=m
+
+Patch is against 3.19.0-rc5 -next-20150119
+
+ drivers/net/wireless/p54/p54pci.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index d4aee64..27a4906 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -431,6 +431,7 @@ static int p54p_open(struct ieee80211_hw *dev)
+ {
+ 	struct p54p_priv *priv = dev->priv;
+ 	int err;
++	long timeout;
+ 
+ 	init_completion(&priv->boot_comp);
+ 	err = request_irq(priv->pdev->irq, p54p_interrupt,
+@@ -468,10 +469,12 @@ static int p54p_open(struct ieee80211_hw *dev)
+ 	P54P_WRITE(dev_int, cpu_to_le32(ISL38XX_DEV_INT_RESET));
+ 	P54P_READ(dev_int);
+ 
+-	if (!wait_for_completion_interruptible_timeout(&priv->boot_comp, HZ)) {
++	timeout = wait_for_completion_interruptible_timeout(
++			&priv->boot_comp, HZ);
++	if (timeout <= 0) {
+ 		wiphy_err(dev->wiphy, "Cannot boot firmware!\n");
+ 		p54p_stop(dev);
+-		return -ETIMEDOUT;
++		return timeout ? -ERESTARTSYS : -ETIMEDOUT;
+ 	}
+ 
+ 	P54P_WRITE(int_enable, cpu_to_le32(ISL38XX_INT_IDENT_UPDATE));
 -- 
-James Cameron
-http://quozl.linux.org.au/
+1.7.10.4
+
