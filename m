@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:42769 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496AbbAWTQt (ORCPT
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:34735 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753498AbbATKsT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 14:16:49 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 20 Jan 2015 05:48:19 -0500
+Received: by mail-qg0-f44.google.com with SMTP id l89so20030138qgf.3
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 02:48:18 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: ath9k_htc: remove dead code in error path of
- ath9k_htc_txcompletion_cb
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1421694141-18337-1-git-send-email-linville@tuxdriver.com>
-To: John Linville <linville@tuxdriver.com>
+In-Reply-To: <54BE2E98.1030109@broadcom.com>
+References: <CACaajQsqPMzwD=EqdD5_XfWAPmkn-52VVNHF1ntFZ6ofEH4D-w@mail.gmail.com>
+ <CACaajQs1r1tE-GXv7cmAL9w8q2cwn_iiDttp6tLFB7BdSBNDPw@mail.gmail.com>
+ <54BD2684.30701@broadcom.com> <CACaajQuCfe-POEecGmet7R3GG8sg5KPzdteU+sHD8Vs5TBLzyA@mail.gmail.com>
+ <54BE2E98.1030109@broadcom.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Tue, 20 Jan 2015 14:48:03 +0400
+Message-ID: <CACaajQv0g90p1jKi_v4PAAimhE8EJ+5uY7_B78paZxXSOLn6gA@mail.gmail.com> (sfid-20150120_114827_816708_6E6B8CCC)
+Subject: Re: b43 bcm43228 and linux 3.18.3
+To: Arend van Spriel <arend@broadcom.com>
 Cc: linux-wireless@vger.kernel.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	ath9k-devel@venema.h4ckr.net,
-	"John W. Linville" <linville@tuxdriver.com>
-Message-Id: <20150123191648.C0F2D141D80@smtp.codeaurora.org> (sfid-20150123_201652_417122_3C580655)
-Date: Fri, 23 Jan 2015 19:16:48 +0000 (UTC)
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+2015-01-20 13:31 GMT+03:00 Arend van Spriel <arend@broadcom.com>:
+> 'b/g' is in 2.4G band. 'n' is in both 2.4G and 5G band. Assume it can do 'a'
+> as well. Anyway, does that router let you specify the SSID for both 2.4G and
+> 5G. Are you using same SSID for both?
 
-> This clause is conditioned on htc_hdr != NULL, but it will only be NULL
-> when that check is reached.
-> 
-> Coverity: CID 114318
-> 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-Thanks, applied to wireless-drivers-next.git.
+As i see i can't specify different SSID for 2.4G and 5G (only one ssid
+available). Does it possible to not roam between bands in b43 driver?
 
-Kalle Valo
+-- 
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
