@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:57927 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753248AbbAZVPc (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:52126 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755093AbbATRBl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 16:15:32 -0500
-Date: Mon, 26 Jan 2015 23:04:48 +0200
-From: Vadim Kochan <vadim4j@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: cfg80211: Unknown symbol get_net_ns_by_fd (err 0)
-Message-ID: <20150126210448.GA987@angus-think.lan> (sfid-20150126_221536_598581_14D3C83E)
-References: <54C6A717.5050804@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54C6A717.5050804@broadcom.com>
+	Tue, 20 Jan 2015 12:01:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
+Subject: [PATCH V2 for 3.19 1/7] rtlwifi: Remove logging statement that is no longer needed
+Date: Tue, 20 Jan 2015 11:01:20 -0600
+Message-Id: <1421773286-1039-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180149_271041_B8A31948)
+In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 26, 2015 at 09:44:07PM +0100, Arend van Spriel wrote:
-> Hi Hauke,
-> 
-> The commit below causes the error mentioned in the Subject: field. I would
-> like to fix this, but could use a bit of help here how to do this type of
-> things.
-> 
-> commit 4b681c82d2f9bef121c912ffcaac89a004af3f2c
-> Author: Vadim Kochan <vadim4j@gmail.com>
-> Date:   Mon Jan 12 16:34:05 2015 +0200
-> 
->     nl80211: Allow set network namespace by fd
-> 
-> Regards,
-> Arend
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In commit e9538cf4f907 ("rtlwifi: Fix error when accessing unmapped memory
+in skb"), a printk was included to indicate that the condition had been
+reached. There is now enough evidence from other users that the fix is
+working. That logging statement can now be removed.
 
-Hi,
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [V3.18]
+---
+ drivers/net/wireless/rtlwifi/pci.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Did you compile it on mac80211-next master branch ?
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index c70efb9..e25faac 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -816,11 +816,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 
+ 		/* get a new skb - if fail, old one will be reused */
+ 		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
+-		if (unlikely(!new_skb)) {
+-			pr_err("Allocation of new skb failed in %s\n",
+-			       __func__);
++		if (unlikely(!new_skb))
+ 			goto no_new;
+-		}
+ 		if (rtlpriv->use_new_trx_flow) {
+ 			buffer_desc =
+ 			  &rtlpci->rx_ring[rxring_idx].buffer_desc
+-- 
+2.1.2
 
-Regards,
