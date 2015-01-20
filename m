@@ -1,140 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:36628 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933012AbbA3UBp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 15:01:45 -0500
-Message-ID: <54CBE299.4070709@hauke-m.de> (sfid-20150130_210203_617337_FB30F15C)
-Date: Fri, 30 Jan 2015 20:59:21 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org
-CC: brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 3/4] bcma: support bringing up bus hosted on PCIe Gen
- 2
-References: <1422638566-7593-1-git-send-email-zajec5@gmail.com> <1422638566-7593-3-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1422638566-7593-3-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:62766 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751177AbbATGuG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Jan 2015 01:50:06 -0500
+Received: by mail-pa0-f45.google.com with SMTP id lf10so43741081pab.4
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 22:50:05 -0800 (PST)
+From: Taehee Yoo <ap420073@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org, Taehee Yoo <ap420073@gmail.com>
+Subject: [PATCH] rtl8192cu : add support to send beacon frame.
+Date: Tue, 20 Jan 2015 15:49:54 +0900
+Message-Id: <1421736594-28262-1-git-send-email-ap420073@gmail.com> (sfid-20150120_075014_966903_3E087BFB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In AP mode, beacon frame is necessary to keep connection.
+this patch adds a sending beacon frame routine in initialize routine.
 
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/core.c          |  3 +++
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c  |  1 +
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 11 +++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.h |  1 +
+ drivers/net/wireless/rtlwifi/wifi.h          |  2 ++
+ 5 files changed, 18 insertions(+)
 
-On 01/30/2015 06:22 PM, Rafał Miłecki wrote:
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->  drivers/bcma/bcma_private.h            |  3 +++
->  drivers/bcma/driver_pcie2.c            | 24 ++++++++++++++++++++++--
->  drivers/bcma/host_pci.c                |  2 +-
->  include/linux/bcma/bcma_driver_pcie2.h |  2 ++
->  4 files changed, 28 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-> index 351f4af..3692912 100644
-> --- a/drivers/bcma/bcma_private.h
-> +++ b/drivers/bcma/bcma_private.h
-> @@ -104,6 +104,9 @@ u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
->  void bcma_core_pci_up(struct bcma_drv_pci *pc);
->  void bcma_core_pci_down(struct bcma_drv_pci *pc);
->  
-> +/* driver_pcie2.c */
-> +void bcma_core_pcie2_up(struct bcma_drv_pcie2 *pcie2);
-> +
->  extern int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc);
->  
->  #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
-> diff --git a/drivers/bcma/driver_pcie2.c b/drivers/bcma/driver_pcie2.c
-> index e4be537..c8913bc 100644
-> --- a/drivers/bcma/driver_pcie2.c
-> +++ b/drivers/bcma/driver_pcie2.c
-> @@ -156,14 +156,20 @@ static void pciedev_reg_pm_clk_period(struct bcma_drv_pcie2 *pcie2)
->  
->  void bcma_core_pcie2_init(struct bcma_drv_pcie2 *pcie2)
->  {
-> -	struct bcma_chipinfo *ci = &pcie2->core->bus->chipinfo;
-> +	struct bcma_bus *bus = pcie2->core->bus;
-> +	struct bcma_chipinfo *ci = &bus->chipinfo;
->  	u32 tmp;
->  
->  	tmp = pcie2_read32(pcie2, BCMA_CORE_PCIE2_SPROM(54));
->  	if ((tmp & 0xe) >> 1 == 2)
->  		bcma_core_pcie2_cfg_write(pcie2, 0x4e0, 0x17);
->  
-> -	/* TODO: Do we need pcie_reqsize? */
-> +	switch (bus->chipinfo.id) {
-> +	case BCMA_CHIP_ID_BCM4360:
-> +	case BCMA_CHIP_ID_BCM4352:
-> +		pcie2->reqsize = 0x3000; /* TODO: PCI_EXP_DEVCTL_READRQ_1024B */
-> +		break;
-> +	}
+diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
+index eb20316..2ebd1fd 100644
+--- a/drivers/net/wireless/rtlwifi/core.c
++++ b/drivers/net/wireless/rtlwifi/core.c
+@@ -1040,6 +1040,9 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 				if (rtlpriv->cfg->ops->linked_set_reg)
+ 					rtlpriv->cfg->ops->linked_set_reg(hw);
++				if (rtlpriv->cfg->ops->set_bcn_frame)
++					rtlpriv->cfg->ops->set_bcn_frame(hw,
++							vif);
+ 			}
+ 		}
+ 		if ((changed & BSS_CHANGED_BEACON_ENABLED &&
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+index 90a714c..d88ee35 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -155,6 +155,7 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
+ 	.dm_dynamic_txpower = rtl92cu_dm_dynamic_txpower,
+ 	.fill_h2c_cmd = rtl92c_fill_h2c_cmd,
+ 	.get_btc_status = rtl92cu_get_btc_status,
++	.set_bcn_frame = rtl92cu_set_bcn_frame,
+ };
+ 
+ static struct rtl_mod_params rtl92cu_mod_params = {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+index cbead00..e27da8f 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
+@@ -684,3 +684,14 @@ bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+ {
+ 	return true;
+ }
++
++void rtl92cu_set_bcn_frame(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
++
++	if (skb == NULL)
++		return;
++
++	rtlpriv->intf_ops->adapter_tx(hw, NULL, skb, NULL);
++}
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
+index fd8051d..0d57431 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
+@@ -431,5 +431,6 @@ void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
+ 			     u8 *pdesc, bool b_firstseg,
+ 			     bool b_lastseg, struct sk_buff *skb);
+ bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
++void rtl92cu_set_bcn_frame(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
+ 
+ #endif
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index b53d9dd..daf8142 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -2182,6 +2182,8 @@ struct rtl_hal_ops {
+ 	void (*add_wowlan_pattern)(struct ieee80211_hw *hw,
+ 				   struct rtl_wow_pattern *rtl_pattern,
+ 				   u8 index);
++	void (*set_bcn_frame) (struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif);
+ };
+ 
+ struct rtl_intf_ops {
+-- 
+1.9.1
 
-In the PCIe controller used in the BCM4706 there was a bug, so that it
-did not support a request size bigger than 128 bytes. Broadcom "fixed"
-that in the PCIe device driver code by decreasing the value, but we
-fixed that in the PCIe controller code, see:
-
-commit f4a83e578e0011ddcfdbe1c62d0916dadb4802aa
-Author: Hauke Mehrtens <hauke@hauke-m.de>
-Date:   Fri Aug 23 23:22:29 2013 +0200
-
-    bcma: change max PCI read request size to 128
-
-It could be that the PCIe controller used on ARM SoCs has similar
-problems but supports bigger sizes now, but not so big ones.
-
-This is just an assumption.
-
-What is the default value for pcie2->reqsize?
-
->  
->  	if (ci->id == BCMA_CHIP_ID_BCM4360 && ci->rev > 3)
->  		bcma_core_pcie2_war_delay_perst_enab(pcie2, true);
-> @@ -173,3 +179,17 @@ void bcma_core_pcie2_init(struct bcma_drv_pcie2 *pcie2)
->  	pciedev_crwlpciegen2_180(pcie2);
->  	pciedev_crwlpciegen2_182(pcie2);
->  }
-> +
-> +/**************************************************
-> + * Runtime ops.
-> + **************************************************/
-> +
-> +void bcma_core_pcie2_up(struct bcma_drv_pcie2 *pcie2)
-> +{
-> +	struct bcma_bus *bus = pcie2->core->bus;
-> +	struct pci_dev *dev = bus->host_pci;
-> +
-> +	pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
-> +					   PCI_EXP_DEVCTL_READRQ,
-> +					   pcie2->reqsize);
-
-Use pcie_set_readrq() if it is needed.
-
-> +}
-> diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-> index 8dd37dc..5fb87a8 100644
-> --- a/drivers/bcma/host_pci.c
-> +++ b/drivers/bcma/host_pci.c
-> @@ -322,7 +322,7 @@ void bcma_host_pci_up(struct bcma_bus *bus)
->  		return;
->  
->  	if (bus->host_is_pcie2)
-> -		pr_warn("Bringing up bus with PCIe Gen 2 host is unsupported yet\n");
-> +		bcma_core_pcie2_up(&bus->drv_pcie2);
->  	else
->  		bcma_core_pci_up(&bus->drv_pci[0]);
->  }
-> diff --git a/include/linux/bcma/bcma_driver_pcie2.h b/include/linux/bcma/bcma_driver_pcie2.h
-> index 5988b05..d8c4329 100644
-> --- a/include/linux/bcma/bcma_driver_pcie2.h
-> +++ b/include/linux/bcma/bcma_driver_pcie2.h
-> @@ -143,6 +143,8 @@
->  
->  struct bcma_drv_pcie2 {
->  	struct bcma_device *core;
-> +
-> +	u16 reqsize;
->  };
->  
->  #define pcie2_read16(pcie2, offset)		bcma_read16((pcie2)->core, offset)
-> 
