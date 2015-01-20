@@ -1,191 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47312 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760350AbbA2JHN (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:30229 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbbATJDp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 04:07:13 -0500
-From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-Subject: [PATCH-RESEND] ath10k: add log level configuration for fw_dbglog
-Date: Thu, 29 Jan 2015 14:36:52 +0530
-Message-ID: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150129_102143_585636_36143373)
+	Tue, 20 Jan 2015 04:03:45 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: David Miller <davem@davemloft.net>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: pull-request: wireless-drivers 2015-01-20
+Date: Tue, 20 Jan 2015 11:03:33 +0200
+Message-ID: <87oapt3jtm.fsf@kamboji.qca.qualcomm.com> (sfid-20150120_100415_420213_DAAEC440)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce optional log level configuration for
-existing debugfs fw_dbglog.
+Hi Dave,
 
-It allow users to configure desired log level
-for firmware debugs.
+more fixes for 3.19, I hope these are still appropriate. Please let me
+know if there are any issues.
 
-To configure log level as WARN
+Kalle
 
-echo 0xffffffff  2 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
+The following changes since commit 16dde0d6ac159531a5e03cd3f8bc8a401d9f3fb6:
 
-Loglevel	Value
-VERBOSE		0
-INFO		1
-WARN		2
-ERR		3
+  be2net: Allow GRE to work concurrently while a VxLAN tunnel is configured (2015-01-15 01:55:05 -0500)
 
-Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h    |  1 +
- drivers/net/wireless/ath/ath10k/debug.c   | 30 +++++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  7 ++++---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 ++--
- drivers/net/wireless/ath/ath10k/wmi.c     |  5 +++--
- 5 files changed, 31 insertions(+), 16 deletions(-)
+are available in the git repository at:
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 2d9f871..b4aecbd 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -345,6 +345,7 @@ struct ath10k_debug {
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-01-20
 
- 	/* protected by conf_mutex */
- 	u32 fw_dbglog_mask;
-+	u32 fw_dbglog_level;
- 	u32 pktlog_filter;
- 	u32 reg_addr;
- 	u32 nf_cal_period;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 42b2e49..b77c51a 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1318,10 +1318,10 @@ static ssize_t ath10k_read_fw_dbglog(struct file *file,
- {
- 	struct ath10k *ar = file->private_data;
- 	unsigned int len;
--	char buf[32];
-+	char buf[64];
+for you to fetch changes up to e3f31175a3eeb492a6ab788e4fa136c19b43aab4:
 
--	len = scnprintf(buf, sizeof(buf), "0x%08x\n",
--			ar->debug.fw_dbglog_mask);
-+	len = scnprintf(buf, sizeof(buf), "0x%08x %u\n",
-+			ar->debug.fw_dbglog_mask, ar->debug.fw_dbglog_level);
+  ath9k: fix race condition in irq processing during hardware reset (2015-01-19 14:32:29 +0200)
 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
-@@ -1331,19 +1331,30 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
- 				      size_t count, loff_t *ppos)
- {
- 	struct ath10k *ar = file->private_data;
--	unsigned long mask;
- 	int ret;
-+	char buf[64];
-+	unsigned int log_level, mask;
+----------------------------------------------------------------
+ath9k:
 
--	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
--	if (ret)
--		return ret;
-+	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+
-+	/* make sure that buf is null terminated */
-+	buf[sizeof(buf) - 1] = 0;
-+
-+	ret = sscanf(buf, "%x %u", &mask, &log_level);
-+
-+	if (!ret)
-+		return -EINVAL;
+* fix an IRQ storm caused by commit 872b5d814f99
 
- 	mutex_lock(&ar->conf_mutex);
+iwlwifi:
 
- 	ar->debug.fw_dbglog_mask = mask;
-+	ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
-+				     log_level;
-+
+* A fix for scan that fixes a firmware assertion
 
- 	if (ar->state == ATH10K_STATE_ON) {
--		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask);
-+		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask,
-+					    ar->debug.fw_dbglog_level);
- 		if (ret) {
- 			ath10k_warn(ar, "dbglog cfg failed from debugfs: %d\n",
- 				    ret);
-@@ -1685,7 +1696,8 @@ int ath10k_debug_start(struct ath10k *ar)
- 			    ret);
+* A fix that improves roaming behavior. Same fix has been tested for
+  a while in iwldvm. This is a bit of a work around, but the real fix
+  should be in mac80211 and will come later.
 
- 	if (ar->debug.fw_dbglog_mask) {
--		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask);
-+		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask,
-+					    ATH10K_DBGLOG_LEVEL_WARN);
- 		if (ret)
- 			/* not serious */
- 			ath10k_warn(ar, "failed to enable dbglog during start: %d",
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 80bd28a..4517993 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -111,7 +111,8 @@ struct wmi_ops {
- 					     enum wmi_force_fw_hang_type type,
- 					     u32 delay_ms);
- 	struct sk_buff *(*gen_mgmt_tx)(struct ath10k *ar, struct sk_buff *skb);
--	struct sk_buff *(*gen_dbglog_cfg)(struct ath10k *ar, u32 module_enable);
-+	struct sk_buff *(*gen_dbglog_cfg)(struct ath10k *ar, u32 module_enable,
-+					  u32 log_level);
- 	struct sk_buff *(*gen_pktlog_enable)(struct ath10k *ar, u32 filter);
- 	struct sk_buff *(*gen_pktlog_disable)(struct ath10k *ar);
- 	struct sk_buff *(*gen_pdev_set_quiet_mode)(struct ath10k *ar,
-@@ -821,14 +822,14 @@ ath10k_wmi_force_fw_hang(struct ath10k *ar,
- }
+* A fix for BARs that avoids a WARNING.
 
- static inline int
--ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable)
-+ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable, u32 log_level)
- {
- 	struct sk_buff *skb;
+* one fix for rfkill while scheduled scan is running.
+  Linus's system hit this issue. WiFi would be unavailable
+  after this has happpened because of bad state in cfg80211.
 
- 	if (!ar->wmi.ops->gen_dbglog_cfg)
- 		return -EOPNOTSUPP;
+----------------------------------------------------------------
+David Spinadel (1):
+      iwlwifi: mvm: fix EBS on single scan
 
--	skb = ar->wmi.ops->gen_dbglog_cfg(ar, module_enable);
-+	skb = ar->wmi.ops->gen_dbglog_cfg(ar, module_enable, log_level);
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
+Emmanuel Grumbach (2):
+      iwlwifi: mvm: drop non VO frames when flushing
+      iwlwifi: mvm: abort scheduled scan upon RFKILL
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index d3cf91dc..d3d5aea 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2044,8 +2044,8 @@ ath10k_wmi_tlv_op_gen_force_fw_hang(struct ath10k *ar,
- }
+Eyal Shapira (1):
+      iwlwifi: mvm: set the tx cmd tid for BAR frame correctly
 
- static struct sk_buff *
--ath10k_wmi_tlv_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
--{
-+ath10k_wmi_tlv_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable,
-+				 u32 log_level) {
- 	struct wmi_tlv_dbglog_cmd *cmd;
- 	struct wmi_tlv *tlv;
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d340361..2fa68ad 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4960,7 +4960,8 @@ ath10k_wmi_op_gen_force_fw_hang(struct ath10k *ar,
- }
+Felix Fietkau (1):
+      ath9k: fix race condition in irq processing during hardware reset
 
- static struct sk_buff *
--ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
-+ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable,
-+			     u32 log_level)
- {
- 	struct wmi_dbglog_cfg_cmd *cmd;
- 	struct sk_buff *skb;
-@@ -4973,7 +4974,7 @@ ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
- 	cmd = (struct wmi_dbglog_cfg_cmd *)skb->data;
+Kalle Valo (2):
+      Merge tag 'iwlwifi-for-kalle-2015-01-13' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+      Merge tag 'iwlwifi-for-kalle-2015-01-15' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
 
- 	if (module_enable) {
--		cfg = SM(ATH10K_DBGLOG_LEVEL_VERBOSE,
-+		cfg = SM(log_level,
- 			 ATH10K_DBGLOG_CFG_LOG_LVL);
- 	} else {
- 		/* set back defaults, all modules with WARN level */
---
-1.9.1
+ drivers/net/wireless/ath/ath9k/main.c          |    7 ++--
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h     |    2 +
+ drivers/net/wireless/iwlwifi/mvm/fw-api-scan.h |    7 +++-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c    |   20 ++++-----
+ drivers/net/wireless/iwlwifi/mvm/scan.c        |   53 ++++++++++++++++++------
+ drivers/net/wireless/iwlwifi/mvm/tx.c          |   11 ++++-
+ 6 files changed, 69 insertions(+), 31 deletions(-)
 
+-- 
+Kalle Valo
