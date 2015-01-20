@@ -1,246 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:53488 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759065AbbA3Mdi (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:65358 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751817AbbATKZh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 07:33:38 -0500
-Received: by mail-we0-f181.google.com with SMTP id k48so26899648wev.12
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 04:33:37 -0800 (PST)
+	Tue, 20 Jan 2015 05:25:37 -0500
+Received: by mail-wg0-f41.google.com with SMTP id a1so14297605wgh.0
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 02:25:36 -0800 (PST)
 From: Michal Kazior <michal.kazior@tieto.com>
 To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
 	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 6/7] ath10k: implement tx pause wmi event
-Date: Fri, 30 Jan 2015 13:31:25 +0100
-Message-Id: <1422621086-28970-7-git-send-email-michal.kazior@tieto.com> (sfid-20150130_133348_898829_DDF12574)
-In-Reply-To: <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
-References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
- <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: implement uapsd autotrigger command
+Date: Tue, 20 Jan 2015 11:24:56 +0100
+Message-Id: <1421749497-10553-1-git-send-email-michal.kazior@tieto.com> (sfid-20150120_112544_130249_587749AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-qca6174 wmi-tlv firmware defines a new wmi event
-for host tx pausing (i.e. stop/wake tx queues).
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 
-Map these events to ath10k/mac80211 tx queue
-control.
+New wmi-tlv firmware for qca6174 has u-UAPSD
+autotrigger service. If it is enabled firmware
+generates trigger frames automatically as
+configured.
 
-This is important for multi-channel throughput
-performance.
-
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 25 +++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 73 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     | 24 ++++++++++
+ 3 files changed, 122 insertions(+)
 
-Notes:
-    v2:
-     * s/thourghput/throughput/ in commit log
-
- drivers/net/wireless/ath/ath10k/mac.c     | 12 +++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 86 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h | 42 +++++++++++++++
- 3 files changed, 140 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 92355f1..9dab8cb 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3488,6 +3488,14 @@ err:
- 	return ret;
- }
- 
-+static void ath10k_mac_vif_tx_unlock_all(struct ath10k_vif *arvif)
-+{
-+	int i;
-+
-+	for (i = 0; i < BITS_PER_LONG; i++)
-+		ath10k_mac_vif_tx_unlock(arvif, i);
-+}
-+
- static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif)
- {
-@@ -3540,6 +3548,10 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 			ath10k_warn(ar, "failed to recalc monitor: %d\n", ret);
- 	}
- 
-+	spin_lock_bh(&ar->htt.tx_lock);
-+	ath10k_mac_vif_tx_unlock_all(arvif);
-+	spin_unlock_bh(&ar->htt.tx_lock);
-+
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 0e36b34..3763359 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -16,6 +16,7 @@
-  */
- #include "core.h"
- #include "debug.h"
-+#include "mac.h"
- #include "hw.h"
- #include "wmi.h"
- #include "wmi-ops.h"
-@@ -62,6 +63,8 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
- 		= { .min_len = sizeof(struct wmi_tlv_bcn_tx_status_ev) },
- 	[WMI_TLV_TAG_STRUCT_DIAG_DATA_CONTAINER_EVENT]
- 		= { .min_len = sizeof(struct wmi_tlv_diag_data_ev) },
-+	[WMI_TLV_TAG_STRUCT_TX_PAUSE_EVENT]
-+		= { .min_len = sizeof(struct wmi_tlv_tx_pause_ev) },
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 0dd49a7..80bd28a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -137,6 +137,10 @@ struct wmi_ops {
+ 					struct sk_buff *bcn);
+ 	struct sk_buff *(*gen_p2p_go_bcn_ie)(struct ath10k *ar, u32 vdev_id,
+ 					     const u8 *p2p_ie);
++	struct sk_buff *(*gen_vdev_sta_uapsd)(struct ath10k *ar, u32 vdev_id,
++					      const u8 peer_addr[ETH_ALEN],
++					      const struct wmi_sta_uapsd_auto_trig_arg *args,
++					      u32 num_ac);
  };
  
- static int
-@@ -296,6 +299,86 @@ static int ath10k_wmi_tlv_event_diag(struct ath10k *ar,
- 	return 0;
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -576,6 +580,27 @@ ath10k_wmi_vdev_spectral_enable(struct ath10k *ar, u32 vdev_id, u32 trigger,
  }
  
-+static int ath10k_wmi_tlv_event_tx_pause(struct ath10k *ar,
-+					 struct sk_buff *skb)
+ static inline int
++ath10k_wmi_vdev_sta_uapsd(struct ath10k *ar, u32 vdev_id,
++			  const u8 peer_addr[ETH_ALEN],
++			  const struct wmi_sta_uapsd_auto_trig_arg *args,
++			  u32 num_ac)
 +{
-+	const void **tb;
-+	const struct wmi_tlv_tx_pause_ev *ev;
-+	int ret, vdev_id;
-+	u32 pause_id, action, vdev_map, peer_id, tid_map;
-+	struct ath10k_vif *arvif;
++	struct sk_buff *skb;
++	u32 cmd_id;
 +
-+	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
-+	if (IS_ERR(tb)) {
-+		ret = PTR_ERR(tb);
-+		ath10k_warn(ar, "failed to parse tlv: %d\n", ret);
-+		return ret;
-+	}
++	if (!ar->wmi.ops->gen_vdev_sta_uapsd)
++		return -EOPNOTSUPP;
 +
-+	ev = tb[WMI_TLV_TAG_STRUCT_TX_PAUSE_EVENT];
-+	if (!ev) {
-+		kfree(tb);
-+		return -EPROTO;
-+	}
++	skb = ar->wmi.ops->gen_vdev_sta_uapsd(ar, vdev_id, peer_addr, args,
++					      num_ac);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
 +
-+	pause_id = __le32_to_cpu(ev->pause_id);
-+	action = __le32_to_cpu(ev->action);
-+	vdev_map = __le32_to_cpu(ev->vdev_map);
-+	peer_id = __le32_to_cpu(ev->peer_id);
-+	tid_map = __le32_to_cpu(ev->tid_map);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI,
-+		   "wmi tlv tx pause pause_id %u action %u vdev_map 0x%08x peer_id %u tid_map 0x%08x\n",
-+		   pause_id, action, vdev_map, peer_id, tid_map);
-+
-+	for (vdev_id = 0; vdev_map; vdev_id++) {
-+		if (!(vdev_map & BIT(vdev_id)))
-+			continue;
-+
-+		vdev_map &= ~BIT(vdev_id);
-+
-+		spin_lock_bh(&ar->htt.tx_lock);
-+		spin_lock_bh(&ar->data_lock);
-+
-+		arvif = ath10k_get_arvif(ar, vdev_id);
-+		if (!arvif) {
-+			ath10k_warn(ar, "failed to find arvif for vdev %i for tx pause event\n",
-+				    vdev_id);
-+			spin_unlock_bh(&ar->data_lock);
-+			spin_unlock_bh(&ar->htt.tx_lock);
-+			continue;
-+		}
-+
-+		/* FIXME: Some pause_id aren't vdev orinted. Instead they are
-+		 * peer_id oriented (mostly for AP mode scenarios).
-+		 */
-+		if (pause_id == WMI_TLV_TX_PAUSE_ID_MCC ||
-+		    pause_id == WMI_TLV_TX_PAUSE_ID_P2P_CLI_NOA ||
-+		    pause_id == WMI_TLV_TX_PAUSE_ID_P2P_GO_PS ||
-+		    pause_id == WMI_TLV_TX_PAUSE_ID_AP_PS ||
-+		    pause_id == WMI_TLV_TX_PAUSE_ID_IBSS_PS) {
-+			switch (action) {
-+			case WMI_TLV_TX_PAUSE_ACTION_STOP:
-+				ath10k_mac_vif_tx_lock(arvif, pause_id);
-+				break;
-+			case WMI_TLV_TX_PAUSE_ACTION_WAKE:
-+				ath10k_mac_vif_tx_unlock(arvif, pause_id);
-+				break;
-+			default:
-+				ath10k_warn(ar, "received unknown tx pause action %d on vdev %i, ignoring\n",
-+					    action, vdev_id);
-+				break;
-+			}
-+		}
-+
-+		spin_unlock_bh(&ar->data_lock);
-+		spin_unlock_bh(&ar->htt.tx_lock);
-+	}
-+
-+	kfree(tb);
-+	return 0;
++	cmd_id = ar->wmi.cmd->sta_uapsd_auto_trig_cmdid;
++	return ath10k_wmi_cmd_send(ar, skb, cmd_id);
 +}
 +
- /***********/
- /* TLV ops */
- /***********/
-@@ -417,6 +500,9 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_TLV_DIAG_EVENTID:
- 		ath10k_wmi_tlv_event_diag(ar, skb);
- 		break;
-+	case WMI_TLV_TX_PAUSE_EVENTID:
-+		ath10k_wmi_tlv_event_tx_pause(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index a05952a..3abc85f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1443,6 +1443,48 @@ struct wmi_tlv_adaptive_qcs {
- 	__le32 enable;
- } __packed;
++static inline int
+ ath10k_wmi_peer_create(struct ath10k *ar, u32 vdev_id,
+ 		       const u8 peer_addr[ETH_ALEN])
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 6f34fc7..0540c64 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1406,6 +1406,78 @@ ath10k_wmi_tlv_op_gen_vdev_install_key(struct ath10k *ar,
+ 	return skb;
+ }
  
-+/**
-+ * wmi_tlv_tx_pause_id - firmware tx queue pause reason types
-+ *
-+ * @WMI_TLV_TX_PAUSE_ID_MCC: used for by multi-channel firmware scheduler.
-+ *		Only vdev_map is valid.
-+ * @WMI_TLV_TX_PAUSE_ID_AP_PEER_PS: peer in AP mode is asleep.
-+ *		Only peer_id is valid.
-+ * @WMI_TLV_TX_PAUSE_ID_AP_PEER_UAPSD: Only peer_id and tid_map are valid.
-+ * @WMI_TLV_TX_PAUSE_ID_P2P_CLI_NOA: Only vdev_map is valid.
-+ * @WMI_TLV_TX_PAUSE_ID_P2P_GO_PS: Only vdev_map is valid.
-+ * @WMI_TLV_TX_PAUSE_ID_STA_ADD_BA: Only peer_id and tid_map are valid.
-+ * @WMI_TLV_TX_PAUSE_ID_AP_PS: When all peers are asleep in AP mode. Only
-+ *		vdev_map is valid.
-+ * @WMI_TLV_TX_PAUSE_ID_IBSS_PS: When all peers are asleep in IBSS mode. Only
-+ *		vdev_map is valid.
-+ * @WMI_TLV_TX_PAUSE_ID_HOST: Host itself requested tx pause.
-+ */
-+enum wmi_tlv_tx_pause_id {
-+	WMI_TLV_TX_PAUSE_ID_MCC = 1,
-+	WMI_TLV_TX_PAUSE_ID_AP_PEER_PS = 2,
-+	WMI_TLV_TX_PAUSE_ID_AP_PEER_UAPSD = 3,
-+	WMI_TLV_TX_PAUSE_ID_P2P_CLI_NOA = 4,
-+	WMI_TLV_TX_PAUSE_ID_P2P_GO_PS = 5,
-+	WMI_TLV_TX_PAUSE_ID_STA_ADD_BA = 6,
-+	WMI_TLV_TX_PAUSE_ID_AP_PS = 7,
-+	WMI_TLV_TX_PAUSE_ID_IBSS_PS = 8,
-+	WMI_TLV_TX_PAUSE_ID_HOST = 21,
++static void *ath10k_wmi_tlv_put_uapsd_ac(struct ath10k *ar, void *ptr,
++					 const struct wmi_sta_uapsd_auto_trig_arg *arg)
++{
++	struct wmi_sta_uapsd_auto_trig_param *ac;
++	struct wmi_tlv *tlv;
++
++	tlv = ptr;
++	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_STA_UAPSD_AUTO_TRIG_PARAM);
++	tlv->len = __cpu_to_le16(sizeof(*ac));
++	ac = (void *)tlv->value;
++
++	ac->wmm_ac = __cpu_to_le32(arg->wmm_ac);
++	ac->user_priority = __cpu_to_le32(arg->user_priority);
++	ac->service_interval = __cpu_to_le32(arg->service_interval);
++	ac->suspend_interval = __cpu_to_le32(arg->suspend_interval);
++	ac->delay_interval = __cpu_to_le32(arg->delay_interval);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi tlv vdev sta uapsd auto trigger ac %d prio %d svc int %d susp int %d delay int %d\n",
++		   ac->wmm_ac, ac->user_priority, ac->service_interval,
++		   ac->suspend_interval, ac->delay_interval);
++
++	return ptr + sizeof(*tlv) + sizeof(*ac);
++}
++
++static struct sk_buff *
++ath10k_wmi_tlv_op_gen_vdev_sta_uapsd(struct ath10k *ar, u32 vdev_id,
++				     const u8 peer_addr[ETH_ALEN],
++				     const struct wmi_sta_uapsd_auto_trig_arg *args,
++				     u32 num_ac)
++{
++	struct wmi_sta_uapsd_auto_trig_cmd_fixed_param *cmd;
++	struct wmi_sta_uapsd_auto_trig_param *ac;
++	struct wmi_tlv *tlv;
++	struct sk_buff *skb;
++	size_t len;
++	size_t ac_tlv_len;
++	void *ptr;
++	int i;
++
++	ac_tlv_len = num_ac * (sizeof(*tlv) + sizeof(*ac));
++	len = sizeof(*tlv) + sizeof(*cmd) +
++	      sizeof(*tlv) + ac_tlv_len;
++	skb = ath10k_wmi_alloc_skb(ar, len);
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	ptr = (void *)skb->data;
++	tlv = ptr;
++	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_STA_UAPSD_AUTO_TRIG_CMD);
++	tlv->len = __cpu_to_le16(sizeof(*cmd));
++	cmd = (void *)tlv->value;
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	cmd->num_ac = __cpu_to_le32(num_ac);
++	ether_addr_copy(cmd->peer_macaddr.addr, peer_addr);
++
++	ptr += sizeof(*tlv);
++	ptr += sizeof(*cmd);
++
++	tlv = ptr;
++	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
++	tlv->len = __cpu_to_le16(ac_tlv_len);
++	ac = (void *)tlv->value;
++
++	ptr += sizeof(*tlv);
++	for (i = 0; i < num_ac; i++)
++		ptr = ath10k_wmi_tlv_put_uapsd_ac(ar, ptr, &args[i]);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv vdev sta uapsd auto trigger\n");
++	return skb;
++}
++
+ static struct sk_buff *
+ ath10k_wmi_tlv_op_gen_peer_create(struct ath10k *ar, u32 vdev_id,
+ 				  const u8 peer_addr[ETH_ALEN])
+@@ -2417,6 +2489,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	.gen_bcn_tmpl = ath10k_wmi_tlv_op_gen_bcn_tmpl,
+ 	.gen_prb_tmpl = ath10k_wmi_tlv_op_gen_prb_tmpl,
+ 	.gen_p2p_go_bcn_ie = ath10k_wmi_tlv_op_gen_p2p_go_bcn_ie,
++	.gen_vdev_sta_uapsd = ath10k_wmi_tlv_op_gen_vdev_sta_uapsd,
+ };
+ 
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index bd7f29a..a943ebd 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4060,6 +4060,30 @@ enum wmi_sta_ps_param_uapsd {
+ 	WMI_STA_PS_UAPSD_AC3_TRIGGER_EN  = (1 << 7),
+ };
+ 
++#define WMI_STA_UAPSD_MAX_INTERVAL_MSEC UINT_MAX
++
++struct wmi_sta_uapsd_auto_trig_param {
++	__le32 wmm_ac;
++	__le32 user_priority;
++	__le32 service_interval;
++	__le32 suspend_interval;
++	__le32 delay_interval;
 +};
 +
-+enum wmi_tlv_tx_pause_action {
-+	WMI_TLV_TX_PAUSE_ACTION_STOP,
-+	WMI_TLV_TX_PAUSE_ACTION_WAKE,
++struct wmi_sta_uapsd_auto_trig_cmd_fixed_param {
++	__le32 vdev_id;
++	struct wmi_mac_addr peer_macaddr;
++	__le32 num_ac;
 +};
 +
-+struct wmi_tlv_tx_pause_ev {
-+	__le32 pause_id;
-+	__le32 action;
-+	__le32 vdev_map;
-+	__le32 peer_id;
-+	__le32 tid_map;
-+} __packed;
++struct wmi_sta_uapsd_auto_trig_arg {
++	u32 wmm_ac;
++	u32 user_priority;
++	u32 service_interval;
++	u32 suspend_interval;
++	u32 delay_interval;
++};
 +
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
- 
- #endif
+ enum wmi_sta_powersave_param {
+ 	/*
+ 	 * Controls how frames are retrievd from AP while STA is sleeping
 -- 
 1.8.5.3
 
