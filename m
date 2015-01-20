@@ -1,109 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 6.mo1.mail-out.ovh.net ([46.105.43.205]:42035 "EHLO
-	6.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752061AbbAVQ54 (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:40508 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752056AbbATKZi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 11:57:56 -0500
-Received: from mail434.ha.ovh.net (gw6.ovh.net [213.251.189.206])
-	by mo1.mail-out.ovh.net (Postfix) with SMTP id 1DF44FFA0B2
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 16:42:34 +0100 (CET)
-From: clement.perrochaud@effinnov.com
-To: linux-nfc@lists.01.org
-Cc: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= <clement.perrochaud@nxp.com>,
-	sunil.jogi@nxp.com, jerome.pele@nxp.com,
-	Charles.Gorand-Effinnov@nxp.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	davem@davemloft.net, grant.likely@linaro.org, lefrique@marvell.com,
-	christophe.ricard@gmail.com, cuissard@marvell.com,
-	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	=?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
-	<clement.perrochaud@effinnov.com>
-Subject: [PATCH 4/4] NFC: nxp-nci: Allow module removal during download
-Date: Thu, 22 Jan 2015 16:27:40 +0100
-Message-Id: <1421940460-14049-5-git-send-email-clement.perrochaud@effinnov.com> (sfid-20150122_175815_668314_2FBDDBA4)
-In-Reply-To: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com>
-References: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Jan 2015 05:25:38 -0500
+Received: by mail-wg0-f48.google.com with SMTP id x12so7916259wgg.7
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 02:25:37 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/2] ath10k: disable uapsd autotrigger
+Date: Tue, 20 Jan 2015 11:24:57 +0100
+Message-Id: <1421749497-10553-2-git-send-email-michal.kazior@tieto.com> (sfid-20150120_112544_731392_D4F921AE)
+In-Reply-To: <1421749497-10553-1-git-send-email-michal.kazior@tieto.com>
+References: <1421749497-10553-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Clément Perrochaud <clement.perrochaud@nxp.com>
+Only userspace can make an educated decision when
+a trigger frame is required so make sure the
+autotrigger service is disabled.
 
-Signed-off-by: Clément Perrochaud <clement.perrochaud@nxp.com>
-Signed-off-by: Clément Perrochaud <clement.perrochaud@effinnov.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/nfc/nxp-nci/core.c     | 7 +++----
- drivers/nfc/nxp-nci/firmware.c | 9 ++++++---
- 2 files changed, 9 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-diff --git a/drivers/nfc/nxp-nci/core.c b/drivers/nfc/nxp-nci/core.c
-index d3643ef..c15606d 100644
---- a/drivers/nfc/nxp-nci/core.c
-+++ b/drivers/nfc/nxp-nci/core.c
-@@ -165,12 +165,11 @@ void nxp_nci_remove(struct nci_dev *ndev)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9524bc5..08e61cb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3987,6 +3987,8 @@ static int ath10k_conf_tx_uapsd(struct ath10k *ar, struct ieee80211_vif *vif,
+ 				u16 ac, bool enable)
  {
- 	struct nxp_nci_info *info = nci_get_drvdata(ndev);
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++	struct wmi_sta_uapsd_auto_trig_arg arg = {};
++	u32 prio = 0, acc = 0;
+ 	u32 value = 0;
+ 	int ret = 0;
  
--	mutex_lock(&info->info_lock);
--
--	cancel_work_sync(&info->fw_info.work);
--
- 	if (info->mode == NXP_NCI_MODE_FW)
- 		nxp_nci_fw_work_complete(info, -ESHUTDOWN);
-+	cancel_work_sync(&info->fw_info.work);
-+
-+	mutex_lock(&info->info_lock);
- 
- 	if (info->phy_ops->disable)
- 		info->phy_ops->disable(info->phy_id);
-diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
-index 1814e9f..de136e1 100644
---- a/drivers/nfc/nxp-nci/firmware.c
-+++ b/drivers/nfc/nxp-nci/firmware.c
-@@ -166,7 +166,8 @@ static int nxp_nci_fw_send(struct nxp_nci_info *info)
- 
- 	if (*fw_info->data == NXP_NCI_FW_CMD_RESET) {
- 		fw_info->cmd_result = 0;
--		schedule_work(&fw_info->work);
-+		if (fw_info->fw)
-+			schedule_work(&fw_info->work);
- 	} else {
- 		completion_rc = wait_for_completion_interruptible_timeout(
- 			&fw_info->cmd_completion, NXP_NCI_FW_ANSWER_TIMEOUT);
-@@ -244,7 +245,8 @@ int nxp_nci_fw_download(struct nci_dev *ndev, const char *firmware_name)
- 	fw_info->frame_size = 0;
- 	fw_info->cmd_result = 0;
- 
--	schedule_work(&fw_info->work);
-+	if (fw_info->fw)
-+		schedule_work(&fw_info->work);
- 
- fw_download_exit:
- 	mutex_unlock(&info->info_lock);
-@@ -316,6 +318,7 @@ void nxp_nci_fw_recv_frame(struct nci_dev *ndev, struct sk_buff *skb)
- 		fw_info->cmd_result = -EIO;
+@@ -3999,18 +4001,26 @@ static int ath10k_conf_tx_uapsd(struct ath10k *ar, struct ieee80211_vif *vif,
+ 	case IEEE80211_AC_VO:
+ 		value = WMI_STA_PS_UAPSD_AC3_DELIVERY_EN |
+ 			WMI_STA_PS_UAPSD_AC3_TRIGGER_EN;
++		prio = 7;
++		acc = 3;
+ 		break;
+ 	case IEEE80211_AC_VI:
+ 		value = WMI_STA_PS_UAPSD_AC2_DELIVERY_EN |
+ 			WMI_STA_PS_UAPSD_AC2_TRIGGER_EN;
++		prio = 5;
++		acc = 2;
+ 		break;
+ 	case IEEE80211_AC_BE:
+ 		value = WMI_STA_PS_UAPSD_AC1_DELIVERY_EN |
+ 			WMI_STA_PS_UAPSD_AC1_TRIGGER_EN;
++		prio = 2;
++		acc = 1;
+ 		break;
+ 	case IEEE80211_AC_BK:
+ 		value = WMI_STA_PS_UAPSD_AC0_DELIVERY_EN |
+ 			WMI_STA_PS_UAPSD_AC0_TRIGGER_EN;
++		prio = 0;
++		acc = 0;
+ 		break;
  	}
  
--	schedule_work(&fw_info->work);
-+	if (fw_info->fw)
-+		schedule_work(&fw_info->work);
+@@ -4052,6 +4062,29 @@ static int ath10k_conf_tx_uapsd(struct ath10k *ar, struct ieee80211_vif *vif,
+ 		return ret;
+ 	}
+ 
++	if (test_bit(WMI_SERVICE_STA_UAPSD_BASIC_AUTO_TRIG, ar->wmi.svc_map) ||
++	    test_bit(WMI_SERVICE_STA_UAPSD_VAR_AUTO_TRIG, ar->wmi.svc_map)) {
++		/* Only userspace can make an educated decision when to send
++		 * trigger frame. The following effectively disables u-UAPSD
++		 * autotrigger in firmware (which is enabled by default
++		 * provided the autotrigger service is available).
++		 */
++
++		arg.wmm_ac = acc;
++		arg.user_priority = prio;
++		arg.service_interval = 0;
++		arg.suspend_interval = WMI_STA_UAPSD_MAX_INTERVAL_MSEC;
++		arg.delay_interval = WMI_STA_UAPSD_MAX_INTERVAL_MSEC;
++
++		ret = ath10k_wmi_vdev_sta_uapsd(ar, arvif->vdev_id,
++						arvif->bssid, &arg, 1);
++		if (ret) {
++			ath10k_warn(ar, "failed to set uapsd auto trigger %d\n",
++				    ret);
++			return ret;
++		}
++	}
++
+ exit:
+ 	return ret;
  }
- EXPORT_SYMBOL(nxp_nci_fw_recv_frame);
 -- 
-Clément Perrochaud
-
-Eff'Innov Technologies
-Caen, Aix-En-Provence, Grenoble
-
-Eff'Innov Technologies
-Campus EffiScience
-2, Esplanade Anton Philips
-14460 Colombelles, FRANCE
-
-http://www.effinnov.com
+1.8.5.3
 
