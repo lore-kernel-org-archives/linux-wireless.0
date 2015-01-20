@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27414 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751175AbbALLqL (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:34141 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753774AbbATKn0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 06:46:11 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 8/8] ath10k: add support to send delba
-References: <1419407949-32367-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<1419407949-32367-9-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Mon, 12 Jan 2015 13:45:59 +0200
-In-Reply-To: <1419407949-32367-9-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Wed, 24 Dec 2014 13:29:09 +0530")
-Message-ID: <87twzwdxxk.fsf@kamboji.qca.qualcomm.com> (sfid-20150112_124621_485040_4D148C43)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 20 Jan 2015 05:43:26 -0500
+Received: by mail-we0-f169.google.com with SMTP id p10so12778657wes.0
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 02:43:25 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/2] ath10k: fix pmf for wmi-tlv on qca6174
+Date: Tue, 20 Jan 2015 11:42:43 +0100
+Message-Id: <1421750563-15945-2-git-send-email-michal.kazior@tieto.com> (sfid-20150120_114330_062597_3D4EB444)
+In-Reply-To: <1421750563-15945-1-git-send-email-michal.kazior@tieto.com>
+References: <1421750563-15945-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+From: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 
-> This per-station debugfs entry helps to send delba in manual mode
-> for debugging purpose. It accepts tid, initiator and reason code
-> as inputs.
->
-> To send delba,
->
-> echo 0 1 37 >/sys/kernel/debug/ieee80211/phyX/netdev:wlanX/
-> 	     stations/XX:XX:XX:XX:XX:XX/delba
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+New wmi-tlv firmware uses HTT 3.0 protocol which
+uses TX_FRM command for management frames (instead
+of a dedicated command). To support PMF it is
+necessary to provide explicit tailroom.
 
-[...]
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-> +	ret = sscanf(buf, "%u %u %u", &tid, &initiator, &reason);
-> +	if (ret != 3) {
-> +		ath10k_warn(ar, "ex: echo <tid> <initiator> <reason code> >delba\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* Valid TID values are 0 through 15 */
-> +	if (tid > HTT_DATA_TX_EXT_TID_MGMT - 2) {
-> +		ath10k_warn(ar, "Invalid TID %u\n", tid);
-> +		return -EINVAL;
-> +	}
-
-And I did the same here as well.
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 5c64139..5780b87 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -481,6 +481,12 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	}
+ 	skb_cb->htt.txbuf_paddr = paddr;
+ 
++	if ((ieee80211_is_action(hdr->frame_control) ||
++	     ieee80211_is_deauth(hdr->frame_control) ||
++	     ieee80211_is_disassoc(hdr->frame_control)) &&
++	     ieee80211_has_protected(hdr->frame_control))
++		skb_put(msdu, IEEE80211_CCMP_MIC_LEN);
++
+ 	skb_cb->paddr = dma_map_single(dev, msdu->data, msdu->len,
+ 				       DMA_TO_DEVICE);
+ 	res = dma_mapping_error(dev, skb_cb->paddr);
 -- 
-Kalle Valo
+1.8.5.3
+
