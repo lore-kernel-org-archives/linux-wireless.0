@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:38332 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753493AbbAGPEc (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:45054 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755385AbbATRBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 10:04:32 -0500
-Date: Wed, 7 Jan 2015 20:34:16 +0530
-From: Rajkumar <rmanohar@qti.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix build error when hwmon is off
-Message-ID: <20150107150413.GA13894@qca.qualcomm.com> (sfid-20150107_160540_854596_1FD9EA66)
-References: <1419420240-11208-1-git-send-email-rmanohar@qti.qualcomm.com>
- <871tn6u0c5.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <871tn6u0c5.fsf@kamboji.qca.qualcomm.com>
+	Tue, 20 Jan 2015 12:01:46 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH V2 for 3.19 4/7] rtlwifi: rtl8192ee: Fix TX hang due to failure to update TX write point
+Date: Tue, 20 Jan 2015 11:01:23 -0600
+Message-Id: <1421773286-1039-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180155_920295_5924C4BC)
+In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 07, 2015 at 04:33:46PM +0200, Kalle Valo wrote:
-> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
-> 
-> > Place hwmon APIs inside CONFIG_HWMON switch to fix undefined
-> > errors when hwmon is not enabled.
-> >
-> > ERROR: "devm_hwmon_device_register_with_groups"
-> > [drivers/net/wireless/ath/ath10k/ath10k_core.ko] undefined!
-> >
-> > Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> 
-> Thanks, but this has too many ifdefs for my taste. I have another idea,
-> let me send v2 shortly.
->
-Got you ;)
-Having seperate register/unregister APIs for hwmon ops reduce switches.
+From: Troy Tan <troy_tan@realsil.com.cn>
 
--Rajkumar
+Initially, the routine to update the write point in the FIFO buffer was
+coded to save CPU time by not doing the calculation every interrupt. This
+was an error and results in TX hangs.
+
+Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [V3.18]
+---
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+index 0a006c4..1535680 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
+@@ -1049,8 +1049,7 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
+ 	static u8 stop_report_cnt;
+ 	struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[hw_queue];
+ 
+-	/*checking Read/Write Point each interrupt wastes CPU */
+-	if (stop_report_cnt > 15 || !rtlpriv->link_info.busytraffic) {
++	{
+ 		u16 point_diff = 0;
+ 		u16 cur_tx_rp, cur_tx_wp;
+ 		u32 tmpu32 = 0;
+-- 
+2.1.2
+
