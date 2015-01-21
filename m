@@ -1,107 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fep14.mx.upcmail.net ([62.179.121.34]:42615 "EHLO
-	fep14.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751839AbbAEJZY (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:12488 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752595AbbAURyx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 04:25:24 -0500
-Received: from edge01.upcmail.net ([192.168.13.236])
-          by viefep16-int.chello.at
-          (InterMail vM.8.01.05.13 201-2260-151-135-20130320) with ESMTP
-          id <20150105090704.LCKS26000.viefep16-int.chello.at@edge01.upcmail.net>
-          for <linux-wireless@vger.kernel.org>;
-          Mon, 5 Jan 2015 10:07:04 +0100
-Received: from [194.124.158.2] (jupiter.think.ch [194.124.158.2])
-	(authenticated bits=0)
-	by luna.think.ch (8.14.3/8.14.3) with ESMTP id t05972mx006135
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Mon, 5 Jan 2015 10:07:03 +0100
-Message-ID: <54AA5438.9070902@think.ch> (sfid-20150105_102529_675996_57CD7390)
-Date: Mon, 05 Jan 2015 10:07:04 +0100
-From: Erich Titl <erich.titl@think.ch>
+	Wed, 21 Jan 2015 12:54:53 -0500
+Message-ID: <54BFE7EA.3090402@broadcom.com> (sfid-20150121_185516_973170_27DE98C4)
+Date: Wed, 21 Jan 2015 18:54:50 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: b43 driver and WEP
-Content-Type: text/plain; charset=utf-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<linux-wireless@vger.kernel.org>,
+	Avri Altman <avri.altman@intel.com>
+Subject: Re: [PATCH] mac80211: tell drivers the user TX power restriction
+References: <1421784945-7815-1-git-send-email-emmanuel.grumbach@intel.com>	 <54BEDBBA.2060305@broadcom.com> <1421858816.1900.24.camel@sipsolutions.net>
+In-Reply-To: <1421858816.1900.24.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+On 01/21/15 17:46, Johannes Berg wrote:
+> On Tue, 2015-01-20 at 23:50 +0100, Arend van Spriel wrote:
+>> On 01/20/15 21:15, Emmanuel Grumbach wrote:
+>>> From: Avri Altman<avri.altman@intel.com>
+>>>
+>>> When a tx power restriction is set, mac80211 protects its downstream
+>>> stack by taking min(user, regulatory, 11h ap). However, we should allow
+>>> drivers to use that value as it is - on their own risk.
+>>> This might come handy, when tx power is set per phy. As mac80211 has
+>>> only a concept of "per-vif" tx power, it iterates over the active vifs,
+>>> and sets their tx power limit accordingly. Allowing this value to
+>>> proliferate downstream unchanged, the driver might use this legacy
+>>> api differently, e.g. to set tx power for the whole device.
+>>
+>> Not sure if this really a good idea as default behaviour. Can't we do
+>> this kind of stuff under some Kconfig. In cfg80211 we have the
+>> CFG80211_CERTIFICATION_ONUS.
+>
+> I don't think this is necessary. After all, it's added in a special
+> separate field that the driver author must evaluate how to use it.
+>
+> In our case, it'll be used (by the driver and firmware) to limit scan TX
+> power appropriately, for example. Since scanning is done by the firmware
+> the TX power for the channel cannot be set by the driver, and if we
+> limit it to the calculated power limit for the (associated) vif then it
+> might be too low since you might be associated on a low channel.
+>
+> But it doesn't have a direct effect on any driver not using it, so I
+> don't really see why it should be configurable?
 
-I am working on a WLAN client on an embedded system and I am facing a
-problem using WEP. I am using the b43 driver with a BCM43222 mini-pci
-card and kernel 3.10.55.
+Okay. Let's forget about the configurable thing. Reading the commit 
+message and I concluded that before the patch it was 'txpwr_limit = 
+min(user, regulatory, ap_11h)'. So for drivers using this value this now 
+changes to 'txpwr_limit = user', right? For those drivers it might be 
+good to have the min() operation added so their behaviour is effectively 
+unchanged by this patch.
 
-The card works fine with WPA and without encryption. Using WEP results
-in a weird situation where dhcp requests can be sent across the wireless
-link, but a dhcp reply is never received.
+Regards,
+Arend
 
-The only error I could come up with is
-
-AP# ip link set wlan0 up
-AP# iw event -f &
-AP# iw wlan0 connect scoobly keys 0:abcdefghijklm
-wlan0 (phy #0): scan started
-AP# wlan0 (phy #0): scan finished: 2412 2417 2422 2427 2432 2437 2442
-2447 2452 2457 2462 2467 2472 2484, "scoobly"
-wlan0: new station f8:1a:67:56:42:96
-
-[  417.886167] b43 ssb0:0 wlan0: failed to set key 0
-
-wlan0 (phy #0): auth f8:1a:67:56:42:96 -> 00:1a:2b:5f:61:11 status: 0:
-Successful [frame: b0 00 40 01 00 1a 2b 5f 61 11 f8 1a 67 56 42 96 f8 1a
-67 56 42 96 00 00 00 00 02 00 00 00]
-wlan0 (phy #0): assoc f8:1a:67:56:42:96 -> 00:1a:2b:5f:61:11 status: 0:
-Successful [frame: 10 00 40 01 00 1a 2b 5f 61 11 f8 1a 67 56 42 96 f8 1a
-67 56 42 96 10 00 31 04 00 00 01 c0 01 08 82 84 8b 0c 12 96 18 24 32 04
-30 48 60 6c dd 18 00 50 f2 02 01 01 85 00 03 a4 00 00 27 a4 00 00 42 43
-5e 00 62 32 2f 00 dd 09 00 03 7f 01 01 00 00 ff 7f dd 0a 00 03 7f 04 01
-00 06 00 40 00]
-wlan0 (phy #0): connected to f8:1a:67:56:42:96
-
-AP# tcpdump -i wlan0 -s 1500 -w /tmp/foo &
-AP# tcpdump: WARNING: wlan0: no IPv4 address assigned
-tcpdump: listening on wlan0, link-type EN10MB (Ethernet), capture size
-1500 bytes
-
-AP# dhcpcd wlan0
-dhcpcd[4335]: version 5.2.11 starting
-dhcpcd[4335]: wlan0: broadcasting for a lease
-dhcpcd[4335]: timed out
-
-AP# tcpdump -r /tmp/foo
-reading from file /tmp/foo, link-type EN10MB (Ethernet)
-08:49:56.270834 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP,
-Request from 00:1a:2b:5f:61:11 (oui Unknown), length 314
-08:50:00.395859 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP,
-Request from 00:1a:2b:5f:61:11 (oui Unknown), length 314
-08:50:07.559542 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP,
-Request from 00:1a:2b:5f:61:11 (oui Unknown), length 314
-08:50:22.958262 IP 0.0.0.0.bootpc > 255.255.255.255.bootps: BOOTP/DHCP,
-Request from 00:1a:2b:5f:61:11 (oui Unknown), length 314
-
-AP# iw dev wlan0 link
-Connected to f8:1a:67:56:42:96 (on wlan0)
-        SSID: scoobly
-        freq: 2427
-        RX: 537892 bytes (7445 packets)
-        TX: 3639 bytes (21 packets)
-        signal: -76 dBm
-        tx bitrate: 1.0 MBit/s
-
-        bss flags:      short-preamble short-slot-time
-        dtim period:    0
-        beacon int:     100
-
-The dhcp request is received at the dhcp server and is being answered to.
-
-Any ideas?
-
-Thanks
-
-Erich Titl
-
-
-
-
-
+> johannes
+>
 
