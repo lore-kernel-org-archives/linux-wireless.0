@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10906 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758001AbbA2K1j (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:52918 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752479AbbAULw2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 05:27:39 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix target wakeup timeout
-References: <1422290586-10955-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Thu, 29 Jan 2015 12:27:30 +0200
-In-Reply-To: <1422290586-10955-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Mon, 26 Jan 2015 22:13:06 +0530")
-Message-ID: <87mw513mr1.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_112747_436415_6D713483)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 21 Jan 2015 06:52:28 -0500
+Received: by mail-lb0-f182.google.com with SMTP id l4so13330595lbv.13
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:52:27 -0800 (PST)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Simon Kelley <simon@thekelleys.org.uk>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] net: wireless: atmel: Remove open-coded and wrong strcasecmp
+Date: Wed, 21 Jan 2015 12:52:07 +0100
+Message-Id: <1421841127-8209-1-git-send-email-linux@rasmusvillemoes.dk> (sfid-20150121_125252_251738_D2D256A9)
+In-Reply-To: <1421414907-26764-1-git-send-email-linux@rasmusvillemoes.dk>
+References: <1421414907-26764-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+The kernel's string library does in fact have strcasecmp, at least
+since ded220bd8f08 ("[STRING]: Move strcasecmp/strncasecmp to
+lib/string.c"). Moreover, this open-coded version is in fact wrong: If
+the strings only differ in their last character, a and b have already
+been incremented to point to the terminating NUL bytes, so they would
+wrongly be treated as equal.
 
-> During drv_start/drv_stop stress testing in ARM platform,
-> sometimes target is taking more that 5ms to wake up. Similar
-> behaviour also noted during driver load and unload iterations.
-> On such cases, the wakup duration lies between 5-6ms. Hence
-> increasing pci wakup timeout 10ms to be more safer. With this
-> changes, able to complete power down/up >100 iterations without
-> any issues.
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+v2: Address Sergei's comments to the commit message.
 
-Thanks, applied to ath.git.
+ drivers/net/wireless/atmel.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
+diff --git a/drivers/net/wireless/atmel.c b/drivers/net/wireless/atmel.c
+index 9183f1cf89a7..55db9f03eb2a 100644
+--- a/drivers/net/wireless/atmel.c
++++ b/drivers/net/wireless/atmel.c
+@@ -45,7 +45,6 @@
+ #include <linux/ptrace.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
+-#include <linux/ctype.h>
+ #include <linux/timer.h>
+ #include <asm/byteorder.h>
+ #include <asm/io.h>
+@@ -2699,16 +2698,7 @@ static int atmel_ioctl(struct net_device *dev, struct ifreq *rq, int cmd)
+ 		domain[REGDOMAINSZ] = 0;
+ 		rc = -EINVAL;
+ 		for (i = 0; i < ARRAY_SIZE(channel_table); i++) {
+-			/* strcasecmp doesn't exist in the library */
+-			char *a = channel_table[i].name;
+-			char *b = domain;
+-			while (*a) {
+-				char c1 = *a++;
+-				char c2 = *b++;
+-				if (tolower(c1) != tolower(c2))
+-					break;
+-			}
+-			if (!*a && !*b) {
++			if (!strcasecmp(channel_table[i].name, domain)) {
+ 				priv->config_reg_domain = channel_table[i].reg_domain;
+ 				rc = 0;
+ 			}
 -- 
-Kalle Valo
+2.1.3
+
