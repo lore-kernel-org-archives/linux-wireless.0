@@ -1,78 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:50771 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985AbbAMHLz (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47583 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750889AbbAULNu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 02:11:55 -0500
-Received: by mail-wg0-f53.google.com with SMTP id x13so1110721wgg.12
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 23:11:54 -0800 (PST)
-Message-ID: <54B4C507.1030102@open-mesh.com> (sfid-20150113_081158_887232_8D810038)
-Date: Tue, 13 Jan 2015 08:11:03 +0100
-From: Antonio Quartulli <antonio@open-mesh.com>
+	Wed, 21 Jan 2015 06:13:50 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0LBDeXu010869
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:13:50 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s09vs9gje-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:13:50 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yogeshp@marvell.com>,
+	<nishants@marvell.com>, <frankh@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/3] mwifiex: selectively choose ext_scan support
+Date: Wed, 21 Jan 2015 22:12:11 +0530
+Message-ID: <1421858531-4536-3-git-send-email-patila@marvell.com> (sfid-20150121_121353_128877_AC22EEF3)
+In-Reply-To: <1421858531-4536-1-git-send-email-patila@marvell.com>
+References: <1421858531-4536-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k: fw_stats not reporting peer_stats with 10.2
-References: <5492CFF5.9060107@open-mesh.com> <CA+BoTQm1H9jAszUH_gQCjcEk-GCQG0r9r7Jb2VdpM1CQF7jXeg@mail.gmail.com>
-In-Reply-To: <CA+BoTQm1H9jAszUH_gQCjcEk-GCQG0r9r7Jb2VdpM1CQF7jXeg@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="SfPJnV8AxjQwDn3ub0C0L3GhEPo05FrbC"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---SfPJnV8AxjQwDn3ub0C0L3GhEPo05FrbC
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Some devices do not support extended scan.
+This patch adds support to enable ext_scan selectively.
+For SD/PCIe interfaces, deefine ext_scan_support as part of
+card structure and use it to initialize ext_scan in adapter
+during registering device. For USB interfaces, we initialize
+ext_scan during register_dev handler.
 
-On 12/01/15 12:54, Michal Kazior wrote:
-> On 18 December 2014 at 14:00, Antonio Quartulli <antonio@open-mesh.com>=
- wrote:
->> I tried printing some debug messages here and there and the only usefu=
-l
->> information I got is that in "ath10k_wmi_10x_pull_fw_stats()" the valu=
-e
->> of "ev->num_peer_stats" is always 0.
->>
->> Is this yet another fw limitation?
->=20
-> Firmware stats has a very fragile ABI. Apparently 10.2 changed it
-> again and thus is broken. I'll try to look into it more if time
-> permits.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c | 2 +-
+ drivers/net/wireless/mwifiex/pcie.c | 2 ++
+ drivers/net/wireless/mwifiex/pcie.h | 3 +++
+ drivers/net/wireless/mwifiex/sdio.c | 2 ++
+ drivers/net/wireless/mwifiex/sdio.h | 8 ++++++++
+ drivers/net/wireless/mwifiex/usb.c  | 3 +++
+ 6 files changed, 19 insertions(+), 1 deletion(-)
 
-Thank Micha=C5=82!
-I will be happy to test any change you might be able to provide.
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index b115e0f..8004d14 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -294,7 +294,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	memset(&adapter->arp_filter, 0, sizeof(adapter->arp_filter));
+ 	adapter->arp_filter_size = 0;
+ 	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
+-	adapter->ext_scan = true;
++	adapter->ext_scan = false;
+ 	adapter->key_api_major_ver = 0;
+ 	adapter->key_api_minor_ver = 0;
+ 
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index a460b0e..824a78b 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -204,6 +204,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 		card->pcie.blksz_fw_dl = data->blksz_fw_dl;
+ 		card->pcie.tx_buf_size = data->tx_buf_size;
+ 		card->pcie.supports_fw_dump = data->supports_fw_dump;
++		card->pcie.ext_scan_support = data->ext_scan_support;
+ 	}
+ 
+ 	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
+@@ -2563,6 +2564,7 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 	adapter->mem_type_mapping_tbl = mem_type_mapping_tbl;
+ 	adapter->num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl);
+ 	strcpy(adapter->fw_name, card->pcie.firmware);
++	adapter->ext_scan = card->pcie.ext_scan_support;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
+index 200e8b0..295e66b 100644
+--- a/drivers/net/wireless/mwifiex/pcie.h
++++ b/drivers/net/wireless/mwifiex/pcie.h
+@@ -206,6 +206,7 @@ struct mwifiex_pcie_device {
+ 	u16 blksz_fw_dl;
+ 	u16 tx_buf_size;
+ 	bool supports_fw_dump;
++	u8 ext_scan_support;
+ };
+ 
+ static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
+@@ -214,6 +215,7 @@ static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
+ 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+ 	.supports_fw_dump = false,
++	.ext_scan_support = true,
+ };
+ 
+ static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
+@@ -222,6 +224,7 @@ static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
+ 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
+ 	.supports_fw_dump = true,
++	.ext_scan_support = true,
+ };
+ 
+ struct mwifiex_evt_buf_desc {
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index cee107f..01c157d 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -107,6 +107,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 		card->mp_rx_agg_buf_size = data->mp_rx_agg_buf_size;
+ 		card->supports_fw_dump = data->supports_fw_dump;
+ 		card->auto_tdls = data->auto_tdls;
++		card->ext_scan = data->ext_scan_support;
+ 	}
+ 
+ 	sdio_claim_host(func);
+@@ -1887,6 +1888,7 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	}
+ 
+ 	adapter->auto_tdls = card->auto_tdls;
++	adapter->ext_scan = card->ext_scan;
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index a4bb0db..1d58f25 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -256,6 +256,7 @@ struct sdio_mmc_card {
+ 
+ 	u8 *mp_regs;
+ 	u8 auto_tdls;
++	u8 ext_scan;
+ 
+ 	struct mwifiex_sdio_mpa_tx mpa_tx;
+ 	struct mwifiex_sdio_mpa_rx mpa_rx;
+@@ -273,6 +274,7 @@ struct mwifiex_sdio_device {
+ 	u32 mp_tx_agg_buf_size;
+ 	u32 mp_rx_agg_buf_size;
+ 	u8 auto_tdls;
++	u8 ext_scan_support;
+ };
+ 
+ static const struct mwifiex_sdio_card_reg mwifiex_reg_sd87xx = {
+@@ -417,6 +419,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+ 	.supports_fw_dump = false,
+ 	.auto_tdls = false,
++	.ext_scan_support = false,
+ };
+ 
+ static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 = {
+@@ -431,6 +434,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 = {
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+ 	.supports_fw_dump = false,
+ 	.auto_tdls = false,
++	.ext_scan_support = true,
+ };
+ 
+ static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 = {
+@@ -445,6 +449,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 = {
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+ 	.supports_fw_dump = false,
+ 	.auto_tdls = false,
++	.ext_scan_support = true,
+ };
+ 
+ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
+@@ -459,6 +464,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+ 	.supports_fw_dump = true,
+ 	.auto_tdls = false,
++	.ext_scan_support = true,
+ };
+ 
+ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
+@@ -473,6 +479,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+ 	.supports_fw_dump = false,
+ 	.auto_tdls = true,
++	.ext_scan_support = true,
+ };
+ 
+ static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
+@@ -487,6 +494,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+ 	.supports_fw_dump = false,
+ 	.auto_tdls = false,
++	.ext_scan_support = true,
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 50517b7..2238730 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -799,16 +799,19 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 	case USB8897_PID_2:
+ 		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
+ 		strcpy(adapter->fw_name, USB8897_DEFAULT_FW_NAME);
++		adapter->ext_scan = true;
+ 		break;
+ 	case USB8766_PID_1:
+ 	case USB8766_PID_2:
+ 		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K;
+ 		strcpy(adapter->fw_name, USB8766_DEFAULT_FW_NAME);
++		adapter->ext_scan = true;
+ 		break;
+ 	case USB8801_PID_1:
+ 	case USB8801_PID_2:
+ 		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K;
+ 		strcpy(adapter->fw_name, USB8801_DEFAULT_FW_NAME);
++		adapter->ext_scan = false;
+ 		break;
+ 	case USB8797_PID_1:
+ 	case USB8797_PID_2:
+-- 
+1.8.1.4
 
-Cheers,
-
-
---=20
-Antonio Quartulli
-
-
---SfPJnV8AxjQwDn3ub0C0L3GhEPo05FrbC
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJUtMUOAAoJEJgn97Bh2u9epwsQAKoKbrBq3FgmGy35F45JqCSh
-KZ/pYNx0ilflVMAUDr6v0SDYoYcGEHZcW+gliLtagbjx8H6lgqCl6tB4uGSHNyUQ
-fYPtzx32mMEQB4f2VjXAONvdb8DzQHXzqd6wUDRHBHOgYL65TSLSG8qzvkQixwwU
-KxOM3rAq8hYlt8kgFTiczyIpLdxoo6LIo0wXko+erYTY9wRIQTVLyYbhf8Mct/cH
-MjDjmX31AlmtbigBwOZLbNIbjIkwG8oJfzRycGb24pwZya5XOLDOBoDLaKRyOSHl
-Lp/oSz6IqyoBSh+Kr6NwiWVHLBIW05LT9g+klIadE4VK8S6OoZxvIitDn1QWHgt/
-77KRwFzyj6v+eCJbe5XGlGUNfoYJ+UeK/rxCLHdZtxDx/d4LB1SHxoaHH6tfPcUF
-YOIDUUL+Eq1IUeIh6WRzD2ryL3861Pc/9DDo/CWgohUl8+Jp8VV1bTe2Dc1bxGGh
-OuyIrgy6r1Kf0zyM343j8zgO5HNpFyXndAzyPtn5jSuGONlWLYqCTgQqtT5BwQSL
-XWyQS5+Q62B53ek9RvJQN4FMJMmbfFVR1B+faByv1orBXNxqKSOplMf8rnGMCmKW
-QY0Mk8w2OIPOmx91IkI3X7/uF/GkobwWwQ34ZdR+n15RnZlZF/earz3kj6VPykIS
-O5z7QlxaTi/aT5oleHwd
-=fb4b
------END PGP SIGNATURE-----
-
---SfPJnV8AxjQwDn3ub0C0L3GhEPo05FrbC--
