@@ -1,55 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:62174 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045AbbASAYm (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58927 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750917AbbAULM5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 19:24:42 -0500
-Received: by mail-qa0-f42.google.com with SMTP id dc16so21959753qab.1
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 16:24:41 -0800 (PST)
+	Wed, 21 Jan 2015 06:12:57 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0LB8iSP007636
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:12:57 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s09vs9ggt-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:12:57 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yogeshp@marvell.com>,
+	<nishants@marvell.com>, <frankh@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/3] mwifiex: add support for SD8801
+Date: Wed, 21 Jan 2015 22:12:09 +0530
+Message-ID: <1421858531-4536-1-git-send-email-patila@marvell.com> (sfid-20150121_121301_153457_A863C755)
 MIME-Version: 1.0
-In-Reply-To: <878uh06ulp.fsf@kamboji.qca.qualcomm.com>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051043.31866.53087.stgit@114-36-241-182.dynamic.hinet.net>
-	<878uh06ulp.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 19 Jan 2015 08:24:41 +0800
-Message-ID: <CAAfg0W4cns51+B_imf1jGWOmA0S8jqNFR+6epRxv8qqTgvBAgg@mail.gmail.com> (sfid-20150119_012451_713381_43330150)
-Subject: Re: [PATCH 1/7] net: wireless: wcn36xx: add wcn3620 chip type definition
-From: Andy Green <andy.green@linaro.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 January 2015 at 22:17, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Andy Green <andy.green@linaro.org> writes:
->
->> Convert the list of chip types to an enum, add the default
->> UNKNOWN type and a type for WCN3620 chip
->>
->> Signed-off-by: Andy Green <andy.green@linaro.org>
->
-> Please just use "wcn36xx: ", you should drop "net: wireless: " entirely.
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-OK.
+SD8801 is Marvell's 1x1 802.11bgn offering.
+This patch adds Device IDs for SD8801 and also defines card
+structure which has definition for register offsets, buffer sizes etc.
 
-Can you help me understand what you'd like to see happen with the chip
-variant detection stuff?
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Frank Huang <frankh@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c |  5 +++++
+ drivers/net/wireless/mwifiex/sdio.h | 15 +++++++++++++++
+ 2 files changed, 20 insertions(+)
 
-There's a comment sent to one list only saying it might be preferable
-to keep the old detection code as the default.  But there are no
-in-tree users of wcn36xx (mainly due to PIL not being in mainline, I
-guess).
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index a70f1033..cee107f 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -282,6 +282,9 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ #define SDIO_DEVICE_ID_MARVELL_8897   (0x912d)
+ /* Device ID for SD8887 */
+ #define SDIO_DEVICE_ID_MARVELL_8887   (0x9135)
++/* Device ID for SD8801 */
++#define SDIO_DEVICE_ID_MARVELL_8801   (0x9139)
++
+ 
+ /* WLAN IDs */
+ static const struct sdio_device_id mwifiex_ids[] = {
+@@ -295,6 +298,8 @@ static const struct sdio_device_id mwifiex_ids[] = {
+ 		.driver_data = (unsigned long) &mwifiex_sdio_sd8897},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887),
+ 		.driver_data = (unsigned long)&mwifiex_sdio_sd8887},
++	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8801),
++		.driver_data = (unsigned long)&mwifiex_sdio_sd8801},
+ 	{},
+ };
+ 
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 895eea0..a4bb0db 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -34,6 +34,7 @@
+ #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
+ #define SD8897_DEFAULT_FW_NAME "mrvl/sd8897_uapsta.bin"
+ #define SD8887_DEFAULT_FW_NAME "mrvl/sd8887_uapsta.bin"
++#define SD8801_DEFAULT_FW_NAME "mrvl/sd8801_uapsta.bin"
+ 
+ #define BLOCK_MODE	1
+ #define BYTE_MODE	0
+@@ -474,6 +475,20 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
+ 	.auto_tdls = true,
+ };
+ 
++static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
++	.firmware = SD8801_DEFAULT_FW_NAME,
++	.reg = &mwifiex_reg_sd87xx,
++	.max_ports = 16,
++	.mp_agg_pkt_limit = 8,
++	.supports_sdio_new_mode = false,
++	.has_control_mask = true,
++	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
++	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
++	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
++	.supports_fw_dump = false,
++	.auto_tdls = false,
++};
++
+ /*
+  * .cmdrsp_complete handler
+  */
+-- 
+1.8.1.4
 
-The old test's equivalence that AC == 3680 seems kind of weak to me
-and establishing the type must be passed in from platform code
-reflects the situation that there's no public way to detect the chip
-type from Qualcomm.  In the second not-for-upstream series I use that
-to pass it in from DT, which is how it'd be normally used.
-
--Andy
-
-> --
-> Kalle Valo
