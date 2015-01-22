@@ -1,53 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53875 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751862AbbANKq1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 05:46:27 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0EAOPIw023688
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 02:46:26 -0800
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1rv520pv15-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 02:46:26 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	<gaoqs@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 01/10] mwifiex: do not send regulatory update while starting AP
-Date: Wed, 14 Jan 2015 21:45:29 +0530
-Message-ID: <1421252138-30157-2-git-send-email-patila@marvell.com> (sfid-20150114_114629_867755_7624A662)
-In-Reply-To: <1421252138-30157-1-git-send-email-patila@marvell.com>
-References: <1421252138-30157-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754540AbbAVUeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:34:25 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 25/38] iwlwifi: mvm: add support for new LTR command
+Date: Thu, 22 Jan 2015 22:33:16 +0200
+Message-Id: <1421958809-3371-25-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214446_456852_82A05B25)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When regulatory domain changes, cfg80211 already issues request
-to change regulatory domain to driver via reg_notifier.
-There is no need to set regulatory again during start_ap.
+This new command will give finer granularity to configure
+the platform.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h      |  2 ++
+ drivers/net/wireless/iwlwifi/mvm/fw-api-power.h | 20 ++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/fw.c           | 38 +++++++++++++++++++------
+ 3 files changed, 51 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 56e50d6..85795f9 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1737,7 +1737,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
- 		priv->adapter->config_bands = config_bands;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 4aa26b2..b998aaf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -241,6 +241,7 @@ enum iwl_ucode_tlv_flag {
+  * @IWL_UCODE_TLV_API_SF_NO_DUMMY_NOTIF: ucode supports disabling dummy notif.
+  * @IWL_UCODE_TLV_API_FRAGMENTED_SCAN: This ucode supports active dwell time
+  *	longer than the passive one, which is essential for fragmented scan.
++ * IWL_UCODE_TLV_API_HDC_PHASE_0: ucode supports finer configuration of LTR
+  * @IWL_UCODE_TLV_API_BASIC_DWELL: use only basic dwell time in scan command,
+  *	regardless of the band or the number of the probes. FW will calculate
+  *	the actual dwell time.
+@@ -255,6 +256,7 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_LMAC_SCAN		= BIT(6),
+ 	IWL_UCODE_TLV_API_SF_NO_DUMMY_NOTIF	= BIT(7),
+ 	IWL_UCODE_TLV_API_FRAGMENTED_SCAN	= BIT(8),
++	IWL_UCODE_TLV_API_HDC_PHASE_0		= BIT(10),
+ 	IWL_UCODE_TLV_API_BASIC_DWELL		= BIT(13),
+ 	IWL_UCODE_TLV_API_SCD_CFG		= BIT(15),
+ 	IWL_UCODE_TLV_API_SINGLE_SCAN_EBS	= BIT(16),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
+index 4300200..4fc0938b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
+@@ -92,14 +92,32 @@ enum iwl_ltr_config_flags {
+ };
  
- 	mwifiex_set_uap_rates(bss_cfg, params);
--	mwifiex_send_domain_info_cmd_fw(wiphy);
+ /**
++ * struct iwl_ltr_config_cmd_v1 - configures the LTR
++ * @flags: See %enum iwl_ltr_config_flags
++ */
++struct iwl_ltr_config_cmd_v1 {
++	__le32 flags;
++	__le32 static_long;
++	__le32 static_short;
++} __packed; /* LTR_CAPABLE_API_S_VER_1 */
++
++#define LTR_VALID_STATES_NUM 4
++
++/**
+  * struct iwl_ltr_config_cmd - configures the LTR
+  * @flags: See %enum iwl_ltr_config_flags
++ * @static_long:
++ * @static_short:
++ * @ltr_cfg_values:
++ * @ltr_short_idle_timeout:
+  */
+ struct iwl_ltr_config_cmd {
+ 	__le32 flags;
+ 	__le32 static_long;
+ 	__le32 static_short;
+-} __packed;
++	__le32 ltr_cfg_values[LTR_VALID_STATES_NUM];
++	__le32 ltr_short_idle_timeout;
++} __packed; /* LTR_CAPABLE_API_S_VER_2 */
  
- 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
- 		kfree(bss_cfg);
+ /* Radio LP RX Energy Threshold measured in dBm */
+ #define POWER_LPRX_RSSI_THRESHOLD	75
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index 2e12f41..a322a5e 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -499,6 +499,35 @@ int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, enum iwl_fw_dbg_conf conf_id)
+ 	return ret;
+ }
+ 
++static int iwl_mvm_config_ltr_v1(struct iwl_mvm *mvm)
++{
++	struct iwl_ltr_config_cmd_v1 cmd_v1 = {
++		.flags = cpu_to_le32(LTR_CFG_FLAG_FEATURE_ENABLE),
++	};
++
++	if (!mvm->trans->ltr_enabled)
++		return 0;
++
++	return iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0,
++				    sizeof(cmd_v1), &cmd_v1);
++}
++
++static int iwl_mvm_config_ltr(struct iwl_mvm *mvm)
++{
++	struct iwl_ltr_config_cmd cmd = {
++		.flags = cpu_to_le32(LTR_CFG_FLAG_FEATURE_ENABLE),
++	};
++
++	if (!mvm->trans->ltr_enabled)
++		return 0;
++
++	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_HDC_PHASE_0))
++		return iwl_mvm_config_ltr_v1(mvm);
++
++	return iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0,
++				    sizeof(cmd), &cmd);
++}
++
+ int iwl_mvm_up(struct iwl_mvm *mvm)
+ {
+ 	int ret, i;
+@@ -604,14 +633,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	/* Initialize tx backoffs to the minimal possible */
+ 	iwl_mvm_tt_tx_backoff(mvm, 0);
+ 
+-	if (mvm->trans->ltr_enabled) {
+-		struct iwl_ltr_config_cmd cmd = {
+-			.flags = cpu_to_le32(LTR_CFG_FLAG_FEATURE_ENABLE),
+-		};
+-
+-		WARN_ON(iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0,
+-					     sizeof(cmd), &cmd));
+-	}
++	WARN_ON(iwl_mvm_config_ltr(mvm));
+ 
+ 	ret = iwl_mvm_power_update_device(mvm);
+ 	if (ret)
 -- 
-1.8.1.4
+1.9.1
 
