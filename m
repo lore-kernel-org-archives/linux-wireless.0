@@ -1,58 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:39832 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755621AbbAFShC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 13:37:02 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/10] brcmfmac: new device support and more
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com>
-Date: Tue, 06 Jan 2015 20:36:56 +0200
-In-Reply-To: <1419162233-19492-1-git-send-email-arend@broadcom.com> (Arend van
-	Spriel's message of "Sun, 21 Dec 2014 12:43:43 +0100")
-Message-ID: <87fvbnycvr.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_193706_828840_9C7C25E1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754559AbbAVUei (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:34:38 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 31/38] iwlwifi: mvm: BT Coex - set all the co-running values to 0
+Date: Thu, 22 Jan 2015 22:33:22 +0200
+Message-Id: <1421958809-3371-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214447_357596_497040BC)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+With this value, we de-facto disable the feature. Since it
+is not working yet, disable it completely.
 
-> Here a first batch for v3.20. This series adds support for the
-> BCM43340 and BCM43341 SDIO chipsets. A number of changes are
-> related to AP mode and some fixes of potential issues that do
-> not seem to qualify for the wireless tree.
->
-> This series is intended for v3.20 and applies to the master
-> branch of the *new* wireless-next repository.
->
-> Arend van Spriel (5):
->   brcmfmac: Add support for bcm43340/1 wireless chipsets
->   brcmfmac: get rid of duplicate SDIO device identifiers
->   brcmfmac: remove unused/duplicate defines in chip.c
->   brcmfmac: follow user-space regulatory domain selection
->   brcmfmac: enable 802.11d support in firmware
->
-> Hante Meuleman (5):
->   brcmfmac: Fix incorrect casting of 64 bit physical address.
->   brcmfmac: Fix possible dereference of NULL pointer.
->   brcmfmac: Fix WEP configuration for AP mode.
->   brcmfmac: Change error log in standard log for rxbufpost.
->   brcmfmac: signal completion of 802.1x.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex.c        | 16 ++++++++--------
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 16 ++++++++--------
+ 2 files changed, 16 insertions(+), 16 deletions(-)
 
-I applied these patches:
-
-98027769828f brcmfmac: enable 802.11d support in firmware
-6b89dcb35bfc brcmfmac: signal completion of 802.1x.
-63db1a499cee brcmfmac: follow user-space regulatory domain selection
-d2e2472cd197 brcmfmac: Change error log in standard log for rxbufpost.
-118eb304d055 brcmfmac: Fix WEP configuration for AP mode.
-f714e58e19a5 brcmfmac: remove unused/duplicate defines in chip.c
-83297aaa8fde brcmfmac: Fix incorrect casting of 64 bit physical address.
-
-I dropped two due based on discussion and one patch didn't apply.
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
+index d2fd48c..1ec4d55 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
+@@ -342,7 +342,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 12,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000001),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -363,7 +363,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 20,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000002),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -384,7 +384,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 21,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000003),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -405,7 +405,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 23,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000004),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -426,7 +426,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 27,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000005),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -447,7 +447,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 30,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000006),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -468,7 +468,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 32,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000007),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -489,7 +489,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 33,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000008),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+index 973f288..d530ef3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+@@ -330,7 +330,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 12,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000001),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -351,7 +351,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 20,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000002),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -372,7 +372,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 21,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000003),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -393,7 +393,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 23,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000004),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -414,7 +414,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 27,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000005),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -435,7 +435,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 30,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000006),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -456,7 +456,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 32,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000007),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+@@ -477,7 +477,7 @@ static const struct corunning_block_luts antenna_coupling_ranges[] = {
+ 	{
+ 		.range = 33,
+ 		.lut20 = {
+-			cpu_to_le32(0x00000008),  cpu_to_le32(0x00000000),
++			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
+ 			cpu_to_le32(0x00000000),  cpu_to_le32(0x00000000),
 -- 
-Kalle Valo
+1.9.1
+
