@@ -1,222 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47583 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750889AbbAULNu (ORCPT
+Received: from 16.mo1.mail-out.ovh.net ([178.33.104.224]:42165 "EHLO
+	16.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbbAVURs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2015 06:13:50 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0LBDeXu010869
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:13:50 -0800
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1s09vs9gje-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:13:50 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yogeshp@marvell.com>,
-	<nishants@marvell.com>, <frankh@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 3/3] mwifiex: selectively choose ext_scan support
-Date: Wed, 21 Jan 2015 22:12:11 +0530
-Message-ID: <1421858531-4536-3-git-send-email-patila@marvell.com> (sfid-20150121_121353_128877_AC22EEF3)
-In-Reply-To: <1421858531-4536-1-git-send-email-patila@marvell.com>
-References: <1421858531-4536-1-git-send-email-patila@marvell.com>
+	Thu, 22 Jan 2015 15:17:48 -0500
+Received: from mail434.ha.ovh.net (gw6.ovh.net [213.251.189.206])
+	by mo1.mail-out.ovh.net (Postfix) with SMTP id 31E7EFFA041
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 16:30:53 +0100 (CET)
+From: clement.perrochaud@effinnov.com
+To: linux-nfc@lists.01.org
+Cc: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
+	<clement.perrochaud@effinnov.com>, sunil.jogi@nxp.com,
+	jerome.pele@nxp.com, Charles.Gorand-Effinnov@nxp.com,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, robh+dt@kernel.org, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, davem@davemloft.net, grant.likely@linaro.org,
+	clement.perrochaud@nxp.com, lefrique@marvell.com,
+	christophe.ricard@gmail.com, cuissard@marvell.com,
+	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 0/4] NFC: nxp-nci: Add support for NXP-NCI NFC controllers
+Date: Thu, 22 Jan 2015 16:27:36 +0100
+Message-Id: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com> (sfid-20150122_211753_356800_DB063FBE)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some devices do not support extended scan.
-This patch adds support to enable ext_scan selectively.
-For SD/PCIe interfaces, deefine ext_scan_support as part of
-card structure and use it to initialize ext_scan in adapter
-during registering device. For USB interfaces, we initialize
-ext_scan during register_dev handler.
+From: Clément Perrochaud <clement.perrochaud@effinnov.com>
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/init.c | 2 +-
- drivers/net/wireless/mwifiex/pcie.c | 2 ++
- drivers/net/wireless/mwifiex/pcie.h | 3 +++
- drivers/net/wireless/mwifiex/sdio.c | 2 ++
- drivers/net/wireless/mwifiex/sdio.h | 8 ++++++++
- drivers/net/wireless/mwifiex/usb.c  | 3 +++
- 6 files changed, 19 insertions(+), 1 deletion(-)
+This patch brings support for the NXP-NCI NFC controllers family.
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index b115e0f..8004d14 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -294,7 +294,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	memset(&adapter->arp_filter, 0, sizeof(adapter->arp_filter));
- 	adapter->arp_filter_size = 0;
- 	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
--	adapter->ext_scan = true;
-+	adapter->ext_scan = false;
- 	adapter->key_api_major_ver = 0;
- 	adapter->key_api_minor_ver = 0;
- 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index a460b0e..824a78b 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -204,6 +204,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 		card->pcie.blksz_fw_dl = data->blksz_fw_dl;
- 		card->pcie.tx_buf_size = data->tx_buf_size;
- 		card->pcie.supports_fw_dump = data->supports_fw_dump;
-+		card->pcie.ext_scan_support = data->ext_scan_support;
- 	}
- 
- 	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
-@@ -2563,6 +2564,7 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	adapter->mem_type_mapping_tbl = mem_type_mapping_tbl;
- 	adapter->num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl);
- 	strcpy(adapter->fw_name, card->pcie.firmware);
-+	adapter->ext_scan = card->pcie.ext_scan_support;
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
-index 200e8b0..295e66b 100644
---- a/drivers/net/wireless/mwifiex/pcie.h
-+++ b/drivers/net/wireless/mwifiex/pcie.h
-@@ -206,6 +206,7 @@ struct mwifiex_pcie_device {
- 	u16 blksz_fw_dl;
- 	u16 tx_buf_size;
- 	bool supports_fw_dump;
-+	u8 ext_scan_support;
- };
- 
- static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
-@@ -214,6 +215,7 @@ static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
- 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.supports_fw_dump = false,
-+	.ext_scan_support = true,
- };
- 
- static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
-@@ -222,6 +224,7 @@ static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
- 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
- 	.supports_fw_dump = true,
-+	.ext_scan_support = true,
- };
- 
- struct mwifiex_evt_buf_desc {
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index cee107f..01c157d 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -107,6 +107,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 		card->mp_rx_agg_buf_size = data->mp_rx_agg_buf_size;
- 		card->supports_fw_dump = data->supports_fw_dump;
- 		card->auto_tdls = data->auto_tdls;
-+		card->ext_scan = data->ext_scan_support;
- 	}
- 
- 	sdio_claim_host(func);
-@@ -1887,6 +1888,7 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
- 	}
- 
- 	adapter->auto_tdls = card->auto_tdls;
-+	adapter->ext_scan = card->ext_scan;
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index a4bb0db..1d58f25 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -256,6 +256,7 @@ struct sdio_mmc_card {
- 
- 	u8 *mp_regs;
- 	u8 auto_tdls;
-+	u8 ext_scan;
- 
- 	struct mwifiex_sdio_mpa_tx mpa_tx;
- 	struct mwifiex_sdio_mpa_rx mpa_rx;
-@@ -273,6 +274,7 @@ struct mwifiex_sdio_device {
- 	u32 mp_tx_agg_buf_size;
- 	u32 mp_rx_agg_buf_size;
- 	u8 auto_tdls;
-+	u8 ext_scan_support;
- };
- 
- static const struct mwifiex_sdio_card_reg mwifiex_reg_sd87xx = {
-@@ -417,6 +419,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.supports_fw_dump = false,
- 	.auto_tdls = false,
-+	.ext_scan_support = false,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 = {
-@@ -431,6 +434,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 = {
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.supports_fw_dump = false,
- 	.auto_tdls = false,
-+	.ext_scan_support = true,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 = {
-@@ -445,6 +449,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 = {
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.supports_fw_dump = false,
- 	.auto_tdls = false,
-+	.ext_scan_support = true,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
-@@ -459,6 +464,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
- 	.supports_fw_dump = true,
- 	.auto_tdls = false,
-+	.ext_scan_support = true,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
-@@ -473,6 +479,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
- 	.supports_fw_dump = false,
- 	.auto_tdls = true,
-+	.ext_scan_support = true,
- };
- 
- static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
-@@ -487,6 +494,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.supports_fw_dump = false,
- 	.auto_tdls = false,
-+	.ext_scan_support = true,
- };
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 50517b7..2238730 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -799,16 +799,19 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 	case USB8897_PID_2:
- 		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
- 		strcpy(adapter->fw_name, USB8897_DEFAULT_FW_NAME);
-+		adapter->ext_scan = true;
- 		break;
- 	case USB8766_PID_1:
- 	case USB8766_PID_2:
- 		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K;
- 		strcpy(adapter->fw_name, USB8766_DEFAULT_FW_NAME);
-+		adapter->ext_scan = true;
- 		break;
- 	case USB8801_PID_1:
- 	case USB8801_PID_2:
- 		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K;
- 		strcpy(adapter->fw_name, USB8801_DEFAULT_FW_NAME);
-+		adapter->ext_scan = false;
- 		break;
- 	case USB8797_PID_1:
- 	case USB8797_PID_2:
+It has been successfully tested on the following SoC boards:
+ - BeagleBone
+ - BeagleBone Black
+ - Raspberry Pi B
+ - Raspberry Pi B+
+
+The submission is broken into four patches:
+ - The first one adds firmware download support to NCI ;
+ - The second one adds the NXP-NCI driver's core ;
+ - The third one adds I2C support to the driver ;
+ - The fourth one allows for module removal during download.
+
+It is based on 767dec21d7f5a9787401ff44568852cb3782de64 (Merge tag
+'nfc-next-3.19-1' of nfc-next into wireless-next) from the nfc-next master
+branch.
+
+Clément Perrochaud (4):
+  NFC: nci: Add FWDL support
+  NFC: nxp-nci: Add support for NXP NCI chips
+  NFC: nxp-nci_i2c: Add I2C support to NXP NCI driver
+  NFC: nxp-nci: Allow module removal during download
+
+ .../devicetree/bindings/net/nfc/nxp-nci.txt        |  35 ++
+ MAINTAINERS                                        |   9 +-
+ drivers/nfc/Kconfig                                |   2 +
+ drivers/nfc/Makefile                               |   1 +
+ drivers/nfc/nxp-nci/Kconfig                        |  24 ++
+ drivers/nfc/nxp-nci/Makefile                       |  11 +
+ drivers/nfc/nxp-nci/core.c                         | 186 ++++++++
+ drivers/nfc/nxp-nci/firmware.c                     | 324 ++++++++++++++
+ drivers/nfc/nxp-nci/i2c.c                          | 468 +++++++++++++++++++++
+ drivers/nfc/nxp-nci/nxp-nci.h                      |  91 ++++
+ include/linux/platform_data/nxp-nci.h              |  27 ++
+ include/net/nfc/nci_core.h                         |   1 +
+ net/nfc/nci/core.c                                 |  11 +
+ 13 files changed, 1189 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/nxp-nci.txt
+ create mode 100644 drivers/nfc/nxp-nci/Kconfig
+ create mode 100644 drivers/nfc/nxp-nci/Makefile
+ create mode 100644 drivers/nfc/nxp-nci/core.c
+ create mode 100644 drivers/nfc/nxp-nci/firmware.c
+ create mode 100644 drivers/nfc/nxp-nci/i2c.c
+ create mode 100644 drivers/nfc/nxp-nci/nxp-nci.h
+ create mode 100644 include/linux/platform_data/nxp-nci.h
+
 -- 
-1.8.1.4
+Clément Perrochaud
+
+Eff'Innov Technologies
+Caen, Aix-En-Provence, Grenoble
+
+Eff'Innov Technologies
+Campus EffiScience
+2, Esplanade Anton Philips
+14460 Colombelles, FRANCE
+
+http://www.effinnov.com
 
