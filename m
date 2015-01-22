@@ -1,60 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:43798 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751094AbbAOHs0 (ORCPT
+Received: from 6.mo1.mail-out.ovh.net ([46.105.43.205]:42035 "EHLO
+	6.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752061AbbAVQ54 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 02:48:26 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 22 Jan 2015 11:57:56 -0500
+Received: from mail434.ha.ovh.net (gw6.ovh.net [213.251.189.206])
+	by mo1.mail-out.ovh.net (Postfix) with SMTP id 1DF44FFA0B2
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 16:42:34 +0100 (CET)
+From: clement.perrochaud@effinnov.com
+To: linux-nfc@lists.01.org
+Cc: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= <clement.perrochaud@nxp.com>,
+	sunil.jogi@nxp.com, jerome.pele@nxp.com,
+	Charles.Gorand-Effinnov@nxp.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	davem@davemloft.net, grant.likely@linaro.org, lefrique@marvell.com,
+	christophe.ricard@gmail.com, cuissard@marvell.com,
+	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	=?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
+	<clement.perrochaud@effinnov.com>
+Subject: [PATCH 4/4] NFC: nxp-nci: Allow module removal during download
+Date: Thu, 22 Jan 2015 16:27:40 +0100
+Message-Id: <1421940460-14049-5-git-send-email-clement.perrochaud@effinnov.com> (sfid-20150122_175815_668314_2FBDDBA4)
+In-Reply-To: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com>
+References: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21687.29026.962216.812998@gargle.gargle.HOWL> (sfid-20150115_084905_401632_AF3A8E91)
-Date: Thu, 15 Jan 2015 13:20:58 +0530
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-In-Reply-To: <87bnm01ojf.fsf@kamboji.qca.qualcomm.com>
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
-	<21685.35179.110539.780864@gargle.gargle.HOWL>
-	<87bnm01ojf.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> Did you read at all what I wrote above? For example, what if we later
-> don't actually use ATH10K_HTT_MAX_NUM_REFILL anymore?
-> 
-> And the fundamental problem is that I still don't know what fill value
-> you think is the best to use here, and that means neither will the
-> users. That's why the values need to be within ath10k, not expose driver
-> internals and use some magic numbers which are not available anywhere.
+From: Clément Perrochaud <clement.perrochaud@nxp.com>
 
-What magic numbers ?
+Signed-off-by: Clément Perrochaud <clement.perrochaud@nxp.com>
+Signed-off-by: Clément Perrochaud <clement.perrochaud@effinnov.com>
+---
+ drivers/nfc/nxp-nci/core.c     | 7 +++----
+ drivers/nfc/nxp-nci/firmware.c | 9 ++++++---
+ 2 files changed, 9 insertions(+), 7 deletions(-)
 
-How is 16 less a magic number than 128 or 96 or the original 1000 ?
+diff --git a/drivers/nfc/nxp-nci/core.c b/drivers/nfc/nxp-nci/core.c
+index d3643ef..c15606d 100644
+--- a/drivers/nfc/nxp-nci/core.c
++++ b/drivers/nfc/nxp-nci/core.c
+@@ -165,12 +165,11 @@ void nxp_nci_remove(struct nci_dev *ndev)
+ {
+ 	struct nxp_nci_info *info = nci_get_drvdata(ndev);
+ 
+-	mutex_lock(&info->info_lock);
+-
+-	cancel_work_sync(&info->fw_info.work);
+-
+ 	if (info->mode == NXP_NCI_MODE_FW)
+ 		nxp_nci_fw_work_complete(info, -ESHUTDOWN);
++	cancel_work_sync(&info->fw_info.work);
++
++	mutex_lock(&info->info_lock);
+ 
+ 	if (info->phy_ops->disable)
+ 		info->phy_ops->disable(info->phy_id);
+diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
+index 1814e9f..de136e1 100644
+--- a/drivers/nfc/nxp-nci/firmware.c
++++ b/drivers/nfc/nxp-nci/firmware.c
+@@ -166,7 +166,8 @@ static int nxp_nci_fw_send(struct nxp_nci_info *info)
+ 
+ 	if (*fw_info->data == NXP_NCI_FW_CMD_RESET) {
+ 		fw_info->cmd_result = 0;
+-		schedule_work(&fw_info->work);
++		if (fw_info->fw)
++			schedule_work(&fw_info->work);
+ 	} else {
+ 		completion_rc = wait_for_completion_interruptible_timeout(
+ 			&fw_info->cmd_completion, NXP_NCI_FW_ANSWER_TIMEOUT);
+@@ -244,7 +245,8 @@ int nxp_nci_fw_download(struct nci_dev *ndev, const char *firmware_name)
+ 	fw_info->frame_size = 0;
+ 	fw_info->cmd_result = 0;
+ 
+-	schedule_work(&fw_info->work);
++	if (fw_info->fw)
++		schedule_work(&fw_info->work);
+ 
+ fw_download_exit:
+ 	mutex_unlock(&info->info_lock);
+@@ -316,6 +318,7 @@ void nxp_nci_fw_recv_frame(struct nci_dev *ndev, struct sk_buff *skb)
+ 		fw_info->cmd_result = -EIO;
+ 	}
+ 
+-	schedule_work(&fw_info->work);
++	if (fw_info->fw)
++		schedule_work(&fw_info->work);
+ }
+ EXPORT_SYMBOL(nxp_nci_fw_recv_frame);
+-- 
+Clément Perrochaud
 
-> We are not limitting anything more. That's not any different from what
-> your patch does, just that the parameter name is different and the user
-> doesn't have direct access to the internal parameter. Let me explain a
-> bit more how that would work in this HTT fill case:
-> 
-> profile 0 (auto):
-> profile 1 (slow):
->         htt_fill_size = ATH10K_HTT_MAX_NUM_REFILL
->         break:
-> profile 2 (fast):
->         htt_fill_size = 77 /* or whatever */
->         break;
-> 
-> So in this method the user can still choose optimal settings for a
-> certain platform, I assume AP148 in this case, and not know about driver
-> internals. And if there are more parameters we need to change in the
-> future, we can use the same modparam to change that as well.
+Eff'Innov Technologies
+Caen, Aix-En-Provence, Grenoble
 
-You seem to be fixated on some imaginary user that is going to be
-confused by a module parameter.
+Eff'Innov Technologies
+Campus EffiScience
+2, Esplanade Anton Philips
+14460 Colombelles, FRANCE
 
-I don't see how adding more complexity by adding profiles and such
-is going to make a user less confused.
+http://www.effinnov.com
 
-Sujith
