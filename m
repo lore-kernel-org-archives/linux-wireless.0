@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:63245 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757998AbbAITSV (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:38939 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751494AbbAVNy6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 14:18:21 -0500
-Received: by mail-oi0-f45.google.com with SMTP id x69so13263713oia.4
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 11:18:21 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 4/8] wcn36xx: don't process 'valid' descriptors
-Date: Fri,  9 Jan 2015 14:15:48 -0500
-Message-Id: <1420830952-9624-5-git-send-email-me@bobcopeland.com> (sfid-20150109_201852_927936_8B10FF35)
-In-Reply-To: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
-References: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
+	Thu, 22 Jan 2015 08:54:58 -0500
+Received: by mail-la0-f54.google.com with SMTP id hv19so1665522lab.13
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 05:54:57 -0800 (PST)
+Message-ID: <54C1012F.1020400@cogentembedded.com> (sfid-20150122_145504_903491_AC344680)
+Date: Thu, 22 Jan 2015 16:54:55 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>,
+	"Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+CC: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54BDCC06.8090107@linux.intel.com> <87twzincvz.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87twzincvz.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The DMA engine will reset the valid bit after a descriptor is
-complete; any with the valid bit still set may still be in
-use by the hardware, so check that before freeing the descriptor.
+Hello.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c |    2 ++
- 1 file changed, 2 insertions(+)
+On 1/22/2015 4:49 PM, Kalle Valo wrote:
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 73f12f1..3d6bc9b 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -354,6 +354,8 @@ static void reap_tx_dxes(struct wcn36xx *wcn, struct wcn36xx_dxe_ch *ch)
- 	 * and while-do will not make any cycles.
- 	 */
- 	do {
-+		if (ctl->desc->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)
-+			break;
- 		if (ctl->skb) {
- 			dma_unmap_single(NULL, ctl->desc->src_addr_l,
- 					 ctl->skb->len, DMA_TO_DEVICE);
--- 
-1.7.10.4
+>> >From 04d3fa673897ca4ccbea6c76836d0092dba2484a Mon Sep 17 00:00:00 2001
+>> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+>> Date: Tue, 20 Jan 2015 11:14:13 +0800
+>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+
+>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>> twice suspend/resume operations for one WiFi chip to do
+>> the same things. This patch avoid this case.
+
+>> Acked-by: Arend van Spriel <arend@broadcom.com>
+>> Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+>> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+
+> I don't remember giving Acked-by to this (or for matter to anything for
+> a long time). What about Sergei or Arend?
+
+    I haven't ACK'ed this patch either.
+
+WBR, Sergei
 
