@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:55650 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981AbbAKM4W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2015 07:56:22 -0500
-Received: by mail-we0-f178.google.com with SMTP id p10so14914243wes.9
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 04:56:21 -0800 (PST)
-Message-ID: <54B272F0.70307@googlemail.com> (sfid-20150111_135640_361505_627E92E9)
-Date: Sun, 11 Jan 2015 12:56:16 +0000
-From: Chris Clayton <chris2553@googlemail.com>
-MIME-Version: 1.0
-To: kvalo@codeaurora.org
-CC: linux-wireless@vger.kernel.org
-Subject: IWLWIFI - 3.18-stable
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754445AbbAVUec (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:34:32 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 28/38] iwlwifi: mvm: document switch case fall-through in iwl_mvm_send_sta_key
+Date: Thu, 22 Jan 2015 22:33:19 +0200
+Message-Id: <1421958809-3371-28-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214445_812744_89222D24)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: "John W. Linville" <linville@tuxdriver.com>
 
-Having recently bought a new laptop, I've just started using the iwlwifi driver for wireless networking. I found both
-3.18.x and the current development tree to be very unreliable due to frequent disconnections from the router.
+Add a comment indicating that the WLAN_CIPHER_SUITE_WEP104 case falls
+through to the WLAN_CIPHER_SUITE_WEP40 case in iwl_mvm_send_sta_key.
+This will document that the lack of a break is intentional.
 
-Before you merged them into your tree, I grabbed the latest fixes from iwlwifi-fixes tree and applied them to the
-development kernel. Since I did that I've had no problems at all with dropped connections. I then looked at each patch
-to see whether it might be applicable to 3.18 and found that two of them looked as if they should be useful. They are:
+Coverity: CID 1260023
 
-c93edc639392df733c7d72db4376a9add775d18a - iwlwifi: mvm: don't allow diversity if BT Coex / TT forbid it
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/sta.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-a9dc5060bf3a32ac3dad472f15416054b92dc5b5 - iwlwifi: mvm: fix out of bounds access to tid_to_mac80211_ac
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index b93a177..8e413d3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -1196,6 +1196,7 @@ static int iwl_mvm_send_sta_key(struct iwl_mvm *mvm,
+ 		break;
+ 	case WLAN_CIPHER_SUITE_WEP104:
+ 		key_flags |= cpu_to_le16(STA_KEY_FLG_WEP_13BYTES);
++		/* fall through */
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 		key_flags |= cpu_to_le16(STA_KEY_FLG_WEP);
+ 		memcpy(cmd.key + 3, keyconf->key, keyconf->keylen);
+-- 
+1.9.1
 
-With those two applied, I've had stable wireless networking on 3.18.2 and, more recently, 3.18.2. Consequently, they
-seem appropriate for tagging for 3.18-stable, but, as far as I can see, they haven't been tagged for stable. Apologies,
-if I'm mistaken, but if I'm not, could you consider submitting the two patches for inclusion in 3.18, please? Of course,
-they may be appropriate to earlier kernels too - I haven't looked.
-
-Thanks
-
-Chris
