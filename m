@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:46092 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064AbbAITSU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 14:18:20 -0500
-Received: by mail-ob0-f180.google.com with SMTP id wp4so14624199obc.11
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 11:18:20 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
+Received: from mga09.intel.com ([134.134.136.24]:42471 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752842AbbAVUde (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:33:34 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 0/8] wcn36xx locking and a-mpdu fixes
-Date: Fri,  9 Jan 2015 14:15:44 -0500
-Message-Id: <1420830952-9624-1-git-send-email-me@bobcopeland.com> (sfid-20150109_201823_977616_B9063CDA)
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 01/38] iwlwifi: mvm: don't indicate no BA if STA was in powersave
+Date: Thu, 22 Jan 2015 22:32:52 +0200
+Message-Id: <1421958809-3371-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_213340_730923_3F061A29)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Eyal Shapira <eyal@wizery.com>
 
-These patches have been merged into the wcn36xx github tree but have
-been collecting dust for some time.  I pinged Eugene (CCed) who said I
-could just go ahead and send them upstream.  Rebased and re-tested on
-an Android target (and newer checkpatch warnings removed).
+If Tx failed because the STA was in powersave there's no point
+in sending a BAR so avoid indicating AMPDU_NO_BACK to mac80211.
 
-At some point I can go through other patches (not by me) that aren't yet
-upstream and send them along as well, unless someone else wants to do that.
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Bob Copeland (8):
-  wcn36xx: initialize device defaults on start
-  wcn36xx: use !! when assigning int as a boolean
-  wcn36xx: let device generate qos seq numbers
-  wcn36xx: don't process 'valid' descriptors
-  wcn36xx: initialize skb_lock
-  wcn36xx: initialize dxe lock
-  wcn36xx: move set_tx_pdu inside set_tx_data/mgmt
-  wcn36xx: initiate TX BA sessions
-
- drivers/net/wireless/ath/wcn36xx/dxe.c     |    3 +
- drivers/net/wireless/ath/wcn36xx/main.c    |   16 +++++-
- drivers/net/wireless/ath/wcn36xx/smd.c     |   73 +++++++++++++++++++++++-
- drivers/net/wireless/ath/wcn36xx/txrx.c    |   83 ++++++++++++++++++++++------
- drivers/net/wireless/ath/wcn36xx/txrx.h    |    9 ++-
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   20 +++++++
- 6 files changed, 182 insertions(+), 22 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
+index d6cdb77..1fff0f4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
+@@ -656,7 +656,8 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 
+ 		/* Single frame failure in an AMPDU queue => send BAR */
+ 		if (txq_id >= mvm->first_agg_queue &&
+-		    !(info->flags & IEEE80211_TX_STAT_ACK))
++		    !(info->flags & IEEE80211_TX_STAT_ACK) &&
++		    !(info->flags & IEEE80211_TX_STAT_TX_FILTERED))
+ 			info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
+ 
+ 		/* W/A FW bug: seq_ctl is wrong when the status isn't success */
 -- 
-1.7.10.4
+1.9.1
 
