@@ -1,29 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54340 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759196AbbA2Bxw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:53:52 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21704.53700.641822.118302@gargle.gargle.HOWL> (sfid-20150129_025357_650811_01401A7F)
-Date: Wed, 28 Jan 2015 17:40:44 +0530
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/6] ath9k: Add a macro to identify PCOEM chips
-In-Reply-To: <1421633598-4488-4-git-send-email-sujith@msujith.org>
-References: <1421633598-4488-1-git-send-email-sujith@msujith.org>
-	<1421633598-4488-4-git-send-email-sujith@msujith.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:56643 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751671AbbAVLur (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 06:50:47 -0500
+Message-ID: <1421927442.1894.2.camel@sipsolutions.net> (sfid-20150122_125054_650004_2C7D5777)
+Subject: Re: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vadim Kochan <vadim4j@gmail.com>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Date: Thu, 22 Jan 2015 12:50:42 +0100
+In-Reply-To: <20150122113259.GA20706@angus-think.local> (sfid-20150122_124403_278920_529DCA35)
+References: <1421073245-20312-1-git-send-email-vadim4j@gmail.com>
+	 <1421225246.1950.22.camel@sipsolutions.net>
+	 <20150119143457.GA6988@angus-think.wlc.globallogic.com>
+	 <20150122113259.GA20706@angus-think.local>
+	 (sfid-20150122_124403_278920_529DCA35)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
->  #define AR_SREV_9462(_ah) 0
->  #define AR_SREV_9485(_ah) 0
->  #define AR_SREV_9565(_ah) 0
-> +#define AR_SREV_9003_PCOEM(_ah) )
+On Thu, 2015-01-22 at 13:32 +0200, Vadim Kochan wrote:
+> On Mon, Jan 19, 2015 at 04:34:57PM +0200, Vadim Kochan wrote:
+> > On Wed, Jan 14, 2015 at 09:47:26AM +0100, Johannes Berg wrote:
+> > > On Mon, 2015-01-12 at 16:34 +0200, Vadim Kochan wrote:
+> > > 
+> > > > --- a/net/core/net_namespace.c
+> > > > +++ b/net/core/net_namespace.c
+> > > > @@ -361,6 +361,7 @@ struct net *get_net_ns_by_fd(int fd)
+> > > >  	return ERR_PTR(-EINVAL);
+> > > >  }
+> > > >  #endif
+> > > > +EXPORT_SYMBOL_GPL(get_net_ns_by_fd);
+> > > 
+> > > Does this seem OK? Vadim is adding support for using the ns-by-fd in
+> > > nl80211, which can be a module as part of cfg80211.
+> > > 
+> > > johannes
+> > > 
+> > PING ... in case if this email was missed ...
+> > 
+> > Thanks,
+> 
+> Hi Johannes,
+> 
+> Does it mean that patch will be rejected in case if no one answer on
+> this ?:)
 
-Kalle, this is a typo - I'll resend the series.
+Nah, I'll eventually take it :)
 
-Sujith
+johannes
+
