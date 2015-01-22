@@ -1,59 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48012 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751684AbbA2O6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 09:58:08 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.84)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1YGqXm-00035r-6A
-	for linux-wireless@vger.kernel.org; Thu, 29 Jan 2015 15:58:06 +0100
-Message-ID: <1422543484.6322.10.camel@sipsolutions.net> (sfid-20150129_155811_799941_FDB35294)
-Subject: Re: moving the wiki
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Thu, 29 Jan 2015 15:58:04 +0100
-In-Reply-To: <1392060043.4128.37.camel@jlt4.sipsolutions.net> (sfid-20140210_202050_594107_FC8E5876)
-References: <1392060043.4128.37.camel@jlt4.sipsolutions.net>
-	 (sfid-20140210_202050_594107_FC8E5876)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.11.231]:55465 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750832AbbAVNuB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 08:50:01 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Fu\, Zhonghui" <zhonghui.fu@linux.intel.com>
+Cc: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54BDCC06.8090107@linux.intel.com>
+Date: Thu, 22 Jan 2015 15:49:52 +0200
+In-Reply-To: <54BDCC06.8090107@linux.intel.com> (Zhonghui Fu's message of
+	"Tue, 20 Jan 2015 11:31:18 +0800")
+Message-ID: <87twzincvz.fsf@kamboji.qca.qualcomm.com> (sfid-20150122_145007_300964_0DC92631)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's almost been a year, but this finally happened...
+"Fu, Zhonghui" <zhonghui.fu@linux.intel.com> writes:
 
-The new wiki is at https://wireless.wiki.kernel.org/ but the old URL
-(http://wireless.kernel.org/) will continue to work and redirect to the
-new one. Note that right now you need a Linux Foundation identity to be
-able to edit.
+>>From 04d3fa673897ca4ccbea6c76836d0092dba2484a Mon Sep 17 00:00:00 2001
+> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> Date: Tue, 20 Jan 2015 11:14:13 +0800
+> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>
+> WiFi chip has 2 SDIO functions, and PM core will trigger
+> twice suspend/resume operations for one WiFi chip to do
+> the same things. This patch avoid this case.
+>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
+> Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
 
+I don't remember giving Acked-by to this (or for matter to anything for
+a long time). What about Sergei or Arend?
 
->  * I'll keep the read-only wiki at http://wireless.sipsolutions.net/ for
-> a while, in case somebody needs history - you can also download page/history
-> snapshots.
+Please do not add Acked-by, Signed-off-by or any other tags unless
+explicitly specified by the person in question. I'm dropping this,
+please resend with real Acked-by lines.
 
-It's actually at http://linuxwireless.sipsolutions.net/ and is just a
-static dump of the old wiki contents. Please don't copy content I
-removed from the new wiki to the old one - we didn't get permission for
-that content to be licensed under the new wiki's license.
-
-> experience skinning mediawiki
-
-It's actually dokuwiki now, so if anyone wants to restore the old site's
-template/layout a dokuwiki template will be needed.
-
-> Obviously, another consequence is that the wiki markup will change
-> somewhat. Moin and Mediawiki aren't too far from each other (except for
-> table syntax), but there are some things that are different that you'll
-> have to get used to when editing.
-
-Again, dokuwiki - slightly different from moinmoin.
-
-> I think/hope that all this can happen over the next few days. If there
-> are any concerns (other than "don't do it") let me know.
-
-Yeah, well, "days" :-)
-
-johannes
-
+-- 
+Kalle Valo
