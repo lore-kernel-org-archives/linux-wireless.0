@@ -1,84 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:42173 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751407AbbAAA3P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 31 Dec 2014 19:29:15 -0500
-Date: Wed, 31 Dec 2014 16:22:47 -0800 (PST)
-From: David Lang <david@lang.hm>
-To: Arend van Spriel <arend@broadcom.com>
-cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	"Theodore Ts'o" <tytso@mit.edu>, Jiri Kosina <jkosina@suse.cz>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Borislav Petkov <bp@alien8.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"peter@hurleysoftware.com" <peter@hurleysoftware.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH] Revert "cfg80211: make WEXT compatibility
- unselectable"
-In-Reply-To: <54A47B7F.9000403@broadcom.com>
-Message-ID: <alpine.DEB.2.02.1412311620140.3337@nftneq.ynat.uz> (sfid-20150101_012951_369944_A92AE920)
-References: <54A328C2.5080606@lwfinger.net> <alpine.LNX.2.00.1412302341290.31609@pobox.suse.cz> <alpine.LNX.2.00.1412302351030.31609@pobox.suse.cz> <54A3D955.6020809@broadcom.com> <0BA3FCBA62E2DC44AF3030971E174FB31B5DD72E@hasmsx107.ger.corp.intel.com>
- <54A3E1F1.7030807@broadcom.com> <alpine.LNX.2.00.1412311505100.31609@pobox.suse.cz> <54A41000.3040306@broadcom.com> <20141231173113.GA443@thunk.org> <54A45D4D.7070302@broadcom.com> <20141231214421.GA29273@thunk.org> <CA+55aFzp2bWctqpiHyZVC9ZCtW3wN_bPsGjcbqKFgu9KOZtAJw@mail.gmail.com>
- <54A47B7F.9000403@broadcom.com>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:40534 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752331AbbAVSNG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 13:13:06 -0500
+Received: by mail-wg0-f51.google.com with SMTP id l18so3252306wgh.10
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 10:13:04 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Nicholas Mc Guire <der.herr@hofr.at>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless: p54: add handling of the signal case
+Date: Thu, 22 Jan 2015 19:13:01 +0100
+Message-ID: <12702639.FEnIjGW6UW@debian64> (sfid-20150122_191310_360243_372E35F4)
+In-Reply-To: <1421731543-13290-1-git-send-email-der.herr@hofr.at>
+References: <1421731543-13290-1-git-send-email-der.herr@hofr.at>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 31 Dec 2014, Arend van Spriel wrote:
+On Tuesday, January 20, 2015 06:25:43 AM Nicholas Mc Guire wrote:
+> if(!wait_for_completion_interruptible_timeout(...))
+> only handles the timeout case - this patch adds handling the
+> signal case the same as timeout.
+> 
+> Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
 
-> On 12/31/14 22:57, Linus Torvalds wrote:
->> On Wed, Dec 31, 2014 at 1:44 PM, Theodore Ts'o<tytso@mit.edu>  wrote:
->>> 
->>> Yeah, the confusing part is that "ip" tends to use "verb object"
->>> scheme, which is consistent with the Cisco IOS command set it was
->>> trying to emulate.
->> 
->> Side note: does anybody think that was really a good idea to begin
->> with? I mean, Cisco iOS is just _soooo_ universally loved, right?
->
-> I think I sense a bit cynical (under)tone here ;-)
->
->> And yeah, I refuse to use "ip link" or other insane commands. Let's
->> face it, "ifconfig" and "route" are perfectly fine commands, and a
->> whole lot less confusing than "ip" with random crap after it.  I'm
->> really not seeing why that "ip" command was seen as an improvement.
->
-> So does "ip" provide the same functionality as "ifconfig" and "route" or does 
-> the package have more to offer.
+> diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
+> index bc065e8..5367d51 100644
+> --- a/drivers/net/wireless/p54/fwio.c
+> +++ b/drivers/net/wireless/p54/fwio.c
+> @@ -249,9 +250,11 @@ int p54_download_eeprom(struct p54_common *priv, void *buf,
+>  
+>  	p54_tx(priv, skb);
+>  
+> -	if (!wait_for_completion_interruptible_timeout(
+> -	     &priv->eeprom_comp, HZ)) {
+> -		wiphy_err(priv->hw->wiphy, "device does not respond!\n");
+> +	timeout = wait_for_completion_interruptible_timeout(
+> +			&priv->eeprom_comp, HZ);
+> +	if (timeout <= 0) {
+> +		wiphy_err(priv->hw->wiphy,
+> +			"device does not respond or signal received!\n");
+>  		ret = -EBUSY;
+>  	}
+>  	priv->eeprom = NULL;
+> 
 
-there are things that you can do with "ip" that you can't do with "ifconfig", 
-but they tend to be rather esoteric things (hundreds of IP addresses on "eth0" 
-without using eth0:1, eth0:2, etc as one example)
+CHECK: Alignment should match open parenthesis
+#98: FILE: drivers/net/wireless/p54/fwio.c:257:
++               wiphy_err(priv->hw->wiphy,
++                       "device does not respond or signal received!\n");
 
-The trouble is that doing simple things is harder with "ip" than "ifconfig"
+total: 0 errors, 0 warnings, 1 checks, 21 lines checked
 
-David Lang
-
-> The "iw" tool provides much more subcommands to perform different wireless 
-> tasks that are not provided by "iwconfig" and friends. So functionally "iw" 
-> provides a superset. Just have to get equivalent output format to mimic 
-> "iwconfig" as Ted suggested.
->
-> Well, that's something for next year as we are getting close to midnight over 
-> here.
->
-> Regards,
-> Arend
->
->> (Ok, "ip route" isn't any more complex than "route", but "ip link"
->> sure as hell isn't simpler than "ifconfig" for most things I can think
->> of)
->>
->>                       Linus
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
