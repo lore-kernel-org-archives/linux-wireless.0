@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:1952 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751952AbbAGNOO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:14:14 -0500
-From: Avinash Patil <patila@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>
-Date: Wed, 7 Jan 2015 05:12:57 -0800
-Subject: RE: [PATCH v3] cfg80211: check for carrier state only when
- offchanel CAC supported
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A82@SC-VEXCH2.marvell.com> (sfid-20150107_141417_842824_13E36D91)
-References: <1420475584-5533-1-git-send-email-patila@marvell.com>
-	 (sfid-20150105_120344_381788_A7E15DA0),<1420462674.9459.9.camel@sipsolutions.net>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com>,<1420635832.3407.7.camel@sipsolutions.net>
-In-Reply-To: <1420635832.3407.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754445AbbAVUe3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:34:29 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/38] iwlwifi: mvm: rs: use STBC regardless of power save mode
+Date: Thu, 22 Jan 2015 22:33:18 +0200
+Message-Id: <1421958809-3371-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214445_944372_E13E150D)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sure Johannes.
+From: Eyal Shapira <eyal@wizery.com>
 
-We need to fix carrier state handling in ndo_open and this patch would not be needed.
+Tx STBC was used only when in CAM mode or if powersave is disabled.
+Effectively this meant we never used STBC as these modes aren't
+used on most platforms by default. Change that.
 
-Thanks,
-Avinash
-________________________________________
-From: Johannes Berg [johannes@sipsolutions.net]
-Sent: Wednesday, January 07, 2015 6:33 PM
-To: Avinash Patil
-Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo
-Subject: Re: [PATCH v3] cfg80211: check for carrier state only when offchanel CAC supported
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-Based on our discussion, you don't actually want to support something
-like off-channel CAC (which doesn't make much sense anyway), you just
-have some issues with the carrier handling in the driver and bring up
-the carrier ON by default rather than OFF.
-
-I'll drop this completely for now.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index dd2f966..997a383 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -1802,20 +1802,12 @@ out:
+ static bool rs_stbc_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 			  struct iwl_lq_sta *lq_sta)
+ {
+-	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+-	struct ieee80211_vif *vif = mvmsta->vif;
+-	bool sta_ps_disabled = (vif->type == NL80211_IFTYPE_STATION &&
+-				!vif->bss_conf.ps);
+-
+ 	/* Our chip supports Tx STBC and the peer is an HT/VHT STA which
+ 	 * supports STBC of at least 1*SS
+ 	 */
+ 	if (!lq_sta->stbc)
+ 		return false;
+ 
+-	if (!mvm->ps_disabled && !sta_ps_disabled)
+-		return false;
+-
+ 	if (!iwl_mvm_bt_coex_is_mimo_allowed(mvm, sta))
+ 		return false;
+ 
+-- 
+1.9.1
 
