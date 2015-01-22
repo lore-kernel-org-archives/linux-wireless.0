@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:64783 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751794AbbAZILO convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:56310 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236AbbAVONa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 03:11:14 -0500
-Received: by mail-lb0-f175.google.com with SMTP id 10so6290677lbg.6
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 00:11:12 -0800 (PST)
+	Thu, 22 Jan 2015 09:13:30 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Avinash Patil <patila@marvell.com>, Cathy Luo <cluo@marvell.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mwifiex: check driver status in connect and scan handlers
+References: <1420631859-29004-1-git-send-email-akarwar@marvell.com>
+	<CAEhWJFnr28=Q4TFwzwcNoWPQRbUY0+mWu8nbocs3789v8X1PHw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951B1633A3FA@SC-VEXCH1.marvell.com>
+Date: Thu, 22 Jan 2015 16:13:23 +0200
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951B1633A3FA@SC-VEXCH1.marvell.com>
+	(Amitkumar Karwar's message of "Sat, 17 Jan 2015 05:05:25 -0800")
+Message-ID: <87lhkunbss.fsf@kamboji.qca.qualcomm.com> (sfid-20150122_151333_215001_020668EC)
 MIME-Version: 1.0
-In-Reply-To: <87iofugh9w.fsf@kamboji.qca.qualcomm.com>
-References: <1422180674-9592-1-git-send-email-zajec5@gmail.com>
-	<1422190968-14422-1-git-send-email-zajec5@gmail.com>
-	<87iofugh9w.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 26 Jan 2015 09:11:12 +0100
-Message-ID: <CACna6rxHxJNBaQ6coxu_NYw-_NZkC6gnBE_rrXZmdYQT0XSZeg@mail.gmail.com> (sfid-20150126_091120_170869_4049632B)
-Subject: Re: [PATCH V2 1/2] bcma: add empty PCIe hostmode functions if support
- is disabled
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 January 2015 at 07:58, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
+Amitkumar Karwar <akarwar@marvell.com> writes:
+
+> Hi Kalle,
 >
->> This allows us to drop some #ifdef magic (mess).
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->> V2: Return false in bcma_core_pci_is_in_hostmode
->>     Don't (accidentally) modify bcma_host_soc_register_driver
+>>On Wed, Jan 7, 2015 at 5:27 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+>>Ignore scan and connection requests from cfg80211 when driver
+>>unload is in process or previous command has timed out due to
+>>a firmware bug. This patch fixes corner case system crash
+>>issues.
 >
-> It would be far more reliable if you resend the whole patchset instead
-> of resending invidiviual patches within the set. Otherwise the chances
-> are that I apply the wrong version.
+>>Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>>Signed-off-by: Cathy Luo <cluo@marvell.com>
+>>---
+>> drivers/net/wireless/mwifiex/cfg80211.c | 8 ++++++++
+>> drivers/net/wireless/mwifiex/scan.c     | 6 ++++++
+>> 2 files changed, 14 insertions(+)
+>
+> Could you please check this patch? Let me know if you want me to
+> resend it.
 
-Oops. I always take care of removing old versions from patchwork and
-using --in-reply-to, I was hoping it's OK.
+Unfortunately I'm lagging behind because I decided to work on automating
+the patch handling. I'm hoping that makes it easier for me to stay
+up-to-date.
 
-How would you like whole patches to be re-send? Should I resend them
-independently? Or should every patch from the patchset include
-In-Reply-To pointing to its previous version?
+Also it would help me that instead of mailing me people would check the
+status from the patchwork:
 
-Is this just an advise for the future, or would you like me to resend
-this patchset too?
+https://patchwork.kernel.org/project/linux-wireless/list/
+
+If the patch is delegated to me and state is one of "New", "Under
+Review" or "Awaiting Upstream" it means that the patch is in queue of
+patches to process. If it's anything else it means that the patch is
+dropped due to some reason, either for a reason (issues found during
+review etc) or accidentally (which can also happen in rare cases).
+
+This patch is in 'Under Review' state so I will get to it eventually:
+
+https://patchwork.kernel.org/patch/5584351/
+
+And even looks to be in top of my list so it shouldn't take long.
 
 -- 
-Rafał
+Kalle Valo
