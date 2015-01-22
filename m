@@ -1,29 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35465 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753476AbbAWJvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 04:51:47 -0500
-Message-ID: <1422006704.2728.15.camel@sipsolutions.net> (sfid-20150123_105150_475544_4992F378)
-Subject: Re: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vadim Kochan <vadim4j@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 23 Jan 2015 10:51:44 +0100
-In-Reply-To: <1421073245-20312-1-git-send-email-vadim4j@gmail.com> (sfid-20150112_154435_236040_68404050)
-References: <1421073245-20312-1-git-send-email-vadim4j@gmail.com>
-	 (sfid-20150112_154435_236040_68404050)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail1.bemta8.messagelabs.com ([216.82.243.194]:60578 "EHLO
+	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753906AbbAVXnX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 18:43:23 -0500
+Message-ID: <54C18987.4080805@netcommwireless.com> (sfid-20150123_004326_839497_D74AC94E)
+Date: Fri, 23 Jan 2015 10:36:39 +1100
+From: Sourav <sourav.chakraborty@netcommwireless.com>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: iw wlan0 set txpower ...does not work using rt2x00 drivers
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-12 at 16:34 +0200, Vadim Kochan wrote:
-> From: Vadim Kochan <vadim4j@gmail.com>
-> 
-> Added new NL80211_ATTR_NETNS_FD which allows to
-> set namespace via nl80211 by fd.
+Hi All,
+I am using rt2x00 drivers for RT3072 chipset.......for changing tx 
+power, I am issuing "iw wlan0 set txpower fixed <value>".....The command 
+succeeds(no error from command line).
+However the driver is not setting the value of the txpower....can you 
+explain the logic of tx power setting by the driver and how to verify 
+the change in txpower?
 
-Applied.
+-- 
+Warm Regards,
+Sourav
 
-johannes
 
+______________________________________________________________________
+This communication contains information which may be confidential or privileged. The information is intended solely for the use of the individual or entity named above.  If you are not the intended recipient, be aware that any disclosure, copying, distribution or use of the contents of this information is prohibited.  If you have received this communication in error, please notify me by telephone immediately.
+______________________________________________________________________
