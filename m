@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:54208 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433AbbAOLnA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 06:43:00 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH for 3.19 3/3] rtlwifi: rtl8192ee: Fix several bugs
-References: <1421257036-5382-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1421257036-5382-4-git-send-email-Larry.Finger@lwfinger.net>
-Date: Thu, 15 Jan 2015 13:42:52 +0200
-In-Reply-To: <1421257036-5382-4-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Wed, 14 Jan 2015 11:37:16 -0600")
-Message-ID: <87bnm0xoar.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_124308_600605_5BB11301)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754445AbbAVUeX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:34:23 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 24/38] iwlwifi: mvm: BT Coex - fine tune the MPLUT register
+Date: Thu, 22 Jan 2015 22:33:15 +0200
+Message-Id: <1421958809-3371-24-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214445_545674_DE79019C)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+This allow to better preserve the BT performance while
+WiFi is running.
 
-> From: Troy Tan <troy_tan@realsil.com.cn>
->
-> The following bugs are fixed in this driver:
-> 1. Problems parsing C2H CMD
-> 2. An ad-hoc connection can cause a TX freeze.
-> 3. There are additional conditions that cause a TX freeze.
-> 4. The previous code failed to handle situations where an RX
->    descriptor was unavailable.
->
-> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/constants.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Is this really so important that it should go to 3.19? A patch titled
-"Fix several bugs" immediately makes me cautious and then I look at the
-patch itself I see rewriting functions instead of simple bug fixes. From
-a quick look this looks more -next material than 3.19.
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index f98f3ef..d91c46b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -94,7 +94,7 @@
+ #define IWL_MVM_BT_COEX_MPLUT			1
+ #define IWL_MVM_BT_COEX_RRC			1
+ #define IWL_MVM_BT_COEX_TTC			1
+-#define IWL_MVM_BT_COEX_MPLUT_REG0		0x28412201
++#define IWL_MVM_BT_COEX_MPLUT_REG0		0x22002200
+ #define IWL_MVM_BT_COEX_MPLUT_REG1		0x11118451
+ #define IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS	30
+ #define IWL_MVM_FW_MCAST_FILTER_PASS_ALL	0
 -- 
-Kalle Valo
+1.9.1
+
