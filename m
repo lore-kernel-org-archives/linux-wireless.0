@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:42000 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751139AbbAKNAX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2015 08:00:23 -0500
-Received: by mail-wi0-f171.google.com with SMTP id bs8so9853431wib.4
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 05:00:21 -0800 (PST)
-Message-ID: <54B273E1.6030306@googlemail.com> (sfid-20150111_140027_100097_B47C4919)
-Date: Sun, 11 Jan 2015 13:00:17 +0000
-From: Chris Clayton <chris2553@googlemail.com>
-MIME-Version: 1.0
-To: kvalo@codeaurora.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: IWLWIFI - 3.18-stable
-References: <54B272F0.70307@googlemail.com>
-In-Reply-To: <54B272F0.70307@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:56090 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753390AbbAVVeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 16:34:14 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>
+Subject: [PATCH] mac80211: complete scan work immediately if quiesced or suspended
+Date: Thu, 22 Jan 2015 23:34:10 +0200
+Message-Id: <1421962450-7096-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_223417_895507_CD129237)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Doh! Cut and paste error ...
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-On 01/11/15 12:56, Chris Clayton wrote:
-> Hi Kalle,
-> 
-> Having recently bought a new laptop, I've just started using the iwlwifi driver for wireless networking. I found both
-> 3.18.x and the current development tree to be very unreliable due to frequent disconnections from the router.
-> 
-> Before you merged them into your tree, I grabbed the latest fixes from iwlwifi-fixes tree and applied them to the
-> development kernel. Since I did that I've had no problems at all with dropped connections. I then looked at each patch
-> to see whether it might be applicable to 3.18 and found that two of them looked as if they should be useful. They are:
-> 
-> c93edc639392df733c7d72db4376a9add775d18a - iwlwifi: mvm: don't allow diversity if BT Coex / TT forbid it
+It is possible that a deferred scan is queued after the queues are
+flushed in __ieee80211_suspend().  The deferred scan work may be
+scheduled by ROC or ieee80211_stop_poll().
 
-The above should have been:
+To make sure don't start a new scan while suspending, check whether
+we're quiescing or suspended and complete the scan immediately if
+that's the case.
 
-c93edc639392df733c7d72db4376a9add775d18a - iwlwifi: mvm: fix Rx with both chains
+Change-Id: I8ec2c8fb4d969833d45c77045b0f5594cc097086
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-on: https://gerrit.rds.intel.com/r/51405
+Tested-by: IWL Jenkins
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/scan.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> 
-> a9dc5060bf3a32ac3dad472f15416054b92dc5b5 - iwlwifi: mvm: fix out of bounds access to tid_to_mac80211_ac
-> 
-> With those two applied, I've had stable wireless networking on 3.18.2 and, more recently, 3.18.2. Consequently, they
-> seem appropriate for tagging for 3.18-stable, but, as far as I can see, they haven't been tagged for stable. Apologies,
-> if I'm mistaken, but if I'm not, could you consider submitting the two patches for inclusion in 3.18, please? Of course,
-> they may be appropriate to earlier kernels too - I haven't looked.
-> 
-> Thanks
-> 
-> Chris
-> 
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 7807fa4..05f0d71 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -828,6 +828,11 @@ void ieee80211_scan_work(struct work_struct *work)
+ 
+ 	mutex_lock(&local->mtx);
+ 
++	if (!ieee80211_can_run_worker(local)) {
++		aborted = true;
++		goto out_complete;
++	}
++
+ 	sdata = rcu_dereference_protected(local->scan_sdata,
+ 					  lockdep_is_held(&local->mtx));
+ 	scan_req = rcu_dereference_protected(local->scan_req,
+-- 
+1.9.1
+
