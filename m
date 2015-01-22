@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:28511 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbbAMOTP (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:41399 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751595AbbAVLoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 09:19:15 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fill max_num_vdevs for wmi-tlv
-References: <1420713416-14634-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 13 Jan 2015 16:19:01 +0200
-In-Reply-To: <1420713416-14634-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 8 Jan 2015 11:36:56 +0100")
-Message-ID: <87h9vu69wq.fsf@kamboji.qca.qualcomm.com> (sfid-20150113_151918_252456_853DB1D8)
+	Thu, 22 Jan 2015 06:44:04 -0500
+Date: Thu, 22 Jan 2015 13:32:59 +0200
+From: Vadim Kochan <vadim4j@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vadim Kochan <vadim4j@gmail.com>,
+	"Eric W. Biederman" <ebiederm@xmission.com>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
+Message-ID: <20150122113259.GA20706@angus-think.local> (sfid-20150122_124410_277312_D1753058)
+References: <1421073245-20312-1-git-send-email-vadim4j@gmail.com>
+ <1421225246.1950.22.camel@sipsolutions.net>
+ <20150119143457.GA6988@angus-think.wlc.globallogic.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150119143457.GA6988@angus-think.wlc.globallogic.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Mon, Jan 19, 2015 at 04:34:57PM +0200, Vadim Kochan wrote:
+> On Wed, Jan 14, 2015 at 09:47:26AM +0100, Johannes Berg wrote:
+> > On Mon, 2015-01-12 at 16:34 +0200, Vadim Kochan wrote:
+> > 
+> > > --- a/net/core/net_namespace.c
+> > > +++ b/net/core/net_namespace.c
+> > > @@ -361,6 +361,7 @@ struct net *get_net_ns_by_fd(int fd)
+> > >  	return ERR_PTR(-EINVAL);
+> > >  }
+> > >  #endif
+> > > +EXPORT_SYMBOL_GPL(get_net_ns_by_fd);
+> > 
+> > Does this seem OK? Vadim is adding support for using the ns-by-fd in
+> > nl80211, which can be a module as part of cfg80211.
+> > 
+> > johannes
+> > 
+> PING ... in case if this email was missed ...
+> 
+> Thanks,
 
-> Recent commit
-> 30c78167bc6536d9074aa79385a575596343bf69 ("ath10k:
-> set max_num_vdevs based on wmi op version")
-> skipped wmi-tlv case and left max_num_vdevs reset.
-> Make sure it is properly set.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Hi Johannes,
 
-Thanks, applied to ath.git.
+Does it mean that patch will be rejected in case if no one answer on
+this ?:)
 
--- 
-Kalle Valo
+Thanks,
