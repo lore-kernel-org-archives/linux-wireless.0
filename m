@@ -1,87 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:35585 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758119AbbAIRXn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 12:23:43 -0500
-Received: by mail-ig0-f174.google.com with SMTP id hn15so2669157igb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 09:23:41 -0800 (PST)
-Received: from mail-ie0-f176.google.com (mail-ie0-f176.google.com. [209.85.223.176])
-        by mx.google.com with ESMTPSA id r12sm4070406ioe.43.2015.01.09.09.23.41
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Fri, 09 Jan 2015 09:23:41 -0800 (PST)
-Received: by mail-ie0-f176.google.com with SMTP id tr6so16175097ieb.7
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 09:23:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <871tn7zsie.fsf@kamboji.qca.qualcomm.com>
-References: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<871tn7zsie.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 9 Jan 2015 18:23:40 +0100
-Message-ID: <CAKXHbyM2JXBgknL+WqVqkLcPMfWHHF4D8j44Cqenj76Gvd8PXQ@mail.gmail.com> (sfid-20150109_182402_291334_5C0E3DEE)
-Subject: Re: [PATCH] net: wireless: rtlwifi: btcoexist: halbtc8821a2ant:
- Remove some unused functions
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Fengguang Wu <fengguang.wu@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:42471 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753078AbbAVUdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:33:55 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 11/38] iwlwifi: remove unused TLV capability flags
+Date: Thu, 22 Jan 2015 22:33:02 +0200
+Message-Id: <1421958809-3371-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_213405_270879_6829C83B)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All
+The driver doesn't support the firmwares that don't have
+these capabilities. The code that actually used these
+flags has been removed already, but the flags were left
+for an unclear reason. Remove them.
 
-Yes I use sed as Julian said. I have it as part of my git send-email
-script, until a few week ago, it was enough that I removed the
-"drivers/" and changed all "/" to ": "
-I have now been expanded my sed pipe a lot (tell me if anyone is interested).
-But a real script to do this would have been very good I think!
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-It may be, there was some mail problems during the holiday season :-(
-There is not a total consensus on how patcher will was designed.
-I have previously received complaints that I made for large patches of
-too many files.
-Have since tried to make small patches, and it also fit better to have
-more specific paths in the subject line.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 752c72b..731f1db 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -235,10 +235,7 @@ enum iwl_ucode_tlv_flag {
+ 
+ /**
+  * enum iwl_ucode_tlv_api - ucode api
+- * @IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID: wowlan config includes tid field.
+- * @IWL_UCODE_TLV_CAPA_EXTENDED_BEACON: Support Extended beacon notification
+  * @IWL_UCODE_TLV_API_BT_COEX_SPLIT: new API for BT Coex
+- * @IWL_UCODE_TLV_API_CSA_FLOW: ucode can do unbind-bind flow for CSA.
+  * @IWL_UCODE_TLV_API_DISABLE_STA_TX: ucode supports tx_disable bit.
+  * @IWL_UCODE_TLV_API_LMAC_SCAN: This ucode uses LMAC unified scan API.
+  * @IWL_UCODE_TLV_API_SF_NO_DUMMY_NOTIF: ucode supports disabling dummy notif.
+@@ -246,10 +243,7 @@ enum iwl_ucode_tlv_flag {
+  *	longer than the passive one, which is essential for fragmented scan.
+  */
+ enum iwl_ucode_tlv_api {
+-	IWL_UCODE_TLV_API_WOWLAN_CONFIG_TID	= BIT(0),
+-	IWL_UCODE_TLV_CAPA_EXTENDED_BEACON	= BIT(1),
+ 	IWL_UCODE_TLV_API_BT_COEX_SPLIT         = BIT(3),
+-	IWL_UCODE_TLV_API_CSA_FLOW		= BIT(4),
+ 	IWL_UCODE_TLV_API_DISABLE_STA_TX	= BIT(5),
+ 	IWL_UCODE_TLV_API_LMAC_SCAN		= BIT(6),
+ 	IWL_UCODE_TLV_API_SF_NO_DUMMY_NOTIF	= BIT(7),
+-- 
+1.9.1
 
-But I'll try to gather all in one patchset instead this weekend.
-
-
-Kind regards
-Rickard Strandqvist
-
-
-
-2015-01-06 19:14 GMT+01:00 Kalle Valo <kvalo@codeaurora.org>:
-> Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
->
->> Removes some functions that are not used anywhere:
->> ex_halbtc8821a2ant_periodical() ex_halbtc8821a2ant_halt_notify()
->> ex_halbtc8821a2ant_bt_info_notify()
->> ex_halbtc8821a2ant_special_packet_notify()
->> ex_halbtc8821a2ant_connect_notify() ex_halbtc8821a2ant_scan_notify()
->> ex_halbtc8821a2ant_lps_notify() ex_halbtc8821a2ant_ips_notify()
->> ex_halbtc8821a2ant_display_coex_info() ex_halbtc8821a2ant_init_coex_dm()
->> ex_halbtc8821a2ant_init_hwconfig()
->>
->> This was partially found by using a static code analysis program called cppcheck.
->>
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->
-> Rickard, I have dropped all your patches because I lost track which I
-> should apply and which not and I do not want to waste half an hour
-> figuring out. Please resend the ones which are still valid.
->
-> And to make it easier for everyone please group these wireless-drivers
-> cleanup patches into a larger patchset (like 10-15 patches max per
-> patchset). That way it's a lot easier for me tomanage them. Sending one
-> patch a day is not recommended, especially when we are talking trivial
-> cleanup patches like this.
->
-> --
-> Kalle Valo
