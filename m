@@ -1,68 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:53254 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683AbbAVT17 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 14:27:59 -0500
-Received: by mail-oi0-f54.google.com with SMTP id v63so2997425oia.13
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 11:27:59 -0800 (PST)
-Message-ID: <54C14F3D.30206@lwfinger.net> (sfid-20150122_202803_591830_F5BDA3B4)
-Date: Thu, 22 Jan 2015 13:27:57 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Taehee Yoo <ap420073@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: add support to send beacon frame.
-References: <1421827099-17975-1-git-send-email-ap420073@gmail.com>
-In-Reply-To: <1421827099-17975-1-git-send-email-ap420073@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:42471 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753977AbbAVUdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:33:40 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/38] iwlwifi: add new config and PCI IDs for 4165 series
+Date: Thu, 22 Jan 2015 22:32:55 +0200
+Message-Id: <1421958809-3371-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214447_784489_2B4F6605)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/21/2015 01:58 AM, Taehee Yoo wrote:
-> In AP mode, beacon frame is necessary to keep connection.
-> this patch adds a sending beacon frame routine in initialization routine.
->
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/core.c | 11 +++++++++++
->   1 file changed, 11 insertions(+)
+From: Oren Givon <oren.givon@intel.com>
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Add a new config for 4165 series over PCI and insert support
+for two new 4165 series PCI IDs.
 
-Thanks,
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-8000.c   | 10 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/iwlwifi/pcie/drv.c   |  2 ++
+ 3 files changed, 13 insertions(+)
 
-Larry
-
->
-> diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-> index eb20316..a31a127 100644
-> --- a/drivers/net/wireless/rtlwifi/core.c
-> +++ b/drivers/net/wireless/rtlwifi/core.c
-> @@ -1010,6 +1010,16 @@ static int rtl_op_conf_tx(struct ieee80211_hw *hw,
->   	return 0;
->   }
->
-> +static void send_beacon_frame(struct ieee80211_hw *hw,
-> +			      struct ieee80211_vif *vif)
-> +{
-> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> +	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
-> +
-> +	if (skb)
-> +		rtlpriv->intf_ops->adapter_tx(hw, NULL, skb, NULL);
-> +}
-> +
->   static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->   				    struct ieee80211_vif *vif,
->   				    struct ieee80211_bss_conf *bss_conf,
-> @@ -1040,6 +1050,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->
->   				if (rtlpriv->cfg->ops->linked_set_reg)
->   					rtlpriv->cfg->ops->linked_set_reg(hw);
-> +				send_beacon_frame(hw, vif);
->   			}
->   		}
->   		if ((changed & BSS_CHANGED_BEACON_ENABLED &&
->
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index 46e9c9a..9eca533 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -156,6 +156,16 @@ const struct iwl_cfg iwl8260_2ac_cfg = {
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ };
+ 
++const struct iwl_cfg iwl4165_2ac_cfg = {
++	.name = "Intel(R) Dual Band Wireless AC 4165",
++	.fw_name_pre = IWL8000_FW_PRE,
++	IWL_DEVICE_8000,
++	.ht_params = &iwl8000_ht_params,
++	.nvm_ver = IWL8000_NVM_VERSION,
++	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
+ const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless-AC 8260",
+ 	.fw_name_pre = IWL8000_FW_PRE,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
+index fa0bc48..0eaafd8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/iwlwifi/iwl-config.h
+@@ -378,6 +378,7 @@ extern const struct iwl_cfg iwl7265d_2n_cfg;
+ extern const struct iwl_cfg iwl7265d_n_cfg;
+ extern const struct iwl_cfg iwl8260_2n_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_cfg;
++extern const struct iwl_cfg iwl4165_2ac_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
+ #endif /* CONFIG_IWLMVM */
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 3ee8e38..c7820aa 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -411,6 +411,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0004, iwl8260_2n_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x0030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F5, 0x0010, iwl4165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F6, 0x0030, iwl4165_2ac_cfg)},
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
+-- 
+1.9.1
 
