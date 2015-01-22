@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:45054 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755385AbbATRBq (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:45503 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752768AbbAVU6Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 12:01:46 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH V2 for 3.19 4/7] rtlwifi: rtl8192ee: Fix TX hang due to failure to update TX write point
-Date: Tue, 20 Jan 2015 11:01:23 -0600
-Message-Id: <1421773286-1039-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180155_920295_5924C4BC)
-In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 22 Jan 2015 15:58:24 -0500
+Message-ID: <54C1646B.4080409@broadcom.com> (sfid-20150122_215831_494592_E025738A)
+Date: Thu, 22 Jan 2015 21:58:19 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	"Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
+	<brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
+	<meuleman@broadcom.com>, <linville@tuxdriver.com>,
+	<pieterpg@broadcom.com>, <hdegoede@redhat.com>, <wens@csie.org>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54BDCC06.8090107@linux.intel.com> <87twzincvz.fsf@kamboji.qca.qualcomm.com> <54C1012F.1020400@cogentembedded.com>
+In-Reply-To: <54C1012F.1020400@cogentembedded.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Troy Tan <troy_tan@realsil.com.cn>
+On 01/22/15 14:54, Sergei Shtylyov wrote:
+> Hello.
+>
+> On 1/22/2015 4:49 PM, Kalle Valo wrote:
+>
+>>> >From 04d3fa673897ca4ccbea6c76836d0092dba2484a Mon Sep 17 00:00:00 2001
+>>> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+>>> Date: Tue, 20 Jan 2015 11:14:13 +0800
+>>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>
+>>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>>> twice suspend/resume operations for one WiFi chip to do
+>>> the same things. This patch avoid this case.
+>
+>>> Acked-by: Arend van Spriel <arend@broadcom.com>
+>>> Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>>> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+>>> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+>
+>> I don't remember giving Acked-by to this (or for matter to anything for
+>> a long time). What about Sergei or Arend?
+>
+> I haven't ACK'ed this patch either.
 
-Initially, the routine to update the write point in the FIFO buffer was
-coded to save CPU time by not doing the calculation every interrupt. This
-was an error and results in TX hangs.
+I did ACK the initial patch and felt it still valid for this 'V2' patch.
 
-Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [V3.18]
----
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-index 0a006c4..1535680 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-@@ -1049,8 +1049,7 @@ bool rtl92ee_is_tx_desc_closed(struct ieee80211_hw *hw, u8 hw_queue, u16 index)
- 	static u8 stop_report_cnt;
- 	struct rtl8192_tx_ring *ring = &rtlpci->tx_ring[hw_queue];
- 
--	/*checking Read/Write Point each interrupt wastes CPU */
--	if (stop_report_cnt > 15 || !rtlpriv->link_info.busytraffic) {
-+	{
- 		u16 point_diff = 0;
- 		u16 cur_tx_rp, cur_tx_wp;
- 		u32 tmpu32 = 0;
--- 
-2.1.2
-
+Regards,
+Arend
