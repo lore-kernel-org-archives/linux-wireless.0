@@ -1,206 +1,236 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:43953 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758196AbbAITSg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 14:18:36 -0500
-Received: by mail-oi0-f45.google.com with SMTP id x69so13264728oia.4
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 11:18:36 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
+Received: from mga09.intel.com ([134.134.136.24]:34440 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754496AbbAVUeP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:34:15 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 8/8] wcn36xx: initiate TX BA sessions
-Date: Fri,  9 Jan 2015 14:15:52 -0500
-Message-Id: <1420830952-9624-9-git-send-email-me@bobcopeland.com> (sfid-20150109_201848_413142_D7934F8C)
-In-Reply-To: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
-References: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/38] iwlwifi: mvm: generate statistics debugfs code
+Date: Thu, 22 Jan 2015 22:33:11 +0200
+Message-Id: <1421958809-3371-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214447_634368_76B21E28)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, wcn36xx only asks for a TX BA session if it has
-already established one for RX.  Thus, two wcn36xx devices cannot
-do a-mpdu between themselves since they both wait for the other
-to go first.  Fix this by starting a BA session after a few QoS
-data frames have been sent to a STA.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+There's no need to duplicate the structure field name in the string,
+just generate the string in the macro that's there anyway. To keep
+the debugfs output the same, rename one (otherwise unused) field.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c    |   14 ++++++++-
- drivers/net/wireless/ath/wcn36xx/txrx.c    |   45 +++++++++++++++++++++++++++-
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   20 +++++++++++++
- 3 files changed, 77 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/debugfs.c      | 162 +++++++++++-------------
+ drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h |   2 +-
+ 2 files changed, 78 insertions(+), 86 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 972bb3e..0783d2e 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -797,6 +797,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
- 		    vif, sta->addr);
- 
-+	spin_lock_init(&sta_priv->ampdu_lock);
- 	vif_priv->sta = sta_priv;
- 	sta_priv->vif = vif_priv;
- 	/*
-@@ -875,21 +876,32 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
- 			get_sta_index(vif, sta_priv));
- 		wcn36xx_smd_add_ba(wcn);
- 		wcn36xx_smd_trigger_ba(wcn, get_sta_index(vif, sta_priv));
--		ieee80211_start_tx_ba_session(sta, tid, 0);
- 		break;
- 	case IEEE80211_AMPDU_RX_STOP:
- 		wcn36xx_smd_del_ba(wcn, tid, get_sta_index(vif, sta_priv));
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
-+		spin_lock_bh(&sta_priv->ampdu_lock);
-+		sta_priv->ampdu_state[tid] = WCN36XX_AMPDU_START;
-+		spin_unlock_bh(&sta_priv->ampdu_lock);
-+
- 		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
-+		spin_lock_bh(&sta_priv->ampdu_lock);
-+		sta_priv->ampdu_state[tid] = WCN36XX_AMPDU_OPERATIONAL;
-+		spin_unlock_bh(&sta_priv->ampdu_lock);
-+
- 		wcn36xx_smd_add_ba_session(wcn, sta, tid, ssn, 1,
- 			get_sta_index(vif, sta_priv));
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
- 	case IEEE80211_AMPDU_TX_STOP_CONT:
-+		spin_lock_bh(&sta_priv->ampdu_lock);
-+		sta_priv->ampdu_state[tid] = WCN36XX_AMPDU_NONE;
-+		spin_unlock_bh(&sta_priv->ampdu_lock);
-+
- 		ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 		break;
- 	default:
-diff --git a/drivers/net/wireless/ath/wcn36xx/txrx.c b/drivers/net/wireless/ath/wcn36xx/txrx.c
-index 7f0d9e6..9bec823 100644
---- a/drivers/net/wireless/ath/wcn36xx/txrx.c
-+++ b/drivers/net/wireless/ath/wcn36xx/txrx.c
-@@ -111,6 +111,42 @@ static inline struct wcn36xx_vif *get_vif_by_addr(struct wcn36xx *wcn,
- 	wcn36xx_warn("vif %pM not found\n", addr);
- 	return NULL;
- }
-+
-+static void wcn36xx_tx_start_ampdu(struct wcn36xx *wcn,
-+				   struct wcn36xx_sta *sta_priv,
-+				   struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-+	struct ieee80211_sta *sta;
-+	u8 *qc, tid;
-+
-+	if (!conf_is_ht(&wcn->hw->conf))
-+		return;
-+
-+	sta = wcn36xx_priv_to_sta(sta_priv);
-+
-+	if (WARN_ON(!ieee80211_is_data_qos(hdr->frame_control)))
-+		return;
-+
-+	if (skb_get_queue_mapping(skb) == IEEE80211_AC_VO)
-+		return;
-+
-+	qc = ieee80211_get_qos_ctl(hdr);
-+	tid = qc[0] & IEEE80211_QOS_CTL_TID_MASK;
-+
-+	spin_lock(&sta_priv->ampdu_lock);
-+	if (sta_priv->ampdu_state[tid] != WCN36XX_AMPDU_NONE)
-+		goto out_unlock;
-+
-+	if (sta_priv->non_agg_frame_ct++ >= WCN36XX_AMPDU_START_THRESH) {
-+		sta_priv->ampdu_state[tid] = WCN36XX_AMPDU_START;
-+		sta_priv->non_agg_frame_ct = 0;
-+		ieee80211_start_tx_ba_session(sta, tid, 0);
-+	}
-+out_unlock:
-+	spin_unlock(&sta_priv->ampdu_lock);
-+}
-+
- static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
- 				struct wcn36xx *wcn,
- 				struct wcn36xx_vif **vif_priv,
-@@ -121,6 +157,8 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_vif *vif = NULL;
- 	struct wcn36xx_vif *__vif_priv = NULL;
-+	bool is_data_qos;
-+
- 	bd->bd_rate = WCN36XX_BD_RATE_DATA;
- 
- 	/*
-@@ -160,11 +198,16 @@ static void wcn36xx_set_tx_data(struct wcn36xx_tx_bd *bd,
- 	}
- 	*vif_priv = __vif_priv;
- 
-+	is_data_qos = ieee80211_is_data_qos(hdr->frame_control);
-+
- 	wcn36xx_set_tx_pdu(bd,
--			   ieee80211_is_data_qos(hdr->frame_control) ?
-+			   is_data_qos ?
- 			   sizeof(struct ieee80211_qos_hdr) :
- 			   sizeof(struct ieee80211_hdr_3addr),
- 			   skb->len, sta_priv ? sta_priv->tid : 0);
-+
-+	if (sta_priv && is_data_qos)
-+		wcn36xx_tx_start_ampdu(wcn, sta_priv, skb);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+index afd1986..82c09d8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs.c
+@@ -654,10 +654,10 @@ out:
+ 	return ret ?: count;
  }
  
- static void wcn36xx_set_tx_mgmt(struct wcn36xx_tx_bd *bd,
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index f0fb81d..7b41e83 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -32,6 +32,9 @@
- #define WLAN_NV_FILE               "wlan/prima/WCNSS_qcom_wlan_nv.bin"
- #define WCN36XX_AGGR_BUFFER_SIZE 64
+-#define PRINT_STATS_LE32(_str, _val)					\
++#define PRINT_STATS_LE32(_struct, _memb)				\
+ 			 pos += scnprintf(buf + pos, bufsz - pos,	\
+-					  fmt_table, _str,		\
+-					  le32_to_cpu(_val))
++					  fmt_table, #_memb,		\
++					  le32_to_cpu(_struct->_memb))
  
-+/* How many frames until we start a-mpdu TX session */
-+#define WCN36XX_AMPDU_START_THRESH	20
-+
- extern unsigned int wcn36xx_dbg_mask;
+ static ssize_t iwl_dbgfs_fw_rx_stats_read(struct file *file,
+ 					  char __user *user_buf, size_t count,
+@@ -692,97 +692,89 @@ static ssize_t iwl_dbgfs_fw_rx_stats_read(struct file *file,
  
- enum wcn36xx_debug_mask {
-@@ -74,6 +77,13 @@ enum wcn36xx_debug_mask {
- 			       buf, len, false);		\
- } while (0)
+ 	pos += scnprintf(buf + pos, bufsz - pos, fmt_header,
+ 			 "Statistics_Rx - OFDM");
+-	PRINT_STATS_LE32("ina_cnt", ofdm->ina_cnt);
+-	PRINT_STATS_LE32("fina_cnt", ofdm->fina_cnt);
+-	PRINT_STATS_LE32("plcp_err", ofdm->plcp_err);
+-	PRINT_STATS_LE32("crc32_err", ofdm->crc32_err);
+-	PRINT_STATS_LE32("overrun_err", ofdm->overrun_err);
+-	PRINT_STATS_LE32("early_overrun_err", ofdm->early_overrun_err);
+-	PRINT_STATS_LE32("crc32_good", ofdm->crc32_good);
+-	PRINT_STATS_LE32("false_alarm_cnt", ofdm->false_alarm_cnt);
+-	PRINT_STATS_LE32("fina_sync_err_cnt", ofdm->fina_sync_err_cnt);
+-	PRINT_STATS_LE32("sfd_timeout", ofdm->sfd_timeout);
+-	PRINT_STATS_LE32("fina_timeout", ofdm->fina_timeout);
+-	PRINT_STATS_LE32("unresponded_rts", ofdm->unresponded_rts);
+-	PRINT_STATS_LE32("rxe_frame_lmt_overrun",
+-			 ofdm->rxe_frame_limit_overrun);
+-	PRINT_STATS_LE32("sent_ack_cnt", ofdm->sent_ack_cnt);
+-	PRINT_STATS_LE32("sent_cts_cnt", ofdm->sent_cts_cnt);
+-	PRINT_STATS_LE32("sent_ba_rsp_cnt", ofdm->sent_ba_rsp_cnt);
+-	PRINT_STATS_LE32("dsp_self_kill", ofdm->dsp_self_kill);
+-	PRINT_STATS_LE32("mh_format_err", ofdm->mh_format_err);
+-	PRINT_STATS_LE32("re_acq_main_rssi_sum", ofdm->re_acq_main_rssi_sum);
+-	PRINT_STATS_LE32("reserved", ofdm->reserved);
++	PRINT_STATS_LE32(ofdm, ina_cnt);
++	PRINT_STATS_LE32(ofdm, fina_cnt);
++	PRINT_STATS_LE32(ofdm, plcp_err);
++	PRINT_STATS_LE32(ofdm, crc32_err);
++	PRINT_STATS_LE32(ofdm, overrun_err);
++	PRINT_STATS_LE32(ofdm, early_overrun_err);
++	PRINT_STATS_LE32(ofdm, crc32_good);
++	PRINT_STATS_LE32(ofdm, false_alarm_cnt);
++	PRINT_STATS_LE32(ofdm, fina_sync_err_cnt);
++	PRINT_STATS_LE32(ofdm, sfd_timeout);
++	PRINT_STATS_LE32(ofdm, fina_timeout);
++	PRINT_STATS_LE32(ofdm, unresponded_rts);
++	PRINT_STATS_LE32(ofdm, rxe_frame_lmt_overrun);
++	PRINT_STATS_LE32(ofdm, sent_ack_cnt);
++	PRINT_STATS_LE32(ofdm, sent_cts_cnt);
++	PRINT_STATS_LE32(ofdm, sent_ba_rsp_cnt);
++	PRINT_STATS_LE32(ofdm, dsp_self_kill);
++	PRINT_STATS_LE32(ofdm, mh_format_err);
++	PRINT_STATS_LE32(ofdm, re_acq_main_rssi_sum);
++	PRINT_STATS_LE32(ofdm, reserved);
  
-+enum wcn36xx_ampdu_state {
-+	WCN36XX_AMPDU_NONE,
-+	WCN36XX_AMPDU_INIT,
-+	WCN36XX_AMPDU_START,
-+	WCN36XX_AMPDU_OPERATIONAL,
-+};
-+
- #define WCN36XX_HW_CHANNEL(__wcn) (__wcn->hw->conf.chandef.chan->hw_value)
- #define WCN36XX_BAND(__wcn) (__wcn->hw->conf.chandef.chan->band)
- #define WCN36XX_CENTER_FREQ(__wcn) (__wcn->hw->conf.chandef.chan->center_freq)
-@@ -165,6 +175,10 @@ struct wcn36xx_sta {
- 	bool is_data_encrypted;
- 	/* Rates */
- 	struct wcn36xx_hal_supported_rates supported_rates;
-+
-+	spinlock_t ampdu_lock;		/* protects next two fields */
-+	enum wcn36xx_ampdu_state ampdu_state[16];
-+	int non_agg_frame_ct;
- };
- struct wcn36xx_dxe_ch;
- struct wcn36xx {
-@@ -243,4 +257,10 @@ static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
- }
- void wcn36xx_set_default_rates(struct wcn36xx_hal_supported_rates *rates);
+ 	pos += scnprintf(buf + pos, bufsz - pos, fmt_header,
+ 			 "Statistics_Rx - CCK");
+-	PRINT_STATS_LE32("ina_cnt", cck->ina_cnt);
+-	PRINT_STATS_LE32("fina_cnt", cck->fina_cnt);
+-	PRINT_STATS_LE32("plcp_err", cck->plcp_err);
+-	PRINT_STATS_LE32("crc32_err", cck->crc32_err);
+-	PRINT_STATS_LE32("overrun_err", cck->overrun_err);
+-	PRINT_STATS_LE32("early_overrun_err", cck->early_overrun_err);
+-	PRINT_STATS_LE32("crc32_good", cck->crc32_good);
+-	PRINT_STATS_LE32("false_alarm_cnt", cck->false_alarm_cnt);
+-	PRINT_STATS_LE32("fina_sync_err_cnt", cck->fina_sync_err_cnt);
+-	PRINT_STATS_LE32("sfd_timeout", cck->sfd_timeout);
+-	PRINT_STATS_LE32("fina_timeout", cck->fina_timeout);
+-	PRINT_STATS_LE32("unresponded_rts", cck->unresponded_rts);
+-	PRINT_STATS_LE32("rxe_frame_lmt_overrun",
+-			 cck->rxe_frame_limit_overrun);
+-	PRINT_STATS_LE32("sent_ack_cnt", cck->sent_ack_cnt);
+-	PRINT_STATS_LE32("sent_cts_cnt", cck->sent_cts_cnt);
+-	PRINT_STATS_LE32("sent_ba_rsp_cnt", cck->sent_ba_rsp_cnt);
+-	PRINT_STATS_LE32("dsp_self_kill", cck->dsp_self_kill);
+-	PRINT_STATS_LE32("mh_format_err", cck->mh_format_err);
+-	PRINT_STATS_LE32("re_acq_main_rssi_sum", cck->re_acq_main_rssi_sum);
+-	PRINT_STATS_LE32("reserved", cck->reserved);
++	PRINT_STATS_LE32(cck, ina_cnt);
++	PRINT_STATS_LE32(cck, fina_cnt);
++	PRINT_STATS_LE32(cck, plcp_err);
++	PRINT_STATS_LE32(cck, crc32_err);
++	PRINT_STATS_LE32(cck, overrun_err);
++	PRINT_STATS_LE32(cck, early_overrun_err);
++	PRINT_STATS_LE32(cck, crc32_good);
++	PRINT_STATS_LE32(cck, false_alarm_cnt);
++	PRINT_STATS_LE32(cck, fina_sync_err_cnt);
++	PRINT_STATS_LE32(cck, sfd_timeout);
++	PRINT_STATS_LE32(cck, fina_timeout);
++	PRINT_STATS_LE32(cck, unresponded_rts);
++	PRINT_STATS_LE32(cck, rxe_frame_lmt_overrun);
++	PRINT_STATS_LE32(cck, sent_ack_cnt);
++	PRINT_STATS_LE32(cck, sent_cts_cnt);
++	PRINT_STATS_LE32(cck, sent_ba_rsp_cnt);
++	PRINT_STATS_LE32(cck, dsp_self_kill);
++	PRINT_STATS_LE32(cck, mh_format_err);
++	PRINT_STATS_LE32(cck, re_acq_main_rssi_sum);
++	PRINT_STATS_LE32(cck, reserved);
  
-+static inline
-+struct ieee80211_sta *wcn36xx_priv_to_sta(struct wcn36xx_sta *sta_priv)
-+{
-+	return container_of((void *)sta_priv, struct ieee80211_sta, drv_priv);
-+}
-+
- #endif	/* _WCN36XX_H_ */
+ 	pos += scnprintf(buf + pos, bufsz - pos, fmt_header,
+ 			 "Statistics_Rx - GENERAL");
+-	PRINT_STATS_LE32("bogus_cts", general->bogus_cts);
+-	PRINT_STATS_LE32("bogus_ack", general->bogus_ack);
+-	PRINT_STATS_LE32("non_bssid_frames", general->non_bssid_frames);
+-	PRINT_STATS_LE32("filtered_frames", general->filtered_frames);
+-	PRINT_STATS_LE32("non_channel_beacons", general->non_channel_beacons);
+-	PRINT_STATS_LE32("channel_beacons", general->channel_beacons);
+-	PRINT_STATS_LE32("num_missed_bcon", general->num_missed_bcon);
+-	PRINT_STATS_LE32("adc_rx_saturation_time",
+-			 general->adc_rx_saturation_time);
+-	PRINT_STATS_LE32("ina_detection_search_time",
+-			 general->ina_detection_search_time);
+-	PRINT_STATS_LE32("beacon_silence_rssi_a",
+-			 general->beacon_silence_rssi_a);
+-	PRINT_STATS_LE32("beacon_silence_rssi_b",
+-			 general->beacon_silence_rssi_b);
+-	PRINT_STATS_LE32("beacon_silence_rssi_c",
+-			 general->beacon_silence_rssi_c);
+-	PRINT_STATS_LE32("interference_data_flag",
+-			 general->interference_data_flag);
+-	PRINT_STATS_LE32("channel_load", general->channel_load);
+-	PRINT_STATS_LE32("dsp_false_alarms", general->dsp_false_alarms);
+-	PRINT_STATS_LE32("beacon_rssi_a", general->beacon_rssi_a);
+-	PRINT_STATS_LE32("beacon_rssi_b", general->beacon_rssi_b);
+-	PRINT_STATS_LE32("beacon_rssi_c", general->beacon_rssi_c);
+-	PRINT_STATS_LE32("beacon_energy_a", general->beacon_energy_a);
+-	PRINT_STATS_LE32("beacon_energy_b", general->beacon_energy_b);
+-	PRINT_STATS_LE32("beacon_energy_c", general->beacon_energy_c);
+-	PRINT_STATS_LE32("num_bt_kills", general->num_bt_kills);
+-	PRINT_STATS_LE32("mac_id", general->mac_id);
+-	PRINT_STATS_LE32("directed_data_mpdu", general->directed_data_mpdu);
++	PRINT_STATS_LE32(general, bogus_cts);
++	PRINT_STATS_LE32(general, bogus_ack);
++	PRINT_STATS_LE32(general, non_bssid_frames);
++	PRINT_STATS_LE32(general, filtered_frames);
++	PRINT_STATS_LE32(general, non_channel_beacons);
++	PRINT_STATS_LE32(general, channel_beacons);
++	PRINT_STATS_LE32(general, num_missed_bcon);
++	PRINT_STATS_LE32(general, adc_rx_saturation_time);
++	PRINT_STATS_LE32(general, ina_detection_search_time);
++	PRINT_STATS_LE32(general, beacon_silence_rssi_a);
++	PRINT_STATS_LE32(general, beacon_silence_rssi_b);
++	PRINT_STATS_LE32(general, beacon_silence_rssi_c);
++	PRINT_STATS_LE32(general, interference_data_flag);
++	PRINT_STATS_LE32(general, channel_load);
++	PRINT_STATS_LE32(general, dsp_false_alarms);
++	PRINT_STATS_LE32(general, beacon_rssi_a);
++	PRINT_STATS_LE32(general, beacon_rssi_b);
++	PRINT_STATS_LE32(general, beacon_rssi_c);
++	PRINT_STATS_LE32(general, beacon_energy_a);
++	PRINT_STATS_LE32(general, beacon_energy_b);
++	PRINT_STATS_LE32(general, beacon_energy_c);
++	PRINT_STATS_LE32(general, num_bt_kills);
++	PRINT_STATS_LE32(general, mac_id);
++	PRINT_STATS_LE32(general, directed_data_mpdu);
+ 
+ 	pos += scnprintf(buf + pos, bufsz - pos, fmt_header,
+ 			 "Statistics_Rx - HT");
+-	PRINT_STATS_LE32("plcp_err", ht->plcp_err);
+-	PRINT_STATS_LE32("overrun_err", ht->overrun_err);
+-	PRINT_STATS_LE32("early_overrun_err", ht->early_overrun_err);
+-	PRINT_STATS_LE32("crc32_good", ht->crc32_good);
+-	PRINT_STATS_LE32("crc32_err", ht->crc32_err);
+-	PRINT_STATS_LE32("mh_format_err", ht->mh_format_err);
+-	PRINT_STATS_LE32("agg_crc32_good", ht->agg_crc32_good);
+-	PRINT_STATS_LE32("agg_mpdu_cnt", ht->agg_mpdu_cnt);
+-	PRINT_STATS_LE32("agg_cnt", ht->agg_cnt);
+-	PRINT_STATS_LE32("unsupport_mcs", ht->unsupport_mcs);
++	PRINT_STATS_LE32(ht, plcp_err);
++	PRINT_STATS_LE32(ht, overrun_err);
++	PRINT_STATS_LE32(ht, early_overrun_err);
++	PRINT_STATS_LE32(ht, crc32_good);
++	PRINT_STATS_LE32(ht, crc32_err);
++	PRINT_STATS_LE32(ht, mh_format_err);
++	PRINT_STATS_LE32(ht, agg_crc32_good);
++	PRINT_STATS_LE32(ht, agg_mpdu_cnt);
++	PRINT_STATS_LE32(ht, agg_cnt);
++	PRINT_STATS_LE32(ht, unsupport_mcs);
+ 
+ 	mutex_unlock(&mvm->mutex);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
+index bda3a36..928168b 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
++++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-stats.h
+@@ -131,7 +131,7 @@ struct mvm_statistics_rx_phy {
+ 	__le32 sfd_timeout;
+ 	__le32 fina_timeout;
+ 	__le32 unresponded_rts;
+-	__le32 rxe_frame_limit_overrun;
++	__le32 rxe_frame_lmt_overrun;
+ 	__le32 sent_ack_cnt;
+ 	__le32 sent_cts_cnt;
+ 	__le32 sent_ba_rsp_cnt;
 -- 
-1.7.10.4
+1.9.1
 
