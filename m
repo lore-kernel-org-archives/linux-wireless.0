@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8764 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751045AbbAOIcr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 03:32:47 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
-	<21685.35179.110539.780864@gargle.gargle.HOWL>
-	<87bnm01ojf.fsf@kamboji.qca.qualcomm.com>
-	<21687.29026.962216.812998@gargle.gargle.HOWL>
-	<87vbk8zcr1.fsf@kamboji.qca.qualcomm.com>
-	<21687.30578.746681.850817@gargle.gargle.HOWL>
-Date: Thu, 15 Jan 2015 10:32:31 +0200
-In-Reply-To: <21687.30578.746681.850817@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Thu, 15 Jan 2015 13:46:50 +0530")
-Message-ID: <87mw5kzbog.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_093250_893071_930B3331)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga09.intel.com ([134.134.136.24]:42471 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754367AbbAVUdx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:33:53 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/38] iwlwifi: mvm: add print of he nvm version
+Date: Thu, 22 Jan 2015 22:33:01 +0200
+Message-Id: <1421958809-3371-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_213404_083722_C5AE3149)
+In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
+References: <1421958313.6424.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+From: Eran Harary <eran.harary@intel.com>
 
-> Kalle Valo wrote:
->> I STILL don't know what values you think people should use with
->> the htt_fill parameter.
->
-> None. The default stays the same. But, it can be adjusted based
-> on the platform, if higher throughput is desired.
+Print the nvm version in the log for debugging purposes.
 
-Yeah, but everyone want higher throughput (including me). So what value
-is best in your opinion?
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/nvm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/nvm.c b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+index d55fd8e..d8ac01d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/iwlwifi/mvm/nvm.c
+@@ -565,6 +565,8 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ 	mvm->nvm_data = iwl_parse_nvm_sections(mvm);
+ 	if (!mvm->nvm_data)
+ 		return -ENODATA;
++	IWL_DEBUG_EEPROM(mvm->trans->dev, "nvm version = %x\n",
++			 mvm->nvm_data->nvm_version);
+ 
+ 	return 0;
+ }
 -- 
-Kalle Valo
+1.9.1
+
