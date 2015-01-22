@@ -1,61 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32923 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60497 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752514AbbA0Lnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 06:43:32 -0500
-Message-ID: <1422359002.1890.65.camel@sipsolutions.net> (sfid-20150127_124337_047766_CF2F8687)
-Subject: Re: [RFCv4 3/3] mac80211: add VHT support for IBSS
+	id S1754464AbbAVUiu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 15:38:50 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Jan 2015 12:43:22 +0100
-In-Reply-To: <CALhHN=oGGR=6bq90DB3wEN4Sq7rCCXEZLFR8x0sxot2+3JE=Aw@mail.gmail.com> (sfid-20150127_123951_413522_6EE70539)
-References: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1422348243-4928-3-git-send-email-janusz.dziedzic@tieto.com>
-	 <1422354271.1890.62.camel@sipsolutions.net>
-	 <CALhHN=oGGR=6bq90DB3wEN4Sq7rCCXEZLFR8x0sxot2+3JE=Aw@mail.gmail.com>
-	 (sfid-20150127_123951_413522_6EE70539)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] ath10k: use IEEE80211_HW_SW_CRYPTO_CONTROL
+Date: Thu, 22 Jan 2015 21:38:45 +0100
+Message-Id: <1421959125-10834-2-git-send-email-johannes@sipsolutions.net> (sfid-20150122_213903_766323_72CDB0A1)
+In-Reply-To: <1421959125-10834-1-git-send-email-johannes@sipsolutions.net>
+References: <1421959125-10834-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-27 at 12:39 +0100, Janusz Dziedzic wrote:
-> On 27 January 2015 at 11:24, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Tue, 2015-01-27 at 09:44 +0100, Janusz Dziedzic wrote:
-> >
-> >> +u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-> >> +                             const struct cfg80211_chan_def *chandef)
-> >
-> >> +     /* 1 stream, MCS0-7 as a min Basic VHT MCS rates */
-> >> +     vht_oper->basic_mcs_set = cpu_to_le16(0xfffc);
-> >
-> > Unless I'm mistaken in my reading of the spec, this will make any
-> > well-behaved client (i.e. not mac80211) not join this network since it
-> > supports VHT MCSes.
-> >
-> > We seem to do the same for HT:
-> >
-> >         /* It seems that Basic MCS set and Supported MCS set
-> >            are identical for the first 10 bytes */
-> >         memset(&ht_oper->basic_set, 0, 16);
-> >         memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
-> >
-> > but I'm not convinced it's right. It probably only works because nobody
-> > ever tested against a well-behaved non-HT client? Or perhaps there isn't
-> > even one?
-> >
-> for HT (spec, 20.3.5) - MCS0 .. MSC7 are mandatory - but this is for
-> all stations (not sure about ibss)
-> for VHT (22.5, table 22-30) - MCS0...MCS7 are mandatory for nss=1 (20,40,80)
-> Seems such set is secure?
-> 
-> If I understand correctly case you describe with non-HT client:
-> non-HT client should not understand HT ies, and HT-only client should
-> not understand VHT ies?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yeah that's a good point, I guess older clients won't even look at this,
-and we don't include the HT or VHT marker in the basic rate set IE.
+The ath10k driver only supports HW crypto (except for management
+frames or so - CMAC needs to be done in software). Make it use
+the new IEEE80211_HW_SW_CRYPTO_CONTROL flag to ensure mac80211
+doesn't erroneously attempt to use software crypto.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 2619db1e3e74..bd950bb24087 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -74,6 +74,9 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+ 		if (memcmp(macaddr, arvif->vif->addr, ETH_ALEN))
+ 			arg.key_flags = WMI_KEY_PAIRWISE;
+ 		break;
++	case WLAN_CIPHER_SUITE_AES_CMAC:
++		/* this one needs to be done in software */
++		return 1;
+ 	default:
+ 		ath10k_warn(ar, "cipher %d is not supported\n", key->cipher);
+ 		return -EOPNOTSUPP;
+@@ -4958,6 +4961,13 @@ struct ath10k_vif *ath10k_get_arvif(struct ath10k *ar, u32 vdev_id)
+ 
+ int ath10k_mac_register(struct ath10k *ar)
+ {
++	static const u32 cipher_suites[] = {
++		WLAN_CIPHER_SUITE_WEP40,
++		WLAN_CIPHER_SUITE_WEP104,
++		WLAN_CIPHER_SUITE_TKIP,
++		WLAN_CIPHER_SUITE_CCMP,
++		WLAN_CIPHER_SUITE_AES_CMAC,
++	};
+ 	struct ieee80211_supported_band *band;
+ 	struct ieee80211_sta_vht_cap vht_cap;
+ 	struct ieee80211_sta_ht_cap ht_cap;
+@@ -5030,7 +5040,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			IEEE80211_HW_REPORTS_TX_ACK_STATUS |
+ 			IEEE80211_HW_HAS_RATE_CONTROL |
+ 			IEEE80211_HW_AP_LINK_PS |
+-			IEEE80211_HW_SPECTRUM_MGMT;
++			IEEE80211_HW_SPECTRUM_MGMT |
++			IEEE80211_HW_SW_CRYPTO_CONTROL;
+ 
+ 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
+ 
+@@ -5094,6 +5105,9 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		goto err_free;
+ 	}
+ 
++	ar->hw->wiphy->cipher_suites = cipher_suites;
++	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
++
+ 	ret = ieee80211_register_hw(ar->hw);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register ieee80211: %d\n", ret);
+-- 
+2.1.4
 
