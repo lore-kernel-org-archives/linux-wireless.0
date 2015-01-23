@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:39914 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754678AbbAZTwm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 14:52:42 -0500
-Received: by mail-pa0-f46.google.com with SMTP id lj1so13670862pab.5
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 11:52:41 -0800 (PST)
-From: David Ramos <davidramos2007@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Uninitialized memcpy length (segfault) in airo_get_essid (drivers/net/wireless/airo.c)
-Date: Mon, 26 Jan 2015 11:52:37 -0800
-Message-Id: <3B0A4D15-A224-40B4-8BC0-2577B68231CB@gmail.com> (sfid-20150126_205245_251001_D1A1DE50)
-Cc: linux-wireless@vger.kernel.org
-To: Johannes Berg <johannes@sipsolutions.net>
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
+Received: from s3.sipsolutions.net ([5.9.151.49]:35497 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754196AbbAWJzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 04:55:10 -0500
+Message-ID: <1422006905.2728.20.camel@sipsolutions.net> (sfid-20150123_105513_871395_8DC36486)
+Subject: Re: [PATCH] mac80211: complete scan work immediately if quiesced or
+ suspended
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Fri, 23 Jan 2015 10:55:05 +0100
+In-Reply-To: <1421962450-7096-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1421962450-7096-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thu, 2015-01-22 at 23:34 +0200, Emmanuel Grumbach wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> It is possible that a deferred scan is queued after the queues are
+> flushed in __ieee80211_suspend().  The deferred scan work may be
+> scheduled by ROC or ieee80211_stop_poll().
+> 
+> To make sure don't start a new scan while suspending, check whether
+> we're quiescing or suspended and complete the scan immediately if
+> that's the case.
 
-Our UC-KLEE tool found an uninitialized memcpy length (segfault) bug in airo_get_essid (drivers/net/wireless/airo.c). We found the bug in kernel 3.16.3, but it appears to date back beyond the original kernel git commit in 2005 (1da177e4c3f41524e886b7f1b8a0c1fc7321cac2).
+Applied.
 
-The offending code is as follows:
+> Change-Id: I8ec2c8fb4d969833d45c77045b0f5594cc097086
+> Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+> Reviewed-on: https://gerrit.rds.intel.com/r/51405
+> Tested-by: IWL Jenkins
+> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
 
-5912   readStatusRid(local, &status_rid, 1);
-5913
-5914   /* Note : if dwrq->flags != 0, we should                                                                                                                                                    
-5915    * get the relevant SSID from the SSID list... */
-5916
-5917   /* Get the current SSID */
-5918   memcpy(extra, status_rid.SSID, le16_to_cpu(status_rid.SSIDlen));
+With all that fixed :)
 
-The call to readStatusRid() on line 5912 fails if PC4500_readrid() fails, which can happen if down_interruptible() fails (e.g., is interrupted). This leaves the ‘status_rid’ struct uninitialized. The memcpy() at line 5918 then uses garbage values from the stack as the memcpy length, which can corrupt memory or cause a kernel segfault.
-
-The recommended fix is to check the return value of readStatusRid() and return an error when it fails.
-
-Please let me know if you have any questions.
-
-Thanks,
--David
-
+johannes
 
