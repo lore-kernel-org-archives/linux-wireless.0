@@ -1,126 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx02.posteo.de ([89.146.194.165]:34568 "EHLO mx02.posteo.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751671AbbAWXaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 18:30:00 -0500
-Message-ID: <1422055797.1850.14.camel@posteo.de> (sfid-20150124_003004_517662_CDC012CD)
-Subject: Re: brcmfmac: kernel panic in brcmf_cfg80211_del_key
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <jkrause@posteo.de>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Sat, 24 Jan 2015 00:29:57 +0100
-In-Reply-To: <54C258DB.7050308@broadcom.com>
-References: <1422016318.1212.22.camel@posteo.de>
-	 <54C258DB.7050308@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43538 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421AbbAWASu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Jan 2015 19:18:50 -0500
+From: Yanbo Li <yanbol@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <ath10k@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath10k: Enable the MCS8 and MCS9 at 2.4G band
+Date: Fri, 23 Jan 2015 08:18:20 +0800
+Message-ID: <1421972300-23520-1-git-send-email-yanbol@qca.qualcomm.com> (sfid-20150123_011859_724639_F01F5804)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+From: Yanbo Li <yanbol@qti.qualcomm.com>
 
-On Fr, 2015-01-23 at 15:21 +0100, Arend van Spriel wrote:
-> On 01/23/15 13:31, Jörg Krause wrote:
-> > Hi all,
-> >
-> > I'm running an wireless device with Linux kernel 3.18.3 and the brcmfmac
-> > driver. When connection the device to my network, I see from time to
-> > time these messages in the kernel log:
-> >
-> > [  899.624759] brcmfmac: brcmf_cfg80211_del_key: invalid key index (4)
-> > [  899.649874] brcmfmac: brcmf_cfg80211_del_key: invalid key index (5)
-> > [  899.678066] cfg80211: Calling CRDA to update world regulatory domain
-> >
-> > I'm not sure about the meaning of the 'invalid key index' messages and
-> > if it may cause some trouble. However the system is running fine.
-> 
-> Basically, wpa_supplicant does key deletion for index 0 to 5, but 
-> brcmfmac only has 4 keys (0 to 3) hence the message. This is not an issue.
+Enable the MCS8 and MCS9 support for 2.4G band, it will
+use these data rate with other devices having the same
+capability.
 
-I see!
+Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   14 ++++++++++++--
+ drivers/net/wireless/ath/ath10k/wmi.h |    2 +-
+ 2 files changed, 13 insertions(+), 3 deletions(-)
 
-> 
-> > Now I had a test case with two wireless devices having the same hostname
-> > and MAC address in the same network.
-> 
-> What? Why is this a test case. That is fundamentally wrong and asking 
-> for trouble.
-
-You're absolutely right! To be honest it's not a real test. We're having
-trouble with some wireless audio devices and multiroom playback. In fact
-I wanted to simulate in a quick and dirty way what happens if the audio
-device does not receive some expected UDP packets from the audio
-streaming source because they get lost.
-
-> 
-> > The first wireless devices connects to the network and starts receiving
-> > an audio stream via UDP. Another device with same hostname and MAC is
-> > started after this and repeatedly reboots after 30 seconds.
-> >
-> > The first device gets disconnected after the second device connects to
-> > the network. The device is running with the network tools tools
-> > wpa_supplicant, a wpa_action script, udhcpc, avahi, and crda. The device
-> > tries to reconnect to the network. It successfully connects, but
-> > authentification fails. This step produces a lot of the kernel messages
-> > from above.
-> >
-> > Okay, nothing wrong until here I think. But after some time the brcmfmac
-> > driver is dying:
-> >
-> > [  901.799454] ------------[ cut here ]------------
-> > [  901.804332] WARNING: CPU: 0 PID: 104 at
-> > drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c:1076
-> > brcmf_netdev_wait_pend8021x+0xe0/0xf4 [brcmfmac]()
-> > [  901.866565] Modules linked in:
-> > [  901.907705] 	brcmfmac brcmutil
-> > [  901.909298] CPU: 0 PID: 104 Comm: wpa_supplicant Not tainted 3.18.3
-> > #1
-> > [  901.959287] [<c000de40>] (unwind_backtrace) from [<c000c1f4>]
-> > (show_stack+0x10/0x14)
-> > [  901.993628] [<c000c1f4>] (show_stack) from [<c0016400>]
-> > (warn_slowpath_common+0x68/0x88)
-> > [  902.016243] [<c0016400>] (warn_slowpath_common) from [<c00164bc>]
-> > (warn_slowpath_null+0x1c/0x24)
-> > [  902.040249] [<c00164bc>] (warn_slowpath_null) from [<bf016304>]
-> > (brcmf_netdev_wait_pend8021x+0xe0/0xf4 [brcmfmac])
-> > [  902.067408] [<bf016304>] (brcmf_netdev_wait_pend8021x [brcmfmac])
-> > from [<bf0061d8>] (brcmf_cfg80211_get_key+0x1a8/0x374 [brcmfmac])
-> > [  902.098434] [<bf0061d8>] (brcmf_cfg80211_get_key [brcmfmac]) from
-> > [<bf00770c>] (brcmf_cfg80211_del_key+0x1d8/0x2e0 [brcmfmac])
-> > [  902.164527] [<bf00770c>] (brcmf_cfg80211_del_key [brcmfmac]) from
-> > [<bf0078ec>] (brcmf_cfg80211_add_key+0xd8/0x248 [brcmfmac])
-> > [  902.213096] [<bf0078ec>] (brcmf_cfg80211_add_key [brcmfmac]) from
-> > [<c037f368>] (nl80211_new_key+0x108/0x144)
-> > [  902.253581] [<c037f368>] (nl80211_new_key) from [<c02ccb98>]
-> > (genl_rcv_msg+0x22c/0x39c)
-> > [  902.290997] [<c02ccb98>] (genl_rcv_msg) from [<c02cc12c>]
-> > (netlink_rcv_skb+0xb4/0xd8)
-> > [  902.325813] [<c02cc12c>] (netlink_rcv_skb) from [<c02cc958>]
-> > (genl_rcv+0x20/0x34)
-> > [  902.363540] [<c02cc958>] (genl_rcv) from [<c02cbaa8>]
-> > (netlink_unicast+0x14c/0x1cc)
-> > [  902.399402] [<c02cbaa8>] (netlink_unicast) from [<c02cbe98>]
-> > (netlink_sendmsg+0x2b8/0x39c)
-> > [  902.435798] [<c02cbe98>] (netlink_sendmsg) from [<c0297860>]
-> > (sock_sendmsg+0x84/0xa8)
-> > [  902.477184] [<c0297860>] (sock_sendmsg) from [<c0298d28>]
-> > (___sys_sendmsg.part.32+0x284/0x290)
-> > [  902.486197] [<c0298d28>] (___sys_sendmsg.part.32) from [<c0299d34>]
-> > (__sys_sendmsg+0x4c/0x7c)
-> > [  902.555011] [<c0299d34>] (__sys_sendmsg) from [<c0009620>]
-> > (ret_fast_syscall+0x0/0x44)
-> > [  902.591178] ---[ end trace 93a9f5360e80c5ca ]---
-> >
-> > I'm not sure if I should worry about this issue.
-> 
-> Well, what is happening here is that the driver got a EAPOL message from 
-> the network stack to transmit and then got a key config request. That 
-> key config is held until transmit of EAPOL is completed. So it is 
-> suspicious.
-
-You're right, it's a warning. Does it mean the network stack gets messy
-due to this wrong setup?
-
-Best regards
-Jörg Krause
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9524bc5..0b11c9c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1557,6 +1557,10 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
+ 		return;
+ 
+ 	arg->peer_flags |= WMI_PEER_VHT;
++
++	if (ar->hw->conf.chandef.chan->band == IEEE80211_BAND_2GHZ)
++		arg->peer_flags |= WMI_PEER_VHT_2G;
++
+ 	arg->peer_vht_caps = vht_cap->cap;
+ 
+ 	ampdu_factor = (vht_cap->cap &
+@@ -1635,7 +1639,12 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ 
+ 	switch (ar->hw->conf.chandef.chan->band) {
+ 	case IEEE80211_BAND_2GHZ:
+-		if (sta->ht_cap.ht_supported) {
++		if (sta->vht_cap.vht_supported) {
++			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
++				phymode = MODE_11AC_VHT40;
++			else
++				phymode = MODE_11AC_VHT20;
++		} else if (sta->ht_cap.ht_supported) {
+ 			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
+ 				phymode = MODE_11NG_HT40;
+ 			else
+@@ -5215,7 +5224,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		band->bitrates = ath10k_g_rates;
+ 		band->ht_cap = ht_cap;
+ 
+-		/* vht is not supported in 2.4 GHz */
++		/* Enable the VHT support at 2.4 GHz */
++		band->vht_cap = vht_cap;
+ 
+ 		ar->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = band;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index bd7f29a..6de92e8 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4430,7 +4430,7 @@ struct wmi_peer_set_q_empty_callback_cmd {
+ #define WMI_PEER_SPATIAL_MUX    0x00200000
+ #define WMI_PEER_VHT            0x02000000
+ #define WMI_PEER_80MHZ          0x04000000
+-#define WMI_PEER_PMF            0x08000000
++#define WMI_PEER_VHT_2G         0x08000000
+ 
+ /*
+  * Peer rate capabilities.
+-- 
+1.7.9.5
 
