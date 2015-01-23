@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:46419 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751622AbbANJWr convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:47443 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753127AbbAWP0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 04:22:47 -0500
-Received: by mail-wg0-f43.google.com with SMTP id k14so7709841wgh.2
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Jan 2015 01:22:46 -0800 (PST)
+	Fri, 23 Jan 2015 10:26:08 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH V2 for 3.19 0/7] Fixes for rtl8192ee
+References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Fri, 23 Jan 2015 17:26:00 +0200
+In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+	(Larry Finger's message of "Tue, 20 Jan 2015 11:01:19 -0600")
+Message-ID: <873871msc7.fsf@kamboji.qca.qualcomm.com> (sfid-20150123_162615_980603_494E4028)
 MIME-Version: 1.0
-In-Reply-To: <21685.35179.110539.780864@gargle.gargle.HOWL>
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org>
-	<87r3uy4t9y.fsf@kamboji.qca.qualcomm.com>
-	<21685.35179.110539.780864@gargle.gargle.HOWL>
-Date: Wed, 14 Jan 2015 10:22:46 +0100
-Message-ID: <CA+BoTQmNkVKyeWB0fCFhG2MfMZYTz6Dp4+cs44Dm4HCKjTc3Zw@mail.gmail.com> (sfid-20150114_102253_010823_B8765D04)
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 January 2015 at 22:08, Sujith Manoharan <sujith@msujith.org> wrote:
-> Kalle Valo wrote:
->> I'm not sure if I really like this path of having interfaces to
->> configure driver internals. I suspect that if we add this, we will have
->> even more later. It's a lot more documenting for us and more work to the
->> users to understand what parameters they should use. Also this means
->> that testing will be more challenging as people will use different
->> values and results won't be comparable.
->>
->> Isn't there any other way to solve the problem? Like automatically
->> changing the value somehow (no idea how) or some other means?
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+
+> This is V2 of the patches for rtl8192ee to be applied to 3.19. They replace
+> all the patches submitted under the title '[PATCH for 3.19 0/3] rtlwifi:
+> Various updates/fixes". All are marked for backporting to 3.18.
 >
-> We are limiting performance by restricting the fill size. A user
-> will just use the default, which is still the same and remains
-> unchanged. But, having a way to adjust this based on the platform
-> seems reasonable to me and I think trying to change this value dynamically
-> is overkill.
+> The first of these removes a logging statement that is no longer needed.
+>
+> Patches 1-6 are relatively small and should not be a problem for 3.19.
+> Patch 7 is quite a bit larger, and adds two new routines to detect
+> DMA stalls. I will understand if you want to defer that to -next; however,
+> it does fix a serious problem.
 
-We should just fix the tx/rx processing instead. The HTT throttling
-limit was originally introduced to deal with watchdog issues we've
-seen on AP135. Tasklets were starving system too much.
+-rc6 is most likely released on Sunday, I cannot send six patches this
+late in the cycle unless our inboxes are filling of bug reports. As my
+inbox seems to be pretty empty about rtlwifi problems can you give more
+background why you think it's important to get these to 3.19? Are these
+all regressions from 3.18 or older bugs which just got fixed now?
 
-I've been playing around with threaded irqs in ath10k in my tree and
-I've seen improvement with Rx. However Tx instead becomes broken in
-the process and I'm yet to find a definite and final answer why that
-is the case. My suspicion is that NAPI, which is used by the ethernet
-driver, runs in tasklets and they aren't frequent enough to trigger
-ksoftirqd so they starve the system. The current non-threaded irq
-approach yields more tasklet schedules for Tx and hits ksoftirqd more
-often making it nice on userspace. If that's the case I don't really
-have an idea how to solve this now.
+>   rtlwifi: Remove logging statement that is no longer needed
 
+I think this is ok.
 
-Michał
+>   rtlwifi: rtl8192ee: Fix adhoc fail
+
+Ad-Hoc mode is not that popular, IMHO this can easily wait for -next.
+
+>   rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
+>   rtlwifi: rtl8192ee: Fix handling of new style descriptors
+>   rtlwifi: rtl8192ee: Fix TX hang due to failure to update TX write
+>     point
+>   rtlwifi: rtl8192ee: Fix parsing of received packet
+>   rtlwifi: rtl8192ee: Fix DMA stalls
+
+For -rc1 or -rc2 these would have been ok, but without really good
+justifications getting these into -rc7 is difficult.
+
+But the patches itself are create, huge improvement compared to v1.
+
+-- 
+Kalle Valo
