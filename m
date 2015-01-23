@@ -1,212 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:43023 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751525AbbATWuh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 17:50:37 -0500
-Message-ID: <54BEDBBA.2060305@broadcom.com> (sfid-20150120_235041_236468_BBC644C3)
-Date: Tue, 20 Jan 2015 23:50:34 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-	Avri Altman <avri.altman@intel.com>
-Subject: Re: [PATCH] mac80211: tell drivers the user TX power restriction
-References: <1421784945-7815-1-git-send-email-emmanuel.grumbach@intel.com>
-In-Reply-To: <1421784945-7815-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:35462 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752031AbbAWJvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 04:51:25 -0500
+Message-ID: <1422006682.2728.14.camel@sipsolutions.net> (sfid-20150123_105129_466106_44A9D01C)
+Subject: Re: [PATCH] mac80211: only roll back station states for WDS when
+ suspending
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Jan 2015 10:51:22 +0100
+In-Reply-To: <1421871574-18789-1-git-send-email-luca@coelho.fi>
+References: <1421699291-16279-1-git-send-email-luca@coelho.fi>
+	 <1421871574-18789-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/15 21:15, Emmanuel Grumbach wrote:
-> From: Avri Altman<avri.altman@intel.com>
->
-> When a tx power restriction is set, mac80211 protects its downstream
-> stack by taking min(user, regulatory, 11h ap). However, we should allow
-> drivers to use that value as it is - on their own risk.
-> This might come handy, when tx power is set per phy. As mac80211 has
-> only a concept of "per-vif" tx power, it iterates over the active vifs,
-> and sets their tx power limit accordingly. Allowing this value to
-> proliferate downstream unchanged, the driver might use this legacy
-> api differently, e.g. to set tx power for the whole device.
+On Wed, 2015-01-21 at 22:19 +0200, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> In normal cases (i.e. when we are fully associated), cfg80211 takes
+> care of removing all the stations before calling suspend in mac80211.
+> 
+> But in the corner case when we suspend during authentication or
+> association, mac80211 needs to roll back the station states.  But we
+> shouldn't roll back the station states in the suspend function,
+> because this is taken care of in other parts of the code, except for
+> WDS interfaces.  For AP types of interfaces, cfg80211 takes care of
+> disconnecting all stations before calling the driver's suspend code.
+> For station interfaces, this is done in the quiesce code.
+> 
+> For WDS interfaces we still need to do it here, so move the code into
+> a new switch case for WDS.
 
-Not sure if this really a good idea as default behaviour. Can't we do 
-this kind of stuff under some Kconfig. In cfg80211 we have the 
-CFG80211_CERTIFICATION_ONUS.
+Applied.
 
-> Change-Id: I4a77b1131bf02f5e0a967132a7c6c3a1cd186e13
-
-Guess you guys are also using Gerrit ;-)
-
-Regards,
-Arend
-
-> Signed-off-by: Avri Altman<avri.altman@intel.com>
-> Signed-off-by: Emmanuel Grumbach<emmanuel.grumbach@intel.com>
-> ---
->   include/net/mac80211.h        |  9 +++++++++
->   net/mac80211/cfg.c            | 37 ++++++++++++++++++++++++++++++-------
->   net/mac80211/debugfs_netdev.c |  2 +-
->   net/mac80211/ieee80211_i.h    |  1 -
->   net/mac80211/iface.c          |  7 ++++---
->   5 files changed, 44 insertions(+), 12 deletions(-)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index e4fab94..d11d811 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -264,6 +264,7 @@ struct ieee80211_vif_chanctx_switch {
->    *	note that this is only called when it changes after the channel
->    *	context had been assigned.
->    * @BSS_CHANGED_OCB: OCB join status changed
-> + * @BSS_CHANGED_USER_TXPOWER: User TX power setting changed for this interface
->    */
->   enum ieee80211_bss_change {
->   	BSS_CHANGED_ASSOC		= 1<<0,
-> @@ -289,6 +290,7 @@ enum ieee80211_bss_change {
->   	BSS_CHANGED_BEACON_INFO		= 1<<20,
->   	BSS_CHANGED_BANDWIDTH		= 1<<21,
->   	BSS_CHANGED_OCB                 = 1<<22,
-> +	BSS_CHANGED_USER_TXPOWER	= 1<<23,
->
->   	/* when adding here, make sure to change ieee80211_reconfig */
->   };
-> @@ -376,6 +378,12 @@ enum ieee80211_rssi_event {
->    * @ssid_len: Length of SSID given in @ssid.
->    * @hidden_ssid: The SSID of the current vif is hidden. Only valid in AP-mode.
->    * @txpower: TX power in dBm
-> + * @user_power_level: TX power limit requested by the user (in dBm).
-> + *	This must be used carefully, it isn't restricted by regulatory.
-> + *	However, it could be used for example for hardware scanning to limit
-> + *	the TX power to the user-requested level, while also limiting to the
-> + *	correct per-channel regulatory. Similarly for other out-of-channel
-> + *	activities where mac80211 cannot correctly set the TX power level.
->    * @p2p_noa_attr: P2P NoA attribute for P2P powersave
->    */
->   struct ieee80211_bss_conf {
-> @@ -411,6 +419,7 @@ struct ieee80211_bss_conf {
->   	size_t ssid_len;
->   	bool hidden_ssid;
->   	int txpower;
-> +	int user_power_level;
->   	struct ieee80211_p2p_noa_attr p2p_noa_attr;
->   };
->
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 84ed7b1..22f5e60 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -2109,21 +2109,34 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
->   	struct ieee80211_sub_if_data *sdata;
->
->   	if (wdev) {
-> +		int old_user_level, new_user_level;
-> +		u32 change;
-> +
->   		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-> +		old_user_level = sdata->vif.bss_conf.user_power_level;
-> +		new_user_level = old_user_level;
->
->   		switch (type) {
->   		case NL80211_TX_POWER_AUTOMATIC:
-> -			sdata->user_power_level = IEEE80211_UNSET_POWER_LEVEL;
-> +			new_user_level = IEEE80211_UNSET_POWER_LEVEL;
->   			break;
->   		case NL80211_TX_POWER_LIMITED:
->   		case NL80211_TX_POWER_FIXED:
->   			if (mbm<  0 || (mbm % 100))
->   				return -EOPNOTSUPP;
-> -			sdata->user_power_level = MBM_TO_DBM(mbm);
-> +			new_user_level = MBM_TO_DBM(mbm);
->   			break;
->   		}
->
-> -		ieee80211_recalc_txpower(sdata);
-> +		if (old_user_level == new_user_level)
-> +			return 0;
-> +
-> +		change = BSS_CHANGED_USER_TXPOWER;
-> +		sdata->vif.bss_conf.user_power_level = new_user_level;
-> +
-> +		if (__ieee80211_recalc_txpower(sdata))
-> +			change |= BSS_CHANGED_TXPOWER;
-> +		ieee80211_bss_info_change_notify(sdata, change);
->
->   		return 0;
->   	}
-> @@ -2141,10 +2154,20 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
->   	}
->
->   	mutex_lock(&local->iflist_mtx);
-> -	list_for_each_entry(sdata,&local->interfaces, list)
-> -		sdata->user_power_level = local->user_power_level;
-> -	list_for_each_entry(sdata,&local->interfaces, list)
-> -		ieee80211_recalc_txpower(sdata);
-> +	list_for_each_entry(sdata,&local->interfaces, list) {
-> +		u32 change = 0;
-> +
-> +		if (sdata->vif.bss_conf.user_power_level !=
-> +				local->user_power_level) {
-> +			change |= BSS_CHANGED_USER_TXPOWER;
-> +			sdata->vif.bss_conf.user_power_level =
-> +						local->user_power_level;
-> +		}
-> +		if (__ieee80211_recalc_txpower(sdata))
-> +			change |= BSS_CHANGED_TXPOWER;
-> +		if (change)
-> +			ieee80211_bss_info_change_notify(sdata, change);
-> +	}
->   	mutex_unlock(&local->iflist_mtx);
->
->   	return 0;
-> diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-> index bb625e9..285b094 100644
-> --- a/net/mac80211/debugfs_netdev.c
-> +++ b/net/mac80211/debugfs_netdev.c
-> @@ -191,7 +191,7 @@ IEEE80211_IF_FILE(flags, flags, HEX);
->   IEEE80211_IF_FILE(state, state, LHEX);
->   IEEE80211_IF_FILE(txpower, vif.bss_conf.txpower, DEC);
->   IEEE80211_IF_FILE(ap_power_level, ap_power_level, DEC);
-> -IEEE80211_IF_FILE(user_power_level, user_power_level, DEC);
-> +IEEE80211_IF_FILE(user_power_level, vif.bss_conf.user_power_level, DEC);
->
->   static ssize_t
->   ieee80211_if_fmt_hw_queues(const struct ieee80211_sub_if_data *sdata,
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index ac3455b..f6772b4 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -867,7 +867,6 @@ struct ieee80211_sub_if_data {
->   	u8 needed_rx_chains;
->   	enum ieee80211_smps_mode smps_mode;
->
-> -	int user_power_level; /* in dBm */
->   	int ap_power_level; /* in dBm */
->
->   	bool radar_required;
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index 93e4639..a818b3b 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -58,8 +58,9 @@ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
->   	power = ieee80211_chandef_max_power(&chanctx_conf->def);
->   	rcu_read_unlock();
->
-> -	if (sdata->user_power_level != IEEE80211_UNSET_POWER_LEVEL)
-> -		power = min(power, sdata->user_power_level);
-> +	if (sdata->vif.bss_conf.user_power_level !=
-> +	    IEEE80211_UNSET_POWER_LEVEL)
-> +		power = min(power, sdata->vif.bss_conf.user_power_level);
->
->   	if (sdata->ap_power_level != IEEE80211_UNSET_POWER_LEVEL)
->   		power = min(power, sdata->ap_power_level);
-> @@ -1769,7 +1770,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
->   	ieee80211_set_default_queues(sdata);
->
->   	sdata->ap_power_level = IEEE80211_UNSET_POWER_LEVEL;
-> -	sdata->user_power_level = local->user_power_level;
-> +	sdata->vif.bss_conf.user_power_level = local->user_power_level;
->
->   	sdata->encrypt_headroom = IEEE80211_ENCRYPT_HEADROOM;
->
+johannes
 
