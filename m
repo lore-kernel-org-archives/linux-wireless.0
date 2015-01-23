@@ -1,120 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:52768 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751005AbbAKJu6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2015 04:50:58 -0500
-Message-ID: <54B24775.5070905@rempel-privat.de> (sfid-20150111_105247_453591_91A05066)
-Date: Sun, 11 Jan 2015 10:50:45 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>, Hong Xu <hong@topbug.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: Add a module parameter to disable blink
-References: <1420968029-1222-1-git-send-email-hong@topbug.net> <54B24504.60105@broadcom.com>
-In-Reply-To: <54B24504.60105@broadcom.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="KPHmoUA5kLOUfKNps5MmbwskuTApP0IFJ"
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:46791 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464AbbAWPYa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 10:24:30 -0500
+Received: by mail-wi0-f176.google.com with SMTP id em10so3584808wid.3
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 07:24:28 -0800 (PST)
+From: Vadim Kochan <vadim4j@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Vadim Kochan <vadim4j@gmail.com>
+Subject: [RFC iw next] phy: Allow set netns by fd
+Date: Fri, 23 Jan 2015 17:13:47 +0200
+Message-Id: <1422026027-5806-1-git-send-email-vadim4j@gmail.com> (sfid-20150123_162433_668129_A5F1E60F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---KPHmoUA5kLOUfKNps5MmbwskuTApP0IFJ
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+From: Vadim Kochan <vadim4j@gmail.com>
 
-Am 11.01.2015 um 10:40 schrieb Arend van Spriel:
-> On 01/11/15 10:20, Hong Xu wrote:
->> Add an option "blink" to enable or disable the LED blink. The default
->> value is set to 1 so that existing users would not experience any
->> unexpected changes.
->> ---
->>   drivers/net/wireless/ath/ath9k/htc.h          | 1 +
->>   drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 4 ++++
->>   drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++++
->>   3 files changed, 9 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/htc.h
->> b/drivers/net/wireless/ath/ath9k/htc.h
->> index 9dde265..5697097 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc.h
->> +++ b/drivers/net/wireless/ath/ath9k/htc.h
->> @@ -44,6 +44,7 @@
->>
->>   extern struct ieee80211_ops ath9k_htc_ops;
->>   extern int htc_modparam_nohwcrypt;
->> +extern int led_blink;
->>
->>   enum htc_phymode {
->>       HTC_MODE_11NA        =3D 0,
->> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
->> b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
->> index 50f74a2..998b558 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
->> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
->> @@ -279,6 +279,10 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)=
+Added possibility to change network namespace
+for phy device by network namespace name from
+/var/run/netns or by absolute file path:
 
->>       else
->>           priv->ah->led_pin =3D ATH_LED_PIN_DEF;
->>
->> +    if (!led_blink)
->> +        priv->led_cdev.default_trigger =3D
->> +            ieee80211_get_radio_led_name(priv->hw);
->> +
->>       ath9k_configure_leds(priv);
->>
->>       snprintf(priv->led_name, sizeof(priv->led_name),
->> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
->> b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
->> index e8fa944..c762d84 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
->> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
->> @@ -38,6 +38,10 @@ static int ath9k_ps_enable;
->>   module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
->>   MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
->>
->> +int led_blink =3D 1;
->> +module_param_named(blink, led_blink, int, 0444);
->> +MODULE_PARM_DESC(blink, "Enable LED blink on activity");
->> +
->=20
-> Seems like this module parameter is only applicable if
-> CONFIG_MAC80211_LEDS is set.
+    iw phy XXX set netns <nsname> | <pid>
 
-This patch is copy&paste of ath9k version. So if some one really care,
-then it can be fixed in this patch and ath9k as well.
+First iw tries to find given nsname from /var/run/netns
+or by absoute path (in case if nsname contains "/") and if
+it failed to open nsname file then iw uses given argument as <pid>.
 
+Also added missing NL80211 attributes before NL80211_CMD_SET_WIPHY_NETNS.
 
-> Regards,
-> Arend
->=20
->>   #ifdef CONFIG_MAC80211_LEDS
->>   static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] =3D {
->>       { .throughput =3D 0 * 1024, .blink_time =3D 334 },
->=20
-> --=20
-> To unsubscribe from this list: send the line "unsubscribe
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
+---
+ nl80211.h |  6 ++++++
+ phy.c     | 44 ++++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 44 insertions(+), 6 deletions(-)
 
+diff --git a/nl80211.h b/nl80211.h
+index c0383e9..a200a0b 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -2072,6 +2072,12 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
+ 
++	NL80211_ATTR_EXT_FEATURES,
++
++	NL80211_ATTR_SURVEY_RADIO_STATS,
++
++	NL80211_ATTR_NETNS_FD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/phy.c b/phy.c
+index aab462d..8d51ed6 100644
+--- a/phy.c
++++ b/phy.c
+@@ -2,6 +2,9 @@
+ #include <errno.h>
+ #include <net/if.h>
+ #include <strings.h>
++#include <sys/param.h>
++#include <sys/stat.h>
++#include <fcntl.h>
+ 
+ #include <netlink/genl/genl.h>
+ #include <netlink/genl/family.h>
+@@ -296,6 +299,24 @@ COMMAND(set, retry, "[short <limit>] [long <limit>]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry,
+ 	"Set retry limit.");
+ 
++#ifndef NETNS_RUN_DIR
++#define NETNS_RUN_DIR "/var/run/netns"
++#endif
++int netns_get_fd(const char *name)
++{
++	char pathbuf[MAXPATHLEN];
++	const char *path, *ptr;
++
++	path = name;
++	ptr = strchr(name, '/');
++	if (!ptr) {
++		snprintf(pathbuf, sizeof(pathbuf), "%s/%s",
++			NETNS_RUN_DIR, name );
++		path = pathbuf;
++	}
++	return open(path, O_RDONLY);
++}
++
+ static int handle_netns(struct nl80211_state *state,
+ 			struct nl_cb *cb,
+ 			struct nl_msg *msg,
+@@ -303,6 +324,7 @@ static int handle_netns(struct nl80211_state *state,
+ 			enum id_input id)
+ {
+ 	char *end;
++	int fd;
+ 
+ 	if (argc != 1)
+ 		return 1;
+@@ -310,19 +332,29 @@ static int handle_netns(struct nl80211_state *state,
+ 	if (!*argv[0])
+ 		return 1;
+ 
+-	NLA_PUT_U32(msg, NL80211_ATTR_PID,
+-		    strtoul(argv[0], &end, 10));
++	if ((fd = netns_get_fd(argv[0])) >= 0) {
++		NLA_PUT_U32(msg, NL80211_ATTR_NETNS_FD, fd);
++	} else {
++		NLA_PUT_U32(msg, NL80211_ATTR_PID,
++				strtoul(argv[0], &end, 10));
++		if (*end != '\0')
++			return 1;
+ 
+-	if (*end != '\0')
+-		return 1;
++	}
+ 
+ 	return 0;
++
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(set, netns, "<pid>",
++COMMAND(set, netns, "<nsname> | <pid>",
+ 	NL80211_CMD_SET_WIPHY_NETNS, 0, CIB_PHY, handle_netns,
+-	"Put this wireless device into a different network namespace");
++	"Put this wireless device into a different network namespace:\n"
++	"    <nsname> - change network namespace by name from "NETNS_RUN_DIR"\n"
++	"               or by absolute path (man ip-netns)\n"
++	"    <pid>    - change network namespace by process id\n"
++	"If <nsname> file does not exist then given argument is used as <pid>\n"
++	);
+ 
+ static int handle_coverage(struct nl80211_state *state,
+ 			struct nl_cb *cb,
+-- 
+2.1.3
 
---=20
-Regards,
-Oleksij
-
-
---KPHmoUA5kLOUfKNps5MmbwskuTApP0IFJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlSyR3sACgkQHwImuRkmbWlpbAD+I8G1NGcSG7J4VDOU5s+CydyR
-rnCrC5M2xgt18t7oE/QA/1EVQc2bNtq+cPTYzdiez4sbnCJDbumMkFjkdJN4Auyf
-=DtOO
------END PGP SIGNATURE-----
-
---KPHmoUA5kLOUfKNps5MmbwskuTApP0IFJ--
