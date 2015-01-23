@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:57382 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756180AbbAWUY3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 15:24:29 -0500
-Message-ID: <54C2ADFB.2080806@lwfinger.net> (sfid-20150123_212438_601138_E746131B)
-Date: Fri, 23 Jan 2015 14:24:27 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mga02.intel.com ([134.134.136.20]:10630 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751753AbbAWKSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 05:18:36 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
+Date: Fri, 23 Jan 2015 10:18:31 +0000
+Message-ID: <1422008312.13429.5.camel@egrumbacBox> (sfid-20150123_111842_334506_336F03EC)
+References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1422006994.2728.22.camel@sipsolutions.net>
+In-Reply-To: <1422006994.2728.22.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 3/6] rtlwifi: btcoexist: Add routines for RTL8812AE with
- single antenna
-References: <1422033044-7461-1-git-send-email-Larry.Finger@lwfinger.net>	<1422033044-7461-4-git-send-email-Larry.Finger@lwfinger.net> <87r3uljm7o.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87r3uljm7o.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/2015 02:06 PM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> From: Troy Tan <troy_tan@realsil.com.cn>
->>
->> The RTL8812AE needs different BT coexistence routines than does the
->> RTL8821AE. This patch adds the necessary routines for devices with a
->> single antenna.
->>
->> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>   .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.c   | 2073 ++++++++++++++++++++
->>   .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.h   |  152 ++
->>   2 files changed, 2225 insertions(+)
->>   create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
->>   create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.h
->>
->> diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c b/drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
->> new file mode 100644
->> index 0000000..11ae66b
->> --- /dev/null
->> +++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
->> @@ -0,0 +1,2073 @@
->> +/*  */
->> +/*  Description: */
->> +/*  */
->> +/*  This file is for 8812a1ant Co-exist mechanism */
->> +/*  */
->> +/*  History */
->> +/*  2012/11/15 Cosa first check in. */
->> +/*  */
->> +/*  */
->> +
->> +/*  */
->> +/*  include files */
->> +/*  */
->
-> One problem I see is that there's no license on either of the files. It
-> would be much better if the files had that.
-
-I will add that and send a V2 after I wait a while for any other comments.
-
-Thanks,
-
-Larry
-
-
-
+T24gRnJpLCAyMDE1LTAxLTIzIGF0IDEwOjU2ICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBUaHUsIDIwMTUtMDEtMjIgYXQgMjM6MzAgKzAyMDAsIEVtbWFudWVsIEdydW1iYWNoIHdy
+b3RlOg0KPiA+IFdoZW4gbWFjODAyMTEgZGlzY29ubmVjdHMsIGl0IGRyb3BzIGFsbCB0aGUgcGFj
+a2V0cyBvbiB0aGUNCj4gPiBxdWV1ZXMuIFRoaXMgaGFwcGVucyBhZnRlciB0aGUgbmV0IHN0YWNr
+IGhhcyBiZWVuIG5vdGlmaWVkDQo+ID4gdGhhdCB3ZSBoYXZlIG5vIGxpbmsgYW55bW9yZSAobmV0
+aWZfY2Fycmllcl9vZmYpLg0KPiA+IG5ldGlmX2NhcnJpZXJfb2ZmIGVuc3VyZXMgdGhhdCBubyBu
+ZXcgcGFja2V0cyBhcmUgc2VudCB0bw0KPiA+IHhtaXQoKSBjYWxsYmFjaywgYnV0IHdlIG1pZ2h0
+IGhhdmUgb2xkZXIgcGFja2V0cyBpbiB0aGUNCj4gPiBtaWRkbGUgb2YgdGhlIFR4IHBhdGguIFRo
+ZXNlIHBhY2tldHMgd2lsbCBsYW5kIGluIHRoZQ0KPiA+IGRyaXZlcidzIHF1ZXVlcyBhZnRlciB0
+aGUgbGF0dGVyIGhhdmUgYmVlbiBmbHVzaGVkLg0KPiA+IFN5bmNocm9uaXplX25ldCgpIGJldHdl
+ZW4gbmV0aWZfY2Fycmllcl9vZmYgYW5kIGRydl9mbHVzaCgpDQo+ID4gd2lsbCBmaXggdGhpcy4N
+Cj4gPiANCj4gPiBOb3RlIHRoYXQgd2UgY2FuJ3QgY2FsbCBzeW5jaHJvbml6ZV9uZXQgaW5zaWRl
+DQo+ID4gaWVlZTgwMjExX2ZsdXNoX3F1ZXVlcyBzaW5jZSB0aGVyZSBhcmUgZmxvd3MgdGhhdCBj
+YWxsDQo+ID4gaWVlZTgwMjExX2ZsdXNoX3F1ZXVlcyBhbmQgZG9uJ3QgbmVlZCBzeW5jaHJvbml6
+ZV9uZXQoKQ0KPiA+IHdoaWNoIGlzIGFuIGV4cGVuc2l2ZSBvcGVyYXRpb24uDQo+IA0KPiBJJ20g
+LS0gd2l0aCBhIGhlYXZ5IGhlYXJ0IC0tIGFwcGx5aW5nIHRoaXMgZm9yIG5vdy4gVEkvd2l6ZXJ5
+IHNwZW50IGENCj4gbG90IG9mIHRpbWUgb3B0aW1pc2luZyB0aGUgdGltZSBpdCB0YWtlcyB0byBy
+b2FtLCBhbmQgdGhpcyBzaW5nbGUgbGluZQ0KPiB3aWxsIGludHJvZHVjZSBhIHBvdGVudGlhbCBm
+b3IgaHVuZHJlZHMgb2YgbXMgb2YgbGF0ZW5jeSBpbnRvIHRoZQ0KPiByb2FtaW5nIGZsb3cuDQo+
+IA0KPiBZb3UgKHdlKSByZWFsbHkgbmVlZCB0byB0aGluayBhYm91dCBob3cgdG8gYXZvaWQgdGhh
+dC4NCg0KSSBkb24ndCB0aGluayBpdCB3aWxsIGludHJvZHVjZSB0aGF0IG11Y2ggb2YgbGF0ZW5j
+eS4NCk5vdGUgdGhhdCB0aGVyZSBpcyBhIGNhbGwgdG8gZmx1c2goKSByaWdodCBhZnRlciB0aGF0
+LCB0aGlzIG1lYW5zIHRoYXQNCmFueSBkcml2ZXIgd2hpY2ggaW1wbGVtZW50cyB0aGlzIGNhbGwg
+bmVlZHMgdG8gd2FpdCB0aGVyZS4gU28geW91IGhhdmUNCnRoZSBsYXRlbmN5IGluIGVpdGhlciBw
+bGFjZS4gVGhlIG9ubHkgYWRkaXRpb25hbCBsYXRlbmN5IGl0IGFkZHMgaXMgZm9yDQpvdGhlciBS
+Q1Ugc2VjdGlvbnMgLyBwYWNrZXRzIG9uIG90aGVyIGludGVyZmFjZXMuDQpBbHNvIC0gc2luY2Ug
+d2UganVzdCBzdG9wcGVkIHRoZSBuZXRpZiwgdGhlcmUgY2FuIHBvc3NpYmx5IGJlIG9ubHkgb25l
+DQpwYWNrZXQgZm9yIGVhY2ggdmlmIC8gYWMgcHJvY2Vzc2luZy4gVGhpcyBpcyBub3QgdG9vIG11
+Y2ggZGF0YSB0bw0KcHJvY2Vzcy4NCg0KWW91ciBjYWxsLCBidXQgdG8gaG9uZXN0LCBJIGhhdmUg
+YmVlbiBvcHRpbWl6aW5nIHRoZSByb2FtaW5nIGFzIHdlbGwgKGFzDQp5b3Uga25vdykuIEFuZCBp
+dCB3YXMgcmVhbGx5IGJhZCBmb3IgZHJpdmVycyB0aGF0IGltcGxlbWVudHMgdGhlIGZsdXNoKCkN
+CmNhbGxiYWNrLiBFc3BlY2lhbGx5IGluIGNhc2VzIHdoZXJlIHlvdSBhcmUgYWxyZWFkeSBmYXIg
+ZnJvbSB0aGUgQVAgeW91DQp3YW50IHRvIHJvYW0gZnJvbS4gVGhpcyBpcyB3aHkgSSBhZGRlZCB0
+aGUgZHJvcCBwYXJhbWV0ZXIgYW5kIG90aGVyDQpvcHRpbWl6YXRpb25zIChkb24ndCBmbHVzaCgp
+IGFmdGVyIHByb2JpbmcgZXRjLi4uKQ0KDQpBZ2FpbiAtIHlvdXIgY2FsbC4gDQoNCg==
