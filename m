@@ -1,71 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:50611 "EHLO www.osadl.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35471 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750704AbbATFdo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 00:33:44 -0500
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <der.herr@hofr.at>
-Subject: [PATCH] wireless: p54: add handling of the signal case
-Date: Tue, 20 Jan 2015 06:25:43 +0100
-Message-Id: <1421731543-13290-1-git-send-email-der.herr@hofr.at> (sfid-20150120_063404_947198_7B85398C)
+	id S1753447AbbAWJw3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 04:52:29 -0500
+Message-ID: <1422006746.2728.17.camel@sipsolutions.net> (sfid-20150123_105233_329110_FA6FDE1C)
+Subject: Re: [PATCH] nl80211: add an attribute to allow delaying the first
+ scheduled scan cycle
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Jan 2015 10:52:26 +0100
+In-Reply-To: <1421417049-9087-1-git-send-email-luca@coelho.fi>
+References: <1421417049-9087-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-if(!wait_for_completion_interruptible_timeout(...))
-only handles the timeout case - this patch adds handling the
-signal case the same as timeout.
+On Fri, 2015-01-16 at 16:04 +0200, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> The userspace may want to delay the the first scheduled scan or
+> net-detect cycle.  Add an optional attribute to the scheduled scan
+> configuration to pass the delay to be (optionally) used by the driver.
 
-Signed-off-by: Nicholas Mc Guire <der.herr@hofr.at>
----
+Applied.
 
-Only the timeout case was being handled, the signal case
-(-ERESTARTSYS) was treated just like the case of successful
-completion, which is most likely not reasonable.
+> +	NL80211_ATTR_SCHED_SCAN_DELAY,
 
-p54_download_eeprom() is called in p54_read_eeprom() and will 
-terminate if p54_download_eeprom() returned != 0 so the logic
-should be correct - but this needs a check from someone who
-knows the driver. Translating -ETIMEOUT to -EBUSY might be ok
-not sure if -ERESTARTSYS also should be returned as -EBUSY ?
+This attribute needed to be added to the policy - I've done that for you
+(this time :) )
 
-Patch was only compild tested with x86_64_defcofnig +
-CONFIG_P54_COMMON=m, CONFIG_P54_PCI=m
-
-Patch is against 3.19.0-rc5 -next-20150119
-
- drivers/net/wireless/p54/fwio.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/p54/fwio.c b/drivers/net/wireless/p54/fwio.c
-index bc065e8..5367d51 100644
---- a/drivers/net/wireless/p54/fwio.c
-+++ b/drivers/net/wireless/p54/fwio.c
-@@ -220,6 +220,7 @@ int p54_download_eeprom(struct p54_common *priv, void *buf,
- 	struct sk_buff *skb;
- 	size_t eeprom_hdr_size;
- 	int ret = 0;
-+	long timeout;
- 
- 	if (priv->fw_var >= 0x509)
- 		eeprom_hdr_size = sizeof(*eeprom_hdr);
-@@ -249,9 +250,11 @@ int p54_download_eeprom(struct p54_common *priv, void *buf,
- 
- 	p54_tx(priv, skb);
- 
--	if (!wait_for_completion_interruptible_timeout(
--	     &priv->eeprom_comp, HZ)) {
--		wiphy_err(priv->hw->wiphy, "device does not respond!\n");
-+	timeout = wait_for_completion_interruptible_timeout(
-+			&priv->eeprom_comp, HZ);
-+	if (timeout <= 0) {
-+		wiphy_err(priv->hw->wiphy,
-+			"device does not respond or signal received!\n");
- 		ret = -EBUSY;
- 	}
- 	priv->eeprom = NULL;
--- 
-1.7.10.4
+johannes
 
