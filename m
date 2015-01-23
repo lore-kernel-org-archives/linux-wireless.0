@@ -1,68 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:53929 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbbABLTN convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:51851 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753706AbbAWN17 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 06:19:13 -0500
+	Fri, 23 Jan 2015 08:27:59 -0500
+Received: by mail-ie0-f177.google.com with SMTP id vy18so7065956iec.8
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 05:27:59 -0800 (PST)
+Message-ID: <54C24C5C.5080709@mojatatu.com> (sfid-20150123_142808_991609_312971D0)
+Date: Fri, 23 Jan 2015 08:27:56 -0500
+From: Jamal Hadi Salim <jhs@mojatatu.com>
 MIME-Version: 1.0
-In-Reply-To: <20150102102727.3918a684@wiggum>
-References: <1420184041-6788-1-git-send-email-xerofoify@gmail.com>
-	<20150102102727.3918a684@wiggum>
-Date: Fri, 2 Jan 2015 12:19:12 +0100
-Message-ID: <CACna6rxP5dB7ng5pf1jeJL7TTOq4xPC9B=wmrX+yeYK-hfF5uw@mail.gmail.com> (sfid-20150102_121935_165600_800478B4)
-Subject: Re: [PATCH] drivers:net:wireless: Add proper locking for the
- function, b43_op_beacon_set_tim in main.c
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: Nicholas Krause <xerofoify@gmail.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
+	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
+CC: Richard Guy Briggs <rgb@tricolour.ca>, info@netdev01.org,
+	speakers@netdev01.org, attendees@netdev01.org
+Subject: NetDev 0.1 conference: Important!  Hotel Reservation Deadline Expiring
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 January 2015 at 10:27, Michael Büsch <m@bues.ch> wrote:
-> On Fri,  2 Jan 2015 02:34:01 -0500
-> Nicholas Krause <xerofoify@gmail.com> wrote:
->
->> This adds proper locking for the function, b43_op_beacon_set_tim in main.c by using the mutex lock
->> in the structure pointer wl, as embedded into this pointer as a mutex in order to protect against
->> multiple access to the pointer wl when updating the templates for this pointer in the function,
->> b43_update_templates internally in the function, b43_op_beacon_set_tim.
->>
->> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
->> ---
->>  drivers/net/wireless/b43/main.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
->> index 47731cb..d568fc8 100644
->> --- a/drivers/net/wireless/b43/main.c
->> +++ b/drivers/net/wireless/b43/main.c
->> @@ -5094,8 +5094,9 @@ static int b43_op_beacon_set_tim(struct ieee80211_hw *hw,
->>  {
->>       struct b43_wl *wl = hw_to_b43_wl(hw);
->>
->> -     /* FIXME: add locking */
->> +     mutex_lock(&wl->mutex);
->>       b43_update_templates(wl);
->> +     mutex_unlock(&wl->mutex);
->>
->>       return 0;
->>  }
->
-> Thanks for the patch.
->
-> However, this does not work. We are in atomic context here.
-> Please see the b43-dev mailing list archives for a recent thread about that.
 
-Michael: guess who it was who sent the patch doing the same back in November.
+Fellow netheads:
 
-Yes, the same troll.
+On behalf of rgb, yours truly is sending out this announcement.
 
--- 
-Rafał
+Today is the last day that the Westin Hotel will be holding a block of
+rooms for Netdev01 at a guaranteed rate of $159.00 or $179.00
+(depending on the type of room required) and there are still rooms
+available.
+
+Please dont procastinate and book now. We are trying to negotiate with
+the hotel to see if they can extend the deadline but so far we have not
+been successful. We are competing against a few tourist activities for
+hotel rooms going on around the area at the same time (example:
+http://www.ottawafestivals.ca/events/winterlude-2/) so we can assure you
+the prices will go up.
+
+The content of the Tutorials/BOFs/talk continues to be updated at:
+https://www.netdev01.org/sessions
+This has to be the most amazing Linux netdev content put together
+anywhere.
+Avoid disappointment and do your reservations at:
+https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
+
+
+cheers,
+jamal (on behalf of Richard Guy Briggs)
