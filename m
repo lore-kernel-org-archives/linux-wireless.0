@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:56747 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750714AbbABKlN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 05:41:13 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21670.30281.688316.623369@gargle.gargle.HOWL> (sfid-20150102_114117_416939_37233614)
-Date: Fri, 2 Jan 2015 16:13:21 +0530
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Enable RX batching
-In-Reply-To: <87bnmh5zyh.fsf@kamboji.qca.qualcomm.com>
-References: <1419834084-11859-1-git-send-email-sujith@msujith.org>
-	<87fvbt62x9.fsf@kamboji.qca.qualcomm.com>
-	<21670.22986.926659.849716@gargle.gargle.HOWL>
-	<87bnmh5zyh.fsf@kamboji.qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35465 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753476AbbAWJvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 04:51:47 -0500
+Message-ID: <1422006704.2728.15.camel@sipsolutions.net> (sfid-20150123_105150_475544_4992F378)
+Subject: Re: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vadim Kochan <vadim4j@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Jan 2015 10:51:44 +0100
+In-Reply-To: <1421073245-20312-1-git-send-email-vadim4j@gmail.com> (sfid-20150112_154435_236040_68404050)
+References: <1421073245-20312-1-git-send-email-vadim4j@gmail.com>
+	 (sfid-20150112_154435_236040_68404050)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> > Along with the other patch and an internal fix,
-> > UDP RX increased to about 950 Mbps.
+On Mon, 2015-01-12 at 16:34 +0200, Vadim Kochan wrote:
+> From: Vadim Kochan <vadim4j@gmail.com>
 > 
-> What was the number before?
+> Added new NL80211_ATTR_NETNS_FD which allows to
+> set namespace via nl80211 by fd.
 
-It was about 600 Mbps. Maybe slightly higher, but the CPU
-was maxed out by the torrent of tasklets trying to
-replenish HTT buffers.
+Applied.
 
-Sujith
+johannes
+
