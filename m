@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10630 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751753AbbAWKSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 05:18:36 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
-Date: Fri, 23 Jan 2015 10:18:31 +0000
-Message-ID: <1422008312.13429.5.camel@egrumbacBox> (sfid-20150123_111842_334506_336F03EC)
-References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1422006994.2728.22.camel@sipsolutions.net>
-In-Reply-To: <1422006994.2728.22.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from zimbra.real-time.com ([63.170.91.9]:45169 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbbAWHQq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 02:16:46 -0500
+Date: Fri, 23 Jan 2015 18:16:19 +1100
+From: James Cameron <quozl@laptop.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RFC PATCH] mwifiex: handle command response in aggregation
+Message-ID: <20150123071619.GA31644@us.netrek.org> (sfid-20150123_081649_486682_DE6C7913)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE1LTAxLTIzIGF0IDEwOjU2ICswMTAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBUaHUsIDIwMTUtMDEtMjIgYXQgMjM6MzAgKzAyMDAsIEVtbWFudWVsIEdydW1iYWNoIHdy
-b3RlOg0KPiA+IFdoZW4gbWFjODAyMTEgZGlzY29ubmVjdHMsIGl0IGRyb3BzIGFsbCB0aGUgcGFj
-a2V0cyBvbiB0aGUNCj4gPiBxdWV1ZXMuIFRoaXMgaGFwcGVucyBhZnRlciB0aGUgbmV0IHN0YWNr
-IGhhcyBiZWVuIG5vdGlmaWVkDQo+ID4gdGhhdCB3ZSBoYXZlIG5vIGxpbmsgYW55bW9yZSAobmV0
-aWZfY2Fycmllcl9vZmYpLg0KPiA+IG5ldGlmX2NhcnJpZXJfb2ZmIGVuc3VyZXMgdGhhdCBubyBu
-ZXcgcGFja2V0cyBhcmUgc2VudCB0bw0KPiA+IHhtaXQoKSBjYWxsYmFjaywgYnV0IHdlIG1pZ2h0
-IGhhdmUgb2xkZXIgcGFja2V0cyBpbiB0aGUNCj4gPiBtaWRkbGUgb2YgdGhlIFR4IHBhdGguIFRo
-ZXNlIHBhY2tldHMgd2lsbCBsYW5kIGluIHRoZQ0KPiA+IGRyaXZlcidzIHF1ZXVlcyBhZnRlciB0
-aGUgbGF0dGVyIGhhdmUgYmVlbiBmbHVzaGVkLg0KPiA+IFN5bmNocm9uaXplX25ldCgpIGJldHdl
-ZW4gbmV0aWZfY2Fycmllcl9vZmYgYW5kIGRydl9mbHVzaCgpDQo+ID4gd2lsbCBmaXggdGhpcy4N
-Cj4gPiANCj4gPiBOb3RlIHRoYXQgd2UgY2FuJ3QgY2FsbCBzeW5jaHJvbml6ZV9uZXQgaW5zaWRl
-DQo+ID4gaWVlZTgwMjExX2ZsdXNoX3F1ZXVlcyBzaW5jZSB0aGVyZSBhcmUgZmxvd3MgdGhhdCBj
-YWxsDQo+ID4gaWVlZTgwMjExX2ZsdXNoX3F1ZXVlcyBhbmQgZG9uJ3QgbmVlZCBzeW5jaHJvbml6
-ZV9uZXQoKQ0KPiA+IHdoaWNoIGlzIGFuIGV4cGVuc2l2ZSBvcGVyYXRpb24uDQo+IA0KPiBJJ20g
-LS0gd2l0aCBhIGhlYXZ5IGhlYXJ0IC0tIGFwcGx5aW5nIHRoaXMgZm9yIG5vdy4gVEkvd2l6ZXJ5
-IHNwZW50IGENCj4gbG90IG9mIHRpbWUgb3B0aW1pc2luZyB0aGUgdGltZSBpdCB0YWtlcyB0byBy
-b2FtLCBhbmQgdGhpcyBzaW5nbGUgbGluZQ0KPiB3aWxsIGludHJvZHVjZSBhIHBvdGVudGlhbCBm
-b3IgaHVuZHJlZHMgb2YgbXMgb2YgbGF0ZW5jeSBpbnRvIHRoZQ0KPiByb2FtaW5nIGZsb3cuDQo+
-IA0KPiBZb3UgKHdlKSByZWFsbHkgbmVlZCB0byB0aGluayBhYm91dCBob3cgdG8gYXZvaWQgdGhh
-dC4NCg0KSSBkb24ndCB0aGluayBpdCB3aWxsIGludHJvZHVjZSB0aGF0IG11Y2ggb2YgbGF0ZW5j
-eS4NCk5vdGUgdGhhdCB0aGVyZSBpcyBhIGNhbGwgdG8gZmx1c2goKSByaWdodCBhZnRlciB0aGF0
-LCB0aGlzIG1lYW5zIHRoYXQNCmFueSBkcml2ZXIgd2hpY2ggaW1wbGVtZW50cyB0aGlzIGNhbGwg
-bmVlZHMgdG8gd2FpdCB0aGVyZS4gU28geW91IGhhdmUNCnRoZSBsYXRlbmN5IGluIGVpdGhlciBw
-bGFjZS4gVGhlIG9ubHkgYWRkaXRpb25hbCBsYXRlbmN5IGl0IGFkZHMgaXMgZm9yDQpvdGhlciBS
-Q1Ugc2VjdGlvbnMgLyBwYWNrZXRzIG9uIG90aGVyIGludGVyZmFjZXMuDQpBbHNvIC0gc2luY2Ug
-d2UganVzdCBzdG9wcGVkIHRoZSBuZXRpZiwgdGhlcmUgY2FuIHBvc3NpYmx5IGJlIG9ubHkgb25l
-DQpwYWNrZXQgZm9yIGVhY2ggdmlmIC8gYWMgcHJvY2Vzc2luZy4gVGhpcyBpcyBub3QgdG9vIG11
-Y2ggZGF0YSB0bw0KcHJvY2Vzcy4NCg0KWW91ciBjYWxsLCBidXQgdG8gaG9uZXN0LCBJIGhhdmUg
-YmVlbiBvcHRpbWl6aW5nIHRoZSByb2FtaW5nIGFzIHdlbGwgKGFzDQp5b3Uga25vdykuIEFuZCBp
-dCB3YXMgcmVhbGx5IGJhZCBmb3IgZHJpdmVycyB0aGF0IGltcGxlbWVudHMgdGhlIGZsdXNoKCkN
-CmNhbGxiYWNrLiBFc3BlY2lhbGx5IGluIGNhc2VzIHdoZXJlIHlvdSBhcmUgYWxyZWFkeSBmYXIg
-ZnJvbSB0aGUgQVAgeW91DQp3YW50IHRvIHJvYW0gZnJvbS4gVGhpcyBpcyB3aHkgSSBhZGRlZCB0
-aGUgZHJvcCBwYXJhbWV0ZXIgYW5kIG90aGVyDQpvcHRpbWl6YXRpb25zIChkb24ndCBmbHVzaCgp
-IGFmdGVyIHByb2JpbmcgZXRjLi4uKQ0KDQpBZ2FpbiAtIHlvdXIgY2FsbC4gDQoNCg==
+Firmware does occasionally pass a command response to the host on the
+data port.  Ensure it is processed.
+
+http://dev.laptop.org/ticket/12749
+---
+Seen on device firmwares:
+
+	14.66.9.p96
+	14.66.35.p52
+
+Others not tested.
+
+ drivers/net/wireless/mwifiex/sdio.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 933dae1..8fe6147 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1240,8 +1240,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 			/* copy pkt to deaggr buf */
+ 			skb_deaggr = card->mpa_rx.skb_arr[pind];
+ 
+-			if ((pkt_type == MWIFIEX_TYPE_DATA) && (pkt_len <=
+-					 card->mpa_rx.len_arr[pind])) {
++			if (pkt_len <= card->mpa_rx.len_arr[pind]) {
+ 
+ 				memcpy(skb_deaggr->data, curr_ptr, pkt_len);
+ 
+@@ -1251,7 +1250,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 				mwifiex_decode_rx_packet(adapter, skb_deaggr,
+ 							 pkt_type);
+ 			} else {
+-				dev_err(adapter->dev, "wrong aggr pkt:"
++				dev_err(adapter->dev, "bad aggr pkt:"
+ 					" type=%d len=%d max_len=%d\n",
+ 					pkt_type, pkt_len,
+ 					card->mpa_rx.len_arr[pind]);
+-- 
+1.9.1
+
+
+-- 
+James Cameron
+http://quozl.linux.org.au/
