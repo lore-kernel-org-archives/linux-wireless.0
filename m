@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36258 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751784AbbAGOMM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 09:12:12 -0500
-Message-ID: <1420639929.3407.18.camel@sipsolutions.net> (sfid-20150107_151223_387613_C33E9AFD)
-Subject: Re: [PATCHv4] mac80211: enable TPC through mac80211 stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless@vger.kernel.org, nbd@openwrt.org,
-	thomas@net.t-labs.tu-berlin.de
-Date: Wed, 07 Jan 2015 15:12:09 +0100
-In-Reply-To: <1420566070-25336-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150106_184113_066053_088DBBD3)
-References: <1420566070-25336-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20150106_184113_066053_088DBBD3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.11.231]:38703 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbbAWRty convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 12:49:54 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH V2] bcma: clean bus initialization code
+References: <1421435929-21499-1-git-send-email-zajec5@gmail.com>
+	<1421438379-26211-1-git-send-email-zajec5@gmail.com>
+Date: Fri, 23 Jan 2015 19:49:48 +0200
+In-Reply-To: <1421438379-26211-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Fri, 16 Jan 2015
+ 20:59:39 +0100")
+Message-ID: <87h9vhl743.fsf@kamboji.qca.qualcomm.com> (sfid-20150123_184958_112691_32CAC249)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-06 at 18:41 +0100, Lorenzo Bianconi wrote:
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-> + * @txpower_type: TX power adjustment used to control per packet Transmit
-> + *	Power Control (TPC) in lower driver for the current vif. In particular
-> + *	TPC is enabled if value passed in %txpower_type is
-> + *	NL80211_TX_POWER_AUTOMATIC (no limit from userspace) or
-> + *	NL80211_TX_POWER_LIMITED (allow using less than specified from
-> + *	userspace), whereas TPC is disabled if %txpower_type is set to
-> + *	NL80211_TX_POWER_FIXED (use value configured from userspace)
+> This moves main bus init code to the main.c and renames old function to
+> make its purpose clear.
+> Thanks to this change we'll also be able to separate scanning from
+> registration (and support PCIe Gen 2 devices) in the future.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> V2: Fix typo (s/initialiation/initialization/)
+>     Put bcma_detect_chip earlier in .h to match order in .c
 
-I was going to apply this, but now I have second thoughts.
+Thanks, applied to wireless-drivers-next.git. But to avoid any UTF-8
+problems I applied this one manually from email. 'git log' and gitk look
+good to me, but please do check still that the log is valid.
 
-Does it really make sense to ask the driver to do "automatic"? After
-all, there are other limits in mac80211 (like 11h from the AP and
-regulatory) that need to be considered. So perhaps if userspace says
-"automatic", the driver should still see only "limited"?
-
-johannes
-
+-- 
+Kalle Valo
