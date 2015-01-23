@@ -1,66 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35623 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751853AbbASRwc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 12:52:32 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] Revert "wireless: Support of IFLA_INFO_KIND rtnl attribute"
-Date: Mon, 19 Jan 2015 18:52:23 +0100
-Message-Id: <1421689943-13264-1-git-send-email-johannes@sipsolutions.net> (sfid-20150119_185234_968564_95BB0018)
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58500 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755801AbbAWP6Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 10:58:25 -0500
+Received: by mail-we0-f174.google.com with SMTP id x3so8371743wes.5
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 07:58:24 -0800 (PST)
+Date: Fri, 23 Jan 2015 17:47:31 +0200
+From: Vadim Kochan <vadim4j@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Vadim Kochan <vadim4j@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: [RFC iw next] phy: Allow set netns by fd
+Message-ID: <20150123154731.GA9454@angus-think.wlc.globallogic.com> (sfid-20150123_165835_056515_116C6F47)
+References: <1422026027-5806-1-git-send-email-vadim4j@gmail.com>
+ <1422027267.2728.39.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1422027267.2728.39.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jan 23, 2015 at 04:34:27PM +0100, Johannes Berg wrote:
+> On Fri, 2015-01-23 at 17:13 +0200, Vadim Kochan wrote:
+> > From: Vadim Kochan <vadim4j@gmail.com>
+> > 
+> > Added possibility to change network namespace
+> > for phy device by network namespace name from
+> > /var/run/netns or by absolute file path:
+> > 
+> >     iw phy XXX set netns <nsname> | <pid>
+> > 
+> > First iw tries to find given nsname from /var/run/netns
+> > or by absoute path (in case if nsname contains "/") and if
+> > it failed to open nsname file then iw uses given argument as <pid>.
+> 
+> Hmm. I think it'd be better to do something like
+> 
+> iw phy XXX set netns name <nsname>
+> 
+> That way there's no way it can be a valid PID.
+> 
+> Otherwise, if you happen to have a file in your local directory that's
+> the name of the PID you want, weird things happen.
+> 
+> > Also added missing NL80211 attributes before NL80211_CMD_SET_WIPHY_NETNS.
+> 
+> Please don't - I'll update nl80211.h by copying as needed.
+> 
+> johannes
+> 
 
-This reverts commit ba1debdfed974f25aa598c283567878657b292ee.
+OK, just to clarify with nl80211.h - you will update it including new
+NL80211_ATTR_NETNS_FD ? If yes - I will wait for this change.
 
-Oliver reported that it breaks network-manager, for some reason with
-this patch NM decides that the device isn't wireless but "generic"
-(ethernet), sees no carrier (as expected with wifi) and fails to do
-anything else with it.
-
-Revert this to unbreak userspace.
-
-Reported-by: Oliver Hartkopp <socketcan@hartkopp.net>
-Tested-by: Oliver Hartkopp <socketcan@hartkopp.net>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 456e4c38c279..3af0ecf1cc16 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -21,7 +21,6 @@
- #include <linux/sched.h>
- #include <net/genetlink.h>
- #include <net/cfg80211.h>
--#include <net/rtnetlink.h>
- #include "nl80211.h"
- #include "core.h"
- #include "sysfs.h"
-@@ -964,10 +963,6 @@ void cfg80211_stop_iface(struct wiphy *wiphy, struct wireless_dev *wdev,
- }
- EXPORT_SYMBOL(cfg80211_stop_iface);
- 
--static const struct rtnl_link_ops wireless_link_ops = {
--	.kind = "wlan",
--};
--
- static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 					 unsigned long state, void *ptr)
- {
-@@ -986,7 +981,6 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 	switch (state) {
- 	case NETDEV_POST_INIT:
- 		SET_NETDEV_DEVTYPE(dev, &wiphy_type);
--		dev->rtnl_link_ops = &wireless_link_ops;
- 		break;
- 	case NETDEV_REGISTER:
- 		/*
--- 
-2.1.4
-
+Thanks,
