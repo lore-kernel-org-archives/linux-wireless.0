@@ -1,137 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:53361 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753908AbbAXOEW (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52461 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750996AbbAWGJd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 09:04:22 -0500
-From: Tejun Heo <tj@kernel.org>
-To: akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 21/32] wireless: use %*pb[l] to print bitmaps including cpumasks and nodemasks
-Date: Sat, 24 Jan 2015 09:03:27 -0500
-Message-Id: <1422108218-25398-22-git-send-email-tj@kernel.org> (sfid-20150124_150723_318560_3852B225)
-In-Reply-To: <1422108218-25398-1-git-send-email-tj@kernel.org>
-References: <1422108218-25398-1-git-send-email-tj@kernel.org>
+	Fri, 23 Jan 2015 01:09:33 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0N65JpA029165
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 22:09:32 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1s2a34vtc8-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 22:09:32 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yogeshp@marvell.com>,
+	<nishants@marvell.com>, <frankh@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 1/3] mwifiex: add support for SD8801
+Date: Fri, 23 Jan 2015 17:09:17 +0530
+Message-ID: <1422013159-3093-1-git-send-email-patila@marvell.com> (sfid-20150123_070936_818742_50BCAD83)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-printk and friends can now formap bitmaps using '%*pb[l]'.  cpumask
-and nodemask also provide cpumask_pr_args() and nodemask_pr_args()
-respectively which can be used to generate the two printf arguments
-necessary to format the specified cpu/nodemask.
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-This patch is dependent on the following two patches.
+SD8801 is Marvell's 1x1 802.11bgn offering.
+This patch adds Device IDs for SD8801 and also defines card
+structure which has definition for register offsets, buffer sizes etc.
 
- lib/vsprintf: implement bitmap printing through '%*pb[l]'
- cpumask, nodemask: implement cpumask/nodemask_pr_args()
-
-Please wait till the forementioned patches are merged to mainline
-before applying to subsystem trees.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Frank Huang <frankh@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 23 ++++++-----------------
- drivers/net/wireless/ath/carl9170/debug.c      | 24 ++++++------------------
- 2 files changed, 12 insertions(+), 35 deletions(-)
+ drivers/net/wireless/mwifiex/sdio.c |  5 +++++
+ drivers/net/wireless/mwifiex/sdio.h | 15 +++++++++++++++
+ 2 files changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-index 8cef1ed..dc79afd 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
-@@ -291,26 +291,15 @@ static ssize_t read_file_slot(struct file *file, char __user *user_buf,
- {
- 	struct ath9k_htc_priv *priv = file->private_data;
- 	char buf[512];
--	unsigned int len = 0;
-+	unsigned int len;
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index a70f1033..cee107f 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -282,6 +282,9 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ #define SDIO_DEVICE_ID_MARVELL_8897   (0x912d)
+ /* Device ID for SD8887 */
+ #define SDIO_DEVICE_ID_MARVELL_8887   (0x9135)
++/* Device ID for SD8801 */
++#define SDIO_DEVICE_ID_MARVELL_8801   (0x9139)
++
  
- 	spin_lock_bh(&priv->tx.tx_lock);
--
--	len += scnprintf(buf + len, sizeof(buf) - len, "TX slot bitmap : ");
--
--	len += bitmap_scnprintf(buf + len, sizeof(buf) - len,
--			       priv->tx.tx_slot, MAX_TX_BUF_NUM);
--
--	len += scnprintf(buf + len, sizeof(buf) - len, "\n");
--
--	len += scnprintf(buf + len, sizeof(buf) - len,
--			 "Used slots     : %d\n",
--			 bitmap_weight(priv->tx.tx_slot, MAX_TX_BUF_NUM));
--
-+	len = scnprintf(buf, sizeof(buf),
-+			"TX slot bitmap : %*pb\n"
-+			"Used slots     : %d\n",
-+			MAX_TX_BUF_NUM, priv->tx.tx_slot,
-+			bitmap_weight(priv->tx.tx_slot, MAX_TX_BUF_NUM));
- 	spin_unlock_bh(&priv->tx.tx_lock);
--
--	if (len > sizeof(buf))
--		len = sizeof(buf);
--
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
+ /* WLAN IDs */
+ static const struct sdio_device_id mwifiex_ids[] = {
+@@ -295,6 +298,8 @@ static const struct sdio_device_id mwifiex_ids[] = {
+ 		.driver_data = (unsigned long) &mwifiex_sdio_sd8897},
+ 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887),
+ 		.driver_data = (unsigned long)&mwifiex_sdio_sd8887},
++	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8801),
++		.driver_data = (unsigned long)&mwifiex_sdio_sd8801},
+ 	{},
+ };
  
-diff --git a/drivers/net/wireless/ath/carl9170/debug.c b/drivers/net/wireless/ath/carl9170/debug.c
-index 1c0af9c..6808db4 100644
---- a/drivers/net/wireless/ath/carl9170/debug.c
-+++ b/drivers/net/wireless/ath/carl9170/debug.c
-@@ -214,14 +214,10 @@ DEBUGFS_DECLARE_RO_FILE(name, _read_bufsize)
- static char *carl9170_debugfs_mem_usage_read(struct ar9170 *ar, char *buf,
- 					     size_t bufsize, ssize_t *len)
- {
--	ADD(buf, *len, bufsize, "jar: [");
--
- 	spin_lock_bh(&ar->mem_lock);
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 895eea0..a4bb0db 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -34,6 +34,7 @@
+ #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
+ #define SD8897_DEFAULT_FW_NAME "mrvl/sd8897_uapsta.bin"
+ #define SD8887_DEFAULT_FW_NAME "mrvl/sd8887_uapsta.bin"
++#define SD8801_DEFAULT_FW_NAME "mrvl/sd8801_uapsta.bin"
  
--	*len += bitmap_scnprintf(&buf[*len], bufsize - *len,
--				  ar->mem_bitmap, ar->fw.mem_blocks);
--
--	ADD(buf, *len, bufsize, "]\n");
-+	ADD(buf, *len, bufsize, "jar: [%*pb]\n",
-+	    ar->fw.mem_blocks, ar->mem_bitmap);
+ #define BLOCK_MODE	1
+ #define BYTE_MODE	0
+@@ -474,6 +475,20 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
+ 	.auto_tdls = true,
+ };
  
- 	ADD(buf, *len, bufsize, "cookies: used:%3d / total:%3d, allocs:%d\n",
- 	    bitmap_weight(ar->mem_bitmap, ar->fw.mem_blocks),
-@@ -316,17 +312,13 @@ static char *carl9170_debugfs_ampdu_state_read(struct ar9170 *ar, char *buf,
- 		    cnt, iter->tid, iter->bsn, iter->snx, iter->hsn,
- 		    iter->max, iter->state, iter->counter);
- 
--		ADD(buf, *len, bufsize, "\tWindow:  [");
--
--		*len += bitmap_scnprintf(&buf[*len], bufsize - *len,
--			iter->bitmap, CARL9170_BAW_BITS);
-+		ADD(buf, *len, bufsize, "\tWindow:  [%*pb,W]\n",
-+		    CARL9170_BAW_BITS, iter->bitmap);
- 
- #define BM_STR_OFF(offset)					\
- 	((CARL9170_BAW_BITS - (offset) - 1) / 4 +		\
- 	 (CARL9170_BAW_BITS - (offset) - 1) / 32 + 1)
- 
--		ADD(buf, *len, bufsize, ",W]\n");
--
- 		offset = BM_STR_OFF(0);
- 		ADD(buf, *len, bufsize, "\tBase Seq: %*s\n", offset, "T");
- 
-@@ -448,12 +440,8 @@ static char *carl9170_debugfs_vif_dump_read(struct ar9170 *ar, char *buf,
- 	ADD(buf, *len, bufsize, "registered VIFs:%d \\ %d\n",
- 	    ar->vifs, ar->fw.vif_num);
- 
--	ADD(buf, *len, bufsize, "VIF bitmap: [");
--
--	*len += bitmap_scnprintf(&buf[*len], bufsize - *len,
--				 &ar->vif_bitmap, ar->fw.vif_num);
--
--	ADD(buf, *len, bufsize, "]\n");
-+	ADD(buf, *len, bufsize, "VIF bitmap: [%*pb]\n",
-+	    ar->fw.vif_num, &ar->vif_bitmap);
- 
- 	rcu_read_lock();
- 	list_for_each_entry_rcu(iter, &ar->vif_list, list) {
++static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
++	.firmware = SD8801_DEFAULT_FW_NAME,
++	.reg = &mwifiex_reg_sd87xx,
++	.max_ports = 16,
++	.mp_agg_pkt_limit = 8,
++	.supports_sdio_new_mode = false,
++	.has_control_mask = true,
++	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
++	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
++	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
++	.supports_fw_dump = false,
++	.auto_tdls = false,
++};
++
+ /*
+  * .cmdrsp_complete handler
+  */
 -- 
-2.1.0
+1.8.1.4
 
