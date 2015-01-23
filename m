@@ -1,143 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754540AbbAVUeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 15:34:25 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 25/38] iwlwifi: mvm: add support for new LTR command
-Date: Thu, 22 Jan 2015 22:33:16 +0200
-Message-Id: <1421958809-3371-25-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214446_456852_82A05B25)
-In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
-References: <1421958313.6424.2.camel@egrumbacBox>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:59115 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750900AbbAWOVU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 09:21:20 -0500
+Message-ID: <54C258DB.7050308@broadcom.com> (sfid-20150123_152123_073711_3F2EAD76)
+Date: Fri, 23 Jan 2015 15:21:15 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?SsO2cmcgS3JhdXNl?= <jkrause@posteo.de>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac: kernel panic in brcmf_cfg80211_del_key
+References: <1422016318.1212.22.camel@posteo.de>
+In-Reply-To: <1422016318.1212.22.camel@posteo.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This new command will give finer granularity to configure
-the platform.
+On 01/23/15 13:31, Jörg Krause wrote:
+> Hi all,
+>
+> I'm running an wireless device with Linux kernel 3.18.3 and the brcmfmac
+> driver. When connection the device to my network, I see from time to
+> time these messages in the kernel log:
+>
+> [  899.624759] brcmfmac: brcmf_cfg80211_del_key: invalid key index (4)
+> [  899.649874] brcmfmac: brcmf_cfg80211_del_key: invalid key index (5)
+> [  899.678066] cfg80211: Calling CRDA to update world regulatory domain
+>
+> I'm not sure about the meaning of the 'invalid key index' messages and
+> if it may cause some trouble. However the system is running fine.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw-file.h      |  2 ++
- drivers/net/wireless/iwlwifi/mvm/fw-api-power.h | 20 ++++++++++++-
- drivers/net/wireless/iwlwifi/mvm/fw.c           | 38 +++++++++++++++++++------
- 3 files changed, 51 insertions(+), 9 deletions(-)
+Basically, wpa_supplicant does key deletion for index 0 to 5, but 
+brcmfmac only has 4 keys (0 to 3) hence the message. This is not an issue.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index 4aa26b2..b998aaf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -241,6 +241,7 @@ enum iwl_ucode_tlv_flag {
-  * @IWL_UCODE_TLV_API_SF_NO_DUMMY_NOTIF: ucode supports disabling dummy notif.
-  * @IWL_UCODE_TLV_API_FRAGMENTED_SCAN: This ucode supports active dwell time
-  *	longer than the passive one, which is essential for fragmented scan.
-+ * IWL_UCODE_TLV_API_HDC_PHASE_0: ucode supports finer configuration of LTR
-  * @IWL_UCODE_TLV_API_BASIC_DWELL: use only basic dwell time in scan command,
-  *	regardless of the band or the number of the probes. FW will calculate
-  *	the actual dwell time.
-@@ -255,6 +256,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_LMAC_SCAN		= BIT(6),
- 	IWL_UCODE_TLV_API_SF_NO_DUMMY_NOTIF	= BIT(7),
- 	IWL_UCODE_TLV_API_FRAGMENTED_SCAN	= BIT(8),
-+	IWL_UCODE_TLV_API_HDC_PHASE_0		= BIT(10),
- 	IWL_UCODE_TLV_API_BASIC_DWELL		= BIT(13),
- 	IWL_UCODE_TLV_API_SCD_CFG		= BIT(15),
- 	IWL_UCODE_TLV_API_SINGLE_SCAN_EBS	= BIT(16),
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-index 4300200..4fc0938b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw-api-power.h
-@@ -92,14 +92,32 @@ enum iwl_ltr_config_flags {
- };
- 
- /**
-+ * struct iwl_ltr_config_cmd_v1 - configures the LTR
-+ * @flags: See %enum iwl_ltr_config_flags
-+ */
-+struct iwl_ltr_config_cmd_v1 {
-+	__le32 flags;
-+	__le32 static_long;
-+	__le32 static_short;
-+} __packed; /* LTR_CAPABLE_API_S_VER_1 */
-+
-+#define LTR_VALID_STATES_NUM 4
-+
-+/**
-  * struct iwl_ltr_config_cmd - configures the LTR
-  * @flags: See %enum iwl_ltr_config_flags
-+ * @static_long:
-+ * @static_short:
-+ * @ltr_cfg_values:
-+ * @ltr_short_idle_timeout:
-  */
- struct iwl_ltr_config_cmd {
- 	__le32 flags;
- 	__le32 static_long;
- 	__le32 static_short;
--} __packed;
-+	__le32 ltr_cfg_values[LTR_VALID_STATES_NUM];
-+	__le32 ltr_short_idle_timeout;
-+} __packed; /* LTR_CAPABLE_API_S_VER_2 */
- 
- /* Radio LP RX Energy Threshold measured in dBm */
- #define POWER_LPRX_RSSI_THRESHOLD	75
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index 2e12f41..a322a5e 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -499,6 +499,35 @@ int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, enum iwl_fw_dbg_conf conf_id)
- 	return ret;
- }
- 
-+static int iwl_mvm_config_ltr_v1(struct iwl_mvm *mvm)
-+{
-+	struct iwl_ltr_config_cmd_v1 cmd_v1 = {
-+		.flags = cpu_to_le32(LTR_CFG_FLAG_FEATURE_ENABLE),
-+	};
-+
-+	if (!mvm->trans->ltr_enabled)
-+		return 0;
-+
-+	return iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0,
-+				    sizeof(cmd_v1), &cmd_v1);
-+}
-+
-+static int iwl_mvm_config_ltr(struct iwl_mvm *mvm)
-+{
-+	struct iwl_ltr_config_cmd cmd = {
-+		.flags = cpu_to_le32(LTR_CFG_FLAG_FEATURE_ENABLE),
-+	};
-+
-+	if (!mvm->trans->ltr_enabled)
-+		return 0;
-+
-+	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_HDC_PHASE_0))
-+		return iwl_mvm_config_ltr_v1(mvm);
-+
-+	return iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0,
-+				    sizeof(cmd), &cmd);
-+}
-+
- int iwl_mvm_up(struct iwl_mvm *mvm)
- {
- 	int ret, i;
-@@ -604,14 +633,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	/* Initialize tx backoffs to the minimal possible */
- 	iwl_mvm_tt_tx_backoff(mvm, 0);
- 
--	if (mvm->trans->ltr_enabled) {
--		struct iwl_ltr_config_cmd cmd = {
--			.flags = cpu_to_le32(LTR_CFG_FLAG_FEATURE_ENABLE),
--		};
--
--		WARN_ON(iwl_mvm_send_cmd_pdu(mvm, LTR_CONFIG, 0,
--					     sizeof(cmd), &cmd));
--	}
-+	WARN_ON(iwl_mvm_config_ltr(mvm));
- 
- 	ret = iwl_mvm_power_update_device(mvm);
- 	if (ret)
--- 
-1.9.1
+> Now I had a test case with two wireless devices having the same hostname
+> and MAC address in the same network.
+
+What? Why is this a test case. That is fundamentally wrong and asking 
+for trouble.
+
+> The first wireless devices connects to the network and starts receiving
+> an audio stream via UDP. Another device with same hostname and MAC is
+> started after this and repeatedly reboots after 30 seconds.
+>
+> The first device gets disconnected after the second device connects to
+> the network. The device is running with the network tools tools
+> wpa_supplicant, a wpa_action script, udhcpc, avahi, and crda. The device
+> tries to reconnect to the network. It successfully connects, but
+> authentification fails. This step produces a lot of the kernel messages
+> from above.
+>
+> Okay, nothing wrong until here I think. But after some time the brcmfmac
+> driver is dying:
+>
+> [  901.799454] ------------[ cut here ]------------
+> [  901.804332] WARNING: CPU: 0 PID: 104 at
+> drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c:1076
+> brcmf_netdev_wait_pend8021x+0xe0/0xf4 [brcmfmac]()
+> [  901.866565] Modules linked in:
+> [  901.907705] 	brcmfmac brcmutil
+> [  901.909298] CPU: 0 PID: 104 Comm: wpa_supplicant Not tainted 3.18.3
+> #1
+> [  901.959287] [<c000de40>] (unwind_backtrace) from [<c000c1f4>]
+> (show_stack+0x10/0x14)
+> [  901.993628] [<c000c1f4>] (show_stack) from [<c0016400>]
+> (warn_slowpath_common+0x68/0x88)
+> [  902.016243] [<c0016400>] (warn_slowpath_common) from [<c00164bc>]
+> (warn_slowpath_null+0x1c/0x24)
+> [  902.040249] [<c00164bc>] (warn_slowpath_null) from [<bf016304>]
+> (brcmf_netdev_wait_pend8021x+0xe0/0xf4 [brcmfmac])
+> [  902.067408] [<bf016304>] (brcmf_netdev_wait_pend8021x [brcmfmac])
+> from [<bf0061d8>] (brcmf_cfg80211_get_key+0x1a8/0x374 [brcmfmac])
+> [  902.098434] [<bf0061d8>] (brcmf_cfg80211_get_key [brcmfmac]) from
+> [<bf00770c>] (brcmf_cfg80211_del_key+0x1d8/0x2e0 [brcmfmac])
+> [  902.164527] [<bf00770c>] (brcmf_cfg80211_del_key [brcmfmac]) from
+> [<bf0078ec>] (brcmf_cfg80211_add_key+0xd8/0x248 [brcmfmac])
+> [  902.213096] [<bf0078ec>] (brcmf_cfg80211_add_key [brcmfmac]) from
+> [<c037f368>] (nl80211_new_key+0x108/0x144)
+> [  902.253581] [<c037f368>] (nl80211_new_key) from [<c02ccb98>]
+> (genl_rcv_msg+0x22c/0x39c)
+> [  902.290997] [<c02ccb98>] (genl_rcv_msg) from [<c02cc12c>]
+> (netlink_rcv_skb+0xb4/0xd8)
+> [  902.325813] [<c02cc12c>] (netlink_rcv_skb) from [<c02cc958>]
+> (genl_rcv+0x20/0x34)
+> [  902.363540] [<c02cc958>] (genl_rcv) from [<c02cbaa8>]
+> (netlink_unicast+0x14c/0x1cc)
+> [  902.399402] [<c02cbaa8>] (netlink_unicast) from [<c02cbe98>]
+> (netlink_sendmsg+0x2b8/0x39c)
+> [  902.435798] [<c02cbe98>] (netlink_sendmsg) from [<c0297860>]
+> (sock_sendmsg+0x84/0xa8)
+> [  902.477184] [<c0297860>] (sock_sendmsg) from [<c0298d28>]
+> (___sys_sendmsg.part.32+0x284/0x290)
+> [  902.486197] [<c0298d28>] (___sys_sendmsg.part.32) from [<c0299d34>]
+> (__sys_sendmsg+0x4c/0x7c)
+> [  902.555011] [<c0299d34>] (__sys_sendmsg) from [<c0009620>]
+> (ret_fast_syscall+0x0/0x44)
+> [  902.591178] ---[ end trace 93a9f5360e80c5ca ]---
+>
+> I'm not sure if I should worry about this issue.
+
+Well, what is happening here is that the driver got a EAPOL message from 
+the network stack to transmit and then got a key config request. That 
+key config is held until transmit of EAPOL is completed. So it is 
+suspicious.
+
+Regards,
+Arend
+
+> Best regards
+> Jörg Krause
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
