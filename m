@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:54228 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbbAMJWg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 04:22:36 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix duration calculation for quiet param
-Date: Tue, 13 Jan 2015 14:52:14 +0530
-Message-ID: <1421140934-16109-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150113_102241_630520_AC4E4E79)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:35553 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754054AbbAWKBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 05:01:16 -0500
+Message-ID: <1422007273.2728.24.camel@sipsolutions.net> (sfid-20150123_110129_219030_C5F6C60B)
+Subject: Re: [RFCv3 1/4] mac80211: ibss/mesh move bw checking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Jan 2015 11:01:13 +0100
+In-Reply-To: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150120_133644_653402_AD13860F)
+References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20150120_133644_653402_AD13860F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The duty cycle (% of quiet duration) is used to put the device
-in quiet mode for the given period. Currently the quiet duration
-is wrongly calculated which results in not enabling quiet mode.
-Fix the calculation as below
+On Tue, 2015-01-20 at 13:35 +0100, Janusz Dziedzic wrote:
+> We will need this as a preparetion for VHT.
 
-     duration = (period * duty cycle) / 100
+"preparation" :)
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/thermal.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It'd be good to explain it a little more though. At least the very last
+hunk:
 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index edecc6c..aede750 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -98,7 +98,7 @@ static int ath10k_thermal_set_cur_dutycycle(struct thermal_cooling_device *cdev,
- 	}
- 	period = max(ATH10K_QUIET_PERIOD_MIN,
- 		     (ATH10K_QUIET_PERIOD_DEFAULT / num_bss));
--	duration = period * (duty_cycle / 100);
-+	duration = (period * duty_cycle) / 100;
- 	enabled = duration ? 1 : 0;
- 
- 	ret = ath10k_wmi_pdev_set_quiet_mode(ar, period, duration,
--- 
-2.2.1
+> @@ -401,6 +402,9 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+>  					      elems->ht_cap_elem, sta))
+>  		changed |= IEEE80211_RC_BW_CHANGED;
+>  
+> +	if (bw != sta->sta.bandwidth)
+> +		changed |= IEEE80211_RC_BW_CHANGED;
+> +
+
+seems new - not just moved.
+
+johannes
 
