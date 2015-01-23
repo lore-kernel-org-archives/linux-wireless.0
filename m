@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:50576 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908AbbASCK7 (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:48302 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756437AbbAWTQ6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 21:10:59 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 6/6] ath9k: Enable manual peak detect calibration
-Date: Mon, 19 Jan 2015 07:43:18 +0530
-Message-Id: <1421633598-4488-7-git-send-email-sujith@msujith.org> (sfid-20150119_031106_389295_8C8FFEFA)
-In-Reply-To: <1421633598-4488-1-git-send-email-sujith@msujith.org>
-References: <1421633598-4488-1-git-send-email-sujith@msujith.org>
+	Fri, 23 Jan 2015 14:16:58 -0500
+Received: by mail-la0-f50.google.com with SMTP id hs14so2659953lab.9
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 11:16:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87h9vhl743.fsf@kamboji.qca.qualcomm.com>
+References: <1421435929-21499-1-git-send-email-zajec5@gmail.com>
+	<1421438379-26211-1-git-send-email-zajec5@gmail.com>
+	<87h9vhl743.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 23 Jan 2015 20:16:56 +0100
+Message-ID: <CACna6ryPpezpP2YUAC02omReuMHagAT2G9rEwh_NYpaOQK8uJA@mail.gmail.com> (sfid-20150123_201710_475466_DC1DC3DE)
+Subject: Re: [PATCH V2] bcma: clean bus initialization code
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 23 January 2015 at 18:49, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Rafał Miłecki <zajec5@gmail.com> writes:
+>
+>> This moves main bus init code to the main.c and renames old function to
+>> make its purpose clear.
+>> Thanks to this change we'll also be able to separate scanning from
+>> registration (and support PCIe Gen 2 devices) in the future.
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>> V2: Fix typo (s/initialiation/initialization/)
+>>     Put bcma_detect_chip earlier in .h to match order in .c
+>
+> Thanks, applied to wireless-drivers-next.git. But to avoid any UTF-8
+> problems I applied this one manually from email. 'git log' and gitk look
+> good to me, but please do check still that the log is valid.
 
-On some AR955x/QCA953x boards, noise floor calibration
-gets stuck and the cause is a hardware/BB issue. To fix
-this, peak detect calibration in the HW is disabled
-and is done in the driver instead. There a few differences
-with the calibration routine for older chips like
-AR9331.
+Looks great, thanks.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+I hope kernel.org team will upgrade patchwork soon so I can send more patches :|
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 91130c0..174442b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -1640,8 +1640,14 @@ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
- 
- skip_tx_iqcal:
- 	if (run_agc_cal || !(ah->ah_flags & AH_FASTCC)) {
--		if (AR_SREV_9330_11(ah))
--			ar9003_hw_manual_peak_cal(ah, 0, IS_CHAN_2GHZ(chan));
-+		if (AR_SREV_9330_11(ah) || AR_SREV_9531(ah) || AR_SREV_9550(ah)) {
-+			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
-+				if (!(ah->rxchainmask & (1 << i)))
-+					continue;
-+				ar9003_hw_manual_peak_cal(ah, i,
-+							  IS_CHAN_2GHZ(chan));
-+			}
-+		}
- 
- 		/*
- 		 * For non-AR9550 chips, we just trigger AGC calibration
 -- 
-2.2.2
-
+Rafał
