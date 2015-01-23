@@ -1,43 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52803 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35631 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751769AbbA3IL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 03:11:59 -0500
-Message-ID: <1422605517.1919.2.camel@sipsolutions.net> (sfid-20150130_091202_226222_1D871A9F)
-Subject: Re: moving the wiki
+	id S1753605AbbAWK1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 05:27:38 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 30 Jan 2015 09:11:57 +0100
-In-Reply-To: <CACna6rzvhJGgQNWBZvfTSz4bsFRsTPcZNiKoZ+po==u6K8gEEg@mail.gmail.com> (sfid-20150130_071550_392649_560599F3)
-References: <1392060043.4128.37.camel@jlt4.sipsolutions.net>
-	 <1422543484.6322.10.camel@sipsolutions.net>
-	 <CACna6rzvhJGgQNWBZvfTSz4bsFRsTPcZNiKoZ+po==u6K8gEEg@mail.gmail.com>
-	 (sfid-20150130_071550_392649_560599F3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: suppress smatch warnings
+Date: Fri, 23 Jan 2015 11:27:33 +0100
+Message-Id: <1422008853-520-1-git-send-email-johannes@sipsolutions.net> (sfid-20150123_112741_953323_C06E767A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-30 at 07:15 +0100, Rafał Miłecki wrote:
-> On 29 January 2015 at 15:58, Johannes Berg <johannes@sipsolutions.net> wrote:
-> >> Obviously, another consequence is that the wiki markup will change
-> >> somewhat. Moin and Mediawiki aren't too far from each other (except for
-> >> table syntax), but there are some things that are different that you'll
-> >> have to get used to when editing.
-> >
-> > Again, dokuwiki - slightly different from moinmoin.
-> 
-> Tables using colspans were not moved correctly, see e.g.:
-> https://wireless.wiki.kernel.org/en/users/Drivers/b43/soc
-> 
-> It displays "–colspan=3–Chip" in a table cell.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I thought I fixed colspan/rowspan in my conversion, but I guess I didn't
-get that right...
+smatch warns that we once checked request->ssids in two functions
+and then unconditionally used it later again.
 
-Actually some of them there do seem to have it right? Anyway - we'll
-have to fix that up by hand.
+This is actually fine, because the code has a relationship between
+attrs[NL80211_ATTR_SCAN_SSIDS], n_ssids and request->ssids, but
+smatch isn't smart enough to realize that.
 
-johannes
+Suppress the warnings by always checking just n_ssids - that way
+smatch won't know that request->ssids could be NULL, and since it
+is only NULL when n_ssids is 0 we still check everything correctly.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4542e8683beb..454d7a079d03 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5776,7 +5776,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 		request->ssids = (void *)&request->channels[n_channels];
+ 	request->n_ssids = n_ssids;
+ 	if (ie_len) {
+-		if (request->ssids)
++		if (n_ssids)
+ 			request->ie = (void *)(request->ssids + n_ssids);
+ 		else
+ 			request->ie = (void *)(request->channels + n_channels);
+@@ -5832,7 +5832,7 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	request->n_channels = i;
+ 
+ 	i = 0;
+-	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
++	if (n_ssids) {
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
+ 			if (nla_len(attr) > IEEE80211_MAX_SSID_LEN) {
+ 				err = -EINVAL;
+@@ -6030,7 +6030,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		request->ssids = (void *)&request->channels[n_channels];
+ 	request->n_ssids = n_ssids;
+ 	if (ie_len) {
+-		if (request->ssids)
++		if (n_ssids)
+ 			request->ie = (void *)(request->ssids + n_ssids);
+ 		else
+ 			request->ie = (void *)(request->channels + n_channels);
+@@ -6039,7 +6039,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	if (n_match_sets) {
+ 		if (request->ie)
+ 			request->match_sets = (void *)(request->ie + ie_len);
+-		else if (request->ssids)
++		else if (n_ssids)
+ 			request->match_sets =
+ 				(void *)(request->ssids + n_ssids);
+ 		else
+@@ -6098,7 +6098,7 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	request->n_channels = i;
+ 
+ 	i = 0;
+-	if (attrs[NL80211_ATTR_SCAN_SSIDS]) {
++	if (n_ssids) {
+ 		nla_for_each_nested(attr, attrs[NL80211_ATTR_SCAN_SSIDS],
+ 				    tmp) {
+ 			if (nla_len(attr) > IEEE80211_MAX_SSID_LEN) {
+-- 
+2.1.4
 
