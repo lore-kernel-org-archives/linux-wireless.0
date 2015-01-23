@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:35802 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751487AbbAALnU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:36667 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630AbbAWRWs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Jan 2015 06:43:20 -0500
-Received: by mail-wg0-f41.google.com with SMTP id y19so23079605wgg.28
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Jan 2015 03:43:19 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: skip disabled channels in VHT check
-Date: Thu,  1 Jan 2015 13:43:17 +0200
-Message-Id: <1420112597-4035-1-git-send-email-arik@wizery.com> (sfid-20150101_124326_050301_8BBDF6D3)
+	Fri, 23 Jan 2015 12:22:48 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/8] mwifiex: remove redundant nick_name variable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1421149130-5889-2-git-send-email-patila@marvell.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Message-Id: <20150123172247.812AD141654@smtp.codeaurora.org> (sfid-20150123_182251_091043_4E6868B6)
+Date: Fri, 23 Jan 2015 17:22:47 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "40a11ca mac80211: check if channels allow 80 MHz for VHT
-probe requests" considered disabled channels as VHT enabled, and
-mistakenly sent out probe-requests with the VHT IE.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
----
- net/mac80211/util.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+> This is not used anywhere execpt initialization.
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 0f9bf47..ad8cb4f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1470,10 +1470,12 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
- 
- 	/* Check if any channel in this sband supports at least 80 MHz */
- 	for (i = 0; i < sband->n_channels; i++) {
--		if (!(sband->channels[i].flags & IEEE80211_CHAN_NO_80MHZ)) {
--			have_80mhz = true;
--			break;
--		}
-+		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
-+						IEEE80211_CHAN_NO_80MHZ))
-+			continue;
-+
-+		have_80mhz = true;
-+		break;
- 	}
- 
- 	if (sband->vht_cap.vht_supported && have_80mhz) {
--- 
-2.1.0
+Thanks, 6 patches applied to wireless-drivers-next.git:
 
+5e7f03b102eb mwifiex: remove redundant nick_name variable
+534cfed66caf mwifiex: set wiphy params only once
+bb2703cffb2f mwifiex: do not declare wdev as pointer
+7d2d4fbf4e8e mwifiex: add init parameter to init command routine
+16b21941fa9a mwifiex: handle PS events on AP interface as well
+770c385d2744 mwifiex: support conversion to any virtual interface type
+
+2 patches failed to apply:
+
+Applying: mwifiex: store permanant mac address in adapter structure
+error: patch failed: drivers/net/wireless/mwifiex/init.c:285
+error: drivers/net/wireless/mwifiex/init.c: patch does not apply
+Patch failed at 0001 mwifiex: store permanant mac address in adapter structure
+
+Applying: mwifiex: manage virtual interface limits efficiently
+error: patch failed: drivers/net/wireless/mwifiex/init.c:286
+error: drivers/net/wireless/mwifiex/init.c: patch does not apply
+Patch failed at 0001 mwifiex: manage virtual interface limits efficiently
+
+Kalle Valo
