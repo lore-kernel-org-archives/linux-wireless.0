@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:41037 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753784AbbA3Mdd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 07:33:33 -0500
-Received: by mail-we0-f179.google.com with SMTP id q59so26870602wes.10
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 04:33:31 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/7] ath10k: allow empty ssid vdev config
-Date: Fri, 30 Jan 2015 13:31:20 +0100
-Message-Id: <1422621086-28970-2-git-send-email-michal.kazior@tieto.com> (sfid-20150130_133337_918369_D16DFAB3)
-In-Reply-To: <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
-References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
- <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37138 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755342AbbAWOvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 09:51:47 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: support beacon statistics
+Date: Fri, 23 Jan 2015 15:51:43 +0100
+Message-Id: <1422024703-27225-1-git-send-email-johannes@sipsolutions.net> (sfid-20150123_155151_748135_47DE0A89)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to reject a valid
-firmware configuration combination.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Since SSID isn't known early on it might make
-sense to allow driver to start vdev without SSID
-and restart it later.
+For drivers without beacon filtering, support beacon statistics
+entirely, i.e. report the number of beacons and average signal.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+For drivers with beacon filtering, give them the number of beacons
+received by mac80211 -- in case the device reports only the number
+of filtered beacons then driver doesn't have to count all beacons
+again as mac80211 already does.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
- 2 files changed, 4 deletions(-)
+ net/mac80211/sta_info.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index be32db9..ccafb69 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1302,8 +1302,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- 	void *ptr;
- 	u32 flags = 0;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 79383ef0c264..00ca8dcc2bcf 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1764,6 +1764,13 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
  
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index ce6f0c7..97ee2e9 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4264,8 +4264,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
- 	const char *cmdname;
- 	u32 flags = 0;
+ 	sinfo->generation = sdata->local->sta_generation;
  
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
++	/* do before driver, so beacon filtering drivers have a
++	 * chance to e.g. just add the number of filtered beacons
++	 * (or just modify the value entirely, of course)
++	 */
++	if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		sinfo->rx_beacon = sdata->u.mgd.count_beacon_signal;
++
+ 	drv_sta_statistics(local, sdata, &sta->sta, sinfo);
+ 
+ 	sinfo->filled |= BIT(NL80211_STA_INFO_INACTIVE_TIME) |
+@@ -1816,6 +1823,13 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 	sinfo->rx_dropped_misc = sta->rx_dropped;
+ 	sinfo->beacon_loss_count = sta->beacon_loss_count;
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++	    !(sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)) {
++		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_RX) |
++				 BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
++		sinfo->rx_beacon_signal_avg = ieee80211_ave_rssi(&sdata->vif);
++	}
++
+ 	if ((sta->local->hw.flags & IEEE80211_HW_SIGNAL_DBM) ||
+ 	    (sta->local->hw.flags & IEEE80211_HW_SIGNAL_UNSPEC)) {
+ 		if (!(sinfo->filled & BIT(NL80211_STA_INFO_SIGNAL))) {
 -- 
-1.8.5.3
+2.1.4
 
