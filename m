@@ -1,78 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0091.hostedemail.com ([216.40.44.91]:51791 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752174AbbA3Kga (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:38239 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751844AbbAWQnI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 05:36:30 -0500
-Message-ID: <1422614186.2675.2.camel@perches.com> (sfid-20150130_113643_537741_00D0A250)
-Subject: Re: [PATCH] iw: print human readable radar events
-From: Joe Perches <joe@perches.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 30 Jan 2015 02:36:26 -0800
-In-Reply-To: <1422610964-23252-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1422610964-23252-1-git-send-email-helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 23 Jan 2015 11:43:08 -0500
+Received: by mail-oi0-f43.google.com with SMTP id z81so7354733oif.2
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 08:43:07 -0800 (PST)
+Message-ID: <54C27A19.80102@lwfinger.net> (sfid-20150123_174312_217337_05D22401)
+Date: Fri, 23 Jan 2015 10:43:05 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	linux-wireless@vger.kernel.org
+CC: linville@tuxdriver.com
+Subject: Re: [PATCH] rtl8192cu: fix the mesh beaconing
+References: <1422003564-22414-1-git-send-email-yeohchunyeow@gmail.com>
+In-Reply-To: <1422003564-22414-1-git-send-email-yeohchunyeow@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-30 at 10:42 +0100, Helmut Schaa wrote:
-> diff --git a/event.c b/event.c
-[]
-> @@ -565,6 +565,31 @@ static int print_event(struct nl_msg *msg, void *arg)
->  				   nla_data(tb[NL80211_ATTR_VENDOR_DATA]),
->  				   nla_len(tb[NL80211_ATTR_VENDOR_DATA]));
->  		break;
-> +	case NL80211_CMD_RADAR_DETECT:
-> +		printf("radar event ");
-> +		if (tb[NL80211_ATTR_RADAR_EVENT]) {
-> +			switch (nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT])) {
-> +				case NL80211_RADAR_DETECTED:
-> +					printf("(radar detected)");
-> +					break;
-> +				case NL80211_RADAR_CAC_FINISHED:
-> +					printf("(cac finished)");
-> +					break;
-> +				case NL80211_RADAR_CAC_ABORTED:
-> +					printf("(cac aborted)");
-> +					break;
-> +				case NL80211_RADAR_NOP_FINISHED:
-> +					printf("(nop finished)");
-> +					break;
-> +				default:
-> +					printf("(unknown)");
-> +					break;
-> +			};
-> +		} else {
-> +			printf("(unknown)");
-> +		}
-> +		printf("\n");
-> +		break;
+On 01/23/2015 02:59 AM, Chun-Yeow Yeoh wrote:
+> Patch "rtlwifi: add support to send beacon frame" allows
+> the beaconing of rtl8192cu. But mesh beaconing is not
+> working. Fix this.
+>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 1 +
+>   1 file changed, 1 insertion(+)
 
-Might be better with a const char * use
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-	case NL80211_CMD_RADAR_DETECT: {
-		const char *type = "unknown";
+Thanks,
 
-		if (tb[NL80211_ATTR_RADAR_EVENT]) {
-			switch (nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT])) {
-			case NL80211_RADAR_DETECTED:
-				type = "radar detected";
-				break;
-			case NL80211_RADAR_CAC_FINISHED:
-				type = "cac finished";
-				break;
-			case NL80211_RADAR_CAC_ABORTED:
-				type = "cac aborted";
-				break;
-			case NL80211_RADAR_NOP_FINISHED:
-				type = "nop finished";
-				break;
-			}
-		}
-		printf("radar event: (%s)\n", type);
-	}
+Larry
 
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> index 5513217..e5a7c4f 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> @@ -1509,6 +1509,7 @@ void rtl92cu_set_beacon_related_registers(struct ieee80211_hw *hw)
+>   	/* TODO: Modify later (Find the right parameters)
+>   	 * NOTE: Fix test chip's bug (about contention windows's randomness) */
+>   	if ((mac->opmode == NL80211_IFTYPE_ADHOC) ||
+> +	    (mac->opmode == NL80211_IFTYPE_MESH_POINT) ||
+>   	    (mac->opmode == NL80211_IFTYPE_AP)) {
+>   		rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_CCK, 0x50);
+>   		rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_OFDM, 0x50);
+>
 
