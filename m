@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:46692 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174AbbAaPBj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:47415 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755381AbbAWUYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2015 10:01:39 -0500
-Received: by mail-we0-f172.google.com with SMTP id q59so31791728wes.3
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 07:01:38 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Raphael Silva <rapphil@gmail.com>,
-	Sachin Kamat <sachin.kamat@linaro.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: core: rtw_sta_mgt: Removed variables that is never used
-Date: Sat, 31 Jan 2015 16:04:59 +0100
-Message-Id: <1422716699-4774-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150131_160155_281734_52A10551)
+	Fri, 23 Jan 2015 15:24:17 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	=?utf-8?Q?tr?=
+	 =?utf-8?Q?oy=5Ftan=40realsil=2Ecom=2Ecn_=3E=3E_=E8=B0=AD=E6=9D=AD?=
+	 =?utf-8?Q?=E6=B3=A2?= <troy_tan@realsil.com.cn>
+Subject: Re: [PATCH V2 for 3.19 0/7] Fixes for rtl8192ee
+References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+	<873871msc7.fsf@kamboji.qca.qualcomm.com>
+	<54C27975.50501@lwfinger.net>
+Date: Fri, 23 Jan 2015 22:24:10 +0200
+In-Reply-To: <54C27975.50501@lwfinger.net> (Larry Finger's message of "Fri, 23
+	Jan 2015 10:40:21 -0600")
+Message-ID: <87egqljled.fsf@kamboji.qca.qualcomm.com> (sfid-20150123_212426_792456_6657C8F7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Variable was assigned a value that was never used.
-I have also removed all the code that thereby serves no purpose.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-This was found using a static code analysis program called cppcheck
+> It is too bad that it took so long to get these ready. I think the
+> reason that there are not a lot of bug reports is because the
+> complaints are all in the GitHub issues for the rtlwifi_new repo, or
+> with Ubuntu. If there are any that get filed against Bugzilla, I will
+> refer them to that repo.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/staging/rtl8723au/core/rtw_sta_mgt.c |    2 --
- 1 file changed, 2 deletions(-)
+Ok.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-index d17998d..7a9feb6 100644
---- a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-+++ b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-@@ -390,7 +390,6 @@ int rtw_init_bcmc_stainfo23a(struct rtw_adapter *padapter)
- {
- 	struct	sta_priv *pstapriv = &padapter->stapriv;
- 	struct sta_info		*psta;
--	struct tx_servq	*ptxservq;
- 	int res = _SUCCESS;
- 
- 	psta = rtw_alloc_stainfo23a(pstapriv, bc_addr, GFP_KERNEL);
-@@ -403,7 +402,6 @@ int rtw_init_bcmc_stainfo23a(struct rtw_adapter *padapter)
- 	/*  default broadcast & multicast use macid 1 */
- 	psta->mac_id = 1;
- 
--	ptxservq = &psta->sta_xmitpriv.be_q;
- 	return _SUCCESS;
- }
- 
+> Driver rtl8192ee was new in 3.18. There had been a previous version in
+> staging, but it did not get a lot of usage. I'm not sure if the
+> additional usage after 3.18 was due to the driver being in the regular
+> tree, or if vendors started using the chips, but the problem reports
+> started arriving. All these bugs have been part of rtl8192ee since it
+> has been in the kernel, thus they are hard to categorize as
+> regressions.
+
+Good. So we are not going backwards in quality, that's most important.
+
+> Push all 7 into -next so that they will be in 3.20. If you think it to
+> be prudent, please leave the Cc for stable. That way 3.18 and 3.19
+> will eventually get the fixes.
+
+I think that's the best plan, thanks for understanding. The patches are
+in my queue and I should apply them within the next few days, unless
+anything comes during the review.
+
 -- 
-1.7.10.4
-
+Kalle Valo
