@@ -1,106 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:48953 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752967AbbAEENZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:36915 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755877AbbAWR2T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2015 23:13:25 -0500
+	Fri, 23 Jan 2015 12:28:19 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>
+Subject: Re: [1/8] mwifiex: remove redundant nick_name variable
+References: <20150123172247.812AD141654@smtp.codeaurora.org>
+Date: Fri, 23 Jan 2015 19:28:12 +0200
+In-Reply-To: <20150123172247.812AD141654@smtp.codeaurora.org> (Kalle Valo's
+	message of "Fri, 23 Jan 2015 17:22:47 +0000 (UTC)")
+Message-ID: <87lhktl843.fsf@kamboji.qca.qualcomm.com> (sfid-20150123_182822_205730_17EB6CAD)
 MIME-Version: 1.0
-In-Reply-To: <54A9ECC7.6040900@lwfinger.net>
-References: <1420230361-1862-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
- <54A786A4.2050202@lwfinger.net> <CAKXHbyOYO29uKA127qyYrCfpgQ2zoqBS9rAJME513oZ8JVdOug@mail.gmail.com>
- <54A9ECC7.6040900@lwfinger.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 5 Jan 2015 15:05:23 +1100
-Message-ID: <CAGRGNgWbTv7Sv0sZR_VB7goy-U0cjUAFNgBm_okiajSPBK+SNg@mail.gmail.com> (sfid-20150105_051349_486618_DD0A4751)
-Subject: Re: [PATCH] net: wireless: rtlwifi: btcoexist: halbtc8821a2ant:
- Remove some unused functions
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@adurom.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Fengguang Wu <fengguang.wu@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-On Mon, Jan 5, 2015 at 12:45 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 01/03/2015 06:03 AM, Rickard Strandqvist wrote:
->>
->> 2015-01-03 7:05 GMT+01:00 Larry Finger <Larry.Finger@lwfinger.net>:
->>
->>> On 01/02/2015 02:26 PM, Rickard Strandqvist wrote:
->>>
->>>> Removes some functions that are not used anywhere:
->>>> ex_halbtc8821a2ant_periodical() ex_halbtc8821a2ant_halt_notify()
->>>> ex_halbtc8821a2ant_bt_info_notify()
->>>> ex_halbtc8821a2ant_special_packet_notify()
->>>> ex_halbtc8821a2ant_connect_notify() ex_halbtc8821a2ant_scan_notify()
->>>> ex_halbtc8821a2ant_lps_notify() ex_halbtc8821a2ant_ips_notify()
->>>> ex_halbtc8821a2ant_display_coex_info() ex_halbtc8821a2ant_init_coex_dm()
->>>> ex_halbtc8821a2ant_init_hwconfig()
->>>>
->>>> This was partially found by using a static code analysis program called
->>>> cppcheck.
->>>>
->>>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@
->>>> spectrumdigital.se>
->>>>
->>>
->>> I know that you have been told that including "net: wireless:" in the
->>> subject line is discouraged. Please do not do this again. The staging
->>> directory is different as GregKH uses "staging:" in the subject to route
->>> patches, but wireless does not.
->>>
->>> As to the patch, NACK for the simple reason that I am currently working
->>> on
->>> a number of changes to btcoexist. Some of these routines may end up being
->>> removed, but others will not. Having your patch remove them, and one of
->>> mine adding them back just constitutes a lot of churning of the source.
->>> In
->>> addition, it greatly increases the probability of the source trees
->>> becoming
->>> unsynchronized and getting merge conflicts.
->>>
->>> Larry
->>>
->>>
->>
->> Hi Larry
->>
->> I do not recognize that there has been no diskution on the subject of
->> "net:
->> wireless:"
->> I use some sed call for this, so it's easy to fix. You want the "net:
->> wireless:" part completely erased then?
->> I check in Documentation/ but find any clear info for this.
->>
->> Sorry for the patch, is there any way for me to see that this is something
->> that is being worked on?
+>> This is not used anywhere execpt initialization.
+>> 
+>> Signed-off-by: Avinash Patil <patila@marvell.com>
+>> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>> Signed-off-by: Cathy Luo <cluo@marvell.com>
 >
+> Thanks, 6 patches applied to wireless-drivers-next.git:
 >
-> These patches are the result of private communications between the Realtek
-> engineers and me. The only publication is in the "rock" branch of the git
-> repo at http://github.com/lwfinger/rtlwifi_new.git.
+> 5e7f03b102eb mwifiex: remove redundant nick_name variable
+> 534cfed66caf mwifiex: set wiphy params only once
+> bb2703cffb2f mwifiex: do not declare wdev as pointer
+> 7d2d4fbf4e8e mwifiex: add init parameter to init command routine
+> 16b21941fa9a mwifiex: handle PS events on AP interface as well
+> 770c385d2744 mwifiex: support conversion to any virtual interface type
 >
-> I do not understand the "use of some 'sed' call". If you edit the source and
-> add it to the git repo with the add and commit operations, then format-patch
-> gives you exactly what you need, and send-email does that operation.
+> 2 patches failed to apply:
+>
+> Applying: mwifiex: store permanant mac address in adapter structure
+> error: patch failed: drivers/net/wireless/mwifiex/init.c:285
+> error: drivers/net/wireless/mwifiex/init.c: patch does not apply
+> Patch failed at 0001 mwifiex: store permanant mac address in adapter structure
+>
+> Applying: mwifiex: manage virtual interface limits efficiently
+> error: patch failed: drivers/net/wireless/mwifiex/init.c:286
+> error: drivers/net/wireless/mwifiex/init.c: patch does not apply
+> Patch failed at 0001 mwifiex: manage virtual interface limits efficiently
 
-I suspect he means how he makes the subject lines. I'm guessing something like:
-
-echo $PATH | sed 's/^.*\/drivers\///;s/\//: /;s/\.c$/: Remove some
-unused functions/;'
-
-Thanks,
+But mwifiex doesn't compile any more so I had to drop all patches.
+Please resend the whole series.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Kalle Valo
