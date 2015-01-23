@@ -1,35 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58042 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325AbbANIdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 03:33:24 -0500
-Message-ID: <1421224392.1950.12.camel@sipsolutions.net> (sfid-20150114_093330_291524_C2F5B648)
-Subject: Re: [PATCH *** REVIEW ME ***] mac80211: let flush() drop packets
- when possible [BUGFIX]
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 14 Jan 2015 09:33:12 +0100
-In-Reply-To: <1420638159-16779-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1420638159-16779-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.11.231]:33448 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752685AbbAWRBY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 12:01:24 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/5] ath9k: Fix no-ack frame status
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1418951039-12309-2-git-send-email-sujith@msujith.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Message-Id: <20150123170124.4638B1411FD@smtp.codeaurora.org> (sfid-20150123_180127_640055_B4237542)
+Date: Fri, 23 Jan 2015 17:01:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-07 at 15:42 +0200, Emmanuel Grumbach wrote:
-> When roaming / suspending, it makes no sense to wait until
-> the transmit queues of the device are empty. In extreme
-> condition they can be starved (VO saturating the air), but
-> even in regular cases, it is pointless to delay the roaming
-> because the low level driver is trying to send packets to
-> an AP which is far away. We'd rather drop these packets and
-> let TCP retransmit if needed. This will allow to speed up
-> the roaming.
+
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 > 
-> For suspend, the explanation is even more trivial.
+> Check if the frame has been completed without any
+> error and use IEEE80211_TX_STAT_NOACK_TRANSMITTED to
+> indicate successful transmission of no-ack frames.
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Applied.
+Thanks, applied to wireless-drivers-next.git.
 
-johannes
-
+Kalle Valo
