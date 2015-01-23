@@ -1,101 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:18381 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932240AbbAGI5x (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56166 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751116AbbAWGJj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 03:57:53 -0500
-Message-ID: <54ACF50D.1050502@broadcom.com> (sfid-20150107_095857_665451_1E4818D3)
-Date: Wed, 7 Jan 2015 09:57:49 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 23 Jan 2015 01:09:39 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0N68pcC013829
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 22:09:39 -0800
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s2dbe4qxv-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 22:09:39 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yogeshp@marvell.com>,
+	<nishants@marvell.com>, <frankh@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 2/3] mwifiex: add support for USB8801
+Date: Fri, 23 Jan 2015 17:09:18 +0530
+Message-ID: <1422013159-3093-2-git-send-email-patila@marvell.com> (sfid-20150123_070943_494826_BF6DDD7A)
+In-Reply-To: <1422013159-3093-1-git-send-email-patila@marvell.com>
+References: <1422013159-3093-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Hante Meuleman" <meuleman@broadcom.com>,
-	Fabian Frederick <fabf@skynet.be>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: Re: [PATCH] brcm80211: brcmsmac: dma: Remove some unused functions
-References: <1420332469-5907-1-git-send-email-rickard_strandqvist@spectrumdigital.se>	<54A8DBF4.4050202@lwfinger.net>	<CAKXHbyN6LH_pFw1uoLXRzgJv-NcjbTLJvMZXfwYXDwuk9QDszA@mail.gmail.com>	<871tn933jc.fsf@kamboji.qca.qualcomm.com>	<54AA7042.50207@broadcom.com> <CAKXHbyNBV6=DPF4n0onzhEqAuS-PqLS5pwZj_OitRuYMvgpjvw@mail.gmail.com>
-In-Reply-To: <CAKXHbyNBV6=DPF4n0onzhEqAuS-PqLS5pwZj_OitRuYMvgpjvw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/15 00:33, Rickard Strandqvist wrote:
-> 2015-01-05 12:06 GMT+01:00 Arend van Spriel<arend@broadcom.com>:
->> On 01/05/15 11:49, Kalle Valo wrote:
->>>
->>> Rickard Strandqvist<rickard_strandqvist@spectrumdigital.se>   writes:
->>>
->>>> As I hope you can see I have made some changes regarding the
->>>> subject-line. Thought it was an advantage to be able to see which file
->>>> I actually removed something from. There seems to be a big focus on
->>>> getting right on subject-line right in recent weeks.
->>>>
->>>> I wonder why there is a script that takes a file name, and respond
->>>> with an appropriate subject line?
->>
->>
->> Is there a script for this? Anyway, I would say driver name is enough.
->> Enough about the subject line ;-) I would like to give some general remarks
->> as you seem to touch a lot of kernel code. First off, I think it is good to
->> remove unused stuff. However, I would like some more explanation on your
->> methodology apart from "partially found by using a static code analysis
->> program". So a cover-letter explaining that would have been nice (maybe
->> still is). Things like Kconfig option can affect whether function are used
->> or not so how did you cover that.
->>
->> Regards,
->> Arend
->>
->>
->>> I don't think you can really automate this as some drivers do this a bit
->>> differently. You always need to manually check the commit log.
->>>
->>>> But ok, I change my script accordingly. Should I submit the patch again?
->>>
->>>
->>> Yes, please resubmit.
->>>
->>
->
-> Hi Arend
->
-> Yes, a script that had been excellent, I think!
-> I have one as part of my git send-email script, until a week ago, it
-> was enough that I removed the "drivers/" and changed all "/" to ": "
-> I have now been expanded my sed pipe a lot (tell me if anyone is interested)
-> But now I've seen everything from uppercase and [DIR], etc.
-> So I can not understand how anyone should be able to get the right
-> name without a good help.
->
-> Sure i like to share how I use cppcheck, but is very hesitant to write
-> this with each patch mails I send though!
->
-> I run:
-> cppcheck --force --quiet --enable=all .
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-And . is the top-level directory in the kernel repo? I am not familiar 
-with cppcheck, but does it invoke the kernel Makefile. From a quick 
-glance on cppcheck webpage I guess you could enable only the unused 
-function checker.
+USB8801 is Marvell's 1x1 802.11bgn offering.
+Patch adds Device IDs support and defines TX buffer size.
 
-> Or a specific file instead of .
->
-> This will include, among other things get a lot of error message such,
-> +4000 for the kernel.
-> (style) The function 'xxx' is never used
->
-> For these I made a script that searched through all the files after
-> the function name (cppcheck missed a few). And save the rest so I go
-> through them and possibly send patches.
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Frank Huang <frankh@marvell.com>
+---
+ drivers/net/wireless/mwifiex/usb.c | 13 +++++++++++++
+ drivers/net/wireless/mwifiex/usb.h |  4 ++++
+ 2 files changed, 17 insertions(+)
 
-All the file? Within the same driver or kernel-wide. So now "go through 
-them" means compile testing with applicable Kconfig selections?
+diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
+index 6c62995..50517b7 100644
+--- a/drivers/net/wireless/mwifiex/usb.c
++++ b/drivers/net/wireless/mwifiex/usb.c
+@@ -37,6 +37,11 @@ static struct usb_device_id mwifiex_usb_table[] = {
+ 	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8797_PID_2,
+ 				       USB_CLASS_VENDOR_SPEC,
+ 				       USB_SUBCLASS_VENDOR_SPEC, 0xff)},
++	/* 8801 */
++	{USB_DEVICE(USB8XXX_VID, USB8801_PID_1)},
++	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8801_PID_2,
++				       USB_CLASS_VENDOR_SPEC,
++				       USB_SUBCLASS_VENDOR_SPEC, 0xff)},
+ 	/* 8897 */
+ 	{USB_DEVICE(USB8XXX_VID, USB8897_PID_1)},
+ 	{USB_DEVICE_AND_INTERFACE_INFO(USB8XXX_VID, USB8897_PID_2,
+@@ -361,11 +366,13 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 	switch (id_product) {
+ 	case USB8766_PID_1:
+ 	case USB8797_PID_1:
++	case USB8801_PID_1:
+ 	case USB8897_PID_1:
+ 		card->usb_boot_state = USB8XXX_FW_DNLD;
+ 		break;
+ 	case USB8766_PID_2:
+ 	case USB8797_PID_2:
++	case USB8801_PID_2:
+ 	case USB8897_PID_2:
+ 		card->usb_boot_state = USB8XXX_FW_READY;
+ 		break;
+@@ -798,6 +805,11 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K;
+ 		strcpy(adapter->fw_name, USB8766_DEFAULT_FW_NAME);
+ 		break;
++	case USB8801_PID_1:
++	case USB8801_PID_2:
++		adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K;
++		strcpy(adapter->fw_name, USB8801_DEFAULT_FW_NAME);
++		break;
+ 	case USB8797_PID_1:
+ 	case USB8797_PID_2:
+ 	default:
+@@ -1083,4 +1095,5 @@ MODULE_VERSION(USB_VERSION);
+ MODULE_LICENSE("GPL v2");
+ MODULE_FIRMWARE(USB8766_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(USB8797_DEFAULT_FW_NAME);
++MODULE_FIRMWARE(USB8801_DEFAULT_FW_NAME);
+ MODULE_FIRMWARE(USB8897_DEFAULT_FW_NAME);
+diff --git a/drivers/net/wireless/mwifiex/usb.h b/drivers/net/wireless/mwifiex/usb.h
+index 0ad1beb..57e1a57 100644
+--- a/drivers/net/wireless/mwifiex/usb.h
++++ b/drivers/net/wireless/mwifiex/usb.h
+@@ -30,6 +30,9 @@
+ #define USB8797_PID_2		0x2044
+ #define USB8897_PID_1		0x2045
+ #define USB8897_PID_2		0x2046
++#define USB8801_PID_1		0x2049
++#define USB8801_PID_2		0x204a
++
+ 
+ #define USB8XXX_FW_DNLD		1
+ #define USB8XXX_FW_READY	2
+@@ -41,6 +44,7 @@
+ 
+ #define USB8766_DEFAULT_FW_NAME	"mrvl/usb8766_uapsta.bin"
+ #define USB8797_DEFAULT_FW_NAME	"mrvl/usb8797_uapsta.bin"
++#define USB8801_DEFAULT_FW_NAME	"mrvl/usb8801_uapsta.bin"
+ #define USB8897_DEFAULT_FW_NAME	"mrvl/usb8897_uapsta.bin"
+ 
+ #define FW_DNLD_TX_BUF_SIZE	620
+-- 
+1.8.1.4
 
-Gr. AvS
