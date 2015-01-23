@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:33286 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754685AbbA0Osj convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20867 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753253AbbAWDtV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 09:48:39 -0500
-From: "Dedy Lansky" <dlansky@codeaurora.org>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	"'Vladimir Kondratiev'" <qca_vkondrat@qca.qualcomm.com>
-References: <1422345312-2963-1-git-send-email-dlansky@codeaurora.org>	 <1422347067.1890.49.camel@sipsolutions.net>	 <002501d03a1f$024d1e30$06e75a90$@codeaurora.org> <1422356461.1890.64.camel@sipsolutions.net>
-In-Reply-To: <1422356461.1890.64.camel@sipsolutions.net>
-Subject: RE: [PATCH] cfg80211: PBSS basic support
-Date: Tue, 27 Jan 2015 16:48:34 +0200
-Message-ID: <002801d03a40$55b81630$01284290$@codeaurora.org> (sfid-20150127_154842_403994_F1760C44)
+	Thu, 22 Jan 2015 22:49:21 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Avinash Patil <patila@marvell.com>, Cathy Luo <cluo@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 22 Jan 2015 19:49:16 -0800
+Subject: RE: [PATCH] mwifiex: check driver status in connect and scan
+ handlers
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B16481C36@SC-VEXCH1.marvell.com> (sfid-20150123_044925_060329_43A4C034)
+References: <1420631859-29004-1-git-send-email-akarwar@marvell.com>
+	<CAEhWJFnr28=Q4TFwzwcNoWPQRbUY0+mWu8nbocs3789v8X1PHw@mail.gmail.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951B1633A3FA@SC-VEXCH1.marvell.com>
+ <87lhkunbss.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87lhkunbss.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg [mailto:johannes@sipsolutions.net] 
-Sent: Tuesday, January 27, 2015 1:01 PM
-
-> On Tue, 2015-01-27 at 12:50 +0200, Dedy Lansky wrote:
-> 
-> > > > @@ -896,6 +949,7 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
-> > > >  	struct cfg80211_bss_ies *ies;
-> > > >  	struct ieee80211_channel *channel;
-> > > >  	struct cfg80211_internal_bss tmp = {}, *res;
-> > > > +	int bss_type;
-> > > 
-> > > enum.
-> > > 
-> > > Except that you actually forgot to store the BSS type ...
-> > > 
-> > > Actually - you didn't add it to the bss struct, but to wdev? Why is it needed there?? I don't see you using it?
-> > 
-> > wdev->bss_type refers to the BSS that we are connecting/connected to (Maybe rename to "conn_bss_type"?).
-> > This member is used in sme.c. It was introduced because once the connect is complete and driver calls cfg80211_connect_result(), cfg needs to find the BSS being connected to.
-> 
-> Ok I was thinking you were adding it to struct cfg80211_bss. Wouldn't that make a bit more sense? Of course it can also be derived from cfg80211_bss::channel and cfg80211_bss::capability, your call.
-> 
-> However, it doesn't seem that you need it in wdev if you have it there inside wdev->current_bss?
-
-current_bss is set later.
-
-inside __cfg80211_connect_result(), we look for the BSS being connected to:
-  bss = cfg80211_get_bss(..., bssid, wdev->bss_type, ...)
-only after that, current_bss is set to this BSS:
-  wdev->current_bss = bss_from_pub(bss);
-
-> 
-> johannes
-
-
+SGkgS2FsbG8sDQoNCj5vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBLYWxsZSBW
+YWxvDQo+U2VudDogMjIgSmFudWFyeSAyMDE1IDE5OjQzDQo+VG86IEFtaXRrdW1hciBLYXJ3YXIN
+Cj5DYzogQXZpbmFzaCBQYXRpbDsgQ2F0aHkgTHVvOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5l
+bC5vcmcNCj5TdWJqZWN0OiBSZTogW1BBVENIXSBtd2lmaWV4OiBjaGVjayBkcml2ZXIgc3RhdHVz
+IGluIGNvbm5lY3QgYW5kIHNjYW4NCj5oYW5kbGVycw0KPg0KPkFtaXRrdW1hciBLYXJ3YXIgPGFr
+YXJ3YXJAbWFydmVsbC5jb20+IHdyaXRlczoNCj4NCj4+IEhpIEthbGxlLA0KPj4NCj4+Pk9uIFdl
+ZCwgSmFuIDcsIDIwMTUgYXQgNToyNyBQTSwgQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2
+ZWxsLmNvbT4NCj53cm90ZToNCj4+Pklnbm9yZSBzY2FuIGFuZCBjb25uZWN0aW9uIHJlcXVlc3Rz
+IGZyb20gY2ZnODAyMTEgd2hlbiBkcml2ZXIgdW5sb2FkDQo+Pj5pcyBpbiBwcm9jZXNzIG9yIHBy
+ZXZpb3VzIGNvbW1hbmQgaGFzIHRpbWVkIG91dCBkdWUgdG8gYSBmaXJtd2FyZSBidWcuDQo+Pj5U
+aGlzIHBhdGNoIGZpeGVzIGNvcm5lciBjYXNlIHN5c3RlbSBjcmFzaCBpc3N1ZXMuDQo+Pg0KPj4+
+U2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4+
+PlNpZ25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1b0BtYXJ2ZWxsLmNvbT4NCj4+Pi0tLQ0KPj4+
+wqBkcml2ZXJzL25ldC93aXJlbGVzcy9td2lmaWV4L2NmZzgwMjExLmMgfCA4ICsrKysrKysrDQo+
+Pj7CoGRyaXZlcnMvbmV0L3dpcmVsZXNzL213aWZpZXgvc2Nhbi5jwqAgwqAgwqB8IDYgKysrKysr
+DQo+Pj7CoDIgZmlsZXMgY2hhbmdlZCwgMTQgaW5zZXJ0aW9ucygrKQ0KPj4NCj4+IENvdWxkIHlv
+dSBwbGVhc2UgY2hlY2sgdGhpcyBwYXRjaD8gTGV0IG1lIGtub3cgaWYgeW91IHdhbnQgbWUgdG8N
+Cj4+IHJlc2VuZCBpdC4NCj4NCj5VbmZvcnR1bmF0ZWx5IEknbSBsYWdnaW5nIGJlaGluZCBiZWNh
+dXNlIEkgZGVjaWRlZCB0byB3b3JrIG9uIGF1dG9tYXRpbmcNCj50aGUgcGF0Y2ggaGFuZGxpbmcu
+IEknbSBob3BpbmcgdGhhdCBtYWtlcyBpdCBlYXNpZXIgZm9yIG1lIHRvIHN0YXkgdXAtDQo+dG8t
+ZGF0ZS4NCj4NCj5BbHNvIGl0IHdvdWxkIGhlbHAgbWUgdGhhdCBpbnN0ZWFkIG9mIG1haWxpbmcg
+bWUgcGVvcGxlIHdvdWxkIGNoZWNrIHRoZQ0KPnN0YXR1cyBmcm9tIHRoZSBwYXRjaHdvcms6DQo+
+DQo+aHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wcm9qZWN0L2xpbnV4LXdpcmVsZXNzL2xp
+c3QvDQo+DQo+SWYgdGhlIHBhdGNoIGlzIGRlbGVnYXRlZCB0byBtZSBhbmQgc3RhdGUgaXMgb25l
+IG9mICJOZXciLCAiVW5kZXINCj5SZXZpZXciIG9yICJBd2FpdGluZyBVcHN0cmVhbSIgaXQgbWVh
+bnMgdGhhdCB0aGUgcGF0Y2ggaXMgaW4gcXVldWUgb2YNCj5wYXRjaGVzIHRvIHByb2Nlc3MuIElm
+IGl0J3MgYW55dGhpbmcgZWxzZSBpdCBtZWFucyB0aGF0IHRoZSBwYXRjaCBpcw0KPmRyb3BwZWQg
+ZHVlIHRvIHNvbWUgcmVhc29uLCBlaXRoZXIgZm9yIGEgcmVhc29uIChpc3N1ZXMgZm91bmQgZHVy
+aW5nDQo+cmV2aWV3IGV0Yykgb3IgYWNjaWRlbnRhbGx5ICh3aGljaCBjYW4gYWxzbyBoYXBwZW4g
+aW4gcmFyZSBjYXNlcykuDQo+DQo+VGhpcyBwYXRjaCBpcyBpbiAnVW5kZXIgUmV2aWV3JyBzdGF0
+ZSBzbyBJIHdpbGwgZ2V0IHRvIGl0IGV2ZW50dWFsbHk6DQo+DQo+aHR0cHM6Ly9wYXRjaHdvcmsu
+a2VybmVsLm9yZy9wYXRjaC81NTg0MzUxLw0KPg0KDQpUaGFua3MgZm9yIHlvdXIgcmVwbHkuIFNv
+dW5kcyBnb29kIHRvIG1lLiANCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0K
