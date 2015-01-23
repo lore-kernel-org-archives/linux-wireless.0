@@ -1,112 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:62512 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932515AbbA0T63 (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:37736 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752249AbbAWLgI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 14:58:29 -0500
+	Fri, 23 Jan 2015 06:36:08 -0500
+Received: by mail-lb0-f171.google.com with SMTP id u14so6536122lbd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 03:36:06 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20150118051117.31866.68634.stgit@114-36-241-182.dynamic.hinet.net>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051117.31866.68634.stgit@114-36-241-182.dynamic.hinet.net>
-Date: Tue, 27 Jan 2015 19:58:28 +0000
-Message-ID: <CAFSJ42Z7OiPvKO3S3=DZo_t6Mu2AhY1aPnM7=LU1fL40PQoXXQ@mail.gmail.com> (sfid-20150127_205839_702386_34B07AFB)
-Subject: Re: [PATCH 7/7] net: wireless: wcn36xx: handle new trigger_ba format
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Andy Green <andy.green@linaro.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
+In-Reply-To: <1422009226.2728.31.camel@sipsolutions.net>
+References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
+	<1422006994.2728.22.camel@sipsolutions.net>
+	<1422008312.13429.5.camel@egrumbacBox>
+	<1422009226.2728.31.camel@sipsolutions.net>
+Date: Fri, 23 Jan 2015 13:36:06 +0200
+Message-ID: <CANUX_P0wvnNKV+-TtGV62ujMxtDDbJ=uEhaxKQF2ePvBcvyOnA@mail.gmail.com> (sfid-20150123_123612_009003_CC8C8C03)
+Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-arg... it looks like the code is starting to have to many
-if(chip_version) cases. Mabe we should concider separate files for
-chip specific logic.
-
-2015-01-18 5:11 GMT+00:00 Andy Green <andy.green@linaro.org>:
-> wcn3620 has a new message structure for the reply to trigger_ba
-> We don't know what to do with the candidate list he sends back,
-> but we can at least accept and ignore it nicely instead of dying.
+On Fri, Jan 23, 2015 at 12:33 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2015-01-23 at 10:18 +0000, Grumbach, Emmanuel wrote:
 >
-> Signed-off-by: Andy Green <andy.green@linaro.org>
-> ---
->  drivers/net/wireless/ath/wcn36xx/smd.c |   28 ++++++++++++++++++++++++++--
->  drivers/net/wireless/ath/wcn36xx/smd.h |    9 +++++++++
->  2 files changed, 35 insertions(+), 2 deletions(-)
+>> I don't think it will introduce that much of latency.
+>> Note that there is a call to flush() right after that, this means that
+>> any driver which implements this call needs to wait there. So you have
+>> the latency in either place. The only additional latency it adds is for
+>> other RCU sections / packets on other interfaces.
 >
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 819741c..dc24e1b 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-> @@ -243,8 +243,31 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
->         rsp = (struct wcn36xx_fw_msg_status_rsp *)
->                 (buf + sizeof(struct wcn36xx_hal_msg_header));
+> This is correct.
 >
-> -       if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
-> +       if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
-> +               pr_err("%s: bad status, len = %d\n", __func__, len);
-> +               return rsp->status;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +static int wcn36xx_smd_rsp_status_check_bav2(struct wcn36xx *wcn, void *buf,
-> +                                            size_t len)
-> +{
-> +       struct wcn36xx_fw_msg_status_rspv2 *rsp;
-> +
-> +       if (wcn->chip_version != WCN36XX_CHIP_3620)
-> +               return wcn36xx_smd_rsp_status_check(buf, len);
-> +
-> +       if (len < sizeof(struct wcn36xx_hal_msg_header) + sizeof(*rsp))
-> +               return -EIO;
-> +
-> +       rsp = buf + sizeof(struct wcn36xx_hal_msg_header);
-> +
-> +       if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
-> +               pr_err("%s: bad status, len = %d\n", __func__, len);
->                 return rsp->status;
-> +       }
+>> Also - since we just stopped the netif, there can possibly be only one
+>> packet for each vif / ac processing. This is not too much data to
+>> process.
 >
->         return 0;
->  }
-> @@ -1884,7 +1907,8 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
->                 wcn36xx_err("Sending hal_trigger_ba failed\n");
->                 goto out;
->         }
-> -       ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
-> +       ret = wcn36xx_smd_rsp_status_check_bav2(wcn, wcn->hal_buf,
-> +                                               wcn->hal_rsp_len);
->         if (ret) {
->                 wcn36xx_err("hal_trigger_ba response failed err=%d\n", ret);
->                 goto out;
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-> index 008d034..432d3b8 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.h
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-> @@ -44,6 +44,15 @@ struct wcn36xx_fw_msg_status_rsp {
->         u32     status;
->  } __packed;
+> But this is the wrong conclusion.
 >
-> +/* wcn3620 returns this for tigger_ba */
-> +
-> +struct wcn36xx_fw_msg_status_rspv2 {
-> +       u8      bss_id[6];
-> +       u32     status __packed;
-> +       u16     count_following_candidates __packed;
-> +       /* candidate list follows */
-> +};
-> +
->  struct wcn36xx_hal_ind_msg {
->         struct list_head list;
->         u8 *msg;
+> synchronize_rcu() is expensive, no matter what, especially if you have
+> multiple cores. The RCU grace periods will practically never line up,
+> and it needs to wait for every CPU to go through one.
 >
 
+I know.
 
+> It's not actually just "one packet for each vif/ac" - it's a whole tail
+> of whatever other RCU usages there are. Back when this was discussed,
+> the wizery people measured this to hundreds of ms in many not too
+> uncommon cases.
+>
 
--- 
-Best regards,
-Eugene
+That's the part I didn't know. I wasn't aware that this
+synchronize_net() was there and that someone removed it.
+
+>> Your call, but to honest, I have been optimizing the roaming as well (as
+>> you know). And it was really bad for drivers that implements the flush()
+>> callback. Especially in cases where you are already far from the AP you
+>> want to roam from. This is why I added the drop parameter and other
+>> optimizations (don't flush() after probing etc...)
+>
+> Well, yes, but that's an upper bound - here with the synchronize_net()
+> we're more talking about a lower bound.
+>
+
+I also have to admit I was wrong earlier: the flush() call in
+set_disassoc has drop set to true, so this call will return
+immediately.
+
+I just wonder how we handle the case where we still have packets in
+the Tx path and we bring everything down. I can check the code, but
+not right now.
