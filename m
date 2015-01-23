@@ -1,130 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:62235 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751959AbbASP2W (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:50528 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755611AbbAWQk3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 10:28:22 -0500
-Received: by mail-ig0-f178.google.com with SMTP id hl2so11161372igb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 07:28:21 -0800 (PST)
-Message-ID: <54BD2294.2000207@mojatatu.com> (sfid-20150119_162829_890122_19C57974)
-Date: Mon, 19 Jan 2015 10:28:20 -0500
-From: Jamal Hadi Salim <jhs@mojatatu.com>
+	Fri, 23 Jan 2015 11:40:29 -0500
+Message-ID: <54C27975.50501@lwfinger.net> (sfid-20150123_174034_447951_BDCBEB1F)
+Date: Fri, 23 Jan 2015 10:40:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
-	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
-CC: Richard Guy Briggs <rgb@tricolour.ca>, info@netdev01.org
-Subject: NetDev 0.1 conference new proposals accepted + misc updates
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	=?UTF-8?B?InRyb3lfdGFuQHJlYWxzaWwuY29tLmNuID4+IOiwreadreazoiI=?=
+	<troy_tan@realsil.com.cn>
+Subject: Re: [PATCH V2 for 3.19 0/7] Fixes for rtl8192ee
+References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net> <873871msc7.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <873871msc7.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fellow netheads:
+On 01/23/2015 09:26 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> This is V2 of the patches for rtl8192ee to be applied to 3.19. They replace
+>> all the patches submitted under the title '[PATCH for 3.19 0/3] rtlwifi:
+>> Various updates/fixes". All are marked for backporting to 3.18.
+>>
+>> The first of these removes a logging statement that is no longer needed.
+>>
+>> Patches 1-6 are relatively small and should not be a problem for 3.19.
+>> Patch 7 is quite a bit larger, and adds two new routines to detect
+>> DMA stalls. I will understand if you want to defer that to -next; however,
+>> it does fix a serious problem.
+>
+> -rc6 is most likely released on Sunday, I cannot send six patches this
+> late in the cycle unless our inboxes are filling of bug reports. As my
+> inbox seems to be pretty empty about rtlwifi problems can you give more
+> background why you think it's important to get these to 3.19? Are these
+> all regressions from 3.18 or older bugs which just got fixed now?
+>
+>>    rtlwifi: Remove logging statement that is no longer needed
+>
+> I think this is ok.
+>
+>>    rtlwifi: rtl8192ee: Fix adhoc fail
+>
+> Ad-Hoc mode is not that popular, IMHO this can easily wait for -next.
+>
+>>    rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
+>>    rtlwifi: rtl8192ee: Fix handling of new style descriptors
+>>    rtlwifi: rtl8192ee: Fix TX hang due to failure to update TX write
+>>      point
+>>    rtlwifi: rtl8192ee: Fix parsing of received packet
+>>    rtlwifi: rtl8192ee: Fix DMA stalls
+>
+> For -rc1 or -rc2 these would have been ok, but without really good
+> justifications getting these into -rc7 is difficult.
+>
+> But the patches itself are create, huge improvement compared to v1.
 
-On behalf of rgb, yours truly is sending out the weekly announcement.
+Kalle,
 
-This conference is turning out to be _the best ever_ Linux networking
-content put together under one roof. You will be committing a netdev
-crime if you dont show up!
-Please spread the news. Forward this email appropriately.
+It is too bad that it took so long to get these ready. I think the reason that 
+there are not a lot of bug reports is because the complaints are all in the 
+GitHub issues for the rtlwifi_new repo, or with Ubuntu. If there are any that 
+get filed against Bugzilla, I will refer them to that repo.
 
-First things first.
+Driver rtl8192ee was new in 3.18. There had been a previous version in staging, 
+but it did not get a lot of usage. I'm not sure if the additional usage after 
+3.18 was due to the driver being in the regular tree, or if vendors started 
+using the chips, but the problem reports started arriving. All these bugs have 
+been part of rtl8192ee since it has been in the kernel, thus they are hard to 
+categorize as regressions.
 
-A reminder that the Westin Hotel is still holding a block of rooms for
-Netdev01 at a guaranteed rate of $159.00 or $179.00 (depending on the 
-type of room required) and there are still rooms available.
-That guarantee expires on January 23, so please dont procastinate
-and book now. The rates *WILL* go up.
-Reservations: 
-https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
+Push all 7 into -next so that they will be in 3.20. If you think it to be 
+prudent, please leave the Cc for stable. That way 3.18 and 3.19 will eventually 
+get the fixes.
 
-Please register soon to help us plan this event better.
-Registration https://onlineregistrations.ca/netdev01/
-$100/day, or $350 for 4 days (Cdn dollars, reel cheep).
-(online reg closes Feb 12th). Again:
-Registering helps us plan properly for numbers of attendees,
-ensuring venue sizes and supplies are appropriate without
-wasting resources.
+Thanks,
 
-NetDev 0.1 would like to gratefully acknowledge our sponsors: 
-https://netdev01.org/sponsors
-Google https://www.google.ca
-Qualcomm  https://www.qualcomm.com/
-Verizon http://www.verizon.com/
-Cumulus Networks http://cumulusnetworks.com/
-Mojatatu Networks http://mojatatu.com/
-
-There are a few more talks and tutorials and BOFs/workshops
-in the pipeline (we will close acceptance at the end of the week,
-so if you want to submit, please do it NOW).
-
-Here is an update on new proposals accepted this past week for NetDev
-0.1 that you may have missed if you aren't following the RSS feed or
-twitter:
-
-New Sponsors (All listed at: https://www.netdev01.org/sponsors)
-=============
-Qualcomm - Without sponsors like Qualcomm netdev 0.1 couldnt have
-have happened. Thanks Qualcomm for your support of the open source
-community.
-Google - Google is a giant in the open source world. We thank them
-for their sponsorship.
-
-
-Accepted talks: (All listed: https://www.netdev01.org/sessions )
-===============
-1) Breaking Open Linux Switching Drivers by Andy Gospodarek
-Andy will talk about taking an evolutionary path of a compromise
-to integrate between vendor SDKs and the Linux kernel for hardware
-offload. Graphics cards all over again? Come and find out.
-https://www.netdev01.org/sessions/19
-
-2) Weighing Three Methods of Scaling UDP Applications by Alan Dekok
-Alan, the maintainer of FreeRadius, has had to battle UDP for years.
-In this talk he will describe his experiences on 3 different approaches
-he has recently taken to try and scale UDP applications on Linux
-https://www.netdev01.org/sessions/20
-
-3) TC Classifier Action Subsystem by Jamal Hadi Salim
-Jamal will describe the tc classifier-action subsystem in details (A 
-decade too late?). He claims to be inspired by two talks at netdev01
-which refer to this subsystem. He also claims it is a better
-architecture than OF and P4. Come beat up on him.
-https://www.netdev01.org/sessions/21
-
-4)  MLAG (or Multi-Chassis Link aggregation Group) integration with 
-Linux by Matty Kadosh
-Mellanox MLAG implementation at  https://github.com/open-ethernet/MLAG
-will be discussed in this talk. Matty will talk about experiences and
-will try to convince us that it is time to mainstream MLAG.
-https://www.netdev01.org/sessions/22
-
-5) MLAG on Linux - Lessons Learned by Scott Emery
-Cumulus Networks has extensive MLAG deployment on Linux using hardware 
-offloads on high speed hardware.
-They have had to battle dragons in many dungeons and slay
-many monsters along the way. Come hear all that experience in one talk.
-https://www.netdev01.org/sessions/23
-
-Accepted Tutorials (All listed: https://www.netdev01.org/sessions )
-===================
-1)Hardware Accelerating Linux Network Functions by
-  Roopa Prabhu and Toshiaki Makita
-
-Everything you ever wanted to know about using Linux bridging
-variations for virtualization, data centre & enterprise, L3, ACLs and 
-more. How well do you know how to use bridge/brctl/ip/ethtool and
-their friends to setup a desired network(bridge, SRIOV, Macvlan etc)?
-Roopa and Toshiaki will try to guide you through this vast ocean of 
-knowledge. You will get to learn about how to learn the theory
-and practise and beauty of using these toolsets consistently
-whether on a NIC, offloaded-NIC or multi-terabit capacity switch
-hardware.
-https://www.netdev01.org/sessions/24
+Larry
 
 
-More coming in future updates.
-If youve got this far reading - please go and register.
-
-cheers,
-jamal (on behalf of Richard Guy Briggs)
