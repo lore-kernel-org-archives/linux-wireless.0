@@ -1,99 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:64239 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36352 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221AbbAZLOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 06:14:06 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Berg Johannes <johannes.berg@intel.com>,
-	Clement Perrochaud <clement.perrochaud@nxp.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH v2 1/2] NFC: PN544: GPIO access that may sleep
-Date: Mon, 26 Jan 2015 13:13:36 +0200
-Message-Id: <1422270817-10950-2-git-send-email-robert.dolca@intel.com> (sfid-20150126_121625_716399_35C22FEE)
-In-Reply-To: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
-References: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
+	id S1751941AbbAWM0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 07:26:35 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix per-TID RX-MSDU counter
+Date: Fri, 23 Jan 2015 13:26:31 +0100
+Message-Id: <1422015991-20096-1-git-send-email-johannes@sipsolutions.net> (sfid-20150123_132638_333844_6F72E682)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gpio_set_value was replaced with gpio_set_value_cansleep in order
-to allow GPIO access that may sleep. This is particularelly useful
-when GPIO is accessed using busses like I2C, SPI, USB
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+In the case of non-QoS association, the counter was actually
+wrong. The right index isn't security_idx but seqno_idx, as
+security_idx will be 0 for data frames, while 16 is needed.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/nfc/pn544/i2c.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ net/mac80211/rx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index fc02e8d..d9018cd 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -195,18 +195,19 @@ static void pn544_hci_i2c_platform_init(struct pn544_i2c_phy *phy)
- 	nfc_info(&phy->i2c_dev->dev, "Detecting nfc_en polarity\n");
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3d79d498e7f6..ed516ae80a3b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2310,12 +2310,12 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_MONITOR;
  
- 	/* Disable fw download */
--	gpio_set_value(phy->gpio_fw, 0);
-+	gpio_set_value_cansleep(phy->gpio_fw, 0);
+ 	if (rx->sta) {
+-		/* The security index has the same property as needed
++		/* The seqno index has the same property as needed
+ 		 * for the rx_msdu field, i.e. it is IEEE80211_NUM_TIDS
+ 		 * for non-QoS-data frames. Here we know it's a data
+ 		 * frame, so count MSDUs.
+ 		 */
+-		rx->sta->rx_msdu[rx->security_idx]++;
++		rx->sta->rx_msdu[rx->seqno_idx]++;
+ 	}
  
- 	for (polarity = 0; polarity < 2; polarity++) {
- 		phy->en_polarity = polarity;
- 		retry = 3;
- 		while (retry--) {
- 			/* power off */
--			gpio_set_value(phy->gpio_en, !phy->en_polarity);
-+			gpio_set_value_cansleep(phy->gpio_en,
-+						!phy->en_polarity);
- 			usleep_range(10000, 15000);
- 
- 			/* power on */
--			gpio_set_value(phy->gpio_en, phy->en_polarity);
-+			gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
- 			usleep_range(10000, 15000);
- 
- 			/* send reset */
-@@ -225,13 +226,14 @@ static void pn544_hci_i2c_platform_init(struct pn544_i2c_phy *phy)
- 		"Could not detect nfc_en polarity, fallback to active high\n");
- 
- out:
--	gpio_set_value(phy->gpio_en, !phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
- }
- 
- static void pn544_hci_i2c_enable_mode(struct pn544_i2c_phy *phy, int run_mode)
- {
--	gpio_set_value(phy->gpio_fw, run_mode == PN544_FW_MODE ? 1 : 0);
--	gpio_set_value(phy->gpio_en, phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_fw,
-+				run_mode == PN544_FW_MODE ? 1 : 0);
-+	gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
- 	usleep_range(10000, 15000);
- 
- 	phy->run_mode = run_mode;
-@@ -254,14 +256,14 @@ static void pn544_hci_i2c_disable(void *phy_id)
- {
- 	struct pn544_i2c_phy *phy = phy_id;
- 
--	gpio_set_value(phy->gpio_fw, 0);
--	gpio_set_value(phy->gpio_en, !phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_fw, 0);
-+	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
- 	usleep_range(10000, 15000);
- 
--	gpio_set_value(phy->gpio_en, phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
- 	usleep_range(10000, 15000);
- 
--	gpio_set_value(phy->gpio_en, !phy->en_polarity);
-+	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
- 	usleep_range(10000, 15000);
- 
- 	phy->powered = 0;
+ 	/*
 -- 
-1.9.1
+2.1.4
 
