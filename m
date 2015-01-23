@@ -1,160 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:7421 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759943AbbAYTbw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 14:31:52 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 11/14] brcmfmac: always obtain device revision info upon intialization
-Date: Sun, 25 Jan 2015 20:31:40 +0100
-Message-ID: <1422214303-7816-12-git-send-email-arend@broadcom.com> (sfid-20150125_203224_213553_CCBDEA80)
-In-Reply-To: <1422214303-7816-1-git-send-email-arend@broadcom.com>
-References: <1422214303-7816-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx02.posteo.de ([89.146.194.165]:34568 "EHLO mx02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751671AbbAWXaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 18:30:00 -0500
+Message-ID: <1422055797.1850.14.camel@posteo.de> (sfid-20150124_003004_517662_CDC012CD)
+Subject: Re: brcmfmac: kernel panic in brcmf_cfg80211_del_key
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <jkrause@posteo.de>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Sat, 24 Jan 2015 00:29:57 +0100
+In-Reply-To: <54C258DB.7050308@broadcom.com>
+References: <1422016318.1212.22.camel@posteo.de>
+	 <54C258DB.7050308@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Obtain device revision information and store it.
+Hi Arend,
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/common.c | 30 ++++++++++++++++++++++--
- drivers/net/wireless/brcm80211/brcmfmac/core.c   | 16 ++++---------
- drivers/net/wireless/brcm80211/brcmfmac/core.h   | 22 +++++++++++++++++
- 3 files changed, 54 insertions(+), 14 deletions(-)
+On Fr, 2015-01-23 at 15:21 +0100, Arend van Spriel wrote:
+> On 01/23/15 13:31, Jörg Krause wrote:
+> > Hi all,
+> >
+> > I'm running an wireless device with Linux kernel 3.18.3 and the brcmfmac
+> > driver. When connection the device to my network, I see from time to
+> > time these messages in the kernel log:
+> >
+> > [  899.624759] brcmfmac: brcmf_cfg80211_del_key: invalid key index (4)
+> > [  899.649874] brcmfmac: brcmf_cfg80211_del_key: invalid key index (5)
+> > [  899.678066] cfg80211: Calling CRDA to update world regulatory domain
+> >
+> > I'm not sure about the meaning of the 'invalid key index' messages and
+> > if it may cause some trouble. However the system is running fine.
+> 
+> Basically, wpa_supplicant does key deletion for index 0 to 5, but 
+> brcmfmac only has 4 keys (0 to 3) hence the message. This is not an issue.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/common.c b/drivers/net/wireless/brcm80211/brcmfmac/common.c
-index ddf05af..91213a6 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/common.c
-@@ -41,6 +41,8 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
- 	u8 buf[BRCMF_DCMD_SMLEN];
- 	struct brcmf_join_pref_params join_pref_params[2];
-+	struct brcmf_rev_info_le revinfo;
-+	struct brcmf_rev_info *ri;
- 	char *ptr;
- 	s32 err;
- 
-@@ -48,12 +50,36 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 	err = brcmf_fil_iovar_data_get(ifp, "cur_etheraddr", ifp->mac_addr,
- 				       sizeof(ifp->mac_addr));
- 	if (err < 0) {
--		brcmf_err("Retreiving cur_etheraddr failed, %d\n",
--			  err);
-+		brcmf_err("Retreiving cur_etheraddr failed, %d\n", err);
- 		goto done;
- 	}
- 	memcpy(ifp->drvr->mac, ifp->mac_addr, sizeof(ifp->drvr->mac));
- 
-+	err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_REVINFO,
-+				     &revinfo, sizeof(revinfo));
-+	if (err < 0) {
-+		brcmf_err("retrieving revision info failed, %d\n", err);
-+	} else {
-+		ri = &ifp->drvr->revinfo;
-+		ri->vendorid = le32_to_cpu(revinfo.vendorid);
-+		ri->deviceid = le32_to_cpu(revinfo.deviceid);
-+		ri->radiorev = le32_to_cpu(revinfo.radiorev);
-+		ri->chiprev = le32_to_cpu(revinfo.chiprev);
-+		ri->corerev = le32_to_cpu(revinfo.corerev);
-+		ri->boardid = le32_to_cpu(revinfo.boardid);
-+		ri->boardvendor = le32_to_cpu(revinfo.boardvendor);
-+		ri->boardrev = le32_to_cpu(revinfo.boardrev);
-+		ri->driverrev = le32_to_cpu(revinfo.driverrev);
-+		ri->ucoderev = le32_to_cpu(revinfo.ucoderev);
-+		ri->bus = le32_to_cpu(revinfo.bus);
-+		ri->chipnum = le32_to_cpu(revinfo.chipnum);
-+		ri->phytype = le32_to_cpu(revinfo.phytype);
-+		ri->phyrev = le32_to_cpu(revinfo.phyrev);
-+		ri->anarev = le32_to_cpu(revinfo.anarev);
-+		ri->chippkg = le32_to_cpu(revinfo.chippkg);
-+		ri->nvramrev = le32_to_cpu(revinfo.nvramrev);
-+	}
-+
- 	/* query for 'ver' to get version info from firmware */
- 	memset(buf, 0, sizeof(buf));
- 	strcpy(buf, "ver");
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index 5f16a7e..6406f95 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -948,7 +948,6 @@ int brcmf_bus_start(struct device *dev)
- 	struct brcmf_pub *drvr = bus_if->drvr;
- 	struct brcmf_if *ifp;
- 	struct brcmf_if *p2p_ifp;
--	struct brcmf_rev_info_le revinfo;
- 
- 	brcmf_dbg(TRACE, "\n");
- 
-@@ -974,17 +973,10 @@ int brcmf_bus_start(struct device *dev)
- 
- 	/* assure we have chipid before feature attach */
- 	if (!bus_if->chip) {
--		ret = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_REVINFO, &revinfo,
--					     sizeof(revinfo));
--		if (ret < 0) {
--			brcmf_err("no chipid determined - device may malfunction\n");
--		} else {
--			bus_if->chip = le32_to_cpu(revinfo.chipnum);
--			bus_if->chiprev = le32_to_cpu(revinfo.chiprev);
--			brcmf_dbg(INFO, "firmware revinfo: chip %x (%d) rev %d\n",
--				  bus_if->chip, bus_if->chip,
--				  bus_if->chiprev);
--		}
-+		bus_if->chip = drvr->revinfo.chipnum;
-+		bus_if->chiprev = drvr->revinfo.chiprev;
-+		brcmf_dbg(INFO, "firmware revinfo: chip %x (%d) rev %d\n",
-+			  bus_if->chip, bus_if->chip, bus_if->chiprev);
- 	}
- 	brcmf_feat_attach(drvr);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.h b/drivers/net/wireless/brcm80211/brcmfmac/core.h
-index f2f7d3d..db7f35f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.h
-@@ -71,6 +71,27 @@ struct brcmf_proto;	/* device communication protocol info */
- struct brcmf_cfg80211_dev; /* cfg80211 device info */
- struct brcmf_fws_info; /* firmware signalling info */
- 
-+/* see struct brcmf_rev_info_le in fwil_types.h */
-+struct brcmf_rev_info {
-+	u32 vendorid;
-+	u32 deviceid;
-+	u32 radiorev;
-+	u32 chiprev;
-+	u32 corerev;
-+	u32 boardid;
-+	u32 boardvendor;
-+	u32 boardrev;
-+	u32 driverrev;
-+	u32 ucoderev;
-+	u32 bus;
-+	u32 chipnum;
-+	u32 phytype;
-+	u32 phyrev;
-+	u32 anarev;
-+	u32 chippkg;
-+	u32 nvramrev;
-+};
-+
- /* Common structure for module and instance linkage */
- struct brcmf_pub {
- 	/* Linkage ponters */
-@@ -104,6 +125,7 @@ struct brcmf_pub {
- 	u32 feat_flags;
- 	u32 chip_quirks;
- 
-+	struct brcmf_rev_info revinfo;
- #ifdef DEBUG
- 	struct dentry *dbgfs_dir;
- #endif
--- 
-1.9.1
+I see!
+
+> 
+> > Now I had a test case with two wireless devices having the same hostname
+> > and MAC address in the same network.
+> 
+> What? Why is this a test case. That is fundamentally wrong and asking 
+> for trouble.
+
+You're absolutely right! To be honest it's not a real test. We're having
+trouble with some wireless audio devices and multiroom playback. In fact
+I wanted to simulate in a quick and dirty way what happens if the audio
+device does not receive some expected UDP packets from the audio
+streaming source because they get lost.
+
+> 
+> > The first wireless devices connects to the network and starts receiving
+> > an audio stream via UDP. Another device with same hostname and MAC is
+> > started after this and repeatedly reboots after 30 seconds.
+> >
+> > The first device gets disconnected after the second device connects to
+> > the network. The device is running with the network tools tools
+> > wpa_supplicant, a wpa_action script, udhcpc, avahi, and crda. The device
+> > tries to reconnect to the network. It successfully connects, but
+> > authentification fails. This step produces a lot of the kernel messages
+> > from above.
+> >
+> > Okay, nothing wrong until here I think. But after some time the brcmfmac
+> > driver is dying:
+> >
+> > [  901.799454] ------------[ cut here ]------------
+> > [  901.804332] WARNING: CPU: 0 PID: 104 at
+> > drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c:1076
+> > brcmf_netdev_wait_pend8021x+0xe0/0xf4 [brcmfmac]()
+> > [  901.866565] Modules linked in:
+> > [  901.907705] 	brcmfmac brcmutil
+> > [  901.909298] CPU: 0 PID: 104 Comm: wpa_supplicant Not tainted 3.18.3
+> > #1
+> > [  901.959287] [<c000de40>] (unwind_backtrace) from [<c000c1f4>]
+> > (show_stack+0x10/0x14)
+> > [  901.993628] [<c000c1f4>] (show_stack) from [<c0016400>]
+> > (warn_slowpath_common+0x68/0x88)
+> > [  902.016243] [<c0016400>] (warn_slowpath_common) from [<c00164bc>]
+> > (warn_slowpath_null+0x1c/0x24)
+> > [  902.040249] [<c00164bc>] (warn_slowpath_null) from [<bf016304>]
+> > (brcmf_netdev_wait_pend8021x+0xe0/0xf4 [brcmfmac])
+> > [  902.067408] [<bf016304>] (brcmf_netdev_wait_pend8021x [brcmfmac])
+> > from [<bf0061d8>] (brcmf_cfg80211_get_key+0x1a8/0x374 [brcmfmac])
+> > [  902.098434] [<bf0061d8>] (brcmf_cfg80211_get_key [brcmfmac]) from
+> > [<bf00770c>] (brcmf_cfg80211_del_key+0x1d8/0x2e0 [brcmfmac])
+> > [  902.164527] [<bf00770c>] (brcmf_cfg80211_del_key [brcmfmac]) from
+> > [<bf0078ec>] (brcmf_cfg80211_add_key+0xd8/0x248 [brcmfmac])
+> > [  902.213096] [<bf0078ec>] (brcmf_cfg80211_add_key [brcmfmac]) from
+> > [<c037f368>] (nl80211_new_key+0x108/0x144)
+> > [  902.253581] [<c037f368>] (nl80211_new_key) from [<c02ccb98>]
+> > (genl_rcv_msg+0x22c/0x39c)
+> > [  902.290997] [<c02ccb98>] (genl_rcv_msg) from [<c02cc12c>]
+> > (netlink_rcv_skb+0xb4/0xd8)
+> > [  902.325813] [<c02cc12c>] (netlink_rcv_skb) from [<c02cc958>]
+> > (genl_rcv+0x20/0x34)
+> > [  902.363540] [<c02cc958>] (genl_rcv) from [<c02cbaa8>]
+> > (netlink_unicast+0x14c/0x1cc)
+> > [  902.399402] [<c02cbaa8>] (netlink_unicast) from [<c02cbe98>]
+> > (netlink_sendmsg+0x2b8/0x39c)
+> > [  902.435798] [<c02cbe98>] (netlink_sendmsg) from [<c0297860>]
+> > (sock_sendmsg+0x84/0xa8)
+> > [  902.477184] [<c0297860>] (sock_sendmsg) from [<c0298d28>]
+> > (___sys_sendmsg.part.32+0x284/0x290)
+> > [  902.486197] [<c0298d28>] (___sys_sendmsg.part.32) from [<c0299d34>]
+> > (__sys_sendmsg+0x4c/0x7c)
+> > [  902.555011] [<c0299d34>] (__sys_sendmsg) from [<c0009620>]
+> > (ret_fast_syscall+0x0/0x44)
+> > [  902.591178] ---[ end trace 93a9f5360e80c5ca ]---
+> >
+> > I'm not sure if I should worry about this issue.
+> 
+> Well, what is happening here is that the driver got a EAPOL message from 
+> the network stack to transmit and then got a key config request. That 
+> key config is held until transmit of EAPOL is completed. So it is 
+> suspicious.
+
+You're right, it's a warning. Does it mean the network stack gets messy
+due to this wrong setup?
+
+Best regards
+Jörg Krause
 
