@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:54437 "EHLO
-	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751222AbbAERid (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 12:38:33 -0500
-Message-ID: <1420479510.14308.23.camel@x220> (sfid-20150105_183907_807502_81C08416)
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Mon, 05 Jan 2015 18:38:30 +0100
-In-Reply-To: <54AA641C.7050307@broadcom.com>
-References: <1420297188.2397.3.camel@tiscali.nl>
-	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
-	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
-	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36645 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754151AbbAWNUQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 08:20:16 -0500
+Message-ID: <1422019208.2728.34.camel@sipsolutions.net> (sfid-20150123_142020_266482_9668F400)
+Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 23 Jan 2015 14:20:08 +0100
+In-Reply-To: <CANUX_P0wvnNKV+-TtGV62ujMxtDDbJ=uEhaxKQF2ePvBcvyOnA@mail.gmail.com> (sfid-20150123_123607_358282_F98B1290)
+References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1422006994.2728.22.camel@sipsolutions.net>
+	 <1422008312.13429.5.camel@egrumbacBox>
+	 <1422009226.2728.31.camel@sipsolutions.net>
+	 <CANUX_P0wvnNKV+-TtGV62ujMxtDDbJ=uEhaxKQF2ePvBcvyOnA@mail.gmail.com>
+	 (sfid-20150123_123607_358282_F98B1290)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 11:14 +0100, Arend van Spriel wrote:
-> On 01/03/15 23:28, Paul Bolle wrote:
-> > Side note: am I correct in thinking that there's some successor to
-> > CFG80211_WEXT and that the ipw2200 driver could, at least in theory, be
-> > ported to that successor? (ipw2200 hardware appears to be a bit old, so
-> > probably no one would care enough to actually do that.)
-> > net/wireless/kconfig doesn't mention anything like that, so probably I'm
-> > just confused.
+On Fri, 2015-01-23 at 13:36 +0200, Emmanuel Grumbach wrote:
+
+> > It's not actually just "one packet for each vif/ac" - it's a whole tail
+> > of whatever other RCU usages there are. Back when this was discussed,
+> > the wizery people measured this to hundreds of ms in many not too
+> > uncommon cases.
 > 
-> ipw2200 is a WEXT driver using some wext functionality (and struct 
-> wiphy) provided by cfg80211 hence it needs CFG80211_WEXT. I guess that 
-> is what makes it confusing.
+> That's the part I didn't know. I wasn't aware that this
+> synchronize_net() was there and that someone removed it.
 
-It doesn't help that I hardly know anything about mac80211, cfg80211 and
-nl80211 (and lib80211 for that matter). To me these are mostly just
-names that end in 80211.
+This particular one might not have been there - I don't remember. There
+were some in this path and we removed quite a few. However, if you have
+keys, wpa_s is currently clearing them, which calls it for every single
+key. I once had worked on an optimisation here (telling wpa_s not to
+clear keys because we handle that when stations are deleted anyway) but
+so far that didn't really go anywhere.
 
-Anyhow, concerning, CFG80211_WEXT: it seems the only functionality
-provided by that symbol that ipw2200 uses directly is
-cfg80211_wext_giwname(). Perhaps ipw2200 could have a private version of
-that function, something like ipw2100's ipw2100_wx_get_name(). Should be
-trivial to implement (ie, it could take _me_ a day or two).
+> I just wonder how we handle the case where we still have packets in
+> the Tx path and we bring everything down. I can check the code, but
+> not right now.
 
-But perhaps ipw2200 uses CFG80211_WEXT _indirectly_ too. Ie, in
-net/wireless/core.c I stumbled on
-    #ifdef CONFIG_CFG80211_WEXT
-            rdev->wiphy.wext = &cfg80211_wext_handler;
-    #endif
+Well - I didn't expect you to check anything now :-)
 
+I was more noting this down for 'future work'. It's possible, perhaps,
+that we cannot do anything else here, but then we should think about the
+other optimisations again...
 
-But I net/wireless/wext-core.c I then found
-    #ifdef CONFIG_CFG80211_WEXT
-            if (dev->ieee80211_ptr && dev->ieee80211_ptr->wiphy)
-                    handlers = dev->ieee80211_ptr->wiphy->wext;
-    #endif
-    #ifdef CONFIG_WIRELESS_EXT
-            if (dev->wireless_handlers)
-                    handlers = dev->wireless_handlers;
-    #endif
-
-(There's much more to discover about WEXT, of course.) Anyhow, IPW2200
-uses both CFG80211_WEXT and WIRELESS_EXT and cfg80211_wext_handler and
-ipw2200's wireless_handlers appear to cover the same set of IOCTLS (one
-exception: SIOCSIWPMKSA). So by now I'm really puzzled how this all fits
-together.
-
-Thanks,
-
-
-Paul Bolle
+johannes
 
