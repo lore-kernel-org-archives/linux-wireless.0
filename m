@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:44298 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbbASSZB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 13:25:01 -0500
-Received: by mail-wi0-f178.google.com with SMTP id em10so7629080wid.5
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 10:25:00 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH 5/6] staging: vt6655: Fix RFbSetPower() error: buffer overflow 'priv->abyCCKPwrTbl' 15 <= 56
-Date: Mon, 19 Jan 2015 18:24:14 +0000
-Message-Id: <1421691855-2927-5-git-send-email-tvboxspy@gmail.com> (sfid-20150119_192515_172041_8B304E74)
-In-Reply-To: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
-References: <1421691855-2927-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37342 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754545AbbAWPea (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 10:34:30 -0500
+Message-ID: <1422027267.2728.39.camel@sipsolutions.net> (sfid-20150123_163433_636509_0CD19919)
+Subject: Re: [RFC iw next] phy: Allow set netns by fd
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vadim Kochan <vadim4j@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Jan 2015 16:34:27 +0100
+In-Reply-To: <1422026027-5806-1-git-send-email-vadim4j@gmail.com> (sfid-20150123_162433_668129_A5F1E60F)
+References: <1422026027-5806-1-git-send-email-vadim4j@gmail.com>
+	 (sfid-20150123_162433_668129_A5F1E60F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check uCH is not more than CB_MAX_CHANNEL_24G(14) on rates RATE_1M to RATE_11M
+On Fri, 2015-01-23 at 17:13 +0200, Vadim Kochan wrote:
+> From: Vadim Kochan <vadim4j@gmail.com>
+> 
+> Added possibility to change network namespace
+> for phy device by network namespace name from
+> /var/run/netns or by absolute file path:
+> 
+>     iw phy XXX set netns <nsname> | <pid>
+> 
+> First iw tries to find given nsname from /var/run/netns
+> or by absoute path (in case if nsname contains "/") and if
+> it failed to open nsname file then iw uses given argument as <pid>.
 
-Return false as the call is invalid as these rates do not exist
-above channel 14.
+Hmm. I think it'd be better to do something like
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/rf.c | 3 +++
- 1 file changed, 3 insertions(+)
+iw phy XXX set netns name <nsname>
 
-diff --git a/drivers/staging/vt6655/rf.c b/drivers/staging/vt6655/rf.c
-index 27841aa..a6eabde 100644
---- a/drivers/staging/vt6655/rf.c
-+++ b/drivers/staging/vt6655/rf.c
-@@ -788,6 +788,9 @@ bool RFbSetPower(
- 	case RATE_2M:
- 	case RATE_5M:
- 	case RATE_11M:
-+		if (uCH > CB_MAX_CHANNEL_24G)
-+			return false;
-+
- 		byPwr = priv->abyCCKPwrTbl[uCH];
- 		byPwrdBm = priv->abyCCKDefaultPwr[uCH];
- 		break;
--- 
-2.1.0
+That way there's no way it can be a valid PID.
+
+Otherwise, if you happen to have a file in your local directory that's
+the name of the PID you want, weird things happen.
+
+> Also added missing NL80211 attributes before NL80211_CMD_SET_WIPHY_NETNS.
+
+Please don't - I'll update nl80211.h by copying as needed.
+
+johannes
 
