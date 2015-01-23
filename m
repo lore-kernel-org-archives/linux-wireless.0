@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from khitomer.mortis.eu ([185.27.175.75]:49846 "EHLO
-	khitomer.mortis.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752834AbbADXIA (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:58491 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbbAWXXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2015 18:08:00 -0500
-Date: Mon, 5 Jan 2015 00:02:09 +0100
-From: Giel van Schijndel <me@mortis.eu>
-To: linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, Eliad Peller <eliad@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 1/2] Align member-assigns in a structure-copy block
-Message-ID: <20150104230209.GD4806@salidar.dom.custoft.eu> (sfid-20150105_000809_721309_652E0FF7)
-References: <1420394427-19509-1-git-send-email-me@mortis.eu>
+	Fri, 23 Jan 2015 18:23:42 -0500
+Received: by mail-wi0-f179.google.com with SMTP id l15so231190wiw.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 15:23:41 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: fix watchdog on some ARM chipsets
+Date: Sat, 24 Jan 2015 00:23:21 +0100
+Message-Id: <1422055401-15029-1-git-send-email-zajec5@gmail.com> (sfid-20150124_002345_842912_C2037917)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="mJm6k4Vb/yFcL9ZU"
-In-Reply-To: <1420394427-19509-1-git-send-email-me@mortis.eu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+These chipsets don't need changing clock mode.
 
---mJm6k4Vb/yFcL9ZU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+This patch adds one line with more than 80 columns, I hope it's OK, IMO it
+improves readability.
+---
+ drivers/bcma/driver_chipcommon.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-On Sun, Jan 04, 2015 at 19:00:22 +0100, Giel van Schijndel wrote:
-> This highlights the differences (errors).
-> ---
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 84d4a95..b7c8a8d 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -178,7 +178,6 @@ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc)
+ u32 bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
+ {
+ 	u32 maxt;
+-	enum bcma_clkmode clkmode;
+ 
+ 	maxt = bcma_chipco_watchdog_get_max_timer(cc);
+ 	if (cc->capabilities & BCMA_CC_CAP_PMU) {
+@@ -188,8 +187,13 @@ u32 bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
+ 			ticks = maxt;
+ 		bcma_cc_write32(cc, BCMA_CC_PMU_WATCHDOG, ticks);
+ 	} else {
+-		clkmode = ticks ? BCMA_CLKMODE_FAST : BCMA_CLKMODE_DYNAMIC;
+-		bcma_core_set_clockmode(cc->core, clkmode);
++		struct bcma_bus *bus = cc->core->bus;
++
++		if (bus->chipinfo.id != BCMA_CHIP_ID_BCM4707 &&
++		    bus->chipinfo.id != BCMA_CHIP_ID_BCM53018)
++			bcma_core_set_clockmode(cc->core,
++						ticks ? BCMA_CLKMODE_FAST : BCMA_CLKMODE_DYNAMIC);
++
+ 		if (ticks > maxt)
+ 			ticks = maxt;
+ 		/* instant NMI */
+-- 
+1.8.4.5
 
-Forgot to:
-Signed-off-by: Giel van Schijndel <me@mortis.eu>
-
---=20
-Met vriendelijke groet,
-With kind regards,
-Giel van Schijndel
---
-"Walking on water and developing software from a specification are easy
- if both are frozen."
-  -- Edward V Berard
-
---mJm6k4Vb/yFcL9ZU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlSpxnEACgkQZBYm/87l50LOEwCfZzeo6sQsEsmDFg2pgjLM7vgK
-xOQAoJmRJtplScu3egjU0GuXEnWRFRjg
-=XcgX
------END PGP SIGNATURE-----
-
---mJm6k4Vb/yFcL9ZU--
