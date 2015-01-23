@@ -1,71 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:56350 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750913AbbAXIaQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 03:30:16 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
+Received: from s3.sipsolutions.net ([5.9.151.49]:35482 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752031AbbAWJyl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 04:54:41 -0500
+Message-ID: <1422006879.2728.19.camel@sipsolutions.net> (sfid-20150123_105444_634390_0730BCBA)
+Subject: Re: [PATCH] mac80211: avoid races related to suspend flow
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 Cc: linux-wireless@vger.kernel.org
-Date: Sat, 24 Jan 2015 10:30:02 +0200
-Message-Id: <1422088202-31871-1-git-send-email-luca@coelho.fi> (sfid-20150124_093023_016053_EEA7A8E6)
-Subject: [PATCH] mac80211: handle potential race between suspend and scan completion
+Date: Fri, 23 Jan 2015 10:54:39 +0100
+In-Reply-To: <1421962366-7015-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1421962366-7015-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Thu, 2015-01-22 at 23:32 +0200, Emmanuel Grumbach wrote:
+> When we go to suspend, there is complex set of states that
+> avoids races. The quiescing variable is set whlie
+> __ieee80211_suspend is running. Then suspended is set.
+> The code makes sure there is no window without any of these
+> flags.
+> 
+> The problem is that workers can still be enqueued while we
+> are quiescing. This leads to situations where the driver is
+> already suspending and other flows like disassociation are
+> handled by a worker.
+> 
+> To fix this, we need to check quiescing and suspended flags
+> in the worker itself and not only before enqueueing it.
+> I also add here extensive documentation to ease the
+> understanding of these complex issues.
 
-If suspend starts while ieee80211_scan_completed() is running, between
-the point where SCAN_COMPLETED is set and the work is queued,
-ieee80211_scan_cancel() will not catch the work and we may finish
-suspending before the work is actually executed, leaving the scan
-running while suspended.
+Applied.
 
-To fix this race, queue the scan work during resume if the
-SCAN_COMPLETED flag is set and flush it immediately.
-
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/mac80211/ieee80211_i.h |  3 ++-
- net/mac80211/util.c        | 12 ++++++++++++
- 2 files changed, 14 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index bdb3e3b..3afe368 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1752,7 +1752,8 @@ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
- 
--	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning),
-+	WARN(test_bit(SCAN_HW_SCANNING, &local->scanning) &&
-+	     !test_bit(SCAN_COMPLETED, &local->scanning),
- 		"%s: resume with hardware scan still in progress\n",
- 		wiphy_name(hw->wiphy));
- 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index c65d03f..8428f4a 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2060,6 +2060,18 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	mb();
- 	local->resuming = false;
- 
-+	/* It's possible that we don't handle the scan completion in
-+	 * time during suspend, so if it's still marked as completed
-+	 * here, queue the work and flush it to clean things up.
-+	 * Instead of calling the worker function directly here, we
-+	 * really queue it to avoid potential races with other flows
-+	 * scheduling the same work.
-+	 */
-+	if (test_bit(SCAN_COMPLETED, &local->scanning)) {
-+		ieee80211_queue_delayed_work(&local->hw, &local->scan_work, 0);
-+		flush_delayed_work(&local->scan_work);
-+	}
-+
- 	if (local->open_count && !reconfig_due_to_wowlan)
- 		drv_reconfig_complete(local, IEEE80211_RECONFIG_TYPE_SUSPEND);
- 
--- 
-2.1.4
+johannes
 
