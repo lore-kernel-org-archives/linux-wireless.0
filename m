@@ -1,51 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:47170 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751004AbbAMOTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 09:19:32 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Jan 2015 16:19:15 +0200
-Message-Id: <1421158755-23411-1-git-send-email-luca@coelho.fi> (sfid-20150113_151934_852550_2C0F9279)
-Subject: [PATCH iw] Read number of supported net-detect matches
+Received: from s3.sipsolutions.net ([5.9.151.49]:35419 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750996AbbAWJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 04:42:58 -0500
+Message-ID: <1422006174.2728.12.camel@sipsolutions.net> (sfid-20150123_104302_972030_ACE35486)
+Subject: Re: [PATCH v3] mac80211: Avoid STA expiration timer truncation to
+ u32
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org, me@bobcopeland.com
+Date: Fri, 23 Jan 2015 10:42:54 +0100
+In-Reply-To: <1421722023-4691-1-git-send-email-masashi.honma@gmail.com> (sfid-20150120_034734_203758_428E04AE)
+References: <CAFk-A4nF4jPiFR1c9fx-+sa=YWUZseEOKtut7rKWHihmLWp02w@mail.gmail.com>
+	 <1421722023-4691-1-git-send-email-masashi.honma@gmail.com>
+	 (sfid-20150120_034734_203758_428E04AE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Tue, 2015-01-20 at 11:47 +0900, Masashi Honma wrote:
+> On some combination of plink_timeout and HZ, the STA expiration timer will be
+> unexpectedly truncated to u32. Maybe there is a question "Who sets such a large
+> number to plink_timeout ?". At least wpa_supplicant will set 0xffffffff to
+> plink_timeout to disable this timer because wpa_supplicant has it's own
+> expiration mechanism.
 
-Instead of just printing whether netdetect is supported, parse the
-attribute and report the maximum number of matchsets the driver
-supports.
+Ok - but that doesn't really disable the timer? Perhaps we should have a
+new userspace API to explicitly disable it? OTOH, worst case I guess
+that means it's like >100 years in the future, so I guess it doesn't
+matter. However, though, you can hardly rely on this fix being present
+in the kernel, so you can't really set such a large value
+unconditionally anyway, no? Otherwise a newer wpa_supplicant running on
+an older kernel would suddenly behave incorrectly. That doesn't seem
+right.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- info.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Having an explicit feature to disable plink timeout would perhaps be
+better?
 
-diff --git a/info.c b/info.c
-index 6e21e45..1df503f 100644
---- a/info.c
-+++ b/info.c
-@@ -455,7 +455,7 @@ broken_combination:
- 			[NL80211_WOWLAN_TRIG_EAP_IDENT_REQUEST] = { .type = NLA_FLAG },
- 			[NL80211_WOWLAN_TRIG_4WAY_HANDSHAKE] = { .type = NLA_FLAG },
- 			[NL80211_WOWLAN_TRIG_RFKILL_RELEASE] = { .type = NLA_FLAG },
--			[NL80211_WOWLAN_TRIG_NET_DETECT] = { .type = NLA_FLAG },
-+			[NL80211_WOWLAN_TRIG_NET_DETECT] = { .type = NLA_U32 },
- 			[NL80211_WOWLAN_TRIG_TCP_CONNECTION] = { .type = NLA_NESTED },
- 		};
- 		struct nl80211_pattern_support *pat;
-@@ -494,7 +494,8 @@ broken_combination:
- 			if (tb_wowlan[NL80211_WOWLAN_TRIG_RFKILL_RELEASE])
- 				printf("\t\t * wake up on rfkill release\n");
- 			if (tb_wowlan[NL80211_WOWLAN_TRIG_NET_DETECT])
--				printf("\t\t * wake up on network detection\n");
-+				printf("\t\t * wake up on network detection, up to %d match sets\n",
-+				       nla_get_u32(tb_wowlan[NL80211_WOWLAN_TRIG_NET_DETECT]));
- 			if (tb_wowlan[NL80211_WOWLAN_TRIG_TCP_CONNECTION])
- 				printf("\t\t * wake up on TCP connection\n");
- 		}
--- 
-2.1.4
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -573,8 +573,11 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
+>  {
+>  	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+>  	u32 changed;
+> +	u64 exp_time;
+>  
+> -	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
+> +	exp_time = ifmsh->mshcfg.plink_timeout * (u64)HZ;
+> +	if (exp_time < 0x100000000)
+> +		ieee80211_sta_expire(sdata, exp_time);
+
+I'm not convinced this is right. For one, I believe on 32-bit machines
+you'll need to write "0x100000000ULL" instead of the plain constant.
+Perhaps preferably, you'd use use ">= MAX_UINT".
+
+However, the argument to ieee80211_sta_expire() is an unsigned long (as
+is jiffies), so on 64-bit machines you could even still use the value
+and the conditional isn't needed.
+
+Given these complications, I would prefer having a feature attribute to
+treat e.g. 0 as disabling the timer entirely, and if this feature isn't
+present then have wpa_supplicant instead use a safe value that doesn't
+trigger the kernel bug - e.g. 0xffffffff/1000 [which is the max possible
+HZ].
+
+johannes
 
