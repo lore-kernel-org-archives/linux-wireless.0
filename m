@@ -1,58 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:60190 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755260AbbA2B1j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:27:39 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Berg Johannes <johannes.berg@intel.com>,
-	Clement Perrochaud <clement.perrochaud@nxp.com>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [RFC] NFC: PN544: Supply the right length to skb_trim
-Date: Thu, 29 Jan 2015 01:50:46 +0200
-Message-Id: <1422489046-6087-1-git-send-email-robert.dolca@intel.com> (sfid-20150129_022800_044908_BA1E77B8)
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:57382 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756180AbbAWUY3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 15:24:29 -0500
+Message-ID: <54C2ADFB.2080806@lwfinger.net> (sfid-20150123_212438_601138_E746131B)
+Date: Fri, 23 Jan 2015 14:24:27 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 3/6] rtlwifi: btcoexist: Add routines for RTL8812AE with
+ single antenna
+References: <1422033044-7461-1-git-send-email-Larry.Finger@lwfinger.net>	<1422033044-7461-4-git-send-email-Larry.Finger@lwfinger.net> <87r3uljm7o.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87r3uljm7o.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The 2nd parameter of skb_trim is the new length of the skb.
+On 01/23/2015 02:06 PM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> From: Troy Tan <troy_tan@realsil.com.cn>
+>>
+>> The RTL8812AE needs different BT coexistence routines than does the
+>> RTL8821AE. This patch adds the necessary routines for devices with a
+>> single antenna.
+>>
+>> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>>   .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.c   | 2073 ++++++++++++++++++++
+>>   .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.h   |  152 ++
+>>   2 files changed, 2225 insertions(+)
+>>   create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
+>>   create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.h
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c b/drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
+>> new file mode 100644
+>> index 0000000..11ae66b
+>> --- /dev/null
+>> +++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
+>> @@ -0,0 +1,2073 @@
+>> +/*  */
+>> +/*  Description: */
+>> +/*  */
+>> +/*  This file is for 8812a1ant Co-exist mechanism */
+>> +/*  */
+>> +/*  History */
+>> +/*  2012/11/15 Cosa first check in. */
+>> +/*  */
+>> +/*  */
+>> +
+>> +/*  */
+>> +/*  include files */
+>> +/*  */
+>
+> One problem I see is that there's no license on either of the files. It
+> would be much better if the files had that.
 
-pn544_hci_i2c_remove_len_crc used the tailroom for the 2nd parameter so
-the new length was 2 no metter how big the skb was.
-Now the length is (skb->len - PN544_I2C_FRAME_TAILROOM)
+I will add that and send a V2 after I wait a while for any other comments.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
----
- drivers/nfc/pn544/i2c.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Thanks,
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 58b9029..42e7b26 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -297,7 +297,7 @@ static void pn544_hci_i2c_add_len_crc(struct sk_buff *skb)
- static void pn544_hci_i2c_remove_len_crc(struct sk_buff *skb)
- {
- 	skb_pull(skb, PN544_I2C_FRAME_HEADROOM);
--	skb_trim(skb, PN544_I2C_FRAME_TAILROOM);
-+	skb_trim(skb, skb->len - PN544_I2C_FRAME_TAILROOM);
- }
- 
- /*
-@@ -411,8 +411,7 @@ static int pn544_hci_i2c_read(struct pn544_i2c_phy *phy, struct sk_buff **skb)
- 		goto flush;
- 	}
- 
--	skb_pull(*skb, 1);
--	skb_trim(*skb, (*skb)->len - 2);
-+	pn544_hci_i2c_remove_len_crc(*skb);
- 
- 	usleep_range(3000, 6000);
- 
--- 
-1.9.1
+Larry
+
+
 
