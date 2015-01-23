@@ -1,39 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:52163 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37317 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751710AbbARUQ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 15:16:27 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@adurom.com" <kvalo@adurom.com>
-CC: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2015-01-15
-Date: Sun, 18 Jan 2015 20:16:23 +0000
-Message-ID: <1421612183.26502.1.camel@egrumbacBox> (sfid-20150118_211630_518006_D0D94D03)
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1755613AbbAWPdS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 10:33:18 -0500
+Message-ID: <1422027188.2728.37.camel@sipsolutions.net> (sfid-20150123_163331_453529_0914EEB9)
+Subject: pull-request: mac80211 2015-01-23
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Date: Fri, 23 Jan 2015 16:33:08 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCk9uZSBzaW5nbGUgcGF0Y2ggaW4gdGhlcmUsIGJ1dCBzaW5jZSBpdCBoaXQg
-TGludXMncyBzeXN0ZW0sIGFuZCB3ZSBhcmUNCmluIC1yYzUgYWxyZWFkeSwgSSBkaWRuJ3Qgd2Fu
-dCB0byB3YWl0IHVudGlsIG1vcmUgc3R1ZmYgYWNjdW11bGF0ZXMuDQpUaGlzIGlzIGEgcGF0Y2gg
-Zm9yIHRoZSBidWcgdGhhdCBMaW51cyByZXBvcnRlZC4NCkxldCBtZSBrbm93IGlmIHlvdSBoYXZl
-IGlzc3VlcyENCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA5YjNiNDNkOGQx
-MzAwYzM2YmE1OTQ1YzEyZmQ1MDU0MDllYWY0ODA3Og0KDQogIGl3bHdpZmk6IG12bTogc2V0IHRo
-ZSB0eCBjbWQgdGlkIGZvciBCQVIgZnJhbWUgY29ycmVjdGx5ICgyMDE1LTAxLTEzIDA4OjUzOjIz
-ICswMjAwKQ0KDQphcmUgYXZhaWxhYmxlIGluIHRoZSBnaXQgcmVwb3NpdG9yeSBhdDoNCg0KICBo
-dHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2l3
-bHdpZmktZml4ZXMuZ2l0IHRhZ3MvaXdsd2lmaS1mb3Ita2FsbGUtMjAxNS0wMS0xNQ0KDQpmb3Ig
-eW91IHRvIGZldGNoIGNoYW5nZXMgdXAgdG8gOTBlYTE1YzExNDhiYjE1MTdlNDAwZWQxNGJiODc1
-ZTMzMGFlYWQyZToNCg0KICBpd2x3aWZpOiBtdm06IGFib3J0IHNjaGVkdWxlZCBzY2FuIHVwb24g
-UkZLSUxMICgyMDE1LTAxLTE4IDIyOjA0OjM3ICswMjAwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoqIG9uZSBmaXgg
-Zm9yIHJma2lsbCB3aGlsZSBzY2hlZHVsZWQgc2NhbiBpcyBydW5uaW5nLg0KICBMaW51cydzIHN5
-c3RlbSBoaXQgdGhpcyBpc3N1ZS4gV2lGaSB3b3VsZCBiZSB1bmF2YWlsYWJsZQ0KICBhZnRlciB0
-aGlzIGhhcyBoYXBwZW5lZCBiZWNhdXNlIG9mIGJhZCBzdGF0ZSBpbiBjZmc4MDIxMS4NCg0KLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLQ0KRW1tYW51ZWwgR3J1bWJhY2ggKDEpOg0KICAgICAgaXdsd2lmaTogbXZtOiBhYm9ydCBz
-Y2hlZHVsZWQgc2NhbiB1cG9uIFJGS0lMTA0KDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9tdm0vc2Nhbi5jIHwgNyArKysrKysrDQogMSBmaWxlIGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygr
-KQ0KDQoNCg==
+Hi Dave,
+
+I have a few more fixes that seemed relevant for the current cycle and
+low enough impact to merge at this point.
+
+However, I can live with all of this going to -next as well since most
+are difficult to hit in practice.
+
+johannes
+
+
+The following changes since commit 20658702e08ecd693236b443837d28863b93e872:
+
+  cfg80211: fix deadlock during reg chan check (2015-01-07 14:53:46 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-01-23
+
+for you to fetch changes up to 0fa7b39131576dd1baa6ca17fca53c65d7f62249:
+
+  nl80211: fix per-station group key get/del and memory leak (2015-01-23 11:21:02 +0100)
+
+----------------------------------------------------------------
+Another set of last-minute fixes:
+ * fix station double-removal when suspending while associating
+ * fix the HT (802.11n) header length calculation
+ * fix the CCK radiotap flag used for monitoring, a pretty
+   old regression but a simple one-liner
+ * fix per-station group-key handling
+
+----------------------------------------------------------------
+Fred Chou (1):
+      mac80211: correct header length calculation
+
+Johannes Berg (1):
+      nl80211: fix per-station group key get/del and memory leak
+
+Luciano Coelho (1):
+      mac80211: only roll back station states for WDS when suspending
+
+Mathy Vanhoef (1):
+      mac80211: properly set CCK flag in radiotap
+
+ net/mac80211/pm.c      | 29 +++++++++++++++--------------
+ net/mac80211/rx.c      |  2 +-
+ net/wireless/nl80211.c |  9 ++++-----
+ net/wireless/util.c    |  6 ++++++
+ 4 files changed, 26 insertions(+), 20 deletions(-)
+
+
