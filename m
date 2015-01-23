@@ -1,211 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:48813 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757538AbbA0IpS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 03:45:18 -0500
-Received: by mail-wi0-f171.google.com with SMTP id l15so3053709wiw.4
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 00:45:17 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFCv4 2/3] mac80211: IBSS fix scan request
-Date: Tue, 27 Jan 2015 09:44:02 +0100
-Message-Id: <1422348243-4928-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150127_094528_072927_CADFD65B)
-In-Reply-To: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35644 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752957AbbAWKdw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 05:33:52 -0500
+Message-ID: <1422009226.2728.31.camel@sipsolutions.net> (sfid-20150123_113356_969685_0F555C2D)
+Subject: Re: [PATCH] mac80211: synchronize_net() before flushing the queues
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 23 Jan 2015 11:33:46 +0100
+In-Reply-To: <1422008312.13429.5.camel@egrumbacBox>
+References: <1421962219-6840-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1422006994.2728.22.camel@sipsolutions.net>
+	 <1422008312.13429.5.camel@egrumbacBox>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of wide bandwidth scan all channels we have
-in chandef, not only control one.
+On Fri, 2015-01-23 at 10:18 +0000, Grumbach, Emmanuel wrote:
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- net/mac80211/ibss.c        | 80 ++++++++++++++++++++++++++++++++++++++++++++--
- net/mac80211/ieee80211_i.h |  3 +-
- net/mac80211/scan.c        | 25 +++++++++------
- 3 files changed, 96 insertions(+), 12 deletions(-)
+> I don't think it will introduce that much of latency.
+> Note that there is a call to flush() right after that, this means that
+> any driver which implements this call needs to wait there. So you have
+> the latency in either place. The only additional latency it adds is for
+> other RCU sections / packets on other interfaces.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index b606b53..14acc21 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1273,7 +1273,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- 
- 	scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
- 	ieee80211_request_ibss_scan(sdata, ifibss->ssid, ifibss->ssid_len,
--				    NULL, scan_width);
-+				    NULL, 0, scan_width);
- }
- 
- static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
-@@ -1312,6 +1312,75 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
- 				  capability, 0, true);
- }
- 
-+static unsigned ibss_setup_channels(struct wiphy *wiphy,
-+				    struct ieee80211_channel **channels,
-+				    unsigned int channels_max,
-+				    u32 center_freq, u32 width)
-+{
-+	struct ieee80211_channel *chan = NULL;
-+	unsigned int n_chan = 0;
-+	u32 start_freq, end_freq, freq;
-+
-+	if (width <= 20) {
-+		start_freq = center_freq;
-+		end_freq = center_freq;
-+	} else {
-+		start_freq = center_freq - width/2 + 10;
-+		end_freq = center_freq + width/2 - 10;
-+	}
-+
-+	for (freq = start_freq; freq <= end_freq; freq += 20) {
-+		chan = ieee80211_get_channel(wiphy, freq);
-+		if (!chan)
-+			continue;
-+		if (n_chan >= channels_max)
-+			return n_chan;
-+
-+		channels[n_chan] = chan;
-+		n_chan++;
-+	}
-+
-+	return n_chan;
-+}
-+
-+static unsigned int
-+ieee80211_ibss_setup_scan_channels(struct wiphy *wiphy,
-+				   const struct cfg80211_chan_def *chandef,
-+				   struct ieee80211_channel **channels,
-+				   unsigned int channels_max)
-+{
-+	unsigned int n_chan = 0;
-+	u32 width, cf1, cf2 = 0;
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_40:
-+		width = 40;
-+		break;
-+	case NL80211_CHAN_WIDTH_80P80:
-+		cf2 = chandef->center_freq2;
-+	case NL80211_CHAN_WIDTH_80:
-+		width = 80;
-+		break;
-+	case NL80211_CHAN_WIDTH_160:
-+		width = 160;
-+		break;
-+	default:
-+		width = 20;
-+		break;
-+	}
-+
-+	cf1 = chandef->center_freq1;
-+
-+	n_chan = ibss_setup_channels(wiphy, channels, channels_max, cf1, width);
-+
-+	if (cf2)
-+		n_chan += ibss_setup_channels(wiphy, &channels[n_chan],
-+					      channels_max - n_chan, cf2,
-+					      width);
-+
-+	return n_chan;
-+}
-+
- /*
-  * This function is called with state == IEEE80211_IBSS_MLME_SEARCH
-  */
-@@ -1381,11 +1450,18 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 	/* Selected IBSS not found in current scan results - try to scan */
- 	if (time_after(jiffies, ifibss->last_scan_completed +
- 					IEEE80211_SCAN_INTERVAL)) {
-+		struct ieee80211_channel *channels[8];
-+		unsigned int num = 0;
-+
- 		sdata_info(sdata, "Trigger new scan to find an IBSS to join\n");
- 
-+		num = ieee80211_ibss_setup_scan_channels(local->hw.wiphy,
-+							 &ifibss->chandef,
-+							 channels,
-+							 ARRAY_SIZE(channels));
- 		scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
- 		ieee80211_request_ibss_scan(sdata, ifibss->ssid,
--					    ifibss->ssid_len, chan,
-+					    ifibss->ssid_len, channels, num,
- 					    scan_width);
- 	} else {
- 		int interval = IEEE80211_SCAN_INTERVAL;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index cc6e964..9254546 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1558,7 +1558,8 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata);
- void ieee80211_scan_work(struct work_struct *work);
- int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 				const u8 *ssid, u8 ssid_len,
--				struct ieee80211_channel *chan,
-+				struct ieee80211_channel **channels,
-+				unsigned int n_channels,
- 				enum nl80211_bss_scan_width scan_width);
- int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
- 			   struct cfg80211_scan_request *req);
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index ae84267..f76a5d1 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -923,11 +923,12 @@ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
- 
- int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 				const u8 *ssid, u8 ssid_len,
--				struct ieee80211_channel *chan,
-+				struct ieee80211_channel **channels,
-+				unsigned int n_channels,
- 				enum nl80211_bss_scan_width scan_width)
- {
- 	struct ieee80211_local *local = sdata->local;
--	int ret = -EBUSY;
-+	int ret = -EBUSY, i, n_ch = 0;
- 	enum ieee80211_band band;
- 
- 	mutex_lock(&local->mtx);
-@@ -937,9 +938,8 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 		goto unlock;
- 
- 	/* fill internal scan request */
--	if (!chan) {
--		int i, max_n;
--		int n_ch = 0;
-+	if (!channels) {
-+		int max_n;
- 
- 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 			if (!local->hw.wiphy->bands[band])
-@@ -964,12 +964,19 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
- 
- 		local->int_scan_req->n_channels = n_ch;
- 	} else {
--		if (WARN_ON_ONCE(chan->flags & (IEEE80211_CHAN_NO_IR |
--						IEEE80211_CHAN_DISABLED)))
-+		for (i = 0; i < n_channels; i++) {
-+			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
-+						  IEEE80211_CHAN_DISABLED))
-+				continue;
-+
-+			local->int_scan_req->channels[n_ch] = channels[i];
-+			n_ch++;
-+		}
-+
-+		if (WARN_ON_ONCE(n_ch == 0))
- 			goto unlock;
- 
--		local->int_scan_req->channels[0] = chan;
--		local->int_scan_req->n_channels = 1;
-+		local->int_scan_req->n_channels = n_ch;
- 	}
- 
- 	local->int_scan_req->ssids = &local->scan_ssid;
--- 
-1.9.1
+This is correct.
+
+> Also - since we just stopped the netif, there can possibly be only one
+> packet for each vif / ac processing. This is not too much data to
+> process.
+
+But this is the wrong conclusion.
+
+synchronize_rcu() is expensive, no matter what, especially if you have
+multiple cores. The RCU grace periods will practically never line up,
+and it needs to wait for every CPU to go through one.
+
+It's not actually just "one packet for each vif/ac" - it's a whole tail
+of whatever other RCU usages there are. Back when this was discussed,
+the wizery people measured this to hundreds of ms in many not too
+uncommon cases.
+
+> Your call, but to honest, I have been optimizing the roaming as well (as
+> you know). And it was really bad for drivers that implements the flush()
+> callback. Especially in cases where you are already far from the AP you
+> want to roam from. This is why I added the drop parameter and other
+> optimizations (don't flush() after probing etc...)
+
+Well, yes, but that's an upper bound - here with the synchronize_net()
+we're more talking about a lower bound.
+
+johannes
 
