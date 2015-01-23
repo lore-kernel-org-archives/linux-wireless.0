@@ -1,43 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:63471 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422663AbbA3Ot0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 09:49:26 -0500
-Received: by mail-ob0-f172.google.com with SMTP id nt9so3028153obb.3
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 06:49:25 -0800 (PST)
-Date: Fri, 30 Jan 2015 08:49:11 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wireless-regdb: Disable VHT80 where 40/80 MHz on 5 GHz
- is not allowed
-Message-ID: <20150130144911.GB124346@ubuntu-hedt> (sfid-20150130_154955_850418_EA196729)
-References: <1422013872-9732-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422013872-9732-1-git-send-email-jouni@qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35475 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751121AbbAWJyS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Jan 2015 04:54:18 -0500
+Message-ID: <1422006855.2728.18.camel@sipsolutions.net> (sfid-20150123_105424_007123_A71505C1)
+Subject: Re: [PATCH] mac80211: properly set CCK flag in radiotap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mathy Vanhoef <vanhoefm@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 23 Jan 2015 10:54:15 +0100
+In-Reply-To: <54BE6094.6010001@gmail.com> (sfid-20150120_150512_222205_85BF3FC3)
+References: <54BE6094.6010001@gmail.com>
+	 (sfid-20150120_150512_222205_85BF3FC3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2015 at 01:51:12PM +0200, Jouni Malinen wrote:
-> VHT80 was incorrectly enabled for number of countries.
-> 
-> 40 and 80 MHz channels are not allowed on 5 GHz for these:
-> - Armenia (AM)
-> - Bahrain (BH)
-> - Costa Rica (CR)
-> - Ecuador (EC)
-> - Guam (GU)
-> - Indonesia (ID) (also remove 40 MHz from 2.4 GHz)
-> - North Korea (KP)
-> - Sri Lanka (LK)
-> - El Salvador (SV)
-> 
-> 80 MHz channels are not allowed on 5 GHz for these:
-> - Egypt (EG)
-> - Russia (RU)
-> 
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+On Tue, 2015-01-20 at 15:05 +0100, Mathy Vanhoef wrote:
+> Fix a regression introduced by commit a5e70697d0c4 ("mac80211: add radiotap flag
+> and handling for 5/10 MHz") where the IEEE80211_CHAN_CCK channel type flag was
+> incorrectly replaced by the IEEE80211_CHAN_OFDM flag. This commit fixes that by
+> using the CCK flag again.
 
-Applied, thanks.
+Applied.
+
+johannes
+
