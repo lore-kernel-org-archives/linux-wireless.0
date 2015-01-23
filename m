@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:53566 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752019AbbAFP6Z (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:17017 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbbAWSJw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:58:25 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, sergei.shtylyov@cogentembedded.com
-Subject: [PATCH 02/11 V2] rtlwifi: rtl8723be: Improve modinfo output
-Date: Tue,  6 Jan 2015 09:58:03 -0600
-Message-Id: <1420559892-12384-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150106_165934_826173_C505DC2F)
-In-Reply-To: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420559892-12384-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 23 Jan 2015 13:09:52 -0500
+Message-ID: <54C28E6B.8090408@broadcom.com> (sfid-20150123_191040_308654_4E5F61F6)
+Date: Fri, 23 Jan 2015 19:09:47 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	"Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
+	<brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
+	<meuleman@broadcom.com>, <linville@tuxdriver.com>,
+	<pieterpg@broadcom.com>, <hdegoede@redhat.com>, <wens@csie.org>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54BDCC06.8090107@linux.intel.com>	<87twzincvz.fsf@kamboji.qca.qualcomm.com>	<54C1012F.1020400@cogentembedded.com> <54C1646B.4080409@broadcom.com> <87y4otldln.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87y4otldln.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The description of the power-save variables for this driver is not as
-clear as for the others. The wording is changed to match the others.
+On 01/23/15 16:29, Kalle Valo wrote:
+> Arend van Spriel<arend@broadcom.com>  writes:
+>
+>> On 01/22/15 14:54, Sergei Shtylyov wrote:
+>>> Hello.
+>>>
+>>> On 1/22/2015 4:49 PM, Kalle Valo wrote:
+>>>
+>>>>> > From 04d3fa673897ca4ccbea6c76836d0092dba2484a Mon Sep 17 00:00:00 2001
+>>>>> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>>>> Date: Tue, 20 Jan 2015 11:14:13 +0800
+>>>>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>>>
+>>>>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>>>>> twice suspend/resume operations for one WiFi chip to do
+>>>>> the same things. This patch avoid this case.
+>>>
+>>>>> Acked-by: Arend van Spriel<arend@broadcom.com>
+>>>>> Acked-by: Sergei Shtylyov<sergei.shtylyov@cogentembedded.com>
+>>>>> Acked-by: Kalle Valo<kvalo@codeaurora.org>
+>>>>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>>
+>>>> I don't remember giving Acked-by to this (or for matter to anything for
+>>>> a long time). What about Sergei or Arend?
+>>>
+>>> I haven't ACK'ed this patch either.
+>>
+>> I did ACK the initial patch and felt it still valid for this 'V2' patch.
+>
+> Ok, thanks. So the patch is good, Zhonghui just needs to remove the two
+> acked-by lines.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+Indeed.
 
-V2 - only patch 02/11 is changed to fix the problem noted by Sergei Shylyov
-     <sergei.shtylyov@cogentembedded.com> concerning a line that was dropped.
----
-
- drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-Index: wireless-drivers/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-===================================================================
---- wireless-drivers.orig/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-+++ wireless-drivers/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-@@ -386,12 +386,14 @@ module_param_named(swlps, rtl8723be_mod_
- module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
- module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
- 		   bool, 0444);
--MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
--MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
--MODULE_PARM_DESC(fwlps, "using linked fw control power save (default 1 is open)\n");
-+MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-+MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
- MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
--MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
-+MODULE_PARM_DESC(disable_watchdog,
-+		 "Set to 1 to disable the watchdog (default 0)\n");
- 
- static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
- 
+Regards,
+Arend
