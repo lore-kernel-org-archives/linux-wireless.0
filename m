@@ -1,307 +1,470 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54376 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754870AbbAFKuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 05:50:12 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@suse.com, Ilan Peer <ilan.peer@intel.com>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2 1/2] cfg80211: Add API to change the indoor regulatory setting
-Date: Mon,  5 Jan 2015 23:52:21 -0500
-Message-Id: <1420519942-16109-1-git-send-email-ilan.peer@intel.com> (sfid-20150106_115554_035119_41B9E557)
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53685 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753600AbbAXRx0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2015 12:53:26 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/6] mac80111: Add CCMP-256 cipher
+Date: Sat, 24 Jan 2015 19:52:07 +0200
+Message-ID: <1422121929-18238-4-git-send-email-jouni@qca.qualcomm.com> (sfid-20150124_185329_338871_93FDB913)
+In-Reply-To: <1422121929-18238-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1422121929-18238-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the operating environment of a device can change, add
-API for user space to indicate a change of indoor settings.
-In addition modify the handling of the indoor processing as
-follows:
+This allows mac80211 to configure CCMP-256 to the driver and also use
+software-implementation within mac80211 when the driver does not support
+this with hardware accelaration.
 
-1. Directly update the indoor setting without wrapping it as a
-   regulatory request.
-2. Track the socket on which the indoor hint is issued, and reset
-   indoor setting if the socket was released.
-3. Do not reset the indoor setting when restoring the regulatory
-   settings as it has nothing to do with CRDA or interface
-   disconnection.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- include/uapi/linux/nl80211.h |  5 +++
- net/wireless/nl80211.c       | 10 +++++-
- net/wireless/reg.c           | 80 +++++++++++++++++++++++++-------------------
- net/wireless/reg.h           | 15 ++++++++-
- 4 files changed, 73 insertions(+), 37 deletions(-)
+ net/mac80211/aes_ccm.c     | 21 ++++++++++++---------
+ net/mac80211/aes_ccm.h     | 10 +++++++---
+ net/mac80211/cfg.c         |  2 ++
+ net/mac80211/debugfs_key.c |  3 +++
+ net/mac80211/key.c         | 27 ++++++++++++++++++++++++++-
+ net/mac80211/main.c        |  6 ++++--
+ net/mac80211/rx.c          | 13 ++++++++++---
+ net/mac80211/tx.c          |  5 ++++-
+ net/mac80211/wpa.c         | 24 ++++++++++++++----------
+ net/mac80211/wpa.h         |  4 ++--
+ 10 files changed, 84 insertions(+), 31 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 54f3911..6ef0a5a 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1713,6 +1713,9 @@ enum nl80211_commands {
-  *	obtained from it is coming from the device's wiphy and not the global
-  *	cfg80211 regdomain.
-  *
-+ * @NL80211_ATTR_REG_INDOOR: flag attribute, if set indicates that the device
-+ *      is operating in an indoor environment.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2072,6 +2075,8 @@ enum nl80211_attrs {
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index 09d9caa..7869bb4 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -20,7 +20,8 @@
+ #include "aes_ccm.h"
  
- 	NL80211_ATTR_WIPHY_SELF_MANAGED_REG,
- 
-+	NL80211_ATTR_REG_INDOOR,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7029201..ca12a31 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -397,6 +397,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_SMPS_MODE] = { .type = NLA_U8 },
- 	[NL80211_ATTR_MAC_MASK] = { .len = ETH_ALEN },
- 	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
- };
- 
- /* policy for the key attributes */
-@@ -4923,6 +4924,7 @@ static int parse_reg_rule(struct nlattr *tb[],
- static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic)
++			       u8 *data, size_t data_len, u8 *mic,
++			       size_t mic_len)
  {
- 	char *data = NULL;
-+	bool is_indoor;
- 	enum nl80211_user_reg_hint_type user_reg_hint_type;
+ 	struct scatterlist assoc, pt, ct[2];
  
- 	/*
-@@ -4949,7 +4951,8 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
- 		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
- 		return regulatory_hint_user(data, user_reg_hint_type);
- 	case NL80211_USER_REG_HINT_INDOOR:
--		return regulatory_hint_indoor_user();
-+		is_indoor = !!info->attrs[NL80211_ATTR_REG_INDOOR];
-+		return regulatory_hint_indoor(is_indoor, info->snd_portid);
- 	default:
- 		return -EINVAL;
- 	}
-@@ -12669,6 +12672,11 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+@@ -35,7 +36,7 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
+ 	sg_init_table(ct, 2);
+ 	sg_set_buf(&ct[0], data, data_len);
+-	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
++	sg_set_buf(&ct[1], mic, mic_len);
  
- 	rcu_read_unlock();
- 
-+	/*
-+	 * It is possible that the user space process that is controlling the
-+	 * indoor setting disappeared, so notify the regulatory core.
-+	 */
-+	regulatory_netlink_notify(notify->portid);
- 	return NOTIFY_OK;
+ 	aead_request_set_tfm(aead_req, tfm);
+ 	aead_request_set_assoc(aead_req, &assoc, assoc.length);
+@@ -45,7 +46,8 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
  }
  
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 9a5411c..6b0da81 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -82,17 +82,12 @@
-  *	be intersected with the current one.
-  * @REG_REQ_ALREADY_SET: the regulatory request will not change the current
-  *	regulatory settings, and no further processing is required.
-- * @REG_REQ_USER_HINT_HANDLED: a non alpha2  user hint was handled and no
-- *	further processing is required, i.e., not need to update last_request
-- *	etc. This should be used for user hints that do not provide an alpha2
-- *	but some other type of regulatory hint, i.e., indoor operation.
-  */
- enum reg_request_treatment {
- 	REG_REQ_OK,
- 	REG_REQ_IGNORE,
- 	REG_REQ_INTERSECT,
- 	REG_REQ_ALREADY_SET,
--	REG_REQ_USER_HINT_HANDLED,
- };
- 
- static struct regulatory_request core_request_world = {
-@@ -133,9 +128,12 @@ static int reg_num_devs_support_basehint;
-  * State variable indicating if the platform on which the devices
-  * are attached is operating in an indoor environment. The state variable
-  * is relevant for all registered devices.
-- * (protected by RTNL)
-  */
- static bool reg_is_indoor;
-+static spinlock_t reg_indoor_lock;
-+
-+/* Used to track the userspace process controlling the indoor setting */
-+static u32 reg_is_indoor_portid;
- 
- static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			      u8 *data, size_t data_len, u8 *mic)
++			      u8 *data, size_t data_len, u8 *mic,
++			      size_t mic_len)
  {
-@@ -1248,13 +1246,6 @@ static bool reg_request_cell_base(struct regulatory_request *request)
- 	return request->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE;
+ 	struct scatterlist assoc, pt, ct[2];
+ 	char aead_req_data[sizeof(struct aead_request) +
+@@ -62,17 +64,18 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	sg_init_one(&assoc, &aad[2], be16_to_cpup((__be16 *)aad));
+ 	sg_init_table(ct, 2);
+ 	sg_set_buf(&ct[0], data, data_len);
+-	sg_set_buf(&ct[1], mic, IEEE80211_CCMP_MIC_LEN);
++	sg_set_buf(&ct[1], mic, mic_len);
+ 
+ 	aead_request_set_tfm(aead_req, tfm);
+ 	aead_request_set_assoc(aead_req, &assoc, assoc.length);
+-	aead_request_set_crypt(aead_req, ct, &pt,
+-			       data_len + IEEE80211_CCMP_MIC_LEN, b_0);
++	aead_request_set_crypt(aead_req, ct, &pt, data_len + mic_len, b_0);
+ 
+ 	return crypto_aead_decrypt(aead_req);
  }
  
--static bool reg_request_indoor(struct regulatory_request *request)
--{
--	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
--		return false;
--	return request->user_reg_hint_type == NL80211_USER_REG_HINT_INDOOR;
--}
--
- bool reg_last_request_cell_base(void)
+-struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[])
++struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
++						    size_t key_len,
++						    size_t mic_len)
  {
- 	return reg_request_cell_base(get_last_request());
-@@ -1815,11 +1806,6 @@ __reg_process_hint_user(struct regulatory_request *user_request)
+ 	struct crypto_aead *tfm;
+ 	int err;
+@@ -81,9 +84,9 @@ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[])
+ 	if (IS_ERR(tfm))
+ 		return tfm;
+ 
+-	err = crypto_aead_setkey(tfm, key, WLAN_KEY_LEN_CCMP);
++	err = crypto_aead_setkey(tfm, key, key_len);
+ 	if (!err)
+-		err = crypto_aead_setauthsize(tfm, IEEE80211_CCMP_MIC_LEN);
++		err = crypto_aead_setauthsize(tfm, mic_len);
+ 	if (!err)
+ 		return tfm;
+ 
+diff --git a/net/mac80211/aes_ccm.h b/net/mac80211/aes_ccm.h
+index 2c7ab19..6a73d1e 100644
+--- a/net/mac80211/aes_ccm.h
++++ b/net/mac80211/aes_ccm.h
+@@ -12,11 +12,15 @@
+ 
+ #include <linux/crypto.h>
+ 
+-struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[]);
++struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
++						    size_t key_len,
++						    size_t mic_len);
+ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic);
++			       u8 *data, size_t data_len, u8 *mic,
++			       size_t mic_len);
+ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			      u8 *data, size_t data_len, u8 *mic);
++			      u8 *data, size_t data_len, u8 *mic,
++			      size_t mic_len);
+ void ieee80211_aes_key_free(struct crypto_aead *tfm);
+ 
+ #endif /* AES_CCM_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1c1d061..ef84441 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -162,6 +162,7 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 			return -EINVAL;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 	case WLAN_CIPHER_SUITE_GCMP:
+ 	case WLAN_CIPHER_SUITE_GCMP_256:
+@@ -349,6 +350,7 @@ static int ieee80211_get_key(struct wiphy *wiphy, struct net_device *dev,
+ 		params.seq_len = 6;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		pn64 = atomic64_read(&key->u.ccmp.tx_pn);
+ 		seq[0] = pn64;
+ 		seq[1] = pn64 >> 8;
+diff --git a/net/mac80211/debugfs_key.c b/net/mac80211/debugfs_key.c
+index 0e223e6..64de07b 100644
+--- a/net/mac80211/debugfs_key.c
++++ b/net/mac80211/debugfs_key.c
+@@ -94,6 +94,7 @@ static ssize_t key_tx_spec_read(struct file *file, char __user *userbuf,
+ 				key->u.tkip.tx.iv16);
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		pn = atomic64_read(&key->u.ccmp.tx_pn);
+ 		len = scnprintf(buf, sizeof(buf), "%02x%02x%02x%02x%02x%02x\n",
+ 				(u8)(pn >> 40), (u8)(pn >> 32), (u8)(pn >> 24),
+@@ -141,6 +142,7 @@ static ssize_t key_rx_spec_read(struct file *file, char __user *userbuf,
+ 		len = p - buf;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		for (i = 0; i < IEEE80211_NUM_TIDS + 1; i++) {
+ 			rpn = key->u.ccmp.rx_pn[i];
+ 			p += scnprintf(p, sizeof(buf)+buf-p,
+@@ -185,6 +187,7 @@ static ssize_t key_replays_read(struct file *file, char __user *userbuf,
+ 
+ 	switch (key->conf.cipher) {
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		len = scnprintf(buf, sizeof(buf), "%u\n", key->u.ccmp.replays);
+ 		break;
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index cbee2f5..83c6108 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -163,6 +163,7 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 	case WLAN_CIPHER_SUITE_WEP104:
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 	case WLAN_CIPHER_SUITE_GCMP:
+ 	case WLAN_CIPHER_SUITE_GCMP_256:
+@@ -389,7 +390,26 @@ ieee80211_key_alloc(u32 cipher, int idx, size_t key_len,
+ 		 * Initialize AES key state here as an optimization so that
+ 		 * it does not need to be initialized for every packet.
+ 		 */
+-		key->u.ccmp.tfm = ieee80211_aes_key_setup_encrypt(key_data);
++		key->u.ccmp.tfm = ieee80211_aes_key_setup_encrypt(
++			key_data, key_len, IEEE80211_CCMP_MIC_LEN);
++		if (IS_ERR(key->u.ccmp.tfm)) {
++			err = PTR_ERR(key->u.ccmp.tfm);
++			kfree(key);
++			return ERR_PTR(err);
++		}
++		break;
++	case WLAN_CIPHER_SUITE_CCMP_256:
++		key->conf.iv_len = IEEE80211_CCMP_256_HDR_LEN;
++		key->conf.icv_len = IEEE80211_CCMP_256_MIC_LEN;
++		for (i = 0; seq && i < IEEE80211_NUM_TIDS + 1; i++)
++			for (j = 0; j < IEEE80211_CCMP_256_PN_LEN; j++)
++				key->u.ccmp.rx_pn[i][j] =
++					seq[IEEE80211_CCMP_256_PN_LEN - j - 1];
++		/* Initialize AES key state here as an optimization so that
++		 * it does not need to be initialized for every packet.
++		 */
++		key->u.ccmp.tfm = ieee80211_aes_key_setup_encrypt(
++			key_data, key_len, IEEE80211_CCMP_256_MIC_LEN);
+ 		if (IS_ERR(key->u.ccmp.tfm)) {
+ 			err = PTR_ERR(key->u.ccmp.tfm);
+ 			kfree(key);
+@@ -457,6 +477,7 @@ static void ieee80211_key_free_common(struct ieee80211_key *key)
  {
- 	struct regulatory_request *lr = get_last_request();
- 
--	if (reg_request_indoor(user_request)) {
--		reg_is_indoor = true;
--		return REG_REQ_USER_HINT_HANDLED;
--	}
--
- 	if (reg_request_cell_base(user_request))
- 		return reg_ignore_cell_hint(user_request);
- 
-@@ -1867,8 +1853,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
- 
- 	treatment = __reg_process_hint_user(user_request);
- 	if (treatment == REG_REQ_IGNORE ||
--	    treatment == REG_REQ_ALREADY_SET ||
--	    treatment == REG_REQ_USER_HINT_HANDLED) {
-+	    treatment == REG_REQ_ALREADY_SET) {
- 		reg_free_request(user_request);
- 		return treatment;
- 	}
-@@ -1929,7 +1914,6 @@ reg_process_hint_driver(struct wiphy *wiphy,
- 	case REG_REQ_OK:
+ 	switch (key->conf.cipher) {
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		ieee80211_aes_key_free(key->u.ccmp.tfm);
  		break;
- 	case REG_REQ_IGNORE:
--	case REG_REQ_USER_HINT_HANDLED:
- 		reg_free_request(driver_request);
- 		return treatment;
- 	case REG_REQ_INTERSECT:
-@@ -2029,7 +2013,6 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
- 	case REG_REQ_OK:
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+@@ -773,6 +794,7 @@ void ieee80211_get_key_tx_seq(struct ieee80211_key_conf *keyconf,
+ 		seq->tkip.iv16 = key->u.tkip.tx.iv16;
  		break;
- 	case REG_REQ_IGNORE:
--	case REG_REQ_USER_HINT_HANDLED:
- 		/* fall through */
- 	case REG_REQ_ALREADY_SET:
- 		reg_free_request(country_ie_request);
-@@ -2068,8 +2051,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	case NL80211_REGDOM_SET_BY_USER:
- 		treatment = reg_process_hint_user(reg_request);
- 		if (treatment == REG_REQ_IGNORE ||
--		    treatment == REG_REQ_ALREADY_SET ||
--		    treatment == REG_REQ_USER_HINT_HANDLED)
-+		    treatment == REG_REQ_ALREADY_SET)
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		pn64 = atomic64_read(&key->u.ccmp.tx_pn);
+ 		seq->ccmp.pn[5] = pn64;
+ 		seq->ccmp.pn[4] = pn64 >> 8;
+@@ -822,6 +844,7 @@ void ieee80211_get_key_rx_seq(struct ieee80211_key_conf *keyconf,
+ 		seq->tkip.iv16 = key->u.tkip.rx[tid].iv16;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		if (WARN_ON(tid < -1 || tid >= IEEE80211_NUM_TIDS))
  			return;
- 		queue_delayed_work(system_power_efficient_wq,
- 				   &reg_timeout, msecs_to_jiffies(3142));
-@@ -2266,22 +2248,51 @@ int regulatory_hint_user(const char *alpha2,
+ 		if (tid < 0)
+@@ -864,6 +887,7 @@ void ieee80211_set_key_tx_seq(struct ieee80211_key_conf *keyconf,
+ 		key->u.tkip.tx.iv16 = seq->tkip.iv16;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		pn64 = (u64)seq->ccmp.pn[5] |
+ 		       ((u64)seq->ccmp.pn[4] << 8) |
+ 		       ((u64)seq->ccmp.pn[3] << 16) |
+@@ -914,6 +938,7 @@ void ieee80211_set_key_rx_seq(struct ieee80211_key_conf *keyconf,
+ 		key->u.tkip.rx[tid].iv16 = seq->tkip.iv16;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
++	case WLAN_CIPHER_SUITE_CCMP_256:
+ 		if (WARN_ON(tid < -1 || tid >= IEEE80211_NUM_TIDS))
+ 			return;
+ 		if (tid < 0)
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 7223b4e..a5ad2d5 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -666,6 +666,7 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
+ 		WLAN_CIPHER_SUITE_WEP104,
+ 		WLAN_CIPHER_SUITE_TKIP,
+ 		WLAN_CIPHER_SUITE_CCMP,
++		WLAN_CIPHER_SUITE_CCMP_256,
+ 		WLAN_CIPHER_SUITE_GCMP,
+ 		WLAN_CIPHER_SUITE_GCMP_256,
+ 
+@@ -727,9 +728,9 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
+ 		 * including the schemes)
+ 		 *
+ 		 * We start counting ciphers defined by schemes, TKIP, CCMP,
+-		 * GCMP, and GCMP-256
++		 * CCMP-256, GCMP, and GCMP-256
+ 		 */
+-		n_suites = local->hw.n_cipher_schemes + 4;
++		n_suites = local->hw.n_cipher_schemes + 5;
+ 
+ 		/* check if we have WEP40 and WEP104 */
+ 		if (have_wep)
+@@ -744,6 +745,7 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
+ 			return -ENOMEM;
+ 
+ 		suites[w++] = WLAN_CIPHER_SUITE_CCMP;
++		suites[w++] = WLAN_CIPHER_SUITE_CCMP_256;
+ 		suites[w++] = WLAN_CIPHER_SUITE_TKIP;
+ 		suites[w++] = WLAN_CIPHER_SUITE_GCMP;
+ 		suites[w++] = WLAN_CIPHER_SUITE_GCMP_256;
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index a11d251..1bcec37 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1650,7 +1650,10 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		result = ieee80211_crypto_tkip_decrypt(rx);
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
+-		result = ieee80211_crypto_ccmp_decrypt(rx);
++		result = ieee80211_crypto_ccmp_decrypt(rx, false);
++		break;
++	case WLAN_CIPHER_SUITE_CCMP_256:
++		result = ieee80211_crypto_ccmp_decrypt(rx, true);
+ 		break;
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		result = ieee80211_crypto_aes_cmac_decrypt(rx);
+@@ -1785,7 +1788,9 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 		/* This is the first fragment of a new frame. */
+ 		entry = ieee80211_reassemble_add(rx->sdata, frag, seq,
+ 						 rx->seqno_idx, &(rx->skb));
+-		if (rx->key && rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP &&
++		if (rx->key &&
++		    (rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP ||
++		     rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP_256) &&
+ 		    ieee80211_has_protected(fc)) {
+ 			int queue = rx->security_idx;
+ 			/* Store CCMP PN so that we can verify that the next
+@@ -1814,7 +1819,9 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 		int i;
+ 		u8 pn[IEEE80211_CCMP_PN_LEN], *rpn;
+ 		int queue;
+-		if (!rx->key || rx->key->conf.cipher != WLAN_CIPHER_SUITE_CCMP)
++		if (!rx->key ||
++		    (rx->key->conf.cipher != WLAN_CIPHER_SUITE_CCMP &&
++		     rx->key->conf.cipher != WLAN_CIPHER_SUITE_CCMP_256))
+ 			return RX_DROP_UNUSABLE;
+ 		memcpy(pn, entry->last_pn, IEEE80211_CCMP_PN_LEN);
+ 		for (i = IEEE80211_CCMP_PN_LEN - 1; i >= 0; i--) {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e4c6fbc..360773b 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -626,6 +626,7 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 				tx->key = NULL;
+ 			break;
+ 		case WLAN_CIPHER_SUITE_CCMP:
++		case WLAN_CIPHER_SUITE_CCMP_256:
+ 		case WLAN_CIPHER_SUITE_GCMP:
+ 		case WLAN_CIPHER_SUITE_GCMP_256:
+ 			if (!ieee80211_is_data_present(hdr->frame_control) &&
+@@ -1013,7 +1014,9 @@ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		return ieee80211_crypto_tkip_encrypt(tx);
+ 	case WLAN_CIPHER_SUITE_CCMP:
+-		return ieee80211_crypto_ccmp_encrypt(tx);
++		return ieee80211_crypto_ccmp_encrypt(tx, false);
++	case WLAN_CIPHER_SUITE_CCMP_256:
++		return ieee80211_crypto_ccmp_encrypt(tx, true);
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		return ieee80211_crypto_aes_cmac_encrypt(tx);
+ 	case WLAN_CIPHER_SUITE_GCMP:
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 96b65c2..1edb5f0 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -394,7 +394,8 @@ static inline void ccmp_hdr2pn(u8 *pn, u8 *hdr)
+ }
+ 
+ 
+-static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
++static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
++			    bool ccmp256)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+@@ -405,6 +406,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	u64 pn64;
+ 	u8 aad[2 * AES_BLOCK_SIZE];
+ 	u8 b_0[AES_BLOCK_SIZE];
++	unsigned int mic_len = ccmp256 ? IEEE80211_CCMP_256_MIC_LEN :
++		IEEE80211_CCMP_MIC_LEN;
+ 
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+@@ -425,7 +428,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	if (info->control.hw_key)
+ 		tail = 0;
+ 	else
+-		tail = IEEE80211_CCMP_MIC_LEN;
++		tail = mic_len;
+ 
+ 	if (WARN_ON(skb_tailroom(skb) < tail ||
+ 		    skb_headroom(skb) < IEEE80211_CCMP_HDR_LEN))
+@@ -460,21 +463,21 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	pos += IEEE80211_CCMP_HDR_LEN;
+ 	ccmp_special_blocks(skb, pn, b_0, aad);
+ 	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
+-				  skb_put(skb, IEEE80211_CCMP_MIC_LEN));
++				  skb_put(skb, mic_len), mic_len);
+ 
  	return 0;
  }
  
--int regulatory_hint_indoor_user(void)
-+int regulatory_hint_indoor(bool is_indoor, u32 portid)
+ 
+ ieee80211_tx_result
+-ieee80211_crypto_ccmp_encrypt(struct ieee80211_tx_data *tx)
++ieee80211_crypto_ccmp_encrypt(struct ieee80211_tx_data *tx, bool ccmp256)
  {
--	struct regulatory_request *request;
-+	spin_lock(&reg_indoor_lock);
+ 	struct sk_buff *skb;
  
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
--	if (!request)
--		return -ENOMEM;
-+	/*
-+	 * Process only if there is a real change, so the original port ID is
-+	 * saved (to handle cases that several processes try to change the
-+	 * indoor setting).
-+	 */
-+	if (reg_is_indoor == is_indoor) {
-+		spin_unlock(&reg_indoor_lock);
-+		return 0;
-+	}
+ 	ieee80211_tx_set_protected(tx);
  
--	request->wiphy_idx = WIPHY_IDX_INVALID;
--	request->initiator = NL80211_REGDOM_SET_BY_USER;
--	request->user_reg_hint_type = NL80211_USER_REG_HINT_INDOOR;
--	queue_regulatory_request(request);
-+	reg_is_indoor = is_indoor;
-+	if (reg_is_indoor)
-+		reg_is_indoor_portid = portid;
-+	else
-+		reg_is_indoor_portid = 0;
-+
-+	spin_unlock(&reg_indoor_lock);
-+
-+	if (!is_indoor)
-+		reg_check_channels();
+ 	skb_queue_walk(&tx->skbs, skb) {
+-		if (ccmp_encrypt_skb(tx, skb) < 0)
++		if (ccmp_encrypt_skb(tx, skb, ccmp256) < 0)
+ 			return TX_DROP;
+ 	}
  
- 	return 0;
- }
+@@ -483,7 +486,7 @@ ieee80211_crypto_ccmp_encrypt(struct ieee80211_tx_data *tx)
  
-+void regulatory_netlink_notify(u32 portid)
-+{
-+	spin_lock(&reg_indoor_lock);
-+
-+	if (reg_is_indoor_portid != portid) {
-+		spin_unlock(&reg_indoor_lock);
-+		return;
-+	}
-+
-+	reg_is_indoor = false;
-+	reg_is_indoor_portid = 0;
-+
-+	spin_unlock(&reg_indoor_lock);
-+
-+	reg_check_channels();
-+}
-+
- /* Driver hints */
- int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ 
+ ieee80211_rx_result
+-ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
++ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx, bool ccmp256)
  {
-@@ -2449,8 +2460,6 @@ static void restore_regulatory_settings(bool reset_user)
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)rx->skb->data;
+ 	int hdrlen;
+@@ -493,6 +496,8 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 	u8 pn[IEEE80211_CCMP_PN_LEN];
+ 	int data_len;
+ 	int queue;
++	unsigned int mic_len = ccmp256 ? IEEE80211_CCMP_256_MIC_LEN :
++		IEEE80211_CCMP_MIC_LEN;
  
- 	ASSERT_RTNL();
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
  
--	reg_is_indoor = false;
--
- 	reset_regdomains(true, &world_regdom);
- 	restore_alpha2(alpha2, reset_user);
+@@ -500,8 +505,7 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 	    !ieee80211_is_robust_mgmt_frame(skb))
+ 		return RX_CONTINUE;
  
-@@ -3019,6 +3028,7 @@ int __init regulatory_init(void)
+-	data_len = skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN -
+-		   IEEE80211_CCMP_MIC_LEN;
++	data_len = skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN - mic_len;
+ 	if (!rx->sta || data_len < 0)
+ 		return RX_DROP_UNUSABLE;
  
- 	spin_lock_init(&reg_requests_lock);
- 	spin_lock_init(&reg_pending_beacons_lock);
-+	spin_lock_init(&reg_indoor_lock);
+@@ -532,14 +536,14 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx)
+ 			    key->u.ccmp.tfm, b_0, aad,
+ 			    skb->data + hdrlen + IEEE80211_CCMP_HDR_LEN,
+ 			    data_len,
+-			    skb->data + skb->len - IEEE80211_CCMP_MIC_LEN))
++			    skb->data + skb->len - mic_len, mic_len))
+ 			return RX_DROP_UNUSABLE;
+ 	}
  
- 	reg_regdb_size_check();
+ 	memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
  
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index 4b45d6e..a2c4e16 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -25,7 +25,20 @@ enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy);
+ 	/* Remove CCMP header and MIC */
+-	if (pskb_trim(skb, skb->len - IEEE80211_CCMP_MIC_LEN))
++	if (pskb_trim(skb, skb->len - mic_len))
+ 		return RX_DROP_UNUSABLE;
+ 	memmove(skb->data + IEEE80211_CCMP_HDR_LEN, skb->data, hdrlen);
+ 	skb_pull(skb, IEEE80211_CCMP_HDR_LEN);
+diff --git a/net/mac80211/wpa.h b/net/mac80211/wpa.h
+index ea955f2..ccf6c0c 100644
+--- a/net/mac80211/wpa.h
++++ b/net/mac80211/wpa.h
+@@ -24,9 +24,9 @@ ieee80211_rx_result
+ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx);
  
- int regulatory_hint_user(const char *alpha2,
- 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
--int regulatory_hint_indoor_user(void);
-+
-+/**
-+ * regulatory_hint_indoor - hint operation in indoor env. or not
-+ * @is_indoor: if true indicates that user space thinks that the
-+ * device is operating in an indoor environment.
-+ * @portid: the netlink port ID on which the hint was given.
-+ */
-+int regulatory_hint_indoor(bool is_indoor, u32 portid);
-+
-+/**
-+ * regulatory_netlink_notify - notify on released netlink socket
-+ * @portid: the netlink socket port ID
-+ */
-+void regulatory_netlink_notify(u32 portid);
+ ieee80211_tx_result
+-ieee80211_crypto_ccmp_encrypt(struct ieee80211_tx_data *tx);
++ieee80211_crypto_ccmp_encrypt(struct ieee80211_tx_data *tx, bool ccmp256);
+ ieee80211_rx_result
+-ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx);
++ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx, bool ccmp256);
  
- void wiphy_regulatory_register(struct wiphy *wiphy);
- void wiphy_regulatory_deregister(struct wiphy *wiphy);
+ ieee80211_tx_result
+ ieee80211_crypto_aes_cmac_encrypt(struct ieee80211_tx_data *tx);
 -- 
-1.8.3.2
+1.9.1
 
