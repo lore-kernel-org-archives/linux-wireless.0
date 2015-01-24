@@ -1,132 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:41004 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752960AbbA3XIw convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f44.google.com ([74.125.82.44]:51610 "EHLO
+	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751571AbbAXLZa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 18:08:52 -0500
-Received: by mail-la0-f52.google.com with SMTP id ge10so26295921lab.11
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 15:08:51 -0800 (PST)
+	Sat, 24 Jan 2015 06:25:30 -0500
+Received: by mail-wg0-f44.google.com with SMTP id z12so1735448wgg.3
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 03:25:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <54CBE299.4070709@hauke-m.de>
-References: <1422638566-7593-1-git-send-email-zajec5@gmail.com>
-	<1422638566-7593-3-git-send-email-zajec5@gmail.com>
-	<54CBE299.4070709@hauke-m.de>
-Date: Sat, 31 Jan 2015 00:08:50 +0100
-Message-ID: <CACna6rwarKekDeR6YL73HcErmu1WGENcN7wVq0gMUEyHq0HekA@mail.gmail.com> (sfid-20150131_000856_062144_9B47D25E)
-Subject: Re: [PATCH 3/4] bcma: support bringing up bus hosted on PCIe Gen 2
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1422098424-18354-1-git-send-email-hong@topbug.net>
+References: <1422098424-18354-1-git-send-email-hong@topbug.net>
+Date: Sat, 24 Jan 2015 12:25:29 +0100
+Message-ID: <CA+icZUXo-7QFYf2Nd5iaV8bGga24=xDdpxn7Zcw2cF4pkdyitQ@mail.gmail.com> (sfid-20150124_122534_642140_0A88405D)
+Subject: Re: [PATCH v3] ath9k and ath9k_htc: rename variable "led_blink"
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Hong Xu <hong@topbug.net>
+Cc: wireless <linux-wireless@vger.kernel.org>, kvalo@codeaurora.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 January 2015 at 20:59, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> On 01/30/2015 06:22 PM, Rafał Miłecki wrote:
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>  drivers/bcma/bcma_private.h            |  3 +++
->>  drivers/bcma/driver_pcie2.c            | 24 ++++++++++++++++++++++--
->>  drivers/bcma/host_pci.c                |  2 +-
->>  include/linux/bcma/bcma_driver_pcie2.h |  2 ++
->>  4 files changed, 28 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
->> index 351f4af..3692912 100644
->> --- a/drivers/bcma/bcma_private.h
->> +++ b/drivers/bcma/bcma_private.h
->> @@ -104,6 +104,9 @@ u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
->>  void bcma_core_pci_up(struct bcma_drv_pci *pc);
->>  void bcma_core_pci_down(struct bcma_drv_pci *pc);
->>
->> +/* driver_pcie2.c */
->> +void bcma_core_pcie2_up(struct bcma_drv_pcie2 *pcie2);
->> +
->>  extern int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc);
->>
->>  #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
->> diff --git a/drivers/bcma/driver_pcie2.c b/drivers/bcma/driver_pcie2.c
->> index e4be537..c8913bc 100644
->> --- a/drivers/bcma/driver_pcie2.c
->> +++ b/drivers/bcma/driver_pcie2.c
->> @@ -156,14 +156,20 @@ static void pciedev_reg_pm_clk_period(struct bcma_drv_pcie2 *pcie2)
->>
->>  void bcma_core_pcie2_init(struct bcma_drv_pcie2 *pcie2)
->>  {
->> -     struct bcma_chipinfo *ci = &pcie2->core->bus->chipinfo;
->> +     struct bcma_bus *bus = pcie2->core->bus;
->> +     struct bcma_chipinfo *ci = &bus->chipinfo;
->>       u32 tmp;
->>
->>       tmp = pcie2_read32(pcie2, BCMA_CORE_PCIE2_SPROM(54));
->>       if ((tmp & 0xe) >> 1 == 2)
->>               bcma_core_pcie2_cfg_write(pcie2, 0x4e0, 0x17);
->>
->> -     /* TODO: Do we need pcie_reqsize? */
->> +     switch (bus->chipinfo.id) {
->> +     case BCMA_CHIP_ID_BCM4360:
->> +     case BCMA_CHIP_ID_BCM4352:
->> +             pcie2->reqsize = 0x3000; /* TODO: PCI_EXP_DEVCTL_READRQ_1024B */
->> +             break;
->> +     }
+On Sat, Jan 24, 2015 at 12:20 PM, Hong Xu <hong@topbug.net> wrote:
+> ath9k and ath9k_htc use the variable name "led_blink" to indicate
+> whether the module parameter "blink" is on. This name is easy to
+> conflict with other variables, and has caused a compiler error found
+> by kbuild. The compiler error is as following:
 >
-> In the PCIe controller used in the BCM4706 there was a bug, so that it
-> did not support a request size bigger than 128 bytes. Broadcom "fixed"
-> that in the PCIe device driver code by decreasing the value, but we
-> fixed that in the PCIe controller code, see:
+
+...found by kbuild test robot...
+
+- Sedat -
+
+> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
 >
-> commit f4a83e578e0011ddcfdbe1c62d0916dadb4802aa
-> Author: Hauke Mehrtens <hauke@hauke-m.de>
-> Date:   Fri Aug 23 23:22:29 2013 +0200
+> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
+> Signed-off-by: Hong Xu <hong@topbug.net>
+> ---
+> Compared to previous versions, the commit message is improved to fit
+> the contribution guideline.
+> ---
+>  drivers/net/wireless/ath/ath9k/ath9k.h        | 2 +-
+>  drivers/net/wireless/ath/ath9k/gpio.c         | 2 +-
+>  drivers/net/wireless/ath/ath9k/htc.h          | 2 +-
+>  drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 2 +-
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++--
+>  drivers/net/wireless/ath/ath9k/init.c         | 4 ++--
+>  6 files changed, 8 insertions(+), 8 deletions(-)
 >
->     bcma: change max PCI read request size to 128
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 1a9fe09..e84b576 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -34,7 +34,7 @@ struct ath_vif;
 >
-> It could be that the PCIe controller used on ARM SoCs has similar
-> problems but supports bigger sizes now, but not so big ones.
-
-Thanks for your comment! It seems indeed that Broadcom's shared code
-provides function called si_pcie_set_request_size
-My guess is that wl.ko has to contain something like
-if (BCM4331)
-        si_pcie_set_request_size(sih, 128);
-
-So the question is: does wl.ko contain similar code for
-BCM4352/BCM4360. It appears that wl.ko (at least for x86_64) uses
-system calls for PCI R/W. So I've put debugging messages and there is
-what I got:
-[  235.036193] [pci_bus_read_config_dword]  pos:180 data:0x00102C10
-[  235.036195] [pci_bus_write_config_dword] pos:180 value:0x00103C10
-[  235.036199] [pci_bus_read_config_dword]  pos:180 data:0x00103C10
-As you can see PCI_EXP_DEVCTL_READRQ has been changed from
-boot-default 512B to default 1024B. It appears that wl.ko didn't call
-si_pcie_set_request_size for my 14e4:43b1 BCM4352.
-
-Of course it may be different for non x86_64 architectures, but I
-can't say it at this point.
-
-So the proposed code seems OK to me, we may need to modify it in the
-future for some SoCs, but we can't say that right now.
-
-
-> What is the default value for pcie2->reqsize?
-
-0x0000 which is 128B.
-
-
->> +void bcma_core_pcie2_up(struct bcma_drv_pcie2 *pcie2)
->> +{
->> +     struct bcma_bus *bus = pcie2->core->bus;
->> +     struct pci_dev *dev = bus->host_pci;
->> +
->> +     pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
->> +                                        PCI_EXP_DEVCTL_READRQ,
->> +                                        pcie2->reqsize);
+>  extern struct ieee80211_ops ath9k_ops;
+>  extern int ath9k_modparam_nohwcrypt;
+> -extern int led_blink;
+> +extern int ath9k_led_blink;
+>  extern bool is_ath9k_unloaded;
+>  extern int ath9k_use_chanctx;
 >
-> Use pcie_set_readrq() if it is needed.
-
-What do you mean by "if needed"? Is there anything wrong?
-
--- 
-Rafał
+> diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+> index 2fef7a4..da344b2 100644
+> --- a/drivers/net/wireless/ath/ath9k/gpio.c
+> +++ b/drivers/net/wireless/ath/ath9k/gpio.c
+> @@ -49,7 +49,7 @@ void ath_init_leds(struct ath_softc *sc)
+>         if (AR_SREV_9100(sc->sc_ah))
+>                 return;
+>
+> -       if (!led_blink)
+> +       if (!ath9k_led_blink)
+>                 sc->led_cdev.default_trigger =
+>                         ieee80211_get_radio_led_name(sc->hw);
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+> index c43fec5..300d367 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc.h
+> +++ b/drivers/net/wireless/ath/ath9k/htc.h
+> @@ -45,7 +45,7 @@
+>  extern struct ieee80211_ops ath9k_htc_ops;
+>  extern int htc_modparam_nohwcrypt;
+>  #ifdef CONFIG_MAC80211_LEDS
+> -extern int led_blink;
+> +extern int ath9k_htc_led_blink;
+>  #endif
+>
+>  enum htc_phymode {
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+> index 998b558..2aabcbd 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+> @@ -279,7 +279,7 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
+>         else
+>                 priv->ah->led_pin = ATH_LED_PIN_DEF;
+>
+> -       if (!led_blink)
+> +       if (!ath9k_htc_led_blink)
+>                 priv->led_cdev.default_trigger =
+>                         ieee80211_get_radio_led_name(priv->hw);
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> index 9470127..fd22940 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+> @@ -39,8 +39,8 @@ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+>  MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+>
+>  #ifdef CONFIG_MAC80211_LEDS
+> -int led_blink = 1;
+> -module_param_named(blink, led_blink, int, 0444);
+> +int ath9k_htc_led_blink = 1;
+> +module_param_named(blink, ath9k_htc_led_blink, int, 0444);
+>  MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+>
+>  static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index d1c3934..2aef14e 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -45,8 +45,8 @@ int ath9k_modparam_nohwcrypt;
+>  module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, 0444);
+>  MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
+>
+> -int led_blink;
+> -module_param_named(blink, led_blink, int, 0444);
+> +int ath9k_led_blink;
+> +module_param_named(blink, ath9k_led_blink, int, 0444);
+>  MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+>
+>  static int ath9k_btcoex_enable;
+> --
+> 2.2.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
