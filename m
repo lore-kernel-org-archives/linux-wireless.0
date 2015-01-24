@@ -1,34 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:14416 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbbAMORv (ORCPT
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:41763 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbbAXJSn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 09:17:51 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Remove unused variable
-References: <1420432822-10819-1-git-send-email-sujith@msujith.org>
-Date: Tue, 13 Jan 2015 16:17:40 +0200
-In-Reply-To: <1420432822-10819-1-git-send-email-sujith@msujith.org> (Sujith
-	Manoharan's message of "Mon, 5 Jan 2015 10:10:22 +0530")
-Message-ID: <87lhl669yz.fsf@kamboji.qca.qualcomm.com> (sfid-20150113_151754_782316_AAFB17F0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 24 Jan 2015 04:18:43 -0500
+Received: by mail-pd0-f182.google.com with SMTP id z10so2393376pdj.13
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 01:18:42 -0800 (PST)
+From: Hong Xu <hong@topbug.net>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Hong Xu <hong@topbug.net>
+Subject: [PATCH v3] ath9k_htc: Add a module parameter to disable blink
+Date: Sat, 24 Jan 2015 01:18:23 -0800
+Message-Id: <1422091103-10579-1-git-send-email-hong@topbug.net> (sfid-20150124_101855_468117_45FC1BFB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+Add an option "blink" to enable or disable the LED blink. The default
+value is set to 1 so that existing users would not experience any
+unexpected changes.
 
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->
-> htt->max_throughput_mbps is not used anywhere.
->
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Hong Xu <hong@topbug.net>
+---
+ drivers/net/wireless/ath/ath9k/htc.h          | 3 +++
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 4 ++++
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++++
+ 3 files changed, 11 insertions(+)
 
-Thanks, applied to ath.git. I just renamed the title to:
-
-c3ebfede463c ath10k: Remove unused htt->max_throughput_mbps
-
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 9dde265..300d367 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -44,6 +44,9 @@
+ 
+ extern struct ieee80211_ops ath9k_htc_ops;
+ extern int htc_modparam_nohwcrypt;
++#ifdef CONFIG_MAC80211_LEDS
++extern int ath9k_htc_led_blink;
++#endif
+ 
+ enum htc_phymode {
+ 	HTC_MODE_11NA		= 0,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 50f74a2..2aabcbd 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -279,6 +279,10 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
+ 	else
+ 		priv->ah->led_pin = ATH_LED_PIN_DEF;
+ 
++	if (!ath9k_htc_led_blink)
++		priv->led_cdev.default_trigger =
++			ieee80211_get_radio_led_name(priv->hw);
++
+ 	ath9k_configure_leds(priv);
+ 
+ 	snprintf(priv->led_name, sizeof(priv->led_name),
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index e8fa944..fd22940 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -39,6 +39,10 @@ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+ MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+ 
+ #ifdef CONFIG_MAC80211_LEDS
++int ath9k_htc_led_blink = 1;
++module_param_named(blink, ath9k_htc_led_blink, int, 0444);
++MODULE_PARM_DESC(blink, "Enable LED blink on activity");
++
+ static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
+ 	{ .throughput = 0 * 1024, .blink_time = 334 },
+ 	{ .throughput = 1 * 1024, .blink_time = 260 },
 -- 
-Kalle Valo
+2.2.2
+
