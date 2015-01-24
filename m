@@ -1,77 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606AbbAYIx2 (ORCPT
+Received: from mail-wi0-f178.google.com ([209.85.212.178]:38171 "EHLO
+	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbbAXLWM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 03:53:28 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 03/10] wil6210: ignore firmware failure to gracefully stop AP
-Date: Sun, 25 Jan 2015 10:52:44 +0200
-Message-Id: <1422175971-8075-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_095337_010854_92A40E75)
-In-Reply-To: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Sat, 24 Jan 2015 06:22:12 -0500
+Received: by mail-wi0-f178.google.com with SMTP id em10so1807643wid.5
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 03:22:11 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <87twzgmo2o.fsf@home.hong.me>
+References: <1422094745-12718-1-git-send-email-hong@topbug.net>
+	<87k30ciiir.fsf@kamboji.qca.qualcomm.com>
+	<CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
+	<87twzgmo2o.fsf@home.hong.me>
+Date: Sat, 24 Jan 2015 12:22:11 +0100
+Message-ID: <CA+icZUUrgMGDEEZd0H2f2qnsvr_bzSbo2oL16V1rCDhOU5-98g@mail.gmail.com> (sfid-20150124_122215_961542_09CCEC0C)
+Subject: Re: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Hong Xu <hong@topbug.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+On Sat, Jan 24, 2015 at 12:10 PM, Hong Xu <hong@topbug.net> wrote:
+>
+> Sedat Dilek <sedat.dilek@gmail.com> writes:
+>
+>> On Sat, Jan 24, 2015 at 11:23 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Hong Xu <hong@topbug.net> writes:
+>>>
+>>>> ath9k and ath9k_htc use the variable name "led_blink" to indicate
+>>>> whether the module parameter "blink" is on. This name is easy to
+>>>> conflict with other variables, thus they are renamed.
+>>>
+>>> Please state clearly that this fixes a compiler error found by kbuild.
+>>> Also it's very much recommended to add the actual compiler error to the
+>>> commit log:
+>>>
+>>> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+>>> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
+>>>
+>>
+>> Some more things...
+>>
+>> If you post a vN (referring to your v3) of a patch, please add a
+>> history of changes.
+>>
+>> 2nd, use the Fixes tag [2] in this case with a reference to the
+>> culprit commit [1].
+>>
+>> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
+>>
+>> Last but not least, honour credits like Reported-by/Tested-by (plus
+>> some infos like broken in Linux-next $VERSION).
+>>
+> Thanks for your comments, I should have been more careful with the
+> guideline. I guess we shouldn't credit kbuild for reporting in this case?
+>
 
-upon cfg80211_stop_ap, a graceful AP shutdown is requested from firmware
-followed by firmware reset.
-In case graceful request failed, error was returned to cfg80211.
+Learning by doing :-).
 
-The change is to return success in this scenario, because firmware
-reset will anyhow shutdown the AP.
+Yesterday, I looked trough some Git trees offline and I saw a commit
+with kbuild-test-bot as "author", so... :-).
+Not sure, if this is good, but I would prefer to put a note in the
+commit-body (some call it changelog, I refer to terms in email
+context)... "...found by kbuild test bot" with appropriate lines of
+warning.
+( See example in [1]. )
 
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+- Sedat -
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 553aa2e..6b7664d 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2012-2014 Qualcomm Atheros, Inc.
-+ * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
-  *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-@@ -773,7 +773,6 @@ out:
- static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
- 				struct net_device *ndev)
- {
--	int rc, rc1;
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 
- 	wil_dbg_misc(wil, "%s()\n", __func__);
-@@ -783,14 +782,17 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
- 
- 	mutex_lock(&wil->mutex);
- 
--	rc = wmi_pcp_stop(wil);
-+	wmi_pcp_stop(wil);
- 
- 	__wil_down(wil);
--	rc1 = __wil_up(wil);
-+	__wil_up(wil);
- 
- 	mutex_unlock(&wil->mutex);
- 
--	return min(rc, rc1);
-+	/* some functions above might fail (e.g. __wil_up). Nevertheless, we
-+	 * return success because AP has stopped
-+	 */
-+	return 0;
- }
- 
- static int wil_cfg80211_del_station(struct wiphy *wiphy,
--- 
-2.1.0
-
+[1] http://www.spinics.net/lists/linux-usb/msg110760.html
