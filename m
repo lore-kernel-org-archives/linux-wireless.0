@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9578 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9243 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684AbbAaAOo (ORCPT
+	with ESMTP id S1752381AbbAXQZH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 19:14:44 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] ath10k: Replace ioread with mb to drain write buffer
-Date: Fri, 30 Jan 2015 16:14:30 -0800
-Message-ID: <7a87e5df81499e4d26a4f8bedf76ed3250a6f7bb.1422663244.git.poh@qca.qualcomm.com> (sfid-20150131_011448_302793_1F647F09)
+	Sat, 24 Jan 2015 11:25:07 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: fix beacon deadlock
+References: <1421412811-6387-1-git-send-email-michal.kazior@tieto.com>
+	<1421412811-6387-2-git-send-email-michal.kazior@tieto.com>
+Date: Sat, 24 Jan 2015 18:24:56 +0200
+In-Reply-To: <1421412811-6387-2-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 16 Jan 2015 13:53:31 +0100")
+Message-ID: <87y4osgn8n.fsf@kamboji.qca.qualcomm.com> (sfid-20150124_172515_641977_5BC7A417)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using ioread() to perform draining write buffer is excessive.
-Use compact API, mb(), that intended to be used for the case.
-It reduces total 14 CPU clocks per interrupt.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+> This should fix a very rare occurrence of the following deadlock:
+>
+>   [<ffffffffa018265e>] ath10k_wmi_tx_beacons_nowait+0x1e/0x50 [ath10k_core]
+>   [<ffffffffa01829b6>] ath10k_wmi_op_ep_tx_credits+0x16/0x40 [ath10k_core]
+>   [<ffffffffa017d685>] ath10k_htc_send+0x285/0x3d0 [ath10k_core]
+>   [<ffffffffa0184b81>] ath10k_wmi_cmd_send_nowait+0x81/0x110 [ath10k_core]
+>   [<ffffffffa0184c61>] ath10k_wmi_tx_beacon_nowait.part.33+0x51/0x90 [ath10k_core]
+>   [<ffffffffa0184cd0>] ath10k_wmi_tx_beacons_iter+0x30/0x40 [ath10k_core]
+>   [<ffffffff81882246>] __iterate_active_interfaces+0xa6/0x100
+>   [<ffffffffa0184ca0>] ? ath10k_wmi_tx_beacon_nowait.part.33+0x90/0x90 [ath10k_core]
+>   [<ffffffff818822ae>] ieee80211_iterate_active_interfaces_atomic+0xe/0x10
+>   [<ffffffffa0182676>] ath10k_wmi_tx_beacons_nowait+0x36/0x50 [ath10k_core]
+>   [<ffffffffa01829b6>] ath10k_wmi_op_ep_tx_credits+0x16/0x40 [ath10k_core]
+>   [<ffffffffa017d140>] ath10k_htc_rx+0x280/0x410 [ath10k_core]
+>   [<ffffffffa01bcbf0>] ? ath10k_ce_completed_recv_next+0x60/0x80 [ath10k_pci]
+>   [<ffffffffa01bc6ab>] ath10k_pci_ce_recv_data+0x11b/0x1d0 [ath10k_pci]
+>   [<ffffffffa01bcf44>] ath10k_ce_per_engine_service+0x64/0xc0 [ath10k_pci]
+>   [<ffffffffa01bcfc2>] ath10k_ce_per_engine_service_any+0x22/0x50 [ath10k_pci]
+>   [<ffffffffa01bc4d0>] ath10k_pci_tasklet+0x30/0x90 [ath10k_pci]
+>   [<ffffffff81055a55>] tasklet_action+0xc5/0x100
+>
+> To prevent this make sure to release ar->data_lock
+> while calling to ath10k_wmi_beacon_send_ref_nowait().
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e6972b0..f1e6980 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -353,10 +353,8 @@ static void ath10k_pci_disable_and_clear_legacy_irq(struct ath10k *ar)
- 	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_CLR_ADDRESS,
- 			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
- 
--	/* IMPORTANT: this extra read transaction is required to
--	 * flush the posted write buffer. */
--	(void)ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				PCIE_INTR_ENABLE_ADDRESS);
-+	/* drain write buffer */
-+	mb();
- }
- 
- static void ath10k_pci_enable_legacy_irq(struct ath10k *ar)
-@@ -365,10 +363,8 @@ static void ath10k_pci_enable_legacy_irq(struct ath10k *ar)
- 			   PCIE_INTR_ENABLE_ADDRESS,
- 			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
- 
--	/* IMPORTANT: this extra read transaction is required to
--	 * flush the posted write buffer. */
--	(void)ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
--				PCIE_INTR_ENABLE_ADDRESS);
-+	/* drain write buffer */
-+	mb();
- }
- 
- static inline const char *ath10k_pci_get_irq_method(struct ath10k *ar)
+This introduces a new warning from kbuild:
+
+tree:   git://github.com/kvalo/ath ath-next-test
+head:   59030a70b61c41268383d1406bb49fc559e0da4e
+commit: 60845cf1bc104bbec7509eb4b6c9f09a1559bfdc [104/113] ath10k: fix beacon deadlock
+
+New smatch warnings:
+drivers/net/wireless/ath/ath10k/wmi.c:969 ath10k_wmi_tx_beacon_nowait() warn: variable dereferenced before check 'bcn' (see line 967)
+
+Old smatch warnings:
+drivers/net/wireless/ath/ath10k/wmi.c:3982 ath10k_wmi_start_scan_verify() warn: this array is probably non-NULL. 'arg->ie'
+drivers/net/wireless/ath/ath10k/wmi.c:3984 ath10k_wmi_start_scan_verify() warn: this array is probably non-NULL. 'arg->channels'
+drivers/net/wireless/ath/ath10k/wmi.c:3986 ath10k_wmi_start_scan_verify() warn: this array is probably non-NULL. 'arg->ssids'
+drivers/net/wireless/ath/ath10k/wmi.c:3988 ath10k_wmi_start_scan_verify() warn: this array is probably non-NULL. 'arg->bssids'
+
 -- 
-1.9.1
-
+Kalle Valo
