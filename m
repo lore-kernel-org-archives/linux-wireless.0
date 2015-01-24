@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35471 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753447AbbAWJw3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 04:52:29 -0500
-Message-ID: <1422006746.2728.17.camel@sipsolutions.net> (sfid-20150123_105233_329110_FA6FDE1C)
-Subject: Re: [PATCH] nl80211: add an attribute to allow delaying the first
- scheduled scan cycle
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 23 Jan 2015 10:52:26 +0100
-In-Reply-To: <1421417049-9087-1-git-send-email-luca@coelho.fi>
-References: <1421417049-9087-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.11.231]:54384 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751846AbbAXKYB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2015 05:24:01 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Hong Xu <hong@topbug.net>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
+References: <1422094745-12718-1-git-send-email-hong@topbug.net>
+Date: Sat, 24 Jan 2015 12:23:56 +0200
+In-Reply-To: <1422094745-12718-1-git-send-email-hong@topbug.net> (Hong Xu's
+	message of "Sat, 24 Jan 2015 02:19:05 -0800")
+Message-ID: <87k30ciiir.fsf@kamboji.qca.qualcomm.com> (sfid-20150124_112406_559286_AEF8C5EB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-16 at 16:04 +0200, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> The userspace may want to delay the the first scheduled scan or
-> net-detect cycle.  Add an optional attribute to the scheduled scan
-> configuration to pass the delay to be (optionally) used by the driver.
+Hong Xu <hong@topbug.net> writes:
 
-Applied.
+> ath9k and ath9k_htc use the variable name "led_blink" to indicate
+> whether the module parameter "blink" is on. This name is easy to
+> conflict with other variables, thus they are renamed.
 
-> +	NL80211_ATTR_SCHED_SCAN_DELAY,
+Please state clearly that this fixes a compiler error found by kbuild.
+Also it's very much recommended to add the actual compiler error to the
+commit log:
 
-This attribute needed to be added to the policy - I've done that for you
-(this time :) )
+drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
 
-johannes
-
+-- 
+Kalle Valo
