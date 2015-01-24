@@ -1,122 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55645 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753943AbbAES5S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 13:57:18 -0500
-Message-ID: <1420484224.9459.16.camel@sipsolutions.net> (sfid-20150105_195739_239140_41C784CD)
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Mon, 05 Jan 2015 19:57:04 +0100
-In-Reply-To: <1420479510.14308.23.camel@x220> (sfid-20150105_183907_807502_81C08416)
-References: <1420297188.2397.3.camel@tiscali.nl>
-	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
-	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
-	 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
-	 <1420479510.14308.23.camel@x220> (sfid-20150105_183907_807502_81C08416)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:59469 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbbAXLKc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2015 06:10:32 -0500
+Received: by mail-pd0-f178.google.com with SMTP id y10so2759683pdj.9
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 03:10:31 -0800 (PST)
+References: <1422094745-12718-1-git-send-email-hong@topbug.net> <87k30ciiir.fsf@kamboji.qca.qualcomm.com> <CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
+From: Hong Xu <hong@topbug.net>
+To: sedat.dilek@gmail.com
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
+In-reply-to: <CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
+Date: Sat, 24 Jan 2015 03:10:23 -0800
+Message-ID: <87twzgmo2o.fsf@home.hong.me> (sfid-20150124_121038_251721_7034B2AA)
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 18:38 +0100, Paul Bolle wrote:
+--=-=-=
+Content-Type: text/plain
 
-> > ipw2200 is a WEXT driver using some wext functionality (and struct 
-> > wiphy) provided by cfg80211 hence it needs CFG80211_WEXT. I guess that 
-> > is what makes it confusing.
-> 
-> It doesn't help that I hardly know anything about mac80211, cfg80211 and
-> nl80211 (and lib80211 for that matter). To me these are mostly just
-> names that end in 80211.
 
-:-)
-There isn't really all that much that ipw2x00 is using from cfg80211
-though - of note is that it has completely empty ops:
+Sedat Dilek <sedat.dilek@gmail.com> writes:
 
-static struct cfg80211_ops libipw_config_ops = { };
+> On Sat, Jan 24, 2015 at 11:23 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Hong Xu <hong@topbug.net> writes:
+>>
+>>> ath9k and ath9k_htc use the variable name "led_blink" to indicate
+>>> whether the module parameter "blink" is on. This name is easy to
+>>> conflict with other variables, thus they are renamed.
+>>
+>> Please state clearly that this fixes a compiler error found by kbuild.
+>> Also it's very much recommended to add the actual compiler error to the
+>> commit log:
+>>
+>> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+>> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
+>>
+>
+> Some more things...
+>
+> If you post a vN (referring to your v3) of a patch, please add a
+> history of changes.
+>
+> 2nd, use the Fixes tag [2] in this case with a reference to the
+> culprit commit [1].
+>
+> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
+>
+> Last but not least, honour credits like Reported-by/Tested-by (plus
+> some infos like broken in Linux-next $VERSION).
+>
+Thanks for your comments, I should have been more careful with the
+guideline. I guess we shouldn't credit kbuild for reporting in this case?
 
-IOW - all it does is register with the framework - courtesy of
-a3caa99e6c68f. It's practically useless.
+Hong
 
-> Anyhow, concerning, CFG80211_WEXT: it seems the only functionality
-> provided by that symbol that ipw2200 uses directly is
-> cfg80211_wext_giwname(). Perhaps ipw2200 could have a private version of
-> that function, something like ipw2100's ipw2100_wx_get_name(). Should be
-> trivial to implement (ie, it could take _me_ a day or two).
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
 
-We could just revert that part of the commit above - or even completely.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-However, in theory at least doing *that* would now be a userspace
-regression - today you can at least discover the presence of ipw2200
-devices with nl80211, even if you can't do anything with them that way.
-
-> But perhaps ipw2200 uses CFG80211_WEXT _indirectly_ too. Ie, in
-> net/wireless/core.c I stumbled on
->     #ifdef CONFIG_CFG80211_WEXT
->             rdev->wiphy.wext = &cfg80211_wext_handler;
->     #endif
-
-I don't think it does - see the note about the ops above. If it did,
-it'd have to implement the ops.
-
-> But I net/wireless/wext-core.c I then found
->     #ifdef CONFIG_CFG80211_WEXT
->             if (dev->ieee80211_ptr && dev->ieee80211_ptr->wiphy)
->                     handlers = dev->ieee80211_ptr->wiphy->wext;
->     #endif
->     #ifdef CONFIG_WIRELESS_EXT
->             if (dev->wireless_handlers)
->                     handlers = dev->wireless_handlers;
->     #endif
-> 
-> (There's much more to discover about WEXT, of course.) Anyhow, IPW2200
-> uses both CFG80211_WEXT and WIRELESS_EXT and cfg80211_wext_handler and
-> ipw2200's wireless_handlers appear to cover the same set of IOCTLS (one
-> exception: SIOCSIWPMKSA). So by now I'm really puzzled how this all fits
-> together.
-
-Well, this was meant as a transition mechanism for drivers. Ultimately,
-the way we thought how you'd convert a driver (and how we converted
-mac80211) would be to have the wext handlers like for example the scan
-ones:
-
-static iw_handler ipw_wx_handlers[] = {
-...
-        IW_HANDLER(SIOCSIWSCAN, ipw_wx_set_scan),
-        IW_HANDLER(SIOCGIWSCAN, ipw_wx_get_scan),
-...
-};
-
-Then you could make a patch that uses the cfg80211 APIs for scanning in
-the driver -- i.e. implement the cfg80211_ops.scan method, report frames
-to the cfg80211 scanning and remove all the ieee->network_list stuff
-etc. using the related cfg80211 API (e.g. cfg80211_get_bss() and friends
-for getting a network, etc.) And then you'd change the handlers to be
-
-static iw_handler ipw_wx_handlers[] = {
-...
-        IW_HANDLER(SIOCSIWSCAN, cfg80211_wext_siwscan),
-        IW_HANDLER(SIOCGIWSCAN, cfg80211_wext_giwscan),
-...
-};
-
-This part would have to be done in a single patch.
-
-Multiple other groups of ioctls could be converted in similar patches,
-until at the end you can completely remove ipw_wx_handlers and rely
-entirely on cfg80211's wext compatibility.
-
-So far the theory - in practice nobody cared enough to start working on
-any of these drivers, let alone actually has the hardware today.
-
-johannes
-
+iQIcBAEBCAAGBQJUw32fAAoJECZsfTOCL4R4tpcQAI1RPkdZWO1SrtqvXhXP8YUB
+97ZRGL1/1pFiAu+1WGm94PQHC7X8L6Jv2e7iRCIfSqKQmjBpBqVMJUpvnGMF/S6n
+P09a+7mqk2rPafKa6aLt8cHgQG7GLigHpv/1qEy8ag/G3PbYdFpdiiQZbmI/BfRB
+H2dM1HBaP1YhdxF2ONpb6OTS506IQ5si79t4lUitmnTrRS0i0xC6QrBGaKq8G+Ql
+P7oAwEyRtOAV/dcqbPwfcMBD1eDc/iTfrH5MxcMdVgqwe8+qaHCIOJzidqp/JR7u
+NGUBneDeYETG/t5XRkbhIjJH16wy5D+iRZi9nbaZ4r+w3ohOss8uwTkTyb3OGmzK
+1DTrKI8PYka/VG5jWRIuim1w+8y8W8sxa9ymuPRaqbf4k4I4vlFwOzxrNGu3VIR/
+EvAYR75pJHBc1zV82Y+yGfUG7XQIMVlPewaFF9wSyypXiZRh5advq/zpvyHTBxxt
+EwqGcJB3zb2AGgMH5/sXPZPWTd9Rw6lx+xUcxOH2ysSXND743pW5OvKbFa0rF4ZG
++rR4inrJojb2giqMr1QGG8kn82QN2d3q6/TOnmqWBraKNiBqhOFOdflypUEVjpwh
+aEE3UeTv6CnBlOVlKUyI7eJlpeg5YsUiGGNdNM/JQquHWMj82D3+QBuxF71Np3x2
+sivnr4TqPo70RD1Hf+mE
+=nBCV
+-----END PGP SIGNATURE-----
+--=-=-=--
