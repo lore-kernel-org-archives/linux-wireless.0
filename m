@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30372 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755941AbbA3ImO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:54816 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674AbbAXKj0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 03:42:14 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0U8ccgb006600
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:42:14 -0800
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1s7fgab5hr-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:42:13 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/4] mwifiex: fix memory leak in mwifiex_send_processed_packet()
-Date: Fri, 30 Jan 2015 00:40:05 -0800
-Message-ID: <1422607207-15229-2-git-send-email-akarwar@marvell.com> (sfid-20150130_094217_248069_F0488ACD)
-In-Reply-To: <1422607207-15229-1-git-send-email-akarwar@marvell.com>
-References: <1422607207-15229-1-git-send-email-akarwar@marvell.com>
+	Sat, 24 Jan 2015 05:39:26 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: sedat.dilek@gmail.com
+Cc: Hong Xu <hong@topbug.net>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
+References: <1422094745-12718-1-git-send-email-hong@topbug.net>
+	<87k30ciiir.fsf@kamboji.qca.qualcomm.com>
+	<CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
+Date: Sat, 24 Jan 2015 12:39:19 +0200
+In-Reply-To: <CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com>
+	(Sedat Dilek's message of "Sat, 24 Jan 2015 11:33:48 +0100")
+Message-ID: <87bnloiht4.fsf@kamboji.qca.qualcomm.com> (sfid-20150124_113934_851111_79417476)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Memory is leaked after downloading already processed packet. This
-patch fixes the problem by freeing returned skb. Other transmit
-paths don't have this problem.
+(I'll drop ath9k-devel as someone from there seems to be spamming with
+vacation responses)
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/wmm.c | 3 +++
- 1 file changed, 3 insertions(+)
+Sedat Dilek <sedat.dilek@gmail.com> writes:
 
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index ffffd2c..ef717ac 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -1228,6 +1228,9 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
- 	case -EINPROGRESS:
- 		if (adapter->iface_type != MWIFIEX_PCIE)
- 			adapter->data_sent = false;
-+		break;
-+	case 0:
-+		mwifiex_write_data_complete(adapter, skb, 0, ret);
- 	default:
- 		break;
- 	}
+> 2nd, use the Fixes tag [2] in this case with a reference to the
+> culprit commit [1].
+>
+> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
+
+Good point. I just found a handy tip from SubmittingPatches, just add
+this to ~/.gitconfig:
+
+	[core]
+		abbrev = 12
+	[pretty]
+		fixes = Fixes: %h (\"%s\")
+
+And then you get the fixes line automatically formatted for whatever
+commit you want:
+
+$ git log --format=fixes | head -5
+Fixes: fa1270678ce4 ("ath10k: Enable the MCS8 and MCS9 at 2.4G band")
+Fixes: 296f98ed02dd ("ath10k: fix pmf for wmi-tlv on qca6174")
+Fixes: 3443aaf6f11d ("ath10k: remove sw encryption for pmf")
+Fixes: d541c931dc93 ("ath10k: disable irqs after fw crash")
+Fixes: 9f282daeedc9 ("ath10k: disable uapsd autotrigger")
+
+Yet another reason why git is so awesome.
+
 -- 
-1.8.1.4
-
+Kalle Valo
