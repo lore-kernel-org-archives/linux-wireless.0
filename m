@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60614 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751150AbbA0KM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 05:12:29 -0500
-Message-ID: <1422353545.1890.57.camel@sipsolutions.net> (sfid-20150127_111232_644427_75422345)
-Subject: Re: [PATCH 2/2] ath10k: use IEEE80211_HW_SW_CRYPTO_CONTROL
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-we0-f176.google.com ([74.125.82.176]:63036 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476AbbAXKdt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 24 Jan 2015 05:33:49 -0500
+Received: by mail-we0-f176.google.com with SMTP id w62so1597725wes.7
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 02:33:48 -0800 (PST)
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <87k30ciiir.fsf@kamboji.qca.qualcomm.com>
+References: <1422094745-12718-1-git-send-email-hong@topbug.net>
+	<87k30ciiir.fsf@kamboji.qca.qualcomm.com>
+Date: Sat, 24 Jan 2015 11:33:48 +0100
+Message-ID: <CA+icZUVq-bhryv=Aj7JuCzFU6kTQEh+jiwBR_bnJzNnjJ2Kg-A@mail.gmail.com> (sfid-20150124_113353_075771_E25DCF81)
+Subject: Re: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
+From: Sedat Dilek <sedat.dilek@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Jan 2015 11:12:25 +0100
-In-Reply-To: <874mrcega3.fsf@kamboji.qca.qualcomm.com>
-References: <1421959125-10834-1-git-send-email-johannes@sipsolutions.net>
-	 <1421959125-10834-2-git-send-email-johannes@sipsolutions.net>
-	 <874mrcega3.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Cc: Hong Xu <hong@topbug.net>,
+	wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-27 at 11:15 +0200, Kalle Valo wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > From: Johannes Berg <johannes.berg@intel.com>
-> >
-> > The ath10k driver only supports HW crypto (except for management
-> > frames or so - CMAC needs to be done in software). Make it use
-> > the new IEEE80211_HW_SW_CRYPTO_CONTROL flag to ensure mac80211
-> > doesn't erroneously attempt to use software crypto.
-> >
-> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> 
-> Acked-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> Feel free to take this via your tree.
+On Sat, Jan 24, 2015 at 11:23 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Hong Xu <hong@topbug.net> writes:
+>
+>> ath9k and ath9k_htc use the variable name "led_blink" to indicate
+>> whether the module parameter "blink" is on. This name is easy to
+>> conflict with other variables, thus they are renamed.
+>
+> Please state clearly that this fixes a compiler error found by kbuild.
+> Also it's very much recommended to add the actual compiler error to the
+> commit log:
+>
+> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
+>
 
-Thanks Kalle. I've put it into my tree to unblock Jouni's crypto
-patches.
+Some more things...
 
-johannes
+If you post a vN (referring to your v3) of a patch, please add a
+history of changes.
 
+2nd, use the Fixes tag [2] in this case with a reference to the
+culprit commit [1].
 
+Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
+
+Last but not least, honour credits like Reported-by/Tested-by (plus
+some infos like broken in Linux-next $VERSION).
+
+- Sedat -
+
+[1] http://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=3a939a671225909c19b09bfcb6e4761109e913d9
+[2] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches#n159
