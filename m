@@ -1,54 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44714 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760614AbbA1Gw2 (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:50682 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752862AbbAXKTb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 01:52:28 -0500
-Message-ID: <1422447728.16899.7.camel@pe-lt950> (sfid-20150128_075234_910157_11AC36F0)
-Subject: Re: [PATCH v2] mwifiex: set netif carrier off in ndo_open
-From: Avinash Patil <patila@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Stable <stable@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Date: Wed, 28 Jan 2015 17:52:08 +0530
-In-Reply-To: <871tmgaznd.fsf@kamboji.qca.qualcomm.com>
-References: <1421663076-32291-1-git-send-email-patila@marvell.com>
-	 <1422360747.20608.5.camel@pe-lt950>
-	 <871tmgaznd.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+	Sat, 24 Jan 2015 05:19:31 -0500
+Received: by mail-pa0-f50.google.com with SMTP id rd3so2145600pab.9
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 02:19:30 -0800 (PST)
+From: Hong Xu <hong@topbug.net>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org, kvalo@codeaurora.org,
+	Hong Xu <hong@topbug.net>
+Subject: [PATCH] ath9k and ath9k_htc: rename variable "led_blink"
+Date: Sat, 24 Jan 2015 02:19:05 -0800
+Message-Id: <1422094745-12718-1-git-send-email-hong@topbug.net> (sfid-20150124_111938_507580_8E3FBC80)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-27 at 09:42 -0800, Kalle Valo wrote:
-> Avinash Patil <patila@marvell.com> writes:
-> 
-> > On Mon, 2015-01-19 at 02:24 -0800, Avinash Patil wrote:
-> >> From: Johannes Berg <johannes@sipsolutions.net>
-> >> 
-> >> This patch adds fix to set carrier state off during ndo_open.
-> >> Carrier should be set to ON when device is ready to send data.
-> >> In case of station/adhoc interface device is able to transfer
-> >> data after successful association/join operation.
-> >> For AP this would be after bss_active event.
-> >> 
-> >> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> >> Signed-off-by: Avinash Patil <patila@marvell.com>
-> 
-> [...]
-> 
-> > I do not see this patch in master branch as well as in patchworks
-> > pending patchlist. Is this one also dropped? Do you want me to resend
-> > this as well while I am sending rebased DFS patches?
-> 
-> I had accidentally marked this patch as "Not Applicable" in patchwork,
-> sorry about that. Good thing that you noticed. I have applied the patch
-> now.
-> 
-Thanks, Kalle.
+ath9k and ath9k_htc use the variable name "led_blink" to indicate
+whether the module parameter "blink" is on. This name is easy to
+conflict with other variables, thus they are renamed.
 
--Avinash
+Signed-off-by: Hong Xu <hong@topbug.net>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h        | 2 +-
+ drivers/net/wireless/ath/ath9k/gpio.c         | 2 +-
+ drivers/net/wireless/ath/ath9k/htc.h          | 2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++--
+ drivers/net/wireless/ath/ath9k/init.c         | 4 ++--
+ 6 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 1a9fe09..e84b576 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -34,7 +34,7 @@ struct ath_vif;
+ 
+ extern struct ieee80211_ops ath9k_ops;
+ extern int ath9k_modparam_nohwcrypt;
+-extern int led_blink;
++extern int ath9k_led_blink;
+ extern bool is_ath9k_unloaded;
+ extern int ath9k_use_chanctx;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 2fef7a4..da344b2 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -49,7 +49,7 @@ void ath_init_leds(struct ath_softc *sc)
+ 	if (AR_SREV_9100(sc->sc_ah))
+ 		return;
+ 
+-	if (!led_blink)
++	if (!ath9k_led_blink)
+ 		sc->led_cdev.default_trigger =
+ 			ieee80211_get_radio_led_name(sc->hw);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index c43fec5..300d367 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -45,7 +45,7 @@
+ extern struct ieee80211_ops ath9k_htc_ops;
+ extern int htc_modparam_nohwcrypt;
+ #ifdef CONFIG_MAC80211_LEDS
+-extern int led_blink;
++extern int ath9k_htc_led_blink;
+ #endif
+ 
+ enum htc_phymode {
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 998b558..2aabcbd 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -279,7 +279,7 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
+ 	else
+ 		priv->ah->led_pin = ATH_LED_PIN_DEF;
+ 
+-	if (!led_blink)
++	if (!ath9k_htc_led_blink)
+ 		priv->led_cdev.default_trigger =
+ 			ieee80211_get_radio_led_name(priv->hw);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 9470127..fd22940 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -39,8 +39,8 @@ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
+ MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+-int led_blink = 1;
+-module_param_named(blink, led_blink, int, 0444);
++int ath9k_htc_led_blink = 1;
++module_param_named(blink, ath9k_htc_led_blink, int, 0444);
+ MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+ 
+ static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index d1c3934..2aef14e 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -45,8 +45,8 @@ int ath9k_modparam_nohwcrypt;
+ module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, 0444);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
+ 
+-int led_blink;
+-module_param_named(blink, led_blink, int, 0444);
++int ath9k_led_blink;
++module_param_named(blink, ath9k_led_blink, int, 0444);
+ MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+ 
+ static int ath9k_btcoex_enable;
+-- 
+2.2.2
 
