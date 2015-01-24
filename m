@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:56491 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753913AbbA2Bsp (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:48823 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752397AbbAXQvz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:48:45 -0500
-Received: from [117.199.141.188] (port=12173 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YGRcf-001zZ7-CR
-	for linux-wireless@vger.kernel.org; Wed, 28 Jan 2015 07:21:30 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 0/6] ath9k patches
-Date: Wed, 28 Jan 2015 17:54:20 +0530
-Message-Id: <1422447866-19967-1-git-send-email-sujith@msujith.org> (sfid-20150129_032642_060014_60C05348)
+	Sat, 24 Jan 2015 11:51:55 -0500
+Received: by mail-ob0-f170.google.com with SMTP id wp4so2336765obc.1
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 08:51:54 -0800 (PST)
+Message-ID: <54C3CDA9.3060401@lwfinger.net> (sfid-20150124_175158_265481_BAE428E9)
+Date: Sat, 24 Jan 2015 10:51:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Taehee Yoo <ap420073@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Set fw_ready flag
+References: <1422100540-6338-1-git-send-email-ap420073@gmail.com>
+In-Reply-To: <1422100540-6338-1-git-send-email-ap420073@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On 01/24/2015 05:55 AM, Taehee Yoo wrote:
+> After rtl8192cu download firmware routine, set fw_ready flag.
+>
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 3 +++
+>   1 file changed, 3 insertions(+)
 
-ath9k patches for -next.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-v2 - Fix typo in patch "ath9k: Add a macro to identify PCOEM chips".
+Thanks,
 
-Sujith Manoharan (6):
-  ath9k: Update QCA953x initvals
-  ath9k: Update AR955x initvals
-  ath9k: Add a macro to identify PCOEM chips
-  ath9k: Fix manual peak calibration initialization
-  ath9k: Set correct peak detect threshold
-  ath9k: Enable manual peak detect calibration
+Larry
 
- drivers/net/wireless/ath/ath9k/ar9003_calib.c      | 61 +++++++++++++++++-----
- drivers/net/wireless/ath/ath9k/ar953x_initvals.h   |  4 +-
- .../net/wireless/ath/ath9k/ar955x_1p0_initvals.h   |  4 +-
- drivers/net/wireless/ath/ath9k/reg.h               |  3 ++
- 4 files changed, 55 insertions(+), 17 deletions(-)
-
--- 
-2.2.2
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> index 5513217..2468850 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> @@ -1000,6 +1000,7 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
+>   	local_save_flags(flags);
+>   	local_irq_enable();
+>
+> +	rtlhal->fw_ready = false;
+>   	rtlhal->hw_type = HARDWARE_TYPE_RTL8192CU;
+>   	err = _rtl92cu_init_mac(hw);
+>   	if (err) {
+> @@ -1013,6 +1014,8 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
+>   		err = 1;
+>   		goto exit;
+>   	}
+> +
+> +	rtlhal->fw_ready = true;
+>   	rtlhal->last_hmeboxnum = 0; /* h2c */
+>   	_rtl92cu_phy_param_tab_init(hw);
+>   	rtl92cu_phy_mac_config(hw);
+>
 
