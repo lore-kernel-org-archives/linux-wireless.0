@@ -1,59 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:48555 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbbACSCH convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:49569 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890AbbAXGjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jan 2015 13:02:07 -0500
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1420297188.2397.3.camel@tiscali.nl>
-Date: Sat, 3 Jan 2015 10:02:00 -0800
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Message-Id: <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org> (sfid-20150103_190233_895756_BA053CB5)
-References: <1420297188.2397.3.camel@tiscali.nl>
-To: Paul Bolle <pebolle@tiscali.nl>
+	Sat, 24 Jan 2015 01:39:20 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Hong Xu <hong@topbug.net>
+Cc: kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [wireless-drivers-next:master 119/130] drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+References: <201501240432.liRbf02o%fengguang.wu@intel.com>
+	<87lhkskjen.fsf@home.hong.me>
+Date: Sat, 24 Jan 2015 08:39:12 +0200
+In-Reply-To: <87lhkskjen.fsf@home.hong.me> (Hong Xu's message of "Fri, 23 Jan
+	2015 18:21:52 -0800")
+Message-ID: <8761bwk7hr.fsf@kamboji.qca.qualcomm.com> (sfid-20150124_074142_877959_6430CEEC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Paul,
+(Adding linux-wireless)
 
-> This reverts commit dddd60220f41775e634258efd1b54c6fa81ce706.
-> 
-> The raison d'être of commit dddd60220f41 ("ipw2200: select
-> CFG80211_WEXT") was reverted in commit 2d36e008739e ("Revert "cfg80211:
-> make WEXT compatibility unselectable""). So revert this commit too.
-> 
-> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
-> ---
-> drivers/net/wireless/ipw2x00/Kconfig | 3 +--
-> 1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ipw2x00/Kconfig b/drivers/net/wireless/ipw2x00/Kconfig
-> index 21de4fe6cf2d..91c0cb3c368e 100644
-> --- a/drivers/net/wireless/ipw2x00/Kconfig
-> +++ b/drivers/net/wireless/ipw2x00/Kconfig
-> @@ -65,8 +65,7 @@ config IPW2100_DEBUG
-> 
-> config IPW2200
-> 	tristate "Intel PRO/Wireless 2200BG and 2915ABG Network Connection"
-> -	depends on PCI && CFG80211
-> -	select CFG80211_WEXT
-> +	depends on PCI && CFG80211 && CFG80211_WEXT
-> 	select WIRELESS_EXT
-> 	select WEXT_SPY
-> 	select WEXT_PRIV
+Hong Xu <hong@topbug.net> writes:
 
-why would you revert this? It is obviously the correct change to actually select CFG80211_WEXT.
+> kbuild test robot <fengguang.wu@intel.com> writes:
+>
+>> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+>> head:   c5ed1df781cb544d4e4d189bb5b6ec7336d8888c
+>> commit: 3a939a671225909c19b09bfcb6e4761109e913d9 [119/130] ath9k_htc: Add a module parameter to disable blink
+>> config: xtensa-allyesconfig (attached as .config)
+>> reproduce:
+>>   wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>>   chmod +x ~/bin/make.cross
+>>   git checkout 3a939a671225909c19b09bfcb6e4761109e913d9
+>>   # save the attached .config to linux build tree
+>>   make.cross ARCH=xtensa 
+>>
+>> All error/warnings:
+>>
+>>>> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+>>    drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
+>>
+>
+> This should not be a problem if the driver is built as a module. If you
+> consider this is a problem we can simply change the variable name.
 
-Regards
+This is a problem, please send a fix which I can apply to
+wireless-drivers-next.
 
-Marcel
-
+-- 
+Kalle Valo
