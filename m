@@ -1,145 +1,380 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:38133 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751820AbbAKOfr (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:22792 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759946AbbAYTbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2015 09:35:47 -0500
-Received: by mail-wi0-f176.google.com with SMTP id ex7so10135963wid.3
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 06:35:46 -0800 (PST)
-Message-ID: <54B28A3F.3000904@gmail.com> (sfid-20150111_153551_422571_D1481621)
-Date: Sun, 11 Jan 2015 15:35:43 +0100
-From: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>
+	Sun, 25 Jan 2015 14:31:49 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 06/14] brcmfmac: SDIO: avoid using bus state for private states.
+Date: Sun, 25 Jan 2015 20:31:35 +0100
+Message-ID: <1422214303-7816-7-git-send-email-arend@broadcom.com> (sfid-20150125_203229_372829_52AA8A31)
+In-Reply-To: <1422214303-7816-1-git-send-email-arend@broadcom.com>
+References: <1422214303-7816-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel crash while copying big files since kernel 3.18
-References: <54AA3953.20603@gmail.com> <54AAC925.6050602@lwfinger.net> <54AADC22.9050105@gmail.com> <54AAE532.6050104@lwfinger.net>
-In-Reply-To: <54AAE532.6050104@lwfinger.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le 05/01/15 20:25, Larry Finger a écrit :
-> On 01/05/2015 12:46 PM, François Valenduc wrote:
->> Le 05/01/15 18:25, Larry Finger a écrit :
->>> On 01/05/2015 01:12 AM, François Valenduc wrote:
->>>> Hello everybody,
->>>>
->>>> Since kernel 3.18, I encounter a kernel crash each time when I copy a
->>>> big file (around 12 Gb) from an external USB drive to the harddrive of
->>>> my laptop.
->>>> I tried a bisection between kernels 3.17 and 3.18 and I was
->>>> surprised to
->>>> find that this has to do with the driver of the wireless card
->>>> (rtl8188ee). However, I don't have problems if I copy the file
->>>> while the
->>>> rtl8188 module is not loaded. Unfortunately, the results of git-bisect
->>>> are not totally conclusive because the kernel crash during boot
->>>> when the
->>>> wireless connection is established. Here are the last steps of the
->>>> bisection:
->>>>
->>>> # bad: [c151aed6aa146e9587590051aba9da68b9370f9b] rtlwifi: rtl8188ee:
->>>> Update driver to match Realtek release of 06282014
->>>> git bisect bad c151aed6aa146e9587590051aba9da68b9370f9b
->>>> # good: [fd09ff958777cf583d7541f180991c0fc50bd2f7] rtlwifi: Remove
->>>> extra
->>>> workqueue for enter/leave power state
->>>> git bisect good fd09ff958777cf583d7541f180991c0fc50bd2f7
->>>> # skip: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b] rtlwifi: Modify
->>>> base.{c,h} for new drivers
->>>> git bisect skip 9afa2e44f4d8f9d031f815c32bb8f225f0f6746b
->>>> # skip: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd] rtlwifi: Modify
->>>> cam.{c,h} and efuse.{c,h} for new drivers
->>>> git bisect skip 3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd
->>>> # skip: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8] rtlwifi: Modify
->>>> core.c for new drivers
->>>> git bisect skip f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8
->>>> # skip: [d3feae41a3473a0f7b431d6af4e092865d586e52] rtlwifi: Update
->>>> power-save routines for 062814 driver
->>>> git bisect skip d3feae41a3473a0f7b431d6af4e092865d586e52
->>>> # skip: [38506ecefab911785d5e1aa5889f6eeb462e0954] rtlwifi: rtl_pci:
->>>> Start modification for new drivers
->>>> git bisect skip 38506ecefab911785d5e1aa5889f6eeb462e0954
->>>> # skip: [f3a97e93814aeac3f13e857a0071726acc9bd626] rtlwifi: Finish
->>>> modifying core routines for new drivers
->>>> git bisect skip f3a97e93814aeac3f13e857a0071726acc9bd626
->>>> # only skipped commits left to test
->>>> # possible first bad commit:
->>>> [c151aed6aa146e9587590051aba9da68b9370f9b]
->>>> rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
->>>> # possible first bad commit:
->>>> [f3a97e93814aeac3f13e857a0071726acc9bd626]
->>>> rtlwifi: Finish modifying core routines for new drivers
->>>> # possible first bad commit:
->>>> [d3feae41a3473a0f7b431d6af4e092865d586e52]
->>>> rtlwifi: Update power-save routines for 062814 driver
->>>> # possible first bad commit:
->>>> [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd]
->>>> rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
->>>> # possible first bad commit:
->>>> [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b]
->>>> rtlwifi: Modify base.{c,h} for new drivers
->>>> # possible first bad commit:
->>>> [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8]
->>>> rtlwifi: Modify core.c for new drivers
->>>> # possible first bad commit:
->>>> [38506ecefab911785d5e1aa5889f6eeb462e0954]
->>>> rtlwifi: rtl_pci: Start modification for new drivers
->>>>
->>>> Can somebody explain what's happening ? I do the copy via Dolphin
->>>> in KDE
->>>> and the screen becomes black and the computer becomes totally
->>>> unresponsive. So, I don't have access to the logs to see the trace of
->>>> the problem.
->>>>
->>>> Thanks in advance for your help,
->>>
->>> There is a bug in 3.18 that is triggered when an O(3) memory
->>> allocation fails. There is a patch to fix this at
->>> http://marc.info/?l=linux-netdev&m=141999680927473&w=2 that has been
->>> merged into wireless-drivers as commit
->>> e9538cf4f90713eca71b1d6a74b4eae1d445c664. It will be applied to 3.18.X
->>> when it makes it into mainline 3.19-rcY, but that has not yet happened.
->>>
->>> You could manually apply that patch to your kernel source, or you
->>> could pull the git repo at http://github.com/lwfinger/rtlwifi_new.git.
->>> That code has this patch already applied.
->>>
->>> If this patch does not fix the problem, you might be able to capture
->>> at least part of the backtrace by starting the transfer and then
->>> switching to the logging console. When a crash happens, photograph the
->>> screen. On my system, I display it with CTRL-ALT-F10. I return to the
->>> normal graphical console with CTRL-ALT-F7, but your distro may use
->>> different virtual consoles.
->>>
->>> Larry
->>>
->>>
->> Thanks for your help, it seems that your patch solves the problem. Now,
->> the system doesn't crash anymore after copying the same large file than
->> yesterday. I also see this message in the log:
->> rtl_pci: Allocation of new skb failed in _rtl_pci_rx_interrupt which is
->> added by your patch.
->> Should I worry about this failure ? Or is it expected ?
->
-> That is the positive proof that the new patch worked. Getting to that
-> condition without the patch would have crashed the system. That printk
-> is there to see if we were actually getting the condition and
-> recovering. As the code is obviously working now, that line will be
-> removed soon.
->
-> Thanks,
->
-> Larry
->
-Do you still intend to remove the line about allocation failure in the
-log ? I made a backup of my root partition compressed with pixz and that
-line appeared 1350 times. So I removed the code which add this line. Is
-it really expected that it occurs so often ? pixz use multithreading to
-compress files and therefore at least 3 of the 4 CPU are used during
-around 20 minutes, but are you sure there is no other problems ?
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Thanks for your help,
+Each bus driver is maintaing an exported bus state indicating
+if upper layers can or cannot send data. SDIO is using this state
+also for more private states. This makes handling the states and
+state changes complex. This patch minimises the exposed states
+and makes SDIO keep track of an internal state where necessary.
 
-François Valenduc
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 17 +++++----
+ drivers/net/wireless/brcm80211/brcmfmac/bus.h    | 14 +-------
+ drivers/net/wireless/brcm80211/brcmfmac/core.c   |  6 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/fwil.c   |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c   |  2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c   | 45 +++++++++---------------
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.h   |  8 +++++
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c    |  2 +-
+ 8 files changed, 43 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 9afaeb6..7944224 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -269,6 +269,12 @@ static int brcmf_sdiod_request_data(struct brcmf_sdio_dev *sdiodev, u8 fn,
+ 	return ret;
+ }
+ 
++static void brcmf_sdiod_nomedium_state(struct brcmf_sdio_dev *sdiodev)
++{
++	sdiodev->state = BRCMF_STATE_NOMEDIUM;
++	brcmf_bus_change_state(sdiodev->bus_if, BRCMF_BUS_DOWN);
++}
++
+ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 				   u8 regsz, void *data, bool write)
+ {
+@@ -276,7 +282,7 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 	s32 retry = 0;
+ 	int ret;
+ 
+-	if (sdiodev->bus_if->state == BRCMF_BUS_NOMEDIUM)
++	if (sdiodev->state == BRCMF_STATE_NOMEDIUM)
+ 		return -ENOMEDIUM;
+ 
+ 	/*
+@@ -302,7 +308,7 @@ static int brcmf_sdiod_regrw_helper(struct brcmf_sdio_dev *sdiodev, u32 addr,
+ 		 retry++ < SDIOH_API_ACCESS_RETRY_LIMIT);
+ 
+ 	if (ret == -ENOMEDIUM)
+-		brcmf_bus_change_state(sdiodev->bus_if, BRCMF_BUS_NOMEDIUM);
++		brcmf_sdiod_nomedium_state(sdiodev);
+ 	else if (ret != 0) {
+ 		/*
+ 		 * SleepCSR register access can fail when
+@@ -325,7 +331,7 @@ brcmf_sdiod_set_sbaddr_window(struct brcmf_sdio_dev *sdiodev, u32 address)
+ 	int err = 0, i;
+ 	u8 addr[3];
+ 
+-	if (sdiodev->bus_if->state == BRCMF_BUS_NOMEDIUM)
++	if (sdiodev->state == BRCMF_STATE_NOMEDIUM)
+ 		return -ENOMEDIUM;
+ 
+ 	addr[0] = (address >> 8) & SBSDIO_SBADDRLOW_MASK;
+@@ -454,7 +460,7 @@ static int brcmf_sdiod_buffrw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 		err = sdio_readsb(sdiodev->func[fn], ((u8 *)(pkt->data)), addr,
+ 				  req_sz);
+ 	if (err == -ENOMEDIUM)
+-		brcmf_bus_change_state(sdiodev->bus_if, BRCMF_BUS_NOMEDIUM);
++		brcmf_sdiod_nomedium_state(sdiodev);
+ 	return err;
+ }
+ 
+@@ -589,8 +595,7 @@ static int brcmf_sdiod_sglist_rw(struct brcmf_sdio_dev *sdiodev, uint fn,
+ 
+ 		ret = mmc_cmd.error ? mmc_cmd.error : mmc_dat.error;
+ 		if (ret == -ENOMEDIUM) {
+-			brcmf_bus_change_state(sdiodev->bus_if,
+-					       BRCMF_BUS_NOMEDIUM);
++			brcmf_sdiod_nomedium_state(sdiodev);
+ 			break;
+ 		} else if (ret != 0) {
+ 			brcmf_err("CMD53 sg block %s failed %d\n",
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+index ef344e4..55d36ff 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+@@ -33,11 +33,8 @@
+ 
+ /* The level of bus communication with the dongle */
+ enum brcmf_bus_state {
+-	BRCMF_BUS_UNKNOWN,	/* Not determined yet */
+-	BRCMF_BUS_NOMEDIUM,	/* No medium access to dongle */
+ 	BRCMF_BUS_DOWN,		/* Not ready for frame transfers */
+-	BRCMF_BUS_LOAD,		/* Download access only (CPU reset) */
+-	BRCMF_BUS_DATA		/* Ready for frame transfers */
++	BRCMF_BUS_UP		/* Ready for frame transfers */
+ };
+ 
+ /* The level of bus communication with the dongle */
+@@ -188,18 +185,9 @@ void brcmf_bus_wowl_config(struct brcmf_bus *bus, bool enabled)
+ 		bus->ops->wowl_config(bus->dev, enabled);
+ }
+ 
+-static inline bool brcmf_bus_ready(struct brcmf_bus *bus)
+-{
+-	return bus->state == BRCMF_BUS_LOAD || bus->state == BRCMF_BUS_DATA;
+-}
+-
+ static inline void brcmf_bus_change_state(struct brcmf_bus *bus,
+ 					  enum brcmf_bus_state new_state)
+ {
+-	/* NOMEDIUM is permanent */
+-	if (bus->state == BRCMF_BUS_NOMEDIUM)
+-		return;
+-
+ 	brcmf_dbg(TRACE, "%d -> %d\n", bus->state, new_state);
+ 	bus->state = new_state;
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index e2a9e33..ff8c97b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -197,7 +197,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 	brcmf_dbg(DATA, "Enter, idx=%d\n", ifp->bssidx);
+ 
+ 	/* Can the device send data? */
+-	if (drvr->bus_if->state != BRCMF_BUS_DATA) {
++	if (drvr->bus_if->state != BRCMF_BUS_UP) {
+ 		brcmf_err("xmit rejected state=%d\n", drvr->bus_if->state);
+ 		netif_stop_queue(ndev);
+ 		dev_kfree_skb(skb);
+@@ -637,7 +637,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 	brcmf_dbg(TRACE, "Enter, idx=%d\n", ifp->bssidx);
+ 
+ 	/* If bus is not ready, can't continue */
+-	if (bus_if->state != BRCMF_BUS_DATA) {
++	if (bus_if->state != BRCMF_BUS_UP) {
+ 		brcmf_err("failed bus is not ready\n");
+ 		return -EAGAIN;
+ 	}
+@@ -964,7 +964,7 @@ int brcmf_bus_start(struct device *dev)
+ 		p2p_ifp = NULL;
+ 
+ 	/* signal bus ready */
+-	brcmf_bus_change_state(bus_if, BRCMF_BUS_DATA);
++	brcmf_bus_change_state(bus_if, BRCMF_BUS_UP);
+ 
+ 	/* Bus is ready, do any initialization */
+ 	ret = brcmf_c_preinit_dcmds(ifp);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+index 03f2c40..dcfa0bb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/fwil.c
+@@ -109,7 +109,7 @@ brcmf_fil_cmd_data(struct brcmf_if *ifp, u32 cmd, void *data, u32 len, bool set)
+ 	struct brcmf_pub *drvr = ifp->drvr;
+ 	s32 err;
+ 
+-	if (drvr->bus_if->state != BRCMF_BUS_DATA) {
++	if (drvr->bus_if->state != BRCMF_BUS_UP) {
+ 		brcmf_err("bus is down. we have nothing to do.\n");
+ 		return -EIO;
+ 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index e91fa9a..61c053a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -1828,7 +1828,7 @@ static int brcmf_pcie_resume(struct pci_dev *pdev)
+ 				goto cleanup;
+ 			brcmf_dbg(PCIE, "Hot resume, continue....\n");
+ 			brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
+-			brcmf_bus_change_state(bus, BRCMF_BUS_DATA);
++			brcmf_bus_change_state(bus, BRCMF_BUS_UP);
+ 			brcmf_pcie_intr_enable(devinfo);
+ 			return 0;
+ 		}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 488a0f6..5e9d208 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -1909,7 +1909,7 @@ static uint brcmf_sdio_readframes(struct brcmf_sdio *bus, uint maxframes)
+ 	bus->rxpending = true;
+ 
+ 	for (rd->seq_num = bus->rx_seq, rxleft = maxframes;
+-	     !bus->rxskip && rxleft && brcmf_bus_ready(bus->sdiodev->bus_if);
++	     !bus->rxskip && rxleft && bus->sdiodev->state == BRCMF_STATE_DATA;
+ 	     rd->seq_num++, rxleft--) {
+ 
+ 		/* Handle glomming separately */
+@@ -2415,7 +2415,7 @@ static uint brcmf_sdio_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 	}
+ 
+ 	/* Deflow-control stack if needed */
+-	if ((bus->sdiodev->bus_if->state == BRCMF_BUS_DATA) &&
++	if ((bus->sdiodev->state == BRCMF_STATE_DATA) &&
+ 	    bus->txoff && (pktq_len(&bus->txq) < TXLOW)) {
+ 		bus->txoff = false;
+ 		brcmf_txflowblock(bus->sdiodev->dev, false);
+@@ -2503,7 +2503,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
+ 		bus->watchdog_tsk = NULL;
+ 	}
+ 
+-	if (bus_if->state == BRCMF_BUS_DOWN) {
++	if (sdiodev->state != BRCMF_STATE_NOMEDIUM) {
+ 		sdio_claim_host(sdiodev->func[1]);
+ 
+ 		/* Enable clock for device interrupts */
+@@ -2756,7 +2756,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 		brcmf_sdio_sendfromq(bus, framecnt);
+ 	}
+ 
+-	if (!brcmf_bus_ready(bus->sdiodev->bus_if) || (err != 0)) {
++	if ((bus->sdiodev->state != BRCMF_STATE_DATA) || (err != 0)) {
+ 		brcmf_err("failed backplane access over SDIO, halting operation\n");
+ 		atomic_set(&bus->intstatus, 0);
+ 	} else if (atomic_read(&bus->intstatus) ||
+@@ -3411,8 +3411,8 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
+ 		goto err;
+ 	}
+ 
+-	/* Allow HT Clock now that the ARM is running. */
+-	brcmf_bus_change_state(bus->sdiodev->bus_if, BRCMF_BUS_LOAD);
++	/* Allow full data communication using DPC from now on. */
++	bus->sdiodev->state = BRCMF_STATE_DATA;
+ 	bcmerror = 0;
+ 
+ err:
+@@ -3558,7 +3558,7 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
+ 		return;
+ 	}
+ 
+-	if (!brcmf_bus_ready(bus->sdiodev->bus_if)) {
++	if (bus->sdiodev->state != BRCMF_STATE_DATA) {
+ 		brcmf_err("bus is down. we have nothing to do\n");
+ 		return;
+ 	}
+@@ -3581,10 +3581,6 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
+ 
+ static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ {
+-#ifdef DEBUG
+-	struct brcmf_bus *bus_if = dev_get_drvdata(bus->sdiodev->dev);
+-#endif	/* DEBUG */
+-
+ 	brcmf_dbg(TIMER, "Enter\n");
+ 
+ 	/* Poll period: check device if appropriate. */
+@@ -3628,7 +3624,7 @@ static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 	}
+ #ifdef DEBUG
+ 	/* Poll for console output periodically */
+-	if (bus_if && bus_if->state == BRCMF_BUS_DATA &&
++	if (bus->sdiodev->state == BRCMF_STATE_DATA &&
+ 	    bus->console_interval != 0) {
+ 		bus->console.count += BRCMF_WD_POLL_MS;
+ 		if (bus->console.count >= bus->console_interval) {
+@@ -3869,11 +3865,6 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+ 		goto fail;
+ 	}
+ 
+-	/* SDIO register access works so moving
+-	 * state from UNKNOWN to DOWN.
+-	 */
+-	brcmf_bus_change_state(bus->sdiodev->bus_if, BRCMF_BUS_DOWN);
+-
+ 	bus->ci = brcmf_chip_attach(bus->sdiodev, &brcmf_sdio_buscore_ops);
+ 	if (IS_ERR(bus->ci)) {
+ 		brcmf_err("brcmf_chip_attach failed!\n");
+@@ -4007,18 +3998,16 @@ static void brcmf_sdio_firmware_callback(struct device *dev,
+ 
+ 	brcmf_dbg(TRACE, "Enter: dev=%s\n", dev_name(dev));
+ 
+-	/* try to download image and nvram to the dongle */
+-	if (bus_if->state == BRCMF_BUS_DOWN) {
+-		bus->alp_only = true;
+-		err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
+-		if (err)
+-			goto fail;
+-		bus->alp_only = false;
+-	}
+-
+ 	if (!bus_if->drvr)
+ 		return;
+ 
++	/* try to download image and nvram to the dongle */
++	bus->alp_only = true;
++	err = brcmf_sdio_download_firmware(bus, code, nvram, nvram_len);
++	if (err)
++		goto fail;
++	bus->alp_only = false;
++
+ 	/* Start the watchdog timer */
+ 	bus->sdcnt.tickcnt = 0;
+ 	brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
+@@ -4254,7 +4243,7 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 			destroy_workqueue(bus->brcmf_wq);
+ 
+ 		if (bus->ci) {
+-			if (bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) {
++			if (bus->sdiodev->state != BRCMF_STATE_NOMEDIUM) {
+ 				sdio_claim_host(bus->sdiodev->func[1]);
+ 				brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+ 				/* Leave the device in state where it is
+@@ -4289,7 +4278,7 @@ void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick)
+ 	}
+ 
+ 	/* don't start the wd until fw is loaded */
+-	if (bus->sdiodev->bus_if->state != BRCMF_BUS_DATA)
++	if (bus->sdiodev->state != BRCMF_STATE_DATA)
+ 		return;
+ 
+ 	if (wdtick) {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio.h
+index 9c5d42d..ec2586a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.h
+@@ -155,6 +155,13 @@
+ /* watchdog polling interval in ms */
+ #define BRCMF_WD_POLL_MS	10
+ 
++/* The state of the bus */
++enum brcmf_sdio_state {
++	BRCMF_STATE_DOWN,	/* Device available, still initialising */
++	BRCMF_STATE_DATA,	/* Ready for data transfers, DPC enabled */
++	BRCMF_STATE_NOMEDIUM	/* No medium access to dongle possible */
++};
++
+ struct brcmf_sdreg {
+ 	int func;
+ 	int offset;
+@@ -187,6 +194,7 @@ struct brcmf_sdio_dev {
+ 	char fw_name[BRCMF_FW_PATH_LEN + BRCMF_FW_NAME_LEN];
+ 	char nvram_name[BRCMF_FW_PATH_LEN + BRCMF_FW_NAME_LEN];
+ 	bool wowl_enabled;
++	enum brcmf_sdio_state state;
+ };
+ 
+ /* sdio core registers */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 4572def..7e0c9e2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -576,7 +576,7 @@ brcmf_usb_state_change(struct brcmf_usbdev_info *devinfo, int state)
+ 		brcmf_bus_change_state(bcmf_bus, BRCMF_BUS_DOWN);
+ 	} else if (state == BRCMFMAC_USB_STATE_UP) {
+ 		brcmf_dbg(USB, "DBUS is up\n");
+-		brcmf_bus_change_state(bcmf_bus, BRCMF_BUS_DATA);
++		brcmf_bus_change_state(bcmf_bus, BRCMF_BUS_UP);
+ 	} else {
+ 		brcmf_dbg(USB, "DBUS current state=%d\n", state);
+ 	}
+-- 
+1.9.1
+
