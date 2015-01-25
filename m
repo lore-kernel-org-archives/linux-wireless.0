@@ -1,48 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:39512 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750959AbbAEGey convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:63700 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759950AbbAYTbu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 01:34:54 -0500
+	Sun, 25 Jan 2015 14:31:50 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 14/14] brcmfmac: fix nvram processing
+Date: Sun, 25 Jan 2015 20:31:43 +0100
+Message-ID: <1422214303-7816-15-git-send-email-arend@broadcom.com> (sfid-20150125_203214_288883_C76C1817)
+In-Reply-To: <1422214303-7816-1-git-send-email-arend@broadcom.com>
+References: <1422214303-7816-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAKXHbyMqTk=k7eieBNtAD+n6+4w3weL82twHBo-o8ebm_3+wvg@mail.gmail.com>
-References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
-	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
-	<CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com>
-	<CAKXHbyO70WdWekSYCY9spMbX2+_kdKTp3JoreDKpCdUBzFwYqw@mail.gmail.com>
-	<CACna6rxTYUWvxvu0rFydWxkjbYdHfhV=o+9A+ViCpbV-LFx7fw@mail.gmail.com>
-	<CAKXHbyMqTk=k7eieBNtAD+n6+4w3weL82twHBo-o8ebm_3+wvg@mail.gmail.com>
-Date: Mon, 5 Jan 2015 07:34:53 +0100
-Message-ID: <CACna6rxF1OKRZSpaL=+XzSV2kCpMH5LuB-B+eWV7zF8MJ-9tog@mail.gmail.com> (sfid-20150105_073510_759481_9377089C)
-Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Sedat Dilek <sedat.dilek@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 January 2015 at 13:28, Rickard Strandqvist
-<rickard_strandqvist@spectrumdigital.se> wrote:
-> 2015-01-02 22:34 GMT+01:00 Rafał Miłecki <zajec5@gmail.com>:
->>
->> 1) I gave you Ack for the changes
->> 2) You could drop "net: wireless: " or better use something Sedat proposed
->
-> Nice, yes I miss the Ack :)
->
-> I just got one more complaining about my subject-line in "net: wireless: "
-> I use some sed call for this, so it's easy to fix. I will now remove that
-> part hereinafter.
+The nvram file can hold a key=value combination in which the value
+may have spaces, ie. 'RAW1=80 02 fe ff'. The parsing functionality
+did not deal with this so it gives an error message:
 
-Will you re-send this patch with a proper subject then, please?
+[621746.311635] brcmfmac: brcmf_nvram_handle_key
+	warning: ln=90:col=11: '=' expected, skip invalid key entry
 
+because RAW1=80 is being considerd as key=value pair and it expects
+'=' sign after '02' for next key=value pair. This entry can be
+completely ignored as firmware does not need it.
+
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/firmware.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+index 1ff787d..9cb9915 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/firmware.c
+@@ -103,7 +103,11 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
+ 
+ 	c = nvp->fwnv->data[nvp->pos];
+ 	if (c == '=') {
+-		st = VALUE;
++		/* ignore RAW1 by treating as comment */
++		if (strncmp(&nvp->fwnv->data[nvp->entry], "RAW1", 4) == 0)
++			st = COMMENT;
++		else
++			st = VALUE;
+ 	} else if (!is_nvram_char(c)) {
+ 		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
+ 			  nvp->line, nvp->column);
 -- 
-Rafał
+1.9.1
+
