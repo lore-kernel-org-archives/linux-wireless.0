@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:43507 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756576AbbAGAn6 (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:47136 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933208AbbAYTiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 19:43:58 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Sun, 25 Jan 2015 14:38:46 -0500
+Received: by mail-wi0-f176.google.com with SMTP id em10so6174960wid.3
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2015 11:38:45 -0800 (PST)
+Message-ID: <54C54642.7000108@gmail.com> (sfid-20150125_203851_102729_C6B163E1)
+Date: Sun, 25 Jan 2015 20:38:42 +0100
+From: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21676.33246.233235.411880@gargle.gargle.HOWL> (sfid-20150107_014404_994020_8A09D6C8)
-Date: Wed, 7 Jan 2015 06:16:22 +0530
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [PATCH 0/5] ath9k patches
-In-Reply-To: <87a91vzt3t.fsf@kamboji.qca.qualcomm.com>
-References: <1418951039-12309-1-git-send-email-sujith@msujith.org>
-	<87a91vzt3t.fsf@kamboji.qca.qualcomm.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Kernel crash while copying big files since kernel 3.18
+References: <54AA3953.20603@gmail.com> <54AAC925.6050602@lwfinger.net> <54AADC22.9050105@gmail.com> <54AAE532.6050104@lwfinger.net> <54B28A3F.3000904@gmail.com> <54B2AC1B.8030107@lwfinger.net>
+In-Reply-To: <54B2AC1B.8030107@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo wrote:
-> What are the dependency patches exactly?
+Le 11/01/15 18:00, Larry Finger a écrit :
+> On 01/11/2015 08:35 AM, François Valenduc wrote:
+>> Do you still intend to remove the line about allocation failure in the
+>> log ? I made a backup of my root partition compressed with pixz and that
+>> line appeared 1350 times. So I removed the code which add this line. Is
+>> it really expected that it occurs so often ? pixz use multithreading to
+>> compress files and therefore at least 3 of the 4 CPU are used during
+>> around 20 minutes, but are you sure there is no other problems ?
+>
+> Yes, I do intend to remove that line; however, I want to keep it for a
+> while just in case there are other crashes. If this message never
+> appears in that case, then there is another bug.
+>
+> You are, of course, free to remove it from your system. BTW, how much
+> memory do you have?
+>
+> Larry
+>
+>
+Sorry for having forgotten to answer. I have 4 Gb of RAM. Taking a
+backup of a DVD with k9copy also produces so much messages (1479 with a
+patch using rate_limit).
+Is it really expected that skb allocation fails so often ? Could there
+be another problem ?
 
-commit 5cf16616e152dd5c274a65954c77f64892d025a8
-Author: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Date:   Wed Dec 10 21:26:11 2014 +0530
-
-    mac80211: Fix accounting of multicast frames
-
-commit 6b127c71fbdd3daacfd8b9f80b8e6ebfb70a889e
-Author: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Date:   Wed Dec 10 21:26:10 2014 +0530
-
-    mac80211: Move IEEE80211_TX_CTL_PS_RESPONSE
-
-Sujith
+François
