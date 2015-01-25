@@ -1,191 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57197 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755396AbbA2BsD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691AbbAYIxg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:48:03 -0500
-From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-Subject: [PATCH] ath10k: add log level configuration for fw_dbglog
-Date: Wed, 28 Jan 2015 16:32:21 +0530
-Message-ID: <1422442941-27034-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150129_032805_738181_8488953A)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 25 Jan 2015 03:53:36 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 07/10] wil6210: remove unnecessary interrupt moderation module parameters
+Date: Sun, 25 Jan 2015 10:52:48 +0200
+Message-Id: <1422175971-8075-8-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_095343_698391_A8614DEB)
+In-Reply-To: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce optional log level configuration for
-existing debugfs fw_dbglog.
+From: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
 
-It allow users to configure desired log level
-for firmware debugs.
+Interrupt moderation parameters will never be passed as module
+parameters. For product, they will be hard-coded after lab testing,
+and for debugging, they can be altered via debugfs.
 
-To configure log level as WARN
-
-echo 0xffffffff  2 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
-
-Loglevel	Value
-VERBOSE		0
-INFO		1
-WARN		2
-ERR		3
-
-Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h    |  1 +
- drivers/net/wireless/ath/ath10k/debug.c   | 30 +++++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  7 ++++---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 ++--
- drivers/net/wireless/ath/ath10k/wmi.c     |  5 +++--
- 5 files changed, 31 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 38 +++++----------------------------
+ 1 file changed, 5 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 2d9f871..b4aecbd 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -345,6 +345,7 @@ struct ath10k_debug {
-
- 	/* protected by conf_mutex */
- 	u32 fw_dbglog_mask;
-+	u32 fw_dbglog_level;
- 	u32 pktlog_filter;
- 	u32 reg_addr;
- 	u32 nf_cal_period;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 42b2e49..b77c51a 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1318,10 +1318,10 @@ static ssize_t ath10k_read_fw_dbglog(struct file *file,
- {
- 	struct ath10k *ar = file->private_data;
- 	unsigned int len;
--	char buf[32];
-+	char buf[64];
-
--	len = scnprintf(buf, sizeof(buf), "0x%08x\n",
--			ar->debug.fw_dbglog_mask);
-+	len = scnprintf(buf, sizeof(buf), "0x%08x %u\n",
-+			ar->debug.fw_dbglog_mask, ar->debug.fw_dbglog_level);
-
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
- }
-@@ -1331,19 +1331,30 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
- 				      size_t count, loff_t *ppos)
- {
- 	struct ath10k *ar = file->private_data;
--	unsigned long mask;
- 	int ret;
-+	char buf[64];
-+	unsigned int log_level, mask;
-
--	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
--	if (ret)
--		return ret;
-+	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-+
-+	/* make sure that buf is null terminated */
-+	buf[sizeof(buf) - 1] = 0;
-+
-+	ret = sscanf(buf, "%x %u", &mask, &log_level);
-+
-+	if (!ret)
-+		return -EINVAL;
-
- 	mutex_lock(&ar->conf_mutex);
-
- 	ar->debug.fw_dbglog_mask = mask;
-+	ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
-+				     log_level;
-+
-
- 	if (ar->state == ATH10K_STATE_ON) {
--		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask);
-+		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask,
-+					    ar->debug.fw_dbglog_level);
- 		if (ret) {
- 			ath10k_warn(ar, "dbglog cfg failed from debugfs: %d\n",
- 				    ret);
-@@ -1685,7 +1696,8 @@ int ath10k_debug_start(struct ath10k *ar)
- 			    ret);
-
- 	if (ar->debug.fw_dbglog_mask) {
--		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask);
-+		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask,
-+					    ATH10K_DBGLOG_LEVEL_WARN);
- 		if (ret)
- 			/* not serious */
- 			ath10k_warn(ar, "failed to enable dbglog during start: %d",
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 80bd28a..4517993 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -111,7 +111,8 @@ struct wmi_ops {
- 					     enum wmi_force_fw_hang_type type,
- 					     u32 delay_ms);
- 	struct sk_buff *(*gen_mgmt_tx)(struct ath10k *ar, struct sk_buff *skb);
--	struct sk_buff *(*gen_dbglog_cfg)(struct ath10k *ar, u32 module_enable);
-+	struct sk_buff *(*gen_dbglog_cfg)(struct ath10k *ar, u32 module_enable,
-+					  u32 log_level);
- 	struct sk_buff *(*gen_pktlog_enable)(struct ath10k *ar, u32 filter);
- 	struct sk_buff *(*gen_pktlog_disable)(struct ath10k *ar);
- 	struct sk_buff *(*gen_pdev_set_quiet_mode)(struct ath10k *ar,
-@@ -821,14 +822,14 @@ ath10k_wmi_force_fw_hang(struct ath10k *ar,
- }
-
- static inline int
--ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable)
-+ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable, u32 log_level)
- {
- 	struct sk_buff *skb;
-
- 	if (!ar->wmi.ops->gen_dbglog_cfg)
- 		return -EOPNOTSUPP;
-
--	skb = ar->wmi.ops->gen_dbglog_cfg(ar, module_enable);
-+	skb = ar->wmi.ops->gen_dbglog_cfg(ar, module_enable, log_level);
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index d3cf91dc..d3d5aea 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2044,8 +2044,8 @@ ath10k_wmi_tlv_op_gen_force_fw_hang(struct ath10k *ar,
- }
-
- static struct sk_buff *
--ath10k_wmi_tlv_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
--{
-+ath10k_wmi_tlv_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable,
-+				 u32 log_level) {
- 	struct wmi_tlv_dbglog_cmd *cmd;
- 	struct wmi_tlv *tlv;
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d340361..2fa68ad 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4960,7 +4960,8 @@ ath10k_wmi_op_gen_force_fw_hang(struct ath10k *ar,
- }
-
- static struct sk_buff *
--ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
-+ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable,
-+			     u32 log_level)
- {
- 	struct wmi_dbglog_cfg_cmd *cmd;
- 	struct sk_buff *skb;
-@@ -4973,7 +4974,7 @@ ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
- 	cmd = (struct wmi_dbglog_cfg_cmd *)skb->data;
-
- 	if (module_enable) {
--		cfg = SM(ATH10K_DBGLOG_LEVEL_VERBOSE,
-+		cfg = SM(log_level,
- 			 ATH10K_DBGLOG_CFG_LOG_LVL);
- 	} else {
- 		/* set back defaults, all modules with WARN level */
---
-1.9.1
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 00c9b0f..d259416 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2012-2014 Qualcomm Atheros, Inc.
++ * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -33,34 +33,6 @@ static bool no_fw_load = true;
+ module_param(no_fw_load, bool, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(no_fw_load, " do not download FW, use one in on-card flash.");
+ 
+-static unsigned int tx_interframe_timeout =
+-		WIL6210_ITR_TX_INTERFRAME_TIMEOUT_DEFAULT;
+-
+-module_param(tx_interframe_timeout, uint, S_IRUGO);
+-MODULE_PARM_DESC(tx_interframe_timeout,
+-		 " Interrupt moderation TX interframe timeout, usecs.");
+-
+-static unsigned int rx_interframe_timeout =
+-		WIL6210_ITR_RX_INTERFRAME_TIMEOUT_DEFAULT;
+-
+-module_param(rx_interframe_timeout, uint, S_IRUGO);
+-MODULE_PARM_DESC(rx_interframe_timeout,
+-		 " Interrupt moderation RX interframe timeout, usecs.");
+-
+-static unsigned int tx_max_burst_duration =
+-		WIL6210_ITR_TX_MAX_BURST_DURATION_DEFAULT;
+-
+-module_param(tx_max_burst_duration, uint, S_IRUGO);
+-MODULE_PARM_DESC(tx_max_burst_duration,
+-		 " Interrupt moderation TX max burst duration, usecs.");
+-
+-static unsigned int rx_max_burst_duration =
+-		WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT;
+-
+-module_param(rx_max_burst_duration, uint, S_IRUGO);
+-MODULE_PARM_DESC(rx_max_burst_duration,
+-		 " Interrupt moderation RX max burst duration, usecs.");
+-
+ /* if not set via modparam, will be set to default value of 1/8 of
+  * rx ring size during init flow
+  */
+@@ -463,10 +435,10 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 		goto out_wmi_wq;
+ 
+ 	wil->last_fw_recovery = jiffies;
+-	wil->tx_interframe_timeout = tx_interframe_timeout;
+-	wil->rx_interframe_timeout = rx_interframe_timeout;
+-	wil->tx_max_burst_duration = tx_max_burst_duration;
+-	wil->rx_max_burst_duration = rx_max_burst_duration;
++	wil->tx_interframe_timeout = WIL6210_ITR_TX_INTERFRAME_TIMEOUT_DEFAULT;
++	wil->rx_interframe_timeout = WIL6210_ITR_RX_INTERFRAME_TIMEOUT_DEFAULT;
++	wil->tx_max_burst_duration = WIL6210_ITR_TX_MAX_BURST_DURATION_DEFAULT;
++	wil->rx_max_burst_duration = WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT;
+ 
+ 	if (rx_ring_overflow_thrsh == WIL6210_RX_HIGH_TRSH_INIT)
+ 		rx_ring_overflow_thrsh = WIL6210_RX_HIGH_TRSH_DEFAULT;
+-- 
+2.1.0
 
