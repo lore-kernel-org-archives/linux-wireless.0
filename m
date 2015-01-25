@@ -1,86 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:38980 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133AbbAGOVt (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:40587 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754484AbbAYTbs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 09:21:49 -0500
-Received: by mail-we0-f171.google.com with SMTP id u56so1241165wes.30
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 06:21:48 -0800 (PST)
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH v2] mac80211: add TDLS supported channels correctly
-Date: Wed,  7 Jan 2015 16:21:45 +0200
-Message-Id: <1420640505-16838-1-git-send-email-arik@wizery.com> (sfid-20150107_152152_381899_29FE9C4E)
+	Sun, 25 Jan 2015 14:31:48 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/14] brcmfmac: do not load firmware when device is already running
+Date: Sun, 25 Jan 2015 20:31:37 +0100
+Message-ID: <1422214303-7816-9-git-send-email-arend@broadcom.com> (sfid-20150125_203238_680348_96603FE5)
+In-Reply-To: <1422214303-7816-1-git-send-email-arend@broadcom.com>
+References: <1422214303-7816-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function adding the supported channels IE during a TDLS connection had
-several issues:
-1. If the entire subband is usable, the function exitted the loop without
-   adding it
-2. The function only checked chandef_usable, ignoring flags like RADAR
-   which would prevent TDLS off-channel communcation.
-3. HT20 was explicitly required in the chandef, while not a requirement
-   for TDLS off-channel.
+In brcmf_usb_probe_cb() the device is checked to determine whether
+it is already running firmware. However, when no firmware download
+is needed it still continues to request the firmware files. This
+is fixed by returning after successful setup.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- net/mac80211/tdls.c | 26 +++++++++++++++++++++-----
- 1 file changed, 21 insertions(+), 5 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 55ddd77..c5c4342 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -68,17 +68,24 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
- 		ch = ieee80211_get_channel(sdata->local->hw.wiphy, i);
- 		if (ch) {
- 			/* we will be active on the channel */
--			u32 flags = IEEE80211_CHAN_DISABLED |
--				    IEEE80211_CHAN_NO_IR;
- 			cfg80211_chandef_create(&chandef, ch,
--						NL80211_CHAN_HT20);
--			if (cfg80211_chandef_usable(sdata->local->hw.wiphy,
--						    &chandef, flags)) {
-+						NL80211_CHAN_NO_HT);
-+			if (cfg80211_reg_can_beacon(sdata->local->hw.wiphy,
-+						    &chandef,
-+						    sdata->wdev.iftype)) {
- 				ch_cnt++;
-+				/*
-+				 * check if the next channel is also part of
-+				 * this allowed range */
-+				 *
- 				continue;
- 			}
- 		}
- 
-+		/*
-+		 * we've reached the end of a range, with allowed channels
-+		 * found
-+		 */
- 		if (ch_cnt) {
- 			u8 *pos = skb_put(skb, 2);
- 			*pos++ = ieee80211_frequency_to_channel(subband_start);
-@@ -89,6 +96,15 @@ ieee80211_tdls_add_subband(struct ieee80211_sub_if_data *sdata,
- 		}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 7e0c9e2..1b95729 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -1263,6 +1263,8 @@ static int brcmf_usb_probe_cb(struct brcmf_usbdev_info *devinfo)
+ 		ret = brcmf_usb_bus_setup(devinfo);
+ 		if (ret)
+ 			goto fail;
++		/* we are done */
++		return 0;
  	}
- 
-+	/* all channels in the requested range are allowed - add them here */
-+	if (ch_cnt) {
-+		u8 *pos = skb_put(skb, 2);
-+		*pos++ = ieee80211_frequency_to_channel(subband_start);
-+		*pos++ = ch_cnt;
-+
-+		subband_cnt++;
-+	}
-+
- 	return subband_cnt;
- }
- 
+ 	bus->chip = bus_pub->devid;
+ 	bus->chiprev = bus_pub->chiprev;
 -- 
-2.1.0
+1.9.1
 
