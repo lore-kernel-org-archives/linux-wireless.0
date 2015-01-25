@@ -1,166 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:61432 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754724AbbATMgu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570AbbAYIxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 07:36:50 -0500
-Received: by mail-wi0-f176.google.com with SMTP id em10so5104592wid.3
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 04:36:49 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFCv3 4/4] mac80211: add VHT support for IBSS
-Date: Tue, 20 Jan 2015 13:35:18 +0100
-Message-Id: <1421757318-8343-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150120_133656_107473_3C15A6DE)
-In-Reply-To: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
+	Sun, 25 Jan 2015 03:53:24 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 01/10] wil6210: sync WMI with firmware
+Date: Sun, 25 Jan 2015 10:52:42 +0200
+Message-Id: <1422175971-8075-2-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_095333_764146_3705B209)
+In-Reply-To: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add VHT80/VHT160 support for IBSS.
-Drivers could activate this feature by
-setting NL80211_FEATURE_VHT_IBSS flag.
+Incorporate changes from firmware.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- net/mac80211/ibss.c        | 41 +++++++++++++++++++++++++++--------------
- net/mac80211/ieee80211_i.h |  2 ++
- net/mac80211/util.c        | 35 +++++++++++++++++++++++++++++++++++
- 3 files changed, 64 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/wil6210/wmi.c | 15 +++++----
+ drivers/net/wireless/ath/wil6210/wmi.h | 58 ++++++++++++++++++++++++++++++----
+ 2 files changed, 59 insertions(+), 14 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index fda5e2f..e041bde 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -188,6 +188,15 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
- 		 */
- 		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
- 						 chandef, 0);
-+
-+		if (chandef->width != NL80211_CHAN_WIDTH_20 &&
-+		    chandef->width != NL80211_CHAN_WIDTH_40 &&
-+		    sband->vht_cap.vht_supported) {
-+			pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
-+							 sband->vht_cap.cap);
-+			pos = ieee80211_ie_build_vht_oper(pos, &sband->vht_cap,
-+							  chandef);
-+		}
- 	}
- 
- 	if (local->hw.queues >= IEEE80211_NUM_ACS)
-@@ -411,6 +420,11 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 		chan_type = cfg80211_get_chandef_type(&sdata->u.ibss.chandef);
- 		cfg80211_chandef_create(&chandef, cbss->channel, chan_type);
- 		break;
-+	case NL80211_CHAN_WIDTH_80:
-+	case NL80211_CHAN_WIDTH_160:
-+		chandef = sdata->u.ibss.chandef;
-+		chandef.chan = cbss->channel;
-+		break;
- 	case NL80211_CHAN_WIDTH_5:
- 	case NL80211_CHAN_WIDTH_10:
- 		cfg80211_chandef_create(&chandef, cbss->channel,
-@@ -1047,27 +1061,26 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		    sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_10) {
- 			/* we both use HT */
- 			struct ieee80211_ht_cap htcap_ie;
--			struct cfg80211_chan_def chandef;
- 			enum ieee80211_sta_rx_bandwidth bw = sta->sta.bandwidth;
- 
--			ieee80211_ht_oper_to_chandef(channel,
--						     elems->ht_operation,
--						     &chandef);
--
- 			memcpy(&htcap_ie, elems->ht_cap_elem, sizeof(htcap_ie));
- 
--			/*
--			 * fall back to HT20 if we don't use or use
--			 * the other extension channel
--			 */
--			if (chandef.center_freq1 !=
--			    sdata->u.ibss.chandef.center_freq1)
--				htcap_ie.cap_info &=
--					cpu_to_le16(~IEEE80211_HT_CAP_SUP_WIDTH_20_40);
--
- 			rates_updated |= ieee80211_ht_cap_ie_to_sta_ht_cap(
- 						sdata, sband, &htcap_ie, sta);
- 
-+			if (elems->vht_operation && elems->vht_cap_elem &&
-+			    sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_20 &&
-+			    sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_40) {
-+				/* we both use VHT */
-+				struct ieee80211_vht_cap vhtcap_ie;
-+				struct ieee80211_sta_vht_cap vht_cap = sta->sta.vht_cap;
-+
-+				memcpy(&vhtcap_ie, elems->vht_cap_elem, sizeof(vhtcap_ie));
-+				ieee80211_vht_cap_ie_to_sta_vht_cap(sdata, sband, &vhtcap_ie, sta);
-+				if (memcmp(&vht_cap, &sta->sta.vht_cap, sizeof(vht_cap)))
-+						rates_updated |= true;
-+			}
-+
- 			if (bw != sta->sta.bandwidth)
- 				rates_updated |= true;
- 		}
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 9254546..9d1967f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1937,6 +1937,8 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 			       u16 prot_mode);
- u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
- 			       u32 cap);
-+u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-+				const struct cfg80211_chan_def *chandef);
- int ieee80211_parse_bitrates(struct cfg80211_chan_def *chandef,
- 			     const struct ieee80211_supported_band *sband,
- 			     const u8 *srates, int srates_len, u32 *rates);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index bb9664c..3824de7 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2317,6 +2317,41 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 	return pos + sizeof(struct ieee80211_ht_operation);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index b2b0fe1..097d78b 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -1133,12 +1133,13 @@ int wmi_rx_chain_add(struct wil6210_priv *wil, struct vring *vring)
+ 	return rc;
  }
  
-+u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-+				const struct cfg80211_chan_def *chandef)
-+{
-+	struct ieee80211_vht_operation *vht_oper;
+-int wmi_get_temperature(struct wil6210_priv *wil, u32 *t_m, u32 *t_r)
++int wmi_get_temperature(struct wil6210_priv *wil, u32 *t_bb, u32 *t_rf)
+ {
+ 	int rc;
+ 	struct wmi_temp_sense_cmd cmd = {
+-		.measure_marlon_m_en = cpu_to_le32(!!t_m),
+-		.measure_marlon_r_en = cpu_to_le32(!!t_r),
++		.measure_baseband_en = cpu_to_le32(!!t_bb),
++		.measure_rf_en = cpu_to_le32(!!t_rf),
++		.measure_mode = cpu_to_le32(TEMPERATURE_MEASURE_NOW),
+ 	};
+ 	struct {
+ 		struct wil6210_mbox_hdr_wmi wmi;
+@@ -1150,10 +1151,10 @@ int wmi_get_temperature(struct wil6210_priv *wil, u32 *t_m, u32 *t_r)
+ 	if (rc)
+ 		return rc;
+ 
+-	if (t_m)
+-		*t_m = le32_to_cpu(reply.evt.marlon_m_t1000);
+-	if (t_r)
+-		*t_r = le32_to_cpu(reply.evt.marlon_r_t1000);
++	if (t_bb)
++		*t_bb = le32_to_cpu(reply.evt.baseband_t1000);
++	if (t_rf)
++		*t_rf = le32_to_cpu(reply.evt.rf_t1000);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index b5102f0..8a4af61 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -29,8 +29,10 @@
+ 
+ /* General */
+ #define WILOCITY_MAX_ASSOC_STA (8)
++#define WILOCITY_DEFAULT_ASSOC_STA (1)
+ #define WMI_MAC_LEN		(6)
+ #define WMI_PROX_RANGE_NUM	(3)
++#define WMI_MAX_LOSS_DMG_BEACONS	(32)
+ 
+ /* List of Commands */
+ enum wmi_command_id {
+@@ -48,7 +50,7 @@ enum wmi_command_id {
+ 	WMI_SET_WSC_STATUS_CMDID	= 0x0041,
+ 	WMI_PXMT_RANGE_CFG_CMDID	= 0x0042,
+ 	WMI_PXMT_SNR2_RANGE_CFG_CMDID	= 0x0043,
+-	WMI_FAST_MEM_ACC_MODE_CMDID	= 0x0300,
++/*	WMI_FAST_MEM_ACC_MODE_CMDID	= 0x0300, */
+ 	WMI_MEM_READ_CMDID		= 0x0800,
+ 	WMI_MEM_WR_CMDID		= 0x0801,
+ 	WMI_ECHO_CMDID			= 0x0803,
+@@ -102,6 +104,8 @@ enum wmi_command_id {
+ 	WMI_MAINTAIN_RESUME_CMDID	= 0x0851,
+ 	WMI_RS_MGMT_CMDID		= 0x0852,
+ 	WMI_RF_MGMT_CMDID		= 0x0853,
++	WMI_THERMAL_THROTTLING_CTRL_CMDID	= 0x0854,
++	WMI_THERMAL_THROTTLING_GET_STATUS_CMDID	= 0x0855,
+ 	/* Performance monitoring commands */
+ 	WMI_BF_CTRL_CMDID		= 0x0862,
+ 	WMI_NOTIFY_REQ_CMDID		= 0x0863,
+@@ -136,6 +140,7 @@ enum wmi_command_id {
+ 	WMI_EAPOL_TX_CMDID		= 0xf04c,
+ 	WMI_MAC_ADDR_REQ_CMDID		= 0xf04d,
+ 	WMI_FW_VER_CMDID		= 0xf04e,
++	WMI_PMC_CMDID			= 0xf04f,
+ };
+ 
+ /*
+@@ -283,8 +288,8 @@ enum wmi_scan_type {
+ 	WMI_LONG_SCAN		= 0,
+ 	WMI_SHORT_SCAN		= 1,
+ 	WMI_PBC_SCAN		= 2,
+-	WMI_ACTIVE_SCAN		= 3,
+-	WMI_DIRECT_SCAN		= 4,
++	WMI_DIRECT_SCAN		= 3,
++	WMI_ACTIVE_SCAN		= 4,
+ };
+ 
+ struct wmi_start_scan_cmd {
+@@ -375,6 +380,17 @@ struct wmi_rf_mgmt_cmd {
+ } __packed;
+ 
+ /*
++ * WMI_THERMAL_THROTTLING_CTRL_CMDID
++ */
++#define THERMAL_THROTTLING_USE_DEFAULT_MAX_TXOP_LENGTH	(0xFFFFFFFF)
 +
-+	/* Build VHT Operation */
-+	*pos++ = WLAN_EID_VHT_OPERATION;
-+	*pos++ = sizeof(struct ieee80211_vht_operation);
++struct wmi_thermal_throttling_ctrl_cmd {
++	__le32 time_on_usec;
++	__le32 time_off_usec;
++	__le32 max_txop_length_usec;
++} __packed;
 +
-+	vht_oper = (struct ieee80211_vht_operation *)pos;
++/*
+  * WMI_RF_RX_TEST_CMDID
+  */
+ struct wmi_rf_rx_test_cmd {
+@@ -648,6 +664,7 @@ enum wmi_cfg_rx_chain_cmd_action {
+ enum wmi_cfg_rx_chain_cmd_decap_trans_type {
+ 	WMI_DECAP_TYPE_802_3			= 0,
+ 	WMI_DECAP_TYPE_NATIVE_WIFI		= 1,
++	WMI_DECAP_TYPE_NONE			= 2,
+ };
+ 
+ enum wmi_cfg_rx_chain_cmd_nwifi_ds_trans_type {
+@@ -785,9 +802,17 @@ struct wmi_echo_cmd {
+  *
+  * Measure MAC and radio temperatures
+  */
 +
-+	vht_oper->center_freq_seg1_idx =
-+			ieee80211_frequency_to_channel(chandef->center_freq1);
-+	vht_oper->center_freq_seg2_idx = 0;
-+	vht_oper->basic_mcs_set = vht_cap->vht_mcs.rx_mcs_map;
++/* Possible modes for temperature measurement */
++enum wmi_temperature_measure_mode {
++	TEMPERATURE_USE_OLD_VALUE	= 0x1,
++	TEMPERATURE_MEASURE_NOW		= 0x2,
++};
 +
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_80:
-+		vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80MHZ;
-+		break;
-+	case NL80211_CHAN_WIDTH_80P80:
-+		vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80P80MHZ;
-+		vht_oper->center_freq_seg2_idx =
-+			ieee80211_frequency_to_channel(chandef->center_freq2);
-+		break;
-+	case NL80211_CHAN_WIDTH_160:
-+		vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_160MHZ;
-+		break;
-+	default:
-+		return pos;
-+	}
+ struct wmi_temp_sense_cmd {
+-	__le32 measure_marlon_m_en;
+-	__le32 measure_marlon_r_en;
++	__le32 measure_baseband_en;
++	__le32 measure_rf_en;
++	__le32 measure_mode;
+ } __packed;
+ 
+ /*
+@@ -843,6 +868,7 @@ enum wmi_event_id {
+ 	WMI_BF_RXSS_MGMT_DONE_EVENTID		= 0x1839,
+ 	WMI_RS_MGMT_DONE_EVENTID		= 0x1852,
+ 	WMI_RF_MGMT_STATUS_EVENTID		= 0x1853,
++	WMI_THERMAL_THROTTLING_STATUS_EVENTID	= 0x1855,
+ 	WMI_BF_SM_MGMT_DONE_EVENTID		= 0x1838,
+ 	WMI_RX_MGMT_PACKET_EVENTID		= 0x1840,
+ 	WMI_TX_MGMT_PACKET_EVENTID		= 0x1841,
+@@ -859,6 +885,7 @@ enum wmi_event_id {
+ 	WMI_FLASH_READ_DONE_EVENTID		= 0x1902,
+ 	WMI_FLASH_WRITE_DONE_EVENTID		= 0x1903,
+ 	/*P2P*/
++	WMI_P2P_CFG_DONE_EVENTID		= 0x1910,
+ 	WMI_PORT_ALLOCATED_EVENTID		= 0x1911,
+ 	WMI_PORT_DELETED_EVENTID		= 0x1912,
+ 	WMI_LISTEN_STARTED_EVENTID		= 0x1914,
+@@ -899,6 +926,15 @@ struct wmi_rf_mgmt_status_event {
+ } __packed;
+ 
+ /*
++ * WMI_THERMAL_THROTTLING_STATUS_EVENTID
++ */
++struct wmi_thermal_throttling_status_event {
++	__le32 time_on_usec;
++	__le32 time_off_usec;
++	__le32 max_txop_length_usec;
++} __packed;
 +
-+	return pos + sizeof(struct ieee80211_vht_operation);
-+}
++/*
+  * WMI_GET_STATUS_DONE_EVENTID
+  */
+ struct wmi_get_status_done_event {
+@@ -1155,6 +1191,14 @@ struct wmi_get_pcp_channel_event {
+ } __packed;
+ 
+ /*
++ * WMI_P2P_CFG_DONE_EVENTID
++ */
++struct wmi_p2p_cfg_done_event {
++	u8 status;	/* wmi_fw_status */
++	u8 reserved[3];
++} __packed;
 +
- void ieee80211_ht_oper_to_chandef(struct ieee80211_channel *control_chan,
- 				  const struct ieee80211_ht_operation *ht_oper,
- 				  struct cfg80211_chan_def *chandef)
++/*
+ * WMI_PORT_ALLOCATED_EVENTID
+ */
+ struct wmi_port_allocated_event {
+@@ -1282,8 +1326,8 @@ struct wmi_echo_event {
+  * Measure MAC and radio temperatures
+  */
+ struct wmi_temp_sense_done_event {
+-	__le32 marlon_m_t1000;
+-	__le32 marlon_r_t1000;
++	__le32 baseband_t1000;
++	__le32 rf_t1000;
+ } __packed;
+ 
+ #endif /* __WILOCITY_WMI_H__ */
 -- 
-1.9.1
+2.1.0
 
