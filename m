@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:35228 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752044AbbAUUUn (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbbAYIxe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2015 15:20:43 -0500
-Date: Thu, 22 Jan 2015 07:11:01 +1100
-From: James Cameron <quozl@laptop.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com, yogeshp@marvell.com, nishants@marvell.com,
-	frankh@marvell.com
-Subject: Re: [PATCH 3/3] mwifiex: selectively choose ext_scan support
-Message-ID: <20150121201101.GA5472@us.netrek.org> (sfid-20150121_212046_551702_288F2847)
-References: <1421858531-4536-1-git-send-email-patila@marvell.com>
- <1421858531-4536-3-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1421858531-4536-3-git-send-email-patila@marvell.com>
+	Sun, 25 Jan 2015 03:53:34 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 06/10] wil6210: interrupt moderation configuration update
+Date: Sun, 25 Jan 2015 10:52:47 +0200
+Message-Id: <1422175971-8075-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_095341_395118_0DFB4966)
+In-Reply-To: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 21, 2015 at 10:12:11PM +0530, Avinash Patil wrote:
-> @@ -256,6 +256,7 @@ struct sdio_mmc_card {
->  
->  	u8 *mp_regs;
->  	u8 auto_tdls;
-> +	u8 ext_scan;
+From: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
 
-Why not same name as below?
+Due to HW limitation, inter-packet gap timeout max value is 13 usec.
+Update of current thresholds from 15 to 13 usec.
 
-> @@ -273,6 +274,7 @@ struct mwifiex_sdio_device {
->  	u32 mp_tx_agg_buf_size;
->  	u32 mp_rx_agg_buf_size;
->  	u8 auto_tdls;
-> +	u8 ext_scan_support;
+Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wil6210.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> @@ -206,6 +206,7 @@ struct mwifiex_pcie_device {
->  	u16 blksz_fw_dl;
->  	u16 tx_buf_size;
->  	bool supports_fw_dump;
-> +	u8 ext_scan_support;
-
-Not consistent name style with other support variable above.  Perhaps
-should be support_ext_scan.
-
-Long variable names for all support variables, perhaps should use:
-
-- supports_sdio_new_mode
-+ can_sdio_new
-
-- supports_fw_dump
-+ can_dump
-
-- supports_ext_scan
-+ can_ext_scan
-
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 2521ba1..3575b5d 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -78,8 +78,8 @@ static inline u32 wil_mtu2macbuf(u32 mtu)
+ #define WIL_MAX_ETH_MTU		(IEEE80211_MAX_DATA_LEN_DMG - 8)
+ /* Max supported by wil6210 value for interrupt threshold is 5sec. */
+ #define WIL6210_ITR_TRSH_MAX (5000000)
+-#define WIL6210_ITR_TX_INTERFRAME_TIMEOUT_DEFAULT (15) /* usec */
+-#define WIL6210_ITR_RX_INTERFRAME_TIMEOUT_DEFAULT (15) /* usec */
++#define WIL6210_ITR_TX_INTERFRAME_TIMEOUT_DEFAULT (13) /* usec */
++#define WIL6210_ITR_RX_INTERFRAME_TIMEOUT_DEFAULT (13) /* usec */
+ #define WIL6210_ITR_TX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
+ #define WIL6210_ITR_RX_MAX_BURST_DURATION_DEFAULT (500) /* usec */
+ #define WIL6210_FW_RECOVERY_RETRIES	(5) /* try to recover this many times */
 -- 
-James Cameron
-http://quozl.linux.org.au/
+2.1.0
+
