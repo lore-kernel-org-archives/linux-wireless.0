@@ -1,60 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:52051 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751312AbbAPKlp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 05:41:45 -0500
-Message-ID: <54B8EAD9.5050200@openwrt.org> (sfid-20150116_114148_505024_3ACF43F5)
-Date: Fri, 16 Jan 2015 11:41:29 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:37162 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517AbbAYKL0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2015 05:11:26 -0500
+Received: by mail-wg0-f49.google.com with SMTP id k14so4456699wgh.8
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2015 02:11:24 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] bcma: add empty PCIe hostmode functions if support is disabled
+Date: Sun, 25 Jan 2015 11:11:13 +0100
+Message-Id: <1422180674-9592-1-git-send-email-zajec5@gmail.com> (sfid-20150125_111150_297762_9F672146)
 MIME-Version: 1.0
-To: Rico Derrer <rico.derrer@neratec.com>
-CC: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: Re: [PATCH 3.19] ath9k: fix race condition in irq processing during
- hardware reset
-References: <1421241456-29085-1-git-send-email-nbd@openwrt.org> <377854068.83121.1421395226029.JavaMail.zimbra@neratec.com>
-In-Reply-To: <377854068.83121.1421395226029.JavaMail.zimbra@neratec.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-01-16 09:00, Rico Derrer wrote:
-> Hi Felix
-> 
-> Felix Fietkau wrote:
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c
->> b/drivers/net/wireless/ath/ath9k/main.c
->> index 9a72640..62b0bf4 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -285,6 +285,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct
->> ath9k_channel *hchan)
->> 
->> __ath_cancel_work(sc);
->> 
->> + disable_irq(sc->irq);
->> tasklet_disable(&sc->intr_tq);
->> tasklet_disable(&sc->bcon_tasklet);
->> spin_lock_bh(&sc->sc_pcu_lock);
->> @@ -331,6 +332,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct
->> ath9k_channel *hchan)
->> r = -EIO;
->> 
->> out:
->> + enable_irq(sc->irq);
->> spin_unlock_bh(&sc->sc_pcu_lock);
->> tasklet_enable(&sc->bcon_tasklet);
->> tasklet_enable(&sc->intr_tq);
-> 
-> This part completely blocks the system on a AR9350. Loading the
-> module works but configuring it hangs the system until watchdog restarts it.
-What kernel/software are you running on there? When I committed this
-patch to OpenWrt, it uncovered IRQ handling bugs in MIPS kernel code
-(both generic and in the ath79 platform code).
+This allows us to drop some #ifdef magic (mess).
 
-You can find the fixes that I've made here:
-http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=target/linux/generic/patches-3.14/130-mips_cpu_irq_disable.patch
-http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=target/linux/ar71xx/patches-3.14/736-MIPS-ath79-fix-chained-irq-disable.patch
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/bcma_private.h | 10 +++++++++-
+ drivers/bcma/driver_pci.c   |  2 --
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-I've already submitted the first one to linux-mips.
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 3f314c9..3242655 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -92,7 +92,7 @@ extern void __exit bcma_host_soc_unregister_driver(void);
+ #else
+ static inline int __init bcma_host_soc_register_driver(void)
+ {
+-	return 0;
++	return false;
+ }
+ static inline void __exit bcma_host_soc_unregister_driver(void)
+ {
+@@ -107,6 +107,14 @@ extern int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc);
+ #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
+ bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc);
+ void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
++#else
++static inline bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc)
++{
++	return 0;
++}
++static inline void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
++{
++}
+ #endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
+ 
+ #ifdef CONFIG_BCMA_DRIVER_GPIO
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index 50329d1..b85a505 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -226,11 +226,9 @@ void bcma_core_pci_init(struct bcma_drv_pci *pc)
+ 	if (pc->setup_done)
+ 		return;
+ 
+-#ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
+ 	pc->hostmode = bcma_core_pci_is_in_hostmode(pc);
+ 	if (pc->hostmode)
+ 		bcma_core_pci_hostmode_init(pc);
+-#endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
+ 
+ 	if (!pc->hostmode)
+ 		bcma_core_pci_clientmode_init(pc);
+-- 
+1.8.4.5
 
-- Felix
