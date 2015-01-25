@@ -1,158 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3378 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31610 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754639AbbAXRwk (ORCPT
+	with ESMTP id S1752718AbbAYIxl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 12:52:40 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/6] cfg80211: Add new GCMP, CCMP-256, BIP-GMAC, BIP-CMAC-256 ciphers
-Date: Sat, 24 Jan 2015 19:52:05 +0200
-Message-ID: <1422121929-18238-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20150124_185243_190365_DBD84190)
-In-Reply-To: <1422121929-18238-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1422121929-18238-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 25 Jan 2015 03:53:41 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 10/10] wil6210: move Rx reorder buffer allocation out of spinlock
+Date: Sun, 25 Jan 2015 10:52:51 +0200
+Message-Id: <1422175971-8075-11-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150125_101445_381705_FBE49888)
+In-Reply-To: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes cfg80211 aware of the GCMP, GCMP-256, CCMP-256, BIP-GMAC-128,
-BIP-GMAC-256, and BIP-CMAC-256 cipher suites. These new cipher suites
-were defined in IEEE Std 802.11ac-2013.
+This fixes issue reported by Dan Carpenter:
+The patch 3277213feb1b: "wil6210: ADDBA/DELBA flows" from Dec 23,
+2014, leads to the following static checker warning:
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+        drivers/net/wireless/ath/wil6210/rx_reorder.c:205 wil_tid_ampdu_rx_alloc()
+        error: scheduling with locks held: 'spin_lock:tid_rx_lock'
+
+drivers/net/wireless/ath/wil6210/rx_reorder.c
+   202  struct wil_tid_ampdu_rx *wil_tid_ampdu_rx_alloc(struct wil6210_priv *wil,
+   203                                                  int size, u16 ssn)
+   204  {
+   205          struct wil_tid_ampdu_rx *r = kzalloc(sizeof(*r), GFP_KERNEL);
+                                                                 ^^^^^^^^^^
+   206
+   207          if (!r)
+   208                  return NULL;
+   209
+   210          r->reorder_buf =
+   211                  kcalloc(size, sizeof(struct sk_buff *), GFP_KERNEL);
+                                                                ^^^^^^^^^^^
+   212          r->reorder_time =
+   213                  kcalloc(size, sizeof(unsigned long), GFP_KERNEL);
+                                                             ^^^^^^^^^^^
+   214          if (!r->reorder_buf || !r->reorder_time) {
+   215                  kfree(r->reorder_buf);
+   216                  kfree(r->reorder_time);
+   217                  kfree(r);
+   218                  return NULL;
+   219          }
+   220
+
+[ snip ]
+
+   331          spin_lock_bh(&sta->tid_rx_lock);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+spin lock held.
+
+   332
+   333          wil_tid_ampdu_rx_free(wil, sta->tid_rx[tid]);
+   334          sta->tid_rx[tid] = wil_tid_ampdu_rx_alloc(wil, agg_wsize, ssn);
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+function called with the lock held.
+
+   335
+   336          spin_unlock_bh(&sta->tid_rx_lock);
+
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 ---
- include/linux/ieee80211.h | 18 ++++++++++++++++++
- net/wireless/util.c       | 41 +++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 57 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 4f4eea8..dbf417b 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1994,9 +1994,15 @@ enum ieee80211_key_len {
- 	WLAN_KEY_LEN_WEP40 = 5,
- 	WLAN_KEY_LEN_WEP104 = 13,
- 	WLAN_KEY_LEN_CCMP = 16,
-+	WLAN_KEY_LEN_CCMP_256 = 32,
- 	WLAN_KEY_LEN_TKIP = 32,
- 	WLAN_KEY_LEN_AES_CMAC = 16,
- 	WLAN_KEY_LEN_SMS4 = 32,
-+	WLAN_KEY_LEN_GCMP = 16,
-+	WLAN_KEY_LEN_GCMP_256 = 32,
-+	WLAN_KEY_LEN_BIP_CMAC_256 = 32,
-+	WLAN_KEY_LEN_BIP_GMAC_128 = 16,
-+	WLAN_KEY_LEN_BIP_GMAC_256 = 32,
- };
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index 5522092..ca10dcf 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2014 Qualcomm Atheros, Inc.
++ * Copyright (c) 2014-2015 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -292,6 +292,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	u16 agg_timeout = req->ba_timeout;
+ 	u16 status = WLAN_STATUS_SUCCESS;
+ 	u16 ssn = req->ba_seq_ctrl >> 4;
++	struct wil_tid_ampdu_rx *r;
+ 	int rc;
  
- #define IEEE80211_WEP_IV_LEN		4
-@@ -2004,9 +2010,16 @@ enum ieee80211_key_len {
- #define IEEE80211_CCMP_HDR_LEN		8
- #define IEEE80211_CCMP_MIC_LEN		8
- #define IEEE80211_CCMP_PN_LEN		6
-+#define IEEE80211_CCMP_256_HDR_LEN	8
-+#define IEEE80211_CCMP_256_MIC_LEN	16
-+#define IEEE80211_CCMP_256_PN_LEN	6
- #define IEEE80211_TKIP_IV_LEN		8
- #define IEEE80211_TKIP_ICV_LEN		4
- #define IEEE80211_CMAC_PN_LEN		6
-+#define IEEE80211_GMAC_PN_LEN		6
-+#define IEEE80211_GCMP_HDR_LEN		8
-+#define IEEE80211_GCMP_MIC_LEN		16
-+#define IEEE80211_GCMP_PN_LEN		6
+ 	might_sleep();
+@@ -328,11 +329,10 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 		return;
  
- /* Public action codes */
- enum ieee80211_pub_actioncode {
-@@ -2230,6 +2243,11 @@ enum ieee80211_sa_query_action {
- #define WLAN_CIPHER_SUITE_WEP104	0x000FAC05
- #define WLAN_CIPHER_SUITE_AES_CMAC	0x000FAC06
- #define WLAN_CIPHER_SUITE_GCMP		0x000FAC08
-+#define WLAN_CIPHER_SUITE_GCMP_256	0x000FAC09
-+#define WLAN_CIPHER_SUITE_CCMP_256	0x000FAC0A
-+#define WLAN_CIPHER_SUITE_BIP_GMAC_128	0x000FAC0B
-+#define WLAN_CIPHER_SUITE_BIP_GMAC_256	0x000FAC0C
-+#define WLAN_CIPHER_SUITE_BIP_CMAC_256	0x000FAC0D
+ 	/* apply */
++	r = wil_tid_ampdu_rx_alloc(wil, agg_wsize, ssn);
+ 	spin_lock_bh(&sta->tid_rx_lock);
+-
+ 	wil_tid_ampdu_rx_free(wil, sta->tid_rx[tid]);
+-	sta->tid_rx[tid] = wil_tid_ampdu_rx_alloc(wil, agg_wsize, ssn);
+-
++	sta->tid_rx[tid] = r;
+ 	spin_unlock_bh(&sta->tid_rx_lock);
+ }
  
- #define WLAN_CIPHER_SUITE_SMS4		0x00147201
- 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index f608ba0..c42202a 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -236,11 +236,18 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
- 	 */
- 	if (pairwise && key_idx &&
- 	    ((params->cipher == WLAN_CIPHER_SUITE_TKIP) ||
--	     (params->cipher == WLAN_CIPHER_SUITE_CCMP)))
-+	     (params->cipher == WLAN_CIPHER_SUITE_CCMP) ||
-+	     (params->cipher == WLAN_CIPHER_SUITE_CCMP_256) ||
-+	     (params->cipher == WLAN_CIPHER_SUITE_GCMP) ||
-+	     (params->cipher == WLAN_CIPHER_SUITE_GCMP_256)))
- 		return -EINVAL;
- 
- 	/* Disallow BIP (group-only) cipher as pairwise cipher */
--	if (pairwise && params->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
-+	if (pairwise &&
-+	    (params->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-+	     params->cipher == WLAN_CIPHER_SUITE_BIP_CMAC_256 ||
-+	     params->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
-+	     params->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256))
- 		return -EINVAL;
- 
- 	switch (params->cipher) {
-@@ -256,6 +263,18 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
- 		if (params->key_len != WLAN_KEY_LEN_CCMP)
- 			return -EINVAL;
- 		break;
-+	case WLAN_CIPHER_SUITE_CCMP_256:
-+		if (params->key_len != WLAN_KEY_LEN_CCMP_256)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_GCMP:
-+		if (params->key_len != WLAN_KEY_LEN_GCMP)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_GCMP_256:
-+		if (params->key_len != WLAN_KEY_LEN_GCMP_256)
-+			return -EINVAL;
-+		break;
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		if (params->key_len != WLAN_KEY_LEN_WEP104)
- 			return -EINVAL;
-@@ -264,6 +283,18 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
- 		if (params->key_len != WLAN_KEY_LEN_AES_CMAC)
- 			return -EINVAL;
- 		break;
-+	case WLAN_CIPHER_SUITE_BIP_CMAC_256:
-+		if (params->key_len != WLAN_KEY_LEN_BIP_CMAC_256)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
-+		if (params->key_len != WLAN_KEY_LEN_BIP_GMAC_128)
-+			return -EINVAL;
-+		break;
-+	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
-+		if (params->key_len != WLAN_KEY_LEN_BIP_GMAC_256)
-+			return -EINVAL;
-+		break;
- 	default:
- 		/*
- 		 * We don't know anything about this algorithm,
-@@ -283,7 +314,13 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
- 			return -EINVAL;
- 		case WLAN_CIPHER_SUITE_TKIP:
- 		case WLAN_CIPHER_SUITE_CCMP:
-+		case WLAN_CIPHER_SUITE_CCMP_256:
-+		case WLAN_CIPHER_SUITE_GCMP:
-+		case WLAN_CIPHER_SUITE_GCMP_256:
- 		case WLAN_CIPHER_SUITE_AES_CMAC:
-+		case WLAN_CIPHER_SUITE_BIP_CMAC_256:
-+		case WLAN_CIPHER_SUITE_BIP_GMAC_128:
-+		case WLAN_CIPHER_SUITE_BIP_GMAC_256:
- 			if (params->seq_len != 6)
- 				return -EINVAL;
- 			break;
 -- 
-1.9.1
+2.1.0
 
