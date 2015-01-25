@@ -1,118 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:59115 "EHLO
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13244 "EHLO
 	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900AbbAWOVU (ORCPT
+	with ESMTP id S1759945AbbAYTbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 09:21:20 -0500
-Message-ID: <54C258DB.7050308@broadcom.com> (sfid-20150123_152123_073711_3F2EAD76)
-Date: Fri, 23 Jan 2015 15:21:15 +0100
+	Sun, 25 Jan 2015 14:31:49 -0500
 From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 07/14] brcmfmac: Reopen netdev queue on bus state data.
+Date: Sun, 25 Jan 2015 20:31:36 +0100
+Message-ID: <1422214303-7816-8-git-send-email-arend@broadcom.com> (sfid-20150125_203230_823289_8C6FC268)
+In-Reply-To: <1422214303-7816-1-git-send-email-arend@broadcom.com>
+References: <1422214303-7816-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?SsO2cmcgS3JhdXNl?= <jkrause@posteo.de>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: brcmfmac: kernel panic in brcmf_cfg80211_del_key
-References: <1422016318.1212.22.camel@posteo.de>
-In-Reply-To: <1422016318.1212.22.camel@posteo.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/23/15 13:31, Jörg Krause wrote:
-> Hi all,
->
-> I'm running an wireless device with Linux kernel 3.18.3 and the brcmfmac
-> driver. When connection the device to my network, I see from time to
-> time these messages in the kernel log:
->
-> [  899.624759] brcmfmac: brcmf_cfg80211_del_key: invalid key index (4)
-> [  899.649874] brcmfmac: brcmf_cfg80211_del_key: invalid key index (5)
-> [  899.678066] cfg80211: Calling CRDA to update world regulatory domain
->
-> I'm not sure about the meaning of the 'invalid key index' messages and
-> if it may cause some trouble. However the system is running fine.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Basically, wpa_supplicant does key deletion for index 0 to 5, but 
-brcmfmac only has 4 keys (0 to 3) hence the message. This is not an issue.
+During suspend the bus state is put in the down state. When data
+is being transmitted during this state then the netdev queue will
+be close. This patch will wake the queue on state data if the
+queue was closed.
 
-> Now I had a test case with two wireless devices having the same hostname
-> and MAC address in the same network.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bus.h  | 10 +++-------
+ drivers/net/wireless/brcm80211/brcmfmac/core.c | 21 +++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 7 deletions(-)
 
-What? Why is this a test case. That is fundamentally wrong and asking 
-for trouble.
-
-> The first wireless devices connects to the network and starts receiving
-> an audio stream via UDP. Another device with same hostname and MAC is
-> started after this and repeatedly reboots after 30 seconds.
->
-> The first device gets disconnected after the second device connects to
-> the network. The device is running with the network tools tools
-> wpa_supplicant, a wpa_action script, udhcpc, avahi, and crda. The device
-> tries to reconnect to the network. It successfully connects, but
-> authentification fails. This step produces a lot of the kernel messages
-> from above.
->
-> Okay, nothing wrong until here I think. But after some time the brcmfmac
-> driver is dying:
->
-> [  901.799454] ------------[ cut here ]------------
-> [  901.804332] WARNING: CPU: 0 PID: 104 at
-> drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c:1076
-> brcmf_netdev_wait_pend8021x+0xe0/0xf4 [brcmfmac]()
-> [  901.866565] Modules linked in:
-> [  901.907705] 	brcmfmac brcmutil
-> [  901.909298] CPU: 0 PID: 104 Comm: wpa_supplicant Not tainted 3.18.3
-> #1
-> [  901.959287] [<c000de40>] (unwind_backtrace) from [<c000c1f4>]
-> (show_stack+0x10/0x14)
-> [  901.993628] [<c000c1f4>] (show_stack) from [<c0016400>]
-> (warn_slowpath_common+0x68/0x88)
-> [  902.016243] [<c0016400>] (warn_slowpath_common) from [<c00164bc>]
-> (warn_slowpath_null+0x1c/0x24)
-> [  902.040249] [<c00164bc>] (warn_slowpath_null) from [<bf016304>]
-> (brcmf_netdev_wait_pend8021x+0xe0/0xf4 [brcmfmac])
-> [  902.067408] [<bf016304>] (brcmf_netdev_wait_pend8021x [brcmfmac])
-> from [<bf0061d8>] (brcmf_cfg80211_get_key+0x1a8/0x374 [brcmfmac])
-> [  902.098434] [<bf0061d8>] (brcmf_cfg80211_get_key [brcmfmac]) from
-> [<bf00770c>] (brcmf_cfg80211_del_key+0x1d8/0x2e0 [brcmfmac])
-> [  902.164527] [<bf00770c>] (brcmf_cfg80211_del_key [brcmfmac]) from
-> [<bf0078ec>] (brcmf_cfg80211_add_key+0xd8/0x248 [brcmfmac])
-> [  902.213096] [<bf0078ec>] (brcmf_cfg80211_add_key [brcmfmac]) from
-> [<c037f368>] (nl80211_new_key+0x108/0x144)
-> [  902.253581] [<c037f368>] (nl80211_new_key) from [<c02ccb98>]
-> (genl_rcv_msg+0x22c/0x39c)
-> [  902.290997] [<c02ccb98>] (genl_rcv_msg) from [<c02cc12c>]
-> (netlink_rcv_skb+0xb4/0xd8)
-> [  902.325813] [<c02cc12c>] (netlink_rcv_skb) from [<c02cc958>]
-> (genl_rcv+0x20/0x34)
-> [  902.363540] [<c02cc958>] (genl_rcv) from [<c02cbaa8>]
-> (netlink_unicast+0x14c/0x1cc)
-> [  902.399402] [<c02cbaa8>] (netlink_unicast) from [<c02cbe98>]
-> (netlink_sendmsg+0x2b8/0x39c)
-> [  902.435798] [<c02cbe98>] (netlink_sendmsg) from [<c0297860>]
-> (sock_sendmsg+0x84/0xa8)
-> [  902.477184] [<c0297860>] (sock_sendmsg) from [<c0298d28>]
-> (___sys_sendmsg.part.32+0x284/0x290)
-> [  902.486197] [<c0298d28>] (___sys_sendmsg.part.32) from [<c0299d34>]
-> (__sys_sendmsg+0x4c/0x7c)
-> [  902.555011] [<c0299d34>] (__sys_sendmsg) from [<c0009620>]
-> (ret_fast_syscall+0x0/0x44)
-> [  902.591178] ---[ end trace 93a9f5360e80c5ca ]---
->
-> I'm not sure if I should worry about this issue.
-
-Well, what is happening here is that the driver got a EAPOL message from 
-the network stack to transmit and then got a key config request. That 
-key config is held until transmit of EAPOL is completed. So it is 
-suspicious.
-
-Regards,
-Arend
-
-> Best regards
-> Jörg Krause
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+index 55d36ff..89e6a4d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bus.h
+@@ -185,13 +185,6 @@ void brcmf_bus_wowl_config(struct brcmf_bus *bus, bool enabled)
+ 		bus->ops->wowl_config(bus->dev, enabled);
+ }
+ 
+-static inline void brcmf_bus_change_state(struct brcmf_bus *bus,
+-					  enum brcmf_bus_state new_state)
+-{
+-	brcmf_dbg(TRACE, "%d -> %d\n", bus->state, new_state);
+-	bus->state = new_state;
+-}
+-
+ /*
+  * interface functions from common layer
+  */
+@@ -214,6 +207,9 @@ void brcmf_txflowblock(struct device *dev, bool state);
+ /* Notify the bus has transferred the tx packet to firmware */
+ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
+ 
++/* Configure the "global" bus state used by upper layers */
++void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
++
+ int brcmf_bus_start(struct device *dev);
+ s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len);
+ void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index ff8c97b..b8520c3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -1106,6 +1106,27 @@ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp)
+ 	return !err;
+ }
+ 
++void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state)
++{
++	struct brcmf_pub *drvr = bus->drvr;
++	struct net_device *ndev;
++	int ifidx;
++
++	brcmf_dbg(TRACE, "%d -> %d\n", bus->state, state);
++	bus->state = state;
++
++	if (state == BRCMF_BUS_UP) {
++		for (ifidx = 0; ifidx < BRCMF_MAX_IFS; ifidx++) {
++			if ((drvr->iflist[ifidx]) &&
++			    (drvr->iflist[ifidx]->ndev)) {
++				ndev = drvr->iflist[ifidx]->ndev;
++				if (netif_queue_stopped(ndev))
++					netif_wake_queue(ndev);
++			}
++		}
++	}
++}
++
+ static void brcmf_driver_register(struct work_struct *work)
+ {
+ #ifdef CONFIG_BRCMFMAC_SDIO
+-- 
+1.9.1
 
