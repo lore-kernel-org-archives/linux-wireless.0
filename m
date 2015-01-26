@@ -1,108 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:37961 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750924AbbANJxK (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:65023 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753260AbbAZINv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 04:53:10 -0500
+	Mon, 26 Jan 2015 03:13:51 -0500
+Received: by mail-wi0-f174.google.com with SMTP id n3so8104178wiv.1
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 00:13:50 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1421224818.2012.4.camel@gmail.com>
-References: <1421224274.2012.2.camel@gmail.com>
-	<1421224818.2012.4.camel@gmail.com>
-Date: Wed, 14 Jan 2015 11:53:08 +0200
-Message-ID: <CANUX_P1DwErJr6O2OGR7Sr12g3-OKYKEBTQ+wSZiSS=NUoCqEw@mail.gmail.com> (sfid-20150114_105319_873950_427B4995)
-Subject: Re: [REGRESSION] iwlfiwi with Intel Centrino N1000 won't work with power_save
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Igor Gnatenko <i.gnatenko.brain@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Wysocki, Rafael" <rafael@kernel.org>,
-	Alex Nik <rage.iz.me@gmail.com>,
-	Linux PM list <linux-pm@vger.kernel.org>
+In-Reply-To: <87y4osgn8n.fsf@kamboji.qca.qualcomm.com>
+References: <1421412811-6387-1-git-send-email-michal.kazior@tieto.com>
+	<1421412811-6387-2-git-send-email-michal.kazior@tieto.com>
+	<87y4osgn8n.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 26 Jan 2015 09:13:50 +0100
+Message-ID: <CA+BoTQ=L6m2nJzCRMW3QZn4CyYHZ94bK=1gk_iMk7iOGt8nEbw@mail.gmail.com> (sfid-20150126_091356_496984_EE5FD974)
+Subject: Re: [PATCH 2/2] ath10k: fix beacon deadlock
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 14, 2015 at 10:40 AM, Igor Gnatenko
-<i.gnatenko.brain@gmail.com> wrote:
-> On Wed, 2015-01-14 at 11:31 +0300, Igor Gnatenko wrote:
->> Hi,
+On 24 January 2015 at 17:24, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> This should fix a very rare occurrence of the following deadlock:
 >>
->> I got report from people that on Intel Centrino N1000 wifi won't
->> work after
->> updating to 3.17.8. I see in that release Fedora maints enabled
->> POWERCAP and
->> INTEL RAPL. We got working wifi only after disabling powersave via
->> `iw dev wlp2s0 set power_save off`.
+>>   [<ffffffffa018265e>] ath10k_wmi_tx_beacons_nowait+0x1e/0x50 [ath10k_core]
+>>   [<ffffffffa01829b6>] ath10k_wmi_op_ep_tx_credits+0x16/0x40 [ath10k_core]
+>>   [<ffffffffa017d685>] ath10k_htc_send+0x285/0x3d0 [ath10k_core]
+>>   [<ffffffffa0184b81>] ath10k_wmi_cmd_send_nowait+0x81/0x110 [ath10k_core]
+>>   [<ffffffffa0184c61>] ath10k_wmi_tx_beacon_nowait.part.33+0x51/0x90 [ath10k_core]
+>>   [<ffffffffa0184cd0>] ath10k_wmi_tx_beacons_iter+0x30/0x40 [ath10k_core]
+>>   [<ffffffff81882246>] __iterate_active_interfaces+0xa6/0x100
+>>   [<ffffffffa0184ca0>] ? ath10k_wmi_tx_beacon_nowait.part.33+0x90/0x90 [ath10k_core]
+>>   [<ffffffff818822ae>] ieee80211_iterate_active_interfaces_atomic+0xe/0x10
+>>   [<ffffffffa0182676>] ath10k_wmi_tx_beacons_nowait+0x36/0x50 [ath10k_core]
+>>   [<ffffffffa01829b6>] ath10k_wmi_op_ep_tx_credits+0x16/0x40 [ath10k_core]
+>>   [<ffffffffa017d140>] ath10k_htc_rx+0x280/0x410 [ath10k_core]
+>>   [<ffffffffa01bcbf0>] ? ath10k_ce_completed_recv_next+0x60/0x80 [ath10k_pci]
+>>   [<ffffffffa01bc6ab>] ath10k_pci_ce_recv_data+0x11b/0x1d0 [ath10k_pci]
+>>   [<ffffffffa01bcf44>] ath10k_ce_per_engine_service+0x64/0xc0 [ath10k_pci]
+>>   [<ffffffffa01bcfc2>] ath10k_ce_per_engine_service_any+0x22/0x50 [ath10k_pci]
+>>   [<ffffffffa01bc4d0>] ath10k_pci_tasklet+0x30/0x90 [ath10k_pci]
+>>   [<ffffffff81055a55>] tasklet_action+0xc5/0x100
+>>
+>> To prevent this make sure to release ar->data_lock
+>> while calling to ath10k_wmi_beacon_send_ref_nowait().
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> This introduces a new warning from kbuild:
+>
+> tree:   git://github.com/kvalo/ath ath-next-test
+> head:   59030a70b61c41268383d1406bb49fc559e0da4e
+> commit: 60845cf1bc104bbec7509eb4b6c9f09a1559bfdc [104/113] ath10k: fix beacon deadlock
+>
+> New smatch warnings:
+> drivers/net/wireless/ath/ath10k/wmi.c:969 ath10k_wmi_tx_beacon_nowait() warn: variable dereferenced before check 'bcn' (see line 967)
 
-What kernel version did you have before?
-BTW - for this device, power save is supposed to be disabled by
-default, but I need to check
+>From a practical standpoint there is no dereference because control
+buffer is inlined in sk_buff and it ends up just as an offset to the
+sk_buff. I guess smatch couldn't figure this out due to macros.
 
->>
->> How we can debug this?
->>
->> lspci above.
->>
->> 02:00.0 Network controller [0280]: Intel Corporation Centrino
->> Wireless- N 1000 [Condor Peak] [8086:0084]
->>         Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN
->> [8086:1315]
->>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast
->> >TAbort-
->> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>         Latency: 0, Cache Line Size: 64 bytes
->>         Interrupt: pin A routed to IRQ 28
->>         Region 0: Memory at d1500000 (64-bit, non-prefetchable)
->> [size=8K]
->>         Capabilities: [c8] Power Management version 3
->>                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
->> PME(D0+,D1-
->> ,D2-,D3hot+,D3cold+)
->>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0
->> PME-
->>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->>                 Address: 00000000fee0800c  Data: 4122
->>         Capabilities: [e0] Express (v1) Endpoint, MSI 00
->>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency
->> L0s
->> <512ns, L1 unlimited
->>                 ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
->>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
->> Unsupported-
->>                 RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
->>                 MaxPayload 128 bytes, MaxReadReq 128 bytes
->>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
->> AuxPwr+ TransPend-
->>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s
->> L1,
->> Exit Latency L0s <128ns, L1 <32us
->>                 ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
->>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled-
->> CommClk+
->>                 ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
->>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
->> SlotClk+ DLActive- BWMgmt- ABWMgmt-
->>         Capabilities: [100 v1] Advanced Error Reporting
->>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
->> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
->> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
->> UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
->> NonFatalErr-
->>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
->> NonFatalErr+
->>                 AERCap: First Error Pointer: 00, GenCap- CGenEn-
->> ChkCap- ChkEn-
->>         Capabilities: [140 v1] Device Serial Number 74-e5-0b-ff-ff-
->> cc-
->> 82-24
->>         Kernel driver in use: iwlwifi
->>         Kernel modules: iwlwifi
->> --
->> -Igor Gnatenko
-> CC linux-pm@
-> --
-> -Igor Gnatenko
+When I run smatch (tip) locally it doesn't complain about this. Maybe
+I'm missing some parameters?
+
+I'll post a v2 later.
+
+
+Michał
