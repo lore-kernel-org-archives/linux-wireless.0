@@ -1,34 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:52552 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbbATCoa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 21:44:30 -0500
-Received: by mail-ob0-f169.google.com with SMTP id va8so7925194obc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Jan 2015 18:44:30 -0800 (PST)
+Received: from mail.neratec.com ([46.140.151.2]:36276 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751406AbbAZIyy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 03:54:54 -0500
+Message-ID: <54C5FEB0.1000609@neratec.com> (sfid-20150126_095518_076674_ED4F1928)
+Date: Mon, 26 Jan 2015 09:45:36 +0100
+From: Matthias May <matthias.may@neratec.com>
 MIME-Version: 1.0
-In-Reply-To: <20150116133152.GC10300@localhost>
-References: <CAFk-A4kzcC9BhCtwqxjprRiXZeVPepBDXr3TvqvL6hn6J37UGw@mail.gmail.com>
-	<1421389121-2841-1-git-send-email-masashi.honma@gmail.com>
-	<20150116133152.GC10300@localhost>
-Date: Tue, 20 Jan 2015 11:44:30 +0900
-Message-ID: <CAFk-A4nF4jPiFR1c9fx-+sa=YWUZseEOKtut7rKWHihmLWp02w@mail.gmail.com> (sfid-20150120_034434_212765_6BEF43B8)
-Subject: Re: [PATCH v2] mac80211: Avoid STA expiration timer truncation to u32
-From: Masashi Honma <masashi.honma@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Christopher M. Penalver" <christopher.m.penalver@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Inquiry on sudo iw dev wlan1 set txpower fixed 14 -> command
+ failed: Invalid argument (-22)
+References: <CAF4BKcCggD23NHD_1156bqLsqMjDWp+8ASJaxJdLXUXcXaaddQ@mail.gmail.com>
+In-Reply-To: <CAF4BKcCggD23NHD_1156bqLsqMjDWp+8ASJaxJdLXUXcXaaddQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-01-16 22:31 GMT+09:00 Bob Copeland <me@bobcopeland.com>:
-> Nice catch!
-> There's a remaining problem on 32-bit platforms: there, unsigned long
-> is 32 bits so 0xffffffff * HZ will still truncate to 32 bits.
+On 26/01/15 03:00, Christopher M. Penalver wrote:
+> Attempting to follow
+> http://wireless.kernel.org/en/users/Documentation/iw#Setting_TX_power
+> I get:
+> sudo iw dev wlan1 set txpower fixed 14
+> command failed: Invalid argument (-22)
 >
-> For normal values of HZ though, result will still be 'a rather large
-> number,' so maybe it's not worth caring about that.
+>
 
-Thank you for your review.
+iw dev <devname> set txpower <auto|fixed|limit> [<tx power in mBm>]
 
-I modified my patch.
+This is set in mBm and not in dBm.
+Try sudo iw dev wlan1 set txpower fixed 1400.
