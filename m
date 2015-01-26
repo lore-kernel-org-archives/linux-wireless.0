@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:53676 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756371AbbAHLSf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 06:18:35 -0500
-Received: by mail-wi0-f173.google.com with SMTP id r20so2540419wiv.0
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:18:34 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/2] ath10k: add wmi-tlv debug event handling
-Date: Thu,  8 Jan 2015 12:18:15 +0100
-Message-Id: <1420715897-18706-1-git-send-email-michal.kazior@tieto.com> (sfid-20150108_121839_279458_D6DFB8B8)
+Received: from s3.sipsolutions.net ([5.9.151.49]:54363 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750793AbbAZI01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 03:26:27 -0500
+Message-ID: <1422260785.1890.8.camel@sipsolutions.net> (sfid-20150126_092630_449411_25DADDA7)
+Subject: Re: [RFCv3 4/4] mac80211: add VHT support for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 26 Jan 2015 09:26:25 +0100
+In-Reply-To: <CA+XVXfdXv5s_hs+jdpshGjo7RdS7fCW52F82Ojf4wQ90fVoCiw@mail.gmail.com> (sfid-20150125_112538_055815_33705601)
+References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1421757318-8343-4-git-send-email-janusz.dziedzic@tieto.com>
+	 <1422007493.2728.26.camel@sipsolutions.net>
+	 <CA+XVXfdXv5s_hs+jdpshGjo7RdS7fCW52F82Ojf4wQ90fVoCiw@mail.gmail.com>
+	 (sfid-20150125_112538_055815_33705601)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New wmi-tlv firmware will deliver debug messages
-via new events.
+On Sun, 2015-01-25 at 12:25 +0200, Arik Nemtsov wrote:
 
-Note: This may yield some (trivial) conflicts
-against my beacon/presp template patchset.
+> >> +u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+> >> +                             const struct cfg80211_chan_def *chandef)
+> >
+> > I still think you should keep this a static function in ibss.c since
+> > nobody else is going to use it soon - the only possible user is mesh
+> > anyway I think.
+> 
+> Actually TDLS needs to use it pretty soon as well :)
 
+Ok, fair enough.
 
-Michal Kazior (2):
-  ath10k: implement diag data container event
-  ath10k: implement diag event
-
- drivers/net/wireless/ath/ath10k/trace.h   |  68 ++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 102 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  19 ++++++
- 3 files changed, 189 insertions(+)
-
--- 
-1.8.5.3
+johannes
 
