@@ -1,94 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:54124 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752044AbbAUUUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2015 15:20:35 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 21 Jan 2015 22:19:34 +0200
-Message-Id: <1421871574-18789-1-git-send-email-luca@coelho.fi> (sfid-20150121_212043_501099_E177506C)
-In-Reply-To: <1421699291-16279-1-git-send-email-luca@coelho.fi>
-References: <1421699291-16279-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH] mac80211: only roll back station states for WDS when suspending
+Received: from toccata2.tricolour.ca ([204.225.221.17]:56857 "EHLO
+	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbbAZNfs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 08:35:48 -0500
+Date: Mon, 26 Jan 2015 08:35:42 -0500
+From: Richard Guy Briggs <rgb@tricolour.ca>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
+	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
+Cc: info@netdev01.org, speakers@netdev01.org, attendees@netdev01.org
+Subject: NetDev 0.1 conference post-CFP deadline weekly update
+Message-ID: <20150126133542.GX30763@toccata2.tricolour.ca> (sfid-20150126_143605_396192_6FDF2FEB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
-
-In normal cases (i.e. when we are fully associated), cfg80211 takes
-care of removing all the stations before calling suspend in mac80211.
-
-But in the corner case when we suspend during authentication or
-association, mac80211 needs to roll back the station states.  But we
-shouldn't roll back the station states in the suspend function,
-because this is taken care of in other parts of the code, except for
-WDS interfaces.  For AP types of interfaces, cfg80211 takes care of
-disconnecting all stations before calling the driver's suspend code.
-For station interfaces, this is done in the quiesce code.
-
-For WDS interfaces we still need to do it here, so move the code into
-a new switch case for WDS.
-
-Cc: stable@kernel.org [3.15+]
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
-
-In v2:
-
-   * Reworked the commit message [Johannes]
+Fellow netheads:
 
 
- net/mac80211/pm.c | 29 +++++++++++++++--------------
- 1 file changed, 15 insertions(+), 14 deletions(-)
+New Sponsors (All listed at: https://www.netdev01.org/sponsors)
+=============
+We are pleased to announce a sixth sponsor:
+CENGN http://www.cengn.ca/
 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 8c8c678..ca405b6 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -86,20 +86,6 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 		}
- 	}
- 
--	/* tear down aggregation sessions and remove STAs */
--	mutex_lock(&local->sta_mtx);
--	list_for_each_entry(sta, &local->sta_list, list) {
--		if (sta->uploaded) {
--			enum ieee80211_sta_state state;
--
--			state = sta->sta_state;
--			for (; state > IEEE80211_STA_NOTEXIST; state--)
--				WARN_ON(drv_sta_state(local, sta->sdata, sta,
--						      state, state - 1));
--		}
--	}
--	mutex_unlock(&local->sta_mtx);
--
- 	/* remove all interfaces that were created in the driver */
- 	list_for_each_entry(sdata, &local->interfaces, list) {
- 		if (!ieee80211_sdata_running(sdata))
-@@ -111,6 +97,21 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_mgd_quiesce(sdata);
- 			break;
-+		case NL80211_IFTYPE_WDS:
-+			/* tear down aggregation sessions and remove STAs */
-+			mutex_lock(&local->sta_mtx);
-+			sta = sdata->u.wds.sta;
-+			if (sta && sta->uploaded) {
-+				enum ieee80211_sta_state state;
-+
-+				state = sta->sta_state;
-+				for (; state > IEEE80211_STA_NOTEXIST; state--)
-+					WARN_ON(drv_sta_state(local, sta->sdata,
-+							      sta, state,
-+							      state - 1));
-+			}
-+			mutex_unlock(&local->sta_mtx);
-+			break;
- 		default:
- 			break;
- 		}
--- 
-2.1.4
 
+Hotel earlybird special rates have expired as of this past Friday.
+There are lots of big and small hotels in Ottawa, but they will fill up
+fast as Winterlude approaches, so book something soon.  There may be
+some possibilities to billet locally, but don't leave it last minute.
+
+The call for proposal deadline was this past Saturday, so expect a
+schedule to be published this week.
+
+
+Here is the post-CFP deadline update of the activity so far in NetDev
+0.1 you may have missed if you aren't following the RSS feed or twitter:
+
+
+Confirmed keynote speaker:
+==========================
+David S. Miller - The Current State of Linux kernel Networking.
+
+
+Accepted talks: (All listed: https://www.netdev01.org/sessions )
+==========================
+The case for eliminating inconsistencies between Linux kernel IPv4/IPv6 API
+https://www.netdev01.org/sessions/25
+Roopa Prabhu
+
+Networking in Containers and Container Clusters
+https://www.netdev01.org/sessions/27
+Victor Marmol
+
+ipvlan
+https://www.netdev01.org/sessions/28
+Mahesh Bandewar
+
+BIRD Internet Routing Daemon
+https://www.netdev01.org/sessions/29
+Ondrej Zajicek
+
+Cooperative networking virtualization for the industrial server applications
+https://www.netdev01.org/news/46
+Vasiliy Tolstoy, Sergey Kovalev
+
+
+Accepted Tutorials (All listed: https://www.netdev01.org/sessions )
+===================
+Hardware Accelerating Linux Network Functions
+https://www.netdev01.org/sessions/24
+Roopa Prabhu, Toshiaki Makita
+
+nftables tutorial
+https://www.netdev01.org/sessions/30
+Pablo Neira Ayuso, Patrick McHardy
+
+
+Accepted BoFs:
+===================
+Netfilter BoF
+https://www.netdev01.org/sessions/26
+Pete Bohmann, David Gervais, Josh Hunt
+
+
+All of the accepted proposals are new work.  A couple of proposals have been
+returned for rework prior to acceptance.  There are a few proposals
+currently making their way through the technical committee vetting
+process.  The committee has so far been very impressed with the quality
+of proposals submitted.
+
+
+More coming in future updates.
+If you've gotten this far reading - please go and register.
+Registration https://onlineregistrations.ca/netdev01/
+$100/day, or $350 for 4 days (Cdn dollars, reel cheep at the moment).
+(online reg closes Feb 12th). Again:
+Registering earlier rather than later helps us plan properly for numbers
+of attendees, ensuring venue sizes and supplies are appropriate without
+wasting resources.
+
+
+Sponsors:
+=========
+NetDev 0.1 would like to gratefully acknowledge all our sponsors: 
+https://netdev01.org/sponsors
+CENGN			http://www.cengn.ca/
+Google			https://www.google.ca
+Qualcomm		https://www.qualcomm.com/
+Verizon			http://www.verizon.com/
+Cumulus Networks	http://cumulusnetworks.com/
+Mojatatu Networks	http://mojatatu.com/
+
+
+Important Dates:
+==========================
+December 2, 2014	Call for Papers opens
+December 10, 2014	Registration opens
+January 23, 2015	Hotel discount rates deadline
+January 24, 2015	Call for sessions deadline
+February 12, 2015	On-line registration closes
+February 14-17, 2015	Conference days
+
+-------------------------------------------------------------------------------
+THE Technical Conference on Linux Networking, February 14-17, 2015, Ottawa, Canada
+https://netdev01.org/
+
+Contact:			info@netdev01.info
+Main site:			https://www.netdev01.org/
+Announcement:			https://www.netdev01.org/announce
+CFP:				https://www.netdev01.org/cfp
+Travel/hotel/weather/clothing:	https://www.netdev01.org/travel
+RSS feed:			https://netdev01.org/atom
+Follow us on Twitter: @netdev01	https://twitter.com/netdev01
