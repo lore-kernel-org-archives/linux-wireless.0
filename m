@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:59150 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752024AbbAUH6a (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:34980 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517AbbAZUmd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2015 02:58:30 -0500
-Received: by mail-pd0-f181.google.com with SMTP id g10so15260413pdj.12
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 23:58:29 -0800 (PST)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org, Taehee Yoo <ap420073@gmail.com>
-Subject: [PATCH] rtlwifi: add support to send beacon frame.
-Date: Wed, 21 Jan 2015 16:58:19 +0900
-Message-Id: <1421827099-17975-1-git-send-email-ap420073@gmail.com> (sfid-20150121_085834_385836_A9B724F4)
+	Mon, 26 Jan 2015 15:42:33 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH V2 1/6] rtlwifi: Change logging level for key change
+Date: Mon, 26 Jan 2015 14:42:09 -0600
+Message-Id: <1422304934-9239-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150126_214245_017824_3CB2A7DD)
+In-Reply-To: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In AP mode, beacon frame is necessary to keep connection.
-this patch adds a sending beacon frame routine in initialization routine.
+A recent change in key handling included logging of these changes for
+all debug levels. Such key changes should only be logged when a high
+level of debugging is enabled.
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/rtlwifi/core.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/net/wireless/rtlwifi/cam.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-index eb20316..a31a127 100644
---- a/drivers/net/wireless/rtlwifi/core.c
-+++ b/drivers/net/wireless/rtlwifi/core.c
-@@ -1010,6 +1010,16 @@ static int rtl_op_conf_tx(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static void send_beacon_frame(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif)
-+{
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
-+
-+	if (skb)
-+		rtlpriv->intf_ops->adapter_tx(hw, NULL, skb, NULL);
-+}
-+
- static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
- 				    struct ieee80211_vif *vif,
- 				    struct ieee80211_bss_conf *bss_conf,
-@@ -1040,6 +1050,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
- 
- 				if (rtlpriv->cfg->ops->linked_set_reg)
- 					rtlpriv->cfg->ops->linked_set_reg(hw);
-+				send_beacon_frame(hw, vif);
- 			}
+diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+index 3ef870d..6e64792 100644
+--- a/drivers/net/wireless/rtlwifi/cam.c
++++ b/drivers/net/wireless/rtlwifi/cam.c
+@@ -406,7 +406,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
  		}
- 		if ((changed & BSS_CHANGED_BEACON_ENABLED &&
+ 	}
+ 	if (found) {
+-		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
++		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+ 			 "key_index=%d,cam_bitmap: 0x%x entry_idx=%d\n",
+ 			  key_index, rtlpriv->sec.cam_bitmap, entry_idx);
+ 		return entry_idx;
 -- 
-1.9.1
+2.1.2
 
