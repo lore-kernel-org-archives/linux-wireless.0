@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:54452 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932507AbbA3Ncr (ORCPT
+Received: from mail-la0-f48.google.com ([209.85.215.48]:57927 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753248AbbAZVPc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 08:32:47 -0500
-Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YHBgk-004FiR-8l
-	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:46 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/17] ath9k: Check multi-channel context for WOW
-Date: Fri, 30 Jan 2015 19:05:25 +0530
-Message-Id: <1422624937-4810-6-git-send-email-sujith@msujith.org> (sfid-20150130_143251_314061_C7703A2B)
-In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
-References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+	Mon, 26 Jan 2015 16:15:32 -0500
+Date: Mon, 26 Jan 2015 23:04:48 +0200
+From: Vadim Kochan <vadim4j@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"backports@vger.kernel.org" <backports@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: cfg80211: Unknown symbol get_net_ns_by_fd (err 0)
+Message-ID: <20150126210448.GA987@angus-think.lan> (sfid-20150126_221536_598581_14D3C83E)
+References: <54C6A717.5050804@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54C6A717.5050804@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Mon, Jan 26, 2015 at 09:44:07PM +0100, Arend van Spriel wrote:
+> Hi Hauke,
+> 
+> The commit below causes the error mentioned in the Subject: field. I would
+> like to fix this, but could use a bit of help here how to do this type of
+> things.
+> 
+> commit 4b681c82d2f9bef121c912ffcaac89a004af3f2c
+> Author: Vadim Kochan <vadim4j@gmail.com>
+> Date:   Mon Jan 12 16:34:05 2015 +0200
+> 
+>     nl80211: Allow set network namespace by fd
+> 
+> Regards,
+> Arend
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-If CONFIG_ATH9K_CHANNEL_CONTEXT is enabled, check whether
-multiple contexts are active and if so, return 1 without
-enabling WOW since we don't support it in this case.
+Hi,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/wow.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Did you compile it on mac80211-next master branch ?
 
-diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
-index 1799a1d..1b005c6 100644
---- a/drivers/net/wireless/ath/ath9k/wow.c
-+++ b/drivers/net/wireless/ath/ath9k/wow.c
-@@ -215,6 +215,15 @@ int ath9k_suspend(struct ieee80211_hw *hw,
- 		goto fail_wow;
- 	}
- 
-+	if (ath9k_is_chanctx_enabled()) {
-+		if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags)) {
-+			ath_dbg(common, WOW,
-+				"Multi-channel WOW is not supported\n");
-+			ret = 1;
-+			goto fail_wow;
-+		}
-+	}
-+
- 	if (!test_bit(ATH_OP_PRIM_STA_VIF, &common->op_flags)) {
- 		ath_dbg(common, WOW, "None of the STA vifs are associated\n");
- 		ret = 1;
--- 
-2.2.2
-
+Regards,
