@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:51439 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101AbbADKNa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:54301 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753355AbbAZNgw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Jan 2015 05:13:30 -0500
-Received: by mail-wg0-f49.google.com with SMTP id n12so25905816wgh.22
-        for <linux-wireless@vger.kernel.org>; Sun, 04 Jan 2015 02:13:29 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] mac80211: don't defer scans in case of radar detection
-Date: Sun,  4 Jan 2015 12:13:18 +0200
-Message-Id: <1420366399-31535-2-git-send-email-eliad@wizery.com> (sfid-20150104_111344_824089_5D605F41)
-In-Reply-To: <1420366399-31535-1-git-send-email-eliad@wizery.com>
-References: <1420366399-31535-1-git-send-email-eliad@wizery.com>
+	Mon, 26 Jan 2015 08:36:52 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 08/10] wil6210: Tx status
+References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1422175971-8075-9-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Mon, 26 Jan 2015 15:36:29 +0200
+In-Reply-To: <1422175971-8075-9-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Sun, 25 Jan 2015 10:52:49 +0200")
+Message-ID: <87oaplfyua.fsf@kamboji.qca.qualcomm.com> (sfid-20150126_143655_524969_5C336B4E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Radar detection can last indefinite time. There is no
-point in deferring a scan request in this case - simply
-return -EBUSY.
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Implement Tx status reporting
+>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index ae84267..4525623 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -505,7 +505,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 
- 	lockdep_assert_held(&local->mtx);
- 
--	if (local->scan_req)
-+	if (local->scan_req || local->radar_detect_enabled)
- 		return -EBUSY;
- 
- 	if (!ieee80211_can_scan(local, sdata)) {
+I think the title is too short. I would like to change it to this, is
+that ok?
+
+wil6210: implement skb Tx status reporting
+
+Implment Tx status reporting using skb_complete_wifi_ack().
+
 -- 
-1.8.5.2.229.g4448466.dirty
-
+Kalle Valo
