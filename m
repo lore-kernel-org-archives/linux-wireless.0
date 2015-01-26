@@ -1,115 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:36619 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752079AbbANKOr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 05:14:47 -0500
+Received: from mga11.intel.com ([192.55.52.93]:24131 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750902AbbAZCqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 25 Jan 2015 21:46:42 -0500
+Message-ID: <54C5AA8C.4010005@linux.intel.com> (sfid-20150126_034648_450523_D7CE27A6)
+Date: Mon, 26 Jan 2015 10:46:36 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P1DwErJr6O2OGR7Sr12g3-OKYKEBTQ+wSZiSS=NUoCqEw@mail.gmail.com>
-References: <1421224274.2012.2.camel@gmail.com>
-	<1421224818.2012.4.camel@gmail.com>
-	<CANUX_P1DwErJr6O2OGR7Sr12g3-OKYKEBTQ+wSZiSS=NUoCqEw@mail.gmail.com>
-Date: Wed, 14 Jan 2015 14:14:46 +0400
-Message-ID: <CAFMg4WBnNhVWf8ouFqWVwpbp5TQ0XrxTC_8vvLDSVBemA0N-Kw@mail.gmail.com> (sfid-20150114_111453_491899_17208812)
-Subject: Re: [REGRESSION] iwlfiwi with Intel Centrino N1000 won't work with power_save
-From: Igor Gnatenko <i.gnatenko.brain@gmail.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Wysocki, Rafael" <rafael@kernel.org>,
-	Alex Nik <rage.iz.me@gmail.com>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	Kalle Valo <kvalo@codeaurora.org>, linville@tuxdriver.com,
+	pieterpg@broadcom.com, hdegoede@redhat.com, wens@csie.org,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 14, 2015 at 12:53 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Wed, Jan 14, 2015 at 10:40 AM, Igor Gnatenko
-> <i.gnatenko.brain@gmail.com> wrote:
->> On Wed, 2015-01-14 at 11:31 +0300, Igor Gnatenko wrote:
->>> Hi,
->>>
->>> I got report from people that on Intel Centrino N1000 wifi won't
->>> work after
->>> updating to 3.17.8. I see in that release Fedora maints enabled
->>> POWERCAP and
->>> INTEL RAPL. We got working wifi only after disabling powersave via
->>> `iw dev wlp2s0 set power_save off`.
->
-> What kernel version did you have before?
-> BTW - for this device, power save is supposed to be disabled by
-> default, but I need to check
-3.17.4
->>>
->>> How we can debug this?
->>>
->>> lspci above.
->>>
->>> 02:00.0 Network controller [0280]: Intel Corporation Centrino
->>> Wireless- N 1000 [Condor Peak] [8086:0084]
->>>         Subsystem: Intel Corporation Centrino Wireless-N 1000 BGN
->>> [8086:1315]
->>>         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>> ParErr- Stepping- SERR- FastB2B- DisINTx+
->>>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast
->>> >TAbort-
->>> <TAbort- <MAbort- >SERR- <PERR- INTx-
->>>         Latency: 0, Cache Line Size: 64 bytes
->>>         Interrupt: pin A routed to IRQ 28
->>>         Region 0: Memory at d1500000 (64-bit, non-prefetchable)
->>> [size=8K]
->>>         Capabilities: [c8] Power Management version 3
->>>                 Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA
->>> PME(D0+,D1-
->>> ,D2-,D3hot+,D3cold+)
->>>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0
->>> PME-
->>>         Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
->>>                 Address: 00000000fee0800c  Data: 4122
->>>         Capabilities: [e0] Express (v1) Endpoint, MSI 00
->>>                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency
->>> L0s
->>> <512ns, L1 unlimited
->>>                 ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
->>>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
->>> Unsupported-
->>>                 RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
->>>                 MaxPayload 128 bytes, MaxReadReq 128 bytes
->>>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq-
->>> AuxPwr+ TransPend-
->>>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s
->>> L1,
->>> Exit Latency L0s <128ns, L1 <32us
->>>                 ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
->>>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled-
->>> CommClk+
->>>                 ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
->>>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train-
->>> SlotClk+ DLActive- BWMgmt- ABWMgmt-
->>>         Capabilities: [100 v1] Advanced Error Reporting
->>>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
->>> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
->>> UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt-
->>> UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->>>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
->>> NonFatalErr-
->>>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
->>> NonFatalErr+
->>>                 AERCap: First Error Pointer: 00, GenCap- CGenEn-
->>> ChkCap- ChkEn-
->>>         Capabilities: [140 v1] Device Serial Number 74-e5-0b-ff-ff-
->>> cc-
->>> 82-24
->>>         Kernel driver in use: iwlwifi
->>>         Kernel modules: iwlwifi
->>> --
->>> -Igor Gnatenko
->> CC linux-pm@
->> --
->> -Igor Gnatenko
+>From ff39ed4af9f1c50358fe92ec4c8eaac9db183e00 Mon Sep 17 00:00:00 2001
+From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+Date: Mon, 26 Jan 2015 10:13:21 +0800
+Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
 
+WiFi chip has 2 SDIO functions, and PM core will trigger
+twice suspend/resume operations for one WiFi chip to do
+the same things. This patch avoid this case.
 
+Acked-by: Arend van Spriel<arend@broadcom.com>
+Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   17 +++++++++++++++--
+ 1 files changed, 15 insertions(+), 2 deletions(-)
 
--- 
--Igor Gnatenko
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 9880dae..618b545 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1139,11 +1139,17 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+ static int brcmf_ops_sdio_suspend(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio_dev *sdiodev;
+ 	mmc_pm_flag_t sdio_flags;
++	struct sdio_func *func = dev_to_sdio_func(dev);
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
++	if (func->num == 2)
++		return 0;
++
++	sdiodev = bus_if->bus_priv.sdio;
++
+ 	atomic_set(&sdiodev->suspend, true);
+ 
+ 	if (sdiodev->wowl_enabled) {
+@@ -1164,9 +1170,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ static int brcmf_ops_sdio_resume(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio_dev *sdiodev;
++	struct sdio_func *func = dev_to_sdio_func(dev);
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
++
++	if (func->num == 2)
++		return 0;
++
++	sdiodev = bus_if->bus_priv.sdio;
++
+ 	if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
+ 		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+ 	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+-- 1.7.1
+
