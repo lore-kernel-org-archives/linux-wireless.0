@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:56335 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752095AbbAaRgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2015 12:36:49 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "chunkeey@googlemail.com" <chunkeey@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [IWLMVM] Firmware restart issue with 3.19-rc6-wl with AC 3160,
- REV=0x164
-Date: Sat, 31 Jan 2015 17:36:45 +0000
-Message-ID: <1422725806.956.0.camel@egrumbacBox> (sfid-20150131_183653_346362_4EA59582)
-References: <CAAd0S9BwPQZhOZSzt2NU1SGjzv8i6685Y7Zb6qRQ1BzJ0P92SA@mail.gmail.com>
-	 <1422650111.1919.45.camel@sipsolutions.net>
-	 <CAAd0S9BRXoymMm=jSPptyYhywyAXVKyoTU_UJDyShDExX5ERRg@mail.gmail.com>
-In-Reply-To: <CAAd0S9BRXoymMm=jSPptyYhywyAXVKyoTU_UJDyShDExX5ERRg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:60352 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbbAZKBE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 05:01:04 -0500
+Received: by mail-ie0-f172.google.com with SMTP id rd18so7697746iec.3
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 02:01:04 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CALhHN=prfa0KoQYeN5+ZsUOH6y4=a73xZTY+O+xbu2OeGTO5Hg@mail.gmail.com>
+References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
+	<1421757318-8343-4-git-send-email-janusz.dziedzic@tieto.com>
+	<CA+XVXfd=dh4_n30y8JzAdo1jNB9eO=qk8mwpzB6vGbSnsk59zg@mail.gmail.com>
+	<1422260772.1890.7.camel@sipsolutions.net>
+	<CA+XVXfdCobu73WOdCDPLuW1XBHQ7otsJG235zwD=DJccaKN2=w@mail.gmail.com>
+	<1422262812.1890.12.camel@sipsolutions.net>
+	<CALhHN=r=Bzh=EyzurEGWWHo3ozYuCf-X6qdKv0tgas_MtvtA4Q@mail.gmail.com>
+	<1422264304.1890.17.camel@sipsolutions.net>
+	<CALhHN=prfa0KoQYeN5+ZsUOH6y4=a73xZTY+O+xbu2OeGTO5Hg@mail.gmail.com>
+Date: Mon, 26 Jan 2015 11:01:03 +0100
+Message-ID: <CALhHN=rEmCGLPQT7pasLBuExQCWVSqx0Ka1FuQua8UFYjp4tCA@mail.gmail.com> (sfid-20150126_110107_975631_E8D20825)
+Subject: Re: [RFCv3 4/4] mac80211: add VHT support for IBSS
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arik Nemtsov <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gU2F0LCAyMDE1LTAxLTMxIGF0IDE1OjE2ICswMTAwLCBDaHJpc3RpYW4gTGFtcGFydGVyIHdy
-b3RlOg0KPiBIZWxsbywNCj4gDQo+IE9uIEZyaSwgSmFuIDMwLCAyMDE1IGF0IDk6MzUgUE0sIEpv
-aGFubmVzIEJlcmcNCj4gPGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+IHdyb3RlOg0KPiA+IE9u
-IEZyaSwgMjAxNS0wMS0zMCBhdCAyMToyMyArMDEwMCwgQ2hyaXN0aWFuIExhbXBhcnRlciB3cm90
-ZToNCj4gPj4gWyAgICA2LjI3NDYyNV0gaXdsd2lmaSAwMDAwOjAxOjAwLjA6IDB4MDAwMDAwMzgg
-fCBCQURfQ09NTUFORA0KPiA+PiBbICAgIDYuMjc1MDM0XSBpd2x3aWZpIDAwMDA6MDE6MDAuMDog
-RlcgZXJyb3IgaW4gU1lOQyBDTUQgU0NEX1FVRVVFX0NGRw0KPiA+DQo+ID4gV1RGLiBIb3cgZGlk
-IHRoZSBmaXJtd2FyZSBldmVuIGFubm91bmNlIHN1cHBvcnQgZm9yIHRoaXMgY29tbWFuZD8/DQo+
-ID4NCj4gPiBQZXJoYXBzIEkgbWlzc2VkIGl0IGluIHRoZSBsb2csIGJ1dCB3aGljaCBmaXJtd2Fy
-ZSBhcmUgeW91IHVzaW5nPyBBbnkNCj4gPiBjaGFuY2UgeW91IGFsc28gdXBncmFkZWQgdGhhdD8g
-QmVjYXVzZSBJIGNhbid0IGltYWdpbmUgdGhpcyBjb2RlIGlzIG5ldw0KPiA+IGluIHRoZSB0cmVl
-Li4uDQo+IFVoaCwgZ29vZCBxdWVzdGlvbjogSSAidGhpbmsiIGdvdCB0aGlzIGZpcm13YXJlIGZy
-b20gb25lIG9mIEVtbWFudWVsJ3MgZmlybXdhcmUNCj4gYW5ub3VuY2VtZW50cy4gKGxzIHNheXMg
-IjEwIEphbnVhcnkgMjAxNSIpDQo+IA0KPiBpd2x3aWZpIDAwMDA6MDE6MDAuMDogbG9hZGVkIGZp
-cm13YXJlIHZlcnNpb24gMjMuMTEuMTAuMCBvcF9tb2RlIGl3bG12bQ0KPiBMb2FkZWQgZmlybXdh
-cmUgdmVyc2lvbjogMjMuMTEuMTAuMA0KPiANCj4gc2hhMXN1bSBpd2wtMzE2MC0xMC51Y29kZSBj
-ZjFhMzljMWIzMGYzODllMTJkMTdjMTM3OWEyYWM1Mzk0OTFiOGUyDQo+IG1kNXN1bSBpd2wtMzE2
-MC0xMC51Y29kZSA5Zjc0NDIyNGNlZTUxZGFjMWQxMTcwOGNhZGU5NjY0MQ0KPiANCj4gSWYgeW91
-IG5lZWQgZnVydGhlciBpbmZvcywgbGV0IG1lIGtub3chDQo+IA0KPiA+IEFueXdheSwgbWFrZSB0
-aGlzIGNoYW5nZToNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9p
-d2x3aWZpL212bS9tdm0uaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL212bS5o
-DQo+ID4gaW5kZXggOTc5YWMyMzUyMmYyLi41YjhjOTY5ZjQ1N2UgMTAwNjQ0DQo+ID4gLS0tIGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbXZtLmgNCj4gPiArKysgYi9kcml2ZXJz
-L25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9tdm0uaA0KPiA+IEBAIC04NzQsNyArODc0LDcgQEAg
-c3RhdGljIGlubGluZSBib29sIGl3bF9tdm1faXNfZDBpM19zdXBwb3J0ZWQoc3RydWN0IGl3bF9t
-dm0gKm12bSkNCj4gPg0KPiA+ICBzdGF0aWMgaW5saW5lIGJvb2wgaXdsX212bV9pc19zY2RfY2Zn
-X3N1cHBvcnRlZChzdHJ1Y3QgaXdsX212bSAqbXZtKQ0KPiA+ICB7DQo+ID4gLSAgICAgICByZXR1
-cm4gbXZtLT5mdy0+dWNvZGVfY2FwYS5jYXBhWzBdICYgSVdMX1VDT0RFX1RMVl9BUElfU0NEX0NG
-RzsNCj4gPiArICAgICAgIHJldHVybiBmYWxzZTsNCj4gPiAgfQ0KPiA+DQo+ID4gIGV4dGVybiBj
-b25zdCB1OCBpd2xfbXZtX2FjX3RvX3R4X2ZpZm9bXTsNCj4gPg0KPiA+IEkgZ3Vlc3MgRW1tYW51
-ZWwgd2lsbCBsb29rIGF0IGl0IG9uIFN1bmRheSA6KQ0KDQpPciBlYXJsaWVyLg0KDQo+IFRoYW5r
-cyEgVGhhdCBkaWQgdGhlIHRyaWNrIQ0KPiANCg0Kd2hhdCBhYm91dCB0aGlzOg0KaHR0cHM6Ly9n
-aXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9pd2x3aWZpLW5leHQu
-Z2l0L2NvbW1pdC8/aWQ9Yzc3NDkwNWQ5OGJhZGRkYmViNGFkMWJjNjUzYWVkYmQ3YWIwMjRlNA0K
-DQo+IFJlZ2FyZHMsDQo+ICAgIENocmlzdGlhbg0KDQo=
+On 26 January 2015 at 10:49, Janusz Dziedzic <janusz.dziedzic@tieto.com> wrote:
+> On 26 January 2015 at 10:25, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Mon, 2015-01-26 at 10:19 +0100, Janusz Dziedzic wrote:
+>>> On 26 January 2015 at 10:00, Johannes Berg <johannes@sipsolutions.net> wrote:
+>>> > On Mon, 2015-01-26 at 10:37 +0200, Arik Nemtsov wrote:
+>>> >
+>>> >> >> Shouldn't you also set vht_oper->basic_mcs_set here? Of course if you
+>>> >> >> have no use for it in IBSS I can add it later.
+>>> >> >
+>>> >> > Why would you want to require VHT rates?
+>>> >>
+>>> >> Are you sure it's required and no the other way around in this case?
+>>> >> As in specifying which rates are not supported.
+>>> >> Not sure it means the same thing as in the HT instance.
+>>> >
+>>> > Well, it does mean the same thing ("these rates are required") but it's
+>>> > encoded in a way that you have to set it to all-ones (rather than
+>>> > all-zeroes) to mean "no requirements", so in that sense you're right.
+>>> >
+>>>
+>>> I already set this in the patch:
+>>> +       vht_oper->basic_mcs_set = vht_cap->vht_mcs.rx_mcs_map;
+>>
+>> But do you really want to require the local capabilities as basic MCSes?
+>>
+> I am not sure. Will check spec and how we do that for an AP.
+>
+The Basic VHT-MCS and NSS Set field indicates the VHT-MCSs for each
+number of spatial streams in VHT
+PPDUs that are supported by all VHT STAs in the BSS (including IBSS and MBSS).
+
+hostapd set this as: 0xfffc - 1 stream, MCS0-7 as a min Basic VHT MCS
+rates - this seems to be secure.
+
+BR
+Janusz
