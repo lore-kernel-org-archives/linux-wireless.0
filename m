@@ -1,79 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60497 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:64239 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754464AbbAVUiu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 15:38:50 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/2] ath10k: use IEEE80211_HW_SW_CRYPTO_CONTROL
-Date: Thu, 22 Jan 2015 21:38:45 +0100
-Message-Id: <1421959125-10834-2-git-send-email-johannes@sipsolutions.net> (sfid-20150122_213903_766323_72CDB0A1)
-In-Reply-To: <1421959125-10834-1-git-send-email-johannes@sipsolutions.net>
-References: <1421959125-10834-1-git-send-email-johannes@sipsolutions.net>
+	id S1751221AbbAZLOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 06:14:06 -0500
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Berg Johannes <johannes.berg@intel.com>,
+	Clement Perrochaud <clement.perrochaud@nxp.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v2 1/2] NFC: PN544: GPIO access that may sleep
+Date: Mon, 26 Jan 2015 13:13:36 +0200
+Message-Id: <1422270817-10950-2-git-send-email-robert.dolca@intel.com> (sfid-20150126_121625_716399_35C22FEE)
+In-Reply-To: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
+References: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+gpio_set_value was replaced with gpio_set_value_cansleep in order
+to allow GPIO access that may sleep. This is particularelly useful
+when GPIO is accessed using busses like I2C, SPI, USB
 
-The ath10k driver only supports HW crypto (except for management
-frames or so - CMAC needs to be done in software). Make it use
-the new IEEE80211_HW_SW_CRYPTO_CONTROL flag to ensure mac80211
-doesn't erroneously attempt to use software crypto.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/nfc/pn544/i2c.c | 22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2619db1e3e74..bd950bb24087 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -74,6 +74,9 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 		if (memcmp(macaddr, arvif->vif->addr, ETH_ALEN))
- 			arg.key_flags = WMI_KEY_PAIRWISE;
- 		break;
-+	case WLAN_CIPHER_SUITE_AES_CMAC:
-+		/* this one needs to be done in software */
-+		return 1;
- 	default:
- 		ath10k_warn(ar, "cipher %d is not supported\n", key->cipher);
- 		return -EOPNOTSUPP;
-@@ -4958,6 +4961,13 @@ struct ath10k_vif *ath10k_get_arvif(struct ath10k *ar, u32 vdev_id)
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index fc02e8d..d9018cd 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -195,18 +195,19 @@ static void pn544_hci_i2c_platform_init(struct pn544_i2c_phy *phy)
+ 	nfc_info(&phy->i2c_dev->dev, "Detecting nfc_en polarity\n");
  
- int ath10k_mac_register(struct ath10k *ar)
+ 	/* Disable fw download */
+-	gpio_set_value(phy->gpio_fw, 0);
++	gpio_set_value_cansleep(phy->gpio_fw, 0);
+ 
+ 	for (polarity = 0; polarity < 2; polarity++) {
+ 		phy->en_polarity = polarity;
+ 		retry = 3;
+ 		while (retry--) {
+ 			/* power off */
+-			gpio_set_value(phy->gpio_en, !phy->en_polarity);
++			gpio_set_value_cansleep(phy->gpio_en,
++						!phy->en_polarity);
+ 			usleep_range(10000, 15000);
+ 
+ 			/* power on */
+-			gpio_set_value(phy->gpio_en, phy->en_polarity);
++			gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
+ 			usleep_range(10000, 15000);
+ 
+ 			/* send reset */
+@@ -225,13 +226,14 @@ static void pn544_hci_i2c_platform_init(struct pn544_i2c_phy *phy)
+ 		"Could not detect nfc_en polarity, fallback to active high\n");
+ 
+ out:
+-	gpio_set_value(phy->gpio_en, !phy->en_polarity);
++	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
+ }
+ 
+ static void pn544_hci_i2c_enable_mode(struct pn544_i2c_phy *phy, int run_mode)
  {
-+	static const u32 cipher_suites[] = {
-+		WLAN_CIPHER_SUITE_WEP40,
-+		WLAN_CIPHER_SUITE_WEP104,
-+		WLAN_CIPHER_SUITE_TKIP,
-+		WLAN_CIPHER_SUITE_CCMP,
-+		WLAN_CIPHER_SUITE_AES_CMAC,
-+	};
- 	struct ieee80211_supported_band *band;
- 	struct ieee80211_sta_vht_cap vht_cap;
- 	struct ieee80211_sta_ht_cap ht_cap;
-@@ -5030,7 +5040,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 			IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 			IEEE80211_HW_HAS_RATE_CONTROL |
- 			IEEE80211_HW_AP_LINK_PS |
--			IEEE80211_HW_SPECTRUM_MGMT;
-+			IEEE80211_HW_SPECTRUM_MGMT |
-+			IEEE80211_HW_SW_CRYPTO_CONTROL;
+-	gpio_set_value(phy->gpio_fw, run_mode == PN544_FW_MODE ? 1 : 0);
+-	gpio_set_value(phy->gpio_en, phy->en_polarity);
++	gpio_set_value_cansleep(phy->gpio_fw,
++				run_mode == PN544_FW_MODE ? 1 : 0);
++	gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
+ 	usleep_range(10000, 15000);
  
- 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
+ 	phy->run_mode = run_mode;
+@@ -254,14 +256,14 @@ static void pn544_hci_i2c_disable(void *phy_id)
+ {
+ 	struct pn544_i2c_phy *phy = phy_id;
  
-@@ -5094,6 +5105,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 		goto err_free;
- 	}
+-	gpio_set_value(phy->gpio_fw, 0);
+-	gpio_set_value(phy->gpio_en, !phy->en_polarity);
++	gpio_set_value_cansleep(phy->gpio_fw, 0);
++	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
+ 	usleep_range(10000, 15000);
  
-+	ar->hw->wiphy->cipher_suites = cipher_suites;
-+	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
-+
- 	ret = ieee80211_register_hw(ar->hw);
- 	if (ret) {
- 		ath10k_err(ar, "failed to register ieee80211: %d\n", ret);
+-	gpio_set_value(phy->gpio_en, phy->en_polarity);
++	gpio_set_value_cansleep(phy->gpio_en, phy->en_polarity);
+ 	usleep_range(10000, 15000);
+ 
+-	gpio_set_value(phy->gpio_en, !phy->en_polarity);
++	gpio_set_value_cansleep(phy->gpio_en, !phy->en_polarity);
+ 	usleep_range(10000, 15000);
+ 
+ 	phy->powered = 0;
 -- 
-2.1.4
+1.9.1
 
