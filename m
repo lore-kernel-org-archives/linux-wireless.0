@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34967 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751214AbbA2BGX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:59017 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751591AbbAZG6Z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:06:23 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: implement sta keepalive command
-References: <1421749440-10457-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 28 Jan 2015 10:20:43 +0200
-In-Reply-To: <1421749440-10457-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 20 Jan 2015 11:23:59 +0100")
-Message-ID: <87h9vb9uzo.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_020634_515747_378986FC)
+	Mon, 26 Jan 2015 01:58:25 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH V2 1/2] bcma: add empty PCIe hostmode functions if support is disabled
+References: <1422180674-9592-1-git-send-email-zajec5@gmail.com>
+	<1422190968-14422-1-git-send-email-zajec5@gmail.com>
+Date: Mon, 26 Jan 2015 08:58:19 +0200
+In-Reply-To: <1422190968-14422-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Sun, 25 Jan 2015
+ 14:02:48 +0100")
+Message-ID: <87iofugh9w.fsf@kamboji.qca.qualcomm.com> (sfid-20150126_075835_345025_E8FF6C7F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> This allows us to drop some #ifdef magic (mess).
 >
-> New wmi-tlv firmware for qca6174 has STA keepalive
-> service available. The service can provide
-> automatic idle connection polling via NullFunc
-> frames to AP when acting as a client.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> V2: Return false in bcma_core_pci_is_in_hostmode
+>     Don't (accidentally) modify bcma_host_soc_register_driver
 
-I had a trivial conflict, please check my resolution from the pending
-branch:
-
-Applying: ath10k: implement sta keepalive command
-Using index info to reconstruct a base tree...
-Falling back to patching base and 3-way merge...
-Auto-merging drivers/net/wireless/ath/ath10k/wmi.h
-Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.h
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.h
-Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.c
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
-Auto-merging drivers/net/wireless/ath/ath10k/wmi-ops.h
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-ops.h
-Failed to merge in the changes.
-Patch failed at 0001 ath10k: implement sta keepalive command
+It would be far more reliable if you resend the whole patchset instead
+of resending invidiviual patches within the set. Otherwise the chances
+are that I apply the wrong version.
 
 -- 
 Kalle Valo
