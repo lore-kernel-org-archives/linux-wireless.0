@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:46006
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752014AbbANNRk (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:60078 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752869AbbAZUmY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 08:17:40 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 3.19] ath9k: fix race condition in irq processing during hardware reset
-Date: Wed, 14 Jan 2015 14:17:36 +0100
-Message-Id: <1421241456-29085-1-git-send-email-nbd@openwrt.org> (sfid-20150114_141743_490969_FC08592B)
+	Mon, 26 Jan 2015 15:42:24 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/6 V2] Some changes for rtlwifi
+Date: Mon, 26 Jan 2015 14:42:08 -0600
+Message-Id: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150126_214232_579249_5226FA09)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To fix invalid hardware accesses, the commit
-"ath9k: do not access hardware on IRQs during reset" made the irq
-handler ignore interrupts emitted after queueing a hardware reset (which
-disables the IRQ). This left a small time window for the IRQ to get
-re-enabled by the tasklet, which caused IRQ storms.
-Instead of returning IRQ_NONE when ATH_OP_HW_RESET is set, disable the
-IRQ entirely for the duration of the reset.
+The first of these patches changes the logging when an encryption key
+is changed. The rest are for changes in the btcoexist driver. Most
+contain the code needed to handle the RTL8812AE chips.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+All patches are for -next.
+
+V2 - Add license for btcoexist/halbtc8812a1ant.{c,h}
+     Improve subject and commit message for patch 5 of series.
+     Add comments explaining routine that formats and sends kernel socket.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/ath9k/main.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 9a72640..62b0bf4 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -285,6 +285,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- 
- 	__ath_cancel_work(sc);
- 
-+	disable_irq(sc->irq);
- 	tasklet_disable(&sc->intr_tq);
- 	tasklet_disable(&sc->bcon_tasklet);
- 	spin_lock_bh(&sc->sc_pcu_lock);
-@@ -331,6 +332,7 @@ static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
- 		r = -EIO;
- 
- out:
-+	enable_irq(sc->irq);
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 	tasklet_enable(&sc->bcon_tasklet);
- 	tasklet_enable(&sc->intr_tq);
-@@ -512,9 +514,6 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	if (!ah || test_bit(ATH_OP_INVALID, &common->op_flags))
- 		return IRQ_NONE;
- 
--	if (!AR_SREV_9100(ah) && test_bit(ATH_OP_HW_RESET, &common->op_flags))
--		return IRQ_NONE;
--
- 	/* shared irq, not for us */
- 	if (!ath9k_hw_intrpend(ah))
- 		return IRQ_NONE;
-@@ -529,7 +528,7 @@ irqreturn_t ath_isr(int irq, void *dev)
- 	ath9k_debug_sync_cause(sc, sync_cause);
- 	status &= ah->imask;	/* discard unasked-for bits */
- 
--	if (AR_SREV_9100(ah) && test_bit(ATH_OP_HW_RESET, &common->op_flags))
-+	if (test_bit(ATH_OP_HW_RESET, &common->op_flags))
- 		return IRQ_HANDLED;
- 
- 	/*
+Larry Finger (2):
+  rtlwifi: Change logging level for key change
+  rtlwifi: btcoexist: Remove typedef statements
+
+Troy Tan (4):
+  rtlwifi: btcoexist: Add routines for RTL8812AE with single antenna
+  rtlwifi: btcoexist: Add routines for RTL8812AE with dual antennae
+  rtlwifi: btcoexist: Add routines for RTL8812AE kernel socket
+  rtlwifi: btcoexist: Enable new routines for RTL8812AE
+
+ drivers/net/wireless/rtlwifi/btcoexist/Makefile    |    9 +
+ .../net/wireless/rtlwifi/btcoexist/halbt_precomp.h |    3 +
+ .../wireless/rtlwifi/btcoexist/halbtc8192e2ant.c   |    6 +-
+ .../wireless/rtlwifi/btcoexist/halbtc8723b2ant.h   |    6 +-
+ .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.c   | 2073 ++++++++++
+ .../wireless/rtlwifi/btcoexist/halbtc8812a1ant.h   |  152 +
+ .../wireless/rtlwifi/btcoexist/halbtc8812a2ant.c   | 4207 ++++++++++++++++++++
+ .../wireless/rtlwifi/btcoexist/halbtc8812a2ant.h   |  177 +
+ .../wireless/rtlwifi/btcoexist/halbtc8812a_ext.c   |  921 +++++
+ .../wireless/rtlwifi/btcoexist/halbtc8812a_ext.h   |  359 ++
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  |  713 +++-
+ .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  |  108 +-
+ drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.c   |   37 +
+ drivers/net/wireless/rtlwifi/btcoexist/rtl_btc.h   |    6 +-
+ drivers/net/wireless/rtlwifi/cam.c                 |    2 +-
+ drivers/net/wireless/rtlwifi/core.c                |   17 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hal_btc.h   |   14 -
+ drivers/net/wireless/rtlwifi/wifi.h                |   12 +-
+ 18 files changed, 8590 insertions(+), 232 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a1ant.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a2ant.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a2ant.h
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a_ext.c
+ create mode 100644 drivers/net/wireless/rtlwifi/btcoexist/halbtc8812a_ext.h
+
 -- 
 2.1.2
 
