@@ -1,127 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:57224 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845AbbATSdZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 13:33:25 -0500
-Received: by mail-ob0-f179.google.com with SMTP id vb8so9426886obc.10
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 10:33:25 -0800 (PST)
-Message-ID: <54BE9F73.9070702@lwfinger.net> (sfid-20150120_193342_682475_B2AF89E2)
-Date: Tue, 20 Jan 2015 12:33:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Taehee Yoo <ap420073@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8192cu : add support to send beacon frame.
-References: <1421736594-28262-1-git-send-email-ap420073@gmail.com>
-In-Reply-To: <1421736594-28262-1-git-send-email-ap420073@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mga14.intel.com ([192.55.52.115]:64239 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751221AbbAZLOJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 06:14:09 -0500
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Berg Johannes <johannes.berg@intel.com>,
+	Clement Perrochaud <clement.perrochaud@nxp.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v2 2/2] NFC: Add ACPI support for NXP PN544
+Date: Mon, 26 Jan 2015 13:13:37 +0200
+Message-Id: <1422270817-10950-3-git-send-email-robert.dolca@intel.com> (sfid-20150126_121547_441241_7272B414)
+In-Reply-To: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
+References: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2015 12:49 AM, Taehee Yoo wrote:
-> In AP mode, beacon frame is necessary to keep connection.
-> this patch adds a sending beacon frame routine in initialize routine.
->
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/core.c          |  3 +++
->   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c  |  1 +
->   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 11 +++++++++++
->   drivers/net/wireless/rtlwifi/rtl8192cu/trx.h |  1 +
->   drivers/net/wireless/rtlwifi/wifi.h          |  2 ++
->   5 files changed, 18 insertions(+)
+Currently there is no support for ACPI.
+This patch uses the following configuration:
+	- Device id: NXP5440
+	- Pin mapping:
+		- 0 IRQ pin
+		- 1 enable pin
+		- 2 firmware pin
 
-This patch has a couple of issues reported by checkpatch.pl. These are noted 
-inline. It will also have a conflict with "[PATCH V2 for 3.19 2/7] rtlwifi: 
-rtl8192ee: Fix handling of new style descriptors" that I submitted today. As I 
-note later, this conflict can be avoided and the patch should be made more general.
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+---
+ drivers/nfc/pn544/i2c.c | 115 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 112 insertions(+), 3 deletions(-)
 
->
-> diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
-> index eb20316..2ebd1fd 100644
-> --- a/drivers/net/wireless/rtlwifi/core.c
-> +++ b/drivers/net/wireless/rtlwifi/core.c
-> @@ -1040,6 +1040,9 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->
->   				if (rtlpriv->cfg->ops->linked_set_reg)
->   					rtlpriv->cfg->ops->linked_set_reg(hw);
-> +				if (rtlpriv->cfg->ops->set_bcn_frame)
-> +					rtlpriv->cfg->ops->set_bcn_frame(hw,
-> +							vif);
->   			}
->   		}
->   		if ((changed & BSS_CHANGED_BEACON_ENABLED &&
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> index 90a714c..d88ee35 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-> @@ -155,6 +155,7 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
->   	.dm_dynamic_txpower = rtl92cu_dm_dynamic_txpower,
->   	.fill_h2c_cmd = rtl92c_fill_h2c_cmd,
->   	.get_btc_status = rtl92cu_get_btc_status,
-> +	.set_bcn_frame = rtl92cu_set_bcn_frame,
->   };
->
->   static struct rtl_mod_params rtl92cu_mod_params = {
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> index cbead00..e27da8f 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-> @@ -684,3 +684,14 @@ bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
->   {
->   	return true;
->   }
-> +
-> +void rtl92cu_set_bcn_frame(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
-> +{
-> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
-> +	struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
-> +
-> +	if (skb == NULL)
-> +		return;
-
-Checkpatch wants this to be "if (!skb)".
-
-> +
-> +	rtlpriv->intf_ops->adapter_tx(hw, NULL, skb, NULL);
-> +}
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
-> index fd8051d..0d57431 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
-> @@ -431,5 +431,6 @@ void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
->   			     u8 *pdesc, bool b_firstseg,
->   			     bool b_lastseg, struct sk_buff *skb);
->   bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
-> +void rtl92cu_set_bcn_frame(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
->
->   #endif
-> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
-> index b53d9dd..daf8142 100644
-> --- a/drivers/net/wireless/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/rtlwifi/wifi.h
-> @@ -2182,6 +2182,8 @@ struct rtl_hal_ops {
->   	void (*add_wowlan_pattern)(struct ieee80211_hw *hw,
->   				   struct rtl_wow_pattern *rtl_pattern,
->   				   u8 index);
-> +	void (*set_bcn_frame) (struct ieee80211_hw *hw,
-
-Checkpatch warns about the space before the function pointer arguments.
-
-> +			       struct ieee80211_vif *vif);
->   };
->
->   struct rtl_intf_ops {
->
-
-As all of the drivers that use rtlwifi will be helped by this routine, I suggest 
-that you rename your new routine rtl92cu_set_bcn_frame() to send_bcn_frame(), 
-make it static, and add it to core.c just before rtl_op_bss_info_changed(). It 
-can then be called directly, none of the device-specific drivers need be 
-modified, yet all will use it.
-
-Thanks,
-
-Larry
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index d9018cd..ae817b0 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -24,6 +24,7 @@
+ #include <linux/gpio.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_irq.h>
++#include <linux/acpi.h>
+ #include <linux/miscdevice.h>
+ #include <linux/interrupt.h>
+ #include <linux/delay.h>
+@@ -41,6 +42,11 @@
+ #define PN544_I2C_FRAME_HEADROOM 1
+ #define PN544_I2C_FRAME_TAILROOM 2
+ 
++/* GPIO names */
++#define PN544_GPIO_NAME_IRQ "pn544_irq"
++#define PN544_GPIO_NAME_FW  "pn544_fw"
++#define PN544_GPIO_NAME_EN  "pn544_en"
++
+ /* framing in HCI mode */
+ #define PN544_HCI_I2C_LLC_LEN		1
+ #define PN544_HCI_I2C_LLC_CRC		2
+@@ -58,6 +64,13 @@ static struct i2c_device_id pn544_hci_i2c_id_table[] = {
+ 
+ MODULE_DEVICE_TABLE(i2c, pn544_hci_i2c_id_table);
+ 
++static const struct acpi_device_id pn544_hci_i2c_acpi_match[] = {
++	{"NXP5440", 0},
++	{}
++};
++
++MODULE_DEVICE_TABLE(acpi, pn544_hci_i2c_acpi_match);
++
+ #define PN544_HCI_I2C_DRIVER_NAME "pn544_hci_i2c"
+ 
+ /*
+@@ -861,6 +874,90 @@ exit_state_wait_secure_write_answer:
+ 	}
+ }
+ 
++static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
++{
++	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
++	const struct acpi_device_id *id;
++	struct gpio_desc *gpiod_en, *gpiod_irq, *gpiod_fw;
++	struct device *dev;
++	int ret;
++
++	if (!client)
++		return -EINVAL;
++
++	dev = &client->dev;
++
++	/* Match the struct device against a given list of ACPI IDs */
++	id = acpi_match_device(dev->driver->acpi_match_table, dev);
++
++	if (!id)
++		return -ENODEV;
++
++	/* Get EN GPIO from ACPI */
++	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1);
++	if (IS_ERR(gpiod_en)) {
++		nfc_err(dev,
++			"Unable to get EN GPIO\n");
++		return -ENODEV;
++	}
++
++	phy->gpio_en  = desc_to_gpio(gpiod_en);
++
++	/* Configuration EN GPIO */
++	ret = gpiod_direction_output(gpiod_en, 0);
++	if (ret) {
++		nfc_err(dev, "Fail EN pin direction\n");
++		return ret;
++	}
++
++	/* Get FW GPIO from ACPI */
++	gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2);
++	if (IS_ERR(gpiod_fw)) {
++		nfc_err(dev,
++			"Unable to get FW GPIO\n");
++		return -ENODEV;
++	}
++
++	phy->gpio_fw  = desc_to_gpio(gpiod_fw);
++
++	/* Configuration FW GPIO */
++	ret = gpiod_direction_output(gpiod_fw, 0);
++	if (ret) {
++		nfc_err(dev, "Fail FW pin direction\n");
++		return ret;
++	}
++
++	/* Get IRQ GPIO */
++	gpiod_irq = devm_gpiod_get_index(dev, PN544_GPIO_NAME_IRQ, 0);
++	if (IS_ERR(gpiod_irq)) {
++		nfc_err(dev,
++			"Unable to get IRQ GPIO\n");
++		return -ENODEV;
++	}
++
++	phy->gpio_irq = desc_to_gpio(gpiod_irq);
++
++	/* Configure IRQ GPIO */
++	ret = gpiod_direction_input(gpiod_irq);
++	if (ret) {
++		nfc_err(dev, "Fail IRQ pin direction\n");
++		return ret;
++	}
++
++	/* Map the pin to an IRQ */
++	ret = gpiod_to_irq(gpiod_irq);
++	if (ret < 0) {
++		nfc_err(dev, "Fail pin IRQ mapping\n");
++		return ret;
++	}
++
++	nfc_info(dev, "GPIO resource, no:%d irq:%d\n",
++			desc_to_gpio(gpiod_irq), ret);
++	client->irq = ret;
++
++	return 0;
++}
++
+ #ifdef CONFIG_OF
+ 
+ static int pn544_hci_i2c_of_request_resources(struct i2c_client *client)
+@@ -886,7 +983,7 @@ static int pn544_hci_i2c_of_request_resources(struct i2c_client *client)
+ 	phy->gpio_en = ret;
+ 
+ 	/* Configuration of EN GPIO */
+-	ret = gpio_request(phy->gpio_en, "pn544_en");
++	ret = gpio_request(phy->gpio_en, PN544_GPIO_NAME_EN);
+ 	if (ret) {
+ 		nfc_err(&client->dev, "Fail EN pin\n");
+ 		goto err_dt;
+@@ -908,7 +1005,7 @@ static int pn544_hci_i2c_of_request_resources(struct i2c_client *client)
+ 	phy->gpio_fw = ret;
+ 
+ 	/* Configuration of FW GPIO */
+-	ret = gpio_request(phy->gpio_fw, "pn544_fw");
++	ret = gpio_request(phy->gpio_fw, PN544_GPIO_NAME_FW);
+ 	if (ret) {
+ 		nfc_err(&client->dev, "Fail FW pin\n");
+ 		goto err_gpio_en;
+@@ -1003,6 +1100,14 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 		phy->gpio_en = pdata->get_gpio(NFC_GPIO_ENABLE);
+ 		phy->gpio_fw = pdata->get_gpio(NFC_GPIO_FW_RESET);
+ 		phy->gpio_irq = pdata->get_gpio(NFC_GPIO_IRQ);
++	/* Using ACPI */
++	} else if (ACPI_HANDLE(&client->dev)) {
++		r = pn544_hci_i2c_acpi_request_resources(client);
++		if (r) {
++			nfc_err(&client->dev,
++				"Cannot get ACPI data\n");
++			return r;
++		}
+ 	} else {
+ 		nfc_err(&client->dev, "No platform data\n");
+ 		return -EINVAL;
+@@ -1022,9 +1127,12 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+ 			    PN544_I2C_FRAME_HEADROOM, PN544_I2C_FRAME_TAILROOM,
+ 			    PN544_HCI_I2C_LLC_MAX_PAYLOAD,
+ 			    pn544_hci_i2c_fw_download, &phy->hdev);
+-	if (r < 0)
++	if (r < 0) {
++		nfc_err(&client->dev, "HCI Probing error\n");
+ 		goto err_hci;
++	}
+ 
++	nfc_info(&client->dev, "NFC I2C driver loaded\n");
+ 	return 0;
+ 
+ err_hci:
+@@ -1082,6 +1190,7 @@ static struct i2c_driver pn544_hci_i2c_driver = {
+ 		   .name = PN544_HCI_I2C_DRIVER_NAME,
+ 		   .owner  = THIS_MODULE,
+ 		   .of_match_table = of_match_ptr(of_pn544_i2c_match),
++		   .acpi_match_table = ACPI_PTR(pn544_hci_i2c_acpi_match),
+ 		  },
+ 	.probe = pn544_hci_i2c_probe,
+ 	.id_table = pn544_hci_i2c_id_table,
+-- 
+1.9.1
 
