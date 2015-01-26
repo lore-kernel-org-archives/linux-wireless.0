@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:56448 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115AbbATErb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:54546 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbbAZNjD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 23:47:31 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Mon, 26 Jan 2015 08:39:03 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Shulman <QCA_shulmanv@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 07/10] wil6210: remove unnecessary interrupt moderation module parameters
+References: <1422175971-8075-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1422175971-8075-8-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Mon, 26 Jan 2015 15:38:57 +0200
+In-Reply-To: <1422175971-8075-8-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Sun, 25 Jan 2015 10:52:48 +0200")
+Message-ID: <87fvaxfyq6.fsf@kamboji.qca.qualcomm.com> (sfid-20150126_143907_991008_481E3485)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <21693.56960.568269.420520@gargle.gargle.HOWL> (sfid-20150120_054734_680798_29D508E3)
-Date: Tue, 20 Jan 2015 10:20:08 +0530
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Eyal Shapira <eyal@wizery.com>
-Subject: Re: [RFC 2/2] mac80211: support RX rate statistics
-In-Reply-To: <1421661324.1965.16.camel@sipsolutions.net>
-References: <1421401708-8123-1-git-send-email-johannes@sipsolutions.net>
-	<1421401708-8123-2-git-send-email-johannes@sipsolutions.net>
-	<21689.49345.803049.938915@gargle.gargle.HOWL>
-	<1421661324.1965.16.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote:
-> Not right now - and there's practically no space left in the rate u16 to
-> store it.
-> 
-> Eyal also commented that perhaps not just antennas but also
-> STBC/LDPC/beamforming should be tracked.
-> 
-> We can achieve this by increasing the size of the rate field to u32, but
-> then we also have far more combinations so probably need to increase the
-> size of the buffer from 36 entries to more since otherwise we just end
-> up sending the data out to userspace too frequently? Antennas for
-> example could change frequently for single stream rates.
-> 
-> This capability right now is mostly intended for Android Lollipop's
-> statistics requirements, where the rate only matters.
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-Ok.
+> From: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
+>
+> Interrupt moderation parameters will never be passed as module
+> parameters. For product, they will be hard-coded after lab testing,
+> and for debugging, they can be altered via debugfs.
+>
+> Signed-off-by: Vladimir Shulman <qca_shulmanv@qca.qualcomm.com>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-> If others want to use it for more, I'm certainly not averse to adding
-> it, but it'd also mean adding more userspace API (where it might be a
-> bit strange to add "antennas" to the "rate" since that doesn't impact
-> the actual rate?)
+Perfect, thanks for doing this.
 
-Having a well-defined API to export statistics seems useful, but
-I guess that can be added later.
-
-Sujith
+-- 
+Kalle Valo
