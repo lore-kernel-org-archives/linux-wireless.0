@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58512 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753217AbbAFKK1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 05:10:27 -0500
-Message-ID: <1420539019.1966.7.camel@sipsolutions.net> (sfid-20150106_111044_720458_1D4DB713)
-Subject: Re: [PATCH] rfkill: parameters documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Clausen <andrew.p.clausen@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Date: Tue, 06 Jan 2015 11:10:19 +0100
-In-Reply-To: <CAAXZBWJD02F81gJkhvLFZcpCzJahr-qsUUgbqheUfrc_BP0CjA@mail.gmail.com> (sfid-20150105_110329_183833_77EE0F7B)
-References: <CAAXZBWLOKL8Uu9No_tQga34nFurmeK2HP9qixO1jCXw1Y0t5HA@mail.gmail.com>
-	 <1420449884.1898.3.camel@sipsolutions.net>
-	 <CAAXZBWJD02F81gJkhvLFZcpCzJahr-qsUUgbqheUfrc_BP0CjA@mail.gmail.com>
-	 (sfid-20150105_110329_183833_77EE0F7B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:33385 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900AbbAZIhV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 03:37:21 -0500
+Received: by mail-lb0-f176.google.com with SMTP id z12so6346854lbi.7
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 00:37:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1422260772.1890.7.camel@sipsolutions.net>
+References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
+ <1421757318-8343-4-git-send-email-janusz.dziedzic@tieto.com>
+ <CA+XVXfd=dh4_n30y8JzAdo1jNB9eO=qk8mwpzB6vGbSnsk59zg@mail.gmail.com> <1422260772.1890.7.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Mon, 26 Jan 2015 10:37:04 +0200
+Message-ID: <CA+XVXfdCobu73WOdCDPLuW1XBHQ7otsJG235zwD=DJccaKN2=w@mail.gmail.com> (sfid-20150126_093725_257863_6962C238)
+Subject: Re: [RFCv3 4/4] mac80211: add VHT support for IBSS
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 10:03 +0000, Andrew Clausen wrote:
-> Hi Johannes,
-> 
-> On 5 January 2015 at 09:24, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > Looks fine to me (though the commit message shouldn't contain the email
-> > "boilerplate" of "hi all" etc - should just be
-> 
-> Ah, sorry for the extra noise.
-> 
-> > However I'm not sure I should apply this through my tree?
-> 
-> I think you're right -- it makes sense to put it in your tree, and
-> merge it down the track.  (I don't think I've submitted a kernel patch
-> since pre-git days, so sorry for the confusion.)
+On Mon, Jan 26, 2015 at 10:26 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Sun, 2015-01-25 at 12:30 +0200, Arik Nemtsov wrote:
+>
+>> > +       switch (chandef->width) {
+>> > +       case NL80211_CHAN_WIDTH_80:
+>> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80MHZ;
+>> > +               break;
+>> > +       case NL80211_CHAN_WIDTH_80P80:
+>> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80P80MHZ;
+>> > +               vht_oper->center_freq_seg2_idx =
+>> > +                       ieee80211_frequency_to_channel(chandef->center_freq2);
+>> > +               break;
+>> > +       case NL80211_CHAN_WIDTH_160:
+>> > +               vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_160MHZ;
+>> > +               break;
+>> > +       default:
+>> > +               return pos;
+>> > +       }
+>>
+>> Shouldn't you also set vht_oper->basic_mcs_set here? Of course if you
+>> have no use for it in IBSS I can add it later.
+>
+> Why would you want to require VHT rates?
 
-I'll take it.
+Are you sure it's required and no the other way around in this case?
+As in specifying which rates are not supported.
+Not sure it means the same thing as in the HT instance.
 
-However, please resend with an adjust commit message, and please diff it
-against my mac80211-next tree (it doesn't apply as is)
-
-johannes
-
+Arik
