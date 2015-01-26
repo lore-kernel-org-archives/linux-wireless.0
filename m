@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54762 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753982AbbAZJZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 04:25:08 -0500
-Message-ID: <1422264304.1890.17.camel@sipsolutions.net> (sfid-20150126_102512_820895_F1698583)
-Subject: Re: [RFCv3 4/4] mac80211: add VHT support for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: Arik Nemtsov <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Jan 2015 10:25:04 +0100
-In-Reply-To: <CALhHN=r=Bzh=EyzurEGWWHo3ozYuCf-X6qdKv0tgas_MtvtA4Q@mail.gmail.com> (sfid-20150126_101905_892008_6CC288A3)
-References: <1421757318-8343-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1421757318-8343-4-git-send-email-janusz.dziedzic@tieto.com>
-	 <CA+XVXfd=dh4_n30y8JzAdo1jNB9eO=qk8mwpzB6vGbSnsk59zg@mail.gmail.com>
-	 <1422260772.1890.7.camel@sipsolutions.net>
-	 <CA+XVXfdCobu73WOdCDPLuW1XBHQ7otsJG235zwD=DJccaKN2=w@mail.gmail.com>
-	 <1422262812.1890.12.camel@sipsolutions.net>
-	 <CALhHN=r=Bzh=EyzurEGWWHo3ozYuCf-X6qdKv0tgas_MtvtA4Q@mail.gmail.com>
-	 (sfid-20150126_101905_892008_6CC288A3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:50979 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757013AbbAZVct (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 16:32:49 -0500
+Received: by mail-ob0-f171.google.com with SMTP id va2so10185245obc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 13:32:48 -0800 (PST)
+Message-ID: <54C6B27F.2030209@lwfinger.net> (sfid-20150126_223301_644553_2D8FE6EB)
+Date: Mon, 26 Jan 2015 15:32:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Burton Williams <burton.b.williams@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ee issues
+References: <CANPw_EgGaG=NT7FK-m93A-Fp80cyU6nTmfLV0wxiU10JT2HfKg@mail.gmail.com>
+In-Reply-To: <CANPw_EgGaG=NT7FK-m93A-Fp80cyU6nTmfLV0wxiU10JT2HfKg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-26 at 10:19 +0100, Janusz Dziedzic wrote:
-> On 26 January 2015 at 10:00, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > On Mon, 2015-01-26 at 10:37 +0200, Arik Nemtsov wrote:
-> >
-> >> >> Shouldn't you also set vht_oper->basic_mcs_set here? Of course if you
-> >> >> have no use for it in IBSS I can add it later.
-> >> >
-> >> > Why would you want to require VHT rates?
-> >>
-> >> Are you sure it's required and no the other way around in this case?
-> >> As in specifying which rates are not supported.
-> >> Not sure it means the same thing as in the HT instance.
-> >
-> > Well, it does mean the same thing ("these rates are required") but it's
-> > encoded in a way that you have to set it to all-ones (rather than
-> > all-zeroes) to mean "no requirements", so in that sense you're right.
-> >
-> 
-> I already set this in the patch:
-> +       vht_oper->basic_mcs_set = vht_cap->vht_mcs.rx_mcs_map;
+On 01/26/2015 02:47 PM, Burton Williams wrote:
+> Hi All -
+>
+> I am having problems with getting my wireless card to work. Here is what i did.
+>
+> I downloaded backports 3.18.1 and compiled and installed the wifi package
+> against my 3.17.8 kernel. (I'm running FC21). Then i modprobe -r r8192ee and
+> modprobe rtl8192ee. On first attempt i was able to connect to a wifi network and
+> see a link speed of more than 6mbs. (144 to be exact) So way better than i was
+> seeing before. I however did not see the network that is broadcasting on 5ghz.
+> Attached are copies of my dmesg from modprobe fwd.
+>
+> Please let me know if I can do something else, or if i did something
+> incorrectly. Any help is appreciated.
+>
+> Hardware is t440s running FC21 kernel   3.17.8-300.fc21.x86_64
 
-But do you really want to require the local capabilities as basic MCSes?
+To the best of my knowledge, the RTL8192EE chip has no 5 GHz radio, thus there 
+is no way you could see a 5 GHz AP. I will recheck that with Realtek and let you 
+know if my information is wrong.
 
-johannes
+Larry
 
