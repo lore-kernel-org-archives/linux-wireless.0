@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:36792 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbbAFSEs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 13:04:48 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: ipw2x00: ipw2200.c:  Remove unused function
-References: <1419078599-31118-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Date: Tue, 06 Jan 2015 20:04:41 +0200
-In-Reply-To: <1419078599-31118-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	(Rickard Strandqvist's message of "Sat, 20 Dec 2014 13:29:59 +0100")
-Message-ID: <8761cjzsxy.fsf@kamboji.qca.qualcomm.com> (sfid-20150106_190631_112894_CA617D60)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga03.intel.com ([134.134.136.65]:4594 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751221AbbAZLNz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Jan 2015 06:13:55 -0500
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Berg Johannes <johannes.berg@intel.com>,
+	Clement Perrochaud <clement.perrochaud@nxp.com>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH v2 0/2] Add ACPI support for NXP PN544
+Date: Mon, 26 Jan 2015 13:13:35 +0200
+Message-Id: <1422270817-10950-1-git-send-email-robert.dolca@intel.com> (sfid-20150126_121400_230926_AF3CDCAA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+This patch set introduces ACPI support for PN544.
 
-> Remove the function ipw_alive() that is not used anywhere.
->
-> This was partially found by using a static code analysis program called cppcheck.
->
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+gpio_set_value was replaced with gpio_set_value_cansleep in order
+to allow GPIO access that may sleep. This is particularelly useful
+when GPIO is accessed using busses like I2C, SPI, USB
 
-Please improve the patch title and make it more unique like:
+Changes since v1:
+	- Added cover letter
+	- Removed debug define and Kconfig include
+	- Minor fixes to patch subjects
 
-ipw2200: remove unused ipw_alive()
+Links to v1:
+	- http://lkml.iu.edu/hypermail/linux/kernel/1501.1/00943.html
+	- http://lkml.iu.edu/hypermail/linux/kernel/1501.1/00944.html
+
+Robert Dolca (2):
+  NFC: PN544: GPIO access that may sleep
+  NFC: Add ACPI support for NXP PN544
+
+ drivers/nfc/pn544/i2c.c | 137 +++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 124 insertions(+), 13 deletions(-)
 
 -- 
-Kalle Valo
+1.9.1
+
