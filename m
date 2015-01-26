@@ -1,71 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:52193 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537AbbAYNDE (ORCPT
+Received: from sender1.zohomail.com ([74.201.84.155]:29103 "EHLO
+	sender1.zohomail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752489AbbAZDJu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Jan 2015 08:03:04 -0500
-Received: by mail-wi0-f176.google.com with SMTP id em10so5162030wid.3
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Jan 2015 05:03:02 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 1/2] bcma: add empty PCIe hostmode functions if support is disabled
-Date: Sun, 25 Jan 2015 14:02:48 +0100
-Message-Id: <1422190968-14422-1-git-send-email-zajec5@gmail.com> (sfid-20150125_140308_567489_7CAB2972)
-In-Reply-To: <1422180674-9592-1-git-send-email-zajec5@gmail.com>
-References: <1422180674-9592-1-git-send-email-zajec5@gmail.com>
+	Sun, 25 Jan 2015 22:09:50 -0500
+References: <1422099243-20321-1-git-send-email-hong@topbug.net> <CA+icZUWtwQoBxWu+LSgva4sKgx1dLgAvxNXWxu2QN0s1zm-tWQ@mail.gmail.com>
+From: Hong Xu <hong@topbug.net>
+To: sedat.dilek@gmail.com
+Cc: wireless <linux-wireless@vger.kernel.org>, kvalo@codeaurora.org
+Subject: Re: [PATCH v4] ath9k and ath9k_htc: rename variable "led_blink"
+In-reply-to: <CA+icZUWtwQoBxWu+LSgva4sKgx1dLgAvxNXWxu2QN0s1zm-tWQ@mail.gmail.com>
+Date: Sun, 25 Jan 2015 19:09:41 -0800
+Message-ID: <87k30ack5m.fsf@home.hong.me> (sfid-20150126_040953_207356_3F35EE4A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows us to drop some #ifdef magic (mess).
+--=-=-=
+Content-Type: text/plain
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Return false in bcma_core_pci_is_in_hostmode
-    Don't (accidentally) modify bcma_host_soc_register_driver
----
- drivers/bcma/bcma_private.h | 8 ++++++++
- drivers/bcma/driver_pci.c   | 2 --
- 2 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 3f314c9..ac6c5fc 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -107,6 +107,14 @@ extern int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc);
- #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
- bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc);
- void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
-+#else
-+static inline bool bcma_core_pci_is_in_hostmode(struct bcma_drv_pci *pc)
-+{
-+	return false;
-+}
-+static inline void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc)
-+{
-+}
- #endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
- 
- #ifdef CONFIG_BCMA_DRIVER_GPIO
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index 50329d1..b85a505 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -226,11 +226,9 @@ void bcma_core_pci_init(struct bcma_drv_pci *pc)
- 	if (pc->setup_done)
- 		return;
- 
--#ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
- 	pc->hostmode = bcma_core_pci_is_in_hostmode(pc);
- 	if (pc->hostmode)
- 		bcma_core_pci_hostmode_init(pc);
--#endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
- 
- 	if (!pc->hostmode)
- 		bcma_core_pci_clientmode_init(pc);
--- 
-1.8.4.5
+Sedat Dilek <sedat.dilek@gmail.com> writes:
+
+> On Sat, Jan 24, 2015 at 12:34 PM, Hong Xu <hong@topbug.net> wrote:
+>> ath9k and ath9k_htc use the variable name "led_blink" to indicate
+>> whether the module parameter "blink" is on. This name is easy to
+>> conflict with other variables, and has caused a compiler error found
+>> by kbuild test bot. The compiler error is as following:
+>>
+>> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+>> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
+>>
+>> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
+>> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+>> Signed-off-by: Hong Xu <hong@topbug.net>
+>> ---
+>> Compared to previous versions, the commit message is improved to fit
+>> the contribution guideline (again).
+>> ---
+>
+> This looks good.
+> ( As said please have a look at [1]. )
+>
+> I have one thing for followers of (linux-wireless) mailing-lists in general.
+> If your patch is against a special Git tree, please add a
+> "subject-prefix" and/or put a note in the commit-body.
+> For example: "This patch is against wireless-drivers-next or
+> linux-next (next-2015-01-23)."
+> This is very helpful.
+> Think also of patches listed and downloadable from patchwork-service [2].
+>
+> $ git format-patch --subject-prefix="PATCH wireless-drivers-next" ...
+>
+> ( Maybe w-d-n or w-d-next is a good abbreviation :-). )
+>
+> - Sedat -
+>
+> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches
+> [2] https://patchwork.kernel.org/project/linux-wireless/list/
+
+Thanks, Sedat. I'll be more careful next time :)
+
+Hong
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJUxa/1AAoJECZsfTOCL4R4Z0wP/jstwZ+S2hksImQgHeCItgwh
+4qAOmRapEN5gHW+AiPq3XoscbHM75i/2qj6lwwOS4shPE8+CruWhVggvpolM4sGv
+TYuuQundJS0BJdKO+rJEpj2pSmzJ9vfFoBcPvHKG/6vQfCNbFJPgFgw6vmYxMOMY
+tQM53Qm+V5V73l+1OzRFEpV0EjkM6Y3lpV3LFkCufQqjDULlWWsfw4xfE24CsY+i
+0Er2GEaKns3xSVR+X6Ztvkopd/Ra4Ugm+EXMBiz1nssjaxNWk+GPR4h02wo13mSO
+r3HfOCqBRt8EZvd9lv9t0bkF5UMHkTNhxr2IOFHMYgHvIod58OC3qG6QT5VHoTtx
+m5vEUPtb93QoAMZ07T/qBaVb1otILGiaCW92ZMulw/DPbszd5ls+GINY5zOgRLRl
+5GbH0ZJgA15smoXJcHKRTRrKzstRtizY7wGT6/zsxOtSE+HUwo0RJpYcSpQnEG3L
+PQ2f484k3B9eYIPNP3SznoNCg3FdfBKLcVkfvZLzg6fgAXoScypM98bCqMZ8o4Ij
+syERgSMc2Gcj6q6u1IcmdkuuaqPqFO0+mwp0IZEzhDjhuDqKXtIUkKU10vM5G3sl
+zfINSG3/iB9phLdS6VtNMQ0dJoPTfRKL7AQp2n2KuebSjDJclvF9U3dwuTgQRpAT
+J5rU3xHruIhx3saE0rD4
+=IuUD
+-----END PGP SIGNATURE-----
+--=-=-=--
 
