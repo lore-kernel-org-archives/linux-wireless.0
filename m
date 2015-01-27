@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:36575 "EHLO hauke-m.de"
+Received: from gn237.zone.eu ([217.146.67.237]:36826 "EHLO gn237.zone.eu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932982AbbA3SdC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 13:33:02 -0500
-Message-ID: <54CBCE5A.9080404@hauke-m.de> (sfid-20150130_193309_078419_9771ED9B)
-Date: Fri, 30 Jan 2015 19:32:58 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "backports@vger.kernel.org" <backports@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: cfg80211: Unknown symbol get_net_ns_by_fd (err 0)
-References: <54C6A717.5050804@broadcom.com> <54CBCADA.4050801@broadcom.com>
-In-Reply-To: <54CBCADA.4050801@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+	id S1751790AbbA0G6L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 01:58:11 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH 6/7] rtlwifi: Remove unused defines from base.h
+Date: Tue, 27 Jan 2015 08:49:32 +0200
+Message-Id: <1422341373-22196-6-git-send-email-plaes@plaes.org> (sfid-20150127_075842_285862_D48E1046)
+In-Reply-To: <1422341373-22196-1-git-send-email-plaes@plaes.org>
+References: <1422341373-22196-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Priit Laes <plaes@plaes.org>
+---
+ drivers/net/wireless/rtlwifi/base.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
+diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
+index 982f245..ea3e3fc 100644
+--- a/drivers/net/wireless/rtlwifi/base.h
++++ b/drivers/net/wireless/rtlwifi/base.h
+@@ -45,9 +45,6 @@ enum ap_peer {
+ #define RTL_TX_DESC_SIZE	32
+ #define RTL_TX_HEADER_SIZE	(RTL_TX_DESC_SIZE + RTL_TX_DUMMY_SIZE)
+ 
+-#define HT_AMSDU_SIZE_4K	3839
+-#define HT_AMSDU_SIZE_8K	7935
+-
+ #define MAX_BIT_RATE_40MHZ_MCS15	300	/* Mbps */
+ #define MAX_BIT_RATE_40MHZ_MCS7		150	/* Mbps */
+ 
+@@ -61,9 +58,6 @@ enum ap_peer {
+ #define MAX_BIT_RATE_LONG_GI_1NSS_80MHZ_MCS9	390	/* Mbps */
+ #define MAX_BIT_RATE_LONG_GI_1NSS_80MHZ_MCS7	293	/* Mbps */
+ 
+-#define RTL_RATE_COUNT_LEGACY		12
+-#define RTL_CHANNEL_COUNT		14
+-
+ #define FRAME_OFFSET_FRAME_CONTROL	0
+ #define FRAME_OFFSET_DURATION		2
+ #define FRAME_OFFSET_ADDRESS1		4
+-- 
+2.2.2
 
-On 01/30/2015 07:18 PM, Arend van Spriel wrote:
-> On 01/26/15 21:44, Arend van Spriel wrote:
->> Hi Hauke,
->>
->> The commit below causes the error mentioned in the Subject: field. I
->> would like to fix this, but could use a bit of help here how to do this
->> type of things.
->>
->> commit 4b681c82d2f9bef121c912ffcaac89a004af3f2c
->> Author: Vadim Kochan <vadim4j@gmail.com>
->> Date: Mon Jan 12 16:34:05 2015 +0200
->>
->> nl80211: Allow set network namespace by fd
-> 
-> Hi Hauke,
-> 
-> I looked into my issue a bit more. So my target kernel is
-> 3.11.1-200.fc19.x86_64 and checking lxr found that 3.11 has this
-> function, but it does not have EXPORT_SYMBOL(). That was added by the
-> same commit above. Any clues how to fix this?
-
-Hi Arend
-
-As Johannes said it is probably not possible to backport
-get_net_ns_by_fd() correctly. You can not access any symbols which are
-not exported in a kernel. To backport it we have to access
-netns_operations which is also not exported.
-
-We could  copy this function it into backports and remove this check
-from the original function:
-if (ei->ns_ops == &netns_operations)
-..
-
-
-Or we just backport this version every time:
-
-struct net *get_net_ns_by_fd(int fd)
-{
-	return ERR_PTR(-EINVAL);
-}
-
-Hauke
