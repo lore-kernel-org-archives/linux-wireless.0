@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:50117 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197AbbARFKt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 00:10:49 -0500
-Subject: [PATCH 1/7] net: wireless: wcn36xx: add wcn3620 chip type definition
-From: Andy Green <andy.green@linaro.org>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Sun, 18 Jan 2015 13:10:43 +0800
-Message-ID: <20150118051043.31866.53087.stgit@114-36-241-182.dynamic.hinet.net> (sfid-20150118_061057_372044_57461993)
-In-Reply-To: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:32923 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752514AbbA0Lnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 06:43:32 -0500
+Message-ID: <1422359002.1890.65.camel@sipsolutions.net> (sfid-20150127_124337_047766_CF2F8687)
+Subject: Re: [RFCv4 3/3] mac80211: add VHT support for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 27 Jan 2015 12:43:22 +0100
+In-Reply-To: <CALhHN=oGGR=6bq90DB3wEN4Sq7rCCXEZLFR8x0sxot2+3JE=Aw@mail.gmail.com> (sfid-20150127_123951_413522_6EE70539)
+References: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1422348243-4928-3-git-send-email-janusz.dziedzic@tieto.com>
+	 <1422354271.1890.62.camel@sipsolutions.net>
+	 <CALhHN=oGGR=6bq90DB3wEN4Sq7rCCXEZLFR8x0sxot2+3JE=Aw@mail.gmail.com>
+	 (sfid-20150127_123951_413522_6EE70539)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert the list of chip types to an enum, add the default
-UNKNOWN type and a type for WCN3620 chip
+On Tue, 2015-01-27 at 12:39 +0100, Janusz Dziedzic wrote:
+> On 27 January 2015 at 11:24, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > On Tue, 2015-01-27 at 09:44 +0100, Janusz Dziedzic wrote:
+> >
+> >> +u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+> >> +                             const struct cfg80211_chan_def *chandef)
+> >
+> >> +     /* 1 stream, MCS0-7 as a min Basic VHT MCS rates */
+> >> +     vht_oper->basic_mcs_set = cpu_to_le16(0xfffc);
+> >
+> > Unless I'm mistaken in my reading of the spec, this will make any
+> > well-behaved client (i.e. not mac80211) not join this network since it
+> > supports VHT MCSes.
+> >
+> > We seem to do the same for HT:
+> >
+> >         /* It seems that Basic MCS set and Supported MCS set
+> >            are identical for the first 10 bytes */
+> >         memset(&ht_oper->basic_set, 0, 16);
+> >         memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
+> >
+> > but I'm not convinced it's right. It probably only works because nobody
+> > ever tested against a well-behaved non-HT client? Or perhaps there isn't
+> > even one?
+> >
+> for HT (spec, 20.3.5) - MCS0 .. MSC7 are mandatory - but this is for
+> all stations (not sure about ibss)
+> for VHT (22.5, table 22-30) - MCS0...MCS7 are mandatory for nss=1 (20,40,80)
+> Seems such set is secure?
+> 
+> If I understand correctly case you describe with non-HT client:
+> non-HT client should not understand HT ies, and HT-only client should
+> not understand VHT ies?
 
-Signed-off-by: Andy Green <andy.green@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+Yeah that's a good point, I guess older clients won't even look at this,
+and we don't include the HT or VHT marker in the basic rate set IE.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index f0fb81d..a5366b6 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -93,6 +93,13 @@ struct nv_data {
- 	u8	table;
- };
- 
-+enum wcn36xx_chip_type {
-+	WCN36XX_CHIP_UNKNOWN,
-+	WCN36XX_CHIP_3660,
-+	WCN36XX_CHIP_3680,
-+	WCN36XX_CHIP_3620,
-+};
-+
- /* Interface for platform control path
-  *
-  * @open: hook must be called when wcn36xx wants to open control channel.
-@@ -179,7 +186,7 @@ struct wcn36xx {
- 	u8			fw_minor;
- 	u8			fw_major;
- 	u32			fw_feat_caps[WCN36XX_HAL_CAPS_SIZE];
--	u32			chip_version;
-+	enum wcn36xx_chip_type	chip_version;
- 
- 	/* extra byte for the NULL termination */
- 	u8			crm_version[WCN36XX_HAL_VERSION_LENGTH + 1];
-@@ -227,9 +234,6 @@ struct wcn36xx {
- 
- };
- 
--#define WCN36XX_CHIP_3660	0
--#define WCN36XX_CHIP_3680	1
--
- static inline bool wcn36xx_is_fw_version(struct wcn36xx *wcn,
- 					 u8 major,
- 					 u8 minor,
+johannes
 
