@@ -1,75 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f181.google.com ([209.85.192.181]:44236 "EHLO
-	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750921AbbAKTqX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Jan 2015 14:46:23 -0500
-Received: by mail-pd0-f181.google.com with SMTP id v10so26775925pde.12
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Jan 2015 11:46:22 -0800 (PST)
-From: Hong Xu <hong@topbug.net>
-To: linux-wireless@vger.kernel.org
-Cc: linux@rempel-privat.de, Hong Xu <hong@topbug.net>
-Subject: [PATCH v2] ath9k_htc: Add a module parameter to disable blink
-Date: Sun, 11 Jan 2015 11:45:53 -0800
-Message-Id: <1421005553-19447-1-git-send-email-hong@topbug.net> (sfid-20150111_204627_062253_12E3FFBE)
+Received: from s3.sipsolutions.net ([5.9.151.49]:60933 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750961AbbA0LBJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 06:01:09 -0500
+Message-ID: <1422356461.1890.64.camel@sipsolutions.net> (sfid-20150127_120114_857281_0711F7F3)
+Subject: Re: [PATCH] cfg80211: PBSS basic support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dedy Lansky <dlansky@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+	'Vladimir Kondratiev' <qca_vkondrat@qca.qualcomm.com>
+Date: Tue, 27 Jan 2015 12:01:01 +0100
+In-Reply-To: <002501d03a1f$024d1e30$06e75a90$@codeaurora.org>
+References: <1422345312-2963-1-git-send-email-dlansky@codeaurora.org>
+	 <1422347067.1890.49.camel@sipsolutions.net>
+	 <002501d03a1f$024d1e30$06e75a90$@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add an option "blink" to enable or disable the LED blink. The default
-value is set to 1 so that existing users would not experience any
-unexpected changes.
+On Tue, 2015-01-27 at 12:50 +0200, Dedy Lansky wrote:
 
-Signed-off-by: Hong Xu <hong@topbug.net>
----
- drivers/net/wireless/ath/ath9k/htc.h          | 3 +++
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 4 ++++
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++++
- 3 files changed, 11 insertions(+)
+> > > @@ -896,6 +949,7 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
+> > >  	struct cfg80211_bss_ies *ies;
+> > >  	struct ieee80211_channel *channel;
+> > >  	struct cfg80211_internal_bss tmp = {}, *res;
+> > > +	int bss_type;
+> > 
+> > enum.
+> > 
+> > Except that you actually forgot to store the BSS type ...
+> > 
+> > Actually - you didn't add it to the bss struct, but to wdev? Why is it needed there?? I don't see you using it?
+> 
+> wdev->bss_type refers to the BSS that we are connecting/connected to (Maybe rename to "conn_bss_type"?).
+> This member is used in sme.c. It was introduced because once the connect is complete and driver calls cfg80211_connect_result(), cfg needs to find the BSS being connected to.
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 9dde265..c43fec5 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -44,6 +44,9 @@
- 
- extern struct ieee80211_ops ath9k_htc_ops;
- extern int htc_modparam_nohwcrypt;
-+#ifdef CONFIG_MAC80211_LEDS
-+extern int led_blink;
-+#endif
- 
- enum htc_phymode {
- 	HTC_MODE_11NA		= 0,
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 50f74a2..998b558 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -279,6 +279,10 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
- 	else
- 		priv->ah->led_pin = ATH_LED_PIN_DEF;
- 
-+	if (!led_blink)
-+		priv->led_cdev.default_trigger =
-+			ieee80211_get_radio_led_name(priv->hw);
-+
- 	ath9k_configure_leds(priv);
- 
- 	snprintf(priv->led_name, sizeof(priv->led_name),
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index e8fa944..9470127 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -39,6 +39,10 @@ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
- #ifdef CONFIG_MAC80211_LEDS
-+int led_blink = 1;
-+module_param_named(blink, led_blink, int, 0444);
-+MODULE_PARM_DESC(blink, "Enable LED blink on activity");
-+
- static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
- 	{ .throughput = 0 * 1024, .blink_time = 334 },
- 	{ .throughput = 1 * 1024, .blink_time = 260 },
--- 
-2.2.1
+Ok I was thinking you were adding it to struct cfg80211_bss. Wouldn't
+that make a bit more sense? Of course it can also be derived from
+cfg80211_bss::channel and cfg80211_bss::capability, your call.
+
+However, it doesn't seem that you need it in wdev if you have it there
+inside wdev->current_bss?
+
+johannes
 
