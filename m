@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:59698 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759146AbbA2Bxd (ORCPT
+Received: from mail-we0-f177.google.com ([74.125.82.177]:50116 "EHLO
+	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754588AbbA0IpQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Jan 2015 20:53:33 -0500
-Received: from [117.199.141.188] (port=12173 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YGRcj-001zZ7-5v
-	for linux-wireless@vger.kernel.org; Wed, 28 Jan 2015 07:21:33 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 27 Jan 2015 03:45:16 -0500
+Received: by mail-we0-f177.google.com with SMTP id l61so13498166wev.8
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 00:45:14 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 3/6] ath9k: Add a macro to identify PCOEM chips
-Date: Wed, 28 Jan 2015 17:54:23 +0530
-Message-Id: <1422447866-19967-4-git-send-email-sujith@msujith.org> (sfid-20150129_025339_448666_9E56573B)
-In-Reply-To: <1422447866-19967-1-git-send-email-sujith@msujith.org>
-References: <1422447866-19967-1-git-send-email-sujith@msujith.org>
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFCv4 1/3] cfg80211: add VHT support for IBSS
+Date: Tue, 27 Jan 2015 09:44:01 +0100
+Message-Id: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150127_094524_829410_948C672D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Add NL80211_EXT_FEATURE_VHT_IBSS flag and VHT
+support for IBSS.
 
-This can be used if we need to apply register settings
-for all PCOEM solutions (in the AR9003 family).
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/reg.h | 3 +++
- 1 file changed, 3 insertions(+)
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/nl80211.c       | 14 ++++++++++++--
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index eb2bb0d..3c0b180 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -900,10 +900,13 @@
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9485))
- #define AR_SREV_9565(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9565))
-+#define AR_SREV_9003_PCOEM(_ah) \
-+	(AR_SREV_9462(_ah) || AR_SREV_9485(_ah) || AR_SREV_9565(_ah))
- #else
- #define AR_SREV_9462(_ah) 0
- #define AR_SREV_9485(_ah) 0
- #define AR_SREV_9565(_ah) 0
-+#define AR_SREV_9003_PCOEM(_ah) 0
- #endif
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 735ab43..ed491b2 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4204,11 +4204,13 @@ enum nl80211_feature_flags {
  
- #define AR_SREV_9485_11_OR_LATER(_ah) \
+ /**
+  * enum nl80211_ext_feature_index - bit index of extended features.
++ * @NL80211_EXT_FEATURE_VHT_IBSS: This driver supports IBSS with VHT datarates.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+ enum nl80211_ext_feature_index {
++	NL80211_EXT_FEATURE_VHT_IBSS,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 39753de..a662cd1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7092,8 +7092,18 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+ 		break;
+ 	case NL80211_CHAN_WIDTH_20:
+ 	case NL80211_CHAN_WIDTH_40:
+-		if (rdev->wiphy.features & NL80211_FEATURE_HT_IBSS)
+-			break;
++		if (!(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
++			return -EINVAL;
++		break;
++	case NL80211_CHAN_WIDTH_80:
++	case NL80211_CHAN_WIDTH_80P80:
++	case NL80211_CHAN_WIDTH_160:
++		if (!(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
++			return -EINVAL;
++		if (!wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_VHT_IBSS))
++			return -EINVAL;
++		break;
+ 	default:
+ 		return -EINVAL;
+ 	}
 -- 
-2.2.2
+1.9.1
 
