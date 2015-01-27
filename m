@@ -1,44 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:59095 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750946AbbAZHEj convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:48813 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757538AbbA0IpS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 02:04:39 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH] b43: AC-PHY: prepare place for developing new PHY support
-References: <1422205297-24767-1-git-send-email-zajec5@gmail.com>
-Date: Mon, 26 Jan 2015 09:04:33 +0200
-In-Reply-To: <1422205297-24767-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Sun, 25 Jan 2015
- 18:01:37 +0100")
-Message-ID: <87egqiggzi.fsf@kamboji.qca.qualcomm.com> (sfid-20150126_080845_781582_E8429AFB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 27 Jan 2015 03:45:18 -0500
+Received: by mail-wi0-f171.google.com with SMTP id l15so3053709wiw.4
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 00:45:17 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFCv4 2/3] mac80211: IBSS fix scan request
+Date: Tue, 27 Jan 2015 09:44:02 +0100
+Message-Id: <1422348243-4928-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150127_094528_072927_CADFD65B)
+In-Reply-To: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+In case of wide bandwidth scan all channels we have
+in chandef, not only control one.
 
-> There are new (not anymore?) Broadcom 802.11ac wireless cards based on
-> chipsets like BCM4352 and BCM4360. They use a new PHY type (called
-> simply AC) that will require new specific code.
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->
-> Kalle: as this commit & Kconfig say, this is just a beginning of new
-> PHY type support. In the past we used development model this patch
-> follows. Code for new PHY was added patch by patch. Adding everything
-> at once would require a huge patchset & development behing the doors.
-> Also sending small patches allows better review of changes & should
-> result in a better code quality. Let me know if there are any
-> problems.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ net/mac80211/ibss.c        | 80 ++++++++++++++++++++++++++++++++++++++++++++--
+ net/mac80211/ieee80211_i.h |  3 +-
+ net/mac80211/scan.c        | 25 +++++++++------
+ 3 files changed, 96 insertions(+), 12 deletions(-)
 
-Sounds good to me. Just keep dependency to BROKEN until it's usable and
-make sure that the code compiles after every patch.
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index b606b53..14acc21 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -1273,7 +1273,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 
+ 	scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
+ 	ieee80211_request_ibss_scan(sdata, ifibss->ssid, ifibss->ssid_len,
+-				    NULL, scan_width);
++				    NULL, 0, scan_width);
+ }
+ 
+ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+@@ -1312,6 +1312,75 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 				  capability, 0, true);
+ }
+ 
++static unsigned ibss_setup_channels(struct wiphy *wiphy,
++				    struct ieee80211_channel **channels,
++				    unsigned int channels_max,
++				    u32 center_freq, u32 width)
++{
++	struct ieee80211_channel *chan = NULL;
++	unsigned int n_chan = 0;
++	u32 start_freq, end_freq, freq;
++
++	if (width <= 20) {
++		start_freq = center_freq;
++		end_freq = center_freq;
++	} else {
++		start_freq = center_freq - width/2 + 10;
++		end_freq = center_freq + width/2 - 10;
++	}
++
++	for (freq = start_freq; freq <= end_freq; freq += 20) {
++		chan = ieee80211_get_channel(wiphy, freq);
++		if (!chan)
++			continue;
++		if (n_chan >= channels_max)
++			return n_chan;
++
++		channels[n_chan] = chan;
++		n_chan++;
++	}
++
++	return n_chan;
++}
++
++static unsigned int
++ieee80211_ibss_setup_scan_channels(struct wiphy *wiphy,
++				   const struct cfg80211_chan_def *chandef,
++				   struct ieee80211_channel **channels,
++				   unsigned int channels_max)
++{
++	unsigned int n_chan = 0;
++	u32 width, cf1, cf2 = 0;
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_40:
++		width = 40;
++		break;
++	case NL80211_CHAN_WIDTH_80P80:
++		cf2 = chandef->center_freq2;
++	case NL80211_CHAN_WIDTH_80:
++		width = 80;
++		break;
++	case NL80211_CHAN_WIDTH_160:
++		width = 160;
++		break;
++	default:
++		width = 20;
++		break;
++	}
++
++	cf1 = chandef->center_freq1;
++
++	n_chan = ibss_setup_channels(wiphy, channels, channels_max, cf1, width);
++
++	if (cf2)
++		n_chan += ibss_setup_channels(wiphy, &channels[n_chan],
++					      channels_max - n_chan, cf2,
++					      width);
++
++	return n_chan;
++}
++
+ /*
+  * This function is called with state == IEEE80211_IBSS_MLME_SEARCH
+  */
+@@ -1381,11 +1450,18 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 	/* Selected IBSS not found in current scan results - try to scan */
+ 	if (time_after(jiffies, ifibss->last_scan_completed +
+ 					IEEE80211_SCAN_INTERVAL)) {
++		struct ieee80211_channel *channels[8];
++		unsigned int num = 0;
++
+ 		sdata_info(sdata, "Trigger new scan to find an IBSS to join\n");
+ 
++		num = ieee80211_ibss_setup_scan_channels(local->hw.wiphy,
++							 &ifibss->chandef,
++							 channels,
++							 ARRAY_SIZE(channels));
+ 		scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
+ 		ieee80211_request_ibss_scan(sdata, ifibss->ssid,
+-					    ifibss->ssid_len, chan,
++					    ifibss->ssid_len, channels, num,
+ 					    scan_width);
+ 	} else {
+ 		int interval = IEEE80211_SCAN_INTERVAL;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index cc6e964..9254546 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1558,7 +1558,8 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_scan_work(struct work_struct *work);
+ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				const u8 *ssid, u8 ssid_len,
+-				struct ieee80211_channel *chan,
++				struct ieee80211_channel **channels,
++				unsigned int n_channels,
+ 				enum nl80211_bss_scan_width scan_width);
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 			   struct cfg80211_scan_request *req);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index ae84267..f76a5d1 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -923,11 +923,12 @@ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				const u8 *ssid, u8 ssid_len,
+-				struct ieee80211_channel *chan,
++				struct ieee80211_channel **channels,
++				unsigned int n_channels,
+ 				enum nl80211_bss_scan_width scan_width)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	int ret = -EBUSY;
++	int ret = -EBUSY, i, n_ch = 0;
+ 	enum ieee80211_band band;
+ 
+ 	mutex_lock(&local->mtx);
+@@ -937,9 +938,8 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 		goto unlock;
+ 
+ 	/* fill internal scan request */
+-	if (!chan) {
+-		int i, max_n;
+-		int n_ch = 0;
++	if (!channels) {
++		int max_n;
+ 
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 			if (!local->hw.wiphy->bands[band])
+@@ -964,12 +964,19 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->int_scan_req->n_channels = n_ch;
+ 	} else {
+-		if (WARN_ON_ONCE(chan->flags & (IEEE80211_CHAN_NO_IR |
+-						IEEE80211_CHAN_DISABLED)))
++		for (i = 0; i < n_channels; i++) {
++			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
++						  IEEE80211_CHAN_DISABLED))
++				continue;
++
++			local->int_scan_req->channels[n_ch] = channels[i];
++			n_ch++;
++		}
++
++		if (WARN_ON_ONCE(n_ch == 0))
+ 			goto unlock;
+ 
+-		local->int_scan_req->channels[0] = chan;
+-		local->int_scan_req->n_channels = 1;
++		local->int_scan_req->n_channels = n_ch;
+ 	}
+ 
+ 	local->int_scan_req->ssids = &local->scan_ssid;
 -- 
-Kalle Valo
+1.9.1
+
