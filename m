@@ -1,41 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:50478 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099AbbAOMiE convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:46736 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757973AbbA0SGo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 07:38:04 -0500
-Received: by mail-wg0-f42.google.com with SMTP id k14so14656803wgh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Jan 2015 04:38:02 -0800 (PST)
+	Tue, 27 Jan 2015 13:06:44 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <87k30oxpt5.fsf@kamboji.qca.qualcomm.com>
-References: <1420715897-18706-1-git-send-email-michal.kazior@tieto.com>
-	<87k30oxpt5.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 15 Jan 2015 13:38:02 +0100
-Message-ID: <CA+BoTQm28YGHPi_k26Cdhn3cwRsHT8uACOoj7G0r2sHEjpkTEQ@mail.gmail.com> (sfid-20150115_133812_791768_C835A02E)
-Subject: Re: [PATCH 0/2] ath10k: add wmi-tlv debug event handling
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [v4] ath9k and ath9k_htc: rename variable "led_blink"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1422099243-20321-1-git-send-email-hong@topbug.net>
+To: Hong Xu <hong@topbug.net>
+Cc: linux-wireless@vger.kernel.org, Hong Xu <hong@topbug.net>
+Message-Id: <20150127180644.9EBB9140694@smtp.codeaurora.org> (sfid-20150127_190648_075675_DA4DB7C0)
+Date: Tue, 27 Jan 2015 18:06:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 January 2015 at 12:10, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-[...]
-> Applying: ath10k: implement diag data container event
-> Using index info to reconstruct a base tree...
-> Falling back to patching base and 3-way merge...
-> Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.h
-> CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.h
-> Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> Failed to merge in the changes.
-> Patch failed at 0001 ath10k: implement diag data container event
->
-> Please double check my conflict resolution in ath-next-test.
 
-Looks good, thanks!
+> ath9k and ath9k_htc use the variable name "led_blink" to indicate
+> whether the module parameter "blink" is on. This name is easy to
+> conflict with other variables, and has caused a compiler error found
+> by kbuild test bot. The compiler error is as following:
+> 
+> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
+> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
+> 
+> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Hong Xu <hong@topbug.net>
 
+Thanks, applied to wireless-drivers-next.git.
 
-Michał
+Kalle Valo
