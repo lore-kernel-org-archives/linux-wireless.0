@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:34918 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752943AbbAHHEX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 02:04:23 -0500
-From: Ying Xue <ying.xue@windriver.com>
-To: <johannes@sipsolutions.net>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH net-next] mac80211: silent build warnings
-Date: Thu, 8 Jan 2015 15:04:15 +0800
-Message-ID: <1420700655-9427-1-git-send-email-ying.xue@windriver.com> (sfid-20150108_080430_147923_FFEF72A3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Received: from gn237.zone.eu ([217.146.67.237]:36810 "EHLO gn237.zone.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751427AbbA0G6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 01:58:09 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH 5/7] rtlwifi: Remove unused defines from cam.h
+Date: Tue, 27 Jan 2015 08:49:31 +0200
+Message-Id: <1422341373-22196-5-git-send-email-plaes@plaes.org> (sfid-20150127_075833_485188_686737D4)
+In-Reply-To: <1422341373-22196-1-git-send-email-plaes@plaes.org>
+References: <1422341373-22196-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Silent the following build warnings:
-
-net/mac80211/mlme.c: In function ‘ieee80211_rx_mgmt_beacon’:
-net/mac80211/mlme.c:1348:3: warning: ‘pwr_level_cisco’ may be used uninitialized in this function [-Wuninitialized]
-net/mac80211/mlme.c:1315:6: note: ‘pwr_level_cisco’ was declared here
-
-Signed-off-by: Ying Xue <ying.xue@windriver.com>
+Signed-off-by: Priit Laes <plaes@plaes.org>
 ---
- net/mac80211/mlme.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/cam.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2c36c47..13b5506 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1312,7 +1312,7 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
- {
- 	bool has_80211h_pwr = false, has_cisco_pwr = false;
- 	int chan_pwr = 0, pwr_reduction_80211h = 0;
--	int pwr_level_cisco, pwr_level_80211h;
-+	int pwr_level_cisco = 0, pwr_level_80211h = 0;
- 	int new_ap_level;
+diff --git a/drivers/net/wireless/rtlwifi/cam.h b/drivers/net/wireless/rtlwifi/cam.h
+index 3550808..e2e647d 100644
+--- a/drivers/net/wireless/rtlwifi/cam.h
++++ b/drivers/net/wireless/rtlwifi/cam.h
+@@ -28,13 +28,11 @@
  
- 	if (country_ie && pwr_constr_ie &&
+ #define CAM_CONTENT_COUNT				8
+ 
+-#define CFG_DEFAULT_KEY					BIT(5)
+ #define CFG_VALID					BIT(15)
+ 
+ #define PAIRWISE_KEYIDX					0
+ #define CAM_PAIRWISE_KEY_POSITION			4
+ 
+-#define	CAM_CONFIG_USEDK				1
+ #define	CAM_CONFIG_NO_USEDK				0
+ 
+ void rtl_cam_reset_all_entry(struct ieee80211_hw *hw);
 -- 
-1.7.9.5
+2.2.2
 
