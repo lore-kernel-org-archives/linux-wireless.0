@@ -1,35 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54812 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754298AbbAEPdh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 10:33:37 -0500
-Message-ID: <1420472013.9459.14.camel@sipsolutions.net> (sfid-20150105_163347_968451_23923B3C)
-Subject: Re: [PATCH v3] cfg80211: check for carrier state only when
- offchanel CAC supported
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <patila@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:36690 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751308AbbA0Gms (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 01:42:48 -0500
+Message-ID: <1422360747.20608.5.camel@pe-lt950> (sfid-20150127_074317_400094_27EA2516)
+Subject: Re: [PATCH v2] mwifiex: set netif carrier off in ndo_open
+From: Avinash Patil <patila@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<kvalo@codeaurora.org>
+CC: Stable <stable@vger.kernel.org>,
 	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>
-Date: Mon, 05 Jan 2015 16:33:33 +0100
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7A6A@SC-VEXCH2.marvell.com>
-References: <1420475584-5533-1-git-send-email-patila@marvell.com>
-	 (sfid-20150105_120344_381788_A7E15DA0),<1420462674.9459.9.camel@sipsolutions.net>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A69@SC-VEXCH2.marvell.com>
-	 (sfid-20150105_143403_923577_F829B8B6),<1420465645.9459.13.camel@sipsolutions.net>
-	 <CBACCFA0AEB13A41977475BCF3E896FC66736E7A6A@SC-VEXCH2.marvell.com>
+	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Date: Tue, 27 Jan 2015 17:42:27 +0530
+In-Reply-To: <1421663076-32291-1-git-send-email-patila@marvell.com>
+References: <1421663076-32291-1-git-send-email-patila@marvell.com>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 06:20 -0800, Avinash Patil wrote:
+On Mon, 2015-01-19 at 02:24 -0800, Avinash Patil wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> 
+> This patch adds fix to set carrier state off during ndo_open.
+> Carrier should be set to ON when device is ready to send data.
+> In case of station/adhoc interface device is able to transfer
+> data after successful association/join operation.
+> For AP this would be after bss_active event.
+> 
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/main.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+> index 6125d1c..a16c293 100644
+> --- a/drivers/net/wireless/mwifiex/main.c
+> +++ b/drivers/net/wireless/mwifiex/main.c
+> @@ -562,7 +562,8 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter)
+>  static int
+>  mwifiex_open(struct net_device *dev)
+>  {
+> -	netif_tx_start_all_queues(dev);
+> +	netif_carrier_off(dev);
+> +
+>  	return 0;
+>  }
+>  
 
-> I think here we want to  do_old_check only when new_feature is
-> supported; because old check is causing issue for device where new
-> feature is not supported.
+Hi Kalle,
 
-But then you should be testing !new_feature to do the old_check
+I do not see this patch in master branch as well as in patchworks
+pending patchlist. Is this one also dropped?
+Do you want me to resend this as well while I am sending rebased DFS
+patches?
 
-johannes
+Thanks,
+Avinash
+
 
