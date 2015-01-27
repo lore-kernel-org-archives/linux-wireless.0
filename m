@@ -1,34 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:41709 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751609AbbAPFuD (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:37354 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752243AbbA0QyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 00:50:03 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org, me@bobcopeland.com
-Subject: Re: [PATCH] mesh: Avoid STA expiration timer truncation to u32
-References: <1421385460-3126-1-git-send-email-masashi.honma@gmail.com>
-Date: Fri, 16 Jan 2015 07:49:56 +0200
-In-Reply-To: <1421385460-3126-1-git-send-email-masashi.honma@gmail.com>
-	(Masashi Honma's message of "Fri, 16 Jan 2015 14:17:40 +0900")
-Message-ID: <87iog7nukb.fsf@kamboji.qca.qualcomm.com> (sfid-20150116_065008_660798_1CB8A510)
+	Tue, 27 Jan 2015 11:54:00 -0500
+Received: by mail-oi0-f45.google.com with SMTP id g201so13272101oib.4
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 08:53:59 -0800 (PST)
+Message-ID: <54C7C2A6.7040904@lwfinger.net> (sfid-20150127_175403_394812_4A6AA081)
+Date: Tue, 27 Jan 2015 10:53:58 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Jason Plum <jplum@devonit.com>,
+	"burton.b.williams@gmail.com >> Burton Williams"
+	<burton.b.williams@gmail.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RTL8192ee
+References: <54C6F65A.90009@lwfinger.net> <B57A220D1EE1644685BA9AD5C790D205421EDC730D@SOUTHSIDE.devonintlgroup.com>
+In-Reply-To: <B57A220D1EE1644685BA9AD5C790D205421EDC730D@SOUTHSIDE.devonintlgroup.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Masashi Honma <masashi.honma@gmail.com> writes:
-
-> On some combination of plink_timeout and HZ, the STA expiration timer will be
-> unexpectedly truncated to u32. Maybe there is a question "Who sets such a large
-> number to plink_timeout ?". At least wpa_supplicant will set 0xffffffff to
-> plink_timeout to disable this timer because wpa_supplicant has it's own
-> expiration mechanism.
+On 01/27/2015 08:19 AM, Jason Plum wrote:
+> Larry,
 >
-> Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+> I know that to some degree I am jumping this chain. That being said, please allow me to offer encouragement in the development of the rtl8192ee, rtl872ae, and the other members of the rtlwifi_new github.
+>
+> I have been using these myself, and keeping them in my sights as my commercial product that has to support these drivers is being developed. There are some hiccups as is to be expected, but your work is greatly appreciated. I strive to keep our product as free of vendor proprietary code as much as possible and you work with rtlwifi_new and the available integration with multiple revisions of the kernel has been a recent key to that effort.
 
-For mac80211 patches please use prefix "mac80211: ".
+Note that everything in rtlwifi_new will soon be in the kernel. The bulk of the 
+code was moved into V3.18 with some fixes applied to V3.19. A major hunk for BT 
+coexistence for the RTL8812AE, which I have never seen, is in review, but should 
+be available in V3.20. If Realtek has any new drivers in development, they have 
+not told me.
 
--- 
-Kalle Valo
+For the next few months, my plan is to fix bugs, prune out any extraneous code, 
+and identify routines used by 2 or more of the drivers and move them into the core.
+
+Larry
+
