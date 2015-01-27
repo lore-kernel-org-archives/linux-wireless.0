@@ -1,63 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:40204 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751598AbbAMNul (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 08:50:41 -0500
-Received: by mail-wg0-f50.google.com with SMTP id a1so3030664wgh.9
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Jan 2015 05:50:40 -0800 (PST)
-Message-ID: <54B522AC.6050901@gmail.com> (sfid-20150113_145045_993386_4743A738)
-Date: Tue, 13 Jan 2015 14:50:36 +0100
-From: wim torfs <wtorfs@gmail.com>
-MIME-Version: 1.0
-To: Avinash Patil <patila@marvell.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mwifiex - question
-References: <1421065496-1968-1-git-send-email-patila@marvell.com>,<54B51EF1.60200@gmail.com> <CBACCFA0AEB13A41977475BCF3E896FC66736E7AC0@SC-VEXCH2.marvell.com>
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66736E7AC0@SC-VEXCH2.marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from gn237.zone.eu ([217.146.67.237]:36802 "EHLO gn237.zone.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949AbbA0G6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 01:58:09 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH 3/7] rtlwifi: Remove unused RF6052_MAX_REG define
+Date: Tue, 27 Jan 2015 08:49:29 +0200
+Message-Id: <1422341373-22196-3-git-send-email-plaes@plaes.org> (sfid-20150127_075821_916772_EDEAF14F)
+In-Reply-To: <1422341373-22196-1-git-send-email-plaes@plaes.org>
+References: <1422341373-22196-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Avinash,
+Signed-off-by: Priit Laes <plaes@plaes.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192de/def.h | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192ee/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8723be/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8821ae/rf.h  | 1 -
+ 8 files changed, 8 deletions(-)
 
-Thanks for the clarification.
-Obviously I missed the most important part of the path, which caused the 
-confusion.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
+index 5c1472d..0eca030 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL92C_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 				     u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
+index d8fe68b..ebd72ca 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
+@@ -31,7 +31,6 @@
+ #define __RTL92C_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ #define RF6052_MAX_PATH			2
+ 
+ void rtl92ce_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
+index 11b439d..6f987de 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
+@@ -31,7 +31,6 @@
+ #define __RTL92CU_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ #define RF6052_MAX_PATH			2
+ 
+ void rtl92cu_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+index 4ca1fe1..0a443ed 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+@@ -35,7 +35,6 @@
+ #define	MAX_MSS_DENSITY_1T				0x0A
+ 
+ #define RF6052_MAX_TX_PWR				0x3F
+-#define RF6052_MAX_REG					0x3F
+ #define RF6052_MAX_PATH					2
+ 
+ #define	PHY_RSSI_SLID_WIN_MAX				100
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
+index 8bdeed3..039c013 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL92E_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl92ee_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 				      u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
+index f3f45b1..7b44ebc 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL8723E_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl8723e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 				       u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/rf.h b/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
+index a6fea10..f423e15 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL8723BE_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl8723be_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 					u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
+index d9582ee..efd22bd 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL8821AE_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl8821ae_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 					u8 bandwidth);
+-- 
+2.2.2
 
-Thanks,
-Wim.
-
-
-On 01/13/2015 02:44 PM, Avinash Patil wrote:
-> Hi Wim,
->
-> Mwifiex is FullMac driver; we have our own thick FW for managing MLME.  This is reason why we do not use mac80211.
-> Mwifiex is very much located under drivers/net/wireless; its not in net/wireless. net/wireless has cfg80211 driver.
->
-> Thanks,
-> Avinash.
-> ________________________________________
-> From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of wim torfs [wtorfs@gmail.com]
-> Sent: Tuesday, January 13, 2015 7:04 PM
-> To: linux-wireless@vger.kernel.org
-> Subject: mwifiex - question
->
-> Hi,
->
-> I just noticed - from the mails passing through - that mwifiex is
-> located in net/wireless and that it contains its own functions besides
-> those of mac80211, while the description on the wiki mentions that it is
-> a driver for Marvell SDIO chips.
->
-> Is there any specific reason why it is not using mac80211 and why it is
-> located in net/wireless instead of drivers/net/wireless, or is this an
-> artifact of past choices that need to be cleaned up?
->
-> Thanks,
-> Wim.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
