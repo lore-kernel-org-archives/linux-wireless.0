@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:21921 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791AbbAWLwU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:33286 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754685AbbA0Osj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 06:52:20 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: <wireless-regdb@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] wireless-regdb: Add regulatory rules for Nigeria (NG)
-Date: Fri, 23 Jan 2015 13:51:58 +0200
-Message-ID: <1422013920-9779-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20150123_125222_686059_B1EB1024)
+	Tue, 27 Jan 2015 09:48:39 -0500
+From: "Dedy Lansky" <dlansky@codeaurora.org>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	"'Vladimir Kondratiev'" <qca_vkondrat@qca.qualcomm.com>
+References: <1422345312-2963-1-git-send-email-dlansky@codeaurora.org>	 <1422347067.1890.49.camel@sipsolutions.net>	 <002501d03a1f$024d1e30$06e75a90$@codeaurora.org> <1422356461.1890.64.camel@sipsolutions.net>
+In-Reply-To: <1422356461.1890.64.camel@sipsolutions.net>
+Subject: RE: [PATCH] cfg80211: PBSS basic support
+Date: Tue, 27 Jan 2015 16:48:34 +0200
+Message-ID: <002801d03a40$55b81630$01284290$@codeaurora.org> (sfid-20150127_154842_403994_F1760C44)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Source is QCA's regulatory team's efforts.
+From: Johannes Berg [mailto:johannes@sipsolutions.net] 
+Sent: Tuesday, January 27, 2015 1:01 PM
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- db.txt | 5 +++++
- 1 file changed, 5 insertions(+)
+> On Tue, 2015-01-27 at 12:50 +0200, Dedy Lansky wrote:
+> 
+> > > > @@ -896,6 +949,7 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
+> > > >  	struct cfg80211_bss_ies *ies;
+> > > >  	struct ieee80211_channel *channel;
+> > > >  	struct cfg80211_internal_bss tmp = {}, *res;
+> > > > +	int bss_type;
+> > > 
+> > > enum.
+> > > 
+> > > Except that you actually forgot to store the BSS type ...
+> > > 
+> > > Actually - you didn't add it to the bss struct, but to wdev? Why is it needed there?? I don't see you using it?
+> > 
+> > wdev->bss_type refers to the BSS that we are connecting/connected to (Maybe rename to "conn_bss_type"?).
+> > This member is used in sme.c. It was introduced because once the connect is complete and driver calls cfg80211_connect_result(), cfg needs to find the BSS being connected to.
+> 
+> Ok I was thinking you were adding it to struct cfg80211_bss. Wouldn't that make a bit more sense? Of course it can also be derived from cfg80211_bss::channel and cfg80211_bss::capability, your call.
+> 
+> However, it doesn't seem that you need it in wdev if you have it there inside wdev->current_bss?
 
-diff --git a/db.txt b/db.txt
-index ae8a216..3ea53ec 100644
---- a/db.txt
-+++ b/db.txt
-@@ -812,6 +812,11 @@ country MY: DFS-FCC
- 	(5250 - 5330 @ 80), (23), DFS, AUTO-BW
- 	(5735 - 5835 @ 80), (30)
- 
-+country NG: DFS-ETSI
-+	(2402 - 2482 @ 40), (20)
-+	(5250 - 5330 @ 80), (30), DFS
-+	(5735 - 5835 @ 80), (30)
-+
- country NI: DFS-FCC
- 	(2402 - 2472 @ 40), (30)
- 	(5170 - 5250 @ 80), (24), AUTO-BW
--- 
-1.9.1
+current_bss is set later.
+
+inside __cfg80211_connect_result(), we look for the BSS being connected to:
+  bss = cfg80211_get_bss(..., bssid, wdev->bss_type, ...)
+only after that, current_bss is set to this BSS:
+  wdev->current_bss = bss_from_pub(bss);
+
+> 
+> johannes
+
 
