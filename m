@@ -1,101 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58927 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750917AbbAULM5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44748 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751614AbbA0OU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Jan 2015 06:12:57 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0LB8iSP007636
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:12:57 -0800
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1s09vs9ggt-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 21 Jan 2015 03:12:57 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yogeshp@marvell.com>,
-	<nishants@marvell.com>, <frankh@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 1/3] mwifiex: add support for SD8801
-Date: Wed, 21 Jan 2015 22:12:09 +0530
-Message-ID: <1421858531-4536-1-git-send-email-patila@marvell.com> (sfid-20150121_121301_153457_A863C755)
+	Tue, 27 Jan 2015 09:20:29 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix dtim period with beacon templates
+References: <1421417336-19371-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 27 Jan 2015 16:19:59 +0200
+In-Reply-To: <1421417336-19371-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 16 Jan 2015 15:08:56 +0100")
+Message-ID: <87mw54b90w.fsf@kamboji.qca.qualcomm.com> (sfid-20150127_152032_238672_4F19FF34)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-SD8801 is Marvell's 1x1 802.11bgn offering.
-This patch adds Device IDs for SD8801 and also defines card
-structure which has definition for register offsets, buffer sizes etc.
+> Firmware supporting beacon templates (i.e. wmi-tlv
+> for qca6174) doesn't implicitly take dtim period
+> from the template. Instead it requires vdev param
+> to be set accordingly.
+>
+> This fixes dtim period being stuck at 3.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Frank Huang <frankh@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.c |  5 +++++
- drivers/net/wireless/mwifiex/sdio.h | 15 +++++++++++++++
- 2 files changed, 20 insertions(+)
+Thanks, applied to ath.git.
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index a70f1033..cee107f 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -282,6 +282,9 @@ static int mwifiex_sdio_suspend(struct device *dev)
- #define SDIO_DEVICE_ID_MARVELL_8897   (0x912d)
- /* Device ID for SD8887 */
- #define SDIO_DEVICE_ID_MARVELL_8887   (0x9135)
-+/* Device ID for SD8801 */
-+#define SDIO_DEVICE_ID_MARVELL_8801   (0x9139)
-+
- 
- /* WLAN IDs */
- static const struct sdio_device_id mwifiex_ids[] = {
-@@ -295,6 +298,8 @@ static const struct sdio_device_id mwifiex_ids[] = {
- 		.driver_data = (unsigned long) &mwifiex_sdio_sd8897},
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8887),
- 		.driver_data = (unsigned long)&mwifiex_sdio_sd8887},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_MARVELL, SDIO_DEVICE_ID_MARVELL_8801),
-+		.driver_data = (unsigned long)&mwifiex_sdio_sd8801},
- 	{},
- };
- 
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index 895eea0..a4bb0db 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -34,6 +34,7 @@
- #define SD8797_DEFAULT_FW_NAME "mrvl/sd8797_uapsta.bin"
- #define SD8897_DEFAULT_FW_NAME "mrvl/sd8897_uapsta.bin"
- #define SD8887_DEFAULT_FW_NAME "mrvl/sd8887_uapsta.bin"
-+#define SD8801_DEFAULT_FW_NAME "mrvl/sd8801_uapsta.bin"
- 
- #define BLOCK_MODE	1
- #define BYTE_MODE	0
-@@ -474,6 +475,20 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
- 	.auto_tdls = true,
- };
- 
-+static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
-+	.firmware = SD8801_DEFAULT_FW_NAME,
-+	.reg = &mwifiex_reg_sd87xx,
-+	.max_ports = 16,
-+	.mp_agg_pkt_limit = 8,
-+	.supports_sdio_new_mode = false,
-+	.has_control_mask = true,
-+	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
-+	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
-+	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
-+	.supports_fw_dump = false,
-+	.auto_tdls = false,
-+};
-+
- /*
-  * .cmdrsp_complete handler
-  */
 -- 
-1.8.1.4
-
+Kalle Valo
