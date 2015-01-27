@@ -1,53 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:54060 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754445AbbAZJ6F (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58548 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758241AbbA0OCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 04:58:05 -0500
-Date: Mon, 26 Jan 2015 11:58:00 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-	linux-wireless@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Subject: Re: [PATCH] nl80211: add new scan flag to indicate P2P search
-Message-ID: <20150126095800.GA12740@w1.fi> (sfid-20150126_105817_443020_56F17E34)
-References: <1422189052-25602-1-git-send-email-dlansky@codeaurora.org>
- <1422260840.1890.9.camel@sipsolutions.net>
+	Tue, 27 Jan 2015 09:02:52 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/3] ath10k: reset chip before reading chip_id in probe
+References: <1421407237-24159-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 27 Jan 2015 16:02:19 +0200
+In-Reply-To: <1421407237-24159-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 16 Jan 2015 12:20:35 +0100")
+Message-ID: <87386wcoes.fsf@kamboji.qca.qualcomm.com> (sfid-20150127_150304_546564_A381A2A1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422260840.1890.9.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 26, 2015 at 09:27:20AM +0100, Johannes Berg wrote:
-> On Sun, 2015-01-25 at 14:30 +0200, Dedy Lansky wrote:
-> > Scan request (NL80211_CMD_TRIGGER_SCAN) is used for triggering both scan
-> > and P2P search.
-> > At driver/firmware layer, scan and P2P search might be handled differently.
-> > 
-> > Add new scan flag to indicate P2P search. This flag can be used
-> > by applications (e.g. wpa_supplicant) to explicitly request P2P search.
-> 
-> I think this ship has sailed many months ago -- too late, you can never
-> rely on wpa_supplicant settings this flag.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I'm not sure I'd fully agree with that.. wpa_supplicant currently maps
-its internal struct wpa_driver_scan_params::p2p_probe to
-NL80211_ATTR_TX_NO_CCK_RATE (and also removal of CCK rates from
-NL80211_ATTR_SCAN_SUPP_RATES). However, neither of these make much sense
-in bands other than 2.4 GHz. There is ongoing effort in defining P2P
-social channels on other bands and it would be useful to be prepared for
-those with a clear nl80211 flag in scan parameters. P2P on those new
-bands will require wpa_supplicant changes, so it is reasonable to assume
-that a wpa_supplicant version that supports those bands will also
-support this new flag.
+> There are some very rare cases with some hardware
+> configuration that the device doesn't init quickly
+> enough in which case reading chip_id yielded 0.
+> This caused driver to subsequently fail to setup
+> the device.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-> If you need to distinguish, you should be able to advertise P2P-Device
-> supports, and then get P2P scans on the P2P-Device virtual interface.
-> Could be a pure driver thing of course.
+Thanks, all three patches applied to ath.git.
 
-It would be unfortunate to force people to use P2P-Device for this.
- 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
