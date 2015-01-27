@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:35809 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358AbbABSgA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 13:36:00 -0500
-Received: by mail-lb0-f178.google.com with SMTP id f15so17479326lbj.9
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Jan 2015 10:35:59 -0800 (PST)
-Message-ID: <54A6E50E.8070205@cogentembedded.com> (sfid-20150102_193605_829036_0C19CFA7)
-Date: Fri, 02 Jan 2015 21:35:58 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Received: from mga02.intel.com ([134.134.136.20]:60845 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752134AbbA0X2j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 18:28:39 -0500
+Date: Wed, 28 Jan 2015 00:28:36 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Robert Dolca <robert.dolca@intel.com>
+Cc: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Berg Johannes <johannes.berg@intel.com>,
+	Clement Perrochaud <clement.perrochaud@nxp.com>
+Subject: Re: [PATCH v2 2/2] NFC: Add ACPI support for NXP PN544
+Message-ID: <20150127232836.GB32667@ribalta.mp.intel.com> (sfid-20150128_002858_073176_D27EF725)
+References: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
+ <1422270817-10950-3-git-send-email-robert.dolca@intel.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 02/11] rtlwifi: rtl8723be: Improve modinfo output
-References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net> <1420217908-1382-3-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1420217908-1382-3-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1422270817-10950-3-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+Hi Robert,
 
-On 1/2/2015 7:58 PM, Larry Finger wrote:
+On Mon, Jan 26, 2015 at 01:13:37PM +0200, Robert Dolca wrote:
+> @@ -1022,9 +1127,12 @@ static int pn544_hci_i2c_probe(struct i2c_client *client,
+>  			    PN544_I2C_FRAME_HEADROOM, PN544_I2C_FRAME_TAILROOM,
+>  			    PN544_HCI_I2C_LLC_MAX_PAYLOAD,
+>  			    pn544_hci_i2c_fw_download, &phy->hdev);
+> -	if (r < 0)
+> +	if (r < 0) {
+> +		nfc_err(&client->dev, "HCI Probing error\n");
+>  		goto err_hci;
+> +	}
+>  
+> +	nfc_info(&client->dev, "NFC I2C driver loaded\n");
+>  	return 0;
+This is unrelated to this patch, so I removed that part.
 
-> The description of the power-save variables for this driver is not as
-> clear as for the others. The wording is changed to match the others.
-
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 11 ++++++-----
->   1 file changed, 6 insertions(+), 5 deletions(-)
-
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-> index 223eb42..52a6d90 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-> @@ -387,12 +387,13 @@ module_param_named(swlps, rtl8723be_mod_params.swctrl_lps, bool, 0444);
->   module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
->   module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
->   		   bool, 0444);
-> -MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
-> -MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
-> -MODULE_PARM_DESC(fwlps, "using linked fw control power save (default 1 is open)\n");
-> -MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
-
-    You are completely removing this description. Is it intentional?
-
-> +MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-> +MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
-> +MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
-> +MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
->   MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
-> -MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
-> +MODULE_PARM_DESC(disable_watchdog,
-> +		 "Set to 1 to disable the watchdog (default 0)\n");
-
-WBR, Sergei
-
+Cheers,
+Samuel.
