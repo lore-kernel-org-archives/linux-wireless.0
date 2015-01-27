@@ -1,85 +1,357 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43538 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752421AbbAWASu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 19:18:50 -0500
-From: Yanbo Li <yanbol@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <dreamfly281@gmail.com>, <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: Enable the MCS8 and MCS9 at 2.4G band
-Date: Fri, 23 Jan 2015 08:18:20 +0800
-Message-ID: <1421972300-23520-1-git-send-email-yanbol@qca.qualcomm.com> (sfid-20150123_011859_724639_F01F5804)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gn237.zone.eu ([217.146.67.237]:36806 "EHLO gn237.zone.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751125AbbA0G6J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 01:58:09 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH 2/7] rtlwifi: Remove unused defines from driver-specific def.h
+Date: Tue, 27 Jan 2015 08:49:28 +0200
+Message-Id: <1422341373-22196-2-git-send-email-plaes@plaes.org> (sfid-20150127_075822_657320_D623491B)
+In-Reply-To: <1422341373-22196-1-git-send-email-plaes@plaes.org>
+References: <1422341373-22196-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yanbo Li <yanbol@qti.qualcomm.com>
+HAL_RETRY_LIMIT_*
+RESET_DELAY_8185
+RT_IBSS_INT_MASKS
+RT_AC_INT_MASKS
+NUM_OF_*
+BT_*,
+MAX_{LINES,BYTES}_*,
+*_THREE_WIRE
+*_QUEUE related
 
-Enable the MCS8 and MCS9 support for 2.4G band, it will
-use these data rate with other devices having the same
-capability.
-
-Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
+Signed-off-by: Priit Laes <plaes@plaes.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   14 ++++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.h |    2 +-
- 2 files changed, 13 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8188ee/def.h | 41 ----------------------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h | 41 ----------------------------
+ drivers/net/wireless/rtlwifi/rtl8192de/def.h | 38 --------------------------
+ drivers/net/wireless/rtlwifi/rtl8192se/def.h |  1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/def.h | 41 ----------------------------
+ drivers/net/wireless/rtlwifi/rtl8821ae/def.h | 41 ----------------------------
+ 6 files changed, 203 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9524bc5..0b11c9c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1557,6 +1557,10 @@ static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
- 		return;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/def.h b/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
+index d9ea9d0..0532b98 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
+@@ -26,53 +26,12 @@
+ #ifndef __RTL92C_DEF_H__
+ #define __RTL92C_DEF_H__
  
- 	arg->peer_flags |= WMI_PEER_VHT;
-+
-+	if (ar->hw->conf.chandef.chan->band == IEEE80211_BAND_2GHZ)
-+		arg->peer_flags |= WMI_PEER_VHT_2G;
-+
- 	arg->peer_vht_caps = vht_cap->cap;
+-#define HAL_RETRY_LIMIT_INFRA				48
+-#define HAL_RETRY_LIMIT_AP_ADHOC			7
+-
+-#define RESET_DELAY_8185				20
+-
+-#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
+-#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
+-
+-#define NUM_OF_FIRMWARE_QUEUE				10
+-#define NUM_OF_PAGES_IN_FW				0x100
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA			0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT			0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH			0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
+-
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM			0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM			0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM			0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM			0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM			0x00
+-
+-#define MAX_LINES_HWCONFIG_TXT				1000
+-#define MAX_BYTES_LINE_HWCONFIG_TXT			256
+-
+-#define SW_THREE_WIRE					0
+-#define HW_THREE_WIRE					2
+-
+-#define BT_DEMO_BOARD					0
+-#define BT_QA_BOARD					1
+-#define BT_FPGA						2
+-
+ #define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
+ #define HAL_PRIME_CHNL_OFFSET_LOWER			1
+ #define HAL_PRIME_CHNL_OFFSET_UPPER			2
  
- 	ampdu_factor = (vht_cap->cap &
-@@ -1635,7 +1639,12 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+-#define MAX_H2C_QUEUE_NUM				10
+-
+ #define RX_MPDU_QUEUE					0
+ #define RX_CMD_QUEUE					1
+-#define RX_MAX_QUEUE					2
+-#define AC2QUEUEID(_AC)					(_AC)
  
- 	switch (ar->hw->conf.chandef.chan->band) {
- 	case IEEE80211_BAND_2GHZ:
--		if (sta->ht_cap.ht_supported) {
-+		if (sta->vht_cap.vht_supported) {
-+			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
-+				phymode = MODE_11AC_VHT40;
-+			else
-+				phymode = MODE_11AC_VHT20;
-+		} else if (sta->ht_cap.ht_supported) {
- 			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
- 				phymode = MODE_11NG_HT40;
- 			else
-@@ -5215,7 +5224,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 		band->bitrates = ath10k_g_rates;
- 		band->ht_cap = ht_cap;
+ #define	C2H_RX_CMD_HDR_LEN				8
+ #define	GET_C2H_CMD_CMD_LEN(__prxhdr)			\
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+index 9b660df..690a7a1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
+@@ -30,59 +30,18 @@
+ #ifndef __RTL92C_DEF_H__
+ #define __RTL92C_DEF_H__
  
--		/* vht is not supported in 2.4 GHz */
-+		/* Enable the VHT support at 2.4 GHz */
-+		band->vht_cap = vht_cap;
+-#define HAL_RETRY_LIMIT_INFRA				48
+-#define HAL_RETRY_LIMIT_AP_ADHOC			7
+-
+ #define	PHY_RSSI_SLID_WIN_MAX				100
+ #define	PHY_LINKQUALITY_SLID_WIN_MAX			20
+ #define	PHY_BEACON_RSSI_SLID_WIN_MAX			10
  
- 		ar->hw->wiphy->bands[IEEE80211_BAND_2GHZ] = band;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index bd7f29a..6de92e8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4430,7 +4430,7 @@ struct wmi_peer_set_q_empty_callback_cmd {
- #define WMI_PEER_SPATIAL_MUX    0x00200000
- #define WMI_PEER_VHT            0x02000000
- #define WMI_PEER_80MHZ          0x04000000
--#define WMI_PEER_PMF            0x08000000
-+#define WMI_PEER_VHT_2G         0x08000000
+-#define RESET_DELAY_8185				20
+-
+-#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
+-#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
+-
+-#define NUM_OF_FIRMWARE_QUEUE				10
+-#define NUM_OF_PAGES_IN_FW				0x100
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA			0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT			0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH			0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
+-
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM			0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM			0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM			0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM			0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM			0x00
+-
+-#define MAX_LINES_HWCONFIG_TXT				1000
+-#define MAX_BYTES_LINE_HWCONFIG_TXT			256
+-
+-#define SW_THREE_WIRE					0
+-#define HW_THREE_WIRE					2
+-
+-#define BT_DEMO_BOARD					0
+-#define BT_QA_BOARD					1
+-#define BT_FPGA						2
+-
+ #define RX_SMOOTH_FACTOR				20
  
- /*
-  * Peer rate capabilities.
+ #define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
+ #define HAL_PRIME_CHNL_OFFSET_LOWER			1
+ #define HAL_PRIME_CHNL_OFFSET_UPPER			2
+ 
+-#define MAX_H2C_QUEUE_NUM				10
+-
+ #define RX_MPDU_QUEUE					0
+ #define RX_CMD_QUEUE					1
+-#define RX_MAX_QUEUE					2
+-#define AC2QUEUEID(_AC)					(_AC)
+ 
+ #define	C2H_RX_CMD_HDR_LEN				8
+ #define	GET_C2H_CMD_CMD_LEN(__prxhdr)		\
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+index 939c905..4ca1fe1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+@@ -38,58 +38,20 @@
+ #define RF6052_MAX_REG					0x3F
+ #define RF6052_MAX_PATH					2
+ 
+-#define HAL_RETRY_LIMIT_INFRA				48
+-#define HAL_RETRY_LIMIT_AP_ADHOC			7
+-
+ #define	PHY_RSSI_SLID_WIN_MAX				100
+ #define	PHY_LINKQUALITY_SLID_WIN_MAX			20
+ #define	PHY_BEACON_RSSI_SLID_WIN_MAX			10
+ 
+-#define RESET_DELAY_8185				20
+-
+-#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
+ #define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
+ 
+-#define NUM_OF_FIRMWARE_QUEUE				10
+-#define NUM_OF_PAGES_IN_FW				0x100
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA			0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT			0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH			0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
+-
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM			0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM			0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM			0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM			0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM			0x00
+-
+-#define MAX_LINES_HWCONFIG_TXT				1000
+-#define MAX_BYTES_LINE_HWCONFIG_TXT			256
+-
+-#define SW_THREE_WIRE					0
+-#define HW_THREE_WIRE					2
+-
+-#define BT_DEMO_BOARD					0
+-#define BT_QA_BOARD					1
+-#define BT_FPGA						2
+-
+ #define RX_SMOOTH_FACTOR				20
+ 
+ #define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
+ #define HAL_PRIME_CHNL_OFFSET_LOWER			1
+ #define HAL_PRIME_CHNL_OFFSET_UPPER			2
+ 
+-#define MAX_H2C_QUEUE_NUM				10
+-
+ #define RX_MPDU_QUEUE					0
+ #define RX_CMD_QUEUE					1
+-#define RX_MAX_QUEUE					2
+ 
+ #define	C2H_RX_CMD_HDR_LEN				8
+ #define	GET_C2H_CMD_CMD_LEN(__prxhdr)			\
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/def.h b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
+index 6e7a70b..b6303c6 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
+@@ -31,7 +31,6 @@
+ 
+ #define RX_MPDU_QUEUE				0
+ #define RX_CMD_QUEUE				1
+-#define RX_MAX_QUEUE				2
+ 
+ #define SHORT_SLOT_TIME				9
+ #define NON_SHORT_SLOT_TIME			20
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/def.h b/drivers/net/wireless/rtlwifi/rtl8723ae/def.h
+index 94bdd4b..bcdf227 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/def.h
+@@ -26,53 +26,12 @@
+ #ifndef __RTL8723E_DEF_H__
+ #define __RTL8723E_DEF_H__
+ 
+-#define HAL_RETRY_LIMIT_INFRA				48
+-#define HAL_RETRY_LIMIT_AP_ADHOC			7
+-
+-#define RESET_DELAY_8185					20
+-
+-#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
+-#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
+-
+-#define NUM_OF_FIRMWARE_QUEUE				10
+-#define NUM_OF_PAGES_IN_FW					0x100
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA		0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT		0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH		0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
+-
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM		0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM		0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM		0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM		0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM		0x00
+-
+-#define MAX_LINES_HWCONFIG_TXT				1000
+-#define MAX_BYTES_LINE_HWCONFIG_TXT			256
+-
+-#define SW_THREE_WIRE						0
+-#define HW_THREE_WIRE						2
+-
+-#define BT_DEMO_BOARD						0
+-#define BT_QA_BOARD							1
+-#define BT_FPGA								2
+-
+ #define HAL_PRIME_CHNL_OFFSET_DONT_CARE		0
+ #define HAL_PRIME_CHNL_OFFSET_LOWER			1
+ #define HAL_PRIME_CHNL_OFFSET_UPPER			2
+ 
+-#define MAX_H2C_QUEUE_NUM					10
+-
+ #define RX_MPDU_QUEUE						0
+ #define RX_CMD_QUEUE						1
+-#define RX_MAX_QUEUE						2
+-#define AC2QUEUEID(_AC)						(_AC)
+ 
+ #define	C2H_RX_CMD_HDR_LEN					8
+ #define	GET_C2H_CMD_CMD_LEN(__prxhdr)		\
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/def.h b/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
+index a730985..532ef01 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
+@@ -118,55 +118,14 @@
+ #define	WIFI_NAV_UPPER_US				30000
+ #define HAL_92C_NAV_UPPER_UNIT			128
+ 
+-#define HAL_RETRY_LIMIT_INFRA				48
+-#define HAL_RETRY_LIMIT_AP_ADHOC			7
+-
+-#define RESET_DELAY_8185					20
+-
+-#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
+-#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
+-
+-#define NUM_OF_FIRMWARE_QUEUE				10
+-#define NUM_OF_PAGES_IN_FW					0x100
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA		0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
+-#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT		0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH		0x02
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
+-
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM		0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM		0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM		0x048
+-#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM		0x026
+-#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM		0x00
+-
+ #define MAX_RX_DMA_BUFFER_SIZE				0x3E80
+ 
+-#define MAX_LINES_HWCONFIG_TXT				1000
+-#define MAX_BYTES_LINE_HWCONFIG_TXT			256
+-
+-#define SW_THREE_WIRE						0
+-#define HW_THREE_WIRE						2
+-
+-#define BT_DEMO_BOARD						0
+-#define BT_QA_BOARD							1
+-#define BT_FPGA								2
+-
+ #define HAL_PRIME_CHNL_OFFSET_DONT_CARE		0
+ #define HAL_PRIME_CHNL_OFFSET_LOWER			1
+ #define HAL_PRIME_CHNL_OFFSET_UPPER			2
+ 
+-#define MAX_H2C_QUEUE_NUM					10
+-
+ #define RX_MPDU_QUEUE						0
+ #define RX_CMD_QUEUE						1
+-#define RX_MAX_QUEUE						2
+-#define AC2QUEUEID(_AC)						(_AC)
+ 
+ #define MAX_RX_DMA_BUFFER_SIZE_8812	0x3E80
+ 
 -- 
-1.7.9.5
+2.2.2
 
