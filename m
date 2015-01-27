@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f49.google.com ([209.85.215.49]:47057 "EHLO
-	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008AbbALMUV (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:31262 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751172AbbA0Fpy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 07:20:21 -0500
-Received: by mail-la0-f49.google.com with SMTP id hs14so23720818lab.8
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 04:20:20 -0800 (PST)
+	Tue, 27 Jan 2015 00:45:54 -0500
+Message-ID: <1422357337.20608.1.camel@pe-lt950> (sfid-20150127_064557_093261_710C5D7E)
+Subject: Re: [1/8] mwifiex: remove redundant nick_name variable
+From: Avinash Patil <patila@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	"Marc Yang" <yangyang@marvell.com>
+Date: Tue, 27 Jan 2015 16:45:37 +0530
+In-Reply-To: <87lhktl843.fsf@kamboji.qca.qualcomm.com>
+References: <20150123172247.812AD141654@smtp.codeaurora.org>
+	 <87lhktl843.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <54B3B538.5010700@googlemail.com>
-References: <54B272F0.70307@googlemail.com>
-	<54B273E1.6030306@googlemail.com>
-	<CANUX_P2PiGUBaw89Rb2zSuy2x8=GJN=o6XgcasdVMtvoy6kmAQ@mail.gmail.com>
-	<54B2DBAF.7010208@googlemail.com>
-	<CANUX_P1Bdz4R2WUK53fx7r5CuvBmyBdqZWwR+Of=1mi7VncqZQ@mail.gmail.com>
-	<54B3B538.5010700@googlemail.com>
-Date: Mon, 12 Jan 2015 14:20:20 +0200
-Message-ID: <CANUX_P3012KuL8KvAvotVShuUqNXSgnW5g571xpGo1NGhmyNOg@mail.gmail.com> (sfid-20150112_132027_690098_2F09F0AF)
-Subject: Re: IWLWIFI - 3.18-stable
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Chris Clayton <chris2553@googlemail.com>
-Cc: kvalo@codeaurora.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> [snip]
->
->>>>
->>>> The first one (c93edc639392df733c7d72db4376a9add775d18a) is tagged for stable.
->>>
->>> Ah, sorry I missed that.
->>>
->>>> Are you using bluetooth?
->>>
->>> Yes, I have a bluetooth mouse and use bluetooth for audio from time to time.
->>>
->>>> Are you able to tell me which of the two really helps?
->>>
->>> It's c93edc639392df733c7d72db4376a9add775d18a that helps. With that applied, I can set off a task which, in a loop,
->>> continually copies a 180MB file from a server on my network. The network remained stable for over 30 minutes before I
->>> killed the task. Without the patch, the network fails during the first iteration of copying the file.
->>>
->
-> Just by way of confirmation, I'm now running 3.19.0-rc4 with c93edc639392df733c7d72db4376a9add775d18a applied and my
-> network is stable. None of the other patches from iwlwifi-fixes that I was previously using are applied.
->
-> Thanks for your help.
->
->>> a9dc5060bf3a32ac3dad472f15416054b92dc5b5 doesn't seem to have any effect on the instability.
->>
->> Ok - I am not surprised - thanks.
->> c93edc... allows to use 2 antennas instead of one only. Technically,
->> one would be enough, but apparently, in your configuration, using 2
->> antennas allows to improve reliability.
->>
->>>
->>>
->>>> Unless I am missing something, the first one
->>>> (c93edc639392df733c7d72db4376a9add775d18a) should help only if you
->>>> disabled power save. Is that the case?
->>>
->>> Not that I know of. The only power-related thing in my init scripts is echoing 5 to /proc/sys/vm/laptop_mode, which I
->>> believe configures disk activity to save power. The mouse does have a power saving feature, however. According to the
->>> manual, it reduces its power consumption in steps the longer it is inactive. As I frequently work in kde's konsole
->>> terminal application, mouse inactivity is common.
->>>
->>> Hope this helps and feel free to request additional information.
->>
->> Ok - I checked the code and we enable the redundancy mentioned above
->> (2 antenna instead of 1) even if power save is enabled.
->> FWIW - this redundancy is also called "diversity".
->
-> <Smile>. Over 30 years working in the IT industry tells me that is a trick vendors have been using for a long time in
-> order to try and confuse customers into buying something they've already got! :-)
->>
+On Fri, 2015-01-23 at 09:28 -0800, Kalle Valo wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+> 
+> >> This is not used anywhere execpt initialization.
+> >> 
+> >> Signed-off-by: Avinash Patil <patila@marvell.com>
+> >> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> >> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> >
+> > Thanks, 6 patches applied to wireless-drivers-next.git:
+> >
+> > 5e7f03b102eb mwifiex: remove redundant nick_name variable
+> > 534cfed66caf mwifiex: set wiphy params only once
+> > bb2703cffb2f mwifiex: do not declare wdev as pointer
+> > 7d2d4fbf4e8e mwifiex: add init parameter to init command routine
+> > 16b21941fa9a mwifiex: handle PS events on AP interface as well
+> > 770c385d2744 mwifiex: support conversion to any virtual interface type
+> >
+> > 2 patches failed to apply:
+> >
+> > Applying: mwifiex: store permanant mac address in adapter structure
+> > error: patch failed: drivers/net/wireless/mwifiex/init.c:285
+> > error: drivers/net/wireless/mwifiex/init.c: patch does not apply
+> > Patch failed at 0001 mwifiex: store permanant mac address in adapter structure
+> >
+> > Applying: mwifiex: manage virtual interface limits efficiently
+> > error: patch failed: drivers/net/wireless/mwifiex/init.c:286
+> > error: drivers/net/wireless/mwifiex/init.c: patch does not apply
+> > Patch failed at 0001 mwifiex: manage virtual interface limits efficiently
+> 
+> But mwifiex doesn't compile any more so I had to drop all patches.
+> Please resend the whole series.
+> 
 
-Oh - we do that all the time, but this is something else :)
-It is not very easy to take the good system decision: have the
-antennas on all the time and you'll waste power, switch off antennas
-and you will lose link quality.
-The best would be to make it depend on the network as a whole. This is
-what 11k is supposed to solve, but we don't really implement this.
+Hi Kalle,
+
+I will rebase patches on top of master and resend.
+
+Thanks,
+Avinash
+
+
+
