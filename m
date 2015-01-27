@@ -1,69 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:43013 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753079AbbAGP6l (ORCPT
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:62512 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932515AbbA0T63 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 10:58:41 -0500
-Received: by mail-ig0-f176.google.com with SMTP id a13so2883394igq.15
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 07:58:40 -0800 (PST)
+	Tue, 27 Jan 2015 14:58:29 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEdWsDsnVr_bJ3ScSYy6MEQ7VXvWw4VC36zheYN-B=yLrA@mail.gmail.com>
-References: <1420366399-31535-1-git-send-email-eliad@wizery.com>
-	<1420542274.1966.21.camel@sipsolutions.net>
-	<1420553111.1966.32.camel@sipsolutions.net>
-	<1420553688.1966.33.camel@sipsolutions.net>
-	<CAB3XZEctcBuPG6f4ZrZFV5O3Z7+hi+ShFdwvFXdJovG2KeAufQ@mail.gmail.com>
-	<1420570976.1966.34.camel@sipsolutions.net>
-	<CAB3XZEdWsDsnVr_bJ3ScSYy6MEQ7VXvWw4VC36zheYN-B=yLrA@mail.gmail.com>
-Date: Wed, 7 Jan 2015 17:58:40 +0200
-Message-ID: <CAB3XZEdJw=vaLVO+5YXkH1ZPerKYC4s-_+E0nzL+XUXMiZQLkw@mail.gmail.com> (sfid-20150107_165846_455179_5B8FADC8)
-Subject: Re: [PATCH 1/3] mac80211: consider only relevant vifs for
- radar_required calculation
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20150118051117.31866.68634.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+	<20150118051117.31866.68634.stgit@114-36-241-182.dynamic.hinet.net>
+Date: Tue, 27 Jan 2015 19:58:28 +0000
+Message-ID: <CAFSJ42Z7OiPvKO3S3=DZo_t6Mu2AhY1aPnM7=LU1fL40PQoXXQ@mail.gmail.com> (sfid-20150127_205839_702386_34B07AFB)
+Subject: Re: [PATCH 7/7] net: wireless: wcn36xx: handle new trigger_ba format
+From: Eugene Krasnikov <k.eugene.e@gmail.com>
+To: Andy Green <andy.green@linaro.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 6, 2015 at 9:36 PM, Eliad Peller <eliad@wizery.com> wrote:
-> On Tue, Jan 6, 2015 at 9:02 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Tue, 2015-01-06 at 20:57 +0200, Eliad Peller wrote:
->>> On Tue, Jan 6, 2015 at 4:14 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->>> > On Tue, 2015-01-06 at 15:05 +0100, Johannes Berg wrote:
->>> >> On Tue, 2015-01-06 at 12:04 +0100, Johannes Berg wrote:
->>> >> > all three applied.
->>> >>
->>> >> Nope, dropped patch 2 again
->>> >
->>> > And dropped the other two also - with them the sequence of two tests I
->>> > was looking at never completes.
->>> >
->>> err... sorry about that.
->>> i'll look into it.
->>
->> I think there's probably two bugs - the test suite should wait for all
->> the DFS stuff to finish.
->>
->> But the fact that it never completes now is strange, maybe somehow radar
->> detection doesn't get turned off properly after your patches?
->>
-> it's probably local->radar_detect_enabled doesn't get cleared.
-> patch (3) fixes a similar issue, but there seems to be another one.
-> (it seems that patch (1) exposed these issues, so i should probably
-> reorder the patches and make it the last one)
+arg... it looks like the code is starting to have to many
+if(chip_version) cases. Mabe we should concider separate files for
+chip specific logic.
+
+2015-01-18 5:11 GMT+00:00 Andy Green <andy.green@linaro.org>:
+> wcn3620 has a new message structure for the reply to trigger_ba
+> We don't know what to do with the candidate list he sends back,
+> but we can at least accept and ignore it nicely instead of dying.
 >
-ok, sent a new patchset.
+> Signed-off-by: Andy Green <andy.green@linaro.org>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/smd.c |   28 ++++++++++++++++++++++++++--
+>  drivers/net/wireless/ath/wcn36xx/smd.h |    9 +++++++++
+>  2 files changed, 35 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index 819741c..dc24e1b 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -243,8 +243,31 @@ static int wcn36xx_smd_rsp_status_check(void *buf, size_t len)
+>         rsp = (struct wcn36xx_fw_msg_status_rsp *)
+>                 (buf + sizeof(struct wcn36xx_hal_msg_header));
+>
+> -       if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status)
+> +       if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
+> +               pr_err("%s: bad status, len = %d\n", __func__, len);
+> +               return rsp->status;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int wcn36xx_smd_rsp_status_check_bav2(struct wcn36xx *wcn, void *buf,
+> +                                            size_t len)
+> +{
+> +       struct wcn36xx_fw_msg_status_rspv2 *rsp;
+> +
+> +       if (wcn->chip_version != WCN36XX_CHIP_3620)
+> +               return wcn36xx_smd_rsp_status_check(buf, len);
+> +
+> +       if (len < sizeof(struct wcn36xx_hal_msg_header) + sizeof(*rsp))
+> +               return -EIO;
+> +
+> +       rsp = buf + sizeof(struct wcn36xx_hal_msg_header);
+> +
+> +       if (WCN36XX_FW_MSG_RESULT_SUCCESS != rsp->status) {
+> +               pr_err("%s: bad status, len = %d\n", __func__, len);
+>                 return rsp->status;
+> +       }
+>
+>         return 0;
+>  }
+> @@ -1884,7 +1907,8 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
+>                 wcn36xx_err("Sending hal_trigger_ba failed\n");
+>                 goto out;
+>         }
+> -       ret = wcn36xx_smd_rsp_status_check(wcn->hal_buf, wcn->hal_rsp_len);
+> +       ret = wcn36xx_smd_rsp_status_check_bav2(wcn, wcn->hal_buf,
+> +                                               wcn->hal_rsp_len);
+>         if (ret) {
+>                 wcn36xx_err("hal_trigger_ba response failed err=%d\n", ret);
+>                 goto out;
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+> index 008d034..432d3b8 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.h
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+> @@ -44,6 +44,15 @@ struct wcn36xx_fw_msg_status_rsp {
+>         u32     status;
+>  } __packed;
+>
+> +/* wcn3620 returns this for tigger_ba */
+> +
+> +struct wcn36xx_fw_msg_status_rspv2 {
+> +       u8      bss_id[6];
+> +       u32     status __packed;
+> +       u16     count_following_candidates __packed;
+> +       /* candidate list follows */
+> +};
+> +
+>  struct wcn36xx_hal_ind_msg {
+>         struct list_head list;
+>         u8 *msg;
+>
 
-there were some missing updates of local->radar_detect_enabled, so i
-preferred to simply remove it altogether and check for radar detection
-directly when needed (i.e. on scan/roc).
 
-ap_ht_40mhz_intolerant_ap still seems to fail here, but it fails even
-when running only this test, without any of my patches applied.
-now i get the same error with my patches applied ("Exception: AP did
-not move to 40 MHz channel") instead of the EBUSY one.
 
-i'll try debugging this issue as well.
-
-Eliad.
+-- 
+Best regards,
+Eugene
