@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:34980 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751517AbbAZUmd (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26645 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753757AbbA0N6I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 15:42:33 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V2 1/6] rtlwifi: Change logging level for key change
-Date: Mon, 26 Jan 2015 14:42:09 -0600
-Message-Id: <1422304934-9239-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150126_214245_017824_3CB2A7DD)
-In-Reply-To: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 27 Jan 2015 08:58:08 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: introduce struct ath10k_skb_rxcb
+References: <1421407029-23967-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 27 Jan 2015 15:57:54 +0200
+In-Reply-To: <1421407029-23967-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 16 Jan 2015 12:17:08 +0100")
+Message-ID: <877fw8com5.fsf@kamboji.qca.qualcomm.com> (sfid-20150127_145812_041189_4D7C0578)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A recent change in key handling included logging of these changes for
-all debug levels. Such key changes should only be logged when a high
-level of debugging is enabled.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/cam.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> It doesn't make much sense to share the
+> ath10k_skb_cb with Rx path. The Rx path doesn't
+> need to keep any mac80211's data.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
-index 3ef870d..6e64792 100644
---- a/drivers/net/wireless/rtlwifi/cam.c
-+++ b/drivers/net/wireless/rtlwifi/cam.c
-@@ -406,7 +406,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
- 		}
- 	}
- 	if (found) {
--		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
-+		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
- 			 "key_index=%d,cam_bitmap: 0x%x entry_idx=%d\n",
- 			  key_index, rtlpriv->sec.cam_bitmap, entry_idx);
- 		return entry_idx;
+Thanks, both patches applied to ath.git.
+
 -- 
-2.1.2
-
+Kalle Valo
