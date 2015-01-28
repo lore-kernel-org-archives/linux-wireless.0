@@ -1,46 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:43007 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbbAPOJh (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:38707 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751528AbbA2BzB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 09:09:37 -0500
-Received: by mail-wi0-f180.google.com with SMTP id bs8so4084678wib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 06:09:36 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix dtim period with beacon templates
-Date: Fri, 16 Jan 2015 15:08:56 +0100
-Message-Id: <1421417336-19371-1-git-send-email-michal.kazior@tieto.com> (sfid-20150116_150940_732363_65B6ABEC)
+	Wed, 28 Jan 2015 20:55:01 -0500
+Received: from [117.199.141.188] (port=12173 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YGRck-001zZ7-B0
+	for linux-wireless@vger.kernel.org; Wed, 28 Jan 2015 07:21:34 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 4/6] ath9k: Fix manual peak calibration initialization
+Date: Wed, 28 Jan 2015 17:54:24 +0530
+Message-Id: <1422447866-19967-5-git-send-email-sujith@msujith.org> (sfid-20150129_025510_087194_66E35609)
+In-Reply-To: <1422447866-19967-1-git-send-email-sujith@msujith.org>
+References: <1422447866-19967-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware supporting beacon templates (i.e. wmi-tlv
-for qca6174) doesn't implicitly take dtim period
-from the template. Instead it requires vdev param
-to be set accordingly.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This fixes dtim period being stuck at 3.
+The LNA gain setting override needs to be done
+only for AR9330 and PCOEM chips.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 38 +++++++++++++++++++++------
+ 1 file changed, 30 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9524bc5..99af537 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3435,7 +3435,7 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
- 				    arvif->vdev_id, ret);
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 06ab71d..374aef1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1205,22 +1205,34 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ 	int offset[8] = {0}, total = 0, test;
+ 	int agc_out, i;
  
--	if (changed & BSS_CHANGED_BEACON_INFO) {
-+	if (changed & (BSS_CHANGED_BEACON_INFO | BSS_CHANGED_BEACON)) {
- 		arvif->dtim_period = info->dtim_period;
++	/*
++	 * Turn off LNA/SW.
++	 */
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_GAINSTAGES(chain),
+ 		      AR_PHY_65NM_RXRF_GAINSTAGES_RX_OVERRIDE, 0x1);
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_GAINSTAGES(chain),
+ 		      AR_PHY_65NM_RXRF_GAINSTAGES_LNAON_CALDC, 0x0);
+-	if (is_2g)
+-		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_GAINSTAGES(chain),
+-			      AR_PHY_65NM_RXRF_GAINSTAGES_LNA2G_GAIN_OVR, 0x0);
+-	else
+-		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_GAINSTAGES(chain),
+-			      AR_PHY_65NM_RXRF_GAINSTAGES_LNA5G_GAIN_OVR, 0x0);
  
- 		ath10k_dbg(ar, ATH10K_DBG_MAC,
++	if (AR_SREV_9003_PCOEM(ah) || AR_SREV_9330_11(ah)) {
++		if (is_2g)
++			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_GAINSTAGES(chain),
++				      AR_PHY_65NM_RXRF_GAINSTAGES_LNA2G_GAIN_OVR, 0x0);
++		else
++			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_GAINSTAGES(chain),
++				      AR_PHY_65NM_RXRF_GAINSTAGES_LNA5G_GAIN_OVR, 0x0);
++	}
++
++	/*
++	 * Turn off RXON.
++	 */
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXTX2(chain),
+ 		      AR_PHY_65NM_RXTX2_RXON_OVR, 0x1);
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXTX2(chain),
+ 		      AR_PHY_65NM_RXTX2_RXON, 0x0);
+ 
++	/*
++	 * Turn on AGC for cal.
++	 */
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+ 		      AR_PHY_65NM_RXRF_AGC_AGC_OVERRIDE, 0x1);
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+@@ -1228,10 +1240,11 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+ 		      AR_PHY_65NM_RXRF_AGC_AGC_CAL_OVR, 0x1);
+ 
+-	if (AR_SREV_9330_11(ah)) {
++	if (AR_SREV_9330_11(ah))
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+ 			      AR_PHY_65NM_RXRF_AGC_AGC2G_CALDAC_OVR, 0x0);
+-	} else {
++
++	if (AR_SREV_9003_PCOEM(ah)) {
+ 		if (is_2g)
+ 			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+ 				      AR_PHY_65NM_RXRF_AGC_AGC2G_DBDAC_OVR, 0x0);
+@@ -1266,10 +1279,19 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+ 			      AR_PHY_65NM_RXRF_AGC_AGC5G_CALDAC_OVR, total);
+ 
++	/*
++	 * Turn on LNA.
++	 */
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_GAINSTAGES(chain),
+ 		      AR_PHY_65NM_RXRF_GAINSTAGES_RX_OVERRIDE, 0);
++	/*
++	 * Turn off RXON.
++	 */
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXTX2(chain),
+ 		      AR_PHY_65NM_RXTX2_RXON_OVR, 0);
++	/*
++	 * Turn off peak detect calibration.
++	 */
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+ 		      AR_PHY_65NM_RXRF_AGC_AGC_CAL_OVR, 0);
+ }
 -- 
-1.8.5.3
+2.2.2
 
