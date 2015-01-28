@@ -1,36 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:37564 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbbASCKq (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:3475 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754395AbbA2B7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 21:10:46 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com
-Subject: [PATCH 0/6] ath9k patches
-Date: Mon, 19 Jan 2015 07:43:12 +0530
-Message-Id: <1421633598-4488-1-git-send-email-sujith@msujith.org> (sfid-20150119_031111_608106_7D249238)
+	Wed, 28 Jan 2015 20:59:11 -0500
+From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Subject: [PATCH] ath10k: add log level configuration for fw_dbglog
+Date: Wed, 28 Jan 2015 16:42:12 +0530
+Message-ID: <1422443532-27159-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150129_025918_019898_AF3971DE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Introduce optional log level configuration for
+existing debugfs fw_dbglog.
 
-ath9k patches for -next.
+It allow users to configure desired log level
+for firmware debugs.
 
-Sujith Manoharan (6):
-  ath9k: Update QCA953x initvals
-  ath9k: Update AR955x initvals
-  ath9k: Add a macro to identify PCOEM chips
-  ath9k: Fix manual peak calibration initialization
-  ath9k: Set correct peak detect threshold
-  ath9k: Enable manual peak detect calibration
+To configure log level as WARN
 
- drivers/net/wireless/ath/ath9k/ar9003_calib.c      | 61 +++++++++++++++++-----
- drivers/net/wireless/ath/ath9k/ar953x_initvals.h   |  4 +-
- .../net/wireless/ath/ath9k/ar955x_1p0_initvals.h   |  4 +-
- drivers/net/wireless/ath/ath9k/reg.h               |  3 ++
- 4 files changed, 55 insertions(+), 17 deletions(-)
+echo 0xffffffff  2 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
 
--- 
-2.2.2
+Loglevel	Value
+VERBOSE		0
+INFO		1
+WARN		2
+ERR		3
+
+Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h    |  1 +
+ drivers/net/wireless/ath/ath10k/debug.c   | 30 +++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  7 ++++---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 ++--
+ drivers/net/wireless/ath/ath10k/wmi.c     |  5 +++--
+ 5 files changed, 31 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 2d9f871..b4aecbd 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -345,6 +345,7 @@ struct ath10k_debug {
+
+ 	/* protected by conf_mutex */
+ 	u32 fw_dbglog_mask;
++	u32 fw_dbglog_level;
+ 	u32 pktlog_filter;
+ 	u32 reg_addr;
+ 	u32 nf_cal_period;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 42b2e49..b77c51a 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1318,10 +1318,10 @@ static ssize_t ath10k_read_fw_dbglog(struct file *file,
+ {
+ 	struct ath10k *ar = file->private_data;
+ 	unsigned int len;
+-	char buf[32];
++	char buf[64];
+
+-	len = scnprintf(buf, sizeof(buf), "0x%08x\n",
+-			ar->debug.fw_dbglog_mask);
++	len = scnprintf(buf, sizeof(buf), "0x%08x %u\n",
++			ar->debug.fw_dbglog_mask, ar->debug.fw_dbglog_level);
+
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+@@ -1331,19 +1331,30 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
+ 				      size_t count, loff_t *ppos)
+ {
+ 	struct ath10k *ar = file->private_data;
+-	unsigned long mask;
+ 	int ret;
++	char buf[64];
++	unsigned int log_level, mask;
+
+-	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
+-	if (ret)
+-		return ret;
++	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
++
++	/* make sure that buf is null terminated */
++	buf[sizeof(buf) - 1] = 0;
++
++	ret = sscanf(buf, "%x %u", &mask, &log_level);
++
++	if (!ret)
++		return -EINVAL;
+
+ 	mutex_lock(&ar->conf_mutex);
+
+ 	ar->debug.fw_dbglog_mask = mask;
++	ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
++				     log_level;
++
+
+ 	if (ar->state == ATH10K_STATE_ON) {
+-		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask);
++		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask,
++					    ar->debug.fw_dbglog_level);
+ 		if (ret) {
+ 			ath10k_warn(ar, "dbglog cfg failed from debugfs: %d\n",
+ 				    ret);
+@@ -1685,7 +1696,8 @@ int ath10k_debug_start(struct ath10k *ar)
+ 			    ret);
+
+ 	if (ar->debug.fw_dbglog_mask) {
+-		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask);
++		ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask,
++					    ATH10K_DBGLOG_LEVEL_WARN);
+ 		if (ret)
+ 			/* not serious */
+ 			ath10k_warn(ar, "failed to enable dbglog during start: %d",
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 80bd28a..4517993 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -111,7 +111,8 @@ struct wmi_ops {
+ 					     enum wmi_force_fw_hang_type type,
+ 					     u32 delay_ms);
+ 	struct sk_buff *(*gen_mgmt_tx)(struct ath10k *ar, struct sk_buff *skb);
+-	struct sk_buff *(*gen_dbglog_cfg)(struct ath10k *ar, u32 module_enable);
++	struct sk_buff *(*gen_dbglog_cfg)(struct ath10k *ar, u32 module_enable,
++					  u32 log_level);
+ 	struct sk_buff *(*gen_pktlog_enable)(struct ath10k *ar, u32 filter);
+ 	struct sk_buff *(*gen_pktlog_disable)(struct ath10k *ar);
+ 	struct sk_buff *(*gen_pdev_set_quiet_mode)(struct ath10k *ar,
+@@ -821,14 +822,14 @@ ath10k_wmi_force_fw_hang(struct ath10k *ar,
+ }
+
+ static inline int
+-ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable)
++ath10k_wmi_dbglog_cfg(struct ath10k *ar, u32 module_enable, u32 log_level)
+ {
+ 	struct sk_buff *skb;
+
+ 	if (!ar->wmi.ops->gen_dbglog_cfg)
+ 		return -EOPNOTSUPP;
+
+-	skb = ar->wmi.ops->gen_dbglog_cfg(ar, module_enable);
++	skb = ar->wmi.ops->gen_dbglog_cfg(ar, module_enable, log_level);
+ 	if (IS_ERR(skb))
+ 		return PTR_ERR(skb);
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index d3cf91dc..d3d5aea 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2044,8 +2044,8 @@ ath10k_wmi_tlv_op_gen_force_fw_hang(struct ath10k *ar,
+ }
+
+ static struct sk_buff *
+-ath10k_wmi_tlv_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
+-{
++ath10k_wmi_tlv_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable,
++				 u32 log_level) {
+ 	struct wmi_tlv_dbglog_cmd *cmd;
+ 	struct wmi_tlv *tlv;
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d340361..2fa68ad 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4960,7 +4960,8 @@ ath10k_wmi_op_gen_force_fw_hang(struct ath10k *ar,
+ }
+
+ static struct sk_buff *
+-ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
++ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable,
++			     u32 log_level)
+ {
+ 	struct wmi_dbglog_cfg_cmd *cmd;
+ 	struct sk_buff *skb;
+@@ -4973,7 +4974,7 @@ ath10k_wmi_op_gen_dbglog_cfg(struct ath10k *ar, u32 module_enable)
+ 	cmd = (struct wmi_dbglog_cfg_cmd *)skb->data;
+
+ 	if (module_enable) {
+-		cfg = SM(ATH10K_DBGLOG_LEVEL_VERBOSE,
++		cfg = SM(log_level,
+ 			 ATH10K_DBGLOG_CFG_LOG_LVL);
+ 	} else {
+ 		/* set back defaults, all modules with WARN level */
+--
+1.9.1
 
