@@ -1,97 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fep17.mx.upcmail.net ([62.179.121.37]:32989 "EHLO
-	fep17.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754930AbbAFKjA (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56884 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934608AbbA1EnC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 05:39:00 -0500
-Received: from edge03.upcmail.net ([192.168.13.238])
-          by viefep17-int.chello.at
-          (InterMail vM.8.01.05.05 201-2260-151-110-20120111) with ESMTP
-          id <20150106103857.NYDY20864.viefep17-int.chello.at@edge03.upcmail.net>
-          for <linux-wireless@vger.kernel.org>;
-          Tue, 6 Jan 2015 11:38:57 +0100
-Received: from [194.124.158.2] (jupiter.think.ch [194.124.158.2])
-	(authenticated bits=0)
-	by luna.think.ch (8.14.3/8.14.3) with ESMTP id t06ActM4026929
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Tue, 6 Jan 2015 11:38:56 +0100
-Message-ID: <54ABBB43.1000803@think.ch> (sfid-20150106_113912_877076_CA210B8C)
-Date: Tue, 06 Jan 2015 11:38:59 +0100
-From: Erich Titl <erich.titl@think.ch>
+	Tue, 27 Jan 2015 23:43:02 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4dAmo029208
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:43:02 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s49ry0gqp-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:43:02 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 2/8] mwifiex: set wiphy params only once
+Date: Wed, 28 Jan 2015 15:41:59 +0530
+Message-ID: <1422439925-25666-3-git-send-email-patila@marvell.com> (sfid-20150128_054307_098560_B7C0050D)
+In-Reply-To: <1422439925-25666-1-git-send-email-patila@marvell.com>
+References: <1422439925-25666-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-CC: linux-wireless@vger.kernel.org
-Subject: Re: b43 driver and WEP (solved)
-References: <54AA5438.9070902@think.ch> <54AAFFB1.8030109@lwfinger.net>	 <54AB2405.3050602@think.ch> <54AB31EB.6020801@lwfinger.net>	 (sfid-20150106_015306_425223_200E98E0) <1420532972.1966.4.camel@sipsolutions.net>
-In-Reply-To: <1420532972.1966.4.camel@sipsolutions.net>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms050608040807060905070706"
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+RTS threshold, fragmentation threshold are per device properties.
+Setting them on any interface would be reflected for all other
+interfaces as well. This patch removes unnesessary command download
+per interface.
 
---------------ms050608040807060905070706
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 111 ++++++++++++++------------------
+ 1 file changed, 48 insertions(+), 63 deletions(-)
 
-Am 06.01.2015 um 09:29 schrieb Johannes Berg:
-> On Mon, 2015-01-05 at 18:52 -0600, Larry Finger wrote:
->=20
->> Glad you found it. Strange that loading mac80211 did not force loading=
-=2E Have you=20
->> run 'depmod -a' on the modules?
->=20
-> I believe that mac80211 doesn't have a strong dependency on the module =
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 7be1e9b..dd0e410 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -590,77 +590,62 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+ 	struct mwifiex_private *priv;
+ 	struct mwifiex_uap_bss_param *bss_cfg;
+-	int ret, bss_started, i;
 -
-> it just loads the crypto algorithm at runtime.
+-	for (i = 0; i < adapter->priv_num; i++) {
+-		priv = adapter->priv[i];
+-
+-		switch (priv->bss_role) {
+-		case MWIFIEX_BSS_ROLE_UAP:
+-			bss_cfg = kzalloc(sizeof(struct mwifiex_uap_bss_param),
+-					  GFP_KERNEL);
+-			if (!bss_cfg)
+-				return -ENOMEM;
+-
+-			mwifiex_set_sys_config_invalid_data(bss_cfg);
+-
+-			if (changed & WIPHY_PARAM_RTS_THRESHOLD)
+-				bss_cfg->rts_threshold = wiphy->rts_threshold;
+-			if (changed & WIPHY_PARAM_FRAG_THRESHOLD)
+-				bss_cfg->frag_threshold = wiphy->frag_threshold;
+-			if (changed & WIPHY_PARAM_RETRY_LONG)
+-				bss_cfg->retry_limit = wiphy->retry_long;
+-
+-			bss_started = priv->bss_started;
+-
+-			ret = mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_STOP,
+-					       HostCmd_ACT_GEN_SET, 0,
+-					       NULL, true);
+-			if (ret) {
+-				wiphy_err(wiphy, "Failed to stop the BSS\n");
+-				kfree(bss_cfg);
+-				return ret;
+-			}
++	int ret;
+ 
+-			ret = mwifiex_send_cmd(priv, HostCmd_CMD_UAP_SYS_CONFIG,
+-					       HostCmd_ACT_GEN_SET,
+-					       UAP_BSS_PARAMS_I, bss_cfg,
+-					       false);
++	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ 
+-			kfree(bss_cfg);
++	switch (priv->bss_role) {
++	case MWIFIEX_BSS_ROLE_UAP:
++		if (priv->bss_started) {
++			dev_err(adapter->dev,
++				"cannot change wiphy params when bss started");
++			return -EINVAL;
++		}
+ 
+-			if (ret) {
+-				wiphy_err(wiphy, "Failed to set bss config\n");
+-				return ret;
+-			}
++		bss_cfg = kzalloc(sizeof(*bss_cfg), GFP_KERNEL);
++		if (!bss_cfg)
++			return -ENOMEM;
+ 
+-			if (!bss_started)
+-				break;
++		mwifiex_set_sys_config_invalid_data(bss_cfg);
+ 
+-			ret = mwifiex_send_cmd(priv, HostCmd_CMD_UAP_BSS_START,
+-					       HostCmd_ACT_GEN_SET, 0,
+-					       NULL, false);
+-			if (ret) {
+-				wiphy_err(wiphy, "Failed to start BSS\n");
+-				return ret;
+-			}
++		if (changed & WIPHY_PARAM_RTS_THRESHOLD)
++			bss_cfg->rts_threshold = wiphy->rts_threshold;
++		if (changed & WIPHY_PARAM_FRAG_THRESHOLD)
++			bss_cfg->frag_threshold = wiphy->frag_threshold;
++		if (changed & WIPHY_PARAM_RETRY_LONG)
++			bss_cfg->retry_limit = wiphy->retry_long;
++
++		ret = mwifiex_send_cmd(priv, HostCmd_CMD_UAP_SYS_CONFIG,
++				       HostCmd_ACT_GEN_SET,
++				       UAP_BSS_PARAMS_I, bss_cfg,
++				       false);
++
++		kfree(bss_cfg);
++		if (ret) {
++			wiphy_err(wiphy, "Failed to set wiphy phy params\n");
++			return ret;
++		}
++		break;
+ 
+-			break;
+ 		case MWIFIEX_BSS_ROLE_STA:
+-			if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
+-				ret = mwifiex_set_rts(priv,
+-						      wiphy->rts_threshold);
+-				if (ret)
+-					return ret;
+-			}
+-			if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
+-				ret = mwifiex_set_frag(priv,
+-						       wiphy->frag_threshold);
+-				if (ret)
+-					return ret;
+-			}
+-			break;
++		if (priv->media_connected) {
++			dev_err(adapter->dev,
++				"cannot change wiphy params when connected");
++			return -EINVAL;
++		}
++		if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
++			ret = mwifiex_set_rts(priv,
++					      wiphy->rts_threshold);
++			if (ret)
++				return ret;
+ 		}
++		if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
++			ret = mwifiex_set_frag(priv,
++					       wiphy->frag_threshold);
++			if (ret)
++				return ret;
++		}
++		break;
+ 	}
+ 
+ 	return 0;
+-- 
+1.8.1.4
 
-Looking at the code that's exactly it.
-
-Erich
-
-
-
-
---------------ms050608040807060905070706
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-ccLeqQY9BgWnv7+dAAAAAAAA
---------------ms050608040807060905070706--
