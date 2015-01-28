@@ -1,40 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44890 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752094AbbABNda (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:12094 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964995AbbA1En2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 08:33:30 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Enable RX batching
-References: <1419834084-11859-1-git-send-email-sujith@msujith.org>
-	<87fvbt62x9.fsf@kamboji.qca.qualcomm.com>
-	<21670.22986.926659.849716@gargle.gargle.HOWL>
-	<87bnmh5zyh.fsf@kamboji.qca.qualcomm.com>
-	<21670.30281.688316.623369@gargle.gargle.HOWL>
-Date: Fri, 2 Jan 2015 15:33:20 +0200
-In-Reply-To: <21670.30281.688316.623369@gargle.gargle.HOWL> (Sujith
-	Manoharan's message of "Fri, 2 Jan 2015 16:13:21 +0530")
-Message-ID: <874ms95mu7.fsf@kamboji.qca.qualcomm.com> (sfid-20150102_143507_720034_A0CA64B0)
+	Tue, 27 Jan 2015 23:43:28 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4hSap031545
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:43:28 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s49ry0grb-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:43:28 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 6/8] mwifiex: manage virtual interface limits efficiently
+Date: Wed, 28 Jan 2015 15:42:03 +0530
+Message-ID: <1422439925-25666-7-git-send-email-patila@marvell.com> (sfid-20150128_054335_777137_B1B3B7B3)
+In-Reply-To: <1422439925-25666-1-git-send-email-patila@marvell.com>
+References: <1422439925-25666-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan <sujith@msujith.org> writes:
+Currently interface limits are checked by seeing if bss_mode for
+particular priv is set. If bss_mode is not set, interface creation
+is allowed. This patch adds framework to initializes maximum virtual
+interfaces supported during load time and check current number of
+interfaces created agains allowed interface limit during new virtual
+interface creation.
 
-> Kalle Valo wrote:
->> > Along with the other patch and an internal fix,
->> > UDP RX increased to about 950 Mbps.
->> 
->> What was the number before?
->
-> It was about 600 Mbps. Maybe slightly higher, but the CPU
-> was maxed out by the torrent of tasklets trying to
-> replenish HTT buffers.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 80 ++++++++++++++++++++++++++++-----
+ drivers/net/wireless/mwifiex/decl.h     | 10 +++++
+ drivers/net/wireless/mwifiex/init.c     |  3 ++
+ drivers/net/wireless/mwifiex/main.h     | 21 +++++++++
+ 4 files changed, 102 insertions(+), 12 deletions(-)
 
-Wow, that's a huge improvement.
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 85f5019..a0221b5 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2185,13 +2185,20 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_ADHOC:
+-		priv = adapter->priv[MWIFIEX_BSS_TYPE_STA];
+-		if (priv->bss_mode) {
++		if (adapter->curr_iface_comb.sta_intf ==
++		    adapter->iface_limit.sta_intf) {
+ 			wiphy_err(wiphy,
+ 				  "cannot create multiple sta/adhoc ifaces\n");
+ 			return ERR_PTR(-EINVAL);
+ 		}
+ 
++		priv = mwifiex_get_unused_priv(adapter);
++		if (!priv) {
++			wiphy_err(wiphy,
++				  "could not get free private struct\n");
++			return ERR_PTR(-EFAULT);
++		}
++
+ 		priv->wdev.wiphy = wiphy;
+ 		priv->wdev.iftype = NL80211_IFTYPE_STATION;
+ 
+@@ -2208,13 +2215,20 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+-		priv = adapter->priv[MWIFIEX_BSS_TYPE_UAP];
+-
+-		if (priv->bss_mode) {
+-			wiphy_err(wiphy, "Can't create multiple AP interfaces");
++		if (adapter->curr_iface_comb.uap_intf ==
++		    adapter->iface_limit.uap_intf) {
++			wiphy_err(wiphy,
++				  "cannot create multiple AP ifaces\n");
+ 			return ERR_PTR(-EINVAL);
+ 		}
+ 
++		priv = mwifiex_get_unused_priv(adapter);
++		if (!priv) {
++			wiphy_err(wiphy,
++				  "could not get free private struct\n");
++			return ERR_PTR(-EFAULT);
++		}
++
+ 		priv->wdev.wiphy = wiphy;
+ 		priv->wdev.iftype = NL80211_IFTYPE_AP;
+ 
+@@ -2228,15 +2242,21 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 
+ 		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+-		priv = adapter->priv[MWIFIEX_BSS_TYPE_P2P];
+-
+-		if (priv->bss_mode) {
+-			wiphy_err(wiphy, "Can't create multiple P2P ifaces");
++		if (adapter->curr_iface_comb.p2p_intf ==
++		    adapter->iface_limit.p2p_intf) {
++			wiphy_err(wiphy,
++				  "cannot create multiple P2P ifaces\n");
+ 			return ERR_PTR(-EINVAL);
+ 		}
+ 
+-		priv->wdev.wiphy = wiphy;
++		priv = mwifiex_get_unused_priv(adapter);
++		if (!priv) {
++			wiphy_err(wiphy,
++				  "could not get free private struct\n");
++			return ERR_PTR(-EFAULT);
++		}
+ 
++		priv->wdev.wiphy = wiphy;
+ 		/* At start-up, wpa_supplicant tries to change the interface
+ 		 * to NL80211_IFTYPE_STATION if it is not managed mode.
+ 		 */
+@@ -2329,6 +2349,23 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	mwifiex_dev_debugfs_init(priv);
+ #endif
+ 
++	switch (type) {
++	case NL80211_IFTYPE_UNSPECIFIED:
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_ADHOC:
++		adapter->curr_iface_comb.sta_intf++;
++		break;
++	case NL80211_IFTYPE_AP:
++		adapter->curr_iface_comb.uap_intf++;
++		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++		adapter->curr_iface_comb.p2p_intf++;
++		break;
++	default:
++		wiphy_err(wiphy, "type not supported\n");
++		return ERR_PTR(-EINVAL);
++	}
++
+ 	return &priv->wdev;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_add_virtual_intf);
+@@ -2339,12 +2376,13 @@ EXPORT_SYMBOL_GPL(mwifiex_add_virtual_intf);
+ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
++	struct mwifiex_adapter *adapter = priv->adapter;
+ 
+ #ifdef CONFIG_DEBUG_FS
+ 	mwifiex_dev_debugfs_remove(priv);
+ #endif
+ 
+-	mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
++	mwifiex_stop_net_dev_queue(priv->netdev, adapter);
+ 
+ 	if (netif_carrier_ok(priv->netdev))
+ 		netif_carrier_off(priv->netdev);
+@@ -2359,6 +2397,24 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 
+ 	priv->media_connected = false;
+ 
++	switch (priv->bss_mode) {
++	case NL80211_IFTYPE_UNSPECIFIED:
++	case NL80211_IFTYPE_STATION:
++	case NL80211_IFTYPE_ADHOC:
++		adapter->curr_iface_comb.sta_intf++;
++		break;
++	case NL80211_IFTYPE_AP:
++		adapter->curr_iface_comb.uap_intf++;
++		break;
++	case NL80211_IFTYPE_P2P_CLIENT:
++	case NL80211_IFTYPE_P2P_GO:
++		adapter->curr_iface_comb.p2p_intf++;
++		break;
++	default:
++		dev_err(adapter->dev, "del_virtual_intf: type not supported\n");
++		break;
++	}
++
+ 	priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+ 
+ 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA ||
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 7aa988e..4481ac4 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -104,6 +104,10 @@
+ /* Rate index for OFDM 0 */
+ #define MWIFIEX_RATE_INDEX_OFDM0   4
+ 
++#define MWIFIEX_MAX_STA_NUM		1
++#define MWIFIEX_MAX_UAP_NUM		1
++#define MWIFIEX_MAX_P2P_NUM		1
++
+ enum mwifiex_bss_type {
+ 	MWIFIEX_BSS_TYPE_STA = 0,
+ 	MWIFIEX_BSS_TYPE_UAP = 1,
+@@ -232,4 +236,10 @@ struct mwifiex_histogram_data {
+ 	atomic_t num_samples;
+ };
+ 
++struct mwifiex_iface_comb {
++	u8 sta_intf;
++	u8 uap_intf;
++	u8 p2p_intf;
++};
++
+ #endif /* !_MWIFIEX_DECL_H_ */
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 2975b51..1d1c3c8 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -298,6 +298,9 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	adapter->key_api_major_ver = 0;
+ 	adapter->key_api_minor_ver = 0;
+ 	memset(adapter->perm_addr, 0xff, ETH_ALEN);
++	adapter->iface_limit.sta_intf = MWIFIEX_MAX_STA_NUM;
++	adapter->iface_limit.uap_intf = MWIFIEX_MAX_UAP_NUM;
++	adapter->iface_limit.p2p_intf = MWIFIEX_MAX_P2P_NUM;
+ 
+ 	setup_timer(&adapter->wakeup_timer, wakeup_timer_fn,
+ 		    (unsigned long)adapter);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 9686bd8..78304a7 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -730,6 +730,8 @@ struct mwifiex_if_ops {
+ 
+ struct mwifiex_adapter {
+ 	u8 iface_type;
++	struct mwifiex_iface_comb iface_limit;
++	struct mwifiex_iface_comb curr_iface_comb;
+ 	struct mwifiex_private *priv[MWIFIEX_MAX_BSS_NUM];
+ 	u8 priv_num;
+ 	const struct firmware *firmware;
+@@ -1150,6 +1152,25 @@ mwifiex_get_priv(struct mwifiex_adapter *adapter,
+ }
+ 
+ /*
++ * This function returns the first available unused private structure pointer.
++ */
++static inline struct mwifiex_private *
++mwifiex_get_unused_priv(struct mwifiex_adapter *adapter)
++{
++	int i;
++
++	for (i = 0; i < adapter->priv_num; i++) {
++		if (adapter->priv[i]) {
++			if (adapter->priv[i]->bss_mode ==
++			    NL80211_IFTYPE_UNSPECIFIED)
++				break;
++		}
++	}
++
++	return ((i < adapter->priv_num) ? adapter->priv[i] : NULL);
++}
++
++/*
+  * This function returns the driver private structure of a network device.
+  */
+ static inline struct mwifiex_private *
 -- 
-Kalle Valo
+1.8.1.4
+
