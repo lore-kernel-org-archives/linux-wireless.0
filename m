@@ -1,67 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:43647 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947AbbABS4l (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:57722 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbbA2BVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 13:56:41 -0500
-Date: Fri, 2 Jan 2015 13:56:39 -0500
-From: Matthew Emerson <emersonmde@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: changes stop ap mode to use reset
- function
-Message-ID: <20150102185639.GA12315@gmail.com> (sfid-20150102_195717_032407_F82E02A3)
-References: <1419819736-4861-1-git-send-email-emersonmde@gmail.com>
- <wrfjoaqhmb91.fsf@redhat.com>
+	Wed, 28 Jan 2015 20:21:46 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <wrfjoaqhmb91.fsf@redhat.com>
+In-Reply-To: <1422424187-19059-1-git-send-email-pramod.gurav@smartplayin.com>
+References: <1422424187-19059-1-git-send-email-pramod.gurav@smartplayin.com>
+Date: Wed, 28 Jan 2015 08:13:54 +0100
+Message-ID: <CACna6rw5uqB=KZjcao8kLvQ0rgCuqOo7KkyReMF3ZoT0ZH4U=Q@mail.gmail.com> (sfid-20150129_045048_442980_F3DF079B)
+Subject: Re: [PATCH RESEND] ssb: Fix Sparse error in main
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Pramod Gurav <pramod.gurav@smartplayin.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	John Linville <linville@tuxdriver.com>,
+	Michael Buesch <m@bues.ch>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 02, 2015 at 10:51:38AM -0500, Jes Sorensen wrote:
-> Matthew Emerson <emersonmde@gmail.com> writes:
-> > Changes stop_ap_mode23a() to use rtw_reset_securitypriv23a. This makes
-> > the code cleaner and fixes two checkpatch.pl errors, one line over 80
-> > characters, and one spacing issue.
-> >
-> > Signed-off-by: Matthew Emerson <emersonmde@gmail.com>
-> > ---
-> >  drivers/staging/rtl8723au/core/rtw_ap.c | 6 ++----
-> >  1 file changed, 2 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
-> > index e394d12c36b0..510ee212496f 100644
-> > --- a/drivers/staging/rtl8723au/core/rtw_ap.c
-> > +++ b/drivers/staging/rtl8723au/core/rtw_ap.c
-> > @@ -1870,10 +1870,8 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
-> >  	pmlmepriv->update_bcn = false;
-> >  	pmlmeext->bstart_bss = false;
-> >  
-> > -	/* reset and init security priv , this can refine with rtw_reset_securitypriv23a */
-> > -	memset((unsigned char *)&padapter->securitypriv, 0, sizeof (struct security_priv));
-> > -	padapter->securitypriv.ndisauthtype = Ndis802_11AuthModeOpen;
-> > -	padapter->securitypriv.ndisencryptstatus = Ndis802_11WEPDisabled;
-> > +	/* reset and init security priv */
-> > +	rtw_reset_securitypriv23a(padapter);
-> 
-> This is broken, rtw_reset_securitypriv23a() takes different actions
-> based on the value of adapter->securitypriv.dot11AuthAlgrthm - you leave
-> it at it's old value, which does not have the same effect as the above.
-> 
-> If anything you should remove the memset() and call
-> rtw_reset_securitypriv23a() after the two assignments.
-> 
-> NACK
-> 
-> Jes
+On 28 January 2015 at 06:49, Pramod Gurav <pramod.gurav@smartplayin.com> wrote:
+> This change fixes below sparse error:
+> drivers/ssb/main.c:94:16: warning: symbol 'ssb_sdio_func_to_bus'
+> was not declared. Should it be static?
 
-Thank you for you feedback! I had noticed that the two assignments above
-(for .ndisauthtype and .ndisencryptstatus) take place in both branches
-of the if statement in rtw_reset_securitypriv23a() so I thought removing
-them here would be okay. I'll be sure to make the changes you suggested.
-
-Thanks for your time,
-Matthew Emerson
+Seems like it was never used. Looks OK.
