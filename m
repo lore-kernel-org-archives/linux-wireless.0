@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38153 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751539AbbAGWQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 17:16:40 -0500
-Message-ID: <1420668978.3407.28.camel@sipsolutions.net> (sfid-20150107_231701_511926_BFE1771A)
-Subject: Re: [PATCH 2/2] Fix copy-paste bug: assign from src struct not dest
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Giel van Schijndel <me@mortis.eu>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>,
-	linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Eliad Peller <eliad@wizery.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>
-Date: Wed, 07 Jan 2015 23:16:18 +0100
-In-Reply-To: <20150107191836.GA18978@salidar.dom.custoft.eu>
-References: <20150107191836.GA18978@salidar.dom.custoft.eu>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14143 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965057AbbA1Eyt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Jan 2015 23:54:49 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4o6ZW024539
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:54:48 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1s50eqxb50-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:54:48 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <gaoqs@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 01/10] mwifiex: do not send regulatory update while starting AP
+Date: Wed, 28 Jan 2015 15:54:16 +0530
+Message-ID: <1422440665-3940-2-git-send-email-patila@marvell.com> (sfid-20150128_055454_349953_E7226672)
+In-Reply-To: <1422440665-3940-1-git-send-email-patila@marvell.com>
+References: <1422440665-3940-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-01-07 at 20:18 +0100, Giel van Schijndel wrote:
+When regulatory domain changes, cfg80211 already issues request
+to change regulatory domain to driver via reg_notifier.
+There is no need to set regulatory again during start_ap.
 
-> IMO the aligned block of code has the significant advantage of taking
-> advantage of humans' ability to spot things that break a pattern. Which
-> in this case becomes *very* visible when properly aligned, because
-> without the alignment there is no (visual) pattern (or at least not one
-> very suitable for my "visual processing system", I know the same applies
-> to at least some others).
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Yeah, well, but why even invoke that "visual processing system"?
-
-If you look, for example, at the __skb_clone function it just uses a
-macro:
-
-#define C(x) n->x = skb->x
-
-and then
-
-	C(len);
-	C(data_len);
-
-etc.
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 30ea94a..1acccc5 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1739,7 +1739,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 		priv->adapter->config_bands = config_bands;
+ 
+ 	mwifiex_set_uap_rates(bss_cfg, params);
+-	mwifiex_send_domain_info_cmd_fw(wiphy);
+ 
+ 	if (mwifiex_set_secure_params(priv, bss_cfg, params)) {
+ 		kfree(bss_cfg);
+-- 
+1.8.1.4
 
