@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.devonsuperstore.com ([8.20.30.154]:49016 "EHLO
-	mx1.devonhealth.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1757999AbbA0O2P convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34967 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbbA2BGX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 09:28:15 -0500
-From: Jason Plum <jplum@devonit.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	"burton.b.williams@gmail.com >> Burton Williams"
-	<burton.b.williams@gmail.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 27 Jan 2015 09:19:36 -0500
-Subject: RE: RTL8192ee
-Message-ID: <B57A220D1EE1644685BA9AD5C790D205421EDC730D@SOUTHSIDE.devonintlgroup.com> (sfid-20150127_152817_968427_D602052C)
-References: <54C6F65A.90009@lwfinger.net>
-In-Reply-To: <54C6F65A.90009@lwfinger.net>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 28 Jan 2015 20:06:23 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: implement sta keepalive command
+References: <1421749440-10457-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 28 Jan 2015 10:20:43 +0200
+In-Reply-To: <1421749440-10457-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 20 Jan 2015 11:23:59 +0100")
+Message-ID: <87h9vb9uzo.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_020634_515747_378986FC)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry,
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I know that to some degree I am jumping this chain. That being said, please allow me to offer encouragement in the development of the rtl8192ee, rtl872ae, and the other members of the rtlwifi_new github.
+> From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+>
+> New wmi-tlv firmware for qca6174 has STA keepalive
+> service available. The service can provide
+> automatic idle connection polling via NullFunc
+> frames to AP when acting as a client.
+>
+> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-I have been using these myself, and keeping them in my sights as my commercial product that has to support these drivers is being developed. There are some hiccups as is to be expected, but your work is greatly appreciated. I strive to keep our product as free of vendor proprietary code as much as possible and you work with rtlwifi_new and the available integration with multiple revisions of the kernel has been a recent key to that effort.
+I had a trivial conflict, please check my resolution from the pending
+branch:
 
-Jason Plum
-Sr. Software Engineer
-Devon IT
-________________________________________
-From: linux-wireless-owner@vger.kernel.org [linux-wireless-owner@vger.kernel.org] On Behalf Of Larry Finger [Larry.Finger@lwfinger.net]
-Sent: Monday, January 26, 2015 9:22 PM
-To: burton.b.williams@gmail.com >> Burton Williams
-Cc: linux-wireless
-Subject: RTL8192ee
+Applying: ath10k: implement sta keepalive command
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/ath/ath10k/wmi.h
+Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.h
+CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.h
+Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
+Auto-merging drivers/net/wireless/ath/ath10k/wmi-ops.h
+CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-ops.h
+Failed to merge in the changes.
+Patch failed at 0001 ath10k: implement sta keepalive command
 
-Burton,
-
-I inadvertently deleted your E-mail, thus I cannot reply to it.
-
-I am sorry that you have not had access to a driver for your wireless card. The
-initial driver was accepted into Linux in May 2014 in staging. It was probably
-not available to you because your distro is one of those that does not enable
-staging drivers. Perhaps you should consider a different distro.
-
-In addition to that driver, another version of the one in kernel 3.18 was made
-available in a GitHub repo that was created in August 2014. That one contains
-all the newest versions, and was the source of the changes introduced in kernel
-3.18.
-
-I have worked very hard on getting these drivers into the kernel. Comments like
-yours make me wonder if it has been worth my effort.
-
-Larry
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Kalle Valo
