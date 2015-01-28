@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:33065 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752827AbbARLrN (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:46941 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964891AbbA1Eah (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 06:47:13 -0500
-Received: by mail-lb0-f173.google.com with SMTP id p9so1054696lbv.4
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 03:47:12 -0800 (PST)
-Message-ID: <54BB9D3C.90306@cogentembedded.com> (sfid-20150118_124720_838505_98F9EBED)
-Date: Sun, 18 Jan 2015 14:47:08 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+	Tue, 27 Jan 2015 23:30:37 -0500
+Received: by mail-ig0-f181.google.com with SMTP id hn18so8936080igb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:30:36 -0800 (PST)
+Date: Tue, 27 Jan 2015 23:30:05 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Peter Oh <poh@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
+Message-ID: <20150128043005.GB24933@localhost> (sfid-20150128_053045_003801_CBF8FDAB)
+References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com>
+ <20150127213349.GA24933@localhost>
+ <54C824DC.5080804@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Andy Green <andy.green@linaro.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-CC: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 5/7] net: wireless: wcn36xx: swallow two wcn3620 IND messages
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net> <20150118051105.31866.43889.stgit@114-36-241-182.dynamic.hinet.net>
-In-Reply-To: <20150118051105.31866.43889.stgit@114-36-241-182.dynamic.hinet.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54C824DC.5080804@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+On Tue, Jan 27, 2015 at 03:53:00PM -0800, Peter Oh wrote:
+> >>-	/* IMPORTANT: this extra read transaction is required to
+> >>-	 * flush the posted write buffer. */
+> >>-	(void)ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
+> >>-				PCIE_INTR_ENABLE_ADDRESS);
+> >>+	/* invoke data sync barrier */
+> >>+	wmb();
+> >>  }
+> >I am no expert in arcane PCI matters, but that looks suspicious to me.  I seem
+> >to recall wmb() only enforced ordering, and maybe not even memory-IO ordering
+> >on all platforms.  If you want to disable an irq, it really seems like you
+> >would want to flush posted writes so you know the hardware has seen it.
+> enforced ordering is happened by flush write buffer and wmb is
+> commonly used to flush write buffer.
+> so that wmb guarantees ordering by flush write buffer. That's why
+> it's called a memory barrier.
 
-On 1/18/2015 8:11 AM, Andy Green wrote:
+Ok, sure, but I/O ordering two different writes, and ensuring device
+has seen a posted write, are related but different things, no?  So if
+you are disabling an interrupt and want to be really sure interrupts
+are off when function returns, I think you still want the read.
 
-> WCN3620 can asynchronously send two new kinds of indication message,
-> since we can't handle them just accept them quietly.
+Anyway, it's your driver, just pointing out that the "IMPORTANT"
+read might still be important to someone.
 
-> Signed-off-by: Andy Green <andy.green@linaro.org>
-> ---
->   drivers/net/wireless/ath/wcn36xx/smd.c |    6 ++++++
->   1 file changed, 6 insertions(+)
-
-> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-> index 6398693..819741c 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-[...]
-> @@ -2107,6 +2109,10 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
->   	msg_header = (struct wcn36xx_hal_msg_header *)hal_ind_msg->msg;
->
->   	switch (msg_header->msg_type) {
-> +	case WCN36XX_HAL_COEX_IND:
-> +		break;
-> +	case WCN36XX_HAL_AVOID_FREQ_RANGE_IND:
-> +		break;
-
-    Can't you merge these 2 cases, so that there's only one *break*?
-
-[...]
-
-WBR, Sergei
-
+-- 
+Bob Copeland %% http://bobcopeland.com/
