@@ -1,89 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:59070 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952AbbAPKjl (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:38571 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760362AbbA2CqL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 05:39:41 -0500
-Received: by mail-wi0-f181.google.com with SMTP id hi2so2937070wib.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 02:39:40 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFCv2 5/6] mac80211: ibss/mesh move bw checking
-Date: Fri, 16 Jan 2015 11:38:43 +0100
-Message-Id: <1421404724-32326-5-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150116_113947_285492_F84FDDB6)
-In-Reply-To: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1421404724-32326-1-git-send-email-janusz.dziedzic@tieto.com>
+	Wed, 28 Jan 2015 21:46:11 -0500
+Received: by mail-wi0-f169.google.com with SMTP id h11so3171767wiw.0
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Jan 2015 18:46:10 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/2] ath10k: change dma beacon cmd prototype
+Date: Wed, 28 Jan 2015 11:22:04 +0100
+Message-Id: <1422440525-11115-1-git-send-email-michal.kazior@tieto.com> (sfid-20150129_034624_975892_8DF94F9E)
+In-Reply-To: <1421412811-6387-1-git-send-email-michal.kazior@tieto.com>
+References: <1421412811-6387-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We will need this as a preparetion for VHT.
+The command logic shouldn't really care about
+arvif structure.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/mac80211/ht.c         | 2 --
- net/mac80211/ibss.c       | 4 ++++
- net/mac80211/mesh_plink.c | 4 ++++
- 3 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 14 ++++++++++----
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 20 +++++++++++---------
+ drivers/net/wireless/ath/ath10k/wmi.c     | 27 +++++++++++++++++----------
+ 3 files changed, 38 insertions(+), 23 deletions(-)
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index ff630be..7a76ce6 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -252,8 +252,6 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
- 		break;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 80bd28a..06062cf 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -102,7 +102,10 @@ struct wmi_ops {
+ 					 u32 value);
+ 	struct sk_buff *(*gen_scan_chan_list)(struct ath10k *ar,
+ 					      const struct wmi_scan_chan_list_arg *arg);
+-	struct sk_buff *(*gen_beacon_dma)(struct ath10k_vif *arvif);
++	struct sk_buff *(*gen_beacon_dma)(struct ath10k *ar, u32 vdev_id,
++					  const void *bcn, size_t bcn_len,
++					  u32 bcn_paddr, bool dtim_zero,
++					  bool deliver_cab);
+ 	struct sk_buff *(*gen_pdev_set_wmm)(struct ath10k *ar,
+ 					    const struct wmi_pdev_set_wmm_params_arg *arg);
+ 	struct sk_buff *(*gen_request_stats)(struct ath10k *ar,
+@@ -749,16 +752,19 @@ ath10k_wmi_peer_assoc(struct ath10k *ar,
+ }
  
--	if (bw != sta->sta.bandwidth)
--		changed = true;
- 	sta->sta.bandwidth = bw;
+ static inline int
+-ath10k_wmi_beacon_send_ref_nowait(struct ath10k_vif *arvif)
++ath10k_wmi_beacon_send_ref_nowait(struct ath10k *ar, u32 vdev_id,
++				  const void *bcn, size_t bcn_len,
++				  u32 bcn_paddr, bool dtim_zero,
++				  bool deliver_cab)
+ {
+-	struct ath10k *ar = arvif->ar;
+ 	struct sk_buff *skb;
+ 	int ret;
  
- 	sta->cur_max_bandwidth =
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index b1e9e9b..3c6df2b 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1064,6 +1064,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 			/* we both use HT */
- 			struct ieee80211_ht_cap htcap_ie;
- 			struct cfg80211_chan_def chandef;
-+			enum ieee80211_sta_rx_bandwidth bw = sta->sta.bandwidth;
+ 	if (!ar->wmi.ops->gen_beacon_dma)
+ 		return -EOPNOTSUPP;
  
- 			ieee80211_ht_oper_to_chandef(channel,
- 						     elems->ht_operation,
-@@ -1082,6 +1083,9 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+-	skb = ar->wmi.ops->gen_beacon_dma(arvif);
++	skb = ar->wmi.ops->gen_beacon_dma(ar, vdev_id, bcn, bcn_len, bcn_paddr,
++					  dtim_zero, deliver_cab);
+ 	if (IS_ERR(skb))
+ 		return PTR_ERR(skb);
  
- 			rates_updated |= ieee80211_ht_cap_ie_to_sta_ht_cap(
- 						sdata, sband, &htcap_ie, sta);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index d3cf91dc..c3d077f 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1906,13 +1906,15 @@ ath10k_wmi_tlv_op_gen_scan_chan_list(struct ath10k *ar,
+ }
+ 
+ static struct sk_buff *
+-ath10k_wmi_tlv_op_gen_beacon_dma(struct ath10k_vif *arvif)
++ath10k_wmi_tlv_op_gen_beacon_dma(struct ath10k *ar, u32 vdev_id,
++				 const void *bcn, size_t bcn_len,
++				 u32 bcn_paddr, bool dtim_zero,
++				 bool deliver_cab)
 +
-+			if (bw != sta->sta.bandwidth)
-+				rates_updated |= true;
- 		}
+ {
+-	struct ath10k *ar = arvif->ar;
+ 	struct wmi_bcn_tx_ref_cmd *cmd;
+ 	struct wmi_tlv *tlv;
+ 	struct sk_buff *skb;
+-	struct sk_buff *beacon = arvif->beacon;
+ 	struct ieee80211_hdr *hdr;
+ 	u16 fc;
  
- 		if (sta && rates_updated) {
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index fa94ca1..de5b8ac 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -382,6 +382,7 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
- 	struct ieee80211_supported_band *sband;
- 	u32 rates, basic_rates = 0, changed = 0;
-+	enum ieee80211_sta_rx_bandwidth bw = sta->sta.bandwidth;
+@@ -1920,24 +1922,24 @@ ath10k_wmi_tlv_op_gen_beacon_dma(struct ath10k_vif *arvif)
+ 	if (!skb)
+ 		return ERR_PTR(-ENOMEM);
  
- 	sband = local->hw.wiphy->bands[band];
- 	rates = ieee80211_sta_get_rates(sdata, elems, band, &basic_rates);
-@@ -401,6 +402,9 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
- 					      elems->ht_cap_elem, sta))
- 		changed |= IEEE80211_RC_BW_CHANGED;
+-	hdr = (struct ieee80211_hdr *)beacon->data;
++	hdr = (struct ieee80211_hdr *)bcn;
+ 	fc = le16_to_cpu(hdr->frame_control);
  
-+	if (bw != sta->sta.bandwidth)
-+		changed |= IEEE80211_RC_BW_CHANGED;
-+
- 	/* HT peer is operating 20MHz-only */
- 	if (elems->ht_operation &&
- 	    !(elems->ht_operation->ht_param &
+ 	tlv = (void *)skb->data;
+ 	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_BCN_SEND_FROM_HOST_CMD);
+ 	tlv->len = __cpu_to_le16(sizeof(*cmd));
+ 	cmd = (void *)tlv->value;
+-	cmd->vdev_id = __cpu_to_le32(arvif->vdev_id);
+-	cmd->data_len = __cpu_to_le32(beacon->len);
+-	cmd->data_ptr = __cpu_to_le32(ATH10K_SKB_CB(beacon)->paddr);
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	cmd->data_len = __cpu_to_le32(bcn_len);
++	cmd->data_ptr = __cpu_to_le32(bcn_paddr);
+ 	cmd->msdu_id = 0;
+ 	cmd->frame_control = __cpu_to_le32(fc);
+ 	cmd->flags = 0;
+ 
+-	if (ATH10K_SKB_CB(beacon)->bcn.dtim_zero)
++	if (dtim_zero)
+ 		cmd->flags |= __cpu_to_le32(WMI_BCN_TX_REF_FLAG_DTIM_ZERO);
+ 
+-	if (ATH10K_SKB_CB(beacon)->bcn.deliver_cab)
++	if (deliver_cab)
+ 		cmd->flags |= __cpu_to_le32(WMI_BCN_TX_REF_FLAG_DELIVER_CAB);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv beacon dma\n");
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d340361..459b203 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -956,6 +956,8 @@ err_pull:
+ 
+ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
+ {
++	struct sk_buff *bcn;
++	struct ath10k_skb_cb *cb;
+ 	int ret;
+ 
+ 	lockdep_assert_held(&arvif->ar->data_lock);
+@@ -966,7 +968,12 @@ static void ath10k_wmi_tx_beacon_nowait(struct ath10k_vif *arvif)
+ 	if (arvif->beacon_sent)
+ 		return;
+ 
+-	ret = ath10k_wmi_beacon_send_ref_nowait(arvif);
++	bcn = arvif->beacon;
++	cb = ATH10K_SKB_CB(bcn);
++	ret = ath10k_wmi_beacon_send_ref_nowait(arvif->ar, arvif->vdev_id,
++						bcn->data, bcn->len, cb->paddr,
++						cb->bcn.dtim_zero,
++						cb->bcn.deliver_cab);
+ 	if (ret)
+ 		return;
+ 
+@@ -4856,12 +4863,12 @@ ath10k_wmi_10_2_op_gen_pdev_get_temperature(struct ath10k *ar)
+ 
+ /* This function assumes the beacon is already DMA mapped */
+ static struct sk_buff *
+-ath10k_wmi_op_gen_beacon_dma(struct ath10k_vif *arvif)
++ath10k_wmi_op_gen_beacon_dma(struct ath10k *ar, u32 vdev_id, const void *bcn,
++			     size_t bcn_len, u32 bcn_paddr, bool dtim_zero,
++			     bool deliver_cab)
+ {
+-	struct ath10k *ar = arvif->ar;
+ 	struct wmi_bcn_tx_ref_cmd *cmd;
+ 	struct sk_buff *skb;
+-	struct sk_buff *beacon = arvif->beacon;
+ 	struct ieee80211_hdr *hdr;
+ 	u16 fc;
+ 
+@@ -4869,22 +4876,22 @@ ath10k_wmi_op_gen_beacon_dma(struct ath10k_vif *arvif)
+ 	if (!skb)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	hdr = (struct ieee80211_hdr *)beacon->data;
++	hdr = (struct ieee80211_hdr *)bcn;
+ 	fc = le16_to_cpu(hdr->frame_control);
+ 
+ 	cmd = (struct wmi_bcn_tx_ref_cmd *)skb->data;
+-	cmd->vdev_id = __cpu_to_le32(arvif->vdev_id);
+-	cmd->data_len = __cpu_to_le32(beacon->len);
+-	cmd->data_ptr = __cpu_to_le32(ATH10K_SKB_CB(beacon)->paddr);
++	cmd->vdev_id = __cpu_to_le32(vdev_id);
++	cmd->data_len = __cpu_to_le32(bcn_len);
++	cmd->data_ptr = __cpu_to_le32(bcn_paddr);
+ 	cmd->msdu_id = 0;
+ 	cmd->frame_control = __cpu_to_le32(fc);
+ 	cmd->flags = 0;
+ 	cmd->antenna_mask = __cpu_to_le32(WMI_BCN_TX_REF_DEF_ANTENNA);
+ 
+-	if (ATH10K_SKB_CB(beacon)->bcn.dtim_zero)
++	if (dtim_zero)
+ 		cmd->flags |= __cpu_to_le32(WMI_BCN_TX_REF_FLAG_DTIM_ZERO);
+ 
+-	if (ATH10K_SKB_CB(beacon)->bcn.deliver_cab)
++	if (deliver_cab)
+ 		cmd->flags |= __cpu_to_le32(WMI_BCN_TX_REF_FLAG_DELIVER_CAB);
+ 
+ 	return skb;
 -- 
-1.9.1
+1.8.5.3
 
