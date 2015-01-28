@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:35620 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754224AbbAGUyF convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:38627 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759944AbbA2B5x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 15:54:05 -0500
+	Wed, 28 Jan 2015 20:57:53 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/6] ath9k: Add a macro to identify PCOEM chips
+References: <1421633598-4488-1-git-send-email-sujith@msujith.org>
+	<1421633598-4488-4-git-send-email-sujith@msujith.org>
+	<21704.53700.641822.118302@gargle.gargle.HOWL>
+	<87oapj85k8.fsf@kamboji.qca.qualcomm.com>
+	<21704.54622.181818.695588@gargle.gargle.HOWL>
+Date: Wed, 28 Jan 2015 14:59:03 +0200
+In-Reply-To: <21704.54622.181818.695588@gargle.gargle.HOWL> (Sujith
+	Manoharan's message of "Wed, 28 Jan 2015 17:56:06 +0530")
+Message-ID: <87fvav83jc.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_025801_230612_B4124B51)
 MIME-Version: 1.0
-In-Reply-To: <87y4peo2of.fsf@kamboji.qca.qualcomm.com>
-References: <1419766622-10911-1-git-send-email-oscar.forner.martinez@gmail.com>
-	<87bnmaqxvs.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rzWaHg=M15q=swf+yqMEB3smRRANuLHkSK1dU1MtG8jgg@mail.gmail.com>
-	<87y4peo2of.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 7 Jan 2015 21:54:04 +0100
-Message-ID: <CACna6rzdtx2pBHE-00uocUEqNrbopShUW83R0dYeQBD26eC=NA@mail.gmail.com> (sfid-20150107_215432_113944_F52FB7F4)
-Subject: Re: [PATCH v4] bcma: fix two coding style issues, more than 80
- characters per line.
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 January 2015 at 19:39, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
+Sujith Manoharan <sujith@msujith.org> writes:
+
+> Kalle Valo wrote:
+>> > Kalle, this is a typo - I'll resend the series.
+>> 
+>> Ok. I had actually put these into "Not Applicable" by accident and
+>> that's why I had missed them.
 >
->> On 7 January 2015 at 18:55, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Oscar Forner Martinez <oscar.forner.martinez@gmail.com> writes:
->>>
->>>> Two lines with more than 80 characters per line have been split in several lines.
->>>>
->>>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
->>>
->>> Thanks, applied to wireless-drivers-next.git.
->>
->> Could you still replace it (V4) with an older version (V3)? Before I
->> explained V3 was OK Oscar already sent this (worse) V4.
->
-> No. I'm not going to rebase a public git tree unless there's a huge
-> disaster.
+> Ah ok. I thought I had to enable some patchwork filters manually to see
+> the pending ath9k patches.
 
-I was pretty sure you didn't push it yet, that's why I asked.
+For ath10k there's currently a separate patchwork project (I haven't
+bothered to change that yet), but for all other drivers you should see
+the patches from this link:
 
+https://patchwork.kernel.org/project/linux-wireless/list/
 
-> But if I see V4 I'm going to assume that's the one I need to apply, not
-> some older version. If V4 is not good for some reason, make it
-> ABSOLUTELY clear that I should not apply it. I do not want to start
-> guessing what patch I should apply.
-
-Yeah, it wasn't your fault of course. Oscar sent V4 too early and I
-didn't make things clear. Sorry.
+If the patch is not in the list, it's not commited and there's no clear
+reason why it was dropped, the chances are that I did a mistake. Like in
+this case and also with one of the mwifiex patch earlier this week. I'll
+need to be more careful with the states.
 
 -- 
-Rafał
+Kalle Valo
