@@ -1,91 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:59765 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbbARTNP (ORCPT
+Received: from smtp94.ord1c.emailsrvr.com ([108.166.43.94]:41429 "EHLO
+	smtp94.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756027AbbA1F5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 14:13:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P1pmB2PD00N2r2LgjNL4fG6RuTPxsO8G2weU+8EeENPTg@mail.gmail.com>
-References: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com>
-	<CANUX_P0LCr3fzqLyjKQbZ-P2hAV-Nk6=AMm=oFOWCLW34cRg2w@mail.gmail.com>
-	<CA+55aFzEr-R1anNm91pnM=ujfhBstJikZBVtduphff1PtccHDw@mail.gmail.com>
-	<54BBF207.2030708@broadcom.com>
-	<CA+55aFws=-MY+rUsEny=DsBx9gct93BnfeGXSnOCLxEFtvDj8A@mail.gmail.com>
-	<CANUX_P1pmB2PD00N2r2LgjNL4fG6RuTPxsO8G2weU+8EeENPTg@mail.gmail.com>
-Date: Sun, 18 Jan 2015 21:13:13 +0200
-Message-ID: <CANUX_P3kv5ofQJLGyEvRSgetHg=TJsaVennLJWq3ummgRJHWgg@mail.gmail.com> (sfid-20150118_201323_530777_85FE86D1)
-Subject: Re: Wireless scanning while turning off the radio problem..
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 28 Jan 2015 00:57:14 -0500
+From: Pramod Gurav <pramod.gurav@smartplayin.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	John Linville <linville@tuxdriver.com>,
+	Michael Buesch <m@bues.ch>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Pramod Gurav <pramod.gurav@smartplayin.com>
+Subject: [PATCH RESEND] ssb: Fix Sparse error in main
+Date: Wed, 28 Jan 2015 11:19:47 +0530
+Message-Id: <1422424187-19059-1-git-send-email-pramod.gurav@smartplayin.com> (sfid-20150128_065718_314878_346DF52B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 18, 2015 at 8:52 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Sun, Jan 18, 2015 at 8:40 PM, Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
->> On Mon, Jan 19, 2015 at 5:48 AM, Arend van Spriel <arend@broadcom.com> wrote:
->>>
->>> So as you indicated you were in location where none of your configured
->>> networks were available. Flipping the rfkill switch in that situation is the
->>> way to trigger the issue.
->>
->> So you certainly seem to be able to explain the behavior I saw under
->> the circumstances they happened.
->>
->> I suspect the best thing to do is to just apply your patch. I may not
->> be able to really test it much for the next few days anyway. Emmanuel?
->>
->
-> Sorry - I was a bit busy.
-> The patch seems wrong, we can't really call that function from the
-> rfkill interrupt - it will blow up.
-> The good news is that I could reproduce the bug based on what Arend
-> pointed. I totally missed the fact
-> that it was scheduled scan - thanks Arend for that.
->
-> So the system I have here doesn't have HW rfkill so I had to implement
-> a hook that fakes it,
-> but I can't reproduce the problem.
-> I'll come up with a patch.
+This change fixes below sparse error:
+drivers/ssb/main.c:94:16: warning: symbol 'ssb_sdio_func_to_bus'
+was not declared. Should it be static?
 
+Acked-by: Michael Buesch <m@bues.ch>
+Signed-off-by: Pramod Gurav <pramod.gurav@smartplayin.com>
+---
+ drivers/ssb/main.c |   19 -------------------
+ 1 file changed, 19 deletions(-)
 
-Ok - Here is the patch:
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index 2fead38..1e180c4 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -90,25 +90,6 @@ found:
+ }
+ #endif /* CONFIG_SSB_PCMCIAHOST */
+ 
+-#ifdef CONFIG_SSB_SDIOHOST
+-struct ssb_bus *ssb_sdio_func_to_bus(struct sdio_func *func)
+-{
+-	struct ssb_bus *bus;
+-
+-	ssb_buses_lock();
+-	list_for_each_entry(bus, &buses, list) {
+-		if (bus->bustype == SSB_BUSTYPE_SDIO &&
+-		    bus->host_sdio == func)
+-			goto found;
+-	}
+-	bus = NULL;
+-found:
+-	ssb_buses_unlock();
+-
+-	return bus;
+-}
+-#endif /* CONFIG_SSB_SDIOHOST */
+-
+ int ssb_for_each_bus_call(unsigned long data,
+ 			  int (*func)(struct ssb_bus *bus, unsigned long data))
+ {
+-- 
+1.7.9.5
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c
-b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 384eefd..bbd8054 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -867,6 +867,9 @@ static bool iwl_mvm_set_hw_rfkill_state(struct
-iwl_op_mode *op_mode, bool state)
-        if (calibrating)
-                iwl_abort_notification_waits(&mvm->notif_wait);
-
-+       if (state)
-+               mvm->scan_status = IWL_MVM_SCAN_NONE;
-+
-        /*
-         * Stop the device if we run OPERATIONAL firmware or if we are in the
-         * middle of the calibrations.
-
-
-I will send that for internal review, because I am not all that much
-familiar with this and I want the guy who wrote that code to take a
-look before I send a pull request, but that should help.
-
-In any case, Linus, until you get the fix (which should be sent to
-upstream in 12 hours) you can restart the whole wifi stack instead of
-rebooting:
-
-sudo modprobe -r iwlwifi
-sudo modprobe iwlwifi
-sudo killall wpa_supplicant
-
-
-that should bring your wifi back without the need to reboot.
