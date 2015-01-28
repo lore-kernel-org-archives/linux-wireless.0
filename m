@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:39320 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbbA3QGq (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58656 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753371AbbA1Emi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 11:06:46 -0500
-Message-ID: <54CBAC14.5060502@lwfinger.net> (sfid-20150130_170712_109586_E7B60CCB)
-Date: Fri, 30 Jan 2015 10:06:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 27 Jan 2015 23:42:38 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4dAmn029208
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:42:38 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s49ry0gq9-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:42:38 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 0/8] mwifiex change virtual interface enhancements
+Date: Wed, 28 Jan 2015 15:41:57 +0530
+Message-ID: <1422439925-25666-1-git-send-email-patila@marvell.com> (sfid-20150128_054258_068767_BAC11BFA)
 MIME-Version: 1.0
-To: Priit Laes <plaes@plaes.org>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/7] rtlwifi: Remove unused RTL_SUPPORTED_CTRL_FILTER
- define
-References: <1422341373-22196-1-git-send-email-plaes@plaes.org> <1422341373-22196-4-git-send-email-plaes@plaes.org>
-In-Reply-To: <1422341373-22196-4-git-send-email-plaes@plaes.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/27/2015 12:49 AM, Priit Laes wrote:
-> Signed-off-by: Priit Laes <plaes@plaes.org>
-> ---
->   drivers/net/wireless/rtlwifi/core.h | 2 --
->   1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
-> index 624e1dc..3b37557 100644
-> --- a/drivers/net/wireless/rtlwifi/core.h
-> +++ b/drivers/net/wireless/rtlwifi/core.h
-> @@ -33,8 +33,6 @@
->   	FIF_FCSFAIL | \
->   	FIF_BCN_PRBRESP_PROMISC)
->
-> -#define RTL_SUPPORTED_CTRL_FILTER	0xFF
-> -
->   extern const struct ieee80211_ops rtl_ops;
->   void rtl_fw_cb(const struct firmware *firmware, void *context);
->   void rtl_addr_delay(u32 addr);
+This patch series is enhancement for change virtual interface
+handling in mwifiex. With this series in, now we remove coupling
+between netdev and FW supported interface combination. Now conversion
+from any type of supported interface types to any other type is possible.
 
-Priit,
+Avinash Patil (8):
+  mwifiex: remove redundant nick_name variable
+  mwifiex: set wiphy params only once
+  mwifiex: do not declare wdev as pointer
+  mwifiex: store permanant mac address in adapter structure
+  mwifiex: add init parameter to init command routine
+  mwifiex: manage virtual interface limits efficiently
+  mwifiex: handle PS events on AP interface as well
+  mwifiex: support conversion to any virtual interface type
 
-I have a couple of points to make. First, when you submit a series of patches 
-like this, it is customary to use the cover letter feature of git to generate a 
-0/X patch in which to explain the set of patches. In this case, the cover letter 
-is not necessary, but it is a good habit to cultivate.
+ drivers/net/wireless/mwifiex/11h.c           |   2 +-
+ drivers/net/wireless/mwifiex/11n.c           |   4 +-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   2 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      | 584 ++++++++++++++++++++-------
+ drivers/net/wireless/mwifiex/cfp.c           |   4 +-
+ drivers/net/wireless/mwifiex/cmdevt.c        |  40 +-
+ drivers/net/wireless/mwifiex/decl.h          |  10 +
+ drivers/net/wireless/mwifiex/init.c          |   7 +-
+ drivers/net/wireless/mwifiex/main.c          |   9 +-
+ drivers/net/wireless/mwifiex/main.h          |  29 +-
+ drivers/net/wireless/mwifiex/scan.c          |  10 +-
+ drivers/net/wireless/mwifiex/sta_cmd.c       |  13 +-
+ drivers/net/wireless/mwifiex/sta_event.c     |   2 +-
+ drivers/net/wireless/mwifiex/sta_ioctl.c     |  32 +-
+ drivers/net/wireless/mwifiex/txrx.c          |   2 +-
+ drivers/net/wireless/mwifiex/uap_event.c     |  39 ++
+ drivers/net/wireless/mwifiex/util.c          |   2 +-
+ 17 files changed, 559 insertions(+), 232 deletions(-)
 
-The second point is more important. I'm not sure what source you used to 
-generate your patches, but it was clearly not wireless-drivers-next. Commit 
-6f8214b69057 ("rtlwifi: Create new routine to initialize the DM tables") moved a 
-lot of stuff from the individual drivers into the core. Some of the new stuff 
-was included right after the definition of RTL_SUPPORTED_CTRL_FILTER, thus your 
-patch fails to apply.
-
-Once you fix this problem, and resubmit V2 of the series, I will approve them. 
-FYI, Kalle prefers that all patches be resubmitted, not just the one that changes.
-
-
-Larry
-
+-- 
+1.8.1.4
 
