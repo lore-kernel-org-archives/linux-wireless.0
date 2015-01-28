@@ -1,178 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:42614 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756110AbbA3Mdf (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:10156 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965303AbbA1Ez4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 07:33:35 -0500
-Received: by mail-we0-f181.google.com with SMTP id k48so26899420wev.12
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 04:33:34 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/7] ath10k: implement adaptive qcs command
-Date: Fri, 30 Jan 2015 13:31:22 +0100
-Message-Id: <1422621086-28970-4-git-send-email-michal.kazior@tieto.com> (sfid-20150130_133343_807604_1CDC1FB0)
-In-Reply-To: <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
-References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
- <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 27 Jan 2015 23:55:56 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4tuRC006823
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:55:56 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s49ry0h7n-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:55:55 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <gaoqs@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 08/10] mwifiex: handle radar detect event from FW
+Date: Wed, 28 Jan 2015 15:54:23 +0530
+Message-ID: <1422440665-3940-9-git-send-email-patila@marvell.com> (sfid-20150128_055608_298031_FE0475EE)
+In-Reply-To: <1422440665-3940-1-git-send-email-patila@marvell.com>
+References: <1422440665-3940-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This command will be used to configure
-multi-channel scheduler in firmware.
+This patch adds support for radar_detected event from FW.
+Driver in turn would stop netdev queues to stop TX traffic and
+issue RADAR_DETECT event to cfg80211.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 16 ++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 30 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  4 ++++
- drivers/net/wireless/ath/ath10k/wmi.c     |  3 +++
- drivers/net/wireless/ath/ath10k/wmi.h     |  1 +
- 5 files changed, 54 insertions(+)
+ drivers/net/wireless/mwifiex/11h.c       | 24 ++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/fw.h        | 20 ++++++++++++++++++++
+ drivers/net/wireless/mwifiex/main.h      |  2 ++
+ drivers/net/wireless/mwifiex/sta_event.c |  5 +++++
+ drivers/net/wireless/mwifiex/uap_event.c |  4 ++++
+ 5 files changed, 55 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 058f88b..cf9d34f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -145,6 +145,7 @@ struct wmi_ops {
- 					      u32 num_ac);
- 	struct sk_buff *(*gen_sta_keepalive)(struct ath10k *ar,
- 					     const struct wmi_sta_keepalive_arg *arg);
-+	struct sk_buff *(*gen_adaptive_qcs)(struct ath10k *ar, bool enable);
- };
+diff --git a/drivers/net/wireless/mwifiex/11h.c b/drivers/net/wireless/mwifiex/11h.c
+index e44cac7..08c12ae 100644
+--- a/drivers/net/wireless/mwifiex/11h.c
++++ b/drivers/net/wireless/mwifiex/11h.c
+@@ -216,3 +216,27 @@ int mwifiex_11h_handle_chanrpt_ready(struct mwifiex_private *priv,
  
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -1054,4 +1055,19 @@ ath10k_wmi_sta_keepalive(struct ath10k *ar,
- 	return ath10k_wmi_cmd_send(ar, skb, cmd_id);
+ 	return 0;
  }
- 
-+static inline int
-+ath10k_wmi_adaptive_qcs(struct ath10k *ar, bool enable)
++
++/* Handler for radar detected event from FW.*/
++int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
++				      struct sk_buff *skb)
 +{
-+	struct sk_buff *skb;
++	struct mwifiex_radar_det_event *rdr_event;
 +
-+	if (!ar->wmi.ops->gen_adaptive_qcs)
-+		return -EOPNOTSUPP;
++	rdr_event = (void *)(skb->data + sizeof(u32));
 +
-+	skb = ar->wmi.ops->gen_adaptive_qcs(ar, enable);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
++	if (le32_to_cpu(rdr_event->passed)) {
++		dev_notice(priv->adapter->dev,
++			   "radar detected; indicating kernel\n");
++		cfg80211_radar_event(priv->adapter->wiphy, &priv->dfs_chandef,
++				     GFP_KERNEL);
++		dev_dbg(priv->adapter->dev, "regdomain: %d\n",
++			rdr_event->reg_domain);
++		dev_dbg(priv->adapter->dev, "radar detection type: %d\n",
++			rdr_event->det_type);
++	} else {
++		dev_dbg(priv->adapter->dev, "false radar detection event!\n");
++	}
 +
-+	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->adaptive_qcs_cmdid);
++	return 0;
 +}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index ccafb69..0e36b34 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2381,6 +2381,34 @@ ath10k_wmi_tlv_op_gen_p2p_go_bcn_ie(struct ath10k *ar, u32 vdev_id,
- 	return skb;
- }
- 
-+static struct sk_buff *
-+ath10k_wmi_tlv_op_gen_adaptive_qcs(struct ath10k *ar, bool enable)
-+{
-+	struct wmi_tlv_adaptive_qcs *cmd;
-+	struct wmi_tlv *tlv;
-+	struct sk_buff *skb;
-+	void *ptr;
-+	size_t len;
-+
-+	len = sizeof(*tlv) + sizeof(*cmd);
-+	skb = ath10k_wmi_alloc_skb(ar, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ptr = (void *)skb->data;
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_RESMGR_ADAPTIVE_OCS_CMD);
-+	tlv->len = __cpu_to_le16(sizeof(*cmd));
-+	cmd = (void *)tlv->value;
-+	cmd->enable = __cpu_to_le32(enable ? 1 : 0);
-+
-+	ptr += sizeof(*tlv);
-+	ptr += sizeof(*cmd);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv adaptive qcs %d\n", enable);
-+	return skb;
-+}
-+
- /****************/
- /* TLV mappings */
- /****************/
-@@ -2505,6 +2533,7 @@ static struct wmi_cmd_map wmi_tlv_cmd_map = {
- 	.gpio_output_cmdid = WMI_TLV_GPIO_OUTPUT_CMDID,
- 	.pdev_get_temperature_cmdid = WMI_TLV_CMD_UNSUPPORTED,
- 	.vdev_set_wmm_params_cmdid = WMI_TLV_VDEV_SET_WMM_PARAMS_CMDID,
-+	.adaptive_qcs_cmdid = WMI_TLV_RESMGR_ADAPTIVE_OCS_CMDID,
- };
- 
- static struct wmi_pdev_param_map wmi_tlv_pdev_param_map = {
-@@ -2677,6 +2706,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	.gen_p2p_go_bcn_ie = ath10k_wmi_tlv_op_gen_p2p_go_bcn_ie,
- 	.gen_vdev_sta_uapsd = ath10k_wmi_tlv_op_gen_vdev_sta_uapsd,
- 	.gen_sta_keepalive = ath10k_wmi_tlv_op_gen_sta_keepalive,
-+	.gen_adaptive_qcs = ath10k_wmi_tlv_op_gen_adaptive_qcs,
- };
- 
- /************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index de68fe7..a05952a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1439,6 +1439,10 @@ struct wmi_tlv_sta_keepalive_cmd {
- 	__le32 interval; /* in seconds */
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 324ef29..6d433227 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -495,6 +495,7 @@ enum P2P_MODES {
+ #define EVENT_HOSTWAKE_STAIE		0x0000004d
+ #define EVENT_CHANNEL_SWITCH_ANN        0x00000050
+ #define EVENT_TDLS_GENERIC_EVENT        0x00000052
++#define EVENT_RADAR_DETECTED		0x00000053
+ #define EVENT_CHANNEL_REPORT_RDY        0x00000054
+ #define EVENT_EXT_SCAN_REPORT           0x00000058
+ #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
+@@ -1813,6 +1814,25 @@ struct mwifiex_ie_types_rssi_threshold {
+ 	u8 evt_freq;
  } __packed;
  
-+struct wmi_tlv_adaptive_qcs {
-+	__le32 enable;
++#define MWIFIEX_DFS_REC_HDR_LEN		8
++#define MWIFIEX_DFS_REC_HDR_NUM		10
++#define MWIFIEX_BIN_COUNTER_LEN		7
++
++struct mwifiex_radar_det_event {
++	__le32 detect_count;
++	u8 reg_domain;  /*1=fcc, 2=etsi, 3=mic*/
++	u8 det_type;  /*0=none, 1=pw(chirp), 2=pri(radar)*/
++	__le16 pw_chirp_type;
++	u8 pw_chirp_idx;
++	u8 pw_value;
++	u8 pri_radar_type;
++	u8 pri_bincnt;
++	u8 bin_counter[MWIFIEX_BIN_COUNTER_LEN];
++	u8 num_dfs_records;
++	u8 dfs_record_hdr[MWIFIEX_DFS_REC_HDR_NUM][MWIFIEX_DFS_REC_HDR_LEN];
++	__le32 passed;
 +} __packed;
 +
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
+ struct meas_rpt_map {
+ 	u8 rssi:3;
+ 	u8 unmeasured:1;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 281a30a..ad9d679 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -1395,6 +1395,8 @@ mwifiex_clone_skb_for_tx_status(struct mwifiex_private *priv,
+ 				struct sk_buff *skb, u8 flag, u64 *cookie);
+ void mwifiex_dfs_cac_work_queue(struct work_struct *work);
+ void mwifiex_abort_cac(struct mwifiex_private *priv);
++int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
++				      struct sk_buff *skb);
  
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 0b49ec4..8966848 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -5224,6 +5224,7 @@ static const struct wmi_ops wmi_ops = {
- 	/* .gen_bcn_tmpl not implemented */
- 	/* .gen_prb_tmpl not implemented */
- 	/* .gen_p2p_go_bcn_ie not implemented */
-+	/* .gen_adaptive_qcs not implemented */
- };
- 
- static const struct wmi_ops wmi_10_1_ops = {
-@@ -5286,6 +5287,7 @@ static const struct wmi_ops wmi_10_1_ops = {
- 	/* .gen_bcn_tmpl not implemented */
- 	/* .gen_prb_tmpl not implemented */
- 	/* .gen_p2p_go_bcn_ie not implemented */
-+	/* .gen_adaptive_qcs not implemented */
- };
- 
- static const struct wmi_ops wmi_10_2_ops = {
-@@ -5408,6 +5410,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
- 	/* .gen_bcn_tmpl not implemented */
- 	/* .gen_prb_tmpl not implemented */
- 	/* .gen_p2p_go_bcn_ie not implemented */
-+	/* .gen_adaptive_qcs not implemented */
- };
- 
- int ath10k_wmi_attach(struct ath10k *ar)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 20ce360..69c7cf4 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -552,6 +552,7 @@ struct wmi_cmd_map {
- 	u32 gpio_output_cmdid;
- 	u32 pdev_get_temperature_cmdid;
- 	u32 vdev_set_wmm_params_cmdid;
-+	u32 adaptive_qcs_cmdid;
- };
- 
- /*
+ void mwifiex_hist_data_set(struct mwifiex_private *priv, u8 rx_rate, s8 snr,
+ 			   s8 nflr);
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index ad5c5e0..c03b82c 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -521,6 +521,11 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 		ret = mwifiex_11h_handle_chanrpt_ready(priv,
+ 						       adapter->event_skb);
+ 		break;
++	case EVENT_RADAR_DETECTED:
++		dev_dbg(adapter->dev, "event: Radar detected\n");
++		ret = mwifiex_11h_handle_radar_detected(priv,
++							adapter->event_skb);
++		break;
+ 	default:
+ 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
+ 			eventcause);
+diff --git a/drivers/net/wireless/mwifiex/uap_event.c b/drivers/net/wireless/mwifiex/uap_event.c
+index e0bdf6a..f4794cd 100644
+--- a/drivers/net/wireless/mwifiex/uap_event.c
++++ b/drivers/net/wireless/mwifiex/uap_event.c
+@@ -221,6 +221,10 @@ int mwifiex_process_uap_event(struct mwifiex_private *priv)
+ 		dev_dbg(adapter->dev, "event: Channel Report\n");
+ 		mwifiex_11h_handle_chanrpt_ready(priv, adapter->event_skb);
+ 		break;
++	case EVENT_RADAR_DETECTED:
++		dev_dbg(adapter->dev, "event: Radar detected\n");
++		mwifiex_11h_handle_radar_detected(priv, adapter->event_skb);
++		break;
+ 	default:
+ 		dev_dbg(adapter->dev, "event: unknown event id: %#x\n",
+ 			eventcause);
 -- 
-1.8.5.3
+1.8.1.4
 
