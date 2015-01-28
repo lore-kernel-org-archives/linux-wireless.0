@@ -1,97 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 16.mo1.mail-out.ovh.net ([178.33.104.224]:44887 "EHLO
-	16.mo1.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751680AbbAVPwm (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:56384 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S965040AbbA1Ez2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 10:52:42 -0500
-Received: from mail434.ha.ovh.net (gw6.ovh.net [213.251.189.206])
-	by mo1.mail-out.ovh.net (Postfix) with SMTP id 5962AFF9E67
-	for <linux-wireless@vger.kernel.org>; Thu, 22 Jan 2015 16:33:50 +0100 (CET)
-From: clement.perrochaud@effinnov.com
-To: linux-nfc@lists.01.org
-Cc: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= <clement.perrochaud@nxp.com>,
-	sunil.jogi@nxp.com, jerome.pele@nxp.com,
-	Charles.Gorand-Effinnov@nxp.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	davem@davemloft.net, grant.likely@linaro.org, lefrique@marvell.com,
-	christophe.ricard@gmail.com, cuissard@marvell.com,
-	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	=?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
-	<clement.perrochaud@effinnov.com>
-Subject: [PATCH 1/4] NFC: nci: Add FWDL support
-Date: Thu, 22 Jan 2015 16:27:37 +0100
-Message-Id: <1421940460-14049-2-git-send-email-clement.perrochaud@effinnov.com> (sfid-20150122_165320_342042_ECB7AE93)
-In-Reply-To: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com>
-References: <1421940460-14049-1-git-send-email-clement.perrochaud@effinnov.com>
+	Tue, 27 Jan 2015 23:55:28 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4tSBu027951
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:55:28 -0800
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1s50eqxb5p-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:55:27 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <gaoqs@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 05/10] mwifiex: separate function for parsing head and tail IEs
+Date: Wed, 28 Jan 2015 15:54:20 +0530
+Message-ID: <1422440665-3940-6-git-send-email-patila@marvell.com> (sfid-20150128_055536_131786_F949853D)
+In-Reply-To: <1422440665-3940-1-git-send-email-patila@marvell.com>
+References: <1422440665-3940-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Clément Perrochaud <clement.perrochaud@nxp.com>
+Head & Tail IEs are supposed to be added to beacon and probe response.
+This patch adds separate function for parsing head and tail IEs from
+cfg80211_beacon_data and sets them to FW.
 
-Signed-off-by: Clément Perrochaud <clement.perrochaud@nxp.com>
-Signed-off-by: Clément Perrochaud <clement.perrochaud@effinnov.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- include/net/nfc/nci_core.h |  1 +
- net/nfc/nci/core.c         | 11 +++++++++++
- 2 files changed, 12 insertions(+)
+ drivers/net/wireless/mwifiex/ie.c   | 81 +++++++++++++++++++++----------------
+ drivers/net/wireless/mwifiex/main.c |  2 +-
+ drivers/net/wireless/mwifiex/main.h |  2 +-
+ 3 files changed, 48 insertions(+), 37 deletions(-)
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 9e51bb4..137e059 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -71,6 +71,7 @@ struct nci_ops {
- 	int   (*close)(struct nci_dev *ndev);
- 	int   (*send)(struct nci_dev *ndev, struct sk_buff *skb);
- 	int   (*setup)(struct nci_dev *ndev);
-+	int   (*fw_download)(struct nci_dev *ndev, const char *firmware_name);
- 	__u32 (*get_rfprotocol)(struct nci_dev *ndev, __u8 rf_protocol);
- 	int   (*discover_se)(struct nci_dev *ndev);
- 	int   (*disable_se)(struct nci_dev *ndev, u32 se_idx);
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 51feb5e..1342c7d 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -789,6 +789,16 @@ static int nci_se_io(struct nfc_dev *nfc_dev, u32 se_idx,
- 	return 0;
+diff --git a/drivers/net/wireless/mwifiex/ie.c b/drivers/net/wireless/mwifiex/ie.c
+index b933794..a6af7b8 100644
+--- a/drivers/net/wireless/mwifiex/ie.c
++++ b/drivers/net/wireless/mwifiex/ie.c
+@@ -317,27 +317,26 @@ done:
+ 	return ret;
  }
  
-+static int nci_fw_download(struct nfc_dev *nfc_dev, const char *firmware_name)
-+{
-+	struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
-+
-+	if (!ndev->ops->fw_download)
-+		return -ENOTSUPP;
-+
-+	return ndev->ops->fw_download(ndev, firmware_name);
+-/* This function parses different IEs-tail IEs, beacon IEs, probe response IEs,
+- * association response IEs from cfg80211_ap_settings function and sets these IE
+- * to FW.
++/* This function parses  head and tail IEs, from cfg80211_beacon_data and sets
++ * these IE to FW.
+  */
+-int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
+-			 struct cfg80211_beacon_data *info)
++static int mwifiex_uap_set_head_tail_ies(struct mwifiex_private *priv,
++					 struct cfg80211_beacon_data *info)
+ {
+ 	struct mwifiex_ie *gen_ie;
+-	struct ieee_types_header *rsn_ie, *wpa_ie = NULL;
+-	u16 rsn_idx = MWIFIEX_AUTO_IDX_MASK, ie_len = 0;
++	struct ieee_types_header *rsn_ie = NULL, *wpa_ie = NULL;
++	u16 gen_idx = MWIFIEX_AUTO_IDX_MASK, ie_len = 0;
+ 	const u8 *vendor_ie;
+ 
+-	if (info->tail && info->tail_len) {
+-		gen_ie = kzalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
+-		if (!gen_ie)
+-			return -ENOMEM;
+-		gen_ie->ie_index = cpu_to_le16(rsn_idx);
+-		gen_ie->mgmt_subtype_mask = cpu_to_le16(MGMT_MASK_BEACON |
+-							MGMT_MASK_PROBE_RESP |
+-							MGMT_MASK_ASSOC_RESP);
++	gen_ie = kzalloc(sizeof(*gen_ie), GFP_KERNEL);
++	if (!gen_ie)
++		return -ENOMEM;
++	gen_ie->ie_index = cpu_to_le16(gen_idx);
++	gen_ie->mgmt_subtype_mask = cpu_to_le16(MGMT_MASK_BEACON |
++						MGMT_MASK_PROBE_RESP |
++						MGMT_MASK_ASSOC_RESP);
+ 
++	if (info->tail && info->tail_len) {
+ 		rsn_ie = (void *)cfg80211_find_ie(WLAN_EID_RSN,
+ 						  info->tail, info->tail_len);
+ 		if (rsn_ie) {
+@@ -357,20 +356,33 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
+ 			ie_len += wpa_ie->len + 2;
+ 			gen_ie->ie_length = cpu_to_le16(ie_len);
+ 		}
++	}
+ 
+-		if (rsn_ie || wpa_ie) {
+-			if (mwifiex_update_uap_custom_ie(priv, gen_ie, &rsn_idx,
+-							 NULL, NULL,
+-							 NULL, NULL)) {
+-				kfree(gen_ie);
+-				return -1;
+-			}
+-			priv->rsn_idx = rsn_idx;
++	if (rsn_ie || wpa_ie) {
++		if (mwifiex_update_uap_custom_ie(priv, gen_ie, &gen_idx, NULL,
++						 NULL, NULL, NULL)) {
++			kfree(gen_ie);
++			return -1;
+ 		}
+-
+-		kfree(gen_ie);
++		priv->gen_idx = gen_idx;
+ 	}
+ 
++	kfree(gen_ie);
++	return 0;
 +}
 +
- static struct nfc_ops nci_nfc_ops = {
- 	.dev_up = nci_dev_up,
- 	.dev_down = nci_dev_down,
-@@ -804,6 +814,7 @@ static struct nfc_ops nci_nfc_ops = {
- 	.disable_se = nci_disable_se,
- 	.discover_se = nci_discover_se,
- 	.se_io = nci_se_io,
-+	.fw_download = nci_fw_download,
- };
++/* This function parses different IEs-head & tail IEs, beacon IEs,
++ * probe response IEs, association response IEs from cfg80211_ap_settings
++ * function and sets these IE to FW.
++ */
++int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
++			 struct cfg80211_beacon_data *info)
++{
++	int ret;
++
++	ret = mwifiex_uap_set_head_tail_ies(priv, info);
++		return ret;
++
+ 	return mwifiex_set_mgmt_beacon_data_ies(priv, info);
+ }
  
- /* ---- Interface to NCI drivers ---- */
+@@ -378,25 +390,25 @@ int mwifiex_set_mgmt_ies(struct mwifiex_private *priv,
+ int mwifiex_del_mgmt_ies(struct mwifiex_private *priv)
+ {
+ 	struct mwifiex_ie *beacon_ie = NULL, *pr_ie = NULL;
+-	struct mwifiex_ie *ar_ie = NULL, *rsn_ie = NULL;
++	struct mwifiex_ie *ar_ie = NULL, *gen_ie = NULL;
+ 	int ret = 0;
+ 
+-	if (priv->rsn_idx != MWIFIEX_AUTO_IDX_MASK) {
+-		rsn_ie = kmalloc(sizeof(struct mwifiex_ie), GFP_KERNEL);
+-		if (!rsn_ie)
++	if (priv->gen_idx != MWIFIEX_AUTO_IDX_MASK) {
++		gen_ie = kmalloc(sizeof(*gen_ie), GFP_KERNEL);
++		if (!gen_ie)
+ 			return -ENOMEM;
+ 
+-		rsn_ie->ie_index = cpu_to_le16(priv->rsn_idx);
+-		rsn_ie->mgmt_subtype_mask = cpu_to_le16(MWIFIEX_DELETE_MASK);
+-		rsn_ie->ie_length = 0;
+-		if (mwifiex_update_uap_custom_ie(priv, rsn_ie, &priv->rsn_idx,
++		gen_ie->ie_index = cpu_to_le16(priv->gen_idx);
++		gen_ie->mgmt_subtype_mask = cpu_to_le16(MWIFIEX_DELETE_MASK);
++		gen_ie->ie_length = 0;
++		if (mwifiex_update_uap_custom_ie(priv, gen_ie, &priv->gen_idx,
+ 						 NULL, &priv->proberesp_idx,
+ 						 NULL, &priv->assocresp_idx)) {
+ 			ret = -1;
+ 			goto done;
+ 		}
+ 
+-		priv->rsn_idx = MWIFIEX_AUTO_IDX_MASK;
++		priv->gen_idx = MWIFIEX_AUTO_IDX_MASK;
+ 	}
+ 
+ 	if (priv->beacon_idx != MWIFIEX_AUTO_IDX_MASK) {
+@@ -440,7 +452,6 @@ done:
+ 	kfree(beacon_ie);
+ 	kfree(pr_ie);
+ 	kfree(ar_ie);
+-	kfree(rsn_ie);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 30e5193..7e74b4f 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -973,7 +973,7 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
+ 	priv->beacon_idx = MWIFIEX_AUTO_IDX_MASK;
+ 	priv->proberesp_idx = MWIFIEX_AUTO_IDX_MASK;
+ 	priv->assocresp_idx = MWIFIEX_AUTO_IDX_MASK;
+-	priv->rsn_idx = MWIFIEX_AUTO_IDX_MASK;
++	priv->gen_idx = MWIFIEX_AUTO_IDX_MASK;
+ 	priv->num_tx_timeout = 0;
+ 	ether_addr_copy(priv->curr_addr, priv->adapter->perm_addr);
+ 	memcpy(dev->dev_addr, priv->curr_addr, ETH_ALEN);
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 0c75eff..c5ac20d 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -567,7 +567,7 @@ struct mwifiex_private {
+ 	u16 beacon_idx;
+ 	u16 proberesp_idx;
+ 	u16 assocresp_idx;
+-	u16 rsn_idx;
++	u16 gen_idx;
+ 	u8 ap_11n_enabled;
+ 	u8 ap_11ac_enabled;
+ 	u32 mgmt_frame_mask;
 -- 
-Clément Perrochaud
-
-Eff'Innov Technologies
-Caen, Aix-En-Provence, Grenoble
-
-Eff'Innov Technologies
-Campus EffiScience
-2, Esplanade Anton Philips
-14460 Colombelles, FRANCE
-
-http://www.effinnov.com
+1.8.1.4
 
