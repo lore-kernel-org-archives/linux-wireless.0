@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:51411 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751273AbbA2Wzd convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:7076 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964844AbbA1EzP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 17:55:33 -0500
-Received: by mail-lb0-f181.google.com with SMTP id u10so33481667lbd.12
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Jan 2015 14:55:32 -0800 (PST)
+	Tue, 27 Jan 2015 23:55:15 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0S4tFYY027913
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:55:15 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1s50eqxb5c-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 27 Jan 2015 20:55:15 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <gaoqs@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 03/10] mwifiex: update IEs after AP has started
+Date: Wed, 28 Jan 2015 15:54:18 +0530
+Message-ID: <1422440665-3940-4-git-send-email-patila@marvell.com> (sfid-20150128_055524_631585_D9A7B356)
+In-Reply-To: <1422440665-3940-1-git-send-email-patila@marvell.com>
+References: <1422440665-3940-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Date: Thu, 29 Jan 2015 23:55:31 +0100
-Message-ID: <CACna6rykYmq6ucTHJ40vcySOFYs3qeim_ZOpNQsNGzyFo=w-aQ@mail.gmail.com> (sfid-20150129_235536_584438_19DB3CC6)
-Subject: cfg80211_ops: deauthentication & disassociation
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This patch moves IE management routine to end of start_ap handler.
+IEs now would be updated after AP has started.
 
-I'm looking at deauthentication & disassociation with cfg80211 API.
-AFAIK both frames can be send by STA as well as AP (according to the
-standard). I was looking info few cfg80211 callbacks and have few
-questions.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-1) @disassoc
-I think it's just for disassociating from AP. Is that correct?
-
-2) @del_station
-Now, this gets tricky for me. I think this callback is for AP mode to
-deauthenticae/disassociate a STA. It seems hostapd follows the same
-idea as in driver_nl80211.c it uses NL80211_CMD_DEL_STATION for both:
-deauth and disassoc (without building own frame).
-
-So I started analyzing this with the base case: mac80211
-(ieee80211_del_station). I expected to find a place where mac80211
-constructs deauth/disassoc management frame and transmits it. But I
-really couldn't. It seems that all ieee80211_del_station does is
-calling __sta_info_destroy / __sta_info_destroy_part1 /
-__sta_info_destroy_part2.
-Did I miss something? Or does mac80211 really ignore sending proper
-management frames in this case?
-
-On the other hand cfg80211 drivers seem to be doing something more in
-the @del_station callback. E.g.:
-a) wil6210 seems to be sending some frame:
-wmi_send(wil, WMI_DISCONNECT_STA_CMDID, &cmd, sizeof(cmd));
-b) brcmfmac does as well:
-brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCB_DEAUTHENTICATE_FOR_REASON,
-&scbval, sizeof(scbval));
-c) mwifiex as well:
-mwifiex_send_cmd(priv, HostCmd_CMD_UAP_STA_DEAUTH, ...);
-
-
-Can you help to understand this, please? Is @del_station handler
-supposed to actually send a proper management frame?
-
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 8e07564..ceeaeac 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1681,8 +1681,6 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 
+ 	if (GET_BSS_ROLE(priv) != MWIFIEX_BSS_ROLE_UAP)
+ 		return -1;
+-	if (mwifiex_set_mgmt_ies(priv, &params->beacon))
+-		return -1;
+ 
+ 	bss_cfg = kzalloc(sizeof(struct mwifiex_uap_bss_param), GFP_KERNEL);
+ 	if (!bss_cfg)
+@@ -1783,6 +1781,9 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 		return -1;
+ 	}
+ 
++	if (mwifiex_set_mgmt_ies(priv, &params->beacon))
++		return -1;
++
+ 	memcpy(&priv->bss_cfg, bss_cfg, sizeof(priv->bss_cfg));
+ 	kfree(bss_cfg);
+ 
 -- 
-Rafał
+1.8.1.4
+
