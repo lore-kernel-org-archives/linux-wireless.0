@@ -1,78 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:35723 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753169AbbAXRrb (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:17546 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753471AbbA2K0N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 12:47:31 -0500
-Received: by mail-wg0-f54.google.com with SMTP id b13so2638372wgh.13
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 09:47:30 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: simplify freeing cores (internal devices structs)
-Date: Sat, 24 Jan 2015 18:47:19 +0100
-Message-Id: <1422121640-9227-1-git-send-email-zajec5@gmail.com> (sfid-20150124_184734_169934_A6EE56C6)
+	Thu, 29 Jan 2015 05:26:13 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Yanbo Li <yanbol@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
+	<ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Enable the MCS8 and MCS9 at 2.4G band
+References: <1421972300-23520-1-git-send-email-yanbol@qca.qualcomm.com>
+Date: Thu, 29 Jan 2015 12:25:58 +0200
+In-Reply-To: <1421972300-23520-1-git-send-email-yanbol@qca.qualcomm.com>
+	(Yanbo Li's message of "Fri, 23 Jan 2015 08:18:20 +0800")
+Message-ID: <87r3ud3mtl.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_112621_143643_F9AD4FAE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/main.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+Yanbo Li <yanbol@qca.qualcomm.com> writes:
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index c3c5e0a..73b2ee3 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -368,12 +368,19 @@ static void bcma_unregister_cores(struct bcma_bus *bus)
- 	struct bcma_device *core, *tmp;
- 
- 	list_for_each_entry_safe(core, tmp, &bus->cores, list) {
-+		if (!core->dev_registered)
-+			continue;
- 		list_del(&core->list);
--		if (core->dev_registered)
--			device_unregister(&core->dev);
-+		device_unregister(&core->dev);
- 	}
- 	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
- 		platform_device_unregister(bus->drv_cc.watchdog);
-+
-+	/* Now noone uses internally-handled cores, we can free them */
-+	list_for_each_entry_safe(core, tmp, &bus->cores, list) {
-+		list_del(&core->list);
-+		kfree(core);
-+	}
- }
- 
- int bcma_bus_register(struct bcma_bus *bus)
-@@ -467,7 +474,6 @@ int bcma_bus_register(struct bcma_bus *bus)
- 
- void bcma_bus_unregister(struct bcma_bus *bus)
- {
--	struct bcma_device *cores[3];
- 	int err;
- 
- 	err = bcma_gpio_unregister(&bus->drv_cc);
-@@ -478,15 +484,7 @@ void bcma_bus_unregister(struct bcma_bus *bus)
- 
- 	bcma_core_chipcommon_b_free(&bus->drv_cc_b);
- 
--	cores[0] = bcma_find_core(bus, BCMA_CORE_MIPS_74K);
--	cores[1] = bcma_find_core(bus, BCMA_CORE_PCIE);
--	cores[2] = bcma_find_core(bus, BCMA_CORE_4706_MAC_GBIT_COMMON);
--
- 	bcma_unregister_cores(bus);
--
--	kfree(cores[2]);
--	kfree(cores[1]);
--	kfree(cores[0]);
- }
- 
- /*
+> From: Yanbo Li <yanbol@qti.qualcomm.com>
+>
+> Enable the MCS8 and MCS9 support for 2.4G band, it will
+> use these data rate with other devices having the same
+> capability.
+>
+> Signed-off-by: Yanbo Li <yanbol@qti.qualcomm.com>
+
+Thanks, applied to ath.git.
+
 -- 
-1.8.4.5
-
+Kalle Valo
