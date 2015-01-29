@@ -1,33 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58103 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752743AbbANIpa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Jan 2015 03:45:30 -0500
-Message-ID: <1421225127.1950.20.camel@sipsolutions.net> (sfid-20150114_094537_088078_8B20F23F)
-Subject: Re: [PATCH] nl80211: send netdetect configuration info in
- NL80211_CMD_GET_WOWLAN
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 14 Jan 2015 09:45:27 +0100
-In-Reply-To: <1420805197-5831-1-git-send-email-luca@coelho.fi>
-References: <1420805197-5831-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:36201 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755070AbbA2NUR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2015 08:20:17 -0500
+Date: Thu, 29 Jan 2015 18:49:49 +0530
+From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH-RESEND] ath10k: add log level configuration for fw_dbglog
+Message-ID: <20150129131947.GA12684@senthilj-ThinkPad-L430> (sfid-20150129_142026_793474_0984161B)
+References: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com>
+ <87vbjp2219.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87vbjp2219.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-09 at 14:06 +0200, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
+On Thu, Jan 29, 2015 at 02:40:18PM +0200, Kalle Valo wrote:
+> SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com> writes:
 > 
-> Send the netdetect configuration information in the response to
-> NL8021_CMD_GET_WOWLAN commands.  This includes the scan interval,
-> SSIDs to match and frequencies to scan.
+> > Introduce optional log level configuration for
+> > existing debugfs fw_dbglog.
+> >
+> > It allow users to configure desired log level
+> > for firmware debugs.
+> >
+> > To configure log level as WARN
+> >
+> > echo 0xffffffff  2 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
+> >
+> > Loglevel	Value
+> > VERBOSE		0
+> > INFO		1
+> > WARN		2
+> > ERR		3
+> >
+> > Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
 > 
-> Additionally, add the NL80211_WOWLAN_TRIG_NET_DETECT with
-> NL80211_ATTR_WOWLAN_TRIGGERS_SUPPORTED.
+> I did cosmetic changes to the log in the pending branch.
+> 
+> > @@ -1331,19 +1331,30 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
+> >  				      size_t count, loff_t *ppos)
+> >  {
+> >  	struct ath10k *ar = file->private_data;
+> > -	unsigned long mask;
+> >  	int ret;
+> > +	char buf[64];
+> > +	unsigned int log_level, mask;
+> >
+> > -	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
+> > -	if (ret)
+> > -		return ret;
+> > +	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
+> > +
+> > +	/* make sure that buf is null terminated */
+> > +	buf[sizeof(buf) - 1] = 0;
+> > +
+> > +	ret = sscanf(buf, "%x %u", &mask, &log_level);
+> > +
+> > +	if (!ret)
+> > +		return -EINVAL;
+> >
+> >  	mutex_lock(&ar->conf_mutex);
+> >
+> >  	ar->debug.fw_dbglog_mask = mask;
+> > +	ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
+> > +				     log_level;
+> 
+> And I simplified this a bit, please review. Full patch in pending
+> branch.
+>
 
-Applied.
+I have looked at the changes in pending branch, it looks good.
 
-johannes
-
+Thanks,
+SenthilJ 
