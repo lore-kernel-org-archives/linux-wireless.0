@@ -1,55 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:47415 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755381AbbAWUYR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26904 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751700AbbA2Mka (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 15:24:17 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	=?utf-8?Q?tr?=
-	 =?utf-8?Q?oy=5Ftan=40realsil=2Ecom=2Ecn_=3E=3E_=E8=B0=AD=E6=9D=AD?=
-	 =?utf-8?Q?=E6=B3=A2?= <troy_tan@realsil.com.cn>
-Subject: Re: [PATCH V2 for 3.19 0/7] Fixes for rtl8192ee
-References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
-	<873871msc7.fsf@kamboji.qca.qualcomm.com>
-	<54C27975.50501@lwfinger.net>
-Date: Fri, 23 Jan 2015 22:24:10 +0200
-In-Reply-To: <54C27975.50501@lwfinger.net> (Larry Finger's message of "Fri, 23
-	Jan 2015 10:40:21 -0600")
-Message-ID: <87egqljled.fsf@kamboji.qca.qualcomm.com> (sfid-20150123_212426_792456_6657C8F7)
+	Thu, 29 Jan 2015 07:40:30 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH-RESEND] ath10k: add log level configuration for fw_dbglog
+References: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com>
+Date: Thu, 29 Jan 2015 14:40:18 +0200
+In-Reply-To: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com>
+	(SenthilKumar Jegadeesan's message of "Thu, 29 Jan 2015 14:36:52
+	+0530")
+Message-ID: <87vbjp2219.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_134038_136001_63ADF12A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com> writes:
 
-> It is too bad that it took so long to get these ready. I think the
-> reason that there are not a lot of bug reports is because the
-> complaints are all in the GitHub issues for the rtlwifi_new repo, or
-> with Ubuntu. If there are any that get filed against Bugzilla, I will
-> refer them to that repo.
+> Introduce optional log level configuration for
+> existing debugfs fw_dbglog.
+>
+> It allow users to configure desired log level
+> for firmware debugs.
+>
+> To configure log level as WARN
+>
+> echo 0xffffffff  2 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
+>
+> Loglevel	Value
+> VERBOSE		0
+> INFO		1
+> WARN		2
+> ERR		3
+>
+> Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
 
-Ok.
+I did cosmetic changes to the log in the pending branch.
 
-> Driver rtl8192ee was new in 3.18. There had been a previous version in
-> staging, but it did not get a lot of usage. I'm not sure if the
-> additional usage after 3.18 was due to the driver being in the regular
-> tree, or if vendors started using the chips, but the problem reports
-> started arriving. All these bugs have been part of rtl8192ee since it
-> has been in the kernel, thus they are hard to categorize as
-> regressions.
+> @@ -1331,19 +1331,30 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
+>  				      size_t count, loff_t *ppos)
+>  {
+>  	struct ath10k *ar = file->private_data;
+> -	unsigned long mask;
+>  	int ret;
+> +	char buf[64];
+> +	unsigned int log_level, mask;
+>
+> -	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
+> -	if (ret)
+> -		return ret;
+> +	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
+> +
+> +	/* make sure that buf is null terminated */
+> +	buf[sizeof(buf) - 1] = 0;
+> +
+> +	ret = sscanf(buf, "%x %u", &mask, &log_level);
+> +
+> +	if (!ret)
+> +		return -EINVAL;
+>
+>  	mutex_lock(&ar->conf_mutex);
+>
+>  	ar->debug.fw_dbglog_mask = mask;
+> +	ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
+> +				     log_level;
 
-Good. So we are not going backwards in quality, that's most important.
+And I simplified this a bit, please review. Full patch in pending
+branch.
 
-> Push all 7 into -next so that they will be in 3.20. If you think it to
-> be prudent, please leave the Cc for stable. That way 3.18 and 3.19
-> will eventually get the fixes.
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1345,12 +1345,14 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
+        if (!ret)
+                return -EINVAL;
+ 
++       if (ret == 1)
++               /* default if user did not specify */
++               log_level = ATH10K_DBGLOG_LEVEL_WARN;
++
+        mutex_lock(&ar->conf_mutex);
+ 
+        ar->debug.fw_dbglog_mask = mask;
+-       ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
+-                                    log_level;
+-
++       ar->debug.fw_dbglog_level = log_level;
+ 
+        if (ar->state == ATH10K_STATE_ON) {
+                ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask,
 
-I think that's the best plan, thanks for understanding. The patches are
-in my queue and I should apply them within the next few days, unless
-anything comes during the review.
 
 -- 
 Kalle Valo
