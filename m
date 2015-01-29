@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60347 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751125AbbA0JBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 04:01:36 -0500
-Message-ID: <1422349293.1890.54.camel@sipsolutions.net> (sfid-20150127_100139_580414_1EC5D6E8)
-Subject: Re: [PATCH] mac80211: handle potential race between suspend and
- scan completion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Jan 2015 10:01:33 +0100
-In-Reply-To: <1422088202-31871-1-git-send-email-luca@coelho.fi>
-References: <1422088202-31871-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:56810 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755084AbbA2WAV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2015 17:00:21 -0500
+Received: by mail-wi0-f169.google.com with SMTP id h11so16457893wiw.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jan 2015 14:00:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1422566048629.36984@mail.polimi.it>
+References: <1422566048629.36984@mail.polimi.it>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 30 Jan 2015 03:30:00 +0530
+Message-ID: <CABPxzYJOT1OMapkL3Yy-wJmDA0T-iNryF-V_RqYE==9pO1CHTA@mail.gmail.com> (sfid-20150129_230024_794284_915457CA)
+Subject: Re: "iw": two small questions
+To: Stefano Cappa <stefano.cappa@mail.polimi.it>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-01-24 at 10:30 +0200, Luca Coelho wrote:
-> From: Luciano Coelho <luciano.coelho@intel.com>
-> 
-> If suspend starts while ieee80211_scan_completed() is running, between
-> the point where SCAN_COMPLETED is set and the work is queued,
-> ieee80211_scan_cancel() will not catch the work and we may finish
-> suspending before the work is actually executed, leaving the scan
-> running while suspended.
-> 
-> To fix this race, queue the scan work during resume if the
-> SCAN_COMPLETED flag is set and flush it immediately.
+On Fri, Jan 30, 2015 at 2:44 AM, Stefano Cappa
+<stefano.cappa@mail.polimi.it> wrote:
+>
+> Hi, i've two question about iw
+>
+> 1) It's possibile that "iw phy phy0 info" said that i can use a particular combination of interfaces in "Valid interface combinations" but on my device i can't use this combination? If yes, the problem is with the driver of this device?
+>
+> 2) How iw obtains the information to print "Valid interface combinations"? iw asks this information to the driver/hardware/or something else ?
+>
 
-Applied. I've put it into mac80211-next, we can look later if we should
-send it to various stable trees.
-
-johannes
-
+Yes, it talks to the device driver and gets the combinations which the
+device supports.
