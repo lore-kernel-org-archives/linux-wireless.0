@@ -1,65 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:52215 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbbARQxZ (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:33572 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871AbbA2TXQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 11:53:25 -0500
+	Thu, 29 Jan 2015 14:23:16 -0500
+Message-ID: <54CA88A1.4020107@broadcom.com> (sfid-20150129_202319_639337_2CAFF42C)
+Date: Thu, 29 Jan 2015 20:23:13 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P0LCr3fzqLyjKQbZ-P2hAV-Nk6=AMm=oFOWCLW34cRg2w@mail.gmail.com>
-References: <CA+55aFyr9LC7oLoJeyFwK4KRURbbUyO63jznTTAkQF+9LBAsfg@mail.gmail.com>
-	<CANUX_P0LCr3fzqLyjKQbZ-P2hAV-Nk6=AMm=oFOWCLW34cRg2w@mail.gmail.com>
-Date: Mon, 19 Jan 2015 04:53:24 +1200
-Message-ID: <CA+55aFzEr-R1anNm91pnM=ujfhBstJikZBVtduphff1PtccHDw@mail.gmail.com> (sfid-20150118_175334_553365_51A8BF5B)
-Subject: Re: Wireless scanning while turning off the radio problem..
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	David Miller <davem@davemloft.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: moving the wiki
+References: <1392060043.4128.37.camel@jlt4.sipsolutions.net>	 (sfid-20140210_202050_594107_FC8E5876) <1422543484.6322.10.camel@sipsolutions.net>
+In-Reply-To: <1422543484.6322.10.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 18, 2015 at 11:24 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+On 01/29/15 15:58, Johannes Berg wrote:
+> It's almost been a year, but this finally happened...
 >
-> we have different scan flows based on the firmware version you have,
-> so it would help if you could tell me what firmware you have.
+> The new wiki is at https://wireless.wiki.kernel.org/ but the old URL
+> (http://wireless.kernel.org/) will continue to work and redirect to the
+> new one. Note that right now you need a Linux Foundation identity to be
+> able to edit.
 
-Sure. It's the larest one I could find
-
-   iwlwifi 0000:01:00.0: loaded firmware version 23.11.10.0 op_mode iwlmvm
-
-with the actual firmware file being 'iwlwifi-7260-10.ucode' from the
-current linux-firmware tree.
-
-Iin a different email Arend van Spriel <arend@broadcom.com> wrote:
+I tried to edit the table of drivers and noticed that page is somewhat 
+garbled at the end. Anyway, for some drivers it lists phy mode as 
+"A(1)/B/G/N". Now the (1) probably is meant to refer to some footnote 
+but it is gone. Maybe deliberate (see below)?
 >
-> The function iwl_trans_pcie_stop_device() put device in low-power and
-> resets the cpu on the device.  So iwl_op_mode_hw_rf_kill ends up in
-> iwl_mvm_set_hw_rfkill_state which schedules cfg80211_rfkill_sync_work
-> and returns true if firmware is running.  The patch below might work.
+>>   * I'll keep the read-only wiki at http://wireless.sipsolutions.net/ for
+>> a while, in case somebody needs history - you can also download page/history
+>> snapshots.
+>
+> It's actually at http://linuxwireless.sipsolutions.net/ and is just a
+> static dump of the old wiki contents. Please don't copy content I
+> removed from the new wiki to the old one - we didn't get permission for
+> that content to be licensed under the new wiki's license.
 
-Any suggestions for how to best try to trigger this for testing?
-Looking at my logs, it turns out that I actually got this three times,
-but they were all on the same boot, and I think the first case might
-just have triggered the later ones.
+I guess this needs to be corrected: "Please don't copy content from the 
+old wiki to the new wiki. It has been removed deliberately as we didn't 
+get permission for that content to be licensed under the new wiki's 
+license".
 
-The trigger was turning off wifi from the wifi settings app due to
-being in an airplane when they were closing the doors. I don't *think*
-there was actually any wifi around at the time, which may or may not
-have made the scanning take longer and made it easier to trigger.
+Regards,
+Arend
 
-But I've done it before (although this machine has been upgraded to
-F21 reasonably recently, and I did update the ucode file before the
-trip). And I did it afterwards to test. And it happened that one time
-(and then apparently kept happening during suspend/resume/shutdown,
-but as mentioned, I blame that on some sticky problem from the first
-time, and those events in turn happened because I couldn't get
-wireless to work afterwards).
+>> experience skinning mediawiki
+>
+> It's actually dokuwiki now, so if anyone wants to restore the old site's
+> template/layout a dokuwiki template will be needed.
+>
+>> Obviously, another consequence is that the wiki markup will change
+>> somewhat. Moin and Mediawiki aren't too far from each other (except for
+>> table syntax), but there are some things that are different that you'll
+>> have to get used to when editing.
+>
+> Again, dokuwiki - slightly different from moinmoin.
+>
+>> I think/hope that all this can happen over the next few days. If there
+>> are any concerns (other than "don't do it") let me know.
+>
+> Yeah, well, "days" :-)
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-IOW, I'm not at all sure I can recreate it, so your "analyzing the
-source code for how this could happen" may be the only good way..
-
-               Linus
