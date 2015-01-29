@@ -1,81 +1,503 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42471 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753977AbbAVUdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 15:33:40 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/38] iwlwifi: add new config and PCI IDs for 4165 series
-Date: Thu, 22 Jan 2015 22:32:55 +0200
-Message-Id: <1421958809-3371-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214447_784489_2B4F6605)
-In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
-References: <1421958313.6424.2.camel@egrumbacBox>
+Received: from skprod2.natinst.com ([130.164.80.23]:52375 "EHLO ni.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753212AbbA2VGF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2015 16:06:05 -0500
+From: Xander Huff <xander.huff@ni.com>
+To: davem@davemloft.net, johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, james.minor@ni.com,
+	joseph.hershberger@ni.com, ben.shelton@ni.com, jaeden.amero@ni.com,
+	joshc@ni.com, rich.tollerton@ni.com, brad.mouring@ni.com,
+	Xander Huff <xander.huff@ni.com>
+Subject: [PATCH RFC] wext: Add event stream wrappers that return E2BIG when values don't fit
+Date: Thu, 29 Jan 2015 15:04:12 -0600
+Message-Id: <1422565452-19825-1-git-send-email-xander.huff@ni.com> (sfid-20150129_220610_092699_2554DB80)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+From: James Minor <james.minor@ni.com>
 
-Add a new config for 4165 series over PCI and insert support
-for two new 4165 series PCI IDs.
+These issues show up when using the WEXT <-> NL80211 conversion layer and
+scanning with that. When the scan results come back, some of the IEs
+(information elements) are missing, those that specifically advertise the
+network security type. This happens due to the IEs getting chopped off in
+if the buffer that's passed in isn't large enough to get the full IE. The
+fix is to instead return E2BIG. Without this fix, the advertised security
+type is misinterpreted, since it appears to be a WPA or WEP network.
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Reviewed-by: Liad Kaufman <liad.kaufman@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Testing with this fix resulted in a network which previously showed up as a
+PSK network now correctly showing up as EAP.
+
+Side effects: A user space app which before did not get E2BIG and instead
+got a clipped off buffer might now get E2BIG instead, if the passed buffer
+is not large enough.
+
+Signed-off-by: James Minor <james.minor@ni.com>
+Signed-off-by: Xander Huff <xander.huff@ni.com>
+Acked-by: Joe Hershberger <joseph.hershberger@ni.com>
+Acked-by: Ben Shelton <ben.shelton@ni.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-8000.c   | 10 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/iwlwifi/pcie/drv.c   |  2 ++
- 3 files changed, 13 insertions(+)
+RFC because we're subtlely changing the user/kernel interface
+---
+ include/net/iw_handler.h |  87 ++++++++++++++++++++++
+ net/wireless/scan.c      | 187 ++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 208 insertions(+), 66 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index 46e9c9a..9eca533 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -156,6 +156,16 @@ const struct iwl_cfg iwl8260_2ac_cfg = {
- 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
- };
+diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
+index a830b01..f07415a 100644
+--- a/include/net/iw_handler.h
++++ b/include/net/iw_handler.h
+@@ -521,6 +521,33 @@ iwe_stream_add_event(struct iw_request_info *info, char *stream, char *ends,
  
-+const struct iwl_cfg iwl4165_2ac_cfg = {
-+	.name = "Intel(R) Dual Band Wireless AC 4165",
-+	.fw_name_pre = IWL8000_FW_PRE,
-+	IWL_DEVICE_8000,
-+	.ht_params = &iwl8000_ht_params,
-+	.nvm_ver = IWL8000_NVM_VERSION,
-+	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+};
+ /*------------------------------------------------------------------*/
+ /*
++ * Wrapper to add an Wireless Event to a stream of events.
++ * Also returns indication of overflow conditions.
++ */
++static inline int
++iwe_stream_add_event_check(struct iw_request_info *info, char **stream,
++			   char *ends, struct iw_event *iwe, int event_len)
++{
++	int lcp_len = iwe_stream_lcp_len(info);
 +
- const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
- 	.name = "Intel(R) Dual Band Wireless-AC 8260",
- 	.fw_name_pre = IWL8000_FW_PRE,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index fa0bc48..0eaafd8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -378,6 +378,7 @@ extern const struct iwl_cfg iwl7265d_2n_cfg;
- extern const struct iwl_cfg iwl7265d_n_cfg;
- extern const struct iwl_cfg iwl8260_2n_cfg;
- extern const struct iwl_cfg iwl8260_2ac_cfg;
-+extern const struct iwl_cfg iwl4165_2ac_cfg;
- extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
- #endif /* CONFIG_IWLMVM */
-diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
-index 3ee8e38..c7820aa 100644
---- a/drivers/net/wireless/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
-@@ -411,6 +411,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0004, iwl8260_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x24F4, 0x0030, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F5, 0x0010, iwl4165_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F6, 0x0030, iwl4165_2ac_cfg)},
- #endif /* CONFIG_IWLMVM */
++	event_len = iwe_stream_event_len_adjust(info, event_len);
++
++	/* Check if it's possible */
++	if (likely((*stream + event_len) < ends)) {
++		iwe->len = event_len;
++		/* Beware of alignement issues on 64 bits */
++		memcpy(*stream, (char *) iwe, IW_EV_LCP_PK_LEN);
++		memcpy(*stream + lcp_len, &iwe->u,
++		       event_len - lcp_len);
++		*stream += event_len;
++		return 0;
++	} else {
++		return -E2BIG;
++	}
++}
++
++/*------------------------------------------------------------------*/
++/*
+  * Wrapper to add an short Wireless Event containing a pointer to a
+  * stream of events.
+  */
+@@ -547,6 +574,35 @@ iwe_stream_add_point(struct iw_request_info *info, char *stream, char *ends,
  
- 	{0}
+ /*------------------------------------------------------------------*/
+ /*
++ * Wrapper to add an short Wireless Event containing a pointer to a
++ * stream of events.
++ * Also returns indication of overflow conditions.
++ */
++static inline int
++iwe_stream_add_point_check(struct iw_request_info *info, char **stream,
++			   char *ends, struct iw_event *iwe, char *extra)
++{
++	int event_len = iwe_stream_point_len(info) + iwe->u.data.length;
++	int point_len = iwe_stream_point_len(info);
++	int lcp_len   = iwe_stream_lcp_len(info);
++
++	/* Check if it's possible */
++	if (likely((*stream + event_len) < ends)) {
++		iwe->len = event_len;
++		memcpy(*stream, (char *) iwe, IW_EV_LCP_PK_LEN);
++		memcpy(*stream + lcp_len,
++		       ((char *) &iwe->u) + IW_EV_POINT_OFF,
++		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
++		memcpy(*stream + point_len, extra, iwe->u.data.length);
++		*stream += event_len;
++		return 0;
++	} else {
++		return -E2BIG;
++	}
++}
++
++/*------------------------------------------------------------------*/
++/*
+  * Wrapper to add a value to a Wireless Event in a stream of events.
+  * Be careful, this one is tricky to use properly :
+  * At the first run, you need to have (value = event + IW_EV_LCP_LEN).
+@@ -572,4 +628,35 @@ iwe_stream_add_value(struct iw_request_info *info, char *event, char *value,
+ 	return value;
+ }
+ 
++/*------------------------------------------------------------------*/
++/*
++ * Wrapper to add a value to a Wireless Event in a stream of events.
++ * Be careful, this one is tricky to use properly :
++ * At the first run, you need to have (value = event + IW_EV_LCP_LEN).
++ * Also returns indication of overflow conditions.
++ */
++static inline int
++iwe_stream_add_value_check(struct iw_request_info *info, char *event,
++			   char **value, char *ends, struct iw_event *iwe,
++			   int event_len)
++{
++	int lcp_len = iwe_stream_lcp_len(info);
++
++	/* Don't duplicate LCP */
++	event_len -= IW_EV_LCP_LEN;
++
++	/* Check if it's possible */
++	if (likely((*value + event_len) < ends)) {
++		/* Add new value */
++		memcpy(*value, &iwe->u, event_len);
++		*value += event_len;
++		/* Patch LCP */
++		iwe->len = *value - event;
++		memcpy(event, (char *) iwe, lcp_len);
++		return 0;
++	} else {
++		return -E2BIG;
++	}
++}
++
+ #endif	/* _IW_HANDLER_H */
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index c705c3e..1cb64ae 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1239,15 +1239,16 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_siwscan);
+ 
+-static void ieee80211_scan_add_ies(struct iw_request_info *info,
+-				   const struct cfg80211_bss_ies *ies,
+-				   char **current_ev, char *end_buf)
++static int ieee80211_scan_add_ies(struct iw_request_info *info,
++				  const struct cfg80211_bss_ies *ies,
++				  char **current_ev, char *end_buf)
+ {
+ 	const u8 *pos, *end, *next;
+ 	struct iw_event iwe;
++	int err = 0;
+ 
+ 	if (!ies)
+-		return;
++		return err;
+ 
+ 	/*
+ 	 * If needed, fragment the IEs buffer (at IE boundaries) into short
+@@ -1264,10 +1265,11 @@ static void ieee80211_scan_add_ies(struct iw_request_info *info,
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd = IWEVGENIE;
+ 		iwe.u.data.length = next - pos;
+-		*current_ev = iwe_stream_add_point(info, *current_ev,
+-						   end_buf, &iwe,
+-						   (void *)pos);
+-
++		err = iwe_stream_add_point_check(info, current_ev,
++						 end_buf, &iwe,
++						 (void *)pos);
++		if (err)
++			return err;
+ 		pos = next;
+ 	}
+ 
+@@ -1275,44 +1277,55 @@ static void ieee80211_scan_add_ies(struct iw_request_info *info,
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd = IWEVGENIE;
+ 		iwe.u.data.length = end - pos;
+-		*current_ev = iwe_stream_add_point(info, *current_ev,
+-						   end_buf, &iwe,
+-						   (void *)pos);
++		err = iwe_stream_add_point_check(info, current_ev,
++						 end_buf, &iwe,
++						 (void *)pos);
++		if (err)
++			return err;
+ 	}
++	return 0;
+ }
+ 
+-static char *
++static int
+ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+-	      struct cfg80211_internal_bss *bss, char *current_ev,
++	      struct cfg80211_internal_bss *bss, char **current_ev,
+ 	      char *end_buf)
+ {
+ 	const struct cfg80211_bss_ies *ies;
+ 	struct iw_event iwe;
+ 	const u8 *ie;
+-	u8 *buf, *cfg, *p;
++	u8 *buf, *cfg;
++	char *p;
+ 	int rem, i, sig;
+ 	bool ismesh = false;
++	int err;
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWAP;
+ 	iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
+ 	memcpy(iwe.u.ap_addr.sa_data, bss->pub.bssid, ETH_ALEN);
+-	current_ev = iwe_stream_add_event(info, current_ev, end_buf, &iwe,
+-					  IW_EV_ADDR_LEN);
++	err = iwe_stream_add_event_check(info, current_ev, end_buf, &iwe,
++					 IW_EV_ADDR_LEN);
++	if (err)
++		return err;
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
+ 	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->pub.channel->center_freq);
+ 	iwe.u.freq.e = 0;
+-	current_ev = iwe_stream_add_event(info, current_ev, end_buf, &iwe,
+-					  IW_EV_FREQ_LEN);
++	err = iwe_stream_add_event_check(info, current_ev, end_buf, &iwe,
++					 IW_EV_FREQ_LEN);
++	if (err)
++		return err;
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
+ 	iwe.u.freq.m = bss->pub.channel->center_freq;
+ 	iwe.u.freq.e = 6;
+-	current_ev = iwe_stream_add_event(info, current_ev, end_buf, &iwe,
+-					  IW_EV_FREQ_LEN);
++	err = iwe_stream_add_event_check(info, current_ev, end_buf, &iwe,
++					 IW_EV_FREQ_LEN);
++	if (err)
++		return err;
+ 
+ 	if (wiphy->signal_type != CFG80211_SIGNAL_TYPE_NONE) {
+ 		memset(&iwe, 0, sizeof(iwe));
+@@ -1341,8 +1354,11 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			/* not reached */
+ 			break;
+ 		}
+-		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
+-						  &iwe, IW_EV_QUAL_LEN);
++		err = iwe_stream_add_event_check(info, current_ev, end_buf,
++						 &iwe, IW_EV_QUAL_LEN);
++		if (err)
++			return err;
++
+ 	}
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+@@ -1352,8 +1368,10 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 	else
+ 		iwe.u.data.flags = IW_ENCODE_DISABLED;
+ 	iwe.u.data.length = 0;
+-	current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+-					  &iwe, "");
++	err = iwe_stream_add_point_check(info, current_ev, end_buf,
++					 &iwe, "");
++	if (err)
++		return err;
+ 
+ 	rcu_read_lock();
+ 	ies = rcu_dereference(bss->pub.ies);
+@@ -1371,16 +1389,22 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			iwe.cmd = SIOCGIWESSID;
+ 			iwe.u.data.length = ie[1];
+ 			iwe.u.data.flags = 1;
+-			current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+-							  &iwe, (u8 *)ie + 2);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf, &iwe,
++							 (u8 *)ie + 2);
++			if (err)
++				return err;
+ 			break;
+ 		case WLAN_EID_MESH_ID:
+ 			memset(&iwe, 0, sizeof(iwe));
+ 			iwe.cmd = SIOCGIWESSID;
+ 			iwe.u.data.length = ie[1];
+ 			iwe.u.data.flags = 1;
+-			current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+-							  &iwe, (u8 *)ie + 2);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf, &iwe,
++							 (u8 *)ie + 2);
++			if (err)
++				return err;
+ 			break;
+ 		case WLAN_EID_MESH_CONFIG:
+ 			ismesh = true;
+@@ -1395,47 +1419,62 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			sprintf(buf, "Mesh Network Path Selection Protocol ID: "
+ 				"0x%02X", cfg[0]);
+ 			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf,
+-							  &iwe, buf);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf,
++							 &iwe, buf);
++			if (err)
++				goto out_fail_mesh;
+ 			sprintf(buf, "Path Selection Metric ID: 0x%02X",
+ 				cfg[1]);
+ 			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf,
+-							  &iwe, buf);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf,
++							 &iwe, buf);
++			if (err)
++				goto out_fail_mesh;
+ 			sprintf(buf, "Congestion Control Mode ID: 0x%02X",
+ 				cfg[2]);
+ 			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf,
+-							  &iwe, buf);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf,
++							 &iwe, buf);
++			if (err)
++				goto out_fail_mesh;
+ 			sprintf(buf, "Synchronization ID: 0x%02X", cfg[3]);
+ 			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf,
+-							  &iwe, buf);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf,
++							 &iwe, buf);
++			if (err)
++				goto out_fail_mesh;
+ 			sprintf(buf, "Authentication ID: 0x%02X", cfg[4]);
+ 			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf,
+-							  &iwe, buf);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf,
++							 &iwe, buf);
++			if (err)
++				goto out_fail_mesh;
+ 			sprintf(buf, "Formation Info: 0x%02X", cfg[5]);
+ 			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf,
+-							  &iwe, buf);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf,
++							 &iwe, buf);
++			if (err)
++				goto out_fail_mesh;
+ 			sprintf(buf, "Capabilities: 0x%02X", cfg[6]);
+ 			iwe.u.data.length = strlen(buf);
+-			current_ev = iwe_stream_add_point(info, current_ev,
+-							  end_buf,
+-							  &iwe, buf);
++			err = iwe_stream_add_point_check(info, current_ev,
++							 end_buf,
++							 &iwe, buf);
++out_fail_mesh:
+ 			kfree(buf);
++			if (err)
++				return err;
+ 			break;
+ 		case WLAN_EID_SUPP_RATES:
+ 		case WLAN_EID_EXT_SUPP_RATES:
+ 			/* display all supported rates in readable format */
+-			p = current_ev + iwe_stream_lcp_len(info);
++			p = *current_ev + iwe_stream_lcp_len(info);
+ 
+ 			memset(&iwe, 0, sizeof(iwe));
+ 			iwe.cmd = SIOCGIWRATE;
+@@ -1445,10 +1484,13 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			for (i = 0; i < ie[1]; i++) {
+ 				iwe.u.bitrate.value =
+ 					((ie[i + 2] & 0x7f) * 500000);
+-				p = iwe_stream_add_value(info, current_ev, p,
+-						end_buf, &iwe, IW_EV_PARAM_LEN);
++				err = iwe_stream_add_value_check(
++					info, *current_ev, &p, end_buf, &iwe,
++					IW_EV_PARAM_LEN);
++				if (err)
++					return err;
+ 			}
+-			current_ev = p;
++			*current_ev = p;
+ 			break;
+ 		}
+ 		rem -= ie[1] + 2;
+@@ -1465,8 +1507,10 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			iwe.u.mode = IW_MODE_MASTER;
+ 		else
+ 			iwe.u.mode = IW_MODE_ADHOC;
+-		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
+-						  &iwe, IW_EV_UINT_LEN);
++		err = iwe_stream_add_event_check(info, current_ev, end_buf,
++						 &iwe, IW_EV_UINT_LEN);
++		if (err)
++			return err;
+ 	}
+ 
+ 	buf = kmalloc(31, GFP_ATOMIC);
+@@ -1475,22 +1519,26 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 		iwe.cmd = IWEVCUSTOM;
+ 		sprintf(buf, "tsf=%016llx", (unsigned long long)(ies->tsf));
+ 		iwe.u.data.length = strlen(buf);
+-		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+-						  &iwe, buf);
++		err = iwe_stream_add_point_check(info, current_ev, end_buf,
++						 &iwe, buf);
++		if (err)
++			return err;
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd = IWEVCUSTOM;
+ 		sprintf(buf, " Last beacon: %ums ago",
+ 			elapsed_jiffies_msecs(bss->ts));
+ 		iwe.u.data.length = strlen(buf);
+-		current_ev = iwe_stream_add_point(info, current_ev,
+-						  end_buf, &iwe, buf);
++		err = iwe_stream_add_point_check(info, current_ev,
++						 end_buf, &iwe, buf);
+ 		kfree(buf);
++		if (err)
++			return err;
+ 	}
+ 
+-	ieee80211_scan_add_ies(info, ies, &current_ev, end_buf);
++	err = ieee80211_scan_add_ies(info, ies, current_ev, end_buf);
+ 	rcu_read_unlock();
+ 
+-	return current_ev;
++	return err;
+ }
+ 
+ 
+@@ -1501,20 +1549,27 @@ static int ieee80211_scan_results(struct cfg80211_registered_device *rdev,
+ 	char *current_ev = buf;
+ 	char *end_buf = buf + len;
+ 	struct cfg80211_internal_bss *bss;
++	int err = 0;
+ 
+ 	spin_lock_bh(&rdev->bss_lock);
+ 	cfg80211_bss_expire(rdev);
+ 
+ 	list_for_each_entry(bss, &rdev->bss_list, list) {
+ 		if (buf + len - current_ev <= IW_EV_ADDR_LEN) {
+-			spin_unlock_bh(&rdev->bss_lock);
+-			return -E2BIG;
++			err = -E2BIG;
++			goto out_fail;
+ 		}
+-		current_ev = ieee80211_bss(&rdev->wiphy, info, bss,
+-					   current_ev, end_buf);
++		err = ieee80211_bss(&rdev->wiphy, info, bss,
++				    &current_ev, end_buf);
++		if (err)
++			goto out_fail;
+ 	}
++ out_fail:
+ 	spin_unlock_bh(&rdev->bss_lock);
+-	return current_ev - buf;
++	if (err)
++		return err;
++	else
++		return current_ev - buf;
+ }
+ 
+ 
 -- 
 1.9.1
 
