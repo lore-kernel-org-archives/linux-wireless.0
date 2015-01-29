@@ -1,102 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:59530 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbbAER0F (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:36820 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753566AbbA2NPA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 12:26:05 -0500
-Received: by mail-ob0-f181.google.com with SMTP id gq1so61898775obb.12
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 09:26:03 -0800 (PST)
-Message-ID: <54AAC925.6050602@lwfinger.net> (sfid-20150105_182616_628776_9FE98A8E)
-Date: Mon, 05 Jan 2015 11:25:57 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel crash while copying big files since kernel 3.18
-References: <54AA3953.20603@gmail.com>
-In-Reply-To: <54AA3953.20603@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Thu, 29 Jan 2015 08:15:00 -0500
+Message-ID: <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150129_141512_103971_1F536019)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Thu, 29 Jan 2015 05:14:57 -0800
+In-Reply-To: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2015 01:12 AM, François Valenduc wrote:
-> Hello everybody,
->
-> Since kernel 3.18, I encounter a kernel crash each time when I copy a
-> big file (around 12 Gb) from an external USB drive to the harddrive of
-> my laptop.
-> I tried a bisection between kernels 3.17 and 3.18 and I was surprised to
-> find that this has to do with the driver of the wireless card
-> (rtl8188ee). However, I don't have problems if I copy the file while the
-> rtl8188 module is not loaded. Unfortunately, the results of git-bisect
-> are not totally conclusive because the kernel crash during boot when the
-> wireless connection is established. Here are the last steps of the
-> bisection:
->
-> # bad: [c151aed6aa146e9587590051aba9da68b9370f9b] rtlwifi: rtl8188ee:
-> Update driver to match Realtek release of 06282014
-> git bisect bad c151aed6aa146e9587590051aba9da68b9370f9b
-> # good: [fd09ff958777cf583d7541f180991c0fc50bd2f7] rtlwifi: Remove extra
-> workqueue for enter/leave power state
-> git bisect good fd09ff958777cf583d7541f180991c0fc50bd2f7
-> # skip: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b] rtlwifi: Modify
-> base.{c,h} for new drivers
-> git bisect skip 9afa2e44f4d8f9d031f815c32bb8f225f0f6746b
-> # skip: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd] rtlwifi: Modify
-> cam.{c,h} and efuse.{c,h} for new drivers
-> git bisect skip 3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd
-> # skip: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8] rtlwifi: Modify
-> core.c for new drivers
-> git bisect skip f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8
-> # skip: [d3feae41a3473a0f7b431d6af4e092865d586e52] rtlwifi: Update
-> power-save routines for 062814 driver
-> git bisect skip d3feae41a3473a0f7b431d6af4e092865d586e52
-> # skip: [38506ecefab911785d5e1aa5889f6eeb462e0954] rtlwifi: rtl_pci:
-> Start modification for new drivers
-> git bisect skip 38506ecefab911785d5e1aa5889f6eeb462e0954
-> # skip: [f3a97e93814aeac3f13e857a0071726acc9bd626] rtlwifi: Finish
-> modifying core routines for new drivers
-> git bisect skip f3a97e93814aeac3f13e857a0071726acc9bd626
-> # only skipped commits left to test
-> # possible first bad commit: [c151aed6aa146e9587590051aba9da68b9370f9b]
-> rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
-> # possible first bad commit: [f3a97e93814aeac3f13e857a0071726acc9bd626]
-> rtlwifi: Finish modifying core routines for new drivers
-> # possible first bad commit: [d3feae41a3473a0f7b431d6af4e092865d586e52]
-> rtlwifi: Update power-save routines for 062814 driver
-> # possible first bad commit: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd]
-> rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
-> # possible first bad commit: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b]
-> rtlwifi: Modify base.{c,h} for new drivers
-> # possible first bad commit: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8]
-> rtlwifi: Modify core.c for new drivers
-> # possible first bad commit: [38506ecefab911785d5e1aa5889f6eeb462e0954]
-> rtlwifi: rtl_pci: Start modification for new drivers
->
-> Can somebody explain what's happening ? I do the copy via Dolphin in KDE
-> and the screen becomes black and the computer becomes totally
-> unresponsive. So, I don't have access to the logs to see the trace of
-> the problem.
->
-> Thanks in advance for your help,
+On Thu, 2015-01-29 at 12:48 +0100, Michal Kazior wrote:
+> Hi,
+> 
+> I'm not subscribed to netdev list and I can't find the message-id so I
+> can't reply directly to the original thread `BW regression after "tcp:
+> refine TSO autosizing"`.
+> 
+> I've noticed a big TCP performance drop with ath10k
+> (drivers/net/wireless/ath/ath10k) on 3.19-rc5. Instead of 500mbps I
+> get 250mbps in my testbed.
+> 
+> After bisecting I ended up at `tcp: refine TSO autosizing`. Reverting
+> `tcp: refine TSO autosizing` and `tcp: Do not apply TSO segment limit
+> to non-TSO packets` (for conflict free reverts) fixes the problem.
+> 
+> My testing setup is as follows:
+> 
+>  a) ath10k AP, github.com/kvalo/ath/tree/master 3.19-rc5, w/ reverts
+>  b) ath10k STA connected to (a), github.com/kvalo/ath/tree/master
+> 3.19-rc5, w/ reverts
+>  c) (b) w/o reverts
+> 
+> Devices are 3x3 (AP) and 2x2 (Client) and are RF cabled. 11ac@80MHz
+> 2x2 has 866mbps modulation rate. In practice this should deliver
+> ~700mbps of real UDP traffic.
+> 
+> Here are some numbers:
+> 
+> UDP: (b) -> (a): 672mbps
+> UDP: (a) -> (b): 687mbps
+> TCP: (b) -> (a): 526mbps
+> TCP: (a) -> (b): 500mbps
+> 
+> UDP: (c) -> (a): 669mbps*
+> UDP: (a) -> (c): 689mbps*
+> TCP: (c) -> (a): 240mbps**
+> TCP: (a) -> (c): 490mbps*
+> 
+> * no changes/within error margin
+> ** the performance drop
+> 
+> I'm using iperf:
+>   UDP: iperf -i1 -s -u vs iperf -i1 -c XX -u -B 200M -P5 -t 20
+>   TCP: iperf -i1 -s vs iperf -i1 -c XX -P5 -t 20
+> 
+> Result values were obtained at the receiver side.
+> 
+> Iperf reports a few frames lost and out-of-order at each UDP test
+> start (during first second) but later has no packet loss and no
+> out-of-order. This shouldn't have any effect on a TCP session, right?
+> 
+> The device delivers batched up tx/rx completions (no way to change
+> that). I suppose this could be an issue for timing sensitive
+> algorithms. Also keep in mind 802.11n and 802.11ac devices have frame
+> aggregation windows so there's an inherent extra (and non-uniform)
+> latency when compared to, e.g. ethernet devices.
+> 
+> The driver doesn't have GRO. I have an internal patch which implements
+> it. It improves overall TCP traffic (more stable, up to 600mbps TCP
+> which is ~100mbps more than without GRO) but the TCP: (c) -> (a)
+> performance drop remains unaffected regardless.
+> 
+> I've tried applying stretch ACK patchset (v2) on both machines and
+> re-run the above tests. I got no measurable difference in performance.
+> 
+> I've also run these tests with iwlwifi 7260 (also a 2x2) as (b) and
+> (c). It didn't seem to be affected by the TSO patch at all (it runs at
+> ~360mbps of TCP regardless of the TSO patch).
+> 
+> Any hints/ideas?
+> 
 
-There is a bug in 3.18 that is triggered when an O(3) memory allocation fails. 
-There is a patch to fix this at 
-http://marc.info/?l=linux-netdev&m=141999680927473&w=2 that has been merged into 
-wireless-drivers as commit e9538cf4f90713eca71b1d6a74b4eae1d445c664. It will be 
-applied to 3.18.X when it makes it into mainline 3.19-rcY, but that has not yet 
-happened.
+Hi Michal
 
-You could manually apply that patch to your kernel source, or you could pull the 
-git repo at http://github.com/lwfinger/rtlwifi_new.git. That code has this patch 
-already applied.
+This patch restored original TSQ behavior, because the 1ms worth of data
+per flow had totally destroyed TSQ intent.
 
-If this patch does not fix the problem, you might be able to capture at least 
-part of the backtrace by starting the transfer and then switching to the logging 
-console. When a crash happens, photograph the screen. On my system, I display it 
-with CTRL-ALT-F10. I return to the normal graphical console with CTRL-ALT-F7, 
-but your distro may use different virtual consoles.
+vi +630 Documentation/networking/ip-sysctl.txt
 
-Larry
+tcp_limit_output_bytes - INTEGER
+        Controls TCP Small Queue limit per tcp socket.
+        TCP bulk sender tends to increase packets in flight until it
+        gets losses notifications. With SNDBUF autotuning, this can
+        result in a large amount of packets queued in qdisc/device
+        on the local machine, hurting latency of other flows, for
+        typical pfifo_fast qdiscs.
+        tcp_limit_output_bytes limits the number of bytes on qdisc
+        or device to reduce artificial RTT/cwnd and reduce bufferbloat.
+        Default: 131072
+
+This is why I suggested to Eyal Perry to change the TX interrupt
+mitigation parameters as in :
+
+ethtool -C eth0 tx-frames 4 rx-frames 4
+
+With this change and the stretch ack fixes, I got 37Gbps of throughput
+on a single flow, on a 40Gbit NIC (mlx4)
+
+If a driver needs to buffer more than tcp_limit_output_bytes=131072 to
+get line rate, I suggest that you either :
+
+1) tweak tcp_limit_output_bytes, but its not practical from a driver.
+
+2) change the driver, knowing what are its exact requirements, by
+removing a fraction of skb->truesize at ndo_start_xmit() time as in :
+
+if ((skb->destructor == sock_wfree ||
+     skb->restuctor == tcp_wfree) &&
+    skb->sk) {
+    u32 fraction = skb->truesize / 2;
+
+    skb->truesize -= fraction;
+    atomic_sub(fraction, &skb->sk->sk_wmem_alloc);
+}
+
+Thanks.
 
 
