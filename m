@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34675 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753578AbbALTmI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:54998 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752226AbbA2IB2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 14:42:08 -0500
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/8] ath10k:  add wmi-id to htc credits debugging.
-Date: Mon, 12 Jan 2015 11:41:43 -0800
-Message-Id: <1421091709-19891-2-git-send-email-greearb@candelatech.com> (sfid-20150112_204238_106594_33F56034)
-In-Reply-To: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
-References: <1421091709-19891-1-git-send-email-greearb@candelatech.com>
+	Thu, 29 Jan 2015 03:01:28 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [01/14] brcmfmac: Relax scheduling of msgbuf worker on
+ highthroughput.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1422214303-7816-2-git-send-email-arend@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20150129080128.4D06913EF18@smtp.codeaurora.org> (sfid-20150129_090133_411789_6A02CC5F)
+Date: Thu, 29 Jan 2015 08:01:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
 
-This helps when trying to figure out exactly which commands
-are consuming credits when trying to debug wmi credit hangs.
----
- drivers/net/wireless/ath/ath10k/htc.c | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+> From: Hante Meuleman <meuleman@broadcom.com>
+> 
+> On every tx the flow worker is triggered. When running high
+> throughput data this causes an excessive amount of times the worker
+> gets activated. This patch starts scheduling the worker more relaxed
+> once outstanding tx has reached a certain depth.
+> 
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index d56e7f6..16b939a 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -137,9 +137,18 @@ int ath10k_htc_send(struct ath10k_htc *htc,
- 			goto err_pull;
- 		}
- 		ep->tx_credits -= credits;
--		ath10k_dbg(ar, ATH10K_DBG_HTC,
--			   "htc ep %d consumed %d credits (total %d)\n",
--			   eid, credits, ep->tx_credits);
-+		if (eid == ar->wmi.eid) {
-+			struct wmi_cmd_hdr* hdr;
-+			hdr = (struct wmi_cmd_hdr*)(skb->data + sizeof(struct ath10k_htc_hdr));
-+			ath10k_dbg(ar, ATH10K_DBG_HTC,
-+				   "htc ep %d consumed %d credits (total %d, wmi-cmd 0x%x)\n",
-+				   eid, credits, ep->tx_credits, __le32_to_cpu(hdr->cmd_id));
-+		}
-+		else {
-+			ath10k_dbg(ar, ATH10K_DBG_HTC,
-+				   "htc ep %d consumed %d credits (total %d)\n",
-+				   eid, credits, ep->tx_credits);
-+		}
- 		spin_unlock_bh(&htc->tx_lock);
- 	}
- 
--- 
-1.7.11.7
+Thanks, 14 patches applied to wireless-drivers-next.git:
 
+5ef1e604194e brcmfmac: Relax scheduling of msgbuf worker on high throughput.
+69d03ee0b709 brcmfmac: prevent possible deadlock on resuming SDIO device.
+4dd8b26a40ac brcmfmac: use SDIO DPC for control frames.
+9b7a0ddc6073 brcmfmac: pass DEAUTH/DISASSOC reason code to user-space
+8982cd40ace9 brcmfmac: wait for driver to go idle during suspend
+a1cee865c3e7 brcmfmac: SDIO: avoid using bus state for private states.
+649f38ae9e48 brcmfmac: Reopen netdev queue on bus state data.
+86fec35e17c1 brcmfmac: do not load firmware when device is already running
+31fc436f184d brcmutil: use define for boardrev string function
+9b1933a3bd7c brcmfmac: determine chip info when not provided by bus layer
+4862290319ad brcmfmac: always obtain device revision info upon intialization
+e749c7d49c20 brcmfmac: show firmware release info in ethtool driver info
+7f52c81d02a2 brcmfmac: store revinfo retrieval result
+4165fe9a9287 brcmfmac: fix nvram processing
+
+Kalle Valo
