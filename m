@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58062 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48333 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752231AbbAFIT2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 03:19:28 -0500
-Message-ID: <1420532359.1966.0.camel@sipsolutions.net> (sfid-20150106_091933_197397_40967C23)
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
+	id S1753314AbbA2QF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2015 11:05:57 -0500
+Message-ID: <1422547553.6322.18.camel@sipsolutions.net> (sfid-20150129_170601_603042_26BE6659)
+Subject: Re: [PATCH] nl80211: don't document per-wiphy interface dump
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Paul Bolle <pebolle@tiscali.nl>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Tue, 06 Jan 2015 09:19:19 +0100
-In-Reply-To: <54AB0C75.1090204@broadcom.com>
-References: <1420297188.2397.3.camel@tiscali.nl>
-		 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
-		 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
-		 <1420324124.9624.60.camel@x220> <54AA641C.7050307@broadcom.com>
-		 <1420479510.14308.23.camel@x220>
-		 (sfid-20150105_183907_807502_81C08416) <1420484224.9459.16.camel@sipsolutions.net>
-	 <1420495519.14308.29.camel@x220> <54AB0C75.1090204@broadcom.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 29 Jan 2015 17:05:53 +0100
+In-Reply-To: <6CBE8643-DD96-45AB-9F73-4CADC7FD2277@holtmann.org>
+References: <1422546796-22526-1-git-send-email-johannes@sipsolutions.net>
+	 <6CBE8643-DD96-45AB-9F73-4CADC7FD2277@holtmann.org>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-05 at 23:13 +0100, Arend van Spriel wrote:
-> On 01/05/15 23:05, Paul Bolle wrote:
-> > On Mon, 2015-01-05 at 19:57 +0100, Johannes Berg wrote:
-> >> Multiple other groups of ioctls could be converted in similar patches,
-> >> until at the end you can completely remove ipw_wx_handlers and rely
-> >> entirely on cfg80211's wext compatibility.
-> >>
-> >> So far the theory - in practice nobody cared enough to start working on
-> >> any of these drivers, let alone actually has the hardware today.
-> >
-> > So my suggestion to make ipw2200 no longer use cfg80211_wext_giwname()
-> > would actually be backwards. What's actually needed, in theory, is to
-> > use more of what's provided under CFG80211_WEXT (and, I guess, less of
-> > what's provided under WIRELESS_EXT). Did I get that right?
-> 
-> Yes, but as Johannes indicated it needs consideration what to group in 
-> the patches.
+On Thu, 2015-01-29 at 08:02 -0800, Marcel Holtmann wrote:
 
-Oh, that's not strictly necessary - that was just so it would actually
-work after each single patch. If you wanted to, you could do it all in a
-single huge patch as well :-) I was explaining though why we did the
-cfg80211-wext code the way it is - which enables making smaller changes
-that don't break the driver.
+> > Such a feature doesn't exist and isn't really needed since you
+> > probably won't have enough interfaces to make it worthwhile, so
+> > just remove that from the documentation.
+
+> we had a TODO item internally that planned to implement this actually.
+
+I'm not sure what it buys you since you still have to deal with old
+kernels and do the filtering, and there aren't that many messages
+(typically you only have one NIC anyway), but hey, if you have enough
+time to waste on it I guess I don't mind ... Although we should start
+watching nl80211.c code size a bit more I guess :)
+
+Can always include a revert of this in the change that actually adds it.
 
 johannes
+
 
