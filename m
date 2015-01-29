@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.jelmoni.net ([78.47.55.82]:41258 "EHLO mail.jelmoni.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968AbbAPWfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 17:35:12 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mail.jelmoni.net (Postfix) with ESMTP id 391F3618FF
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 23:29:21 +0100 (CET)
-Received: from mail.jelmoni.net ([78.47.55.82])
-	by localhost (mail.jelmoni.net [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id wPgwgO3DmrlN for <linux-wireless@vger.kernel.org>;
-	Fri, 16 Jan 2015 23:29:21 +0100 (CET)
-Received: from laptop-bmeier.swiss-wireless (host133.190-137-223.telecom.net.ar [190.137.223.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: genauth@swiss-wireless.com.ar)
-	by mail.jelmoni.net (Postfix) with ESMTPSA id 51D22618AA
-	for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 23:29:19 +0100 (CET)
-Message-ID: <54B990BC.1060604@swiss-wireless.com.ar> (sfid-20150116_233517_806044_139B6A33)
-Date: Fri, 16 Jan 2015 19:29:16 -0300
-From: Beat Meier <mbe_ml@swiss-wireless.com.ar>
+Received: from mail2.candelatech.com ([208.74.158.173]:42003 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755347AbbA2Quo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2015 11:50:44 -0500
+Message-ID: <54CA64E2.2050502@candelatech.com> (sfid-20150129_175048_004808_A7F9341C)
+Date: Thu, 29 Jan 2015 08:50:42 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org >> Linux Wireless List"
-	<linux-wireless@vger.kernel.org>
-Subject: Cannot use ap and sta mode on same interface with ath9k and kernel
- 3.8.13 :-(
-Content-Type: text/plain; charset=utf-8
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: YanBo <dreamfly281@gmail.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFTv2 2/5] ath10k: fix wmi-htc tx credit starvation
+References: <1396611464-5940-1-git-send-email-michal.kazior@tieto.com> <1397040531-6224-1-git-send-email-michal.kazior@tieto.com> <1397040531-6224-3-git-send-email-michal.kazior@tieto.com> <CAFuUQkiVB7DVXpBCrSy_LFMCm3CX9wPi_awq3x16FHDB2OmasA@mail.gmail.com> <CA+BoTQnXPMT3xQ=kmV5hdXgffZUB=tBvVnsawvzLATajPzoYsg@mail.gmail.com>
+In-Reply-To: <CA+BoTQnXPMT3xQ=kmV5hdXgffZUB=tBvVnsawvzLATajPzoYsg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On 01/28/2015 11:57 PM, Michal Kazior wrote:
+> On 29 January 2015 at 02:32, YanBo <dreamfly281@gmail.com> wrote:
+>> Hi Michal,
+>>
+>> What the conclusion about this patch, it  looks like this patch not be
+>> merged into ath10K due to introduce some unstable issue, I'v got
+>> another issue that when move the station enter hibernate mode. the AP
+>> will continue report message like before
+>> [ 3958.681293] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
+>> 00:03:7f:40:04:5b
+>> [ 3959.681449] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
+>> 00:03:7f:40:04:5b
+>> [ 3960.681696] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
+>> 00:03:7f:40:04:5b
+>> [ 3961.681877] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
+>> 00:03:7f:40:04:5b
+>> [ 3962.682080] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
+>> 00:03:7f:40:04:5b
+>> [ 3963.682361] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
+>> 00:03:7f:40:04:5b
+>> [ 3964.682550] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
+>> 00:03:7f:40:04:5b
+>> [ 3965.682743] ath10k_pci 0000:01:00.0: Spurious quick kickout for STA
+>> 00:03:7f:40:04:5b
+> 
+> The spurious STA kickout alone is most likely an aftermath of HTX Tx
+> credit starvation when client was detected as inactive by hostapd and
+> was subsequently disassociated. However due to starvation
+> wmi-peer-delete was never sent to firmware so fw thinks the peer is
+> still there.
+> 
+> I suppose fw should be restarted when ath10k is unable to submit a
+> configuration command like wmi-peer-delete. It doesn't make sense to
+> continue since fw-host state loses coherency and weird things can
+> start to happen (spurious sta kickout is the best known example).
 
-I'm using an WLM200NX card in master mode ath1 and want to do scanning
-on the same interface.
-I'm using ath9k on 3.8.13 kernel (voyage-linux)
+At least some of the tx-credits problem is in firmware, but
+regardless of that:
 
-So I setup an additional  interface in sta mode with
-  iw phy phy1 interface add ath2 type managed
-This works but the interface is not coming up.
-I tried several things like
-auto ath2
-iface ath2 inet static
-        address 10.58.1.1
-        netmask 255.255.255.0
-        wireless-mode Managed
-        wpa-conf /etc/wpa_supplicant.conf.WPA-PSK
+Instead of restarting firmware in this case, maybe change the
+'wait-for-3-seconds' timeout to 3 1-second timeouts, and
+on second timeout force a flush, ignoring tx-credits if
+required?  That may not be pretty, but seems better than resetting
+firmware if it works.
 
-But wpa_spplicant comes with error:
-  wpa_supplicant: /sbin/wpa_supplicant daemon failed to start
-  run-parts: /etc/network/if-pre-up.d/wpasupplicant exited with return
-code 1
-  RTNETLINK answers: Name not unique on network
-  Failed to bring up ath2.
+Thanks,
+Ben
 
-I can setup monitor mode but I want to scan to see what other equipment
-is on which channel ...
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-What's the problem? With ath9k I cannot use ap and sta mode together???
-
-Thanks
-
-Beat
