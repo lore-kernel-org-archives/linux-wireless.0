@@ -1,45 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:41027 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751834AbbAOLK1 (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:42743 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754431AbbA2MZ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 06:10:27 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] ath10k: add wmi-tlv debug event handling
-References: <1420715897-18706-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 15 Jan 2015 13:10:14 +0200
-In-Reply-To: <1420715897-18706-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 8 Jan 2015 12:18:15 +0100")
-Message-ID: <87k30oxpt5.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_121030_936366_10469ACC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 29 Jan 2015 07:25:27 -0500
+Received: by mail-we0-f172.google.com with SMTP id q59so23247014wes.3
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Jan 2015 04:25:25 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: enable qca6174 hw3.2
+Date: Thu, 29 Jan 2015 13:24:33 +0100
+Message-Id: <1422534273-18427-1-git-send-email-michal.kazior@tieto.com> (sfid-20150129_132535_545515_3714060C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+The 3.2 revision has a different target BMI
+version so it wasn't recognized by ath10k (despite
+the chip_id rev being on the supported list
+already).
 
-> New wmi-tlv firmware will deliver debug messages
-> via new events.
->
-> Note: This may yield some (trivial) conflicts
-> against my beacon/presp template patchset.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 14 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  1 +
+ 2 files changed, 15 insertions(+)
 
-You were right, but bonus points for having valid parent commit ids for
-the 3-way merge! :)
-
-Applying: ath10k: implement diag data container event
-Using index info to reconstruct a base tree...
-Falling back to patching base and 3-way merge...
-Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.h
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.h
-Auto-merging drivers/net/wireless/ath/ath10k/wmi-tlv.c
-CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
-Failed to merge in the changes.
-Patch failed at 0001 ath10k: implement diag data container event
-
-Please double check my conflict resolution in ath-next-test.
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 5e9e1a6..36a8fcf 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -85,6 +85,20 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+ 		},
+ 	},
++	{
++		.id = QCA6174_HW_3_2_VERSION,
++		.name = "qca6174 hw3.2",
++		.patch_load_addr = QCA6174_HW_3_0_PATCH_LOAD_ADDR,
++		.uart_pin = 6,
++		.fw = {
++			.dir = QCA6174_HW_3_0_FW_DIR,
++			.fw = QCA6174_HW_3_0_FW_FILE,
++			.otp = QCA6174_HW_3_0_OTP_FILE,
++			.board = QCA6174_HW_3_0_BOARD_DATA_FILE,
++			.board_size = QCA6174_BOARD_DATA_SZ,
++			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
++		},
++	},
+ };
+ 
+ static void ath10k_send_suspend_complete(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 5771278..460771f 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -40,6 +40,7 @@
+ #define QCA6174_HW_1_3_VERSION		0x05000003
+ #define QCA6174_HW_2_1_VERSION		0x05010000
+ #define QCA6174_HW_3_0_VERSION		0x05020000
++#define QCA6174_HW_3_2_VERSION		0x05030000
+ 
+ enum qca6174_pci_rev {
+ 	QCA6174_PCI_REV_1_1 = 0x11,
 -- 
-Kalle Valo
+1.8.5.3
+
