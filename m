@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:41848 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752650AbbAGNyE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10906 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758001AbbA2K1j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 08:54:04 -0500
-Received: by mail-wg0-f53.google.com with SMTP id x13so1224986wgg.12
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 05:54:03 -0800 (PST)
+	Thu, 29 Jan 2015 05:27:39 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix target wakeup timeout
+References: <1422290586-10955-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Thu, 29 Jan 2015 12:27:30 +0200
+In-Reply-To: <1422290586-10955-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Mon, 26 Jan 2015 22:13:06 +0530")
+Message-ID: <87mw513mr1.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_112747_436415_6D713483)
 MIME-Version: 1.0
-In-Reply-To: <1420638161.3407.12.camel@sipsolutions.net>
-References: <1420112563-3981-1-git-send-email-arik@wizery.com>
- <1420112563-3981-2-git-send-email-arik@wizery.com> <1420541766.1966.18.camel@sipsolutions.net>
- <1420552744.1966.31.camel@sipsolutions.net> <CA+XVXfcAW19fzEpAV8R=hDbBdXEgJmrT8m4mqFg8tUhdx1XvKQ@mail.gmail.com>
- <CA+XVXfdKq1tUoUrbH+9BE=LX_Nf+tNNeoHLYMa4NfX41cMoysg@mail.gmail.com> <1420638161.3407.12.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 7 Jan 2015 15:45:50 +0200
-Message-ID: <CA+XVXfex6L8-6FbKys07VAstTC3NeqtJPykUc-zxS0ZZp3nWnw@mail.gmail.com> (sfid-20150107_145412_101033_E020C1D8)
-Subject: Re: [PATCH 2/2] cfg80211: avoid reg-hints in self-managed only systems
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@suse.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 7, 2015 at 3:42 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2015-01-07 at 15:38 +0200, Arik Nemtsov wrote:
->> On Tue, Jan 6, 2015 at 4:04 PM, Arik Nemtsov <arik@wizery.com> wrote:
->> > On Tue, Jan 6, 2015 at 3:59 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> >> On Tue, 2015-01-06 at 11:56 +0100, Johannes Berg wrote:
->> >>> On Thu, 2015-01-01 at 13:42 +0200, Arik Nemtsov wrote:
->> >>> > When a system contains only self-managed regulatory devices all hints
->> >>> > from the regulatory core are ignored. Stop hint processing early in this
->> >>> > case. These systems usually don't have CRDA deployed, which results in
->> >>> > endless (irrelevent) logs of the form:
->> >>> > cfg80211: Calling CRDA to update world regulatory domain
->> >>>
->> >>> Applied.
->> >>
->> >> I take that back - dropped again. This was causing spurious messages in
->> >> the hwsim test run VM, saying something like "couldn't set reg domain:
->> >> -7". Maybe at that point not a single wiphy existed?
->> >
->> > Interesting. I guess I should fix this to only drop the request in
->> > case there's at least one self-managed wiphy.
->>
->> Could you point me to the hwsim test that failed for you?
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+
+> During drv_start/drv_stop stress testing in ARM platform,
+> sometimes target is taking more that 5ms to wake up. Similar
+> behaviour also noted during driver load and unload iterations.
+> On such cases, the wakup duration lies between 5-6ms. Hence
+> increasing pci wakup timeout 10ms to be more safer. With this
+> changes, able to complete power down/up >100 iterations without
+> any issues.
 >
-> I don't think it was a specific test case - the message seems to have
-> come during boot. OTOH, I also reverted some of Eliad's patches, so
-> perhaps I should retest without those?
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-It's a good check to add anyway (at least one self-managed device).
-Since the regulatory queues us the world-update core hint right away..
-Not sure why I haven't encountered it, I'll try to introduce some
-sleep() calls to reproduce. It's a real bug I believe.
+Thanks, applied to ath.git.
 
->
->> Also where is that message coming from? I don't see it in wpa_s or the kernel.
->
-> I have no idea! I can't even explain where the -7 (-E2BIG) came from!
-
-Yea that's what I was after as well. :)
-
-Arik
+-- 
+Kalle Valo
