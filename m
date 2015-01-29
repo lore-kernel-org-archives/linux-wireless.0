@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toccata2.tricolour.ca ([204.225.221.17]:59702 "EHLO
-	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751286AbbAFNjf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 08:39:35 -0500
-Date: Tue, 6 Jan 2015 08:39:30 -0500
-From: Richard Guy Briggs <rgb@tricolour.ca>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
-	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
-Subject: NetDev 0.1 Hotel guaranteed rate expiry fast approaching
-Message-ID: <20150106133930.GT1343@toccata2.tricolour.ca> (sfid-20150106_143951_227435_FBFA14E3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:48295 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752375AbbA2PxU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Jan 2015 10:53:20 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: don't document per-wiphy interface dump
+Date: Thu, 29 Jan 2015 16:53:16 +0100
+Message-Id: <1422546796-22526-1-git-send-email-johannes@sipsolutions.net> (sfid-20150129_165323_364017_3D1EF347)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hotel guaranteed rate expiry fast approaching
+From: Johannes Berg <johannes.berg@intel.com>
 
-The Westin Hotel is holding a block of rooms for Netdev01 at a guaranteed rate
-of $159.00 or $179.00 (depending on the type of room required). That guarantee
-expires on January 23, so book now to avoid disappointment and get the low
-rate. The rooms are going faster than we expected!
+Such a feature doesn't exist and isn't really needed since you
+probably won't have enough interfaces to make it worthwhile, so
+just remove that from the documentation.
 
-Hotel room reservation link:
-	https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/uapi/linux/nl80211.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1cbc3aae425c..68b294e83944 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -180,8 +180,8 @@
+  *	%NL80211_ATTR_WIPHY and %NL80211_ATTR_WIPHY_NAME.
+  *
+  * @NL80211_CMD_GET_INTERFACE: Request an interface's configuration;
+- *	either a dump request on a %NL80211_ATTR_WIPHY or a specific get
+- *	on an %NL80211_ATTR_IFINDEX is supported.
++ *	either a dump request for all interfaces or a specific get with a
++ *	single %NL80211_ATTR_IFINDEX is supported.
+  * @NL80211_CMD_SET_INTERFACE: Set type of a virtual interface, requires
+  *	%NL80211_ATTR_IFINDEX and %NL80211_ATTR_IFTYPE.
+  * @NL80211_CMD_NEW_INTERFACE: Newly created virtual interface or response
+-- 
+2.1.4
 
-Registration: (closes Feb 12)	https://onlineregistrations.ca/netdev01
-Main site:                      https://www.netdev01.org/
-Announcement:                   https://www.netdev01.org/announce
-CFP:                            https://www.netdev01.org/cfp
-Travel/hotel/weather/clothing:  https://www.netdev01.org/travel
-
-netdev 0.1 is the community-driven Linux networking conference held
-back-to-back with netconf in Ottawa, Canada, February 14-17, 2015.
-
-
-	slainte mhath, RGB
-
---
-Richard Guy Briggs               --  ~\    -- ~\             <hpv.tricolour.ca>
-<www.TriColour.ca>                 --  \___   o \@      @        Ride yer bike!
-Ottawa, ON, CANADA                  --  Lo_>__M__\\/\%__\\/\%
-Vote! -- <greenparty.ca>_____GTVS6#790__(*)__(*)________(*)(*)_________________
