@@ -1,43 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:65024 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362AbbAWLBA (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48217 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762AbbA2QCm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 06:01:00 -0500
-Received: by mail-we0-f176.google.com with SMTP id w62so6886730wes.7
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Jan 2015 03:00:59 -0800 (PST)
-Date: Fri, 23 Jan 2015 12:50:18 +0200
-From: Vadim Kochan <vadim4j@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vadim Kochan <vadim4j@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH mac80211-next] nl80211: Allow set network namespace by fd
-Message-ID: <20150123104956.GA22514@angus-think.wlc.globallogic.com> (sfid-20150123_120104_994492_33804160)
-References: <1421073245-20312-1-git-send-email-vadim4j@gmail.com>
- <1422006704.2728.15.camel@sipsolutions.net>
-MIME-Version: 1.0
+	Thu, 29 Jan 2015 11:02:42 -0500
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422006704.2728.15.camel@sipsolutions.net>
+Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
+Subject: Re: [PATCH] nl80211: don't document per-wiphy interface dump
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1422546796-22526-1-git-send-email-johannes@sipsolutions.net>
+Date: Thu, 29 Jan 2015 08:02:36 -0800
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Message-Id: <6CBE8643-DD96-45AB-9F73-4CADC7FD2277@holtmann.org> (sfid-20150129_170246_892258_7AAAE738)
+References: <1422546796-22526-1-git-send-email-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 23, 2015 at 10:51:44AM +0100, Johannes Berg wrote:
-> On Mon, 2015-01-12 at 16:34 +0200, Vadim Kochan wrote:
-> > From: Vadim Kochan <vadim4j@gmail.com>
-> > 
-> > Added new NL80211_ATTR_NETNS_FD which allows to
-> > set namespace via nl80211 by fd.
+Hi Johannes,
+
+> Such a feature doesn't exist and isn't really needed since you
+> probably won't have enough interfaces to make it worthwhile, so
+> just remove that from the documentation.
 > 
-> Applied.
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+> include/uapi/linux/nl80211.h | 4 ++--
+> 1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> johannes
-> 
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 1cbc3aae425c..68b294e83944 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -180,8 +180,8 @@
+>  *	%NL80211_ATTR_WIPHY and %NL80211_ATTR_WIPHY_NAME.
+>  *
+>  * @NL80211_CMD_GET_INTERFACE: Request an interface's configuration;
+> - *	either a dump request on a %NL80211_ATTR_WIPHY or a specific get
+> - *	on an %NL80211_ATTR_IFINDEX is supported.
+> + *	either a dump request for all interfaces or a specific get with a
+> + *	single %NL80211_ATTR_IFINDEX is supported.
+>  * @NL80211_CMD_SET_INTERFACE: Set type of a virtual interface, requires
+>  *	%NL80211_ATTR_IFINDEX and %NL80211_ATTR_IFTYPE.
+>  * @NL80211_CMD_NEW_INTERFACE: Newly created virtual interface or response
 
-Hi,
+we had a TODO item internally that planned to implement this actually.
 
-I have changes for 'iw' for setting netns by name in the same way as it
-works in 'ip link set dev XXX netns <NAME>', so it uses /var/run/netns
-path by default or absolute path if it sees "/" in the netns name.
+Regards
 
-So may be I will send the patch as RFC just to see a feedback ?
+Marcel
 
-Thanks,
