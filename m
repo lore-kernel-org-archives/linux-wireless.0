@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:61920 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796AbbATR7s (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:51877 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbbA2HBu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 12:59:48 -0500
-Message-ID: <54BE9791.1070706@broadcom.com> (sfid-20150120_185951_581994_645F47A5)
-Date: Tue, 20 Jan 2015 18:59:45 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 29 Jan 2015 02:01:50 -0500
+From: "Dedy Lansky" <dlansky@codeaurora.org>
+To: "'Johannes Berg'" <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	"'Vladimir Kondratiev'" <qca_vkondrat@qca.qualcomm.com>
+References: <1422189052-25602-1-git-send-email-dlansky@codeaurora.org> <1422260840.1890.9.camel@sipsolutions.net> <20150126095800.GA12740@w1.fi>
+In-Reply-To: <20150126095800.GA12740@w1.fi>
+Subject: RE: [PATCH] nl80211: add new scan flag to indicate P2P search
+Date: Thu, 29 Jan 2015 09:01:45 +0200
+Message-ID: <000801d03b91$73b1c030$5b154090$@codeaurora.org> (sfid-20150129_080153_483691_0FC68677)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, Dave Taht <dave.taht@gmail.com>
-Subject: Re: REMINDER: wireless workshop in Ottawa
-References: <1421660507.1965.8.camel@sipsolutions.net>
-In-Reply-To: <1421660507.1965.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/19/15 10:41, Johannes Berg wrote:
-> We're holding a wireless workshop at the netdev0.1 conference
-> (https://www.netdev01.org/) on the first day (Feb 14th)
->
-> As the wiki is currently locked down for editing for the migration,
-> please send agenda proposals to this thread - I'll put it up on the
-> wiki. I'd also appreciate (private!) email if you're planning to attend.
->
-> If you haven't registered, make sure you do so. There's an option for a
-> single day and for the whole 4-day conference. The hotel room rate also
-> expires this Friday.
+Hi Johannes,
 
-I am afraid I will be "committing a netdev crime" [1] because I will not 
-attend. Still there is one topic that would be interesting for this 
-conf/workshop. Recent experiences with 11ac devices has shown us that 
-the congestion control mechanisms in the networking subsystem are not 
-optimal for wireless in general which becomes even more visible with 
-11ac (or it is just our devices :-p ). If there are people in the 
-community working in this area it would be great to collaborate on it. 
-Let me know. I know Dave Taht is the usual suspect to talk to about this 
-so Cc'ed him explicitly.
+Following Jouni's comment, would you please re-consider?
 
-Regards,
-Arend
+Thanks,
+ Dedy.
 
-[1] http://mid.gmane.org/54BD2294.2000207@mojatatu.com
-
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: Jouni Malinen [mailto:j@w1.fi] 
+Sent: Monday, January 26, 2015 11:58 AM
+> On Mon, Jan 26, 2015 at 09:27:20AM +0100, Johannes Berg wrote:
+> > On Sun, 2015-01-25 at 14:30 +0200, Dedy Lansky wrote:
+> > > Scan request (NL80211_CMD_TRIGGER_SCAN) is used for triggering both 
+> > > scan and P2P search.
+> > > At driver/firmware layer, scan and P2P search might be handled
+differently.
+> > > 
+> > > Add new scan flag to indicate P2P search. This flag can be used by 
+> > > applications (e.g. wpa_supplicant) to explicitly request P2P search.
+> > 
+> > I think this ship has sailed many months ago -- too late, you can 
+> > never rely on wpa_supplicant settings this flag.
+> 
+> I'm not sure I'd fully agree with that.. wpa_supplicant currently maps its
+internal struct wpa_driver_scan_params::p2p_probe to
+NL80211_ATTR_TX_NO_CCK_RATE (and also removal of CCK rates from
+NL80211_ATTR_SCAN_SUPP_RATES). However, neither of these make much sense in
+bands other than 2.4 GHz. There is ongoing effort in defining P2P social
+channels on other bands and it would be useful to be prepared for those with
+a clear nl80211 flag in scan parameters. P2P on those new bands will require
+wpa_supplicant changes, so it is reasonable to assume that a wpa_supplicant
+version that supports those bands will also support this new flag.
+> 
+> > If you need to distinguish, you should be able to advertise P2P-Device 
+> > supports, and then get P2P scans on the P2P-Device virtual interface.
+> > Could be a pure driver thing of course.
+> 
+> It would be unfortunate to force people to use P2P-Device for this.
+>  
+> -- 
+> Jouni Malinen                                            PGP id EFC895FA
 
