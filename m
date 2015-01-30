@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:52126 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755093AbbATRBl (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:9029 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751761AbbA3ImV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 12:01:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: [PATCH V2 for 3.19 1/7] rtlwifi: Remove logging statement that is no longer needed
-Date: Tue, 20 Jan 2015 11:01:20 -0600
-Message-Id: <1421773286-1039-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180149_271041_B8A31948)
-In-Reply-To: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 30 Jan 2015 03:42:21 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0U8ccgf006600
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:42:21 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s7fgab5j3-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:42:21 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 4/4] mwifiex: disable UAPSD mode when AP starts
+Date: Fri, 30 Jan 2015 00:40:07 -0800
+Message-ID: <1422607207-15229-4-git-send-email-akarwar@marvell.com> (sfid-20150130_094224_146088_9C931683)
+In-Reply-To: <1422607207-15229-1-git-send-email-akarwar@marvell.com>
+References: <1422607207-15229-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit e9538cf4f907 ("rtlwifi: Fix error when accessing unmapped memory
-in skb"), a printk was included to indicate that the condition had been
-reached. There is now enough evidence from other users that the fix is
-working. That logging statement can now be removed.
+When AP is started, firmware exits power save mode. This
+means power save manager of AP takes priority over station.
+Firmware stop sending periodic AWAKE events to host.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [V3.18]
+We may have UAPSD enabled on station which buffers data
+packets until AWAKE event from firmware. Data path is
+unnecessarily blocked in this case. This patch disables
+UAPSD mode to reenable transmit data path.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/rtlwifi/pci.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/mwifiex/sta_cmdresp.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index c70efb9..e25faac 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -816,11 +816,8 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 
- 		/* get a new skb - if fail, old one will be reused */
- 		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
--		if (unlikely(!new_skb)) {
--			pr_err("Allocation of new skb failed in %s\n",
--			       __func__);
-+		if (unlikely(!new_skb))
- 			goto no_new;
--		}
- 		if (rtlpriv->use_new_trx_flow) {
- 			buffer_desc =
- 			  &rtlpci->rx_ring[rxring_idx].buffer_desc
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 39f3176..5f8da59 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -1105,6 +1105,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 	case HostCmd_CMD_UAP_SYS_CONFIG:
+ 		break;
+ 	case HostCmd_CMD_UAP_BSS_START:
++		adapter->tx_lock_flag = false;
++		adapter->pps_uapsd_mode = false;
++		adapter->delay_null_pkt = false;
+ 		priv->bss_started = 1;
+ 		break;
+ 	case HostCmd_CMD_UAP_BSS_STOP:
 -- 
-2.1.2
+1.8.1.4
 
