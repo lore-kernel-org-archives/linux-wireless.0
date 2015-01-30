@@ -1,121 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:55317 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbbAXK3q (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:54937 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753341AbbA3Mdb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 05:29:46 -0500
-Received: by mail-pa0-f41.google.com with SMTP id kq14so2226192pab.0
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 02:29:46 -0800 (PST)
-From: Hong Xu <hong@topbug.net>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, kvalo@codeaurora.org,
-	Hong Xu <hong@topbug.net>
-Subject: [PATCH v2] ath9k and ath9k_htc: rename variable "led_blink"
-Date: Sat, 24 Jan 2015 02:29:37 -0800
-Message-Id: <1422095377-14170-1-git-send-email-hong@topbug.net> (sfid-20150124_112952_382437_3558F39E)
+	Fri, 30 Jan 2015 07:33:31 -0500
+Received: by mail-wi0-f177.google.com with SMTP id r20so2381673wiv.4
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 04:33:30 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 0/7] ath10k: add multi-channel support
+Date: Fri, 30 Jan 2015 13:31:19 +0100
+Message-Id: <1422621086-28970-1-git-send-email-michal.kazior@tieto.com> (sfid-20150130_133336_450085_753687B2)
+In-Reply-To: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k and ath9k_htc use the variable name "led_blink" to indicate
-whether the module parameter "blink" is on. This name is easy to
-conflict with other variables, and has caused a compiler error found
-by kbuild. The compiler error is as following:
+New qca6174 with wmi-tlv firmware supports
+multi-channel operation. To make use of it
+ath10k needs a few changes: implement mac80211's
+chanctx API and rework tx queue control a bit.
 
-drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
-drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
+There are still rough edges (involving seldom
+beacon reports from firmware causing beacon loss
+in some cases, etc). Hopefully this will be fixed
+either in driver or firmware eventually.
 
-Signed-off-by: Hong Xu <hong@topbug.net>
----
- drivers/net/wireless/ath/ath9k/ath9k.h        | 2 +-
- drivers/net/wireless/ath/ath9k/gpio.c         | 2 +-
- drivers/net/wireless/ath/ath9k/htc.h          | 2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c | 2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 4 ++--
- drivers/net/wireless/ath/ath9k/init.c         | 4 ++--
- 6 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 1a9fe09..e84b576 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -34,7 +34,7 @@ struct ath_vif;
- 
- extern struct ieee80211_ops ath9k_ops;
- extern int ath9k_modparam_nohwcrypt;
--extern int led_blink;
-+extern int ath9k_led_blink;
- extern bool is_ath9k_unloaded;
- extern int ath9k_use_chanctx;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 2fef7a4..da344b2 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -49,7 +49,7 @@ void ath_init_leds(struct ath_softc *sc)
- 	if (AR_SREV_9100(sc->sc_ah))
- 		return;
- 
--	if (!led_blink)
-+	if (!ath9k_led_blink)
- 		sc->led_cdev.default_trigger =
- 			ieee80211_get_radio_led_name(sc->hw);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index c43fec5..300d367 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -45,7 +45,7 @@
- extern struct ieee80211_ops ath9k_htc_ops;
- extern int htc_modparam_nohwcrypt;
- #ifdef CONFIG_MAC80211_LEDS
--extern int led_blink;
-+extern int ath9k_htc_led_blink;
- #endif
- 
- enum htc_phymode {
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 998b558..2aabcbd 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -279,7 +279,7 @@ void ath9k_init_leds(struct ath9k_htc_priv *priv)
- 	else
- 		priv->ah->led_pin = ATH_LED_PIN_DEF;
- 
--	if (!led_blink)
-+	if (!ath9k_htc_led_blink)
- 		priv->led_cdev.default_trigger =
- 			ieee80211_get_radio_led_name(priv->hw);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index 9470127..fd22940 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -39,8 +39,8 @@ module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
- #ifdef CONFIG_MAC80211_LEDS
--int led_blink = 1;
--module_param_named(blink, led_blink, int, 0444);
-+int ath9k_htc_led_blink = 1;
-+module_param_named(blink, ath9k_htc_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
- static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index d1c3934..2aef14e 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -45,8 +45,8 @@ int ath9k_modparam_nohwcrypt;
- module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, 0444);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
--int led_blink;
--module_param_named(blink, led_blink, int, 0444);
-+int ath9k_led_blink;
-+module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
- static int ath9k_btcoex_enable;
+Changes since RFC:
+ * I've sent `ath10k: defer AP self-peer removal
+   wait` separately now because it's not really
+   required for multi-channel per se
+
+v2:
+ * fix null deref after rebasing
+ * fix commit log typo
+
+Michal Kazior (7):
+  ath10k: allow empty ssid vdev config
+  ath10k: implement chanctx API
+  ath10k: implement adaptive qcs command
+  ath10k: protect ar->arvifs linking with data_lock
+  ath10k: rework tx queue locking
+  ath10k: implement tx pause wmi event
+  ath10k: enable multi-channel on supported devices
+
+ drivers/net/wireless/ath/ath10k/core.c    |   1 +
+ drivers/net/wireless/ath/ath10k/core.h    |  16 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c  |  87 +++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c  |  11 +-
+ drivers/net/wireless/ath/ath10k/mac.c     | 682 ++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/mac.h     |  57 +++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  16 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 118 +++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  46 ++
+ drivers/net/wireless/ath/ath10k/wmi.c     |  18 +-
+ drivers/net/wireless/ath/ath10k/wmi.h     |   1 +
+ 11 files changed, 966 insertions(+), 87 deletions(-)
+
 -- 
-2.2.2
+1.8.5.3
 
