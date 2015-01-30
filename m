@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:46627 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590AbbARQls (ORCPT
+Received: from mail-wi0-f177.google.com ([209.85.212.177]:39714 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349AbbA3NGJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Jan 2015 11:41:48 -0500
-Received: by mail-ie0-f179.google.com with SMTP id rp18so27550813iec.10
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 08:41:47 -0800 (PST)
-Received: from mail-ie0-f171.google.com (mail-ie0-f171.google.com. [209.85.223.171])
-        by mx.google.com with ESMTPSA id n13sm426619ioi.24.2015.01.18.08.41.46
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sun, 18 Jan 2015 08:41:46 -0800 (PST)
-Received: by mail-ie0-f171.google.com with SMTP id ar1so27646240iec.2
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Jan 2015 08:41:46 -0800 (PST)
+	Fri, 30 Jan 2015 08:06:09 -0500
+Received: by mail-wi0-f177.google.com with SMTP id r20so2549301wiv.4
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 05:06:08 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20150117215839.GA18538@kroah.com>
-References: <1419166779-2619-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<20150117215839.GA18538@kroah.com>
-Date: Sun, 18 Jan 2015 17:41:46 +0100
-Message-ID: <CAKXHbyMjJUUYcSqvoE4eC_BdCEH1Lh3vLqCTaOf3GDvsKaQcjQ@mail.gmail.com> (sfid-20150118_174205_883142_243BA3F4)
-Subject: Re: [PATCH] staging: rtl8723au: hal: rtl8723au_led.c: Remove some
- unused functions
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <1422622694.1919.17.camel@sipsolutions.net>
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+	<1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+	<1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
+	<1422622694.1919.17.camel@sipsolutions.net>
+Date: Fri, 30 Jan 2015 14:06:08 +0100
+Message-ID: <CA+BoTQkVuDqZVCVUB6pkDKp2tZ1sgnezju6Kg48JvnS4a_LZyA@mail.gmail.com> (sfid-20150130_140621_385051_2BA65BD6)
+Subject: Re: [PATCH v2 2/7] ath10k: implement chanctx API
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-01-17 22:58 GMT+01:00 Greg Kroah-Hartman <gregkh@linuxfoundation.org>:
-> On Sun, Dec 21, 2014 at 01:59:39PM +0100, Rickard Strandqvist wrote:
->> Removes some functions that are not used anywhere:
->> rtl8723au_DeInitSwLeds() rtl8723au_InitSwLeds()
->>
->> This was partially found by using a static code analysis program called cppcheck.
->>
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  drivers/staging/rtl8723au/hal/rtl8723au_led.c    |   23 ----------------------
->>  drivers/staging/rtl8723au/include/rtl8723a_led.h |    2 --
->>  2 files changed, 25 deletions(-)
+On 30 January 2015 at 13:58, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
-> These files aren't even in the tree anymore :(
+>> +++ b/drivers/net/wireless/ath/ath10k/core.h
+>
+>> @@ -277,6 +282,7 @@ struct ath10k_vif {
+>>       dma_addr_t beacon_paddr;
+>>
+>>       struct ath10k *ar;
+>> +     struct ath10k_chanctx *arctx;
+>
+> you also have vif->chanctx_conf pointer, which you could use
+>
+> ultimately it's a software architecture decision - personally I wouldn't
+> want to duplicate all that data and the lists etc. in the driver when
+> mac80211 has them, but that's just my opinion. :)
+
+I'm a bit reluctant to freely use mac80211 owned structures out of
+mac80211_ops callback context, i.e. from a tasklet fearing
+inconsistencies. Or am I worrying unnecessarily? If so I guess I'll
+redo this and use mac80211's structures directly :-)
 
 
-Hi
-
-No right. I can not find the files.
-And can not find these functions anywhere anymore.
-
-Sorry about that :(
-
-Kind regards
-Rickard Strandqvist
+Michał
