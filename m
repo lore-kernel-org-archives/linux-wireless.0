@@ -1,61 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:39614 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103AbbALJfP (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:34775 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932519AbbA3Ncw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Jan 2015 04:35:15 -0500
-Received: by mail-qa0-f49.google.com with SMTP id v8so4456835qal.8
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Jan 2015 01:35:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
-References: <1420830952-9624-1-git-send-email-me@bobcopeland.com>
-Date: Mon, 12 Jan 2015 09:35:13 +0000
-Message-ID: <CAFSJ42Z2VagmLsq_+BB217CDU1-_GVcSGQ=0UWBFzvcbMq7cug@mail.gmail.com> (sfid-20150112_103519_645568_0D0C84D7)
-Subject: Re: [PATCH 0/8] wcn36xx locking and a-mpdu fixes
-From: Eugene Krasnikov <k.eugene.e@gmail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 30 Jan 2015 08:32:52 -0500
+Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YHBgp-004FiR-LU
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:52 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 09/17] ath9k: Remove ath9k_hw_wow_event_to_string
+Date: Fri, 30 Jan 2015 19:05:29 +0530
+Message-Id: <1422624937-4810-10-git-send-email-sujith@msujith.org> (sfid-20150130_143348_728212_A5EF7823)
+In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks good to me!
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-2015-01-09 19:15 GMT+00:00 Bob Copeland <me@bobcopeland.com>:
-> Hello,
->
-> These patches have been merged into the wcn36xx github tree but have
-> been collecting dust for some time.  I pinged Eugene (CCed) who said I
-> could just go ahead and send them upstream.  Rebased and re-tested on
-> an Android target (and newer checkpatch warnings removed).
->
-> At some point I can go through other patches (not by me) that aren't yet
-> upstream and send them along as well, unless someone else wants to do that.
->
-> Bob Copeland (8):
->   wcn36xx: initialize device defaults on start
->   wcn36xx: use !! when assigning int as a boolean
->   wcn36xx: let device generate qos seq numbers
->   wcn36xx: don't process 'valid' descriptors
->   wcn36xx: initialize skb_lock
->   wcn36xx: initialize dxe lock
->   wcn36xx: move set_tx_pdu inside set_tx_data/mgmt
->   wcn36xx: initiate TX BA sessions
->
->  drivers/net/wireless/ath/wcn36xx/dxe.c     |    3 +
->  drivers/net/wireless/ath/wcn36xx/main.c    |   16 +++++-
->  drivers/net/wireless/ath/wcn36xx/smd.c     |   73 +++++++++++++++++++++++-
->  drivers/net/wireless/ath/wcn36xx/txrx.c    |   83 ++++++++++++++++++++++------
->  drivers/net/wireless/ath/wcn36xx/txrx.h    |    9 ++-
->  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |   20 +++++++
->  6 files changed, 182 insertions(+), 22 deletions(-)
->
-> --
-> 1.7.10.4
->
+Printing the value of the wakeup status is sufficient.
 
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_wow.c | 15 ---------------
+ drivers/net/wireless/ath/ath9k/hw.h         |  5 -----
+ drivers/net/wireless/ath/ath9k/wow.c        | 10 +++-------
+ 3 files changed, 3 insertions(+), 27 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_wow.c b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
+index 81c88dd..3abc907 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_wow.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
+@@ -19,21 +19,6 @@
+ #include "reg.h"
+ #include "hw-ops.h"
+ 
+-const char *ath9k_hw_wow_event_to_string(u32 wow_event)
+-{
+-	if (wow_event & AH_WOW_MAGIC_PATTERN_EN)
+-		return "Magic pattern";
+-	if (wow_event & AH_WOW_USER_PATTERN_EN)
+-		return "User pattern";
+-	if (wow_event & AH_WOW_LINK_CHANGE)
+-		return "Link change";
+-	if (wow_event & AH_WOW_BEACON_MISS)
+-		return "Beacon miss";
+-
+-	return  "unknown reason";
+-}
+-EXPORT_SYMBOL(ath9k_hw_wow_event_to_string);
+-
+ static void ath9k_hw_set_powermode_wow_sleep(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index dabc94e..22b0422 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1146,17 +1146,12 @@ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
+ 
+ 
+ #ifdef CONFIG_ATH9K_WOW
+-const char *ath9k_hw_wow_event_to_string(u32 wow_event);
+ void ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
+ 				u8 *user_mask, int pattern_count,
+ 				int pattern_len);
+ u32 ath9k_hw_wow_wakeup(struct ath_hw *ah);
+ void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable);
+ #else
+-static inline const char *ath9k_hw_wow_event_to_string(u32 wow_event)
+-{
+-	return NULL;
+-}
+ static inline void ath9k_hw_wow_apply_pattern(struct ath_hw *ah,
+ 					      u8 *user_pattern,
+ 					      u8 *user_mask,
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index fa60dbb..d4cfbc3 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -281,7 +281,7 @@ int ath9k_resume(struct ieee80211_hw *hw)
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 wow_status;
++	u8 status;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+@@ -296,12 +296,8 @@ int ath9k_resume(struct ieee80211_hw *hw)
+ 
+ 	spin_unlock_bh(&sc->sc_pcu_lock);
+ 
+-	wow_status = ath9k_hw_wow_wakeup(ah);
+-
+-	if (wow_status) {
+-		ath_dbg(common, ANY, "Waking up due to WoW triggers %s with WoW status = %x\n",
+-			ath9k_hw_wow_event_to_string(wow_status), wow_status);
+-	}
++	status = ath9k_hw_wow_wakeup(ah);
++	ath_dbg(common, WOW, "Resume with WoW status: 0x%x\n", status);
+ 
+ 	ath_restart_work(sc);
+ 	ath9k_start_btcoex(sc);
 -- 
-Best regards,
-Eugene
+2.2.2
+
