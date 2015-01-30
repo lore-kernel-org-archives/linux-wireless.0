@@ -1,58 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:39541 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754201AbbATRBk (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:51049 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932505AbbA3Pre (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 12:01:40 -0500
+	Fri, 30 Jan 2015 10:47:34 -0500
+Message-ID: <54CBA794.90508@lwfinger.net> (sfid-20150130_164739_353246_D6AE7DB3)
+Date: Fri, 30 Jan 2015 09:47:32 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V2 for 3.19 0/7] Fixes for rtl8192ee
-Date: Tue, 20 Jan 2015 11:01:19 -0600
-Message-Id: <1421773286-1039-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150120_180143_609021_F53F6A7C)
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH V2 1/6] rtlwifi: Change logging level for key change
+References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net> <1422304934-9239-2-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1422304934-9239-2-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/26/2015 02:42 PM, Larry Finger wrote:
+> A recent change in key handling included logging of these changes for
+> all debug levels. Such key changes should only be logged when a high
+> level of debugging is enabled.
+>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>   drivers/net/wireless/rtlwifi/cam.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/cam.c b/drivers/net/wireless/rtlwifi/cam.c
+> index 3ef870d..6e64792 100644
+> --- a/drivers/net/wireless/rtlwifi/cam.c
+> +++ b/drivers/net/wireless/rtlwifi/cam.c
+> @@ -406,7 +406,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
+>   		}
+>   	}
+>   	if (found) {
+> -		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
+> +		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+>   			 "key_index=%d,cam_bitmap: 0x%x entry_idx=%d\n",
+>   			  key_index, rtlpriv->sec.cam_bitmap, entry_idx);
+>   		return entry_idx;
+>
+
 Kalle,
 
-This is V2 of the patches for rtl8192ee to be applied to 3.19. They replace
-all the patches submitted under the title '[PATCH for 3.19 0/3] rtlwifi:
-Various updates/fixes". All are marked for backporting to 3.18.
+Please include this patch even though the rest of this set should be dropped. 
+Once the wifi-BT communications problem is resolved, new versions of those will 
+be presented.
 
-The first of these removes a logging statement that is no longer needed.
+I'm sorry that my commit message was not as informative as it could have been. I 
+was presented with this material that I did not understand. One saving grace is 
+that the RTL8812AE hardware is apparently rare - I certainly do not have any 
+samples. I'm not sure of the value of a 1x1 implementation of 802.11ac, but that 
+may be another example of my ignorance.
 
-Patches 1-6 are relatively small and should not be a problem for 3.19.
-Patch 7 is quite a bit larger, and adds two new routines to detect
-DMA stalls. I will understand if you want to defer that to -next; however,
-it does fix a serious problem.
+Thanks,
 
 Larry
----
-Larry Finger (2):
-  rtlwifi: Remove logging statement that is no longer needed
-  rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
-
-Troy Tan (5):
-  rtlwifi: rtl8192ee: Fix handling of new style descriptors
-  rtlwifi: rtl8192ee: Fix adhoc fail
-  rtlwifi: rtl8192ee: Fix TX hang due to failure to update TX write
-    point
-  rtlwifi: rtl8192ee: Fix parsing of received packet
-  rtlwifi: rtl8192ee: Fix DMA stalls
-
- drivers/net/wireless/rtlwifi/pci.c           |  36 ++++--
- drivers/net/wireless/rtlwifi/pci.h           |   7 ++
- drivers/net/wireless/rtlwifi/rtl8192ee/fw.c  |   6 +-
- drivers/net/wireless/rtlwifi/rtl8192ee/hw.c  | 166 ++++++++++++++++++++++-----
- drivers/net/wireless/rtlwifi/rtl8192ee/reg.h |   2 +
- drivers/net/wireless/rtlwifi/rtl8192ee/sw.c  |   3 +-
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c |  36 +++---
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.h |   4 +-
- drivers/net/wireless/rtlwifi/wifi.h          |   1 +
- 9 files changed, 192 insertions(+), 69 deletions(-)
-
--- 
-2.1.2
-
