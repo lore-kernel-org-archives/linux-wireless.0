@@ -1,80 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:53391 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754087AbbAPLVF (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:35780 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319AbbA3OkQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 06:21:05 -0500
-Received: by mail-we0-f171.google.com with SMTP id u56so19696720wes.2
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Jan 2015 03:21:04 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] ath10k: reset chip before reading chip_id in probe
-Date: Fri, 16 Jan 2015 12:20:35 +0100
-Message-Id: <1421407237-24159-1-git-send-email-michal.kazior@tieto.com> (sfid-20150116_122110_692009_02BC9D73)
+	Fri, 30 Jan 2015 09:40:16 -0500
+Message-ID: <54CB97CC.2050001@broadcom.com> (sfid-20150130_154021_697022_4DDE0598)
+Date: Fri, 30 Jan 2015 15:40:12 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?U8OpYmFzdGllbiBCb3VyZGVhdWR1Y3E=?= <sb@m-labs.hk>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: "brcmfmac: brcmf_sdio_htclk: HT Avail timeout" on Thinkpad Tablet
+ 10
+References: <54C88C7D.707@m-labs.hk>
+In-Reply-To: <54C88C7D.707@m-labs.hk>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are some very rare cases with some hardware
-configuration that the device doesn't init quickly
-enough in which case reading chip_id yielded 0.
-This caused driver to subsequently fail to setup
-the device.
+On 01/28/15 08:15, Sébastien Bourdeauducq wrote:
+> Hi,
+>
+> The Lenovo Thinkpad Tablet 10 is a complete disaster under Linux, and
+> among many problems the SDIO brcmfmac wifi does not work.
+>
+> I get the following messages in the kernel log:
+> brcmfmac: brcmf_sdio_drivestrengthinit: No SDIO Drive strength init done
+> for chip 4324 rev 6 pmurev 17
+> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+> [repeated]
+>
+> and the network interface is never created.
+>
+> I'm running kernel 3.18.4, my brcmfmac43241b4-sdio.bin is identical to
+> the one in the linux-firmware repository, and I have attached the
+> brcmfmac43241b4-sdio.txt that I have extracted from the EFI variables.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 30 ++++++++++++++++++------------
- 1 file changed, 18 insertions(+), 12 deletions(-)
+When you say your firmware is identical what does that mean. Did you do 
+a diff? Can you do 'hexdump -C brcmfmac43241b4-sdio.bin | tail -30'? I 
+will be getting a laptop with 43241 integrated soonish (monday?). 
+Hopefully it has same chip revision.
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 3b40a86..6a512fb 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2544,18 +2544,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 		goto err_release;
- 	}
- 
--	chip_id = ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
--	if (chip_id == 0xffffffff) {
--		ath10k_err(ar, "failed to get chip id\n");
--		goto err_sleep;
--	}
--
--	if (!ath10k_pci_chip_is_supported(pdev->device, chip_id)) {
--		ath10k_err(ar, "device %04x with chip_id %08x isn't supported\n",
--			   pdev->device, chip_id);
--		goto err_sleep;
--	}
--
- 	ret = ath10k_pci_alloc_pipes(ar);
- 	if (ret) {
- 		ath10k_err(ar, "failed to allocate copy engine pipes: %d\n",
-@@ -2582,6 +2570,24 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 		goto err_deinit_irq;
- 	}
- 
-+	ret = ath10k_pci_chip_reset(ar);
-+	if (ret) {
-+		ath10k_err(ar, "failed to reset chip: %d\n", ret);
-+		goto err_free_irq;
-+	}
-+
-+	chip_id = ath10k_pci_soc_read32(ar, SOC_CHIP_ID_ADDRESS);
-+	if (chip_id == 0xffffffff) {
-+		ath10k_err(ar, "failed to get chip id\n");
-+		goto err_free_irq;
-+	}
-+
-+	if (!ath10k_pci_chip_is_supported(pdev->device, chip_id)) {
-+		ath10k_err(ar, "device %04x with chip_id %08x isn't supported\n",
-+			   pdev->device, chip_id);
-+		goto err_sleep;
-+	}
-+
- 	ath10k_pci_sleep(ar);
- 
- 	ret = ath10k_core_register(ar, chip_id);
--- 
-1.8.5.3
+Regards,
+Arend
+> Any help would be appreciated.
+>
+> Sébastien
 
