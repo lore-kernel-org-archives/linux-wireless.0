@@ -1,70 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:51073 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752483AbbAZMbQ convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:55621 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753341AbbA3Mdj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 07:31:16 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH V2 1/2] bcma: add empty PCIe hostmode functions if support is disabled
-References: <1422180674-9592-1-git-send-email-zajec5@gmail.com>
-	<1422190968-14422-1-git-send-email-zajec5@gmail.com>
-	<87iofugh9w.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rxHxJNBaQ6coxu_NYw-_NZkC6gnBE_rrXZmdYQT0XSZeg@mail.gmail.com>
-Date: Mon, 26 Jan 2015 14:31:08 +0200
-In-Reply-To: <CACna6rxHxJNBaQ6coxu_NYw-_NZkC6gnBE_rrXZmdYQT0XSZeg@mail.gmail.com>
-	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Mon, 26 Jan 2015
- 09:11:12 +0100")
-Message-ID: <87siexg1v7.fsf@kamboji.qca.qualcomm.com> (sfid-20150126_133120_164340_91163543)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Fri, 30 Jan 2015 07:33:39 -0500
+Received: by mail-wi0-f176.google.com with SMTP id bs8so2726965wib.3
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 04:33:38 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 7/7] ath10k: enable multi-channel on supported devices
+Date: Fri, 30 Jan 2015 13:31:26 +0100
+Message-Id: <1422621086-28970-8-git-send-email-michal.kazior@tieto.com> (sfid-20150130_133345_485017_972317C6)
+In-Reply-To: <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+ <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+This effectively enables multi-channel operation
+on qca6174 WLAN.RM.2.0-00073 (and possibly any
+newer firmware release for qca6174).
 
-> On 26 January 2015 at 07:58, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Rafał Miłecki <zajec5@gmail.com> writes:
->>
->>> This allows us to drop some #ifdef magic (mess).
->>>
->>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>> ---
->>> V2: Return false in bcma_core_pci_is_in_hostmode
->>>     Don't (accidentally) modify bcma_host_soc_register_driver
->>
->> It would be far more reliable if you resend the whole patchset instead
->> of resending invidiviual patches within the set. Otherwise the chances
->> are that I apply the wrong version.
->
-> Oops. I always take care of removing old versions from patchwork
+This adds appopriate interface combinations and
+initializes firmware channel scheduler.
 
-Yeah, I noticed that. That's really helpful, thanks for that.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 81 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 80 insertions(+), 1 deletion(-)
 
-> and using --in-reply-to, I was hoping it's OK.
-
-But still ordering is different which might introduce problems while I
-apply them. And like in your case, when I have to take the patches from
-email due to UTF-8 problems, it won't work at all.
-
-> How would you like whole patches to be re-send? Should I resend them
-> independently? Or should every patch from the patchset include
-> In-Reply-To pointing to its previous version?
-
-Let's say you have a ten patch patchset and you have to change something
-in patch 3. I would prefer that you resend the whole patchset (all 10
-patches) and each patch in the patchset has "v2". So the version is
-actually version of the patchset, not of the individual patch.
-
-I assumed this was standard practice everywhere in the kernel, but I
-guess I was wrong.
-
-> Is this just an advise for the future, or would you like me to resend
-> this patchset too?
-
-For the future.
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9dab8cb..dc845e2 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2959,6 +2959,15 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 		goto err_core_stop;
+ 	}
+ 
++	if (test_bit(WMI_SERVICE_ADAPTIVE_OCS, ar->wmi.svc_map)) {
++		ret = ath10k_wmi_adaptive_qcs(ar, true);
++		if (ret) {
++			ath10k_warn(ar, "failed to enable adaptive qcs: %d\n",
++				    ret);
++			goto err_core_stop;
++		}
++	}
++
+ 	if (ar->cfg_tx_chainmask)
+ 		__ath10k_set_antenna(ar, ar->cfg_tx_chainmask,
+ 				     ar->cfg_rx_chainmask);
+@@ -5614,6 +5623,64 @@ static const struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
+ 	},
+ };
+ 
++static const struct ieee80211_iface_limit ath10k_tlv_if_limit[] = {
++	{
++		.max = 2,
++		.types = BIT(NL80211_IFTYPE_STATION) |
++			 BIT(NL80211_IFTYPE_AP) |
++			 BIT(NL80211_IFTYPE_P2P_CLIENT) |
++			 BIT(NL80211_IFTYPE_P2P_GO),
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_P2P_DEVICE),
++	},
++};
++
++static const struct ieee80211_iface_limit ath10k_tlv_if_limit_ibss[] = {
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_STATION),
++	},
++	{
++		.max = 1,
++		.types = BIT(NL80211_IFTYPE_ADHOC),
++	},
++};
++
++/* FIXME: This is not thouroughly tested. These combinations may over- or
++ * underestimate hw/fw capabilities.
++ */
++static struct ieee80211_iface_combination ath10k_tlv_if_comb[] = {
++	{
++		.limits = ath10k_tlv_if_limit,
++		.num_different_channels = 1,
++		.max_interfaces = 2,
++		.n_limits = ARRAY_SIZE(ath10k_tlv_if_limit),
++	},
++	{
++		.limits = ath10k_tlv_if_limit_ibss,
++		.num_different_channels = 1,
++		.max_interfaces = 2,
++		.n_limits = ARRAY_SIZE(ath10k_tlv_if_limit_ibss),
++	},
++};
++
++static struct ieee80211_iface_combination ath10k_tlv_qcs_if_comb[] = {
++	{
++		.limits = ath10k_tlv_if_limit,
++		.num_different_channels = 2,
++		.max_interfaces = 2,
++		.n_limits = ARRAY_SIZE(ath10k_tlv_if_limit),
++	},
++	{
++		.limits = ath10k_tlv_if_limit_ibss,
++		.num_different_channels = 1,
++		.max_interfaces = 2,
++		.n_limits = ARRAY_SIZE(ath10k_tlv_if_limit_ibss),
++	},
++};
++
+ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+ {
+ 	struct ieee80211_sta_vht_cap vht_cap = {0};
+@@ -5864,12 +5931,24 @@ int ath10k_mac_register(struct ath10k *ar)
+ 
+ 	switch (ar->wmi.op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+-	case ATH10K_FW_WMI_OP_VERSION_TLV:
+ 		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
+ 		ar->hw->wiphy->n_iface_combinations =
+ 			ARRAY_SIZE(ath10k_if_comb);
+ 		ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
+ 		break;
++	case ATH10K_FW_WMI_OP_VERSION_TLV:
++		if (test_bit(WMI_SERVICE_ADAPTIVE_OCS, ar->wmi.svc_map)) {
++			ar->hw->wiphy->iface_combinations =
++				ath10k_tlv_qcs_if_comb;
++			ar->hw->wiphy->n_iface_combinations =
++				ARRAY_SIZE(ath10k_tlv_qcs_if_comb);
++		} else {
++			ar->hw->wiphy->iface_combinations = ath10k_tlv_if_comb;
++			ar->hw->wiphy->n_iface_combinations =
++				ARRAY_SIZE(ath10k_tlv_if_comb);
++		}
++		ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
++		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_1:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
 -- 
-Kalle Valo
+1.8.5.3
+
