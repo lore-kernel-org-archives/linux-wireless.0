@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:38765 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752172AbbABQ6g (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:54452 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932507AbbA3Ncr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 11:58:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 02/11] rtlwifi: rtl8723be: Improve modinfo output
-Date: Fri,  2 Jan 2015 10:58:19 -0600
-Message-Id: <1420217908-1382-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150102_175946_832828_CF17C5AD)
-In-Reply-To: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 30 Jan 2015 08:32:47 -0500
+Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YHBgk-004FiR-8l
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:46 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 05/17] ath9k: Check multi-channel context for WOW
+Date: Fri, 30 Jan 2015 19:05:25 +0530
+Message-Id: <1422624937-4810-6-git-send-email-sujith@msujith.org> (sfid-20150130_143251_314061_C7703A2B)
+In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The description of the power-save variables for this driver is not as
-clear as for the others. The wording is changed to match the others.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+If CONFIG_ATH9K_CHANNEL_CONTEXT is enabled, check whether
+multiple contexts are active and if so, return 1 without
+enabling WOW since we don't support it in this case.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/wow.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-index 223eb42..52a6d90 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
-@@ -387,12 +387,13 @@ module_param_named(swlps, rtl8723be_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
- module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
- 		   bool, 0444);
--MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
--MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
--MODULE_PARM_DESC(fwlps, "using linked fw control power save (default 1 is open)\n");
--MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
-+MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
-+MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
- MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
--MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default 0)\n");
-+MODULE_PARM_DESC(disable_watchdog,
-+		 "Set to 1 to disable the watchdog (default 0)\n");
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index 1799a1d..1b005c6 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -215,6 +215,15 @@ int ath9k_suspend(struct ieee80211_hw *hw,
+ 		goto fail_wow;
+ 	}
  
- static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
- 
++	if (ath9k_is_chanctx_enabled()) {
++		if (test_bit(ATH_OP_MULTI_CHANNEL, &common->op_flags)) {
++			ath_dbg(common, WOW,
++				"Multi-channel WOW is not supported\n");
++			ret = 1;
++			goto fail_wow;
++		}
++	}
++
+ 	if (!test_bit(ATH_OP_PRIM_STA_VIF, &common->op_flags)) {
+ 		ath_dbg(common, WOW, "None of the STA vifs are associated\n");
+ 		ret = 1;
 -- 
-2.1.2
+2.2.2
 
