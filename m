@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58492 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53925 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752104AbbABPrn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Jan 2015 10:47:43 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Jesus Legaspy <jesus.legaspy@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: rtl8723au system lock ups, possible code regression
-References: <CAMUBipdVDgxeTDEY=q2QP1=OyF67tvU-S1riy_CMSawj01xhgA@mail.gmail.com>
-	<CAMUBipfDmww-Jv5p9ZUumfv6oto+gc9JEuez7Ee4XoEv0mGbqw@mail.gmail.com>
-Date: Fri, 02 Jan 2015 10:40:48 -0500
-In-Reply-To: <CAMUBipfDmww-Jv5p9ZUumfv6oto+gc9JEuez7Ee4XoEv0mGbqw@mail.gmail.com>
-	(Jesus Legaspy's message of "Wed, 24 Dec 2014 03:10:09 -0600")
-Message-ID: <wrfjy4plmbr3.fsf@redhat.com> (sfid-20150102_164746_816226_69180A71)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1753715AbbA3M6S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 07:58:18 -0500
+Message-ID: <1422622694.1919.17.camel@sipsolutions.net> (sfid-20150130_135821_332536_6F2E65C6)
+Subject: Re: [PATCH v2 2/7] ath10k: implement chanctx API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Fri, 30 Jan 2015 13:58:14 +0100
+In-Reply-To: <1422621086-28970-3-git-send-email-michal.kazior@tieto.com> (sfid-20150130_133341_121083_F7682B5B)
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+	 <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+	 <1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150130_133341_121083_F7682B5B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jesus Legaspy <jesus.legaspy@gmail.com> writes:
-> plain text
-> cc linux-wireless@vger.kernel.org
->
-> On Wed, Dec 24, 2014 at 2:56 AM, Jesus Legaspy <jesus.legaspy@gmail.com> wrote:
->>
->> Hi Jes,
->>
->> I hope you're having a great Christmas celebration!
->> I've been having this issue for a while now, and decided to submit
-> this bug report as many others have similar problems. Hopefully this
-> helps fix the bug!
->>
->> rtl8723au driver: wifi connection drops and system lock ups,
-> possible code regression
->>
->> I'm using Ubuntu 14.10 with Linux version 3.16.0-28-generic on
-> Lenovo Yoga 13 using the built in rtl8723au driver from the kernel. At
-> random times my internet doesn't work. I disactivate the internet and
-> reactivate it to get it working again. It is usually at this time
-> where most of the system hangs and freezes occur. The computer hangs
-> and freezes occur at random times as well. I've used many wifi
-> connections and types and they all cause the bug. The driver from
-> lwfinger works flawlessly. Maybe there was some code regression? I've
-> attached several log files.
 
-Jesus,
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
 
-First of all, I have never seen this happen in my usage, however I use
-recent kernels (upstream, and Fedora). 3.16 is pre-historic in term of
-the 8723au driver - please update and try again.
+> @@ -277,6 +282,7 @@ struct ath10k_vif {
+>  	dma_addr_t beacon_paddr;
+>  
+>  	struct ath10k *ar;
+> +	struct ath10k_chanctx *arctx;
 
-Second, please don't ever send me HTML email (multipart or not), it will
-be ignored.
+you also have vif->chanctx_conf pointer, which you could use
 
-Jes
+ultimately it's a software architecture decision - personally I wouldn't
+want to duplicate all that data and the lists etc. in the driver when
+mac80211 has them, but that's just my opinion. :)
+
+johannes
+
+
