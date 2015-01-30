@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:35475 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755543AbbAFTHh (ORCPT
+Received: from mail-wg0-f42.google.com ([74.125.82.42]:57666 "EHLO
+	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751457AbbA3OCA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 14:07:37 -0500
-Message-ID: <54AC3275.7040802@broadcom.com> (sfid-20150106_200742_539137_44FC8E1D)
-Date: Tue, 6 Jan 2015 20:07:33 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 30 Jan 2015 09:02:00 -0500
+Received: by mail-wg0-f42.google.com with SMTP id x13so27146457wgg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 06:01:59 -0800 (PST)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/10] brcmfmac: new device support and more
-References: <1419162233-19492-1-git-send-email-arend@broadcom.com> <87fvbnycvr.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87fvbnycvr.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1422623446.1919.20.camel@sipsolutions.net>
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+	<1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+	<1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
+	<1422622694.1919.17.camel@sipsolutions.net>
+	<CA+BoTQkVuDqZVCVUB6pkDKp2tZ1sgnezju6Kg48JvnS4a_LZyA@mail.gmail.com>
+	<1422623446.1919.20.camel@sipsolutions.net>
+Date: Fri, 30 Jan 2015 15:01:59 +0100
+Message-ID: <CA+BoTQ=pRfxreghBMNoqXfADSLntws_UZqtLHRHbdTrLJvH6bw@mail.gmail.com> (sfid-20150130_150205_229820_85EC3E47)
+Subject: Re: [PATCH v2 2/7] ath10k: implement chanctx API
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/15 19:36, Kalle Valo wrote:
-> Arend van Spriel<arend@broadcom.com>  writes:
+On 30 January 2015 at 14:10, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2015-01-30 at 14:06 +0100, Michal Kazior wrote:
 >
->> Here a first batch for v3.20. This series adds support for the
->> BCM43340 and BCM43341 SDIO chipsets. A number of changes are
->> related to AP mode and some fixes of potential issues that do
->> not seem to qualify for the wireless tree.
->>
->> This series is intended for v3.20 and applies to the master
->> branch of the *new* wireless-next repository.
->>
->> Arend van Spriel (5):
->>    brcmfmac: Add support for bcm43340/1 wireless chipsets
->>    brcmfmac: get rid of duplicate SDIO device identifiers
->>    brcmfmac: remove unused/duplicate defines in chip.c
->>    brcmfmac: follow user-space regulatory domain selection
->>    brcmfmac: enable 802.11d support in firmware
->>
->> Hante Meuleman (5):
->>    brcmfmac: Fix incorrect casting of 64 bit physical address.
->>    brcmfmac: Fix possible dereference of NULL pointer.
->>    brcmfmac: Fix WEP configuration for AP mode.
->>    brcmfmac: Change error log in standard log for rxbufpost.
->>    brcmfmac: signal completion of 802.1x.
+>> I'm a bit reluctant to freely use mac80211 owned structures out of
+>> mac80211_ops callback context, i.e. from a tasklet fearing
+>> inconsistencies. Or am I worrying unnecessarily? If so I guess I'll
+>> redo this and use mac80211's structures directly :-)
 >
-> I applied these patches:
->
-> 98027769828f brcmfmac: enable 802.11d support in firmware
-> 6b89dcb35bfc brcmfmac: signal completion of 802.1x.
-> 63db1a499cee brcmfmac: follow user-space regulatory domain selection
-> d2e2472cd197 brcmfmac: Change error log in standard log for rxbufpost.
-> 118eb304d055 brcmfmac: Fix WEP configuration for AP mode.
-> f714e58e19a5 brcmfmac: remove unused/duplicate defines in chip.c
-> 83297aaa8fde brcmfmac: Fix incorrect casting of 64 bit physical address.
->
-> I dropped two due based on discussion and one patch didn't apply.
->
-Thanks, Kalle
+> Yeah that's a concern, we were just looking at something similar.
+> However, I think at least with channel contexts you should be fine since
+> mac80211 never really modifies them much, except for the width and # of
+> chains needed?
 
-I will resend that last one mentioned. Probably depends on (one of) the 
-two dropped patches.
+With `width` you'll change `center_freq1` in many cases. Reading a
+pair of old-and-new of each may not necessarily be fatal but may
+introduce subtle bugs that are hard to debug. Even if the current code
+doesn't really use these values out of mac80211 callback context now
+it may become a problem later.
 
-Regards,
-Arend
+I don't know. I'll think about this a bit more. You *do* have a point.
 
+
+> We've recently seen a similar issue with vif->bss_conf, and I'm
+> considering making that an RCU-protected pointer rather than the
+> embedded sub-struct, that way mac80211 can replace it atomically when
+> needed. I've yet to see if that's practical though.
+
+It'd be lovely if I could freely read mac80211 structures from
+whatever context I want without any worries but I think you'd have to
+introduce explicit locking between mac80211 and drivers or go ham with
+RCU :-)
+
+
+Michał
