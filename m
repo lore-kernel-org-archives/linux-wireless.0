@@ -1,40 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35695 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53849 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751996AbbASSCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Jan 2015 13:02:55 -0500
-Message-ID: <1421690572.1965.41.camel@sipsolutions.net> (sfid-20150119_190259_120071_E9A7CC0E)
-Subject: Re: [PATCH] Revert "wireless: Support of IFLA_INFO_KIND rtnl
- attribute"
+	id S1755886AbbA3MpM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 07:45:12 -0500
+Message-ID: <1422621903.1919.7.camel@sipsolutions.net> (sfid-20150130_134516_903418_D3980237)
+Subject: Re: [PATCH v2 2/7] ath10k: implement chanctx API
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Vadim Kochan <vadim4j@gmail.com>,
-	Marcel Holtmann <marcel@holtmann.org>
-Date: Mon, 19 Jan 2015 19:02:52 +0100
-In-Reply-To: <1421689943-13264-1-git-send-email-johannes@sipsolutions.net> (sfid-20150119_185234_968564_95BB0018)
-References: <1421689943-13264-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20150119_185234_968564_95BB0018)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Fri, 30 Jan 2015 13:45:03 +0100
+In-Reply-To: <1422621086-28970-3-git-send-email-michal.kazior@tieto.com> (sfid-20150130_133341_121083_F7682B5B)
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+	 <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+	 <1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150130_133341_121083_F7682B5B)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-01-19 at 18:52 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> This reverts commit ba1debdfed974f25aa598c283567878657b292ee.
-> 
-> Oliver reported that it breaks network-manager, for some reason with
-> this patch NM decides that the device isn't wireless but "generic"
-> (ethernet), sees no carrier (as expected with wifi) and fails to do
-> anything else with it.
-> 
-> Revert this to unbreak userspace.
+On Fri, 2015-01-30 at 13:31 +0100, Michal Kazior wrote:
 
-git-email didn't Cc Vadim or Marcel ...
+> +	INIT_LIST_HEAD(&ar->arctxs);
+>  	INIT_LIST_HEAD(&ar->arvifs);
 
-Looks like we can't do this since it will break userspace - please don't
-write any tools depending on it :)
+I'm not sure why you have an interface list, but I'd say you don't need
+either since you have enumeration APIs:
+
+ieee80211_iterate_active_interfaces[_atomic,...]
+
+and
+
+ieee80211_iter_chan_contexts_atomic
+
+:)
 
 johannes
 
