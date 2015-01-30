@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:39714 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751349AbbA3NGJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 08:06:09 -0500
-Received: by mail-wi0-f177.google.com with SMTP id r20so2549301wiv.4
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 05:06:08 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1422622694.1919.17.camel@sipsolutions.net>
-References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
-	<1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
-	<1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
-	<1422622694.1919.17.camel@sipsolutions.net>
-Date: Fri, 30 Jan 2015 14:06:08 +0100
-Message-ID: <CA+BoTQkVuDqZVCVUB6pkDKp2tZ1sgnezju6Kg48JvnS4a_LZyA@mail.gmail.com> (sfid-20150130_140621_385051_2BA65BD6)
+Received: from s3.sipsolutions.net ([5.9.151.49]:54500 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762187AbbA3OKf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 09:10:35 -0500
+Message-ID: <1422627032.1919.26.camel@sipsolutions.net> (sfid-20150130_151038_193667_10A9292B)
 Subject: Re: [PATCH v2 2/7] ath10k: implement chanctx API
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
 Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Fri, 30 Jan 2015 15:10:32 +0100
+In-Reply-To: <CA+BoTQ=pRfxreghBMNoqXfADSLntws_UZqtLHRHbdTrLJvH6bw@mail.gmail.com> (sfid-20150130_150200_280430_F4A5B0DB)
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+	 <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+	 <1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
+	 <1422622694.1919.17.camel@sipsolutions.net>
+	 <CA+BoTQkVuDqZVCVUB6pkDKp2tZ1sgnezju6Kg48JvnS4a_LZyA@mail.gmail.com>
+	 <1422623446.1919.20.camel@sipsolutions.net>
+	 <CA+BoTQ=pRfxreghBMNoqXfADSLntws_UZqtLHRHbdTrLJvH6bw@mail.gmail.com>
+	 (sfid-20150130_150200_280430_F4A5B0DB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 January 2015 at 13:58, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->> +++ b/drivers/net/wireless/ath/ath10k/core.h
->
->> @@ -277,6 +282,7 @@ struct ath10k_vif {
->>       dma_addr_t beacon_paddr;
->>
->>       struct ath10k *ar;
->> +     struct ath10k_chanctx *arctx;
->
-> you also have vif->chanctx_conf pointer, which you could use
->
-> ultimately it's a software architecture decision - personally I wouldn't
-> want to duplicate all that data and the lists etc. in the driver when
-> mac80211 has them, but that's just my opinion. :)
+On Fri, 2015-01-30 at 15:01 +0100, Michal Kazior wrote:
 
-I'm a bit reluctant to freely use mac80211 owned structures out of
-mac80211_ops callback context, i.e. from a tasklet fearing
-inconsistencies. Or am I worrying unnecessarily? If so I guess I'll
-redo this and use mac80211's structures directly :-)
+> With `width` you'll change `center_freq1` in many cases. Reading a
+> pair of old-and-new of each may not necessarily be fatal but may
+> introduce subtle bugs that are hard to debug. Even if the current code
+> doesn't really use these values out of mac80211 callback context now
+> it may become a problem later.
 
+Yes, this is a good point. Like I said (below), we had a similar issue
+with the bss_conf, in our case that was two timestamps there that need
+to be read together. Right now we're the only ones using those and only
+within the context of the callback, so we can just document that they're
+only valid together in such a context, but it's a more general issue.
 
-Michał
+> > We've recently seen a similar issue with vif->bss_conf, and I'm
+> > considering making that an RCU-protected pointer rather than the
+> > embedded sub-struct, that way mac80211 can replace it atomically when
+> > needed. I've yet to see if that's practical though.
+> 
+> It'd be lovely if I could freely read mac80211 structures from
+> whatever context I want without any worries but I think you'd have to
+> introduce explicit locking between mac80211 and drivers or go ham with
+> RCU :-)
+
+Yeah, locking there would perhaps not be such a bad idea? Either that or
+RCU. Though we need RCU already in many contexts (like a tasklet
+iterating the list of interfaces) but perhaps configuration accesses
+could be contained to mutex-capable contexts? I don't know.
+
+We did have a similar problem between cfg80211 and mac80211 and decided
+to move the cfg80211 mutex to the public part so that mac80211 (or other
+cfg80211 drivers, of course) could use it - and in fact the cfg80211 API
+requires that now in some places - but we haven't really considered this
+so much in the context of drivers.
+
+I think this would make a good discussion topic for the wireless
+workshop :)
+
+johannes
+
