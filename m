@@ -1,120 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:50291 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752395AbbAPOEV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 09:04:21 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 16 Jan 2015 16:04:09 +0200
-Message-Id: <1421417049-9087-1-git-send-email-luca@coelho.fi> (sfid-20150116_150436_904439_7488CF1B)
-Subject: [PATCH] nl80211: add an attribute to allow delaying the first scheduled scan cycle
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:63442 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753492AbbA3Njq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 08:39:46 -0500
+Received: by mail-wi0-f170.google.com with SMTP id bs8so2981443wib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 05:39:45 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+Date: Fri, 30 Jan 2015 14:39:45 +0100
+Message-ID: <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com> (sfid-20150130_143949_935186_D83BE586)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 29 January 2015 at 14:14, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> On Thu, 2015-01-29 at 12:48 +0100, Michal Kazior wrote:
+>> Hi,
+>>
+>> I'm not subscribed to netdev list and I can't find the message-id so I
+>> can't reply directly to the original thread `BW regression after "tcp:
+>> refine TSO autosizing"`.
+>>
+>> I've noticed a big TCP performance drop with ath10k
+>> (drivers/net/wireless/ath/ath10k) on 3.19-rc5. Instead of 500mbps I
+>> get 250mbps in my testbed.
+>>
+>> After bisecting I ended up at `tcp: refine TSO autosizing`. Reverting
+>> `tcp: refine TSO autosizing` and `tcp: Do not apply TSO segment limit
+>> to non-TSO packets` (for conflict free reverts) fixes the problem.
+[...]
+>> Any hints/ideas?
+>>
+>
+> Hi Michal
+>
+> This patch restored original TSQ behavior, because the 1ms worth of data
+> per flow had totally destroyed TSQ intent.
+>
+> vi +630 Documentation/networking/ip-sysctl.txt
+[...]
+> With this change and the stretch ack fixes, I got 37Gbps of throughput
+> on a single flow, on a 40Gbit NIC (mlx4)
+>
+> If a driver needs to buffer more than tcp_limit_output_bytes=131072 to
+> get line rate, I suggest that you either :
+>
+> 1) tweak tcp_limit_output_bytes, but its not practical from a driver.
 
-The userspace may want to delay the the first scheduled scan or
-net-detect cycle.  Add an optional attribute to the scheduled scan
-configuration to pass the delay to be (optionally) used by the driver.
+I've briefly tried playing with this knob to no avail unfortunately. I
+tried 256K, 1M - it didn't improve TCP performance. When I tried to
+make it smaller (e.g. 16K) the traffic dropped even more so it does
+have an effect. It seems there's some other limiting factor in this
+case.
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h       |  5 +++++
- include/uapi/linux/nl80211.h | 20 ++++++++++++++------
- net/wireless/nl80211.c       |  4 ++++
- 3 files changed, 23 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7b44ba0..64e09e1 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1493,6 +1493,10 @@ struct cfg80211_match_set {
-  * @rcu_head: RCU callback used to free the struct
-  * @owner_nlportid: netlink portid of owner (if this should is a request
-  *	owned by a particular socket)
-+ * @delay: delay in seconds to use before starting the first scan
-+ *	cycle.  The driver may ignore this parameter and start
-+ *	immediately (or at any other time), if this feature is not
-+ *	supported.
-  */
- struct cfg80211_sched_scan_request {
- 	struct cfg80211_ssid *ssids;
-@@ -1506,6 +1510,7 @@ struct cfg80211_sched_scan_request {
- 	struct cfg80211_match_set *match_sets;
- 	int n_match_sets;
- 	s32 min_rssi_thold;
-+	u32 delay;
- 
- 	u8 mac_addr[ETH_ALEN] __aligned(2);
- 	u8 mac_addr_mask[ETH_ALEN] __aligned(2);
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f52797a..9eaccf0 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -324,7 +324,9 @@
-  *	if passed, define which channels should be scanned; if not
-  *	passed, all channels allowed for the current regulatory domain
-  *	are used.  Extra IEs can also be passed from the userspace by
-- *	using the %NL80211_ATTR_IE attribute.
-+ *	using the %NL80211_ATTR_IE attribute.  The first cycle of the
-+ *	scheduled scan can be delayed by %NL80211_ATTR_SCHED_SCAN_DELAY
-+ *	is supplied.
-  * @NL80211_CMD_STOP_SCHED_SCAN: stop a scheduled scan. Returns -ENOENT if
-  *	scheduled scan is not running. The caller may assume that as soon
-  *	as the call returns, it is safe to start a new scheduled scan again.
-@@ -1735,6 +1737,9 @@ enum nl80211_commands {
-  *	should be contained in the result as the sum of the respective counters
-  *	over all channels.
-  *
-+ * @NL80211_ATTR_SCHED_SCAN_DELAY: delay before a scheduled scan (or a
-+ *	WoWLAN net-detect scan) is started, u32 in seconds.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2098,6 +2103,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_SURVEY_RADIO_STATS,
- 
-+	NL80211_ATTR_SCHED_SCAN_DELAY,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -3741,11 +3748,12 @@ struct nl80211_pattern_support {
-  * @NL80211_WOWLAN_TRIG_NET_DETECT: wake up when a configured network
-  *	is detected.  This is a nested attribute that contains the
-  *	same attributes used with @NL80211_CMD_START_SCHED_SCAN.  It
-- *	specifies how the scan is performed (e.g. the interval and the
-- *	channels to scan) as well as the scan results that will
-- *	trigger a wake (i.e. the matchsets).  This attribute is also
-- *	sent in a response to @NL80211_CMD_GET_WIPHY, indicating the
-- *	number of match sets supported by the driver (u32).
-+ *	specifies how the scan is performed (e.g. the interval, the
-+ *	channels to scan and the initial delay) as well as the scan
-+ *	results that will trigger a wake (i.e. the matchsets).  This
-+ *	attribute is also sent in a response to
-+ *	@NL80211_CMD_GET_WIPHY, indicating the number of match sets
-+ *	supported by the driver (u32).
-  * @NL80211_WOWLAN_TRIG_NET_DETECT_RESULTS: nested attribute
-  *	containing an array with information about what triggered the
-  *	wake up.  If no elements are present in the array, it means
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8e56eeb..f2ef811 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6204,6 +6204,10 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		}
- 	}
- 
-+	if (attrs[NL80211_ATTR_SCHED_SCAN_DELAY])
-+		request->delay =
-+			nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_DELAY]);
-+
- 	request->interval = interval;
- 	request->scan_start = jiffies;
- 
--- 
-2.1.4
+> 2) change the driver, knowing what are its exact requirements, by
+> removing a fraction of skb->truesize at ndo_start_xmit() time as in :
+>
+> if ((skb->destructor == sock_wfree ||
+>      skb->restuctor == tcp_wfree) &&
+>     skb->sk) {
+>     u32 fraction = skb->truesize / 2;
+>
+>     skb->truesize -= fraction;
+>     atomic_sub(fraction, &skb->sk->sk_wmem_alloc);
+> }
 
+tcp_wfree isn't exported so I went and just did a quick hack and used
+`if (skb->sk)` as the condition. Didn't help with TCP.
+
+I wonder if this TSO patch is the single thing to blame. Maybe it's
+just the trigger and something else is broken? I've been seeing some
+UDP performance inconsistencies in 3.19 (I don't recall seeing these
+in 3.18) - but maybe my perception is failing on me.
+
+Anyway, thanks for the tips so far.
+
+
+Michał
