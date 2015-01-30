@@ -1,49 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:37123 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752791AbbAWRbB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 12:31:01 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: rtlwifi/rtl8192de: remove redundant else if check
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1421158054-22566-1-git-send-email-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20150123173101.2E01C1416F0@smtp.codeaurora.org> (sfid-20150123_183123_036757_8A05F0B3)
-Date: Fri, 23 Jan 2015 17:31:01 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:55444 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753462AbbA3RoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 12:44:13 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	(Exim 4.84)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1YHFc4-0007BZ-4X
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 18:44:12 +0100
+Message-ID: <1422639851.1919.37.camel@sipsolutions.net> (sfid-20150130_184416_594385_085BA4B1)
+Subject: Re: [PATCH] backports: update genl-const patch for nl80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Date: Fri, 30 Jan 2015 18:44:11 +0100
+In-Reply-To: <1422639317-21593-1-git-send-email-johannes@sipsolutions.net> (sfid-20150130_183524_349907_92B477EF)
+References: <1422639317-21593-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20150130_183524_349907_92B477EF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2015-01-30 at 18:35 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The current wireless tree changes the surrounding code to
+> use the exported string constants, so adjust the patch to
+> make it apply again.
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The else if check condition checks for the opposite of the
-> if check, hence the else if check is redundant and can be
-> replaced with a simple else:
-> 
-> if (rtlpriv->rtlhal.macphymode == SINGLEMAC_SINGLEPHY) {
-> 	..
-> } else if (rtlpriv->rtlhal.macphymode != SINGLEMAC_SINGLEPHY) {
-> 	..
-> }
-> 
-> replaced with:
-> 
-> if (rtlpriv->rtlhal.macphymode == SINGLEMAC_SINGLEPHY) {
-> 	..
-> } else {
-> 	..
-> }
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Wrong list, and Arend sent the same patch already anyway... stupid me.
 
-Thanks, applied to wireless-drivers-next.git.
+Sorry for the noise.
 
-Kalle Valo
+johannes
+
