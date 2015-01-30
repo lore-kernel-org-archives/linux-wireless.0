@@ -1,85 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53472 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751227AbbAEKFM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 05:05:12 -0500
-Message-ID: <1420452301.9459.3.camel@sipsolutions.net> (sfid-20150105_110517_096161_25D10129)
-Subject: Re: [PATCH] Revert "ipw2200: select CFG80211_WEXT"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jiri Kosina <jkosina@suse.cz>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Mon, 05 Jan 2015 11:05:01 +0100
-In-Reply-To: <1420324124.9624.60.camel@x220> (sfid-20150103_232852_400842_25360CE9)
-References: <1420297188.2397.3.camel@tiscali.nl>
-	 <CD467A59-F563-439B-BA82-954AB27AD9CC@holtmann.org>
-	 <CA+55aFzYSiUkntraMrHEhMzkt35Ft2p9E3cT7ejwQOBDwKvcOg@mail.gmail.com>
-	 <1420324124.9624.60.camel@x220> (sfid-20150103_232852_400842_25360CE9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-we0-f171.google.com ([74.125.82.171]:63698 "EHLO
+	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760133AbbA3Jvp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 04:51:45 -0500
+Received: by mail-we0-f171.google.com with SMTP id k11so23728548wes.2
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 01:51:44 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: add TxBF support
+Date: Fri, 30 Jan 2015 10:50:52 +0100
+Message-Id: <1422611452-21105-1-git-send-email-michal.kazior@tieto.com> (sfid-20150130_105214_314165_250D516E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-01-03 at 23:28 +0100, Paul Bolle wrote:
-> On Sat, 2015-01-03 at 10:07 -0800, Linus Torvalds wrote:
-> > On Sat, Jan 3, 2015 at 10:02 AM, Marcel Holtmann <marcel@holtmann.org> wrote:
-> > >
-> > > why would you revert this? It is obviously the correct change to actually select CFG80211_WEXT.
-> > 
-> > I don't know about obvious, but yeah, I think the select in this case
-> > is actually the better idea anyway.
-> 
-> Obviously it wasn't obvious to me!
-> 
-> My reasoning was that the "ipw2200: select CFG80211_WEXT" commit was
-> _solely_ a workaround for the breakage introduced by that other patch.
-> And since that one is now reverted the workaround wasn't needed anymore.
+If firmware advertises support for TxBF then the
+driver has to instruct the firmware accordingly
+during runtime. Without this patch connecting to
+an AP with beamformer support would yield abysmal
+Rx performance.
 
-Well, you thought of it only as a workaround - but it makes sense. You
-shouldn't have to 
+This has been tested with wmi-tlv and qca6174
+while acting as a STA beamformee only.
 
-> Besied, I thought we try to avoid select-ing symbols that can also be
-> set manually. As that makes it more likely to trigger circular
-> dependency problems in the kconfig tools, doesn't it?
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 79 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  5 +++
+ 2 files changed, 84 insertions(+)
 
-I don't think that has much to do with whether or not they can be set
-manually - it's more a question of what the dependencies of the selected
-symbol are. In this case it's a bool leaf symbol with the only
-dependency being something ipw already needs, so it's pretty much
-guaranteed to be safe.
-
-> Side note: am I correct in thinking that there's some successor to
-> CFG80211_WEXT and that the ipw2200 driver could, at least in theory, be
-> ported to that successor? (ipw2200 hardware appears to be a bit old, so
-> probably no one would care enough to actually do that.)
-> net/wireless/kconfig doesn't mention anything like that, so probably I'm
-> just confused.
-
-Well, see the big thread over there with the revert that I'm tempted to
-not even read ...
-
-The real successor, for various reasons (like simply always being able
-to connect to a single AP, no matter how many others can be found by
-scanning!), is nl80211.
-
-Many drivers have been converted to the new framework by using mac80211,
-but some drivers cannot use mac80211 because they do more in the
-device/firmware. Among those are many of the old 11b/11g ones that still
-exist in the tree, but also a few new ones (like mwifiex) that were
-already written to cfg80211 APIs.
-
-It should definitely be possible to convert all the drivers (*) to pure
-cfg80211 instead of having direct userspace wext to driver calls - but
-nobody has gone and done it.
-
-johannes
-
-(*) caveat - at least the playstation3 driver will require some new
-nl80211 API
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 15e47f4..81455dc 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1764,6 +1764,68 @@ static int ath10k_setup_peer_smps(struct ath10k *ar, struct ath10k_vif *arvif,
+ 					 ath10k_smps_map[smps]);
+ }
+ 
++static int ath10k_mac_vif_recalc_txbf(struct ath10k *ar,
++				      struct ieee80211_vif *vif,
++				      struct ieee80211_sta_vht_cap vht_cap)
++{
++	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++	int ret;
++	u32 param;
++	u32 value;
++
++	if (!(ar->vht_cap_info &
++	      (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
++	       IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE |
++	       IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
++	       IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)))
++		return 0;
++
++	param = ar->wmi.vdev_param->txbf;
++	value = 0;
++
++	if (WARN_ON(param == WMI_VDEV_PARAM_UNSUPPORTED))
++		return 0;
++
++	/* The following logic is correct. If a remote STA advertises support
++	 * for being a beamformer then we should enable us being a beamformee.
++	 */
++
++	if (ar->vht_cap_info &
++	    (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
++	     IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE)) {
++		if (vht_cap.cap & IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE)
++			value |= WMI_VDEV_PARAM_TXBF_SU_TX_BFEE;
++
++		if (vht_cap.cap & IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)
++			value |= WMI_VDEV_PARAM_TXBF_MU_TX_BFEE;
++	}
++
++	if (ar->vht_cap_info &
++	    (IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
++	     IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)) {
++		if (vht_cap.cap & IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE)
++			value |= WMI_VDEV_PARAM_TXBF_SU_TX_BFER;
++
++		if (vht_cap.cap & IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE)
++			value |= WMI_VDEV_PARAM_TXBF_MU_TX_BFER;
++	}
++
++	if (value & WMI_VDEV_PARAM_TXBF_MU_TX_BFEE)
++		value |= WMI_VDEV_PARAM_TXBF_SU_TX_BFEE;
++
++	if (value & WMI_VDEV_PARAM_TXBF_MU_TX_BFER)
++		value |= WMI_VDEV_PARAM_TXBF_SU_TX_BFER;
++
++	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param, value);
++	if (ret) {
++		ath10k_warn(ar, "failed to submit vdev param txbf 0x%x: %d\n",
++			    value, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
+ /* can be called only in mac80211 callbacks due to `key_count` usage */
+ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+@@ -1772,6 +1834,7 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+ 	struct ieee80211_sta_ht_cap ht_cap;
++	struct ieee80211_sta_vht_cap vht_cap;
+ 	struct wmi_peer_assoc_complete_arg peer_arg;
+ 	struct ieee80211_sta *ap_sta;
+ 	int ret;
+@@ -1794,6 +1857,7 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+ 	/* ap_sta must be accessed only within rcu section which must be left
+ 	 * before calling ath10k_setup_peer_smps() which might sleep. */
+ 	ht_cap = ap_sta->ht_cap;
++	vht_cap = ap_sta->vht_cap;
+ 
+ 	ret = ath10k_peer_assoc_prepare(ar, vif, ap_sta, &peer_arg);
+ 	if (ret) {
+@@ -1819,6 +1883,13 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+ 		return;
+ 	}
+ 
++	ret = ath10k_mac_vif_recalc_txbf(ar, vif, vht_cap);
++	if (ret) {
++		ath10k_warn(ar, "failed to recalc txbf for vdev %i on bss %pM: %d\n",
++			    arvif->vdev_id, bss_conf->bssid, ret);
++		return;
++	}
++
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC,
+ 		   "mac vdev %d up (associated) bssid %pM aid %d\n",
+ 		   arvif->vdev_id, bss_conf->bssid, bss_conf->aid);
+@@ -1843,6 +1914,7 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++	struct ieee80211_sta_vht_cap vht_cap = {};
+ 	int ret;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+@@ -1855,6 +1927,13 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+ 		ath10k_warn(ar, "faield to down vdev %i: %d\n",
+ 			    arvif->vdev_id, ret);
+ 
++	ret = ath10k_mac_vif_recalc_txbf(ar, vif, vht_cap);
++	if (ret) {
++		ath10k_warn(ar, "failed to recalc txbf for vdev %i: %d\n",
++			    arvif->vdev_id, ret);
++		return;
++	}
++
+ 	arvif->def_wep_key_idx = 0;
+ 	arvif->is_up = false;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 20ce360..8073fba 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3745,6 +3745,11 @@ enum wmi_10x_vdev_param {
+ 	WMI_10X_VDEV_PARAM_VHT80_RATEMASK,
+ };
+ 
++#define WMI_VDEV_PARAM_TXBF_SU_TX_BFEE BIT(0)
++#define WMI_VDEV_PARAM_TXBF_MU_TX_BFEE BIT(1)
++#define WMI_VDEV_PARAM_TXBF_SU_TX_BFER BIT(2)
++#define WMI_VDEV_PARAM_TXBF_MU_TX_BFER BIT(3)
++
+ /* slot time long */
+ #define WMI_VDEV_SLOT_TIME_LONG		0x1
+ /* slot time short */
+-- 
+1.8.5.3
 
