@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:48961 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751794AbbAZIMX convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:44949 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752222AbbA3Ohb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 03:12:23 -0500
-Received: by mail-lb0-f182.google.com with SMTP id l4so6267347lbv.13
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Jan 2015 00:12:20 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87egqiggzi.fsf@kamboji.qca.qualcomm.com>
-References: <1422205297-24767-1-git-send-email-zajec5@gmail.com>
-	<87egqiggzi.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 26 Jan 2015 09:12:20 +0100
-Message-ID: <CACna6rx8LQZLPmAp8mgXro_5=ppprKHrRe7L-VFEU=Qdz60Edw@mail.gmail.com> (sfid-20150126_091225_484229_3BDD6251)
-Subject: Re: [PATCH] b43: AC-PHY: prepare place for developing new PHY support
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 30 Jan 2015 09:37:31 -0500
+Message-ID: <1422628649.21689.92.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150130_153740_262373_FAF2624D)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Fri, 30 Jan 2015 06:37:29 -0800
+In-Reply-To: <54CB8B69.1070807@broadcom.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <54CB5D08.2070906@broadcom.com>
+	 <1422623975.21689.77.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <54CB8B69.1070807@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 January 2015 at 08:04, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
->
->> There are new (not anymore?) Broadcom 802.11ac wireless cards based on
->> chipsets like BCM4352 and BCM4360. They use a new PHY type (called
->> simply AC) that will require new specific code.
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->> ---
->>
->> Kalle: as this commit & Kconfig say, this is just a beginning of new
->> PHY type support. In the past we used development model this patch
->> follows. Code for new PHY was added patch by patch. Adding everything
->> at once would require a huge patchset & development behing the doors.
->> Also sending small patches allows better review of changes & should
->> result in a better code quality. Let me know if there are any
->> problems.
->
-> Sounds good to me. Just keep dependency to BROKEN until it's usable and
-> make sure that the code compiles after every patch.
+On Fri, 2015-01-30 at 14:47 +0100, Arend van Spriel wrote:
 
-Alright! :)
+> Indeed and that is what we would like to address in our wireless 
+> drivers. I will setup some experiments using the fraction sizing and 
+> post my findings. Again sorry if I offended you.
 
--- 
-Rafał
+You did not, but I had no feedback about my suggestions.
+
+Michal sent it now.
+
+Thanks
+
+
