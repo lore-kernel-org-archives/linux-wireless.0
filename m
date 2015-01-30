@@ -1,57 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13672 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759040AbbA0Xyx (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:4245 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758247AbbA3K3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 18:54:53 -0500
-Message-ID: <54C824DC.5080804@qca.qualcomm.com> (sfid-20150128_005457_494974_AFA983AF)
-Date: Tue, 27 Jan 2015 15:53:00 -0800
-From: Peter Oh <poh@qca.qualcomm.com>
+	Fri, 30 Jan 2015 05:29:34 -0500
+Message-ID: <54CB5D08.2070906@broadcom.com> (sfid-20150130_112949_367376_F514CCDB)
+Date: Fri, 30 Jan 2015 11:29:28 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
-References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com> <20150127213349.GA24933@localhost>
-In-Reply-To: <20150127213349.GA24933@localhost>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	<eyalpe@dev.mellanox.co.il>
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com> <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+In-Reply-To: <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-On 01/27/2015 01:33 PM, Bob Copeland wrote:
-> On Mon, Jan 26, 2015 at 02:25:18PM -0800, Peter Oh wrote:
->> Using ioread() to perform data sync is excessive.
->> Use compact API, wmb(), that intended to be used for the case.
->> It reduces total 14 CPU clocks per interrupt.
-> Hi,
+On 01/29/15 14:14, Eric Dumazet wrote:
+> On Thu, 2015-01-29 at 12:48 +0100, Michal Kazior wrote:
+>> Hi,
+>>
+>> I'm not subscribed to netdev list and I can't find the message-id so I
+>> can't reply directly to the original thread `BW regression after "tcp:
+>> refine TSO autosizing"`.
+>>
+>> I've noticed a big TCP performance drop with ath10k
+>> (drivers/net/wireless/ath/ath10k) on 3.19-rc5. Instead of 500mbps I
+>> get 250mbps in my testbed.
+>>
+>> After bisecting I ended up at `tcp: refine TSO autosizing`. Reverting
+>> `tcp: refine TSO autosizing` and `tcp: Do not apply TSO segment limit
+>> to non-TSO packets` (for conflict free reverts) fixes the problem.
+>>
+>> My testing setup is as follows:
+>>
+>>   a) ath10k AP, github.com/kvalo/ath/tree/master 3.19-rc5, w/ reverts
+>>   b) ath10k STA connected to (a), github.com/kvalo/ath/tree/master
+>> 3.19-rc5, w/ reverts
+>>   c) (b) w/o reverts
+>>
+>> Devices are 3x3 (AP) and 2x2 (Client) and are RF cabled. 11ac@80MHz
+>> 2x2 has 866mbps modulation rate. In practice this should deliver
+>> ~700mbps of real UDP traffic.
+>>
+>> Here are some numbers:
+>>
+>> UDP: (b) ->  (a): 672mbps
+>> UDP: (a) ->  (b): 687mbps
+>> TCP: (b) ->  (a): 526mbps
+>> TCP: (a) ->  (b): 500mbps
+>>
+>> UDP: (c) ->  (a): 669mbps*
+>> UDP: (a) ->  (c): 689mbps*
+>> TCP: (c) ->  (a): 240mbps**
+>> TCP: (a) ->  (c): 490mbps*
+>>
+>> * no changes/within error margin
+>> ** the performance drop
+>>
+>> I'm using iperf:
+>>    UDP: iperf -i1 -s -u vs iperf -i1 -c XX -u -B 200M -P5 -t 20
+>>    TCP: iperf -i1 -s vs iperf -i1 -c XX -P5 -t 20
+>>
+>> Result values were obtained at the receiver side.
+>>
+>> Iperf reports a few frames lost and out-of-order at each UDP test
+>> start (during first second) but later has no packet loss and no
+>> out-of-order. This shouldn't have any effect on a TCP session, right?
+>>
+>> The device delivers batched up tx/rx completions (no way to change
+>> that). I suppose this could be an issue for timing sensitive
+>> algorithms. Also keep in mind 802.11n and 802.11ac devices have frame
+>> aggregation windows so there's an inherent extra (and non-uniform)
+>> latency when compared to, e.g. ethernet devices.
+>>
+>> The driver doesn't have GRO. I have an internal patch which implements
+>> it. It improves overall TCP traffic (more stable, up to 600mbps TCP
+>> which is ~100mbps more than without GRO) but the TCP: (c) ->  (a)
+>> performance drop remains unaffected regardless.
+>>
+>> I've tried applying stretch ACK patchset (v2) on both machines and
+>> re-run the above tests. I got no measurable difference in performance.
+>>
+>> I've also run these tests with iwlwifi 7260 (also a 2x2) as (b) and
+>> (c). It didn't seem to be affected by the TSO patch at all (it runs at
+>> ~360mbps of TCP regardless of the TSO patch).
+>>
+>> Any hints/ideas?
+>>
 >
->>   	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_CLR_ADDRESS,
->>   			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
->>   
->> -	/* IMPORTANT: this extra read transaction is required to
->> -	 * flush the posted write buffer. */
->> -	(void)ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS +
->> -				PCIE_INTR_ENABLE_ADDRESS);
->> +	/* invoke data sync barrier */
->> +	wmb();
->>   }
-> I am no expert in arcane PCI matters, but that looks suspicious to me.  I seem
-> to recall wmb() only enforced ordering, and maybe not even memory-IO ordering
-> on all platforms.  If you want to disable an irq, it really seems like you
-> would want to flush posted writes so you know the hardware has seen it.
-enforced ordering is happened by flush write buffer and wmb is commonly 
-used to flush write buffer.
-so that wmb guarantees ordering by flush write buffer. That's why it's 
-called a memory barrier.
-when wmb is used, it guarantees all memory accesses complete before wmb 
-command completes.
-for instance dsb is the corresponding command for wmb in arm and arm 
-instruction guide says
-"The DSB instruction completes when all explicit memory accesses before 
-it complete."
-Which means DSB instruction will hold the bus (usually AXI bus) and 
-never returns until any memory or memory mapped I/O access complete
-(dsb is for ARM and other platforms have the equivalent instruction such 
-as sfence, sync, mf, and dcs).
-Thanks,
-Peter
+> Hi Michal
+>
+> This patch restored original TSQ behavior, because the 1ms worth of data
+> per flow had totally destroyed TSQ intent.
+>
+> vi +630 Documentation/networking/ip-sysctl.txt
+>
+> tcp_limit_output_bytes - INTEGER
+>          Controls TCP Small Queue limit per tcp socket.
+>          TCP bulk sender tends to increase packets in flight until it
+>          gets losses notifications. With SNDBUF autotuning, this can
+>          result in a large amount of packets queued in qdisc/device
+>          on the local machine, hurting latency of other flows, for
+>          typical pfifo_fast qdiscs.
+>          tcp_limit_output_bytes limits the number of bytes on qdisc
+>          or device to reduce artificial RTT/cwnd and reduce bufferbloat.
+>          Default: 131072
+>
+> This is why I suggested to Eyal Perry to change the TX interrupt
+> mitigation parameters as in :
+>
+> ethtool -C eth0 tx-frames 4 rx-frames 4
+>
+> With this change and the stretch ack fixes, I got 37Gbps of throughput
+> on a single flow, on a 40Gbit NIC (mlx4)
+>
+> If a driver needs to buffer more than tcp_limit_output_bytes=131072 to
+> get line rate, I suggest that you either :
+>
+> 1) tweak tcp_limit_output_bytes, but its not practical from a driver.
+>
+> 2) change the driver, knowing what are its exact requirements, by
+> removing a fraction of skb->truesize at ndo_start_xmit() time as in :
+>
+> if ((skb->destructor == sock_wfree ||
+>       skb->restuctor == tcp_wfree)&&
+>      skb->sk) {
+>      u32 fraction = skb->truesize / 2;
+>
+>      skb->truesize -= fraction;
+>      atomic_sub(fraction,&skb->sk->sk_wmem_alloc);
+> }
+
+Hi Eric,
+
+Your suggestions are still based on the fact that you consider wireless 
+networking to be similar to ethernet, but as Michal indicated there are 
+some fundamental differences starting with CSMA/CD versus CSMA/CA. Also 
+the medium conditions are far from comparable. There is no shielding so 
+it needs to deal with interference and dynamically drops the link rate 
+so transmission of packets can take several milliseconds. Then with 11n 
+they came up with aggregation with sends up to 64 packets in a single 
+transmit over the air at worst case 6.5 Mbps (if I am not mistaken). The 
+parameter value for tcp_limit_output_bytes of 131072 means that it 
+allows queuing for about 1ms on a 1Gbps link, but I hope you can see 
+this is not realistic for dealing with all variances of the wireless 
+medium/standard. I suggested this as topic for the wireless workshop in 
+Otawa [1], but I can not attend there. Still hope that there will be 
+some discussions to get more awareness.
+
+Regards,
+Arend
+
+[1] http://mid.gmane.org/54BE9791.1070706@broadcom.com
