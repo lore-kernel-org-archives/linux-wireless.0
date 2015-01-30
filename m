@@ -1,86 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:60629 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751947AbbAONXu (ORCPT
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:55260 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394AbbA3Jmy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 08:23:50 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Giel van Schijndel <me@mortis.eu>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	"open list\:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	"open list\:NETWORKING DRIVERS" <netdev@vger.kernel.org>
-Subject: Re: [PATCH RESEND 2/2] wlcore: align member-assigns in a structure-copy block
-References: <1420394427-19509-1-git-send-email-me@mortis.eu>
-	<1420659525-22975-1-git-send-email-me@mortis.eu>
-	<1420659525-22975-2-git-send-email-me@mortis.eu>
-	<87vbkfga32.fsf@kamboji.qca.qualcomm.com>
-	<CAB3XZEcm4+=dYC-8_m_7YRdET_wPkWUYHcDuy9mCKdxkCFEnQA@mail.gmail.com>
-Date: Thu, 15 Jan 2015 15:23:41 +0200
-In-Reply-To: <CAB3XZEcm4+=dYC-8_m_7YRdET_wPkWUYHcDuy9mCKdxkCFEnQA@mail.gmail.com>
-	(Eliad Peller's message of "Sun, 11 Jan 2015 12:22:49 +0200")
-Message-ID: <87twzsqisi.fsf@kamboji.qca.qualcomm.com> (sfid-20150115_142432_000650_76CCC58C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 30 Jan 2015 04:42:54 -0500
+Received: by mail-qc0-f175.google.com with SMTP id c9so19629009qcz.6
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 01:42:53 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] iw: print human readable radar events
+Date: Fri, 30 Jan 2015 10:42:44 +0100
+Message-Id: <1422610964-23252-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20150130_104258_683029_0D1F5AB2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eliad Peller <eliad@wizery.com> writes:
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ event.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-> On Fri, Jan 9, 2015 at 7:03 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Giel van Schijndel <me@mortis.eu> writes:
->>
->>> This highlights the differences (e.g. the bug fixed in the previous
->>> commit).
->>>
->>> Signed-off-by: Giel van Schijndel <me@mortis.eu>
->>> ---
->>>  drivers/net/wireless/ti/wlcore/acx.c | 22 +++++++++++-----------
->>>  1 file changed, 11 insertions(+), 11 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
->>> index f28fa3b..93a2fa8 100644
->>> --- a/drivers/net/wireless/ti/wlcore/acx.c
->>> +++ b/drivers/net/wireless/ti/wlcore/acx.c
->>> @@ -1715,17 +1715,17 @@ int wl12xx_acx_config_hangover(struct wl1271 *wl)
->>>               goto out;
->>>       }
->>>
->>> -     acx->recover_time = cpu_to_le32(conf->recover_time);
->>> -     acx->hangover_period = conf->hangover_period;
->>> -     acx->dynamic_mode = conf->dynamic_mode;
->>> -     acx->early_termination_mode = conf->early_termination_mode;
->>> -     acx->max_period = conf->max_period;
->>> -     acx->min_period = conf->min_period;
->>> -     acx->increase_delta = conf->increase_delta;
->>> -     acx->decrease_delta = conf->decrease_delta;
->>> -     acx->quiet_time = conf->quiet_time;
->>> -     acx->increase_time = conf->increase_time;
->>> -     acx->window_size = conf->window_size;
->>> +     acx->recover_time               = cpu_to_le32(conf->recover_time);
->>> +     acx->hangover_period            = conf->hangover_period;
->>> +     acx->dynamic_mode               = conf->dynamic_mode;
->>> +     acx->early_termination_mode     = conf->early_termination_mode;
->>> +     acx->max_period                 = conf->max_period;
->>> +     acx->min_period                 = conf->min_period;
->>> +     acx->increase_delta             = conf->increase_delta;
->>> +     acx->decrease_delta             = conf->decrease_delta;
->>> +     acx->quiet_time                 = conf->quiet_time;
->>> +     acx->increase_time              = conf->increase_time;
->>> +     acx->window_size                = conf->window_size;
->>
->> I would like to get an ACK from one of the wlcore developers if I should
->> apply this (or not).
->
-> I don't have a strong opinion here. However, it looks pretty much
-> redundant to take a random blob (which was just fixed by a correct
-> patch) and re-indent it. The rest of the file doesn't follow this
-> style, so i don't see a good reason to apply it here.
-
-Yeah, this should be a driver decision and not just a single change in
-one function. Hence I'm dropping patch 2.
-
+diff --git a/event.c b/event.c
+index c175c66..71ab7f7 100644
+--- a/event.c
++++ b/event.c
+@@ -565,6 +565,31 @@ static int print_event(struct nl_msg *msg, void *arg)
+ 				   nla_data(tb[NL80211_ATTR_VENDOR_DATA]),
+ 				   nla_len(tb[NL80211_ATTR_VENDOR_DATA]));
+ 		break;
++	case NL80211_CMD_RADAR_DETECT:
++		printf("radar event ");
++		if (tb[NL80211_ATTR_RADAR_EVENT]) {
++			switch (nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT])) {
++				case NL80211_RADAR_DETECTED:
++					printf("(radar detected)");
++					break;
++				case NL80211_RADAR_CAC_FINISHED:
++					printf("(cac finished)");
++					break;
++				case NL80211_RADAR_CAC_ABORTED:
++					printf("(cac aborted)");
++					break;
++				case NL80211_RADAR_NOP_FINISHED:
++					printf("(nop finished)");
++					break;
++				default:
++					printf("(unknown)");
++					break;
++			};
++		} else {
++			printf("(unknown)");
++		}
++		printf("\n");
++		break;
+ 	default:
+ 		printf("unknown event %d (%s)\n",
+ 		       gnlh->cmd, command_name(gnlh->cmd));
 -- 
-Kalle Valo
+1.8.4.5
+
