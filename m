@@ -1,32 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40540 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751834AbbAPHgW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Jan 2015 02:36:22 -0500
-Message-ID: <1421393778.2388.0.camel@sipsolutions.net> (sfid-20150116_083630_438711_98511A87)
-Subject: Re: pull-request: mac80211-next 2015-01-15
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Fri, 16 Jan 2015 08:36:18 +0100
-In-Reply-To: <20150115.192820.2095761147762961625.davem@davemloft.net>
-References: <1421325902.1962.8.camel@sipsolutions.net>
-	 <20150115.192820.2095761147762961625.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:47014 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759AbbA3SSJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 13:18:09 -0500
+Message-ID: <54CBCADA.4050801@broadcom.com> (sfid-20150130_191813_704980_0F6DC467)
+Date: Fri, 30 Jan 2015 19:18:02 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: "backports@vger.kernel.org" <backports@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: cfg80211: Unknown symbol get_net_ns_by_fd (err 0)
+References: <54C6A717.5050804@broadcom.com>
+In-Reply-To: <54C6A717.5050804@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-01-15 at 19:28 -0500, David Miller wrote:
+On 01/26/15 21:44, Arend van Spriel wrote:
+> Hi Hauke,
+>
+> The commit below causes the error mentioned in the Subject: field. I
+> would like to fix this, but could use a bit of help here how to do this
+> type of things.
+>
+> commit 4b681c82d2f9bef121c912ffcaac89a004af3f2c
+> Author: Vadim Kochan <vadim4j@gmail.com>
+> Date: Mon Jan 12 16:34:05 2015 +0200
+>
+> nl80211: Allow set network namespace by fd
 
-> I had to resolve a minor merge conflict, please take a look to make sure
-> I got it right.
+Hi Hauke,
 
-Ah, yes, sorry about that - I knew about the conflict (had resolved it
-numerous times) but forgot to give you a heads-up.
+I looked into my issue a bit more. So my target kernel is 
+3.11.1-200.fc19.x86_64 and checking lxr found that 3.11 has this 
+function, but it does not have EXPORT_SYMBOL(). That was added by the 
+same commit above. Any clues how to fix this?
 
-What you did is good, thanks.
+Regards,
+Arend
 
-johannes
-
+> Regards,
+> Arend
 
