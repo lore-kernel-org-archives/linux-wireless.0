@@ -1,69 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35419 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750996AbbAWJm6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 04:42:58 -0500
-Message-ID: <1422006174.2728.12.camel@sipsolutions.net> (sfid-20150123_104302_972030_ACE35486)
-Subject: Re: [PATCH v3] mac80211: Avoid STA expiration timer truncation to
- u32
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org, me@bobcopeland.com
-Date: Fri, 23 Jan 2015 10:42:54 +0100
-In-Reply-To: <1421722023-4691-1-git-send-email-masashi.honma@gmail.com> (sfid-20150120_034734_203758_428E04AE)
-References: <CAFk-A4nF4jPiFR1c9fx-+sa=YWUZseEOKtut7rKWHihmLWp02w@mail.gmail.com>
-	 <1421722023-4691-1-git-send-email-masashi.honma@gmail.com>
-	 (sfid-20150120_034734_203758_428E04AE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56619 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754557AbbA3Imj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 03:42:39 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t0U8cxUS006804
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:42:39 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1s7fgab5jc-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:42:39 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 3/4] mwifiex: fix NULL packet downloading issues
+Date: Fri, 30 Jan 2015 00:40:06 -0800
+Message-ID: <1422607207-15229-3-git-send-email-akarwar@marvell.com> (sfid-20150130_094250_809558_572AEBBA)
+In-Reply-To: <1422607207-15229-1-git-send-email-akarwar@marvell.com>
+References: <1422607207-15229-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-20 at 11:47 +0900, Masashi Honma wrote:
-> On some combination of plink_timeout and HZ, the STA expiration timer will be
-> unexpectedly truncated to u32. Maybe there is a question "Who sets such a large
-> number to plink_timeout ?". At least wpa_supplicant will set 0xffffffff to
-> plink_timeout to disable this timer because wpa_supplicant has it's own
-> expiration mechanism.
+This patch makes sure that skb is freed after downloading
+NULL packet in error cases. Also, USB chipsets return
+-EINPROGRESS after downloading packets, they are freed in
+USB completion handler later. We will add missing change
+to set tx_lock_flag for USB which blocks further packets.
 
-Ok - but that doesn't really disable the timer? Perhaps we should have a
-new userspace API to explicitly disable it? OTOH, worst case I guess
-that means it's like >100 years in the future, so I guess it doesn't
-matter. However, though, you can hardly rely on this fix being present
-in the kernel, so you can't really set such a large value
-unconditionally anyway, no? Otherwise a newer wpa_supplicant running on
-an older kernel would suddenly behave incorrectly. That doesn't seem
-right.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sta_tx.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-Having an explicit feature to disable plink timeout would perhaps be
-better?
-
-> --- a/net/mac80211/mesh.c
-> +++ b/net/mac80211/mesh.c
-> @@ -573,8 +573,11 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
->  {
->  	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
->  	u32 changed;
-> +	u64 exp_time;
->  
-> -	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
-> +	exp_time = ifmsh->mshcfg.plink_timeout * (u64)HZ;
-> +	if (exp_time < 0x100000000)
-> +		ieee80211_sta_expire(sdata, exp_time);
-
-I'm not convinced this is right. For one, I believe on 32-bit machines
-you'll need to write "0x100000000ULL" instead of the plain constant.
-Perhaps preferably, you'd use use ">= MAX_UINT".
-
-However, the argument to ieee80211_sta_expire() is an unsigned long (as
-is jiffies), so on 64-bit machines you could even still use the value
-and the conditional isn't needed.
-
-Given these complications, I would prefer having a feature attribute to
-treat e.g. 0 as disabling the timer entirely, and if this feature isn't
-present then have wpa_supplicant instead use a safe value that doesn't
-trigger the kernel bug - e.g. 0xffffffff/1000 [which is the max possible
-HZ].
-
-johannes
+diff --git a/drivers/net/wireless/mwifiex/sta_tx.c b/drivers/net/wireless/mwifiex/sta_tx.c
+index 1debe76..5ce2d9a 100644
+--- a/drivers/net/wireless/mwifiex/sta_tx.c
++++ b/drivers/net/wireless/mwifiex/sta_tx.c
+@@ -183,9 +183,13 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
+ 	}
+ 	switch (ret) {
+ 	case -EBUSY:
+-		adapter->data_sent = true;
+-		/* Fall through FAILURE handling */
++		dev_kfree_skb_any(skb);
++		dev_err(adapter->dev, "%s: host_to_card failed: ret=%d\n",
++			__func__, ret);
++		adapter->dbg.num_tx_host_to_card_failure++;
++		break;
+ 	case -1:
++		adapter->data_sent = false;
+ 		dev_kfree_skb_any(skb);
+ 		dev_err(adapter->dev, "%s: host_to_card failed: ret=%d\n",
+ 			__func__, ret);
+@@ -198,6 +202,7 @@ int mwifiex_send_null_packet(struct mwifiex_private *priv, u8 flags)
+ 		adapter->tx_lock_flag = true;
+ 		break;
+ 	case -EINPROGRESS:
++		adapter->tx_lock_flag = true;
+ 		break;
+ 	default:
+ 		break;
+-- 
+1.8.1.4
 
