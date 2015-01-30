@@ -1,62 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:33082 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759835AbbA3Imz (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:58567 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422897AbbA3Ous (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 03:42:55 -0500
-Received: by mail-wg0-f50.google.com with SMTP id b13so25483921wgh.9
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:42:54 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/7] ath10k: allow empty ssid vdev config
-Date: Fri, 30 Jan 2015 09:41:21 +0100
-Message-Id: <1422607287-12289-2-git-send-email-michal.kazior@tieto.com> (sfid-20150130_094301_874086_B38C480A)
-In-Reply-To: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
-References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 30 Jan 2015 09:50:48 -0500
+Received: by mail-oi0-f42.google.com with SMTP id i138so34870134oig.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 06:50:47 -0800 (PST)
+Date: Fri, 30 Jan 2015 08:50:33 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] wireless-regdb: Add regulatory rules for Nigeria (NG)
+Message-ID: <20150130145033.GC124346@ubuntu-hedt> (sfid-20150130_155101_710058_CDD15814)
+References: <1422013920-9779-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1422013920-9779-1-git-send-email-jouni@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to reject a valid
-firmware configuration combination.
+On Fri, Jan 23, 2015 at 01:51:58PM +0200, Jouni Malinen wrote:
+> Source is QCA's regulatory team's efforts.
+> 
+> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 
-Since SSID isn't known early on it might make
-sense to allow driver to start vdev without SSID
-and restart it later.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
- 2 files changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index be32db9..ccafb69 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1302,8 +1302,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- 	void *ptr;
- 	u32 flags = 0;
- 
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index ce6f0c7..97ee2e9 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4264,8 +4264,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
- 	const char *cmdname;
- 	u32 flags = 0;
- 
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
--- 
-1.8.5.3
-
+Applied all three (this one plus Samoa and Tanzania), thanks.
