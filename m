@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4278 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209AbbAGK5X (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:42484 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753982AbbA3IRh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 05:57:23 -0500
-Message-ID: <54AD103B.40002@qti.qualcomm.com> (sfid-20150107_115726_718450_7FF56308)
-Date: Wed, 7 Jan 2015 16:23:47 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+	Fri, 30 Jan 2015 03:17:37 -0500
+Received: by mail-lb0-f171.google.com with SMTP id u14so35035137lbd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:17:36 -0800 (PST)
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>,
-	Sujith Manoharan <sujith@msujith.org>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Make HTT fill size configurable
-References: <1420432796-10765-1-git-send-email-sujith@msujith.org> <CA+BoTQ=HqF0vBj4chXfoY9GKcFBP8Xh37HXo5etDDZ1XCg6O4w@mail.gmail.com>
-In-Reply-To: <CA+BoTQ=HqF0vBj4chXfoY9GKcFBP8Xh37HXo5etDDZ1XCg6O4w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <54CB2338.2070502@gmail.com>
+References: <CACna6rykYmq6ucTHJ40vcySOFYs3qeim_ZOpNQsNGzyFo=w-aQ@mail.gmail.com>
+	<54CB2338.2070502@gmail.com>
+Date: Fri, 30 Jan 2015 09:17:36 +0100
+Message-ID: <CACna6rzXoVdf_7sD4Fio5793kXco5so7=wRisfCcbWt+U2CLKQ@mail.gmail.com> (sfid-20150130_091741_165664_1EE1B66C)
+Subject: Re: cfg80211_ops: deauthentication & disassociation
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: wim torfs <wtorfs@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Wednesday 07 January 2015 03:44 PM, Michal Kazior wrote:
-> On 5 January 2015 at 05:39, Sujith Manoharan <sujith@msujith.org> wrote:
->> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
->>
->> The HTT RX ring is replenished with a maximum of 16 buffers,
->> but this might be insufficient when RX traffic is high.
->> Not having enough RX buffers throttles the FW, resulting
->> in low throughput.
->>
->> This patch adds a module parameter to adjust the fill size
->> based on the platform/usage.
+On 30 January 2015 at 07:22, wim torfs <wtorfs@gmail.com> wrote:
+> On 01/29/2015 11:55 PM, Rafał Miłecki wrote:
+>> So I started analyzing this with the base case: mac80211
+>> (ieee80211_del_station). I expected to find a place where mac80211
+>> constructs deauth/disassoc management frame and transmits it. But I
+>> really couldn't. It seems that all ieee80211_del_station does is
+>> calling __sta_info_destroy / __sta_info_destroy_part1 /
+>> __sta_info_destroy_part2.
+>> Did I miss something? Or does mac80211 really ignore sending proper
+>> management frames in this case?
 >
-> I don't think this should be adjustable.
+> If you look further into __sta_info_destroy, you will notice a callback to
+> cfg80211_del_sta (net/wireless/nl80211.c), notifying the removal of the
+> station information.
+> cfg80211_del_sta composes a netlink message, notifying everyone interested
+> about the removal of the station:
+> hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_DEL_STATION);
+>
+> In hostapd, there is a routine that monitors such netlink messages,
+> process_global_event, which eventually parses the CMD_DEL_STATION event in
+> nl80211_del_station_event, where a call is made to drv_event_disassoc if the
+> current device is indeed in AP mode.
+> So eventually, it is the hostapd that triggers the transmission of the
+> disassociation packet.
 
-Default value of 16 causes rx ring corruption within 1 hour of stress
-testing. Increasing this limit to 1000 solves the issue, not sure what
-max value in > 16 and <= 1000 works. This lower value obviously has issues
-on some platforms.
+I indeed missed the way cfg80211_del_sta works and hostapd's event
+handler for this. That explains a lot.
 
-Vasanth
+I've checked ath6kl, brcmfmac and mwifiex and they don't seem to call
+cfg80211_del_sta. AFAIU it's because they handle sending
+disassoc/deauth packet on their own (and the don't want e.g. hostapd
+to do this), is that correct?
+
+
+> I hope my explanation is correct and it helps you to make things more clear.
+
+Absolutely, thanks a lot!
+
+-- 
+Rafał
