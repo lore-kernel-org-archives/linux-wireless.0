@@ -1,54 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:47020 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752448AbbAGSjt convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:50392 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762644AbbA3PQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 13:39:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4] bcma: fix two coding style issues, more than 80 characters per line.
-References: <1419766622-10911-1-git-send-email-oscar.forner.martinez@gmail.com>
-	<87bnmaqxvs.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rzWaHg=M15q=swf+yqMEB3smRRANuLHkSK1dU1MtG8jgg@mail.gmail.com>
-Date: Wed, 07 Jan 2015 20:39:44 +0200
-In-Reply-To: <CACna6rzWaHg=M15q=swf+yqMEB3smRRANuLHkSK1dU1MtG8jgg@mail.gmail.com>
-	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Wed, 7 Jan 2015
- 19:12:30 +0100")
-Message-ID: <87y4peo2of.fsf@kamboji.qca.qualcomm.com> (sfid-20150107_194008_706618_4D1CEC14)
+	Fri, 30 Jan 2015 10:16:20 -0500
+Received: by mail-oi0-f49.google.com with SMTP id a3so34973564oib.8
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 07:16:19 -0800 (PST)
+Date: Fri, 30 Jan 2015 09:16:05 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org
+Subject: [ANN] wireless-regdb: master-2015-01-30
+Message-ID: <20150130151605.GD124346@ubuntu-hedt> (sfid-20150130_161623_162711_26909D9A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+A new release of wireless-regdb (master-2015-01-30) is available at:
 
-> On 7 January 2015 at 18:55, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Oscar Forner Martinez <oscar.forner.martinez@gmail.com> writes:
->>
->>> Two lines with more than 80 characters per line have been split in several lines.
->>>
->>> Signed-off-by: Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
->>
->> Thanks, applied to wireless-drivers-next.git.
->
-> Could you still replace it (V4) with an older version (V3)? Before I
-> explained V3 was OK Oscar already sent this (worse) V4.
+https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.01.30.tar.gz
 
-No. I'm not going to rebase a public git tree unless there's a huge
-disaster.
+Note that this is the first release signed with my key. As of yet there
+is no release of CRDA which by default trusts a regulatory.bin signed
+with my key, but in most cases it will still trust regulatory.bin by
+virtue of having the corresponding public key installed in e.g.
+/lib/crda/pubkeys.
 
-But if I see V4 I'm going to assume that's the one I need to apply, not
-some older version. If V4 is not good for some reason, make it
-ABSOLUTELY clear that I should not apply it. I do not want to start
-guessing what patch I should apply.
+The short log of changes included since the 2014-11-18 release is below.
 
-> This is not critical though, we can always send separated patch for
-> one more line > 80 chars.
+Seth
 
-Please send a followup patch if you want to fix something.
+---
 
--- 
-Kalle Valo
+Daiwei Li (1):
+      wireless-regdb: Add back regulatory rules for US
+
+Jouni Malinen (4):
+      wireless-regdb: Disable VHT80 where 40/80 MHz on 5 GHz is not allowed
+      wireless-regdb: Add regulatory rules for Nigeria (NG)
+      wireless-regdb: Add regulatory rules for Samoa (WS)
+      wireless-regdb: Add regulatory rules for Tanzania (TZ)
+
+Seth Forshee (2):
+      wireless-regdb: Update keys and maintainer information
+      wireless-regdb: update regulatory.bin based on preceding changes
+
