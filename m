@@ -1,177 +1,408 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:47587 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932546AbbAILOu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Jan 2015 06:14:50 -0500
-Received: by mail-we0-f176.google.com with SMTP id w61so7361941wes.7
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Jan 2015 03:14:49 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC 4/8] ath10k: implement adaptive qcs command
-Date: Fri,  9 Jan 2015 12:14:05 +0100
-Message-Id: <1420802049-11962-5-git-send-email-michal.kazior@tieto.com> (sfid-20150109_121505_674219_03F264DD)
-In-Reply-To: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com>
-References: <1420802049-11962-1-git-send-email-michal.kazior@tieto.com>
+Received: from mout.gmx.net ([212.227.15.15]:61788 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752685AbbA3K4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 05:56:06 -0500
+Message-ID: <54CB6326.2070803@rempel-privat.de> (sfid-20150130_115659_501342_7D4F9173)
+Date: Fri, 30 Jan 2015 11:55:34 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: yuweizheng@139.com, linux-kernel@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
+CC: netdev@vger.kernel.org, Yuwei Zheng <zhengyuwei@360.cn>
+Subject: Re: [PATCH] Repair soft lockup with monitor mode of ath9k_htc card
+References: <1422486872-16308-1-git-send-email-yuweizheng@139.com>
+In-Reply-To: <1422486872-16308-1-git-send-email-yuweizheng@139.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="j2DGpl7q5fg70tApro8kAv1sp8Fk1ep3f"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This command is used in latest firmware revisions
-to control multi-channel scheduler.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--j2DGpl7q5fg70tApro8kAv1sp8Fk1ep3f
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 16 ++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 30 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  4 ++++
- drivers/net/wireless/ath/ath10k/wmi.c     |  3 +++
- drivers/net/wireless/ath/ath10k/wmi.h     |  1 +
- 5 files changed, 54 insertions(+)
+Am 29.01.2015 um 00:14 schrieb yuweizheng@139.com:
+> From: Yuwei Zheng <yuweizheng@139.com>
+>=20
+> In the environment with heavy wifi traffic, set the ar9271 into monitor=
+ mode, will
+> trigger a deadloop panic.
+> =20
+> The ath9k_hif_usb_rx_cb function excute on  the interrupt context, and =
+ath9k_rx_tasklet excute
+> on the soft irq context. In other words, the ath9k_hif_usb_rx_cb have m=
+ore chance to excute than
+> ath9k_rx_tasklet.  So in the worst condition,  the rx.rxbuf receive lis=
+t is always full,
+> and the do {}while(true) loop will not be break. The kernel get a soft =
+lockup panic.=20
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 8e815d4..7dc7b1b 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -127,6 +127,7 @@ struct wmi_ops {
- 					struct sk_buff *bcn);
- 	struct sk_buff *(*gen_p2p_go_bcn_ie)(struct ath10k *ar, u32 vdev_id,
- 					     const u8 *p2p_ie);
-+	struct sk_buff *(*gen_adaptive_qcs)(struct ath10k *ar, bool enable);
- };
- 
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -914,4 +915,19 @@ ath10k_wmi_p2p_go_bcn_ie(struct ath10k *ar, u32 vdev_id, const u8 *p2p_ie)
- 	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->p2p_go_set_beacon_ie);
- }
- 
-+static inline int
-+ath10k_wmi_adaptive_qcs(struct ath10k *ar, bool enable)
-+{
-+	struct sk_buff *skb;
-+
-+	if (!ar->wmi.ops->gen_adaptive_qcs)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_adaptive_qcs(ar, enable);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->adaptive_qcs_cmdid);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index ea7fe78..ef55110 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2222,6 +2222,34 @@ ath10k_wmi_tlv_op_gen_p2p_go_bcn_ie(struct ath10k *ar, u32 vdev_id,
- 	return skb;
- }
- 
-+static struct sk_buff *
-+ath10k_wmi_tlv_op_gen_adaptive_qcs(struct ath10k *ar, bool enable)
-+{
-+	struct wmi_tlv_adaptive_qcs *cmd;
-+	struct wmi_tlv *tlv;
-+	struct sk_buff *skb;
-+	void *ptr;
-+	size_t len;
-+
-+	len = sizeof(*tlv) + sizeof(*cmd);
-+	skb = ath10k_wmi_alloc_skb(ar, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	ptr = (void *)skb->data;
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_RESMGR_ADAPTIVE_OCS_CMD);
-+	tlv->len = __cpu_to_le16(sizeof(*cmd));
-+	cmd = (void *)tlv->value;
-+	cmd->enable = __cpu_to_le32(enable ? 1 : 0);
-+
-+	ptr += sizeof(*tlv);
-+	ptr += sizeof(*cmd);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv adaptive qcs %d\n", enable);
-+	return skb;
-+}
-+
- /****************/
- /* TLV mappings */
- /****************/
-@@ -2345,6 +2373,7 @@ static struct wmi_cmd_map wmi_tlv_cmd_map = {
- 	.gpio_config_cmdid = WMI_TLV_GPIO_CONFIG_CMDID,
- 	.gpio_output_cmdid = WMI_TLV_GPIO_OUTPUT_CMDID,
- 	.pdev_get_temperature_cmdid = WMI_TLV_CMD_UNSUPPORTED,
-+	.adaptive_qcs_cmdid = WMI_TLV_RESMGR_ADAPTIVE_OCS_CMDID,
- };
- 
- static struct wmi_pdev_param_map wmi_tlv_pdev_param_map = {
-@@ -2510,6 +2539,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	.gen_bcn_tmpl = ath10k_wmi_tlv_op_gen_bcn_tmpl,
- 	.gen_prb_tmpl = ath10k_wmi_tlv_op_gen_prb_tmpl,
- 	.gen_p2p_go_bcn_ie = ath10k_wmi_tlv_op_gen_p2p_go_bcn_ie,
-+	.gen_adaptive_qcs = ath10k_wmi_tlv_op_gen_adaptive_qcs,
- };
- 
- /************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 87db762..c311b3c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1428,6 +1428,10 @@ struct wmi_tlv_diag_data_ev {
- 	__le32 num_items;
- } __packed;
- 
-+struct wmi_tlv_adaptive_qcs {
-+	__le32 enable;
-+} __packed;
-+
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
- 
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index cff16e4..ee68e6b 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4944,6 +4944,7 @@ static const struct wmi_ops wmi_ops = {
- 	/* .gen_bcn_tmpl not implemented */
- 	/* .gen_prb_tmpl not implemented */
- 	/* .gen_p2p_go_bcn_ie not implemented */
-+	/* .gen_adaptive_qcs not implemented */
- };
- 
- static const struct wmi_ops wmi_10_1_ops = {
-@@ -5001,6 +5002,7 @@ static const struct wmi_ops wmi_10_1_ops = {
- 	/* .gen_bcn_tmpl not implemented */
- 	/* .gen_prb_tmpl not implemented */
- 	/* .gen_p2p_go_bcn_ie not implemented */
-+	/* .gen_adaptive_qcs not implemented */
- };
- 
- static const struct wmi_ops wmi_10_2_ops = {
-@@ -5114,6 +5116,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
- 	/* .gen_bcn_tmpl not implemented */
- 	/* .gen_prb_tmpl not implemented */
- 	/* .gen_p2p_go_bcn_ie not implemented */
-+	/* .gen_adaptive_qcs not implemented */
- };
- 
- int ath10k_wmi_attach(struct ath10k *ar)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index bd7f29a..af5f88cf 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -551,6 +551,7 @@ struct wmi_cmd_map {
- 	u32 gpio_config_cmdid;
- 	u32 gpio_output_cmdid;
- 	u32 pdev_get_temperature_cmdid;
-+	u32 adaptive_qcs_cmdid;
- };
- 
- /*
--- 
-1.8.5.3
+Please note, ath9k_htc is also used on HW where real hrtimer actually
+exist. It should behave differently and produce different load on the
+system. The overhead of setting up the hrtimers *may* not be worth it.
+Depending on the load, it may provide lots of avoidable interrupts.
+Did you tried to use simple tasklet_start?
 
+> [59011.007210] BUG: soft lockup - CPU#0 stuck for 23s!
+> [kworker/0:0:30609]
+> [59011.030560] BUG: scheduling while atomic: kworker/0:0/30609/0x400101=
+00
+> [59013.804486] BUG: scheduling while atomic: kworker/0:0/30609/0x400101=
+00
+> [59013.858522] Kernel panic - not syncing: softlockup: hung tasks
+> =20
+> [59014.038891] Exception stack(0xdf4bbc38 to 0xdf4bbc80)
+> [59014.046834] bc20:                                                   =
+    de57b950 60000113
+> [59014.059579] bc40: 00000000 bb32bb32 60000113 de57b948 de57b500 dc7bb=
+440 df4bbcd0 00000000
+> [59014.072337] bc60: de57b950 60000113 df4bbcd0 df4bbc80 c04c259d c04c2=
+5a0 60000133 ffffffff
+> [59014.085233] [<c04c28db>] (__irq_svc+0x3b/0x5c) from [<c04c25a0>] (_r=
+aw_spin_unlock_irqrestore+0xc/0x10)
+> [59014.100437] [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10) from=
+ [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc])
+> [59014.118267] [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc]) =
+from [<c0036d23>] (tasklet_action+0x3b/0x98)
+> [59014.134132] [<c0036d23>] (tasklet_action+0x3b/0x98) from [<c0036709>=
+] (__do_softirq+0x99/0x16c)
+> [59014.147784] [<c0036709>] (__do_softirq+0x99/0x16c) from [<c00369f7>]=
+ (irq_exit+0x5b/0x5c)
+> [59014.160653] [<c00369f7>] (irq_exit+0x5b/0x5c) from [<c000cfc3>] (han=
+dle_IRQ+0x37/0x78)
+> [59014.173124] [<c000cfc3>] (handle_IRQ+0x37/0x78) from [<c00085df>] (o=
+map3_intc_handle_irq+0x5f/0x68)
+> [59014.187225] [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68) from [<c0=
+4c28db>](__irq_svc+0x3b/0x5c)
+> =20
+> This bug can be see with low performance board, such as uniprocessor be=
+agle bone board.
+> =20
+> =20
+> Signed-off-by: Yuwei Zheng <zhengyuwei@360.cn>
+> Signed-off-by: Yuwei Zheng <yuweizheng@139.com>
+>=20
+>=20
+> ---
+>  drivers/net/wireless/ath/ath9k/hif_usb.c       | 58 ++++++++++++++++++=
+++++----
+>  drivers/net/wireless/ath/ath9k/hif_usb.h       |  5 +++
+>  drivers/net/wireless/ath/ath9k/htc.h           | 13 ++++++
+>  drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 49 ++++++++++++++++++=
+++++
+>  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  | 26 ++++++++++++
+>  5 files changed, 144 insertions(+), 7 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wir=
+eless/ath/ath9k/hif_usb.c
+> index 8e7153b..18c6f0e 100644
+> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> @@ -658,7 +658,6 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+>  	default:
+>  		goto resubmit;
+>  	}
+> -
+>  	if (likely(urb->actual_length !=3D 0)) {
+>  		skb_put(skb, urb->actual_length);
+>  		ath9k_hif_usb_rx_stream(hif_dev, skb);
+> @@ -667,12 +666,18 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+>  resubmit:
+>  	skb_reset_tail_pointer(skb);
+>  	skb_trim(skb, 0);
+> -
+> -	usb_anchor_urb(urb, &hif_dev->rx_submitted);
+> -	ret =3D usb_submit_urb(urb, GFP_ATOMIC);
+> -	if (ret) {
+> -		usb_unanchor_urb(urb);
+> -		goto free;
+> +	if (atomic_read(&hif_dev->rx_urb_submit_delay) > 0) {
+> +		usb_anchor_urb(urb, &hif_dev->rx_delayed_submitted);
+> +		ret =3D tasklet_hrtimer_start(&hif_dev->rx_submit_timer,
+> +						ktime_set(0, atomic_read(&hif_dev->rx_urb_submit_delay)*1000),
+> +						HRTIMER_MODE_REL);
+> +	} else {
+> +		usb_anchor_urb(urb, &hif_dev->rx_submitted);
+> +		ret =3D usb_submit_urb(urb, GFP_ATOMIC);
+> +		if (ret) {
+> +			usb_unanchor_urb(urb);
+> +			goto free;
+> +		}
+>  	}
+> =20
+>  	return;
+> @@ -818,9 +823,39 @@ err:
+>  	return -ENOMEM;
+>  }
+> =20
+> +static enum hrtimer_restart rx_urb_submit_timer_handler(struct hrtimer=
+ *me)
+> +{
+> +	struct tasklet_hrtimer *thr =3D
+> +		container_of(me, struct tasklet_hrtimer, timer);
+> +	struct  hif_device_usb *hif_dev =3D
+> +		container_of(thr, struct hif_device_usb, rx_submit_timer);
+> +	struct urb *urb =3D NULL;
+> +	struct sk_buff *skb =3D NULL;
+> +	int ret;
+> +
+> +	while (true) {
+> +		urb =3D usb_get_from_anchor(&hif_dev->rx_delayed_submitted);
+> +		if (urb !=3D NULL) {
+> +			skb =3D (struct sk_buff *)urb->context;
+> +			ret =3D usb_submit_urb(urb, GFP_ATOMIC);
+> +			if (ret !=3D -EBUSY) {
+> +				usb_unanchor_urb(urb);
+> +				dev_kfree_skb_any(skb);
+> +				urb->context =3D NULL;
+> +			}
+> +		} else {
+> +			break;
+> +		}
+> +	}
+> +
+> +	return HRTIMER_NORESTART;
+> +}
+> +
+>  static void ath9k_hif_usb_dealloc_rx_urbs(struct hif_device_usb *hif_d=
+ev)
+>  {
+>  	usb_kill_anchored_urbs(&hif_dev->rx_submitted);
+> +	usb_kill_anchored_urbs(&hif_dev->rx_delayed_submitted);
+> +	tasklet_hrtimer_cancel(&hif_dev->rx_submit_timer);
+>  }
+> =20
+>  static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)=
+
+> @@ -830,6 +865,8 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_d=
+evice_usb *hif_dev)
+>  	int i, ret;
+> =20
+>  	init_usb_anchor(&hif_dev->rx_submitted);
+> +	init_usb_anchor(&hif_dev->rx_delayed_submitted);
+> +
+>  	spin_lock_init(&hif_dev->rx_lock);
+> =20
+>  	for (i =3D 0; i < MAX_RX_URB_NUM; i++) {
+> @@ -871,6 +908,13 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_=
+device_usb *hif_dev)
+>  		usb_free_urb(urb);
+>  	}
+> =20
+> +	/* add for flow control*/
+> +	atomic_set(&hif_dev->rx_urb_submit_delay, 0);
+> +	tasklet_hrtimer_init(&hif_dev->rx_submit_timer,
+> +				rx_urb_submit_timer_handler,
+> +				CLOCK_MONOTONIC,
+> +				HRTIMER_MODE_REL);
+> +
+>  	return 0;
+> =20
+>  err_submit:
+> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wir=
+eless/ath/ath9k/hif_usb.h
+> index 51496e7..56d6be8 100644
+> --- a/drivers/net/wireless/ath/ath9k/hif_usb.h
+> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+> @@ -98,9 +98,14 @@ struct hif_device_usb {
+>  	struct hif_usb_tx tx;
+>  	struct usb_anchor regout_submitted;
+>  	struct usb_anchor rx_submitted;
+> +	struct usb_anchor rx_delayed_submitted; /* delayed submit anchor */
+>  	struct usb_anchor reg_in_submitted;
+>  	struct usb_anchor mgmt_submitted;
+>  	struct sk_buff *remain_skb;
+> +
+> +	struct tasklet_hrtimer  rx_submit_timer;/* delayed submit hrtimer */
+> +	atomic_t  rx_urb_submit_delay; /*us*/
+> +
+>  	const char *fw_name;
+>  	int rx_remain_len;
+>  	int rx_pkt_len;
+> diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireles=
+s/ath/ath9k/htc.h
+> index 9dde265..453d0a8 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc.h
+> +++ b/drivers/net/wireless/ath/ath9k/htc.h
+> @@ -331,6 +331,10 @@ static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(=
+struct sk_buff *skb)
+> =20
+>  #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
+> =20
+> +#define TASKLETRX_STAT_INC(c) (hif_dev->htc_handle->drv_priv->debug.ta=
+skletrx_stats.c++)
+> +#define TASKLETRX_STAT_ADD(c, a) (hif_dev->htc_handle->drv_priv->debug=
+=2Etaskletrx_stats.c +=3D a)
+> +#define TASKLETRX_STAT_SET(c, a) (hif_dev->htc_handle->drv_priv->debug=
+=2Etaskletrx_stats.c =3D a)
+> +
+>  void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+>  			   struct ath_rx_status *rs);
+> =20
+> @@ -352,11 +356,20 @@ struct ath_skbrx_stats {
+>  	u32 skb_dropped;
+>  };
+> =20
+> +struct ath_taskletrx_stats {
+> +	u32 taskletrx_looptimes;
+> +	u32 taskletrx_highwater;
+> +	u32 taskletrx_lowwater;
+> +	u32 taskletrx_watermark_triggered;
+> +	u32 taskletrx_urb_submit_delay;
+> +};
+> +
+>  struct ath9k_debug {
+>  	struct dentry *debugfs_phy;
+>  	struct ath_tx_stats tx_stats;
+>  	struct ath_rx_stats rx_stats;
+>  	struct ath_skbrx_stats skbrx_stats;
+> +	struct ath_taskletrx_stats taskletrx_stats;
+>  };
+> =20
+>  void ath9k_htc_get_et_strings(struct ieee80211_hw *hw,
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/n=
+et/wireless/ath/ath9k/htc_drv_debug.c
+> index 8cef1ed..7c8322e 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+> @@ -286,6 +286,51 @@ static const struct file_operations fops_skb_rx =3D=
+ {
+>  	.llseek =3D default_llseek,
+>  };
+> =20
+> +static ssize_t read_file_tasklet_rx(struct file *file, char __user *us=
+er_buf,
+> +				    size_t count, loff_t *ppos)
+> +{
+> +	struct ath9k_htc_priv *priv =3D file->private_data;
+> +	char *buf;
+> +	unsigned int len =3D 0, size =3D 1500;
+> +	ssize_t retval =3D 0;
+> +
+> +	buf =3D kzalloc(size, GFP_KERNEL);
+> +	if (buf =3D=3D NULL)
+> +		return -ENOMEM;
+> +
+> +	len +=3D scnprintf(buf + len, size - len,
+> +			"%20s : %10u\n", "Loop times",
+> +			priv->debug.taskletrx_stats.taskletrx_looptimes);
+> +	len +=3D scnprintf(buf + len, size - len,
+> +			"%20s : %10u\n", "High watermark",
+> +			priv->debug.taskletrx_stats.taskletrx_highwater);
+> +	len +=3D scnprintf(buf + len, size - len,
+> +			"%20s : %10u\n", "Low watermark",
+> +			priv->debug.taskletrx_stats.taskletrx_lowwater);
+> +
+> +	len +=3D scnprintf(buf + len, size - len,
+> +			"%20s : %10u\n", "WM triggered",
+> +			priv->debug.taskletrx_stats.taskletrx_watermark_triggered);
+> +
+> +	len +=3D scnprintf(buf + len, size - len,
+> +			"%20s : %10u\n", "URB delay",
+> +			priv->debug.taskletrx_stats.taskletrx_urb_submit_delay);
+> +	if (len > size)
+> +		len =3D size;
+> +
+> +	retval =3D simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> +	kfree(buf);
+> +
+> +	return retval;
+> +}
+> +
+> +static const struct file_operations fops_tasklet_rx =3D {
+> +	.read =3D read_file_tasklet_rx,
+> +	.open =3D simple_open,
+> +	.owner =3D THIS_MODULE,
+> +	.llseek =3D default_llseek,
+> +};
+> +
+>  static ssize_t read_file_slot(struct file *file, char __user *user_buf=
+,
+>  			      size_t count, loff_t *ppos)
+>  {
+> @@ -518,7 +563,11 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+>  	debugfs_create_file("skb_rx", S_IRUSR, priv->debug.debugfs_phy,
+>  			    priv, &fops_skb_rx);
+> =20
+> +	debugfs_create_file("tasklet_rx", S_IRUSR, priv->debug.debugfs_phy,
+> +			    priv, &fops_tasklet_rx);
+> +
+>  	ath9k_cmn_debug_recv(priv->debug.debugfs_phy, &priv->debug.rx_stats);=
+
+> +
+>  	ath9k_cmn_debug_phy_err(priv->debug.debugfs_phy, &priv->debug.rx_stat=
+s);
+> =20
+>  	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/ne=
+t/wireless/ath/ath9k/htc_drv_txrx.c
+> index a0f58e2..f5e6217 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> @@ -1061,7 +1061,28 @@ void ath9k_rx_tasklet(unsigned long data)
+>  	unsigned long flags;
+>  	struct ieee80211_hdr *hdr;
+> =20
+> +	/* add for adaptive flow control*/
+> +	int looptimes =3D 0;
+> +	int highwatermark =3D ATH9K_HTC_RXBUF*3/4;
+> +	int lowwatermark =3D ATH9K_HTC_RXBUF/4;
+> +	unsigned int delay =3D 0;
+> +
+> +	struct htc_target *htc =3D priv->htc;
+> +	struct hif_device_usb *hif_dev =3D htc->hif_dev;
+> +
+> +	TASKLETRX_STAT_SET(taskletrx_highwater, highwatermark);
+> +	TASKLETRX_STAT_SET(taskletrx_lowwater, lowwatermark);
+> +
+>  	do {
+> +		looptimes++;
+> +		TASKLETRX_STAT_SET(taskletrx_looptimes, looptimes);
+> +		if (looptimes > highwatermark) {
+> +			delay =3D looptimes*10;
+> +			atomic_set(&hif_dev->rx_urb_submit_delay, delay);
+> +			TASKLETRX_STAT_INC(taskletrx_watermark_triggered);
+> +			TASKLETRX_STAT_SET(taskletrx_urb_submit_delay, delay);
+> +		}
+> +
+>  		spin_lock_irqsave(&priv->rx.rxbuflock, flags);
+>  		list_for_each_entry(tmp_buf, &priv->rx.rxbuf, list) {
+>  			if (tmp_buf->in_process) {
+> @@ -1072,6 +1093,11 @@ void ath9k_rx_tasklet(unsigned long data)
+> =20
+>  		if (rxbuf =3D=3D NULL) {
+>  			spin_unlock_irqrestore(&priv->rx.rxbuflock, flags);
+> +			if (looptimes < lowwatermark) {
+> +				atomic_set(&hif_dev->rx_urb_submit_delay, 0);
+> +				TASKLETRX_STAT_SET(taskletrx_urb_submit_delay, 0);
+> +			}
+> +
+>  			break;
+>  		}
+> =20
+>=20
+
+
+--=20
+Regards,
+Oleksij
+
+
+--j2DGpl7q5fg70tApro8kAv1sp8Fk1ep3f
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iF4EAREIAAYFAlTLYyYACgkQHwImuRkmbWnWGQEAiObt/z0JDYkpquV+x/ICyzoe
+dtlzbDYnpW3jj+bDQNUA/RmiCzBQhxZIpbOJY813loUSJaf8ChK91juRjJw0/Km8
+=0uiG
+-----END PGP SIGNATURE-----
+
+--j2DGpl7q5fg70tApro8kAv1sp8Fk1ep3f--
