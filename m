@@ -1,184 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:63742 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756528AbbAHLM5 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:52801 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932563AbbA3Ncx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Jan 2015 06:12:57 -0500
-Received: by mail-we0-f171.google.com with SMTP id u56so1849328wes.2
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Jan 2015 03:12:56 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 3/5] ath10k: implement prb tmpl wmi command
-Date: Thu,  8 Jan 2015 12:12:28 +0100
-Message-Id: <1420715550-16017-4-git-send-email-michal.kazior@tieto.com> (sfid-20150108_121303_825373_8F00DDA9)
-In-Reply-To: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
-References: <1420715550-16017-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 30 Jan 2015 08:32:53 -0500
+Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YHBgq-004FiR-To
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:53 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/17] ath9k: Add a debugfs file for WOW
+Date: Fri, 30 Jan 2015 19:05:30 +0530
+Message-Id: <1422624937-4810-11-git-send-email-sujith@msujith.org> (sfid-20150130_143258_037591_2EEA2E40)
+In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New firmware revisions with beacon templates need
-probe templates as well because they don't forward
-probe requests to host at all.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This is required for new firmware to work with
-direct probe requests (notably required by hidden
-ssid AP).
+This can be used to force WOW for cards that
+are not present in the supported PCI ID list.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 17 +++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 50 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  5 ++++
- drivers/net/wireless/ath/ath10k/wmi.c     |  3 ++
- 4 files changed, 75 insertions(+)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+ drivers/net/wireless/ath/ath9k/debug.c | 68 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/wow.c   |  4 +-
+ 3 files changed, 71 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 2ef75ef..148a44a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -123,6 +123,8 @@ struct wmi_ops {
- 					u32 tim_ie_offset, struct sk_buff *bcn,
- 					u32 prb_caps, u32 prb_erp,
- 					void *prb_ies, size_t prb_ies_len);
-+	struct sk_buff *(*gen_prb_tmpl)(struct ath10k *ar, u32 vdev_id,
-+					struct sk_buff *bcn);
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 803a7d4..20216c5 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -1044,6 +1044,7 @@ struct ath_softc {
+ 
+ #ifdef CONFIG_ATH9K_WOW
+ 	u32 wow_intr_before_sleep;
++	bool force_wow;
+ #endif
  };
  
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -880,4 +882,19 @@ ath10k_wmi_bcn_tmpl(struct ath10k *ar, u32 vdev_id, u32 tim_ie_offset,
- 	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->bcn_tmpl_cmdid);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index dd5d391..50a2e0a 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1043,6 +1043,69 @@ static const struct file_operations fops_ackto = {
+ };
+ #endif
  
-+static inline int
-+ath10k_wmi_prb_tmpl(struct ath10k *ar, u32 vdev_id, struct sk_buff *prb)
++#ifdef CONFIG_ATH9K_WOW
++
++static ssize_t read_file_wow(struct file *file, char __user *user_buf,
++			     size_t count, loff_t *ppos)
 +{
-+	struct sk_buff *skb;
++	struct ath_softc *sc = file->private_data;
++	unsigned int len = 0, size = 32;
++	ssize_t retval;
++	char *buf;
 +
-+	if (!ar->wmi.ops->gen_prb_tmpl)
-+		return -EOPNOTSUPP;
++	buf = kzalloc(size, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
 +
-+	skb = ar->wmi.ops->gen_prb_tmpl(ar, vdev_id, prb);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
++	len += scnprintf(buf + len, size - len, "WOW: %s\n",
++			 sc->force_wow ? "ENABLED" : "DISABLED");
 +
-+	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->prb_tmpl_cmdid);
++	if (len > size)
++		len = size;
++
++	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
++	kfree(buf);
++
++	return retval;
 +}
 +
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 11be2d5..1713f8c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2036,6 +2036,55 @@ ath10k_wmi_tlv_op_gen_bcn_tmpl(struct ath10k *ar, u32 vdev_id,
- 	return skb;
- }
- 
-+static struct sk_buff *
-+ath10k_wmi_tlv_op_gen_prb_tmpl(struct ath10k *ar, u32 vdev_id,
-+			       struct sk_buff *prb)
++static ssize_t write_file_wow(struct file *file, const char __user *user_buf,
++			      size_t count, loff_t *ppos)
 +{
-+	struct wmi_tlv_prb_tmpl_cmd *cmd;
-+	struct wmi_tlv_bcn_prb_info *info;
-+	struct wmi_tlv *tlv;
-+	struct sk_buff *skb;
-+	void *ptr;
-+	size_t len;
++	struct ath_softc *sc = file->private_data;
++	unsigned long val;
++	char buf[32];
++	ssize_t len;
 +
-+	len = sizeof(*tlv) + sizeof(*cmd) +
-+	      sizeof(*tlv) + sizeof(*info) +
-+	      sizeof(*tlv) + roundup(prb->len, 4);
-+	skb = ath10k_wmi_alloc_skb(ar, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
++	len = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, user_buf, len))
++		return -EFAULT;
 +
-+	ptr = (void *)skb->data;
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_PRB_TMPL_CMD);
-+	tlv->len = __cpu_to_le16(sizeof(*cmd));
-+	cmd = (void *)tlv->value;
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	cmd->buf_len = __cpu_to_le32(prb->len);
++	buf[len] = '\0';
++	if (kstrtoul(buf, 0, &val))
++		return -EINVAL;
 +
-+	ptr += sizeof(*tlv);
-+	ptr += sizeof(*cmd);
++	if (val != 1)
++		return -EINVAL;
 +
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_BCN_PRB_INFO);
-+	tlv->len = __cpu_to_le16(sizeof(*info));
-+	info = (void *)tlv->value;
-+	info->caps = 0;
-+	info->erp = 0;
++	if (!sc->force_wow) {
++		sc->force_wow = true;
++		ath9k_init_wow(sc->hw);
++	}
 +
-+	ptr += sizeof(*tlv);
-+	ptr += sizeof(*info);
-+
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_BYTE);
-+	tlv->len = __cpu_to_le16(roundup(prb->len, 4));
-+	memcpy(tlv->value, prb->data, prb->len);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv prb tmpl vdev_id %i\n",
-+		   vdev_id);
-+	return skb;
++	return count;
 +}
 +
- /****************/
- /* TLV mappings */
- /****************/
-@@ -2322,6 +2371,7 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	/* .gen_pdev_set_quiet_mode not implemented */
- 	/* .gen_pdev_get_temperature not implemented */
- 	.gen_bcn_tmpl = ath10k_wmi_tlv_op_gen_bcn_tmpl,
-+	.gen_prb_tmpl = ath10k_wmi_tlv_op_gen_prb_tmpl,
- };
- 
- /************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index c477365..5772519 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1399,6 +1399,11 @@ struct wmi_tlv_bcn_tmpl_cmd {
- 	__le32 buf_len;
- } __packed;
- 
-+struct wmi_tlv_prb_tmpl_cmd {
-+	__le32 vdev_id;
-+	__le32 buf_len;
-+} __packed;
++static const struct file_operations fops_wow = {
++	.read = read_file_wow,
++	.write = write_file_wow,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
 +
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
- 
++#endif
++
+ static ssize_t read_file_tpc(struct file *file, char __user *user_buf,
+ 			     size_t count, loff_t *ppos)
+ {
+@@ -1313,6 +1376,11 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &fops_btcoex);
  #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 491c18c..8c46de1 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4929,6 +4929,7 @@ static const struct wmi_ops wmi_ops = {
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	/* .gen_pdev_get_temperature not implemented */
- 	/* .gen_bcn_tmpl not implemented */
-+	/* .gen_prb_tmpl not implemented */
- };
  
- static const struct wmi_ops wmi_10_1_ops = {
-@@ -4984,6 +4985,7 @@ static const struct wmi_ops wmi_10_1_ops = {
- 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	/* .gen_bcn_tmpl not implemented */
-+	/* .gen_prb_tmpl not implemented */
- };
++#ifdef CONFIG_ATH9K_WOW
++	debugfs_create_file("wow", S_IRUSR | S_IWUSR,
++			    sc->debug.debugfs_phy, sc, &fops_wow);
++#endif
++
+ #ifdef CONFIG_ATH9K_DYNACK
+ 	debugfs_create_file("ack_to", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
+ 			    sc, &fops_ackto);
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index d4cfbc3..4b3b565 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -327,7 +327,7 @@ void ath9k_init_wow(struct ieee80211_hw *hw)
+ {
+ 	struct ath_softc *sc = hw->priv;
  
- static const struct wmi_ops wmi_10_2_ops = {
-@@ -5095,6 +5097,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
- 	.gen_pktlog_disable = ath10k_wmi_op_gen_pktlog_disable,
- 	.gen_pdev_set_quiet_mode = ath10k_wmi_op_gen_pdev_set_quiet_mode,
- 	/* .gen_bcn_tmpl not implemented */
-+	/* .gen_prb_tmpl not implemented */
- };
+-	if (sc->driver_data & ATH9K_PCI_WOW) {
++	if ((sc->driver_data & ATH9K_PCI_WOW) || sc->force_wow) {
+ 		hw->wiphy->wowlan = &ath9k_wowlan_support;
+ 		device_init_wakeup(sc->dev, 1);
+ 	}
+@@ -337,6 +337,6 @@ void ath9k_deinit_wow(struct ieee80211_hw *hw)
+ {
+ 	struct ath_softc *sc = hw->priv;
  
- int ath10k_wmi_attach(struct ath10k *ar)
+-	if (sc->driver_data & ATH9K_PCI_WOW)
++	if ((sc->driver_data & ATH9K_PCI_WOW) || sc->force_wow)
+ 		device_init_wakeup(sc->dev, 0);
+ }
 -- 
-1.8.5.3
+2.2.2
 
