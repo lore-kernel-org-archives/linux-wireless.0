@@ -1,134 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f180.google.com ([74.125.82.180]:37343 "EHLO
-	mail-we0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753819AbbAUE75 convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:41817 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932519AbbA3Ncz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Jan 2015 23:59:57 -0500
-Received: by mail-we0-f180.google.com with SMTP id m14so16677890wev.11
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Jan 2015 20:59:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <54BE9F73.9070702@lwfinger.net>
-References: <1421736594-28262-1-git-send-email-ap420073@gmail.com>
-	<54BE9F73.9070702@lwfinger.net>
-Date: Wed, 21 Jan 2015 13:59:55 +0900
-Message-ID: <CAMArcTWD72q3HF3Sy4-STqnidGOX-dan7xcPhr0gPOj_qYf7_A@mail.gmail.com> (sfid-20150121_060007_753746_C4D3B141)
-Subject: Re: [PATCH] rtl8192cu : add support to send beacon frame.
-From: "ap420073 ." <ap420073@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 30 Jan 2015 08:32:55 -0500
+Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YHBgs-004FiR-6C
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:54 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 11/17] ath9k: Simplify user pattern configuration
+Date: Fri, 30 Jan 2015 19:05:31 +0530
+Message-Id: <1422624937-4810-12-git-send-email-sujith@msujith.org> (sfid-20150130_143258_974603_65327208)
+In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-01-21 3:33 GMT+09:00 Larry Finger <Larry.Finger@lwfinger.net>:
->
-> On 01/20/2015 12:49 AM, Taehee Yoo wrote:
->>
->> In AP mode, beacon frame is necessary to keep connection.
->> this patch adds a sending beacon frame routine in initialize routine.
->>
->> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
->> ---
->>   drivers/net/wireless/rtlwifi/core.c          |  3 +++
->>   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c  |  1 +
->>   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c | 11 +++++++++++
->>   drivers/net/wireless/rtlwifi/rtl8192cu/trx.h |  1 +
->>   drivers/net/wireless/rtlwifi/wifi.h          |  2 ++
->>   5 files changed, 18 insertions(+)
->
->
-> This patch has a couple of issues reported by checkpatch.pl. These are noted inline. It will also have a conflict with "[PATCH V2 for 3.19 2/7] rtlwifi: rtl8192ee: Fix handling of new style descriptors" that I submitted today. As I note later, this conflict can be avoided and the patch should be made more general.
->
->
->>
->> diff --git a/drivers/net/wireless/rtlwifi/core.c b/drivers/net/wireless/rtlwifi/core.c
->> index eb20316..2ebd1fd 100644
->> --- a/drivers/net/wireless/rtlwifi/core.c
->> +++ b/drivers/net/wireless/rtlwifi/core.c
->> @@ -1040,6 +1040,9 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
->>
->>                                 if (rtlpriv->cfg->ops->linked_set_reg)
->>                                         rtlpriv->cfg->ops->linked_set_reg(hw);
->> +                               if (rtlpriv->cfg->ops->set_bcn_frame)
->> +                                       rtlpriv->cfg->ops->set_bcn_frame(hw,
->> +                                                       vif);
->>                         }
->>                 }
->>                 if ((changed & BSS_CHANGED_BEACON_ENABLED &&
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->> index 90a714c..d88ee35 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
->> @@ -155,6 +155,7 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
->>         .dm_dynamic_txpower = rtl92cu_dm_dynamic_txpower,
->>         .fill_h2c_cmd = rtl92c_fill_h2c_cmd,
->>         .get_btc_status = rtl92cu_get_btc_status,
->> +       .set_bcn_frame = rtl92cu_set_bcn_frame,
->>   };
->>
->>   static struct rtl_mod_params rtl92cu_mod_params = {
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
->> index cbead00..e27da8f 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
->> @@ -684,3 +684,14 @@ bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
->>   {
->>         return true;
->>   }
->> +
->> +void rtl92cu_set_bcn_frame(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
->> +{
->> +       struct rtl_priv *rtlpriv = rtl_priv(hw);
->> +       struct sk_buff *skb = ieee80211_beacon_get(hw, vif);
->> +
->> +       if (skb == NULL)
->> +               return;
->
->
-> Checkpatch wants this to be "if (!skb)".
->
->> +
->> +       rtlpriv->intf_ops->adapter_tx(hw, NULL, skb, NULL);
->> +}
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
->> index fd8051d..0d57431 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.h
->> @@ -431,5 +431,6 @@ void rtl92cu_tx_fill_cmddesc(struct ieee80211_hw *hw,
->>                              u8 *pdesc, bool b_firstseg,
->>                              bool b_lastseg, struct sk_buff *skb);
->>   bool rtl92cu_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb);
->> +void rtl92cu_set_bcn_frame(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
->>
->>   #endif
->> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
->> index b53d9dd..daf8142 100644
->> --- a/drivers/net/wireless/rtlwifi/wifi.h
->> +++ b/drivers/net/wireless/rtlwifi/wifi.h
->> @@ -2182,6 +2182,8 @@ struct rtl_hal_ops {
->>         void (*add_wowlan_pattern)(struct ieee80211_hw *hw,
->>                                    struct rtl_wow_pattern *rtl_pattern,
->>                                    u8 index);
->> +       void (*set_bcn_frame) (struct ieee80211_hw *hw,
->
->
-> Checkpatch warns about the space before the function pointer arguments.
->
->> +                              struct ieee80211_vif *vif);
->>   };
->>
->>   struct rtl_intf_ops {
->>
->
-> As all of the drivers that use rtlwifi will be helped by this routine, I suggest that you rename your new routine rtl92cu_set_bcn_frame() to send_bcn_frame(), make it static, and add it to core.c just before rtl_op_bss_info_changed(). It can then be called directly, none of the device-specific drivers need be modified, yet all will use it.
->
-> Thanks,
->
-> Larry
->
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
+There is no need to allocate a new structure and
+free it for every user pattern, instead use local
+variables.
 
-I will send a modified patch as rtlwifi.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  6 -----
+ drivers/net/wireless/ath/ath9k/wow.c   | 49 +++++++++-------------------------
+ 2 files changed, 12 insertions(+), 43 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 20216c5..0f8e946 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -830,12 +830,6 @@ static inline void ath_fill_led_pin(struct ath_softc *sc)
+ /* Wake on Wireless LAN */
+ /************************/
+ 
+-struct ath9k_wow_pattern {
+-	u8 pattern_bytes[MAX_PATTERN_SIZE];
+-	u8 mask_bytes[MAX_PATTERN_SIZE];
+-	u32 pattern_len;
+-};
+-
+ #ifdef CONFIG_ATH9K_WOW
+ void ath9k_init_wow(struct ieee80211_hw *hw);
+ void ath9k_deinit_wow(struct ieee80211_hw *hw);
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index 4b3b565..da52b1f 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -128,50 +128,25 @@ static void ath9k_wow_add_pattern(struct ath_softc *sc,
+ 				  struct cfg80211_wowlan *wowlan)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
+-	struct ath9k_wow_pattern *wow_pattern = NULL;
+ 	struct cfg80211_pkt_pattern *patterns = wowlan->patterns;
++	u8 wow_pattern[MAX_PATTERN_SIZE];
++	u8 wow_mask[MAX_PATTERN_SIZE];
+ 	int mask_len;
+ 	s8 i = 0;
+ 
+-	if (!wowlan->n_patterns)
+-		return;
+-
+-	/*
+-	 * Add the new user configured patterns
+-	 */
+ 	for (i = 0; i < wowlan->n_patterns; i++) {
+-
+-		wow_pattern = kzalloc(sizeof(*wow_pattern), GFP_KERNEL);
+-
+-		if (!wow_pattern)
+-			return;
+-
+-		/*
+-		 * TODO: convert the generic user space pattern to
+-		 * appropriate chip specific/802.11 pattern.
+-		 */
+-
+-		mask_len = DIV_ROUND_UP(wowlan->patterns[i].pattern_len, 8);
+-		memset(wow_pattern->pattern_bytes, 0, MAX_PATTERN_SIZE);
+-		memset(wow_pattern->mask_bytes, 0, MAX_PATTERN_SIZE);
+-		memcpy(wow_pattern->pattern_bytes, patterns[i].pattern,
+-		       patterns[i].pattern_len);
+-		memcpy(wow_pattern->mask_bytes, patterns[i].mask, mask_len);
+-		wow_pattern->pattern_len = patterns[i].pattern_len;
+-
+-		/*
+-		 * just need to take care of deauth and disssoc pattern,
+-		 * make sure we don't overwrite them.
+-		 */
+-
+-		ath9k_hw_wow_apply_pattern(ah, wow_pattern->pattern_bytes,
+-					   wow_pattern->mask_bytes,
++		mask_len = DIV_ROUND_UP(patterns[i].pattern_len, 8);
++		memset(wow_pattern, 0, MAX_PATTERN_SIZE);
++		memset(wow_mask, 0, MAX_PATTERN_SIZE);
++		memcpy(wow_pattern, patterns[i].pattern, patterns[i].pattern_len);
++		memcpy(wow_mask, patterns[i].mask, mask_len);
++
++		ath9k_hw_wow_apply_pattern(ah,
++					   wow_pattern,
++					   wow_mask,
+ 					   i + 2,
+-					   wow_pattern->pattern_len);
+-		kfree(wow_pattern);
+-
++					   patterns[i].pattern_len);
+ 	}
+-
+ }
+ 
+ int ath9k_suspend(struct ieee80211_hw *hw,
+-- 
+2.2.2
 
-Thanks!
