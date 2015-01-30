@@ -1,121 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:33281 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754277AbbAETZl (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:59044 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932531AbbA3Ncv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Jan 2015 14:25:41 -0500
-Received: by mail-oi0-f41.google.com with SMTP id i138so44667781oig.0
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Jan 2015 11:25:40 -0800 (PST)
-Message-ID: <54AAE532.6050104@lwfinger.net> (sfid-20150105_202545_105115_334FAC56)
-Date: Mon, 05 Jan 2015 13:25:38 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: =?UTF-8?B?RnJhbsOnb2lzIFZhbGVuZHVj?= <francoisvalenduc@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Kernel crash while copying big files since kernel 3.18
-References: <54AA3953.20603@gmail.com> <54AAC925.6050602@lwfinger.net> <54AADC22.9050105@gmail.com>
-In-Reply-To: <54AADC22.9050105@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Fri, 30 Jan 2015 08:32:51 -0500
+Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YHBgo-004FiR-1s
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:50 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 08/17] ath9k: Remove unused BMISS processing
+Date: Fri, 30 Jan 2015 19:05:28 +0530
+Message-Id: <1422624937-4810-9-git-send-email-sujith@msujith.org> (sfid-20150130_143351_257656_E640C6CF)
+In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2015 12:46 PM, François Valenduc wrote:
-> Le 05/01/15 18:25, Larry Finger a écrit :
->> On 01/05/2015 01:12 AM, François Valenduc wrote:
->>> Hello everybody,
->>>
->>> Since kernel 3.18, I encounter a kernel crash each time when I copy a
->>> big file (around 12 Gb) from an external USB drive to the harddrive of
->>> my laptop.
->>> I tried a bisection between kernels 3.17 and 3.18 and I was surprised to
->>> find that this has to do with the driver of the wireless card
->>> (rtl8188ee). However, I don't have problems if I copy the file while the
->>> rtl8188 module is not loaded. Unfortunately, the results of git-bisect
->>> are not totally conclusive because the kernel crash during boot when the
->>> wireless connection is established. Here are the last steps of the
->>> bisection:
->>>
->>> # bad: [c151aed6aa146e9587590051aba9da68b9370f9b] rtlwifi: rtl8188ee:
->>> Update driver to match Realtek release of 06282014
->>> git bisect bad c151aed6aa146e9587590051aba9da68b9370f9b
->>> # good: [fd09ff958777cf583d7541f180991c0fc50bd2f7] rtlwifi: Remove extra
->>> workqueue for enter/leave power state
->>> git bisect good fd09ff958777cf583d7541f180991c0fc50bd2f7
->>> # skip: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b] rtlwifi: Modify
->>> base.{c,h} for new drivers
->>> git bisect skip 9afa2e44f4d8f9d031f815c32bb8f225f0f6746b
->>> # skip: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd] rtlwifi: Modify
->>> cam.{c,h} and efuse.{c,h} for new drivers
->>> git bisect skip 3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd
->>> # skip: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8] rtlwifi: Modify
->>> core.c for new drivers
->>> git bisect skip f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8
->>> # skip: [d3feae41a3473a0f7b431d6af4e092865d586e52] rtlwifi: Update
->>> power-save routines for 062814 driver
->>> git bisect skip d3feae41a3473a0f7b431d6af4e092865d586e52
->>> # skip: [38506ecefab911785d5e1aa5889f6eeb462e0954] rtlwifi: rtl_pci:
->>> Start modification for new drivers
->>> git bisect skip 38506ecefab911785d5e1aa5889f6eeb462e0954
->>> # skip: [f3a97e93814aeac3f13e857a0071726acc9bd626] rtlwifi: Finish
->>> modifying core routines for new drivers
->>> git bisect skip f3a97e93814aeac3f13e857a0071726acc9bd626
->>> # only skipped commits left to test
->>> # possible first bad commit: [c151aed6aa146e9587590051aba9da68b9370f9b]
->>> rtlwifi: rtl8188ee: Update driver to match Realtek release of 06282014
->>> # possible first bad commit: [f3a97e93814aeac3f13e857a0071726acc9bd626]
->>> rtlwifi: Finish modifying core routines for new drivers
->>> # possible first bad commit: [d3feae41a3473a0f7b431d6af4e092865d586e52]
->>> rtlwifi: Update power-save routines for 062814 driver
->>> # possible first bad commit: [3c67b8f9f3b5bb1207c9bb198e5ef04ff56921dd]
->>> rtlwifi: Modify cam.{c,h} and efuse.{c,h} for new drivers
->>> # possible first bad commit: [9afa2e44f4d8f9d031f815c32bb8f225f0f6746b]
->>> rtlwifi: Modify base.{c,h} for new drivers
->>> # possible first bad commit: [f7953b2ad66cc5fc66e13d5c0a40e61b45cdfca8]
->>> rtlwifi: Modify core.c for new drivers
->>> # possible first bad commit: [38506ecefab911785d5e1aa5889f6eeb462e0954]
->>> rtlwifi: rtl_pci: Start modification for new drivers
->>>
->>> Can somebody explain what's happening ? I do the copy via Dolphin in KDE
->>> and the screen becomes black and the computer becomes totally
->>> unresponsive. So, I don't have access to the logs to see the trace of
->>> the problem.
->>>
->>> Thanks in advance for your help,
->>
->> There is a bug in 3.18 that is triggered when an O(3) memory
->> allocation fails. There is a patch to fix this at
->> http://marc.info/?l=linux-netdev&m=141999680927473&w=2 that has been
->> merged into wireless-drivers as commit
->> e9538cf4f90713eca71b1d6a74b4eae1d445c664. It will be applied to 3.18.X
->> when it makes it into mainline 3.19-rcY, but that has not yet happened.
->>
->> You could manually apply that patch to your kernel source, or you
->> could pull the git repo at http://github.com/lwfinger/rtlwifi_new.git.
->> That code has this patch already applied.
->>
->> If this patch does not fix the problem, you might be able to capture
->> at least part of the backtrace by starting the transfer and then
->> switching to the logging console. When a crash happens, photograph the
->> screen. On my system, I display it with CTRL-ALT-F10. I return to the
->> normal graphical console with CTRL-ALT-F7, but your distro may use
->> different virtual consoles.
->>
->> Larry
->>
->>
-> Thanks for your help, it seems that your patch solves the problem. Now,
-> the system doesn't crash anymore after copying the same large file than
-> yesterday. I also see this message in the log:
-> rtl_pci: Allocation of new skb failed in _rtl_pci_rx_interrupt which is
-> added by your patch.
-> Should I worry about this failure ? Or is it expected ?
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-That is the positive proof that the new patch worked. Getting to that condition 
-without the patch would have crashed the system. That printk is there to see if 
-we were actually getting the condition and recovering. As the code is obviously 
-working now, that line will be removed soon.
+The various variables tracking bmiss interrupts
+are not really used anywhere except in a debug
+message. Remove them since they have no functional
+purpose.
 
-Thanks,
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  2 --
+ drivers/net/wireless/ath/ath9k/main.c  |  9 ---------
+ drivers/net/wireless/ath/ath9k/wow.c   | 18 ------------------
+ 3 files changed, 29 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 4209d7b..803a7d4 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -1043,8 +1043,6 @@ struct ath_softc {
+ 	s16 tx99_power;
+ 
+ #ifdef CONFIG_ATH9K_WOW
+-	atomic_t wow_got_bmiss_intr;
+-	atomic_t wow_sleep_proc_intr; /* in the middle of WoW sleep ? */
+ 	u32 wow_intr_before_sleep;
+ #endif
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 62b0bf4..9ede991 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -555,15 +555,6 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 	    (status & ATH9K_INT_BB_WATCHDOG))
+ 		goto chip_reset;
+ 
+-#ifdef CONFIG_ATH9K_WOW
+-	if (status & ATH9K_INT_BMISS) {
+-		if (atomic_read(&sc->wow_sleep_proc_intr) == 0) {
+-			atomic_inc(&sc->wow_got_bmiss_intr);
+-			atomic_dec(&sc->wow_sleep_proc_intr);
+-		}
+-	}
+-#endif
+-
+ 	if (status & ATH9K_INT_SWBA)
+ 		tasklet_schedule(&sc->bcon_tasklet);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index c0c564d..fa60dbb 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -269,7 +269,6 @@ int ath9k_suspend(struct ieee80211_hw *hw,
+ 
+ 	ath9k_ps_restore(sc);
+ 	ath_dbg(common, WOW, "Suspend with WoW triggers: 0x%x\n", triggers);
+-	atomic_inc(&sc->wow_sleep_proc_intr);
+ 
+ 	set_bit(ATH_OP_WOW_ENABLED, &common->op_flags);
+ fail_wow:
+@@ -299,19 +298,6 @@ int ath9k_resume(struct ieee80211_hw *hw)
+ 
+ 	wow_status = ath9k_hw_wow_wakeup(ah);
+ 
+-	if (atomic_read(&sc->wow_got_bmiss_intr) == 0) {
+-		/*
+-		 * some devices may not pick beacon miss
+-		 * as the reason they woke up so we add
+-		 * that here for that shortcoming.
+-		 */
+-		wow_status |= AH_WOW_BEACON_MISS;
+-		atomic_dec(&sc->wow_got_bmiss_intr);
+-		ath_dbg(common, ANY, "Beacon miss interrupt picked up during WoW sleep\n");
+-	}
+-
+-	atomic_dec(&sc->wow_sleep_proc_intr);
+-
+ 	if (wow_status) {
+ 		ath_dbg(common, ANY, "Waking up due to WoW triggers %s with WoW status = %x\n",
+ 			ath9k_hw_wow_event_to_string(wow_status), wow_status);
+@@ -347,10 +333,6 @@ void ath9k_init_wow(struct ieee80211_hw *hw)
+ 
+ 	if (sc->driver_data & ATH9K_PCI_WOW) {
+ 		hw->wiphy->wowlan = &ath9k_wowlan_support;
+-
+-		atomic_set(&sc->wow_sleep_proc_intr, -1);
+-		atomic_set(&sc->wow_got_bmiss_intr, -1);
+-
+ 		device_init_wakeup(sc->dev, 1);
+ 	}
+ }
+-- 
+2.2.2
 
