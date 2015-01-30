@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:57414 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbbAMHOo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Jan 2015 02:14:44 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2] ath10k: fix hwmon temperature input units
-Date: Tue, 13 Jan 2015 12:44:24 +0530
-Message-ID: <1421133264-21278-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150113_081447_208542_26F2759D)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:54487 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762307AbbA3OGj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 09:06:39 -0500
+Message-ID: <1422626790.1919.22.camel@sipsolutions.net> (sfid-20150130_150645_335192_0EAD6FEE)
+Subject: Re: [PATCH v2 2/7] ath10k: implement chanctx API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 30 Jan 2015 15:06:30 +0100
+In-Reply-To: <CA+BoTQ=YnQhjLwUU9jj_SBS_mji-pG=cYbdGtYusKC3pwVAirA@mail.gmail.com> (sfid-20150130_144728_059271_B371B04E)
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+	 <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
+	 <1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
+	 <1422621903.1919.7.camel@sipsolutions.net>
+	 <CA+BoTQkdszYWbNJcV+1dDFsaSJ3aoTuC=ORUMr_aJx7_aQmcqw@mail.gmail.com>
+	 <1422623054.1919.18.camel@sipsolutions.net>
+	 <CA+BoTQnkqzHNWTFSc9VB4_itCK_+jC6HC8GmdMKiyrhu-Sz9Cg@mail.gmail.com>
+	 <1422624670.1919.21.camel@sipsolutions.net>
+	 <CA+BoTQ=YnQhjLwUU9jj_SBS_mji-pG=cYbdGtYusKC3pwVAirA@mail.gmail.com>
+	 (sfid-20150130_144728_059271_B371B04E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To be compliant with the hwmon interface the unit needs to be
-millidegree Celsius. Fix that.
+On Fri, 2015-01-30 at 14:47 +0100, Michal Kazior wrote:
 
-Reported-by: Matthias Kaehlcke <mka@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
-v2: added new line for better readability.
- drivers/net/wireless/ath/ath10k/thermal.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> I'm not sure if you refer to iwlwifi or mac80211 now? If it's the
+> latter: even if you have an ops with, e.g. vif pointer, driver may
+> still need to iterate over interfaces in order to propagate some
+> side-effect changes or aggregate some values/recalculate.
 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index b14ae8d..e915178 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -160,7 +160,8 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
- 	temperature = ar->thermal.temperature;
- 	spin_unlock_bh(&ar->data_lock);
- 
--	ret = snprintf(buf, PAGE_SIZE, "%d", temperature);
-+	/* display in millidegree celcius */
-+	ret = snprintf(buf, PAGE_SIZE, "%d\n", temperature * 1000);
- out:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
--- 
-2.2.1
+I was referring mostly to iwlwifi :)
+
+johannes
 
