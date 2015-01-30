@@ -1,34 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:46736 "EHLO
+Received: from smtp.codeaurora.org ([198.145.11.231]:58275 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757973AbbA0SGo (ORCPT
+	with ESMTP id S1760340AbbA3JUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 13:06:44 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [v4] ath9k and ath9k_htc: rename variable "led_blink"
+	Fri, 30 Jan 2015 04:20:01 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1422099243-20321-1-git-send-email-hong@topbug.net>
-To: Hong Xu <hong@topbug.net>
-Cc: linux-wireless@vger.kernel.org, Hong Xu <hong@topbug.net>
-Message-Id: <20150127180644.9EBB9140694@smtp.codeaurora.org> (sfid-20150127_190648_075675_DA4DB7C0)
-Date: Tue, 27 Jan 2015 18:06:44 +0000 (UTC)
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	netdev@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: [PATCH V2 5/6] rtlwifi: btcoexist: Add routines for RTL8812AE kernel socket communications
+References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net>
+	<1422304934-9239-6-git-send-email-Larry.Finger@lwfinger.net>
+Date: Fri, 30 Jan 2015 11:19:50 +0200
+In-Reply-To: <1422304934-9239-6-git-send-email-Larry.Finger@lwfinger.net>
+	(Larry Finger's message of "Mon, 26 Jan 2015 14:42:13 -0600")
+Message-ID: <87h9v8zkuh.fsf@kamboji.qca.qualcomm.com> (sfid-20150130_102020_490781_81227607)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-> ath9k and ath9k_htc use the variable name "led_blink" to indicate
-> whether the module parameter "blink" is on. This name is easy to
-> conflict with other variables, and has caused a compiler error found
-> by kbuild test bot. The compiler error is as following:
-> 
-> drivers/net/wireless/ath/ath9k/ath9k_htc.o:(.data+0x47c): multiple definition of `led_blink'
-> drivers/net/wireless/ath/ath9k/ath9k.o:(.bss+0x20): first defined here
-> 
-> Fixes: 3a939a671225 ("ath9k_htc: Add a module parameter to disable blink")
-> Reported-by: kbuild test robot <fengguang.wu@intel.com>
-> Signed-off-by: Hong Xu <hong@topbug.net>
+I'm adding bluetooth list to the discussion. Full patch is available
+here:
 
-Thanks, applied to wireless-drivers-next.git.
+https://patchwork.kernel.org/patch/5712591/
 
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+
+> From: Troy Tan <troy_tan@realsil.com.cn>
+>
+> This patch adds the routines used to communicate between the RTL8812AE (wifi)
+> device and the RTL8761AU (bluetooth) device that are part of the same chip.
+> Unlike other similar dual-function devices, this chip does not contain special
+> hardware that lets the firmware pass coexistence info from one part to the
+> other. As a result, this driver implements such communication as a kernel
+> socket.
+>
+> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> V2 - Add comments explaining the routine that sends a message via the
+> socket.
+
+The commit log is not still explaining that much about the actual
+functionality, so I investigated on my own:
+
+> +static u8 rtl_btcoex_create_kernel_socket(struct rtl_priv *rtlpriv,
+> +					  u8 is_invite)
+> +{
+> +	struct bt_coex_info *pcoex_info = &rtlpriv->coex_info;
+> +	s8 kernel_socket_err;
+> +
+> +	BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
+> +		  "%s CONNECT_PORT %d\n", __func__, CONNECT_PORT);
+> +
+> +	if (!pcoex_info) {
+> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL, "coex_info: NULL\n");
+> +		return _FAIL;
+> +	}
+> +
+> +	kernel_socket_err = sock_create(PF_INET, SOCK_DGRAM, 0,
+> +					&pcoex_info->udpsock);
+> +	BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
+> +		  "binding socket, err = %d\n", kernel_socket_err);
+> +
+> +	if (kernel_socket_err < 0) {
+> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
+> +			  "Error during creation of socket error:%d\n",
+> +			  kernel_socket_err);
+> +		return _FAIL;
+> +	}
+> +	memset(&pcoex_info->sin, 0, sizeof(pcoex_info->sin));
+> +	pcoex_info->sin.sin_family = AF_INET;
+> +	pcoex_info->sin.sin_port = htons(CONNECT_PORT);
+> +	pcoex_info->sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+> +
+> +	memset(&pcoex_info->bt_addr, 0, sizeof(pcoex_info->bt_addr));
+> +	pcoex_info->bt_addr.sin_family = AF_INET;
+> +	pcoex_info->bt_addr.sin_port = htons(CONNECT_PORT_BT);
+> +	pcoex_info->bt_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+> +
+> +	pcoex_info->sk_store = NULL;
+> +
+> +	kernel_socket_err =
+> +	   pcoex_info->udpsock->ops->bind(pcoex_info->udpsock,
+> +					  (struct sockaddr *)&pcoex_info->sin,
+> +					  sizeof(pcoex_info->sin));
+> +	if (kernel_socket_err == 0) {
+> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
+> +			  "binding socket success\n");
+> +		pcoex_info->udpsock->sk->sk_data_ready =
+> +			rtl_btcoex_recvmsg_int;
+> +		pcoex_info->sock_open |=  KERNEL_SOCKET_OK;
+> +		pcoex_info->bt_attend = false;
+> +		BTC_PRINT(BTC_MSG_SOCKET, SOCKET_CRITICAL,
+> +			  "WIFI sending attend_req\n");
+> +		rtl_btcoex_sendmsgbysocket(rtlpriv, attend_req,
+> +					   sizeof(attend_req), true);
+> +		return _SUCCESS;
+
+So the wireless driver communicates with the bluetooth driver (which is
+not in upstream) via a localhost UDP connection?
+
+> +#define CONNECT_PORT 30000
+> +#define CONNECT_PORT_BT 30001
+
+And these are the UDP ports used.
+
+> +struct hci_link_info {
+> +	u16		connect_handle;
+> +	u8		incoming_traffic_mode;
+> +	u8		outgoing_traffic_mode;
+> +	u8		bt_profile;
+> +	u8		bt_corespec;
+> +	s8		bt_RSSI;
+> +	u8		traffic_profile;
+> +	u8		link_role;
+> +};
+> +
+> +#define	MAX_BT_ACL_LINK_NUM		8
+> +
+> +struct hci_ext_config {
+> +	struct hci_link_info	acl_link[MAX_BT_ACL_LINK_NUM];
+> +	u8	bt_operation_code;
+> +	u16	current_connect_handle;
+> +	u8	current_incoming_traffic_mode;
+> +	u8	current_outgoing_traffic_mode;
+> +
+> +	u8	number_of_acl;
+> +	u8	number_of_sco;
+> +	u8	current_bt_status;
+> +	u16	hci_ext_ver;
+> +	bool	enable_wifi_scan_notify;
+> +};
+
+[...]
+
+> +enum HCI_STATUS {
+> +	/* Success */
+> +	HCI_STATUS_SUCCESS				= 0x00,
+> +	/* Unknown HCI Command */
+> +	HCI_STATUS_UNKNOW_HCI_CMD			= 0x01,
+> +	/* Unknown Connection Identifier */
+> +	HCI_STATUS_UNKNOW_CONNECT_ID			= 0X02,
+> +	/* Hardware Failure */
+> +	HCI_STATUS_HW_FAIL				= 0X03,
+> +	/* Page Timeout */
+> +	HCI_STATUS_PAGE_TIMEOUT				= 0X04,
+> +	/* Authentication Failure */
+> +	HCI_STATUS_AUTH_FAIL				= 0X05,
+> +	/* PIN or Key Missing */
+> +	HCI_STATUS_PIN_OR_KEY_MISSING			= 0X06,
+> +	/* Memory Capacity Exceeded */
+> +	HCI_STATUS_MEM_CAP_EXCEED			= 0X07,
+> +	/* Connection Timeout */
+> +	HCI_STATUS_CONNECT_TIMEOUT			= 0X08,
+> +	/* Connection Limit Exceeded */
+
+And here's part of the information exchanged between the drivers.
+
+This is something which needs to be properly reviewed both in wireless
+and bluetooth lists, a wireless driver cannot just invent these on their
+own. And using UDP sockets for this is in my opinion just horrible.
+
+I know there's a general need for something similar like this, but it
+needs to properly discussed and designed.
+
+Comments?
+
+-- 
 Kalle Valo
