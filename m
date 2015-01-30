@@ -1,98 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26904 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700AbbA2Mka (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:49300 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759099AbbA3Ncm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 07:40:30 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH-RESEND] ath10k: add log level configuration for fw_dbglog
-References: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com>
-Date: Thu, 29 Jan 2015 14:40:18 +0200
-In-Reply-To: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com>
-	(SenthilKumar Jegadeesan's message of "Thu, 29 Jan 2015 14:36:52
-	+0530")
-Message-ID: <87vbjp2219.fsf@kamboji.qca.qualcomm.com> (sfid-20150129_134038_136001_63ADF12A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 30 Jan 2015 08:32:42 -0500
+Received: from [117.207.72.194] (port=10794 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YHBgf-004FiR-B0
+	for linux-wireless@vger.kernel.org; Fri, 30 Jan 2015 08:32:41 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/17] ath9k: Remove ATH9K_HW_WOW_DEVICE_CAPABLE
+Date: Fri, 30 Jan 2015 19:05:21 +0530
+Message-Id: <1422624937-4810-2-git-send-email-sujith@msujith.org> (sfid-20150130_143245_946617_45AB50B7)
+In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com> writes:
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-> Introduce optional log level configuration for
-> existing debugfs fw_dbglog.
->
-> It allow users to configure desired log level
-> for firmware debugs.
->
-> To configure log level as WARN
->
-> echo 0xffffffff  2 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
->
-> Loglevel	Value
-> VERBOSE		0
-> INFO		1
-> WARN		2
-> ERR		3
->
-> Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Enabling WOW based on the chip is incorrect since
+it needs to be done for specific sub-devices which
+have proper platform support.
 
-I did cosmetic changes to the log in the pending branch.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  | 3 ---
+ drivers/net/wireless/ath/ath9k/hw.h  | 2 --
+ drivers/net/wireless/ath/ath9k/wow.c | 4 +---
+ 3 files changed, 1 insertion(+), 8 deletions(-)
 
-> @@ -1331,19 +1331,30 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
->  				      size_t count, loff_t *ppos)
->  {
->  	struct ath10k *ar = file->private_data;
-> -	unsigned long mask;
->  	int ret;
-> +	char buf[64];
-> +	unsigned int log_level, mask;
->
-> -	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
-> -	if (ret)
-> -		return ret;
-> +	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
-> +
-> +	/* make sure that buf is null terminated */
-> +	buf[sizeof(buf) - 1] = 0;
-> +
-> +	ret = sscanf(buf, "%x %u", &mask, &log_level);
-> +
-> +	if (!ret)
-> +		return -EINVAL;
->
->  	mutex_lock(&ar->conf_mutex);
->
->  	ar->debug.fw_dbglog_mask = mask;
-> +	ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
-> +				     log_level;
-
-And I simplified this a bit, please review. Full patch in pending
-branch.
-
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1345,12 +1345,14 @@ static ssize_t ath10k_write_fw_dbglog(struct file *file,
-        if (!ret)
-                return -EINVAL;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 82d8f32..8c2f9e2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2544,9 +2544,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 			pCap->hw_caps |= ATH9K_HW_CAP_RTT;
+ 	}
  
-+       if (ret == 1)
-+               /* default if user did not specify */
-+               log_level = ATH10K_DBGLOG_LEVEL_WARN;
-+
-        mutex_lock(&ar->conf_mutex);
- 
-        ar->debug.fw_dbglog_mask = mask;
--       ar->debug.fw_dbglog_level = (ret == 1) ? ATH10K_DBGLOG_LEVEL_WARN :
--                                    log_level;
+-	if (AR_SREV_9462(ah))
+-		pCap->hw_caps |= ATH9K_HW_WOW_DEVICE_CAPABLE;
 -
-+       ar->debug.fw_dbglog_level = log_level;
+ 	if (AR_SREV_9300_20_OR_LATER(ah) &&
+ 	    ah->eep_ops->get_eeprom(ah, EEP_PAPRD))
+ 			pCap->hw_caps |= ATH9K_HW_CAP_PAPRD;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 450704e..dabc94e 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -248,12 +248,10 @@ enum ath9k_hw_caps {
+ #ifdef CONFIG_ATH9K_PCOEM
+ 	ATH9K_HW_CAP_RTT			= BIT(14),
+ 	ATH9K_HW_CAP_MCI			= BIT(15),
+-	ATH9K_HW_WOW_DEVICE_CAPABLE		= BIT(16),
+ 	ATH9K_HW_CAP_BT_ANT_DIV			= BIT(17),
+ #else
+ 	ATH9K_HW_CAP_RTT			= 0,
+ 	ATH9K_HW_CAP_MCI			= 0,
+-	ATH9K_HW_WOW_DEVICE_CAPABLE		= 0,
+ 	ATH9K_HW_CAP_BT_ANT_DIV			= 0,
+ #endif
+ 	ATH9K_HW_CAP_DFS			= BIT(18),
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index 5f30e58..4ffaadd 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -352,9 +352,7 @@ void ath9k_init_wow(struct ieee80211_hw *hw)
+ {
+ 	struct ath_softc *sc = hw->priv;
  
-        if (ar->state == ATH10K_STATE_ON) {
-                ret = ath10k_wmi_dbglog_cfg(ar, ar->debug.fw_dbglog_mask,
-
-
+-	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_WOW_DEVICE_CAPABLE) &&
+-	    (sc->driver_data & ATH9K_PCI_WOW) &&
+-	    device_can_wakeup(sc->dev))
++	if ((sc->driver_data & ATH9K_PCI_WOW) && device_can_wakeup(sc->dev))
+ 		hw->wiphy->wowlan = &ath9k_wowlan_support;
+ 
+ 	atomic_set(&sc->wow_sleep_proc_intr, -1);
 -- 
-Kalle Valo
+2.2.2
+
