@@ -1,50 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60669 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755340AbbA0KYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Jan 2015 05:24:40 -0500
-Message-ID: <1422354271.1890.62.camel@sipsolutions.net> (sfid-20150127_112501_686109_D83488D8)
-Subject: Re: [RFCv4 3/3] mac80211: add VHT support for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 27 Jan 2015 11:24:31 +0100
-In-Reply-To: <1422348243-4928-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150127_094518_689625_288E01DC)
-References: <1422348243-4928-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1422348243-4928-3-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150127_094518_689625_288E01DC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:49701 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759807AbbA3Imy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Jan 2015 03:42:54 -0500
+Received: by mail-wi0-f175.google.com with SMTP id fb4so1363059wid.2
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 00:42:53 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/7] ath10k: protect ar->arvifs linking with data_lock
+Date: Fri, 30 Jan 2015 09:41:24 +0100
+Message-Id: <1422607287-12289-5-git-send-email-michal.kazior@tieto.com> (sfid-20150130_094307_439737_49A91606)
+In-Reply-To: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
+References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-01-27 at 09:44 +0100, Janusz Dziedzic wrote:
+This will make it possible to iterate over
+interface list while in an atomic context,
+i.e. tasklet.
 
-> +u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
-> +				const struct cfg80211_chan_def *chandef)
+Caller should still be careful with accessing
+arvif structures though.
 
-> +	/* 1 stream, MCS0-7 as a min Basic VHT MCS rates */
-> +	vht_oper->basic_mcs_set = cpu_to_le16(0xfffc);
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Unless I'm mistaken in my reading of the spec, this will make any
-well-behaved client (i.e. not mac80211) not join this network since it
-supports VHT MCSes.
-
-We seem to do the same for HT:
-
-        /* It seems that Basic MCS set and Supported MCS set
-           are identical for the first 10 bytes */
-        memset(&ht_oper->basic_set, 0, 16);
-        memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
-
-but I'm not convinced it's right. It probably only works because nobody
-ever tested against a well-behaved non-HT client? Or perhaps there isn't
-even one?
-
-I for one am not really comfortable with this restriction - there's very
-little point in making such a restriction in IBSS since if you have it
-then the other node will just form its own network on the same channel
-and you've won nothing - only lost interoperability.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 16fddc7..721b2ce 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3325,7 +3325,10 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	ar->free_vdev_map &= ~(1LL << arvif->vdev_id);
++
++	spin_lock_bh(&ar->data_lock);
+ 	list_add(&arvif->list, &ar->arvifs);
++	spin_unlock_bh(&ar->data_lock);
+ 
+ 	/* It makes no sense to have firmware do keepalives. mac80211 already
+ 	 * takes care of this with idle connection polling.
+@@ -3452,7 +3455,9 @@ err_peer_delete:
+ err_vdev_delete:
+ 	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
+ 	ar->free_vdev_map |= 1LL << arvif->vdev_id;
++	spin_lock_bh(&ar->data_lock);
+ 	list_del(&arvif->list);
++	spin_unlock_bh(&ar->data_lock);
+ 
+ err:
+ 	if (arvif->beacon_buf) {
+@@ -3487,7 +3492,10 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 			    arvif->vdev_id, ret);
+ 
+ 	ar->free_vdev_map |= 1LL << arvif->vdev_id;
++
++	spin_lock_bh(&ar->data_lock);
+ 	list_del(&arvif->list);
++	spin_unlock_bh(&ar->data_lock);
+ 
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+ 		ret = ath10k_peer_delete(arvif->ar, arvif->vdev_id, vif->addr);
+-- 
+1.8.5.3
 
