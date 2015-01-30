@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:51877 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbbA2HBu (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:57665 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751763AbbA3T0Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Jan 2015 02:01:50 -0500
-From: "Dedy Lansky" <dlansky@codeaurora.org>
-To: "'Johannes Berg'" <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	"'Vladimir Kondratiev'" <qca_vkondrat@qca.qualcomm.com>
-References: <1422189052-25602-1-git-send-email-dlansky@codeaurora.org> <1422260840.1890.9.camel@sipsolutions.net> <20150126095800.GA12740@w1.fi>
-In-Reply-To: <20150126095800.GA12740@w1.fi>
-Subject: RE: [PATCH] nl80211: add new scan flag to indicate P2P search
-Date: Thu, 29 Jan 2015 09:01:45 +0200
-Message-ID: <000801d03b91$73b1c030$5b154090$@codeaurora.org> (sfid-20150129_080153_483691_0FC68677)
+	Fri, 30 Jan 2015 14:26:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 30 Jan 2015 11:26:02 -0800
+Message-ID: <CAB=NE6UM-=ARNqwyxk0a_qve+9Ndk1znsm+FjfXq+xenCkTvCQ@mail.gmail.com> (sfid-20150130_202640_007594_57225D87)
+Subject: [ANN] crda-3.18 released
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	"wireless-regdb@lists.infradead.org"
+	<wireless-regdb@lists.infradead.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Seth Forshee <seth.forshee@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+A new release of CRDA has been released, this might be the last since
+we have some ideas of how to just shift this functionality directly
+into the kernel and in the future may not need any userspace tool
+other than to help debug stuff perhaps. The major thing here is
+trusting Seth's new key as he is now the maintainer of the
+wireless-regdb. Other than this it also add AUTO-BW rule support,
+parse/print of CAC on db2rd, and fixes a compile error. This release
+goes signed with my new PGP key.
 
-Following Jouni's comment, would you please re-consider?
+Thanks to all who have contributed. There release page for CRDA:
 
-Thanks,
- Dedy.
+http://drvbp1.linux-foundation.org/~mcgrof/rel-html/crda/
 
-From: Jouni Malinen [mailto:j@w1.fi] 
-Sent: Monday, January 26, 2015 11:58 AM
-> On Mon, Jan 26, 2015 at 09:27:20AM +0100, Johannes Berg wrote:
-> > On Sun, 2015-01-25 at 14:30 +0200, Dedy Lansky wrote:
-> > > Scan request (NL80211_CMD_TRIGGER_SCAN) is used for triggering both 
-> > > scan and P2P search.
-> > > At driver/firmware layer, scan and P2P search might be handled
-differently.
-> > > 
-> > > Add new scan flag to indicate P2P search. This flag can be used by 
-> > > applications (e.g. wpa_supplicant) to explicitly request P2P search.
-> > 
-> > I think this ship has sailed many months ago -- too late, you can 
-> > never rely on wpa_supplicant settings this flag.
-> 
-> I'm not sure I'd fully agree with that.. wpa_supplicant currently maps its
-internal struct wpa_driver_scan_params::p2p_probe to
-NL80211_ATTR_TX_NO_CCK_RATE (and also removal of CCK rates from
-NL80211_ATTR_SCAN_SUPP_RATES). However, neither of these make much sense in
-bands other than 2.4 GHz. There is ongoing effort in defining P2P social
-channels on other bands and it would be useful to be prepared for those with
-a clear nl80211 flag in scan parameters. P2P on those new bands will require
-wpa_supplicant changes, so it is reasonable to assume that a wpa_supplicant
-version that supports those bands will also support this new flag.
-> 
-> > If you need to distinguish, you should be able to advertise P2P-Device 
-> > supports, and then get P2P scans on the P2P-Device virtual interface.
-> > Could be a pure driver thing of course.
-> 
-> It would be unfortunate to force people to use P2P-Device for this.
->  
-> -- 
-> Jouni Malinen                                            PGP id EFC895FA
+The v3.18 release:
 
+http://kernel.org/pub/software/network/crda/crda-3.18.tar.xz
+
+The wireless-regdb release page:
+
+http://drvbp1.linux-foundation.org/~mcgrof/rel-html/wireless-regdb/
+
+As announced by Seth, the new wireless-regdb is:
+
+http://kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.01.30.tar.xz
+
+The shortlog of this CRDA v3.18 release:
+
+mcgrof@garbanzo ~/devel/crda (git::master)$ git shortlog v3.13..v3.18
+Janusz Dziedzic (4):
+      crda: sync with latest nl80211.h
+      crda: add AUTO-BW rule flag support
+      crda: simplify text parsing for country/rules
+      crda: db2rd, parse/print CAC time
+
+John W. Linville (1):
+      crda: Add DESTDIR support in install-libreg* rules in Makefile
+
+Krishna Chaitanya (1):
+      crda: Fix the linking order to avoid compilation error
+
+Luis R. Rodriguez (1):
+      crda: document contribution process using the DCO
+
+Seth Forshee (1):
+      crda: Trust regulatory.bin from Seth Forshee
