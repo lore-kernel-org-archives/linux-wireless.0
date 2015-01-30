@@ -1,35 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:59098 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750955AbbAGKEU convert rfc822-to-8bit (ORCPT
+Received: from ssl.serverraum.org ([88.198.40.39]:46495 "EHLO
+	ssl.serverraum.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbbA3Q2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 05:04:20 -0500
-Received: by mail-wi0-f176.google.com with SMTP id ex7so7118945wid.3
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Jan 2015 02:04:19 -0800 (PST)
+	Fri, 30 Jan 2015 11:28:14 -0500
+Message-ID: <54CBB118.5020806@m-labs.hk> (sfid-20150130_172818_197971_1AF9B275)
+Date: Sat, 31 Jan 2015 00:28:08 +0800
+From: Sebastien Bourdeauducq <sb@m-labs.hk>
 MIME-Version: 1.0
-In-Reply-To: <1419834066-11802-1-git-send-email-sujith@msujith.org>
-References: <1419834066-11802-1-git-send-email-sujith@msujith.org>
-Date: Wed, 7 Jan 2015 11:04:19 +0100
-Message-ID: <CA+BoTQ=Vt8BTzZcgxqq4eU+RKhMwNbGrZOOFGL9TcBA3KnrerQ@mail.gmail.com> (sfid-20150107_110425_929577_D9BDDF24)
-Subject: Re: [PATCH] ath10k: Fix DMA burst size
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Arend van Spriel <arend@broadcom.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: "brcmfmac: brcmf_sdio_htclk: HT Avail timeout" on Thinkpad Tablet
+ 10
+References: <54C88C7D.707@m-labs.hk> <54CB97CC.2050001@broadcom.com>
+In-Reply-To: <54CB97CC.2050001@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 December 2014 at 07:21, Sujith Manoharan <sujith@msujith.org> wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Friday, January 30, 2015 10:40 PM, Arend van Spriel wrote:
+>> I'm running kernel 3.18.4, my brcmfmac43241b4-sdio.bin is identical to
+>> the one in the linux-firmware repository, and I have attached the
+>> brcmfmac43241b4-sdio.txt that I have extracted from the EFI variables.
 >
-> A value of zero indicates that 128B is the maximum
-> DMA request size for read/writes. But PCI cards based
-> on AR9880 can support 256B, so enable this for
-> the 10.2 firmware.
+> When you say your firmware is identical what does that mean.
 
-Since it's for cards/chips why do you enable it for 10.2 only? There's
-10.1, main and tlv as well which could possibly benefit from this.
+It is exactly this file (diff reports same content):
 
+https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/plain/brcm/brcmfmac43241b4-sdio.bin
 
-Michał
+Sebastien
