@@ -1,60 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:41255 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753169AbbAXRrd (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:47948 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759099AbbA3PHg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Jan 2015 12:47:33 -0500
-Received: by mail-wi0-f169.google.com with SMTP id h11so2247135wiw.0
-        for <linux-wireless@vger.kernel.org>; Sat, 24 Jan 2015 09:47:31 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: detect SPROM revision 11
-Date: Sat, 24 Jan 2015 18:47:20 +0100
-Message-Id: <1422121640-9227-2-git-send-email-zajec5@gmail.com> (sfid-20150124_184736_163780_A7AD9761)
-In-Reply-To: <1422121640-9227-1-git-send-email-zajec5@gmail.com>
-References: <1422121640-9227-1-git-send-email-zajec5@gmail.com>
+	Fri, 30 Jan 2015 10:07:36 -0500
+Received: by mail-ig0-f170.google.com with SMTP id l13so3665105iga.1
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 07:07:35 -0800 (PST)
+Message-ID: <54CB9E35.4060606@mojatatu.com> (sfid-20150130_160745_626329_196CFC11)
+Date: Fri, 30 Jan 2015 10:07:33 -0500
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Reply-To: info@netdev01.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
+	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
+CC: info@netdev01.org, speakers@netdev01.org, attendees@netdev01.org
+Subject: NetDev 0.1 Preliminary schedule posted
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Extracting values from it is still unsupported, but at least we'll
-display some meaningful error now.
+Fellow netheads:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/sprom.c         | 3 ++-
- include/linux/ssb/ssb_regs.h | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+Yours truly posting on behalf of rgb.
 
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index efb037f..206edd3 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -579,7 +579,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 	u16 offset = BCMA_CC_SPROM;
- 	u16 *sprom;
- 	size_t sprom_sizes[] = { SSB_SPROMSIZE_WORDS_R4,
--				 SSB_SPROMSIZE_WORDS_R10, };
-+				 SSB_SPROMSIZE_WORDS_R10,
-+				 SSB_SPROMSIZE_WORDS_R11, };
- 	int i, err = 0;
- 
- 	if (!bus->drv_cc.core)
-diff --git a/include/linux/ssb/ssb_regs.h b/include/linux/ssb/ssb_regs.h
-index f7b9100..c0f707a 100644
---- a/include/linux/ssb/ssb_regs.h
-+++ b/include/linux/ssb/ssb_regs.h
-@@ -173,6 +173,7 @@
- #define SSB_SPROMSIZE_BYTES_R123	(SSB_SPROMSIZE_WORDS_R123 * sizeof(u16))
- #define SSB_SPROMSIZE_BYTES_R4		(SSB_SPROMSIZE_WORDS_R4 * sizeof(u16))
- #define SSB_SPROMSIZE_WORDS_R10		230
-+#define SSB_SPROMSIZE_WORDS_R11		234
- #define SSB_SPROM_BASE1			0x1000
- #define SSB_SPROM_BASE31		0x0800
- #define SSB_SPROM_REVISION		0x007E
--- 
-1.8.4.5
+The preliminary schedule was published late yesterday.
+https://www.netdev01.org/schedule
 
+We wanted to get something out quickly while we make it pretty
+afterwards. There will be some minor changes later on.
+Talks are all on Mon/Tuesday and Tutorials/BoFs/Workshops are
+Sat/Sunday.
+
+There will be a click-able version of the schedule later, for now
+please correlate the schedule against the sessions at:
+https://www.netdev01.org/sessions
+
+We appologize for the inconvinience (all volunteers are hard at
+work to make this a fantastic conference for you).
+
+If you have been waiting for the schedule to register, now is the
+time:
+https://onlineregistrations.ca/netdev01/
+
+Hotel update:
+------------
+The hotel has agreed, on a best effort basis to extend the
+netdev01 rate of $159.00 or $179.00 (depending on the type of room
+required).  Please dont procastinate and book now.  We are competing
+against a few tourist activities for hotel rooms going on around the
+area at the same time (example:
+http://www.ottawafestivals.ca/events/winterlude-2/).
+
+Avoid disappointment and do your reservations at:
+https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
+
+If you dont succeed getting the reservation, send us email at
+info at netdev01.org; we will try to bat for you but we cant guarantee
+results. We are also putting effort into talking to other local hotels.
+
+Sponsors:
+=========
+NetDev 0.1 would like to gratefully acknowledge all our sponsors:
+https://netdev01.org/sponsors
+CENGN                   http://www.cengn.ca/
+Google                  https://www.google.ca
+Qualcomm                https://www.qualcomm.com/
+Verizon                 http://www.verizon.com/
+Cumulus Networks        http://cumulusnetworks.com/
+Mojatatu Networks       https://mojatatu.com/
+
+
+Important Dates:
+==========================
+December 2, 2014        Call for Papers opens
+December 10, 2014       Registration opens
+January 23, 2015        Hotel discount rates deadline
+January 24, 2015        Call for sessions deadline
+February 12, 2015       On-line registration closes
+February 14-17, 2015    Conference days
+
+-------------------------------------------------------------------------------
+THE Technical Conference on Linux Networking, February 14-17, 2015, 
+Ottawa, Canada
+https://netdev01.org/
+
+Contact:                        info@xxxxxxxxxxxxx
+Main site:                      https://www.netdev01.org/
+Announcement:                   https://www.netdev01.org/announce
+CFP:                            https://www.netdev01.org/cfp
+Travel/hotel/weather/clothing:  https://www.netdev01.org/travel
+RSS feed:                       https://netdev01.org/atom
+Follow us on Twitter: @netdev01 https://twitter.com/netdev01
+
+cheers,
+jamal (on behalf of Richard Guy Briggs)
