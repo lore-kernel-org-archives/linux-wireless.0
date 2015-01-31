@@ -1,31 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38775 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752293AbbAOVN5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Jan 2015 16:13:57 -0500
-Message-ID: <1421356430.1962.15.camel@sipsolutions.net> (sfid-20150115_221359_649529_8849C4D6)
-Subject: Re: Delivery Status Notification (Failure)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pat Erley <pat-lkml@erley.org>
-Cc: Mike Purvis <mpurvis@clearpathrobotics.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 15 Jan 2015 22:13:50 +0100
-In-Reply-To: <54B82598.9060403@erley.org> (sfid-20150115_214608_607970_D88B0939)
-References: <CACsJT9OOBcYNhNG6=+Q2EE4VHEvJ8_rJ3fr6gb9_3P4KpPPX3g@mail.gmail.com>
-	 <f46d043c061e8dd5c9050cb5990c@google.com>
-	 <CACsJT9M9LcHEuEa2mgAB2taYATZq4j_NeLq78w+=-VBvOw1NGw@mail.gmail.com>
-	 <54B82598.9060403@erley.org> (sfid-20150115_214608_607970_D88B0939)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:57905 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752710AbbAaSBY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2015 13:01:24 -0500
+Received: by mail-oi0-f45.google.com with SMTP id g201so39084885oib.4
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 10:01:23 -0800 (PST)
+Message-ID: <54CD1871.80409@lwfinger.net> (sfid-20150131_190133_353944_A0BDDC86)
+Date: Sat, 31 Jan 2015 12:01:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: poma <pomidorabelisima@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek RTL8812AE 802.11ac
+References: <54CC73E2.3040208@gmail.com>
+In-Reply-To: <54CC73E2.3040208@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-01-15 at 14:39 -0600, Pat Erley wrote:
+On 01/31/2015 12:19 AM, poma wrote:
+>
+> Salutem
+>
+>
+> Is the combination with Bluetooth only essential difference between RTL8821AE and RTL8812AE?
+>
+> *If* the undermentioned two devices are based on RTL8812AE chipset,
+> whether they supported via 'rtl8821ae.ko' & 'rtl8821aefw.bin'?
+>
+> PCIe RTL8812AE 802.11abgn+ac 2x2:2
+>
+>
+> Amped Wireless PCI20E (FCC ID: ZTT-PCI20E)
+>    https://wikidevi.com/wiki/Amped_Wireless_PCI20E
+>
+> - High Power AC1200 Wi-Fi PCI-E Adapter
+>    PCI20E
+>    http://www.ampedwireless.com/products/pci20e.html
+>
+> - http://www.amazon.com/Amped-Wireless-AC1200-Adapter-PCI20E/dp/B00I9AS1JA
+>
+>
+> D-Link DWA-582 rev A1 (FCC ID: KA2WA582A1)
+>    https://wikidevi.com/wiki/D-Link_DWA-582_rev_A1
+>
+> - Wireless AC1200 Dual Band PCIe Desktop Adapter
+>    DWA-582
+>    http://www.dlink.com.au/home-solutions/wireless-ac1200-dual-band-pcie-desktop-adapter
+>
+> - http://www.amazon.com/WIRELESS-AC1200-EXPRESS-ADAPTER-DUAL/dp/B00PHVQV14
 
-> I'd guess that the 6235 module has WLAN on the pci-e connector portion,
-> and Bluetooth on the USB portion.
+Both RTL8812AE and RTL8821AE have wifi and Bluetooth. There is a difference in 
+the radio structure. The 8812 has the potential to handle 867 Mbps - the 8821 
+only half that rate. In any case, driver rtl8821ae handles both devices, and the 
+firmware is the same. One other difference is that I have not tested the 8812 as 
+I only have 8821 devices.
 
-Yes, that's the case for all Intel wifi modules that have BT.
+One other difference is that the firmware can handle BT coexistence internally 
+in the 8821, but not in the 8812. Realtek is still working on getting a method 
+of handling that problem. None of the Realtek Bluetooth adaptors has a driver in 
+the kernel. Fixing that issue is my current project.
 
-johannes
+Larry
 
