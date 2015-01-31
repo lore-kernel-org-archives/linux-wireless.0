@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35618 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752031AbbAWKVS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 05:21:18 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: fix per-station group key get/del and memory leak
-Date: Fri, 23 Jan 2015 11:21:14 +0100
-Message-Id: <1422008474-30610-1-git-send-email-johannes@sipsolutions.net> (sfid-20150123_112121_645425_B8FF8D57)
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:41841 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbbAaPJh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2015 10:09:37 -0500
+Received: by mail-wi0-f170.google.com with SMTP id bs8so8018269wib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 07:09:36 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: hal: usb_ops_linux: Removed variables that is never used
+Date: Sat, 31 Jan 2015 16:12:57 +0100
+Message-Id: <1422717177-5865-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150131_160940_415339_1A06B2FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Variable was assigned a value that was never used.
+I have also removed all the code that thereby serves no purpose.
 
-In case userspace attempts to obtain key information for or delete a
-unicast key, this is currently erroneously rejected unless the driver
-sets the WIPHY_FLAG_IBSS_RSN flag. Apparently enough drivers do so it
-was never noticed.
+This was found using a static code analysis program called cppcheck
 
-Fix that, and while at it fix a potential memory leak: the error path
-in the get_key() function was placed after allocating a message but
-didn't free it - move it to a better place. Luckily admin permissions
-are needed to call this operation.
-
-Cc: stable@vger.kernel.org
-Fixes: e31b82136d1ad ("cfg80211/mac80211: allow per-station GTKs")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- net/wireless/nl80211.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/staging/rtl8723au/hal/usb_ops_linux.c |    9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7ca4b5133123..8887c6e5fca8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2854,6 +2854,9 @@ static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
- 	if (!rdev->ops->get_key)
- 		return -EOPNOTSUPP;
+diff --git a/drivers/staging/rtl8723au/hal/usb_ops_linux.c b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+index a6d16ad..4ae0a8a 100644
+--- a/drivers/staging/rtl8723au/hal/usb_ops_linux.c
++++ b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+@@ -26,11 +26,10 @@ u8 rtl8723au_read8(struct rtw_adapter *padapter, u16 addr)
+ {
+ 	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+ 	struct usb_device *udev = pdvobjpriv->pusbdev;
+-	int len;
+ 	u8 data;
  
-+	if (!pairwise && mac_addr && !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))
-+		return -ENOENT;
-+
- 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 	if (!msg)
- 		return -ENOMEM;
-@@ -2873,10 +2876,6 @@ static int nl80211_get_key(struct sk_buff *skb, struct genl_info *info)
- 	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr))
- 		goto nla_put_failure;
+ 	mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+-	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
++	usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			      REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+ 			      addr, 0, &pdvobjpriv->usb_buf.val8, sizeof(data),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
+@@ -45,11 +44,10 @@ u16 rtl8723au_read16(struct rtw_adapter *padapter, u16 addr)
+ {
+ 	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+ 	struct usb_device *udev = pdvobjpriv->pusbdev;
+-	int len;
+ 	u16 data;
  
--	if (pairwise && mac_addr &&
--	    !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))
--		return -ENOENT;
--
- 	err = rdev_get_key(rdev, dev, key_idx, pairwise, mac_addr, &cookie,
- 			   get_key_callback);
+ 	mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+-	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
++	usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			      REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+ 			      addr, 0, &pdvobjpriv->usb_buf.val16, sizeof(data),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
+@@ -64,11 +62,10 @@ u32 rtl8723au_read32(struct rtw_adapter *padapter, u16 addr)
+ {
+ 	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+ 	struct usb_device *udev = pdvobjpriv->pusbdev;
+-	int len;
+ 	u32 data;
  
-@@ -3047,7 +3046,7 @@ static int nl80211_del_key(struct sk_buff *skb, struct genl_info *info)
- 	wdev_lock(dev->ieee80211_ptr);
- 	err = nl80211_key_allowed(dev->ieee80211_ptr);
- 
--	if (key.type == NL80211_KEYTYPE_PAIRWISE && mac_addr &&
-+	if (key.type == NL80211_KEYTYPE_GROUP && mac_addr &&
- 	    !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))
- 		err = -ENOENT;
- 
+ 	mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+-	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
++	usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+ 			      REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+ 			      addr, 0, &pdvobjpriv->usb_buf.val32, sizeof(data),
+ 			      RTW_USB_CONTROL_MSG_TIMEOUT);
 -- 
-2.1.4
+1.7.10.4
 
