@@ -1,93 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:40382 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751950AbbAaPH7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Jan 2015 10:07:59 -0500
-Received: by mail-we0-f181.google.com with SMTP id k48so31885689wev.12
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 07:07:58 -0800 (PST)
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: hal: rtl8723a_hal_init: Removed variables that is never used
-Date: Sat, 31 Jan 2015 16:11:19 +0100
-Message-Id: <1422717079-5629-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150131_160820_568899_65170CE9)
+Received: from mga03.intel.com ([134.134.136.65]:56335 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752095AbbAaRgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2015 12:36:49 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "chunkeey@googlemail.com" <chunkeey@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: Re: [IWLMVM] Firmware restart issue with 3.19-rc6-wl with AC 3160,
+ REV=0x164
+Date: Sat, 31 Jan 2015 17:36:45 +0000
+Message-ID: <1422725806.956.0.camel@egrumbacBox> (sfid-20150131_183653_346362_4EA59582)
+References: <CAAd0S9BwPQZhOZSzt2NU1SGjzv8i6685Y7Zb6qRQ1BzJ0P92SA@mail.gmail.com>
+	 <1422650111.1919.45.camel@sipsolutions.net>
+	 <CAAd0S9BRXoymMm=jSPptyYhywyAXVKyoTU_UJDyShDExX5ERRg@mail.gmail.com>
+In-Reply-To: <CAAd0S9BRXoymMm=jSPptyYhywyAXVKyoTU_UJDyShDExX5ERRg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Variable was assigned a value that was never used.
-I have also removed all the code that thereby serves no purpose.
-
-This was found using a static code analysis program called cppcheck
-
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c |   10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-index a5eadd4..f2bcf4f 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-@@ -604,7 +604,7 @@ rtl8723a_readefuse(struct rtw_adapter *padapter,
- u16 rtl8723a_EfuseGetCurrentSize_WiFi(struct rtw_adapter *padapter)
- {
- 	u16 efuse_addr = 0;
--	u8 hoffset = 0, hworden = 0;
-+	u8 hworden = 0;
- 	u8 efuse_data, word_cnts = 0;
- 	struct hal_data_8723a *pHalData = GET_HAL_DATA(padapter);
- 
-@@ -627,17 +627,14 @@ u16 rtl8723a_EfuseGetCurrentSize_WiFi(struct rtw_adapter *padapter)
- 			break;
- 
- 		if (EXT_HEADER(efuse_data)) {
--			hoffset = GET_HDR_OFFSET_2_0(efuse_data);
- 			efuse_addr++;
- 			efuse_OneByteRead23a(padapter, efuse_addr, &efuse_data);
- 			if (ALL_WORDS_DISABLED(efuse_data)) {
- 				continue;
- 			}
- 
--			hoffset |= ((efuse_data & 0xF0) >> 1);
- 			hworden = efuse_data & 0x0F;
- 		} else {
--			hoffset = (efuse_data >> 4) & 0x0F;
- 			hworden = efuse_data & 0x0F;
- 		}
- 
-@@ -657,7 +654,7 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
- 	u16 btusedbytes;
- 	u16 efuse_addr;
- 	u8 bank, startBank;
--	u8 hoffset = 0, hworden = 0;
-+	u8 hworden = 0;
- 	u8 efuse_data, word_cnts = 0;
- 	u16 retU2 = 0;
- 	struct hal_data_8723a *pHalData = GET_HAL_DATA(padapter);
-@@ -700,7 +697,6 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
- 				break;
- 
- 			if (EXT_HEADER(efuse_data)) {
--				hoffset = GET_HDR_OFFSET_2_0(efuse_data);
- 				efuse_addr++;
- 				efuse_OneByteRead23a(padapter, efuse_addr,
- 						  &efuse_data);
-@@ -709,10 +705,8 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
- 					continue;
- 				}
- 
--				hoffset |= ((efuse_data & 0xF0) >> 1);
- 				hworden = efuse_data & 0x0F;
- 			} else {
--				hoffset = (efuse_data >> 4) & 0x0F;
- 				hworden = efuse_data & 0x0F;
- 			}
- 			word_cnts = Efuse_CalculateWordCnts23a(hworden);
--- 
-1.7.10.4
-
+T24gU2F0LCAyMDE1LTAxLTMxIGF0IDE1OjE2ICswMTAwLCBDaHJpc3RpYW4gTGFtcGFydGVyIHdy
+b3RlOg0KPiBIZWxsbywNCj4gDQo+IE9uIEZyaSwgSmFuIDMwLCAyMDE1IGF0IDk6MzUgUE0sIEpv
+aGFubmVzIEJlcmcNCj4gPGpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXQ+IHdyb3RlOg0KPiA+IE9u
+IEZyaSwgMjAxNS0wMS0zMCBhdCAyMToyMyArMDEwMCwgQ2hyaXN0aWFuIExhbXBhcnRlciB3cm90
+ZToNCj4gPj4gWyAgICA2LjI3NDYyNV0gaXdsd2lmaSAwMDAwOjAxOjAwLjA6IDB4MDAwMDAwMzgg
+fCBCQURfQ09NTUFORA0KPiA+PiBbICAgIDYuMjc1MDM0XSBpd2x3aWZpIDAwMDA6MDE6MDAuMDog
+RlcgZXJyb3IgaW4gU1lOQyBDTUQgU0NEX1FVRVVFX0NGRw0KPiA+DQo+ID4gV1RGLiBIb3cgZGlk
+IHRoZSBmaXJtd2FyZSBldmVuIGFubm91bmNlIHN1cHBvcnQgZm9yIHRoaXMgY29tbWFuZD8/DQo+
+ID4NCj4gPiBQZXJoYXBzIEkgbWlzc2VkIGl0IGluIHRoZSBsb2csIGJ1dCB3aGljaCBmaXJtd2Fy
+ZSBhcmUgeW91IHVzaW5nPyBBbnkNCj4gPiBjaGFuY2UgeW91IGFsc28gdXBncmFkZWQgdGhhdD8g
+QmVjYXVzZSBJIGNhbid0IGltYWdpbmUgdGhpcyBjb2RlIGlzIG5ldw0KPiA+IGluIHRoZSB0cmVl
+Li4uDQo+IFVoaCwgZ29vZCBxdWVzdGlvbjogSSAidGhpbmsiIGdvdCB0aGlzIGZpcm13YXJlIGZy
+b20gb25lIG9mIEVtbWFudWVsJ3MgZmlybXdhcmUNCj4gYW5ub3VuY2VtZW50cy4gKGxzIHNheXMg
+IjEwIEphbnVhcnkgMjAxNSIpDQo+IA0KPiBpd2x3aWZpIDAwMDA6MDE6MDAuMDogbG9hZGVkIGZp
+cm13YXJlIHZlcnNpb24gMjMuMTEuMTAuMCBvcF9tb2RlIGl3bG12bQ0KPiBMb2FkZWQgZmlybXdh
+cmUgdmVyc2lvbjogMjMuMTEuMTAuMA0KPiANCj4gc2hhMXN1bSBpd2wtMzE2MC0xMC51Y29kZSBj
+ZjFhMzljMWIzMGYzODllMTJkMTdjMTM3OWEyYWM1Mzk0OTFiOGUyDQo+IG1kNXN1bSBpd2wtMzE2
+MC0xMC51Y29kZSA5Zjc0NDIyNGNlZTUxZGFjMWQxMTcwOGNhZGU5NjY0MQ0KPiANCj4gSWYgeW91
+IG5lZWQgZnVydGhlciBpbmZvcywgbGV0IG1lIGtub3chDQo+IA0KPiA+IEFueXdheSwgbWFrZSB0
+aGlzIGNoYW5nZToNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9p
+d2x3aWZpL212bS9tdm0uaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL212bS5o
+DQo+ID4gaW5kZXggOTc5YWMyMzUyMmYyLi41YjhjOTY5ZjQ1N2UgMTAwNjQ0DQo+ID4gLS0tIGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbXZtLmgNCj4gPiArKysgYi9kcml2ZXJz
+L25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9tdm0uaA0KPiA+IEBAIC04NzQsNyArODc0LDcgQEAg
+c3RhdGljIGlubGluZSBib29sIGl3bF9tdm1faXNfZDBpM19zdXBwb3J0ZWQoc3RydWN0IGl3bF9t
+dm0gKm12bSkNCj4gPg0KPiA+ICBzdGF0aWMgaW5saW5lIGJvb2wgaXdsX212bV9pc19zY2RfY2Zn
+X3N1cHBvcnRlZChzdHJ1Y3QgaXdsX212bSAqbXZtKQ0KPiA+ICB7DQo+ID4gLSAgICAgICByZXR1
+cm4gbXZtLT5mdy0+dWNvZGVfY2FwYS5jYXBhWzBdICYgSVdMX1VDT0RFX1RMVl9BUElfU0NEX0NG
+RzsNCj4gPiArICAgICAgIHJldHVybiBmYWxzZTsNCj4gPiAgfQ0KPiA+DQo+ID4gIGV4dGVybiBj
+b25zdCB1OCBpd2xfbXZtX2FjX3RvX3R4X2ZpZm9bXTsNCj4gPg0KPiA+IEkgZ3Vlc3MgRW1tYW51
+ZWwgd2lsbCBsb29rIGF0IGl0IG9uIFN1bmRheSA6KQ0KDQpPciBlYXJsaWVyLg0KDQo+IFRoYW5r
+cyEgVGhhdCBkaWQgdGhlIHRyaWNrIQ0KPiANCg0Kd2hhdCBhYm91dCB0aGlzOg0KaHR0cHM6Ly9n
+aXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9pd2x3aWZpLW5leHQu
+Z2l0L2NvbW1pdC8/aWQ9Yzc3NDkwNWQ5OGJhZGRkYmViNGFkMWJjNjUzYWVkYmQ3YWIwMjRlNA0K
+DQo+IFJlZ2FyZHMsDQo+ICAgIENocmlzdGlhbg0KDQo=
