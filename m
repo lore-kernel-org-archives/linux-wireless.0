@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f182.google.com ([209.85.214.182]:38678 "EHLO
-	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756482AbbAFP7J (ORCPT
+Received: from mail-wg0-f53.google.com ([74.125.82.53]:59138 "EHLO
+	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbbAaPAA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Jan 2015 10:59:09 -0500
-Message-ID: <54AC064A.6090505@lwfinger.net> (sfid-20150106_165915_817881_D7BCEA92)
-Date: Tue, 06 Jan 2015 09:59:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	kvalo@codeaurora.org
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 02/11] rtlwifi: rtl8723be: Improve modinfo output
-References: <1420217908-1382-1-git-send-email-Larry.Finger@lwfinger.net> <1420217908-1382-3-git-send-email-Larry.Finger@lwfinger.net> <54A6E50E.8070205@cogentembedded.com>
-In-Reply-To: <54A6E50E.8070205@cogentembedded.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Sat, 31 Jan 2015 10:00:00 -0500
+Received: by mail-wg0-f53.google.com with SMTP id a1so31465242wgh.12
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 06:59:59 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Greg Donald <gdonald@gmail.com>,
+	Yeliz Taneroglu <yeliztaneroglu@gmail.com>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: core: rtw_security: Removed variables that is never used
+Date: Sat, 31 Jan 2015 16:03:20 +0100
+Message-Id: <1422716600-4498-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150131_160025_333799_2830E070)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/02/2015 12:35 PM, Sergei Shtylyov wrote:
-> Hello.
->
-> On 1/2/2015 7:58 PM, Larry Finger wrote:
->
->> The description of the power-save variables for this driver is not as
->> clear as for the others. The wording is changed to match the others.
->
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> ---
->>   drivers/net/wireless/rtlwifi/rtl8723be/sw.c | 11 ++++++-----
->>   1 file changed, 6 insertions(+), 5 deletions(-)
->
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
->> b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
->> index 223eb42..52a6d90 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/sw.c
->> @@ -387,12 +387,13 @@ module_param_named(swlps,
->> rtl8723be_mod_params.swctrl_lps, bool, 0444);
->>   module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
->>   module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
->>              bool, 0444);
->> -MODULE_PARM_DESC(swenc, "using hardware crypto (default 0 [hardware])\n");
->> -MODULE_PARM_DESC(ips, "using no link power save (default 1 is open)\n");
->> -MODULE_PARM_DESC(fwlps, "using linked fw control power save (default 1 is
->> open)\n");
->> -MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
->
->     You are completely removing this description. Is it intentional?
->
->> +MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
->> +MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
->> +MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
->> +MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
->>   MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
->> -MODULE_PARM_DESC(disable_watchdog, "Set to 1 to disable the watchdog (default
->> 0)\n");
->> +MODULE_PARM_DESC(disable_watchdog,
->> +         "Set to 1 to disable the watchdog (default 0)\n");
->
-> WBR, Sergei
+Variable was assigned a value that was never used.
+I have also removed all the code that thereby serves no purpose.
 
-Good catch. Fixed in V2.
+This was found using a static code analysis program called cppcheck
 
-Larry
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c |    3 ---
+ 1 file changed, 3 deletions(-)
 
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 715a474..8799ba4 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -612,7 +612,6 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 	u8   hw_hdr_offset = 0;
+ 	struct arc4context mycontext;
+ 	int			curfragnum, length;
+-	u32	prwskeylen;
+ 	u8	*pframe, *payload, *iv, *prwskey;
+ 	union pn48 dot11txpn;
+ 	struct	sta_info		*stainfo;
+@@ -651,8 +650,6 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 			else
+ 				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
+ 
+-			prwskeylen = 16;
+-
+ 			for (curfragnum = 0;curfragnum<pattrib->nr_frags;curfragnum++) {
+ 				iv = pframe+pattrib->hdrlen;
+ 				payload = pframe+pattrib->iv_len+pattrib->hdrlen;
+-- 
+1.7.10.4
 
