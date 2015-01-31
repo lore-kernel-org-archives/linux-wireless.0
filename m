@@ -1,148 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:65177 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756268AbbAWRKy (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:35927 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750787AbbAaGTR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Jan 2015 12:10:54 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH 2/6] rtlwifi: btcoexist: Remove typedef statements
-Date: Fri, 23 Jan 2015 11:10:40 -0600
-Message-Id: <1422033044-7461-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150123_181104_214538_4EFC24B4)
-In-Reply-To: <1422033044-7461-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1422033044-7461-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sat, 31 Jan 2015 01:19:17 -0500
+Received: by mail-wi0-f172.google.com with SMTP id h11so7156050wiw.5
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Jan 2015 22:19:16 -0800 (PST)
+Received: from localhost (iskon3992.duo.carnet.hr. [31.147.111.152])
+        by mx.google.com with ESMTPSA id a20sm9882887wic.16.2015.01.30.22.19.14
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 30 Jan 2015 22:19:15 -0800 (PST)
+Message-ID: <54CC73E2.3040208@gmail.com> (sfid-20150131_072335_263556_E02D34A9)
+Date: Sat, 31 Jan 2015 07:19:14 +0100
+From: poma <pomidorabelisima@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Realtek RTL8812AE 802.11ac
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In btcoexist, there are a number of typedef statements. Not only do
-they violate the rule of avoiding new typdef statements in the kernel,
-these are also pointless as they merely introduce an extra level of
-indirection in the definition of some function pointers.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  |  2 +-
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  | 84 +++++++---------------
- 2 files changed, 26 insertions(+), 60 deletions(-)
+Salutem
 
-diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-index b2791c8..7a72636 100644
---- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -496,7 +496,7 @@ static u32 halbtc_read_4byte(void *bt_context, u32 reg_addr)
- 	return	rtl_read_dword(rtlpriv, reg_addr);
- }
- 
--static void halbtc_write_1byte(void *bt_context, u32 reg_addr, u32 data)
-+static void halbtc_write_1byte(void *bt_context, u32 reg_addr, u8 data)
- {
- 	struct btc_coexist *btcoexist = (struct btc_coexist *)bt_context;
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
-index 0a903ea..8c64acf 100644
---- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -350,45 +350,6 @@ enum btc_notify_type_stack_operation {
- 	BTC_STACK_OP_MAX
- };
- 
--typedef u8 (*bfp_btc_r1)(void *btc_context, u32 reg_addr);
--
--typedef u16 (*bfp_btc_r2)(void *btc_context, u32 reg_addr);
--
--typedef u32 (*bfp_btc_r4)(void *btc_context, u32 reg_addr);
--
--typedef void (*bfp_btc_w1)(void *btc_context, u32 reg_addr, u32 data);
--
--typedef void (*bfp_btc_w1_bit_mak)(void *btc_context, u32 reg_addr,
--				   u32 bit_mask, u8 data1b);
--
--typedef void (*bfp_btc_w2)(void *btc_context, u32 reg_addr, u16 data);
--
--typedef void (*bfp_btc_w4)(void *btc_context, u32 reg_addr, u32 data);
--
--typedef void (*bfp_btc_wr_1byte_bit_mask)(void *btc_context, u32 reg_addr,
--					  u8 bit_mask, u8 data);
--
--typedef void (*bfp_btc_set_bb_reg)(void *btc_context, u32 reg_addr,
--				   u32 bit_mask, u32 data);
--
--typedef u32 (*bfp_btc_get_bb_reg)(void *btc_context, u32 reg_addr,
--				  u32 bit_mask);
--
--typedef void (*bfp_btc_set_rf_reg)(void *btc_context, u8 rf_path, u32 reg_addr,
--				   u32 bit_mask, u32 data);
--
--typedef u32 (*bfp_btc_get_rf_reg)(void *btc_context, u8 rf_path,
--				  u32 reg_addr, u32 bit_mask);
--
--typedef void (*bfp_btc_fill_h2c)(void *btc_context, u8 element_id,
--				 u32 cmd_len, u8 *cmd_buffer);
--
--typedef	bool (*bfp_btc_get)(void *btcoexist, u8 get_type, void *out_buf);
--
--typedef	bool (*bfp_btc_set)(void *btcoexist, u8 set_type, void *in_buf);
--
--typedef void (*bfp_btc_disp_dbg_msg)(void *btcoexist, u8 disp_type);
--
- struct btc_bt_info {
- 	bool bt_disabled;
- 	u8 rssi_adjust_for_agc_table_on;
-@@ -484,26 +445,31 @@ struct btc_coexist {
- 	u8 pwr_mode_val[10];
- 
- 	/* function pointers - io related */
--	bfp_btc_r1 btc_read_1byte;
--	bfp_btc_w1 btc_write_1byte;
--	bfp_btc_w1_bit_mak btc_write_1byte_bitmask;
--	bfp_btc_r2 btc_read_2byte;
--	bfp_btc_w2 btc_write_2byte;
--	bfp_btc_r4 btc_read_4byte;
--	bfp_btc_w4 btc_write_4byte;
--
--	bfp_btc_set_bb_reg btc_set_bb_reg;
--	bfp_btc_get_bb_reg btc_get_bb_reg;
--
--	bfp_btc_set_rf_reg btc_set_rf_reg;
--	bfp_btc_get_rf_reg btc_get_rf_reg;
--
--	bfp_btc_fill_h2c btc_fill_h2c;
--
--	bfp_btc_disp_dbg_msg btc_disp_dbg_msg;
--
--	bfp_btc_get btc_get;
--	bfp_btc_set btc_set;
-+	u8 (*btc_read_1byte)(void *btc_context, u32 reg_addr);
-+	void (*btc_write_1byte)(void *btc_context, u32 reg_addr, u8 data);
-+	void (*btc_write_1byte_bitmask)(void *btc_context, u32 reg_addr,
-+					u32 bit_mask, u8 data1b);
-+	u16 (*btc_read_2byte)(void *btc_context, u32 reg_addr);
-+	void (*btc_write_2byte)(void *btc_context, u32 reg_addr, u16 data);
-+	u32 (*btc_read_4byte)(void *btc_context, u32 reg_addr);
-+	void (*btc_write_4byte)(void *btc_context, u32 reg_addr, u32 data);
-+
-+	void (*btc_set_bb_reg)(void *btc_context, u32 reg_addr,
-+			       u32 bit_mask, u32 data);
-+	u32 (*btc_get_bb_reg)(void *btc_context, u32 reg_addr, u32 bit_mask);
-+
-+	void (*btc_set_rf_reg)(void *btc_context, u8 rf_path, u32 reg_addr,
-+			       u32 bit_mask, u32 data);
-+	u32 (*btc_get_rf_reg)(void *btc_context, u8 rf_path,
-+			      u32 reg_addr, u32 bit_mask);
-+
-+	void (*btc_fill_h2c)(void *btc_context, u8 element_id,
-+			     u32 cmd_len, u8 *cmd_buffer);
-+
-+	void (*btc_disp_dbg_msg)(void *btcoexist, u8 disp_type);
-+
-+	bool (*btc_get)(void *btcoexist, u8 get_type, void *out_buf);
-+	bool (*btc_set)(void *btcoexist, u8 set_type, void *in_buf);
- };
- 
- bool halbtc_is_wifi_uplink(struct rtl_priv *adapter);
--- 
-2.1.2
+
+Is the combination with Bluetooth only essential difference between RTL8821AE and RTL8812AE?
+
+*If* the undermentioned two devices are based on RTL8812AE chipset,
+whether they supported via 'rtl8821ae.ko' & 'rtl8821aefw.bin'?
+
+PCIe RTL8812AE 802.11abgn+ac 2x2:2
+
+
+Amped Wireless PCI20E (FCC ID: ZTT-PCI20E) 
+  https://wikidevi.com/wiki/Amped_Wireless_PCI20E
+
+- High Power AC1200 Wi-Fi PCI-E Adapter 
+  PCI20E
+  http://www.ampedwireless.com/products/pci20e.html
+
+- http://www.amazon.com/Amped-Wireless-AC1200-Adapter-PCI20E/dp/B00I9AS1JA
+
+
+D-Link DWA-582 rev A1 (FCC ID: KA2WA582A1) 
+  https://wikidevi.com/wiki/D-Link_DWA-582_rev_A1
+
+- Wireless AC1200 Dual Band PCIe Desktop Adapter
+  DWA-582
+  http://www.dlink.com.au/home-solutions/wireless-ac1200-dual-band-pcie-desktop-adapter
+
+- http://www.amazon.com/WIRELESS-AC1200-EXPRESS-ADAPTER-DUAL/dp/B00PHVQV14
+
+
+/usr/src/kernels/3.18.3-201.fc21.x86_64/drivers/net/wireless/rtlwifi/Kconfig
+...
+config RTL8821AE
+        tristate "Realtek RTL8821AE/RTL8812AE Wireless Network Adapter"
+        depends on PCI
+        select RTLWIFI
+        select RTLWIFI_PCI
+        select RTLBTCOEXIST
+        ---help---
+        This is the driver for Realtek RTL8i821AE/RTL8812AE 802.11av PCIe
+        wireless network adapters.
+
+        If you choose to build it as a module, it will be called rtl8821ae
+...
+
+
+$ modinfo rtl8821ae
+filename:       /lib/modules/3.18.3-201.fc21.x86_64/kernel/drivers/net/wireless/rtlwifi/rtl8821ae/rtl8821ae.ko.xz
+firmware:       rtlwifi/rtl8821aefw.bin
+description:    Realtek 8821ae 802.11ac PCI wireless
+license:        GPL
+author:         Realtek WlanFAE	<wlanfae@realtek.com>
+alias:          pci:v000010ECd00008821sv*sd*bc*sc*i*
+alias:          pci:v000010ECd00008812sv*sd*bc*sc*i*
+depends:        rtlwifi,rtl_pci,btcoexist,mac80211
+...
+
+
+poma
 
