@@ -1,113 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f193.google.com ([209.85.223.193]:51429 "EHLO
-	mail-ie0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752213AbbACPlq (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:54074 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752871AbbAaBNT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Jan 2015 10:41:46 -0500
-Received: by mail-ie0-f193.google.com with SMTP id x19so4966867ier.0
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2015 07:41:45 -0800 (PST)
-Received: from mail-ie0-f170.google.com (mail-ie0-f170.google.com. [209.85.223.170])
-        by mx.google.com with ESMTPSA id k75sm21131804ioe.41.2015.01.03.07.41.44
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sat, 03 Jan 2015 07:41:44 -0800 (PST)
-Received: by mail-ie0-f170.google.com with SMTP id rd18so17880418iec.15
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Jan 2015 07:41:44 -0800 (PST)
+	Fri, 30 Jan 2015 20:13:19 -0500
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-In-Reply-To: <CA+icZUUfFr2PQjp4ppMNj5UQE3U7-ArmO1LSDoZZf5c1Y85OMw@mail.gmail.com>
-References: <1420127170-28421-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<CACna6rznUcqGTK0t1k=kjn0NVLycq865780ozyB+VYu78d_BSg@mail.gmail.com>
-	<CACna6rxbGRdw7XSYvHAJGxJvMVwjVbAL4ynBM3m9rNggh7gCVQ@mail.gmail.com>
-	<CA+icZUWOXMEyobZkudW9BEfkaWFTXQL9XF26g7oJMCzt=4==6g@mail.gmail.com>
-	<CAKXHbyO70WdWekSYCY9spMbX2+_kdKTp3JoreDKpCdUBzFwYqw@mail.gmail.com>
-	<CACna6rxTYUWvxvu0rFydWxkjbYdHfhV=o+9A+ViCpbV-LFx7fw@mail.gmail.com>
-	<CAKXHbyMqTk=k7eieBNtAD+n6+4w3weL82twHBo-o8ebm_3+wvg@mail.gmail.com>
-	<CA+icZUUJfemKC85=p7Huyw7xwfUdXBhePseJCnUKLx9edgpT4w@mail.gmail.com>
-	<CAKXHbyPm+2gy3E_FAVY82ggvJhWe-E_xtrhgeAPxUyRS-FutaA@mail.gmail.com>
-	<CA+icZUUfFr2PQjp4ppMNj5UQE3U7-ArmO1LSDoZZf5c1Y85OMw@mail.gmail.com>
-Date: Sat, 3 Jan 2015 16:41:44 +0100
-Message-ID: <CAKXHbyN2Vud5skK38KHFNo+FEG9at4SAQh8X5QYYK7qD3-34YQ@mail.gmail.com> (sfid-20150103_164150_753765_0AF605D4)
-Subject: Re: [PATCH] net: wireless: b43legacy: radio.c: Remove unused function
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Sedat Dilek <sedat.dilek@gmail.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21708.11481.380046.994311@gargle.gargle.HOWL> (sfid-20150131_021322_800648_EF2DBBBD)
+Date: Sat, 31 Jan 2015 06:46:09 +0530
+To: Peter Oh <poh@codeaurora.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Peter Oh <poh@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+	ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
+In-Reply-To: <54CC0B71.9050301@codeaurora.org>
+References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com>
+	<20150127213349.GA24933@localhost>
+	<54C824DC.5080804@qca.qualcomm.com>
+	<20150128043005.GB24933@localhost>
+	<54C875FD.3070101@qca.qualcomm.com>
+	<1422430643.1973.1.camel@sipsolutions.net>
+	<54CC0B71.9050301@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-01-03 15:51 GMT+01:00 Sedat Dilek <sedat.dilek@gmail.com>:
-> On Sat, Jan 3, 2015 at 3:45 PM, Rickard Strandqvist
-> <rickard_strandqvist@spectrumdigital.se> wrote:
-> [ ... ]
->>> > I just got one more complaining about my subject-line in "net: wireless: "
->>> > I use some sed call for this, so it's easy to fix. I will now remove that
->>> > part hereinafter.
->>> > I check in Documentation/ but did not find any clear info for this.
->>> >
->>>
->>> The easiest way to make (sub)maintainers happy is to check the git-log...
->>>
->>> $ git log --oneline /path/to/file
->>>
->>> ...and look how other contributors labeled their patches.
->>>
->>> [1] is the 1st address to look at on how to submit patches to Linux-kernel.
->>> To promote the good work of Greg, see [2,3] for a video and tutorial
->>> on that topic, too.
->>>
->>> - Sedat -
->>>
->>> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches
->>> [2] https://www.youtube.com/watch?v=XXix80GCvpo
->>> [3] https://github.com/gregkh/kernel-tutorial
->>
->>
->>
->> Hi Sedat
->>
->> Thanks for the tip :)
->>
->> To bad with the audio in the video thow. Have read SubmittingPatches before.
->>
->
-> AFAICS there is another (earlier) video "Write and Submit your first
-> Linux kernel Patch" from FOSDEM 2010.
->
-> For German readers I can recommend the book from [2] (no I get no
-> money for promotion).
->
-> - Sedat -
->
-> [1] https://www.youtube.com/watch?v=LLBrBBImJt4
-> [2] http://www.opensourcepress.de/de/produkte/Git/33227/978-3-95539-119-5-
->
->>
->> But I have now added a line in my script that does a:
->>
->> git log -10 --oneline
->>
->> So I can at least see the other subjekt lines, and make adjustments if
->> necessary.
->>
->>
->>
->> Kind regards
->> Rickard Strandqvist
+Peter Oh wrote:
+> As I addressed wmb uses dsb (in arm arch) and here is the description of 
+> arm architecture.
 
+What about other architectures ?
 
-Hi
-
-Good video!
-Wish I had seen this a year ago.
-
-Sorry, no German for me :)
-
-
-Kind regards
-Rickard Strandqvist
+Sujith
