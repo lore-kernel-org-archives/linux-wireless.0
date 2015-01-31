@@ -1,56 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34269 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751400AbbAGLDZ (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:40382 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950AbbAaPH7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Jan 2015 06:03:25 -0500
-Date: Wed, 7 Jan 2015 12:03:23 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: jikos@suse.cz, kernel list <linux-kernel@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] wireless extensions should default to Y
-Message-ID: <20150107110323.GB7368@amd> (sfid-20150107_120339_703328_4BE7AB28)
-References: <20150107101903.GA6563@amd>
- <1420627315.3407.2.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420627315.3407.2.camel@sipsolutions.net>
+	Sat, 31 Jan 2015 10:07:59 -0500
+Received: by mail-we0-f181.google.com with SMTP id k48so31885689wev.12
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 07:07:58 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: hal: rtl8723a_hal_init: Removed variables that is never used
+Date: Sat, 31 Jan 2015 16:11:19 +0100
+Message-Id: <1422717079-5629-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150131_160820_568899_65170CE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed 2015-01-07 11:41:55, Johannes Berg wrote:
-> On Wed, 2015-01-07 at 11:19 +0100, Pavel Machek wrote:
-> > Do we need following patch on top of
-> > 24a0aa212ee2dbe44360288684478d76a8e20a0a revert?
-> > 
-> > I updated kernel today, and (probably because extensions were not
-> > selectable before), the default choice was "N", which is wrong:
-> > oldconfig should result in compatible choices being made, for example
-> > to help bisect.
-> 
-> I don't believe we need this. It has been defaulting to N for a long
-> time, it's just that it got thrown out of your config due to building
-> inbetween the patch and its revert. Had you built only before and after
-> that wouldn't be an issue.
+Variable was assigned a value that was never used.
+I have also removed all the code that thereby serves no purpose.
 
-Well, I clearly hit the issue. If someone had _not_ build in between,
-the "default y" does not change anything for him, as he will not be
-asked thequestion. If someone starts config from scratch, Y is the
-safe answer.
+This was found using a static code analysis program called cppcheck
 
-> If we default to Y now we send the wrong signal. If you really need to
-> bisect something wext related you have far bigger issues I'd think, the
-> code hasn't changed *forever*.
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+---
+ drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c |   10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-I am woried about bisecting something unrelated, and then wext coming
-and breaking the bisect. But you are right that it will break the
-bisect, anyway...
-
-                                                                        Pavel
-									
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+index a5eadd4..f2bcf4f 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+@@ -604,7 +604,7 @@ rtl8723a_readefuse(struct rtw_adapter *padapter,
+ u16 rtl8723a_EfuseGetCurrentSize_WiFi(struct rtw_adapter *padapter)
+ {
+ 	u16 efuse_addr = 0;
+-	u8 hoffset = 0, hworden = 0;
++	u8 hworden = 0;
+ 	u8 efuse_data, word_cnts = 0;
+ 	struct hal_data_8723a *pHalData = GET_HAL_DATA(padapter);
+ 
+@@ -627,17 +627,14 @@ u16 rtl8723a_EfuseGetCurrentSize_WiFi(struct rtw_adapter *padapter)
+ 			break;
+ 
+ 		if (EXT_HEADER(efuse_data)) {
+-			hoffset = GET_HDR_OFFSET_2_0(efuse_data);
+ 			efuse_addr++;
+ 			efuse_OneByteRead23a(padapter, efuse_addr, &efuse_data);
+ 			if (ALL_WORDS_DISABLED(efuse_data)) {
+ 				continue;
+ 			}
+ 
+-			hoffset |= ((efuse_data & 0xF0) >> 1);
+ 			hworden = efuse_data & 0x0F;
+ 		} else {
+-			hoffset = (efuse_data >> 4) & 0x0F;
+ 			hworden = efuse_data & 0x0F;
+ 		}
+ 
+@@ -657,7 +654,7 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
+ 	u16 btusedbytes;
+ 	u16 efuse_addr;
+ 	u8 bank, startBank;
+-	u8 hoffset = 0, hworden = 0;
++	u8 hworden = 0;
+ 	u8 efuse_data, word_cnts = 0;
+ 	u16 retU2 = 0;
+ 	struct hal_data_8723a *pHalData = GET_HAL_DATA(padapter);
+@@ -700,7 +697,6 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
+ 				break;
+ 
+ 			if (EXT_HEADER(efuse_data)) {
+-				hoffset = GET_HDR_OFFSET_2_0(efuse_data);
+ 				efuse_addr++;
+ 				efuse_OneByteRead23a(padapter, efuse_addr,
+ 						  &efuse_data);
+@@ -709,10 +705,8 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
+ 					continue;
+ 				}
+ 
+-				hoffset |= ((efuse_data & 0xF0) >> 1);
+ 				hworden = efuse_data & 0x0F;
+ 			} else {
+-				hoffset = (efuse_data >> 4) & 0x0F;
+ 				hworden = efuse_data & 0x0F;
+ 			}
+ 			word_cnts = Efuse_CalculateWordCnts23a(hworden);
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+1.7.10.4
+
