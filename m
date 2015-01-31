@@ -1,148 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:52040 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756780AbbAZUmg (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:40155 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752832AbbAaOz3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Jan 2015 15:42:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org
-Subject: [PATCH V2 2/6] rtlwifi: btcoexist: Remove typedef statements
-Date: Mon, 26 Jan 2015 14:42:10 -0600
-Message-Id: <1422304934-9239-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150126_214245_622737_B423CBCD)
-In-Reply-To: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sat, 31 Jan 2015 09:55:29 -0500
+Received: by mail-wg0-f49.google.com with SMTP id k14so31545660wgh.8
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 06:55:27 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: core: rtw_mlme: Removed variables that is never used
+Date: Sat, 31 Jan 2015 15:58:49 +0100
+Message-Id: <1422716329-3718-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150131_155545_510684_A0CA1BA7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In btcoexist, there are a number of typedef statements. Not only do
-they violate the rule of avoiding new typdef statements in the kernel,
-these are also pointless as they use an extra level of indirection in
-the definition of some function pointers.
+Variable was assigned a value that was never used.
+I have also removed all the code that thereby serves no purpose.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+This was found using a static code analysis program called cppcheck
+
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c  |  2 +-
- .../net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h  | 84 +++++++---------------
- 2 files changed, 26 insertions(+), 60 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_mlme.c |   21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-index b2791c8..7a72636 100644
---- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -496,7 +496,7 @@ static u32 halbtc_read_4byte(void *bt_context, u32 reg_addr)
- 	return	rtl_read_dword(rtlpriv, reg_addr);
- }
- 
--static void halbtc_write_1byte(void *bt_context, u32 reg_addr, u32 data)
-+static void halbtc_write_1byte(void *bt_context, u32 reg_addr, u8 data)
+diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
+index 7299ef0..8b2db4b 100644
+--- a/drivers/staging/rtl8723au/core/rtw_mlme.c
++++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
+@@ -2123,7 +2123,6 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
  {
- 	struct btc_coexist *btcoexist = (struct btc_coexist *)bt_context;
- 	struct rtl_priv *rtlpriv = btcoexist->adapter;
-diff --git a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
-index 0a903ea..8c64acf 100644
---- a/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -350,45 +350,6 @@ enum btc_notify_type_stack_operation {
- 	BTC_STACK_OP_MAX
- };
+ 	u32 out_len;
+ 	int max_rx_ampdu_factor;
+-	unsigned char *pframe;
+ 	const u8 *p;
+ 	struct ieee80211_ht_cap ht_capie;
+ 	u8 WMM_IE[7] = {0x00, 0x50, 0xf2, 0x02, 0x00, 0x01, 0x00};
+@@ -2139,10 +2138,10 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
  
--typedef u8 (*bfp_btc_r1)(void *btc_context, u32 reg_addr);
--
--typedef u16 (*bfp_btc_r2)(void *btc_context, u32 reg_addr);
--
--typedef u32 (*bfp_btc_r4)(void *btc_context, u32 reg_addr);
--
--typedef void (*bfp_btc_w1)(void *btc_context, u32 reg_addr, u32 data);
--
--typedef void (*bfp_btc_w1_bit_mak)(void *btc_context, u32 reg_addr,
--				   u32 bit_mask, u8 data1b);
--
--typedef void (*bfp_btc_w2)(void *btc_context, u32 reg_addr, u16 data);
--
--typedef void (*bfp_btc_w4)(void *btc_context, u32 reg_addr, u32 data);
--
--typedef void (*bfp_btc_wr_1byte_bit_mask)(void *btc_context, u32 reg_addr,
--					  u8 bit_mask, u8 data);
--
--typedef void (*bfp_btc_set_bb_reg)(void *btc_context, u32 reg_addr,
--				   u32 bit_mask, u32 data);
--
--typedef u32 (*bfp_btc_get_bb_reg)(void *btc_context, u32 reg_addr,
--				  u32 bit_mask);
--
--typedef void (*bfp_btc_set_rf_reg)(void *btc_context, u8 rf_path, u32 reg_addr,
--				   u32 bit_mask, u32 data);
--
--typedef u32 (*bfp_btc_get_rf_reg)(void *btc_context, u8 rf_path,
--				  u32 reg_addr, u32 bit_mask);
--
--typedef void (*bfp_btc_fill_h2c)(void *btc_context, u8 element_id,
--				 u32 cmd_len, u8 *cmd_buffer);
--
--typedef	bool (*bfp_btc_get)(void *btcoexist, u8 get_type, void *out_buf);
--
--typedef	bool (*bfp_btc_set)(void *btcoexist, u8 set_type, void *in_buf);
--
--typedef void (*bfp_btc_disp_dbg_msg)(void *btcoexist, u8 disp_type);
--
- struct btc_bt_info {
- 	bool bt_disabled;
- 	u8 rssi_adjust_for_agc_table_on;
-@@ -484,26 +445,31 @@ struct btc_coexist {
- 	u8 pwr_mode_val[10];
+ 		if (pmlmepriv->qos_option == 0) {
+ 			out_len = *pout_len;
+-			pframe = rtw_set_ie23a(out_ie + out_len,
+-					       WLAN_EID_VENDOR_SPECIFIC,
+-					       sizeof(WMM_IE), WMM_IE,
+-					       pout_len);
++			rtw_set_ie23a(out_ie + out_len,
++						WLAN_EID_VENDOR_SPECIFIC,
++						sizeof(WMM_IE), WMM_IE,
++						pout_len);
  
- 	/* function pointers - io related */
--	bfp_btc_r1 btc_read_1byte;
--	bfp_btc_w1 btc_write_1byte;
--	bfp_btc_w1_bit_mak btc_write_1byte_bitmask;
--	bfp_btc_r2 btc_read_2byte;
--	bfp_btc_w2 btc_write_2byte;
--	bfp_btc_r4 btc_read_4byte;
--	bfp_btc_w4 btc_write_4byte;
--
--	bfp_btc_set_bb_reg btc_set_bb_reg;
--	bfp_btc_get_bb_reg btc_get_bb_reg;
--
--	bfp_btc_set_rf_reg btc_set_rf_reg;
--	bfp_btc_get_rf_reg btc_get_rf_reg;
--
--	bfp_btc_fill_h2c btc_fill_h2c;
--
--	bfp_btc_disp_dbg_msg btc_disp_dbg_msg;
--
--	bfp_btc_get btc_get;
--	bfp_btc_set btc_set;
-+	u8 (*btc_read_1byte)(void *btc_context, u32 reg_addr);
-+	void (*btc_write_1byte)(void *btc_context, u32 reg_addr, u8 data);
-+	void (*btc_write_1byte_bitmask)(void *btc_context, u32 reg_addr,
-+					u32 bit_mask, u8 data1b);
-+	u16 (*btc_read_2byte)(void *btc_context, u32 reg_addr);
-+	void (*btc_write_2byte)(void *btc_context, u32 reg_addr, u16 data);
-+	u32 (*btc_read_4byte)(void *btc_context, u32 reg_addr);
-+	void (*btc_write_4byte)(void *btc_context, u32 reg_addr, u32 data);
-+
-+	void (*btc_set_bb_reg)(void *btc_context, u32 reg_addr,
-+			       u32 bit_mask, u32 data);
-+	u32 (*btc_get_bb_reg)(void *btc_context, u32 reg_addr, u32 bit_mask);
-+
-+	void (*btc_set_rf_reg)(void *btc_context, u8 rf_path, u32 reg_addr,
-+			       u32 bit_mask, u32 data);
-+	u32 (*btc_get_rf_reg)(void *btc_context, u8 rf_path,
-+			      u32 reg_addr, u32 bit_mask);
-+
-+	void (*btc_fill_h2c)(void *btc_context, u8 element_id,
-+			     u32 cmd_len, u8 *cmd_buffer);
-+
-+	void (*btc_disp_dbg_msg)(void *btcoexist, u8 disp_type);
-+
-+	bool (*btc_get)(void *btcoexist, u8 get_type, void *out_buf);
-+	bool (*btc_set)(void *btcoexist, u8 set_type, void *in_buf);
- };
+ 			pmlmepriv->qos_option = 1;
+ 		}
+@@ -2172,18 +2171,18 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
+ 			ht_capie.ampdu_params_info |=
+ 				(IEEE80211_HT_AMPDU_PARM_DENSITY & 0x00);
  
- bool halbtc_is_wifi_uplink(struct rtl_priv *adapter);
+-		pframe = rtw_set_ie23a(out_ie + out_len, WLAN_EID_HT_CAPABILITY,
+-				    sizeof(struct ieee80211_ht_cap),
+-				    (unsigned char *)&ht_capie, pout_len);
++		rtw_set_ie23a(out_ie + out_len, WLAN_EID_HT_CAPABILITY,
++				sizeof(struct ieee80211_ht_cap),
++				(unsigned char *)&ht_capie, pout_len);
+ 
+ 		phtpriv->ht_option = true;
+ 
+ 		p = cfg80211_find_ie(WLAN_EID_HT_OPERATION, in_ie, in_len);
+ 		if (p && (p[1] == sizeof(struct ieee80211_ht_operation))) {
+ 			out_len = *pout_len;
+-			pframe = rtw_set_ie23a(out_ie + out_len,
+-					       WLAN_EID_HT_OPERATION,
+-					       p[1], p + 2 , pout_len);
++			rtw_set_ie23a(out_ie + out_len,
++					WLAN_EID_HT_OPERATION,
++					p[1], p + 2, pout_len);
+ 		}
+ 	}
+ 
 -- 
-2.1.2
+1.7.10.4
 
