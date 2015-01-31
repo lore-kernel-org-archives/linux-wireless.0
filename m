@@ -1,58 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11786 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754445AbbAVUe3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Jan 2015 15:34:29 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/38] iwlwifi: mvm: rs: use STBC regardless of power save mode
-Date: Thu, 22 Jan 2015 22:33:18 +0200
-Message-Id: <1421958809-3371-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150122_214445_944372_E13E150D)
-In-Reply-To: <1421958313.6424.2.camel@egrumbacBox>
-References: <1421958313.6424.2.camel@egrumbacBox>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:59811 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950AbbAaO4w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Jan 2015 09:56:52 -0500
+Received: by mail-wg0-f45.google.com with SMTP id x12so31538902wgg.4
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Jan 2015 06:56:51 -0800 (PST)
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: core: rtw_mlme_ext: Removed variables that is never used
+Date: Sat, 31 Jan 2015 16:00:12 +0100
+Message-Id: <1422716412-3960-1-git-send-email-rickard_strandqvist@spectrumdigital.se> (sfid-20150131_155655_275076_977DCDE0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Variable was assigned a value that was never used.
+I have also removed all the code that thereby serves no purpose.
 
-Tx STBC was used only when in CAM mode or if powersave is disabled.
-Effectively this meant we never used STBC as these modes aren't
-used on most platforms by default. Change that.
+This was found using a static code analysis program called cppcheck
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 8 --------
- 1 file changed, 8 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_mlme_ext.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index dd2f966..997a383 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -1802,20 +1802,12 @@ out:
- static bool rs_stbc_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			  struct iwl_lq_sta *lq_sta)
- {
--	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
--	struct ieee80211_vif *vif = mvmsta->vif;
--	bool sta_ps_disabled = (vif->type == NL80211_IFTYPE_STATION &&
--				!vif->bss_conf.ps);
--
- 	/* Our chip supports Tx STBC and the peer is an HT/VHT STA which
- 	 * supports STBC of at least 1*SS
- 	 */
- 	if (!lq_sta->stbc)
- 		return false;
+diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+index 0e0f73c..7c60fed 100644
+--- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
++++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+@@ -2515,7 +2515,6 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da,
+ 	unsigned char *mac, *bssid;
+ 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+ #ifdef CONFIG_8723AU_AP_MODE
+-	const u8 *pwps_ie;
+ 	u8 *ssid_ie;
+ 	int ssid_ielen;
+ 	int ssid_ielen_diff;
+@@ -2576,7 +2575,7 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da,
  
--	if (!mvm->ps_disabled && !sta_ps_disabled)
--		return false;
+ #ifdef CONFIG_8723AU_AP_MODE
+ 	if ((pmlmeinfo->state & 0x03) == MSR_AP) {
+-		pwps_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
++		cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+ 						  WLAN_OUI_TYPE_MICROSOFT_WPS,
+ 						  cur_network->IEs,
+ 						  cur_network->IELength);
+@@ -6196,13 +6195,9 @@ int set_chplan_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
+ 
+ int led_blink_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
+ {
+-	struct LedBlink_param *ledBlink_param;
 -
- 	if (!iwl_mvm_bt_coex_is_mimo_allowed(mvm, sta))
- 		return false;
+ 	if (!pbuf)
+ 		return H2C_PARAMETERS_ERROR;
+ 
+-	ledBlink_param = (struct LedBlink_param *)pbuf;
+-
+ 	return H2C_SUCCESS;
+ }
  
 -- 
-1.9.1
+1.7.10.4
 
