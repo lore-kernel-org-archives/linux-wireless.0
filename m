@@ -1,61 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47992 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753662AbbBAXCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2015 18:02:25 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: core: rtw_mlme: Removed variables that is never used
-References: <1422716329-3718-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-Date: Sun, 01 Feb 2015 18:02:18 -0500
-In-Reply-To: <1422716329-3718-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	(Rickard Strandqvist's message of "Sat, 31 Jan 2015 15:58:49 +0100")
-Message-ID: <wrfjbnld1bid.fsf@redhat.com> (sfid-20150202_000238_305727_5A78D6A1)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25275 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751541AbbBAIzj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Feb 2015 03:55:39 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 5/6] wil6210: print ciphers in debug info
+Date: Sun,  1 Feb 2015 10:55:15 +0200
+Message-Id: <1422780916-8577-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150201_095548_649854_1680AB64)
+In-Reply-To: <1422780916-8577-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1422780916-8577-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
-> Variable was assigned a value that was never used.
-> I have also removed all the code that thereby serves no purpose.
->
-> This was found using a static code analysis program called cppcheck
->
-> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-> ---
->  drivers/staging/rtl8723au/core/rtw_mlme.c |   21 ++++++++++-----------
->  1 file changed, 10 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
-> index 7299ef0..8b2db4b 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_mlme.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
-> @@ -2123,7 +2123,6 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
->  {
->  	u32 out_len;
->  	int max_rx_ampdu_factor;
-> -	unsigned char *pframe;
->  	const u8 *p;
->  	struct ieee80211_ht_cap ht_capie;
->  	u8 WMM_IE[7] = {0x00, 0x50, 0xf2, 0x02, 0x00, 0x01, 0x00};
-> @@ -2139,10 +2138,10 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
->  
->  		if (pmlmepriv->qos_option == 0) {
->  			out_len = *pout_len;
-> -			pframe = rtw_set_ie23a(out_ie + out_len,
-> -					       WLAN_EID_VENDOR_SPECIFIC,
-> -					       sizeof(WMM_IE), WMM_IE,
-> -					       pout_len);
-> +			rtw_set_ie23a(out_ie + out_len,
-> +						WLAN_EID_VENDOR_SPECIFIC,
-> +						sizeof(WMM_IE), WMM_IE,
-> +						pout_len);
+Print (at debug level) all cipher and AKM suites
 
-And again here - do it properly, please.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 37 +++++++++++++++++++----------
+ 1 file changed, 25 insertions(+), 12 deletions(-)
 
-Jes
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index e758f43..2d5ea21 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -334,6 +334,30 @@ out:
+ 	return rc;
+ }
+ 
++static void wil_print_crypto(struct wil6210_priv *wil,
++			     struct cfg80211_crypto_settings *c)
++{
++	int i, n;
++
++	wil_dbg_misc(wil, "WPA versions: 0x%08x cipher group 0x%08x\n",
++		     c->wpa_versions, c->cipher_group);
++	wil_dbg_misc(wil, "Pairwise ciphers [%d] {\n", c->n_ciphers_pairwise);
++	n = min_t(int, c->n_ciphers_pairwise, ARRAY_SIZE(c->ciphers_pairwise));
++	for (i = 0; i < n; i++)
++		wil_dbg_misc(wil, "  [%d] = 0x%08x\n", i,
++			     c->ciphers_pairwise[i]);
++	wil_dbg_misc(wil, "}\n");
++	wil_dbg_misc(wil, "AKM suites [%d] {\n", c->n_akm_suites);
++	n = min_t(int, c->n_akm_suites, ARRAY_SIZE(c->akm_suites));
++	for (i = 0; i < n; i++)
++		wil_dbg_misc(wil, "  [%d] = 0x%08x\n", i,
++			     c->akm_suites[i]);
++	wil_dbg_misc(wil, "}\n");
++	wil_dbg_misc(wil, "Control port : %d, eth_type 0x%04x no_encrypt %d\n",
++		     c->control_port, be16_to_cpu(c->control_port_ethertype),
++		     c->control_port_no_encrypt);
++}
++
+ static void wil_print_connect_params(struct wil6210_priv *wil,
+ 				     struct cfg80211_connect_params *sme)
+ {
+@@ -348,6 +372,7 @@ static void wil_print_connect_params(struct wil6210_priv *wil,
+ 		print_hex_dump(KERN_INFO, "  SSID: ", DUMP_PREFIX_OFFSET,
+ 			       16, 1, sme->ssid, sme->ssid_len, true);
+ 	wil_info(wil, "  Privacy: %s\n", sme->privacy ? "secure" : "open");
++	wil_print_crypto(wil, &sme->crypto);
+ }
+ 
+ static int wil_cfg80211_connect(struct wiphy *wiphy,
+@@ -619,18 +644,6 @@ static void wil_print_bcon_data(struct cfg80211_beacon_data *b)
+ 			     b->assocresp_ies, b->assocresp_ies_len);
+ }
+ 
+-static void wil_print_crypto(struct wil6210_priv *wil,
+-			     struct cfg80211_crypto_settings *c)
+-{
+-	wil_dbg_misc(wil, "WPA versions: 0x%08x cipher group 0x%08x\n",
+-		     c->wpa_versions, c->cipher_group);
+-	wil_dbg_misc(wil, "Pairwise ciphers [%d]\n", c->n_ciphers_pairwise);
+-	wil_dbg_misc(wil, "AKM suites [%d]\n", c->n_akm_suites);
+-	wil_dbg_misc(wil, "Control port : %d, eth_type 0x%04x no_encrypt %d\n",
+-		     c->control_port, be16_to_cpu(c->control_port_ethertype),
+-		     c->control_port_no_encrypt);
+-}
+-
+ static int wil_fix_bcon(struct wil6210_priv *wil,
+ 			struct cfg80211_beacon_data *bcon)
+ {
+-- 
+2.1.0
+
