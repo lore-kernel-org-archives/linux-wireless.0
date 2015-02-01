@@ -1,42 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:41918 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbbBVVuS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2015 16:50:18 -0500
-Received: by mail-ig0-f177.google.com with SMTP id z20so14217711igj.4
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2015 13:50:17 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:38351 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753356AbbBAW6N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Feb 2015 17:58:13 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: core: rtw_mlme_ext: Removed variables that is never used
+References: <1422716412-3960-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Date: Sun, 01 Feb 2015 17:58:03 -0500
+In-Reply-To: <1422716412-3960-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	(Rickard Strandqvist's message of "Sat, 31 Jan 2015 16:00:12 +0100")
+Message-ID: <wrfjoapd1bpg.fsf@redhat.com> (sfid-20150201_235936_508355_8DE86E5E)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
-References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
-	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
-	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
-	<CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
-Date: Sun, 22 Feb 2015 13:50:16 -0800
-Message-ID: <CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com> (sfid-20150222_225022_139490_F3E0DA32)
-Subject: Re: AR9462 problems connecting again..
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 22, 2015 at 11:39 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+> Variable was assigned a value that was never used.
+> I have also removed all the code that thereby serves no purpose.
 >
-> Hm, can you enable wpa debugging to log everything whilst it's
-> associating / reassociating?
+> This was found using a static code analysis program called cppcheck
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_mlme_ext.c |    7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> index 0e0f73c..7c60fed 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> @@ -2515,7 +2515,6 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da,
+>  	unsigned char *mac, *bssid;
+>  	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+>  #ifdef CONFIG_8723AU_AP_MODE
+> -	const u8 *pwps_ie;
+>  	u8 *ssid_ie;
+>  	int ssid_ielen;
+>  	int ssid_ielen_diff;
+> @@ -2576,7 +2575,7 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da,
+>  
+>  #ifdef CONFIG_8723AU_AP_MODE
+>  	if ((pmlmeinfo->state & 0x03) == MSR_AP) {
+> -		pwps_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+> +		cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+>  						  WLAN_OUI_TYPE_MICROSOFT_WPS,
+>  						  cur_network->IEs,
+>  						  cur_network->IELength);
 
-Ugh. When I add "-dd" to the command line, it has now worked three
-times in a row, when before it worked once out of ten tries.
+If you want to modify this, you need to fix up the formatting to go with
+it.
 
-So my guess is that it's something timing-dependent.
+NACK
 
-Or it's something where once it starts working, it stays working until
-I reboot. I'll try that.
+Jes
 
-                         Linus
+> @@ -6196,13 +6195,9 @@ int set_chplan_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
+>  
+>  int led_blink_hdl23a(struct rtw_adapter *padapter, const u8 *pbuf)
+>  {
+> -	struct LedBlink_param *ledBlink_param;
+> -
+>  	if (!pbuf)
+>  		return H2C_PARAMETERS_ERROR;
+>  
+> -	ledBlink_param = (struct LedBlink_param *)pbuf;
+> -
+>  	return H2C_SUCCESS;
+>  }
