@@ -1,91 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:49356 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754621AbbBPMQp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 07:16:45 -0500
-Message-ID: <54E1DF9F.7080708@rempel-privat.de> (sfid-20150216_131648_513572_4B1F391C)
-Date: Mon, 16 Feb 2015 13:16:31 +0100
-From: Oleksij Rempel <linux@rempel-privat.de>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:35613 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922AbbBAXQg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Feb 2015 18:16:36 -0500
+Received: by mail-ig0-f178.google.com with SMTP id hl2so13442151igb.5
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 15:16:35 -0800 (PST)
+Received: from mail-ie0-f180.google.com (mail-ie0-f180.google.com. [209.85.223.180])
+        by mx.google.com with ESMTPSA id w4sm2459806ioi.10.2015.02.01.15.16.35
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Sun, 01 Feb 2015 15:16:35 -0800 (PST)
+Received: by mail-ie0-f180.google.com with SMTP id rl12so14130690iec.11
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 15:16:35 -0800 (PST)
 MIME-Version: 1.0
-To: Waldek <sp2ong@wp.pl>, linux-wireless@vger.kernel.org
-Subject: Re: 10/5 Mhz channel width is possible ?
-References: <54e1bd9b748a00.69475037@wp.pl>
-In-Reply-To: <54e1bd9b748a00.69475037@wp.pl>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="3WqR0wUmqDGEGcS1o77D6mCRwNJGfd7l7"
+In-Reply-To: <wrfjoapd1bpg.fsf@redhat.com>
+References: <1422716412-3960-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<wrfjoapd1bpg.fsf@redhat.com>
+Date: Mon, 2 Feb 2015 00:16:34 +0100
+Message-ID: <CAKXHbyM+2XBM-9s4-tuM024SBKEFoBb7bKG+OcqC0_t8TrCPcg@mail.gmail.com> (sfid-20150202_001653_408096_B2420A35)
+Subject: Re: [PATCH] staging: rtl8723au: core: rtw_mlme_ext: Removed variables
+ that is never used
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---3WqR0wUmqDGEGcS1o77D6mCRwNJGfd7l7
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+2015-02-01 23:58 GMT+01:00 Jes Sorensen <Jes.Sorensen@redhat.com>:
+> Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+>> Variable was assigned a value that was never used.
+>> I have also removed all the code that thereby serves no purpose.
+>>
+>> This was found using a static code analysis program called cppcheck
+>>
+>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+>> ---
+>>  drivers/staging/rtl8723au/core/rtw_mlme_ext.c |    7 +------
+>>  1 file changed, 1 insertion(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+>> index 0e0f73c..7c60fed 100644
+>> --- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+>> +++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+>> @@ -2515,7 +2515,6 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da,
+>>       unsigned char *mac, *bssid;
+>>       struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+>>  #ifdef CONFIG_8723AU_AP_MODE
+>> -     const u8 *pwps_ie;
+>>       u8 *ssid_ie;
+>>       int ssid_ielen;
+>>       int ssid_ielen_diff;
+>> @@ -2576,7 +2575,7 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da,
+>>
+>>  #ifdef CONFIG_8723AU_AP_MODE
+>>       if ((pmlmeinfo->state & 0x03) == MSR_AP) {
+>> -             pwps_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+>> +             cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+>>                                                 WLAN_OUI_TYPE_MICROSOFT_WPS,
+>>                                                 cur_network->IEs,
+>>                                                 cur_network->IELength);
+>
+> If you want to modify this, you need to fix up the formatting to go with
+> it.
+>
+> NACK
+>
 
-Am 16.02.2015 um 10:51 schrieb Waldek:
->=20
-> Hi,
->=20
-> I have linux kernel version 3.19 and iw tool v3.17. I have use USB WIFI=
- WN722N which use ATH9k_htc driver from kernel
-> I would like setup channel width 5 MHZ form my ad-hoc Mesh network base=
- on olsrd
->=20
-> I have try setup in following
->=20
-> iw wlan0 set type ibss
-> ip link set wlan0 up
-> iw wlan0 ibss join MYNet 2447 5MHZ
->=20
-> but I have message:
->=20
-> command failed: Invalid argument (-22)
->=20
-> when I use=20
-> iw wlan0 ibss join MYNet 2447
->=20
-> no error message but channel width is 20 Mhz
->=20
-> I have see syntax iw tools:
->=20
->  iw   dev <devname> ibss join <SSID> <freq in MHz> [HT20|HT40+|HT40-|NO=
-HT|5MHZ|10MHZ] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>] [basic=
--rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] [key d:0:abc=
-de]
->=20
-> it is look that in ibss mode I can set 10 or 5 Mhz width channel but do=
-n't work
->=20
-> I have local network which working on OpenWRT with UBNT devices with ch=
-annel width 5 Mhz
-> I would like get access to my local network from my laptop with Linux a=
-nd use USB WIFI WN722N
->=20
-> What is wrong ??
->=20
-> Thank you for help and any suggestion
->=20
-> Waldek
+Hi
 
-Theoretically it should be possible, but i we need some changes in the
-firmware.
+I am sorry, please ignore this.
+I will not send any more patches.
 
---=20
-Regards,
-Oleksij
-
-
---3WqR0wUmqDGEGcS1o77D6mCRwNJGfd7l7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iF4EAREIAAYFAlTh36kACgkQHwImuRkmbWkL+gD+IPvRWWFM32QbTD8eQCFG3s+v
-sMjqP5X5vtIlZSeygiwA/i9XjEVwEgHTBXP7ur14o4UFeUnNc3PpB7BZzmPG8G8C
-=qptB
------END PGP SIGNATURE-----
-
---3WqR0wUmqDGEGcS1o77D6mCRwNJGfd7l7--
+Kind regards
+Rickard Strandqvist
