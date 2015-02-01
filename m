@@ -1,41 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:43013 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753806AbbBCAAi (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:35833 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbbBAX2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 19:00:38 -0500
-Received: by mail-ob0-f171.google.com with SMTP id gq1so10856278obb.2
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2015 16:00:38 -0800 (PST)
-Message-ID: <54D00FA4.2060907@lwfinger.net> (sfid-20150203_010236_533654_DB5C5B1B)
-Date: Mon, 02 Feb 2015 18:00:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 1 Feb 2015 18:28:44 -0500
 MIME-Version: 1.0
-To: Ken D'Ambrosio <ken@jots.org>, linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ee (Thinkpad T440s)
-References: <10a90ab7a6c186362f339481b531832f@webmail.jots.org>
-In-Reply-To: <10a90ab7a6c186362f339481b531832f@webmail.jots.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAKXHbyP10uukO7Y54OBTvWPUZ6RiVpG=8BcppzxfnJOMg+Mobw@mail.gmail.com>
+References: <1422717177-5865-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+ <wrfjfvap1bk6.fsf@redhat.com> <CAKXHbyP10uukO7Y54OBTvWPUZ6RiVpG=8BcppzxfnJOMg+Mobw@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 2 Feb 2015 10:28:22 +1100
+Message-ID: <CAGRGNgUDQWKLyj=U72iNmGQZVfushx2OR=qsjqQQ5C+LJirLQg@mail.gmail.com> (sfid-20150202_002900_711425_BC8AB2CC)
+Subject: Re: [PATCH] staging: rtl8723au: hal: usb_ops_linux: Removed variables
+ that is never used
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/02/2015 05:24 PM, Ken D'Ambrosio wrote:
-> Hi, all.  Just got a new Thinkpad, and needless to say, tried to fire it up on
-> the network.  Ubuntu 14.04 didn't have the driver, so I tried 14.10, which did.
-> I thought I was good until I tried to connect; the laptop would see all the
-> advertised WAPs, but wouldn't connect to any of them (including my security-free
-> ones).  I then downloaded the 3.19 RC and tried that -- same deal.  I see a few
-> extra git commits in -next; any idea if that will be of any assistance?  Is
-> there anything I can dig through in my logs to help flesh out what the problem is?
+Hi Rickard,
 
-Logs are always helpful. As some of us do not use Ubuntu, a kernel version as 
-shown by 'uname -r' is a lot more helpful that what version of Ubuntu you are using.
+On Mon, Feb 2, 2015 at 10:17 AM, Rickard Strandqvist
+<rickard_strandqvist@spectrumdigital.se> wrote:
+> 2015-02-02 0:01 GMT+01:00 Jes Sorensen <Jes.Sorensen@redhat.com>:
+>> Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+>>> Variable was assigned a value that was never used.
+>>> I have also removed all the code that thereby serves no purpose.
+>>>
+>>> This was found using a static code analysis program called cppcheck
+>>>
+>>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+>>> ---
+>>>  drivers/staging/rtl8723au/hal/usb_ops_linux.c |    9 +++------
+>>>  1 file changed, 3 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/staging/rtl8723au/hal/usb_ops_linux.c b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+>>> index a6d16ad..4ae0a8a 100644
+>>> --- a/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+>>> +++ b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+>>> @@ -26,11 +26,10 @@ u8 rtl8723au_read8(struct rtw_adapter *padapter, u16 addr)
+>>>  {
+>>>       struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+>>>       struct usb_device *udev = pdvobjpriv->pusbdev;
+>>> -     int len;
+>>>       u8 data;
+>>>
+>>>       mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+>>> -     len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>>> +     usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>>>                             REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+>>>                             addr, 0, &pdvobjpriv->usb_buf.val8, sizeof(data),
+>>>                             RTW_USB_CONTROL_MSG_TIMEOUT);
+>>> @@ -45,11 +44,10 @@ u16 rtl8723au_read16(struct rtw_adapter *padapter, u16 addr)
+>>>  {
+>>>       struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+>>>       struct usb_device *udev = pdvobjpriv->pusbdev;
+>>> -     int len;
+>>>       u16 data;
+>>>
+>>>       mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+>>> -     len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>>> +     usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>>>                             REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+>>>                             addr, 0, &pdvobjpriv->usb_buf.val16, sizeof(data),
+>>>                             RTW_USB_CONTROL_MSG_TIMEOUT);
+>>> @@ -64,11 +62,10 @@ u32 rtl8723au_read32(struct rtw_adapter *padapter, u16 addr)
+>>>  {
+>>>       struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+>>>       struct usb_device *udev = pdvobjpriv->pusbdev;
+>>> -     int len;
+>>>       u32 data;
+>>>
+>>>       mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+>>> -     len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>>> +     usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>>>                             REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+>>>                             addr, 0, &pdvobjpriv->usb_buf.val32, sizeof(data),
+>>>                             RTW_USB_CONTROL_MSG_TIMEOUT);
+>>
+>> Again, fix the formatting if you want to make this change.
+>>
+>> NACK
+>>
+>> Jes
+>
+>
+> Hi
+>
+> I am sorry, please ignore this.
+> I will not send any more patches.
 
-Kernel 3.19-rc4 from the wireless-drivers repo contains all those commits in 
--next, and it works fine here. At this point, I have been connected for 27 hours 
-with a WPA2 connection.
+The issue isn't you sending patches, the issue is that you don't spend
+enough time on them.
 
-You can also try the repo at http://github.com/lwfinger/rtlwifi-new.git. The 
-master branch should be OK. If not, try the troy branch.
+As I understand it, the formatting for function calls is that if the
+arguments flow onto a new line, they start in the column after the
+opening bracket of the function call.
 
-Larry
+I.e.
 
+do_something(arg, arg, arg,
+/* 13 cols */arg, arg, arg);
+
+(Using tabs and spaces instead of the comment of course)
+
+In this case, you're dropping 6 characters from the line with the
+function call. You then need to re-flow the arguments to suit.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
