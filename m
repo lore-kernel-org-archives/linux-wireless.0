@@ -1,72 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49787 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752284AbbBXKCa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:02:30 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH 0/8] Adds Intel FieldsPeak NFC solution driver
-Date: Tue, 24 Feb 2015 12:01:44 +0200
-Message-Id: <1424772112-27399-1-git-send-email-robert.dolca@intel.com> (sfid-20150224_110810_936097_7FF06E46)
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:37909 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753AbbBAXRL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Feb 2015 18:17:11 -0500
+Received: by mail-ig0-f171.google.com with SMTP id r10so14440747igi.4
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 15:17:10 -0800 (PST)
+Received: from mail-ig0-f171.google.com (mail-ig0-f171.google.com. [209.85.213.171])
+        by mx.google.com with ESMTPSA id m77sm5061685iom.38.2015.02.01.15.17.10
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 01 Feb 2015 15:17:10 -0800 (PST)
+Received: by mail-ig0-f171.google.com with SMTP id r10so14440701igi.4
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 15:17:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <wrfjk3011bm0.fsf@redhat.com>
+References: <1422716904-5208-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	<wrfjk3011bm0.fsf@redhat.com>
+Date: Mon, 2 Feb 2015 00:17:09 +0100
+Message-ID: <CAKXHbyMzt7Z3SffFUGDK_z0Y83_sBGoHO1fHLgWicsL+6EXfrQ@mail.gmail.com> (sfid-20150202_001719_222646_741605BC)
+Subject: Re: [PATCH] staging: rtl8723au: hal: HalDMOutSrc8723A_CE: Removed
+ variables that is never used
+From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for Intel's FieldsPeak NFC solution.
-The device is enumerated with ACPI and platform init.
+2015-02-02 0:00 GMT+01:00 Jes Sorensen <Jes.Sorensen@redhat.com>:
+> Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+>> Variable was assigned a value that was never used.
+>> I have also removed all the code that thereby serves no purpose.
+>>
+>> This was found using a static code analysis program called cppcheck
+>>
+>> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+>> ---
+>>  drivers/staging/rtl8723au/hal/HalDMOutSrc8723A_CE.c |    6 ++----
+>>  1 file changed, 2 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/staging/rtl8723au/hal/HalDMOutSrc8723A_CE.c b/drivers/staging/rtl8723au/hal/HalDMOutSrc8723A_CE.c
+>> index 179a1ba..3cbbfb7 100644
+>> --- a/drivers/staging/rtl8723au/hal/HalDMOutSrc8723A_CE.c
+>> +++ b/drivers/staging/rtl8723au/hal/HalDMOutSrc8723A_CE.c
+>> @@ -743,10 +743,8 @@ static void _PHY_IQCalibrate(struct rtw_adapter *pAdapter, int result[][8], u8 t
+>>       /*  Note: IQ calibration must be performed after loading  */
+>>       /*              PHY_REG.txt , and radio_a, radio_b.txt   */
+>>
+>> -     u32 bbvalue;
+>> -
+>>       if (t == 0) {
+>> -             bbvalue = PHY_QueryBBReg(pAdapter, rFPGA0_RFMOD, bMaskDWord);
+>> +             PHY_QueryBBReg(pAdapter, rFPGA0_RFMOD, bMaskDWord);
+>
+> In this particular case, I'd say to get rid of the call completely.
+> FPGA0_RFMOD should not have magic side effects just from being read.
+>
+> Jes
+>
+>>
+>>               /*  Save ADDA parameters, turn Path A ADDA on */
+>>               _PHY_SaveADDARegisters(pAdapter, ADDA_REG, pdmpriv->ADDA_backup, IQK_ADDA_REG_NUM);
+>> @@ -1047,7 +1045,7 @@ void rtl8723a_phy_iq_calibrate(struct rtw_adapter *pAdapter, bool bReCovery)
+>>               bPathAOK = bPathBOK = true;
+>>       } else {
+>>               RegE94 = RegEB4 = pdmpriv->RegE94 = pdmpriv->RegEB4 = 0x100;    /* X default value */
+>> -             RegE9C = RegEBC = pdmpriv->RegE9C = pdmpriv->RegEBC = 0x0;              /* Y default value */
+>> +             pdmpriv->RegE9C = pdmpriv->RegEBC = 0x0;                /* Y default value */
+>>       }
+>>
+>>       if ((RegE94 != 0)/*&&(RegEA4 != 0)*/)
 
-In order to implement the driver the nci_core_conn_create was
-modified in order to report the ID of the newly created connection.
-Fixed a bug that prevented to close a connection from the driver while
-the dev was down.
 
-The max packet size of a connection can be retrieved by the driver.
 
-The init, reset NCI functions can be called from the driver. The driver
-can also send command to the device using the NFC subsystem using the
-request - response blocking method.
+Hi
 
-Robert Dolca (8):
-  NFC: NCI: Allow connection close with dev down
-  NFC: NCI: Exporting NFC command and data send API
-  NFC: NCI: Adds NCI init and reset API for drivers
-  NFC: NCI: Add a special nci_request for driver
-  NFC: NCI: Don't call setup if previous NCI request failed
-  NFC: NCI: Add function to get max packet size for conn
-  NFC: NCI: Adds a way to get the new connection ID
-  NFC: Add Intel FieldsPeak NFC solution driver
+I am sorry, please ignore this.
+I will not send any more patches.
 
- drivers/nfc/Kconfig                |   1 +
- drivers/nfc/fdp/Kconfig            |  22 ++
- drivers/nfc/fdp/Makefile           |  10 +
- drivers/nfc/fdp/cmd.c              | 196 +++++++++++++++
- drivers/nfc/fdp/core.c             | 503 +++++++++++++++++++++++++++++++++++++
- drivers/nfc/fdp/fdp.h              | 115 +++++++++
- drivers/nfc/fdp/i2c.c              | 454 +++++++++++++++++++++++++++++++++
- drivers/nfc/fdp/ntf.c              |  68 +++++
- drivers/nfc/fdp/rsp.c              | 117 +++++++++
- drivers/nfc/st21nfcb/st21nfcb_se.c |   2 +-
- include/linux/platform_data/fdp.h  |  33 +++
- include/net/nfc/nci_core.h         |  18 +-
- net/nfc/nci/core.c                 |  53 +++-
- net/nfc/nci/data.c                 |  13 +
- net/nfc/nci/rsp.c                  |   6 +
- 15 files changed, 1601 insertions(+), 10 deletions(-)
- create mode 100644 drivers/nfc/fdp/Kconfig
- create mode 100644 drivers/nfc/fdp/Makefile
- create mode 100644 drivers/nfc/fdp/cmd.c
- create mode 100644 drivers/nfc/fdp/core.c
- create mode 100644 drivers/nfc/fdp/fdp.h
- create mode 100644 drivers/nfc/fdp/i2c.c
- create mode 100644 drivers/nfc/fdp/ntf.c
- create mode 100644 drivers/nfc/fdp/rsp.c
- create mode 100644 include/linux/platform_data/fdp.h
-
--- 
-1.9.1
-
+Kind regards
+Rickard Strandqvist
