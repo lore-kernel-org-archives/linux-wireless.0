@@ -1,135 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:47137 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757689AbbBENoD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 08:44:03 -0500
-Received: by mail-wi0-f181.google.com with SMTP id fb4so10634308wid.2
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2015 05:44:01 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:44853 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753356AbbBAXBZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Feb 2015 18:01:25 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: hal: usb_ops_linux: Removed variables that is never used
+References: <1422717177-5865-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Date: Sun, 01 Feb 2015 18:01:13 -0500
+In-Reply-To: <1422717177-5865-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	(Rickard Strandqvist's message of "Sat, 31 Jan 2015 16:12:57 +0100")
+Message-ID: <wrfjfvap1bk6.fsf@redhat.com> (sfid-20150202_000130_120552_35146836)
 MIME-Version: 1.0
-In-Reply-To: <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	<1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-	<1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Thu, 5 Feb 2015 14:44:01 +0100
-Message-ID: <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com> (sfid-20150205_144414_688722_9B8E5DB6)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 February 2015 at 14:19, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Thu, 2015-02-05 at 04:57 -0800, Eric Dumazet wrote:
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+> Variable was assigned a value that was never used.
+> I have also removed all the code that thereby serves no purpose.
 >
->> The intention is to control the queues to the following :
->>
->> 1 ms of buffering, but limited to a configurable value.
->>
->> On a 40Gbps flow, 1ms represents 5 MB, which is insane.
->>
->> We do not want to queue 5 MB of traffic, this would destroy latencies
->> for all concurrent flows. (Or would require having fq_codel or fq as
->> packet schedulers, instead of default pfifo_fast)
->>
->> This is why having 1.5 ms delay between the transmit and TX completion
->> is a problem in your case.
-
-I do get your point. But 1.5ms is really tough on Wi-Fi.
-
-Just look at this:
-
-; ping 192.168.1.2 -c 3
-PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.
-64 bytes from 192.168.1.2: icmp_seq=1 ttl=64 time=1.83 ms
-64 bytes from 192.168.1.2: icmp_seq=2 ttl=64 time=2.02 ms
-64 bytes from 192.168.1.2: icmp_seq=3 ttl=64 time=1.98 ms
-
-; ping 192.168.1.2 -c 3 -Q 224
-PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.
-64 bytes from 192.168.1.2: icmp_seq=1 ttl=64 time=0.939 ms
-64 bytes from 192.168.1.2: icmp_seq=2 ttl=64 time=0.906 ms
-64 bytes from 192.168.1.2: icmp_seq=3 ttl=64 time=0.946 ms
-
-This was run with no load so batching code in the driver itself should
-have no measurable effect. The channel was near-ideal: low noise
-floor, cabled rf, no other traffic.
-
-The lower latency ping is when 802.11 QoS Voice Access Category is
-used. I also get 400mbps instead of 250mbps in this case with 5 flows
-(net/master).
-
-Dealing with black box firmware blobs is a pain.
-
-
-> Note that TCP stack could detect when this happens, *if* ACK where
-> delivered before the TX completions, or when TX completion happens,
-> we could detect that the clone of the freed packet was freed.
+> This was found using a static code analysis program called cppcheck
 >
-> In my test, when I did "ethtool -C eth0 tx-usecs 1024 tx-frames 64", and
-> disabling GSO, TCP stack sends a bunch of packets (a bit less than 64),
-> blocks on tcp_limit_output_bytes.
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/staging/rtl8723au/hal/usb_ops_linux.c |    9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
 >
-> Then we receive 2 stretch ACKS after ~50 usec.
->
-> TCP stack tries to push again some packets but blocks on
-> tcp_limit_output_bytes again.
->
-> 1ms later, TX completion happens, tcp_wfree() is called, and TCP stack
-> push following ~60 packets.
->
->
-> TCP could  eventually dynamically adjust the tcp_limit_output_bytes,
-> using a per flow dynamic value, but I would rather not add a kludge in
-> TCP stack only to deal with a possible bug in ath10k driver.
->
-> niu has a similar issue and simply had to call skb_orphan() :
->
-> drivers/net/ethernet/sun/niu.c:6669:            skb_orphan(skb);
+> diff --git a/drivers/staging/rtl8723au/hal/usb_ops_linux.c b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+> index a6d16ad..4ae0a8a 100644
+> --- a/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+> +++ b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
+> @@ -26,11 +26,10 @@ u8 rtl8723au_read8(struct rtw_adapter *padapter, u16 addr)
+>  {
+>  	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+>  	struct usb_device *udev = pdvobjpriv->pusbdev;
+> -	int len;
+>  	u8 data;
+>  
+>  	mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+> -	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+> +	usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>  			      REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+>  			      addr, 0, &pdvobjpriv->usb_buf.val8, sizeof(data),
+>  			      RTW_USB_CONTROL_MSG_TIMEOUT);
+> @@ -45,11 +44,10 @@ u16 rtl8723au_read16(struct rtw_adapter *padapter, u16 addr)
+>  {
+>  	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+>  	struct usb_device *udev = pdvobjpriv->pusbdev;
+> -	int len;
+>  	u16 data;
+>  
+>  	mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+> -	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+> +	usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>  			      REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+>  			      addr, 0, &pdvobjpriv->usb_buf.val16, sizeof(data),
+>  			      RTW_USB_CONTROL_MSG_TIMEOUT);
+> @@ -64,11 +62,10 @@ u32 rtl8723au_read32(struct rtw_adapter *padapter, u16 addr)
+>  {
+>  	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+>  	struct usb_device *udev = pdvobjpriv->pusbdev;
+> -	int len;
+>  	u32 data;
+>  
+>  	mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
+> -	len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+> +	usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
+>  			      REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
+>  			      addr, 0, &pdvobjpriv->usb_buf.val32, sizeof(data),
+>  			      RTW_USB_CONTROL_MSG_TIMEOUT);
 
-Ok. I tried calling skb_orphan() right after I submit each Tx frame
-(similar to niu which does this in start_xmit):
+Again, fix the formatting if you want to make this change.
 
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -564,6 +564,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct
-sk_buff *msdu)
-        if (res)
-                goto err_unmap_msdu;
+NACK
 
-+       skb_orphan(msdu);
-+
-        return 0;
-
- err_unmap_msdu:
-
-
-Now, with {net/master + ath10k GRO + the above} I get 620mbps on a
-single flow (even better then before). Wow.
-
-Does this look ok/safe as a solution to you?
-
-
-Michał
+Jes
