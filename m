@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34296 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752093AbbB0IKw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2015 03:10:52 -0500
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:47992 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753662AbbBAXCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Feb 2015 18:02:25 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: core: rtw_mlme: Removed variables that is never used
+References: <1422716329-3718-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Date: Sun, 01 Feb 2015 18:02:18 -0500
+In-Reply-To: <1422716329-3718-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+	(Rickard Strandqvist's message of "Sat, 31 Jan 2015 15:58:49 +0100")
+Message-ID: <wrfjbnld1bid.fsf@redhat.com> (sfid-20150202_000238_305727_5A78D6A1)
 MIME-Version: 1.0
-Subject: Re: [1/4] mwifiex: more_task flag for main_process
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1423676547-5213-1-git-send-email-patila@marvell.com>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <yangyang@marvell.com>, <szli@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Message-Id: <20150227081051.979A913FB80@smtp.codeaurora.org> (sfid-20150227_091101_728685_F292B45E)
-Date: Fri, 27 Feb 2015 08:10:51 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
+> Variable was assigned a value that was never used.
+> I have also removed all the code that thereby serves no purpose.
+>
+> This was found using a static code analysis program called cppcheck
+>
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_mlme.c |   21 ++++++++++-----------
+>  1 file changed, 10 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
+> index 7299ef0..8b2db4b 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_mlme.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
+> @@ -2123,7 +2123,6 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
+>  {
+>  	u32 out_len;
+>  	int max_rx_ampdu_factor;
+> -	unsigned char *pframe;
+>  	const u8 *p;
+>  	struct ieee80211_ht_cap ht_capie;
+>  	u8 WMM_IE[7] = {0x00, 0x50, 0xf2, 0x02, 0x00, 0x01, 0x00};
+> @@ -2139,10 +2138,10 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
+>  
+>  		if (pmlmepriv->qos_option == 0) {
+>  			out_len = *pout_len;
+> -			pframe = rtw_set_ie23a(out_ie + out_len,
+> -					       WLAN_EID_VENDOR_SPECIFIC,
+> -					       sizeof(WMM_IE), WMM_IE,
+> -					       pout_len);
+> +			rtw_set_ie23a(out_ie + out_len,
+> +						WLAN_EID_VENDOR_SPECIFIC,
+> +						sizeof(WMM_IE), WMM_IE,
+> +						pout_len);
 
-> From: Shengzhen Li <szli@marvell.com>
-> 
-> This patch handles a corner case where TX packet would remain in
-> driver queue till next packet comes in.
-> Here is sequence:
-> 1. TX packet is queued via hard_start_xmit and main_work is queued
-> 2. SDIO interrupt comes in which directly call mwifiex_main_process.
-> This starts executing main superloop.
-> 3. Now work from step1 is scheduled but at first check itself it sees
-> mwifiex_processing is set and exits.
-> 4. Now if superloop from step2 has passed TX processing part of superloop
-> this packet would remain in queue until next packet/command/SDIO interrupt
-> arrives and queues main_work.
-> 
-> This patch fixes this corner case by defining more_task flag which is set when
-> mwifiex_processing is found to be true. At end of superloop we again check if
-> more_task flag is set and if set, execute superloop again.
-> 
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Avinash Patil <patila@marvell.com>
+And again here - do it properly, please.
 
-Thanks, 4 patches applied to wireless-drivers-next.git:
-
-04c7b363c9f7 mwifiex: more_task flag for main_process
-7521ce6eb2d3 mwifiex: do not process mgmt rx on uninitialized interface
-b4e8aebbc7c2 mwifiex: change datatype to bool for device capability flags
-1c4c24eb7e96 mwifiex: modify TX buff size for SD8887
-
-Kalle Valo
+Jes
