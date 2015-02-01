@@ -1,52 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:28201 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752943AbbBYTye (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:58737 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752860AbbBAMAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 14:54:34 -0500
-Message-ID: <54EE2877.2040906@broadcom.com> (sfid-20150225_205437_422173_244C8C49)
-Date: Wed, 25 Feb 2015 20:54:31 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Jocky Wilson <jockyw2001@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: brcmfmac43241b4-sdio / Thinkpad Tablet 10 issues
-References: <54E2E1CD.5020203@m-labs.hk> <54E31CD5.70901@broadcom.com> <54E778F9.1000500@m-labs.hk> <loom.20150225T131550-21@post.gmane.org>
-In-Reply-To: <loom.20150225T131550-21@post.gmane.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sun, 1 Feb 2015 07:00:18 -0500
+Received: by mail-we0-f169.google.com with SMTP id u56so34421385wes.0
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 04:00:17 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 6/6] staging: vt6656: parse cts fall back out of vnt_fill_cts_head
+Date: Sun,  1 Feb 2015 11:59:43 +0000
+Message-Id: <1422791983-3408-6-git-send-email-tvboxspy@gmail.com> (sfid-20150201_130029_213274_3E5385F5)
+In-Reply-To: <1422791983-3408-1-git-send-email-tvboxspy@gmail.com>
+References: <1422791983-3408-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/25/15 13:23, Jocky Wilson wrote:
-> Sebastien Bourdeauducq<sb@...>  writes:
->
->>
->> On Tuesday, February 17, 2015 03:49 AM, Arend van Spriel wrote:
->>> So it is a one-off and not showing the issue you are seeing. Your issue
->>> seems to be due to failing firmware so you may need b5 firmware.
->>
->> Making some progress :)
->> ...
->> I guess that the driver has bugs with decoding some of the data sent by
->> the card.
->>
-> I can confirm this with my Thinkpad Tablet 8
-> which has same chip revision.
-> Arend: do you need anything else to be tested?
+Creating new function vnt_fill_cts_fb_head for the fall back rates.
 
-Nope. As it turns out this chip revision indeed needs b5 firmware. As 
-windows and linux use different firmware we will need to release that to 
-linux-firmware and modify brcmfmac to pick it up properly. Keep an eye 
-out for those patches.
+The check for fb_option is now done in vnt_rxtx_cts.
 
-Regards,
-Arend
+This fixes checkpatch warning
+WARNING: else is not generally useful after a break or return
+	559: FILE: drivers/staging/vt6656/rxtx.c:559:
 
-> /JockyW
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6656/rxtx.c | 99 +++++++++++++++++++++++--------------------
+ 1 file changed, 54 insertions(+), 45 deletions(-)
+
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index 3b90497..33baf26 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -518,60 +518,66 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_usb_send_context *tx_context,
+ 	return vnt_rxtx_datahead_a_fb(tx_context, &buf->data_head);
+ }
+ 
+-static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
+-	union vnt_tx_data_head *head)
++static u16 vnt_fill_cts_fb_head(struct vnt_usb_send_context *tx_context,
++				union vnt_tx_data_head *head)
+ {
+ 	struct vnt_private *priv = tx_context->priv;
++	struct vnt_cts_fb *buf = &head->cts_g_fb;
+ 	u32 cts_frame_len = 14;
+ 	u16 current_rate = tx_context->tx_rate;
+ 
+-	if (tx_context->fb_option) {
+-		/* Auto Fall back */
+-		struct vnt_cts_fb *buf = &head->cts_g_fb;
+-		/* Get SignalField,ServiceField,Length */
+-		vnt_get_phy_field(priv, cts_frame_len,
+-			priv->top_cck_basic_rate, PK_TYPE_11B, &buf->b);
+-		buf->duration_ba =
+-			vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA,
+-						   tx_context->pkt_type,
+-						   current_rate);
+-		/* Get CTSDuration_ba_f0 */
+-		buf->cts_duration_ba_f0 =
+-			vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA_F0,
+-						   tx_context->pkt_type,
+-						   priv->tx_rate_fb0);
+-		/* Get CTSDuration_ba_f1 */
+-		buf->cts_duration_ba_f1 =
+-			vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA_F1,
+-						   tx_context->pkt_type,
+-						   priv->tx_rate_fb1);
+-		/* Get CTS Frame body */
+-		buf->data.duration = buf->duration_ba;
+-		buf->data.frame_control =
+-			cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
++	/* Get SignalField,ServiceField,Length */
++	vnt_get_phy_field(priv, cts_frame_len, priv->top_cck_basic_rate,
++			  PK_TYPE_11B, &buf->b);
+ 
+-		ether_addr_copy(buf->data.ra, priv->current_net_addr);
++	buf->duration_ba =
++		vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA,
++					   tx_context->pkt_type,
++					   current_rate);
++	/* Get CTSDuration_ba_f0 */
++	buf->cts_duration_ba_f0 =
++		vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA_F0,
++					   tx_context->pkt_type,
++					   priv->tx_rate_fb0);
++	/* Get CTSDuration_ba_f1 */
++	buf->cts_duration_ba_f1 =
++		vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA_F1,
++					   tx_context->pkt_type,
++					   priv->tx_rate_fb1);
++	/* Get CTS Frame body */
++	buf->data.duration = buf->duration_ba;
++	buf->data.frame_control =
++		cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
+ 
+-		return vnt_rxtx_datahead_g_fb(tx_context, &buf->data_head);
+-	} else {
+-		struct vnt_cts *buf = &head->cts_g;
+-		/* Get SignalField,ServiceField,Length */
+-		vnt_get_phy_field(priv, cts_frame_len,
+-			priv->top_cck_basic_rate, PK_TYPE_11B, &buf->b);
+-		/* Get CTSDuration_ba */
+-		buf->duration_ba =
+-			vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA,
+-						   tx_context->pkt_type,
+-						   current_rate);
+-		/*Get CTS Frame body*/
+-		buf->data.duration = buf->duration_ba;
+-		buf->data.frame_control =
+-			cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
++	ether_addr_copy(buf->data.ra, priv->current_net_addr);
+ 
+-		ether_addr_copy(buf->data.ra, priv->current_net_addr);
++	return vnt_rxtx_datahead_g_fb(tx_context, &buf->data_head);
++}
+ 
+-		return vnt_rxtx_datahead_g(tx_context, &buf->data_head);
+-	}
++static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
++			     union vnt_tx_data_head *head)
++{
++	struct vnt_private *priv = tx_context->priv;
++	struct vnt_cts *buf = &head->cts_g;
++	u32 cts_frame_len = 14;
++	u16 current_rate = tx_context->tx_rate;
++
++	/* Get SignalField,ServiceField,Length */
++	vnt_get_phy_field(priv, cts_frame_len, priv->top_cck_basic_rate,
++			  PK_TYPE_11B, &buf->b);
++	/* Get CTSDuration_ba */
++	buf->duration_ba =
++		vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA,
++					   tx_context->pkt_type,
++					   current_rate);
++	/*Get CTS Frame body*/
++	buf->data.duration = buf->duration_ba;
++	buf->data.frame_control =
++		cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
++
++	ether_addr_copy(buf->data.ra, priv->current_net_addr);
++
++	return vnt_rxtx_datahead_g(tx_context, &buf->data_head);
+ }
+ 
+ static u16 vnt_rxtx_rts(struct vnt_usb_send_context *tx_context,
+@@ -628,6 +634,9 @@ static u16 vnt_rxtx_cts(struct vnt_usb_send_context *tx_context,
+ 		head = &tx_head->tx_cts.tx.mic.head;
+ 
+ 	/* Fill CTS */
++	if (tx_context->fb_option)
++		return vnt_fill_cts_fb_head(tx_context, head);
++
+ 	return vnt_fill_cts_head(tx_context, head);
+ }
+ 
+-- 
+2.1.0
 
