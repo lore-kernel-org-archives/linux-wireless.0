@@ -1,91 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49814 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752586AbbBXKCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:02:35 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH 4/8] NFC: NCI: Add a special nci_request for driver
-Date: Tue, 24 Feb 2015 12:01:48 +0200
-Message-Id: <1424772112-27399-5-git-send-email-robert.dolca@intel.com> (sfid-20150224_110431_260948_4CF68EBB)
-In-Reply-To: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+Received: from smtp.codeaurora.org ([198.145.11.231]:60084 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbbBBRZ3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2015 12:25:29 -0500
+Message-ID: <54CFB2EC.5070307@codeaurora.org> (sfid-20150202_182532_082511_59961289)
+Date: Mon, 02 Feb 2015 09:25:00 -0800
+From: Peter Oh <poh@codeaurora.org>
+MIME-Version: 1.0
+To: Sujith Manoharan <sujith@msujith.org>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Bob Copeland <me@bobcopeland.com>,
+	Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
+References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com> <20150127213349.GA24933@localhost> <54C824DC.5080804@qca.qualcomm.com> <20150128043005.GB24933@localhost> <54C875FD.3070101@qca.qualcomm.com> <1422430643.1973.1.camel@sipsolutions.net> <54CC0B71.9050301@codeaurora.org> <21708.11481.380046.994311@gargle.gargle.HOWL> <54CC3640.2090209@codeaurora.org> <21708.14493.458370.65799@gargle.gargle.HOWL>
+In-Reply-To: <21708.14493.458370.65799@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds nci_request_driver and nci_req_complete_driver
-as a wrapper for __nci_request. When nci_req_complete_driver is
-called it also sets cmd_cnt to 1. This is done because the response is not
-sent to the NFC subsystem so cmd_cnt is not decremented there.
 
-nci_send_cmd was previously exported in order to send commands to
-the device from the driver. It shouldn't be used without
-nci_req_complete_driver because cmd_cnt will have the wrong value.
-
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
----
- include/net/nfc/nci_core.h |  4 ++++
- net/nfc/nci/core.c         | 19 +++++++++++++++++++
- 2 files changed, 23 insertions(+)
-
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 4358d0a..42ec342 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -333,6 +333,10 @@ void nci_clear_target_list(struct nci_dev *ndev);
- #define NCI_REQ_CANCELED	2
- 
- void nci_req_complete(struct nci_dev *ndev, int result);
-+int nci_request_driver(struct nci_dev *ndev,
-+		       void (*req)(struct nci_dev *ndev, unsigned long opt),
-+		       unsigned long opt, __u32 timeout);
-+void nci_req_complete_driver(struct nci_dev *ndev, int result);
- struct nci_conn_info *nci_get_conn_info_by_conn_id(struct nci_dev *ndev,
- 						   int conn_id);
- 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 317b94b..1a449ac 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -74,6 +74,17 @@ void nci_req_complete(struct nci_dev *ndev, int result)
- 	}
- }
- 
-+void nci_req_complete_driver(struct nci_dev *ndev, int result)
-+{
-+	nci_req_complete(ndev, result);
-+
-+	/* trigger the next cmd */
-+	atomic_set(&ndev->cmd_cnt, 1);
-+	if (!skb_queue_empty(&ndev->cmd_q))
-+		queue_work(ndev->cmd_wq, &ndev->cmd_work);
-+}
-+EXPORT_SYMBOL(nci_req_complete_driver);
-+
- static void nci_req_cancel(struct nci_dev *ndev, int err)
- {
- 	if (ndev->req_status == NCI_REQ_PEND) {
-@@ -127,6 +138,14 @@ static int __nci_request(struct nci_dev *ndev,
- 	return rc;
- }
- 
-+int nci_request_driver(struct nci_dev *ndev,
-+		       void (*req)(struct nci_dev *ndev, unsigned long opt),
-+		       unsigned long opt, __u32 timeout)
-+{
-+	return __nci_request(ndev, req, opt, timeout);
-+}
-+EXPORT_SYMBOL(nci_request_driver);
-+
- inline int nci_request(struct nci_dev *ndev,
- 		       void (*req)(struct nci_dev *ndev,
- 				   unsigned long opt),
--- 
-1.9.1
-
+On 01/30/2015 06:06 PM, Sujith Manoharan wrote:
+> Peter Oh wrote:
+>> Please refer the email thread that I mentioned about other
+> architectures.
+>> (dsb is for ARM and other platforms have the equivalent instruction such
+>> as sfence, sync, mf, and dcs).
+> Ok.
+>
+>> Also the patch is updated with 2nd patch set replacing wmb to mb.
+> Would be good to test this on a MIPS platform...
+Agree. I'll do the investigation and test.
+> Sujith
+>
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
+Thanks,
+Peter
