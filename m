@@ -1,50 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21073 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932227AbbBIHQN convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:48408 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752470AbbBBPZp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 02:16:13 -0500
-From: "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	"Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-Subject: RE: [PATCH] cfg80211: add debugfs VHT80 allow map
-Date: Mon, 9 Feb 2015 07:16:02 +0000
-Message-ID: <1423466162219.33842@qti.qualcomm.com> (sfid-20150209_081621_814091_E7DED96D)
-References: <1423204546-22872-1-git-send-email-arnagara@qti.qualcomm.com>,<1423249860.2037.28.camel@sipsolutions.net>
-In-Reply-To: <1423249860.2037.28.camel@sipsolutions.net>
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 2 Feb 2015 10:25:45 -0500
 MIME-Version: 1.0
+In-Reply-To: <CAPp0ZBbKu-B3yPf0Et=XByJ1SrnxBgVbRXr9PBe0f6P08w87=Q@mail.gmail.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<54CB5D08.2070906@broadcom.com>
+	<1422623975.21689.77.camel@edumazet-glaptop2.roam.corp.google.com>
+	<54CB8B69.1070807@broadcom.com>
+	<CAA93jw5fqhz0Hiw74L2GXgtZ9JsMg+NtYydKxKzGDrvQcZn4hA@mail.gmail.com>
+	<CAA93jw7b0E9jjQYXrEPzjLLC9j8xNC0TFYXpWVtgFameJaNBdw@mail.gmail.com>
+	<1422741065.199624134@apps.rackspace.com>
+	<CAPp0ZBb2nkA6Y0s=W0kw=zvyn0wi0NMBRsBCw_xcD61ScOmgQg@mail.gmail.com>
+	<CAA_e5Z46Bu+zZZFzf_ejzA35Gw3g1_OG85yv6yd7MpbwZcE-nw@mail.gmail.com>
+	<CAA93jw7=oTex0Mp-0ThvuDRUnfR0N8tzdOQ8DD7QYWphp1b=4w@mail.gmail.com>
+	<CAJq5cE3ETbpEtecFHmhgHQveNRUhVfrzjTOygHm-TRCTwHNyKA@mail.gmail.com>
+	<1422801814.796219699@apps.rackspace.com>
+	<CAA_e5Z5PfimZeC5cqSk_xFpKOBeZ74htLeEdwtKieAYWJaEX+A@mail.gmail.com>
+	<CAPp0ZBbKu-B3yPf0Et=XByJ1SrnxBgVbRXr9PBe0f6P08w87=Q@mail.gmail.com>
+Date: Mon, 2 Feb 2015 10:25:45 -0500
+Message-ID: <CAGhGL2CnECP=3JkYEeshjqh7p1ra1jUunvVkSDQftGA+CVrPug@mail.gmail.com> (sfid-20150202_162554_598508_86C84B46)
+Subject: Re: [Cerowrt-devel] Fwd: Throughput regression with `tcp: refine TSO autosizing`
+From: Jim Gettys <jg@freedesktop.org>
+To: Avery Pennarun <apenwarr@google.com>
+Cc: Andrew McGregor <andrewmcgr@gmail.com>,
+	David Reed <dpreed@reed.com>,
+	Jonathan Morton <chromatix99@gmail.com>,
+	Dave Taht <dave.taht@gmail.com>,
+	Matt Mathis <mattmathis@google.com>,
+	Tim Shepard <shep@alum.mit.edu>,
+	"dstanley@arubanetworks.com" <dstanley@arubanetworks.com>,
+	Kathy Giori <kgiori@qca.qualcomm.com>,
+	Stig Thormodsrud <stig@ubnt.com>,
+	Derrick Pallas <pallas@meraki.com>,
+	"cerowrt-devel@lists.bufferbloat.net"
+	<cerowrt-devel@lists.bufferbloat.net>,
+	Mahesh Paolini-Subramanya <mahesh@dieswaytoofast.com>,
+	Jesper Dangaard Brouer <jbrouer@redhat.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-I see your point here. I will upload one patch for printing this info from iw.
-
-I will also write another patch for removing HT40 one?
-
-Thanks,
-Ashok
-________________________________________
-From: Johannes Berg <johannes@sipsolutions.net>
-Sent: Saturday, February 7, 2015 12:41 AM
-To: Nagarajan, Ashok Raj
-Cc: linux-wireless@vger.kernel.org; Manoharan, Rajkumar; Thiagarajan, Vasanthakumar
-Subject: Re: [PATCH] cfg80211: add debugfs VHT80 allow map
-
-On Fri, 2015-02-06 at 12:05 +0530, Ashok Raj Nagarajan wrote:
-> Here is a output of this debugfs entry
+On Sun, Feb 1, 2015 at 11:04 PM, Avery Pennarun <apenwarr@google.com> wrote:
+> On Sun, Feb 1, 2015 at 6:34 PM, Andrew McGregor <andrewmcgr@gmail.com> wrote:
+>> I missed one item in my list of potential improvements: the most braindead
+>> thing 802.11 has to say about rates is that broadcast and multicast packets
+>> should be sent at 'the lowest basic rate in the current supported rate set',
+>> which is really wasteful.  There are a couple of ways of dealing with this:
+>> one, ignore the standard and pick the rate that is most likely to get the
+>> frame to as many neighbours as possible (by a scan of the Minstrel tables).
+>> Or two, fan it out as unicast, which might well take less airtime (due to
+>> aggregation) as well as being much more likely to be delivered, since you
+>> get ACKs and retries by doing that.
 >
-> root@OpenWrt:/# cat /sys/kernel/debug/ieee80211/phy0/vht80allow_map
-> 2412 VHT80 N
+> As far as I can see, the only sensible thing to do with
+> multicast/broadcast is some variation of the unicast fanout, unless
+> you've got a truly huge number of nodes.  I don't know of any
+> protocols (certainly not video streams) that actually work well with
+> the kind of packet loss you see at medium/long range with wifi if
+> retransmits aren't used.  I've heard that openwrt already has a patch
+> included that does this kind of fanout at the bridge layer.
 
-I'm not sure I see much point in this, in fact we could remove the HT40
-one?
+I gather some Windows drivers from some vendors do this unicast fanout
+(claim made by one of their engineers in an early homenet meeting).
 
-We expose this data to userspace, so you could change 'iw' to print it
-when dumping the list of channels in 'iw list' or similar.
+>
+> I've also heard of a new "reliable multicast" in some newer 802.11
+> variant, which essentially sends out a single multicast packet and
+> expects an ACK from each intended recipient.  Other than adding
+> complexity, it seems like the best of both worlds.
 
-johannes
+So long as it times out in some very small, finite time.  We don't
+want a repeat of the infinite retry bugs Dave found in drivers a few
+years back...
 
+"Reliable multicast" ultimately is an oxymoron, particularly on a
+medium with hundreds/one bandwidth variation.  One remote low
+bandwidth station cannot be allowed to drag the entire network to the
+basement.
+                                     - Jim
