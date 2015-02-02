@@ -1,58 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:54388 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750975AbbBSIKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 03:10:15 -0500
-Message-ID: <54E59A57.402@openwrt.org> (sfid-20150219_091037_984477_D5B18F9C)
-Date: Thu, 19 Feb 2015 19:09:59 +1100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:55207 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806AbbBBXuB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2015 18:50:01 -0500
+Message-ID: <54D00D0A.6050107@codeaurora.org> (sfid-20150203_005006_146603_8627A85C)
+Date: Mon, 02 Feb 2015 15:49:30 -0800
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-To: Yuwei Zheng <yuweizheng@139.com>, linux-kernel@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
-CC: netdev@vger.kernel.org, zhengyuwei@360.cn
-Subject: Re: [PATCHv2] ath9k_htc: add adaptive usb receive flow control to
- repair soft lockup with monitor mode
-References: <1423528464-8433-1-git-send-email-yuweizheng@139.com>
-In-Reply-To: <1423528464-8433-1-git-send-email-yuweizheng@139.com>
-Content-Type: text/plain; charset=windows-1252
+To: Florian Fainelli <f.fainelli@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
+	ath10k@lists.infradead.org, Peter Oh <poh@qca.qualcomm.com>
+Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
+References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com> <20150127213349.GA24933@localhost> <54C824DC.5080804@qca.qualcomm.com> <20150128043005.GB24933@localhost> <54C875FD.3070101@qca.qualcomm.com> (sfid-20150128_064104_435635_7E681844) <1422430643.1973.1.camel@sipsolutions.net> <54CC0B71.9050301@codeaurora.org> <1422882133.1930.10.camel@sipsolutions.net> <54CFB4F4.1070807@qca.qualcomm.com> <1422903279.8755.1.camel@sipsolutions.net> <54CFCCCF.900@codeaurora.org> <1422904939.8755.3.camel@sipsolutions.net> <54CFD1D1.8060901@codeaurora.org> <1422906446.8755.4.camel@sipsolutions.net> <54CFF4E0.1040207@codeaurora.org> <54D00764.40808@gmail.com>
+In-Reply-To: <54D00764.40808@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-02-10 11:34, Yuwei Zheng wrote:
-> The ath9k_hif_usb_rx_cb function excute on  the interrupt context, and ath9k_rx_tasklet excute
-> on the soft irq context. In other words, the ath9k_hif_usb_rx_cb have more chance to excute than
-> ath9k_rx_tasklet.  So in the worst condition,  the rx.rxbuf receive list is always full,
-> and the do {}while(true) loop will not be break. The kernel get a soft lockup panic. 
->  
-> [59011.007210] BUG: soft lockup - CPU#0 stuck for 23s!
-> [kworker/0:0:30609]
-> [59011.030560] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
-> [59013.804486] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
-> [59013.858522] Kernel panic - not syncing: softlockup: hung tasks
->  
-> [59014.038891] Exception stack(0xdf4bbc38 to 0xdf4bbc80)
-> [59014.046834] bc20:                                                       de57b950 60000113
-> [59014.059579] bc40: 00000000 bb32bb32 60000113 de57b948 de57b500 dc7bb440 df4bbcd0 00000000
-> [59014.072337] bc60: de57b950 60000113 df4bbcd0 df4bbc80 c04c259d c04c25a0 60000133 ffffffff
-> [59014.085233] [<c04c28db>] (__irq_svc+0x3b/0x5c) from [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10)
-> [59014.100437] [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10) from [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc])
-> [59014.118267] [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc]) from [<c0036d23>] (tasklet_action+0x3b/0x98)
-> [59014.134132] [<c0036d23>] (tasklet_action+0x3b/0x98) from [<c0036709>] (__do_softirq+0x99/0x16c)
-> [59014.147784] [<c0036709>] (__do_softirq+0x99/0x16c) from [<c00369f7>] (irq_exit+0x5b/0x5c)
-> [59014.160653] [<c00369f7>] (irq_exit+0x5b/0x5c) from [<c000cfc3>] (handle_IRQ+0x37/0x78)
-> [59014.173124] [<c000cfc3>] (handle_IRQ+0x37/0x78) from [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68)
-> [59014.187225] [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68) from [<c04c28db>](__irq_svc+0x3b/0x5c)
->  
-> This bug can be see with low performance board, such as uniprocessor beagle bone board. Add some debug 
-> message in the ath9k_hif_usb_rx_cb function may trigger this bug quickly.
->  
-> Signed-off-by: Yuwei Zheng <yuweizheng@139.com>
-This approach of interaction between tasklet and workqueue processing
-seems quite complex to me. Wouldn't it be simpler and better to simply
-always run the rx processing code in workqueue context?
-That way it can go on processing forever (as long as there is data to be
-received), while the scheduler ensures that it doesn't interfere with
-other critical work on the CPU.
+Hi Florian,
 
-- Felix
+Very appreciate your explanation in detail.
+
+Regards,
+Peter
+On 02/02/2015 03:25 PM, Florian Fainelli wrote:
+> On 02/02/15 14:06, Peter Oh wrote:
+>> On 02/02/2015 11:47 AM, Johannes Berg wrote:
+>>> On Mon, 2015-02-02 at 11:36 -0800, Peter Oh wrote:
+>>>> On 02/02/2015 11:22 AM, Johannes Berg wrote:
+>>>>>>> You basically have the following sequence:
+>>>>>>>
+>>>>>>> iowrite()
+>>>>>>> ioread()
+>>>>>>>
+>>>>>>> If you look, you'll see that iowrite() is actually done (or should
+>>> be,
+>>>>>>> or perhaps with appropriate syncs) on an uncached mapping.
+>>>>>> since it's mmio, iowrite will be map to write, not out which is
+>>> cached
+>>>>>> mapping.
+>>>>>> That's why we address "posted write" here.
+>>>>>> If it's un-cached mapping which is volatile, we don't even need
+>>> ioread.
+>>>>> No, this isn't true - "posted write" in the context of this discussion
+>>>>> is about the PCIe bus. Memory writes that go through cache aren't
+>>>>> referred to as "posted writes", those are just (cached) memory writes.
+>>>>>
+>>>>>>>      As a result,
+>>>>>>> the only thing you care about here is the PCIe bus, not the CPU
+>>> cache
+>>>>>>> flush. And from there on that's just a question of PCIe bus
+>>> semantics.
+>>>>>> So how does ioread guarantee PCIe bus transaction done?
+>>>>> That's how PCIe works, operations are serialized, and read() has to
+>>> wait
+>>>>> for a response from the device
+>>>> do you know which mechanism or which instruction set makes read() wait
+>>>> for a response from the device?
+>>> I have no idea. I assume it's just like a DRAM read, the CPU stalls
+>>> while there's no response.
+>> My explanation in this thread is all about how read() guarantees the
+>> wait for a response from the device, therefore why mb() - replace from
+>> wmb at patch set 2 - is compatible to read().
+>> Briefly speaking,
+>> read() -> dsb 'st' -> cpu (actually axi master in cpu) holding axi bus
+>> -> cpu post write buffer on axi bus -> axi bus (axi slave which is PCIe
+>> device) signals write completion when write transactions completed in
+>> write response channel ->  cpu release axi bus -> cpu program counter
+>> (pc) proceeds the next to read.
+>>
+>> the exact same routines happen with mb().
+>> mb() -> dsb 'st' -> cpu (actually axi master in cpu) holding axi bus ->
+>> cpu post write buffer on axi bus -> axi bus (axi slave which is PCIe
+>> device) signals write completion when write transactions completed in
+>> write response channel ->  cpu release axi bus -> cpu program counter
+>> (pc) proceeds the next to read.
+>>
+>> Since axi bus master is waiting (blocking) for write completion signal
+>> from axi slave (PCIe device), this is how read() and mb() guarantee
+>> write command reaches to the device.
+> PCIe writes are posted, so the only guarantee you can have by inserting
+> such barriers is that writes from CPU to the PCIe RC (targeting PCIe
+> device) is non-posted (as far as the busing between CPU and the PCIe RC
+> is concerned), but past the PCIe RC, there is no such guarantee, because
+> the PCIe specification allows for that and there is flow control, PCIe
+> switches or other things that can alter the way your PCIe device ends-up
+> being written to.
+>
+> The only way to make a "portable" synchronization barrier is to do a
+> PCIe read from the same register you just wrote to, because then, the
+> PCIe RC needs to guarantee the transaction ordering on the PCIe bus itself.
+>
+> You might just be lucky and/or have very good HW which ensures that the
+> ARM synchronization barriers are propagated to the memory region where
+> your PCIe device BARs are mapped from the CPU perspective, but you
+> definitively cannot rely on such assumptions, as there will be bogus HW
+> there, for which only a subsequent ioread32() will work.
+
