@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:48847 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750748AbbBXPXO (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:32822 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755345AbbBBMsX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 10:23:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Alan Fisher <acf@unixcube.org>
-Subject: [PATCH] rtlwifi: Improve handling of IPv6 packets
-Date: Tue, 24 Feb 2015 09:23:01 -0600
-Message-Id: <1424791381-31863-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150224_162318_341760_62B15868)
+	Mon, 2 Feb 2015 07:48:23 -0500
+Received: from [117.216.55.194] (port=15247 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YIGQQ-002djK-Ir
+	for linux-wireless@vger.kernel.org; Mon, 02 Feb 2015 07:48:22 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 6/6] ath9k: Choose correct rate for 2GHz channel
+Date: Mon,  2 Feb 2015 18:21:13 +0530
+Message-Id: <1422881473-24580-7-git-send-email-sujith@msujith.org> (sfid-20150202_135429_650860_4D6ED4A3)
+In-Reply-To: <1422881473-24580-1-git-send-email-sujith@msujith.org>
+References: <1422881473-24580-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Routine rtl_is_special_data() is supposed to identify packets that need to
-use a low bit rate so that the probability of successful transmission is
-high. The current version has a bug that causes all IPv6 packets to be
-labelled as special, with a corresponding low rate of transmission. A
-complete fix will be quite intrusive, but until that is available, all
-IPv6 packets are identified as regular.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-This patch also removes a magic number.
+Set the transmit rate for the keep-alive frames
+as 1M/CCK when the current channel is in the
+2GHz band.
 
-Reported-and-tested-by: Alan Fisher <acf@unixcube.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [3.18+]
-Cc: Alan Fisher <acf@unixcube.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/rtlwifi/base.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_wow.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
-index 1d46774..074f716 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -1386,8 +1386,11 @@ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx)
- 		}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_wow.c b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
+index 2dc50a0..86bfc96 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_wow.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
+@@ -62,11 +62,15 @@ static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
+ 	/* set the transmit buffer */
+ 	ctl[0] = (KAL_FRAME_LEN | (MAX_RATE_POWER << 16));
+ 	ctl[1] = 0;
+-	ctl[3] = 0xb;	/* OFDM_6M hardware value for this rate */
+ 	ctl[4] = 0;
+ 	ctl[7] = (ah->txchainmask) << 2;
+ 	ctl[2] = 0xf << 16; /* tx_tries 0 */
  
- 		return true;
--	} else if (0x86DD == ether_type) {
--		return true;
-+	} else if (ETH_P_IPV6 == ether_type) {
-+		/* TODO: Handle any IPv6 cases that need special handling.
-+		 * For now, always return false
-+		 */
-+		goto end;
- 	}
++	if (IS_CHAN_2GHZ(ah->curchan))
++		ctl[3] = 0x1b;	/* CCK_1M */
++	else
++		ctl[3] = 0xb;	/* OFDM_6M */
++
+ 	for (i = 0; i < KAL_NUM_DESC_WORDS; i++)
+ 		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
  
- end:
 -- 
-2.1.4
+2.2.2
 
