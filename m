@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:2500 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752856AbbBDHVo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 02:21:44 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH-RESEND] ath10k: add log level configuration for fw_dbglog
-References: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com>
-Date: Wed, 4 Feb 2015 09:21:35 +0200
-In-Reply-To: <1422522412-10441-1-git-send-email-sjegadee@qti.qualcomm.com>
-	(SenthilKumar Jegadeesan's message of "Thu, 29 Jan 2015 14:36:52
-	+0530")
-Message-ID: <871tm6w39c.fsf@kamboji.qca.qualcomm.com> (sfid-20150204_082209_469145_DFE91700)
+Received: from mail.lang.hm ([64.81.33.126]:46491 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932679AbbBBHIU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2015 02:08:20 -0500
+Date: Sun, 1 Feb 2015 23:07:23 -0800 (PST)
+From: David Lang <david@lang.hm>
+To: Avery Pennarun <apenwarr@google.com>
+cc: David Reed <dpreed@reed.com>, dstanley@arubanetworks.com,
+	Andrew McGregor <andrewmcgr@gmail.com>,
+	Stig Thormodsrud <stig@ubnt.com>, netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Jesper Dangaard Brouer <jbrouer@redhat.com>,
+	"cerowrt-devel@lists.bufferbloat.net"
+	<cerowrt-devel@lists.bufferbloat.net>,
+	Matt Mathis <mattmathis@google.com>,
+	Derrick Pallas <pallas@meraki.com>,
+	Kathy Giori <kgiori@qca.qualcomm.com>,
+	Mahesh Paolini-Subramanya <mahesh@dieswaytoofast.com>,
+	Jonathan Morton <chromatix99@gmail.com>,
+	Tim Shepard <shep@alum.mit.edu>
+Subject: Re: [Cerowrt-devel] Fwd: Throughput regression with `tcp: refine
+ TSO autosizing`
+In-Reply-To: <CAPp0ZBa43kVBWN5iGgmW=-YQAkdm2DrmMN0URvVu=yXA-_TZCQ@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1502012249100.19609@nftneq.ynat.uz> (sfid-20150202_080826_390015_002728EC)
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com> <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com> <54CB5D08.2070906@broadcom.com> <1422623975.21689.77.camel@edumazet-glaptop2.roam.corp.google.com>
+ <54CB8B69.1070807@broadcom.com> <CAA93jw5fqhz0Hiw74L2GXgtZ9JsMg+NtYydKxKzGDrvQcZn4hA@mail.gmail.com> <CAA93jw7b0E9jjQYXrEPzjLLC9j8xNC0TFYXpWVtgFameJaNBdw@mail.gmail.com> <1422741065.199624134@apps.rackspace.com> <CAPp0ZBb2nkA6Y0s=W0kw=zvyn0wi0NMBRsBCw_xcD61ScOmgQg@mail.gmail.com>
+ <CAA_e5Z46Bu+zZZFzf_ejzA35Gw3g1_OG85yv6yd7MpbwZcE-nw@mail.gmail.com> <CAA93jw7=oTex0Mp-0ThvuDRUnfR0N8tzdOQ8DD7QYWphp1b=4w@mail.gmail.com> <CAJq5cE3ETbpEtecFHmhgHQveNRUhVfrzjTOygHm-TRCTwHNyKA@mail.gmail.com> <1422801814.796219699@apps.rackspace.com>
+ <CAPp0ZBa43kVBWN5iGgmW=-YQAkdm2DrmMN0URvVu=yXA-_TZCQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com> writes:
+On Sun, 1 Feb 2015, Avery Pennarun wrote:
 
-> Introduce optional log level configuration for
-> existing debugfs fw_dbglog.
+> On Sun, Feb 1, 2015 at 9:43 AM,  <dpreed@reed.com> wrote:
+>> I personally think that things like promoting semi-closed, essentially
+>> proprietary ESSID-based bridged distribution systems as "good ideas" are
+>> counterproductive to this goal.  But that's perhaps too radical for this
+>> crowd.
 >
-> It allow users to configure desired log level
-> for firmware debugs.
->
-> To configure log level as WARN
->
-> echo 0xffffffff  2 > /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
->
-> Loglevel	Value
-> VERBOSE		0
-> INFO		1
-> WARN		2
-> ERR		3
->
-> Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+> Not sure what you mean here.  ESSID-based distribution systems seem
+> pretty well defined to me.  The only proprietary part is the
+> decision-making process for assisted roaming (ie. the "inter-AP
+> protocol") which is only an optional performance optimization.  There
+> really should be an open source version of this, and I'm in fact
+> feebly attempting to build one, but I don't feel like the world is
+> falling apart through not having it.  You can build a bridged
+> multi-BSS ESSID today with plain out-of-the-box hostapd.
 
-Thanks, applied to ath.git.
+I will be running a fully opensource bridged ESSID system at SCaLE this month. 
+last year we had ~2500 people and devices with ~50 APs deployed, and it worked 
+well. The only problem was that I needed to deploy a few more APs to cover some 
+of the hallway areas more reliably.
 
--- 
-Kalle Valo
+There are tricks that the commercial systems pull that I can't currently 
+duplicate with opensource tools. But as Avery says, they are optimizations, not 
+something required for successful operation. It would be nice to get the 
+assisted roaming portion available. But it's not required.
+
+David Lang
