@@ -1,92 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47089 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754734AbbBOMDM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 07:03:12 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 8/9] wil6210: track privacy connection attribute
-Date: Sun, 15 Feb 2015 14:02:37 +0200
-Message-Id: <1424001758-29529-9-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150215_130319_819259_9A5CFE9B)
-In-Reply-To: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from mail.lang.hm ([64.81.33.126]:36838 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965142AbbBBX1o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2015 18:27:44 -0500
+Date: Mon, 2 Feb 2015 15:27:02 -0800 (PST)
+From: David Lang <david@lang.hm>
+To: Avery Pennarun <apenwarr@google.com>
+cc: =?ISO-8859-15?Q?Bj=F6rn_Smedman?= <bs@anyfi.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"cerowrt-devel@lists.bufferbloat.net"
+	<cerowrt-devel@lists.bufferbloat.net>,
+	dstanley <dstanley@arubanetworks.com>,
+	Derrick Pallas <pallas@meraki.com>
+Subject: Re: [Cerowrt-devel] Open Source RRM & Hand-Over Optimization (WAS:
+ Throughput regression with `tcp: refine TSO autosizing`)
+In-Reply-To: <CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1502021506460.8636@nftneq.ynat.uz> (sfid-20150203_002753_385201_611AF3B4)
+References: <CAJ1dT9x+vWm4uZ-r9PZrTmKjEQc260NhOKoRzH=Ab=oWkeZ83w@mail.gmail.com> <CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: MULTIPART/MIXED; BOUNDARY="680960-1537533407-1422919622=:8636"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For the STA interface, track 'privacy'.
-Refactor safety checks to:
-- always print connection params
-- always check IE size validity
-- require RSN IE for secure connection
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 30 +++++++++++++++++------------
- 1 file changed, 18 insertions(+), 12 deletions(-)
+--680960-1537533407-1422919622=:8636
+Content-Type: TEXT/PLAIN; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8BIT
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 38bd294..4bd708c 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -387,11 +387,25 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 	int ch;
- 	int rc = 0;
- 
-+	wil_print_connect_params(wil, sme);
-+
- 	if (test_bit(wil_status_fwconnecting, wil->status) ||
- 	    test_bit(wil_status_fwconnected, wil->status))
- 		return -EALREADY;
- 
--	wil_print_connect_params(wil, sme);
-+	if (sme->ie_len > WMI_MAX_IE_LEN) {
-+		wil_err(wil, "IE too large (%td bytes)\n", sme->ie_len);
-+		return -ERANGE;
-+	}
-+
-+	rsn_eid = sme->ie ?
-+			cfg80211_find_ie(WLAN_EID_RSN, sme->ie, sme->ie_len) :
-+			NULL;
-+
-+	if (sme->privacy && !rsn_eid) {
-+		wil_err(wil, "Missing RSN IE for secure connection\n");
-+		return -EINVAL;
-+	}
- 
- 	bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
- 			       sme->ssid, sme->ssid_len,
-@@ -407,17 +421,9 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 		rc = -ENOENT;
- 		goto out;
- 	}
-+	wil->privacy = sme->privacy;
- 
--	rsn_eid = sme->ie ?
--			cfg80211_find_ie(WLAN_EID_RSN, sme->ie, sme->ie_len) :
--			NULL;
--	if (rsn_eid) {
--		if (sme->ie_len > WMI_MAX_IE_LEN) {
--			rc = -ERANGE;
--			wil_err(wil, "IE too large (%td bytes)\n",
--				sme->ie_len);
--			goto out;
--		}
-+	if (wil->privacy) {
- 		/* For secure assoc, send WMI_DELETE_CIPHER_KEY_CMD */
- 		rc = wmi_del_cipher_key(wil, 0, bss->bssid);
- 		if (rc) {
-@@ -450,7 +456,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 			bss->capability);
- 		goto out;
- 	}
--	if (rsn_eid) {
-+	if (wil->privacy) {
- 		conn.dot11_auth_mode = WMI_AUTH11_SHARED;
- 		conn.auth_mode = WMI_AUTH_WPA2_PSK;
- 		conn.pairwise_crypto_type = WMI_CRYPT_AES_GCMP;
--- 
-2.1.0
+On Mon, 2 Feb 2015, Avery Pennarun wrote:
 
+> On Mon, Feb 2, 2015 at 11:44 AM, Björn Smedman <bs@anyfi.net> wrote:
+>> On Mon, Feb 2, 2015 at 5:21 AM, Avery Pennarun <apenwarr@google.com> wrote:
+>>> While there is definitely some work to be done in handoff, it seems
+>>> like there are some find implementations of this already in existence.
+>>> Several brands of "enterprise access point" setups seem to do well at
+>>> this.  It would be nice if they interoperated, I guess.
+>>>
+>>> The fact that there's no open source version of this kind of handoff
+>>> feature bugs me, but we are working on it here and the work is all
+>>> planned to be open source, for example: (very early version)
+>>> https://gfiber.googlesource.com/vendor/google/platform/+/master/waveguide/
+>>
+>> We've got an SDN-inspired architecture with 802.11 frame tunneling (a
+>> la CAPWAP), airtime fairness, infrastructure initiated hand-over,
+>> Opportunistic Key Caching (OKC), IEEE 802.11r Fast BSS Transition and
+>> a few more goodies. It's currently free as in beer
+>> (http://anyfi.net/software,
+>> https://github.com/carrierwrt/carrierwrt/pull/7 and
+>> http://www.anyfinetworks.com/download) up to 100 APs, but we're
+>> definitely going to open source in one form or another.
+
+Please keep in touch, when it is released open source I'd be very interested in 
+trying it for SCaLE. I'll probably exceed your 100 radio free limit this year, 
+and it's hard to justify using non-free code at a linux conference (not 
+impossible, but not something I'm going to try to do 3 weeks before the show :-)
+
+I'm doing social engineering to push people to the 5GHz network (SSID for 5G is 
+scale, for 2.4 is scale-slow), it would be great to be able to do this directly. 
+And better handoffs as people move around would be good.
+
+It would also be good if something like this could help identify gaps in 
+coverage. If it can identify cases where users go from having coverage to poor 
+connectivity to having coverage, we can manually investigate to see where in the 
+building that is and see what we can do to fix it.
+
+David Lang
+
+>> We've also tried to raise some interest in fixing up CAPWAP
+>> (https://www.ietf.org/mail-archive/web/opsawg/current/msg03196.html),
+>> which is (unfortunately) the best open standard at the moment.
+>> Interest seems marginal though...
+>
+> This sounds cool.  Is the CAPWAP/encapsulation stuff separable from
+> the rest?  At 802.11ac speeds, a super fast WAN link, and a low-cost
+> SoC, too many layers can be a killer.
+> _______________________________________________
+> Cerowrt-devel mailing list
+> Cerowrt-devel@lists.bufferbloat.net
+> https://lists.bufferbloat.net/listinfo/cerowrt-devel
+--680960-1537533407-1422919622=:8636--
