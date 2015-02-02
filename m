@@ -1,74 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:42518 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932463AbbBBQoj convert rfc822-to-8bit (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:26659 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753598AbbBBReJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 11:44:39 -0500
-Received: by mail-la0-f46.google.com with SMTP id s18so42933304lam.5
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2015 08:44:38 -0800 (PST)
+	Mon, 2 Feb 2015 12:34:09 -0500
+Message-ID: <54CFB4F4.1070807@qca.qualcomm.com> (sfid-20150202_183413_798234_1B6E37D4)
+Date: Mon, 2 Feb 2015 09:33:40 -0800
+From: Peter Oh <poh@qca.qualcomm.com>
 MIME-Version: 1.0
-Date: Mon, 2 Feb 2015 17:44:38 +0100
-Message-ID: <CAJ1dT9x+vWm4uZ-r9PZrTmKjEQc260NhOKoRzH=Ab=oWkeZ83w@mail.gmail.com> (sfid-20150202_174443_420355_B042D759)
-Subject: Open Source RRM & Hand-Over Optimization (WAS: Throughput regression
- with `tcp: refine TSO autosizing`)
-From: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bs@anyfi.net>
-To: Avery Pennarun <apenwarr@google.com>, David Reed <dpreed@reed.com>
-Cc: dstanley@arubanetworks.com, Derrick Pallas <pallas@meraki.com>,
-	"cerowrt-devel@lists.bufferbloat.net"
-	<cerowrt-devel@lists.bufferbloat.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Bob Copeland <me@bobcopeland.com>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	Peter Oh <poh@qca.qualcomm.com>
+Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
+References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com> <20150127213349.GA24933@localhost> <54C824DC.5080804@qca.qualcomm.com> <20150128043005.GB24933@localhost> <54C875FD.3070101@qca.qualcomm.com> (sfid-20150128_064104_435635_7E681844) <1422430643.1973.1.camel@sipsolutions.net> <54CC0B71.9050301@codeaurora.org> <1422882133.1930.10.camel@sipsolutions.net>
+In-Reply-To: <1422882133.1930.10.camel@sipsolutions.net>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 2, 2015 at 5:21 AM, Avery Pennarun <apenwarr@google.com> wrote:
-> On Sun, Feb 1, 2015 at 9:43 AM,  <dpreed@reed.com> wrote:
->> Just to clarify, managing queueing in a single access point WiFi network is
->> only a small part of the problem of fixing the rapidly degrading performance
->> of WiFi based systems.
->
-> Can you explain what you mean by "rapidly degrading?"  The performance
-> in odd situations is certainly not inspirational, but I haven't
-> noticed it getting worse over time.
->
->> Similarly, mesh routing is only a small part of the
->> problem with the scalability of cooperative meshes based on the WiFi MAC.
->
-> That's certainly true.  Not to say the mesh routing algorithms are
-> much good either.
->
->>  Also, as we noted
->> earlier, "handoff" from one next hop to another is a huge problem with
->> performance in practical deployments (a factor of 10x at least, just in
->> that).
->
-> While there is definitely some work to be done in handoff, it seems
-> like there are some find implementations of this already in existence.
-> Several brands of "enterprise access point" setups seem to do well at
-> this.  It would be nice if they interoperated, I guess.
->
-> The fact that there's no open source version of this kind of handoff
-> feature bugs me, but we are working on it here and the work is all
-> planned to be open source, for example: (very early version)
-> https://gfiber.googlesource.com/vendor/google/platform/+/master/waveguide/
 
-We've got an SDN-inspired architecture with 802.11 frame tunneling (a
-la CAPWAP), airtime fairness, infrastructure initiated hand-over,
-Opportunistic Key Caching (OKC), IEEE 802.11r Fast BSS Transition and
-a few more goodies. It's currently free as in beer
-(http://anyfi.net/software,
-https://github.com/carrierwrt/carrierwrt/pull/7 and
-http://www.anyfinetworks.com/download) up to 100 APs, but we're
-definitely going to open source in one form or another.
-
-We've also tried to raise some interest in fixing up CAPWAP
-(https://www.ietf.org/mail-archive/web/opsawg/current/msg03196.html),
-which is (unfortunately) the best open standard at the moment.
-Interest seems marginal though...
-
-If anybody's interested in joining forces on either front we'd be be
-happy to talk.
-
-Cheers,
-
-Björn
+On 02/02/2015 05:02 AM, Johannes Berg wrote:
+> On Fri, 2015-01-30 at 14:53 -0800, Peter Oh wrote:
+>
+>> I admit that I/O ordering and posted write are looked different in
+>> theory and at glance since posted write could be related cache
+> invalidate.
+>> But wmb are still related to both.
+>> As I addressed wmb uses dsb (in arm arch) and here is the description of
+>> arm architecture.
+>>
+>> * DSB drains write buffer.
+>> * DSB is architecturally defined to include all cache, TLB and branch
+>> prediction maintenance operations as well as explicit memory operations
+>>
+>> These are the reasons why I mentioned wmb does both.
+>>
+>> * captured from ARMv7 Architecture Manual
+>> --- Notes ---
+>> Historically, this operation was referred to as Drain Write Buffer or
+>> Data Write Barrier (DWB). From ARMv6, these
+>> names and the use of DWB were deprecated in favor of the new Data
+>> Synchronization Barrier name and DSB
+>> abbreviation. DSB better reflects the functionality provided from ARMv6,
+>> because DSB is architecturally defined
+>> to include all cache, TLB and branch prediction maintenance operations
+>> as well as explicit memory operations
+>>
+>> --- A DSB completes when: ---
+>> ? all explicit memory accesses that are observed by Pe before the DSB is
+>> executed, are of the required access
+>> types, and are from observers in the same required shareability domain
+>> as Pe, are complete for the set of
+>> observers in the required shareability domain.
+>> ? if the required accesses types of the DSB is reads and writes, all
+>> cache and branch predictor maintenance
+>> operations issued by Pe before the DSB are complete for the required
+>> shareability domain.
+>> ? if the required accesses types of the DSB is reads and writes, all TLB
+>> maintenance operations issued by Pe
+>> before the DSB are complete for the required shareability domain.
+>> --------------
+> I cannot read from this in any way that it can post writes to the PCIe
+> bus. In fact, architecturally, I cannot think of any reason how it even
+> could do that from the CPU.
+>
+>> Furthermore this is the comparison of the compiled assembly code between
+>> ath10k_pci_read32 and wmb.
+>>
+>> ath10k_pci_read32()
+>>        bac:    e5932008     ldr    r2, [r3, #8]
+>>        bb0:    f57ff04f     dsb    sy
+>>        bb4:    e2883d52     add    r3, r8, #5248    ; 0x1480
+>>        bb8:    e283303c     add    r3, r3, #60    ; 0x3c
+>>        bbc:    e593300c     ldr    r3, [r3, #12]
+>>        bc0:    e2833a09     add    r3, r3, #36864    ; 0x9000
+>>
+>> wmb();
+>>        b9c:    f57ff04e     dsb    st
+>>
+>> ath10k_pci_read32 does register operation except dsb and there is no
+>> cache invalidate related commands.
+> I don't think this is relevant. The question is "what are you trying to
+> achieve".
+>
+>> So that if wmb is not enough for the purpose then ath10k_pci_read32 is
+>> also not enough for that.
+>>
+>> Also refer the section "ACQUIRES VS I/O ACCESSES" in
+> memory-barriers.txt.
+>> It gives an example with PCI bridge and introduces readl as an
+>> alternative method to mmiowb which weaker form of wmb.
+>>
+>> Please give your opinion.
+> Again - the question is - what are you trying to achieve?
+>
+> The code (as it is before your patch) implies that it's trying to make
+> sure that before it continues, any previous writes to the PCIe device's
+> registers are posted. The only way to ensure that is to do a read to the
+> registers, as the code does now.
+Do you know how the read ensure that although the read code does not 
+check the return value?
+Can you explain how a read ensures that posted write reaches PCIe device?
+> What you're describing is something else entirely - you're describing a
+> way to make sure that some data was flushed out to DRAM from the CPU
+> caches.
+>
+> These two things are not related in any way.
+>
+> In an interrupt routine, it would make sense to ensure that the write
+> was posted (e.g. to mask interrupts, or to acknowledge them, or similar,
+> before the routine can be re-invoked.)
+>
+> To me, flushing memory writes to DRAM makes less sense in an interrupt
+> handlers unless the device was somehow using DMA to coordinate
+> interrupts [1], which seems unlikely but I haven't checked.
+>
+> Anyway - I have no particular interest in this discussion, I was merely
+> trying to help you out with this :) You can make whatever change you
+> want, of course :P
+>
+> johannes
+>
+> [1] incidentally, our device [iwlwifi] does in fact do something like
+> that, but it's read-only for the driver so no need for such a thing
+> either
+>
+>
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
+Thanks,
+Peter
