@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:58075 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752247AbbB0Tzf (ORCPT
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:46093 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753123AbbBBSwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2015 14:55:35 -0500
-Date: Fri, 27 Feb 2015 21:55:31 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [PATCH] mac80211: simplify station assignment in
- ieee80211_tx_prepare()
-Message-ID: <20150227195531.GA8251@w1.fi> (sfid-20150227_205538_744042_B8A1EDB6)
-References: <1424734438-18209-1-git-send-email-johannes@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424734438-18209-1-git-send-email-johannes@sipsolutions.net>
+	Mon, 2 Feb 2015 13:52:18 -0500
+Message-ID: <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150202_195223_388567_7F9506FB)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Mon, 02 Feb 2015 10:52:16 -0800
+In-Reply-To: <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 12:33:58AM +0100, Johannes Berg wrote:
-> There's no need for the second conditional as the same will be
-> done immediately afterwards if there's no station assigned.
-> 
-> Remove the useless conditional, move fallback assignment into
-> the else branch and don't try to look up a multicast address
-> which cannot be found anyway.
+On Mon, 2015-02-02 at 11:27 +0100, Michal Kazior wrote:
 
-It looks like this breaks ap_vlan_* hwsim test cases. Found by git
-bisect on current wireless-testing, confirmed by reverting this on top
-of the current master branch.
+> While testing I've had my internal GRO patch for ath10k and no stretch
+> ack patches.
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Thanks for the data, I took a look at it.
+
+I am afraid this GRO patch might be the problem.
+
+It seems to break ACK clocking badly (linux stack has a somewhat buggy
+tcp_tso_should_defer(), which relies on ACK being received smoothly, as
+no timer is setup to split the TSO packet.)
+
+I am seeing huge delays on ACK packets and bursts like that :
+
+05:01:53.413038 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 76745, win 4435, options [nop,nop,TS val 4294758508 ecr 4294757300], length 0
+05:01:53.413407 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 79641, win 4435, options [nop,nop,TS val 4294758508 ecr 4294757301], length 0
+05:01:53.413969 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 92673, win 4435, options [nop,nop,TS val 4294758510 ecr 4294757302], length 0
+05:01:53.413990 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 97017, win 4435, options [nop,nop,TS val 4294758510 ecr 4294757302], length 0
+05:01:53.414011 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 110049, win 4435, options [nop,nop,TS val 4294758510 ecr 4294757302], length 0
+...
+05:01:53.422663 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 189689, win 4435, options [nop,nop,TS val 4294758519 ecr 4294757310], length 0
+05:01:53.424354 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 198377, win 4435, options [nop,nop,TS val 4294758520 ecr 4294757311], length 0
+05:01:53.424400 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 202721, win 4435, options [nop,nop,TS val 4294758520 ecr 4294757313], length 0
+05:01:53.424409 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 205617, win 4435, options [nop,nop,TS val 4294758520 ecr 4294757313], length 0
+...
+05:01:53.450248 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 419921, win 4435, options [nop,nop,TS val 4294758547 ecr 4294757337], length 0
+05:01:53.450266 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 427161, win 4435, options [nop,nop,TS val 4294758547 ecr 4294757340], length 0
+05:01:53.450289 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 431505, win 4435, options [nop,nop,TS val 4294758547 ecr 4294757340], length 0
+
+Could you make again your experiments using upstream kernel (David
+Miller net tree) ?
+
+You also could post the GRO patch so that we can comment on it.
+
+Thanks
+
+
