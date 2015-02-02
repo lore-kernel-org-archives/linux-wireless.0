@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54778 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752169AbbBZUHe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 15:07:34 -0500
-Message-ID: <1424981243.1885.31.camel@sipsolutions.net> (sfid-20150226_210737_745382_2063C683)
-Subject: Re: [PATCH] mac80211: Send EAPOL frames at lowest rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Date: Thu, 26 Feb 2015 21:07:23 +0100
-In-Reply-To: <CA+55aFyMoNhwYKcYwfs7Jjxh-wQbQK92Gqs8pv9AcLJUwk13RA@mail.gmail.com> (sfid-20150226_190127_554604_DDFD2747)
-References: <1424958650-11165-1-git-send-email-jouni@qca.qualcomm.com>
-	 <CA+55aFyMoNhwYKcYwfs7Jjxh-wQbQK92Gqs8pv9AcLJUwk13RA@mail.gmail.com>
-	 (sfid-20150226_190127_554604_DDFD2747)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from s72.web-hosting.com ([198.187.29.22]:47310 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505AbbBBMsR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Feb 2015 07:48:17 -0500
+Received: from [117.216.55.194] (port=15247 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YIGQK-002djK-26
+	for linux-wireless@vger.kernel.org; Mon, 02 Feb 2015 07:48:16 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/6] ath9k: Register correct WOW details with mac80211
+Date: Mon,  2 Feb 2015 18:21:09 +0530
+Message-Id: <1422881473-24580-3-git-send-email-sujith@msujith.org> (sfid-20150202_134837_415683_C6805F23)
+In-Reply-To: <1422881473-24580-1-git-send-email-sujith@msujith.org>
+References: <1422881473-24580-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus, Jouni, all,
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Thanks everyone. I've applied this patch to my mac80211 tree - I'll send
-it out to davem tomorrow I think.
+Since the number of user patterns is higher for
+newer chips, make sure that this is registered
+during initialization.
 
-Jouni, given that hwsim uses minstrel as well, perhaps we could have a
-test case in the wpa_supplicant tests in some way that checks this? I'm
-thinking we could hook into the AP and remove it from the radio group
-right after sending 3/4, so that 4/4 would get retransmitted? I don't
-actually know though if hwsim really honours all the rate stuff,
-something to look into perhaps.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/wow.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-> Also "Tested-by:", and I'd suggest marking it for stable too (although
-> I understand that David generally doesn't use stable tags, and just
-> sends them separately to the stable tree).
-
-Done - and yeah, he does that, but I add stable tags anyway since I
-don't want to track it down later. So far he hasn't complained :-)
-
-> My main laptop is iwlwifi, and the only reason that worked is
-> apparently that the iwlwifi driver already basically does something
-> similar on its own.
-
-Yes, and it also starts out at a lower rate.
-
-> All the other devices I have apparently don't use the 802.11 code even
-> if they are Linux-based (ie mostly android, and presumably they use
-> some vendor driver rather than the minstrel rate-handling code).
-
-Indeed, very few of them do. The only ones I'm aware of are (fairly old)
-phones using the TI wifi chip - my Motorola razr i for example actually
-runs mac80211. However, it also doesn't use minstrel, so I guess you
-won't find a phone using this :-)
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/wow.c b/drivers/net/wireless/ath/ath9k/wow.c
+index 5092939..8d0b173 100644
+--- a/drivers/net/wireless/ath/ath9k/wow.c
++++ b/drivers/net/wireless/ath/ath9k/wow.c
+@@ -16,13 +16,20 @@
+ 
+ #include "ath9k.h"
+ 
+-static const struct wiphy_wowlan_support ath9k_wowlan_support = {
++static const struct wiphy_wowlan_support ath9k_wowlan_support_legacy = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
+ 	.n_patterns = MAX_NUM_USER_PATTERN,
+ 	.pattern_min_len = 1,
+ 	.pattern_max_len = MAX_PATTERN_SIZE,
+ };
+ 
++static const struct wiphy_wowlan_support ath9k_wowlan_support = {
++	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
++	.n_patterns = MAX_NUM_PATTERN - 2,
++	.pattern_min_len = 1,
++	.pattern_max_len = MAX_PATTERN_SIZE,
++};
++
+ static u8 ath9k_wow_map_triggers(struct ath_softc *sc,
+ 				 struct cfg80211_wowlan *wowlan)
+ {
+@@ -320,9 +327,14 @@ void ath9k_set_wakeup(struct ieee80211_hw *hw, bool enabled)
+ void ath9k_init_wow(struct ieee80211_hw *hw)
+ {
+ 	struct ath_softc *sc = hw->priv;
++	struct ath_hw *ah = sc->sc_ah;
+ 
+ 	if ((sc->driver_data & ATH9K_PCI_WOW) || sc->force_wow) {
+-		hw->wiphy->wowlan = &ath9k_wowlan_support;
++		if (AR_SREV_9462_20_OR_LATER(ah) || AR_SREV_9565_11_OR_LATER(ah))
++			hw->wiphy->wowlan = &ath9k_wowlan_support;
++		else
++			hw->wiphy->wowlan = &ath9k_wowlan_support_legacy;
++
+ 		device_init_wakeup(sc->dev, 1);
+ 	}
+ }
+-- 
+2.2.2
 
