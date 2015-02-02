@@ -1,109 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:63624 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933853AbbBDN3w (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:38527 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965072AbbBBVsi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 08:29:52 -0500
-Message-ID: <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150204_143000_468702_B2AAE062)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Wed, 04 Feb 2015 05:29:51 -0800
-In-Reply-To: <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 2 Feb 2015 16:48:38 -0500
+Received: by mail-we0-f174.google.com with SMTP id w55so36246161wes.5
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2015 13:48:37 -0800 (PST)
+Message-ID: <54CFF0B3.1060507@gmail.com> (sfid-20150202_224841_571486_202E34E5)
+Date: Mon, 02 Feb 2015 22:48:35 +0100
+From: =?UTF-8?B?VmxhZGltw61yIMSMdW7DoXQ=?= <vcunat@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+CC: Nix Dev <nix-dev@lists.science.uu.nl>
+Subject: broken URLs of iwlwifi firmware tarballs
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms030109010008090406090503"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-02-04 at 05:16 -0800, Eric Dumazet wrote:
-> OK guys
-> 
-> Using a mlx4 testbed I can reproduce the problem by pushing coalescing
-> settings and disabling SG (thus disabling GSO)
-> 
-> ethtool -K eth0 sg off
-> Actual changes:
-> scatter-gather: off
-> 	tx-scatter-gather: off
-> generic-segmentation-offload: off [requested on]
-> 
-> ethtool -C eth0 tx-usecs 1024 tx-frames 64
-> 
-> Meaning that NIC waits one ms before sending the TX IRQ,
-> and can accumulate 64 frames before forcing the interrupt.
-> 
-> We probably have a bug in cwnd expansion logic :
-> 
-> lpaa23:~# DUMP_TCP_INFO=1 ./netperf -H 10.246.7.152 -Cc
-> MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 10.246.7.152 () port 0 AF_INET
-> rto=201000 ato=0 pmtu=1500 rcv_ssthresh=29200 rtt=230 rttvar=30 snd_ssthresh=41 cwnd=59 reordering=3 total_retrans=1 ca_state=0 pacing_rate=5943.1 Mbits
-> Recv   Send    Send                          Utilization       Service Demand
-> Socket Socket  Message  Elapsed              Send     Recv     Send    Recv
-> Size   Size    Size     Time     Throughput  local    remote   local   remote
-> bytes  bytes   bytes    secs.    10^6bits/s  % S      % S      us/KB   us/KB
-> 
->  87380  16384  16384    10.00       530.39   0.40     0.32     2.965   2.398  
-> 
-> 
-> -> final cwnd=59 which is not enough to avoid the 1ms delay between each
-> burst. 
-> 
-> So sender sends ~60 packets, then has to wait 1ms (to get NIC TX IRQ)
-> before sending the following burst.
-> 
-> I am CCing Neal, he probably can help to root cause the problem.
+This is a cryptographically signed message in MIME format.
 
-Arg, this was with net-next, ie not including our recent stretch ack
-fixes.
+--------------ms030109010008090406090503
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Using David Miller 'net' tree, cwnd seems OK.
+Hello,
+the URLs to iwlwifi firmware tarballs are broken.=20
+https://wireless.wiki.kernel.org/en/users/Drivers/iwlwifi
 
-Speed is low because of 64 queued frames are exceeding
-tcp_limit_output_bytes
+Is that a temporary problem? I could find no mirrors for some of the=20
+files. (Besides, I found that nixos.org isn't the only user of those URLs=
+=2E)
 
-lpaa23:~# cat /proc/sys/net/ipv4/tcp_limit_output_bytes
-131072
-lpaa23:~# DUMP_TCP_INFO=1 ./netperf -H 10.246.7.152 -Cc
-MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 10.246.7.152 () port 0 AF_INET
-rto=201000 ato=0 pmtu=1500 rcv_ssthresh=29200 rtt=166 rttvar=16 snd_ssthresh=26 cwnd=59 reordering=3 total_retrans=0 ca_state=0 pacing_rate=8203.52 Mbits
-Recv   Send    Send                          Utilization       Service Demand
-Socket Socket  Message  Elapsed              Send     Recv     Send    Recv
-Size   Size    Size     Time     Throughput  local    remote   local   remote
-bytes  bytes   bytes    secs.    10^6bits/s  % S      % S      us/KB   us/KB
+Please, CC me with replies.
 
- 87380  16384  16384    10.00       569.96   0.52     0.38     3.588   2.625  
+Thanks,
+Vladimir
 
 
-lpaa23:~# echo 262144 >/proc/sys/net/ipv4/tcp_limit_output_bytes
-lpaa23:~# DUMP_TCP_INFO=1 ./netperf -H 10.246.7.152 -Cc
-MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 10.246.7.152 () port 0 AF_INET
-rto=201000 ato=0 pmtu=1500 rcv_ssthresh=29200 rtt=98 rttvar=18 snd_ssthresh=312 cwnd=313 reordering=3 total_retrans=23 ca_state=0
-Recv   Send    Send                          Utilization       Service Demand
-Socket Socket  Message  Elapsed              Send     Recv     Send    Recv
-Size   Size    Size     Time     Throughput  local    remote   local   remote
-bytes  bytes   bytes    secs.    10^6bits/s  % S      % S      us/KB   us/KB
+--------------ms030109010008090406090503
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
- 87380  16384  16384    10.00      8518.40   2.60     1.57     1.200   0.727  
-
-
-
-
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIJazCC
+BKAwggOIoAMCAQICEQDwhvYlHZdHibfdyBlsiW2AMA0GCSqGSIb3DQEBBQUAMDsxCzAJBgNV
+BAYTAk5MMQ8wDQYDVQQKEwZURVJFTkExGzAZBgNVBAMTElRFUkVOQSBQZXJzb25hbCBDQTAe
+Fw0xMjA2MjYwMDAwMDBaFw0xNTA2MjYyMzU5NTlaMGsxCzAJBgNVBAYTAkNaMSMwIQYDVQQK
+ExpVbml2ZXJ6aXRhIEthcmxvdmEgdiBQcmF6ZTEaMBgGA1UEAwwRVmxhZGltw61yIMSMdW7D
+oXQxGzAZBgkqhkiG9w0BCQIWDDEwMDAwMDA1MDU5OTCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBANcoAjmclljT9rjG719tYe8Ov3aTzBlnnpQUlmLrhztf3R+FAuJloiGgBiZ1
+tUdX7F/j/Mb+/LrROiqenYvnk3B2mrxg5klkfua44v1VZSePH8d5kwIN+eBVK4cicuNFbqt+
+szFH1mFXFdlUfJtj6l5KFhyucFgcrp0ccxpcy9kEajaOChUoljG5BXJfB1T0z8Jr+tGw0hce
+CQ9P/uahEkiDHWtK1gbtGQyAuMh1vFtEM35mt0pyQ0PzouCHzqGmDzLGi7l+Ud72uDWvJ9nR
+rGQWFwKqrbd/C4bbnwgIsItp65jTObmgeDzAIyISUeBgouUMwk9k0AHkILNAJlyT7rUCAwEA
+AaOCAW0wggFpMB8GA1UdIwQYMBaAFGNNQ1oZSD/ERsECur/uDuWCt2amMB0GA1UdDgQWBBRE
+k9LYYV+vNxAFmKcTUdWizi/PyzAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAdBgNV
+HSUEFjAUBggrBgEFBQcDBAYIKwYBBQUHAwIwGAYDVR0gBBEwDzANBgsrBgEEAbIxAQICHTA/
+BgNVHR8EODA2MDSgMqAwhi5odHRwOi8vY3JsLnRjcy50ZXJlbmEub3JnL1RFUkVOQVBlcnNv
+bmFsQ0EuY3JsMHIGCCsGAQUFBwEBBGYwZDA6BggrBgEFBQcwAoYuaHR0cDovL2NydC50Y3Mu
+dGVyZW5hLm9yZy9URVJFTkFQZXJzb25hbENBLmNydDAmBggrBgEFBQcwAYYaaHR0cDovL29j
+c3AudGNzLnRlcmVuYS5vcmcwGwYDVR0RBBQwEoEQdmN1bmF0QGdtYWlsLmNvbTANBgkqhkiG
+9w0BAQUFAAOCAQEAdL7MsKsfcl1/yHu/kz1XOZxmZFpSiIYrlf04iuHG+1cH+9qaDIno2BBt
+PMw5l7fWjtMu7s9G9gLW+hrduPUbMdHAL7GyHD1J5puisO6AE1RDOZCpDUFiU4NN2wUZFTWL
+scRK37ijol/Pa5gyt98R0Lyb23J2wNywNEWjFJyE/Izz/BpX+xldrFRu10DQN0faSo9+9F4Y
+zLTuG7lGAbNJ14HGNhiFJurinIWq0HOPIw9Uyf7enleaYlKHWsjhBipzoFr4NoinHY5UuaDB
+8o4d+g1qSpNZM7NSVzN0l043rFVHEWNAvrHx4fHj0ydar47MR2EE716F4iO1/m0S/uW84zCC
+BMMwggOroAMCAQICEHP+V/rfuMUIgXtmuWvwLe8wDQYJKoZIhvcNAQEFBQAwga4xCzAJBgNV
+BAYTAlVTMQswCQYDVQQIEwJVVDEXMBUGA1UEBxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoT
+FVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8GA1UECxMYaHR0cDovL3d3dy51c2VydHJ1c3Qu
+Y29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0LUNsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
+RW1haWwwHhcNMDkwNTE4MDAwMDAwWhcNMjgxMjMxMjM1OTU5WjA7MQswCQYDVQQGEwJOTDEP
+MA0GA1UEChMGVEVSRU5BMRswGQYDVQQDExJURVJFTkEgUGVyc29uYWwgQ0EwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDIFdn1M2ojoZANz7sFRMOrH0o1hRohhaBP+PBA4kpD
+m/5bsbC/tFfcdYBBS2Qa9ttPb4/QJUU1+erLSvr72tPtRYgRlDbkzKgN78U9N+0We+PClZ5Y
+M38i+/j/7Oa+264KZSUih9pvhItG6ECGKD+/VgjiSumDouki+y36tigfkcHDcftTwCtOpAyh
+bp1V7ezhJIc6COINHOTETdDLJ/qEZObRl51WJFuTuykuQ+JBaj3iSmX8ml9ahoe8h8d5gJaZ
+UcaQD2SRmX0Q3awsAyrheGT+zj1O9CtQEUvRWNSbA/B/9TtTsFND+8UvxAQpGjqs11Xp0Q6V
+0Tsxf3hPriktAgMBAAGjggFNMIIBSTAfBgNVHSMEGDAWgBSJgmd9xJ0mcABLtFBIfN49rgRu
+fTAdBgNVHQ4EFgQUY01DWhlIP8RGwQK6v+4O5YK3ZqYwDgYDVR0PAQH/BAQDAgEGMBIGA1Ud
+EwEB/wQIMAYBAf8CAQAwGAYDVR0gBBEwDzANBgsrBgEEAbIxAQICHTBYBgNVHR8EUTBPME2g
+S6BJhkdodHRwOi8vY3JsLnVzZXJ0cnVzdC5jb20vVVROLVVTRVJGaXJzdC1DbGllbnRBdXRo
+ZW50aWNhdGlvbmFuZEVtYWlsLmNybDBvBggrBgEFBQcBAQRjMGEwOAYIKwYBBQUHMAKGLGh0
+dHA6Ly9jcnQudXNlcnRydXN0LmNvbS9VVE5BQUFDbGllbnRfQ0EuY3J0MCUGCCsGAQUFBzAB
+hhlodHRwOi8vb2NzcC51c2VydHJ1c3QuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQAGK6lTLxPc
+XDkWzIafXkx7cvvsjVWKXpoK/1NMdvQGPVDPV/Ciz6+ZjKr+oBl2PpkDMvp1gziKu2uapQwT
+stQbduaULmeYWeORbAKQmpzIYEtVq8qIWo0r5WmVAwfR1A78JCIuWbFjpF/t2SNy5JzOOlxs
+H0+pAMkd/vp/RS22LoTdDyegWRhO1XYlRfSZJnnbb58j90O7Kw8Eo4EmLLd7Nfk9d19AIeZ/
+HaWWWr3QyxY6bLthi4r9BDlECsss4cvOLhCYGtvgk+1JZGQIIJ+3o1Dwot3KtMZ8DD3nXhXc
+J4bkOjtSWherqQZTK50Jc2QcAcP9MNKHA2/kFQN6OV9oMYIDCjCCAwYCAQEwUDA7MQswCQYD
+VQQGEwJOTDEPMA0GA1UEChMGVEVSRU5BMRswGQYDVQQDExJURVJFTkEgUGVyc29uYWwgQ0EC
+EQDwhvYlHZdHibfdyBlsiW2AMAkGBSsOAwIaBQCgggGPMBgGCSqGSIb3DQEJAzELBgkqhkiG
+9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1MDIwMjIxNDgzNVowIwYJKoZIhvcNAQkEMRYEFHYU
+fupq6HrCPdNlltSV+5m5GsMXMF8GCSsGAQQBgjcQBDFSMFAwOzELMAkGA1UEBhMCTkwxDzAN
+BgNVBAoTBlRFUkVOQTEbMBkGA1UEAxMSVEVSRU5BIFBlcnNvbmFsIENBAhEA8Ib2JR2XR4m3
+3cgZbIltgDBhBgsqhkiG9w0BCRACCzFSoFAwOzELMAkGA1UEBhMCTkwxDzANBgNVBAoTBlRF
+UkVOQTEbMBkGA1UEAxMSVEVSRU5BIFBlcnNvbmFsIENBAhEA8Ib2JR2XR4m33cgZbIltgDBs
+BgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcw
+DgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEo
+MA0GCSqGSIb3DQEBAQUABIIBABPQQhM+cAE2j4dIJwJ1aK7GjFO26HG8Gr8R+fscM7NrZ39k
+urFQWvP8nXTOZxRpdYLUm3y7/1mBdx+jTrXzbvfAD96L0BN3mhOUWAJMXHsiUdQDYfDsb1nI
+yslTa4uho+LIpi88/GOngN2VYJe25fbN8tsqlpXZ3m9xNyJvKBlAqmBTid3kHjzJYpqy6zOD
+obc33P42YG99XeptUQ4uER03hMjtVnSYfPm1T/R/72WmT+MRKCu9qmn4w106KdqUv5QmfFYv
+uNUi6r+3opr9IX/8tStxx9YoLXipk0t3MmZVdhXCsB5coIL8vC1HMKFwOmWDj82IEO998Ual
+48RMlUEAAAAAAAA=
+--------------ms030109010008090406090503--
