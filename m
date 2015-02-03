@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:57089 "EHLO
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:43435 "EHLO
 	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbbBHKlP (ORCPT
+	with ESMTP id S1754951AbbBCBSy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2015 05:41:15 -0500
-Received: by mail-ig0-f174.google.com with SMTP id b16so11222507igk.1
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 02:41:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20150207115758.GA503@w1.fi>
-References: <1420645811-17877-1-git-send-email-eliad@wizery.com>
-	<1420645811-17877-3-git-send-email-eliad@wizery.com>
-	<20150207115758.GA503@w1.fi>
-Date: Sun, 8 Feb 2015 12:41:14 +0200
-Message-ID: <CAB3XZEfhCkHFNg1ypxGd7sHreYmGDiUZUjOBokrsbGwJs-qP6A@mail.gmail.com> (sfid-20150208_114117_985104_BA30925D)
-Subject: Re: [PATCH v2 3/3] mac80211: don't defer scans in case of radar detection
-From: Eliad Peller <eliad@wizery.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 2 Feb 2015 20:18:54 -0500
+Message-ID: <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150203_021859_561364_4083A8B4)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Mon, 02 Feb 2015 17:18:50 -0800
+In-Reply-To: <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+On Mon, 2015-02-02 at 10:52 -0800, Eric Dumazet wrote:
 
-On Sat, Feb 7, 2015 at 1:57 PM, Jouni Malinen <j@w1.fi> wrote:
-> On Wed, Jan 07, 2015 at 05:50:11PM +0200, Eliad Peller wrote:
->> Radar detection can last indefinite time. There is no
->> point in deferring a scan request in this case - simply
->> return -EBUSY.
->
->> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
->> @@ -505,7 +505,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
->> -     if (local->scan_req)
->> +     if (local->scan_req || ieee80211_is_radar_required(local))
->>               return -EBUSY;
->
-> This seems to be breaking a hwsim test case sequence of ap_vht80plus80
-> followed by ap_vht80. In such a case, all the HT40 scans for ap_vht80
-> fail due to this added condition resulting in -EBUSY being returned
-> every time. It looks like this happens even if I change ap_vht80 to use
-> the same country code (US) as ap_vht80plus80, so the change in the
-> country code does not explain this either.
->
-> I'm not sure what is causing the issue here, but it looks like something
-> in ap_vht80plus80 (i.e., an attempt to enable a channel combination that
-> would require DFS on one of the 80 MHz segments) leaves behind state
-> that makes ieee80211_is_radar_required(local) return true even when it
-> shouldn't. DFS for 80+80 is not yet supported, so I'd assume this is
-> somehow related to that. Anyway, I don't think mac80211 should behave in
-> this way.
->
-Thanks for the detailed report.
-There was indeed stale state. I've just sent a patch to fix it.
+> It seems to break ACK clocking badly (linux stack has a somewhat buggy
+> tcp_tso_should_defer(), which relies on ACK being received smoothly, as
+> no timer is setup to split the TSO packet.)
 
-I don't see why returning EBUSY is wrong, though.
-Actually, it just make the test fail immediately, instead of waiting
-indefinitely until a timeout occurs (i guess, didn't actually test it
-with the reverted patch).
-This was exactly the intended behavior, and i think it makes much more sense.
+Following patch might help the TSO split defer logic.
 
-Eliad.
+It would avoid setting the TSO defer 'pseudo timer' twice, if/when TCP
+Small Queue logic prevented the xmit at the expiration of first 'timer'.
+
+This patch clears the tso_deferred variable only if we could really
+send something.
+
+Please try it, thanks !
+
+
+diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
+index 65caf8b95e17..e735f38557db 100644
+--- a/net/ipv4/tcp_output.c
++++ b/net/ipv4/tcp_output.c
+@@ -1821,7 +1821,6 @@ static bool tcp_tso_should_defer(struct sock *sk,
+struct sk_buff *skb,
+ 	return true;
+ 
+ send_now:
+-	tp->tso_deferred = 0;
+ 	return false;
+ }
+ 
+@@ -2070,6 +2069,7 @@ static bool tcp_write_xmit(struct sock *sk,
+unsigned int mss_now, int nonagle,
+ 		if (unlikely(tcp_transmit_skb(sk, skb, 1, gfp)))
+ 			break;
+ 
++		tp->tso_deferred = 0;
+ repair:
+ 		/* Advance the send_head.  This one is sent out.
+ 		 * This call will increment packets_out.
+
+
