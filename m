@@ -1,127 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44191 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751738AbbBKMM7 (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:52787 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933798AbbBCMtX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2015 07:12:59 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1BCAECl015594
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:12:58 -0800
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1sfwqx17jk-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:12:58 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 1/4] mwifiex: more_task flag for main_process
-Date: Wed, 11 Feb 2015 23:12:24 +0530
-Message-ID: <1423676547-5213-1-git-send-email-patila@marvell.com> (sfid-20150211_131322_645382_AA15C4DA)
+	Tue, 3 Feb 2015 07:49:23 -0500
+Received: by mail-we0-f172.google.com with SMTP id q59so44682937wes.3
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 04:49:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1422960114-25137-5-git-send-email-marek.puzyniak@tieto.com>
+References: <1422960114-25137-1-git-send-email-marek.puzyniak@tieto.com>
+	<1422960114-25137-5-git-send-email-marek.puzyniak@tieto.com>
+Date: Tue, 3 Feb 2015 13:49:22 +0100
+Message-ID: <CA+BoTQnKvNwcCxQWQe1Ck11oTE4yGTPpV65r5D02fHbLkrvpFQ@mail.gmail.com> (sfid-20150203_134928_189592_ADC81596)
+Subject: Re: [RFC 4/4] ath10k: introduce basic tdls functionality
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+On 3 February 2015 at 11:41, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
+[...]
+> +static int ath10k_enable_tdls(struct ath10k *ar, u32 vdev_id, bool enable)
 
-This patch handles a corner case where TX packet would remain in
-driver queue till next packet comes in.
-Here is sequence:
-1. TX packet is queued via hard_start_xmit and main_work is queued
-2. SDIO interrupt comes in which directly call mwifiex_main_process.
-This starts executing main superloop.
-3. Now work from step1 is scheduled but at first check itself it sees
-mwifiex_processing is set and exits.
-4. Now if superloop from step2 has passed TX processing part of superloop
-this packet would remain in queue until next packet/command/SDIO interrupt
-arrives and queues main_work.
+Function in mac.c should have a `ath10k_mac_` prefix.
 
-This patch fixes this corner case by defining more_task flag which is set when
-mwifiex_processing is found to be true. At end of superloop we again check if
-more_task flag is set and if set, execute superloop again.
+> +{
+> +       int ret;
+> +       enum wmi_tdls_state state = WMI_TDLS_DISABLE;
+> +
+> +       lockdep_assert_held(&ar->conf_mutex);
+> +
+> +       if (enable)
+> +               state = WMI_TDLS_ENABLE_ACTIVE;
+> +
+> +       ret = ath10k_wmi_update_fw_tdls_state(ar, vdev_id, state);
 
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c | 16 +++++++++-------
- drivers/net/wireless/mwifiex/main.h |  1 +
- 2 files changed, 10 insertions(+), 7 deletions(-)
+Anyway I see little point in having this wrapper function just to call
+wmi function?
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 7e74b4f..74488ab 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -190,14 +190,16 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
- 
- 	/* Check if already processing */
- 	if (adapter->mwifiex_processing) {
-+		adapter->more_task_flag = true;
- 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 		goto exit_main_proc;
- 	} else {
- 		adapter->mwifiex_processing = true;
--		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 	}
- process_start:
- 	do {
-+		adapter->more_task_flag = false;
-+		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 		if ((adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) ||
- 		    (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY))
- 			break;
-@@ -238,6 +240,7 @@ process_start:
- 			adapter->pm_wakeup_fw_try = true;
- 			mod_timer(&adapter->wakeup_timer, jiffies + (HZ*3));
- 			adapter->if_ops.wakeup(adapter);
-+			spin_lock_irqsave(&adapter->main_proc_lock, flags);
- 			continue;
- 		}
- 
-@@ -295,8 +298,10 @@ process_start:
- 		if ((adapter->ps_state == PS_STATE_SLEEP) ||
- 		    (adapter->ps_state == PS_STATE_PRE_SLEEP) ||
- 		    (adapter->ps_state == PS_STATE_SLEEP_CFM) ||
--		    adapter->tx_lock_flag)
-+		    adapter->tx_lock_flag){
-+			spin_lock_irqsave(&adapter->main_proc_lock, flags);
- 			continue;
-+		}
- 
- 		if (!adapter->cmd_sent && !adapter->curr_cmd) {
- 			if (mwifiex_exec_next_cmd(adapter) == -1) {
-@@ -330,15 +335,12 @@ process_start:
- 			}
- 			break;
- 		}
-+		spin_lock_irqsave(&adapter->main_proc_lock, flags);
- 	} while (true);
- 
- 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
--	if (!adapter->delay_main_work &&
--	    (adapter->int_status || IS_CARD_RX_RCVD(adapter))) {
--		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-+	if (adapter->more_task_flag)
- 		goto process_start;
--	}
--
- 	adapter->mwifiex_processing = false;
- 	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index f0a6af1..2089a30 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -774,6 +774,7 @@ struct mwifiex_adapter {
- 	/* spin lock for main process */
- 	spinlock_t main_proc_lock;
- 	u32 mwifiex_processing;
-+	u8 more_task_flag;
- 	u16 tx_buf_size;
- 	u16 curr_tx_buf_size;
- 	u32 ioport;
--- 
-1.8.1.4
 
+[...]
+> +static int ath10k_tdls_peer_update(struct ath10k *ar, u32 vdev_id,
+> +                                  struct ieee80211_sta *sta,
+> +                                  enum wmi_tdls_peer_state state)
+
+The ath10k_mac_ prefix is missing: ath10k_mac_tdls_peer_update().
+
+
+> +{
+> +       int ret;
+> +       struct wmi_tdls_peer_update_cmd_arg arg;
+> +       struct wmi_tdls_peer_capab_arg cap;
+> +       struct wmi_channel_arg chan_arg;
+
+I would `xxx = {}` to make these are zero-ed. Right now you pass
+uninitialized vars from the stack..
+
+
+> +       int i;
+> +
+> +       lockdep_assert_held(&ar->conf_mutex);
+> +
+> +       arg.vdev_id = vdev_id;
+> +       arg.peer_state = state;
+> +       ether_addr_copy(arg.addr, sta->addr);
+> +
+> +       cap.peer_max_sp = sta->max_sp;
+> +       cap.peer_uapsd_queues = sta->uapsd_queues;
+> +       cap.peer_curr_operclass = 0;
+> +       cap.self_curr_operclass = 0;
+> +       cap.peer_chan_len = 0;
+> +       cap.peer_operclass_len = 0;
+> +       cap.is_peer_responder = 0;
+> +       cap.buff_sta_support = 0;
+> +       cap.off_chan_support = 0;
+> +       cap.pref_offchan_num = 0;
+> +       cap.pref_offchan_bw = 0;
+
+Once you `= {}` it's probably redundant to zero each structure member like that.
+
+
+[...]
+> @@ -4462,6 +4553,8 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+>                 if (ret)
+>                         ath10k_warn(ar, "failed to delete peer %pM for vdev %d: %i\n",
+>                                     sta->addr, arvif->vdev_id, ret);
+> +               if (sta->tdls)
+> +                       ath10k_enable_tdls(ar, arvif->vdev_id, false);
+
+What if you have 2 TDLS peers? If you disconnect the first one you'll
+disable TDLS on the entire vdev while the other peer is still
+connected. I don't think that's desired.
+
+Perhaps the per-vdev TDLS command can be called in
+add_interface()/remove_interface()? If that's not possible I guess you
+could use ieee80211_iterate_stations_atomic() to look if there's still
+at least one TDLS peer present.
+
+
+>
+>                 ath10k_mac_dec_num_stations(arvif);
+>         } else if (old_state == IEEE80211_STA_AUTH &&
+> @@ -4479,9 +4572,28 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+>                         ath10k_warn(ar, "failed to associate station %pM for vdev %i: %i\n",
+>                                     sta->addr, arvif->vdev_id, ret);
+>         } else if (old_state == IEEE80211_STA_ASSOC &&
+> -                  new_state == IEEE80211_STA_AUTH &&
+> -                  (vif->type == NL80211_IFTYPE_AP ||
+> -                   vif->type == NL80211_IFTYPE_ADHOC)) {
+> +                  new_state == IEEE80211_STA_AUTHORIZED &&
+> +                  sta->tdls) {
+> +               /*
+> +                * Tdls station authorized.
+> +                */
+> +               ath10k_dbg(ar, ATH10K_DBG_MAC, "mac tdls sta %pM authorized\n",
+> +                          sta->addr);
+> +
+> +               ret = ath10k_station_assoc(ar, vif, sta, false);
+> +               if (ret)
+> +                       ath10k_warn(ar, "failed to associate station %pM for vdev %i: %i\n",
+> +                                   sta->addr, arvif->vdev_id, ret);
+
+It's meaningless to call tdls_peer_update() if assoc failed. From
+practical standpoint fw is probably dead at that point and subsequent
+commands will timeout. You can `goto exit`.
+
+
+[...]
+> +static struct sk_buff *
+> +ath10k_wmi_tlv_op_gen_update_fw_tdls_state(struct ath10k *ar, u32 vdev_id,
+> +                                          enum wmi_tdls_state state)
+> +{
+> +       struct wmi_tdls_set_state_cmd *cmd;
+> +       struct wmi_tlv *tlv;
+> +       struct sk_buff *skb;
+> +       void *ptr;
+> +       size_t len;
+> +       /* Set to options from wmi_tlv_tdls_options,
+> +        * for now none of then are enabled.
+
+Typo: s/then/them/
+
+
+> +        */
+> +       u32 options = 0;
+> +
+> +       len = sizeof(*tlv) + sizeof(*cmd);
+> +       skb = ath10k_wmi_alloc_skb(ar, sizeof(*tlv) + sizeof(*cmd));
+
+Why not use `len` for alloc_skb()?
+
+
+[...]
+> +static struct sk_buff *
+> +ath10k_wmi_tlv_op_gen_tdls_peer_update(struct ath10k *ar,
+> +                                      struct wmi_tdls_peer_update_cmd_arg *arg,
+> +                                      struct wmi_tdls_peer_capab_arg *cap,
+> +                                      struct wmi_channel_arg *chan_arg)
+
+Could be const struct on these _args.
+
+
+[...]
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+> index 5f0fe84..8c219f0 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+> +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+> @@ -1516,6 +1516,58 @@ struct wmi_tlv_p2p_noa_ev {
+>         __le32 vdev_id;
+>  } __packed;
+>
+> +/* TDLS Options */
+> +enum wmi_tlv_tdls_options {
+> +       WMI_TLV_TDLS_OFFCHAN_EN = BIT(0), /* TDLS Off Channel support */
+> +       WMI_TLV_TDLS_BUFFER_STA_EN = BIT(1), /* TDLS Buffer STA support */
+> +       WMI_TLV_TDLS_SLEEP_STA_EN = BIT(2), /* TDLS Sleep STA support */
+
+These comments seem redundant and don't introduce any extra info..
+
+
+Michał
