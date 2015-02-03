@@ -1,52 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59637 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48429 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751270AbbB0Ocw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2015 09:32:52 -0500
+	id S1755707AbbBCNil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 08:38:41 -0500
+Message-ID: <1422970713.2237.1.camel@sipsolutions.net> (sfid-20150203_143857_484189_23A42115)
+Subject: Re: [PATCH] net: rfkill: Add Broadcom BCM2E40 bluetooth ACPI ID
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: j@w1.fi, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: add notes about userspace API/ABI modifications
-Date: Fri, 27 Feb 2015 15:32:43 +0100
-Message-Id: <1425047563-9988-1-git-send-email-johannes@sipsolutions.net> (sfid-20150227_153256_111711_F4D3D94E)
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 03 Feb 2015 14:38:33 +0100
+In-Reply-To: <1422548760-56542-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1422548760-56542-1-git-send-email-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2015-01-29 at 18:26 +0200, Mika Westerberg wrote:
+> This is yet another Broadcom bluetooth chip with ACPI ID BCM2E40.
 
-Add notes about userspace ABI/API modifications, including the
-fact that we decided that API submissions should come with a
-driver implementation.
+Applied.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/uapi/linux/nl80211.h | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 2dcf9bba317c..74492e85b04f 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -25,6 +25,19 @@
-  *
-  */
- 
-+/*
-+ * This header file defines the userspace API to the wireless stack. Please
-+ * be careful not to break things - i.e. don't move anything around or so
-+ * unless you can demonstrate that it breaks neither API nor ABI.
-+ *
-+ * Additions to the API should be accompanied by actual implementations in
-+ * an upstream driver, so that example implementations exist in case there
-+ * are ever concerns about the precise semantics of the API or changes are
-+ * needed, and to ensure that code for dead (no longer implemented) API
-+ * can actually be identified and removed.
-+ * Nonetheless, semantics should also be documented carefully in this file.
-+ */
-+
- #include <linux/types.h>
- 
- #define NL80211_GENL_NAME "nl80211"
--- 
-2.1.4
+johannes
 
