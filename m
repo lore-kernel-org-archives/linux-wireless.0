@@ -1,64 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0213.hostedemail.com ([216.40.44.213]:52127 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751034AbbB0FnP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:36138 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965238AbbBCNfW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2015 00:43:15 -0500
-Message-ID: <1425015791.2690.7.camel@perches.com> (sfid-20150227_064335_489286_431FD06A)
-Subject: [PATCH net-next] wireless: test sscanf return values
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Thu, 26 Feb 2015 21:43:11 -0800
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Tue, 3 Feb 2015 08:35:22 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/17] ath9k patches
+References: <1422624937-4810-1-git-send-email-sujith@msujith.org>
+Date: Tue, 03 Feb 2015 15:35:16 +0200
+In-Reply-To: <1422624937-4810-1-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Fri, 30 Jan 2015 19:05:20 +0530")
+Message-ID: <87mw4vw223.fsf@kamboji.qca.qualcomm.com> (sfid-20150203_143525_539745_0541BD3C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At some point, it'd be good to make sscanf use __must_check
-so make sure the net/ uses of sscanf use the return value.
+Sujith Manoharan <sujith@msujith.org> writes:
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> ath9k patches for -next.
+>
+> Sujith Manoharan (17):
+>   ath9k: Remove ATH9K_HW_WOW_DEVICE_CAPABLE
+>   ath9k: Return early for error conditions
+>   ath9k: Remove redundant device_can_wakeup() check
+>   ath9k: Check early for multi-vif/STA conditions
+>   ath9k: Check multi-channel context for WOW
+>   ath9k: Fix wow init/deinit
+>   ath9k: Check WOW triggers properly
+>   ath9k: Remove unused BMISS processing
+>   ath9k: Remove ath9k_hw_wow_event_to_string
+>   ath9k: Add a debugfs file for WOW
+>   ath9k: Simplify user pattern configuration
+>   ath9k: Add a HW structure for WOW
+>   ath9k: Register max WOW patterns
+>   ath9k: Move WOW registers to reg_wow.h
+>   ath9k: Remove incorrect register macros
+>   ath9k: Cleanup reg_wow.h
+>   ath9k: Fix max pattern check
 
-Compiled, untested.
+Thanks, all 17 applied to wireless-drivers-next.git.
 
- net/mac80211/debugfs.c | 4 ++--
- net/wireless/core.c    | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index eeb0bbd..0e44be7 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -160,9 +160,9 @@ static ssize_t sta_tx_latency_stat_write(struct file *file,
- 	tx_latency->n_ranges = n_ranges;
- 	for (i = 0; i < n_ranges; i++) { /* setting bin ranges */
- 		token = strsep(&bins, TX_LATENCY_BIN_DELIMTER_S);
--		sscanf(token, "%d", &tx_latency->ranges[i]);
- 		/* bins values should be in ascending order */
--		if (prev_bin >= tx_latency->ranges[i]) {
-+		if (sscanf(token, "%d", &tx_latency->ranges[i]) != 1 ||
-+		    prev_bin >= tx_latency->ranges[i]) {
- 			ret = -EINVAL;
- 			kfree(tx_latency);
- 			goto unlock;
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 3af0ecf..69a350e 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -95,8 +95,8 @@ static int cfg80211_dev_check_name(struct cfg80211_registered_device *rdev,
- 	ASSERT_RTNL();
- 
- 	/* prohibit calling the thing phy%d when %d is not its number */
--	sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken);
--	if (taken == strlen(newname) && wiphy_idx != rdev->wiphy_idx) {
-+	if (sscanf(newname, PHY_NAME "%d%n", &wiphy_idx, &taken) == 1 &&
-+	    taken == strlen(newname) && wiphy_idx != rdev->wiphy_idx) {
- 		/* count number of places needed to print wiphy_idx */
- 		digits = 1;
- 		while (wiphy_idx /= 10)
-
-
+-- 
+Kalle Valo
