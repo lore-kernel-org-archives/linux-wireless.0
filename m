@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from skprod3.natinst.com ([130.164.80.24]:36348 "EHLO ni.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752134AbbBSVeg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 16:34:36 -0500
-Message-ID: <54E6561F.4050109@ni.com> (sfid-20150219_223455_570238_376F4C2A)
-Date: Thu, 19 Feb 2015 15:31:11 -0600
-From: James Minor <james.minor@ni.com>
+Received: from smtp.codeaurora.org ([198.145.11.231]:34884 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965661AbbBCN3e (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 08:29:34 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Xander Huff <xander.huff@ni.com>
-CC: davem@davemloft.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	joseph.hershberger@ni.com, ben.shelton@ni.com, jaeden.amero@ni.com,
-	joshc@ni.com, rich.tollerton@ni.com, brad.mouring@ni.com
-Subject: Re: [PATCH RFC] wext: Add event stream wrappers that return E2BIG
- when values don't fit
-References: <1422565452-19825-1-git-send-email-xander.huff@ni.com> <1422566529.6322.26.camel@sipsolutions.net>
-In-Reply-To: <1422566529.6322.26.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [1/4] mwifiex: correction in wakeup timer handling
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1422607207-15229-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20150203132934.12DB8140B4E@smtp.codeaurora.org> (sfid-20150203_142945_078756_406424B6)
+Date: Tue,  3 Feb 2015 13:29:34 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2015 03:22 PM, Johannes Berg wrote:
 
-> > What you mean is "with the wext (compatibility) code in cfg80211".
+> Wakeup timer is in sync with 'pm_wakeup_fw_try' flag. It
+> has been started instead of cancelling at one place. This
+> patch corrects it.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
 
-Comment fixed in the v2 of the patch (coming shortly).
+Thanks, 4 patches applied to wireless-drivers-next.git:
 
-> > Either way, I *strongly* recommend against using this in the first
-> > place. There's an upper bound of 64k (I think) on the amount of memory
-> > that can be used, and people have been known to run into this limit - at
-> > which point you get absolutely no scan results back whatsoever. It's far
-> > safer to use nl80211's scan dump, and if you're looking at this code in
-> > particular then clearly you have it available.
+ee6f0dd8a836 mwifiex: correction in wakeup timer handling
+7a1f4e61eb64 mwifiex: fix memory leak in mwifiex_send_processed_packet()
+0ea3186ce03c mwifiex: fix NULL packet downloading issues
+fc8f0456dcce mwifiex: disable UAPSD mode when AP starts
 
-Agreed, and we will be switching to nl80211 as soon as we can.
-
-> > Regarding the patch itself, it seems to add a bit much code. Is there
-> > really no better way to express this? Perhaps by checking that the
-> > stream actually moved forward - which will *always* happen for any of
-> > these functions if they actually did anything? Even maybe if the new
-> > _check inlines were to do that it'd still make the code smaller.
-
-I've shuffled some things around and will submit the v2 momentarily.
-
-
-Thanks,
-James
-
+Kalle Valo
