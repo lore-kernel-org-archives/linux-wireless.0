@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:31435 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:1101 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757212AbbBEL4r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 06:56:47 -0500
-Message-ID: <54D35A76.4010801@linux.intel.com> (sfid-20150205_125708_023460_A6AF255D)
-Date: Thu, 05 Feb 2015 19:56:38 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
-	wens@csie.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
-References: <54C5AA8C.4010005@linux.intel.com> <87vbjjw3bc.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87vbjjw3bc.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+	id S964928AbbBCHOo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 02:14:44 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/19] iwlwifi: mvm: don't reprobe if we fail during reconfig and fw_restart is false
+Date: Tue,  3 Feb 2015 09:14:21 +0200
+Message-Id: <1422947678-16917-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081448_699517_D388D129)
+In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
+References: <1422947482.30742.8.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-On 2015/2/3 21:08, Kalle Valo wrote:
-> "Fu, Zhonghui" <zhonghui.fu@linux.intel.com> writes:
->
->> >From ff39ed4af9f1c50358fe92ec4c8eaac9db183e00 Mon Sep 17 00:00:00 2001
->> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
->> Date: Mon, 26 Jan 2015 10:13:21 +0800
->> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
->>
->> WiFi chip has 2 SDIO functions, and PM core will trigger
->> twice suspend/resume operations for one WiFi chip to do
->> the same things. This patch avoid this case.
->>
->> Acked-by: Arend van Spriel<arend@broadcom.com>
->> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
-> This doesn't apply:
->
-> Applying: brcmfmac: avoid duplicated suspend/resume operation
-> Using index info to reconstruct a base tree...
-> Falling back to patching base and 3-way merge...
-> Auto-merging drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> CONFLICT (content): Merge conflict in drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> Failed to merge in the changes.
-> Patch failed at 0001 brcmfmac: avoid duplicated suspend/resume operation
->
-> BTW, when you resend a patch please use "[PATCH v2]" (or v3, v4...) in
-> the Subject field.
-Just see your comments, so please ignore my inquiry in last mail. I will re-base this patch again.
+If we don't want to restart the firmware, don't reprobe either in case
+of a failure during reconfiguration.  This allows us to debug failures
+in the reconfig flow as well.
 
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/ops.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Thanks,
-Zhonghui
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index 8bf8c2a..b1dea68 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -870,7 +870,10 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
+ 	 * If WoWLAN fw asserted, don't restart either, mac80211
+ 	 * can't recover this since we're already half suspended.
+ 	 */
+-	if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
++	if (!mvm->restart_fw && fw_error) {
++		schedule_work(&mvm->fw_error_dump_wk);
++	} else if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART,
++				    &mvm->status)) {
+ 		struct iwl_mvm_reprobe *reprobe;
+ 
+ 		IWL_ERR(mvm,
+@@ -894,16 +897,13 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
+ 		reprobe->dev = mvm->trans->dev;
+ 		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
+ 		schedule_work(&reprobe->work);
+-	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR &&
+-		   (!fw_error || mvm->restart_fw)) {
++	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR) {
+ 		/* don't let the transport/FW power down */
+ 		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
+ 
+ 		if (fw_error && mvm->restart_fw > 0)
+ 			mvm->restart_fw--;
+ 		ieee80211_restart_hw(mvm->hw);
+-	} else if (fw_error) {
+-		schedule_work(&mvm->fw_error_dump_wk);
+ 	}
+ }
+ 
+-- 
+1.9.1
 
