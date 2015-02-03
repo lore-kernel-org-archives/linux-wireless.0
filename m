@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gn237.zone.eu ([217.146.67.237]:18051 "EHLO gn237.zone.eu"
+Received: from mga02.intel.com ([134.134.136.20]:1101 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932402AbbBOUsi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 15:48:38 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH v2 7/7] rtlwifi: Remove unused RTL_SUPPORTED_CTRL_FILTER define
-Date: Sun, 15 Feb 2015 22:46:51 +0200
-Message-Id: <1424033211-11696-8-git-send-email-plaes@plaes.org> (sfid-20150215_214912_280363_0ECD97A0)
-In-Reply-To: <1424033211-11696-1-git-send-email-plaes@plaes.org>
-References: <1424033211-11696-1-git-send-email-plaes@plaes.org>
+	id S964928AbbBCHOq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 02:14:46 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/19] iwlwifi: mvm: remove space padding after sysassert description
+Date: Tue,  3 Feb 2015 09:14:22 +0200
+Message-Id: <1422947678-16917-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081450_520770_13FD6019)
+In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
+References: <1422947482.30742.8.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/rtlwifi/core.h | 2 --
- 1 file changed, 2 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/rtlwifi/core.h b/drivers/net/wireless/rtlwifi/core.h
-index 7b64e34..82733c6 100644
---- a/drivers/net/wireless/rtlwifi/core.h
-+++ b/drivers/net/wireless/rtlwifi/core.h
-@@ -33,8 +33,6 @@
- 	FIF_FCSFAIL | \
- 	FIF_BCN_PRBRESP_PROMISC)
+There's really no reason to pad out the field with spaces at the
+end of the line - they're practically invisible there anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/utils.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index 4eb3cad..02f434d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -432,7 +432,7 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
+ 			mvm->status, table.valid);
+ 	}
  
--#define RTL_SUPPORTED_CTRL_FILTER	0xFF
--
- #define DM_DIG_THRESH_HIGH		40
- #define DM_DIG_THRESH_LOW		35
- #define DM_FALSEALARM_THRESH_LOW	400
+-	IWL_ERR(mvm, "0x%08X | %-28s\n", table.error_id,
++	IWL_ERR(mvm, "0x%08X | %s\n", table.error_id,
+ 		desc_lookup(table.error_id));
+ 	IWL_ERR(mvm, "0x%08X | umac branchlink1\n", table.blink1);
+ 	IWL_ERR(mvm, "0x%08X | umac branchlink2\n", table.blink2);
 -- 
-2.3.0
+1.9.1
 
