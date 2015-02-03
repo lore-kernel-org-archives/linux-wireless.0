@@ -1,118 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36770 "EHLO mx2.suse.de"
+Received: from mga02.intel.com ([134.134.136.20]:1101 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752971AbbBZRlp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 12:41:45 -0500
-Date: Thu, 26 Feb 2015 18:41:43 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, ArikX Nemtsov <arik@wizery.com>
-Subject: Re: [PATCH v8 2/3] cfg80211: Add API to change the indoor
-	regulatory setting
-Message-ID: <20150226174143.GM8749@wotan.suse.de> (sfid-20150226_184148_611015_3B272F01)
-References: <1424944447-10988-1-git-send-email-ilan.peer@intel.com> <1424944447-10988-2-git-send-email-ilan.peer@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424944447-10988-2-git-send-email-ilan.peer@intel.com>
+	id S965181AbbBCHO6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 02:14:58 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/19] iwlwifi: pcie: prepare the enablement of 31 TFD queues
+Date: Tue,  3 Feb 2015 09:14:27 +0200
+Message-Id: <1422947678-16917-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081502_992667_D5852AF9)
+In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
+References: <1422947482.30742.8.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 26, 2015 at 04:54:06AM -0500, Ilan Peer wrote:
-> Previously, the indoor setting configuration assumed that as
-> long as a station interface is connected, the indoor environment
-> setting does not change. However, this assumption is problematic
-> as:
-> 
-> - It is possible that a station interface is connected to a mobile
->   AP, e.g., softAP or a P2P GO, where it is possible that both the
->   station and the mobile AP move out of the indoor environment making
->   the indoor setting invalid. In such a case, user space has no way to
->   invalidate the setting.
-> - A station interface disconnection does not necessarily imply that
->   the device is no longer operating in an indoor environment, e.g.,
->   it is possible that the station interface is roaming but is still
->   stays indoor.
-> 
-> To handle the above, extend the indoor configuration API to allow
-> user space to indicate a change of indoor settings, and allow it to
-> indicate weather it controls the indoor setting, such that:
-> 
-> 1. If the user space process explicitly indicates that it is going
->    to control the indoor setting, do not clear the indoor setting
->    internally, unless the socket is released. The user space process
->    should use the NL80211_ATTR_SOCKET_OWNER attribute in the command
->    to state that it is going to control the indoor setting.
-> 2. Reset the indoor setting when restoring the regulatory settings in
->    case it is not owned by a user space process.
-> 
-> Based on the above, a user space tool that continuously monitors the
-> indoor settings, i.e., tracking power setting, location etc., can
-> indicate environment changes to the regulatory core.
-> 
-> Currently, in case a received country IE includes environment
-> information (indicates that the country IE applies only to
-> indoor operation or only to outdoor operation) it is currently not
-> used.
+Some devices have 31 TFD queues. Don't enable it yet since
+there are still issues with it, but at least prepare the
+code for it. There was a bug in the read pointer assignment,
+fix that. Also, move the inline functions to iwl-scd.h which
+is the right place.
 
-Since I spotted an issue and you have to remake this patch
-please also change this to:
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-prph.h   | 26 ++------------------
+ drivers/net/wireless/iwlwifi/iwl-scd.h    | 41 +++++++++++++++++++++++++------
+ drivers/net/wireless/iwlwifi/pcie/trans.c |  1 +
+ drivers/net/wireless/iwlwifi/pcie/tx.c    |  4 +++
+ 4 files changed, 40 insertions(+), 32 deletions(-)
 
-It should be noted that currently userspace is the only
-provided mechanism used to hint to the regulatory core
-over the indoor/outdoor environment -- while the country
-IEs do have an environment setting this has been completely
-ignored by the regulatory core by design  for a while now
-since country IEs typically can contain bogus data.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index b21fcf0..6221e4d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -252,6 +252,7 @@
+ #define SCD_QUEUE_CTX_REG2_WIN_SIZE_MSK		(0x0000007F)
+ #define SCD_QUEUE_CTX_REG2_FRAME_LIMIT_POS	(16)
+ #define SCD_QUEUE_CTX_REG2_FRAME_LIMIT_MSK	(0x007F0000)
++#define SCD_GP_CTRL_ENABLE_31_QUEUES		BIT(0)
+ 
+ /* Context Data */
+ #define SCD_CONTEXT_MEM_LOWER_BOUND	(SCD_MEM_LOWER_BOUND + 0x600)
+@@ -285,32 +286,9 @@
+ #define SCD_CHAINEXT_EN		(SCD_BASE + 0x244)
+ #define SCD_AGGR_SEL		(SCD_BASE + 0x248)
+ #define SCD_INTERRUPT_MASK	(SCD_BASE + 0x108)
++#define SCD_GP_CTRL		(SCD_BASE + 0x1a8)
+ #define SCD_EN_CTRL		(SCD_BASE + 0x254)
+ 
+-static inline unsigned int SCD_QUEUE_WRPTR(unsigned int chnl)
+-{
+-	if (chnl < 20)
+-		return SCD_BASE + 0x18 + chnl * 4;
+-	WARN_ON_ONCE(chnl >= 32);
+-	return SCD_BASE + 0x284 + (chnl - 20) * 4;
+-}
+-
+-static inline unsigned int SCD_QUEUE_RDPTR(unsigned int chnl)
+-{
+-	if (chnl < 20)
+-		return SCD_BASE + 0x68 + chnl * 4;
+-	WARN_ON_ONCE(chnl >= 32);
+-	return SCD_BASE + 0x2B4 + (chnl - 20) * 4;
+-}
+-
+-static inline unsigned int SCD_QUEUE_STATUS_BITS(unsigned int chnl)
+-{
+-	if (chnl < 20)
+-		return SCD_BASE + 0x10c + chnl * 4;
+-	WARN_ON_ONCE(chnl >= 32);
+-	return SCD_BASE + 0x384 + (chnl - 20) * 4;
+-}
+-
+ /*********************** END TX SCHEDULER *************************************/
+ 
+ /* Oscillator clock */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scd.h b/drivers/net/wireless/iwlwifi/iwl-scd.h
+index 6c622b2..f2353eb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scd.h
++++ b/drivers/net/wireless/iwlwifi/iwl-scd.h
+@@ -69,14 +69,6 @@
+ #include "iwl-prph.h"
+ 
+ 
+-static inline void iwl_scd_txq_set_inactive(struct iwl_trans *trans,
+-					    u16 txq_id)
+-{
+-	iwl_write_prph(trans, SCD_QUEUE_STATUS_BITS(txq_id),
+-		       (0 << SCD_QUEUE_STTS_REG_POS_ACTIVE)|
+-		       (1 << SCD_QUEUE_STTS_REG_POS_SCD_ACT_EN));
+-}
+-
+ static inline void iwl_scd_txq_set_chain(struct iwl_trans *trans,
+ 					 u16 txq_id)
+ {
+@@ -115,4 +107,37 @@ static inline void iwl_scd_enable_set_active(struct iwl_trans *trans,
+ {
+ 	iwl_write_prph(trans, SCD_EN_CTRL, value);
+ }
++
++static inline unsigned int SCD_QUEUE_WRPTR(unsigned int chnl)
++{
++	if (chnl < 20)
++		return SCD_BASE + 0x18 + chnl * 4;
++	WARN_ON_ONCE(chnl >= 32);
++	return SCD_BASE + 0x284 + (chnl - 20) * 4;
++}
++
++static inline unsigned int SCD_QUEUE_RDPTR(unsigned int chnl)
++{
++	if (chnl < 20)
++		return SCD_BASE + 0x68 + chnl * 4;
++	WARN_ON_ONCE(chnl >= 32);
++	return SCD_BASE + 0x2B4 + chnl * 4;
++}
++
++static inline unsigned int SCD_QUEUE_STATUS_BITS(unsigned int chnl)
++{
++	if (chnl < 20)
++		return SCD_BASE + 0x10c + chnl * 4;
++	WARN_ON_ONCE(chnl >= 32);
++	return SCD_BASE + 0x334 + chnl * 4;
++}
++
++static inline void iwl_scd_txq_set_inactive(struct iwl_trans *trans,
++					    u16 txq_id)
++{
++	iwl_write_prph(trans, SCD_QUEUE_STATUS_BITS(txq_id),
++		       (0 << SCD_QUEUE_STTS_REG_POS_ACTIVE)|
++		       (1 << SCD_QUEUE_STTS_REG_POS_SCD_ACT_EN));
++}
++
+ #endif
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 1ff8767..eb0ffc1 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -75,6 +75,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-csr.h"
+ #include "iwl-prph.h"
++#include "iwl-scd.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-fw-error-dump.h"
+ #include "internal.h"
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index 6c7bfe8..0a94083 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -892,6 +892,10 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 		}
+ 	}
+ 
++	if (trans->cfg->base_params->num_of_queues > 20)
++		iwl_set_bits_prph(trans, SCD_GP_CTRL,
++				  SCD_GP_CTRL_ENABLE_31_QUEUES);
++
+ 	return 0;
+ error:
+ 	/*Upon error, free only if we allocated something */
+-- 
+1.9.1
 
-> @@ -4984,7 +4988,15 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
->  		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
->  		return regulatory_hint_user(data, user_reg_hint_type);
->  	case NL80211_USER_REG_HINT_INDOOR:
-> -		return regulatory_hint_indoor_user();
-> +		if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
-> +			owner_nlportid = info->snd_portid;
-> +			is_indoor = !!info->attrs[NL80211_ATTR_REG_INDOOR];
-> +		} else {
-> +			owner_nlportid = 0;
-> +			is_indoor = true;
-> +		}
-> +
-> +		return regulatory_hint_indoor(is_indoor, owner_nlportid);
-
-Good, this looks better now. But you are missing the chance that a secondary
-random interface can come up and override that environmental information
-without checking for previous users. I'll illustrate below.
-
->  	default:
-> @@ -2288,15 +2291,51 @@ int regulatory_hint_user(const char *alpha2,
->  	return 0;
->  }
->  
-> -int regulatory_hint_indoor_user(void)
-> +int regulatory_hint_indoor(bool is_indoor, u32 portid)
->  {
-> +	spin_lock(&reg_indoor_lock);
->  
-> +	/*
-> +	 * Process only if there is a real change, so the original port ID is
-> +	 * saved (to handle cases that several processes try to change the
-> +	 * indoor setting).
-> +	 */
-> +	if (reg_is_indoor == is_indoor) {
-> +		spin_unlock(&reg_indoor_lock);
-> +		return 0;
-> +	}
->  
-> -	reg_is_indoor = true;
-> +	reg_is_indoor = is_indoor;
-> +	if (reg_is_indoor)
-> +		reg_is_indoor_portid = portid;
-> +	else
-> +		reg_is_indoor_portid = 0;
-
-Why do we ignore port id if we go outdoor? Also we seem to allow
-interfaces to disagree on the setting, how are you handling that here?
-Don't tell me that cannot happen, I want you to think about that and
-handle it.
-
-  Luis
