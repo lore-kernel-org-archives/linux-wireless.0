@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57905 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752071AbbBMWNH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 17:13:07 -0500
-Message-ID: <54DE76F2.4080107@candelatech.com> (sfid-20150213_231311_584595_EAFF1225)
-Date: Fri, 13 Feb 2015 14:13:06 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [RFC] mac80211: use rhashtable for station table
-References: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:1162 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966209AbbBCHPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 02:15:19 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/19] iwlwifi: mvm: don't send a command the firmware doesn't know
+Date: Tue,  3 Feb 2015 09:14:37 +0200
+Message-Id: <1422947678-16917-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081522_955869_0C63DD92)
+In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
+References: <1422947482.30742.8.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2015 01:47 PM, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> We currently have a hand-rolled table with 256 entries and are
-> using the last byte of the MAC address as the hash. This hash
-> is obviously very fast, but collisions are easily created and
-> we waste a lot of space in the common case of just connecting
-> as a client to an AP where we just have a single station. The
-> other common case of an AP is also suboptimal due to the size
-> of the hash table and the ease of causing collisions.
-> 
-> Convert all of this to use rhashtable with jhash, which gives
-> us the advantage of a far better hash function (with random
-> perturbation to avoid hash collision attacks) and of course
-> that the hash table grows and shrinks dynamically with chain
-> length, improving both cases above.
+-9.ucode doesn't know the command SHARED_MEM_CFG yet.
 
-Oooh, maybe finally time to mix local addr with peer addr to
-make lots of vifs connected to same AP hash well too? :)
+Fixes: 04fd2c28226f ("iwlwifi: mvm: add rxf and txf to dump data")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/fw.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
+index a322a5e..ca38e98 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
+@@ -575,7 +575,8 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 		goto error;
+ 	}
+ 
+-	iwl_mvm_get_shared_mem_conf(mvm);
++	if (IWL_UCODE_API(mvm->fw->ucode_ver) >= 10)
++		iwl_mvm_get_shared_mem_conf(mvm);
+ 
+ 	ret = iwl_mvm_sf_update(mvm, NULL, false);
+ 	if (ret)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
