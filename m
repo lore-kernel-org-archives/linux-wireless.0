@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12263 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168AbbBFLri (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 06:47:38 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath10k: Bypass PLL setting on target init for QCA9888
-Date: Fri, 6 Feb 2015 17:17:17 +0530
-Message-ID: <1423223238-17530-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150206_124742_080809_AF2E7FD2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:1162 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966214AbbBCHPU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 02:15:20 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/19] iwlwifi: mvm: reduce quota threshold
+Date: Tue,  3 Feb 2015 09:14:38 +0200
+Message-Id: <1422947678-16917-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081526_826381_9533F903)
+In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
+References: <1422947482.30742.8.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of of qca988x solutions are having global reset issue
-during target initialization. Bypassing PLL setting before
-downloading firmware and letting the SoC run on REF_CLK is fixing
-the problem. Corresponding firmware change is also needed to set
-the clock source once the target is initialized. Since 10.2.4
-firmware is having this ROM patch, applying skip_clock_init only
-for 10.2.4 firmware versions.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+The quota threshold should be reduced to 4 to update the
+firmware more frequently.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/constants.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 310e12b..3119192 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -797,6 +797,20 @@ static int ath10k_download_cal_data(struct ath10k *ar)
- 	ar->cal_mode = ATH10K_CAL_MODE_OTP;
- 
- done:
-+	if ((ar->hw_rev != ATH10K_HW_QCA988X) ||
-+	    (ar->wmi.op_version != ATH10K_FW_WMI_OP_VERSION_10_2_4)) {
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+			   "boot using calibration mode %s\n",
-+			   ath10k_cal_mode_str(ar->cal_mode));
-+		return 0;
-+	}
-+
-+	ret = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
-+	if (ret) {
-+		ath10k_err(ar, "could not write skip_clock_init (%d)\n", ret);
-+		return ret;
-+	}
-+
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot using calibration mode %s\n",
- 		   ath10k_cal_mode_str(ar->cal_mode));
- 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/constants.h b/drivers/net/wireless/iwlwifi/mvm/constants.h
+index d91c46b..beba375 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/constants.h
++++ b/drivers/net/wireless/iwlwifi/mvm/constants.h
+@@ -99,7 +99,7 @@
+ #define IWL_MVM_BT_COEX_ANTENNA_COUPLING_THRS	30
+ #define IWL_MVM_FW_MCAST_FILTER_PASS_ALL	0
+ #define IWL_MVM_FW_BCAST_FILTER_PASS_ALL	0
+-#define IWL_MVM_QUOTA_THRESHOLD			8
++#define IWL_MVM_QUOTA_THRESHOLD			4
+ #define IWL_MVM_RS_RSSI_BASED_INIT_RATE         0
+ #define IWL_MVM_RS_DISABLE_P2P_MIMO		0
+ #define IWL_MVM_RS_NUM_TRY_BEFORE_ANT_TOGGLE    1
 -- 
-2.2.2
+1.9.1
 
