@@ -1,71 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:33283 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216AbbBZKMe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 05:12:34 -0500
-Received: by lbvp9 with SMTP id p9so9799199lbv.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2015 02:12:32 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix TxBF VHT capabilities for 2+ RF-chain devices
-Date: Thu, 26 Feb 2015 11:11:22 +0100
-Message-Id: <1424945482-9765-1-git-send-email-michal.kazior@tieto.com> (sfid-20150226_111237_997668_6BD6E6FD)
+Received: from s3.sipsolutions.net ([5.9.151.49]:48517 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753210AbbBCNvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 08:51:46 -0500
+Message-ID: <1422971503.2237.4.camel@sipsolutions.net> (sfid-20150203_145153_891621_C5D78CD8)
+Subject: pull-request: mac80211-next 2015-02-03
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 Feb 2015 14:51:43 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware doesn't report a complete and
-ready-to-use vht cap. Instead the driver is
-supposed to fill in the missing bits related to
-number of chains.
+Hi,
 
-This effectively increases Compressed Steering
-Number and Number of Sounding Dimensions in
-AssocReq frames for devices with more than one RF
-chain and should improve TxBF performance.
+Here's a last pull request for net-next - I hope it can still make it,
+we fixed a fairly large number of issues. Also there's a bunch of new
+ciphers, but see the details below.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Let me know if there's any problem.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0f39af7..383250e 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5263,11 +5263,30 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- {
- 	struct ieee80211_sta_vht_cap vht_cap = {0};
- 	u16 mcs_map;
-+	u32 val;
- 	int i;
- 
- 	vht_cap.vht_supported = 1;
- 	vht_cap.cap = ar->vht_cap_info;
- 
-+	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE |
-+				IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE)) {
-+		val = ar->num_rf_chains - 1;
-+		val <<= IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT;
-+		val &= IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK;
-+
-+		vht_cap.cap |= val;
-+	}
-+
-+	if (ar->vht_cap_info & (IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE |
-+				IEEE80211_VHT_CAP_MU_BEAMFORMER_CAPABLE)) {
-+		val = ar->num_rf_chains - 1;
-+		val <<= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT;
-+		val &= IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK;
-+
-+		vht_cap.cap |= val;
-+	}
-+
- 	mcs_map = 0;
- 	for (i = 0; i < 8; i++) {
- 		if (i < ar->num_rf_chains)
--- 
-1.8.5.3
+Thanks,
+johannes
+
+
+
+The following changes since commit c1e140bf79d817d4a7aa9932eb98b0359c87af33:
+
+  mac80211: delete the assoc/auth timer upon suspend (2015-01-19 18:59:20 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2015-02-03
+
+for you to fetch changes up to 79044f60caa7c377333dc8f13cf1e48c144e2521:
+
+  net: rfkill: Add Broadcom BCM2E40 bluetooth ACPI ID (2015-02-03 14:38:22 +0100)
+
+----------------------------------------------------------------
+Last round of updates for net-next:
+ * revert a patch that caused a regression with mesh userspace (Bob)
+ * fix a number of suspend/resume related races
+   (from Emmanuel, Luca and myself - we'll look at backporting later)
+ * add software implementations for new ciphers (Jouni)
+ * add a new ACPI ID for Broadcom's rfkill (Mika)
+ * allow using netns FD for wireless (Vadim)
+ * some other cleanups (various)
+
+----------------------------------------------------------------
+Bob Copeland (1):
+      Revert "mac80211: keep sending peer candidate events while in listen state"
+
+Emmanuel Grumbach (2):
+      mac80211: synchronize_net() before flushing the queues
+      mac80211: avoid races related to suspend flow
+
+Johannes Berg (9):
+      mac80211: fix HW registration error paths
+      mac80211: allow drivers to control software crypto
+      nl80211: suppress smatch warnings
+      mac80211: tdls: remove shadowing variable
+      mac80211: tdls: disentangle HT supported conditions
+      mac80211: fix per-TID RX-MSDU counter
+      mac80211: support beacon statistics
+      ath10k: use IEEE80211_HW_SW_CRYPTO_CONTROL
+      nl80211: don't document per-wiphy interface dump
+
+Jouni Malinen (6):
+      cfg80211: Fix BIP (AES-CMAC) cipher validation
+      cfg80211: Add new GCMP, CCMP-256, BIP-GMAC, BIP-CMAC-256 ciphers
+      mac80111: Add GCMP and GCMP-256 ciphers
+      mac80111: Add CCMP-256 cipher
+      mac80111: Add BIP-CMAC-256 cipher
+      mac80111: Add BIP-GMAC-128 and BIP-GMAC-256 ciphers
+
+Lorenzo Bianconi (1):
+      mac80211: enable TPC through mac80211 stack
+
+Luciano Coelho (3):
+      nl80211: add an attribute to allow delaying the first scheduled scan cycle
+      mac80211: complete scan work immediately if quiesced or suspended
+      mac80211: handle potential race between suspend and scan completion
+
+Mika Westerberg (1):
+      net: rfkill: Add Broadcom BCM2E40 bluetooth ACPI ID
+
+Sharon Dvir (1):
+      wireless: docs: fix 'make pdfdocs' failure
+
+Vadim Kochan (1):
+      nl80211: Allow set network namespace by fd
+
+ Documentation/DocBook/80211.tmpl      |   4 +-
+ drivers/net/wireless/ath/ath10k/mac.c |  16 +-
+ include/linux/ieee80211.h             |  27 +++
+ include/net/cfg80211.h                |   5 +
+ include/net/mac80211.h                |  39 ++-
+ include/uapi/linux/nl80211.h          |  26 +-
+ net/core/net_namespace.c              |   1 +
+ net/mac80211/Kconfig                  |   1 +
+ net/mac80211/Makefile                 |   2 +
+ net/mac80211/aes_ccm.c                |  21 +-
+ net/mac80211/aes_ccm.h                |  10 +-
+ net/mac80211/aes_cmac.c               |  34 ++-
+ net/mac80211/aes_cmac.h               |   5 +-
+ net/mac80211/aes_gcm.c                |  95 ++++++++
+ net/mac80211/aes_gcm.h                |  22 ++
+ net/mac80211/aes_gmac.c               |  84 +++++++
+ net/mac80211/aes_gmac.h               |  20 ++
+ net/mac80211/cfg.c                    |  50 +++-
+ net/mac80211/chan.c                   |   4 +-
+ net/mac80211/debugfs_key.c            |  55 +++++
+ net/mac80211/ieee80211_i.h            |  36 ++-
+ net/mac80211/iface.c                  |  12 +-
+ net/mac80211/key.c                    | 185 +++++++++++++-
+ net/mac80211/key.h                    |  18 ++
+ net/mac80211/main.c                   | 107 +++++---
+ net/mac80211/mesh_plink.c             |   7 -
+ net/mac80211/mlme.c                   |   3 +
+ net/mac80211/rx.c                     |  48 +++-
+ net/mac80211/scan.c                   |   5 +
+ net/mac80211/sta_info.c               |  14 ++
+ net/mac80211/tdls.c                   |  37 ++-
+ net/mac80211/tx.c                     |  20 +-
+ net/mac80211/util.c                   |  27 ++-
+ net/mac80211/wpa.c                    | 443 +++++++++++++++++++++++++++++++++-
+ net/mac80211/wpa.h                    |  19 +-
+ net/rfkill/rfkill-gpio.c              |   1 +
+ net/wireless/nl80211.c                |  31 ++-
+ net/wireless/util.c                   |  68 +++++-
+ 38 files changed, 1426 insertions(+), 176 deletions(-)
+ create mode 100644 net/mac80211/aes_gcm.c
+ create mode 100644 net/mac80211/aes_gcm.h
+ create mode 100644 net/mac80211/aes_gmac.c
+ create mode 100644 net/mac80211/aes_gmac.h
+
 
