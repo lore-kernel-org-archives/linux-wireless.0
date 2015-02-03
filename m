@@ -1,210 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:47571 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751321AbbBHPby (ORCPT
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:50288 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbbBCKk3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2015 10:31:54 -0500
-Received: by mail-we0-f181.google.com with SMTP id w62so4877730wes.12
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 07:31:52 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 1/4] bcma: add helpers bringing PCIe hosted bus up / down
-Date: Sun,  8 Feb 2015 16:31:41 +0100
-Message-Id: <1423409504-16435-1-git-send-email-zajec5@gmail.com> (sfid-20150208_163208_043762_3F308587)
-In-Reply-To: <1422638566-7593-1-git-send-email-zajec5@gmail.com>
-References: <1422638566-7593-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 3 Feb 2015 05:40:29 -0500
+Received: by mail-wi0-f171.google.com with SMTP id l15so23134647wiw.4
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 02:40:28 -0800 (PST)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Subject: [RFC 2/4] ath10k: make peer type configurable
+Date: Tue,  3 Feb 2015 11:41:52 +0100
+Message-Id: <1422960114-25137-3-git-send-email-marek.puzyniak@tieto.com> (sfid-20150203_114045_231524_E14D09A2)
+In-Reply-To: <1422960114-25137-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1422960114-25137-1-git-send-email-marek.puzyniak@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bringing PCIe hosted bus up requires operating on host-related core.
-Since we plan to support PCIe Gen 2 devices we should provide a helper
-picking the correct one (PCIE or PCIE2).
+Peer type was hardcoded to default value.
+For future implementation it is required
+to make is configurable.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
 ---
- drivers/bcma/bcma_private.h                    |  2 ++
- drivers/bcma/driver_pci.c                      | 20 ++----------------
- drivers/bcma/host_pci.c                        | 28 ++++++++++++++++++++++++++
- drivers/net/wireless/b43/main.c                |  4 ++--
- drivers/net/wireless/brcm80211/brcmsmac/main.c |  8 ++++----
- include/linux/bcma/bcma.h                      |  3 +++
- include/linux/bcma/bcma_driver_pci.h           |  2 --
- 7 files changed, 41 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c     | 14 +++++++++-----
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  8 +++++---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  5 +++--
+ drivers/net/wireless/ath/ath10k/wmi.c     |  3 ++-
+ drivers/net/wireless/ath/ath10k/wmi.h     |  6 ++++++
+ 5 files changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index ac6c5fc..351f4af 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -101,6 +101,8 @@ static inline void __exit bcma_host_soc_unregister_driver(void)
- 
- /* driver_pci.c */
- u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
-+void bcma_core_pci_up(struct bcma_drv_pci *pc);
-+void bcma_core_pci_down(struct bcma_drv_pci *pc);
- 
- extern int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc);
- 
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index 7866664..cf92bfa 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -328,28 +328,12 @@ static void bcma_core_pci_extend_L1timer(struct bcma_drv_pci *pc, bool extend)
- 	bcma_pcie_read(pc, BCMA_CORE_PCI_DLLP_PMTHRESHREG);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index c5815ce..7f0a594 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -381,7 +381,8 @@ ath10k_mac_get_any_chandef_iter(struct ieee80211_hw *hw,
+ 	*def = &conf->def;
  }
  
--void bcma_core_pci_up(struct bcma_bus *bus)
-+void bcma_core_pci_up(struct bcma_drv_pci *pc)
+-static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
++static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr,
++			      enum wmi_peer_type peer_type)
  {
--	struct bcma_drv_pci *pc;
--
--	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
--		return;
--
--	pc = &bus->drv_pci[0];
--
- 	bcma_core_pci_extend_L1timer(pc, true);
- }
--EXPORT_SYMBOL_GPL(bcma_core_pci_up);
+ 	int ret;
  
--void bcma_core_pci_down(struct bcma_bus *bus)
-+void bcma_core_pci_down(struct bcma_drv_pci *pc)
- {
--	struct bcma_drv_pci *pc;
--
--	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
--		return;
--
--	pc = &bus->drv_pci[0];
--
- 	bcma_core_pci_extend_L1timer(pc, false);
- }
--EXPORT_SYMBOL_GPL(bcma_core_pci_down);
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 53c6a8a..8dd37dc 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -310,3 +310,31 @@ void __exit bcma_host_pci_exit(void)
- {
- 	pci_unregister_driver(&bcma_pci_bridge_driver);
- }
-+
-+/**************************************************
-+ * Runtime ops for drivers.
-+ **************************************************/
-+
-+/* See also pcicore_up */
-+void bcma_host_pci_up(struct bcma_bus *bus)
-+{
-+	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
-+		return;
-+
-+	if (bus->host_is_pcie2)
-+		pr_warn("Bringing up bus with PCIe Gen 2 host is unsupported yet\n");
-+	else
-+		bcma_core_pci_up(&bus->drv_pci[0]);
-+}
-+EXPORT_SYMBOL_GPL(bcma_host_pci_up);
-+
-+/* See also pcicore_down */
-+void bcma_host_pci_down(struct bcma_bus *bus)
-+{
-+	if (bus->hosttype != BCMA_HOSTTYPE_PCI)
-+		return;
-+
-+	if (!bus->host_is_pcie2)
-+		bcma_core_pci_down(&bus->drv_pci[0]);
-+}
-+EXPORT_SYMBOL_GPL(bcma_host_pci_down);
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index 2c90886..e129b4c 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -4819,7 +4819,7 @@ static void b43_wireless_core_exit(struct b43_wldev *dev)
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
- 	case B43_BUS_BCMA:
--		bcma_core_pci_down(dev->dev->bdev->bus);
-+		bcma_host_pci_down(dev->dev->bdev->bus);
- 		break;
- #endif
- #ifdef CONFIG_B43_SSB
-@@ -4868,7 +4868,7 @@ static int b43_wireless_core_init(struct b43_wldev *dev)
- 	case B43_BUS_BCMA:
- 		bcma_core_pci_irq_ctl(&dev->dev->bdev->bus->drv_pci[0],
- 				      dev->dev->bdev, true);
--		bcma_core_pci_up(dev->dev->bdev->bus);
-+		bcma_host_pci_up(dev->dev->bdev->bus);
- 		break;
- #endif
- #ifdef CONFIG_B43_SSB
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index eb8584a..bcbfc6e 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4668,7 +4668,7 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 	brcms_c_coredisable(wlc_hw);
+@@ -390,7 +391,7 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
+ 	if (ar->num_peers >= ar->max_num_peers)
+ 		return -ENOBUFS;
  
- 	/* Match driver "down" state */
--	bcma_core_pci_down(wlc_hw->d11core->bus);
-+	bcma_host_pci_down(wlc_hw->d11core->bus);
+-	ret = ath10k_wmi_peer_create(ar, vdev_id, addr);
++	ret = ath10k_wmi_peer_create(ar, vdev_id, addr, peer_type);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to create wmi peer %pM on vdev %i: %i\n",
+ 			    addr, vdev_id, ret);
+@@ -2772,7 +2773,8 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 				   peer_addr, vdev_id);
  
- 	/* turn off pll and xtal to match driver "down" state */
- 	brcms_b_xtal(wlc_hw, OFF);
-@@ -4969,12 +4969,12 @@ static int brcms_b_up_prep(struct brcms_hardware *wlc_hw)
- 	 */
- 	if (brcms_b_radio_read_hwdisabled(wlc_hw)) {
- 		/* put SB PCI in down state again */
--		bcma_core_pci_down(wlc_hw->d11core->bus);
-+		bcma_host_pci_down(wlc_hw->d11core->bus);
- 		brcms_b_xtal(wlc_hw, OFF);
- 		return -ENOMEDIUM;
- 	}
+ 		if (!peer) {
+-			ret = ath10k_peer_create(ar, vdev_id, peer_addr);
++			ret = ath10k_peer_create(ar, vdev_id, peer_addr,
++						 WMI_PEER_TYPE_DEFAULT);
+ 			if (ret)
+ 				ath10k_warn(ar, "failed to create peer %pM on vdev %d: %d\n",
+ 					    peer_addr, vdev_id, ret);
+@@ -3686,7 +3688,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
  
--	bcma_core_pci_up(wlc_hw->d11core->bus);
-+	bcma_host_pci_up(wlc_hw->d11core->bus);
- 
- 	/* reset the d11 core */
- 	brcms_b_corereset(wlc_hw, BRCMS_USE_COREFLAGS);
-@@ -5171,7 +5171,7 @@ static int brcms_b_down_finish(struct brcms_hardware *wlc_hw)
- 
- 		/* turn off primary xtal and pll */
- 		if (!wlc_hw->noreset) {
--			bcma_core_pci_down(wlc_hw->d11core->bus);
-+			bcma_host_pci_down(wlc_hw->d11core->bus);
- 			brcms_b_xtal(wlc_hw, OFF);
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP ||
+ 	    arvif->vdev_type == WMI_VDEV_TYPE_IBSS) {
+-		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
++		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr,
++					 WMI_PEER_TYPE_DEFAULT);
+ 		if (ret) {
+ 			ath10k_warn(ar, "failed to create vdev %i peer for AP/IBSS: %d\n",
+ 				    arvif->vdev_id, ret);
+@@ -4439,7 +4442,8 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 			goto exit;
  		}
- 	}
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 994739d..037620b 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -434,6 +434,9 @@ static inline struct bcma_device *bcma_find_core(struct bcma_bus *bus,
- 	return bcma_find_core_unit(bus, coreid, 0);
- }
  
-+extern void bcma_host_pci_up(struct bcma_bus *bus);
-+extern void bcma_host_pci_down(struct bcma_bus *bus);
+-		ret = ath10k_peer_create(ar, arvif->vdev_id, sta->addr);
++		ret = ath10k_peer_create(ar, arvif->vdev_id, sta->addr,
++					 WMI_PEER_TYPE_DEFAULT);
+ 		if (ret) {
+ 			ath10k_warn(ar, "failed to add peer %pM for vdev %d when adding a new sta: %i\n",
+ 				    sta->addr, arvif->vdev_id, ret);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 71334f5..16d2d7c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -83,7 +83,8 @@ struct wmi_ops {
+ 	struct sk_buff *(*gen_vdev_wmm_conf)(struct ath10k *ar, u32 vdev_id,
+ 					     const struct wmi_wmm_params_all_arg *arg);
+ 	struct sk_buff *(*gen_peer_create)(struct ath10k *ar, u32 vdev_id,
+-					   const u8 peer_addr[ETH_ALEN]);
++					   const u8 peer_addr[ETH_ALEN],
++					   enum wmi_peer_type peer_type);
+ 	struct sk_buff *(*gen_peer_delete)(struct ath10k *ar, u32 vdev_id,
+ 					   const u8 peer_addr[ETH_ALEN]);
+ 	struct sk_buff *(*gen_peer_flush)(struct ath10k *ar, u32 vdev_id,
+@@ -633,14 +634,15 @@ ath10k_wmi_vdev_wmm_conf(struct ath10k *ar, u32 vdev_id,
+ 
+ static inline int
+ ath10k_wmi_peer_create(struct ath10k *ar, u32 vdev_id,
+-		       const u8 peer_addr[ETH_ALEN])
++		       const u8 peer_addr[ETH_ALEN],
++		       enum wmi_peer_type peer_type)
+ {
+ 	struct sk_buff *skb;
+ 
+ 	if (!ar->wmi.ops->gen_peer_create)
+ 		return -EOPNOTSUPP;
+ 
+-	skb = ar->wmi.ops->gen_peer_create(ar, vdev_id, peer_addr);
++	skb = ar->wmi.ops->gen_peer_create(ar, vdev_id, peer_addr, peer_type);
+ 	if (IS_ERR(skb))
+ 		return PTR_ERR(skb);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index a846821..16b0e6b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1963,7 +1963,8 @@ ath10k_wmi_tlv_op_gen_sta_keepalive(struct ath10k *ar,
+ 
+ static struct sk_buff *
+ ath10k_wmi_tlv_op_gen_peer_create(struct ath10k *ar, u32 vdev_id,
+-				  const u8 peer_addr[ETH_ALEN])
++				  const u8 peer_addr[ETH_ALEN],
++				  enum wmi_peer_type peer_type)
+ {
+ 	struct wmi_tlv_peer_create_cmd *cmd;
+ 	struct wmi_tlv *tlv;
+@@ -1978,7 +1979,7 @@ ath10k_wmi_tlv_op_gen_peer_create(struct ath10k *ar, u32 vdev_id,
+ 	tlv->len = __cpu_to_le16(sizeof(*cmd));
+ 	cmd = (void *)tlv->value;
+ 	cmd->vdev_id = __cpu_to_le32(vdev_id);
+-	cmd->peer_type = __cpu_to_le32(WMI_TLV_PEER_TYPE_DEFAULT); /* FIXME */
++	cmd->peer_type = __cpu_to_le32(peer_type);
+ 	ether_addr_copy(cmd->peer_addr.addr, peer_addr);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d03d175..2415845 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4574,7 +4574,8 @@ ath10k_wmi_op_gen_vdev_spectral_enable(struct ath10k *ar, u32 vdev_id,
+ 
+ static struct sk_buff *
+ ath10k_wmi_op_gen_peer_create(struct ath10k *ar, u32 vdev_id,
+-			      const u8 peer_addr[ETH_ALEN])
++			      const u8 peer_addr[ETH_ALEN],
++			      enum wmi_peer_type peer_type)
+ {
+ 	struct wmi_peer_create_cmd *cmd;
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 23d76c0..01cdb8b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4348,6 +4348,12 @@ struct wmi_peer_create_cmd {
+ 	struct wmi_mac_addr peer_macaddr;
+ } __packed;
+ 
++enum wmi_peer_type {
++	WMI_PEER_TYPE_DEFAULT = 0,
++	WMI_PEER_TYPE_BSS = 1,
++	WMI_PEER_TYPE_TDLS = 2,
++};
 +
- extern bool bcma_core_is_enabled(struct bcma_device *core);
- extern void bcma_core_disable(struct bcma_device *core, u32 flags);
- extern int bcma_core_enable(struct bcma_device *core, u32 flags);
-diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
-index 3f809ae..23af893 100644
---- a/include/linux/bcma/bcma_driver_pci.h
-+++ b/include/linux/bcma/bcma_driver_pci.h
-@@ -242,8 +242,6 @@ extern void bcma_core_pci_early_init(struct bcma_drv_pci *pc);
- extern void bcma_core_pci_init(struct bcma_drv_pci *pc);
- extern int bcma_core_pci_irq_ctl(struct bcma_drv_pci *pc,
- 				 struct bcma_device *core, bool enable);
--extern void bcma_core_pci_up(struct bcma_bus *bus);
--extern void bcma_core_pci_down(struct bcma_bus *bus);
- extern void bcma_core_pci_power_save(struct bcma_bus *bus, bool up);
- 
- extern int bcma_core_pci_pcibios_map_irq(const struct pci_dev *dev);
+ struct wmi_peer_delete_cmd {
+ 	__le32 vdev_id;
+ 	struct wmi_mac_addr peer_macaddr;
 -- 
-1.8.4.5
+2.1.4
 
