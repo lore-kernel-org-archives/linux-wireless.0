@@ -1,73 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:65179 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbbBYTMG (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:48469 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932074AbbBCJAe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 14:12:06 -0500
-Received: by mail-ob0-f180.google.com with SMTP id vb8so5964878obc.11
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 11:12:05 -0800 (PST)
-Message-ID: <54EE1E83.3040603@lwfinger.net> (sfid-20150225_201210_497617_7E569E32)
-Date: Wed, 25 Feb 2015 13:12:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 3 Feb 2015 04:00:34 -0500
+Received: by mail-we0-f174.google.com with SMTP id w55so38297433wes.5
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 01:00:33 -0800 (PST)
 MIME-Version: 1.0
-To: "ap420073 ." <ap420073@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add case in rtl92cu_get_hw_reg
-References: <1424887133-5670-1-git-send-email-ap420073@gmail.com>	<54EE157D.3050101@lwfinger.net> <CAMArcTW+UM62th3CZ-hhmPiH0-hzo4-f6qB2O9q7ktK4tLtuOQ@mail.gmail.com>
-In-Reply-To: <CAMArcTW+UM62th3CZ-hhmPiH0-hzo4-f6qB2O9q7ktK4tLtuOQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1422918363.21689.132.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	<54CFEB46.3050006@candelatech.com>
+	<1422918363.21689.132.camel@edumazet-glaptop2.roam.corp.google.com>
+Date: Tue, 3 Feb 2015 10:00:33 +0100
+Message-ID: <CA+BoTQko60aGP7QG+ELrgRmU=OFBZVc9n1X-ecGX2rLBnULSTA@mail.gmail.com> (sfid-20150203_100041_683055_7BEC8AAC)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/25/2015 12:59 PM, ap420073 . wrote:
-> 2015-02-26 3:33 GMT+09:00 Larry Finger <Larry.Finger@lwfinger.net>:
->> On 02/25/2015 11:58 AM, Taehee Yoo wrote:
->>>
->>> rtl_op_stop get wowlan state but rtl92cu_get_hw_reg has not process.
->>>
->>> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
->>
->>
->> Has this been tested? I am not aware that the RTL8192CU firmware could
->> handle WOWLAN.
->>
->> Larry
->>
->>
->>> ---
->>>    drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 6 ++++++
->>>    1 file changed, 6 insertions(+)
->>>
->>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
->>> b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
->>> index fe4b699..f6ad959 100644
->>> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
->>> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
->>> @@ -1589,6 +1589,12 @@ void rtl92cu_get_hw_reg(struct ieee80211_hw *hw, u8
->>> variable, u8 *val)
->>>          case HW_VAR_DATA_FILTER:
->>>                  *((u16 *) (val)) = rtl_read_word(rtlpriv, REG_RXFLTMAP2);
->>>                  break;
->>> +       case HAL_DEF_WOWLAN:
->>> +               if (ppsc->wo_wlan_mode)
->>> +                       *((bool *)(val)) = true;
->>> +               else
->>> +                       *((bool *)(val)) = false;
->>> +               break;
->>>          default:
->>>                  RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
->>>                           "switch case not processed\n");
->>>
->>
+On 3 February 2015 at 00:06, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> On Mon, 2015-02-02 at 13:25 -0800, Ben Greear wrote:
 >
-> As far as i know, rtl8192cu is not support WOWLAN.
-> in rtl8192cu, this code is no effect. so, It is care of unnecessary
-> debug message.
+>> It is a big throughput win to have fewer TCP ack packets on
+>> wireless since it is a half-duplex environment.  Is there anything
+>> we could improve so that we can have fewer acks and still get
+>> good tcp stack behaviour?
+>
+> First apply TCP stretch ack fixes to the sender. There is no way to get
+> good performance if the sender does not handle stretch ack.
+>
+> d6b1a8a92a14 tcp: fix timing issue in CUBIC slope calculation
+> 9cd981dcf174 tcp: fix stretch ACK bugs in CUBIC
+> c22bdca94782 tcp: fix stretch ACK bugs in Reno
+> 814d488c6126 tcp: fix the timid additive increase on stretch ACKs
+> e73ebb0881ea tcp: stretch ACK fixes prep
+>
+> Then, make sure you do not throttle ACK too long, especially if you hope
+> to get Gbit line rate on a 4 ms RTT flow.
+>
+> GRO does not mean : send one ACK every ms, or after 3ms delay...
 
-That is what I thought. In that case, the new code should be
+I think it's worth pointing out that If you assume 3-frame A-MSDU and
+64-frame A-MPDU you get 192 frames (as far as TCP/IP is concerned) per
+aggregation window. Assuming effective 600mbps throughput:
 
-	case HAL_DEF_WOWLAN:
-		break;
+ python> 1.0/((((600/8)*1024*1024)/1500)/(3*64))
+ 0.003663003663003663
 
-Larry
+This is probably worst case, but still probably worth to keep in mind.
 
+ath10k has a knob to tune A-MSDU aggregation count. The default is "3"
+and it's what I've been testing so far.
+
+When I change it to "1" on sender I get 250->400mbps boost in TCP -P5
+but see no difference with -P1 (number of flows). Changing it to "1"
+on receiver yields no difference. I can try adding this configuration
+permutation to my future tests if you're interested.
+
+So that you have an idea - using "1" on sender degrades UDP throughput
+(even 690->500mbps in some cases).
+
+
+Michał
