@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44965 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751314AbbBFLMt (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:62982 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965676AbbBCRP0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 06:12:49 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t16B9VLB022069
-	for <linux-wireless@vger.kernel.org>; Fri, 6 Feb 2015 03:12:49 -0800
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1scthm86ut-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 03:12:49 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 2/5] mwifiex: do not process mgmt rx on uninitialized interface
-Date: Fri, 6 Feb 2015 22:11:43 +0530
-Message-ID: <1423240906-12951-2-git-send-email-patila@marvell.com> (sfid-20150206_121252_958587_CC664484)
-In-Reply-To: <1423240906-12951-1-git-send-email-patila@marvell.com>
-References: <1423240906-12951-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 3 Feb 2015 12:15:26 -0500
+Received: by mail-ob0-f170.google.com with SMTP id va2so11714853obc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 09:15:25 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH RESEND 0/2] Resend critical patches for rtl8192ee
+Date: Tue,  3 Feb 2015 11:15:16 -0600
+Message-Id: <1422983718-21432-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150203_181531_786653_F3CAA0BF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a crash which was happening because of RX of
-management frames on uninitialzed interface. Now we drop management
-frames for interfaces where cfg80211 has not registered any management
-subtype reception or interface has no NL80211 iftype set.
+Kalle,
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
+These are the two patches that would not apply to wireless-drivers-next.
+They have been rebased, and are generated against a pull done today.
+
+Thanks,
+
+Larry
 ---
- drivers/net/wireless/mwifiex/util.c | 7 +++++++
- 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 3085506..47e215b 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -367,6 +367,13 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 	if (!skb)
- 		return -1;
- 
-+	if (!priv->mgmt_frame_mask ||
-+	    priv->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED) {
-+		dev_dbg(priv->adapter->dev,
-+			"do not receive mgmt frames on uninitialized intf");
-+		return -1;
-+	}
-+
- 	rx_pd = (struct rxpd *)skb->data;
- 
- 	skb_pull(skb, le16_to_cpu(rx_pd->rx_pkt_offset));
+Larry Finger (1):
+  rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
+
+Troy Tan (1):
+  rtlwifi: rtl8192ee: Fix handling of new style descriptors
+
+ drivers/net/wireless/rtlwifi/pci.c           | 31 +++++++++++++++------
+ drivers/net/wireless/rtlwifi/pci.h           |  7 +++++
+ drivers/net/wireless/rtlwifi/rtl8192ee/sw.c  |  3 +--
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 40 +++++++++++++++++-----------
+ drivers/net/wireless/rtlwifi/rtl8192ee/trx.h |  1 +
+ drivers/net/wireless/rtlwifi/wifi.h          |  1 +
+ 6 files changed, 57 insertions(+), 26 deletions(-)
+
 -- 
-1.8.1.4
+2.1.4
 
