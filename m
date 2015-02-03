@@ -1,108 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:44302 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754935AbbBFJb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 04:31:59 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kyle@infradead.org" <kyle@infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhao, Yingying" <yingying.zhao@intel.com>,
-	"linux-firmware@kernel.org" <linux-firmware@kernel.org>
-Subject: Re: pull request: new firmware for Intel wireless Intel 3160 / 7260
- / 7265 / 7265D devices
-Date: Fri, 6 Feb 2015 09:31:52 +0000
-Message-ID: <1423215113.8145.0.camel@egrumbacBox> (sfid-20150206_103205_394445_2319EDF9)
-References: <1422999252.29907.18.camel@egrumbacBox>
-	 <1422999568.29907.24.camel@egrumbacBox>
-	 <20150206091506.GE30928@merlin.infradead.org>
-In-Reply-To: <20150206091506.GE30928@merlin.infradead.org>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-la0-f42.google.com ([209.85.215.42]:37753 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932438AbbBCKCm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 05:02:42 -0500
+Received: by mail-la0-f42.google.com with SMTP id ms9so49847435lab.1
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 02:02:41 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com>
+References: <CAJ1dT9x+vWm4uZ-r9PZrTmKjEQc260NhOKoRzH=Ab=oWkeZ83w@mail.gmail.com>
+	<CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com>
+Date: Tue, 3 Feb 2015 11:02:41 +0100
+Message-ID: <CAJ1dT9x58-ZGWX7Gku3a8K-GskvaX6=C=Lyo24PE6=cjBfjw2Q@mail.gmail.com> (sfid-20150203_110248_606822_FF219BDB)
+Subject: Re: Open Source RRM & Hand-Over Optimization (WAS: Throughput
+ regression with `tcp: refine TSO autosizing`)
+From: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bs@anyfi.net>
+To: Avery Pennarun <apenwarr@google.com>
+Cc: David Reed <dpreed@reed.com>,
+	dstanley <dstanley@arubanetworks.com>,
+	Derrick Pallas <pallas@meraki.com>,
+	"cerowrt-devel@lists.bufferbloat.net"
+	<cerowrt-devel@lists.bufferbloat.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE1LTAyLTA2IGF0IDA0OjE1IC0wNTAwLCBLeWxlIE1jTWFydGluIHdyb3RlOg0K
-PiBPbiBUdWUsIEZlYiAwMywgMjAxNSBhdCAwOTozOToyOFBNICswMDAwLCBHcnVtYmFjaCwgRW1t
-YW51ZWwgd3JvdGU6DQo+ID4gSGksDQo+ID4gDQo+ID4gVGhpcyBpcyBhIHB1bGwgcmVxdWVzdCBm
-b3IgbmV3IGZpcm13YXJlcyBmb3IgdGhlIEludGVsIHdpcmVsZXNzIGRldmljZXMNCj4gPiBtZW50
-aW9uZWQgaW4gdGhlIHN1YmplY3QuDQo+ID4gDQo+ID4gSSByZXBsYWNlIC0xMC51Y29kZSB3aXRo
-IG5ldyBvbmVzICh0aGF0IGluY2x1ZGVzIGJ1ZyBmaXhlcykuDQo+ID4gSSBhZGQgdGhlIGJyYW5k
-IG5ldyAtMTIudWNvZGUuDQo+ID4gDQo+ID4gUGxlYXNlIHB1bGwuDQo+ID4gDQo+ID4gVGhlIGZv
-bGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdA0KPiA+IDM4ZTU0MDVjOTZkMTBiYjQyYjYyOWI0
-NTIxMGM0NjE2NjQ2MWZjMjE6DQo+ID4gDQo+IA0KPiBvaCwgaGVoLCBvbmx5IDEgY29tbWl0LCBu
-b3QgMy4gOy0pDQo+IA0KDQpXZWxsIC0gYWN0dWFsbHkgMiBjb21taXRzLiBZb3UgbWlzc2VkIHRo
-ZSBvbmUgdGhhdCB1cGRhdGVzIHRoZSAtMTAudWNvZGUNCmZyb20gMjMuMTEuMTAuMCAyMy4xMi4x
-MC4wLg0KDQo+IGFwcGxpZWQsIHRoYW5rcyBFbW1hbnVlbC4NCj4gDQo+IHJlZ2FyZHMsIEt5bGUN
-Cj4gDQo+ID4gICBjeGdiNDogVXBkYXRlIGZpcm13YXJlIHRvIHJldmlzaW9uIDEuMTIuMjUuMCAo
-MjAxNC0xMi0wMSAxNTo0ODowMg0KPiA+IC0wNTAwKQ0KPiA+IA0KPiA+IGFyZSBhdmFpbGFibGUg
-aW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KPiA+IA0KPiA+IA0KPiA+IGdpdDovL2dpdC5rZXJu
-ZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2xpbnV4LWZpcm13YXJlLmdp
-dA0KPiA+IG1hc3Rlcg0KPiA+IA0KPiA+IGZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byBk
-YTRlNThkNDc1NTc3NzZjNTcyMWJhZmIzZjJiNmM0YTFhNGZmMGYzOg0KPiA+IA0KPiA+ICAgaXds
-d2lmaTogYWRkIG5ldyAtMTIgZmlybXdhcmUgZm9yIDMxNjAgLyA3MjYwIC8gNzI2NSAvIDcyNjVE
-DQo+ID4gKDIwMTUtMDItMDMgMjM6MTQ6NTEgKzAyMDApDQo+ID4gDQo+ID4gLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+
-IEVtbWFudWVsIEdydW1iYWNoICgzKToNCj4gPiAgICAgICBpd2x3aWZpOiB1cGRhdGUgLTEwLnVj
-b2RlIGZvciAzMTYwIC8gNzI2MCAvIDcyNjUgLyA3MjY1RA0KPiA+ICAgICAgIGl3bHdpZmk6IHVw
-ZGF0ZSAtMTAudWNvZGUgZm9yIDMxNjAgLyA3MjYwIC8gNzI2NSAvIDcyNjVEDQo+ID4gICAgICAg
-aXdsd2lmaTogYWRkIG5ldyAtMTIgZmlybXdhcmUgZm9yIDMxNjAgLyA3MjYwIC8gNzI2NSAvIDcy
-NjVEDQo+ID4gDQo+ID4gIFdIRU5DRSAgICAgICAgICAgICAgICAgfCAgMjAgKysrKysrKysrKysr
-KysrKy0tLS0NCj4gPiAgaXdsd2lmaS0zMTYwLTEwLnVjb2RlICB8IEJpbiA2MTAxNjggLT4gNjEw
-MDY0IGJ5dGVzDQo+ID4gIGl3bHdpZmktMzE2MC0xMi51Y29kZSAgfCBCaW4gMCAtPiA2ODM5OTYg
-Ynl0ZXMNCj4gPiAgaXdsd2lmaS03MjYwLTEwLnVjb2RlICB8IEJpbiA2NzI0ODAgLT4gNjcyMzcy
-IGJ5dGVzDQo+ID4gIGl3bHdpZmktNzI2MC0xMi51Y29kZSAgfCBCaW4gMCAtPiA3ODIzMDAgYnl0
-ZXMNCj4gPiAgaXdsd2lmaS03MjY1LTEwLnVjb2RlICB8IEJpbiA3MzY5NjggLT4gNzM2ODY0IGJ5
-dGVzDQo+ID4gIGl3bHdpZmktNzI2NS0xMi51Y29kZSAgfCBCaW4gMCAtPiA4ODA2MDQgYnl0ZXMN
-Cj4gPiAgaXdsd2lmaS03MjY1RC0xMC51Y29kZSB8IEJpbiA3NDA2MzYgLT4gNzQwNDU2IGJ5dGVz
-DQo+ID4gIGl3bHdpZmktNzI2NUQtMTIudWNvZGUgfCBCaW4gMCAtPiAxMDAyODAwIGJ5dGVzDQo+
-ID4gIDkgZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4g
-PiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmktMzE2MC0xMi51Y29kZQ0KPiA+ICBjcmVhdGUg
-bW9kZSAxMDA2NDQgaXdsd2lmaS03MjYwLTEyLnVjb2RlDQo+ID4gIGNyZWF0ZSBtb2RlIDEwMDY0
-NCBpd2x3aWZpLTcyNjUtMTIudWNvZGUNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmkt
-NzI2NUQtMTIudWNvZGUNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvV0hFTkNFIGIvV0hFTkNFDQo+
-ID4gaW5kZXggNDRjNDFjNy4uMTkxNzI4OCAxMDA2NDQNCj4gPiAtLS0gYS9XSEVOQ0UNCj4gPiAr
-KysgYi9XSEVOQ0UNCj4gPiBAQCAtODE2LDcgKzgxNiwxMCBAQCBGaWxlOiBpd2x3aWZpLTcyNjAt
-OS51Y29kZQ0KPiA+ICBWZXJzaW9uOiAyNS4yMjguOS4wDQo+ID4gIA0KPiA+ICBGaWxlOiBpd2x3
-aWZpLTcyNjAtMTAudWNvZGUNCj4gPiAtVmVyc2lvbjogMjMuMTAuMTAuMA0KPiA+ICtWZXJzaW9u
-OiAyMy4xMi4xMC4wDQo+ID4gKw0KPiA+ICtGaWxlOiBpd2x3aWZpLTcyNjAtMTIudWNvZGUNCj4g
-PiArVmVyc2lvbjogMjUuMTUuMTIuMA0KPiA+ICANCj4gPiAgRmlsZTogaXdsd2lmaS0zMTYwLTcu
-dWNvZGUNCj4gPiAgVmVyc2lvbjogMjIuMS43LjANCj4gPiBAQCAtODI4LDcgKzgzMSwxMCBAQCBG
-aWxlOiBpd2x3aWZpLTMxNjAtOS51Y29kZQ0KPiA+ICBWZXJzaW9uOiAyNS4yMjguOS4wDQo+ID4g
-IA0KPiA+ICBGaWxlOiBpd2x3aWZpLTMxNjAtMTAudWNvZGUNCj4gPiAtVmVyc2lvbjogMjMuMTAu
-MTAuMA0KPiA+ICtWZXJzaW9uOiAyMy4xMi4xMC4wDQo+ID4gKw0KPiA+ICtGaWxlOiBpd2x3aWZp
-LTMxNjAtMTIudWNvZGUNCj4gPiArVmVyc2lvbjogMjUuMTUuMTIuMA0KPiA+ICANCj4gPiAgRmls
-ZTogaXdsd2lmaS03MjY1LTgudWNvZGUNCj4gPiAgVmVyc2lvbjogMjIuMjQuOC4wDQo+ID4gQEAg
-LTgzNywxMCArODQzLDE2IEBAIEZpbGU6IGl3bHdpZmktNzI2NS05LnVjb2RlDQo+ID4gIFZlcnNp
-b246IDI1LjIyOC45LjANCj4gPiAgDQo+ID4gIEZpbGU6IGl3bHdpZmktNzI2NS0xMC51Y29kZQ0K
-PiA+IC1WZXJzaW9uOiAyMy4xMC4xMC4wDQo+ID4gK1ZlcnNpb246IDIzLjEyLjEwLjANCj4gPiAr
-DQo+ID4gK0ZpbGU6IGl3bHdpZmktNzI2NS0xMi51Y29kZQ0KPiA+ICtWZXJzaW9uOiAyNS4xNS4x
-Mi4wDQo+ID4gIA0KPiA+ICBGaWxlOiBpd2x3aWZpLTcyNjVELTEwLnVjb2RlDQo+ID4gLVZlcnNp
-b246IDIzLjEwLjEwLjANCj4gPiArVmVyc2lvbjogMjMuMTIuMTAuMA0KPiA+ICsNCj4gPiArRmls
-ZTogaXdsd2lmaS03MjY1RC0xMi51Y29kZQ0KPiA+ICtWZXJzaW9uOiAyNS4xNS4xMi4wDQo+ID4g
-IA0KPiA+ICBMaWNlbmNlOiBSZWRpc3RyaWJ1dGFibGUuIFNlZSBMSUNFTkNFLml3bHdpZmlfZmly
-bXdhcmUgZm9yIGRldGFpbHMNCj4gPiAgDQo+ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktMzE2MC0x
-MC51Y29kZSBiL2l3bHdpZmktMzE2MC0xMC51Y29kZQ0KPiA+IGluZGV4IDhjZWM3YmYuLjVmNDE3
-M2MgMTAwNjQ0DQo+ID4gQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS0zMTYwLTEwLnVjb2RlIGFuZCBi
-L2l3bHdpZmktMzE2MC0xMC51Y29kZSBkaWZmZXINCj4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS0z
-MTYwLTEyLnVjb2RlIGIvaXdsd2lmaS0zMTYwLTEyLnVjb2RlDQo+ID4gbmV3IGZpbGUgbW9kZSAx
-MDA2NDQNCj4gPiBpbmRleCAwMDAwMDAwLi40NWJjZTQ4DQo+ID4gQmluYXJ5IGZpbGVzIC9kZXYv
-bnVsbCBhbmQgYi9pd2x3aWZpLTMxNjAtMTIudWNvZGUgZGlmZmVyDQo+ID4gZGlmZiAtLWdpdCBh
-L2l3bHdpZmktNzI2MC0xMC51Y29kZSBiL2l3bHdpZmktNzI2MC0xMC51Y29kZQ0KPiA+IGluZGV4
-IDllNWI5MzAuLmRjYTc5ZTIgMTAwNjQ0DQo+ID4gQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS03MjYw
-LTEwLnVjb2RlIGFuZCBiL2l3bHdpZmktNzI2MC0xMC51Y29kZSBkaWZmZXINCj4gPiBkaWZmIC0t
-Z2l0IGEvaXdsd2lmaS03MjYwLTEyLnVjb2RlIGIvaXdsd2lmaS03MjYwLTEyLnVjb2RlDQo+ID4g
-bmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gPiBpbmRleCAwMDAwMDAwLi43ZWM5MWYwDQo+ID4gQmlu
-YXJ5IGZpbGVzIC9kZXYvbnVsbCBhbmQgYi9pd2x3aWZpLTcyNjAtMTIudWNvZGUgZGlmZmVyDQo+
-ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktNzI2NS0xMC51Y29kZSBiL2l3bHdpZmktNzI2NS0xMC51
-Y29kZQ0KPiA+IGluZGV4IDQ4OGRkZDAuLjA1NzFmY2YgMTAwNjQ0DQo+ID4gQmluYXJ5IGZpbGVz
-IGEvaXdsd2lmaS03MjY1LTEwLnVjb2RlIGFuZCBiL2l3bHdpZmktNzI2NS0xMC51Y29kZSBkaWZm
-ZXINCj4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS03MjY1LTEyLnVjb2RlIGIvaXdsd2lmaS03MjY1
-LTEyLnVjb2RlDQo+ID4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gPiBpbmRleCAwMDAwMDAwLi44
-NGFlMmNlDQo+ID4gQmluYXJ5IGZpbGVzIC9kZXYvbnVsbCBhbmQgYi9pd2x3aWZpLTcyNjUtMTIu
-dWNvZGUgZGlmZmVyDQo+ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktNzI2NUQtMTAudWNvZGUgYi9p
-d2x3aWZpLTcyNjVELTEwLnVjb2RlDQo+ID4gaW5kZXggMDExOTRkYi4uZDliOWFhZiAxMDA2NDQN
-Cj4gPiBCaW5hcnkgZmlsZXMgYS9pd2x3aWZpLTcyNjVELTEwLnVjb2RlIGFuZCBiL2l3bHdpZmkt
-NzI2NUQtMTAudWNvZGUNCj4gPiBkaWZmZXINCj4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS03MjY1
-RC0xMi51Y29kZSBiL2l3bHdpZmktNzI2NUQtMTIudWNvZGUNCj4gPiBuZXcgZmlsZSBtb2RlIDEw
-MDY0NA0KPiA+IGluZGV4IDAwMDAwMDAuLjNmMzZiNTUNCj4gPiBCaW5hcnkgZmlsZXMgL2Rldi9u
-dWxsIGFuZCBiL2l3bHdpZmktNzI2NUQtMTIudWNvZGUgZGlmZmVyDQo+ID4gDQo+IA0KPiANCg0K
+On Mon, Feb 2, 2015 at 11:53 PM, Avery Pennarun <apenwarr@google.com> wrote:
+> On Mon, Feb 2, 2015 at 11:44 AM, Björn Smedman <bs@anyfi.net> wrote:
+>> On Mon, Feb 2, 2015 at 5:21 AM, Avery Pennarun <apenwarr@google.com> wrote:
+>>> While there is definitely some work to be done in handoff, it seems
+>>> like there are some find implementations of this already in existence.
+>>> Several brands of "enterprise access point" setups seem to do well at
+>>> this.  It would be nice if they interoperated, I guess.
+>>>
+>>> The fact that there's no open source version of this kind of handoff
+>>> feature bugs me, but we are working on it here and the work is all
+>>> planned to be open source, for example: (very early version)
+>>> https://gfiber.googlesource.com/vendor/google/platform/+/master/waveguide/
+>>
+>> We've got an SDN-inspired architecture with 802.11 frame tunneling (a
+>> la CAPWAP), airtime fairness, infrastructure initiated hand-over,
+>> Opportunistic Key Caching (OKC), IEEE 802.11r Fast BSS Transition and
+>> a few more goodies. It's currently free as in beer
+>> (http://anyfi.net/software,
+>> https://github.com/carrierwrt/carrierwrt/pull/7 and
+>> http://www.anyfinetworks.com/download) up to 100 APs, but we're
+>> definitely going to open source in one form or another.
+>>
+>> We've also tried to raise some interest in fixing up CAPWAP
+>> (https://www.ietf.org/mail-archive/web/opsawg/current/msg03196.html),
+>> which is (unfortunately) the best open standard at the moment.
+>> Interest seems marginal though...
+>
+> This sounds cool.  Is the CAPWAP/encapsulation stuff separable from
+> the rest?  At 802.11ac speeds, a super fast WAN link, and a low-cost
+> SoC, too many layers can be a killer.
+
+Our current architecture is a bit "fixed function" with tunneling
+built in. That's because it's targeted at guest access / homespots
+where there's typically a "local MAC" for the home Wi-Fi network
+(which we don't touch), and for guests you usually want to tunnel
+anyway. Many use L2oGRE to tunnel a "second SSID" in this use-case,
+but since the visited AP is a point of attack we think you should
+encrypt "through" the AP. You can do that without any extra overhead
+since you're just shoveling encrypted 802.11 frames from one interface
+to another, but you're right it's a bit slower in practice: in the
+extreme case of frame shoveling in user space you're limited to about
+40 Mbps (for guests) on a $10 SoC (but home Wi-Fi throughput is not
+impacted).
+
+What we're working on now though is an "Open wSwitch" that lets you
+pick and choose which frames to tunnel and where, even within one BSS
+/ for a single STA. You'll also be able to set the temporal key (TK)
+from a central location so that you can do e.g. OKC / 802.11r combined
+with local bridging. This should make it possible to do both the
+secure guest access and the more enterprisy stuff over the same
+control plane protocol. We're also planning to put the 802.11
+tunneling in kernel space this time, which should easily get you 100
+Mbps of AES-128-CCM through a cheap SoC (and into/out of a cheap
+mobile device!).
