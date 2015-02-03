@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:52325 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754481AbbBEEtm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 23:49:42 -0500
-Received: from [117.199.130.171] (port=13666 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YJENp-002ASp-U5
-	for linux-wireless@vger.kernel.org; Wed, 04 Feb 2015 23:49:42 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from mga02.intel.com ([134.134.136.20]:1101 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965134AbbBCHOv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Feb 2015 02:14:51 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/7] ath9k: Set keep awake timer
-Date: Thu,  5 Feb 2015 10:22:39 +0530
-Message-Id: <1423111964-19626-3-git-send-email-sujith@msujith.org> (sfid-20150205_054952_692833_9C183BA8)
-In-Reply-To: <1423111964-19626-1-git-send-email-sujith@msujith.org>
-References: <1423111964-19626-1-git-send-email-sujith@msujith.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/19] iwlwifi: pcie: don't dump useless data when a TFD queue hangs
+Date: Tue,  3 Feb 2015 09:14:24 +0200
+Message-Id: <1422947678-16917-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081455_729044_8F3E747F)
+In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
+References: <1422947482.30742.8.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Printing all the scratch data of the TFDs of that queue is
+useless and stuffed the kernel log with data. Remove that.
 
-When MCI is enabled and WoW sleep is enabled,
-make sure that the RTC keep awake timer is set
-with the required value. This is also required
-when the AR_WA is programmed.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_wow.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/iwlwifi/pcie/tx.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_wow.c b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-index 5e707c8..721caf3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-@@ -44,6 +44,9 @@ static void ath9k_hw_set_powermode_wow_sleep(struct ath_hw *ah)
- 			REG_CLR_BIT(ah, AR_DIRECT_CONNECT, AR_DC_TSF2_ENABLE);
+diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+index d40cd4a..6c7bfe8 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+@@ -147,7 +147,6 @@ static void iwl_pcie_free_dma_ptr(struct iwl_trans *trans,
+ static void iwl_pcie_txq_stuck_timer(unsigned long data)
+ {
+ 	struct iwl_txq *txq = (void *)data;
+-	struct iwl_queue *q = &txq->q;
+ 	struct iwl_trans_pcie *trans_pcie = txq->trans_pcie;
+ 	struct iwl_trans *trans = iwl_trans_pcie_get_trans(trans_pcie);
+ 	u32 scd_sram_addr = trans_pcie->scd_base_addr +
+@@ -198,11 +197,6 @@ static void iwl_pcie_txq_stuck_timer(unsigned long data)
+ 			iwl_read_prph(trans, SCD_QUEUE_WRPTR(i)));
  	}
  
-+	if (ath9k_hw_mci_is_enabled(ah))
-+		REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
-+
- 	REG_WRITE(ah, AR_RTC_FORCE_WAKE, AR_RTC_FORCE_WAKE_ON_INT);
+-	for (i = q->read_ptr; i != q->write_ptr;
+-	     i = iwl_queue_inc_wrap(i))
+-		IWL_ERR(trans, "scratch %d = 0x%08x\n", i,
+-			le32_to_cpu(txq->scratchbufs[i].scratch));
+-
+ 	iwl_force_nmi(trans);
  }
  
-@@ -407,6 +410,9 @@ void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
- 
- 	ath9k_hw_wow_set_arwr_reg(ah);
- 
-+	if (ath9k_hw_mci_is_enabled(ah))
-+		REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
-+
- 	/* HW WoW */
- 	REG_CLR_BIT(ah, AR_PCU_MISC_MODE3, BIT(5));
- 
 -- 
-2.2.2
+1.9.1
 
