@@ -1,103 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:51341 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752892AbbBHPcA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:59415 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755745AbbBCM3q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2015 10:32:00 -0500
-Received: by mail-we0-f175.google.com with SMTP id p10so22362615wes.6
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 07:31:58 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 4/4] bcma: enable support for PCIe Gen 2 host devices
-Date: Sun,  8 Feb 2015 16:31:44 +0100
-Message-Id: <1423409504-16435-4-git-send-email-zajec5@gmail.com> (sfid-20150208_163209_836958_EBFCBE75)
-In-Reply-To: <1423409504-16435-1-git-send-email-zajec5@gmail.com>
-References: <1422638566-7593-1-git-send-email-zajec5@gmail.com>
- <1423409504-16435-1-git-send-email-zajec5@gmail.com>
+	Tue, 3 Feb 2015 07:29:46 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Troy Tan <troy_tan@realsil.com.cn>, netdev@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org
+Subject: btcoex subsystem
+References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net>
+	<1422304934-9239-6-git-send-email-Larry.Finger@lwfinger.net>
+	<87h9v8zkuh.fsf@kamboji.qca.qualcomm.com>
+	<EC423C22-AEA0-4232-A452-7A131C41780A@holtmann.org>
+	<54CBA0CE.8030800@lwfinger.net>
+	<B814EF26-CBC9-43E4-A6C9-761A013F85C1@holtmann.org>
+Date: Tue, 03 Feb 2015 14:29:38 +0200
+In-Reply-To: <B814EF26-CBC9-43E4-A6C9-761A013F85C1@holtmann.org> (Marcel
+	Holtmann's message of "Fri, 30 Jan 2015 10:05:24 -0800")
+Message-ID: <874mr3xjnx.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20150203_132958_031951_73F6A931)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/bcma_private.h |  1 +
- drivers/bcma/host_pci.c     | 15 ++++++++++++++-
- drivers/bcma/main.c         |  2 +-
- 3 files changed, 16 insertions(+), 2 deletions(-)
+Marcel Holtmann <marcel@holtmann.org> writes:
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 3692912..29565e3 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -26,6 +26,7 @@ bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
- 		     int timeout);
- void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
- void bcma_init_bus(struct bcma_bus *bus);
-+void bcma_unregister_cores(struct bcma_bus *bus);
- int bcma_bus_register(struct bcma_bus *bus);
- void bcma_bus_unregister(struct bcma_bus *bus);
- int __init bcma_bus_early_register(struct bcma_bus *bus);
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 5fb87a8..a62a2f9 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -213,16 +213,26 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
- 	/* Initialize struct, detect chip */
- 	bcma_init_bus(bus);
- 
-+	/* Scan bus to find out generation of PCIe core */
-+	err = bcma_bus_scan(bus);
-+	if (err)
-+		goto err_pci_unmap_mmio;
-+
-+	if (bcma_find_core(bus, BCMA_CORE_PCIE2))
-+		bus->host_is_pcie2 = true;
-+
- 	/* Register */
- 	err = bcma_bus_register(bus);
- 	if (err)
--		goto err_pci_unmap_mmio;
-+		goto err_unregister_cores;
- 
- 	pci_set_drvdata(dev, bus);
- 
- out:
- 	return err;
- 
-+err_unregister_cores:
-+	bcma_unregister_cores(bus);
- err_pci_unmap_mmio:
- 	pci_iounmap(dev, bus->mmio);
- err_pci_release_regions:
-@@ -283,9 +293,12 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4358) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4360) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4365) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a0) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43b1) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43227) },	/* 0xa8db, BCM43217 (sic!) */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43228) },	/* 0xa8dc */
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 38bde6e..9635f10 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -363,7 +363,7 @@ static int bcma_register_devices(struct bcma_bus *bus)
- 	return 0;
- }
- 
--static void bcma_unregister_cores(struct bcma_bus *bus)
-+void bcma_unregister_cores(struct bcma_bus *bus)
- {
- 	struct bcma_device *core, *tmp;
- 
+>> I will work on combining the latest BT drivers from Realtek with
+>> btusb to see if I can achieve a patch that will both work with the
+>> Realtek hardware, and get approval from the reviewers.
+>> 
+>> What would be an approved method of communicating between two kernel
+>> modules? Is there some example in the kernel that I could study?
+>
+> We need a btcoex subsystem that both WiFi and Bluetooth can register
+> to and communicate with.
+
+The need for this seems to periodically come up, I remember needing
+something like that back in the Maemo wl1251 days and also ath6kl needed
+this. Are there any ideas for this subsystem? How would this btcoex
+subsystem work? What kind of information would it provide?
+
+Is this something we should discuss at Ottawa?
+
 -- 
-1.8.4.5
-
+Kalle Valo
