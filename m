@@ -1,186 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:52787 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933798AbbBCMtX convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:64100 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756172AbbBCVVY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 07:49:23 -0500
-Received: by mail-we0-f172.google.com with SMTP id q59so44682937wes.3
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 04:49:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1422960114-25137-5-git-send-email-marek.puzyniak@tieto.com>
-References: <1422960114-25137-1-git-send-email-marek.puzyniak@tieto.com>
-	<1422960114-25137-5-git-send-email-marek.puzyniak@tieto.com>
-Date: Tue, 3 Feb 2015 13:49:22 +0100
-Message-ID: <CA+BoTQnKvNwcCxQWQe1Ck11oTE4yGTPpV65r5D02fHbLkrvpFQ@mail.gmail.com> (sfid-20150203_134928_189592_ADC81596)
-Subject: Re: [RFC 4/4] ath10k: introduce basic tdls functionality
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 3 Feb 2015 16:21:24 -0500
+Received: by mail-la0-f46.google.com with SMTP id s18so54870919lam.5
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 13:21:23 -0800 (PST)
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH] ath5k: fix spontaneus AR5312 freezes
+Date: Wed,  4 Feb 2015 00:21:13 +0300
+Message-Id: <1422998473-3709-1-git-send-email-ryazanov.s.a@gmail.com> (sfid-20150203_222128_649572_3A9D8C31)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 February 2015 at 11:41, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
-[...]
-> +static int ath10k_enable_tdls(struct ath10k *ar, u32 vdev_id, bool enable)
+Sometimes while CPU have some load and ath5k doing the wireless
+interface reset the whole WiSoC completely freezes. Set of tests shows
+that using atomic delay function while we wait interface reset helps to
+avoid such freezes.
 
-Function in mac.c should have a `ath10k_mac_` prefix.
+The easiest way to reproduce this issue: create a station interface,
+start continous scan with wpa_supplicant and load CPU by something. Or
+just create multiple station interfaces and put them all in continous
+scan.
 
-> +{
-> +       int ret;
-> +       enum wmi_tdls_state state = WMI_TDLS_DISABLE;
-> +
-> +       lockdep_assert_held(&ar->conf_mutex);
-> +
-> +       if (enable)
-> +               state = WMI_TDLS_ENABLE_ACTIVE;
-> +
-> +       ret = ath10k_wmi_update_fw_tdls_state(ar, vdev_id, state);
+This patch partially reverts the commit 1846ac3dbec0 ("ath5k: Use
+usleep_range where possible"), which replaces initial udelay()
+by usleep_range().
 
-Anyway I see little point in having this wrapper function just to call
-wmi function?
+I do not know actual source of this issue, but all looks like that HW
+freeze is caused by transaction on internal SoC bus, while wireless
+block is in reset state.
 
+Also I should note that I do not know how many chips are affected, but I
+did not see this issue with chips, other than AR5312.
 
-[...]
-> +static int ath10k_tdls_peer_update(struct ath10k *ar, u32 vdev_id,
-> +                                  struct ieee80211_sta *sta,
-> +                                  enum wmi_tdls_peer_state state)
+CC: Jiri Slaby <jirislaby@gmail.com>
+CC: Nick Kossifidis <mickflemm@gmail.com>
+CC: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Fixes: 1846ac3dbec0 ("ath5k: Use usleep_range where possible")
+Reported-by: Christophe Prevotaux <c.prevotaux@rural-networks.com>
+Tested-by: Christophe Prevotaux <c.prevotaux@rural-networks.com>
+Tested-by: Eric Bree <ebree@nltinc.com>
+Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+---
+I would like to sincerely thank Christophe for provided board and
+for his patience and perseverance in solving problems with the
+delivery ;)
+---
+ drivers/net/wireless/ath/ath5k/reset.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The ath10k_mac_ prefix is missing: ath10k_mac_tdls_peer_update().
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index a3399c4..b9b651e 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -478,7 +478,7 @@ ath5k_hw_wisoc_reset(struct ath5k_hw *ah, u32 flags)
+ 	regval = ioread32(reg);
+ 	iowrite32(regval | val, reg);
+ 	regval = ioread32(reg);
+-	usleep_range(100, 150);
++	udelay(100);	/* NB: should be atomic */
+ 
+ 	/* Bring BB/MAC out of reset */
+ 	iowrite32(regval & ~val, reg);
+-- 
+2.0.4
 
-
-> +{
-> +       int ret;
-> +       struct wmi_tdls_peer_update_cmd_arg arg;
-> +       struct wmi_tdls_peer_capab_arg cap;
-> +       struct wmi_channel_arg chan_arg;
-
-I would `xxx = {}` to make these are zero-ed. Right now you pass
-uninitialized vars from the stack..
-
-
-> +       int i;
-> +
-> +       lockdep_assert_held(&ar->conf_mutex);
-> +
-> +       arg.vdev_id = vdev_id;
-> +       arg.peer_state = state;
-> +       ether_addr_copy(arg.addr, sta->addr);
-> +
-> +       cap.peer_max_sp = sta->max_sp;
-> +       cap.peer_uapsd_queues = sta->uapsd_queues;
-> +       cap.peer_curr_operclass = 0;
-> +       cap.self_curr_operclass = 0;
-> +       cap.peer_chan_len = 0;
-> +       cap.peer_operclass_len = 0;
-> +       cap.is_peer_responder = 0;
-> +       cap.buff_sta_support = 0;
-> +       cap.off_chan_support = 0;
-> +       cap.pref_offchan_num = 0;
-> +       cap.pref_offchan_bw = 0;
-
-Once you `= {}` it's probably redundant to zero each structure member like that.
-
-
-[...]
-> @@ -4462,6 +4553,8 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
->                 if (ret)
->                         ath10k_warn(ar, "failed to delete peer %pM for vdev %d: %i\n",
->                                     sta->addr, arvif->vdev_id, ret);
-> +               if (sta->tdls)
-> +                       ath10k_enable_tdls(ar, arvif->vdev_id, false);
-
-What if you have 2 TDLS peers? If you disconnect the first one you'll
-disable TDLS on the entire vdev while the other peer is still
-connected. I don't think that's desired.
-
-Perhaps the per-vdev TDLS command can be called in
-add_interface()/remove_interface()? If that's not possible I guess you
-could use ieee80211_iterate_stations_atomic() to look if there's still
-at least one TDLS peer present.
-
-
->
->                 ath10k_mac_dec_num_stations(arvif);
->         } else if (old_state == IEEE80211_STA_AUTH &&
-> @@ -4479,9 +4572,28 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
->                         ath10k_warn(ar, "failed to associate station %pM for vdev %i: %i\n",
->                                     sta->addr, arvif->vdev_id, ret);
->         } else if (old_state == IEEE80211_STA_ASSOC &&
-> -                  new_state == IEEE80211_STA_AUTH &&
-> -                  (vif->type == NL80211_IFTYPE_AP ||
-> -                   vif->type == NL80211_IFTYPE_ADHOC)) {
-> +                  new_state == IEEE80211_STA_AUTHORIZED &&
-> +                  sta->tdls) {
-> +               /*
-> +                * Tdls station authorized.
-> +                */
-> +               ath10k_dbg(ar, ATH10K_DBG_MAC, "mac tdls sta %pM authorized\n",
-> +                          sta->addr);
-> +
-> +               ret = ath10k_station_assoc(ar, vif, sta, false);
-> +               if (ret)
-> +                       ath10k_warn(ar, "failed to associate station %pM for vdev %i: %i\n",
-> +                                   sta->addr, arvif->vdev_id, ret);
-
-It's meaningless to call tdls_peer_update() if assoc failed. From
-practical standpoint fw is probably dead at that point and subsequent
-commands will timeout. You can `goto exit`.
-
-
-[...]
-> +static struct sk_buff *
-> +ath10k_wmi_tlv_op_gen_update_fw_tdls_state(struct ath10k *ar, u32 vdev_id,
-> +                                          enum wmi_tdls_state state)
-> +{
-> +       struct wmi_tdls_set_state_cmd *cmd;
-> +       struct wmi_tlv *tlv;
-> +       struct sk_buff *skb;
-> +       void *ptr;
-> +       size_t len;
-> +       /* Set to options from wmi_tlv_tdls_options,
-> +        * for now none of then are enabled.
-
-Typo: s/then/them/
-
-
-> +        */
-> +       u32 options = 0;
-> +
-> +       len = sizeof(*tlv) + sizeof(*cmd);
-> +       skb = ath10k_wmi_alloc_skb(ar, sizeof(*tlv) + sizeof(*cmd));
-
-Why not use `len` for alloc_skb()?
-
-
-[...]
-> +static struct sk_buff *
-> +ath10k_wmi_tlv_op_gen_tdls_peer_update(struct ath10k *ar,
-> +                                      struct wmi_tdls_peer_update_cmd_arg *arg,
-> +                                      struct wmi_tdls_peer_capab_arg *cap,
-> +                                      struct wmi_channel_arg *chan_arg)
-
-Could be const struct on these _args.
-
-
-[...]
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-> index 5f0fe84..8c219f0 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-> @@ -1516,6 +1516,58 @@ struct wmi_tlv_p2p_noa_ev {
->         __le32 vdev_id;
->  } __packed;
->
-> +/* TDLS Options */
-> +enum wmi_tlv_tdls_options {
-> +       WMI_TLV_TDLS_OFFCHAN_EN = BIT(0), /* TDLS Off Channel support */
-> +       WMI_TLV_TDLS_BUFFER_STA_EN = BIT(1), /* TDLS Buffer STA support */
-> +       WMI_TLV_TDLS_SLEEP_STA_EN = BIT(2), /* TDLS Sleep STA support */
-
-These comments seem redundant and don't introduce any extra info..
-
-
-Michał
