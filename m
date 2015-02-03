@@ -1,318 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47089 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752313AbbBOMDB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:33501 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752434AbbBCNIP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 07:03:01 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 2/9] wil6210: remove support for old hardware
-Date: Sun, 15 Feb 2015 14:02:31 +0200
-Message-Id: <1424001758-29529-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150215_130317_491245_1277ECFF)
-In-Reply-To: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 3 Feb 2015 08:08:15 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Fu\, Zhonghui" <zhonghui.fu@linux.intel.com>
+Cc: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54C5AA8C.4010005@linux.intel.com>
+Date: Tue, 03 Feb 2015 15:08:07 +0200
+In-Reply-To: <54C5AA8C.4010005@linux.intel.com> (Zhonghui Fu's message of
+	"Mon, 26 Jan 2015 10:46:36 +0800")
+Message-ID: <87vbjjw3bc.fsf@kamboji.qca.qualcomm.com> (sfid-20150203_140837_313352_992F19AC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware older than Sparrow B0 obsolete.
-There is no WiFi product that uses this hardware.
-Recent firmware does not support it either.
+"Fu, Zhonghui" <zhonghui.fu@linux.intel.com> writes:
 
-Remove driver support.
+>>From ff39ed4af9f1c50358fe92ec4c8eaac9db183e00 Mon Sep 17 00:00:00 2001
+> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> Date: Mon, 26 Jan 2015 10:13:21 +0800
+> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>
+> WiFi chip has 2 SDIO functions, and PM core will trigger
+> twice suspend/resume operations for one WiFi chip to do
+> the same things. This patch avoid this case.
+>
+> Acked-by: Arend van Spriel<arend@broadcom.com>
+> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/ethtool.c   | 34 +++++++---------
- drivers/net/wireless/ath/wil6210/interrupt.c | 45 +++++----------------
- drivers/net/wireless/ath/wil6210/main.c      | 58 ++++++++++------------------
- drivers/net/wireless/ath/wil6210/pcie_bus.c  | 20 ----------
- drivers/net/wireless/ath/wil6210/wil6210.h   |  8 ----
- 5 files changed, 42 insertions(+), 123 deletions(-)
+This doesn't apply:
 
-diff --git a/drivers/net/wireless/ath/wil6210/ethtool.c b/drivers/net/wireless/ath/wil6210/ethtool.c
-index 4c44a82..0ea695f 100644
---- a/drivers/net/wireless/ath/wil6210/ethtool.c
-+++ b/drivers/net/wireless/ath/wil6210/ethtool.c
-@@ -50,27 +50,19 @@ static int wil_ethtoolops_get_coalesce(struct net_device *ndev,
- 
- 	wil_dbg_misc(wil, "%s()\n", __func__);
- 
--	if (test_bit(hw_capability_advanced_itr_moderation,
--		     wil->hw_capabilities)) {
--		tx_itr_en = ioread32(wil->csr +
--				     HOSTADDR(RGF_DMA_ITR_TX_CNT_CTL));
--		if (tx_itr_en & BIT_DMA_ITR_TX_CNT_CTL_EN)
--			tx_itr_val =
--				ioread32(wil->csr +
--					 HOSTADDR(RGF_DMA_ITR_TX_CNT_TRSH));
--
--		rx_itr_en = ioread32(wil->csr +
--				     HOSTADDR(RGF_DMA_ITR_RX_CNT_CTL));
--		if (rx_itr_en & BIT_DMA_ITR_RX_CNT_CTL_EN)
--			rx_itr_val =
--				ioread32(wil->csr +
--					 HOSTADDR(RGF_DMA_ITR_RX_CNT_TRSH));
--	} else {
--		rx_itr_en = ioread32(wil->csr + HOSTADDR(RGF_DMA_ITR_CNT_CRL));
--		if (rx_itr_en & BIT_DMA_ITR_CNT_CRL_EN)
--			rx_itr_val = ioread32(wil->csr +
--					      HOSTADDR(RGF_DMA_ITR_CNT_TRSH));
--	}
-+	tx_itr_en = ioread32(wil->csr +
-+			     HOSTADDR(RGF_DMA_ITR_TX_CNT_CTL));
-+	if (tx_itr_en & BIT_DMA_ITR_TX_CNT_CTL_EN)
-+		tx_itr_val =
-+			ioread32(wil->csr +
-+				 HOSTADDR(RGF_DMA_ITR_TX_CNT_TRSH));
-+
-+	rx_itr_en = ioread32(wil->csr +
-+			     HOSTADDR(RGF_DMA_ITR_RX_CNT_CTL));
-+	if (rx_itr_en & BIT_DMA_ITR_RX_CNT_CTL_EN)
-+		rx_itr_val =
-+			ioread32(wil->csr +
-+				 HOSTADDR(RGF_DMA_ITR_RX_CNT_TRSH));
- 
- 	cp->tx_coalesce_usecs = tx_itr_val;
- 	cp->rx_coalesce_usecs = rx_itr_val;
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index a6f9230..d5a651b 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -166,9 +166,16 @@ void wil_unmask_irq(struct wil6210_priv *wil)
- /* target write operation */
- #define W(a, v) do { iowrite32(v, wil->csr + HOSTADDR(a)); wmb(); } while (0)
- 
--static
--void wil_configure_interrupt_moderation_new(struct wil6210_priv *wil)
-+void wil_configure_interrupt_moderation(struct wil6210_priv *wil)
- {
-+	wil_dbg_irq(wil, "%s()\n", __func__);
-+
-+	/* disable interrupt moderation for monitor
-+	 * to get better timestamp precision
-+	 */
-+	if (wil->wdev->iftype == NL80211_IFTYPE_MONITOR)
-+		return;
-+
- 	/* Disable and clear tx counter before (re)configuration */
- 	W(RGF_DMA_ITR_TX_CNT_CTL, BIT_DMA_ITR_TX_CNT_CTL_CLR);
- 	W(RGF_DMA_ITR_TX_CNT_TRSH, wil->tx_max_burst_duration);
-@@ -206,42 +213,8 @@ void wil_configure_interrupt_moderation_new(struct wil6210_priv *wil)
- 				      BIT_DMA_ITR_RX_IDL_CNT_CTL_EXT_TIC_SEL);
- }
- 
--static
--void wil_configure_interrupt_moderation_lgc(struct wil6210_priv *wil)
--{
--	/* disable, use usec resolution */
--	W(RGF_DMA_ITR_CNT_CRL, BIT_DMA_ITR_CNT_CRL_CLR);
--
--	wil_info(wil, "set ITR_TRSH = %d usec\n", wil->rx_max_burst_duration);
--	W(RGF_DMA_ITR_CNT_TRSH, wil->rx_max_burst_duration);
--	/* start it */
--	W(RGF_DMA_ITR_CNT_CRL,
--	  BIT_DMA_ITR_CNT_CRL_EN | BIT_DMA_ITR_CNT_CRL_EXT_TICK);
--}
--
- #undef W
- 
--void wil_configure_interrupt_moderation(struct wil6210_priv *wil)
--{
--	wil_dbg_irq(wil, "%s()\n", __func__);
--
--	/* disable interrupt moderation for monitor
--	 * to get better timestamp precision
--	 */
--	if (wil->wdev->iftype == NL80211_IFTYPE_MONITOR)
--		return;
--
--	if (test_bit(hw_capability_advanced_itr_moderation,
--		     wil->hw_capabilities))
--		wil_configure_interrupt_moderation_new(wil);
--	else {
--		/* Advanced interrupt moderation is not available before
--		 * Sparrow v2. Will use legacy interrupt moderation
--		 */
--		wil_configure_interrupt_moderation_lgc(wil);
--	}
--}
--
- static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
- {
- 	struct wil6210_priv *wil = cookie;
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index acbbd27..95755a5 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -516,8 +516,6 @@ static int wil_target_reset(struct wil6210_priv *wil)
- {
- 	int delay = 0;
- 	u32 x;
--	bool is_reset_v2 = test_bit(hw_capability_reset_v2,
--				    wil->hw_capabilities);
- 
- 	wil_dbg_misc(wil, "Resetting \"%s\"...\n", wil->hw_name);
- 
-@@ -533,52 +531,39 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 	/* Clear Fw Download notification */
- 	C(RGF_USER_USAGE_6, BIT(0));
- 
--	if (is_reset_v2) {
--		S(RGF_CAF_OSC_CONTROL, BIT_CAF_OSC_XTAL_EN);
--		/* XTAL stabilization should take about 3ms */
--		usleep_range(5000, 7000);
--		x = R(RGF_CAF_PLL_LOCK_STATUS);
--		if (!(x & BIT_CAF_OSC_DIG_XTAL_STABLE)) {
--			wil_err(wil, "Xtal stabilization timeout\n"
--				"RGF_CAF_PLL_LOCK_STATUS = 0x%08x\n", x);
--			return -ETIME;
--		}
--		/* switch 10k to XTAL*/
--		C(RGF_USER_SPARROW_M_4, BIT_SPARROW_M_4_SEL_SLEEP_OR_REF);
--		/* 40 MHz */
--		C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_CAR_AHB_SW_SEL);
--
--		W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
--		W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
-+	S(RGF_CAF_OSC_CONTROL, BIT_CAF_OSC_XTAL_EN);
-+	/* XTAL stabilization should take about 3ms */
-+	usleep_range(5000, 7000);
-+	x = R(RGF_CAF_PLL_LOCK_STATUS);
-+	if (!(x & BIT_CAF_OSC_DIG_XTAL_STABLE)) {
-+		wil_err(wil, "Xtal stabilization timeout\n"
-+			"RGF_CAF_PLL_LOCK_STATUS = 0x%08x\n", x);
-+		return -ETIME;
- 	}
-+	/* switch 10k to XTAL*/
-+	C(RGF_USER_SPARROW_M_4, BIT_SPARROW_M_4_SEL_SLEEP_OR_REF);
-+	/* 40 MHz */
-+	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_CAR_AHB_SW_SEL);
-+
-+	W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x3ff81f);
-+	W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0xf);
- 
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0xFE000000);
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0x0000003F);
--	W(RGF_USER_CLKS_CTL_SW_RST_VEC_3,
--	  is_reset_v2 ? 0x000000f0 : 0x00000170);
-+	W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x000000f0);
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0xFFE7FE00);
- 
--	if (is_reset_v2) {
--		W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x0);
--		W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0x0);
--	}
-+	W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_0, 0x0);
-+	W(RGF_USER_CLKS_CTL_EXT_SW_RST_VEC_1, 0x0);
- 
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0);
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0);
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_1, 0);
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
- 
--	if (is_reset_v2) {
--		W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x00000003);
--		/* reset A2 PCIE AHB */
--		W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00008000);
--	} else {
--		W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x00000001);
--		W(RGF_PCIE_LOS_COUNTER_CTL, BIT(6) | BIT(8));
--		W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00008000);
--	}
-+	W(RGF_USER_CLKS_CTL_SW_RST_VEC_3, 0x00000003);
-+	W(RGF_USER_CLKS_CTL_SW_RST_VEC_2, 0x00008000); /* reset A2 PCIE AHB */
- 
--	/* TODO: check order here!!! Erez code is different */
- 	W(RGF_USER_CLKS_CTL_SW_RST_VEC_0, 0);
- 
- 	/* wait until device ready. typical time is 20..80 msec */
-@@ -592,9 +577,6 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 		}
- 	} while (!(x & BIT_BL_READY));
- 
--	if (!is_reset_v2)
--		W(RGF_PCIE_LOS_COUNTER_CTL, BIT(8));
--
- 	C(RGF_USER_CLKS_CTL_0, BIT_USER_CLKS_RST_PWGD);
- 
- 	wil_dbg_misc(wil, "Reset completed in %d ms\n", delay * RST_DELAY);
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index f7c165d..25343cf 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -39,18 +39,6 @@ void wil_set_capabilities(struct wil6210_priv *wil)
- 	bitmap_zero(wil->hw_capabilities, hw_capability_last);
- 
- 	switch (rev_id) {
--	case JTAG_DEV_ID_MARLON_B0:
--		wil->hw_name = "Marlon B0";
--		wil->hw_version = HW_VER_MARLON_B0;
--		break;
--	case JTAG_DEV_ID_SPARROW_A0:
--		wil->hw_name = "Sparrow A0";
--		wil->hw_version = HW_VER_SPARROW_A0;
--		break;
--	case JTAG_DEV_ID_SPARROW_A1:
--		wil->hw_name = "Sparrow A1";
--		wil->hw_version = HW_VER_SPARROW_A1;
--		break;
- 	case JTAG_DEV_ID_SPARROW_B0:
- 		wil->hw_name = "Sparrow B0";
- 		wil->hw_version = HW_VER_SPARROW_B0;
-@@ -62,13 +50,6 @@ void wil_set_capabilities(struct wil6210_priv *wil)
- 	}
- 
- 	wil_info(wil, "Board hardware is %s\n", wil->hw_name);
--
--	if (wil->hw_version >= HW_VER_SPARROW_A0)
--		set_bit(hw_capability_reset_v2, wil->hw_capabilities);
--
--	if (wil->hw_version >= HW_VER_SPARROW_B0)
--		set_bit(hw_capability_advanced_itr_moderation,
--			wil->hw_capabilities);
- }
- 
- void wil_disable_irq(struct wil6210_priv *wil)
-@@ -305,7 +286,6 @@ static void wil_pcie_remove(struct pci_dev *pdev)
- }
- 
- static const struct pci_device_id wil6210_pcie_ids[] = {
--	{ PCI_DEVICE(0x1ae9, 0x0301) },
- 	{ PCI_DEVICE(0x1ae9, 0x0310) },
- 	{ PCI_DEVICE(0x1ae9, 0x0302) }, /* same as above, firmware broken */
- 	{ /* end: all zeroes */	},
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index cfe43d2..97422e7 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -241,16 +241,10 @@ struct RGF_BL {
- 	#define BIT_CAF_OSC_DIG_XTAL_STABLE	BIT(0)
- 
- #define RGF_USER_JTAG_DEV_ID	(0x880b34) /* device ID */
--	#define JTAG_DEV_ID_MARLON_B0	(0x0612072f)
--	#define JTAG_DEV_ID_SPARROW_A0	(0x0632072f)
--	#define JTAG_DEV_ID_SPARROW_A1	(0x1632072f)
- 	#define JTAG_DEV_ID_SPARROW_B0	(0x2632072f)
- 
- enum {
- 	HW_VER_UNKNOWN,
--	HW_VER_MARLON_B0,  /* JTAG_DEV_ID_MARLON_B0  */
--	HW_VER_SPARROW_A0, /* JTAG_DEV_ID_SPARROW_A0 */
--	HW_VER_SPARROW_A1, /* JTAG_DEV_ID_SPARROW_A1 */
- 	HW_VER_SPARROW_B0, /* JTAG_DEV_ID_SPARROW_B0 */
- };
- 
-@@ -494,8 +488,6 @@ enum {
- };
- 
- enum {
--	hw_capability_reset_v2 = 0,
--	hw_capability_advanced_itr_moderation = 1,
- 	hw_capability_last
- };
- 
+Applying: brcmfmac: avoid duplicated suspend/resume operation
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+Failed to merge in the changes.
+Patch failed at 0001 brcmfmac: avoid duplicated suspend/resume operation
+
+BTW, when you resend a patch please use "[PATCH v2]" (or v3, v4...) in
+the Subject field.
+
 -- 
-2.1.0
-
+Kalle Valo
