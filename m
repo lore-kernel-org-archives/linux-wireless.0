@@ -1,45 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:38212 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752452AbbBKR5d convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2015 12:57:33 -0500
-From: Avinash Patil <patila@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	Shengzhen Li <szli@marvell.com>
-Date: Wed, 11 Feb 2015 09:57:31 -0800
-Subject: RE: [PATCH 1/5] mwifiex: more_task flag for main_process
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC66743F9F37@SC-VEXCH2.marvell.com> (sfid-20150211_185736_482364_C5B78E41)
-References: <1423240906-12951-1-git-send-email-patila@marvell.com>
-	<CBACCFA0AEB13A41977475BCF3E896FC6674321B02@SC-VEXCH2.marvell.com>
- <87wq3pn94m.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87wq3pn94m.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-we0-f176.google.com ([74.125.82.176]:42129 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932316AbbBDMGb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 07:06:31 -0500
+Received: by mail-we0-f176.google.com with SMTP id w62so1329197wes.7
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2015 04:06:29 -0800 (PST)
+Message-ID: <54D20B43.9060506@gmail.com> (sfid-20150204_130643_493905_62313F7C)
+Date: Wed, 04 Feb 2015 13:06:27 +0100
+From: =?UTF-8?B?VmxhZGltw61yIMSMdW7DoXQ=?= <vcunat@gmail.com>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org,
+	Nix Dev <nix-dev@lists.science.uu.nl>
+Subject: Re: broken URLs of iwlwifi firmware tarballs
+References: <54CFF0B3.1060507@gmail.com>	 (sfid-20150202_224841_571486_202E34E5) <1422953213.2237.0.camel@sipsolutions.net>
+In-Reply-To: <1422953213.2237.0.camel@sipsolutions.net>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms000509070406050401080909"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Tuesday, February 10, 2015 7:48 PM
-> To: Avinash Patil
-> Cc: linux-wireless@vger.kernel.org; Amitkumar Karwar; Cathy Luo; Marc Yang;
-> Shengzhen Li
-> Subject: Re: [PATCH 1/5] mwifiex: more_task flag for main_process
-> 
-> Avinash Patil <patila@marvell.com> writes:
-> 
-> > Please drop this series as we are seeing issue with DMA alignment patch.
-> > I will resend v2 after fixing this.
-> 
-> Ok, dropped.
->
-> --
-> Kalle Valo
-Hi Kalle,
+This is a cryptographically signed message in MIME format.
 
-I have sent v2 by omitting DMA alignment patch. I will send this patch separately after fixing issue.
--Avinash.
+--------------ms000509070406050401080909
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+On 02/03/2015 09:46 AM, Johannes Berg wrote:
+> I've fixed that now.
+
+Thanks!
+
+For future reference, is it the case that fetching from (c)git is the=20
+preferred way of distributing the firmware? (preferred by you, i.e.=20
+*.kernel.org)
+
+
+Vladimir
+
+
+
+--------------ms000509070406050401080909
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIJazCC
+BKAwggOIoAMCAQICEQDwhvYlHZdHibfdyBlsiW2AMA0GCSqGSIb3DQEBBQUAMDsxCzAJBgNV
+BAYTAk5MMQ8wDQYDVQQKEwZURVJFTkExGzAZBgNVBAMTElRFUkVOQSBQZXJzb25hbCBDQTAe
+Fw0xMjA2MjYwMDAwMDBaFw0xNTA2MjYyMzU5NTlaMGsxCzAJBgNVBAYTAkNaMSMwIQYDVQQK
+ExpVbml2ZXJ6aXRhIEthcmxvdmEgdiBQcmF6ZTEaMBgGA1UEAwwRVmxhZGltw61yIMSMdW7D
+oXQxGzAZBgkqhkiG9w0BCQIWDDEwMDAwMDA1MDU5OTCCASIwDQYJKoZIhvcNAQEBBQADggEP
+ADCCAQoCggEBANcoAjmclljT9rjG719tYe8Ov3aTzBlnnpQUlmLrhztf3R+FAuJloiGgBiZ1
+tUdX7F/j/Mb+/LrROiqenYvnk3B2mrxg5klkfua44v1VZSePH8d5kwIN+eBVK4cicuNFbqt+
+szFH1mFXFdlUfJtj6l5KFhyucFgcrp0ccxpcy9kEajaOChUoljG5BXJfB1T0z8Jr+tGw0hce
+CQ9P/uahEkiDHWtK1gbtGQyAuMh1vFtEM35mt0pyQ0PzouCHzqGmDzLGi7l+Ud72uDWvJ9nR
+rGQWFwKqrbd/C4bbnwgIsItp65jTObmgeDzAIyISUeBgouUMwk9k0AHkILNAJlyT7rUCAwEA
+AaOCAW0wggFpMB8GA1UdIwQYMBaAFGNNQ1oZSD/ERsECur/uDuWCt2amMB0GA1UdDgQWBBRE
+k9LYYV+vNxAFmKcTUdWizi/PyzAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAdBgNV
+HSUEFjAUBggrBgEFBQcDBAYIKwYBBQUHAwIwGAYDVR0gBBEwDzANBgsrBgEEAbIxAQICHTA/
+BgNVHR8EODA2MDSgMqAwhi5odHRwOi8vY3JsLnRjcy50ZXJlbmEub3JnL1RFUkVOQVBlcnNv
+bmFsQ0EuY3JsMHIGCCsGAQUFBwEBBGYwZDA6BggrBgEFBQcwAoYuaHR0cDovL2NydC50Y3Mu
+dGVyZW5hLm9yZy9URVJFTkFQZXJzb25hbENBLmNydDAmBggrBgEFBQcwAYYaaHR0cDovL29j
+c3AudGNzLnRlcmVuYS5vcmcwGwYDVR0RBBQwEoEQdmN1bmF0QGdtYWlsLmNvbTANBgkqhkiG
+9w0BAQUFAAOCAQEAdL7MsKsfcl1/yHu/kz1XOZxmZFpSiIYrlf04iuHG+1cH+9qaDIno2BBt
+PMw5l7fWjtMu7s9G9gLW+hrduPUbMdHAL7GyHD1J5puisO6AE1RDOZCpDUFiU4NN2wUZFTWL
+scRK37ijol/Pa5gyt98R0Lyb23J2wNywNEWjFJyE/Izz/BpX+xldrFRu10DQN0faSo9+9F4Y
+zLTuG7lGAbNJ14HGNhiFJurinIWq0HOPIw9Uyf7enleaYlKHWsjhBipzoFr4NoinHY5UuaDB
+8o4d+g1qSpNZM7NSVzN0l043rFVHEWNAvrHx4fHj0ydar47MR2EE716F4iO1/m0S/uW84zCC
+BMMwggOroAMCAQICEHP+V/rfuMUIgXtmuWvwLe8wDQYJKoZIhvcNAQEFBQAwga4xCzAJBgNV
+BAYTAlVTMQswCQYDVQQIEwJVVDEXMBUGA1UEBxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoT
+FVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8GA1UECxMYaHR0cDovL3d3dy51c2VydHJ1c3Qu
+Y29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0LUNsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
+RW1haWwwHhcNMDkwNTE4MDAwMDAwWhcNMjgxMjMxMjM1OTU5WjA7MQswCQYDVQQGEwJOTDEP
+MA0GA1UEChMGVEVSRU5BMRswGQYDVQQDExJURVJFTkEgUGVyc29uYWwgQ0EwggEiMA0GCSqG
+SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDIFdn1M2ojoZANz7sFRMOrH0o1hRohhaBP+PBA4kpD
+m/5bsbC/tFfcdYBBS2Qa9ttPb4/QJUU1+erLSvr72tPtRYgRlDbkzKgN78U9N+0We+PClZ5Y
+M38i+/j/7Oa+264KZSUih9pvhItG6ECGKD+/VgjiSumDouki+y36tigfkcHDcftTwCtOpAyh
+bp1V7ezhJIc6COINHOTETdDLJ/qEZObRl51WJFuTuykuQ+JBaj3iSmX8ml9ahoe8h8d5gJaZ
+UcaQD2SRmX0Q3awsAyrheGT+zj1O9CtQEUvRWNSbA/B/9TtTsFND+8UvxAQpGjqs11Xp0Q6V
+0Tsxf3hPriktAgMBAAGjggFNMIIBSTAfBgNVHSMEGDAWgBSJgmd9xJ0mcABLtFBIfN49rgRu
+fTAdBgNVHQ4EFgQUY01DWhlIP8RGwQK6v+4O5YK3ZqYwDgYDVR0PAQH/BAQDAgEGMBIGA1Ud
+EwEB/wQIMAYBAf8CAQAwGAYDVR0gBBEwDzANBgsrBgEEAbIxAQICHTBYBgNVHR8EUTBPME2g
+S6BJhkdodHRwOi8vY3JsLnVzZXJ0cnVzdC5jb20vVVROLVVTRVJGaXJzdC1DbGllbnRBdXRo
+ZW50aWNhdGlvbmFuZEVtYWlsLmNybDBvBggrBgEFBQcBAQRjMGEwOAYIKwYBBQUHMAKGLGh0
+dHA6Ly9jcnQudXNlcnRydXN0LmNvbS9VVE5BQUFDbGllbnRfQ0EuY3J0MCUGCCsGAQUFBzAB
+hhlodHRwOi8vb2NzcC51c2VydHJ1c3QuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQAGK6lTLxPc
+XDkWzIafXkx7cvvsjVWKXpoK/1NMdvQGPVDPV/Ciz6+ZjKr+oBl2PpkDMvp1gziKu2uapQwT
+stQbduaULmeYWeORbAKQmpzIYEtVq8qIWo0r5WmVAwfR1A78JCIuWbFjpF/t2SNy5JzOOlxs
+H0+pAMkd/vp/RS22LoTdDyegWRhO1XYlRfSZJnnbb58j90O7Kw8Eo4EmLLd7Nfk9d19AIeZ/
+HaWWWr3QyxY6bLthi4r9BDlECsss4cvOLhCYGtvgk+1JZGQIIJ+3o1Dwot3KtMZ8DD3nXhXc
+J4bkOjtSWherqQZTK50Jc2QcAcP9MNKHA2/kFQN6OV9oMYIDCjCCAwYCAQEwUDA7MQswCQYD
+VQQGEwJOTDEPMA0GA1UEChMGVEVSRU5BMRswGQYDVQQDExJURVJFTkEgUGVyc29uYWwgQ0EC
+EQDwhvYlHZdHibfdyBlsiW2AMAkGBSsOAwIaBQCgggGPMBgGCSqGSIb3DQEJAzELBgkqhkiG
+9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1MDIwNDEyMDYyN1owIwYJKoZIhvcNAQkEMRYEFLkm
+dh62QK83YD92JbwCKAIvENLaMF8GCSsGAQQBgjcQBDFSMFAwOzELMAkGA1UEBhMCTkwxDzAN
+BgNVBAoTBlRFUkVOQTEbMBkGA1UEAxMSVEVSRU5BIFBlcnNvbmFsIENBAhEA8Ib2JR2XR4m3
+3cgZbIltgDBhBgsqhkiG9w0BCRACCzFSoFAwOzELMAkGA1UEBhMCTkwxDzANBgNVBAoTBlRF
+UkVOQTEbMBkGA1UEAxMSVEVSRU5BIFBlcnNvbmFsIENBAhEA8Ib2JR2XR4m33cgZbIltgDBs
+BgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcw
+DgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEo
+MA0GCSqGSIb3DQEBAQUABIIBADyxEfBegO95k17m0nq01dWnpR3KvbNWVtSbx7415uOh+PGn
+1WsbzybJawAgDUqKy1gq5Z/faX7oE7F8OgpvkolTeXYXXmEJ20pwDtIdz+GOFYWDT51ofAYt
+AkJzZ7hNGhHfBFvPIkx6yfAPQkHH6dduoVW0EBbZqy5r3CyZtvHuNis5hBJd32mWRvxU3aou
+KzZszKSdWulenSVmViI9b5ab4I2Poaq6/rqQ+p7JFRPlZna956QkGCLs1Xf+qotz0FR3GGYJ
+lvr2WzxlLhgrUR7KTq6+9E0hSbHswF9PoJWDGLKPa/FPKJaI7xEnK+jVzVdQpcKogZx8I4ZD
+tlu6RocAAAAAAAA=
+--------------ms000509070406050401080909--
