@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from milliways.jots.org ([198.204.250.45]:50889 "EHLO
-	milliways.jots.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752461AbbBBXaU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 18:30:20 -0500
-Received: from webmail.jots.org (localhost.localdomain [127.0.0.1])
-	by milliways.jots.org (Postfix) with ESMTP id 6B5992BC0F78
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Feb 2015 18:24:15 -0500 (EST)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 02 Feb 2015 18:24:15 -0500
-From: Ken D'Ambrosio <ken@jots.org>
-To: linux-wireless@vger.kernel.org
-Subject: rtl8192ee (Thinkpad T440s)
-Message-ID: <10a90ab7a6c186362f339481b531832f@webmail.jots.org> (sfid-20150203_003029_821361_E3B57960)
+Received: from www.osadl.org ([62.245.132.105]:36166 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933015AbbBDIMa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 03:12:30 -0500
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Benoit Taine <benoit.taine@lip6.fr>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH 2/3] wireless: orinoco: orinoco_pci use msecs_to_jiffies for conversion
+Date: Wed,  4 Feb 2015 03:07:40 -0500
+Message-Id: <1423037261-20193-2-git-send-email-hofrat@osadl.org> (sfid-20150204_091317_495907_2F2B9E57)
+In-Reply-To: <1423037261-20193-1-git-send-email-hofrat@osadl.org>
+References: <1423037261-20193-1-git-send-email-hofrat@osadl.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, all.  Just got a new Thinkpad, and needless to say, tried to fire it 
-up on the network.  Ubuntu 14.04 didn't have the driver, so I tried 
-14.10, which did.  I thought I was good until I tried to connect; the 
-laptop would see all the advertised WAPs, but wouldn't connect to any of 
-them (including my security-free ones).  I then downloaded the 3.19 RC 
-and tried that -- same deal.  I see a few extra git commits in -next; 
-any idea if that will be of any assistance?  Is there anything I can dig 
-through in my logs to help flesh out what the problem is?
+This is only an API consolidation and should make things more readable
+it replaces var * HZ / 1000 by msecs_to_jiffies(var).
 
-Thanks!
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
--Ken
+Converting milliseconds to jiffies by "val * HZ / 1000" is technically
+ok but msecs_to_jiffies(val) is the cleaner solution and handles all
+corner cases correctly. This is a minor API cleanup only.
+
+Patch was compile-tested only for x86_64_defconfig + CONFIG_HERMES=m
+CONFIG_HERMES_PRISM=y, CONFIG_PCI_HERMES=m
+
+Patch is against 3.19.0-rc7 (localversion-next is -next-20150203)
+
+ drivers/net/wireless/orinoco/orinoco_pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/orinoco/orinoco_pci.c b/drivers/net/wireless/orinoco/orinoco_pci.c
+index b6bdad6..74219d5 100644
+--- a/drivers/net/wireless/orinoco/orinoco_pci.c
++++ b/drivers/net/wireless/orinoco/orinoco_pci.c
+@@ -94,7 +94,7 @@ static int orinoco_pci_cor_reset(struct orinoco_private *priv)
+ 	mdelay(HERMES_PCI_COR_OFFT);
+ 
+ 	/* The card is ready when it's no longer busy */
+-	timeout = jiffies + (HERMES_PCI_COR_BUSYT * HZ / 1000);
++	timeout = jiffies + msecs_to_jiffies(HERMES_PCI_COR_BUSYT);
+ 	reg = hermes_read_regn(hw, CMD);
+ 	while (time_before(jiffies, timeout) && (reg & HERMES_CMD_BUSY)) {
+ 		mdelay(1);
+-- 
+1.7.10.4
+
