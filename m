@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.11]:47415 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755675AbbBFR30 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 12:29:26 -0500
-Date: Fri, 6 Feb 2015 18:29:15 +0100
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Etna <etna@openmailbox.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: MediaTek WiFi hardware support in upstream kernel
-Message-ID: <20150206182915.7467bac7@north> (sfid-20150206_182930_229327_A516ABA4)
-In-Reply-To: <5463D28F.9080106@lwfinger.net>
-References: <544DB5A8.7090405@openmailbox.org>
-	<20141027152026.GB19976@tuxdriver.com>
-	<544E8CB4.3000607@rempel-privat.de>
-	<20141028134608.GA26283@tuxdriver.com>
-	<544FA303.5060303@broadcom.com>
-	<544FA627.3000004@rempel-privat.de>
-	<5450BEB2.60208@openwrt.org>
-	<5461F937.9060004@rempel-privat.de>
-	<5463CB6C.3030204@openwrt.org>
-	<5463D28F.9080106@lwfinger.net>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16352 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754353AbbBDIuH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 03:50:07 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/4] ath10k: implement fw stats for wmi-tlv
+References: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 4 Feb 2015 10:49:55 +0200
+In-Reply-To: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 30 Jan 2015 10:47:20 +0100")
+Message-ID: <874mr2uklo.fsf@kamboji.qca.qualcomm.com> (sfid-20150204_095011_843114_C1FD57B6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone!
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I put together a mac80211 driver for Mediatek MT7601U.  It's partially
-based on Felix's mt76, but I'm not sure if it will make sense to merge
-the two together.  MT7601U is a pretty old 1x1 bgn chip for USB dongles
-and mt76 now only supports the latest and greatest ac APs.
+> There are some slight differences in fw stats
+> (sic) in wmi-tlv.
+>
+> Firmware has changed the querying scheme and no
+> longer requires the ping-pong to get all stats.
+> The patchset doesn't change this behaviour so with
+> wmi-tlv it's possible to see the following
+> warnings when reading fw stats:
+>
+>  ath10k_pci 0000:00:06.0: received unsolicited stats update event
+>
+> The logic in ath10k still produces correct results
+> so this is harmless.
+>
+> I wonder how to deal with this in a sane way. An
+> `if (op_ver == WMI_TLV)` is a little bad but
+> having a new ar->fw_feature flag just for a debug
+> facility like this is a bit silly. Or we can just
+> drop the warning and leave a comment. Ideas?
 
-I'm testing STA functionality right now and it seems to be working ok.
-The code is very much a work in progress but if anyone is interested you
-can get it here:
+I think we could just remove the warning.
 
-https://github.com/kuba-moo/mt7601u
+> Michal Kazior (4):
+>   ath10k: add vdev stats processing
+>   ath10k: change request stats command prototype
+>   ath10k: add more wmi fw stat defines
+>   ath10k: implement fw stats for wmi-tlv
 
-Cheers,
-kuba
+There was a conflict in patch 2 but 3-way merge solved it automatically.
+Please check the result in the pending branch.
+
+-- 
+Kalle Valo
