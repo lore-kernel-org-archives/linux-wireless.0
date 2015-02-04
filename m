@@ -1,255 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:43680 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751387AbbBECTX (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:56701 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202AbbBDLfY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 21:19:23 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@nbd.name,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 08/10] mac80211: add max. lossless throughput per rate to rc_stats
-Date: Thu,  5 Feb 2015 03:13:18 +0100
-Message-Id: <1423102400-9693-9-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150205_031930_717657_F2271156)
-In-Reply-To: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Wed, 4 Feb 2015 06:35:24 -0500
+Received: by mail-wi0-f179.google.com with SMTP id l15so2959007wiw.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2015 03:35:22 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+Date: Wed, 4 Feb 2015 12:35:22 +0100
+Message-ID: <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com> (sfid-20150204_123532_386077_F584936C)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the new statistic "maximum possible lossless
-throughput" to Minstrels and Minstrel-HTs rc_stats (in debugfs). This
-enables comprehensive comparison between current per-rate throughput
-and max. achievable per-rate throughput.
+On 3 February 2015 at 15:27, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> On Tue, 2015-02-03 at 12:50 +0100, Michal Kazior wrote:
+[...]
+>> IOW:
+>>  - stretch acks / TSO defer don't seem to help much (when compared to
+>> throughput results from yesterday)
+>>  - GRO helps
+>>  - disabling A-MSDU on sender helps
+>>  - net/master+GRO still doesn't reach the performance from before the
+>> regression (~600mbps w/ GRO)
+>>
+>> You can grab logs and dumps here: http://www.filedropper.com/test2tar
+>>
+>
+> Thanks for these traces.
+>
+> There is absolutely a problem at the sender, as we can see a big 2ms
+> delay between reception of ACK and send of following packets.
+> TCP stack should generate them immediately.
+> Are you using some kind of netem qdisc ?
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- net/mac80211/rc80211_minstrel.c            | 12 ++++++++++++
- net/mac80211/rc80211_minstrel.h            |  1 +
- net/mac80211/rc80211_minstrel_debugfs.c    | 18 +++++++++++-------
- net/mac80211/rc80211_minstrel_ht.c         | 19 +++++++++++++++++++
- net/mac80211/rc80211_minstrel_ht.h         |  1 +
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 20 ++++++++++++--------
- 6 files changed, 56 insertions(+), 15 deletions(-)
+Both systems have identical setup:
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 28de2f7a..42dfef8 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -87,7 +87,19 @@ int minstrel_get_tp_avg(struct minstrel_rate *mr)
- 	return tp_avg;
- }
- 
-+/* return max. potential lossless throughput */
-+int minstrel_get_tp_max(struct minstrel_rate *mr)
-+{
-+	int tp_max, usecs;
- 
-+	usecs = mr->perfect_tx_time;
-+	if (!usecs)
-+		usecs = 1000000;
-+
-+	tp_max = 100000 / usecs;
-+
-+	return tp_max;
-+}
- 
- /* find & sort topmost throughput rates */
- static inline void
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 27b82ee..d047610 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -135,6 +135,7 @@ void minstrel_remove_sta_debugfs(void *priv, void *priv_sta);
- /* Recalculate success probabilities and counters for a given rate using EWMA */
- void minstrel_calc_rate_stats(struct minstrel_rate_stats *mr);
- int minstrel_get_tp_avg(struct minstrel_rate *mr);
-+int minstrel_get_tp_max(struct minstrel_rate *mr);
- 
- /* debugfs */
- int minstrel_stats_open(struct inode *inode, struct file *file);
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index d8ccef7..182d552 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -75,7 +75,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- {
- 	struct minstrel_sta_info *mi = inode->i_private;
- 	struct minstrel_debugfs_info *ms;
--	unsigned int i, tp_avg, prob, eprob;
-+	unsigned int i, tp_max, tp_avg, prob, eprob;
- 	char *p;
- 
- 	ms = kmalloc(2048, GFP_KERNEL);
-@@ -85,9 +85,9 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	file->private_data = ms;
- 	p = ms->buf;
- 	p += sprintf(p, "\n");
--	p += sprintf(p, "best   _______rate_____    __statistics__    "
-+	p += sprintf(p, "best   __________rate_________    __statistics__    "
- 			"________last_______    ______sum-of________\n");
--	p += sprintf(p, "rate  [name idx airtime]  [ ø(tp) ø(prob)]  "
-+	p += sprintf(p, "rate  [name idx airtime max_tp]  [ ø(tp) ø(prob)]  "
- 			"[prob.|retry|suc|att]  [#success | #attempts]\n");
- 
- 	for (i = 0; i < mi->n_rates; i++) {
-@@ -103,14 +103,16 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 		p += sprintf(p, " %3u%s ", mr->bitrate / 2,
- 				(mr->bitrate & 1 ? ".5" : "  "));
- 		p += sprintf(p, "%3u  ", i);
--		p += sprintf(p, "%6u  ", mr->perfect_tx_time);
-+		p += sprintf(p, "%6u ", mr->perfect_tx_time);
- 
-+		tp_max = minstrel_get_tp_max(mr);
- 		tp_avg = minstrel_get_tp_avg(mr);
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, " %4u.%1u   %3u.%1u     %3u.%1u %3u"
-+		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u     %3u.%1u %3u"
- 				"   %3u %-3u   %9llu   %-9llu\n",
-+				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
- 				prob / 10, prob % 10,
-@@ -145,7 +147,7 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
- 	struct minstrel_sta_info *mi = inode->i_private;
- 	struct minstrel_debugfs_info *ms;
- 	struct timeval tv;
--	unsigned int i, tp_avg, prob, eprob;
-+	unsigned int i, tp_max, tp_avg, prob, eprob;
- 	char *p;
- 
- 	ms = kmalloc(2048, GFP_KERNEL);
-@@ -173,12 +175,14 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
- 		p += sprintf(p, "%u,", i);
- 		p += sprintf(p, "%u,",mr->perfect_tx_time);
- 
-+		tp_max = minstrel_get_tp_max(mr);
- 		tp_avg = minstrel_get_tp_avg(mr);
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u,%u,%u,"
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
- 				"%llu,%llu,%d,%d\n",
-+				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
- 				prob / 10, prob % 10,
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 2a55f63..b62b04e 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -350,6 +350,25 @@ minstrel_ht_get_tp_avg(struct minstrel_ht_sta *mi, int group, int rate)
- }
- 
- /*
-+ * Return max. potential lossless throughput based on the average A-MPDU
-+ */
-+int
-+minstrel_ht_get_tp_max(struct minstrel_ht_sta *mi, int group, int rate)
-+{
-+	unsigned int nsecs = 0;
-+	unsigned int tp_max;
-+
-+	if (group != MINSTREL_CCK_GROUP)
-+		nsecs = 1000 * mi->overhead / MINSTREL_TRUNC(mi->avg_ampdu_len);
-+
-+	nsecs += minstrel_mcs_groups[group].duration[rate];
-+	tp_max = 100000000 / nsecs;
-+
-+	return tp_max;
-+}
-+
-+
-+/*
-  * Find & sort topmost throughput rates
-  *
-  * If multiple rates provide equal throughput the sorting is based on their
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index 68dce4f..b1ea339 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -122,5 +122,6 @@ struct minstrel_ht_sta_priv {
- void minstrel_ht_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir);
- void minstrel_ht_remove_sta_debugfs(void *priv, void *priv_sta);
- int minstrel_ht_get_tp_avg(struct minstrel_ht_sta *mi, int group, int rate);
-+int minstrel_ht_get_tp_max(struct minstrel_ht_sta *mi, int group, int rate);
- 
- #endif
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index ce3baab..e70961f 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -19,7 +19,7 @@ static char *
- minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- {
- 	const struct mcs_group *mg;
--	unsigned int j, tp_avg, prob, eprob, tx_time;
-+	unsigned int j, tp_max, tp_avg, prob, eprob, tx_time;
- 	char htmode = '2';
- 	char gimode = 'L';
- 	u32 gflags;
-@@ -79,14 +79,16 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 
- 		/* tx_time[rate(i)] in usec */
- 		tx_time = DIV_ROUND_CLOSEST(mg->duration[j], 1000);
--		p += sprintf(p, "%6u   ", tx_time);
-+		p += sprintf(p, "%6u  ", tx_time);
- 
-+		tp_max = minstrel_ht_get_tp_max(mi, i, j);
- 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j);
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%4u.%1u   %3u.%1u     %3u.%1u "
-+		p += sprintf(p, "%4u.%1u    %4u.%1u   %3u.%1u    %3u.%1u "
- 				"%3u   %3u %-3u   %9llu   %-9llu\n",
-+				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
- 				prob / 10, prob % 10,
-@@ -125,11 +127,11 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 	p = ms->buf;
- 
- 	p += sprintf(p, "\n");
--	p += sprintf(p, "              best   ________rate______    "
-+	p += sprintf(p, "              best   ____________rate__________    "
- 			"__statistics__    ________last_______    "
- 			"______sum-of________\n");
--	p += sprintf(p, "mode guard #  rate  [name   idx airtime]  [ ø(tp) "
--			"ø(prob)]  [prob.|retry|suc|att]  [#success | "
-+	p += sprintf(p, "mode guard #  rate  [name   idx airtime  max_tp]  "
-+			"[ ø(tp) ø(prob)]  [prob.|retry|suc|att]  [#success | "
- 			"#attempts]\n");
- 
- 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
-@@ -164,7 +166,7 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p,
- 			    struct timeval tv)
- {
- 	const struct mcs_group *mg;
--	unsigned int j, tp_avg, prob, eprob, tx_time;
-+	unsigned int j, tp_max, tp_avg, prob, eprob, tx_time;
- 	char htmode = '2';
- 	char gimode = 'L';
- 	u32 gflags;
-@@ -225,11 +227,13 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p,
- 		tx_time = DIV_ROUND_CLOSEST(mg->duration[j], 1000);
- 		p += sprintf(p, "%u,", tx_time);
- 
-+		tp_max = minstrel_ht_get_tp_max(mi, i, j);
- 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j);
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u,%u,%u,%llu,%llu,",
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,%llu,%llu,",
-+				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
- 				prob / 10, prob % 10,
--- 
-2.2.2
+; tc qdisc
+qdisc pfifo_fast 0: dev eth0 root refcnt 2 bands 3 priomap  1 2 2 2 1
+2 0 0 1 1 1 1 1 1 1 1
+qdisc pfifo_fast 0: dev eth1 root refcnt 2 bands 3 priomap  1 2 2 2 1
+2 0 0 1 1 1 1 1 1 1 1
+qdisc mq 0: dev wlan1 root
+qdisc pfifo_fast 0: dev wlan1 parent :1 bands 3 priomap  1 2 2 2 1 2 0
+0 1 1 1 1 1 1 1 1
+qdisc pfifo_fast 0: dev wlan1 parent :2 bands 3 priomap  1 2 2 2 1 2 0
+0 1 1 1 1 1 1 1 1
+qdisc pfifo_fast 0: dev wlan1 parent :3 bands 3 priomap  1 2 2 2 1 2 0
+0 1 1 1 1 1 1 1 1
+qdisc pfifo_fast 0: dev wlan1 parent :4 bands 3 priomap  1 2 2 2 1 2 0
+0 1 1 1 1 1 1 1 1
 
+
+> These 2ms delays, in a flow with a 5ms RTT are terrible.
+>
+> 06:54:57.408391 IP 192.168.1.2.5001 > 192.168.1.3.51645: Flags [.], ack 4294899240, win 11268, options [nop,nop,TS val 1053302 ecr 1052250], length 0
+> 06:54:57.408418 IP 192.168.1.2.5001 > 192.168.1.3.51645: Flags [.], ack 4294910824, win 11268, options [nop,nop,TS val 1053303 ecr 1052251], length 0
+> 06:54:57.408431 IP 192.168.1.2.5001 > 192.168.1.3.51645: Flags [.], ack 4294936888, win 11268, options [nop,nop,TS val 1053303 ecr 1052251], length 0
+> 06:54:57.408453 IP 192.168.1.2.5001 > 192.168.1.3.51645: Flags [.], ack 4294962952, win 11268, options [nop,nop,TS val 1053303 ecr 1052251], length 0
+> 06:54:57.408474 IP 192.168.1.2.5001 > 192.168.1.3.51645: Flags [.], ack 0, win 11268, options [nop,nop,TS val 1053303 ecr 1052251], length 0
+> <this 2ms delay is not generated by TCP stack.>
+> 06:54:57.410243 IP 192.168.1.3.51645 > 192.168.1.2.5001: Flags [.], seq 82536:83984, ack 1, win 457, options [nop,nop,TS val 1052256 ecr 1053303], length 1448
+[...]
+>
+> Are packets TX completed after a timer or something ?
+
+As far as ath10k is concerned - no timers here. Not sure about
+firmware itself though.
+
+
+> Some very heavy stuff might run from tasklet (or other softirq triggered) event.
+>
+> BTW, traces tend to show that you 'receive' multiple ACK in the same burst,
+> its not clear if they are delayed at one side or the other.
+>
+> GRO should delay only GRO candidates. ACK packets are not GRO candidates.
+>
+> Have you tried to disable GSO on sender ?
+
+I assume I do that via ethtool? This is my current setup on both systems:
+
+; ethtool -k wlan1
+Features for wlan1:
+rx-checksumming: off [fixed]
+tx-checksumming: on
+        tx-checksum-ipv4: off [fixed]
+        tx-checksum-ip-generic: on [fixed]
+        tx-checksum-ipv6: off [fixed]
+        tx-checksum-fcoe-crc: off [fixed]
+        tx-checksum-sctp: off [fixed]
+scatter-gather: off
+        tx-scatter-gather: off [fixed]
+        tx-scatter-gather-fraglist: off [fixed]
+tcp-segmentation-offload: off
+        tx-tcp-segmentation: off [fixed]
+        tx-tcp-ecn-segmentation: off [fixed]
+        tx-tcp6-segmentation: off [fixed]
+udp-fragmentation-offload: off [fixed]
+generic-segmentation-offload: off [requested on]
+generic-receive-offload: on
+large-receive-offload: off [fixed]
+rx-vlan-offload: off [fixed]
+tx-vlan-offload: off [fixed]
+ntuple-filters: off [fixed]
+receive-hashing: off [fixed]
+highdma: off [fixed]
+rx-vlan-filter: off [fixed]
+vlan-challenged: off [fixed]
+tx-lockless: off [fixed]
+netns-local: on [fixed]
+tx-gso-robust: off [fixed]
+tx-fcoe-segmentation: off [fixed]
+tx-gre-segmentation: off [fixed]
+tx-ipip-segmentation: off [fixed]
+tx-sit-segmentation: off [fixed]
+tx-udp_tnl-segmentation: off [fixed]
+fcoe-mtu: off [fixed]
+tx-nocache-copy: off
+loopback: off [fixed]
+rx-fcs: off [fixed]
+rx-all: off [fixed]
+tx-vlan-stag-hw-insert: off [fixed]
+rx-vlan-stag-hw-parse: off [fixed]
+rx-vlan-stag-filter: off [fixed]
+l2-fwd-offload: off [fixed]
+busy-poll: off [fixed]
+
+; ethtool -K wlan1 generic-segmentation-offload off
+ethtool: bad command line argument(s)
+For more information run ethtool -h
+
+
+> (Or maybe wifi drivers should start to use skb->xmit_more as a signal to end aggregation)
+
+This could work if your firmware/device supports this kind of thing.
+To my understanding ath10k firmware doesn't.
+
+
+Michał
