@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f170.google.com ([209.85.223.170]:33670 "EHLO
-	mail-ie0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933420AbbBBXGF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 18:06:05 -0500
-Message-ID: <1422918363.21689.132.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150203_000620_719007_56761351)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Mon, 02 Feb 2015 15:06:03 -0800
-In-Reply-To: <54CFEB46.3050006@candelatech.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <54CFEB46.3050006@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.web.de ([212.227.17.12]:59246 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161127AbbBDRyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 12:54:47 -0500
+Message-ID: <54D25CDC.3040405@users.sourceforge.net> (sfid-20150204_185511_357238_DF6CF226)
+Date: Wed, 04 Feb 2015 18:54:36 +0100
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	netdev@vger.kernel.org
+CC: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH] ath9k: Delete an unnecessary check before the function call
+ "relay_close"
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-02-02 at 13:25 -0800, Ben Greear wrote:
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Wed, 4 Feb 2015 18:48:28 +0100
 
-> It is a big throughput win to have fewer TCP ack packets on
-> wireless since it is a half-duplex environment.  Is there anything
-> we could improve so that we can have fewer acks and still get
-> good tcp stack behaviour?
+The relay_close() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
-First apply TCP stretch ack fixes to the sender. There is no way to get
-good performance if the sender does not handle stretch ack.
+This issue was detected by using the Coccinelle software.
 
-d6b1a8a92a14 tcp: fix timing issue in CUBIC slope calculation
-9cd981dcf174 tcp: fix stretch ACK bugs in CUBIC
-c22bdca94782 tcp: fix stretch ACK bugs in Reno
-814d488c6126 tcp: fix the timid additive increase on stretch ACKs
-e73ebb0881ea tcp: stretch ACK fixes prep
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Then, make sure you do not throttle ACK too long, especially if you hope
-to get Gbit line rate on a 4 ms RTT flow.
-
-GRO does not mean : send one ACK every ms, or after 3ms delay...
-
-It is literally :
-  aggregate X packets at receive, and send the ACK asap.
-
-If the receiver expects to have 64 ACK packets in the TX ring buffer to
-actually send them (wifi aggregation), then you certainly do not want to
-compress ACK too much.
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index ec93ddf..5cee231 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -582,7 +582,7 @@ static struct rchan_callbacks rfs_spec_scan_cb = {
+ 
+ void ath9k_cmn_spectral_deinit_debug(struct ath_spec_scan_priv *spec_priv)
+ {
+-	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && spec_priv->rfs_chan_spec_scan) {
++	if (config_enabled(CONFIG_ATH9K_DEBUGFS)) {
+ 		relay_close(spec_priv->rfs_chan_spec_scan);
+ 		spec_priv->rfs_chan_spec_scan = NULL;
+ 	}
+-- 
+2.2.2
 
