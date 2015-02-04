@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1101 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964928AbbBCHOq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 02:14:46 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/19] iwlwifi: mvm: remove space padding after sysassert description
-Date: Tue,  3 Feb 2015 09:14:22 +0200
-Message-Id: <1422947678-16917-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081450_520770_13FD6019)
-In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
-References: <1422947482.30742.8.camel@egrumbacBox>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:36743 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbbBDL50 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 06:57:26 -0500
+Message-ID: <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150204_125731_338082_C854D4A2)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Wed, 04 Feb 2015 03:57:25 -0800
+In-Reply-To: <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2015-02-04 at 12:35 +0100, Michal Kazior wrote:
 
-There's really no reason to pad out the field with spaces at the
-end of the line - they're practically invisible there anyway.
+> > (Or maybe wifi drivers should start to use skb->xmit_more as a signal to end aggregation)
+> 
+> This could work if your firmware/device supports this kind of thing.
+> To my understanding ath10k firmware doesn't.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/utils.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is a pure software signal. You do not need firmware support.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index 4eb3cad..02f434d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -432,7 +432,7 @@ static void iwl_mvm_dump_umac_error_log(struct iwl_mvm *mvm)
- 			mvm->status, table.valid);
- 	}
- 
--	IWL_ERR(mvm, "0x%08X | %-28s\n", table.error_id,
-+	IWL_ERR(mvm, "0x%08X | %s\n", table.error_id,
- 		desc_lookup(table.error_id));
- 	IWL_ERR(mvm, "0x%08X | umac branchlink1\n", table.blink1);
- 	IWL_ERR(mvm, "0x%08X | umac branchlink2\n", table.blink2);
--- 
-1.9.1
+Idea is the following :
+
+Your driver gets a train of messages, coming from upper layers (TCP, IP,
+qdisc)
+
+It can know that a packet is not the last one, by looking at
+skb->xmit_more.
+
+Basically, aggregation logic could use this signal as a very clear
+indicator you got the end of a train -> force the xmit right now.
+
+To disable gso you would have to use :
+
+ethtool -K wlan1 gso off
+
+
 
