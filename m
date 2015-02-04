@@ -1,99 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:28408 "EHLO mga11.intel.com"
+Received: from mout.web.de ([212.227.15.14]:59787 "EHLO mout.web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751781AbbBLAlr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2015 19:41:47 -0500
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwl4965: Enable checking of format strings
-Date: Thu, 12 Feb 2015 00:41:39 +0000
-Message-ID: <60178C37-F104-430E-92EB-B6DDFAEB2F99@intel.com> (sfid-20150212_014204_536299_98E5FC34)
-References: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>
-In-Reply-To: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_39763AEA-1C12-4996-997C-C584EEB22D7C";
-	protocol="application/pgp-signature"; micalg=pgp-sha1
+	id S966624AbbBDQqB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 11:46:01 -0500
+Message-ID: <54D24CC3.9010006@users.sourceforge.net> (sfid-20150204_174606_946966_4CFCC8A2)
+Date: Wed, 04 Feb 2015 17:45:55 +0100
+From: SF Markus Elfring <elfring@users.sourceforge.net>
 MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Solomon Peachy <pizza@shaftnet.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+CC: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: [PATCH 0/2] CW1200: Deletion of an unnecessary check
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Apple-Mail=_39763AEA-1C12-4996-997C-C584EEB22D7C
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Wed, 4 Feb 2015 17:31:00 +0100
 
-On Feb 11, 2015, at 2:51 PM, Rasmus Villemoes <linux@rasmusvillemoes.dk> =
-wrote:
+Another update suggestion was taken into account after a patch was applied
+from static source code analysis.
 
-> Since these fmt_* variables are just const char*, and not const
-> char[], gcc (and smatch) doesn't to type checking of the arguments to
-> the printf functions. Since the linker knows perfectly well to merge
-> identical string constants, there's no point in having three static
-> pointers waste memory and give an extra level of indirection.
->=20
-> This removes over 100 "non-constant format argument" warnings from
-> smatch, accounting for about 20% of all such warnings in an
-> allmodconfig.
->=20
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-> ---
-> drivers/net/wireless/iwlegacy/4965-debug.c | 7 +++----
-> 1 file changed, 3 insertions(+), 4 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/iwlegacy/4965-debug.c =
-b/drivers/net/wireless/iwlegacy/4965-debug.c
-> index e0597bfdddb8..18855325cc1c 100644
-> --- a/drivers/net/wireless/iwlegacy/4965-debug.c
-> +++ b/drivers/net/wireless/iwlegacy/4965-debug.c
-> @@ -28,10 +28,9 @@
-> #include "common.h"
-> #include "4965.h"
->=20
-> -static const char *fmt_value =3D "  %-30s %10u\n";
-> -static const char *fmt_table =3D "  %-30s %10u  %10u  %10u  %10u\n";
-> -static const char *fmt_header =3D
-> -    "%-32s    current  cumulative       delta         max\n";
+Markus Elfring (2):
+  Delete an unnecessary check before the function call "release_firmware"
+  Less function calls in cw1200_load_firmware_cw1200() after error detection
 
-Why not change these to:
-static const char fmt_value[] =3D "  %-30s %10u\n";
-static const char fmt_table[] =3D "  %-30s %10u  %10u  %10u  %10u\n";
-static const char fmt_header[] =3D
-    "%-32s    current  cumulative       delta         max\n";
+ drivers/net/wireless/cw1200/fwio.c | 40 +++++++++++++++++++++++---------------
+ 1 file changed, 24 insertions(+), 16 deletions(-)
 
-I think that is better than the macros and avoids the extra pointers =
-that I agree are useless.
+-- 
+2.2.2
 
---=20
-Mark Rustad, Networking Division, Intel Corporation
-
-
---Apple-Mail=_39763AEA-1C12-4996-997C-C584EEB22D7C
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBAgAGBQJU2/bCAAoJEDwO/+eO4+5uAFkP/A0FhqR0STl6uCwwaKu/Ro0P
-4qx6gcM7995VyuBcXNMgqTGpRcQIachnS+7xULon8/bCPy5xYAoqVGm1XTwDLDvp
-1ENK2Lpn87FPltBOVW/tA4HQFSdWP+OAplLkaaqAUwd676eKCe3YD5QPtjfYJrx3
-d8jIipNUrxdW5zpqkDjCe1yUFgKzfivQRV4Spc37CLfkxf2opM5YVLerQdJn86dq
-6n9IuogcNCUXuQzEZPKt7Abv760GpqpNQfNoF2YnChEvfjzdOVSXlX2VW/GQ6Iwo
-9S6pLaLPrem04lOFpg1b+qNq58JCEuCcTi0KZr81RLqn8hHt2hyBpqffjSPwL3On
-wCk7pXkpz1B60IY2XANGYFhQaNZBAMcgItUgnBXFYcaZJsgzVmS/QQ97H0NL9cVJ
-fPeSZ7b7TzAv/XeJCnsBlcDORghDMQLsqbfq6meZfy25Lv7f4O11l4bvIoS07SQu
-nXnL+5M9u2J9jEqbmRdgX67I3XI0ROsq6sP6eBx9OZ1Z8tHu9idqsIXs6x8WtF/k
-v5CyoSSDjvZjOhMlZWuoJNuZxZLdcePangUBX5/sFnb+oRdyklFAR2cQJjJC21vH
-W3W0bNGAVIVe6F7S76aACxDYn4VphqOm4+KaOkvppVOHhuEwLMRdSYqh2V90szWT
-LZw+4Y9gE0/UNtiaujvT
-=GQJq
------END PGP SIGNATURE-----
-
---Apple-Mail=_39763AEA-1C12-4996-997C-C584EEB22D7C--
