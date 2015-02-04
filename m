@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:39926 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbbBFRsX (ORCPT
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:52547 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965839AbbBDPff convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 12:48:23 -0500
-Received: from g2t2353.austin.hp.com (g2t2353.austin.hp.com [15.217.128.52])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 8AC3E690B2
-	for <linux-wireless@vger.kernel.org>; Fri,  6 Feb 2015 17:48:22 +0000 (UTC)
-Message-ID: <54D4FE63.9020602@hp.com> (sfid-20150206_185023_913393_9A770373)
-Date: Fri, 06 Feb 2015 09:48:19 -0800
-From: Rick Jones <rick.jones2@hp.com>
+	Wed, 4 Feb 2015 10:35:35 -0500
+Received: by mail-lb0-f170.google.com with SMTP id w7so2161129lbi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2015 07:35:34 -0800 (PST)
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-CC: Neal Cardwell <ncardwell@google.com>,
+In-Reply-To: <1423052124.4741.0.camel@sipsolutions.net>
+References: <54CFF0B3.1060507@gmail.com>
+	<1422953213.2237.0.camel@sipsolutions.net>
+	<54D20B43.9060506@gmail.com>
+	<1423052124.4741.0.camel@sipsolutions.net>
+Date: Wed, 4 Feb 2015 17:35:33 +0200
+Message-ID: <CANUX_P0S+mf6gaC2yhGdoPn=dx2H17Hs1Xdi1SXM_es3KQCgRA@mail.gmail.com> (sfid-20150204_163543_856474_C1E0A2E5)
+Subject: Re: broken URLs of iwlwifi firmware tarballs
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?UTF-8?B?VmxhZGltw61yIMSMdW7DoXQ=?= <vcunat@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Eyal Perry <eyalpe@dev.mellanox.co.il>
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com> <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com> <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com> <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com> <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com> <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com> <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com> <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com> <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com> <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com> <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com> <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com> <CA+BoTQnEvF_mi68gyFns67oKC=8jEYdi3tLuW5dNj20KwUNs9A@mail.gmail.com> <1423233346.31870.136.camel@edumazet-glaptop2.roam.corp.google.com>
-In-Reply-To: <1423233346.31870.136.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Nix Dev <nix-dev@lists.science.uu.nl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> If you increase ability to flood on one flow, then you need to make sure
-> receiver has big rcvbuf as well.
+> On Wed, 2015-02-04 at 13:06 +0100, Vladimír Čunát wrote:
+>> On 02/03/2015 09:46 AM, Johannes Berg wrote:
+>> > I've fixed that now.
+>>
+>> Thanks!
+>>
+>> For future reference, is it the case that fetching from (c)git is the
+>> preferred way of distributing the firmware? (preferred by you, i.e.p
+>> *.kernel.org)
 >
-> echo 2000000 >/proc/sys/net/core/rmem_default
+> We publish both, so it doesn't really matter.
 >
-> Otherwise it might drop bursts.
->
-> This is the kind of things that TCP does automatically, not UDP.
 
-An alternative, if the application involved can make explicit 
-setsockopt() calls to set SO_SNDBUF and/or SO_RCVBUF, is to tweak 
-rmem_max and wmem_max and then let the application make the setsockopt() 
-calls.
-
-Which path one would take would depend on circumstances I suspect.
-
-rick jones
+Yeah but I typically publish on the git tree earlier since it is easier :)
+Not really significant though.
