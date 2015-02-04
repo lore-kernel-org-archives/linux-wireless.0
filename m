@@ -1,90 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:62516 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754169AbbBERKQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 12:10:16 -0500
-Message-ID: <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150205_181027_267426_0DE99631)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Thu, 05 Feb 2015 09:10:05 -0800
-In-Reply-To: <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
-	 <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from www.osadl.org ([62.245.132.105]:35390 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932318AbbBDHoN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 02:44:13 -0500
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Solomon Peachy <pizza@shaftnet.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] cw1200: use msecs_to_jiffies for conversion
+Date: Wed,  4 Feb 2015 02:39:49 -0500
+Message-Id: <1423035589-3647-1-git-send-email-hofrat@osadl.org> (sfid-20150204_084452_302128_932AC9FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-02-05 at 06:41 -0800, Eric Dumazet wrote:
+This is only an API consolidation to make things more readable.
+Instances of  HZ / CONST  are replaced by appropriate msecs_to_jiffies().
 
-> Not at all. This basically removes backpressure.
-> 
-> A single UDP socket can now blast packets regardless of SO_SNDBUF
-> limits.
-> 
-> This basically remove years of work trying to fix bufferbloat.
-> 
-> I still do not understand why increasing tcp_limit_output_bytes is not
-> working for you.
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
-Oh well, tcp_limit_output_bytes might be ok.
+Converting milliseconds to jiffies by "val * HZ / 1000" or passing
+HZ / 10 is technically OK but appropriate msecs_to_jiffies(val), respectively
+msecs_to_jiffies(100) is the cleaner solution and handles all corner cases 
+correctly. This is a minor API cleanup only.
 
-In fact, the problem comes from GSO assumption. Maybe Herbert was right,
-when he suggested TCP would be simpler if we enforced GSO...
+Patch was only compile tested for x86_64_defconfig + CONFIG_CW1200=m
 
-When GSO is used, the thing works because 2*skb->truesize is roughly 2
-ms worth of traffic.
+Patch is against 3.19.0-rc7 (localversion-next = -next-20150203)
 
-Because you do not use GSO, and tx completions are slow, we need this :
+ drivers/net/wireless/cw1200/scan.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index 65caf8b95e17..ac01b4cd0035 100644
---- a/net/ipv4/tcp_output.c
-+++ b/net/ipv4/tcp_output.c
-@@ -2044,7 +2044,8 @@ static bool tcp_write_xmit(struct sock *sk, unsigned int mss_now, int nonagle,
- 			break;
- 
- 		/* TCP Small Queues :
--		 * Control number of packets in qdisc/devices to two packets / or ~1 ms.
-+		 * Control number of packets in qdisc/devices to two packets /
-+		 * or ~2 ms (sk->sk_pacing_rate >> 9) in case GSO is off.
- 		 * This allows for :
- 		 *  - better RTT estimation and ACK scheduling
- 		 *  - faster recovery
-@@ -2053,7 +2054,7 @@ static bool tcp_write_xmit(struct sock *sk, unsigned int mss_now, int nonagle,
- 		 * of queued bytes to ensure line rate.
- 		 * One example is wifi aggregation (802.11 AMPDU)
- 		 */
--		limit = max(2 * skb->truesize, sk->sk_pacing_rate >> 10);
-+		limit = max(2 * skb->truesize, sk->sk_pacing_rate >> 9);
- 		limit = min_t(u32, limit, sysctl_tcp_limit_output_bytes);
- 
- 		if (atomic_read(&sk->sk_wmem_alloc) > limit) {
-
+diff --git a/drivers/net/wireless/cw1200/scan.c b/drivers/net/wireless/cw1200/scan.c
+index f2e276f..bff81b8 100644
+--- a/drivers/net/wireless/cw1200/scan.c
++++ b/drivers/net/wireless/cw1200/scan.c
+@@ -39,9 +39,9 @@ static int cw1200_scan_start(struct cw1200_common *priv, struct wsm_scan *scan)
+ 	cancel_delayed_work_sync(&priv->clear_recent_scan_work);
+ 	atomic_set(&priv->scan.in_progress, 1);
+ 	atomic_set(&priv->recent_scan, 1);
+-	cw1200_pm_stay_awake(&priv->pm_state, tmo * HZ / 1000);
++	cw1200_pm_stay_awake(&priv->pm_state, msecs_to_jiffies(tmo));
+ 	queue_delayed_work(priv->workqueue, &priv->scan.timeout,
+-			   tmo * HZ / 1000);
++			   msecs_to_jiffies(tmo));
+ 	ret = wsm_scan(priv, scan);
+ 	if (ret) {
+ 		atomic_set(&priv->scan.in_progress, 0);
+@@ -386,8 +386,8 @@ void cw1200_probe_work(struct work_struct *work)
+ 	if (down_trylock(&priv->scan.lock)) {
+ 		/* Scan is already in progress. Requeue self. */
+ 		schedule();
+-		queue_delayed_work(priv->workqueue,
+-				   &priv->scan.probe_work, HZ / 10);
++		queue_delayed_work(priv->workqueue, &priv->scan.probe_work,
++				   msecs_to_jiffies(100));
+ 		mutex_unlock(&priv->conf_mutex);
+ 		return;
+ 	}
+-- 
+1.7.10.4
 
