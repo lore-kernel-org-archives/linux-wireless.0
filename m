@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:38448 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750751AbbBFGuH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 01:50:07 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: ath9k: Delete an unnecessary check before the function
- call"relay_close"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <54D25CDC.3040405@users.sourceforge.net>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Message-Id: <20150206065007.0E82D140CC9@smtp.codeaurora.org> (sfid-20150206_075051_337622_980114A8)
-Date: Fri,  6 Feb 2015 06:50:07 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:54249 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751149AbbBDMP3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 07:15:29 -0500
+Message-ID: <1423052124.4741.0.camel@sipsolutions.net> (sfid-20150204_131532_310505_2C1C7824)
+Subject: Re: broken URLs of iwlwifi firmware tarballs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Vladim=C3=ADr_=C4=8Cun=C3=A1t?= <vcunat@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Nix Dev <nix-dev@lists.science.uu.nl>
+Date: Wed, 04 Feb 2015 13:15:24 +0100
+In-Reply-To: <54D20B43.9060506@gmail.com> (sfid-20150204_130629_942767_BA1AA591)
+References: <54CFF0B3.1060507@gmail.com>
+		 (sfid-20150202_224841_571486_202E34E5) <1422953213.2237.0.camel@sipsolutions.net>
+	 <54D20B43.9060506@gmail.com> (sfid-20150204_130629_942767_BA1AA591)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Wed, 4 Feb 2015 18:48:28 +0100
+On Wed, 2015-02-04 at 13:06 +0100, Vladimír Čunát wrote:
+> On 02/03/2015 09:46 AM, Johannes Berg wrote:
+> > I've fixed that now.
 > 
-> The relay_close() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
+> Thanks!
 > 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> For future reference, is it the case that fetching from (c)git is the 
+> preferred way of distributing the firmware? (preferred by you, i.e. 
+> *.kernel.org)
 
-Thanks, applied to wireless-drivers-next.git.
+We publish both, so it doesn't really matter.
 
-Kalle Valo
+johannes
+
