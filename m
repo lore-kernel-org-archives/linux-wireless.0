@@ -1,46 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:55251 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752368AbbBYMXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 07:23:36 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1YQb02-0002aK-Pt
-	for linux-wireless@vger.kernel.org; Wed, 25 Feb 2015 13:23:34 +0100
-Received: from 114.124.24.192 ([114.124.24.192])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 13:23:34 +0100
-Received: from jockyw2001 by 114.124.24.192 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 13:23:34 +0100
-To: linux-wireless@vger.kernel.org
-From: Jocky Wilson <jockyw2001@gmail.com>
-Subject: Re: brcmfmac43241b4-sdio / Thinkpad Tablet 10 issues
-Date: Wed, 25 Feb 2015 12:23:28 +0000 (UTC)
-Message-ID: <loom.20150225T131550-21@post.gmane.org> (sfid-20150225_132341_689770_3F52CF92)
-References: <54E2E1CD.5020203@m-labs.hk> <54E31CD5.70901@broadcom.com> <54E778F9.1000500@m-labs.hk>
+Received: from shards.monkeyblade.net ([149.20.54.216]:39336 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754268AbbBDW6L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 17:58:11 -0500
+Date: Wed, 04 Feb 2015 14:58:08 -0800 (PST)
+Message-Id: <20150204.145808.471111538111155797.davem@davemloft.net> (sfid-20150204_235818_618932_4E78408C)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2015-02-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1422971503.2237.4.camel@sipsolutions.net>
+References: <1422971503.2237.4.camel@sipsolutions.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sebastien Bourdeauducq <sb@...> writes:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 03 Feb 2015 14:51:43 +0100
 
+> Here's a last pull request for net-next - I hope it can still make it,
+> we fixed a fairly large number of issues. Also there's a bunch of new
+> ciphers, but see the details below.
 > 
-> On Tuesday, February 17, 2015 03:49 AM, Arend van Spriel wrote:
-> > So it is a one-off and not showing the issue you are seeing. Your issue
-> > seems to be due to failing firmware so you may need b5 firmware.
-> 
-> Making some progress :)
-> ...
-> I guess that the driver has bugs with decoding some of the data sent by 
-> the card.
-> 
-I can confirm this with my Thinkpad Tablet 8 
-which has same chip revision. 
-Arend: do you need anything else to be tested?
+> Let me know if there's any problem.
 
-/JockyW
-
-
+Pulled, thanks Johannes.
