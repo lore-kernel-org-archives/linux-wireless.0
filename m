@@ -1,46 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:47065 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754464AbbBTRWG (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:51345 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751656AbbBDCWg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2015 12:22:06 -0500
-Received: by wevm14 with SMTP id m14so6775097wev.13
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2015 09:22:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <loom.20150220T175341-637@post.gmane.org>
-References: <1424443813-13634-1-git-send-email-ap420073@gmail.com>
-	<loom.20150220T175341-637@post.gmane.org>
-Date: Sat, 21 Feb 2015 02:22:04 +0900
-Message-ID: <CAMArcTUCnxNY-cmDNSttOoBvQ1S35OeYQR6eAz5Aghe6cTto2Q@mail.gmail.com> (sfid-20150220_182211_479863_984B851F)
-Subject: Re: [PATCH] rtlwifi: rtl8192cu: Fix some beacon issue
-From: "ap420073 ." <ap420073@gmail.com>
-To: Mike Turner <miketurner.forum@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 3 Feb 2015 21:22:36 -0500
+Received: by mail-pa0-f54.google.com with SMTP id eu11so104020213pac.13
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 18:22:36 -0800 (PST)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: me@bobcopeland.com, Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH v4] mac80211: Allow 0 for NL80211_MESHCONF_PLINK_TIMEOUT to disable STA expiration
+Date: Wed,  4 Feb 2015 11:22:09 +0900
+Message-Id: <1423016529-4812-1-git-send-email-masashi.honma@gmail.com> (sfid-20150204_032242_077760_F0B21BD8)
+In-Reply-To: <CAFk-A4kSa=TznTNdtbWnUMaGWKM=WHYppfdyywagNMYS=VBcmQ@mail.gmail.com>
+References: <CAFk-A4kSa=TznTNdtbWnUMaGWKM=WHYppfdyywagNMYS=VBcmQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-02-21 1:58 GMT+09:00 Mike Turner <miketurner.forum@gmail.com>:
->
-> Taehee Yoo <ap420073@...> writes:
->
-> >
-> > Sometimes rtl8192cu is not sending beacon frame.
-> > This patch fix this issue.
-> >
-> > Signed-off-by: Taehee Yoo <ap420073@...>
->
->
->
-> Tried this and it doesn't help. Beacon transmission still isn't
-> consistent. Can hostapd have an effect on this?
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Both wpa_supplicant and mac80211 has inactivity timer. By default
+wpa_supplicant will be timed out in 5 minutes and mac80211's it is 30 minutes.
+If wpa_supplicant uses more long timer than mac80211, wpa_supplicant will get
+unexpected disconnection by mac80211. This patch adds functionality of disabling
+mac80211 inactivity timer to avoid to prevent wpa_supplicant inactivity timer.
 
+I have thought setting 0xffffffff to NL80211_MESHCONF_PLINK_TIMEOUT will solve
+this problem without this patch. But the approach does not work on 32 bit
+system. To explain the reason, I will show STA expiration rule in kernel. This
+is the expression.
 
+(current jiffies) > (frame Rx jiffies + NL80211_MESHCONF_PLINK_TIMEOUT * 250)
 
-can you tell me hostapd options and detailed situation?
+On 32bit system, right side could be over flow and be unexpected small value if
+NL80211_MESHCONF_PLINK_TIMEOUT is sufficiently large. STA expiration occurs by
+this reason. So I made this patch.
+
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ net/mac80211/mesh.c    | 3 ++-
+ net/wireless/nl80211.c | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 0c8b2a7..acf441f 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -574,7 +574,8 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	u32 changed;
+ 
+-	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
++	if (ifmsh->mshcfg.plink_timeout > 0)
++		ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
+ 	mesh_path_expire(sdata);
+ 
+ 	changed = mesh_accept_plinks_update(sdata);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e9ad9d9..bef52af 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5261,7 +5261,7 @@ do {									    \
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshAwakeWindowDuration,
+ 				  0, 65535, mask,
+ 				  NL80211_MESHCONF_AWAKE_WINDOW, nla_get_u16);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, plink_timeout, 1, 0xffffffff,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, plink_timeout, 0, 0xffffffff,
+ 				  mask, NL80211_MESHCONF_PLINK_TIMEOUT,
+ 				  nla_get_u32);
+ 	if (mask_out)
+-- 
+2.1.0
+
