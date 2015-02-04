@@ -1,88 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:57473 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751832AbbBWXN1 (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:63624 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933853AbbBDN3w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 18:13:27 -0500
-Date: Tue, 24 Feb 2015 01:13:23 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: AR9462 problems connecting again..
-Message-ID: <20150223231323.GA31115@w1.fi> (sfid-20150224_001330_916589_D5702F49)
-References: <CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
- <CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
- <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
- <20150223171700.GA29730@w1.fi>
- <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
- <20150223213050.GA23232@w1.fi>
- <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
- <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
- <20150223224305.GA30228@w1.fi>
- <CA+55aFzpmD+XOF4PTePgi6WnRTyXbVUQxc7kgwvmFbfG_2VoTg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFzpmD+XOF4PTePgi6WnRTyXbVUQxc7kgwvmFbfG_2VoTg@mail.gmail.com>
+	Wed, 4 Feb 2015 08:29:52 -0500
+Message-ID: <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150204_143000_468702_B2AAE062)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Wed, 04 Feb 2015 05:29:51 -0800
+In-Reply-To: <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 23, 2015 at 03:00:39PM -0800, Linus Torvalds wrote:
-> On Mon, Feb 23, 2015 at 2:43 PM, Jouni Malinen <j@w1.fi> wrote:
-> >
-> > This did not get exactly supportive response when this was proposed last
-> > time (Sep 2013). Anyway, for a quick test, this can be done with the
-> > following one-liner:
+On Wed, 2015-02-04 at 05:16 -0800, Eric Dumazet wrote:
+> OK guys
 > 
-> fwiw, that one-liner seems to work fine for me.
-
-Good to know. That seems to confirm that the issue is most likely in
-some of the higher HT rates not working with that AP for some reason at
-least for EAPOL frames immediately following the association. This
-should really have worked since I'm pretty sure minstrel will add a
-lower MCS index as a fallback rate, but maybe there are some interop
-issues or just close enough to being below the required signal strength
-(though, I'd find that somewhat unlikely unless there is something
-messed up with the antennas etc. taken into account your description on
-how close the devices are and what's between them).
-
-> Side note: I've done the "turn off wifi and turn it back on" several
-> times to test that patch, and it has worked every time. BUT I also see
-> this odd behavior where the logs show that it tries to authenticate
-> twice: the first time it does that "send auth to 20:9f .." thing three
-> times (looks like 100ms apart), and nothing happens so it does
-> "authentication with 20:9f .. timed out". Then it waits three seconds
-> and tries again, and now it succeeds on the first try.
+> Using a mlx4 testbed I can reproduce the problem by pushing coalescing
+> settings and disabling SG (thus disabling GSO)
 > 
-> The only downside of that seems to be that it takes an extra 3s to
-> connect to the network - but it does now seem to *reliably* connect -
-> so it's not a big problem, but I wonder why it should be that
-> repeatable. Is there some difference between the first and the second
-> time it tries to authenticate?
+> ethtool -K eth0 sg off
+> Actual changes:
+> scatter-gather: off
+> 	tx-scatter-gather: off
+> generic-segmentation-offload: off [requested on]
+> 
+> ethtool -C eth0 tx-usecs 1024 tx-frames 64
+> 
+> Meaning that NIC waits one ms before sending the TX IRQ,
+> and can accumulate 64 frames before forcing the interrupt.
+> 
+> We probably have a bug in cwnd expansion logic :
+> 
+> lpaa23:~# DUMP_TCP_INFO=1 ./netperf -H 10.246.7.152 -Cc
+> MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 10.246.7.152 () port 0 AF_INET
+> rto=201000 ato=0 pmtu=1500 rcv_ssthresh=29200 rtt=230 rttvar=30 snd_ssthresh=41 cwnd=59 reordering=3 total_retrans=1 ca_state=0 pacing_rate=5943.1 Mbits
+> Recv   Send    Send                          Utilization       Service Demand
+> Socket Socket  Message  Elapsed              Send     Recv     Send    Recv
+> Size   Size    Size     Time     Throughput  local    remote   local   remote
+> bytes  bytes   bytes    secs.    10^6bits/s  % S      % S      us/KB   us/KB
+> 
+>  87380  16384  16384    10.00       530.39   0.40     0.32     2.965   2.398  
+> 
+> 
+> -> final cwnd=59 which is not enough to avoid the 1ms delay between each
+> burst. 
+> 
+> So sender sends ~60 packets, then has to wait 1ms (to get NIC TX IRQ)
+> before sending the following burst.
+> 
+> I am CCing Neal, he probably can help to root cause the problem.
 
-There have been some issues in this area in the past, but it is a bit
-difficult to say what could have caused it here without a wireless
-capture from the operating channel of the AP. It is possible that those
-Authentication frames were not actually transmitted due to some issue or
-they could have even been sent out on incorrect channel, etc. That
-shouldn't really happen that frequently (i.e., others should be seeing
-and reporting this as well..), but it's possible something gets messed
-up in channel configuration.
+Arg, this was with net-next, ie not including our recent stretch ack
+fixes.
 
-> Anyway, even if people don't like that particular patch, it does seem
-> like *something* like that should be done.
+Using David Miller 'net' tree, cwnd seems OK.
 
-Agreed. Just need to figure out a suitable compromise somewhere in the
-middle of the minimum and close-to-maximum rates. As far as ath9k is
-concerned, it would actually support four different rates for retry
-series where minstrel uses only three, so it would be easy even for that
-driver on its own to add a lower rate at the end if we cannot find
-consensus on something more generic in mac80211. That said, I'd rather
-see minstrel getting more conservative for EAPOL frames.
+Speed is low because of 64 queued frames are exceeding
+tcp_limit_output_bytes
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+lpaa23:~# cat /proc/sys/net/ipv4/tcp_limit_output_bytes
+131072
+lpaa23:~# DUMP_TCP_INFO=1 ./netperf -H 10.246.7.152 -Cc
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 10.246.7.152 () port 0 AF_INET
+rto=201000 ato=0 pmtu=1500 rcv_ssthresh=29200 rtt=166 rttvar=16 snd_ssthresh=26 cwnd=59 reordering=3 total_retrans=0 ca_state=0 pacing_rate=8203.52 Mbits
+Recv   Send    Send                          Utilization       Service Demand
+Socket Socket  Message  Elapsed              Send     Recv     Send    Recv
+Size   Size    Size     Time     Throughput  local    remote   local   remote
+bytes  bytes   bytes    secs.    10^6bits/s  % S      % S      us/KB   us/KB
+
+ 87380  16384  16384    10.00       569.96   0.52     0.38     3.588   2.625  
+
+
+lpaa23:~# echo 262144 >/proc/sys/net/ipv4/tcp_limit_output_bytes
+lpaa23:~# DUMP_TCP_INFO=1 ./netperf -H 10.246.7.152 -Cc
+MIGRATED TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to 10.246.7.152 () port 0 AF_INET
+rto=201000 ato=0 pmtu=1500 rcv_ssthresh=29200 rtt=98 rttvar=18 snd_ssthresh=312 cwnd=313 reordering=3 total_retrans=23 ca_state=0
+Recv   Send    Send                          Utilization       Service Demand
+Socket Socket  Message  Elapsed              Send     Recv     Send    Recv
+Size   Size    Size     Time     Throughput  local    remote   local   remote
+bytes  bytes   bytes    secs.    10^6bits/s  % S      % S      us/KB   us/KB
+
+ 87380  16384  16384    10.00      8518.40   2.60     1.57     1.200   0.727  
+
+
+
+
