@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38491 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888AbbBJRBN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 12:01:13 -0500
-Message-ID: <54DA3957.10402@candelatech.com> (sfid-20150210_180116_646464_25E2D698)
-Date: Tue, 10 Feb 2015 09:01:11 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:54389 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754208AbbBDMz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 07:55:26 -0500
+Message-ID: <1423054520.4741.2.camel@sipsolutions.net> (sfid-20150204_135534_224162_DF59142C)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matti Laakso <malaakso@elisanet.fi>
-Subject: Re: [RFT] ath10k: restart fw on tx-credit timeout
-References: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com> <54D4E89A.7040602@candelatech.com> <CA+BoTQ=HqyGKOBdOmpWOn_VjH1UTWF9nN_PE0uanaGsdeJmB6Q@mail.gmail.com> <54D8DA6F.7040805@candelatech.com> <CA+BoTQk9C_7efUs6VTZrEz5ECxsvCgfA8ObrAXKjqMpTL8pggA@mail.gmail.com>
-In-Reply-To: <CA+BoTQk9C_7efUs6VTZrEz5ECxsvCgfA8ObrAXKjqMpTL8pggA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Wed, 04 Feb 2015 13:55:20 +0100
+In-Reply-To: <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com> (sfid-20150204_135320_650134_35405608)
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 (sfid-20150204_135320_650134_35405608)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2015 10:09 PM, Michal Kazior wrote:
-> On 9 February 2015 at 17:03, Ben Greear <greearb@candelatech.com> wrote:
->> On 02/08/2015 10:24 PM, Michal Kazior wrote:
->>> On 6 February 2015 at 17:15, Ben Greear <greearb@candelatech.com> wrote:
-> [...]
->>>> At least in my tests, I could continue
->>>> to receive network traffic while WMI was blocked.
->>>
->>>
->>> Yeah. Traffic works with the tx-credit starvation as well but what
->>> good is this if you have inconsistent driver-firmware state after
->>> failing to send a few commands?
->>
->>
->> I just mention it because someone debugging the system might
->> wonder why the firmware is 'locked up' while it is still passing traffic.
-> 
-> I might as well include this info in the commit log.
-> 
-> 
->> If it is just powersave issue, could you force (overriding wmi tx-credits
->> limit)
->> a flush at the 1 second mark and hope it recovers by 3 second timeout?
-> 
-> Well, there's a couple of problems with that.
-> 
-> 1) you suggest to call wmi_flush() which calls wmi_cmd_send() *while*
-> in wmi_cmd_send(),
-> 2) you're out of credits, how do you intend to submit a frame,
-> 3) yes, you can force it, but that's super ugly,
-> 4) and this still doesn't guarantee you'll get your tx-credit due to
-> firmware quirkiness.
+On Wed, 2015-02-04 at 13:53 +0100, Michal Kazior wrote:
 
-If you do force the wmi send, ignoring credits, and even if you are running
-stock firmware with wmi credits replenishment issues, then you at least
-have a chance of recovering.  (Upstream firmware requires lots of WMI messages
-to flush, I think..like you can only flush per peer or something like that,
-so maybe there is no realistic way to flush with small number of WMI messages.)
+> The hardware itself seems to be capable. The firmware is a problem
+> though. I'm also not sure if mac80211 can handle this as is. No 802.11
+> driver seems to support SG except wil6210 which uses cfg80211 and
+> netdevs directly.
 
-I've hacked CT firmware to do a flush of all vdevs itself when it detects WMI hang.
-I don't have a good test bed to reproduce the problem reliably, but I should know
-after a few days if the flush works at all.  If not, then it's a moot point anyway.
+mac80211 cannot deal with this right now. This would make a good topic
+for the workshop since there's interest elsewhere in this as well. It's
+probably not terribly hard to do as far as mac80211 is concerned.
 
-Thanks,
-Ben
+How much offload do you really have though? Sometimes people just want
+to build A-MSDUs.
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
 
