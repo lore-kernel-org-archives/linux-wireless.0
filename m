@@ -1,116 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:56115 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239AbbBXQ6g convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:47137 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757689AbbBENoD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 11:58:36 -0500
-Received: by mail-oi0-f45.google.com with SMTP id i138so20379672oig.4
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 08:58:36 -0800 (PST)
+	Thu, 5 Feb 2015 08:44:03 -0500
+Received: by mail-wi0-f181.google.com with SMTP id fb4so10634308wid.2
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2015 05:44:01 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20150224102611.GA30806@w1.fi>
-References: <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
-	<20150223171700.GA29730@w1.fi>
-	<CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
-	<20150223213050.GA23232@w1.fi>
-	<CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
-	<CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
-	<20150223224305.GA30228@w1.fi>
-	<21739.50662.902775.901924@gargle.gargle.HOWL>
-	<CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com>
-	<CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>
-	<20150224102611.GA30806@w1.fi>
-Date: Tue, 24 Feb 2015 08:58:35 -0800
-Message-ID: <CAA93jw6uQhcSmK7r_YK=0iS07N18_eyngP4xTardRkHgyuQqfA@mail.gmail.com> (sfid-20150224_175840_107054_CB7574EB)
-Subject: Re: [ath9k-devel] AR9462 problems connecting again..
-From: Dave Taht <dave.taht@gmail.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: Andrew McGregor <andrewmcgr@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	<1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	<1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+Date: Thu, 5 Feb 2015 14:44:01 +0100
+Message-ID: <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com> (sfid-20150205_144414_688722_9B8E5DB6)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 2:26 AM, Jouni Malinen <j@w1.fi> wrote:
-> On Tue, Feb 24, 2015 at 01:29:27PM +1100, Andrew McGregor wrote:
->> Over the weekend I found a bug in minstrel-ht that might well be
->> implicated here.
+On 5 February 2015 at 14:19, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> On Thu, 2015-02-05 at 04:57 -0800, Eric Dumazet wrote:
+>
+>> The intention is to control the queues to the following :
 >>
->> The last retransmit rate is meant to be a 'get the packet there
->> reliably' rate; minstrel-ht doesn't do that right, and can pick a
->> fairly flaky rate instead.
+>> 1 ms of buffering, but limited to a configurable value.
 >>
->> Can't generate a proper patch right now, so this diff might not apply
->> cleanly, but the fix is simply to change 75 to 99 in the two places
->> below:
+>> On a 40Gbps flow, 1ms represents 5 MB, which is insane.
+>>
+>> We do not want to queue 5 MB of traffic, this would destroy latencies
+>> for all concurrent flows. (Or would require having fq_codel or fq as
+>> packet schedulers, instead of default pfifo_fast)
+>>
+>> This is why having 1.5 ms delay between the transmit and TX completion
+>> is a problem in your case.
+
+I do get your point. But 1.5ms is really tough on Wi-Fi.
+
+Just look at this:
+
+; ping 192.168.1.2 -c 3
+PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.
+64 bytes from 192.168.1.2: icmp_seq=1 ttl=64 time=1.83 ms
+64 bytes from 192.168.1.2: icmp_seq=2 ttl=64 time=2.02 ms
+64 bytes from 192.168.1.2: icmp_seq=3 ttl=64 time=1.98 ms
+
+; ping 192.168.1.2 -c 3 -Q 224
+PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.
+64 bytes from 192.168.1.2: icmp_seq=1 ttl=64 time=0.939 ms
+64 bytes from 192.168.1.2: icmp_seq=2 ttl=64 time=0.906 ms
+64 bytes from 192.168.1.2: icmp_seq=3 ttl=64 time=0.946 ms
+
+This was run with no load so batching code in the driver itself should
+have no measurable effect. The channel was near-ideal: low noise
+floor, cabled rf, no other traffic.
+
+The lower latency ping is when 802.11 QoS Voice Access Category is
+used. I also get 400mbps instead of 250mbps in this case with 5 flows
+(net/master).
+
+Dealing with black box firmware blobs is a pain.
+
+
+> Note that TCP stack could detect when this happens, *if* ACK where
+> delivered before the TX completions, or when TX completion happens,
+> we could detect that the clone of the freed packet was freed.
 >
-> While this may indeed be helpful, I don't think it is sufficient for
-> this EAPOL frame related issue. What I would like to see is minstrel_ht
-> using a basic rate (something non-HT) at the end of the retry series for
-> EAPOL frames.
+> In my test, when I did "ethtool -C eth0 tx-usecs 1024 tx-frames 64", and
+> disabling GSO, TCP stack sends a bunch of packets (a bit less than 64),
+> blocks on tcp_limit_output_bytes.
 >
-> The current behavior looks very suspicious to me. The early EAPOL frames
-> after association are being used to probe for higher rates. This results
-> in the total number of retry attempts actually getting smaller than any
-> other frame, i.e., minstrel_ht seems to be using significantly _less_
-> robust choices for the EAPOL frames than following "normal" data frames!
-> This should really be the other way around..
+> Then we receive 2 stretch ACKS after ~50 usec.
 >
-> As an example, I'm seeing this on 5 GHz band (with the 75 to 99 change
-> in place, but behavior was more or less identical without it):
-> - the first EAPOL frame (msg 2/4) getting one attempt at MCS 3, 2
->   attempts at MCS 0, 2 attempts at MCS 0 (yes, identical to the previous
->   one) with total maximum of 5 attempts
-> - the second EAPOL frame (msg 4/4) getting one attempt at MCS 9, 2
->   attempts at MCS 0, 2 attempts at MCS 0 with total maximum of 5
->   attempts
-> - another data frame after this: 5 attempts at MCS 9, 5 attempts at MCS
->   3, 5 attempts at MCS 3 with total maximum of 15 attempts(!!)
-
-I would in general prefer that the excessive retries in the present
-driver layers in wifi be
-dramatically reduced, the packet dropped and the problem punted to
-higher layers.
-
-> This cannot be the best approach here..
-
-Falling back faster to the lowest possible rate with minimum retries,
-and then giving up sooner would be better. 15 attempts? jeeze....
-
-> For the
-> IEEE80211_TX_CTRL_PORT_CTRL_PROTO cases, there are identified issues
-> where failing to deliver the frame results is significant issues either
-> in getting connected in the first place or getting disconnected if
-> rekeying fails.
+> TCP stack tries to push again some packets but blocks on
+> tcp_limit_output_bytes again.
 >
-> I'm not sure how this would be implemented cleanly in minstrel_ht or
-> whether that is even the best place (i.e., rate.c could do this
-> instead), but I'd like that third attempt for control port cases to be
-> dropped to use a (lowish) basic rate and non-MCS at that since there may
-> be some interop issues with HT MCS early during association.
-> Alternatively with drivers like ath9k that support 4 rate values, it
-> would also be fine to add this basic rate attempt (or well, I'd have
-> multiple, say 4, such attempts) as an additional 4th entry which does
-> not currently seem to get used with minstrel at all.
+> 1ms later, TX completion happens, tcp_wfree() is called, and TCP stack
+> push following ~60 packets.
 >
-> The "(lowish) basic rate" here could be defined as 6 Mbps OFDM for 5 GHz
-> band and either that or maybe even 2 Mbps or 5.5 Mbps on 2.4 GHz (if
-> included by the AP in basic rate set).
 >
-> --
-> Jouni Malinen                                            PGP id EFC895FA
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+> TCP could  eventually dynamically adjust the tcp_limit_output_bytes,
+> using a per flow dynamic value, but I would rather not add a kludge in
+> TCP stack only to deal with a possible bug in ath10k driver.
+>
+> niu has a similar issue and simply had to call skb_orphan() :
+>
+> drivers/net/ethernet/sun/niu.c:6669:            skb_orphan(skb);
+
+Ok. I tried calling skb_orphan() right after I submit each Tx frame
+(similar to niu which does this in start_xmit):
+
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -564,6 +564,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct
+sk_buff *msdu)
+        if (res)
+                goto err_unmap_msdu;
+
++       skb_orphan(msdu);
++
+        return 0;
+
+ err_unmap_msdu:
 
 
+Now, with {net/master + ath10k GRO + the above} I get 620mbps on a
+single flow (even better then before). Wow.
 
--- 
-Dave Täht
-Let's make wifi fast, less jittery and reliable again!
+Does this look ok/safe as a solution to you?
 
-https://plus.google.com/u/0/107942175615993706558/posts/TVX3o84jjmb
+
+Michał
