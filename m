@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49822 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:31435 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752848AbbBXKCg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:02:36 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH 5/8] NFC: NCI: Don't call setup if previous NCI request failed
-Date: Tue, 24 Feb 2015 12:01:49 +0200
-Message-Id: <1424772112-27399-6-git-send-email-robert.dolca@intel.com> (sfid-20150224_110534_812612_3D91E2BA)
-In-Reply-To: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+	id S1757212AbbBEL4r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Feb 2015 06:56:47 -0500
+Message-ID: <54D35A76.4010801@linux.intel.com> (sfid-20150205_125708_023460_A6AF255D)
+Date: Thu, 05 Feb 2015 19:56:38 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: brudley@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54C5AA8C.4010005@linux.intel.com> <87vbjjw3bc.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87vbjjw3bc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the previous nci_request (NCI reset) failed the setup function
-was being called anyway. It shouldn't be called if the reset failed.
 
-The result of the setup function is taken into consideration. If it
-fails the init should fail.
+On 2015/2/3 21:08, Kalle Valo wrote:
+> "Fu, Zhonghui" <zhonghui.fu@linux.intel.com> writes:
+>
+>> >From ff39ed4af9f1c50358fe92ec4c8eaac9db183e00 Mon Sep 17 00:00:00 2001
+>> From: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+>> Date: Mon, 26 Jan 2015 10:13:21 +0800
+>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>>
+>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>> twice suspend/resume operations for one WiFi chip to do
+>> the same things. This patch avoid this case.
+>>
+>> Acked-by: Arend van Spriel<arend@broadcom.com>
+>> Signed-off-by: Zhonghui Fu <zhonghui.fu@linux.intel.com>
+> This doesn't apply:
+>
+> Applying: brcmfmac: avoid duplicated suspend/resume operation
+> Using index info to reconstruct a base tree...
+> Falling back to patching base and 3-way merge...
+> Auto-merging drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> CONFLICT (content): Merge conflict in drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> Failed to merge in the changes.
+> Patch failed at 0001 brcmfmac: avoid duplicated suspend/resume operation
+>
+> BTW, when you resend a patch please use "[PATCH v2]" (or v3, v4...) in
+> the Subject field.
+Just see your comments, so please ignore my inquiry in last mail. I will re-base this patch again.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
----
- net/nfc/nci/core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 1a449ac..d2e7adf 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -365,8 +365,8 @@ static int nci_open_device(struct nci_dev *ndev)
- 	rc = __nci_request(ndev, nci_reset_req, 0,
- 			   msecs_to_jiffies(NCI_RESET_TIMEOUT));
- 
--	if (ndev->ops->setup)
--		ndev->ops->setup(ndev);
-+	if (!rc && ndev->ops->setup)
-+		rc = ndev->ops->setup(ndev);
- 
- 	if (!rc) {
- 		rc = __nci_request(ndev, nci_init_req, 0,
--- 
-1.9.1
+Thanks,
+Zhonghui
 
