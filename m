@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:60333 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752841AbbBMPgn (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:43681 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751523AbbBECTX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 10:36:43 -0500
-From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-Subject: [PATCH v2] ath10k: Increase AST table SKID length limit
-Date: Fri, 13 Feb 2015 21:06:16 +0530
-Message-ID: <1423841776-16288-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150213_163649_267647_F7E7574B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 4 Feb 2015 21:19:23 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 09/10] mac80211: reduce calculation costs of EWMA
+Date: Thu,  5 Feb 2015 03:13:19 +0100
+Message-Id: <1423102400-9693-10-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150205_031928_438437_3861E809)
+In-Reply-To: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current SKID length configuration causes firmware
-to reject peer creation for not able to allocate
-AST entries for peers. This issue is observed when
-least significant 3 bytes are used ramdomly to create
-client MAC addresses.
+This patch reduces the calculation costs of the EWMA macro from
+"2x multiplication and 1 addition" down to "1x multiplication and
+2 additions". This slightly improves performance depending on the
+CPU architecture.
 
-AST table SKID length configuration is increased to
-maximum value to fix this issue.
-
-Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/ath/ath10k/hw.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/rc80211_minstrel.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 460771f..7f04645 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -223,7 +223,7 @@ struct ath10k_pktlog_hdr {
- #define TARGET_10X_NUM_WDS_ENTRIES		32
- #define TARGET_10X_DMA_BURST_SIZE		0
- #define TARGET_10X_MAC_AGGR_DELIM		0
--#define TARGET_10X_AST_SKID_LIMIT		16
-+#define TARGET_10X_AST_SKID_LIMIT		128
- #define TARGET_10X_NUM_STATIONS			128
- #define TARGET_10X_NUM_PEERS			((TARGET_10X_NUM_STATIONS) + \
- 						 (TARGET_10X_NUM_VDEVS))
---
-1.9.1
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index d047610..16b6e36 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -27,7 +27,12 @@
+ static inline int
+ minstrel_ewma(int old, int new, int weight)
+ {
+-	return (new * (EWMA_DIV - weight) + old * weight) / EWMA_DIV;
++	int diff, incr;
++
++	diff = new - old;
++	incr = (EWMA_DIV - weight) * diff / EWMA_DIV;
++
++	return old + incr;
+ }
+ 
+ struct minstrel_rate_stats {
+-- 
+2.2.2
 
