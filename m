@@ -1,79 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f194.google.com ([209.85.212.194]:48640 "EHLO
-	mail-wi0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933111AbbBITMe (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:40752 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757361AbbBEOl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 14:12:34 -0500
-Received: by mail-wi0-f194.google.com with SMTP id hm9so2840742wib.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 11:12:33 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH fix for v3.20] staging: vt6655: vnt_tx_packet fix dma_idx selection.
-Date: Mon,  9 Feb 2015 19:11:33 +0000
-Message-Id: <1423509094-4548-1-git-send-email-tvboxspy@gmail.com> (sfid-20150209_201238_158778_017C6EEF)
+	Thu, 5 Feb 2015 09:41:29 -0500
+Message-ID: <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150205_154136_159582_EB2E11F8)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Thu, 05 Feb 2015 06:41:26 -0800
+In-Reply-To: <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is still a problem that dma_idx is causing packets to
-go onto the wrong tx path.
+On Thu, 2015-02-05 at 14:44 +0100, Michal Kazior wrote:
 
-Protect dma_idx fully with the present first lock and
-use pTDInfo->byFlags TD_FLAGS_NETIF_SKB to set MACvTransmit.
+> Ok. I tried calling skb_orphan() right after I submit each Tx frame
+> (similar to niu which does this in start_xmit):
+> 
+> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
+> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+> @@ -564,6 +564,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct
+> sk_buff *msdu)
+>         if (res)
+>                 goto err_unmap_msdu;
+> 
+> +       skb_orphan(msdu);
+> +
+>         return 0;
+> 
+>  err_unmap_msdu:
+> 
+> 
+> Now, with {net/master + ath10k GRO + the above} I get 620mbps on a
+> single flow (even better then before). Wow.
+> 
+> Does this look ok/safe as a solution to you?
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/device_main.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+Not at all. This basically removes backpressure.
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 4324282..f5c5872 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1187,12 +1187,14 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	PSTxDesc head_td;
--	u32 dma_idx = TYPE_AC0DMA;
-+	u32 dma_idx;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
--	if (!ieee80211_is_data(hdr->frame_control))
-+	if (ieee80211_is_data(hdr->frame_control))
-+		dma_idx = TYPE_AC0DMA;
-+	else
- 		dma_idx = TYPE_TXDMA0;
- 
- 	if (AVAIL_TD(priv, dma_idx) < 1) {
-@@ -1206,6 +1208,9 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	head_td->pTDInfo->skb = skb;
- 
-+	if (dma_idx == TYPE_AC0DMA)
-+		head_td->pTDInfo->byFlags = TD_FLAGS_NETIF_SKB;
-+
- 	priv->iTDUsed[dma_idx]++;
- 
- 	/* Take ownership */
-@@ -1234,13 +1239,10 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	head_td->buff_addr = cpu_to_le32(head_td->pTDInfo->skb_dma);
- 
--	if (dma_idx == TYPE_AC0DMA) {
--		head_td->pTDInfo->byFlags = TD_FLAGS_NETIF_SKB;
--
-+	if (head_td->pTDInfo->byFlags & TD_FLAGS_NETIF_SKB)
- 		MACvTransmitAC0(priv->PortOffset);
--	} else {
-+	else
- 		MACvTransmit0(priv->PortOffset);
--	}
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
- 
--- 
-2.1.0
+A single UDP socket can now blast packets regardless of SO_SNDBUF
+limits.
+
+This basically remove years of work trying to fix bufferbloat.
+
+I still do not understand why increasing tcp_limit_output_bytes is not
+working for you.
+
+
+
 
