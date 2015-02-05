@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:51506 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752490AbbBLWvO (ORCPT
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:35336 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755645AbbBEOso (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 17:51:14 -0500
-Received: by mail-ob0-f170.google.com with SMTP id va2so13721939obc.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2015 14:51:14 -0800 (PST)
-Received: from linux.site ([69.76.245.152])
-        by mx.google.com with ESMTPSA id ve6sm2888509obb.2.2015.02.12.14.51.13
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 12 Feb 2015 14:51:13 -0800 (PST)
-Message-ID: <54DD2E60.50509@lwfinger.net> (sfid-20150212_235121_276360_3ECAA8FE)
-Date: Thu, 12 Feb 2015 16:51:12 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce kernel panics since 3.17(?)
-References: <20150212121057.GA1804@leeloo.kyriasis.com> <54DCD708.3070402@lwfinger.net> <20150212172753.GA17043@leeloo.kyriasis.com> <54DCF71A.8030207@lwfinger.net> <20150212215457.GA23894@leeloo.kyriasis.com>
-In-Reply-To: <20150212215457.GA23894@leeloo.kyriasis.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Thu, 5 Feb 2015 09:48:44 -0500
+Message-ID: <1423147722.31870.65.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150205_154849_704308_4F25160D)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Thu, 05 Feb 2015 06:48:42 -0800
+In-Reply-To: <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/12/2015 03:54 PM, Johannes Löthberg wrote:
-> On 12/02, Larry Finger wrote:
->> OK, that makes more sense than your original report of problems starting with
->> 3.16 or 3.17. That bug was fixed in 3.18.4.
->>
->
-> Well, I'm rather sure that I had some panics in 3.17 due to it, but I have no
-> photographic evidence anymore alas. And d'oh, should have tried a newer kernel
-> before sending it in, was meaning to report it for a while but never ended up
-> to, sorry.
->
-> Any idea about the third kernel panic photo?
+On Thu, 2015-02-05 at 14:44 +0100, Michal Kazior wrote:
 
-Trying to trace it back on my kernel leads to a nonsense location. If it happens 
-again, capture the trace as you did, then find the location in one of the rtl* 
-routines that crashed. In the picture you sent, that is 
-"_rtl_pci_interrupt+0x3d0" and that is in rtl_pci. To find the code section that 
-crashed, start in the kernel source directory and do the following:
+> I do get your point. But 1.5ms is really tough on Wi-Fi.
+> 
+> Just look at this:
+> 
+> ; ping 192.168.1.2 -c 3
+> PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.
+> 64 bytes from 192.168.1.2: icmp_seq=1 ttl=64 time=1.83 ms
+> 64 bytes from 192.168.1.2: icmp_seq=2 ttl=64 time=2.02 ms
+> 64 bytes from 192.168.1.2: icmp_seq=3 ttl=64 time=1.98 ms
 
-gdb drivers/net/wireless/rtlwifi/rtl_pci.ko
-l *_rtl_pci_interrupt+0x3d0
-quit
+Thats a different point.
 
-Adjust the driver and location to match the new crash. Send me the output of the 
-"l" command.
+I dont care about rtt but TX completions. (usually much much lower than
+rtt)
 
-Larry
+I can have a 4 usec delay from the moment a NIC submits a packet to the
+wire and I get TX completion IRQ, free the packet.
+
+Yet the pong reply can come 100 ms later.
+
+It does not mean the 4 usec delay is a problem.
+
 
 
