@@ -1,75 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:64914 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759522AbbBIVH2 (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:39581 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754133AbbBEEtl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 16:07:28 -0500
-Received: by mail-qa0-f50.google.com with SMTP id f12so4676325qad.9
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 13:07:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAJAp7OhcFTuYfc7JOKW1SrVRbucuSWg5jcFaoVnSDgBxsyo2ng@mail.gmail.com>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net>
-	<CAJAp7OhcFTuYfc7JOKW1SrVRbucuSWg5jcFaoVnSDgBxsyo2ng@mail.gmail.com>
-Date: Tue, 10 Feb 2015 05:07:28 +0800
-Message-ID: <CAAfg0W6dPupGLgwDF5FtNqEFvC4Y+GvFBAmXWcUQwXr2y6KugQ@mail.gmail.com> (sfid-20150209_220732_643856_7D77F026)
-Subject: Re: [PATCH 6/7] net: wireless: wcn36xx: remove powersaving for wcn3620
-From: Andy Green <andy.green@linaro.org>
-To: Bjorn Andersson <bjorn@kryo.se>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 4 Feb 2015 23:49:41 -0500
+Received: from [117.199.130.171] (port=13666 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YJENo-002ASp-O8
+	for linux-wireless@vger.kernel.org; Wed, 04 Feb 2015 23:49:41 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/7] ath9k: Fix descriptors for keep-alive frame
+Date: Thu,  5 Feb 2015 10:22:38 +0530
+Message-Id: <1423111964-19626-2-git-send-email-sujith@msujith.org> (sfid-20150205_054952_110576_715F35D7)
+In-Reply-To: <1423111964-19626-1-git-send-email-sujith@msujith.org>
+References: <1423111964-19626-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 February 2015 at 01:54, Bjorn Andersson <bjorn@kryo.se> wrote:
-> On Sat, Jan 17, 2015 at 9:11 PM, Andy Green <andy.green@linaro.org> wrote:
->> WCN3620 powersaving mode is not stable.  Disable it if we're
->> on a wcn3620 chip type.
->>
->> Signed-off-by: Andy Green <andy.green@linaro.org>
->> ---
->>  drivers/net/wireless/ath/wcn36xx/main.c |    4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
->> index c4178c7..569d45b 100644
->> --- a/drivers/net/wireless/ath/wcn36xx/main.c
->> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
->> @@ -924,6 +924,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
->>                 IEEE80211_HW_AMPDU_AGGREGATION |
->>                 IEEE80211_HW_TIMING_BEACON_ONLY;
->>
->> +       /* 3620 powersaving currently unstable */
->> +       if (wcn->chip_version == WCN36XX_CHIP_3620)
->> +               wcn->hw->flags &= ~IEEE80211_HW_SUPPORTS_PS;
->> +
->
-> Hi Andy,
->
-> I have the same problem (Data Abort Exception in wcnss) on 3680, this
-> with my wip smd code and a hacked up remoteproc-pil. I haven't spent
-> any effort on debugging this, but it looks like it's something related
-> to what we have ported to mainline (or lack thereof) rather than a
-> 3620 specific issue.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Makes sense since I only have 3620, I assumed it's related to that.
+Along with AR9462, AR9565 also has an extra field
+in the TX descriptor which needs to be zeroed out
+for the keep alive frame. This makes the earlier
+REG_WRITE redundant, so it can be removed.
 
-However he can work for a while with powersaving on, but ping
-latencies are +600-800ms and he's shaky.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_wow.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-Later I found something mac80211 generic scan preparation or post-scan
-code (for scan initiated by wpa_supplicant) is able to stop wlan
-traffic after a few goes even if the actual scan mode smd is not sent.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_wow.c b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
+index 86bfc96..5e707c8 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_wow.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
+@@ -74,8 +74,6 @@ static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
+ 	for (i = 0; i < KAL_NUM_DESC_WORDS; i++)
+ 		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
+ 
+-	REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
+-
+ 	data_word[0] = (KAL_FRAME_TYPE << 2) | (KAL_FRAME_SUB_TYPE << 4) |
+ 		       (KAL_TO_DS << 8) | (KAL_DURATION_ID << 16);
+ 	data_word[1] = (ap_mac_addr[3] << 24) | (ap_mac_addr[2] << 16) |
+@@ -88,9 +86,11 @@ static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
+ 		       (ap_mac_addr[1] << 8) | (ap_mac_addr[0]);
+ 	data_word[5] = (ap_mac_addr[5] << 8) | (ap_mac_addr[4]);
+ 
+-	if (AR_SREV_9462_20(ah)) {
+-		/* AR9462 2.0 has an extra descriptor word (time based
+-		 * discard) compared to other chips */
++	if (AR_SREV_9462_20_OR_LATER(ah) || AR_SREV_9565(ah)) {
++		/*
++		 * AR9462 2.0 and AR9565 have an extra descriptor word
++		 * (time based discard) compared to other chips.
++		 */
+ 		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + (12 * 4)), 0);
+ 		wow_ka_data_word0 = AR_WOW_TXBUF(13);
+ 	} else {
+@@ -99,7 +99,6 @@ static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
+ 
+ 	for (i = 0; i < KAL_NUM_DATA_WORDS; i++)
+ 		REG_WRITE(ah, (wow_ka_data_word0 + i*4), data_word[i]);
+-
+ }
+ 
+ int ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
+-- 
+2.2.2
 
-At that point I think a nice solution would be a donation of time from
-guys who specialize in wcn for a living to come and hand out a pony or
-two...
-
--Andy
-
-> Regards,
-> Bjorn
