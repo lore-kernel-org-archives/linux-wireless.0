@@ -1,10 +1,10 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:53731 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429AbbBFNkI (ORCPT
+Received: from mail-pd0-f180.google.com ([209.85.192.180]:38322 "EHLO
+	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752891AbbBENDG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 08:40:08 -0500
-Message-ID: <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150206_144013_786586_8ACF4C34)
+	Thu, 5 Feb 2015 08:03:06 -0500
+Message-ID: <1423141383.31870.39.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150205_140312_642098_1A20AB9B)
 Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
 From: Eric Dumazet <eric.dumazet@gmail.com>
 To: Michal Kazior <michal.kazior@tieto.com>
@@ -12,8 +12,8 @@ Cc: Neal Cardwell <ncardwell@google.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
 	Network Development <netdev@vger.kernel.org>,
 	eyalpe@dev.mellanox.co.il
-Date: Fri, 06 Feb 2015 05:40:01 -0800
-In-Reply-To: <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
+Date: Thu, 05 Feb 2015 05:03:03 -0800
+In-Reply-To: <CA+BoTQnwcmu=YbKB17JQb7ZPwGZoQS7zQ6nT-WEJHjnBX34QKA@mail.gmail.com>
 References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
 	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
 	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
@@ -31,81 +31,33 @@ References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
 	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
 	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
 	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
-	 <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
+	 <CA+BoTQnwcmu=YbKB17JQb7ZPwGZoQS7zQ6nT-WEJHjnBX34QKA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-02-06 at 10:42 +0100, Michal Kazior wrote:
+On Thu, 2015-02-05 at 07:46 +0100, Michal Kazior wrote:
+> On 4 February 2015 at 22:11, Eric Dumazet <eric.dumazet@gmail.com> wrote:
 
-> The above brings back previous behaviour, i.e. I can get 600mbps TCP
-> on 5 flows again. Single flow is still (as it was before TSO
-> autosizing) limited to roughly ~280mbps.
+> > Most conservative patch would be :
+> >
+> > diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> > index 9c782a42665e1aaf43bfbca441631ee58da50c09..6a36317d6bb0447202dee15528130bd5e21248c4 100644
+> > --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+> > +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+> > @@ -1642,6 +1642,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+> >                 break;
+> >         }
+> >         case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
+> > +               skb_orphan(skb);
+> >                 spin_lock_bh(&htt->tx_lock);
+> >                 __skb_queue_tail(&htt->tx_compl_q, skb);
+> >                 spin_unlock_bh(&htt->tx_lock);
 > 
-> I never really bothered before to understand why I need to push a few
-> flows through ath10k to max it out, i.e. if I run a single UDP flow I
-> get ~300mbps while with, e.g. 5 I get 670mbps easily.
-> 
+> I suppose you want to call skb_orphan() on actual data packets, right?
+> This skb is just a host-firmware communication buffer.
 
-For single UDP flow, tweaking /proc/sys/net/core/wmem_default might be
-enough : UDP has no callback from TX completion to feed following frames
-(No write queue like TCP)
-
-# cat /proc/sys/net/core/wmem_default
-212992
-# ethtool -C eth1 tx-usecs 1024 tx-frames 120
-# ./netperf -H remote -t UDP_STREAM -- -m 1450
-Socket  Message  Elapsed      Messages                
-Size    Size     Time         Okay Errors   Throughput
-bytes   bytes    secs            #      #   10^6bits/sec
-
-212992    1450   10.00      697705      0     809.27
-212992           10.00      673412            781.09
-
-# echo 800000 >/proc/sys/net/core/wmem_default
-# ./netperf -H remote -t UDP_STREAM -- -m 1450
-Socket  Message  Elapsed      Messages                
-Size    Size     Time         Okay Errors   Throughput
-bytes   bytes    secs            #      #   10^6bits/sec
-
-800000    1450   10.00     7329221      0    8501.84
-212992           10.00     7284051           8449.44
-
-
-> I guess it was the tx completion latency all along.
-> 
-> I just put an extra debug to ath10k to see the latency between
-> submission and completion. Here's a log
-> (http://www.filedropper.com/complete-log) of 2s run of UDP iperf
-> trying to push 1gbps but managing only 300mbps.
-> 
-> I've made sure to not hold any locks nor introduce internal to ath10k
-> delays. Frames get completed between 2-4ms in avarage during load.
-
-
-tcp_wfree() could maintain in tp->tx_completion_delay_ms an EWMA
-of TX completion delay. But this would require yet another expensive
-call to ktime_get() if HZ < 1000.
-
-Then tcp_write_xmit() could use it to adjust :
-
-   limit = max(2 * skb->truesize, sk->sk_pacing_rate >> 9);
-
-to
-
-   amount = (2 + tp->tx_completion_delay_ms) * sk->sk_pacing_rate 
-
-   limit = max(2 * skb->truesize, amount / 1000);
-
-I'll cook a patch.
-
-Thanks.
+Right. I have no idea how you find the actual data packet at this stage.
 
 
