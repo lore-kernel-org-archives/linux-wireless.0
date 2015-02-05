@@ -1,119 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:56912 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932204AbbBQHsP (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:43688 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756172AbbBECT0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2015 02:48:15 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V2 1/2] ath10k: Move ath10k_vdev_stop() up before ath10k_vdev_start_restart()
-Date: Tue, 17 Feb 2015 13:13:15 +0530
-Message-ID: <1424158996-8830-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150217_084819_647698_BF6BFF3D)
+	Wed, 4 Feb 2015 21:19:26 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 01/10] mac80211: enhance readability of Minstrels rc_stats output
+Date: Thu,  5 Feb 2015 03:13:11 +0100
+Message-Id: <1423102400-9693-2-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150205_031937_262851_F72FA9BB)
+In-Reply-To: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches does not modify any functionality. Just a code move
-so that ath10k_vdev_stop() can be used in ath10k_vdev_start_restart()
-for any failure cases which involves vdev_stop().
+This patch restructures the rc_stats debugfs table of Minstrel in
+order to achieve better human readability. A new layout of the
+statistics and a new header is added. In addition to the old layout
+there are two new columns of information added:
+"idx"	- representing the rate index of each rate in mac80211 which
+	  can be used to set specific rates as fixed rate via debugfs
+"airtime" - the tx-time in micro seconds that a 1200 Byte packet
+	    takes to be transmitted over the air at the given rate
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+The old layout of rc_stats:
+
+     rate      tpt  eprob *prob ret  *ok(*cum)        ok(      cum)
+  DP 1          0.9  93.5 100.0   1    0(   0)         2(        2)
+     2          0.4  40.0 100.0   0    0(   0)         4(        10)
+     5.5        0.0   0.0   0.0   0    0(   0)         0(        0)
+...
+
+is chaged into this new layout:
+
+best   _______rate_____    __statistics__    ________last_______    ______sum-of________
+rate  [name idx tx-time]  [ ø(tp) ø(prob)]  [prob.|retry|suc|att]  [#success | #attempts]
+  DP   1     0     9738      0.9    93.5     100.0   1     1 1             2   2
+       2     1     4922      0.4    40.0     100.0   1     0 0             4   10
+       5.5   2     1858      0.0     0.0       0.0   2     0 0             0   0
+...
+
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Stefan Venz <ikstream86@gmail.com>
 ---
+ net/mac80211/rc80211_minstrel_debugfs.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-V2:
-     - Call ath10k_vdev_stop() when ath10k_monitor_recalc() failed.
-       This results in code move done in patch 1.
-
- drivers/net/wireless/ath/ath10k/mac.c |   66 ++++++++++++++++-----------------
- 1 file changed, 33 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0f39af7..3b5aaa3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -872,6 +872,39 @@ static void ath10k_recalc_radar_detection(struct ath10k *ar)
- 	}
- }
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index 2acab1b..2d70081 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -68,8 +68,12 @@ minstrel_stats_open(struct inode *inode, struct file *file)
  
-+static int ath10k_vdev_stop(struct ath10k_vif *arvif)
-+{
-+	struct ath10k *ar = arvif->ar;
-+	int ret;
+ 	file->private_data = ms;
+ 	p = ms->buf;
+-	p += sprintf(p, "rate          tpt eprob *prob"
+-			"  *ok(*cum)        ok(      cum)\n");
++	p += sprintf(p, "\n");
++	p += sprintf(p, "best   _______rate_____    __statistics__    "
++			"________last_______    ______sum-of________\n");
++	p += sprintf(p, "rate  [name idx airtime]  [ ø(tp) ø(prob)]  "
++			"[prob.|retry|suc|att]  [#success | #attempts]\n");
 +
-+	lockdep_assert_held(&ar->conf_mutex);
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
+@@ -79,18 +83,22 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		*(p++) = (i == mi->max_tp_rate[2]) ? 'C' : ' ';
+ 		*(p++) = (i == mi->max_tp_rate[3]) ? 'D' : ' ';
+ 		*(p++) = (i == mi->max_prob_rate) ? 'P' : ' ';
+-		p += sprintf(p, "%3u%s", mr->bitrate / 2,
 +
-+	reinit_completion(&ar->vdev_setup_done);
-+
-+	ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_vdev_setup_sync(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	WARN_ON(ar->num_started_vdevs == 0);
-+
-+	if (ar->num_started_vdevs != 0) {
-+		ar->num_started_vdevs--;
-+		ath10k_recalc_radar_detection(ar);
-+	}
-+
-+	return ret;
-+}
-+
- static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
- {
- 	struct ath10k *ar = arvif->ar;
-@@ -949,39 +982,6 @@ static int ath10k_vdev_restart(struct ath10k_vif *arvif)
- 	return ath10k_vdev_start_restart(arvif, true);
- }
++		p += sprintf(p, " %3u%s ", mr->bitrate / 2,
+ 				(mr->bitrate & 1 ? ".5" : "  "));
++		p += sprintf(p, "%3u  ", i);
++		p += sprintf(p, "%6u  ", mr->perfect_tx_time);
  
--static int ath10k_vdev_stop(struct ath10k_vif *arvif)
--{
--	struct ath10k *ar = arvif->ar;
--	int ret;
--
--	lockdep_assert_held(&ar->conf_mutex);
--
--	reinit_completion(&ar->vdev_setup_done);
--
--	ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
--	if (ret) {
--		ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
--			    arvif->vdev_id, ret);
--		return ret;
--	}
--
--	ret = ath10k_vdev_setup_sync(ar);
--	if (ret) {
--		ath10k_warn(ar, "failed to synchronize setup for vdev %i stop: %d\n",
--			    arvif->vdev_id, ret);
--		return ret;
--	}
--
--	WARN_ON(ar->num_started_vdevs == 0);
--
--	if (ar->num_started_vdevs != 0) {
--		ar->num_started_vdevs--;
--		ath10k_recalc_radar_detection(ar);
--	}
--
--	return ret;
--}
--
- static int ath10k_mac_setup_bcn_p2p_ie(struct ath10k_vif *arvif,
- 				       struct sk_buff *bcn)
- {
+ 		tp = MINSTREL_TRUNC(mrs->cur_tp / 10);
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->probability * 1000);
+ 
+-		p += sprintf(p, " %4u.%1u %3u.%1u %3u.%1u"
+-				" %4u(%4u) %9llu(%9llu)\n",
++		p += sprintf(p, " %4u.%1u   %3u.%1u     %3u.%1u %3u"
++				"   %3u %-3u   %9llu   %-9llu\n",
+ 				tp / 10, tp % 10,
+ 				eprob / 10, eprob % 10,
+ 				prob / 10, prob % 10,
++				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+ 				(unsigned long long)mrs->succ_hist,
 -- 
-1.7.9.5
+2.2.2
 
