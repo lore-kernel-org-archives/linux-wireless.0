@@ -1,69 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49837 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753092AbbBXKCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:02:42 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH 6/8] NFC: NCI: Add function to get max packet size for conn
-Date: Tue, 24 Feb 2015 12:01:50 +0200
-Message-Id: <1424772112-27399-7-git-send-email-robert.dolca@intel.com> (sfid-20150224_110350_332602_2DAA468A)
-In-Reply-To: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+Received: from s72.web-hosting.com ([198.187.29.22]:50867 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754720AbbBEEtq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Feb 2015 23:49:46 -0500
+Received: from [117.199.130.171] (port=13666 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YJENt-002ASp-Er
+	for linux-wireless@vger.kernel.org; Wed, 04 Feb 2015 23:49:45 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/7] ath9k: Handle additional patterns on wakeup
+Date: Thu,  5 Feb 2015 10:22:42 +0530
+Message-Id: <1423111964-19626-6-git-send-email-sujith@msujith.org> (sfid-20150205_054955_051894_1E863896)
+In-Reply-To: <1423111964-19626-1-git-send-email-sujith@msujith.org>
+References: <1423111964-19626-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FDP driver needs to send the firmware as regular packets
-(not fragmented). That's whay the driver should have a way to
-get the max packet size for a given connection.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+Handle the user-configured patterns in the range 8..15
+when waking up and update wow_status correctly.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- include/net/nfc/nci_core.h |  1 +
- net/nfc/nci/data.c         | 12 ++++++++++++
- 2 files changed, 13 insertions(+)
+ drivers/net/wireless/ath/ath9k/ar9003_wow.c | 16 ++++++++++++----
+ drivers/net/wireless/ath/ath9k/reg_wow.h    |  8 +++++++-
+ 2 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index 42ec342..d79f90e 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -321,6 +321,7 @@ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb);
- void nci_rx_data_packet(struct nci_dev *ndev, struct sk_buff *skb);
- int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload);
- int nci_send_data(struct nci_dev *ndev, __u8 conn_id, struct sk_buff *skb);
-+__u8 nci_conn_max_data_pkt_payload_size(struct nci_dev *ndev, __u8 conn_id);
- void nci_data_exchange_complete(struct nci_dev *ndev, struct sk_buff *skb,
- 				__u8 conn_id, int err);
- void nci_hci_data_received_cb(void *context, struct sk_buff *skb, int err);
-diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
-index 83acd18..056f841 100644
---- a/net/nfc/nci/data.c
-+++ b/net/nfc/nci/data.c
-@@ -90,6 +90,18 @@ static inline void nci_push_data_hdr(struct nci_dev *ndev,
- 	nci_pbf_set((__u8 *)hdr, pbf);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_wow.c b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
+index bf3378f0..34763c4 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_wow.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
+@@ -186,18 +186,17 @@ u32 ath9k_hw_wow_wakeup(struct ath_hw *ah)
+ 	u32 val = 0, rval;
  
-+__u8 nci_conn_max_data_pkt_payload_size(struct nci_dev *ndev, __u8 conn_id)
-+{
-+	struct nci_conn_info *conn_info;
+ 	/*
+-	 * read the WoW status register to know
+-	 * the wakeup reason
++	 * Read the WoW status register to know
++	 * the wakeup reason.
+ 	 */
+ 	rval = REG_READ(ah, AR_WOW_PATTERN);
+ 	val = AR_WOW_STATUS(rval);
+ 
+ 	/*
+-	 * mask only the WoW events that we have enabled. Sometimes
++	 * Mask only the WoW events that we have enabled. Sometimes
+ 	 * we have spurious WoW events from the AR_WOW_PATTERN
+ 	 * register. This mask will clean it up.
+ 	 */
+-
+ 	val &= ah->wow.wow_event_mask;
+ 
+ 	if (val) {
+@@ -211,6 +210,15 @@ u32 ath9k_hw_wow_wakeup(struct ath_hw *ah)
+ 			wow_status |= AH_WOW_BEACON_MISS;
+ 	}
+ 
++	rval = REG_READ(ah, AR_MAC_PCU_WOW4);
++	val = AR_WOW_STATUS2(rval);
++	val &= ah->wow.wow_event_mask2;
 +
-+	conn_info = nci_get_conn_info_by_conn_id(ndev, conn_id);
-+	if (!conn_info)
-+		return 0;
++	if (val) {
++		if (AR_WOW2_PATTERN_FOUND(val))
++			wow_status |= AH_WOW_USER_PATTERN_EN;
++	}
 +
-+	return conn_info->max_pkt_payload_len;
-+}
-+EXPORT_SYMBOL(nci_conn_max_data_pkt_payload_size);
+ 	/*
+ 	 * set and clear WOW_PME_CLEAR registers for the chip to
+ 	 * generate next wow signal.
+diff --git a/drivers/net/wireless/ath/ath9k/reg_wow.h b/drivers/net/wireless/ath/ath9k/reg_wow.h
+index 3abfca5..42ed4ee 100644
+--- a/drivers/net/wireless/ath/ath9k/reg_wow.h
++++ b/drivers/net/wireless/ath/ath9k/reg_wow.h
+@@ -72,7 +72,7 @@
+ #define AR_WOW_MAC_INTR_EN              0x00040000
+ #define AR_WOW_MAGIC_EN                 0x00010000
+ #define AR_WOW_PATTERN_EN(x)            (x & 0xff)
+-#define AR_WOW_PAT_FOUND_SHIFT  8
++#define AR_WOW_PAT_FOUND_SHIFT          8
+ #define AR_WOW_PATTERN_FOUND(x)         (x & (0xff << AR_WOW_PAT_FOUND_SHIFT))
+ #define AR_WOW_PATTERN_FOUND_MASK       ((0xff) << AR_WOW_PAT_FOUND_SHIFT)
+ #define AR_WOW_MAGIC_PAT_FOUND          0x00020000
+@@ -90,6 +90,12 @@
+                                                AR_WOW_BEACON_FAIL |	\
+                                                AR_WOW_KEEP_ALIVE_FAIL))
+ 
++#define AR_WOW2_PATTERN_FOUND_SHIFT     8
++#define AR_WOW2_PATTERN_FOUND(x)        (x & (0xff << AR_WOW2_PATTERN_FOUND_SHIFT))
++#define AR_WOW2_PATTERN_FOUND_MASK      ((0xff) << AR_WOW2_PATTERN_FOUND_SHIFT)
 +
- static int nci_queue_tx_data_frags(struct nci_dev *ndev,
- 				   __u8 conn_id,
- 				   struct sk_buff *skb) {
++#define AR_WOW_STATUS2(x)               (x & AR_WOW2_PATTERN_FOUND_MASK)
++
+ #define AR_WOW_AIFS_CNT(x)              (x & 0xff)
+ #define AR_WOW_SLOT_CNT(x)              ((x & 0xff) << 8)
+ #define AR_WOW_KEEP_ALIVE_CNT(x)        ((x & 0xff) << 16)
 -- 
-1.9.1
+2.2.2
 
