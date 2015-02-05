@@ -1,80 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:54532 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751594AbbBMHzt (ORCPT
+Received: from milliways.jots.org ([198.204.250.45]:47514 "EHLO
+	milliways.jots.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbbBEG4P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 02:55:49 -0500
-From: Mark Rustad <mrustad@gmail.com>
-Message-ID: <54DDAE03.4000502@gmail.com> (sfid-20150213_085611_397646_FA569D67)
-Date: Thu, 12 Feb 2015 23:55:47 -0800
+	Thu, 5 Feb 2015 01:56:15 -0500
 MIME-Version: 1.0
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	"Rustad, Mark D" <mark.d.rustad@intel.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwl4965: Enable checking of format strings
-References: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>	<60178C37-F104-430E-92EB-B6DDFAEB2F99@intel.com> <87vbj7zb0e.fsf@rasmusvillemoes.dk>
-In-Reply-To: <87vbj7zb0e.fsf@rasmusvillemoes.dk>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 05 Feb 2015 01:56:07 -0500
+From: Ken D'Ambrosio <ken@jots.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <larry.finger@gmail.com>
+Subject: Re: rtl8192ee (Thinkpad T440s)
+In-Reply-To: <54D00FA4.2060907@lwfinger.net>
+References: <10a90ab7a6c186362f339481b531832f@webmail.jots.org>
+ <54D00FA4.2060907@lwfinger.net>
+Message-ID: <8f26bf9461a88199ef8d8c86f7ee98f9@webmail.jots.org> (sfid-20150205_075618_698132_ED396899)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hi!  Want to thank you for the reply.  Gave it a shot; no dice.  See 
+comments below.
 
-On 2/12/15 2:20 AM, Rasmus Villemoes wrote:
-> Rather weak arguments, but I have three of them :-)
+On 2015-02-02 19:00, Larry Finger wrote:
+> On 02/02/2015 05:24 PM, Ken D'Ambrosio wrote:
+>> Hi, all.  Just got a new Thinkpad, and needless to say, tried to fire 
+>> it up on
+>> the network.  Ubuntu 14.04 didn't have the driver, so I tried 14.10, 
+>> which did.
+>> I thought I was good until I tried to connect; the laptop would see 
+>> all the
+>> advertised WAPs, but wouldn't connect to any of them (including my 
+>> security-free
+>> ones).  I then downloaded the 3.19 RC and tried that -- same deal.  I 
+>> see a few
+>> extra git commits in -next; any idea if that will be of any 
+>> assistance?  Is
+>> there anything I can dig through in my logs to help flesh out what the 
+>> problem is?
+> 
+> Logs are always helpful. As some of us do not use Ubuntu, a kernel
+> version as shown by 'uname -r' is a lot more helpful that what version
+> of Ubuntu you are using.
 
-Yes, weak. All three.
+Sorry; I'll be more specific going forward.  Current kernel I'm using is 
+3.19.0-rc7-next-20150204.  The included driver did not work:
 
-> (1) If I'm reading some code and spot a non-constant format
-> argument, I sometimes track back to see how e.g. fmt_value is
-> defined. If I then see it's a macro, I immediately think "ok, the
-> compiler is doing type-checking". If it is a const char[], I have
-> to remember that gcc also does it in that case (as opposed to for
-> example const char*const).
+------------------------ cut here 
+----------------------------------------------
 
-GCC should check in both cases. The case you are replacing was not
-const char * const, but only const char *. Still, the compiler really
-should check either form, even though theoretically the pointer in the
-latter case could be changed, but the initial const value should be a
-good indication of what the parameters are expected to be. No real
-reason for the compiler not to check it.
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation 
+(wlan0) starting connection 'whateveryouwant'
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> (wlan0): device 
+state change: disconnected -> prepare (reason 'none') [30 40 0]
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> NetworkManager 
+state is now CONNECTING
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation 
+(wlan0) Stage 1 of 5 (Device Prepare) scheduled...
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation 
+(wlan0) Stage 1 of 5 (Device Prepare) started...
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation 
+(wlan0) Stage 2 of 5 (Device Configure) scheduled...
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation 
+(wlan0) Stage 1 of 5 (Device Prepare) complete.
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation 
+(wlan0) Stage 2 of 5 (Device Configure) starting...
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> (wlan0): device 
+state change: prepare -> config (reason 'none') [40 50 0]
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation 
+(wlan0/wireless): connection 'whateveryouwant' requires no security.  No 
+secrets needed.
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Config: added 
+'ssid' value 'whateveryouwant'
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Config: added 
+'scan_ssid' value '1'
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Config: added 
+'key_mgmt' value 'NONE'
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation 
+(wlan0) Stage 2 of 5 (Device Configure) complete.
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Config: set 
+interface ap_scan to 1
+Feb  5 01:05:21 minasithil NetworkManager[864]: <info> (wlan0): 
+supplicant interface state: disconnected -> scanning
+Feb  5 01:05:46 minasithil NetworkManager[864]: <warn> Activation 
+(wlan0/wireless): association took too long, failing activation.
+Feb  5 01:05:46 minasithil NetworkManager[864]: <info> (wlan0): device 
+state change: config -> failed (reason 'SSID not found') [50 120 53]
+Feb  5 01:05:46 minasithil NetworkManager[864]: <info> NetworkManager 
+state is now DISCONNECTED
+Feb  5 01:05:46 minasithil NetworkManager[864]: <warn> Activation 
+(wlan0) failed for connection 'whateveryouwant'
+Feb  5 01:05:46 minasithil NetworkManager[864]: <info> (wlan0): device 
+state change: failed -> disconnected (reason 'none') [120 30 0]
+Feb  5 01:05:46 minasithil NetworkManager[864]: <info> (wlan0): 
+deactivating device (reason 'none') [0]
+Feb  5 01:05:46 minasithil NetworkManager[864]: <info> (wlan0): 
+supplicant interface state: scanning -> disconnected
+Feb  5 01:05:46 minasithil NetworkManager[864]: <warn> Couldn't 
+disconnect supplicant interface: This interface is not connected.
 
-> (2) The names of these variables themselves may end up wasting a
-> few bytes in the image.
+------------------------ cut here 
+----------------------------------------------
 
-Maybe in a debug image, but they should be stripped from any normal
-image. Really not a factor.
+> Kernel 3.19-rc4 from the wireless-drivers repo contains all those
+> commits in -next, and it works fine here. At this point, I have been
+> connected for 27 hours with a WPA2 connection.
+> 
+> You can also try the repo at
+> http://github.com/lwfinger/rtlwifi-new.git. The master branch should
+> be OK. If not, try the troy branch.
 
-> (3) gcc/the linker doesn't merge identical const char[] arrays
-> across translation units. It also doesn't consider their tails for
-> merging with string literals. So although these specific strings
-> are unlikely to appear elsewhere, a string such as "%10u\n" or
-> "max\n" couldn't be merged with one of the above.
+I tried both branches; they both failed identically:
+Feb  5 01:51:19 minasithil kernel: [ 3141.801171] rtl8192ee 
+0000:03:00.0: Refused to change power state, currently in D3
+Feb  5 01:51:19 minasithil kernel: [ 3141.801349] 
+rtl8192ee:_rtl92ee_read_adapter_info():<0-0> RTL819X Not boot from 
+eeprom, check it !!
+Feb  5 01:51:19 minasithil kernel: [ 3141.801375] Using firmware 
+rtlwifi/rtl8192eefw_new.bin
+Feb  5 01:51:19 minasithil kernel: [ 3141.803189] ieee80211 phy2: 
+Selected rate control algorithm 'rtl_rc'
+Feb  5 01:51:19 minasithil kernel: [ 3141.803855] rtlwifi: wireless 
+switch is on
+Feb  5 01:51:19 minasithil kernel: [ 3141.825219] rtl8192ee 0000:03:00.0 
+wlan8: renamed from wlan0
+Feb  5 01:51:19 minasithil kernel: [ 3141.899361] 
+rtl8192ee:rtl92ee_hw_init():<0-0> Init MAC failed
+Feb  5 01:51:19 minasithil kernel: [ 3141.977804] 
+rtl8192ee:rtl92ee_hw_init():<0-0> Init MAC failed
+[repeat ad nauseum until module is removed]
+Feb  5 01:51:26 minasithil kernel: [ 3148.373955] IPv6: 
+ADDRCONF(NETDEV_UP): wlan8: link is not ready
 
-I haven't checked, but there is no theoretical reason that const char
-[] items could not be merged exactly as the literals are. Considering
-the boundaries the compiler guys push on optimization, doing such
-merging would be tame by comparison (speculative stores make me crazy).
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.20 (Darwin)
-Comment: GPGTools - http://gpgtools.org
+Thanks for any insights...
 
-iQIcBAEBAgAGBQJU3a3+AAoJEDwO/+eO4+5unvMP/jwxA4GmwC0d3VdGsVTJkMVd
-zg+jwbkhnMiaEj6uPAwV5LXV/IGyuYFgNjoiNDg9RD3trV9/3YAxdAKw1ffO+PWe
-lnmXSxaapLlCTapOsUdXPg88z9muQKrcfhnGyi+jt3BFeccXgtlHLsR0qVa4ddJw
-KVHByPg+AlTSNzSnROxHH3UAbxEuZmDy+g+xfbEFLCKNCgtrSX5jGyG2vJIY3lhF
-40VIdriUHz1QW4C1YYeJWMKwzml7Kln3u0T5MfDEtDfy6n7hiBhHczEgPjf7dnzd
-aY4+VtKTyjPWLRhyDoJfR9maaV9TsYHpheSuUVzAGwvb85wH32ugdfmcW2RPnRfC
-n9ThhtWd1WdJJpmq0xhLjc9bc3nrxJO8b2J/GMsT6SjGBhPGaaJSWY37UPhhOJOj
-akKkA6QwD0u6Yoc3de7unGsiKWayD7e2k3w3bus+kCSspmyn/OnkzZRc0X3nXd20
-suAWNZTalLWioqvI/hyvH3GMZxIuHTJoLRpTm+K7BQs7gBM9pD7OJOpn7XLtk2PM
-zPfEj8fAUMV17lzFdBP+M+pGT3HzjWVwTIUgujdA4vL6eqB1W+3fR7kqjUuQYc69
-aBaMde//i+HUPzTHZht2qXEb6K9EvSsz/XlhQrtAyu2gYY8PwchdZXH0NbAGqJ9C
-4BEAO4HYJijd4vVSNBFO
-=utge
------END PGP SIGNATURE-----
+-Ken
+
+
