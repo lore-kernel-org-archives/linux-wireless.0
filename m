@@ -1,63 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:50748 "EHLO mout.web.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:45488 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967047AbbBDSeK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 13:34:10 -0500
-Message-ID: <54D26614.2080708@users.sourceforge.net> (sfid-20150204_193442_717043_E991B132)
-Date: Wed, 04 Feb 2015 19:33:56 +0100
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] ath10k: Delete unnecessary checks before the function call
- "release_firmware"
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+	id S1751331AbbBFTLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 14:11:05 -0500
+Message-ID: <1423249860.2037.28.camel@sipsolutions.net> (sfid-20150206_201109_295520_CA6B1218)
+Subject: Re: [PATCH] cfg80211: add debugfs VHT80 allow map
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, rmanohar@qti.qualcomm.com,
+	vthiagar@qti.qualcomm.com
+Date: Fri, 06 Feb 2015 20:11:00 +0100
+In-Reply-To: <1423204546-22872-1-git-send-email-arnagara@qti.qualcomm.com>
+References: <1423204546-22872-1-git-send-email-arnagara@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 4 Feb 2015 19:30:23 +0100
+On Fri, 2015-02-06 at 12:05 +0530, Ashok Raj Nagarajan wrote:
+> Here is a output of this debugfs entry
+> 
+> root@OpenWrt:/# cat /sys/kernel/debug/ieee80211/phy0/vht80allow_map
+> 2412 VHT80 N
 
-The release_firmware() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
+I'm not sure I see much point in this, in fact we could remove the HT40
+one?
 
-This issue was detected by using the Coccinelle software.
+We expose this data to userspace, so you could change 'iw' to print it
+when dumping the list of channels in 'iw list' or similar.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/ath/ath10k/core.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 2d0671e..45171ad 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -393,16 +393,16 @@ static int ath10k_download_fw(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 
- static void ath10k_core_free_firmware_files(struct ath10k *ar)
- {
--	if (ar->board && !IS_ERR(ar->board))
-+	if (!IS_ERR(ar->board))
- 		release_firmware(ar->board);
- 
--	if (ar->otp && !IS_ERR(ar->otp))
-+	if (!IS_ERR(ar->otp))
- 		release_firmware(ar->otp);
- 
--	if (ar->firmware && !IS_ERR(ar->firmware))
-+	if (!IS_ERR(ar->firmware))
- 		release_firmware(ar->firmware);
- 
--	if (ar->cal_file && !IS_ERR(ar->cal_file))
-+	if (!IS_ERR(ar->cal_file))
- 		release_firmware(ar->cal_file);
- 
- 	ar->board = NULL;
--- 
-2.2.2
+johannes
 
