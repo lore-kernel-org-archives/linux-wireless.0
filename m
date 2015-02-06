@@ -1,53 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:46247 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771AbbBYHxE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 02:53:04 -0500
-Received: by lams18 with SMTP id s18so2044474lam.13
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 23:53:02 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH v2 0/4] ath10k: add basic tdls support
-Date: Wed, 25 Feb 2015 08:55:07 +0100
-Message-Id: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20150225_085309_309112_B53DB2CA)
+Received: from www.osadl.org ([62.245.132.105]:59125 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751044AbbBFKbI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 05:31:08 -0500
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] brcmfmac: use msecs_to_jiffies for time conversion
+Date: Fri,  6 Feb 2015 05:26:45 -0500
+Message-Id: <1423218405-17624-1-git-send-email-hofrat@osadl.org> (sfid-20150206_113133_611578_797EFFA7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset introduces tdls funtionality without tdls peer uapsd
-and tdls channel switching. Tdls is supported by qca6174 hardware
-what is indicated by firmware through supported services.
-Tdls station when authorized requires some parameters that are filled in
-by rate control initialization. Because of that this patches contains
-one patch for mac80211 which moves rate control initialization before
-calling drivers station state with transition to authorized state.
+This is only an API consolidation and should make things more readable
+it replaces var * HZ / 1000 by msecs_to_jiffies(var).
 
-v2:
--introduce tdls peer counter
--minor changes after review
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
-Marek Puzyniak (3):
-  ath10k: make peer type configurable
-  mac80211: initialize rate control earlier for tdls station
-  ath10k: introduce basic tdls functionality
+Patch was only compile tested with x86_64_defconfig + CONFIG_BRCMFMAC=m,
+CONFIG_MMC=m, CONFIG_BRCMFMAC_SDIO=y
 
-Michal Kazior (1):
-  ath10k: unify tx mode and dispatch
+Patch is against 3.19.0-rc7 (localversion-next is -next-20150204)
 
- drivers/net/wireless/ath/ath10k/core.h    |   3 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  |   8 -
- drivers/net/wireless/ath/ath10k/htt_tx.c  |  30 ++-
- drivers/net/wireless/ath/ath10k/mac.c     | 307 +++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/mac.h     |   8 +
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  50 ++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 157 ++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  52 +++++
- drivers/net/wireless/ath/ath10k/wmi.c     |   3 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |  43 +++++
- net/mac80211/cfg.c                        |  20 +-
- 11 files changed, 597 insertions(+), 84 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 5e9d208..4f9469b 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -3972,7 +3972,7 @@ brcmf_sdio_watchdog(unsigned long data)
+ 		/* Reschedule the watchdog */
+ 		if (bus->wd_timer_valid)
+ 			mod_timer(&bus->timer,
+-				  jiffies + BRCMF_WD_POLL_MS * HZ / 1000);
++				  jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS));
+ 	}
+ }
+ 
+@@ -4291,13 +4291,13 @@ void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick)
+ 			   dynamically changed or in the first instance
+ 			 */
+ 			bus->timer.expires =
+-				jiffies + BRCMF_WD_POLL_MS * HZ / 1000;
++				jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS);
+ 			add_timer(&bus->timer);
+ 
+ 		} else {
+ 			/* Re arm the timer, at last watchdog period */
+ 			mod_timer(&bus->timer,
+-				jiffies + BRCMF_WD_POLL_MS * HZ / 1000);
++				jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS));
+ 		}
+ 
+ 		bus->wd_timer_valid = true;
 -- 
-2.1.4
+1.7.10.4
 
