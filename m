@@ -1,65 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1142 "EHLO mga02.intel.com"
+Received: from mx4.wp.pl ([212.77.101.12]:40563 "EHLO mx4.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965181AbbBCHPC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 02:15:02 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 09/19] iwlwifi: pcie: disable the SCD_BASE_ADDR when we resume from WoWLAN
-Date: Tue,  3 Feb 2015 09:14:28 +0200
-Message-Id: <1422947678-16917-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081507_389850_379E3438)
-In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
-References: <1422947482.30742.8.camel@egrumbacBox>
+	id S1751839AbbBFJF3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 04:05:29 -0500
+Date: Fri, 6 Feb 2015 09:58:46 +0100
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Peter Oh <poh@qca.qualcomm.com>
+Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: Replace ioread with mb to drain write buffer
+Message-ID: <20150206095846.5d46f11e@north> (sfid-20150206_100536_624377_E1DAF748)
+In-Reply-To: <7a87e5df81499e4d26a4f8bedf76ed3250a6f7bb.1422663244.git.poh@qca.qualcomm.com>
+References: <7a87e5df81499e4d26a4f8bedf76ed3250a6f7bb.1422663244.git.poh@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The base address of the scheduler in the device's memory
-(SRAM) comes from two different sources. The periphery
-register and the alive notification from the firmware.
-We have a check in iwl_pcie_tx_start that ensures that
-they are the same.
-When we resume from WoWLAN, the firmware may have crashed
-for whatever reason. In that case, the whole device may be
-reset which means that the periphery register will hold a
-meaningless value. When we come to compare
-trans_pcie->scd_base_addr (which really holds the value we
-had when we loaded the WoWLAN firmware upon suspend) and
-the current value of the register, we don't see a match
-unsurprisingly.
-Trick the check to avoid a loud yet harmless WARN.
-Note that when the WoWLAN has crashed, we will see that
-in iwl_trans_pcie_d3_resume which will let the op_mode
-know. Once the op_mode is informed that the WowLAN firmware
-has crashed, it can't do much besides resetting the whole
-device.
+On Fri, 30 Jan 2015 16:14:30 -0800, Peter Oh wrote:
+> Using ioread() to perform draining write buffer is excessive.
+> Use compact API, mb(), that intended to be used for the case.
+> It reduces total 14 CPU clocks per interrupt.
+>
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 
-CC: <stable@vger.kernel.org>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/tx.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+I have no idea what the code does but this change looks suspicious. 
+Usually the point of ioread() is to flush the interconnect buffers 
+while mb() ensures ordering only from the CPU perspective.
 
-diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-index 0a94083..59aefa4 100644
---- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-@@ -716,7 +716,12 @@ void iwl_trans_pcie_tx_reset(struct iwl_trans *trans)
- 	iwl_write_direct32(trans, FH_KW_MEM_ADDR_REG,
- 			   trans_pcie->kw.dma >> 4);
- 
--	iwl_pcie_tx_start(trans, trans_pcie->scd_base_addr);
-+	/*
-+	 * Send 0 as the scd_base_addr since the device may have be reset
-+	 * while we were in WoWLAN in which case SCD_SRAM_BASE_ADDR will
-+	 * contain garbage.
-+	 */
-+	iwl_pcie_tx_start(trans, 0);
- }
- 
- /*
--- 
-1.9.1
-
+Could you provide the reason *why* flushing buffers is unnecessary
+in the commit message?
