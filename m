@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:43876 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751749AbbBQPtb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:38308 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225AbbBFGqv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2015 10:49:31 -0500
-Date: Tue, 17 Feb 2015 15:48:55 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>
-Subject: Re: [PATCH v2] wlcore: add basic device-tree support
-Message-ID: <20150217154855.GQ8994@leverpostej> (sfid-20150217_164935_288195_24BBA77F)
-References: <1423998550-8829-1-git-send-email-eliad@wizery.com>
+	Fri, 6 Feb 2015 01:46:51 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1423998550-8829-1-git-send-email-eliad@wizery.com>
+Subject: Re: [1/3] orinoco: orinoco_plx use msecs_to_jiffies for conversion
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1423037261-20193-1-git-send-email-hofrat@osadl.org>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Benoit Taine <benoit.taine@lip6.fr>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+Message-Id: <20150206064650.46D22140C91@smtp.codeaurora.org> (sfid-20150206_074706_757063_DEACE65E)
+Date: Fri,  6 Feb 2015 06:46:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[...]
 
-> +	wlcore: wlcore@0 {
-> +		compatible = "ti,wlcore";
-> +		reg = <2>;
+> This is only an API consolidation and should make things more readable
+> it replaces var * HZ / 1000 by msecs_to_jiffies(var).
+> 
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-Nit: the reg and unit-address (the bit after the '@' in the node name)
-should match.
+Thanks, 3 patches applied to wireless-drivers-next.git:
 
-Mark.
+ab458cc85fa2 orinoco: orinoco_plx use msecs_to_jiffies for conversion
+3427da4597ae orinoco: orinoco_pci use msecs_to_jiffies for conversion
+c1f1f6663b3c orinoco: orinoco_tmd use msecs_to_jiffies for conversion
+
+Kalle Valo
