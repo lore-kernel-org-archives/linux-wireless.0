@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:7400 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755069AbbBOPLe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 10:11:34 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: defer AP self-peer removal wait
-References: <1422606682-12121-1-git-send-email-michal.kazior@tieto.com>
-Date: Sun, 15 Feb 2015 17:11:28 +0200
-In-Reply-To: <1422606682-12121-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 30 Jan 2015 09:31:22 +0100")
-Message-ID: <87zj8fgqfz.fsf@kamboji.qca.qualcomm.com> (sfid-20150215_161150_084937_E5BA4DE9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from www.osadl.org ([62.245.132.105]:35734 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752535AbbBFNbV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 08:31:21 -0500
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Fabian Frederick <fabf@skynet.be>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] brcm80211: drop unreachable else case
+Date: Fri,  6 Feb 2015 08:26:50 -0500
+Message-Id: <1423229210-7313-1-git-send-email-hofrat@osadl.org> (sfid-20150206_143141_529031_11108892)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+the if/elseif/else is exhaustive - there is no 4th case given the 
+  rssi_ctrl_mask = RADIO_2055_NBRSSI_SEL | RADIO_2055_WBRSSI_G1_SEL | 
+  RADIO_2055_WBRSSI_G2_SEL;
+so this unreachable else case (dead code) can be dropped.
 
-> Some firmware revisions don't notify host about
-> self-bss-peer removal until after associated vdev
-> is deleted. This has been observed with qca6174
-> WLAN.RM.2.0-00073 firmware.
->
-> This patch fixes AP teardown slowdowns and
-> prevents delays and warnings:
->
->  ath10k_pci 0000:00:05.0: failed to remove peer for AP vdev 0: -110
->  ath10k_pci 0000:00:05.0: removing stale peer xx:xx:xx:xx:xx:xx from vdev_id 0
->  ath10k_pci 0000:00:05.0: peer-unmap-event: unknown peer id 24
->  ath10k_pci 0000:00:05.0: peer-unmap-event: unknown peer id 8
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
-Thanks, applied to ath.git.
+It seems that there are only three cases:
+RADIO_2055_NBRSSI_SEL | RADIO_2055_WBRSSI_G1_SEL | RADIO_2055_WBRSSI_G2_SEL
+The conditional call to wlc_phy_rssisel_nphy(... NPHY_RSSI_SEL_*) thus do 
+not seem to have a 4th case which would be covered by the final else.
 
+If the final else is there to accommodate extensions then this patch is
+of course wrong - in that case it would be good though to comment the
+final else as it appears to be dead-code at the moment.
+
+Patch was only compile tested with x86_64_defconfig + CONFIG_BRCMSMAC=m
+
+Patch is against 3.19.0-rc7 (localversion-next is -next-20150204)
+
+ drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c |   11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+index 084f18f..99dac9b 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+@@ -23041,10 +23041,7 @@ static void wlc_phy_rssi_cal_nphy_rev2(struct brcms_phy *pi, u8 rssi_type)
+ 	else if (rssi_ctrl_state[0] == RADIO_2055_WBRSSI_G1_SEL)
+ 		wlc_phy_rssisel_nphy(pi, RADIO_MIMO_CORESEL_CORE1,
+ 				     NPHY_RSSI_SEL_W1);
+-	else if (rssi_ctrl_state[0] == RADIO_2055_WBRSSI_G2_SEL)
+-		wlc_phy_rssisel_nphy(pi, RADIO_MIMO_CORESEL_CORE1,
+-				     NPHY_RSSI_SEL_W2);
+-	else
++	else /* RADIO_2055_WBRSSI_G2_SEL */
+ 		wlc_phy_rssisel_nphy(pi, RADIO_MIMO_CORESEL_CORE1,
+ 				     NPHY_RSSI_SEL_W2);
+ 	if (rssi_ctrl_state[1] == RADIO_2055_NBRSSI_SEL)
+@@ -23053,13 +23050,9 @@ static void wlc_phy_rssi_cal_nphy_rev2(struct brcms_phy *pi, u8 rssi_type)
+ 	else if (rssi_ctrl_state[1] == RADIO_2055_WBRSSI_G1_SEL)
+ 		wlc_phy_rssisel_nphy(pi, RADIO_MIMO_CORESEL_CORE2,
+ 				     NPHY_RSSI_SEL_W1);
+-	else if (rssi_ctrl_state[1] == RADIO_2055_WBRSSI_G2_SEL)
++	else /* RADIO_2055_WBRSSI_G1_SEL */
+ 		wlc_phy_rssisel_nphy(pi, RADIO_MIMO_CORESEL_CORE2,
+ 				     NPHY_RSSI_SEL_W2);
+-	else
+-		wlc_phy_rssisel_nphy(pi, RADIO_MIMO_CORESEL_CORE2,
+-				     NPHY_RSSI_SEL_W2);
+-
+ 	wlc_phy_rssisel_nphy(pi, RADIO_MIMO_CORESEL_OFF, rssi_type);
+ 
+ 	write_phy_reg(pi, 0x91, rfctrlintc_state[0]);
 -- 
-Kalle Valo
+1.7.10.4
+
