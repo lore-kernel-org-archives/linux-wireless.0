@@ -1,29 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34155 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbbB0IF6 (ORCPT
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:39926 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752809AbbBFRsX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2015 03:05:58 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 6 Feb 2015 12:48:23 -0500
+Received: from g2t2353.austin.hp.com (g2t2353.austin.hp.com [15.217.128.52])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by g9t1613g.houston.hp.com (Postfix) with ESMTPS id 8AC3E690B2
+	for <linux-wireless@vger.kernel.org>; Fri,  6 Feb 2015 17:48:22 +0000 (UTC)
+Message-ID: <54D4FE63.9020602@hp.com> (sfid-20150206_185023_913393_9A770373)
+Date: Fri, 06 Feb 2015 09:48:19 -0800
+From: Rick Jones <rick.jones2@hp.com>
 MIME-Version: 1.0
-Subject: Re: rtlwifi: Modify some USB de-initialize code.
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1423586430-12454-1-git-send-email-ap420073@gmail.com>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
-	linux-wireless@vger.kernel.org
-Message-Id: <20150227080557.D1FA913FA09@smtp.codeaurora.org> (sfid-20150227_090604_132633_9FCD0680)
-Date: Fri, 27 Feb 2015 08:05:57 +0000 (UTC)
+To: Eric Dumazet <eric.dumazet@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+CC: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Eyal Perry <eyalpe@dev.mellanox.co.il>
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com> <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com> <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com> <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com> <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com> <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com> <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com> <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com> <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com> <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com> <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com> <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com> <CA+BoTQnEvF_mi68gyFns67oKC=8jEYdi3tLuW5dNj20KwUNs9A@mail.gmail.com> <1423233346.31870.136.camel@edumazet-glaptop2.roam.corp.google.com>
+In-Reply-To: <1423233346.31870.136.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> If you increase ability to flood on one flow, then you need to make sure
+> receiver has big rcvbuf as well.
+>
+> echo 2000000 >/proc/sys/net/core/rmem_default
+>
+> Otherwise it might drop bursts.
+>
+> This is the kind of things that TCP does automatically, not UDP.
 
-> Delete SET_USB_STOP macro and rtl_usb_deinit because
-> those are called twice in USB de-initialize routine.
-> Add some de-initialize workqueue function in USB disconnect routine.
-> 
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+An alternative, if the application involved can make explicit 
+setsockopt() calls to set SO_SNDBUF and/or SO_RCVBUF, is to tweak 
+rmem_max and wmem_max and then let the application make the setsockopt() 
+calls.
 
-Thanks, applied to wireless-drivers-next.git.
+Which path one would take would depend on circumstances I suspect.
 
-Kalle Valo
+rick jones
