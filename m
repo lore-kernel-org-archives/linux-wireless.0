@@ -1,355 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gn237.zone.eu ([217.146.67.237]:17807 "EHLO gn237.zone.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754724AbbBOUs0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 15:48:26 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH v2 2/7] rtlwifi: Remove unused defines from driver-specific def.h
-Date: Sun, 15 Feb 2015 22:46:46 +0200
-Message-Id: <1424033211-11696-3-git-send-email-plaes@plaes.org> (sfid-20150215_215042_190027_0E060948)
-In-Reply-To: <1424033211-11696-1-git-send-email-plaes@plaes.org>
-References: <1424033211-11696-1-git-send-email-plaes@plaes.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:40404 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755109AbbBFRgx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 12:36:53 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 3/6] brcmfmac: add debugfs file containing revision info
+Date: Fri, 6 Feb 2015 18:36:44 +0100
+Message-ID: <1423244207-9707-4-git-send-email-arend@broadcom.com> (sfid-20150206_183704_610058_BA00DE13)
+In-Reply-To: <1423244207-9707-1-git-send-email-arend@broadcom.com>
+References: <1423244207-9707-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HAL_RETRY_LIMIT_*
-RESET_DELAY_8185
-RT_IBSS_INT_MASKS
-RT_AC_INT_MASKS
-NUM_OF_*
-BT_*,
-MAX_{LINES,BYTES}_*,
-*_THREE_WIRE
-*_QUEUE related
----
- drivers/net/wireless/rtlwifi/rtl8188ee/def.h | 41 ----------------------------
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h | 41 ----------------------------
- drivers/net/wireless/rtlwifi/rtl8192de/def.h | 38 --------------------------
- drivers/net/wireless/rtlwifi/rtl8192se/def.h |  1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/def.h | 41 ----------------------------
- drivers/net/wireless/rtlwifi/rtl8821ae/def.h | 41 ----------------------------
- 6 files changed, 203 deletions(-)
+Make the revision info visible in debugfs. The new debugfs
+file is named 'revinfo'.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/def.h b/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
-index d9ea9d0..0532b98 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/def.h
-@@ -26,53 +26,12 @@
- #ifndef __RTL92C_DEF_H__
- #define __RTL92C_DEF_H__
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/core.c | 30 ++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+index 2d6e2cc..f8f47dc 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
+@@ -944,6 +944,34 @@ fail:
+ 	return ret;
+ }
  
--#define HAL_RETRY_LIMIT_INFRA				48
--#define HAL_RETRY_LIMIT_AP_ADHOC			7
--
--#define RESET_DELAY_8185				20
--
--#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
--#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
--
--#define NUM_OF_FIRMWARE_QUEUE				10
--#define NUM_OF_PAGES_IN_FW				0x100
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA			0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT			0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH			0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
--
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM			0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM			0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM			0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM			0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM			0x00
--
--#define MAX_LINES_HWCONFIG_TXT				1000
--#define MAX_BYTES_LINE_HWCONFIG_TXT			256
--
--#define SW_THREE_WIRE					0
--#define HW_THREE_WIRE					2
--
--#define BT_DEMO_BOARD					0
--#define BT_QA_BOARD					1
--#define BT_FPGA						2
--
- #define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
- #define HAL_PRIME_CHNL_OFFSET_LOWER			1
- #define HAL_PRIME_CHNL_OFFSET_UPPER			2
++static int brcmf_revinfo_read(struct seq_file *s, void *data)
++{
++	struct brcmf_bus *bus_if = dev_get_drvdata(s->private);
++	struct brcmf_rev_info *ri = &bus_if->drvr->revinfo;
++	char drev[BRCMU_DOTREV_LEN];
++	char brev[BRCMU_BOARDREV_LEN];
++
++	seq_printf(s, "vendorid: 0x%04x\n", ri->vendorid);
++	seq_printf(s, "deviceid: 0x%04x\n", ri->deviceid);
++	seq_printf(s, "radiorev: %s\n", brcmu_dotrev_str(ri->radiorev, drev));
++	seq_printf(s, "chipnum: %u (%x)\n", ri->chipnum, ri->chipnum);
++	seq_printf(s, "chiprev: %u\n", ri->chiprev);
++	seq_printf(s, "chippkg: %u\n", ri->chippkg);
++	seq_printf(s, "corerev: %u\n", ri->corerev);
++	seq_printf(s, "boardid: 0x%04x\n", ri->boardid);
++	seq_printf(s, "boardvendor: 0x%04x\n", ri->boardvendor);
++	seq_printf(s, "boardrev: %s\n", brcmu_boardrev_str(ri->boardrev, brev));
++	seq_printf(s, "driverrev: %s\n", brcmu_dotrev_str(ri->driverrev, drev));
++	seq_printf(s, "ucoderev: %u\n", ri->ucoderev);
++	seq_printf(s, "bus: %u\n", ri->bus);
++	seq_printf(s, "phytype: %u\n", ri->phytype);
++	seq_printf(s, "phyrev: %u\n", ri->phyrev);
++	seq_printf(s, "anarev: %u\n", ri->anarev);
++	seq_printf(s, "nvramrev: %08x\n", ri->nvramrev);
++
++	return 0;
++}
++
+ int brcmf_bus_start(struct device *dev)
+ {
+ 	int ret = -1;
+@@ -974,6 +1002,8 @@ int brcmf_bus_start(struct device *dev)
+ 	if (ret < 0)
+ 		goto fail;
  
--#define MAX_H2C_QUEUE_NUM				10
--
- #define RX_MPDU_QUEUE					0
- #define RX_CMD_QUEUE					1
--#define RX_MAX_QUEUE					2
--#define AC2QUEUEID(_AC)					(_AC)
- 
- #define	C2H_RX_CMD_HDR_LEN				8
- #define	GET_C2H_CMD_CMD_LEN(__prxhdr)			\
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-index 9b660df..690a7a1 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-@@ -30,59 +30,18 @@
- #ifndef __RTL92C_DEF_H__
- #define __RTL92C_DEF_H__
- 
--#define HAL_RETRY_LIMIT_INFRA				48
--#define HAL_RETRY_LIMIT_AP_ADHOC			7
--
- #define	PHY_RSSI_SLID_WIN_MAX				100
- #define	PHY_LINKQUALITY_SLID_WIN_MAX			20
- #define	PHY_BEACON_RSSI_SLID_WIN_MAX			10
- 
--#define RESET_DELAY_8185				20
--
--#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
--#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
--
--#define NUM_OF_FIRMWARE_QUEUE				10
--#define NUM_OF_PAGES_IN_FW				0x100
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA			0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT			0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH			0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
--
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM			0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM			0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM			0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM			0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM			0x00
--
--#define MAX_LINES_HWCONFIG_TXT				1000
--#define MAX_BYTES_LINE_HWCONFIG_TXT			256
--
--#define SW_THREE_WIRE					0
--#define HW_THREE_WIRE					2
--
--#define BT_DEMO_BOARD					0
--#define BT_QA_BOARD					1
--#define BT_FPGA						2
--
- #define RX_SMOOTH_FACTOR				20
- 
- #define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
- #define HAL_PRIME_CHNL_OFFSET_LOWER			1
- #define HAL_PRIME_CHNL_OFFSET_UPPER			2
- 
--#define MAX_H2C_QUEUE_NUM				10
--
- #define RX_MPDU_QUEUE					0
- #define RX_CMD_QUEUE					1
--#define RX_MAX_QUEUE					2
--#define AC2QUEUEID(_AC)					(_AC)
- 
- #define	C2H_RX_CMD_HDR_LEN				8
- #define	GET_C2H_CMD_CMD_LEN(__prxhdr)		\
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-index 939c905..4ca1fe1 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-@@ -38,58 +38,20 @@
- #define RF6052_MAX_REG					0x3F
- #define RF6052_MAX_PATH					2
- 
--#define HAL_RETRY_LIMIT_INFRA				48
--#define HAL_RETRY_LIMIT_AP_ADHOC			7
--
- #define	PHY_RSSI_SLID_WIN_MAX				100
- #define	PHY_LINKQUALITY_SLID_WIN_MAX			20
- #define	PHY_BEACON_RSSI_SLID_WIN_MAX			10
- 
--#define RESET_DELAY_8185				20
--
--#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
- #define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
- 
--#define NUM_OF_FIRMWARE_QUEUE				10
--#define NUM_OF_PAGES_IN_FW				0x100
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA			0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT			0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH			0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
--
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM			0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM			0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM			0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM			0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM			0x00
--
--#define MAX_LINES_HWCONFIG_TXT				1000
--#define MAX_BYTES_LINE_HWCONFIG_TXT			256
--
--#define SW_THREE_WIRE					0
--#define HW_THREE_WIRE					2
--
--#define BT_DEMO_BOARD					0
--#define BT_QA_BOARD					1
--#define BT_FPGA						2
--
- #define RX_SMOOTH_FACTOR				20
- 
- #define HAL_PRIME_CHNL_OFFSET_DONT_CARE			0
- #define HAL_PRIME_CHNL_OFFSET_LOWER			1
- #define HAL_PRIME_CHNL_OFFSET_UPPER			2
- 
--#define MAX_H2C_QUEUE_NUM				10
--
- #define RX_MPDU_QUEUE					0
- #define RX_CMD_QUEUE					1
--#define RX_MAX_QUEUE					2
- 
- #define	C2H_RX_CMD_HDR_LEN				8
- #define	GET_C2H_CMD_CMD_LEN(__prxhdr)			\
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/def.h b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-index ef87c09..41466f9 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/def.h
-@@ -31,7 +31,6 @@
- 
- #define RX_MPDU_QUEUE				0
- #define RX_CMD_QUEUE				1
--#define RX_MAX_QUEUE				2
- 
- #define SHORT_SLOT_TIME				9
- #define NON_SHORT_SLOT_TIME			20
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/def.h b/drivers/net/wireless/rtlwifi/rtl8723ae/def.h
-index 94bdd4b..bcdf227 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/def.h
-@@ -26,53 +26,12 @@
- #ifndef __RTL8723E_DEF_H__
- #define __RTL8723E_DEF_H__
- 
--#define HAL_RETRY_LIMIT_INFRA				48
--#define HAL_RETRY_LIMIT_AP_ADHOC			7
--
--#define RESET_DELAY_8185					20
--
--#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
--#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
--
--#define NUM_OF_FIRMWARE_QUEUE				10
--#define NUM_OF_PAGES_IN_FW					0x100
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA		0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT		0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH		0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
--
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM		0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM		0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM		0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM		0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM		0x00
--
--#define MAX_LINES_HWCONFIG_TXT				1000
--#define MAX_BYTES_LINE_HWCONFIG_TXT			256
--
--#define SW_THREE_WIRE						0
--#define HW_THREE_WIRE						2
--
--#define BT_DEMO_BOARD						0
--#define BT_QA_BOARD							1
--#define BT_FPGA								2
--
- #define HAL_PRIME_CHNL_OFFSET_DONT_CARE		0
- #define HAL_PRIME_CHNL_OFFSET_LOWER			1
- #define HAL_PRIME_CHNL_OFFSET_UPPER			2
- 
--#define MAX_H2C_QUEUE_NUM					10
--
- #define RX_MPDU_QUEUE						0
- #define RX_CMD_QUEUE						1
--#define RX_MAX_QUEUE						2
--#define AC2QUEUEID(_AC)						(_AC)
- 
- #define	C2H_RX_CMD_HDR_LEN					8
- #define	GET_C2H_CMD_CMD_LEN(__prxhdr)		\
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/def.h b/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
-index ee7c208..dfbdf53 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/def.h
-@@ -118,55 +118,14 @@
- #define	WIFI_NAV_UPPER_US				30000
- #define HAL_92C_NAV_UPPER_UNIT			128
- 
--#define HAL_RETRY_LIMIT_INFRA				48
--#define HAL_RETRY_LIMIT_AP_ADHOC			7
--
--#define RESET_DELAY_8185					20
--
--#define RT_IBSS_INT_MASKS	(IMR_BCNINT | IMR_TBDOK | IMR_TBDER)
--#define RT_AC_INT_MASKS		(IMR_VIDOK | IMR_VODOK | IMR_BEDOK|IMR_BKDOK)
--
--#define NUM_OF_FIRMWARE_QUEUE				10
--#define NUM_OF_PAGES_IN_FW					0x100
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO			0x07
--#define NUM_OF_PAGE_IN_FW_QUEUE_HCCA		0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_CMD			0x0
--#define NUM_OF_PAGE_IN_FW_QUEUE_MGNT		0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_HIGH		0x02
--#define NUM_OF_PAGE_IN_FW_QUEUE_BCN			0x2
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB			0xA1
--
--#define NUM_OF_PAGE_IN_FW_QUEUE_BK_DTM		0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_BE_DTM		0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VI_DTM		0x048
--#define NUM_OF_PAGE_IN_FW_QUEUE_VO_DTM		0x026
--#define NUM_OF_PAGE_IN_FW_QUEUE_PUB_DTM		0x00
--
- #define MAX_RX_DMA_BUFFER_SIZE				0x3E80
- 
--#define MAX_LINES_HWCONFIG_TXT				1000
--#define MAX_BYTES_LINE_HWCONFIG_TXT			256
--
--#define SW_THREE_WIRE						0
--#define HW_THREE_WIRE						2
--
--#define BT_DEMO_BOARD						0
--#define BT_QA_BOARD							1
--#define BT_FPGA								2
--
- #define HAL_PRIME_CHNL_OFFSET_DONT_CARE		0
- #define HAL_PRIME_CHNL_OFFSET_LOWER			1
- #define HAL_PRIME_CHNL_OFFSET_UPPER			2
- 
--#define MAX_H2C_QUEUE_NUM					10
--
- #define RX_MPDU_QUEUE						0
- #define RX_CMD_QUEUE						1
--#define RX_MAX_QUEUE						2
--#define AC2QUEUEID(_AC)						(_AC)
- 
- #define MAX_RX_DMA_BUFFER_SIZE_8812	0x3E80
- 
++	brcmf_debugfs_add_entry(drvr, "revinfo", brcmf_revinfo_read);
++
+ 	/* assure we have chipid before feature attach */
+ 	if (!bus_if->chip) {
+ 		bus_if->chip = drvr->revinfo.chipnum;
 -- 
-2.3.0
+1.9.1
 
