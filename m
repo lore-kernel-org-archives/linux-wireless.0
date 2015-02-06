@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33081 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751844AbbBWP5n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 10:57:43 -0500
-Message-ID: <1424707044.3075.14.camel@sipsolutions.net> (sfid-20150223_165746_579361_EFA13356)
-Subject: Re: [PATCH v2] wext: Return -E2BIG when the buffer is too small for
- the full scan results, including IEs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: James Minor <james.minor@ni.com>
-Cc: linville@tuxdriver.com, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, xander.huff@ni.com, joshc@ni.com,
-	joseph.hershberger@ni.com, ben.shelton@ni.com, jaeden.amero@ni.com,
-	rich.tollerton@ni.com, brad.mouring@ni.com
-Date: Mon, 23 Feb 2015 16:57:24 +0100
-In-Reply-To: <1424382142-13346-1-git-send-email-james.minor@ni.com>
-References: <54E6561F.4050109@ni.com>
-	 <1424382142-13346-1-git-send-email-james.minor@ni.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.11.231]:37962 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880AbbBFGhO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 01:37:14 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [RESEND,
+ 1/2] rtlwifi: rtl8192ee: Fix handling of new style descriptors
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1422983718-21432-2-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Message-Id: <20150206063713.C8380140C14@smtp.codeaurora.org> (sfid-20150206_073719_426906_1AF5ABFE)
+Date: Fri,  6 Feb 2015 06:37:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-02-19 at 15:42 -0600, James Minor wrote:
 
-> +#define CHECK_BUF_FULL(p, c, e)		       \
-> +	do {                                   \
-> +		if (unlikely(p == c))	       \
-> +			e = -E2BIG;	       \
-> +	} while (0)
+> From: Troy Tan <troy_tan@realsil.com.cn>
+> 
+> The hardware and firmware for the RTL8192EE utilize a FIFO list of
+> descriptors. There were some problems with the initial implementation.
+> The worst of these failed to detect that the FIFO was becoming full,
+> which led to the device needing to be power cycled. As this condition
+> is not relevant to most of the devices supported by rtlwifi, a callback
+> routine was added to detect this situation. This patch implements the
+> necessary changes in the pci handler, and the linkage into the appropriate
+> rtl8192ee routine.
+> 
+> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> [V3.18]
 
-I think this would be nicer as a static inline that returned -E2BIG, or
-the passed in err, instead of modifying the macro argument.
+Thanks, 2 patches applied to wireless-drivers-next.git:
 
-johannes
+d0311314d002 rtlwifi: rtl8192ee: Fix handling of new style descriptors
+6d4beca37752 rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
 
+Kalle Valo
