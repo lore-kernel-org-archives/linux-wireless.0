@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gn237.zone.eu ([217.146.67.237]:17785 "EHLO gn237.zone.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755233AbbBOUsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 15:48:23 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH v2 1/7] rtlwifi: Remove unused defines from rtl8192cu driver
-Date: Sun, 15 Feb 2015 22:46:45 +0200
-Message-Id: <1424033211-11696-2-git-send-email-plaes@plaes.org> (sfid-20150215_215120_631028_F75D2F6E)
-In-Reply-To: <1424033211-11696-1-git-send-email-plaes@plaes.org>
-References: <1424033211-11696-1-git-send-email-plaes@plaes.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:38864 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754940AbbBFG7S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 01:59:18 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-02-03
+References: <1422947482.30742.8.camel@egrumbacBox>
+Date: Fri, 06 Feb 2015 08:59:12 +0200
+In-Reply-To: <1422947482.30742.8.camel@egrumbacBox> (Emmanuel Grumbach's
+	message of "Tue, 3 Feb 2015 07:11:20 +0000")
+Message-ID: <87ioffpltr.fsf@kamboji.qca.qualcomm.com> (sfid-20150206_075928_058174_6BAB7600)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.h | 2 --
- 1 file changed, 2 deletions(-)
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-index c1e33b0..6758808 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-@@ -32,8 +32,6 @@
- 
- #define H2C_RA_MASK	6
- 
--#define LLT_POLLING_LLT_THRESHOLD		20
--#define LLT_POLLING_READY_TIMEOUT_COUNT		100
- #define LLT_LAST_ENTRY_OF_TX_PKT_BUFFER		255
- 
- #define RX_PAGE_SIZE_REG_VALUE			PBP_128
+> Here is probably the last pull request for 3.20. Details below.
+> Since it is probably too late to send patches for 3.19, There are a few
+> patches here that are tagged for stable.
+>
+> Please let me know if you have issues!
+>
+> The following changes since commit 0b83795a110248db8f8e7c289a27b3b71b0bb35a:
+>
+>   iwlwifi: mvm: fix rx chains configuration in phy ctxt cmd (2015-01-22 22:17:22 +0200)
+
+Thanks, pulled.
+
 -- 
-2.3.0
-
+Kalle Valo
