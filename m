@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38179 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752397AbbBXKPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:15:22 -0500
-Message-ID: <1424772920.2192.20.camel@sipsolutions.net> (sfid-20150224_111526_353852_4C92F772)
-Subject: Re: [PATCH] mac80211_hwsim: support any address in userspace
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 24 Feb 2015 11:15:20 +0100
-In-Reply-To: <1424705624-7964-1-git-send-email-me@bobcopeland.com> (sfid-20150223_163628_160158_62E4F7CC)
-References: <1424705624-7964-1-git-send-email-me@bobcopeland.com>
-	 (sfid-20150223_163628_160158_62E4F7CC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12263 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751168AbbBFLri (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 06:47:38 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: Bypass PLL setting on target init for QCA9888
+Date: Fri, 6 Feb 2015 17:17:17 +0530
+Message-ID: <1423223238-17530-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150206_124742_080809_AF2E7FD2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-02-23 at 10:33 -0500, Bob Copeland wrote:
-> Due to the checks in get_hwsim_data_ref_from_addr, wmediumd
-> was only able to use the second mac address (those starting with
-> 0x42).  This is confusing and needlessly limiting, so allow any
-> configured address.
-> 
-> While at it, use ether_addr_equal since data->addresses and the
-> address from the netlink payload are aligned(2).
+Some of of qca988x solutions are having global reset issue
+during target initialization. Bypassing PLL setting before
+downloading firmware and letting the SoC run on REF_CLK is fixing
+the problem. Corresponding firmware change is also needed to set
+the clock source once the target is initialized. Since 10.2.4
+firmware is having this ROM patch, applying skip_clock_init only
+for 10.2.4 firmware versions.
 
-As I mentioned on IRC, I think you should iterate the interfaces to
-identify the currently live MAC addresses instead of the fake "hw
-addresses" we assign to each hwsim radio.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 310e12b..3119192 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -797,6 +797,20 @@ static int ath10k_download_cal_data(struct ath10k *ar)
+ 	ar->cal_mode = ATH10K_CAL_MODE_OTP;
+ 
+ done:
++	if ((ar->hw_rev != ATH10K_HW_QCA988X) ||
++	    (ar->wmi.op_version != ATH10K_FW_WMI_OP_VERSION_10_2_4)) {
++		ath10k_dbg(ar, ATH10K_DBG_BOOT,
++			   "boot using calibration mode %s\n",
++			   ath10k_cal_mode_str(ar->cal_mode));
++		return 0;
++	}
++
++	ret = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
++	if (ret) {
++		ath10k_err(ar, "could not write skip_clock_init (%d)\n", ret);
++		return ret;
++	}
++
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot using calibration mode %s\n",
+ 		   ath10k_cal_mode_str(ar->cal_mode));
+ 	return 0;
+-- 
+2.2.2
 
