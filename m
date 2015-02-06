@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:62292 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755606AbbBPS0r (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:38206 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739AbbBFGmr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 13:26:47 -0500
-Received: by mail-ob0-f172.google.com with SMTP id nt9so44955747obb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2015 10:26:46 -0800 (PST)
-Message-ID: <54E23664.70509@lwfinger.net> (sfid-20150216_192651_602827_8F9D5AA6)
-Date: Mon, 16 Feb 2015 12:26:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 6 Feb 2015 01:42:47 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Alan Fisher <acf@unixcube.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: PROBLEM: rtlwifi drops most IPv6 packets
-References: <54E19DD6.9050704@unixcube.org>
-In-Reply-To: <54E19DD6.9050704@unixcube.org>
-Content-Type: multipart/mixed;
- boundary="------------090100050405060808070108"
+Subject: Re: ath5k: fix spontaneus AR5312 freezes
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1422998473-3709-1-git-send-email-ryazanov.s.a@gmail.com>
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Message-Id: <20150206064246.9AA43140C6D@smtp.codeaurora.org> (sfid-20150206_074249_755157_70BC53DB)
+Date: Fri,  6 Feb 2015 06:42:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------090100050405060808070108
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
 
-On 02/16/2015 01:35 AM, Alan Fisher wrote:
+> Sometimes while CPU have some load and ath5k doing the wireless
+> interface reset the whole WiSoC completely freezes. Set of tests shows
+> that using atomic delay function while we wait interface reset helps to
+> avoid such freezes.
+> 
+> The easiest way to reproduce this issue: create a station interface,
+> start continous scan with wpa_supplicant and load CPU by something. Or
+> just create multiple station interfaces and put them all in continous
+> scan.
+> 
+> This patch partially reverts the commit 1846ac3dbec0 ("ath5k: Use
+> usleep_range where possible"), which replaces initial udelay()
+> by usleep_range().
+> 
+> I do not know actual source of this issue, but all looks like that HW
+> freeze is caused by transaction on internal SoC bus, while wireless
+> block is in reset state.
+> 
+> Also I should note that I do not know how many chips are affected, but I
+> did not see this issue with chips, other than AR5312.
+> 
+> CC: Jiri Slaby <jirislaby@gmail.com>
+> CC: Nick Kossifidis <mickflemm@gmail.com>
+> CC: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+> Fixes: 1846ac3dbec0 ("ath5k: Use usleep_range where possible")
+> Reported-by: Christophe Prevotaux <c.prevotaux@rural-networks.com>
+> Tested-by: Christophe Prevotaux <c.prevotaux@rural-networks.com>
+> Tested-by: Eric Bree <ebree@nltinc.com>
+> Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 
-Alan,
+Thanks, applied to wireless-drivers-next.git.
 
-I looked at the routine, and it is returning true for all IPv6 packets.
-
-Does the attached patch for 3.18 or 3.19 help?
-
-Larry
-
-
---------------090100050405060808070108
-Content-Type: text/plain; charset=UTF-8;
- name="modify_is_special_data"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="modify_is_special_data"
-
-SW5kZXg6IHdpcmVsZXNzLWRyaXZlcnMtbmV4dC9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3
-aWZpL2Jhc2UuYwo9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSB3aXJlbGVzcy1kcml2ZXJzLW5leHQub3Jp
-Zy9kcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL2Jhc2UuYworKysgd2lyZWxlc3MtZHJp
-dmVycy1uZXh0L2RyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvYmFzZS5jCkBAIC0xMzQ3
-LDcgKzEzNDcsNyBAQCB1OCBydGxfaXNfc3BlY2lhbF9kYXRhKHN0cnVjdCBpZWVlODAyMTFf
-CiAJb2Zmc2V0ID0gbWFjX2hkcl9sZW4gKyBTTkFQX1NJWkUgKyBlbmNyeXB0X2hlYWRlcl9s
-ZW47CiAJZXRoZXJfdHlwZSA9IGJlMTZfdG9fY3B1cCgoX19iZTE2ICopKHNrYi0+ZGF0YSAr
-IG9mZnNldCkpOwogCi0JaWYgKEVUSF9QX0lQID09IGV0aGVyX3R5cGUpIHsKKwlpZiAoRVRI
-X1BfSVAgPT0gZXRoZXJfdHlwZSB8fCBFVEhfUF9JUFY2ID09IGV0aGVyX3R5cGUpIHsKIAkJ
-aXAgPSAoc3RydWN0IGlwaGRyICopKCh1OCAqKXNrYi0+ZGF0YSArIG9mZnNldCArCiAJCSAg
-ICAgUFJPVE9DX1RZUEVfU0laRSk7CiAJCWlmIChJUFBST1RPX1VEUCA9PSBpcC0+cHJvdG9j
-b2wpIHsKQEAgLTEzODYsOCArMTM4Niw2IEBAIHU4IHJ0bF9pc19zcGVjaWFsX2RhdGEoc3Ry
-dWN0IGllZWU4MDIxMV8KIAkJfQogCiAJCXJldHVybiB0cnVlOwotCX0gZWxzZSBpZiAoMHg4
-NkREID09IGV0aGVyX3R5cGUpIHsKLQkJcmV0dXJuIHRydWU7CiAJfQogCiBlbmQ6Cg==
---------------090100050405060808070108--
+Kalle Valo
