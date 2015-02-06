@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:59944 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933111AbbBIRyZ (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:57042 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509AbbBFNxH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 12:54:25 -0500
-Received: by mail-lb0-f169.google.com with SMTP id f15so31309136lbj.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 09:54:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net>
-Date: Mon, 9 Feb 2015 09:54:23 -0800
-Message-ID: <CAJAp7OhcFTuYfc7JOKW1SrVRbucuSWg5jcFaoVnSDgBxsyo2ng@mail.gmail.com> (sfid-20150209_185429_730143_DD094C2D)
-Subject: Re: [PATCH 6/7] net: wireless: wcn36xx: remove powersaving for wcn3620
-From: Bjorn Andersson <bjorn@kryo.se>
-To: Andy Green <andy.green@linaro.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 6 Feb 2015 08:53:07 -0500
+Message-ID: <1423230785.31870.131.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150206_145313_585029_C16B8C62)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Fri, 06 Feb 2015 05:53:05 -0800
+In-Reply-To: <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+	 <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
+	 <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 17, 2015 at 9:11 PM, Andy Green <andy.green@linaro.org> wrote:
-> WCN3620 powersaving mode is not stable.  Disable it if we're
-> on a wcn3620 chip type.
->
-> Signed-off-by: Andy Green <andy.green@linaro.org>
-> ---
->  drivers/net/wireless/ath/wcn36xx/main.c |    4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-> index c4178c7..569d45b 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/main.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
-> @@ -924,6 +924,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
->                 IEEE80211_HW_AMPDU_AGGREGATION |
->                 IEEE80211_HW_TIMING_BEACON_ONLY;
->
-> +       /* 3620 powersaving currently unstable */
-> +       if (wcn->chip_version == WCN36XX_CHIP_3620)
-> +               wcn->hw->flags &= ~IEEE80211_HW_SUPPORTS_PS;
-> +
+On Fri, 2015-02-06 at 05:40 -0800, Eric Dumazet wrote:
 
-Hi Andy,
+> tcp_wfree() could maintain in tp->tx_completion_delay_ms an EWMA
+> of TX completion delay. But this would require yet another expensive
+> call to ktime_get() if HZ < 1000.
+> 
+> Then tcp_write_xmit() could use it to adjust :
+> 
+>    limit = max(2 * skb->truesize, sk->sk_pacing_rate >> 9);
+> 
+> to
+> 
+>    amount = (2 + tp->tx_completion_delay_ms) * sk->sk_pacing_rate 
+> 
+>    limit = max(2 * skb->truesize, amount / 1000);
+> 
+> I'll cook a patch.
 
-I have the same problem (Data Abort Exception in wcnss) on 3680, this
-with my wip smd code and a hacked up remoteproc-pil. I haven't spent
-any effort on debugging this, but it looks like it's something related
-to what we have ported to mainline (or lack thereof) rather than a
-3620 specific issue.
+Hmm... doing this in all protocols would be too expensive,
+and we do not want to include time spent in qdiscs.
 
-Regards,
-Bjorn
+wifi could eventually do that, providing in skb->tx_completion_delay_us
+the time spent in wifi driver.
+
+This way, we would have no penalty for network devices doing normal skb
+orphaning (loopback interface, ethernet, ...)
+
+
