@@ -1,159 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:40125 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702AbbBFOjt (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:43354 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756785AbbBFRhG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 09:39:49 -0500
-Received: by mail-wi0-f181.google.com with SMTP id fb4so2899828wid.2
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 06:39:48 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [RFC 1/2] ath9k: add per-vif TX power capability
-Date: Fri,  6 Feb 2015 15:39:45 +0100
-Message-Id: <1423233586-9258-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150206_153952_759240_0642FE81)
-In-Reply-To: <1423233586-9258-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1423233586-9258-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Fri, 6 Feb 2015 12:37:06 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 5/6] brcmfmac: Dont sleep when ctrl frames to transmit.
+Date: Fri, 6 Feb 2015 18:36:46 +0100
+Message-ID: <1423244207-9707-6-git-send-email-arend@broadcom.com> (sfid-20150206_183716_251505_D46E56B9)
+In-Reply-To: <1423244207-9707-1-git-send-email-arend@broadcom.com>
+References: <1423244207-9707-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure the HW with highest TX power among all vif when HW TPC has been
-enabled in order to add support for per-vif TX power capability. Use lowest
-configured power among all interfaces when TPC is disabled
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+The SDIO watchdog will put the device in sleep mode when there is
+no activity for some time and nothing to do anymore. This check
+is incomplete and should also check if there is a control frame
+to transmit.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/debug.c |  5 +++-
- drivers/net/wireless/ath/ath9k/main.c  | 52 ++++++++++++++++++++++++++++------
- 3 files changed, 49 insertions(+), 9 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0f8e946..7e89236 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -645,6 +645,7 @@ void ath9k_calculate_iter_data(struct ath_softc *sc,
- 			       struct ath9k_vif_iter_data *iter_data);
- void ath9k_calculate_summary_state(struct ath_softc *sc,
- 				   struct ath_chanctx *ctx);
-+void ath9k_set_txpower(struct ath_softc *sc, struct ieee80211_vif *vif);
- 
- /*******************/
- /* Beacon Handling */
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 50a2e0a..dbf8f49 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1156,7 +1156,10 @@ static ssize_t write_file_tpc(struct file *file, const char __user *user_buf,
- 
- 	if (tpc_enabled != ah->tpc_enabled) {
- 		ah->tpc_enabled = tpc_enabled;
--		ath9k_hw_set_txpowerlimit(ah, sc->cur_chan->txpower, false);
-+
-+		mutex_lock(&sc->mutex);
-+		ath9k_set_txpower(sc, NULL);
-+		mutex_unlock(&sc->mutex);
- 	}
- 
- 	return count;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 98b1e4a..2e2775b 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1173,6 +1173,38 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
- 	ath9k_ps_restore(sc);
- }
- 
-+static void ath9k_tpc_vif_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
-+{
-+	int *power = (int *)data;
-+
-+	if (*power < vif->bss_conf.txpower)
-+		*power = vif->bss_conf.txpower;
-+}
-+
-+/* Called with sc->mutex held. */
-+void ath9k_set_txpower(struct ath_softc *sc, struct ieee80211_vif *vif)
-+{
-+	int power;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
-+
-+	ath9k_ps_wakeup(sc);
-+	if (ah->tpc_enabled) {
-+		power = (vif) ? vif->bss_conf.txpower : -1;
-+		ieee80211_iterate_active_interfaces_atomic(
-+				sc->hw, IEEE80211_IFACE_ITER_RESUME_ALL,
-+				ath9k_tpc_vif_iter, &power);
-+		if (power == -1)
-+			power = sc->hw->conf.power_level;
-+	} else {
-+		power = sc->hw->conf.power_level;
-+	}
-+	sc->cur_chan->txpower = 2 * power;
-+	ath9k_hw_set_txpowerlimit(ah, sc->cur_chan->txpower, false);
-+	sc->cur_chan->cur_txpower = reg->max_power_level;
-+	ath9k_ps_restore(sc);
-+}
-+
- static void ath9k_assign_hw_queues(struct ieee80211_hw *hw,
- 				   struct ieee80211_vif *vif)
- {
-@@ -1226,6 +1258,8 @@ static int ath9k_add_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_assign_hw_queues(hw, vif);
- 
-+	ath9k_set_txpower(sc, vif);
-+
- 	an->sc = sc;
- 	an->sta = NULL;
- 	an->vif = vif;
-@@ -1266,6 +1300,8 @@ static int ath9k_change_interface(struct ieee80211_hw *hw,
- 	ath9k_assign_hw_queues(hw, vif);
- 	ath9k_calculate_summary_state(sc, avp->chanctx);
- 
-+	ath9k_set_txpower(sc, vif);
-+
- 	mutex_unlock(&sc->mutex);
- 	return 0;
- }
-@@ -1295,6 +1331,8 @@ static void ath9k_remove_interface(struct ieee80211_hw *hw,
- 
- 	ath9k_calculate_summary_state(sc, avp->chanctx);
- 
-+	ath9k_set_txpower(sc, NULL);
-+
- 	mutex_unlock(&sc->mutex);
- }
- 
-@@ -1398,14 +1436,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 		ath_chanctx_set_channel(sc, ctx, &hw->conf.chandef);
- 	}
- 
--	if (changed & IEEE80211_CONF_CHANGE_POWER) {
--		ath_dbg(common, CONFIG, "Set power: %d\n", conf->power_level);
--		sc->cur_chan->txpower = 2 * conf->power_level;
--		ath9k_cmn_update_txpow(ah, sc->cur_chan->cur_txpower,
--				       sc->cur_chan->txpower,
--				       &sc->cur_chan->cur_txpower);
--	}
--
- 	mutex_unlock(&sc->mutex);
- 	ath9k_ps_restore(sc);
- 
-@@ -1765,6 +1795,12 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	if (changed & CHECK_ANI)
- 		ath_check_ani(sc);
- 
-+	if (changed & BSS_CHANGED_TXPOWER) {
-+		ath_dbg(common, CONFIG, "vif %pM power %d dbm power_type %d\n",
-+			vif->addr, bss_conf->txpower, bss_conf->txpower_type);
-+		ath9k_set_txpower(sc, vif);
-+	}
-+
- 	mutex_unlock(&sc->mutex);
- 	ath9k_ps_restore(sc);
- 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index ea403d1..f365cde 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -1027,6 +1027,7 @@ brcmf_sdio_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
+ 			/* Don't sleep if something is pending */
+ 			if (atomic_read(&bus->intstatus) ||
+ 			    atomic_read(&bus->ipend) > 0 ||
++			    bus->ctrl_frame_stat ||
+ 			    (!atomic_read(&bus->fcstate) &&
+ 			    brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol) &&
+ 			    data_ok(bus))) {
 -- 
-2.1.0
+1.9.1
 
