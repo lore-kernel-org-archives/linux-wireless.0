@@ -1,615 +1,409 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:52777 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752892AbbBHNx0 (ORCPT
+Received: from n9-38.mail.139.com ([221.176.9.38]:37508 "EHLO
+	n9-38.mail.139.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751168AbbBFK43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2015 08:53:26 -0500
-From: Dedy Lansky <dlansky@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-	linux-wireless@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Subject: [PATCH v2 1/2] cfg80211: add bss_type and privacy arguments in cfg80211_get_bss()
-Date: Sun,  8 Feb 2015 15:52:03 +0200
-Message-Id: <1423403524-22540-2-git-send-email-dlansky@codeaurora.org> (sfid-20150208_145333_447715_A2FA1B7F)
-In-Reply-To: <1423403524-22540-1-git-send-email-dlansky@codeaurora.org>
-References: <1423403524-22540-1-git-send-email-dlansky@codeaurora.org>
+	Fri, 6 Feb 2015 05:56:29 -0500
+From: yuweizheng@139.com
+To: linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@qca.qualcomm.com
+Cc: netdev@vger.kernel.org, zhengyuwei@360.cn,
+	Yuwei Zheng <yuweizheng@139.com>
+Subject: [PATCH] ath9k_htc: add adaptive usb receive flow control to repair soft lockup with monitor mode
+Date: Fri,  6 Feb 2015 18:46:38 +0800
+Message-Id: <1423219598-17982-1-git-send-email-yuweizheng@139.com> (sfid-20150206_115651_628598_CF653159)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Background: 802.11ad adds new network type (PBSS) and changes "capability"
-field interpretation for the DMG (60G) band.
-Same 2 bits that was interpreted as "ESS" and "IBSS", are re-used as
-2-bit field with 3 valid values (and 1 reserved). Valid values are:
-"IBSS", "PBSS" (new) and "AP".
+From: Yuwei Zheng <yuweizheng@139.com>
 
-New enum added into cfg80211.h - ieee80211_bss_type with valid network types.
-When searching for particular network type in cfg80211_get_bss,
-"capa_mask" and "capa_val" would not work due to difference described above.
-Thus, need to decouple network type (bss_type) and handle it separately.
+In the environment with heavy wifi traffic, set the ar9271 into monitor mode, will
+trigger a deadloop panic.
+ 
+The ath9k_hif_usb_rx_cb function excute on  the interrupt context, and ath9k_rx_tasklet excute
+on the soft irq context. In other words, the ath9k_hif_usb_rx_cb have more chance to excute than
+ath9k_rx_tasklet.  So in the worst condition,  the rx.rxbuf receive list is always full,
+and the do {}while(true) loop will not be break. The kernel get a soft lockup panic. 
+ 
+[59011.007210] BUG: soft lockup - CPU#0 stuck for 23s!
+[kworker/0:0:30609]
+[59011.030560] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
+[59013.804486] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
+[59013.858522] Kernel panic - not syncing: softlockup: hung tasks
+ 
+[59014.038891] Exception stack(0xdf4bbc38 to 0xdf4bbc80)
+[59014.046834] bc20:                                                       de57b950 60000113
+[59014.059579] bc40: 00000000 bb32bb32 60000113 de57b948 de57b500 dc7bb440 df4bbcd0 00000000
+[59014.072337] bc60: de57b950 60000113 df4bbcd0 df4bbc80 c04c259d c04c25a0 60000133 ffffffff
+[59014.085233] [<c04c28db>] (__irq_svc+0x3b/0x5c) from [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10)
+[59014.100437] [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10) from [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc])
+[59014.118267] [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc]) from [<c0036d23>] (tasklet_action+0x3b/0x98)
+[59014.134132] [<c0036d23>] (tasklet_action+0x3b/0x98) from [<c0036709>] (__do_softirq+0x99/0x16c)
+[59014.147784] [<c0036709>] (__do_softirq+0x99/0x16c) from [<c00369f7>] (irq_exit+0x5b/0x5c)
+[59014.160653] [<c00369f7>] (irq_exit+0x5b/0x5c) from [<c000cfc3>] (handle_IRQ+0x37/0x78)
+[59014.173124] [<c000cfc3>] (handle_IRQ+0x37/0x78) from [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68)
+[59014.187225] [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68) from [<c04c28db>](__irq_svc+0x3b/0x5c)
+ 
+This bug can be see with low performance board, such as uniprocessor beagle bone board. 
+ 
+Signed-off-by: Yuwei Zheng <yuweizheng@139.com>
 
-Remaining bits in "capa_mask" and "capa_val" are used only for PRIVACY matching
-so replace those two with privacy enum.
-
-Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c       |  3 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c  |  9 +--
- drivers/net/wireless/ath/wil6210/cfg80211.c |  2 +-
- drivers/net/wireless/cw1200/sta.c           |  4 +-
- drivers/net/wireless/libertas/cfg.c         |  6 +-
- drivers/net/wireless/mwifiex/cfg80211.c     |  8 +--
- include/net/cfg80211.h                      | 40 +++++++++++++-
- net/mac80211/ibss.c                         | 43 ++++-----------
- net/wireless/ibss.c                         |  2 +-
- net/wireless/mlme.c                         |  6 +-
- net/wireless/scan.c                         | 86 ++++++++++++++++++++++++++---
- net/wireless/sme.c                          | 16 ++----
- net/wireless/trace.h                        | 24 ++++----
- 13 files changed, 169 insertions(+), 80 deletions(-)
+ drivers/net/wireless/ath/ath9k/hif_usb.c       | 74 +++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/hif_usb.h       |  9 ++++
+ drivers/net/wireless/ath/ath9k/htc.h           | 19 +++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 53 ++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  | 44 +++++++++++++++
+ 5 files changed, 192 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 60a524b..96f6306 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1206,7 +1206,8 @@ static void ath10k_peer_assoc_h_crypto(struct ath10k *ar,
- 	lockdep_assert_held(&ar->conf_mutex);
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 8e7153b..90ee568 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -640,6 +640,7 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+ 	struct hif_device_usb *hif_dev =
+ 		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
+ 	int ret;
++	int delay;
  
- 	bss = cfg80211_get_bss(ar->hw->wiphy, ar->hw->conf.chandef.chan,
--			       info->bssid, NULL, 0, 0, 0);
-+			       info->bssid, NULL, 0, IEEE80211_BSS_TYPE_ANY,
-+			       IEEE80211_PRIVACY_ANY);
- 	if (bss) {
- 		const struct cfg80211_bss_ies *ies;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 85da63a..ff7ba5c 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -686,20 +686,21 @@ ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
- {
- 	struct ath6kl *ar = vif->ar;
- 	struct cfg80211_bss *bss;
--	u16 cap_mask, cap_val;
-+	u16 cap_val;
-+	enum ieee80211_bss_type bss_type;
- 	u8 *ie;
- 
- 	if (nw_type & ADHOC_NETWORK) {
--		cap_mask = WLAN_CAPABILITY_IBSS;
- 		cap_val = WLAN_CAPABILITY_IBSS;
-+		bss_type = IEEE80211_BSS_TYPE_IBSS;
- 	} else {
--		cap_mask = WLAN_CAPABILITY_ESS;
- 		cap_val = WLAN_CAPABILITY_ESS;
-+		bss_type = IEEE80211_BSS_TYPE_ESS;
+ 	if (!skb)
+ 		return;
+@@ -658,7 +659,6 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+ 	default:
+ 		goto resubmit;
  	}
- 
- 	bss = cfg80211_get_bss(ar->wiphy, chan, bssid,
- 			       vif->ssid, vif->ssid_len,
--			       cap_mask, cap_val);
-+			       bss_type, IEEE80211_PRIVACY_ANY);
- 	if (bss == NULL) {
- 		/*
- 		 * Since cfg80211 may not yet know about the BSS,
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index e758f43..c3d29a7 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -370,7 +370,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 
- 	bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
- 			       sme->ssid, sme->ssid_len,
--			       WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
-+			       IEEE80211_BSS_TYPE_ESS, IEEE80211_PRIVACY_ANY);
- 	if (!bss) {
- 		wil_err(wil, "Unable to find BSS\n");
- 		return -ENOENT;
-diff --git a/drivers/net/wireless/cw1200/sta.c b/drivers/net/wireless/cw1200/sta.c
-index 4a47c7f..1b58b2e 100644
---- a/drivers/net/wireless/cw1200/sta.c
-+++ b/drivers/net/wireless/cw1200/sta.c
-@@ -1240,8 +1240,8 @@ static void cw1200_do_join(struct cw1200_common *priv)
- 
- 	bssid = priv->vif->bss_conf.bssid;
- 
--	bss = cfg80211_get_bss(priv->hw->wiphy, priv->channel,
--			bssid, NULL, 0, 0, 0);
-+	bss = cfg80211_get_bss(priv->hw->wiphy, priv->channel, bssid, NULL, 0,
-+			       IEEE80211_BSS_TYPE_ANY, IEEE80211_PRIVACY_ANY);
- 
- 	if (!bss && !conf->ibss_joined) {
- 		wsm_unlock_tx(priv);
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index a92985a..1a4d558 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -1356,8 +1356,8 @@ static int lbs_cfg_connect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	/* Find the BSS we want using available scan results */
- 	bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
--		sme->ssid, sme->ssid_len,
--		WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
-+		sme->ssid, sme->ssid_len, IEEE80211_BSS_TYPE_ESS,
-+		IEEE80211_PRIVACY_ANY);
- 	if (!bss) {
- 		wiphy_err(wiphy, "assoc: bss %pM not in scan results\n",
- 			  sme->bssid);
-@@ -2000,7 +2000,7 @@ static int lbs_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 	 * bss list is populated already */
- 	bss = cfg80211_get_bss(wiphy, params->chandef.chan, params->bssid,
- 		params->ssid, params->ssid_len,
--		WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
-+		IEEE80211_BSS_TYPE_IBSS, IEEE80211_PRIVACY_ANY);
- 
- 	if (bss) {
- 		ret = lbs_ibss_join_existing(priv, params, bss);
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 41c8e25..a47eb55 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1954,13 +1954,13 @@ done:
- 		if (mode == NL80211_IFTYPE_ADHOC)
- 			bss = cfg80211_get_bss(priv->wdev.wiphy, channel,
- 					       bssid, ssid, ssid_len,
--					       WLAN_CAPABILITY_IBSS,
--					       WLAN_CAPABILITY_IBSS);
-+					       IEEE80211_BSS_TYPE_IBSS,
-+					       IEEE80211_PRIVACY_ANY);
- 		else
- 			bss = cfg80211_get_bss(priv->wdev.wiphy, channel,
- 					       bssid, ssid, ssid_len,
--					       WLAN_CAPABILITY_ESS,
--					       WLAN_CAPABILITY_ESS);
-+					       IEEE80211_BSS_TYPE_ESS,
-+					       IEEE80211_PRIVACY_ANY);
- 
- 		if (!bss) {
- 			if (is_scanning_required) {
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 64e09e1..acf8f09 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -215,6 +215,40 @@ enum ieee80211_rate_flags {
- };
- 
- /**
-+ * enum ieee80211_bss_type - BSS type as defined in 80211ad #6.3.3.2
-+ *
-+ * @IEEE80211_BSS_TYPE_ESS: Infrastructure BSS
-+ * @IEEE80211_BSS_TYPE_PBSS: Personal BSS
-+ * @IEEE80211_BSS_TYPE_IBSS: Independent BSS
-+ * @IEEE80211_BSS_TYPE_MBSS: Mesh BSS
-+ * @IEEE80211_BSS_TYPE_ANY: Wildcard value for matching any BSS type
-+ */
-+enum ieee80211_bss_type {
-+	IEEE80211_BSS_TYPE_ESS,
-+	IEEE80211_BSS_TYPE_PBSS,
-+	IEEE80211_BSS_TYPE_IBSS,
-+	IEEE80211_BSS_TYPE_MBSS,
-+	IEEE80211_BSS_TYPE_ANY
-+};
-+
-+/**
-+ * enum ieee80211_privacy - privacy settings
-+ *
-+ * Privacy bit in capability field as defined in 80211 #8.4.1.4
-+ *
-+ * @IEEE80211_PRIVACY_ON: privacy bit set
-+ * @IEEE80211_PRIVACY_OFF: privacy bit clear
-+ * @IEEE80211_PRIVACY_ANY: Wildcard value for matching any privacy setting
-+ */
-+enum ieee80211_privacy {
-+	IEEE80211_PRIVACY_ON,
-+	IEEE80211_PRIVACY_OFF,
-+	IEEE80211_PRIVACY_ANY
-+};
-+
-+#define IEEE80211_PRIVACY(x) (x ? IEEE80211_PRIVACY_ON : IEEE80211_PRIVACY_OFF)
-+
-+/**
-  * struct ieee80211_rate - bitrate definition
-  *
-  * This structure describes a bitrate that an 802.11 PHY can
-@@ -4012,14 +4046,16 @@ struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 				      struct ieee80211_channel *channel,
- 				      const u8 *bssid,
- 				      const u8 *ssid, size_t ssid_len,
--				      u16 capa_mask, u16 capa_val);
-+				      enum ieee80211_bss_type bss_type,
-+				      enum ieee80211_privacy);
- static inline struct cfg80211_bss *
- cfg80211_get_ibss(struct wiphy *wiphy,
- 		  struct ieee80211_channel *channel,
- 		  const u8 *ssid, size_t ssid_len)
- {
- 	return cfg80211_get_bss(wiphy, channel, NULL, ssid, ssid_len,
--				WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
-+				IEEE80211_BSS_TYPE_IBSS,
-+				IEEE80211_PRIVACY_ANY);
- }
- 
- /**
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index b606b53..ee93d7d 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -470,22 +470,19 @@ int ieee80211_ibss_csa_beacon(struct ieee80211_sub_if_data *sdata,
- 	struct beacon_data *presp, *old_presp;
- 	struct cfg80211_bss *cbss;
- 	const struct cfg80211_bss_ies *ies;
--	u16 capability;
-+	u16 capability = 0;
- 	u64 tsf;
- 	int ret = 0;
- 
- 	sdata_assert_lock(sdata);
- 
--	capability = WLAN_CAPABILITY_IBSS;
 -
- 	if (ifibss->privacy)
--		capability |= WLAN_CAPABILITY_PRIVACY;
-+		capability = WLAN_CAPABILITY_PRIVACY;
- 
- 	cbss = cfg80211_get_bss(sdata->local->hw.wiphy, ifibss->chandef.chan,
- 				ifibss->bssid, ifibss->ssid,
--				ifibss->ssid_len, WLAN_CAPABILITY_IBSS |
--				WLAN_CAPABILITY_PRIVACY,
--				capability);
-+				ifibss->ssid_len, IEEE80211_BSS_TYPE_IBSS,
-+				IEEE80211_PRIVACY(ifibss->privacy));
- 
- 	if (WARN_ON(!cbss)) {
- 		ret = -EINVAL;
-@@ -525,23 +522,17 @@ int ieee80211_ibss_finish_csa(struct ieee80211_sub_if_data *sdata)
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 	struct cfg80211_bss *cbss;
- 	int err, changed = 0;
--	u16 capability;
- 
- 	sdata_assert_lock(sdata);
- 
- 	/* update cfg80211 bss information with the new channel */
- 	if (!is_zero_ether_addr(ifibss->bssid)) {
--		capability = WLAN_CAPABILITY_IBSS;
+ 	if (likely(urb->actual_length != 0)) {
+ 		skb_put(skb, urb->actual_length);
+ 		ath9k_hif_usb_rx_stream(hif_dev, skb);
+@@ -667,12 +667,22 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+ resubmit:
+ 	skb_reset_tail_pointer(skb);
+ 	skb_trim(skb, 0);
 -
--		if (ifibss->privacy)
--			capability |= WLAN_CAPABILITY_PRIVACY;
--
- 		cbss = cfg80211_get_bss(sdata->local->hw.wiphy,
- 					ifibss->chandef.chan,
- 					ifibss->bssid, ifibss->ssid,
--					ifibss->ssid_len, WLAN_CAPABILITY_IBSS |
--					WLAN_CAPABILITY_PRIVACY,
--					capability);
-+					ifibss->ssid_len,
-+					IEEE80211_BSS_TYPE_IBSS,
-+					IEEE80211_PRIVACY(ifibss->privacy));
- 		/* XXX: should not really modify cfg80211 data */
- 		if (cbss) {
- 			cbss->channel = sdata->csa_chandef.chan;
-@@ -682,19 +673,13 @@ static void ieee80211_ibss_disconnect(struct ieee80211_sub_if_data *sdata)
- 	struct cfg80211_bss *cbss;
- 	struct beacon_data *presp;
- 	struct sta_info *sta;
--	u16 capability;
- 
- 	if (!is_zero_ether_addr(ifibss->bssid)) {
--		capability = WLAN_CAPABILITY_IBSS;
--
--		if (ifibss->privacy)
--			capability |= WLAN_CAPABILITY_PRIVACY;
--
- 		cbss = cfg80211_get_bss(local->hw.wiphy, ifibss->chandef.chan,
- 					ifibss->bssid, ifibss->ssid,
--					ifibss->ssid_len, WLAN_CAPABILITY_IBSS |
--					WLAN_CAPABILITY_PRIVACY,
--					capability);
-+					ifibss->ssid_len,
-+					IEEE80211_BSS_TYPE_IBSS,
-+					IEEE80211_PRIVACY(ifibss->privacy));
- 
- 		if (cbss) {
- 			cfg80211_unlink_bss(local->hw.wiphy, cbss);
-@@ -1325,7 +1310,6 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 	const u8 *bssid = NULL;
- 	enum nl80211_bss_scan_width scan_width;
- 	int active_ibss;
--	u16 capability;
- 
- 	sdata_assert_lock(sdata);
- 
-@@ -1335,9 +1319,6 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 	if (active_ibss)
- 		return;
- 
--	capability = WLAN_CAPABILITY_IBSS;
--	if (ifibss->privacy)
--		capability |= WLAN_CAPABILITY_PRIVACY;
- 	if (ifibss->fixed_bssid)
- 		bssid = ifibss->bssid;
- 	if (ifibss->fixed_channel)
-@@ -1346,8 +1327,8 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
- 		bssid = ifibss->bssid;
- 	cbss = cfg80211_get_bss(local->hw.wiphy, chan, bssid,
- 				ifibss->ssid, ifibss->ssid_len,
--				WLAN_CAPABILITY_IBSS | WLAN_CAPABILITY_PRIVACY,
--				capability);
-+				IEEE80211_BSS_TYPE_IBSS,
-+				IEEE80211_PRIVACY(ifibss->privacy));
- 
- 	if (cbss) {
- 		struct ieee80211_bss *bss;
-diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
-index e24fc58..1a65662 100644
---- a/net/wireless/ibss.c
-+++ b/net/wireless/ibss.c
-@@ -30,7 +30,7 @@ void __cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid,
- 		return;
- 
- 	bss = cfg80211_get_bss(wdev->wiphy, channel, bssid, NULL, 0,
--			       WLAN_CAPABILITY_IBSS, WLAN_CAPABILITY_IBSS);
-+			       IEEE80211_BSS_TYPE_IBSS, IEEE80211_PRIVACY_ANY);
- 
- 	if (WARN_ON(!bss))
- 		return;
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 2c52b59..7aae329 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -229,7 +229,8 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
- 		return -EALREADY;
- 
- 	req.bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
--				   WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
-+				   IEEE80211_BSS_TYPE_ESS,
-+				   IEEE80211_PRIVACY_ANY);
- 	if (!req.bss)
- 		return -ENOENT;
- 
-@@ -296,7 +297,8 @@ int cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 				   rdev->wiphy.vht_capa_mod_mask);
- 
- 	req->bss = cfg80211_get_bss(&rdev->wiphy, chan, bssid, ssid, ssid_len,
--				    WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
-+				    IEEE80211_BSS_TYPE_ESS,
-+				    IEEE80211_PRIVACY_ANY);
- 	if (!req->bss)
- 		return -ENOENT;
- 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index c705c3e..dcfb4e7 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -531,24 +531,78 @@ static int cmp_bss(struct cfg80211_bss *a,
- 	}
- }
- 
-+static bool cfg80211_bss_type_match(u16 capability,
-+				    enum ieee80211_band band,
-+				    enum ieee80211_bss_type bss_type)
-+{
-+	bool ret = true;
-+	u16 mask, val;
-+
-+	if (bss_type == IEEE80211_BSS_TYPE_ANY)
-+		return ret;
-+
-+	if (band == IEEE80211_BAND_60GHZ) {
-+		mask = WLAN_CAPABILITY_DMG_TYPE_MASK;
-+		switch (bss_type) {
-+		case IEEE80211_BSS_TYPE_ESS:
-+			val = WLAN_CAPABILITY_DMG_TYPE_AP;
-+			break;
-+		case IEEE80211_BSS_TYPE_PBSS:
-+			val = WLAN_CAPABILITY_DMG_TYPE_PBSS;
-+			break;
-+		case IEEE80211_BSS_TYPE_IBSS:
-+			val = WLAN_CAPABILITY_DMG_TYPE_IBSS;
-+			break;
-+		default:
-+			return false;
-+		}
+-	usb_anchor_urb(urb, &hif_dev->rx_submitted);
+-	ret = usb_submit_urb(urb, GFP_ATOMIC);
+-	if (ret) {
+-		usb_unanchor_urb(urb);
+-		goto free;
++	spin_lock(&hif_dev->aurfc_lock);
++	if (atomic_read(&hif_dev->aurfc_submit_delay) > 0 &&
++	    hif_dev->aurfc_active == 1) {
++		usb_anchor_urb(urb, &hif_dev->rx_delayed_submitted);
++		delay = atomic_read(&hif_dev->aurfc_submit_delay);
++		schedule_delayed_work(&hif_dev->aurfc_delayed_work,
++				      msecs_to_jiffies(delay));
++		spin_unlock(&hif_dev->aurfc_lock);
 +	} else {
-+		mask = (WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_IBSS);
-+		switch (bss_type) {
-+		case IEEE80211_BSS_TYPE_ESS:
-+			val = WLAN_CAPABILITY_ESS;
++		spin_unlock(&hif_dev->aurfc_lock);
++		usb_anchor_urb(urb, &hif_dev->rx_submitted);
++		ret = usb_submit_urb(urb, GFP_ATOMIC);
++		if (ret) {
++			usb_unanchor_urb(urb);
++			goto free;
++		}
+ 	}
+ 
+ 	return;
+@@ -818,9 +828,50 @@ err:
+ 	return -ENOMEM;
+ }
+ 
++static void aurfc_submit_handler(struct work_struct *work)
++{
++	struct hif_device_usb *hif_dev =
++		container_of(work,
++			     struct hif_device_usb,
++			     aurfc_delayed_work.work);
++
++	struct urb *urb = NULL;
++	struct sk_buff *skb = NULL;
++	int ret;
++	int loop_times = 0;
++
++	while (true) {
++		loop_times++;
++		if (loop_times > MAX_RX_URB_NUM)
++			atomic_add(AURFC_STEP,
++				   &hif_dev->aurfc_submit_delay);
++
++		urb = usb_get_from_anchor(
++				&hif_dev->rx_delayed_submitted);
++		if (urb) {
++			skb = (struct sk_buff *)urb->context;
++			ret = usb_submit_urb(urb, GFP_KERNEL);
++			if (ret != 0) {
++				usb_unanchor_urb(urb);
++				dev_kfree_skb_any(skb);
++				urb->context = NULL;
++			}
++		} else {
 +			break;
-+		case IEEE80211_BSS_TYPE_IBSS:
-+			val = WLAN_CAPABILITY_IBSS;
-+			break;
-+		case IEEE80211_BSS_TYPE_MBSS:
-+			val = 0;
-+			break;
-+		default:
-+			return false;
 +		}
 +	}
-+
-+	ret = ((capability & mask) == val);
-+	return ret;
 +}
 +
- /* Returned bss is reference counted and must be cleaned up appropriately. */
- struct cfg80211_bss *cfg80211_get_bss(struct wiphy *wiphy,
- 				      struct ieee80211_channel *channel,
- 				      const u8 *bssid,
- 				      const u8 *ssid, size_t ssid_len,
--				      u16 capa_mask, u16 capa_val)
-+				      enum ieee80211_bss_type bss_type,
-+				      enum ieee80211_privacy privacy)
+ static void ath9k_hif_usb_dealloc_rx_urbs(struct hif_device_usb *hif_dev)
  {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
- 	struct cfg80211_internal_bss *bss, *res = NULL;
- 	unsigned long now = jiffies;
-+	int bss_privacy;
- 
--	trace_cfg80211_get_bss(wiphy, channel, bssid, ssid, ssid_len, capa_mask,
--			       capa_val);
-+	trace_cfg80211_get_bss(wiphy, channel, bssid, ssid, ssid_len, bss_type,
-+			       privacy);
- 
- 	spin_lock_bh(&rdev->bss_lock);
- 
- 	list_for_each_entry(bss, &rdev->bss_list, list) {
--		if ((bss->pub.capability & capa_mask) != capa_val)
-+		if (!cfg80211_bss_type_match(bss->pub.capability,
-+					     bss->pub.channel->band, bss_type))
-+			continue;
++	unsigned long flags;
 +
-+		bss_privacy = (bss->pub.capability & WLAN_CAPABILITY_PRIVACY);
-+		if ((privacy == IEEE80211_PRIVACY_ON && !bss_privacy) ||
-+		    (privacy == IEEE80211_PRIVACY_OFF && bss_privacy))
- 			continue;
- 		if (channel && bss->pub.channel != channel)
- 			continue;
-@@ -896,6 +950,7 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
- 	struct cfg80211_bss_ies *ies;
- 	struct ieee80211_channel *channel;
- 	struct cfg80211_internal_bss tmp = {}, *res;
-+	int bss_type;
- 	bool signal_valid;
++	spin_lock_irqsave(&hif_dev->aurfc_lock, flags);
++	hif_dev->aurfc_active = 0;
++	mod_delayed_work(system_wq, &hif_dev->aurfc_delayed_work, 0);
++	spin_unlock_irqrestore(&hif_dev->aurfc_lock, flags);
+ 	usb_kill_anchored_urbs(&hif_dev->rx_submitted);
++	usb_kill_anchored_urbs(&hif_dev->rx_delayed_submitted);
+ }
  
- 	if (WARN_ON(!wiphy))
-@@ -950,8 +1005,15 @@ cfg80211_inform_bss_width(struct wiphy *wiphy,
- 	if (!res)
- 		return NULL;
+ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
+@@ -830,8 +881,17 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
+ 	int i, ret;
  
--	if (res->pub.capability & WLAN_CAPABILITY_ESS)
--		regulatory_hint_found_beacon(wiphy, channel, gfp);
-+	if (channel->band == IEEE80211_BAND_60GHZ) {
-+		bss_type = res->pub.capability & WLAN_CAPABILITY_DMG_TYPE_MASK;
-+		if (bss_type == WLAN_CAPABILITY_DMG_TYPE_AP ||
-+		    bss_type == WLAN_CAPABILITY_DMG_TYPE_PBSS)
-+			regulatory_hint_found_beacon(wiphy, channel, gfp);
-+	} else {
-+		if (res->pub.capability & WLAN_CAPABILITY_ESS)
-+			regulatory_hint_found_beacon(wiphy, channel, gfp);
-+	}
+ 	init_usb_anchor(&hif_dev->rx_submitted);
++	init_usb_anchor(&hif_dev->rx_delayed_submitted);
++
+ 	spin_lock_init(&hif_dev->rx_lock);
  
- 	trace_cfg80211_return_bss(&res->pub);
- 	/* cfg80211_bss_update gives us a referenced result */
-@@ -973,6 +1035,7 @@ cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
- 	bool signal_valid;
- 	size_t ielen = len - offsetof(struct ieee80211_mgmt,
- 				      u.probe_resp.variable);
-+	int bss_type;
++	/* add for adaptive usb receive control*/
++	atomic_set(&hif_dev->aurfc_submit_delay, 0);
++	INIT_DELAYED_WORK(&hif_dev->aurfc_delayed_work,
++			  aurfc_submit_handler);
++	spin_lock_init(&hif_dev->aurfc_lock);
++	hif_dev->aurfc_active = 1;
++
+ 	for (i = 0; i < MAX_RX_URB_NUM; i++) {
  
- 	BUILD_BUG_ON(offsetof(struct ieee80211_mgmt, u.probe_resp.variable) !=
- 			offsetof(struct ieee80211_mgmt, u.beacon.variable));
-@@ -1025,8 +1088,15 @@ cfg80211_inform_bss_width_frame(struct wiphy *wiphy,
- 	if (!res)
- 		return NULL;
+ 		/* Allocate URB */
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 51496e7..2050a74 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -41,6 +41,7 @@
+ #define MAX_RX_URB_NUM  8
+ #define MAX_RX_BUF_SIZE 16384
+ #define MAX_PKT_NUM_IN_TRANSFER 10
++#define AURFC_STEP 10  /* ms */
  
--	if (res->pub.capability & WLAN_CAPABILITY_ESS)
--		regulatory_hint_found_beacon(wiphy, channel, gfp);
-+	if (channel->band == IEEE80211_BAND_60GHZ) {
-+		bss_type = res->pub.capability & WLAN_CAPABILITY_DMG_TYPE_MASK;
-+		if (bss_type == WLAN_CAPABILITY_DMG_TYPE_AP ||
-+		    bss_type == WLAN_CAPABILITY_DMG_TYPE_PBSS)
-+			regulatory_hint_found_beacon(wiphy, channel, gfp);
-+	} else {
-+		if (res->pub.capability & WLAN_CAPABILITY_ESS)
-+			regulatory_hint_found_beacon(wiphy, channel, gfp);
-+	}
+ #define MAX_REG_OUT_URB_NUM  1
+ #define MAX_REG_IN_URB_NUM   64
+@@ -98,9 +99,17 @@ struct hif_device_usb {
+ 	struct hif_usb_tx tx;
+ 	struct usb_anchor regout_submitted;
+ 	struct usb_anchor rx_submitted;
++	struct usb_anchor rx_delayed_submitted;
+ 	struct usb_anchor reg_in_submitted;
+ 	struct usb_anchor mgmt_submitted;
+ 	struct sk_buff *remain_skb;
++
++	/* adaptive usb receive flow control */
++	struct delayed_work aurfc_delayed_work;
++	spinlock_t aurfc_lock; /* to protect work */
++	atomic_t  aurfc_submit_delay; /* ms */
++	int aurfc_active;
++
+ 	const char *fw_name;
+ 	int rx_remain_len;
+ 	int rx_pkt_len;
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 9dde265..1586bd2 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -331,6 +331,13 @@ static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
  
- 	trace_cfg80211_return_bss(&res->pub);
- 	/* cfg80211_bss_update gives us a referenced result */
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 0ab3711..ea1da66 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -257,19 +257,15 @@ static struct cfg80211_bss *cfg80211_get_conn_bss(struct wireless_dev *wdev)
+ #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
+ 
++#define AURFC_STAT_INC(c) \
++	(hif_dev->htc_handle->drv_priv->debug.aurfc_stats.c++)
++#define AURFC_STAT_ADD(c, a) \
++	(hif_dev->htc_handle->drv_priv->debug.aurfc_stats.c += a)
++#define AURFC_STAT_SET(c, a) \
++	(hif_dev->htc_handle->drv_priv->debug.aurfc_stats.c = a)
++
+ void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+ 			   struct ath_rx_status *rs);
+ 
+@@ -352,11 +359,20 @@ struct ath_skbrx_stats {
+ 	u32 skb_dropped;
+ };
+ 
++struct ath_aurfc_stats {
++	u32 aurfc_highwater;
++	u32 aurfc_lowwater;
++	u32 aurfc_wm_triggered;
++	u32 aurfc_submit_delay;
++	u32 aurfc_called;
++};
++
+ struct ath9k_debug {
+ 	struct dentry *debugfs_phy;
+ 	struct ath_tx_stats tx_stats;
+ 	struct ath_rx_stats rx_stats;
+ 	struct ath_skbrx_stats skbrx_stats;
++	struct ath_aurfc_stats aurfc_stats;
+ };
+ 
+ void ath9k_htc_get_et_strings(struct ieee80211_hw *hw,
+@@ -377,6 +393,9 @@ void ath9k_htc_get_et_stats(struct ieee80211_hw *hw,
+ 
+ #define TX_QSTAT_INC(c) do { } while (0)
+ 
++#define AURFC_STAT_INC(c) do {} while (0)
++#define AURFC_STAT_ADD(c, a) do {} while (0)
++#define AURFC_STAT_SET(c, a) do {} while (0)
+ static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+ 					 struct ath_rx_status *rs)
  {
- 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
- 	struct cfg80211_bss *bss;
--	u16 capa = WLAN_CAPABILITY_ESS;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+index 8cef1ed..a6be9be 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+@@ -286,6 +286,54 @@ static const struct file_operations fops_skb_rx = {
+ 	.llseek = default_llseek,
+ };
  
- 	ASSERT_WDEV_LOCK(wdev);
++static ssize_t read_file_aurfc(struct file *file,
++			       char __user *user_buf,
++			       size_t count, loff_t *ppos)
++{
++	struct ath9k_htc_priv *priv = file->private_data;
++	char *buf;
++	unsigned int len = 0, size = 1500;
++	ssize_t retval = 0;
++
++	buf = kzalloc(size, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	len += scnprintf(buf + len, size - len,
++			"%20s : %10u\n", "High watermark",
++			priv->debug.aurfc_stats.aurfc_highwater);
++	len += scnprintf(buf + len, size - len,
++			"%20s : %10u\n", "Low watermark",
++			priv->debug.aurfc_stats.aurfc_lowwater);
++
++	len += scnprintf(buf + len, size - len,
++			"%20s : %10u\n", "WM triggered",
++			priv->debug.aurfc_stats.aurfc_wm_triggered);
++
++	len += scnprintf(buf + len, size - len,
++			"%20s : %10u\n", "Handler called",
++			priv->debug.aurfc_stats.aurfc_called);
++
++	len += scnprintf(buf + len, size - len,
++			"%20s : %10u\n", "Submit delay",
++			priv->debug.aurfc_stats.aurfc_submit_delay);
++	if (len > size)
++		len = size;
++
++	retval = simple_read_from_buffer(user_buf, count,
++					 ppos, buf, len);
++	kfree(buf);
++
++	return retval;
++}
++
++static const struct file_operations fops_aurfc = {
++	.read = read_file_aurfc,
++	.open = simple_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static ssize_t read_file_slot(struct file *file, char __user *user_buf,
+ 			      size_t count, loff_t *ppos)
+ {
+@@ -518,7 +566,12 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+ 	debugfs_create_file("skb_rx", S_IRUSR, priv->debug.debugfs_phy,
+ 			    priv, &fops_skb_rx);
  
--	if (wdev->conn->params.privacy)
--		capa |= WLAN_CAPABILITY_PRIVACY;
--
- 	bss = cfg80211_get_bss(wdev->wiphy, wdev->conn->params.channel,
- 			       wdev->conn->params.bssid,
- 			       wdev->conn->params.ssid,
- 			       wdev->conn->params.ssid_len,
--			       WLAN_CAPABILITY_ESS | WLAN_CAPABILITY_PRIVACY,
--			       capa);
-+			       IEEE80211_BSS_TYPE_ESS,
-+			       IEEE80211_PRIVACY(wdev->conn->params.privacy));
- 	if (!bss)
- 		return NULL;
++	debugfs_create_file("aurfc_stats", S_IRUSR,
++			    priv->debug.debugfs_phy,
++			    priv, &fops_aurfc);
++
+ 	ath9k_cmn_debug_recv(priv->debug.debugfs_phy, &priv->debug.rx_stats);
++
+ 	ath9k_cmn_debug_phy_err(priv->debug.debugfs_phy, &priv->debug.rx_stats);
  
-@@ -637,8 +633,8 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 		WARN_ON_ONCE(!wiphy_to_rdev(wdev->wiphy)->ops->connect);
- 		bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
- 				       wdev->ssid, wdev->ssid_len,
--				       WLAN_CAPABILITY_ESS,
--				       WLAN_CAPABILITY_ESS);
-+				       IEEE80211_BSS_TYPE_ESS,
-+				       IEEE80211_PRIVACY_ANY);
- 		if (bss)
- 			cfg80211_hold_bss(bss_from_pub(bss));
+ 	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+index a0f58e2..939d008 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+@@ -1061,7 +1061,28 @@ void ath9k_rx_tasklet(unsigned long data)
+ 	unsigned long flags;
+ 	struct ieee80211_hdr *hdr;
+ 
++	/* add for adaptive usb receive flow control*/
++	int looptimes = 0;
++	int highwatermark = ATH9K_HTC_RXBUF*3/4;
++	int lowwatermark = ATH9K_HTC_RXBUF/32;
++	unsigned int delay = 0;
++
++	struct htc_target *htc = priv->htc;
++	struct hif_device_usb *hif_dev = htc->hif_dev;
++
++	AURFC_STAT_SET(aurfc_highwater, highwatermark);
++	AURFC_STAT_SET(aurfc_lowwater, lowwatermark);
++
+ 	do {
++		looptimes++;
++		if (looptimes > highwatermark) {
++			delay = looptimes*AURFC_STEP;
++			atomic_set(&hif_dev->aurfc_submit_delay,
++				   delay);
++			AURFC_STAT_INC(aurfc_wm_triggered);
++			AURFC_STAT_SET(aurfc_submit_delay, delay);
++		}
++
+ 		spin_lock_irqsave(&priv->rx.rxbuflock, flags);
+ 		list_for_each_entry(tmp_buf, &priv->rx.rxbuf, list) {
+ 			if (tmp_buf->in_process) {
+@@ -1072,6 +1093,22 @@ void ath9k_rx_tasklet(unsigned long data)
+ 
+ 		if (rxbuf == NULL) {
+ 			spin_unlock_irqrestore(&priv->rx.rxbuflock, flags);
++			spin_lock_irqsave(&hif_dev->aurfc_lock,
++					  flags);
++			if (atomic_read(
++				&hif_dev->aurfc_submit_delay) > 0 &&
++			    hif_dev->aurfc_active > 0)
++				mod_delayed_work(system_wq,
++					&hif_dev->aurfc_delayed_work,
++						 0);
++			spin_unlock_irqrestore(&hif_dev->aurfc_lock,
++					       flags);
++			if (looptimes < lowwatermark) {
++				atomic_set(&hif_dev->aurfc_submit_delay
++					   , 0);
++				AURFC_STAT_SET(aurfc_submit_delay,
++					       0);
++			}
+ 			break;
+ 		}
+ 
+@@ -1114,6 +1151,10 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_htc_rxbuf *rxbuf = NULL, *tmp_buf = NULL;
+ 
++	struct htc_target *htc = priv->htc;
++	struct hif_device_usb *hif_dev = htc->hif_dev;
++	int delay = ATH9K_HTC_RXBUF * AURFC_STEP;
++
+ 	spin_lock(&priv->rx.rxbuflock);
+ 	list_for_each_entry(tmp_buf, &priv->rx.rxbuf, list) {
+ 		if (!tmp_buf->in_process) {
+@@ -1124,6 +1165,9 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
+ 	spin_unlock(&priv->rx.rxbuflock);
+ 
+ 	if (rxbuf == NULL) {
++		atomic_set(&hif_dev->aurfc_submit_delay, delay);
++		AURFC_STAT_INC(aurfc_wm_triggered);
++		AURFC_STAT_SET(aurfc_submit_delay, delay);
+ 		ath_dbg(common, ANY, "No free RX buffer\n");
+ 		goto err;
  	}
-@@ -795,8 +791,8 @@ void cfg80211_roamed(struct net_device *dev,
- 	struct cfg80211_bss *bss;
- 
- 	bss = cfg80211_get_bss(wdev->wiphy, channel, bssid, wdev->ssid,
--			       wdev->ssid_len, WLAN_CAPABILITY_ESS,
--			       WLAN_CAPABILITY_ESS);
-+			       wdev->ssid_len,
-+			       IEEE80211_BSS_TYPE_ESS, IEEE80211_PRIVACY_ANY);
- 	if (WARN_ON(!bss))
- 		return;
- 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index b17b369..b19773c 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2636,28 +2636,30 @@ DEFINE_EVENT(wiphy_only_evt, cfg80211_sched_scan_stopped,
- TRACE_EVENT(cfg80211_get_bss,
- 	TP_PROTO(struct wiphy *wiphy, struct ieee80211_channel *channel,
- 		 const u8 *bssid, const u8 *ssid, size_t ssid_len,
--		 u16 capa_mask, u16 capa_val),
--	TP_ARGS(wiphy, channel, bssid, ssid, ssid_len, capa_mask, capa_val),
-+		 enum ieee80211_bss_type bss_type,
-+		 enum ieee80211_privacy privacy),
-+	TP_ARGS(wiphy, channel, bssid, ssid, ssid_len, bss_type, privacy),
- 	TP_STRUCT__entry(
- 		WIPHY_ENTRY
- 		CHAN_ENTRY
- 		MAC_ENTRY(bssid)
- 		__dynamic_array(u8, ssid, ssid_len)
--		__field(u16, capa_mask)
--		__field(u16, capa_val)
-+		__field(enum ieee80211_bss_type, bss_type)
-+		__field(enum ieee80211_privacy, privacy)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
- 		CHAN_ASSIGN(channel);
- 		MAC_ASSIGN(bssid, bssid);
- 		memcpy(__get_dynamic_array(ssid), ssid, ssid_len);
--		__entry->capa_mask = capa_mask;
--		__entry->capa_val = capa_val;
--	),
--	TP_printk(WIPHY_PR_FMT ", " CHAN_PR_FMT ", " MAC_PR_FMT ", buf: %#.2x, "
--		  "capa_mask: %d, capa_val: %u", WIPHY_PR_ARG, CHAN_PR_ARG,
--		  MAC_PR_ARG(bssid), ((u8 *)__get_dynamic_array(ssid))[0],
--		  __entry->capa_mask, __entry->capa_val)
-+		__entry->bss_type = bss_type;
-+		__entry->privacy = privacy;
-+	),
-+	TP_printk(WIPHY_PR_FMT ", " CHAN_PR_FMT ", " MAC_PR_FMT
-+		  ", buf: %#.2x, bss_type: %d, privacy: %d",
-+		  WIPHY_PR_ARG, CHAN_PR_ARG, MAC_PR_ARG(bssid),
-+		  ((u8 *)__get_dynamic_array(ssid))[0], __entry->bss_type,
-+		  __entry->privacy)
- );
- 
- TRACE_EVENT(cfg80211_inform_bss_width_frame,
 -- 
 1.9.1
+
 
