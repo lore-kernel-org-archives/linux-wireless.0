@@ -1,167 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51199 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784AbbBLVaV (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34243 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751334AbbBFLM2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 16:30:21 -0500
-Message-ID: <54DD1B18.8030803@codeaurora.org> (sfid-20150212_223024_647870_B3775E5A)
-Date: Thu, 12 Feb 2015 13:28:56 -0800
-From: Peter Oh <poh@codeaurora.org>
+	Fri, 6 Feb 2015 06:12:28 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t16AwVwi030145
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Feb 2015 03:12:28 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1sca52atye-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 03:12:27 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/5] mwifiex: more_task flag for main_process
+Date: Fri, 6 Feb 2015 22:11:42 +0530
+Message-ID: <1423240906-12951-1-git-send-email-patila@marvell.com> (sfid-20150206_121234_372501_91C76097)
 MIME-Version: 1.0
-To: Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/3] ath: Introduce chirp parameter used by DFS
-References: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com>
-In-Reply-To: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch handles a corner case where TX packet would remain in
+driver queue till next packet comes in.
+Here is sequence:
+1. TX packet is queued via hard_start_xmit and main_work is queued
+2. SDIO interrupt comes in which directly call mwifiex_main_process.
+This starts executing main superloop.
+3. Now work from step1 is scheduled but at first check itself it sees
+mwifiex_processing is set and exits.
+4. Now if superloop from step2 has passed TX processing part of superloop
+this packet would remain in queue until next packet/command/SDIO interrupt
+arrives and queues main_work.
 
-On 02/12/2015 01:17 PM, Peter Oh wrote:
-> Some of radar types such as FCC radar type 5 require
-> to look up chirp in pulse to detect genuine radar and
-> it will prevent DFS channels from false radar detection.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/dfs_pattern_detector.c | 52
-> ++++++++++++-------------
->   drivers/net/wireless/ath/dfs_pattern_detector.h |  4 ++
->   2 files changed, 30 insertions(+), 26 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c
-> b/drivers/net/wireless/ath/dfs_pattern_detector.c
-> index 3d57f87..b1de8c6 100644
-> --- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-> +++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-> @@ -48,23 +48,23 @@ struct radar_types {
->   #define WIDTH_LOWER(X) ((X*(100-WIDTH_TOLERANCE)+50)/100)
->   #define WIDTH_UPPER(X) ((X*(100+WIDTH_TOLERANCE)+50)/100)
->   
-> -#define ETSI_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB)	\
-> +#define ETSI_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB, CHIRP)	\
->   {								\
->   	ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),		\
->   	(PRF2PRI(PMAX) - PRI_TOLERANCE),			\
->   	(PRF2PRI(PMIN) * PRF + PRI_TOLERANCE), PRF, PPB * PRF,	\
-> -	PPB_THRESH(PPB), PRI_TOLERANCE,				\
-> +	PPB_THRESH(PPB), PRI_TOLERANCE,	CHIRP			\
->   }
->   
->   /* radar types as defined by ETSI EN-301-893 v1.5.1 */
->   static const struct radar_detector_specs etsi_radar_ref_types_v15[] = {
-> -	ETSI_PATTERN(0,  0,  1,  700,  700, 1, 18),
-> -	ETSI_PATTERN(1,  0,  5,  200, 1000, 1, 10),
-> -	ETSI_PATTERN(2,  0, 15,  200, 1600, 1, 15),
-> -	ETSI_PATTERN(3,  0, 15, 2300, 4000, 1, 25),
-> -	ETSI_PATTERN(4, 20, 30, 2000, 4000, 1, 20),
-> -	ETSI_PATTERN(5,  0,  2,  300,  400, 3, 10),
-> -	ETSI_PATTERN(6,  0,  2,  400, 1200, 3, 15),
-> +	ETSI_PATTERN(0,  0,  1,  700,  700, 1, 18, false),
-> +	ETSI_PATTERN(1,  0,  5,  200, 1000, 1, 10, false),
-> +	ETSI_PATTERN(2,  0, 15,  200, 1600, 1, 15, false),
-> +	ETSI_PATTERN(3,  0, 15, 2300, 4000, 1, 25, false),
-> +	ETSI_PATTERN(4, 20, 30, 2000, 4000, 1, 20, false),
-> +	ETSI_PATTERN(5,  0,  2,  300,  400, 3, 10, false),
-> +	ETSI_PATTERN(6,  0,  2,  400, 1200, 3, 15, false),
->   };
->   
->   static const struct radar_types etsi_radar_types_v15 = {
-> @@ -73,21 +73,21 @@ static const struct radar_types etsi_radar_types_v15 =
-> {
->   	.radar_types		= etsi_radar_ref_types_v15,
->   };
->   
-> -#define FCC_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB)	\
-> +#define FCC_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB, CHIRP)	\
->   {								\
->   	ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),		\
->   	PMIN - PRI_TOLERANCE,					\
->   	PMAX * PRF + PRI_TOLERANCE, PRF, PPB * PRF,		\
-> -	PPB_THRESH(PPB), PRI_TOLERANCE,				\
-> +	PPB_THRESH(PPB), PRI_TOLERANCE,	CHIRP			\
->   }
->   
->   static const struct radar_detector_specs fcc_radar_ref_types[] = {
-> -	FCC_PATTERN(0, 0, 1, 1428, 1428, 1, 18),
-> -	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
-> -	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
-> -	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
-> -	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 1),
-> -	FCC_PATTERN(5, 0, 1, 333, 333, 1, 9),
-> +	FCC_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
-> +	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23, false),
-> +	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16, false),
-> +	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12, false),
-> +	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 1, true),
-> +	FCC_PATTERN(5, 0, 1, 333, 333, 1, 9, false),
->   };
->   
->   static const struct radar_types fcc_radar_types = {
-> @@ -98,15 +98,15 @@ static const struct radar_types fcc_radar_types = {
->   
->   #define JP_PATTERN FCC_PATTERN
->   static const struct radar_detector_specs jp_radar_ref_types[] = {
-> -	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18),
-> -	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18),
-> -	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18),
-> -	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18),
-> -	JP_PATTERN(4, 0, 5, 150, 230, 1, 23),
-> -	JP_PATTERN(5, 6, 10, 200, 500, 1, 16),
-> -	JP_PATTERN(6, 11, 20, 200, 500, 1, 12),
-> -	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20),
-> -	JP_PATTERN(5, 0, 1, 333, 333, 1, 9),
-> +	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
-> +	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, false),
-> +	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, false),
-> +	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, false),
-> +	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, false),
-> +	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, false),
-> +	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, false),
-> +	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, false),
-> +	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, false),
->   };
->   
->   static const struct radar_types jp_radar_types = {
-> diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.h
-> b/drivers/net/wireless/ath/dfs_pattern_detector.h
-> index dde2652..25a43d6 100644
-> --- a/drivers/net/wireless/ath/dfs_pattern_detector.h
-> +++ b/drivers/net/wireless/ath/dfs_pattern_detector.h
-> @@ -40,12 +40,14 @@ struct ath_dfs_pool_stats {
->    * @freq: channel frequency in MHz
->    * @width: pulse duration in us
->    * @rssi: rssi of radar event
-> + * @chirp: chirp detected in pulse
->    */
->   struct pulse_event {
->   	u64 ts;
->   	u16 freq;
->   	u8 width;
->   	u8 rssi;
-> +	bool chirp;
->   };
->   
->   /**
-> @@ -59,6 +61,7 @@ struct pulse_event {
->    * @ppb: pulses per bursts for this type
->    * @ppb_thresh: number of pulses required to trigger detection
->    * @max_pri_tolerance: pulse time stamp tolerance on both sides [us]
-> + * @chirp: chirp required for the radar pattern
->    */
->   struct radar_detector_specs {
->   	u8 type_id;
-> @@ -70,6 +73,7 @@ struct radar_detector_specs {
->   	u8 ppb;
->   	u8 ppb_thresh;
->   	u8 max_pri_tolerance;
-> +	bool chirp;
-Chirp is also used by Japan and ETSI, but need more test and analysis to 
-use on them, so they're not enabled at this moment, but should be good 
-to have architecturally.
->   };
->   
->   /**
-Regards,
-Peter
+This patch fixes this corner case by defining more_task flag which is set when
+mwifiex_processing is found to be true. At end of superloop we again check if
+more_task flag is set and if set, execute superloop again.
+
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 16 +++++++++-------
+ drivers/net/wireless/mwifiex/main.h |  1 +
+ 2 files changed, 10 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 7e74b4f..74488ab 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -190,14 +190,16 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 
+ 	/* Check if already processing */
+ 	if (adapter->mwifiex_processing) {
++		adapter->more_task_flag = true;
+ 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		goto exit_main_proc;
+ 	} else {
+ 		adapter->mwifiex_processing = true;
+-		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 	}
+ process_start:
+ 	do {
++		adapter->more_task_flag = false;
++		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		if ((adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) ||
+ 		    (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY))
+ 			break;
+@@ -238,6 +240,7 @@ process_start:
+ 			adapter->pm_wakeup_fw_try = true;
+ 			mod_timer(&adapter->wakeup_timer, jiffies + (HZ*3));
+ 			adapter->if_ops.wakeup(adapter);
++			spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 			continue;
+ 		}
+ 
+@@ -295,8 +298,10 @@ process_start:
+ 		if ((adapter->ps_state == PS_STATE_SLEEP) ||
+ 		    (adapter->ps_state == PS_STATE_PRE_SLEEP) ||
+ 		    (adapter->ps_state == PS_STATE_SLEEP_CFM) ||
+-		    adapter->tx_lock_flag)
++		    adapter->tx_lock_flag){
++			spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 			continue;
++		}
+ 
+ 		if (!adapter->cmd_sent && !adapter->curr_cmd) {
+ 			if (mwifiex_exec_next_cmd(adapter) == -1) {
+@@ -330,15 +335,12 @@ process_start:
+ 			}
+ 			break;
+ 		}
++		spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 	} while (true);
+ 
+ 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+-	if (!adapter->delay_main_work &&
+-	    (adapter->int_status || IS_CARD_RX_RCVD(adapter))) {
+-		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
++	if (adapter->more_task_flag)
+ 		goto process_start;
+-	}
+-
+ 	adapter->mwifiex_processing = false;
+ 	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index f0a6af1..2089a30 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -774,6 +774,7 @@ struct mwifiex_adapter {
+ 	/* spin lock for main process */
+ 	spinlock_t main_proc_lock;
+ 	u32 mwifiex_processing;
++	u8 more_task_flag;
+ 	u16 tx_buf_size;
+ 	u16 curr_tx_buf_size;
+ 	u32 ioport;
+-- 
+1.8.1.4
+
