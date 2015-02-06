@@ -1,85 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38241 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932069AbbBXKag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:30:36 -0500
-Message-ID: <1424773829.2192.26.camel@sipsolutions.net> (sfid-20150224_113053_601266_2B6FD03E)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Eyal Perry <eyalpe@dev.mellanox.co.il>
-Date: Tue, 24 Feb 2015 11:30:29 +0100
-In-Reply-To: <1424773495.2192.23.camel@sipsolutions.net> (sfid-20150224_112513_283616_0F65D43B)
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
-	 <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
-	 <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423230785.31870.131.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkazCOin7VWLfrHUjtgKDPV6T+sFsk5FPS7D-morr4FZQ@mail.gmail.com>
-	 <CA+BoTQn3KRym0qCJ+fLav5LQgjfiN_-Eqz0xPSc2eXJ-ijNjQw@mail.gmail.com>
-	 <1423494690.31870.189.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com>
-	 <1423577962.2215.2.camel@sipsolutions.net>
-	 <CA+BoTQn=YQQ_yUHvpAG3MMAw+=jxgLDiUMWxiTC3B3vkksTw9g@mail.gmail.com>
-	 <CA+BoTQnxo-x94uVfErZO43jTowVcEMEt+7xDzoAGiR8fRDv=ug@mail.gmail.com>
-	 (sfid-20150212_084824_976893_36D95ADD) <1424773495.2192.23.camel@sipsolutions.net>
-	 (sfid-20150224_112513_283616_0F65D43B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:43354 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756488AbbBFRhF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 12:37:05 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 2/6] brcmfmac: Remove error print for invalid key index.
+Date: Fri, 6 Feb 2015 18:36:43 +0100
+Message-ID: <1423244207-9707-3-git-send-email-arend@broadcom.com> (sfid-20150206_183717_774443_C5592010)
+In-Reply-To: <1423244207-9707-1-git-send-email-arend@broadcom.com>
+References: <1423244207-9707-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-02-24 at 11:24 +0100, Johannes Berg wrote:
-> On Thu, 2015-02-12 at 08:48 +0100, Michal Kazior wrote:
-> 
-> > > Good point. I was actually thinking about it. I can try cooking a
-> > > patch unless you want to do it yourself :-)
-> > 
-> > I've taken a look into this. The most obvious place to add the
-> > timestamp for each packet would be ieee80211_tx_info (i.e. the
-> > skb->cb[48]). The problem is it's very tight there. Even squeezing 2
-> > bytes (allowing up to 64ms of tx completion delay which I'm worried
-> > won't be enough) will be troublesome. Some drivers already use every
-> > last byte of their allowance on 64bit archs (e.g. ar5523 uses entire
-> > 40 bytes of driver_data).
-> 
-> Couldn't we just repurpose the existing skb->tstamp field for this, as
-> long as the skb is fully contained within the wireless layer?
-> 
-> Actually, it looks like we can't, since I guess timestamping options can
-> be turned on on any socket.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Actually, that creates a clone or a new skb? Hmm.
+When a key is set or cleared with an unsupported key index then
+brcmfmac will print an error. With most wpa_supplicants this is
+happening a lot. The error print is confusing and not needed.
 
-Anyway, I think we should just move the vif and hw_key pointers out of
-the tx_info and into ieee80211_tx_control. That will give us plenty of
-space, and they can't really be used long-term anyway? Although ... both
-might be somewhat problematic for mac80211 itself? Hmm.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index b59b8c6..bc86009 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -2252,7 +2252,6 @@ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ 	if (key_idx >= BRCMF_MAX_DEFAULT_KEYS) {
+ 		/* we ignore this key index in this case */
+-		brcmf_err("invalid key index (%d)\n", key_idx);
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+1.9.1
 
