@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:38084 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753246AbbBSV27 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44965 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751314AbbBFLMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 16:28:59 -0500
-Received: by wesw55 with SMTP id w55so2240001wes.5
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 13:28:58 -0800 (PST)
+	Fri, 6 Feb 2015 06:12:49 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t16B9VLB022069
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Feb 2015 03:12:49 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1scthm86ut-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 03:12:49 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 2/5] mwifiex: do not process mgmt rx on uninitialized interface
+Date: Fri, 6 Feb 2015 22:11:43 +0530
+Message-ID: <1423240906-12951-2-git-send-email-patila@marvell.com> (sfid-20150206_121252_958587_CC664484)
+In-Reply-To: <1423240906-12951-1-git-send-email-patila@marvell.com>
+References: <1423240906-12951-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
-References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 20 Feb 2015 02:58:38 +0530
-Message-ID: <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com> (sfid-20150219_222907_540544_14913882)
-Subject: Re: Connection issues with BW Tracking in mac80211
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 20, 2015 at 1:00 AM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> Hi Johannes,
->
-> The BW tracking feature in mac80211 is causing connection problems and
-> operating mode/bw problems when switching b/w modes and bw's in AP.
->
-> For Eg. Initially if AP is operating in VHT-80MHz, and then we changed
-> in to HT-40MHz, mac80211 cannot handle it because the VHT capability
-> is mismatched b/w stored info (ifmgd->flags).
->
-> I have tried your DISABLE_BW_TRACK patch, that helps making the
-> connection but it doesn't update the chipset causing issues.
->
-> Ideally we should be able to handle all the config changes right?
+This patch fixes a crash which was happening because of RX of
+management frames on uninitialzed interface. Now we drop management
+frames for interfaces where cfg80211 has not registered any management
+subtype reception or interface has no NL80211 iftype set.
 
-Before that i have a basic question? Should we reset our tracking after
-the connection is lost, in my case above the connection was lost (Config
-change in A triggers a reboot), still mac80211 is tracking the BW changes?
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/util.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 3085506..47e215b 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -367,6 +367,13 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ 	if (!skb)
+ 		return -1;
+ 
++	if (!priv->mgmt_frame_mask ||
++	    priv->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED) {
++		dev_dbg(priv->adapter->dev,
++			"do not receive mgmt frames on uninitialized intf");
++		return -1;
++	}
++
+ 	rx_pd = (struct rxpd *)skb->data;
+ 
+ 	skb_pull(skb, le16_to_cpu(rx_pd->rx_pkt_offset));
+-- 
+1.8.1.4
+
