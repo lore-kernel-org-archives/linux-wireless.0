@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:52539 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933484AbbBIT33 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 14:29:29 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, pstew@chromium.org,
-	samueltan@chromium.org
-Date: Mon,  9 Feb 2015 21:29:15 +0200
-Message-Id: <1423510155-7449-1-git-send-email-luca@coelho.fi> (sfid-20150209_202932_753859_1F4F9AC9)
-Subject: [PATCH] nl80211: use loop index as type for net detect frequency results
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:40362 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004AbbBFJ6B convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 04:58:01 -0500
+Received: by mail-wi0-f169.google.com with SMTP id h11so1253315wiw.0
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 01:58:00 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAA93jw45o-Tnt4hEYgc-wHJ26J11dDZLptO9ZONy0Jxp350S3A@mail.gmail.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	<1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	<1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+	<CAA93jw45o-Tnt4hEYgc-wHJ26J11dDZLptO9ZONy0Jxp350S3A@mail.gmail.com>
+Date: Fri, 6 Feb 2015 10:57:59 +0100
+Message-ID: <CA+BoTQmU4VXw7yD9bLAvrr6mqSbkYcNHZ1o-CcLUtb+kbQa7DQ@mail.gmail.com> (sfid-20150206_105811_114649_48983736)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	Neal Cardwell <ncardwell@google.com>,
+	Eyal Perry <eyalpe@dev.mellanox.co.il>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Samuel Tan <samueltan@chromium.org>
+On 5 February 2015 at 20:50, Dave Taht <dave.taht@gmail.com> wrote:
+[...]
+> And I really, really, really wish, that just once during this thread,
+> someone had bothered to try running a test
+> at a real world MCS rate - say MCS1, or MCS4, and measured the latency
+> under load of that...
 
-We currently add nested members of the NL80211_ATTR_SCAN_FREQUENCIES
-as NLA_U32 attributes of type NL80211_ATTR_WIPHY_FREQ in
-cfg80211_net_detect_results. However, since there can be an arbitrary number of
-frequency results, we should use the loop index of the loop used to add the
-frequency results to NL80211_ATTR_SCAN_FREQUENCIES as the type (i.e. nla_type)
-for each result attribute, rather than a fixed type.
+Time between frame submission to firmware and tx-completion on one of
+my ath10k machines:
 
-This change is in line with how nested members are added to
-NL80211_ATTR_SCAN_FREQUENCIES in the functions nl80211_send_wowlan_nd and
-nl80211_add_scan_req.
+Legacy 54mbps: ~18ms
+Legacy 6mbps: ~37ms
+11n MCS 3 (nss=0): ~13ms
+11n MCS 8 (nss=1): ~6-8ms
+11ac NSS=1 MCS=2: ~4-6ms
+11ac NSS=2 MCS=0: ~5-8ms
 
-Signed-off-by: Samuel Tan <samueltan@chromium.org>
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- net/wireless/nl80211.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Keep in mind this is a clean room environment so retransmissions are
+kept at minimum. Obviously with a noisy environment you'll get retries
+at different rates and higher latency.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 454d7a0..57ab1ac 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12520,9 +12520,7 @@ static int cfg80211_net_detect_results(struct sk_buff *msg,
- 			}
- 
- 			for (j = 0; j < match->n_channels; j++) {
--				if (nla_put_u32(msg,
--						NL80211_ATTR_WIPHY_FREQ,
--						match->channels[j])) {
-+				if (nla_put_u32(msg, j, match->channels[j])) {
- 					nla_nest_cancel(msg, nl_freqs);
- 					nla_nest_cancel(msg, nl_match);
- 					goto out;
--- 
-2.1.4
 
+Michał
