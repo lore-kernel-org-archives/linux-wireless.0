@@ -1,68 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:35336 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755645AbbBEOso (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:53794 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752535AbbBFOju (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 09:48:44 -0500
-Message-ID: <1423147722.31870.65.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150205_154849_704308_4F25160D)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Thu, 05 Feb 2015 06:48:42 -0800
-In-Reply-To: <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 6 Feb 2015 09:39:50 -0500
+Received: by mail-we0-f176.google.com with SMTP id p10so2545277wes.7
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 06:39:49 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [RFC 2/2] ath9k: add per-vif TX power capability to TX path
+Date: Fri,  6 Feb 2015 15:39:46 +0100
+Message-Id: <1423233586-9258-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150206_153954_953398_E8B95013)
+In-Reply-To: <1423233586-9258-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1423233586-9258-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-02-05 at 14:44 +0100, Michal Kazior wrote:
+In order to add per-vif TX power capability cap per-packet TX power to vif
+configured power if the latter is lower than per-rate TX power and mac80211
+per-frame power. Use vif TX power if TPC has been disabled for current
+interface
 
-> I do get your point. But 1.5ms is really tough on Wi-Fi.
-> 
-> Just look at this:
-> 
-> ; ping 192.168.1.2 -c 3
-> PING 192.168.1.2 (192.168.1.2) 56(84) bytes of data.
-> 64 bytes from 192.168.1.2: icmp_seq=1 ttl=64 time=1.83 ms
-> 64 bytes from 192.168.1.2: icmp_seq=2 ttl=64 time=2.02 ms
-> 64 bytes from 192.168.1.2: icmp_seq=3 ttl=64 time=1.98 ms
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 42 +++++++++++++++++++++++------------
+ 1 file changed, 28 insertions(+), 14 deletions(-)
 
-Thats a different point.
-
-I dont care about rtt but TX completions. (usually much much lower than
-rtt)
-
-I can have a 4 usec delay from the moment a NIC submits a packet to the
-wire and I get TX completion IRQ, free the packet.
-
-Yet the pong reply can come 100 ms later.
-
-It does not mean the 4 usec delay is a problem.
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 1b8e75c..0acd079 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1103,14 +1103,28 @@ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct sk_buff *skb;
+ 	struct ath_frame_info *fi;
+ 	struct ieee80211_tx_info *info;
++	struct ieee80211_vif *vif;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 
+ 	if (sc->tx99_state || !ah->tpc_enabled)
+ 		return MAX_RATE_POWER;
+ 
+ 	skb = bf->bf_mpdu;
+-	fi = get_frame_info(skb);
+ 	info = IEEE80211_SKB_CB(skb);
++	vif = info->control.vif;
++
++	if (!vif) {
++		max_power = sc->cur_chan->cur_txpower;
++		goto out;
++	}
++
++	if (vif->bss_conf.txpower_type != NL80211_TX_POWER_LIMITED) {
++		max_power = min_t(u8, sc->cur_chan->cur_txpower,
++				  2 * vif->bss_conf.txpower);
++		goto out;
++	}
++
++	fi = get_frame_info(skb);
+ 
+ 	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+ 		int txpower = fi->tx_power;
+@@ -1147,25 +1161,25 @@ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+ 			txpower -= 2;
+ 
+ 		txpower = max(txpower, 0);
+-		max_power = min_t(u8, ah->tx_power[rateidx], txpower);
+-
+-		/* XXX: clamp minimum TX power at 1 for AR9160 since if
+-		 * max_power is set to 0, frames are transmitted at max
+-		 * TX power
+-		 */
+-		if (!max_power && !AR_SREV_9280_20_OR_LATER(ah))
+-			max_power = 1;
++		max_power = min_t(u8, ah->tx_power[rateidx],
++				  2 * vif->bss_conf.txpower);
++		max_power = min_t(u8, max_power, txpower);
+ 	} else if (!bf->bf_state.bfs_paprd) {
+ 		if (rateidx < 8 && (info->flags & IEEE80211_TX_CTL_STBC))
+-			max_power = min(ah->tx_power_stbc[rateidx],
+-					fi->tx_power);
++			max_power = min_t(u8, ah->tx_power_stbc[rateidx],
++					  2 * vif->bss_conf.txpower);
+ 		else
+-			max_power = min(ah->tx_power[rateidx], fi->tx_power);
++			max_power = min_t(u8, ah->tx_power[rateidx],
++					  2 * vif->bss_conf.txpower);
++		max_power = min(max_power, fi->tx_power);
+ 	} else {
+ 		max_power = ah->paprd_training_power;
+ 	}
+-
+-	return max_power;
++out:
++	/* XXX: clamp minimum TX power at 1 for AR9160 since if max_power
++	 * is set to 0, frames are transmitted at max TX power
++	 */
++	return (!max_power && !AR_SREV_9280_20_OR_LATER(ah)) ? 1 : max_power;
+ }
+ 
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+-- 
+2.1.0
 
