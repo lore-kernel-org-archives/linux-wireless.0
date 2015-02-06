@@ -1,98 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss-mx-na.arm.com ([217.140.108.86]:43874 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750807AbbBQPqN (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52869 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751314AbbBFLMx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2015 10:46:13 -0500
-Date: Tue, 17 Feb 2015 15:45:38 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>
-Subject: Re: [PATCH v2] wlcore: add basic device-tree support
-Message-ID: <20150217154538.GP8994@leverpostej> (sfid-20150217_164625_121172_BF5058BD)
-References: <1423998550-8829-1-git-send-email-eliad@wizery.com>
- <2344371.zDnvJJhFdD@wuerfel>
- <CAB3XZEe1HmOwQ3GcU5T3ruFybKdCVNiBwQbeLS3X4MMkL2G5uA@mail.gmail.com>
+	Fri, 6 Feb 2015 06:12:53 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t16B9dgB022395
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Feb 2015 03:12:52 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1scthm86uv-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 03:12:52 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/5] mwifiex: DMA alignment for RX packets
+Date: Fri, 6 Feb 2015 22:11:44 +0530
+Message-ID: <1423240906-12951-3-git-send-email-patila@marvell.com> (sfid-20150206_121255_703566_B252F045)
+In-Reply-To: <1423240906-12951-1-git-send-email-patila@marvell.com>
+References: <1423240906-12951-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB3XZEe1HmOwQ3GcU5T3ruFybKdCVNiBwQbeLS3X4MMkL2G5uA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 17, 2015 at 03:39:03PM +0000, Eliad Peller wrote:
-> On Mon, Feb 16, 2015 at 12:06 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Sunday 15 February 2015 13:09:10 Eliad Peller wrote:
-> > s
-> >> +
-> >> +This node provides properties for controlling the wilink wireless device. The
-> >> +node is expected to be specified as a child node to the SDIO controller that
-> >> +connects the device to the system.
-> >> +
-> >> +Required properties:
-> >> +
-> >> + - compatible : Should be "ti,wlcore".
-> >
-> > I think you should use the specific model number here. If I understand
-> > correctly, wlcore is the name of the driver that is used for multiple
-> > device implementation.
-> >
-> right, wlcore is the common driver part of wl12xx and wl18xx device drivers.
-> these DT properties are common for both.
-> can't we use a common binding as well in this case?
+This patch adds support for DMA alignment of sk_buffs
+allocated for RX.
+Patch also adds support to modify skb allocation flags.
 
-Just have a string for each; the driver can easily match them all and
-handle them identically for now until we decide/realise we need to
-handle them differently later.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.h |  4 ++++
+ drivers/net/wireless/mwifiex/pcie.c |  6 ++++--
+ drivers/net/wireless/mwifiex/sdio.c |  5 +++--
+ drivers/net/wireless/mwifiex/util.c | 21 +++++++++++++++++++++
+ 4 files changed, 32 insertions(+), 4 deletions(-)
 
-Regardless, the compatible string should match some real part number
-and/or standard rather than the Linux driver name.
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 2089a30..16be45e 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -140,6 +140,9 @@ enum {
+ 
+ #define MWIFIEX_DRV_INFO_SIZE_MAX 0x40000
+ 
++/* Address alignment */
++#define MWIFIEX_ALIGN_ADDR(p, a) (((long)(p) + (a) - 1) & ~((a) - 1))
++
+ struct mwifiex_dbg {
+ 	u32 num_cmd_host_to_card_failure;
+ 	u32 num_cmd_sleep_cfm_host_to_card_failure;
+@@ -1418,6 +1421,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+ 			    u8 rx_rate, u8 ht_info);
+ 
+ void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter);
++void *mwifiex_alloc_rx_buf(int rx_len, gfp_t flags);
+ 
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index a5828da..29c4e8e 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -498,7 +498,8 @@ static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
+ 
+ 	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
+ 		/* Allocate skb here so that firmware can DMA data from it */
+-		skb = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
++		skb = mwifiex_alloc_rx_buf(MWIFIEX_RX_DATA_BUF_SIZE,
++					   GFP_KERNEL | GFP_DMA);
+ 		if (!skb) {
+ 			dev_err(adapter->dev,
+ 				"Unable to allocate skb for RX ring.\n");
+@@ -1297,7 +1298,8 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 			}
+ 		}
+ 
+-		skb_tmp = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
++		skb_tmp = mwifiex_alloc_rx_buf(MWIFIEX_RX_DATA_BUF_SIZE,
++					       GFP_KERNEL | GFP_DMA);
+ 		if (!skb_tmp) {
+ 			dev_err(adapter->dev,
+ 				"Unable to allocate skb.\n");
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 91e36cd..998f3cb 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1357,7 +1357,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 			return -1;
+ 		rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
+ 
+-		skb = dev_alloc_skb(rx_len);
++		skb = mwifiex_alloc_rx_buf(rx_len, GFP_KERNEL | GFP_DMA);
+ 		if (!skb)
+ 			return -1;
+ 
+@@ -1454,7 +1454,8 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 			}
+ 			rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
+ 
+-			skb = dev_alloc_skb(rx_len);
++			skb = mwifiex_alloc_rx_buf(rx_len,
++						   GFP_KERNEL | GFP_DMA);
+ 
+ 			if (!skb) {
+ 				dev_err(adapter->dev, "%s: failed to alloc skb",
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 47e215b..ed69154 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -631,3 +631,24 @@ void mwifiex_hist_data_reset(struct mwifiex_private *priv)
+ 	for (ix = 0; ix < MWIFIEX_MAX_SIG_STRENGTH; ix++)
+ 		atomic_set(&phist_data->sig_str[ix], 0);
+ }
++
++void *mwifiex_alloc_rx_buf(int rx_len, gfp_t flags)
++{
++	struct sk_buff *skb;
++	int buf_len, pad;
++
++	buf_len = rx_len + MWIFIEX_DMA_ALIGN_SZ;
++
++	skb = __dev_alloc_skb(buf_len, flags);
++
++	if (!skb)
++		return NULL;
++
++	pad = MWIFIEX_ALIGN_ADDR(skb->data, MWIFIEX_DMA_ALIGN_SZ) -
++	      (long)skb->data;
++
++	skb_reserve(skb, pad);
++
++	return skb;
++}
++EXPORT_SYMBOL_GPL(mwifiex_alloc_rx_buf);
+-- 
+1.8.1.4
 
-> 
-> >> + - interrupt-parent : the phandle for the interrupt controller to which the
-> >> +     device interrupts are connected.
-> >
-> > interrupt-parent should not be required
-> >
-> sure. i'll make it optional.
-> 
-> >> +&mmc3 {
-> >> +     status = "okay";
-> >> +     vmmc-supply = <&wlan_en_reg>;
-> >> +     bus-width = <4>;
-> >> +     cap-power-off-card;
-> >> +     keep-power-in-suspend;
-> >> +
-> >> +     #address-cells = <1>;
-> >> +     #size-cells = <0>;
-> >> +     wlcore: wlcore@0 {
-> >> +             compatible = "ti,wlcore";
-> >> +             reg = <2>;
-> >> +             interrupt-parent = <&gpio0>;
-> >> +             interrupts = <19 IRQ_TYPE_NONE>;
-> >> +     };
-> >> +};
-> >
-> > It could make sense to specify a few extra properties here:
-> >
-> > - The platform data lists two clocks. How about adding them
-> >   here as optional clocks so we don't need to change the binding
-> >   again.
-> >
-> There were some very long threads previously regarding the correct way
-> to describe these clocks.
-> I prefer starting a working basic implementation and add the
-> controversial parts later on, as needed.
-
-This could be problematic. Elsewhere we've later added properties that
-should have been mandatory from the start but were masked by some
-platform data somewhere. It would be very good to avoid that.
-
-What is problematic about describing the clock inputs to this block? Is
-the problem specific to this block or to the specific clock
-controller(s) it happens to be wired to?
-
-Thanks,
-Mark.
