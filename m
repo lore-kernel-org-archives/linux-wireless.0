@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57930 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447AbbBKWZF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:38741 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751469AbbBFG40 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2015 17:25:05 -0500
-Message-ID: <54DBD6C0.5000106@candelatech.com> (sfid-20150211_232510_384327_11942F40)
-Date: Wed, 11 Feb 2015 14:25:04 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 6 Feb 2015 01:56:26 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Subject: Re: [PATCH 3/4] bcma: support bringing up bus hosted on PCIe Gen 2
+References: <1422638566-7593-1-git-send-email-zajec5@gmail.com>
+	<1422638566-7593-3-git-send-email-zajec5@gmail.com>
+	<54CBE299.4070709@hauke-m.de>
+	<CACna6rwarKekDeR6YL73HcErmu1WGENcN7wVq0gMUEyHq0HekA@mail.gmail.com>
+Date: Fri, 06 Feb 2015 08:56:18 +0200
+In-Reply-To: <CACna6rwarKekDeR6YL73HcErmu1WGENcN7wVq0gMUEyHq0HekA@mail.gmail.com>
+	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Sat, 31 Jan 2015
+ 00:08:50 +0100")
+Message-ID: <87mw4rplyl.fsf@kamboji.qca.qualcomm.com> (sfid-20150206_075629_858893_5A73F860)
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matti Laakso <malaakso@elisanet.fi>
-Subject: Re: [RFT] ath10k: restart fw on tx-credit timeout
-References: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com> <54D4E89A.7040602@candelatech.com> <CA+BoTQ=HqyGKOBdOmpWOn_VjH1UTWF9nN_PE0uanaGsdeJmB6Q@mail.gmail.com> <54D8DA6F.7040805@candelatech.com> <CA+BoTQk9C_7efUs6VTZrEz5ECxsvCgfA8ObrAXKjqMpTL8pggA@mail.gmail.com> <54DA3957.10402@candelatech.com>
-In-Reply-To: <54DA3957.10402@candelatech.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/10/2015 09:01 AM, Ben Greear wrote:
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-> I've hacked CT firmware to do a flush of all vdevs itself when it detects WMI hang.
-> I don't have a good test bed to reproduce the problem reliably, but I should know
-> after a few days if the flush works at all.  If not, then it's a moot point anyway.
+>>> +void bcma_core_pcie2_up(struct bcma_drv_pcie2 *pcie2)
+>>> +{
+>>> +     struct bcma_bus *bus = pcie2->core->bus;
+>>> +     struct pci_dev *dev = bus->host_pci;
+>>> +
+>>> +     pcie_capability_clear_and_set_word(dev, PCI_EXP_DEVCTL,
+>>> +                                        PCI_EXP_DEVCTL_READRQ,
+>>> +                                        pcie2->reqsize);
+>>
+>> Use pcie_set_readrq() if it is needed.
+>
+> What do you mean by "if needed"? Is there anything wrong?
 
-So, this appears to at least partially work.
-
-But, what we notice is that when using multiple station vdevs, the system pretty much
-becomes useless if we get any significant number of stuck or slow-to-transmit management
-buffers over WMI.  Part of this is because WMI messages are sent when holding rtnl
-much of the time, I think.
-
-I would guess that an AP with lots of peers associated might have similar problems
-if peers are not ACKing packets reliably.
-
-Probably the only useful way to fix this is to make the firmware and driver able to
-send management frames over the normal transport like every other data packet?
-
-Any idea what it wasn't written like that to begin with?
-
-Thanks,
-Ben
+So what's the conclusion? Can I apply these?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Kalle Valo
