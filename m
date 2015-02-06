@@ -1,62 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:53697 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754624AbbBFMDw (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40727 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751696AbbBFI6z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 07:03:52 -0500
-Received: by mail-we0-f179.google.com with SMTP id u56so7738939wes.10
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 04:03:51 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 1/7] ath10k: allow empty ssid vdev config
-Date: Fri,  6 Feb 2015 13:02:48 +0100
-Message-Id: <1423224174-24764-2-git-send-email-michal.kazior@tieto.com> (sfid-20150206_130407_224894_71539F7B)
-In-Reply-To: <1423224174-24764-1-git-send-email-michal.kazior@tieto.com>
-References: <1423224174-24764-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 6 Feb 2015 03:58:55 -0500
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<keescook@chromium.org>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH] mwifiex: use alloc_workqueue's format strings capabilities for WQ names
+Date: Fri, 6 Feb 2015 19:58:05 +0530
+Message-ID: <1423232885-10073-1-git-send-email-patila@marvell.com> (sfid-20150206_095904_474800_D7E1C9BC)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to reject a valid
-firmware configuration combination.
+alloc_workqueue() has string format formation ability e.g. wqname%ifname
+will be treated as wqnameifname. Use this and remove string operations
+while defining strings for workqueue names.
 
-Since SSID isn't known early on it might make
-sense to allow driver to start vdev without SSID
-and restart it later.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reported-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
- 2 files changed, 4 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 71614ba..c13a505 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1302,8 +1302,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- 	void *ptr;
- 	u32 flags = 0;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 41c8e25..5f3c1d3 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2397,7 +2397,6 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
+ 	ht_info->mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+ }
  
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index aeea1c7..0da1cdc 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4295,8 +4295,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
- 	const char *cmdname;
- 	u32 flags = 0;
+-#define MWIFIEX_MAX_WQ_LEN  30
+ /*
+  *  create a new virtual interface with the given name
+  */
+@@ -2411,7 +2410,6 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 	struct mwifiex_private *priv;
+ 	struct net_device *dev;
+ 	void *mdev_priv;
+-	char dfs_cac_str[MWIFIEX_MAX_WQ_LEN], dfs_chsw_str[MWIFIEX_MAX_WQ_LEN];
  
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
+ 	if (!adapter)
+ 		return ERR_PTR(-EFAULT);
+@@ -2576,12 +2574,10 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		return ERR_PTR(-EFAULT);
+ 	}
+ 
+-	strcpy(dfs_cac_str, "MWIFIEX_DFS_CAC");
+-	strcat(dfs_cac_str, name);
+-	priv->dfs_cac_workqueue = alloc_workqueue(dfs_cac_str,
++	priv->dfs_cac_workqueue = alloc_workqueue("MWIFIEX_DFS_CAC%s",
+ 						  WQ_HIGHPRI |
+ 						  WQ_MEM_RECLAIM |
+-						  WQ_UNBOUND, 1);
++						  WQ_UNBOUND, 1, name);
+ 	if (!priv->dfs_cac_workqueue) {
+ 		wiphy_err(wiphy, "cannot register virtual network device\n");
+ 		free_netdev(dev);
+@@ -2594,11 +2590,9 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 
+ 	INIT_DELAYED_WORK(&priv->dfs_cac_work, mwifiex_dfs_cac_work_queue);
+ 
+-	strcpy(dfs_chsw_str, "MWIFIEX_DFS_CHSW");
+-	strcat(dfs_chsw_str, name);
+-	priv->dfs_chan_sw_workqueue = alloc_workqueue(dfs_chsw_str,
++	priv->dfs_chan_sw_workqueue = alloc_workqueue("MWIFIEX_DFS_CHSW%s",
+ 						      WQ_HIGHPRI | WQ_UNBOUND |
+-						      WQ_MEM_RECLAIM, 1);
++						      WQ_MEM_RECLAIM, 1, name);
+ 	if (!priv->dfs_chan_sw_workqueue) {
+ 		wiphy_err(wiphy, "cannot register virtual network device\n");
+ 		free_netdev(dev);
 -- 
-1.8.5.3
+1.8.1.4
 
