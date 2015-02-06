@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:28400 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751761AbbBZPv4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 10:51:56 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org, mcgrof@suse.com
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v3 3/3] cfg80211: Schedule timeout for all CRDA calls
-Date: Thu, 26 Feb 2015 04:54:07 -0500
-Message-Id: <1424944447-10988-3-git-send-email-ilan.peer@intel.com> (sfid-20150226_165159_809463_A3CFE026)
-In-Reply-To: <1424944447-10988-1-git-send-email-ilan.peer@intel.com>
-References: <1424944447-10988-1-git-send-email-ilan.peer@intel.com>
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:40933 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756233AbbBFMGv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 07:06:51 -0500
+Received: by mail-wg0-f52.google.com with SMTP id y19so13083277wgg.11
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 04:06:50 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org, malaakso@elisanet.fi,
+	greearb@candelatech.com, Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFT] ath10k: restart fw on tx-credit timeout
+Date: Fri,  6 Feb 2015 13:05:54 +0100
+Message-Id: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com> (sfid-20150206_130701_163834_82A6B8B9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Timeout was scheduled only in case CRDA was called due to user hints,
-but was not scheduled for other cases. This can result in regulatory
-hint processing getting stuck in case that there is no CRDA configured.
+It makes little sense to continue and let
+firmware-host state become inconsistent if a WMI
+command can't be submitted to firmware.
 
-Change this by scheduling a timeout every time CRDA is called. In
-addition, in restore_regulatory_settings() all pending requests are
-restored (and not only the user ones).
+This effectively prevents after-affects of
+tx-credit starvation bug which include spurious
+sta kickout events and inability to associate new
+stations after some time when acting as AP.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+This should also speed up recovery/teardown in
+some cases when firmware stops responding for some
+reason.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/wireless/reg.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 4ccf563..442bb52 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -552,6 +552,9 @@ reg_call_crda(struct regulatory_request *request)
- {
- 	if (call_crda(request->alpha2))
- 		return REG_REQ_IGNORE;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index aeea1c7..776b257 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -1045,9 +1045,15 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
+ 		(ret != -EAGAIN);
+ 	}), 3*HZ);
+ 
+-	if (ret)
++	if (ret) {
+ 		dev_kfree_skb_any(skb);
+ 
++		if (ret == -EAGAIN) {
++			ath10k_warn(ar, "firmware unresponsive, restarting..\n");
++			queue_work(ar->workqueue, &ar->restart_work);
++		}
++	}
 +
-+	queue_delayed_work(system_power_efficient_wq,
-+			   &reg_timeout, msecs_to_jiffies(3142));
- 	return REG_REQ_OK;
+ 	return ret;
  }
  
-@@ -1791,8 +1794,7 @@ static void reg_set_request_processed(void)
- 		need_more_processing = true;
- 	spin_unlock(&reg_requests_lock);
- 
--	if (lr->initiator == NL80211_REGDOM_SET_BY_USER)
--		cancel_delayed_work(&reg_timeout);
-+	cancel_delayed_work(&reg_timeout);
- 
- 	if (need_more_processing)
- 		schedule_work(&reg_work);
-@@ -2071,8 +2073,6 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 		if (treatment == REG_REQ_IGNORE ||
- 		    treatment == REG_REQ_ALREADY_SET)
- 			return;
--		queue_delayed_work(system_power_efficient_wq,
--				   &reg_timeout, msecs_to_jiffies(3142));
- 		return;
- 	case NL80211_REGDOM_SET_BY_DRIVER:
- 		if (!wiphy)
-@@ -2497,7 +2497,6 @@ static void restore_regulatory_settings(bool reset_user)
- 	char alpha2[2];
- 	char world_alpha2[2];
- 	struct reg_beacon *reg_beacon, *btmp;
--	struct regulatory_request *reg_request, *tmp;
- 	LIST_HEAD(tmp_reg_req_list);
- 	struct cfg80211_registered_device *rdev;
- 
-@@ -2525,11 +2524,7 @@ static void restore_regulatory_settings(bool reset_user)
- 	 * settings.
- 	 */
- 	spin_lock(&reg_requests_lock);
--	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
--		if (reg_request->initiator != NL80211_REGDOM_SET_BY_USER)
--			continue;
--		list_move_tail(&reg_request->list, &tmp_reg_req_list);
--	}
-+	list_splice_tail_init(&reg_requests_list, &tmp_reg_req_list);
- 	spin_unlock(&reg_requests_lock);
- 
- 	/* Clear beacon hints */
 -- 
-1.8.3.2
+1.8.5.3
 
