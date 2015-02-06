@@ -1,392 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:25275 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067AbbBAIzl (ORCPT
+Received: from mail-we0-f170.google.com ([74.125.82.170]:54577 "EHLO
+	mail-we0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932132AbbBFMD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2015 03:55:41 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 6/6] wil6210: Remove msm platform related code
-Date: Sun,  1 Feb 2015 10:55:16 +0200
-Message-Id: <1422780916-8577-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150201_095549_391002_D937F9D1)
-In-Reply-To: <1422780916-8577-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1422780916-8577-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Fri, 6 Feb 2015 07:03:56 -0500
+Received: by mail-we0-f170.google.com with SMTP id q59so4408828wes.1
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 04:03:55 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 5/7] ath10k: rework tx queue locking
+Date: Fri,  6 Feb 2015 13:02:52 +0100
+Message-Id: <1423224174-24764-6-git-send-email-michal.kazior@tieto.com> (sfid-20150206_130411_920488_609C0900)
+In-Reply-To: <1423224174-24764-1-git-send-email-michal.kazior@tieto.com>
+References: <1423224174-24764-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Tx queue locking was very simple until now.
+Multi-channel support will require a more flexible
+and fine grained control.
 
-Current implementation depends on msm-bus driver which
-is not merged into mainline kernel therefore
-this code is removed
+This introduces a per-hw and per-vif (each with a
+bitmask of reasons) tx queue locking.
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/wil6210/Kconfig           |   9 -
- drivers/net/wireless/ath/wil6210/Makefile          |   1 -
- drivers/net/wireless/ath/wil6210/wil_platform.c    |  12 +-
- .../net/wireless/ath/wil6210/wil_platform_msm.c    | 257 ---------------------
- .../net/wireless/ath/wil6210/wil_platform_msm.h    |  24 --
- 5 files changed, 1 insertion(+), 302 deletions(-)
- delete mode 100644 drivers/net/wireless/ath/wil6210/wil_platform_msm.c
- delete mode 100644 drivers/net/wireless/ath/wil6210/wil_platform_msm.h
+ drivers/net/wireless/ath/ath10k/core.h   |  8 +++++
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 11 ++++--
+ drivers/net/wireless/ath/ath10k/mac.c    | 22 ++++++++++--
+ drivers/net/wireless/ath/ath10k/mac.h    | 57 ++++++++++++++++++++++++++++++++
+ 4 files changed, 93 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/Kconfig b/drivers/net/wireless/ath/wil6210/Kconfig
-index 481680a..ce8c038 100644
---- a/drivers/net/wireless/ath/wil6210/Kconfig
-+++ b/drivers/net/wireless/ath/wil6210/Kconfig
-@@ -39,12 +39,3 @@ config WIL6210_TRACING
- 	  option if you are interested in debugging the driver.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 6df0b56..08f0f06 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -290,6 +290,7 @@ struct ath10k_vif {
+ 	enum ath10k_beacon_state beacon_state;
+ 	void *beacon_buf;
+ 	dma_addr_t beacon_paddr;
++	unsigned long tx_paused; /* arbitrary values defined by target */
  
- 	  If unsure, say Y to make it easier to debug problems.
--
--config WIL6210_PLATFORM_MSM
--	bool "wil6210 MSM platform specific support"
--	depends on WIL6210
--	depends on ARCH_MSM
--	default y
--	---help---
--	  Say Y here to enable wil6210 driver support for MSM
--	  platform specific features
-diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
-index 8ad4b5f..caa717b 100644
---- a/drivers/net/wireless/ath/wil6210/Makefile
-+++ b/drivers/net/wireless/ath/wil6210/Makefile
-@@ -14,7 +14,6 @@ wil6210-y += ioctl.o
- wil6210-y += fw.o
- wil6210-$(CONFIG_WIL6210_TRACING) += trace.o
- wil6210-y += wil_platform.o
--wil6210-$(CONFIG_WIL6210_PLATFORM_MSM) += wil_platform_msm.o
- wil6210-y += ethtool.o
+ 	struct ath10k *ar;
+ 	struct ieee80211_vif *vif;
+@@ -480,6 +481,11 @@ static inline const char *ath10k_scan_state_str(enum ath10k_scan_state state)
+ 	return "unknown";
+ }
  
- # for tracing framework to find trace.h
-diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.c b/drivers/net/wireless/ath/wil6210/wil_platform.c
-index 8f1d78f..976a071 100644
---- a/drivers/net/wireless/ath/wil6210/wil_platform.c
-+++ b/drivers/net/wireless/ath/wil6210/wil_platform.c
-@@ -17,10 +17,6 @@
- #include "linux/device.h"
- #include "wil_platform.h"
++enum ath10k_tx_pause_reason {
++	ATH10K_TX_PAUSE_Q_FULL,
++	ATH10K_TX_PAUSE_MAX,
++};
++
+ struct ath10k {
+ 	struct ath_common ath_common;
+ 	struct ieee80211_hw *hw;
+@@ -638,6 +644,8 @@ struct ath10k {
  
--#ifdef CONFIG_WIL6210_PLATFORM_MSM
--#include "wil_platform_msm.h"
--#endif
--
- /**
-  * wil_platform_init() - wil6210 platform module init
-  *
-@@ -37,13 +33,7 @@ void *wil_platform_init(struct device *dev, struct wil_platform_ops *ops)
- 		return NULL;
+ 	struct dfs_pattern_detector *dfs_detector;
+ 
++	unsigned long tx_paused; /* see ATH10K_TX_PAUSE_ */
++
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ 	struct ath10k_debug debug;
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index cbd2bc9..9b34e3f 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -24,9 +24,14 @@
+ 
+ void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
+ {
++	struct ath10k *ar = htt->ar;
++
+ 	htt->num_pending_tx--;
+-	if (htt->num_pending_tx == htt->max_num_pending_tx - 1)
+-		ieee80211_wake_queues(htt->ar->hw);
++	if (htt->num_pending_tx == htt->max_num_pending_tx - 1) {
++		spin_lock_bh(&ar->data_lock);
++		ath10k_mac_tx_unlock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
++		spin_unlock_bh(&ar->data_lock);
++	}
+ }
+ 
+ static void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt)
+@@ -49,7 +54,7 @@ static int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt)
+ 
+ 	htt->num_pending_tx++;
+ 	if (htt->num_pending_tx == htt->max_num_pending_tx)
+-		ieee80211_stop_queues(htt->ar->hw);
++		ath10k_mac_tx_lock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
+ 
+ exit:
+ 	spin_unlock_bh(&htt->tx_lock);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1d7e0ae..056f94c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2821,6 +2821,7 @@ void ath10k_halt(struct ath10k *ar)
+ 		ath10k_monitor_stop(ar);
+ 
+ 	ar->monitor_started = false;
++	ar->tx_paused = 0;
+ 
+ 	ath10k_scan_finish(ar);
+ 	ath10k_peer_cleanup_all(ar);
+@@ -3217,6 +3218,7 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 	int ret = 0;
+ 	u32 value;
+ 	int bit;
++	int i;
+ 	u32 vdev_param;
+ 
+ 	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_UAPSD;
+@@ -3271,6 +3273,15 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		break;
  	}
  
--#ifdef CONFIG_WIL6210_PLATFORM_MSM
--	handle = wil_platform_msm_init(dev, ops);
--	if (handle)
--		return handle;
--#endif
--
--	/* other platform specific init functions should be called here */
-+	/* platform specific init functions should be called here */
++	/* Using vdev_id as queue number will make it very easy to do per-vif
++	 * tx queue locking. This shouldn't wrap due to interface combinations
++	 * but do a modulo for correctness sake and prevent using offchannel tx
++	 * queues for regular vif tx.
++	 */
++	vif->cab_queue = arvif->vdev_id % (IEEE80211_MAX_QUEUES - 1);
++	for (i = 0; i < ARRAY_SIZE(vif->hw_queue); i++)
++		vif->hw_queue[i] = arvif->vdev_id % (IEEE80211_MAX_QUEUES - 1);
++
+ 	/* Some firmware revisions don't wait for beacon tx completion before
+ 	 * sending another SWBA event. This could lead to hardware using old
+ 	 * (freed) beacon data in some cases, e.g. tx credit starvation
+@@ -5775,7 +5786,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			IEEE80211_HW_AP_LINK_PS |
+ 			IEEE80211_HW_SPECTRUM_MGMT |
+ 			IEEE80211_HW_SW_CRYPTO_CONTROL |
+-			IEEE80211_HW_WANT_MONITOR_VIF;
++			IEEE80211_HW_WANT_MONITOR_VIF |
++			IEEE80211_HW_QUEUE_CONTROL;
  
- 	return handle;
+ 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
+ 
+@@ -5820,7 +5832,13 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	 * on LL hardware queues are managed entirely by the FW
+ 	 * so we only advertise to mac we can do the queues thing
+ 	 */
+-	ar->hw->queues = 4;
++	ar->hw->queues = IEEE80211_MAX_QUEUES;
++
++	/* vdev_ids are used as hw queue numbers. Make sure offchan tx queue is
++	 * something that vdev_ids can't reach so that we don't stop the queue
++	 * accidentally.
++	 */
++	ar->hw->offchannel_tx_hw_queue = IEEE80211_MAX_QUEUES - 1;
+ 
+ 	switch (ar->wmi.op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index 212689f..b11f1d9 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -80,4 +80,61 @@ static inline void ath10k_tx_h_seq_no(struct ieee80211_vif *vif,
+ 	}
  }
-diff --git a/drivers/net/wireless/ath/wil6210/wil_platform_msm.c b/drivers/net/wireless/ath/wil6210/wil_platform_msm.c
-deleted file mode 100644
-index b354a74..0000000
---- a/drivers/net/wireless/ath/wil6210/wil_platform_msm.c
-+++ /dev/null
-@@ -1,257 +0,0 @@
--/*
-- * Copyright (c) 2014 Qualcomm Atheros, Inc.
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#include <linux/of.h>
--#include <linux/slab.h>
--#include <linux/msm-bus.h>
--
--#include "wil_platform.h"
--#include "wil_platform_msm.h"
--
--/**
-- * struct wil_platform_msm - wil6210 msm platform module info
-- *
-- * @dev: device object
-- * @msm_bus_handle: handle for using msm_bus API
-- * @pdata: bus scale info retrieved from DT
-- */
--struct wil_platform_msm {
--	struct device *dev;
--	uint32_t msm_bus_handle;
--	struct msm_bus_scale_pdata *pdata;
--};
--
--#define KBTOB(a) (a * 1000ULL)
--
--/**
-- * wil_platform_get_pdata() - Generate bus client data from device tree
-- * provided by clients.
-- *
-- * dev: device object
-- * of_node: Device tree node to extract information from
-- *
-- * The function returns a valid pointer to the allocated bus-scale-pdata
-- * if the vectors were correctly read from the client's device node.
-- * Any error in reading or parsing the device node will return NULL
-- * to the caller.
-- */
--static struct msm_bus_scale_pdata *wil_platform_get_pdata(
--		struct device *dev,
--		struct device_node *of_node)
--{
--	struct msm_bus_scale_pdata *pdata;
--	struct msm_bus_paths *usecase;
--	int i, j, ret, len;
--	unsigned int num_usecases, num_paths, mem_size;
--	const uint32_t *vec_arr;
--	struct msm_bus_vectors *vectors;
--
--	/* first read num_usecases and num_paths so we can calculate
--	 * amount of memory to allocate
--	 */
--	ret = of_property_read_u32(of_node, "qcom,msm-bus,num-cases",
--				   &num_usecases);
--	if (ret) {
--		dev_err(dev, "Error: num-usecases not found\n");
--		return NULL;
--	}
--
--	ret = of_property_read_u32(of_node, "qcom,msm-bus,num-paths",
--				   &num_paths);
--	if (ret) {
--		dev_err(dev, "Error: num_paths not found\n");
--		return NULL;
--	}
--
--	/* pdata memory layout:
--	 *   msm_bus_scale_pdata
--	 *   msm_bus_paths[num_usecases]
--	 *   msm_bus_vectors[num_usecases][num_paths]
--	 */
--	mem_size = sizeof(struct msm_bus_scale_pdata) +
--		   sizeof(struct msm_bus_paths) * num_usecases +
--		   sizeof(struct msm_bus_vectors) * num_usecases * num_paths;
--
--	pdata = kzalloc(mem_size, GFP_KERNEL);
--	if (!pdata)
--		return NULL;
--
--	ret = of_property_read_string(of_node, "qcom,msm-bus,name",
--				      &pdata->name);
--	if (ret) {
--		dev_err(dev, "Error: Client name not found\n");
--		goto err;
--	}
--
--	if (of_property_read_bool(of_node, "qcom,msm-bus,active-only")) {
--		pdata->active_only = 1;
--	} else {
--		dev_info(dev, "active_only flag absent.\n");
--		dev_info(dev, "Using dual context by default\n");
--	}
--
--	pdata->num_usecases = num_usecases;
--	pdata->usecase = (struct msm_bus_paths *)(pdata + 1);
--
--	vec_arr = of_get_property(of_node, "qcom,msm-bus,vectors-KBps", &len);
--	if (vec_arr == NULL) {
--		dev_err(dev, "Error: Vector array not found\n");
--		goto err;
--	}
--
--	if (len != num_usecases * num_paths * sizeof(uint32_t) * 4) {
--		dev_err(dev, "Error: Length-error on getting vectors\n");
--		goto err;
--	}
--
--	vectors = (struct msm_bus_vectors *)(pdata->usecase + num_usecases);
--	for (i = 0; i < num_usecases; i++) {
--		usecase = &pdata->usecase[i];
--		usecase->num_paths = num_paths;
--		usecase->vectors = &vectors[i];
--
--		for (j = 0; j < num_paths; j++) {
--			int index = ((i * num_paths) + j) * 4;
--
--			usecase->vectors[j].src = be32_to_cpu(vec_arr[index]);
--			usecase->vectors[j].dst =
--				be32_to_cpu(vec_arr[index + 1]);
--			usecase->vectors[j].ab = (uint64_t)
--				KBTOB(be32_to_cpu(vec_arr[index + 2]));
--			usecase->vectors[j].ib = (uint64_t)
--				KBTOB(be32_to_cpu(vec_arr[index + 3]));
--		}
--	}
--
--	return pdata;
--
--err:
--	kfree(pdata);
--
--	return NULL;
--}
--
--/* wil_platform API (callbacks) */
--
--static int wil_platform_bus_request(void *handle,
--				    uint32_t kbps /* KBytes/Sec */)
--{
--	int rc, i;
--	struct wil_platform_msm *msm = (struct wil_platform_msm *)handle;
--	int vote = 0; /* vote 0 in case requested kbps cannot be satisfied */
--	struct msm_bus_paths *usecase;
--	uint32_t usecase_kbps;
--	uint32_t min_kbps = ~0;
--
--	/* find the lowest usecase that is bigger than requested kbps */
--	for (i = 0; i < msm->pdata->num_usecases; i++) {
--		usecase = &msm->pdata->usecase[i];
--		/* assume we have single path (vectors[0]). If we ever
--		 * have multiple paths, need to define the behavior */
--		usecase_kbps = div64_u64(usecase->vectors[0].ib, 1000);
--		if (usecase_kbps >= kbps && usecase_kbps < min_kbps) {
--			min_kbps = usecase_kbps;
--			vote = i;
--		}
--	}
--
--	rc = msm_bus_scale_client_update_request(msm->msm_bus_handle, vote);
--	if (rc)
--		dev_err(msm->dev, "Failed msm_bus voting. kbps=%d vote=%d, rc=%d\n",
--			kbps, vote, rc);
--	else
--		/* TOOD: remove */
--		dev_info(msm->dev, "msm_bus_scale_client_update_request succeeded. kbps=%d vote=%d\n",
--			 kbps, vote);
--
--	return rc;
--}
--
--static void wil_platform_uninit(void *handle)
--{
--	struct wil_platform_msm *msm = (struct wil_platform_msm *)handle;
--
--	dev_info(msm->dev, "wil_platform_uninit\n");
--
--	if (msm->msm_bus_handle)
--		msm_bus_scale_unregister_client(msm->msm_bus_handle);
--
--	kfree(msm->pdata);
--	kfree(msm);
--}
--
--static int wil_platform_msm_bus_register(struct wil_platform_msm *msm,
--					 struct device_node *node)
--{
--	msm->pdata = wil_platform_get_pdata(msm->dev, node);
--	if (!msm->pdata) {
--		dev_err(msm->dev, "Failed getting DT info\n");
--		return -EINVAL;
--	}
--
--	msm->msm_bus_handle = msm_bus_scale_register_client(msm->pdata);
--	if (!msm->msm_bus_handle) {
--		dev_err(msm->dev, "Failed msm_bus registration\n");
--		return -EINVAL;
--	}
--
--	dev_info(msm->dev, "msm_bus registration succeeded! handle 0x%x\n",
--		 msm->msm_bus_handle);
--
--	return 0;
--}
--
--/**
-- * wil_platform_msm_init() - wil6210 msm platform module init
-- *
-- * The function must be called before all other functions in this module.
-- * It returns a handle which is used with the rest of the API
-- *
-- */
--void *wil_platform_msm_init(struct device *dev, struct wil_platform_ops *ops)
--{
--	struct device_node *of_node;
--	struct wil_platform_msm *msm;
--	int rc;
--
--	of_node = of_find_compatible_node(NULL, NULL, "qcom,wil6210");
--	if (!of_node) {
--		/* this could mean non-msm platform */
--		dev_err(dev, "DT node not found\n");
--		return NULL;
--	}
--
--	msm = kzalloc(sizeof(*msm), GFP_KERNEL);
--	if (!msm)
--		return NULL;
--
--	msm->dev = dev;
--
--	/* register with msm_bus module for scaling requests */
--	rc = wil_platform_msm_bus_register(msm, of_node);
--	if (rc)
--		goto cleanup;
--
--	memset(ops, 0, sizeof(*ops));
--	ops->bus_request = wil_platform_bus_request;
--	ops->uninit = wil_platform_uninit;
--
--	return (void *)msm;
--
--cleanup:
--	kfree(msm);
--	return NULL;
--}
-diff --git a/drivers/net/wireless/ath/wil6210/wil_platform_msm.h b/drivers/net/wireless/ath/wil6210/wil_platform_msm.h
-deleted file mode 100644
-index 2f2229e..0000000
---- a/drivers/net/wireless/ath/wil6210/wil_platform_msm.h
-+++ /dev/null
-@@ -1,24 +0,0 @@
--/*
-- * Copyright (c) 2014 Qualcomm Atheros, Inc.
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#ifndef __WIL_PLATFORM__MSM_H__
--#define __WIL_PLATFORM_MSM_H__
--
--#include "wil_platform.h"
--
--void *wil_platform_msm_init(struct device *dev, struct wil_platform_ops *ops);
--
--#endif /* __WIL_PLATFORM__MSM_H__ */
+ 
++static inline void ath10k_mac_tx_lock(struct ath10k *ar, int reason)
++{
++	lockdep_assert_held(&ar->htt.tx_lock);
++
++	WARN_ON(reason >= ATH10K_TX_PAUSE_MAX);
++	ar->tx_paused |= BIT(reason);
++	ieee80211_stop_queues(ar->hw);
++}
++
++static inline void ath10k_mac_tx_unlock(struct ath10k *ar, int reason)
++{
++	struct ath10k_vif *arvif;
++
++	lockdep_assert_held(&ar->htt.tx_lock);
++	lockdep_assert_held(&ar->data_lock);
++
++	WARN_ON(reason >= ATH10K_TX_PAUSE_MAX);
++	ar->tx_paused &= ~BIT(reason);
++
++	if (ar->tx_paused)
++		return;
++
++	list_for_each_entry(arvif, &ar->arvifs, list)
++		if (!arvif->tx_paused)
++			ieee80211_wake_queue(ar->hw, arvif->vdev_id);
++}
++
++static inline void ath10k_mac_vif_tx_lock(struct ath10k_vif *arvif, int reason)
++{
++	struct ath10k *ar = arvif->ar;
++
++	lockdep_assert_held(&ar->htt.tx_lock);
++
++	WARN_ON(reason >= BITS_PER_LONG);
++	arvif->tx_paused |= BIT(reason);
++	ieee80211_stop_queue(ar->hw, arvif->vdev_id);
++}
++
++static inline void ath10k_mac_vif_tx_unlock(struct ath10k_vif *arvif,
++					    int reason)
++{
++	struct ath10k *ar = arvif->ar;
++
++	lockdep_assert_held(&ar->htt.tx_lock);
++
++	WARN_ON(reason >= BITS_PER_LONG);
++	arvif->tx_paused &= ~BIT(reason);
++
++	if (ar->tx_paused)
++		return;
++
++	if (arvif->tx_paused)
++		return;
++
++	ieee80211_wake_queue(ar->hw, arvif->vdev_id);
++}
++
+ #endif /* _MAC_H_ */
 -- 
-2.1.0
+1.8.5.3
 
