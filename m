@@ -1,70 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:46926 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965676AbbBCRP2 (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:43136 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754379AbbBFOKo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 12:15:28 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH RESEND 2/2] rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
-Date: Tue,  3 Feb 2015 11:15:18 -0600
-Message-Id: <1422983718-21432-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20150203_181535_195749_45AB2894)
-In-Reply-To: <1422983718-21432-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1422983718-21432-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 6 Feb 2015 09:10:44 -0500
+Message-ID: <1423231841.31870.133.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150206_151051_271827_415DD4D6)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	eyalpe@dev.mellanox.co.il
+Date: Fri, 06 Feb 2015 06:10:41 -0800
+In-Reply-To: <1423230785.31870.131.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+	 <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
+	 <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423230785.31870.131.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver utilizes a FIFO buffer for RX descriptors. There are four places
-in the code where it calculates the number of free slots. Several of those
-locations do the calculation incorrectly. To fix these and to prevent future
-mistakes, a common inline routine is created.
+On Fri, 2015-02-06 at 05:53 -0800, Eric Dumazet wrote:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [V3.18]
----
- drivers/net/wireless/rtlwifi/pci.h           | 7 +++++++
- drivers/net/wireless/rtlwifi/rtl8192ee/trx.c | 9 +--------
- 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.h b/drivers/net/wireless/rtlwifi/pci.h
-index 5e83230..d4567d1 100644
---- a/drivers/net/wireless/rtlwifi/pci.h
-+++ b/drivers/net/wireless/rtlwifi/pci.h
-@@ -325,4 +325,11 @@ static inline void pci_write32_async(struct rtl_priv *rtlpriv,
- 	writel(val, (u8 __iomem *) rtlpriv->io.pci_mem_start + addr);
- }
- 
-+static inline u16 calc_fifo_space(u16 rp, u16 wp)
-+{
-+	if (rp <= wp)
-+		return RTL_PCI_MAX_RX_COUNT - 1 + rp - wp;
-+	return rp - wp - 1;
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-index 1245e2f..d39ee67 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/trx.c
-@@ -499,14 +499,7 @@ u16 rtl92ee_rx_desc_buff_remained_cnt(struct ieee80211_hw *hw, u8 queue_index)
- 	if (!start_rx)
- 		return 0;
- 
--	if ((last_read_point > (RX_DESC_NUM_92E / 2)) &&
--	    (read_point <= (RX_DESC_NUM_92E / 2))) {
--		remind_cnt = RX_DESC_NUM_92E - write_point;
--	} else {
--		remind_cnt = (read_point >= write_point) ?
--			     (read_point - write_point) :
--			     (RX_DESC_NUM_92E - write_point + read_point);
--	}
-+	remind_cnt = calc_fifo_space(read_point, write_point);
- 
- 	if (remind_cnt == 0)
- 		return 0;
--- 
-2.1.4
+> wifi could eventually do that, providing in skb->tx_completion_delay_us
+> the time spent in wifi driver.
+> 
+> This way, we would have no penalty for network devices doing normal skb
+> orphaning (loopback interface, ethernet, ...)
+
+Another way would be that wifi does an automatic orphaning after 1 or
+2ms.
+
 
