@@ -1,56 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36629 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932862AbbBIIqX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 03:46:23 -0500
-Date: Mon, 9 Feb 2015 09:41:43 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "Simon Raffeiner (SCC)" <simon.raffeiner@kit.edu>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: Ralink RT5390/RT5370 no longer works on more recent kernels
-Message-ID: <20150209084142.GA15797@redhat.com> (sfid-20150209_094634_010111_C1310165)
-References: <54D64337.7080005@kit.edu>
- <54D81624.9070705@lwfinger.net>
+Received: from mail2.candelatech.com ([208.74.158.173]:52272 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756178AbbBFQOH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 11:14:07 -0500
+Message-ID: <54D4E89A.7040602@candelatech.com> (sfid-20150206_171411_201886_C425BEE6)
+Date: Fri, 06 Feb 2015 08:15:22 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54D81624.9070705@lwfinger.net>
+To: Michal Kazior <michal.kazior@tieto.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org, malaakso@elisanet.fi
+Subject: Re: [RFT] ath10k: restart fw on tx-credit timeout
+References: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 08, 2015 at 08:06:28PM -0600, Larry Finger wrote:
-> On 02/07/2015 10:54 AM, Simon Raffeiner (SCC) wrote:
-> The second thing to verify is that your configuration contains the line
-> "CONFIG_RT2800USB_RT53XX=y". This parameter is marked as depending on
-> EXPERIMENTAL, and I'm not sure that Ubuntu enables those parameters in their
-> kernels. Again as the module was loaded, I think your kernel is OK, but that
-> parameter is something to check.
+On 02/06/2015 04:05 AM, Michal Kazior wrote:
+> It makes little sense to continue and let
+> firmware-host state become inconsistent if a WMI
+> command can't be submitted to firmware.
+>
+> This effectively prevents after-affects of
+> tx-credit starvation bug which include spurious
+> sta kickout events and inability to associate new
+> stations after some time when acting as AP.
+>
+> This should also speed up recovery/teardown in
+> some cases when firmware stops responding for some
+> reason.
 
-I suggest check rfkill as well.
+I have not seen a WMI timeout since I added keep-alive
+and CE polling in my firmware, but the patch looks OK
+to me.
 
-> Finally, if your kernel configuration is OK, you will probably need to
-> bisect the problem between v3.18 and v3.16. I have a device that uses
-> rt2800usb, but it is not a 53XX. FWIW, it works.
+You might add something about 'WMI' in that warning
+message to make it more clear what is not being
+responsive.  At least in my tests, I could continue
+to receive network traffic while WMI was blocked.
 
-Between 3.16 and 3.18 we have only those rt2x00 changes:
+Thanks,
+Ben
 
-cfd9167 rt2x00: do not align payload on modern H/W
-664d6a7 wireless: rt2x00: add new rt2800usb device
-01f7fee rt2800: correct BBP1_TX_POWER_CTRL mask
-ac0372a rt2x00: support Ralink 5362.
-9baa3c3 PCI: Remove DEFINE_PCI_DEVICE_TABLE macro use
-6a06e55 wireless: rt2x00: add new rt2800usb devices
-d4150246 drivers/net/wireless/rt2x00/rt2x00dev.c: remove null test before kfree
-df6e633 rt2x00: Use dma_zalloc_coherent
-19dcb76 rt2x00: do not initialize BCN_OFFSET registers
-ddb4055 rt2x00: change order when stop beaconing
-88ff2f4 rt2x00: change default MAC_BSSID_DW1_BSS_BCN_NUM
-ba08910 rt2x00: change beaconing setup on RT2800
-283dafa rt2x00: change beaconing locking
-57eaeb6 net: wireless: rt2x00: rt2x00mac.c: Cleaning up uninitialized variables
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/wmi.c | 8 +++++++-
+>   1 file changed, 7 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index aeea1c7..776b257 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -1045,9 +1045,15 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
+>   		(ret != -EAGAIN);
+>   	}), 3*HZ);
+>
+> -	if (ret)
+> +	if (ret) {
+>   		dev_kfree_skb_any(skb);
+>
+> +		if (ret == -EAGAIN) {
+> +			ath10k_warn(ar, "firmware unresponsive, restarting..\n");
+> +			queue_work(ar->workqueue, &ar->restart_work);
+> +		}
+> +	}
+> +
+>   	return ret;
+>   }
+>
+>
 
-They could be reverted, even on top of 3.19-rc7, instead of doing
-full bisection. But this could be also mac80211 issue, then bisection
-will be necessary to figure out this bug.
 
-Stanislaw 
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
