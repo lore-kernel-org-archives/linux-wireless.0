@@ -1,38 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37975 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751383AbbBXJyR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 04:54:17 -0500
-Message-ID: <1424771654.2192.8.camel@sipsolutions.net> (sfid-20150224_105422_434336_49C94B0B)
-Subject: Re: [PATCH] nl80211: use loop index as type for net detect
- frequency results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, pstew@chromium.org,
-	samueltan@chromium.org
-Date: Tue, 24 Feb 2015 10:54:14 +0100
-In-Reply-To: <1423510155-7449-1-git-send-email-luca@coelho.fi>
-References: <1423510155-7449-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:33411 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751974AbbBFDLc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Feb 2015 22:11:32 -0500
+Received: by mail-ob0-f177.google.com with SMTP id wp18so10575236obc.8
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Feb 2015 19:11:31 -0800 (PST)
+Message-ID: <54D430E1.6030904@lwfinger.net> (sfid-20150206_041135_773948_E1CCDEAD)
+Date: Thu, 05 Feb 2015 21:11:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ken D'Ambrosio <ken@jots.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ee (Thinkpad T440s)
+References: <10a90ab7a6c186362f339481b531832f@webmail.jots.org> <54D00FA4.2060907@lwfinger.net> <8f26bf9461a88199ef8d8c86f7ee98f9@webmail.jots.org>
+In-Reply-To: <8f26bf9461a88199ef8d8c86f7ee98f9@webmail.jots.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-02-09 at 21:29 +0200, Luca Coelho wrote:
-> From: Samuel Tan <samueltan@chromium.org>
-> 
-> We currently add nested members of the NL80211_ATTR_SCAN_FREQUENCIES
-> as NLA_U32 attributes of type NL80211_ATTR_WIPHY_FREQ in
-> cfg80211_net_detect_results. However, since there can be an arbitrary number of
-> frequency results, we should use the loop index of the loop used to add the
-> frequency results to NL80211_ATTR_SCAN_FREQUENCIES as the type (i.e. nla_type)
-> for each result attribute, rather than a fixed type.
-> 
-> This change is in line with how nested members are added to
-> NL80211_ATTR_SCAN_FREQUENCIES in the functions nl80211_send_wowlan_nd and
-> nl80211_add_scan_req.
+On 02/05/2015 12:56 AM, Ken D'Ambrosio wrote:
 
-Applied, thanks.
+Did the update to the troy branch of the rtlwifi_new repo fix the problem?
 
-johannes
+Larry
+
 
