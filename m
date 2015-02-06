@@ -1,118 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13939 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968AbbBFKGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 05:06:10 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kyle@infradead.org" <kyle@infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Zhao, Yingying" <yingying.zhao@intel.com>,
-	"linux-firmware@kernel.org" <linux-firmware@kernel.org>
-Subject: Re: pull request: new firmware for Intel wireless Intel 3160 / 7260
- / 7265 / 7265D devices
-Date: Fri, 6 Feb 2015 10:06:05 +0000
-Message-ID: <1423217157.11315.0.camel@egrumbacBox> (sfid-20150206_110616_617750_6F5994E5)
-References: <1422999252.29907.18.camel@egrumbacBox>
-	 <1422999568.29907.24.camel@egrumbacBox>
-	 <20150206091506.GE30928@merlin.infradead.org>
-	 <1423215113.8145.0.camel@egrumbacBox>
-In-Reply-To: <1423215113.8145.0.camel@egrumbacBox>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-we0-f179.google.com ([74.125.82.179]:53697 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754624AbbBFMDw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 07:03:52 -0500
+Received: by mail-we0-f179.google.com with SMTP id u56so7738939wes.10
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 04:03:51 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v3 1/7] ath10k: allow empty ssid vdev config
+Date: Fri,  6 Feb 2015 13:02:48 +0100
+Message-Id: <1423224174-24764-2-git-send-email-michal.kazior@tieto.com> (sfid-20150206_130407_224894_71539F7B)
+In-Reply-To: <1423224174-24764-1-git-send-email-michal.kazior@tieto.com>
+References: <1423224174-24764-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE1LTAyLTA2IGF0IDExOjMxICswMjAwLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90
-ZToNCj4gT24gRnJpLCAyMDE1LTAyLTA2IGF0IDA0OjE1IC0wNTAwLCBLeWxlIE1jTWFydGluIHdy
-b3RlOg0KPiA+IE9uIFR1ZSwgRmViIDAzLCAyMDE1IGF0IDA5OjM5OjI4UE0gKzAwMDAsIEdydW1i
-YWNoLCBFbW1hbnVlbCB3cm90ZToNCj4gPiA+IEhpLA0KPiA+ID4gDQo+ID4gPiBUaGlzIGlzIGEg
-cHVsbCByZXF1ZXN0IGZvciBuZXcgZmlybXdhcmVzIGZvciB0aGUgSW50ZWwgd2lyZWxlc3MgZGV2
-aWNlcw0KPiA+ID4gbWVudGlvbmVkIGluIHRoZSBzdWJqZWN0Lg0KPiA+ID4gDQo+ID4gPiBJIHJl
-cGxhY2UgLTEwLnVjb2RlIHdpdGggbmV3IG9uZXMgKHRoYXQgaW5jbHVkZXMgYnVnIGZpeGVzKS4N
-Cj4gPiA+IEkgYWRkIHRoZSBicmFuZCBuZXcgLTEyLnVjb2RlLg0KPiA+ID4gDQo+ID4gPiBQbGVh
-c2UgcHVsbC4NCj4gPiA+IA0KPiA+ID4gVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1p
-dA0KPiA+ID4gMzhlNTQwNWM5NmQxMGJiNDJiNjI5YjQ1MjEwYzQ2MTY2NDYxZmMyMToNCj4gPiA+
-IA0KPiA+IA0KPiA+IG9oLCBoZWgsIG9ubHkgMSBjb21taXQsIG5vdCAzLiA7LSkNCj4gPiANCj4g
-DQo+IFdlbGwgLSBhY3R1YWxseSAyIGNvbW1pdHMuIFlvdSBtaXNzZWQgdGhlIG9uZSB0aGF0IHVw
-ZGF0ZXMgdGhlIC0xMC51Y29kZQ0KPiBmcm9tIDIzLjExLjEwLjAgMjMuMTIuMTAuMC4NCj4gDQoN
-CkkgcmViYXNlZCBteSB0cmVlIG9uIHRvcCBvZiB5b3VycyB0byBtYWtlIGl0IGVhc2llciBmb3Ig
-eW91IHRvIHRyYWNrLg0KQnV0IEkgZ3Vlc3MgSSBuZWVkIHRvIHNwZWNpZnkgdGhlIHZlcnNpb24g
-aW4gdGhlIGNvbW1pdCB0aXRsZS4gVGhhdCdkDQphdm9pZCBjb25mdXNpb24uDQoNCj4gPiBhcHBs
-aWVkLCB0aGFua3MgRW1tYW51ZWwuDQo+ID4gDQo+ID4gcmVnYXJkcywgS3lsZQ0KPiA+IA0KPiA+
-ID4gICBjeGdiNDogVXBkYXRlIGZpcm13YXJlIHRvIHJldmlzaW9uIDEuMTIuMjUuMCAoMjAxNC0x
-Mi0wMSAxNTo0ODowMg0KPiA+ID4gLTA1MDApDQo+ID4gPiANCj4gPiA+IGFyZSBhdmFpbGFibGUg
-aW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KPiA+ID4gDQo+ID4gPiANCj4gPiA+IGdpdDovL2dp
-dC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2xpbnV4LWZpcm13
-YXJlLmdpdA0KPiA+ID4gbWFzdGVyDQo+ID4gPiANCj4gPiA+IGZvciB5b3UgdG8gZmV0Y2ggY2hh
-bmdlcyB1cCB0byBkYTRlNThkNDc1NTc3NzZjNTcyMWJhZmIzZjJiNmM0YTFhNGZmMGYzOg0KPiA+
-ID4gDQo+ID4gPiAgIGl3bHdpZmk6IGFkZCBuZXcgLTEyIGZpcm13YXJlIGZvciAzMTYwIC8gNzI2
-MCAvIDcyNjUgLyA3MjY1RA0KPiA+ID4gKDIwMTUtMDItMDMgMjM6MTQ6NTEgKzAyMDApDQo+ID4g
-PiANCj4gPiA+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0NCj4gPiA+IEVtbWFudWVsIEdydW1iYWNoICgzKToNCj4gPiA+ICAg
-ICAgIGl3bHdpZmk6IHVwZGF0ZSAtMTAudWNvZGUgZm9yIDMxNjAgLyA3MjYwIC8gNzI2NSAvIDcy
-NjVEDQo+ID4gPiAgICAgICBpd2x3aWZpOiB1cGRhdGUgLTEwLnVjb2RlIGZvciAzMTYwIC8gNzI2
-MCAvIDcyNjUgLyA3MjY1RA0KPiA+ID4gICAgICAgaXdsd2lmaTogYWRkIG5ldyAtMTIgZmlybXdh
-cmUgZm9yIDMxNjAgLyA3MjYwIC8gNzI2NSAvIDcyNjVEDQo+ID4gPiANCj4gPiA+ICBXSEVOQ0Ug
-ICAgICAgICAgICAgICAgIHwgIDIwICsrKysrKysrKysrKysrKystLS0tDQo+ID4gPiAgaXdsd2lm
-aS0zMTYwLTEwLnVjb2RlICB8IEJpbiA2MTAxNjggLT4gNjEwMDY0IGJ5dGVzDQo+ID4gPiAgaXds
-d2lmaS0zMTYwLTEyLnVjb2RlICB8IEJpbiAwIC0+IDY4Mzk5NiBieXRlcw0KPiA+ID4gIGl3bHdp
-ZmktNzI2MC0xMC51Y29kZSAgfCBCaW4gNjcyNDgwIC0+IDY3MjM3MiBieXRlcw0KPiA+ID4gIGl3
-bHdpZmktNzI2MC0xMi51Y29kZSAgfCBCaW4gMCAtPiA3ODIzMDAgYnl0ZXMNCj4gPiA+ICBpd2x3
-aWZpLTcyNjUtMTAudWNvZGUgIHwgQmluIDczNjk2OCAtPiA3MzY4NjQgYnl0ZXMNCj4gPiA+ICBp
-d2x3aWZpLTcyNjUtMTIudWNvZGUgIHwgQmluIDAgLT4gODgwNjA0IGJ5dGVzDQo+ID4gPiAgaXds
-d2lmaS03MjY1RC0xMC51Y29kZSB8IEJpbiA3NDA2MzYgLT4gNzQwNDU2IGJ5dGVzDQo+ID4gPiAg
-aXdsd2lmaS03MjY1RC0xMi51Y29kZSB8IEJpbiAwIC0+IDEwMDI4MDAgYnl0ZXMNCj4gPiA+ICA5
-IGZpbGVzIGNoYW5nZWQsIDE2IGluc2VydGlvbnMoKyksIDQgZGVsZXRpb25zKC0pDQo+ID4gPiAg
-Y3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmktMzE2MC0xMi51Y29kZQ0KPiA+ID4gIGNyZWF0ZSBt
-b2RlIDEwMDY0NCBpd2x3aWZpLTcyNjAtMTIudWNvZGUNCj4gPiA+ICBjcmVhdGUgbW9kZSAxMDA2
-NDQgaXdsd2lmaS03MjY1LTEyLnVjb2RlDQo+ID4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdp
-ZmktNzI2NUQtMTIudWNvZGUNCj4gPiA+IA0KPiA+ID4gZGlmZiAtLWdpdCBhL1dIRU5DRSBiL1dI
-RU5DRQ0KPiA+ID4gaW5kZXggNDRjNDFjNy4uMTkxNzI4OCAxMDA2NDQNCj4gPiA+IC0tLSBhL1dI
-RU5DRQ0KPiA+ID4gKysrIGIvV0hFTkNFDQo+ID4gPiBAQCAtODE2LDcgKzgxNiwxMCBAQCBGaWxl
-OiBpd2x3aWZpLTcyNjAtOS51Y29kZQ0KPiA+ID4gIFZlcnNpb246IDI1LjIyOC45LjANCj4gPiA+
-ICANCj4gPiA+ICBGaWxlOiBpd2x3aWZpLTcyNjAtMTAudWNvZGUNCj4gPiA+IC1WZXJzaW9uOiAy
-My4xMC4xMC4wDQo+ID4gPiArVmVyc2lvbjogMjMuMTIuMTAuMA0KPiA+ID4gKw0KPiA+ID4gK0Zp
-bGU6IGl3bHdpZmktNzI2MC0xMi51Y29kZQ0KPiA+ID4gK1ZlcnNpb246IDI1LjE1LjEyLjANCj4g
-PiA+ICANCj4gPiA+ICBGaWxlOiBpd2x3aWZpLTMxNjAtNy51Y29kZQ0KPiA+ID4gIFZlcnNpb246
-IDIyLjEuNy4wDQo+ID4gPiBAQCAtODI4LDcgKzgzMSwxMCBAQCBGaWxlOiBpd2x3aWZpLTMxNjAt
-OS51Y29kZQ0KPiA+ID4gIFZlcnNpb246IDI1LjIyOC45LjANCj4gPiA+ICANCj4gPiA+ICBGaWxl
-OiBpd2x3aWZpLTMxNjAtMTAudWNvZGUNCj4gPiA+IC1WZXJzaW9uOiAyMy4xMC4xMC4wDQo+ID4g
-PiArVmVyc2lvbjogMjMuMTIuMTAuMA0KPiA+ID4gKw0KPiA+ID4gK0ZpbGU6IGl3bHdpZmktMzE2
-MC0xMi51Y29kZQ0KPiA+ID4gK1ZlcnNpb246IDI1LjE1LjEyLjANCj4gPiA+ICANCj4gPiA+ICBG
-aWxlOiBpd2x3aWZpLTcyNjUtOC51Y29kZQ0KPiA+ID4gIFZlcnNpb246IDIyLjI0LjguMA0KPiA+
-ID4gQEAgLTgzNywxMCArODQzLDE2IEBAIEZpbGU6IGl3bHdpZmktNzI2NS05LnVjb2RlDQo+ID4g
-PiAgVmVyc2lvbjogMjUuMjI4LjkuMA0KPiA+ID4gIA0KPiA+ID4gIEZpbGU6IGl3bHdpZmktNzI2
-NS0xMC51Y29kZQ0KPiA+ID4gLVZlcnNpb246IDIzLjEwLjEwLjANCj4gPiA+ICtWZXJzaW9uOiAy
-My4xMi4xMC4wDQo+ID4gPiArDQo+ID4gPiArRmlsZTogaXdsd2lmaS03MjY1LTEyLnVjb2RlDQo+
-ID4gPiArVmVyc2lvbjogMjUuMTUuMTIuMA0KPiA+ID4gIA0KPiA+ID4gIEZpbGU6IGl3bHdpZmkt
-NzI2NUQtMTAudWNvZGUNCj4gPiA+IC1WZXJzaW9uOiAyMy4xMC4xMC4wDQo+ID4gPiArVmVyc2lv
-bjogMjMuMTIuMTAuMA0KPiA+ID4gKw0KPiA+ID4gK0ZpbGU6IGl3bHdpZmktNzI2NUQtMTIudWNv
-ZGUNCj4gPiA+ICtWZXJzaW9uOiAyNS4xNS4xMi4wDQo+ID4gPiAgDQo+ID4gPiAgTGljZW5jZTog
-UmVkaXN0cmlidXRhYmxlLiBTZWUgTElDRU5DRS5pd2x3aWZpX2Zpcm13YXJlIGZvciBkZXRhaWxz
-DQo+ID4gPiAgDQo+ID4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS0zMTYwLTEwLnVjb2RlIGIvaXds
-d2lmaS0zMTYwLTEwLnVjb2RlDQo+ID4gPiBpbmRleCA4Y2VjN2JmLi41ZjQxNzNjIDEwMDY0NA0K
-PiA+ID4gQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS0zMTYwLTEwLnVjb2RlIGFuZCBiL2l3bHdpZmkt
-MzE2MC0xMC51Y29kZSBkaWZmZXINCj4gPiA+IGRpZmYgLS1naXQgYS9pd2x3aWZpLTMxNjAtMTIu
-dWNvZGUgYi9pd2x3aWZpLTMxNjAtMTIudWNvZGUNCj4gPiA+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0
-DQo+ID4gPiBpbmRleCAwMDAwMDAwLi40NWJjZTQ4DQo+ID4gPiBCaW5hcnkgZmlsZXMgL2Rldi9u
-dWxsIGFuZCBiL2l3bHdpZmktMzE2MC0xMi51Y29kZSBkaWZmZXINCj4gPiA+IGRpZmYgLS1naXQg
-YS9pd2x3aWZpLTcyNjAtMTAudWNvZGUgYi9pd2x3aWZpLTcyNjAtMTAudWNvZGUNCj4gPiA+IGlu
-ZGV4IDllNWI5MzAuLmRjYTc5ZTIgMTAwNjQ0DQo+ID4gPiBCaW5hcnkgZmlsZXMgYS9pd2x3aWZp
-LTcyNjAtMTAudWNvZGUgYW5kIGIvaXdsd2lmaS03MjYwLTEwLnVjb2RlIGRpZmZlcg0KPiA+ID4g
-ZGlmZiAtLWdpdCBhL2l3bHdpZmktNzI2MC0xMi51Y29kZSBiL2l3bHdpZmktNzI2MC0xMi51Y29k
-ZQ0KPiA+ID4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gPiA+IGluZGV4IDAwMDAwMDAuLjdlYzkx
-ZjANCj4gPiA+IEJpbmFyeSBmaWxlcyAvZGV2L251bGwgYW5kIGIvaXdsd2lmaS03MjYwLTEyLnVj
-b2RlIGRpZmZlcg0KPiA+ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktNzI2NS0xMC51Y29kZSBiL2l3
-bHdpZmktNzI2NS0xMC51Y29kZQ0KPiA+ID4gaW5kZXggNDg4ZGRkMC4uMDU3MWZjZiAxMDA2NDQN
-Cj4gPiA+IEJpbmFyeSBmaWxlcyBhL2l3bHdpZmktNzI2NS0xMC51Y29kZSBhbmQgYi9pd2x3aWZp
-LTcyNjUtMTAudWNvZGUgZGlmZmVyDQo+ID4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS03MjY1LTEy
-LnVjb2RlIGIvaXdsd2lmaS03MjY1LTEyLnVjb2RlDQo+ID4gPiBuZXcgZmlsZSBtb2RlIDEwMDY0
-NA0KPiA+ID4gaW5kZXggMDAwMDAwMC4uODRhZTJjZQ0KPiA+ID4gQmluYXJ5IGZpbGVzIC9kZXYv
-bnVsbCBhbmQgYi9pd2x3aWZpLTcyNjUtMTIudWNvZGUgZGlmZmVyDQo+ID4gPiBkaWZmIC0tZ2l0
-IGEvaXdsd2lmaS03MjY1RC0xMC51Y29kZSBiL2l3bHdpZmktNzI2NUQtMTAudWNvZGUNCj4gPiA+
-IGluZGV4IDAxMTk0ZGIuLmQ5YjlhYWYgMTAwNjQ0DQo+ID4gPiBCaW5hcnkgZmlsZXMgYS9pd2x3
-aWZpLTcyNjVELTEwLnVjb2RlIGFuZCBiL2l3bHdpZmktNzI2NUQtMTAudWNvZGUNCj4gPiA+IGRp
-ZmZlcg0KPiA+ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktNzI2NUQtMTIudWNvZGUgYi9pd2x3aWZp
-LTcyNjVELTEyLnVjb2RlDQo+ID4gPiBuZXcgZmlsZSBtb2RlIDEwMDY0NA0KPiA+ID4gaW5kZXgg
-MDAwMDAwMC4uM2YzNmI1NQ0KPiA+ID4gQmluYXJ5IGZpbGVzIC9kZXYvbnVsbCBhbmQgYi9pd2x3
-aWZpLTcyNjVELTEyLnVjb2RlIGRpZmZlcg0KPiA+ID4gDQo+ID4gDQo+ID4gDQo+IA0KDQo=
+It doesn't make much sense to reject a valid
+firmware configuration combination.
+
+Since SSID isn't known early on it might make
+sense to allow driver to start vdev without SSID
+and restart it later.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
+ drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
+ 2 files changed, 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 71614ba..c13a505 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1302,8 +1302,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
+ 	void *ptr;
+ 	u32 flags = 0;
+ 
+-	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
+-		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
+ 		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index aeea1c7..0da1cdc 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4295,8 +4295,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
+ 	const char *cmdname;
+ 	u32 flags = 0;
+ 
+-	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
+-		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
+ 		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
+-- 
+1.8.5.3
+
