@@ -1,53 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:36166 "EHLO www.osadl.org"
+Received: from mx1.redhat.com ([209.132.183.28]:48931 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933015AbbBDIMa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 03:12:30 -0500
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Benoit Taine <benoit.taine@lip6.fr>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH 2/3] wireless: orinoco: orinoco_pci use msecs_to_jiffies for conversion
-Date: Wed,  4 Feb 2015 03:07:40 -0500
-Message-Id: <1423037261-20193-2-git-send-email-hofrat@osadl.org> (sfid-20150204_091317_495907_2F2B9E57)
-In-Reply-To: <1423037261-20193-1-git-send-email-hofrat@osadl.org>
-References: <1423037261-20193-1-git-send-email-hofrat@osadl.org>
+	id S1755550AbbBFWYn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 17:24:43 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: Larry.Finger@lwfinger.net, wlanfae@realtek.com,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 1/1] rtlwifi: Clear ACM_CTRL AC3_VO bit correctly
+Date: Fri,  6 Feb 2015 17:24:32 -0500
+Message-Id: <1423261472-4607-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20150206_232459_481066_49885480)
+In-Reply-To: <1423261472-4607-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1423261472-4607-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is only an API consolidation and should make things more readable
-it replaces var * HZ / 1000 by msecs_to_jiffies(var).
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+All hw driver components in the rtlwifi driver, except for the
+rtl8192de component has this bug. They would clear BE bit in the
+ACM_CTRL register instead of the VO bit when processing the VO queue.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
+ drivers/net/wireless/rtlwifi/rtl8188ee/hw.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8192ee/hw.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8723ae/hw.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8723be/hw.c | 2 +-
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
 
-Converting milliseconds to jiffies by "val * HZ / 1000" is technically
-ok but msecs_to_jiffies(val) is the cleaner solution and handles all
-corner cases correctly. This is a minor API cleanup only.
-
-Patch was compile-tested only for x86_64_defconfig + CONFIG_HERMES=m
-CONFIG_HERMES_PRISM=y, CONFIG_PCI_HERMES=m
-
-Patch is against 3.19.0-rc7 (localversion-next is -next-20150203)
-
- drivers/net/wireless/orinoco/orinoco_pci.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/orinoco/orinoco_pci.c b/drivers/net/wireless/orinoco/orinoco_pci.c
-index b6bdad6..74219d5 100644
---- a/drivers/net/wireless/orinoco/orinoco_pci.c
-+++ b/drivers/net/wireless/orinoco/orinoco_pci.c
-@@ -94,7 +94,7 @@ static int orinoco_pci_cor_reset(struct orinoco_private *priv)
- 	mdelay(HERMES_PCI_COR_OFFT);
- 
- 	/* The card is ready when it's no longer busy */
--	timeout = jiffies + (HERMES_PCI_COR_BUSYT * HZ / 1000);
-+	timeout = jiffies + msecs_to_jiffies(HERMES_PCI_COR_BUSYT);
- 	reg = hermes_read_regn(hw, CMD);
- 	while (time_before(jiffies, timeout) && (reg & HERMES_CMD_BUSY)) {
- 		mdelay(1);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+index f2b9713..edc2cbb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+@@ -566,7 +566,7 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				acm_ctrl &= (~ACMHW_VIQEN);
+ 				break;
+ 			case AC3_VO:
+-				acm_ctrl &= (~ACMHW_BEQEN);
++				acm_ctrl &= (~ACMHW_VOQEN);
+ 				break;
+ 			default:
+ 				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+index 5c646d5..545b2c1 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
+@@ -363,7 +363,7 @@ void rtl92ce_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 					acm_ctrl &= (~AcmHw_ViqEn);
+ 					break;
+ 				case AC3_VO:
+-					acm_ctrl &= (~AcmHw_BeqEn);
++					acm_ctrl &= (~AcmHw_VoqEn);
+ 					break;
+ 				default:
+ 					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index 5513217..ab38e68 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1867,7 +1867,7 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 					acm_ctrl &= (~AcmHw_ViqEn);
+ 					break;
+ 				case AC3_VO:
+-					acm_ctrl &= (~AcmHw_BeqEn);
++					acm_ctrl &= (~AcmHw_VoqEn);
+ 					break;
+ 				default:
+ 					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+index 1a87edc..bac42e4 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+@@ -588,7 +588,7 @@ void rtl92ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				acm_ctrl &= (~ACMHW_VIQEN);
+ 				break;
+ 			case AC3_VO:
+-				acm_ctrl &= (~ACMHW_BEQEN);
++				acm_ctrl &= (~ACMHW_VOQEN);
+ 				break;
+ 			default:
+ 				RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+index 5761d5b..dee88a8 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+@@ -293,7 +293,7 @@ void rtl92se_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 					acm_ctrl &= (~AcmHw_ViqEn);
+ 					break;
+ 				case AC3_VO:
+-					acm_ctrl &= (~AcmHw_BeqEn);
++					acm_ctrl &= (~AcmHw_VoqEn);
+ 					break;
+ 				default:
+ 					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+index aa08546..b3b0947 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+@@ -362,7 +362,7 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 					acm_ctrl &= (~ACMHW_VIQEN);
+ 					break;
+ 				case AC3_VO:
+-					acm_ctrl &= (~ACMHW_BEQEN);
++					acm_ctrl &= (~ACMHW_VOQEN);
+ 					break;
+ 				default:
+ 					RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+index 6dad28e..b469983 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+@@ -603,7 +603,7 @@ void rtl8723be_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				acm_ctrl &= (~ACMHW_VIQEN);
+ 				break;
+ 			case AC3_VO:
+-				acm_ctrl &= (~ACMHW_BEQEN);
++				acm_ctrl &= (~ACMHW_VOQEN);
+ 				break;
+ 			default:
+ 				RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+index 8ec8200..ac235df 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+@@ -667,7 +667,7 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				acm_ctrl &= (~ACMHW_VIQEN);
+ 				break;
+ 			case AC3_VO:
+-				acm_ctrl &= (~ACMHW_BEQEN);
++				acm_ctrl &= (~ACMHW_VOQEN);
+ 				break;
+ 			default:
+ 				RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
 -- 
-1.7.10.4
+2.1.0
 
