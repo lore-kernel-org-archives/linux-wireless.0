@@ -1,53 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:36275 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933162AbbBDIMm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 03:12:42 -0500
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Benoit Taine <benoit.taine@lip6.fr>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+Received: from smtp.codeaurora.org ([198.145.11.231]:38219 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750921AbbBFGnk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 01:43:40 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: cw1200: use msecs_to_jiffies for conversion
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1423035589-3647-1-git-send-email-hofrat@osadl.org>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Solomon Peachy <pizza@shaftnet.org>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH 3/3] wireless: orinoco: orinoco_tmd use msecs_to_jiffies for conversion
-Date: Wed,  4 Feb 2015 03:07:41 -0500
-Message-Id: <1423037261-20193-3-git-send-email-hofrat@osadl.org> (sfid-20150204_091305_778052_4AE9A11B)
-In-Reply-To: <1423037261-20193-1-git-send-email-hofrat@osadl.org>
-References: <1423037261-20193-1-git-send-email-hofrat@osadl.org>
+Message-Id: <20150206064339.92EB9140C72@smtp.codeaurora.org> (sfid-20150206_074359_087877_FB3F368B)
+Date: Fri,  6 Feb 2015 06:43:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is only an API consolidation and should make things more readable
-it replaces var * HZ / 1000 by msecs_to_jiffies(var).
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+> This is only an API consolidation to make things more readable.
+> Instances of  HZ / CONST  are replaced by appropriate msecs_to_jiffies().
+> 
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-Converting milliseconds to jiffies by "val * HZ / 1000" is technically
-ok but msecs_to_jiffies(val) is the cleaner solution and handles all
-corner cases correctly. This is a minor API cleanup only.
+Thanks, applied to wireless-drivers-next.git.
 
-Patch was compile-tested only for x86_64_defconfig + CONFIG_HERMES=m
-CONFIG_TMD_HERMES=m
-
-Patch is against 3.19.0-rc7 (localversion-next is -next-20150203)
-
- drivers/net/wireless/orinoco/orinoco_tmd.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/orinoco/orinoco_tmd.c b/drivers/net/wireless/orinoco/orinoco_tmd.c
-index 79d0e33..20ce569 100644
---- a/drivers/net/wireless/orinoco/orinoco_tmd.c
-+++ b/drivers/net/wireless/orinoco/orinoco_tmd.c
-@@ -71,7 +71,7 @@ static int orinoco_tmd_cor_reset(struct orinoco_private *priv)
- 	mdelay(1);
- 
- 	/* Just in case, wait more until the card is no longer busy */
--	timeout = jiffies + (TMD_RESET_TIME * HZ / 1000);
-+	timeout = jiffies + msecs_to_jiffies(TMD_RESET_TIME);
- 	reg = hermes_read_regn(hw, CMD);
- 	while (time_before(jiffies, timeout) && (reg & HERMES_CMD_BUSY)) {
- 		mdelay(1);
--- 
-1.7.10.4
-
+Kalle Valo
