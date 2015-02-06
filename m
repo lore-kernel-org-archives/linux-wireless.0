@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:37478 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752760AbbBWVxq (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46307 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751314AbbBFLNX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 16:53:46 -0500
-Received: by mail-ig0-f182.google.com with SMTP id h15so22078871igd.3
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 13:53:45 -0800 (PST)
+	Fri, 6 Feb 2015 06:13:23 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t16AwVwm030145
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Feb 2015 03:13:23 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1sca52au0a-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 03:13:23 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 5/5] mwifiex: modify TX buff size for SD8887
+Date: Fri, 6 Feb 2015 22:11:46 +0530
+Message-ID: <1423240906-12951-5-git-send-email-patila@marvell.com> (sfid-20150206_121326_057827_3414D2DF)
+In-Reply-To: <1423240906-12951-1-git-send-email-patila@marvell.com>
+References: <1423240906-12951-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20150223213050.GA23232@w1.fi>
-References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
-	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
-	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
-	<CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
-	<CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
-	<CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
-	<CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
-	<CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
-	<20150223171700.GA29730@w1.fi>
-	<CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
-	<20150223213050.GA23232@w1.fi>
-Date: Mon, 23 Feb 2015 13:53:45 -0800
-Message-ID: <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com> (sfid-20150223_225353_372302_CD206FEE)
-Subject: Re: AR9462 problems connecting again..
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Jouni Malinen <j@w1.fi>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 23, 2015 at 1:30 PM, Jouni Malinen <j@w1.fi> wrote:
->
-> How far is the station from the AP? Would it be possible to see whether
-> the behavior changes if you were within, say, five meters or so?
+FW crash has been observed while running iperf TX with SD8887
+devices. This is because of invalid TX buffer setting. SD8887
+supports 2K buffer sizes. This patch fixes this issue.
 
-Well, it was pretty much within five meters already, but there was a
-thin wall in between (and the old AP was right next to the laptop,
-which might add some noise even if they are on different channels).
-Going closer does seem to help, but again, it's not like this is 100%
-reproducible to begin with.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-So the theory that the driver starts at too high a transmit rate, and
-then does not handle failures well, might be true. Of course, "not
-handle failures well" is something of an understatement.
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 3fe9fb4..c636944 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -472,7 +472,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
+ 	.reg = &mwifiex_reg_sd8887,
+ 	.max_ports = 32,
+ 	.mp_agg_pkt_limit = 16,
+-	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
++	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+ 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+ 	.supports_sdio_new_mode = true,
+-- 
+1.8.1.4
 
-> It would be useful if you can capture the 802.11 frame exchange from a
-> failed connection case with an external wireless sniffer.
-
-I will try with my (much more reliable) iwlwifi laptop. At least the
-merge window is over, so I should have some time. Knock wood.
-
-              Linus
