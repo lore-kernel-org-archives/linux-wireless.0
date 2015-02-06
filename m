@@ -1,45 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37323 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751701AbbBURct (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2015 12:32:49 -0500
-Received: from [50.34.201.20] (unknown [50.34.201.20])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id 750C640A539
-	for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2015 09:32:48 -0800 (PST)
-Message-ID: <54E8C140.1030500@candelatech.com> (sfid-20150221_183253_748397_D1B33184)
-Date: Sat, 21 Feb 2015 09:32:48 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from mga09.intel.com ([134.134.136.24]:44302 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754935AbbBFJb7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Feb 2015 04:31:59 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kyle@infradead.org" <kyle@infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Zhao, Yingying" <yingying.zhao@intel.com>,
+	"linux-firmware@kernel.org" <linux-firmware@kernel.org>
+Subject: Re: pull request: new firmware for Intel wireless Intel 3160 / 7260
+ / 7265 / 7265D devices
+Date: Fri, 6 Feb 2015 09:31:52 +0000
+Message-ID: <1423215113.8145.0.camel@egrumbacBox> (sfid-20150206_103205_394445_2319EDF9)
+References: <1422999252.29907.18.camel@egrumbacBox>
+	 <1422999568.29907.24.camel@egrumbacBox>
+	 <20150206091506.GE30928@merlin.infradead.org>
+In-Reply-To: <20150206091506.GE30928@merlin.infradead.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: CT ath10k firmware 10.1.467-13 is released.
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are the highlights:
-
-Add IBSS/AHDOC support.
-Work-around tx-credits hang due to WMI/CE lockup in firmware (requires ath10k driver patches)
-Attempt to fix a few asserts reported by users (scan code, rate-ctrl, resource-mgr, etc)
-
-Known bugs:
-CE transport failure assert (Only seen on IMX6 hardware at this time)
-WMI keepalive failure, probably due to inability to send mgt frames in bad RF environment.
-
-
-Downloads and more info is here:
-
-http://www.candelatech.com/ath10k.php
-
-As always, I am interested to hear of users having success or otherwise with
-this firmware.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+T24gRnJpLCAyMDE1LTAyLTA2IGF0IDA0OjE1IC0wNTAwLCBLeWxlIE1jTWFydGluIHdyb3RlOg0K
+PiBPbiBUdWUsIEZlYiAwMywgMjAxNSBhdCAwOTozOToyOFBNICswMDAwLCBHcnVtYmFjaCwgRW1t
+YW51ZWwgd3JvdGU6DQo+ID4gSGksDQo+ID4gDQo+ID4gVGhpcyBpcyBhIHB1bGwgcmVxdWVzdCBm
+b3IgbmV3IGZpcm13YXJlcyBmb3IgdGhlIEludGVsIHdpcmVsZXNzIGRldmljZXMNCj4gPiBtZW50
+aW9uZWQgaW4gdGhlIHN1YmplY3QuDQo+ID4gDQo+ID4gSSByZXBsYWNlIC0xMC51Y29kZSB3aXRo
+IG5ldyBvbmVzICh0aGF0IGluY2x1ZGVzIGJ1ZyBmaXhlcykuDQo+ID4gSSBhZGQgdGhlIGJyYW5k
+IG5ldyAtMTIudWNvZGUuDQo+ID4gDQo+ID4gUGxlYXNlIHB1bGwuDQo+ID4gDQo+ID4gVGhlIGZv
+bGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdA0KPiA+IDM4ZTU0MDVjOTZkMTBiYjQyYjYyOWI0
+NTIxMGM0NjE2NjQ2MWZjMjE6DQo+ID4gDQo+IA0KPiBvaCwgaGVoLCBvbmx5IDEgY29tbWl0LCBu
+b3QgMy4gOy0pDQo+IA0KDQpXZWxsIC0gYWN0dWFsbHkgMiBjb21taXRzLiBZb3UgbWlzc2VkIHRo
+ZSBvbmUgdGhhdCB1cGRhdGVzIHRoZSAtMTAudWNvZGUNCmZyb20gMjMuMTEuMTAuMCAyMy4xMi4x
+MC4wLg0KDQo+IGFwcGxpZWQsIHRoYW5rcyBFbW1hbnVlbC4NCj4gDQo+IHJlZ2FyZHMsIEt5bGUN
+Cj4gDQo+ID4gICBjeGdiNDogVXBkYXRlIGZpcm13YXJlIHRvIHJldmlzaW9uIDEuMTIuMjUuMCAo
+MjAxNC0xMi0wMSAxNTo0ODowMg0KPiA+IC0wNTAwKQ0KPiA+IA0KPiA+IGFyZSBhdmFpbGFibGUg
+aW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KPiA+IA0KPiA+IA0KPiA+IGdpdDovL2dpdC5rZXJu
+ZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2xpbnV4LWZpcm13YXJlLmdp
+dA0KPiA+IG1hc3Rlcg0KPiA+IA0KPiA+IGZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byBk
+YTRlNThkNDc1NTc3NzZjNTcyMWJhZmIzZjJiNmM0YTFhNGZmMGYzOg0KPiA+IA0KPiA+ICAgaXds
+d2lmaTogYWRkIG5ldyAtMTIgZmlybXdhcmUgZm9yIDMxNjAgLyA3MjYwIC8gNzI2NSAvIDcyNjVE
+DQo+ID4gKDIwMTUtMDItMDMgMjM6MTQ6NTEgKzAyMDApDQo+ID4gDQo+ID4gLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+
+IEVtbWFudWVsIEdydW1iYWNoICgzKToNCj4gPiAgICAgICBpd2x3aWZpOiB1cGRhdGUgLTEwLnVj
+b2RlIGZvciAzMTYwIC8gNzI2MCAvIDcyNjUgLyA3MjY1RA0KPiA+ICAgICAgIGl3bHdpZmk6IHVw
+ZGF0ZSAtMTAudWNvZGUgZm9yIDMxNjAgLyA3MjYwIC8gNzI2NSAvIDcyNjVEDQo+ID4gICAgICAg
+aXdsd2lmaTogYWRkIG5ldyAtMTIgZmlybXdhcmUgZm9yIDMxNjAgLyA3MjYwIC8gNzI2NSAvIDcy
+NjVEDQo+ID4gDQo+ID4gIFdIRU5DRSAgICAgICAgICAgICAgICAgfCAgMjAgKysrKysrKysrKysr
+KysrKy0tLS0NCj4gPiAgaXdsd2lmaS0zMTYwLTEwLnVjb2RlICB8IEJpbiA2MTAxNjggLT4gNjEw
+MDY0IGJ5dGVzDQo+ID4gIGl3bHdpZmktMzE2MC0xMi51Y29kZSAgfCBCaW4gMCAtPiA2ODM5OTYg
+Ynl0ZXMNCj4gPiAgaXdsd2lmaS03MjYwLTEwLnVjb2RlICB8IEJpbiA2NzI0ODAgLT4gNjcyMzcy
+IGJ5dGVzDQo+ID4gIGl3bHdpZmktNzI2MC0xMi51Y29kZSAgfCBCaW4gMCAtPiA3ODIzMDAgYnl0
+ZXMNCj4gPiAgaXdsd2lmaS03MjY1LTEwLnVjb2RlICB8IEJpbiA3MzY5NjggLT4gNzM2ODY0IGJ5
+dGVzDQo+ID4gIGl3bHdpZmktNzI2NS0xMi51Y29kZSAgfCBCaW4gMCAtPiA4ODA2MDQgYnl0ZXMN
+Cj4gPiAgaXdsd2lmaS03MjY1RC0xMC51Y29kZSB8IEJpbiA3NDA2MzYgLT4gNzQwNDU2IGJ5dGVz
+DQo+ID4gIGl3bHdpZmktNzI2NUQtMTIudWNvZGUgfCBCaW4gMCAtPiAxMDAyODAwIGJ5dGVzDQo+
+ID4gIDkgZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMoLSkNCj4g
+PiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmktMzE2MC0xMi51Y29kZQ0KPiA+ICBjcmVhdGUg
+bW9kZSAxMDA2NDQgaXdsd2lmaS03MjYwLTEyLnVjb2RlDQo+ID4gIGNyZWF0ZSBtb2RlIDEwMDY0
+NCBpd2x3aWZpLTcyNjUtMTIudWNvZGUNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmkt
+NzI2NUQtMTIudWNvZGUNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvV0hFTkNFIGIvV0hFTkNFDQo+
+ID4gaW5kZXggNDRjNDFjNy4uMTkxNzI4OCAxMDA2NDQNCj4gPiAtLS0gYS9XSEVOQ0UNCj4gPiAr
+KysgYi9XSEVOQ0UNCj4gPiBAQCAtODE2LDcgKzgxNiwxMCBAQCBGaWxlOiBpd2x3aWZpLTcyNjAt
+OS51Y29kZQ0KPiA+ICBWZXJzaW9uOiAyNS4yMjguOS4wDQo+ID4gIA0KPiA+ICBGaWxlOiBpd2x3
+aWZpLTcyNjAtMTAudWNvZGUNCj4gPiAtVmVyc2lvbjogMjMuMTAuMTAuMA0KPiA+ICtWZXJzaW9u
+OiAyMy4xMi4xMC4wDQo+ID4gKw0KPiA+ICtGaWxlOiBpd2x3aWZpLTcyNjAtMTIudWNvZGUNCj4g
+PiArVmVyc2lvbjogMjUuMTUuMTIuMA0KPiA+ICANCj4gPiAgRmlsZTogaXdsd2lmaS0zMTYwLTcu
+dWNvZGUNCj4gPiAgVmVyc2lvbjogMjIuMS43LjANCj4gPiBAQCAtODI4LDcgKzgzMSwxMCBAQCBG
+aWxlOiBpd2x3aWZpLTMxNjAtOS51Y29kZQ0KPiA+ICBWZXJzaW9uOiAyNS4yMjguOS4wDQo+ID4g
+IA0KPiA+ICBGaWxlOiBpd2x3aWZpLTMxNjAtMTAudWNvZGUNCj4gPiAtVmVyc2lvbjogMjMuMTAu
+MTAuMA0KPiA+ICtWZXJzaW9uOiAyMy4xMi4xMC4wDQo+ID4gKw0KPiA+ICtGaWxlOiBpd2x3aWZp
+LTMxNjAtMTIudWNvZGUNCj4gPiArVmVyc2lvbjogMjUuMTUuMTIuMA0KPiA+ICANCj4gPiAgRmls
+ZTogaXdsd2lmaS03MjY1LTgudWNvZGUNCj4gPiAgVmVyc2lvbjogMjIuMjQuOC4wDQo+ID4gQEAg
+LTgzNywxMCArODQzLDE2IEBAIEZpbGU6IGl3bHdpZmktNzI2NS05LnVjb2RlDQo+ID4gIFZlcnNp
+b246IDI1LjIyOC45LjANCj4gPiAgDQo+ID4gIEZpbGU6IGl3bHdpZmktNzI2NS0xMC51Y29kZQ0K
+PiA+IC1WZXJzaW9uOiAyMy4xMC4xMC4wDQo+ID4gK1ZlcnNpb246IDIzLjEyLjEwLjANCj4gPiAr
+DQo+ID4gK0ZpbGU6IGl3bHdpZmktNzI2NS0xMi51Y29kZQ0KPiA+ICtWZXJzaW9uOiAyNS4xNS4x
+Mi4wDQo+ID4gIA0KPiA+ICBGaWxlOiBpd2x3aWZpLTcyNjVELTEwLnVjb2RlDQo+ID4gLVZlcnNp
+b246IDIzLjEwLjEwLjANCj4gPiArVmVyc2lvbjogMjMuMTIuMTAuMA0KPiA+ICsNCj4gPiArRmls
+ZTogaXdsd2lmaS03MjY1RC0xMi51Y29kZQ0KPiA+ICtWZXJzaW9uOiAyNS4xNS4xMi4wDQo+ID4g
+IA0KPiA+ICBMaWNlbmNlOiBSZWRpc3RyaWJ1dGFibGUuIFNlZSBMSUNFTkNFLml3bHdpZmlfZmly
+bXdhcmUgZm9yIGRldGFpbHMNCj4gPiAgDQo+ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktMzE2MC0x
+MC51Y29kZSBiL2l3bHdpZmktMzE2MC0xMC51Y29kZQ0KPiA+IGluZGV4IDhjZWM3YmYuLjVmNDE3
+M2MgMTAwNjQ0DQo+ID4gQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS0zMTYwLTEwLnVjb2RlIGFuZCBi
+L2l3bHdpZmktMzE2MC0xMC51Y29kZSBkaWZmZXINCj4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS0z
+MTYwLTEyLnVjb2RlIGIvaXdsd2lmaS0zMTYwLTEyLnVjb2RlDQo+ID4gbmV3IGZpbGUgbW9kZSAx
+MDA2NDQNCj4gPiBpbmRleCAwMDAwMDAwLi40NWJjZTQ4DQo+ID4gQmluYXJ5IGZpbGVzIC9kZXYv
+bnVsbCBhbmQgYi9pd2x3aWZpLTMxNjAtMTIudWNvZGUgZGlmZmVyDQo+ID4gZGlmZiAtLWdpdCBh
+L2l3bHdpZmktNzI2MC0xMC51Y29kZSBiL2l3bHdpZmktNzI2MC0xMC51Y29kZQ0KPiA+IGluZGV4
+IDllNWI5MzAuLmRjYTc5ZTIgMTAwNjQ0DQo+ID4gQmluYXJ5IGZpbGVzIGEvaXdsd2lmaS03MjYw
+LTEwLnVjb2RlIGFuZCBiL2l3bHdpZmktNzI2MC0xMC51Y29kZSBkaWZmZXINCj4gPiBkaWZmIC0t
+Z2l0IGEvaXdsd2lmaS03MjYwLTEyLnVjb2RlIGIvaXdsd2lmaS03MjYwLTEyLnVjb2RlDQo+ID4g
+bmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gPiBpbmRleCAwMDAwMDAwLi43ZWM5MWYwDQo+ID4gQmlu
+YXJ5IGZpbGVzIC9kZXYvbnVsbCBhbmQgYi9pd2x3aWZpLTcyNjAtMTIudWNvZGUgZGlmZmVyDQo+
+ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktNzI2NS0xMC51Y29kZSBiL2l3bHdpZmktNzI2NS0xMC51
+Y29kZQ0KPiA+IGluZGV4IDQ4OGRkZDAuLjA1NzFmY2YgMTAwNjQ0DQo+ID4gQmluYXJ5IGZpbGVz
+IGEvaXdsd2lmaS03MjY1LTEwLnVjb2RlIGFuZCBiL2l3bHdpZmktNzI2NS0xMC51Y29kZSBkaWZm
+ZXINCj4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS03MjY1LTEyLnVjb2RlIGIvaXdsd2lmaS03MjY1
+LTEyLnVjb2RlDQo+ID4gbmV3IGZpbGUgbW9kZSAxMDA2NDQNCj4gPiBpbmRleCAwMDAwMDAwLi44
+NGFlMmNlDQo+ID4gQmluYXJ5IGZpbGVzIC9kZXYvbnVsbCBhbmQgYi9pd2x3aWZpLTcyNjUtMTIu
+dWNvZGUgZGlmZmVyDQo+ID4gZGlmZiAtLWdpdCBhL2l3bHdpZmktNzI2NUQtMTAudWNvZGUgYi9p
+d2x3aWZpLTcyNjVELTEwLnVjb2RlDQo+ID4gaW5kZXggMDExOTRkYi4uZDliOWFhZiAxMDA2NDQN
+Cj4gPiBCaW5hcnkgZmlsZXMgYS9pd2x3aWZpLTcyNjVELTEwLnVjb2RlIGFuZCBiL2l3bHdpZmkt
+NzI2NUQtMTAudWNvZGUNCj4gPiBkaWZmZXINCj4gPiBkaWZmIC0tZ2l0IGEvaXdsd2lmaS03MjY1
+RC0xMi51Y29kZSBiL2l3bHdpZmktNzI2NUQtMTIudWNvZGUNCj4gPiBuZXcgZmlsZSBtb2RlIDEw
+MDY0NA0KPiA+IGluZGV4IDAwMDAwMDAuLjNmMzZiNTUNCj4gPiBCaW5hcnkgZmlsZXMgL2Rldi9u
+dWxsIGFuZCBiL2l3bHdpZmktNzI2NUQtMTIudWNvZGUgZGlmZmVyDQo+ID4gDQo+IA0KPiANCg0K
