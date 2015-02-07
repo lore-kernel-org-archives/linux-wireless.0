@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:61814 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753114AbbBYQeK (ORCPT
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:32940 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932237AbbBGTIv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 11:34:10 -0500
-Message-ID: <54EDF97E.3060507@lwfinger.net> (sfid-20150225_173416_408850_C66EB074)
-Date: Wed, 25 Feb 2015 10:34:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 7 Feb 2015 14:08:51 -0500
+Received: by iecrl12 with SMTP id rl12so8509019iec.0
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Feb 2015 11:08:51 -0800 (PST)
 MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch] rtlwifi: rtl8188ee: missing curly braces in handle_branch1()
-References: <20150225132451.GL19745@mwanda>
-In-Reply-To: <20150225132451.GL19745@mwanda>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <54D6487D.1020607@lwfinger.net>
+References: <1423305971-8360-1-git-send-email-leon.nardella@gmail.com>
+	<54D6487D.1020607@lwfinger.net>
+Date: Sat, 7 Feb 2015 17:08:50 -0200
+Message-ID: <CABLm8Yh3H_=s-c8ZfdMYmBDseqEj51DdSgjfZsRFPi9voW_4rg@mail.gmail.com> (sfid-20150207_200854_916830_ECC50148)
+Subject: Re: [PATCH] * Add support for Philips (or NXP) PTA01 Wireless Adapter
+From: Leon Nardella <leon.nardella@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/25/2015 07:24 AM, Dan Carpenter wrote:
->>From the indenting, it seems like the READ_NEXT_PAIR() was supposed to
-> be inside the while loop.
+Larry,
+
+
+Thank for your remarks! I'll submit it again!
+
+
+
+Att,
+
+Leon Nardella
+
+On Sat, Feb 7, 2015 at 3:16 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 02/07/2015 04:46 AM, Leon Nardella wrote:
+>>
+>> Signed-off-by: Leon Nardella <leon.nardella@gmail.com>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/hif_usb.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c
+>> b/drivers/net/wireless/ath/ath9k/hif_usb.c
+>> index 8e7153b..10c02f5 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+>> @@ -40,6 +40,7 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
+>>         { USB_DEVICE(0x0cf3, 0xb003) }, /* Ubiquiti WifiStation Ext */
+>>         { USB_DEVICE(0x0cf3, 0xb002) }, /* Ubiquiti WifiStation */
+>>         { USB_DEVICE(0x057c, 0x8403) }, /* AVM FRITZ!WLAN 11N v2 USB */
+>> +       { USB_DEVICE(0x0471, 0x209e) }, /* Philips (or NXP) PTA01 */
+>>
+>>         { USB_DEVICE(0x0cf3, 0x7015),
+>>           .driver_info = AR9287_USB },  /* Atheros */
 >
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-Good catch.
-
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-Thanks,
-
-Larry
-
 >
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-> index 3f6c59c..a2bb02c 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/phy.c
-> @@ -452,9 +452,10 @@ static void handle_branch1(struct ieee80211_hw *hw, u16 arraylen,
->   				READ_NEXT_PAIR(v1, v2, i);
->   				while (v2 != 0xDEAD &&
->   				       v2 != 0xCDEF &&
-> -				       v2 != 0xCDCD && i < arraylen - 2)
-> +				       v2 != 0xCDCD && i < arraylen - 2) {
->   					_rtl8188e_config_bb_reg(hw, v1, v2);
->   					READ_NEXT_PAIR(v1, v2, i);
-> +				}
+> Leon,
 >
->   				while (v2 != 0xDEAD && i < arraylen - 2)
->   					READ_NEXT_PAIR(v1, v2, i);
+> Your patch is correct, but your subject and commit message needs a little
+> work.
 >
-
+> When I add a new USB ID for a driver, my subject usually includes the driver
+> name followed by a colon, and the "Add new USB ID". In your case, that would
+> be "[PATCH] ath9k_htc: Add new USB ID". Then in the commit message I include
+> the make and model of the device, and some indication of why that device ID
+> should be added. For example, was that ID found in a Windows driver?
+> Finally, indicate that the patch has been tested. Such a statement should
+> not be necessary, but recently there have been a number of patches submitted
+> that have not been tested on real hardware.
+>
+> Larry
+>
+>
