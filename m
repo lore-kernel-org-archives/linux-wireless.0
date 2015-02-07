@@ -1,30 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:38780 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751108AbbBPV4d convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:59830 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755873AbbBGTR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 16:56:33 -0500
-Received: by lamq1 with SMTP id q1so32317555lam.5
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2015 13:56:32 -0800 (PST)
+	Sat, 7 Feb 2015 14:17:58 -0500
+Received: by mail-wi0-f173.google.com with SMTP id em10so1890220wid.0
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Feb 2015 11:17:57 -0800 (PST)
 MIME-Version: 1.0
-Date: Mon, 16 Feb 2015 22:56:32 +0100
-Message-ID: <CACna6rxVurWg7D9ObqM3wg+9i=cj9niA4XpV9pyOKoQSeO+e_w@mail.gmail.com> (sfid-20150216_225747_606364_4BB43990)
-Subject: Request for brcm/brcmfmac43602-pcie.bin
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: brcm80211 development <brcm80211-dev-list@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20150207115758.GA503@w1.fi>
+References: <1420645811-17877-1-git-send-email-eliad@wizery.com>
+	<1420645811-17877-3-git-send-email-eliad@wizery.com>
+	<20150207115758.GA503@w1.fi>
+Date: Sat, 7 Feb 2015 20:17:57 +0100
+Message-ID: <CALhHN=rj=1OE8xv_q4cTRVkF_=Ko-3amjn4_6tYHXg9dtev=9A@mail.gmail.com> (sfid-20150207_201802_748262_703BEF39)
+Subject: Re: [PATCH v2 3/3] mac80211: don't defer scans in case of radar detection
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 7 February 2015 at 12:57, Jouni Malinen <j@w1.fi> wrote:
+> On Wed, Jan 07, 2015 at 05:50:11PM +0200, Eliad Peller wrote:
+>> Radar detection can last indefinite time. There is no
+>> point in deferring a scan request in this case - simply
+>> return -EBUSY.
+>
+>> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+>> @@ -505,7 +505,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
+>> -     if (local->scan_req)
+>> +     if (local->scan_req || ieee80211_is_radar_required(local))
+>>               return -EBUSY;
+>
+> This seems to be breaking a hwsim test case sequence of ap_vht80plus80
+> followed by ap_vht80. In such a case, all the HT40 scans for ap_vht80
+> fail due to this added condition resulting in -EBUSY being returned
+> every time. It looks like this happens even if I change ap_vht80 to use
+> the same country code (US) as ap_vht80plus80, so the change in the
+> country code does not explain this either.
+>
+> I'm not sure what is causing the issue here, but it looks like something
+> in ap_vht80plus80 (i.e., an attempt to enable a channel combination that
+> would require DFS on one of the 80 MHz segments) leaves behind state
+> that makes ieee80211_is_radar_required(local) return true even when it
+> shouldn't. DFS for 80+80 is not yet supported, so I'd assume this is
+> somehow related to that. Anyway, I don't think mac80211 should behave in
+> this way.
+>
 
-We're moving forward with BCM43602 support in OpenWrt (using brcmfmac
-ofc), but it seems there isn't brcmfmac43602-pcie.bin available
-anywhere.
+BTW, what in case we will start AP on first interface (DFS channel),
+on second one we will try to connect to other AP. As I understand this
+correctly, second iface (STA iface) will not allow to scan (connect)
+...?
 
-Could you send it for linux-firmware? It seems BCM43602 support is
-already in 3.17, so it'd be great to finally get fw for it :)
+Other case, what if we start DFS AP and allow to scan in AP mode (eg
+for ACS purpose, allow to choose better channel and do CSA ...)?
 
--- 
-Rafał
+BR
+Janusz
