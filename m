@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:59387 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbbBSQN0 (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:62469 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751836AbbBHKwI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 11:13:26 -0500
-Received: by mail-wg0-f47.google.com with SMTP id x12so8162671wgg.6
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 08:13:25 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Mark Rutland <mark.rutland@arm.com>
-Subject: [PATCH v3 1/2] dt: bindings: add wl18xx wireless device
-Date: Thu, 19 Feb 2015 18:13:20 +0200
-Message-Id: <1424362401-8228-1-git-send-email-eliad@wizery.com> (sfid-20150219_171329_730644_AFB82E1A)
+	Sun, 8 Feb 2015 05:52:08 -0500
+Received: by mail-wg0-f54.google.com with SMTP id l18so5557677wgh.13
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 02:52:06 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] brcmfmac: respect reason when deleting (deauthenticating) STA
+Date: Sun,  8 Feb 2015 11:51:47 +0100
+Message-Id: <1423392707-12417-1-git-send-email-zajec5@gmail.com> (sfid-20150208_115212_230206_730B0FF4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree binding documentation for TI's wl18xx
-wlan chip.
+Starting with kernel 3.19 reason is provided by cfg80211.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
 ---
-v3:
- * make the bindings device-specific (wl18xx) (Arnd, Mark)
- * split bindings and driver changes (Arnd)
- * make interrupt-parent optional (Arnd)
- * make unit-address same as reg (Mark)
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- .../devicetree/bindings/net/wireless/ti,wl18xx.txt | 32 ++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wl18xx.txt
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wl18xx.txt b/Documentation/devicetree/bindings/net/wireless/ti,wl18xx.txt
-new file mode 100644
-index 0000000..8120a81
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wl18xx.txt
-@@ -0,0 +1,32 @@
-+TI Wilink8 (wl18xx) SDIO devices
-+
-+This node provides properties for controlling the wilink8 wireless device. The
-+node is expected to be specified as a child node to the SDIO controller that
-+connects the device to the system.
-+
-+Required properties:
-+ - compatible : Should be "ti,wl18xx".
-+ - interrupts : specifies attributes for the out-of-band interrupt.
-+
-+Optional properties:
-+ - interrupt-parent : the phandle for the interrupt controller to which the
-+	device interrupts are connected.
-+
-+Example:
-+
-+&mmc3 {
-+	status = "okay";
-+	vmmc-supply = <&wlan_en_reg>;
-+	bus-width = <4>;
-+	cap-power-off-card;
-+	keep-power-in-suspend;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	wlcore: wlcore@2 {
-+		compatible = "ti,wl18xx";
-+		reg = <2>;
-+		interrupt-parent = <&gpio0>;
-+		interrupts = <19 IRQ_TYPE_NONE>;
-+	};
-+};
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index b59b8c6..a23bfaa 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -4272,7 +4272,7 @@ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
+ 		return -EIO;
+ 
+ 	memcpy(&scbval.ea, params->mac, ETH_ALEN);
+-	scbval.val = cpu_to_le32(WLAN_REASON_DEAUTH_LEAVING);
++	scbval.val = cpu_to_le32(params->reason_code);
+ 	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCB_DEAUTHENTICATE_FOR_REASON,
+ 				     &scbval, sizeof(scbval));
+ 	if (err)
 -- 
-1.8.5.1.109.g3d252a9
+1.8.4.5
 
