@@ -1,107 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:38527 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965072AbbBBVsi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:52752 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348AbbBHNw6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 16:48:38 -0500
-Received: by mail-we0-f174.google.com with SMTP id w55so36246161wes.5
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2015 13:48:37 -0800 (PST)
-Message-ID: <54CFF0B3.1060507@gmail.com> (sfid-20150202_224841_571486_202E34E5)
-Date: Mon, 02 Feb 2015 22:48:35 +0100
-From: =?UTF-8?B?VmxhZGltw61yIMSMdW7DoXQ=?= <vcunat@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Nix Dev <nix-dev@lists.science.uu.nl>
-Subject: broken URLs of iwlwifi firmware tarballs
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha1; boundary="------------ms030109010008090406090503"
+	Sun, 8 Feb 2015 08:52:58 -0500
+From: Dedy Lansky <dlansky@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+	linux-wireless@vger.kernel.org,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Subject: [PATCH v2 0/2] cfg80211: PBSS Basic Support
+Date: Sun,  8 Feb 2015 15:52:02 +0200
+Message-Id: <1423403524-22540-1-git-send-email-dlansky@codeaurora.org> (sfid-20150208_145305_061525_3930F03A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a cryptographically signed message in MIME format.
+cfg80211: PBSS Basic Support
 
---------------ms030109010008090406090503
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Dedy Lansky (2):
+  cfg80211: add bss_type and privacy arguments in cfg80211_get_bss()
+  cfg80211: add support for connecting to PBSS network type
 
-Hello,
-the URLs to iwlwifi firmware tarballs are broken.=20
-https://wireless.wiki.kernel.org/en/users/Drivers/iwlwifi
+ drivers/net/wireless/ath/ath10k/mac.c       |  3 +-
+ drivers/net/wireless/ath/ath6kl/cfg80211.c  |  9 +--
+ drivers/net/wireless/ath/wil6210/cfg80211.c |  2 +-
+ drivers/net/wireless/cw1200/sta.c           |  4 +-
+ drivers/net/wireless/libertas/cfg.c         |  6 +-
+ drivers/net/wireless/mwifiex/cfg80211.c     |  8 +--
+ include/net/cfg80211.h                      | 42 +++++++++++++-
+ net/mac80211/ibss.c                         | 43 ++++-----------
+ net/wireless/ibss.c                         |  2 +-
+ net/wireless/mlme.c                         |  6 +-
+ net/wireless/scan.c                         | 86 ++++++++++++++++++++++++++---
+ net/wireless/sme.c                          | 22 ++++----
+ net/wireless/trace.h                        | 24 ++++----
+ 13 files changed, 177 insertions(+), 80 deletions(-)
 
-Is that a temporary problem? I could find no mirrors for some of the=20
-files. (Besides, I found that nixos.org isn't the only user of those URLs=
-=2E)
+-- 
+1.9.1
 
-Please, CC me with replies.
-
-Thanks,
-Vladimir
-
-
---------------ms030109010008090406090503
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIIJazCC
-BKAwggOIoAMCAQICEQDwhvYlHZdHibfdyBlsiW2AMA0GCSqGSIb3DQEBBQUAMDsxCzAJBgNV
-BAYTAk5MMQ8wDQYDVQQKEwZURVJFTkExGzAZBgNVBAMTElRFUkVOQSBQZXJzb25hbCBDQTAe
-Fw0xMjA2MjYwMDAwMDBaFw0xNTA2MjYyMzU5NTlaMGsxCzAJBgNVBAYTAkNaMSMwIQYDVQQK
-ExpVbml2ZXJ6aXRhIEthcmxvdmEgdiBQcmF6ZTEaMBgGA1UEAwwRVmxhZGltw61yIMSMdW7D
-oXQxGzAZBgkqhkiG9w0BCQIWDDEwMDAwMDA1MDU5OTCCASIwDQYJKoZIhvcNAQEBBQADggEP
-ADCCAQoCggEBANcoAjmclljT9rjG719tYe8Ov3aTzBlnnpQUlmLrhztf3R+FAuJloiGgBiZ1
-tUdX7F/j/Mb+/LrROiqenYvnk3B2mrxg5klkfua44v1VZSePH8d5kwIN+eBVK4cicuNFbqt+
-szFH1mFXFdlUfJtj6l5KFhyucFgcrp0ccxpcy9kEajaOChUoljG5BXJfB1T0z8Jr+tGw0hce
-CQ9P/uahEkiDHWtK1gbtGQyAuMh1vFtEM35mt0pyQ0PzouCHzqGmDzLGi7l+Ud72uDWvJ9nR
-rGQWFwKqrbd/C4bbnwgIsItp65jTObmgeDzAIyISUeBgouUMwk9k0AHkILNAJlyT7rUCAwEA
-AaOCAW0wggFpMB8GA1UdIwQYMBaAFGNNQ1oZSD/ERsECur/uDuWCt2amMB0GA1UdDgQWBBRE
-k9LYYV+vNxAFmKcTUdWizi/PyzAOBgNVHQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAdBgNV
-HSUEFjAUBggrBgEFBQcDBAYIKwYBBQUHAwIwGAYDVR0gBBEwDzANBgsrBgEEAbIxAQICHTA/
-BgNVHR8EODA2MDSgMqAwhi5odHRwOi8vY3JsLnRjcy50ZXJlbmEub3JnL1RFUkVOQVBlcnNv
-bmFsQ0EuY3JsMHIGCCsGAQUFBwEBBGYwZDA6BggrBgEFBQcwAoYuaHR0cDovL2NydC50Y3Mu
-dGVyZW5hLm9yZy9URVJFTkFQZXJzb25hbENBLmNydDAmBggrBgEFBQcwAYYaaHR0cDovL29j
-c3AudGNzLnRlcmVuYS5vcmcwGwYDVR0RBBQwEoEQdmN1bmF0QGdtYWlsLmNvbTANBgkqhkiG
-9w0BAQUFAAOCAQEAdL7MsKsfcl1/yHu/kz1XOZxmZFpSiIYrlf04iuHG+1cH+9qaDIno2BBt
-PMw5l7fWjtMu7s9G9gLW+hrduPUbMdHAL7GyHD1J5puisO6AE1RDOZCpDUFiU4NN2wUZFTWL
-scRK37ijol/Pa5gyt98R0Lyb23J2wNywNEWjFJyE/Izz/BpX+xldrFRu10DQN0faSo9+9F4Y
-zLTuG7lGAbNJ14HGNhiFJurinIWq0HOPIw9Uyf7enleaYlKHWsjhBipzoFr4NoinHY5UuaDB
-8o4d+g1qSpNZM7NSVzN0l043rFVHEWNAvrHx4fHj0ydar47MR2EE716F4iO1/m0S/uW84zCC
-BMMwggOroAMCAQICEHP+V/rfuMUIgXtmuWvwLe8wDQYJKoZIhvcNAQEFBQAwga4xCzAJBgNV
-BAYTAlVTMQswCQYDVQQIEwJVVDEXMBUGA1UEBxMOU2FsdCBMYWtlIENpdHkxHjAcBgNVBAoT
-FVRoZSBVU0VSVFJVU1QgTmV0d29yazEhMB8GA1UECxMYaHR0cDovL3d3dy51c2VydHJ1c3Qu
-Y29tMTYwNAYDVQQDEy1VVE4tVVNFUkZpcnN0LUNsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
-RW1haWwwHhcNMDkwNTE4MDAwMDAwWhcNMjgxMjMxMjM1OTU5WjA7MQswCQYDVQQGEwJOTDEP
-MA0GA1UEChMGVEVSRU5BMRswGQYDVQQDExJURVJFTkEgUGVyc29uYWwgQ0EwggEiMA0GCSqG
-SIb3DQEBAQUAA4IBDwAwggEKAoIBAQDIFdn1M2ojoZANz7sFRMOrH0o1hRohhaBP+PBA4kpD
-m/5bsbC/tFfcdYBBS2Qa9ttPb4/QJUU1+erLSvr72tPtRYgRlDbkzKgN78U9N+0We+PClZ5Y
-M38i+/j/7Oa+264KZSUih9pvhItG6ECGKD+/VgjiSumDouki+y36tigfkcHDcftTwCtOpAyh
-bp1V7ezhJIc6COINHOTETdDLJ/qEZObRl51WJFuTuykuQ+JBaj3iSmX8ml9ahoe8h8d5gJaZ
-UcaQD2SRmX0Q3awsAyrheGT+zj1O9CtQEUvRWNSbA/B/9TtTsFND+8UvxAQpGjqs11Xp0Q6V
-0Tsxf3hPriktAgMBAAGjggFNMIIBSTAfBgNVHSMEGDAWgBSJgmd9xJ0mcABLtFBIfN49rgRu
-fTAdBgNVHQ4EFgQUY01DWhlIP8RGwQK6v+4O5YK3ZqYwDgYDVR0PAQH/BAQDAgEGMBIGA1Ud
-EwEB/wQIMAYBAf8CAQAwGAYDVR0gBBEwDzANBgsrBgEEAbIxAQICHTBYBgNVHR8EUTBPME2g
-S6BJhkdodHRwOi8vY3JsLnVzZXJ0cnVzdC5jb20vVVROLVVTRVJGaXJzdC1DbGllbnRBdXRo
-ZW50aWNhdGlvbmFuZEVtYWlsLmNybDBvBggrBgEFBQcBAQRjMGEwOAYIKwYBBQUHMAKGLGh0
-dHA6Ly9jcnQudXNlcnRydXN0LmNvbS9VVE5BQUFDbGllbnRfQ0EuY3J0MCUGCCsGAQUFBzAB
-hhlodHRwOi8vb2NzcC51c2VydHJ1c3QuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQAGK6lTLxPc
-XDkWzIafXkx7cvvsjVWKXpoK/1NMdvQGPVDPV/Ciz6+ZjKr+oBl2PpkDMvp1gziKu2uapQwT
-stQbduaULmeYWeORbAKQmpzIYEtVq8qIWo0r5WmVAwfR1A78JCIuWbFjpF/t2SNy5JzOOlxs
-H0+pAMkd/vp/RS22LoTdDyegWRhO1XYlRfSZJnnbb58j90O7Kw8Eo4EmLLd7Nfk9d19AIeZ/
-HaWWWr3QyxY6bLthi4r9BDlECsss4cvOLhCYGtvgk+1JZGQIIJ+3o1Dwot3KtMZ8DD3nXhXc
-J4bkOjtSWherqQZTK50Jc2QcAcP9MNKHA2/kFQN6OV9oMYIDCjCCAwYCAQEwUDA7MQswCQYD
-VQQGEwJOTDEPMA0GA1UEChMGVEVSRU5BMRswGQYDVQQDExJURVJFTkEgUGVyc29uYWwgQ0EC
-EQDwhvYlHZdHibfdyBlsiW2AMAkGBSsOAwIaBQCgggGPMBgGCSqGSIb3DQEJAzELBgkqhkiG
-9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE1MDIwMjIxNDgzNVowIwYJKoZIhvcNAQkEMRYEFHYU
-fupq6HrCPdNlltSV+5m5GsMXMF8GCSsGAQQBgjcQBDFSMFAwOzELMAkGA1UEBhMCTkwxDzAN
-BgNVBAoTBlRFUkVOQTEbMBkGA1UEAxMSVEVSRU5BIFBlcnNvbmFsIENBAhEA8Ib2JR2XR4m3
-3cgZbIltgDBhBgsqhkiG9w0BCRACCzFSoFAwOzELMAkGA1UEBhMCTkwxDzANBgNVBAoTBlRF
-UkVOQTEbMBkGA1UEAxMSVEVSRU5BIFBlcnNvbmFsIENBAhEA8Ib2JR2XR4m33cgZbIltgDBs
-BgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglghkgBZQMEAQIwCgYIKoZIhvcNAwcw
-DgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcGBSsOAwIHMA0GCCqGSIb3DQMCAgEo
-MA0GCSqGSIb3DQEBAQUABIIBABPQQhM+cAE2j4dIJwJ1aK7GjFO26HG8Gr8R+fscM7NrZ39k
-urFQWvP8nXTOZxRpdYLUm3y7/1mBdx+jTrXzbvfAD96L0BN3mhOUWAJMXHsiUdQDYfDsb1nI
-yslTa4uho+LIpi88/GOngN2VYJe25fbN8tsqlpXZ3m9xNyJvKBlAqmBTid3kHjzJYpqy6zOD
-obc33P42YG99XeptUQ4uER03hMjtVnSYfPm1T/R/72WmT+MRKCu9qmn4w106KdqUv5QmfFYv
-uNUi6r+3opr9IX/8tStxx9YoLXipk0t3MmZVdhXCsB5coIL8vC1HMKFwOmWDj82IEO998Ual
-48RMlUEAAAAAAAA=
---------------ms030109010008090406090503--
