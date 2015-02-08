@@ -1,44 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.stuge.se ([212.116.89.98]:45191 "EHLO foo.stuge.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751866AbbBYSc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 13:32:26 -0500
-Message-ID: <20150225182543.20582.qmail@stuge.se> (sfid-20150225_193229_831369_6608C151)
-Date: Wed, 25 Feb 2015 19:25:43 +0100
-From: Peter Stuge <peter@stuge.se>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jouni Malinen <j@w1.fi>, Andrew McGregor <andrewmcgr@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Thomas =?utf-8?B?SMO8aG4=?= <thomas@net.t-labs.tu-berlin.de>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [ath9k-devel] AR9462 problems connecting again..
-References: <20150223224305.GA30228@w1.fi> <21739.50662.902775.901924@gargle.gargle.HOWL> <CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com> <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com> <20150224102611.GA30806@w1.fi> <80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de> <20150224181454.GA30859@w1.fi> <54ED56D8.9030806@openwrt.org> <20150225144723.GA6903@w1.fi> <CA+55aFyvhgFMRAg2ftuN_cykGs_3-Oyabhi_N6S-J1daVFFRzw@mail.gmail.com>
+Received: from mail-we0-f182.google.com ([74.125.82.182]:43800 "EHLO
+	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755657AbbBHQMD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Feb 2015 11:12:03 -0500
+Received: by mail-we0-f182.google.com with SMTP id l61so22394480wev.13
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 08:12:02 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V3 4/4] bcma: enable support for PCIe Gen 2 host devices
+Date: Sun,  8 Feb 2015 17:11:50 +0100
+Message-Id: <1423411910-22399-4-git-send-email-zajec5@gmail.com> (sfid-20150208_171209_763371_4B9E9FF6)
+In-Reply-To: <1423411910-22399-1-git-send-email-zajec5@gmail.com>
+References: <1423409504-16435-1-git-send-email-zajec5@gmail.com>
+ <1423411910-22399-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFyvhgFMRAg2ftuN_cykGs_3-Oyabhi_N6S-J1daVFFRzw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus Torvalds wrote:
-> Last time I had connection issues with this laptop, nothing ended up
-> happening in the end, and I had people pipe up saying they had had
-> similar problems. I'd hate for the same "nothing" to happen this time
-> just because people aren't 100% sure what the final right thing is to
-> do. So I'd really like people to apply the simple workarounds for now
-> because clearly something is badly wrong, and *if* there is some
-> better resolution later, that's fine.
-..
-> So I'm sure I can improve reception of my laptop, but that's not the
-> point. The point is that bad wireless networks aren't so unusual, and
-> right now things clearly don't work as well as they could.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/bcma_private.h |  1 +
+ drivers/bcma/host_pci.c     | 15 ++++++++++++++-
+ drivers/bcma/main.c         |  2 +-
+ 3 files changed, 16 insertions(+), 2 deletions(-)
 
-Those two patches (the one-liner in particular) should have gone
-in already 5-10 years ago. This has been an embarrassing problem
-for many years.
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 3692912..29565e3 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -26,6 +26,7 @@ bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
+ 		     int timeout);
+ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
+ void bcma_init_bus(struct bcma_bus *bus);
++void bcma_unregister_cores(struct bcma_bus *bus);
+ int bcma_bus_register(struct bcma_bus *bus);
+ void bcma_bus_unregister(struct bcma_bus *bus);
+ int __init bcma_bus_early_register(struct bcma_bus *bus);
+diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+index 5fb87a8..a62a2f9 100644
+--- a/drivers/bcma/host_pci.c
++++ b/drivers/bcma/host_pci.c
+@@ -213,16 +213,26 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
+ 	/* Initialize struct, detect chip */
+ 	bcma_init_bus(bus);
+ 
++	/* Scan bus to find out generation of PCIe core */
++	err = bcma_bus_scan(bus);
++	if (err)
++		goto err_pci_unmap_mmio;
++
++	if (bcma_find_core(bus, BCMA_CORE_PCIE2))
++		bus->host_is_pcie2 = true;
++
+ 	/* Register */
+ 	err = bcma_bus_register(bus);
+ 	if (err)
+-		goto err_pci_unmap_mmio;
++		goto err_unregister_cores;
+ 
+ 	pci_set_drvdata(dev, bus);
+ 
+ out:
+ 	return err;
+ 
++err_unregister_cores:
++	bcma_unregister_cores(bus);
+ err_pci_unmap_mmio:
+ 	pci_iounmap(dev, bus->mmio);
+ err_pci_release_regions:
+@@ -283,9 +293,12 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4358) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4360) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4365) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a0) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43b1) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43227) },	/* 0xa8db, BCM43217 (sic!) */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43228) },	/* 0xa8dc */
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 38bde6e..9635f10 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -363,7 +363,7 @@ static int bcma_register_devices(struct bcma_bus *bus)
+ 	return 0;
+ }
+ 
+-static void bcma_unregister_cores(struct bcma_bus *bus)
++void bcma_unregister_cores(struct bcma_bus *bus)
+ {
+ 	struct bcma_device *core, *tmp;
+ 
+-- 
+1.8.4.5
 
-I'm glad that people jumped this time around.
-
-
-//Peter
