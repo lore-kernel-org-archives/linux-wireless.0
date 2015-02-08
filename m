@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:16601 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932642AbbBPNWA (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:42125 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752892AbbBHNRu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 08:22:00 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix AP/IBSS CSA with template based fw
-References: <1423749198-11346-1-git-send-email-michal.kazior@tieto.com>
-	<87mw4fgolp.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQkZJLaAYy+PnoLiFn5S3sfJujgRRkWcMqgdxJbbf3FHeQ@mail.gmail.com>
-Date: Mon, 16 Feb 2015 15:21:53 +0200
-In-Reply-To: <CA+BoTQkZJLaAYy+PnoLiFn5S3sfJujgRRkWcMqgdxJbbf3FHeQ@mail.gmail.com>
-	(Michal Kazior's message of "Mon, 16 Feb 2015 07:54:17 +0100")
-Message-ID: <877fvigff2.fsf@kamboji.qca.qualcomm.com> (sfid-20150216_142204_360338_DE543798)
+	Sun, 8 Feb 2015 08:17:50 -0500
+Received: by mail-wg0-f49.google.com with SMTP id k14so21782799wgh.8
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 05:17:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAB3XZEfJt=YKP8+SKie7L_4sdxcdrGUtzruDvrjFKDvXKo2L3w@mail.gmail.com>
+References: <1420645811-17877-1-git-send-email-eliad@wizery.com>
+	<1420645811-17877-3-git-send-email-eliad@wizery.com>
+	<20150207115758.GA503@w1.fi>
+	<CALhHN=rj=1OE8xv_q4cTRVkF_=Ko-3amjn4_6tYHXg9dtev=9A@mail.gmail.com>
+	<CAB3XZEfJt=YKP8+SKie7L_4sdxcdrGUtzruDvrjFKDvXKo2L3w@mail.gmail.com>
+Date: Sun, 8 Feb 2015 14:17:49 +0100
+Message-ID: <CALhHN=pxxL9Wr9aURjZV8fQ7uvSV6e49KTLbEAzUZ0zTDhPsqw@mail.gmail.com> (sfid-20150208_141754_003991_76752CE4)
+Subject: Re: [PATCH v2 3/3] mac80211: don't defer scans in case of radar detection
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On 8 February 2015 at 11:57, Eliad Peller <eliad@wizery.com> wrote:
+> On Sat, Feb 7, 2015 at 9:17 PM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
+>> BTW, what in case we will start AP on first interface (DFS channel),
+>> on second one we will try to connect to other AP. As I understand this
+>> correctly, second iface (STA iface) will not allow to scan (connect)
+>> ...?
+>>
+> right.
+> The rationale behind it that you must listen constantly to detect
+> radar events, which prevents scanning off-channel.
+> (i guess an exception for on-channel scanning can be added if needed, though)
+>
+Still I can image hw with hw_scan() support that could have dedicated
+"hw part" for scanning.
+So, driver should made this decision (allow or not) base on hw features.
 
->> I actually had strange conflicts already with this patch (in mac.c). As
->> I'm travelling, please check my resolution from the pending branch very
->> carefully. I might have done something stupid.
->
-> There's a mistake. Only `arvif->is_up` should be protected by
-> `ar->data_lock` in ath10k_bss_assoc():
->
-> @@ -1852,7 +1901,9 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
->                 return;
->         }
->
-> +       spin_lock_bh(&arvif->ar->data_lock);
->         arvif->is_up = true;
-> +       spin_unlock_bh(&arvif->ar->data_lock);
->
->         /* Workaround: Some firmware revisions (tested with qca6174
+BR
+Janusz
 
-Thanks for catching this. I fixed it now, can you please check again?
-
--- 
-Kalle Valo
+>> Other case, what if we start DFS AP and allow to scan in AP mode (eg
+>> for ACS purpose, allow to choose better channel and do CSA ...)?
+> ditto. you just have to make sure you keep listening on the operating channel.
+>
+> Eliad.
