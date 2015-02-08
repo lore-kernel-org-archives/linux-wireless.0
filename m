@@ -1,62 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:34262 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684AbbBMMEv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.11.231]:52783 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753012AbbBHNx1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 07:04:51 -0500
-Received: by mail-lb0-f171.google.com with SMTP id b6so15031686lbj.2
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 04:04:49 -0800 (PST)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: Mark Rustad <mrustad@gmail.com>,
-	"Rustad\, Mark D" <mark.d.rustad@intel.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwl4965: Enable checking of format strings
-References: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>
-	<60178C37-F104-430E-92EB-B6DDFAEB2F99@intel.com>
-	<87vbj7zb0e.fsf@rasmusvillemoes.dk> <54DDAE03.4000502@gmail.com>
-	<87y4o2xfgz.fsf@rasmusvillemoes.dk>
-	<063D6719AE5E284EB5DD2968C1650D6D1CAE3325@AcuExch.aculab.com>
-Date: Fri, 13 Feb 2015 13:04:47 +0100
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CAE3325@AcuExch.aculab.com>
-	(David Laight's message of "Fri, 13 Feb 2015 11:20:47 +0000")
-Message-ID: <87twyqxbj4.fsf@rasmusvillemoes.dk> (sfid-20150213_130513_516321_50D95EFD)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 8 Feb 2015 08:53:27 -0500
+From: Dedy Lansky <dlansky@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dedy Lansky <dlansky@codeaurora.org>,
+	linux-wireless@vger.kernel.org,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Subject: [PATCH v2 2/2] cfg80211: add support for connecting to PBSS network type
+Date: Sun,  8 Feb 2015 15:52:04 +0200
+Message-Id: <1423403524-22540-3-git-send-email-dlansky@codeaurora.org> (sfid-20150208_145334_053325_F37E970B)
+In-Reply-To: <1423403524-22540-1-git-send-email-dlansky@codeaurora.org>
+References: <1423403524-22540-1-git-send-email-dlansky@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 13 2015, David Laight <David.Laight@ACULAB.COM> wrote:
+sme.c assumes BSS is of ESS type. With 802.11ad and the new PBSS network
+type, this is not always true.
+On DMG (60GHz) band, P2P connection uses PBSS network. Detect P2P
+connection for DMG band and adjust BSS type to PBSS.
 
-> From: Rasmus Villemoes
->> Well, probably the linker is allowed to overlap "anonymous" objects
->> (string literals) with whatever const char[] (or indeed any const)
->> object it finds containing the appropriate byte sequence. But I think
->> language lawyers would insist that for
->> 
->> const char foo[] = "a string";
->> const char bar[] = "a string";
->
-> A quick test shows those are separate strings.
-> But 'const char *foo = "xxx";' will share.
+When connect starts (cfg80211_connect), store the bss type in new field in wdev
+(conn_bss_type). This field is used later (e.g. in __cfg80211_connect_result)
+when calling cfg80211_get_bss() for finding the BSS we are connecting to.
 
-Yes, of course, because in that case you are actually creating two
-objects, "xxx" which the linker will find some place to put, and foo
-which is initialized to the address of whereever "xxx" was/will be
-put. So one is wasting sizeof(const char*). Also, passing foo to a
-function means the compiler has to load the value of foo and use that,
-instead of simply passing the compile-time (well, link-time) constant
-address of "xxx".
+Signed-off-by: Dedy Lansky <dlansky@codeaurora.org>
+---
+ include/net/cfg80211.h |  2 ++
+ net/wireless/sme.c     | 12 +++++++++---
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-> You also need -O1 to get the strings into .rodata.str.n so that the linker
-> can merge them.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index acf8f09..da346b1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3426,6 +3426,7 @@ struct cfg80211_cached_keys;
+  *	registered for unexpected class 3 frames (AP mode)
+  * @conn: (private) cfg80211 software SME connection state machine data
+  * @connect_keys: (private) keys to set after connection is established
++ * @conn_bss_type: connecting/connected BSS type
+  * @ibss_fixed: (private) IBSS is using fixed BSSID
+  * @ibss_dfs_possible: (private) IBSS may change to a DFS channel
+  * @event_list: (private) list for internal event processing
+@@ -3456,6 +3457,7 @@ struct wireless_dev {
+ 	u8 ssid_len, mesh_id_len, mesh_id_up_len;
+ 	struct cfg80211_conn *conn;
+ 	struct cfg80211_cached_keys *connect_keys;
++	enum ieee80211_bss_type conn_bss_type;
+ 
+ 	struct list_head event_list;
+ 	spinlock_t event_lock;
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index ea1da66..bf79bf2 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -264,7 +264,7 @@ static struct cfg80211_bss *cfg80211_get_conn_bss(struct wireless_dev *wdev)
+ 			       wdev->conn->params.bssid,
+ 			       wdev->conn->params.ssid,
+ 			       wdev->conn->params.ssid_len,
+-			       IEEE80211_BSS_TYPE_ESS,
++			       wdev->conn_bss_type,
+ 			       IEEE80211_PRIVACY(wdev->conn->params.privacy));
+ 	if (!bss)
+ 		return NULL;
+@@ -633,7 +633,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 		WARN_ON_ONCE(!wiphy_to_rdev(wdev->wiphy)->ops->connect);
+ 		bss = cfg80211_get_bss(wdev->wiphy, NULL, bssid,
+ 				       wdev->ssid, wdev->ssid_len,
+-				       IEEE80211_BSS_TYPE_ESS,
++				       wdev->conn_bss_type,
+ 				       IEEE80211_PRIVACY_ANY);
+ 		if (bss)
+ 			cfg80211_hold_bss(bss_from_pub(bss));
+@@ -792,7 +792,7 @@ void cfg80211_roamed(struct net_device *dev,
+ 
+ 	bss = cfg80211_get_bss(wdev->wiphy, channel, bssid, wdev->ssid,
+ 			       wdev->ssid_len,
+-			       IEEE80211_BSS_TYPE_ESS, IEEE80211_PRIVACY_ANY);
++			       wdev->conn_bss_type, IEEE80211_PRIVACY_ANY);
+ 	if (WARN_ON(!bss))
+ 		return;
+ 
+@@ -961,6 +961,12 @@ int cfg80211_connect(struct cfg80211_registered_device *rdev,
+ 	memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
+ 	wdev->ssid_len = connect->ssid_len;
+ 
++	wdev->conn_bss_type = IEEE80211_BSS_TYPE_ESS;
++	if (connect->channel &&
++	    connect->channel->band == IEEE80211_BAND_60GHZ &&
++	    wdev->iftype == NL80211_IFTYPE_P2P_CLIENT)
++		wdev->conn_bss_type = IEEE80211_BSS_TYPE_PBSS;
++
+ 	if (!rdev->ops->connect)
+ 		err = cfg80211_sme_connect(wdev, connect, prev_bssid);
+ 	else
+-- 
+1.9.1
 
-Sure, optimization has to be turned on, but isn't the kernel always
-compiled with -O2? ISTR that there are some things which won't even
-work/compile with -O0.
-
-Rasmus
