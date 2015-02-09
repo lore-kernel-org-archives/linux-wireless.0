@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toccata2.tricolour.ca ([204.225.221.17]:43000 "EHLO
-	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735AbbBJPVY (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62314 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236AbbBIHhU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 10:21:24 -0500
-Date: Tue, 10 Feb 2015 10:21:21 -0500
-From: Richard Guy Briggs <rgb@tricolour.ca>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
-	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	swan-dev@lists.libreswan.org, swan@lists.libreswan.org,
-	users@lists.openswan.org, dev@lists.openswan.org
-Cc: info@netdev01.org, speakers@netdev01.org, attendees@netdev01.org
-Subject: NetDev 0.1 online registration deadline Feb 12 (Thursday)
-Message-ID: <20150210152121.GN27821@toccata2.tricolour.ca> (sfid-20150210_162142_679674_00FBF8A3)
+	Mon, 9 Feb 2015 02:37:20 -0500
+From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@qti.qualcomm.com>,
+	<vthiagar@qti.qualcomm.com>,
+	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Subject: [PATCH] iw: display allowable channel bandwidth information
+Date: Mon, 9 Feb 2015 13:06:58 +0530
+Message-ID: <1423467418-3912-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20150209_083724_711771_6B5F6C04)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fellow netheads:
+We already have allowable channel bandwidth information at userspace.
+Display this information with 'iw list'. Excerpt of iw list command
 
+Frequencies:
+	* 5180 MHz [36] (17.0 dBm) (HT40+, VHT80, VHT160)
+	* 5200 MHz [40] (17.0 * dBm) (HT40-, HT40+, VHT80, VHT160)
 
-NetDev 0.1 starts in 4 days.
+Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+---
+ info.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
+diff --git a/info.c b/info.c
+index 6e21e45..84db716 100644
+--- a/info.c
++++ b/info.c
+@@ -173,6 +173,18 @@ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ 						goto next;
+ 					}
+ 
++					if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40_MINUS])
++						print_flag("HT40-", &open);
++
++					if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40_PLUS])
++						print_flag("HT40+", &open);
++
++					if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_80MHZ])
++						print_flag("VHT80", &open);
++
++					if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_160MHZ])
++						print_flag("VHT160", &open);
++
+ 					/* If both flags are set assume an new kernel */
+ 					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR] && tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]) {
+ 						print_flag("no IR", &open);
+-- 
+1.9.1
 
-Registration:
-==========================
-Online registration ends Thursday the 12th at midnight.  Registration is
-possible on site, but may incur a late registration fee.
-https://onlineregistrations.ca/netdev01/
-$100/day, or $350 for 4 days (Cdn dollars).
-
-
-There have been additions made to the "travel" section of the web site
-concerning local transit details, weather and clothing.  Please check it
-before travelling so you know what to expect.
-Travel/hotel/weather/clothing:	https://www.netdev01.org/travel
-
-
-Hotel:
-==========================
-The Westin Hotel may still have rooms for Netdev01 available.
-There are lots of big and small hotels in Ottawa, but they will fill up
-fast as Winterlude approaches, so book something soon.  There may be
-some possibilities to billet locally, but don't leave it last minute.
-Make your reservations at:
-https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
-
-
-Schedule:
-==========================
-The final schedule is out coded with session links.
-	https://www.netdev01.org/schedule
-
-
-Sponsors:
-=========
-NetDev 0.1 would like to gratefully acknowledge all our sponsors: 
-https://netdev01.org/sponsors
-Intel			http://www.intel.com/
-CENGN			http://www.cengn.ca/
-Google			https://www.google.ca
-Qualcomm		https://www.qualcomm.com/
-Verizon			http://www.verizon.com/
-Cumulus Networks	http://cumulusnetworks.com/
-Mojatatu Networks	http://mojatatu.com/
-
-
--------------------------------------------------------------------------------
-THE Technical Conference on Linux Networking, February 14-17, 2015, Ottawa, Canada
-https://netdev01.org/
-
-Contact:			info@netdev01.info
-Main site:			https://www.netdev01.org/
-Travel/hotel/weather/clothing:	https://www.netdev01.org/travel
-RSS feed:			https://netdev01.org/atom
-Follow us on Twitter: @netdev01	https://twitter.com/netdev01
-
-	slainte mhath, RGB
-
---
-Richard Guy Briggs               --  ~\    -- ~\             <hpv.tricolour.ca>
-<www.TriColour.ca>                 --  \___   o \@      @        Ride yer bike!
-Ottawa, ON, CANADA                  --  Lo_>__M__\\/\%__\\/\%
-Vote! -- <greenparty.ca>_____GTVS6#790__(*)__(*)________(*)(*)_________________
