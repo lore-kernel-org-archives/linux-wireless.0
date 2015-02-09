@@ -1,122 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from erley.org ([97.107.129.9]:40759 "EHLO remote.erley.org"
+Received: from mx1.redhat.com ([209.132.183.28]:36629 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751326AbbBNGqW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Feb 2015 01:46:22 -0500
-Message-ID: <54DEEF3B.7060204@erley.org> (sfid-20150214_074659_285395_5A61C169)
-Date: Sat, 14 Feb 2015 00:46:19 -0600
-From: Pat Erley <pat-lkml@erley.org>
+	id S932862AbbBIIqX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2015 03:46:23 -0500
+Date: Mon, 9 Feb 2015 09:41:43 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "Simon Raffeiner (SCC)" <simon.raffeiner@kit.edu>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: Ralink RT5390/RT5370 no longer works on more recent kernels
+Message-ID: <20150209084142.GA15797@redhat.com> (sfid-20150209_094634_010111_C1310165)
+References: <54D64337.7080005@kit.edu>
+ <54D81624.9070705@lwfinger.net>
 MIME-Version: 1.0
-To: Tim-Hinnerk Heuer <tim@heuer.nz>, linux-wireless@vger.kernel.org
-Subject: Re: Fwd: Kernel 3.6.0 works, newer doesn't
-References: <CAApG7tYL+9t729-VLiHhb5CqGvw3bxaH4czR+0wWwFF_iOjk_w@mail.gmail.com>	<20150213151910.GA8503@kroah.com> <CAApG7tbt_UDjnzRfCshR7pMMnug=vzdgtCSt8Pi+7dHMpri0aA@mail.gmail.com>
-In-Reply-To: <CAApG7tbt_UDjnzRfCshR7pMMnug=vzdgtCSt8Pi+7dHMpri0aA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <54D81624.9070705@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2015 09:58 PM, Tim-Hinnerk Heuer wrote:
-> Hi can someone here help with this issue, please? I'm willing to give
-> more info if necessary or help out otherwise. I am a programmer but
-> haven't done much with Linux drivers yet.
->
+On Sun, Feb 08, 2015 at 08:06:28PM -0600, Larry Finger wrote:
+> On 02/07/2015 10:54 AM, Simon Raffeiner (SCC) wrote:
+> The second thing to verify is that your configuration contains the line
+> "CONFIG_RT2800USB_RT53XX=y". This parameter is marked as depending on
+> EXPERIMENTAL, and I'm not sure that Ubuntu enables those parameters in their
+> kernels. Again as the module was loaded, I think your kernel is OK, but that
+> parameter is something to check.
 
-First key is probably defining 'not working'.  Second key is likely to
-be a dmesg output of it 'not working'.  Third detail that is likely to
-help is what distribution you're running and how how you're attempting
-to manage the wifi device(networkmanager/wicd/etc).
+I suggest check rfkill as well.
 
->
-> Hi there,
->
-> Sorry, I'm new to this list, so excuse my newbie question.
->
-> I have Linux 3.6.0-030600-generic #201209302035 SMP Mon Oct 1 00:36:01
-> UTC 2012 x86_64 x86_64 x86_64 GNU/Linux installed and it works great.
-> My WLAN driver works with this version, but not with any newer version
-> of the kernel. Am I right that backports can help me with that?
->
-> Can I somehow upgrade to a newer version of the kernel and keep my
-> WIFI USB driver and maybe even upgrade to newer kernels? Or even
-> better, does someone here have the capacity to fix the problem in
-> newer kernels?
->
-> My Wifi USB Card is the
-> Asus USB N13
->
-> ```
-> lsusb
-> Bus 002 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
-> Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> Bus 006 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
->
-> Bus 005 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> Bus 001 Device 004: ID 0b05:1784 ASUSTek Computer, Inc. USB-N13
-> 802.11n Network Adapter (rev. A1) [Ralink RT3072]
->
-> Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
-> Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-> Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
->
-> Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
->
-> sudo lsmod|grep rt
-> xt_addrtype            12713  2
-> x_tables               29846  6
-> ip_tables,ipt_MASQUERADE,xt_conntrack,iptable_filter,xt_addrtype,iptable_nat
-> rt2800usb              26998  0
-> rt2x00usb              20762  1 rt2800usb
-> rt2800lib              63557  1 rt2800usb
-> rt2x00lib              55527  3 rt2x00usb,rt2800lib,rt2800usb
-> mac80211              564631  3 rt2x00lib,rt2x00usb,rt2800lib
-> cfg80211              212917  2 mac80211,rt2x00lib
-> crc_ccitt              12667  1 rt2800lib
-> parport_pc             32866  0
-> parport                46562  3 lp,ppdev,parport_pc
-> ```
->
-> Running Ubuntu 14.04.
->
-> Thanks for your patience.
-> Tim
->
->
-> ---------- Forwarded message ----------
-> From: Greg KH <greg@kroah.com>
-> Date: 14 February 2015 at 04:19
-> Subject: Re: Kernel 3.6.0 works, newer doesn't
-> To: Tim-Hinnerk Heuer <tim@heuer.nz>
-> Cc: linux-usb@vger.kernel.org
->
->
-> On Fri, Feb 13, 2015 at 11:20:33PM +1300, Tim-Hinnerk Heuer wrote:
->> Hi there,
->>
->> Sorry, I'm new to this list, so excuse my newbie question.
->>
->> I have Linux 3.6.0-030600-generic #201209302035 SMP Mon Oct 1 00:36:01
->> UTC 2012 x86_64 x86_64 x86_64 GNU/Linux installed and it works great.
->> My WLAN driver works with this version, but not with any newer version
->> of the kernel. Am I right that backports can help me with that?
->
-> I suggest working with the driver authors of that driver to fix it to
-> work with the latest kernel version.  It is merged into the main
-> kernel.org repo, right?  Which one is it?
->
-> The networking mailing list should be able to help you out the best, try
-> sending this to the linux-wireless@vger.kernel.org
->
-> hope this helps,
->
-> greg k-h
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+> Finally, if your kernel configuration is OK, you will probably need to
+> bisect the problem between v3.18 and v3.16. I have a device that uses
+> rt2800usb, but it is not a 53XX. FWIW, it works.
 
+Between 3.16 and 3.18 we have only those rt2x00 changes:
+
+cfd9167 rt2x00: do not align payload on modern H/W
+664d6a7 wireless: rt2x00: add new rt2800usb device
+01f7fee rt2800: correct BBP1_TX_POWER_CTRL mask
+ac0372a rt2x00: support Ralink 5362.
+9baa3c3 PCI: Remove DEFINE_PCI_DEVICE_TABLE macro use
+6a06e55 wireless: rt2x00: add new rt2800usb devices
+d4150246 drivers/net/wireless/rt2x00/rt2x00dev.c: remove null test before kfree
+df6e633 rt2x00: Use dma_zalloc_coherent
+19dcb76 rt2x00: do not initialize BCN_OFFSET registers
+ddb4055 rt2x00: change order when stop beaconing
+88ff2f4 rt2x00: change default MAC_BSSID_DW1_BSS_BCN_NUM
+ba08910 rt2x00: change beaconing setup on RT2800
+283dafa rt2x00: change beaconing locking
+57eaeb6 net: wireless: rt2x00: rt2x00mac.c: Cleaning up uninitialized variables
+
+They could be reverted, even on top of 3.19-rc7, instead of doing
+full bisection. But this could be also mac80211 issue, then bisection
+will be necessary to figure out this bug.
+
+Stanislaw 
