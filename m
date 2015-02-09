@@ -1,153 +1,445 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:43685 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756171AbbBECTZ (ORCPT
+Received: from n9-28.mail.139.com ([221.176.9.28]:34989 "EHLO
+	n9-28.mail.139.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932363AbbBII5m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 21:19:25 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@nbd.name,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 02/10] mac80211: enhance readability of Minstrel-HTs rc_stats output
-Date: Thu,  5 Feb 2015 03:13:12 +0100
-Message-Id: <1423102400-9693-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150205_031934_352701_B647A94F)
-In-Reply-To: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 Feb 2015 03:57:42 -0500
+Message-ID: <1423466429.3162.8.camel@am335x> (sfid-20150209_095804_700440_0548F0AA)
+Subject: Re: [PATCH] ath9k_htc: add adaptive usb receive flow control to
+ repair soft lockup with monitor mode
+From: Yuwei Zheng <yuweizheng@139.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@qca.qualcomm.com, netdev@vger.kernel.org,
+	zhengyuwei@360.cn
+Date: Mon, 09 Feb 2015 15:20:29 +0800
+In-Reply-To: <54D53F15.8000507@rempel-privat.de>
+References: <1423219598-17982-1-git-send-email-yuweizheng@139.com>
+	 <54D53F15.8000507@rempel-privat.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch restructures the rc_stats debugfs table of Minstrel-HT in
-order to achieve better human readability. A new layout of the
-statistics and a new header is added. In addition to the old layout
-there are two new columns of information added:
-"idx"   - representing the rate index of each rate in mac80211 which
-          can be used to set specific rates as fixed rate via debugfs
-"airtime" - the tx-time in micro seconds that a 1200 Byte packet
-            takes to be transmitted over the air at the given rate
 
-The old layout of rc_stats:
+On 五, 2015-02-06 at 23:24 +0100, Oleksij Rempel wrote:
+> formatting of this patch is still badly broken.
+> ./scripts/checkpatch.pl ~/Downloads/patch.eml
+> ....
+> ERROR: DOS line endings
+> #442: FILE: drivers/net/wireless/ath/ath9k/htc_drv_txrx.c:1170:
+> +^I^IAURFC_STAT_SET(aurfc_submit_delay, delay);^M$
+> 
+> total: 195 errors, 6 warnings, 1 checks, 310 lines checked
 
-type           rate      tpt eprob *prob ret  *ok(*cum)        ok(      cum)
-HT20/LGI       MCS0      5.6 100.0 100.0   1    0(   0)         1(        1)
-HT20/LGI   B   MCS1     10.5 100.0 100.0   0    0(   0)         1(        1)
-HT20/LGI  A    MCS2     14.8 100.0 100.0   0    0(   0)         1(        1)
-...
 
-is chaged into this new layout:
+Don't save the email as microsoft eml format.  The mail tool may 
+translate it to DOS line endings if you save it as eml format. 
 
-             best   ________rate______    __statistics__    ________last_______    ______sum-of________
-mode guard #  rate  [name   idx airtime]  [ ø(tp) ø(prob)]  [prob.|retry|suc|att]  [#success | #attempts]
-HT20  LGI  1         MCS0     0    1480      0.0      0.0      0.0   1     0 0             0   0
-HT20  LGI  1     B   MCS1     1     740     10.5    100.0    100.0   0     0 0             1   1
-HT20  LGI  1    A    MCS2     2     496     14.8    100.0    100.0   0     0 0             1   1
-...
+I have tested the patch and save it with Evolution as mobox format. 
+The check result is 
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Signed-off-by: Stefan Venz <ikstream86@gmail.com>
----
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 49 +++++++++++++++++++++---------
- 1 file changed, 34 insertions(+), 15 deletions(-)
+total: 0 errors, 0 warnings, 1 checks, 310 lines checked
 
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 20c676b..7fc690f 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -19,7 +19,7 @@ static char *
- minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- {
- 	const struct mcs_group *mg;
--	unsigned int j, tp, prob, eprob;
-+	unsigned int j, tp, prob, eprob, tx_time;
- 	char htmode = '2';
- 	char gimode = 'L';
- 	u32 gflags;
-@@ -45,12 +45,19 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		if (!(mi->groups[i].supported & BIT(j)))
- 			continue;
- 
--		if (gflags & IEEE80211_TX_RC_MCS)
--			p += sprintf(p, " HT%c0/%cGI ", htmode, gimode);
--		else if (gflags & IEEE80211_TX_RC_VHT_MCS)
--			p += sprintf(p, "VHT%c0/%cGI ", htmode, gimode);
--		else
--			p += sprintf(p, " CCK/%cP   ", j < 4 ? 'L' : 'S');
-+		if (gflags & IEEE80211_TX_RC_MCS) {
-+			p += sprintf(p, "HT%c0  ", htmode);
-+			p += sprintf(p, "%cGI  ", gimode);
-+			p += sprintf(p, "%d  ", mg->streams);
-+		} else if (gflags & IEEE80211_TX_RC_VHT_MCS) {
-+			p += sprintf(p, "VHT%c0 ", htmode);
-+			p += sprintf(p, "%cGI ", gimode);
-+			p += sprintf(p, "%d  ", mg->streams);
-+		} else {
-+			p += sprintf(p, "CCK    ");
-+			p += sprintf(p, "%cP  ", j < 4 ? 'L' : 'S');
-+			p += sprintf(p, "1 ");
-+		}
- 
- 		*(p++) = (idx == mi->max_tp_rate[0]) ? 'A' : ' ';
- 		*(p++) = (idx == mi->max_tp_rate[1]) ? 'B' : ' ';
-@@ -59,21 +66,27 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		*(p++) = (idx == mi->max_prob_rate) ? 'P' : ' ';
- 
- 		if (gflags & IEEE80211_TX_RC_MCS) {
--			p += sprintf(p, " MCS%-2u ", (mg->streams - 1) * 8 + j);
-+			p += sprintf(p, "  MCS%-2u", (mg->streams - 1) * 8 + j);
- 		} else if (gflags & IEEE80211_TX_RC_VHT_MCS) {
--			p += sprintf(p, " MCS%-1u/%1u", j, mg->streams);
-+			p += sprintf(p, "  MCS%-1u/%1u", j, mg->streams);
- 		} else {
- 			int r = bitrates[j % 4];
- 
--			p += sprintf(p, " %2u.%1uM ", r / 10, r % 10);
-+			p += sprintf(p, "   %2u.%1uM", r / 10, r % 10);
- 		}
- 
-+		p += sprintf(p, "  %3u  ", idx);
-+
-+		/* tx_time[rate(i)] in usec */
-+		tx_time = DIV_ROUND_CLOSEST(mg->duration[j], 1000);
-+		p += sprintf(p, "%6u   ", tx_time);
-+
- 		tp = mr->cur_tp / 10;
- 		prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mr->probability * 1000);
- 
--		p += sprintf(p, " %4u.%1u %3u.%1u %3u.%1u "
--				"%3u %4u(%4u) %9llu(%9llu)\n",
-+		p += sprintf(p, "%4u.%1u   %3u.%1u     %3u.%1u "
-+				"%3u   %3u %-3u   %9llu   %-9llu\n",
- 				tp / 10, tp % 10,
- 				eprob / 10, eprob % 10,
- 				prob / 10, prob % 10,
-@@ -110,8 +123,14 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 
- 	file->private_data = ms;
- 	p = ms->buf;
--	p += sprintf(p, " type           rate      tpt eprob *prob "
--			"ret  *ok(*cum)        ok(      cum)\n");
-+
-+	p += sprintf(p, "\n");
-+	p += sprintf(p, "              best   ________rate______    "
-+			"__statistics__    ________last_______    "
-+			"______sum-of________\n");
-+	p += sprintf(p, "mode guard #  rate  [name   idx airtime]  [ ø(tp) "
-+			"ø(prob)]  [prob.|retry|suc|att]  [#success | "
-+			"#attempts]\n");
- 
- 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
- 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
-@@ -123,7 +142,7 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 			"lookaround %d\n",
- 			max(0, (int) mi->total_packets - (int) mi->sample_packets),
- 			mi->sample_packets);
--	p += sprintf(p, "Average A-MPDU length: %d.%d\n",
-+	p += sprintf(p, "Average # of aggregated frames per A-MPDU: %d.%d\n",
- 		MINSTREL_TRUNC(mi->avg_ampdu_len),
- 		MINSTREL_TRUNC(mi->avg_ampdu_len * 10) % 10);
- 	ms->len = p - ms->buf;
--- 
-2.2.2
+
+
+
+
+> 
+> 
+> Am 06.02.2015 um 11:46 schrieb yuweizheng@139.com:
+> > From: Yuwei Zheng <yuweizheng@139.com>
+> > 
+> > In the environment with heavy wifi traffic, set the ar9271 into monitor mode, will
+> > trigger a deadloop panic.
+> >  
+> > The ath9k_hif_usb_rx_cb function excute on  the interrupt context, and ath9k_rx_tasklet excute
+> > on the soft irq context. In other words, the ath9k_hif_usb_rx_cb have more chance to excute than
+> > ath9k_rx_tasklet.  So in the worst condition,  the rx.rxbuf receive list is always full,
+> > and the do {}while(true) loop will not be break. The kernel get a soft lockup panic. 
+> >  
+> > [59011.007210] BUG: soft lockup - CPU#0 stuck for 23s!
+> > [kworker/0:0:30609]
+> > [59011.030560] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
+> > [59013.804486] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
+> > [59013.858522] Kernel panic - not syncing: softlockup: hung tasks
+> >  
+> > [59014.038891] Exception stack(0xdf4bbc38 to 0xdf4bbc80)
+> > [59014.046834] bc20:                                                       de57b950 60000113
+> > [59014.059579] bc40: 00000000 bb32bb32 60000113 de57b948 de57b500 dc7bb440 df4bbcd0 00000000
+> > [59014.072337] bc60: de57b950 60000113 df4bbcd0 df4bbc80 c04c259d c04c25a0 60000133 ffffffff
+> > [59014.085233] [<c04c28db>] (__irq_svc+0x3b/0x5c) from [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10)
+> > [59014.100437] [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10) from [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc])
+> > [59014.118267] [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc]) from [<c0036d23>] (tasklet_action+0x3b/0x98)
+> > [59014.134132] [<c0036d23>] (tasklet_action+0x3b/0x98) from [<c0036709>] (__do_softirq+0x99/0x16c)
+> > [59014.147784] [<c0036709>] (__do_softirq+0x99/0x16c) from [<c00369f7>] (irq_exit+0x5b/0x5c)
+> > [59014.160653] [<c00369f7>] (irq_exit+0x5b/0x5c) from [<c000cfc3>] (handle_IRQ+0x37/0x78)
+> > [59014.173124] [<c000cfc3>] (handle_IRQ+0x37/0x78) from [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68)
+> > [59014.187225] [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68) from [<c04c28db>](__irq_svc+0x3b/0x5c)
+> >  
+> > This bug can be see with low performance board, such as uniprocessor beagle bone board. 
+> >  
+> > Signed-off-by: Yuwei Zheng <yuweizheng@139.com>
+> > 
+> > ---
+> >  drivers/net/wireless/ath/ath9k/hif_usb.c       | 74 +++++++++++++++++++++++---
+> >  drivers/net/wireless/ath/ath9k/hif_usb.h       |  9 ++++
+> >  drivers/net/wireless/ath/ath9k/htc.h           | 19 +++++++
+> >  drivers/net/wireless/ath/ath9k/htc_drv_debug.c | 53 ++++++++++++++++++
+> >  drivers/net/wireless/ath/ath9k/htc_drv_txrx.c  | 44 +++++++++++++++
+> >  5 files changed, 192 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> > index 8e7153b..90ee568 100644
+> > --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+> > +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+> > @@ -640,6 +640,7 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+> >  	struct hif_device_usb *hif_dev =
+> >  		usb_get_intfdata(usb_ifnum_to_if(urb->dev, 0));
+> >  	int ret;
+> > +	int delay;
+> >  
+> >  	if (!skb)
+> >  		return;
+> > @@ -658,7 +659,6 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+> >  	default:
+> >  		goto resubmit;
+> >  	}
+> > -
+> >  	if (likely(urb->actual_length != 0)) {
+> >  		skb_put(skb, urb->actual_length);
+> >  		ath9k_hif_usb_rx_stream(hif_dev, skb);
+> > @@ -667,12 +667,22 @@ static void ath9k_hif_usb_rx_cb(struct urb *urb)
+> >  resubmit:
+> >  	skb_reset_tail_pointer(skb);
+> >  	skb_trim(skb, 0);
+> > -
+> > -	usb_anchor_urb(urb, &hif_dev->rx_submitted);
+> > -	ret = usb_submit_urb(urb, GFP_ATOMIC);
+> > -	if (ret) {
+> > -		usb_unanchor_urb(urb);
+> > -		goto free;
+> > +	spin_lock(&hif_dev->aurfc_lock);
+> > +	if (atomic_read(&hif_dev->aurfc_submit_delay) > 0 &&
+> > +	    hif_dev->aurfc_active == 1) {
+> > +		usb_anchor_urb(urb, &hif_dev->rx_delayed_submitted);
+> > +		delay = atomic_read(&hif_dev->aurfc_submit_delay);
+> > +		schedule_delayed_work(&hif_dev->aurfc_delayed_work,
+> > +				      msecs_to_jiffies(delay));
+> > +		spin_unlock(&hif_dev->aurfc_lock);
+> > +	} else {
+> > +		spin_unlock(&hif_dev->aurfc_lock);
+> > +		usb_anchor_urb(urb, &hif_dev->rx_submitted);
+> > +		ret = usb_submit_urb(urb, GFP_ATOMIC);
+> > +		if (ret) {
+> > +			usb_unanchor_urb(urb);
+> > +			goto free;
+> > +		}
+> >  	}
+> >  
+> >  	return;
+> > @@ -818,9 +828,50 @@ err:
+> >  	return -ENOMEM;
+> >  }
+> >  
+> > +static void aurfc_submit_handler(struct work_struct *work)
+> > +{
+> > +	struct hif_device_usb *hif_dev =
+> > +		container_of(work,
+> > +			     struct hif_device_usb,
+> > +			     aurfc_delayed_work.work);
+> > +
+> > +	struct urb *urb = NULL;
+> > +	struct sk_buff *skb = NULL;
+> > +	int ret;
+> > +	int loop_times = 0;
+> > +
+> > +	while (true) {
+> > +		loop_times++;
+> > +		if (loop_times > MAX_RX_URB_NUM)
+> > +			atomic_add(AURFC_STEP,
+> > +				   &hif_dev->aurfc_submit_delay);
+> > +
+> > +		urb = usb_get_from_anchor(
+> > +				&hif_dev->rx_delayed_submitted);
+> > +		if (urb) {
+> > +			skb = (struct sk_buff *)urb->context;
+> > +			ret = usb_submit_urb(urb, GFP_KERNEL);
+> > +			if (ret != 0) {
+> > +				usb_unanchor_urb(urb);
+> > +				dev_kfree_skb_any(skb);
+> > +				urb->context = NULL;
+> > +			}
+> > +		} else {
+> > +			break;
+> > +		}
+> > +	}
+> > +}
+> > +
+> >  static void ath9k_hif_usb_dealloc_rx_urbs(struct hif_device_usb *hif_dev)
+> >  {
+> > +	unsigned long flags;
+> > +
+> > +	spin_lock_irqsave(&hif_dev->aurfc_lock, flags);
+> > +	hif_dev->aurfc_active = 0;
+> > +	mod_delayed_work(system_wq, &hif_dev->aurfc_delayed_work, 0);
+> > +	spin_unlock_irqrestore(&hif_dev->aurfc_lock, flags);
+> >  	usb_kill_anchored_urbs(&hif_dev->rx_submitted);
+> > +	usb_kill_anchored_urbs(&hif_dev->rx_delayed_submitted);
+> >  }
+> >  
+> >  static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
+> > @@ -830,8 +881,17 @@ static int ath9k_hif_usb_alloc_rx_urbs(struct hif_device_usb *hif_dev)
+> >  	int i, ret;
+> >  
+> >  	init_usb_anchor(&hif_dev->rx_submitted);
+> > +	init_usb_anchor(&hif_dev->rx_delayed_submitted);
+> > +
+> >  	spin_lock_init(&hif_dev->rx_lock);
+> >  
+> > +	/* add for adaptive usb receive control*/
+> > +	atomic_set(&hif_dev->aurfc_submit_delay, 0);
+> > +	INIT_DELAYED_WORK(&hif_dev->aurfc_delayed_work,
+> > +			  aurfc_submit_handler);
+> > +	spin_lock_init(&hif_dev->aurfc_lock);
+> > +	hif_dev->aurfc_active = 1;
+> > +
+> >  	for (i = 0; i < MAX_RX_URB_NUM; i++) {
+> >  
+> >  		/* Allocate URB */
+> > diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+> > index 51496e7..2050a74 100644
+> > --- a/drivers/net/wireless/ath/ath9k/hif_usb.h
+> > +++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+> > @@ -41,6 +41,7 @@
+> >  #define MAX_RX_URB_NUM  8
+> >  #define MAX_RX_BUF_SIZE 16384
+> >  #define MAX_PKT_NUM_IN_TRANSFER 10
+> > +#define AURFC_STEP 10  /* ms */
+> >  
+> >  #define MAX_REG_OUT_URB_NUM  1
+> >  #define MAX_REG_IN_URB_NUM   64
+> > @@ -98,9 +99,17 @@ struct hif_device_usb {
+> >  	struct hif_usb_tx tx;
+> >  	struct usb_anchor regout_submitted;
+> >  	struct usb_anchor rx_submitted;
+> > +	struct usb_anchor rx_delayed_submitted;
+> >  	struct usb_anchor reg_in_submitted;
+> >  	struct usb_anchor mgmt_submitted;
+> >  	struct sk_buff *remain_skb;
+> > +
+> > +	/* adaptive usb receive flow control */
+> > +	struct delayed_work aurfc_delayed_work;
+> > +	spinlock_t aurfc_lock; /* to protect work */
+> > +	atomic_t  aurfc_submit_delay; /* ms */
+> > +	int aurfc_active;
+> > +
+> >  	const char *fw_name;
+> >  	int rx_remain_len;
+> >  	int rx_pkt_len;
+> > diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+> > index 9dde265..1586bd2 100644
+> > --- a/drivers/net/wireless/ath/ath9k/htc.h
+> > +++ b/drivers/net/wireless/ath/ath9k/htc.h
+> > @@ -331,6 +331,13 @@ static inline struct ath9k_htc_tx_ctl *HTC_SKB_CB(struct sk_buff *skb)
+> >  
+> >  #define TX_QSTAT_INC(q) (priv->debug.tx_stats.queue_stats[q]++)
+> >  
+> > +#define AURFC_STAT_INC(c) \
+> > +	(hif_dev->htc_handle->drv_priv->debug.aurfc_stats.c++)
+> > +#define AURFC_STAT_ADD(c, a) \
+> > +	(hif_dev->htc_handle->drv_priv->debug.aurfc_stats.c += a)
+> > +#define AURFC_STAT_SET(c, a) \
+> > +	(hif_dev->htc_handle->drv_priv->debug.aurfc_stats.c = a)
+> > +
+> >  void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+> >  			   struct ath_rx_status *rs);
+> >  
+> > @@ -352,11 +359,20 @@ struct ath_skbrx_stats {
+> >  	u32 skb_dropped;
+> >  };
+> >  
+> > +struct ath_aurfc_stats {
+> > +	u32 aurfc_highwater;
+> > +	u32 aurfc_lowwater;
+> > +	u32 aurfc_wm_triggered;
+> > +	u32 aurfc_submit_delay;
+> > +	u32 aurfc_called;
+> > +};
+> > +
+> >  struct ath9k_debug {
+> >  	struct dentry *debugfs_phy;
+> >  	struct ath_tx_stats tx_stats;
+> >  	struct ath_rx_stats rx_stats;
+> >  	struct ath_skbrx_stats skbrx_stats;
+> > +	struct ath_aurfc_stats aurfc_stats;
+> >  };
+> >  
+> >  void ath9k_htc_get_et_strings(struct ieee80211_hw *hw,
+> > @@ -377,6 +393,9 @@ void ath9k_htc_get_et_stats(struct ieee80211_hw *hw,
+> >  
+> >  #define TX_QSTAT_INC(c) do { } while (0)
+> >  
+> > +#define AURFC_STAT_INC(c) do {} while (0)
+> > +#define AURFC_STAT_ADD(c, a) do {} while (0)
+> > +#define AURFC_STAT_SET(c, a) do {} while (0)
+> >  static inline void ath9k_htc_err_stat_rx(struct ath9k_htc_priv *priv,
+> >  					 struct ath_rx_status *rs)
+> >  {
+> > diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+> > index 8cef1ed..a6be9be 100644
+> > --- a/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+> > +++ b/drivers/net/wireless/ath/ath9k/htc_drv_debug.c
+> > @@ -286,6 +286,54 @@ static const struct file_operations fops_skb_rx = {
+> >  	.llseek = default_llseek,
+> >  };
+> >  
+> > +static ssize_t read_file_aurfc(struct file *file,
+> > +			       char __user *user_buf,
+> > +			       size_t count, loff_t *ppos)
+> > +{
+> > +	struct ath9k_htc_priv *priv = file->private_data;
+> > +	char *buf;
+> > +	unsigned int len = 0, size = 1500;
+> > +	ssize_t retval = 0;
+> > +
+> > +	buf = kzalloc(size, GFP_KERNEL);
+> > +	if (!buf)
+> > +		return -ENOMEM;
+> > +
+> > +	len += scnprintf(buf + len, size - len,
+> > +			"%20s : %10u\n", "High watermark",
+> > +			priv->debug.aurfc_stats.aurfc_highwater);
+> > +	len += scnprintf(buf + len, size - len,
+> > +			"%20s : %10u\n", "Low watermark",
+> > +			priv->debug.aurfc_stats.aurfc_lowwater);
+> > +
+> > +	len += scnprintf(buf + len, size - len,
+> > +			"%20s : %10u\n", "WM triggered",
+> > +			priv->debug.aurfc_stats.aurfc_wm_triggered);
+> > +
+> > +	len += scnprintf(buf + len, size - len,
+> > +			"%20s : %10u\n", "Handler called",
+> > +			priv->debug.aurfc_stats.aurfc_called);
+> > +
+> > +	len += scnprintf(buf + len, size - len,
+> > +			"%20s : %10u\n", "Submit delay",
+> > +			priv->debug.aurfc_stats.aurfc_submit_delay);
+> > +	if (len > size)
+> > +		len = size;
+> > +
+> > +	retval = simple_read_from_buffer(user_buf, count,
+> > +					 ppos, buf, len);
+> > +	kfree(buf);
+> > +
+> > +	return retval;
+> > +}
+> > +
+> > +static const struct file_operations fops_aurfc = {
+> > +	.read = read_file_aurfc,
+> > +	.open = simple_open,
+> > +	.owner = THIS_MODULE,
+> > +	.llseek = default_llseek,
+> > +};
+> > +
+> >  static ssize_t read_file_slot(struct file *file, char __user *user_buf,
+> >  			      size_t count, loff_t *ppos)
+> >  {
+> > @@ -518,7 +566,12 @@ int ath9k_htc_init_debug(struct ath_hw *ah)
+> >  	debugfs_create_file("skb_rx", S_IRUSR, priv->debug.debugfs_phy,
+> >  			    priv, &fops_skb_rx);
+> >  
+> > +	debugfs_create_file("aurfc_stats", S_IRUSR,
+> > +			    priv->debug.debugfs_phy,
+> > +			    priv, &fops_aurfc);
+> > +
+> >  	ath9k_cmn_debug_recv(priv->debug.debugfs_phy, &priv->debug.rx_stats);
+> > +
+> >  	ath9k_cmn_debug_phy_err(priv->debug.debugfs_phy, &priv->debug.rx_stats);
+> >  
+> >  	debugfs_create_file("slot", S_IRUSR, priv->debug.debugfs_phy,
+> > diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> > index a0f58e2..939d008 100644
+> > --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> > +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> > @@ -1061,7 +1061,28 @@ void ath9k_rx_tasklet(unsigned long data)
+> >  	unsigned long flags;
+> >  	struct ieee80211_hdr *hdr;
+> >  
+> > +	/* add for adaptive usb receive flow control*/
+> > +	int looptimes = 0;
+> > +	int highwatermark = ATH9K_HTC_RXBUF*3/4;
+> > +	int lowwatermark = ATH9K_HTC_RXBUF/32;
+> > +	unsigned int delay = 0;
+> > +
+> > +	struct htc_target *htc = priv->htc;
+> > +	struct hif_device_usb *hif_dev = htc->hif_dev;
+> > +
+> > +	AURFC_STAT_SET(aurfc_highwater, highwatermark);
+> > +	AURFC_STAT_SET(aurfc_lowwater, lowwatermark);
+> > +
+> >  	do {
+> > +		looptimes++;
+> > +		if (looptimes > highwatermark) {
+> > +			delay = looptimes*AURFC_STEP;
+> > +			atomic_set(&hif_dev->aurfc_submit_delay,
+> > +				   delay);
+> > +			AURFC_STAT_INC(aurfc_wm_triggered);
+> > +			AURFC_STAT_SET(aurfc_submit_delay, delay);
+> > +		}
+> > +
+> >  		spin_lock_irqsave(&priv->rx.rxbuflock, flags);
+> >  		list_for_each_entry(tmp_buf, &priv->rx.rxbuf, list) {
+> >  			if (tmp_buf->in_process) {
+> > @@ -1072,6 +1093,22 @@ void ath9k_rx_tasklet(unsigned long data)
+> >  
+> >  		if (rxbuf == NULL) {
+> >  			spin_unlock_irqrestore(&priv->rx.rxbuflock, flags);
+> > +			spin_lock_irqsave(&hif_dev->aurfc_lock,
+> > +					  flags);
+> > +			if (atomic_read(
+> > +				&hif_dev->aurfc_submit_delay) > 0 &&
+> > +			    hif_dev->aurfc_active > 0)
+> > +				mod_delayed_work(system_wq,
+> > +					&hif_dev->aurfc_delayed_work,
+> > +						 0);
+> > +			spin_unlock_irqrestore(&hif_dev->aurfc_lock,
+> > +					       flags);
+> > +			if (looptimes < lowwatermark) {
+> > +				atomic_set(&hif_dev->aurfc_submit_delay
+> > +					   , 0);
+> > +				AURFC_STAT_SET(aurfc_submit_delay,
+> > +					       0);
+> > +			}
+> >  			break;
+> >  		}
+> >  
+> > @@ -1114,6 +1151,10 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
+> >  	struct ath_common *common = ath9k_hw_common(ah);
+> >  	struct ath9k_htc_rxbuf *rxbuf = NULL, *tmp_buf = NULL;
+> >  
+> > +	struct htc_target *htc = priv->htc;
+> > +	struct hif_device_usb *hif_dev = htc->hif_dev;
+> > +	int delay = ATH9K_HTC_RXBUF * AURFC_STEP;
+> > +
+> >  	spin_lock(&priv->rx.rxbuflock);
+> >  	list_for_each_entry(tmp_buf, &priv->rx.rxbuf, list) {
+> >  		if (!tmp_buf->in_process) {
+> > @@ -1124,6 +1165,9 @@ void ath9k_htc_rxep(void *drv_priv, struct sk_buff *skb,
+> >  	spin_unlock(&priv->rx.rxbuflock);
+> >  
+> >  	if (rxbuf == NULL) {
+> > +		atomic_set(&hif_dev->aurfc_submit_delay, delay);
+> > +		AURFC_STAT_INC(aurfc_wm_triggered);
+> > +		AURFC_STAT_SET(aurfc_submit_delay, delay);
+> >  		ath_dbg(common, ANY, "No free RX buffer\n");
+> >  		goto err;
+> >  	}
+> > 
+> 
+> 
+
+
+
 
