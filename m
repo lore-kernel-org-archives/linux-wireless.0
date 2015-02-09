@@ -1,83 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:40404 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755109AbbBFRgx (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:61685 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759473AbbBIUto (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 12:36:53 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/6] brcmfmac: add debugfs file containing revision info
-Date: Fri, 6 Feb 2015 18:36:44 +0100
-Message-ID: <1423244207-9707-4-git-send-email-arend@broadcom.com> (sfid-20150206_183704_610058_BA00DE13)
-In-Reply-To: <1423244207-9707-1-git-send-email-arend@broadcom.com>
-References: <1423244207-9707-1-git-send-email-arend@broadcom.com>
+	Mon, 9 Feb 2015 15:49:44 -0500
+Message-ID: <54D91D66.2060108@lwfinger.net> (sfid-20150209_214949_076799_3FA7BA42)
+Date: Mon, 09 Feb 2015 14:49:42 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: David Miller <davem@davemloft.net>
+CC: "John W. Linville" <linville@tuxdriver.com>, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2015-02-07
+References: <87a90qosos.fsf@kamboji.qca.qualcomm.com> <20150209.121342.1535841700027616341.davem@davemloft.net> <20150209203741.GG3566@tuxdriver.com>
+In-Reply-To: <20150209203741.GG3566@tuxdriver.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the revision info visible in debugfs. The new debugfs
-file is named 'revinfo'.
+On 02/09/2015 02:37 PM, John W. Linville wrote:
+> On Mon, Feb 09, 2015 at 12:13:42PM -0800, David Miller wrote:
+>> From: Kalle Valo <kvalo@codeaurora.org>
+>> Date: Sat, 07 Feb 2015 13:40:51 +0200
+>>
+>>> There's a small conflict in drivers/net/wireless/rtlwifi/pci.c, the fix
+>>> is to leave the two labels like this:
+>>>
+>>> 			schedule_work(&rtlpriv->works.lps_change_work);
+>>> 		}
+>>> end:
+>>> 		skb = new_skb;
+>>> no_new:
+>>> 		if (rtlpriv->use_new_trx_flow) {
+>>>
+>>>
+>>
+>> That can't be the correct resolution:
+>>
+>> drivers/net/wireless/rtlwifi/pci.c: In function ‘_rtl_pci_rx_interrupt’:
+>> drivers/net/wireless/rtlwifi/pci.c:934:1: warning: label ‘end’ defined but not used [-Wunused-label]
+>>
+>> So I've removed that label in the merge commit.
+>
+> FWIW, that's the way I have it in wireless-testing as well..
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/core.c | 30 ++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+I must have missed the pull request. Removal of the label "end" is correct.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.c b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-index 2d6e2cc..f8f47dc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/core.c
-@@ -944,6 +944,34 @@ fail:
- 	return ret;
- }
- 
-+static int brcmf_revinfo_read(struct seq_file *s, void *data)
-+{
-+	struct brcmf_bus *bus_if = dev_get_drvdata(s->private);
-+	struct brcmf_rev_info *ri = &bus_if->drvr->revinfo;
-+	char drev[BRCMU_DOTREV_LEN];
-+	char brev[BRCMU_BOARDREV_LEN];
-+
-+	seq_printf(s, "vendorid: 0x%04x\n", ri->vendorid);
-+	seq_printf(s, "deviceid: 0x%04x\n", ri->deviceid);
-+	seq_printf(s, "radiorev: %s\n", brcmu_dotrev_str(ri->radiorev, drev));
-+	seq_printf(s, "chipnum: %u (%x)\n", ri->chipnum, ri->chipnum);
-+	seq_printf(s, "chiprev: %u\n", ri->chiprev);
-+	seq_printf(s, "chippkg: %u\n", ri->chippkg);
-+	seq_printf(s, "corerev: %u\n", ri->corerev);
-+	seq_printf(s, "boardid: 0x%04x\n", ri->boardid);
-+	seq_printf(s, "boardvendor: 0x%04x\n", ri->boardvendor);
-+	seq_printf(s, "boardrev: %s\n", brcmu_boardrev_str(ri->boardrev, brev));
-+	seq_printf(s, "driverrev: %s\n", brcmu_dotrev_str(ri->driverrev, drev));
-+	seq_printf(s, "ucoderev: %u\n", ri->ucoderev);
-+	seq_printf(s, "bus: %u\n", ri->bus);
-+	seq_printf(s, "phytype: %u\n", ri->phytype);
-+	seq_printf(s, "phyrev: %u\n", ri->phyrev);
-+	seq_printf(s, "anarev: %u\n", ri->anarev);
-+	seq_printf(s, "nvramrev: %08x\n", ri->nvramrev);
-+
-+	return 0;
-+}
-+
- int brcmf_bus_start(struct device *dev)
- {
- 	int ret = -1;
-@@ -974,6 +1002,8 @@ int brcmf_bus_start(struct device *dev)
- 	if (ret < 0)
- 		goto fail;
- 
-+	brcmf_debugfs_add_entry(drvr, "revinfo", brcmf_revinfo_read);
-+
- 	/* assure we have chipid before feature attach */
- 	if (!bus_if->chip) {
- 		bus_if->chip = drvr->revinfo.chipnum;
--- 
-1.9.1
+Larry
+
 
