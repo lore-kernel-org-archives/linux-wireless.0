@@ -1,74 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47089 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754603AbbBOMDI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44292 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752008AbbBIFr1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 07:03:08 -0500
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Boris Sorochkin <boriss@codeaurora.org>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 6/9] wil6210: Fix division by zero in wil_vring_debugfs_show
-Date: Sun, 15 Feb 2015 14:02:35 +0200
-Message-Id: <1424001758-29529-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150215_130324_852108_962845F4)
-In-Reply-To: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 9 Feb 2015 00:47:27 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 2/2] ath10k: Increase copy engine entries for rx wmi
+Date: Mon, 9 Feb 2015 11:16:54 +0530
+Message-ID: <1423460814-2767-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150209_064731_269587_71472013)
+In-Reply-To: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Boris Sorochkin <boriss@codeaurora.org>
+Having lower number of copy engine entries for target to host
+WMI ring is causing drops in receiving management frames. This
+issue is observed during max clients (128 clients) stress testing.
+While bursting deauthentication frames from simulated clients,
+approx. 70% of frames are getting dropped due to lower ring entries.
 
-On some platforms get_cycles() implemented to allways return 0.
-On such platforms "Division by zero" bug was triggered.
-
-Signed-off-by: Boris Sorochkin <boriss@codeaurora.org>
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/debugfs.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index eb6de8c..fd59751 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -103,23 +103,30 @@ static int wil_vring_debugfs_show(struct seq_file *s, void *data)
- 				   % vring->size;
- 			int avail = vring->size - used - 1;
- 			char name[10];
-+			char sidle[10];
- 			/* performance monitoring */
- 			cycles_t now = get_cycles();
- 			uint64_t idle = txdata->idle * 100;
- 			uint64_t total = now - txdata->begin;
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index e6972b0..f3174a6 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -113,7 +113,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
+ 		.flags = CE_ATTR_FLAGS,
+ 		.src_nentries = 0,
+ 		.src_sz_max = 2048,
+-		.dest_nentries = 32,
++		.dest_nentries = 128,
+ 	},
  
--			do_div(idle, total);
-+			if (total != 0) {
-+				do_div(idle, total);
-+				snprintf(sidle, sizeof(sidle), "%3d%%",
-+					 (int)idle);
-+			} else {
-+				snprintf(sidle, sizeof(sidle), "N/A");
-+			}
- 			txdata->begin = now;
- 			txdata->idle = 0ULL;
- 
- 			snprintf(name, sizeof(name), "tx_%2d", i);
- 
- 			seq_printf(s,
--				   "\n%pM CID %d TID %d BACK([%d] %d TU A%s) [%3d|%3d] idle %3d%%\n",
--				   wil->sta[cid].addr, cid, tid,
--				   txdata->agg_wsize, txdata->agg_timeout,
--				   txdata->agg_amsdu ? "+" : "-",
--				   used, avail, (int)idle);
-+				"\n%pM CID %d TID %d BACK([%d] %d TU A%s) [%3d|%3d] idle %s\n",
-+				wil->sta[cid].addr, cid, tid,
-+				txdata->agg_wsize, txdata->agg_timeout,
-+				txdata->agg_amsdu ? "+" : "-",
-+				used, avail, sidle);
- 
- 			wil_print_vring(s, wil, name, vring, '_', 'H');
- 		}
+ 	/* CE3: host->target WMI */
+@@ -183,7 +183,7 @@ static const struct ce_pipe_config target_ce_config_wlan[] = {
+ 	{
+ 		.pipenum = __cpu_to_le32(2),
+ 		.pipedir = __cpu_to_le32(PIPEDIR_IN),
+-		.nentries = __cpu_to_le32(32),
++		.nentries = __cpu_to_le32(64),
+ 		.nbytes_max = __cpu_to_le32(2048),
+ 		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
+ 		.reserved = __cpu_to_le32(0),
 -- 
-2.1.0
+2.2.2
 
