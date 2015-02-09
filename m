@@ -1,70 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:59123 "EHLO mout.web.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:34880 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934036AbbBDTki (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 14:40:38 -0500
-Message-ID: <54D275A7.3050701@users.sourceforge.net> (sfid-20150204_204059_809471_1AF6FB1D)
-Date: Wed, 04 Feb 2015 20:40:23 +0100
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] net: brcm80211: Delete unnecessary checks before two function
- calls
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+	id S1759233AbbBIKQy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2015 05:16:54 -0500
+Message-ID: <1423477011.2110.8.camel@sipsolutions.net> (sfid-20150209_111657_583305_39DD6933)
+Subject: Re: [PATCH] cfg80211: add debugfs VHT80 allow map
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	"Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+Date: Mon, 09 Feb 2015 11:16:51 +0100
+In-Reply-To: <1423466162219.33842@qti.qualcomm.com>
+References: <1423204546-22872-1-git-send-email-arnagara@qti.qualcomm.com>
+	,<1423249860.2037.28.camel@sipsolutions.net>
+	 <1423466162219.33842@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 4 Feb 2015 20:28:49 +0100
+[please don't top-post]
 
-The functions brcmu_pkt_buf_free_skb() and usb_free_urb() test whether
-their argument is NULL and then return immediately. Thus the test around
-the call is not needed.
+On Mon, 2015-02-09 at 07:16 +0000, Nagarajan, Ashok Raj wrote:
+> Hi Johannes,
+> 
+> I see your point here. I will upload one patch for printing this info from iw.
+> 
+> I will also write another patch for removing HT40 one?
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 3 +--
- drivers/net/wireless/brcm80211/brcmfmac/usb.c  | 2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+Sounds fine - any complaints from others?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index 99a3776..5b5520b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -2543,8 +2543,7 @@ static void brcmf_sdio_bus_stop(struct device *dev)
- 	brcmu_pktq_flush(&bus->txq, true, NULL, NULL);
- 
- 	/* Clear any held glomming stuff */
--	if (bus->glomd)
--		brcmu_pkt_buf_free_skb(bus->glomd);
-+	brcmu_pkt_buf_free_skb(bus->glomd);
- 	brcmf_sdio_free_glom(bus);
- 
- 	/* Clear rx control and wake any waiters */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-index 4572def..10c684c 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
-@@ -421,7 +421,7 @@ fail:
- 	brcmf_err("fail!\n");
- 	while (!list_empty(q)) {
- 		req = list_entry(q->next, struct brcmf_usbreq, list);
--		if (req && req->urb)
-+		if (req)
- 			usb_free_urb(req->urb);
- 		list_del(q->next);
- 	}
--- 
-2.2.2
+johannes
 
