@@ -1,82 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:62087 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754483AbbBAXSO (ORCPT
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:48593 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753640AbbBIV2C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2015 18:18:14 -0500
-Received: by mail-ie0-f171.google.com with SMTP id tr6so14151317ieb.2
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 15:18:12 -0800 (PST)
-Received: from mail-ig0-f182.google.com (mail-ig0-f182.google.com. [209.85.213.182])
-        by mx.google.com with ESMTPSA id m77sm5062935iom.38.2015.02.01.15.18.11
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sun, 01 Feb 2015 15:18:12 -0800 (PST)
-Received: by mail-ig0-f182.google.com with SMTP id r10so13440004igi.3
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 15:18:11 -0800 (PST)
+	Mon, 9 Feb 2015 16:28:02 -0500
+Received: by mail-qg0-f48.google.com with SMTP id a108so23763539qge.7
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 13:28:01 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <wrfjbnld1bid.fsf@redhat.com>
-References: <1422716329-3718-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<wrfjbnld1bid.fsf@redhat.com>
-Date: Mon, 2 Feb 2015 00:18:11 +0100
-Message-ID: <CAKXHbyOqqCU_A3GbMG5pGSPeSqB5PjMgcWm2Dd7dDP=zVnNyCw@mail.gmail.com> (sfid-20150202_001818_073750_12C4E4B3)
-Subject: Re: [PATCH] staging: rtl8723au: core: rtw_mlme: Removed variables
- that is never used
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <CAJAp7OjLDCzLYeb3LHNs1sOHWM64XZWzr46UQ2vNirH_2JibNg@mail.gmail.com>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+	<20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net>
+	<CAJAp7OhcFTuYfc7JOKW1SrVRbucuSWg5jcFaoVnSDgBxsyo2ng@mail.gmail.com>
+	<CAAfg0W6dPupGLgwDF5FtNqEFvC4Y+GvFBAmXWcUQwXr2y6KugQ@mail.gmail.com>
+	<CAJAp7OjLDCzLYeb3LHNs1sOHWM64XZWzr46UQ2vNirH_2JibNg@mail.gmail.com>
+Date: Tue, 10 Feb 2015 05:28:01 +0800
+Message-ID: <CAAfg0W58Wssa=OKRSGtxY4rQJCzP0uTw__Rd278fc1v7Q0fqUw@mail.gmail.com> (sfid-20150209_222809_275215_CCB27216)
+Subject: Re: [PATCH 6/7] net: wireless: wcn36xx: remove powersaving for wcn3620
+From: Andy Green <andy.green@linaro.org>
+To: Bjorn Andersson <bjorn@kryo.se>
+Cc: netdev <netdev@vger.kernel.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	wcn36xx <wcn36xx@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-02-02 0:02 GMT+01:00 Jes Sorensen <Jes.Sorensen@redhat.com>:
-> Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
->> Variable was assigned a value that was never used.
->> I have also removed all the code that thereby serves no purpose.
+On 10 February 2015 at 05:11, Bjorn Andersson <bjorn@kryo.se> wrote:
+> On Feb 9, 2015 1:07 PM, "Andy Green" <andy.green@linaro.org> wrote:
 >>
->> This was found using a static code analysis program called cppcheck
+>> On 10 February 2015 at 01:54, Bjorn Andersson <bjorn@kryo.se> wrote:
+>> > On Sat, Jan 17, 2015 at 9:11 PM, Andy Green <andy.green@linaro.org>
+>> > wrote:
+>> >> WCN3620 powersaving mode is not stable.  Disable it if we're
+>> >> on a wcn3620 chip type.
+>> >>
+>> >> Signed-off-by: Andy Green <andy.green@linaro.org>
+>> >> ---
+>> >>  drivers/net/wireless/ath/wcn36xx/main.c |    4 ++++
+>> >>  1 file changed, 4 insertions(+)
+>> >>
+>> >> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c
+>> >> b/drivers/net/wireless/ath/wcn36xx/main.c
+>> >> index c4178c7..569d45b 100644
+>> >> --- a/drivers/net/wireless/ath/wcn36xx/main.c
+>> >> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
+>> >> @@ -924,6 +924,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx
+>> >> *wcn)
+>> >>                 IEEE80211_HW_AMPDU_AGGREGATION |
+>> >>                 IEEE80211_HW_TIMING_BEACON_ONLY;
+>> >>
+>> >> +       /* 3620 powersaving currently unstable */
+>> >> +       if (wcn->chip_version == WCN36XX_CHIP_3620)
+>> >> +               wcn->hw->flags &= ~IEEE80211_HW_SUPPORTS_PS;
+>> >> +
+>> >
+>> > Hi Andy,
+>> >
+>> > I have the same problem (Data Abort Exception in wcnss) on 3680, this
+>> > with my wip smd code and a hacked up remoteproc-pil. I haven't spent
+>> > any effort on debugging this, but it looks like it's something related
+>> > to what we have ported to mainline (or lack thereof) rather than a
+>> > 3620 specific issue.
 >>
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  drivers/staging/rtl8723au/core/rtw_mlme.c |   21 ++++++++++-----------
->>  1 file changed, 10 insertions(+), 11 deletions(-)
+>> Makes sense since I only have 3620, I assumed it's related to that.
 >>
->> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
->> index 7299ef0..8b2db4b 100644
->> --- a/drivers/staging/rtl8723au/core/rtw_mlme.c
->> +++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
->> @@ -2123,7 +2123,6 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
->>  {
->>       u32 out_len;
->>       int max_rx_ampdu_factor;
->> -     unsigned char *pframe;
->>       const u8 *p;
->>       struct ieee80211_ht_cap ht_capie;
->>       u8 WMM_IE[7] = {0x00, 0x50, 0xf2, 0x02, 0x00, 0x01, 0x00};
->> @@ -2139,10 +2138,10 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
+>> However he can work for a while with powersaving on, but ping
+>> latencies are +600-800ms and he's shaky.
 >>
->>               if (pmlmepriv->qos_option == 0) {
->>                       out_len = *pout_len;
->> -                     pframe = rtw_set_ie23a(out_ie + out_len,
->> -                                            WLAN_EID_VENDOR_SPECIFIC,
->> -                                            sizeof(WMM_IE), WMM_IE,
->> -                                            pout_len);
->> +                     rtw_set_ie23a(out_ie + out_len,
->> +                                             WLAN_EID_VENDOR_SPECIFIC,
->> +                                             sizeof(WMM_IE), WMM_IE,
->> +                                             pout_len);
+>> Later I found something mac80211 generic scan preparation or post-scan
+>> code (for scan initiated by wpa_supplicant) is able to stop wlan
+>> traffic after a few goes even if the actual scan mode smd is not sent.
+>>
+>> At that point I think a nice solution would be a donation of time from
+>> guys who specialize in wcn for a living to come and hand out a pony or
+>> two...
+>>
 >
-> And again here - do it properly, please.
->
-> Jes
+> I agree, my goal is that we get this running in mainline (smd, smsm, smp2p
+> and remoteproc-tz) so that people with the domain knowledge can go in and
+> make it work well.
 
-Hi Jes
+Sounds great thanks.
 
-I am sorry, please ignore this.
-I will not send any more patches.
+I also tried hostapd which is fully workable without encryption, plus
+or minus the instabilities mentioned.  But for wpa, he chokes trying
+to inject a packet.  So it's another pony needed from somewhere.
 
-Kind regards
-Rickard Strandqvist
+Can I ask if smdtty will also appear?  I uplevelled and hacked smdtty
+a bit from a 3.10 reference tree for 8916-qrd, and I was able to get
+wcn3620 BT working stably for BT keyboard + mouse and even ad2p.
+
+However the hack bound together smdtty ch2 + 3 in smdtty driver and
+made it understand about the missing hci protocol byte... this is far
+from reasonable for upstream, but it works like the 3.10 except needs
+no special bluez / userland treatment.  So I'm curious if no smdtty
+how the split smd hci / acl link in firmware will appear coherently to
+userspace as a normal uart.
+
+-Andy
+
+> Regards,
+> Bjorn
