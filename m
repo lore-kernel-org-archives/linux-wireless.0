@@ -1,127 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:46208 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751747AbbBNHoT (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51718 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933313AbbBIQEB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Feb 2015 02:44:19 -0500
-Received: by mail-lb0-f180.google.com with SMTP id z12so19297763lbi.11
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 23:44:17 -0800 (PST)
-From: Vadim Kochan <vadim4j@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Vadim Kochan <vadim4j@gmail.com>
-Subject: [PATCH iw] phy: Allow set netns by fd
-Date: Sat, 14 Feb 2015 09:33:12 +0200
-Message-Id: <1423899192-4315-1-git-send-email-vadim4j@gmail.com> (sfid-20150214_084422_521515_CB673939)
+	Mon, 9 Feb 2015 11:04:01 -0500
+Message-ID: <54D8DA6F.7040805@candelatech.com> (sfid-20150209_170405_809814_FFE07904)
+Date: Mon, 09 Feb 2015 08:03:59 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matti Laakso <malaakso@elisanet.fi>
+Subject: Re: [RFT] ath10k: restart fw on tx-credit timeout
+References: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com>	<54D4E89A.7040602@candelatech.com> <CA+BoTQ=HqyGKOBdOmpWOn_VjH1UTWF9nN_PE0uanaGsdeJmB6Q@mail.gmail.com>
+In-Reply-To: <CA+BoTQ=HqyGKOBdOmpWOn_VjH1UTWF9nN_PE0uanaGsdeJmB6Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vadim Kochan <vadim4j@gmail.com>
 
-Added possibility to change network namespace
-for phy device by network namespace name from
-/var/run/netns or by absolute file path:
 
-iw phy XXX set netns name <nsname>
+On 02/08/2015 10:24 PM, Michal Kazior wrote:
+> On 6 February 2015 at 17:15, Ben Greear <greearb@candelatech.com> wrote:
+>> On 02/06/2015 04:05 AM, Michal Kazior wrote:
+>>>
+>>> It makes little sense to continue and let
+>>> firmware-host state become inconsistent if a WMI
+>>> command can't be submitted to firmware.
+>>>
+>>> This effectively prevents after-affects of
+>>> tx-credit starvation bug which include spurious
+>>> sta kickout events and inability to associate new
+>>> stations after some time when acting as AP.
+>>>
+>>> This should also speed up recovery/teardown in
+>>> some cases when firmware stops responding for some
+>>> reason.
+>>
+>>
+>> I have not seen a WMI timeout since I added keep-alive
+>> and CE polling in my firmware, but the patch looks OK
+>> to me.
+>
+> This is mainly aimed at the tx-credit starvation due to mgmt-tx being
+> stuck on client powersave buffering.
+>
+>
+>> You might add something about 'WMI' in that warning
+>> message to make it more clear what is not being
+>> responsive.
+>
+> Good point.
+>
+>
+>> At least in my tests, I could continue
+>> to receive network traffic while WMI was blocked.
+>
+> Yeah. Traffic works with the tx-credit starvation as well but what
+> good is this if you have inconsistent driver-firmware state after
+> failing to send a few commands?
 
-iw tries to open fd of given nsname from /var/run/netns
-or by absoute path if nsname contains "/".
+I just mention it because someone debugging the system might
+wonder why the firmware is 'locked up' while it is still passing traffic.
 
-Signed-off-by: Vadim Kochan <vadim4j@gmail.com>
----
- phy.c | 55 ++++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 46 insertions(+), 9 deletions(-)
+I agree with your patch in general.
 
-diff --git a/phy.c b/phy.c
-index aab462d..271c9d9 100644
---- a/phy.c
-+++ b/phy.c
-@@ -2,6 +2,9 @@
- #include <errno.h>
- #include <net/if.h>
- #include <strings.h>
-+#include <sys/param.h>
-+#include <sys/stat.h>
-+#include <fcntl.h>
- 
- #include <netlink/genl/genl.h>
- #include <netlink/genl/family.h>
-@@ -296,6 +299,24 @@ COMMAND(set, retry, "[short <limit>] [long <limit>]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_retry,
- 	"Set retry limit.");
- 
-+#ifndef NETNS_RUN_DIR
-+#define NETNS_RUN_DIR "/var/run/netns"
-+#endif
-+int netns_get_fd(const char *name)
-+{
-+	char pathbuf[MAXPATHLEN];
-+	const char *path, *ptr;
-+
-+	path = name;
-+	ptr = strchr(name, '/');
-+	if (!ptr) {
-+		snprintf(pathbuf, sizeof(pathbuf), "%s/%s",
-+			NETNS_RUN_DIR, name );
-+		path = pathbuf;
-+	}
-+	return open(path, O_RDONLY);
-+}
-+
- static int handle_netns(struct nl80211_state *state,
- 			struct nl_cb *cb,
- 			struct nl_msg *msg,
-@@ -303,26 +324,42 @@ static int handle_netns(struct nl80211_state *state,
- 			enum id_input id)
- {
- 	char *end;
-+	int fd;
- 
--	if (argc != 1)
-+	if (argc < 1 || !*argv[0])
- 		return 1;
- 
--	if (!*argv[0])
-+	if (argc == 1) {
-+		NLA_PUT_U32(msg, NL80211_ATTR_PID,
-+				strtoul(argv[0], &end, 10));
-+		if (*end != '\0') {
-+			printf("Invalid parameter: pid(%s)\n", argv[0]);
-+			return 1;
-+		}
-+		return 0;
-+	}
-+
-+	if (argc != 2 || strcmp(argv[0], "name"))
- 		return 1;
- 
--	NLA_PUT_U32(msg, NL80211_ATTR_PID,
--		    strtoul(argv[0], &end, 10));
-+	if ((fd = netns_get_fd(argv[1])) >= 0) {
-+		NLA_PUT_U32(msg, NL80211_ATTR_NETNS_FD, fd);
-+		return 0;
-+	} else {
-+		printf("Invalid parameter: nsname(%s)\n", argv[0]);
-+	}
- 
--	if (*end != '\0')
--		return 1;
-+	return 1;
- 
--	return 0;
-  nla_put_failure:
- 	return -ENOBUFS;
- }
--COMMAND(set, netns, "<pid>",
-+COMMAND(set, netns, "{ <pid> | name <nsname> }",
- 	NL80211_CMD_SET_WIPHY_NETNS, 0, CIB_PHY, handle_netns,
--	"Put this wireless device into a different network namespace");
-+	"Put this wireless device into a different network namespace:\n"
-+	"    <pid>    - change network namespace by process id\n"
-+	"    <nsname> - change network namespace by name from "NETNS_RUN_DIR"\n"
-+	"               or by absolute path (man ip-netns)\n");
- 
- static int handle_coverage(struct nl80211_state *state,
- 			struct nl_cb *cb,
+If it is just powersave issue, could you force (overriding wmi tx-credits limit)
+a flush at the 1 second mark and hope it recovers by 3 second timeout?
+
+Thanks,
+Ben
+
 -- 
-2.2.2
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
