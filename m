@@ -1,228 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:55519 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754015AbbBJKdu convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33652 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756140AbbBIXDg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 05:33:50 -0500
-Received: by mail-wg0-f43.google.com with SMTP id n12so10981467wgh.2
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2015 02:33:48 -0800 (PST)
+	Mon, 9 Feb 2015 18:03:36 -0500
+Message-ID: <54D93A88.8090609@codeaurora.org> (sfid-20150210_000339_831745_30504983)
+Date: Mon, 09 Feb 2015 14:54:00 -0800
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1423494690.31870.189.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	<1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-	<1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
-	<1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
-	<1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423230785.31870.131.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkazCOin7VWLfrHUjtgKDPV6T+sFsk5FPS7D-morr4FZQ@mail.gmail.com>
-	<CA+BoTQn3KRym0qCJ+fLav5LQgjfiN_-Eqz0xPSc2eXJ-ijNjQw@mail.gmail.com>
-	<1423494690.31870.189.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Tue, 10 Feb 2015 11:33:48 +0100
-Message-ID: <CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com> (sfid-20150210_113400_003683_520989B4)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Eyal Perry <eyalpe@dev.mellanox.co.il>
-Content-Type: text/plain; charset=UTF-8
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] ath10k: Increase copy engine entries for rx wmi
+References: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com> <1423460814-2767-2-git-send-email-rmanohar@qti.qualcomm.com>
+In-Reply-To: <1423460814-2767-2-git-send-email-rmanohar@qti.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 February 2015 at 16:11, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Mon, 2015-02-09 at 14:47 +0100, Michal Kazior wrote:
-[...]
-> This is not what I suggested.
+
+On 02/08/2015 09:46 PM, Rajkumar Manoharan wrote:
+> Having lower number of copy engine entries for target to host
+> WMI ring is causing drops in receiving management frames. This
+> issue is observed during max clients (128 clients) stress testing.
+> While bursting deauthentication frames from simulated clients,
+> approx. 70% of frames are getting dropped due to lower ring entries.
 >
-> If you test this on any other network device, you'll have
-> sk->sk_tx_completion_delay_us == 0
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/pci.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 >
-> amount = 0 * (sk->sk_pacing_rate >> 10); --> 0
-> limit = max(2 * skb->truesize, amount >> 10); --> 2 * skb->truesize
-
-You're right. Sorry for mixing up.
-
-
-> So non TSO/GSO NIC will not be able to queue more than 2 MSS (one MSS
-> per skb)
->
-> Then if you store only the last tx completion, you have the possibility
-> of having a last packet of a train (say a retransmit) to make it very
-> low.
->
-> Ideally the formula would be in TCP something very fast to compute :
->
-> amount = (sk->sk_pacing_rate >> 10) + sk->tx_completion_delay_cushion;
-> limit = max(2 * skb->truesize, amount);
-> limit = min_t(u32, limit, sysctl_tcp_limit_output_bytes);
->
-> So a 'problematic' driver would have to do the math (64 bit maths) like
-> this :
->
->
-> sk->tx_completion_delay_cushion = ewma_tx_delay * sk->sk_pacing_rate;
-
-Hmm. So I've done like you suggested (hopefully I didn't mix anything
-up this time around).
-
-I now get pre-regression performance, ~250mbps on 1 flow, 600mbps on 5
-flows (vs 250mbps whatever number of flows).
-
-
-Michał
-
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c
-b/drivers/net/wireless/ath/ath10k/core.c
-index 367e896..a29111c 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -18,6 +18,7 @@
- #include <linux/module.h>
- #include <linux/firmware.h>
- #include <linux/of.h>
-+#include <linux/average.h>
-
- #include "core.h"
- #include "mac.h"
-@@ -1423,6 +1424,7 @@ struct ath10k *ath10k_core_create(size_t
-priv_size, struct device *dev,
-        init_dummy_netdev(&ar->napi_dev);
-        ieee80211_napi_add(ar->hw, &ar->napi, &ar->napi_dev,
-                           ath10k_core_napi_dummy_poll, 64);
-+       ewma_init(&ar->tx_delay_us, 16384, 8);
-
-        ret = ath10k_debug_create(ar);
-        if (ret)
-diff --git a/drivers/net/wireless/ath/ath10k/core.h
-b/drivers/net/wireless/ath/ath10k/core.h
-index 3be3a59..34f6d78 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -24,6 +24,7 @@
- #include <linux/pci.h>
- #include <linux/uuid.h>
- #include <linux/time.h>
-+#include <linux/average.h>
-
- #include "htt.h"
- #include "htc.h"
-@@ -82,6 +83,7 @@ struct ath10k_skb_cb {
-        dma_addr_t paddr;
-        u8 eid;
-        u8 vdev_id;
-+       ktime_t stamp;
-
-        struct {
-                u8 tid;
-@@ -625,6 +627,7 @@ struct ath10k {
-
-        struct net_device napi_dev;
-        struct napi_struct napi;
-+       struct ewma tx_delay_us;
-
- #ifdef CONFIG_ATH10K_DEBUGFS
-        struct ath10k_debug debug;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c
-b/drivers/net/wireless/ath/ath10k/mac.c
-index 15e47f4..5efb2a7 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2620,6 +2620,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
-        if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
-                ath10k_dbg(ar, ATH10K_DBG_MAC,
-"IEEE80211_TX_CTL_NO_CCK_RATE\n");
-
-+       ATH10K_SKB_CB(skb)->stamp = ktime_get();
-        ATH10K_SKB_CB(skb)->htt.is_offchan = false;
-        ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
-        ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c
-b/drivers/net/wireless/ath/ath10k/txrx.c
-index 3f00cec..0f5f0f2 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -15,6 +15,8 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
-
-+#include <net/sock.h>
-+#include <linux/average.h>
- #include "core.h"
- #include "txrx.h"
- #include "htt.h"
-@@ -82,6 +84,16 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
-
-        ath10k_report_offchan_tx(htt->ar, msdu);
-
-+       if (msdu->sk) {
-+               ewma_add(&ar->tx_delay_us,
-+                        ktime_to_ns(ktime_sub(ktime_get(), skb_cb->stamp)) /
-+                        NSEC_PER_USEC);
-+
-+               ACCESS_ONCE(msdu->sk->sk_tx_completion_delay_cushion) =
-+                               (ewma_read(&ar->tx_delay_us) *
-+                                msdu->sk->sk_pacing_rate) >> 20;
-+       }
-+
-        info = IEEE80211_SKB_CB(msdu);
-        memset(&info->status, 0, sizeof(info->status));
-        trace_ath10k_txrx_tx_unref(ar, tx_done->msdu_id);
-diff --git a/include/net/sock.h b/include/net/sock.h
-index 2210fec..6772543 100644
---- a/include/net/sock.h
-+++ b/include/net/sock.h
-@@ -391,6 +391,7 @@ struct sock {
-        gfp_t                   sk_allocation;
-        u32                     sk_pacing_rate; /* bytes per second */
-        u32                     sk_max_pacing_rate;
-+       u32                     sk_tx_completion_delay_cushion;
-        netdev_features_t       sk_route_caps;
-        netdev_features_t       sk_route_nocaps;
-        int                     sk_gso_type;
-diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
-index 65caf8b..526a568 100644
---- a/net/ipv4/tcp_output.c
-+++ b/net/ipv4/tcp_output.c
-@@ -1996,6 +1996,7 @@ static bool tcp_write_xmit(struct sock *sk,
-unsigned int mss_now, int nonagle,
-        max_segs = tcp_tso_autosize(sk, mss_now);
-        while ((skb = tcp_send_head(sk))) {
-                unsigned int limit;
-+               unsigned int amount;
-
-                tso_segs = tcp_init_tso_segs(sk, skb, mss_now);
-                BUG_ON(!tso_segs);
-@@ -2053,7 +2054,9 @@ static bool tcp_write_xmit(struct sock *sk,
-unsigned int mss_now, int nonagle,
-                 * of queued bytes to ensure line rate.
-                 * One example is wifi aggregation (802.11 AMPDU)
-                 */
--               limit = max(2 * skb->truesize, sk->sk_pacing_rate >> 10);
-+               amount = (sk->sk_pacing_rate >> 10) +
-+                        sk->sk_tx_completion_delay_cushion;
-+               limit = max(2 * skb->truesize, amount);
-                limit = min_t(u32, limit, sysctl_tcp_limit_output_bytes);
-
-                if (atomic_read(&sk->sk_wmem_alloc) > limit) {
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c
+> b/drivers/net/wireless/ath/ath10k/pci.c
+> index e6972b0..f3174a6 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -113,7 +113,7 @@ static const struct ce_attr host_ce_config_wlan[] = {
+>   		.flags = CE_ATTR_FLAGS,
+>   		.src_nentries = 0,
+>   		.src_sz_max = 2048,
+> -		.dest_nentries = 32,
+> +		.dest_nentries = 128,
+>   	},
+>   
+>   	/* CE3: host->target WMI */
+> @@ -183,7 +183,7 @@ static const struct ce_pipe_config
+> target_ce_config_wlan[] = {
+>   	{
+>   		.pipenum = __cpu_to_le32(2),
+>   		.pipedir = __cpu_to_le32(PIPEDIR_IN),
+> -		.nentries = __cpu_to_le32(32),
+> +		.nentries = __cpu_to_le32(64),
+Could you explain why the value of nentries are different?
+>   		.nbytes_max = __cpu_to_le32(2048),
+>   		.flags = __cpu_to_le32(CE_ATTR_FLAGS),
+>   		.reserved = __cpu_to_le32(0),
+Thanks,
+Peter
