@@ -1,73 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:46781 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbbBUPxB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Feb 2015 10:53:01 -0500
-Received: by lbjf15 with SMTP id f15so11390212lbj.13
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2015 07:53:00 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH 1/3] cfg80211: add VHT support for IBSS
-Date: Sat, 21 Feb 2015 16:52:39 +0100
-Message-Id: <1424533961-3869-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150221_165310_049279_5DFCD02F)
+Received: from mga14.intel.com ([192.55.52.115]:57546 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755360AbbBIEt1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Feb 2015 23:49:27 -0500
+Message-ID: <54D83C52.9000403@linux.intel.com> (sfid-20150209_054945_532061_4C6FC715)
+Date: Mon, 09 Feb 2015 12:49:22 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: brudley@broadcom.com, Franky Lin <frankyl@broadcom.com>,
+	meuleman@broadcom.com, Kalle Valo <kvalo@codeaurora.org>,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+References: <54C5AA8C.4010005@linux.intel.com> <54D35545.7010600@linux.intel.com> <54D35814.4070503@broadcom.com>
+In-Reply-To: <54D35814.4070503@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add NL80211_EXT_FEATURE_VHT_IBSS flag and VHT
-support for IBSS.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- include/uapi/linux/nl80211.h |  2 ++
- net/wireless/nl80211.c       | 14 ++++++++++++--
- 2 files changed, 14 insertions(+), 2 deletions(-)
+I have re-sent the patch with the subject "[PATCH v2] brcmfmac: avoid duplicated suspend/resume operation" in another mail.
+If this patch can be accepted, please tell me.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 68b294e..a7ce571 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4327,11 +4327,13 @@ enum nl80211_feature_flags {
- 
- /**
-  * enum nl80211_ext_feature_index - bit index of extended features.
-+ * @NL80211_EXT_FEATURE_VHT_IBSS: This driver supports IBSS with VHT datarates.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-  */
- enum nl80211_ext_feature_index {
-+	NL80211_EXT_FEATURE_VHT_IBSS,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 454d7a0..472e8f5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7259,8 +7259,18 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		break;
- 	case NL80211_CHAN_WIDTH_20:
- 	case NL80211_CHAN_WIDTH_40:
--		if (rdev->wiphy.features & NL80211_FEATURE_HT_IBSS)
--			break;
-+		if (!(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
-+			return -EINVAL;
-+		break;
-+	case NL80211_CHAN_WIDTH_80:
-+	case NL80211_CHAN_WIDTH_80P80:
-+	case NL80211_CHAN_WIDTH_160:
-+		if (!(rdev->wiphy.features & NL80211_FEATURE_HT_IBSS))
-+			return -EINVAL;
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_VHT_IBSS))
-+			return -EINVAL;
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
--- 
-1.9.1
+Thanks,
+Zhonghui
+
+On 2015/2/5 19:46, Arend van Spriel wrote:
+> On 02/05/15 12:34, Fu, Zhonghui wrote:
+>> What comments about the new patch?  Can this new patch be accepted?
+>
+> Hi Zhonghui
+>
+> Last reply from Kalle was that it did not apply to his tree and recommended to use version numbering so "[PATCH V2] <subject>".
+>
+>> Thanks,
+>> Zhonghui
+>>
+>> On 2015/1/26 10:46, Fu, Zhonghui wrote:
+>>>  From ff39ed4af9f1c50358fe92ec4c8eaac9db183e00 Mon Sep 17 00:00:00 2001
+>>> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>> Date: Mon, 26 Jan 2015 10:13:21 +0800
+>>> Subject: [PATCH] brcmfmac: avoid duplicated suspend/resume operation
+>>>
+>>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>>> twice suspend/resume operations for one WiFi chip to do
+>>> the same things. This patch avoid this case.
+>>>
+>>> Acked-by: Arend van Spriel<arend@broadcom.com>
+>>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>>> ---
+> And when using version info a change log here is even better. Although admittedly I lost track which version this would be ;-)
+>
+> Regards,
+> Arend
+> ---
+>>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   17 +++++++++++++++--
+>>>   1 files changed, 15 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> index 9880dae..618b545 100644
+>>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>>> @@ -1139,11 +1139,17 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+>>>   static int brcmf_ops_sdio_suspend(struct device *dev)
+>>>   {
+>>>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>>> +    struct brcmf_sdio_dev *sdiodev;
+>>>       mmc_pm_flag_t sdio_flags;
+>>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>>
+>>>       brcmf_dbg(SDIO, "Enter\n");
+>>>
+>>> +    if (func->num == 2)
+>>> +        return 0;
+>>> +
+>>> +    sdiodev = bus_if->bus_priv.sdio;
+>>> +
+>>>       atomic_set(&sdiodev->suspend, true);
+>>>
+>>>       if (sdiodev->wowl_enabled) {
+>>> @@ -1164,9 +1170,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>>>   static int brcmf_ops_sdio_resume(struct device *dev)
+>>>   {
+>>>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>>> +    struct brcmf_sdio_dev *sdiodev;
+>>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>>
+>>>       brcmf_dbg(SDIO, "Enter\n");
+>>> +
+>>> +    if (func->num == 2)
+>>> +        return 0;
+>>> +
+>>> +    sdiodev = bus_if->bus_priv.sdio;
+>>> +
+>>>       if (sdiodev->pdata&&  sdiodev->pdata->oob_irq_supported)
+>>>           disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>>>       brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+>>> -- 1.7.1
+>>>
+>>
+>
 
