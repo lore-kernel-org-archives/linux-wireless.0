@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49399 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755994AbbBJNta convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 08:49:30 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2015-02-07
-References: <87a90qosos.fsf@kamboji.qca.qualcomm.com>
-	<20150209.121342.1535841700027616341.davem@davemloft.net>
-Date: Tue, 10 Feb 2015 15:49:24 +0200
-In-Reply-To: <20150209.121342.1535841700027616341.davem@davemloft.net> (David
-	Miller's message of "Mon, 09 Feb 2015 12:13:42 -0800 (PST)")
-Message-ID: <8761b9op0b.fsf@kamboji.qca.qualcomm.com> (sfid-20150210_144937_224957_4970C9D1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from dedo.coelho.fi ([88.198.205.34]:52539 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933484AbbBIT33 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2015 14:29:29 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, pstew@chromium.org,
+	samueltan@chromium.org
+Date: Mon,  9 Feb 2015 21:29:15 +0200
+Message-Id: <1423510155-7449-1-git-send-email-luca@coelho.fi> (sfid-20150209_202932_753859_1F4F9AC9)
+Subject: [PATCH] nl80211: use loop index as type for net detect frequency results
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
+From: Samuel Tan <samueltan@chromium.org>
 
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Sat, 07 Feb 2015 13:40:51 +0200
->
->> There's a small conflict in drivers/net/wireless/rtlwifi/pci.c, the fix
->> is to leave the two labels like this:
->> 
->> 			schedule_work(&rtlpriv->works.lps_change_work);
->> 		}
->> end:
->> 		skb = new_skb;
->> no_new:
->> 		if (rtlpriv->use_new_trx_flow) {
->> 
->> 
->
-> That can't be the correct resolution:
->
-> drivers/net/wireless/rtlwifi/pci.c: In function ‘_rtl_pci_rx_interrupt’:
-> drivers/net/wireless/rtlwifi/pci.c:934:1: warning: label ‘end’ defined but not used [-Wunused-label]
->
-> So I've removed that label in the merge commit.
+We currently add nested members of the NL80211_ATTR_SCAN_FREQUENCIES
+as NLA_U32 attributes of type NL80211_ATTR_WIPHY_FREQ in
+cfg80211_net_detect_results. However, since there can be an arbitrary number of
+frequency results, we should use the loop index of the loop used to add the
+frequency results to NL80211_ATTR_SCAN_FREQUENCIES as the type (i.e. nla_type)
+for each result attribute, rather than a fixed type.
 
-Sorry about that, but great that you catched my mistake.
+This change is in line with how nested members are added to
+NL80211_ATTR_SCAN_FREQUENCIES in the functions nl80211_send_wowlan_nd and
+nl80211_add_scan_req.
 
+Signed-off-by: Samuel Tan <samueltan@chromium.org>
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ net/wireless/nl80211.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 454d7a0..57ab1ac 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -12520,9 +12520,7 @@ static int cfg80211_net_detect_results(struct sk_buff *msg,
+ 			}
+ 
+ 			for (j = 0; j < match->n_channels; j++) {
+-				if (nla_put_u32(msg,
+-						NL80211_ATTR_WIPHY_FREQ,
+-						match->channels[j])) {
++				if (nla_put_u32(msg, j, match->channels[j])) {
+ 					nla_nest_cancel(msg, nl_freqs);
+ 					nla_nest_cancel(msg, nl_match);
+ 					goto out;
 -- 
-Kalle Valo
+2.1.4
+
