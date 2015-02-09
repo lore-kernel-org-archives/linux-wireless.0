@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49799 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751627AbbBXKCc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:02:32 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH 2/8] NFC: NCI: Exporting NFC command and data send API
-Date: Tue, 24 Feb 2015 12:01:46 +0200
-Message-Id: <1424772112-27399-3-git-send-email-robert.dolca@intel.com> (sfid-20150224_110705_852283_2AACFF8C)
-In-Reply-To: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:59611 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236AbbBIGYb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2015 01:24:31 -0500
+Received: by mail-wi0-f181.google.com with SMTP id fb4so14662866wid.2
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 22:24:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <54D4E89A.7040602@candelatech.com>
+References: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com>
+	<54D4E89A.7040602@candelatech.com>
+Date: Mon, 9 Feb 2015 07:24:30 +0100
+Message-ID: <CA+BoTQ=HqyGKOBdOmpWOn_VjH1UTWF9nN_PE0uanaGsdeJmB6Q@mail.gmail.com> (sfid-20150209_072435_109204_FA12D939)
+Subject: Re: [RFT] ath10k: restart fw on tx-credit timeout
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matti Laakso <malaakso@elisanet.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-nci_send_cmd was exported in order to send commands to the device from
-the driver. For the firmware update the driver may use nci_send_data.
+On 6 February 2015 at 17:15, Ben Greear <greearb@candelatech.com> wrote:
+> On 02/06/2015 04:05 AM, Michal Kazior wrote:
+>>
+>> It makes little sense to continue and let
+>> firmware-host state become inconsistent if a WMI
+>> command can't be submitted to firmware.
+>>
+>> This effectively prevents after-affects of
+>> tx-credit starvation bug which include spurious
+>> sta kickout events and inability to associate new
+>> stations after some time when acting as AP.
+>>
+>> This should also speed up recovery/teardown in
+>> some cases when firmware stops responding for some
+>> reason.
+>
+>
+> I have not seen a WMI timeout since I added keep-alive
+> and CE polling in my firmware, but the patch looks OK
+> to me.
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
----
- net/nfc/nci/core.c | 1 +
- net/nfc/nci/data.c | 1 +
- 2 files changed, 2 insertions(+)
+This is mainly aimed at the tx-credit starvation due to mgmt-tx being
+stuck on client powersave buffering.
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index c4dd5d8..9605b9c 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -1153,6 +1153,7 @@ int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(nci_send_cmd);
- 
- /* ---- NCI TX Data worker thread ---- */
- 
-diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
-index 566466d..83acd18 100644
---- a/net/nfc/nci/data.c
-+++ b/net/nfc/nci/data.c
-@@ -203,6 +203,7 @@ free_exit:
- exit:
- 	return rc;
- }
-+EXPORT_SYMBOL(nci_send_data);
- 
- /* ----------------- NCI RX Data ----------------- */
- 
--- 
-1.9.1
 
+> You might add something about 'WMI' in that warning
+> message to make it more clear what is not being
+> responsive.
+
+Good point.
+
+
+> At least in my tests, I could continue
+> to receive network traffic while WMI was blocked.
+
+Yeah. Traffic works with the tx-credit starvation as well but what
+good is this if you have inconsistent driver-firmware state after
+failing to send a few commands?
+
+
+Michał
