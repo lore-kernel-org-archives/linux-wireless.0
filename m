@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:35216 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751272AbbBLQie (ORCPT
+Received: from mail-qa0-f50.google.com ([209.85.216.50]:64914 "EHLO
+	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759522AbbBIVH2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 11:38:34 -0500
-Received: by mail-oi0-f52.google.com with SMTP id u20so4077784oif.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2015 08:38:33 -0800 (PST)
-Message-ID: <54DCD708.3070402@lwfinger.net> (sfid-20150212_173838_152599_B29E8C98)
-Date: Thu, 12 Feb 2015 10:38:32 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 9 Feb 2015 16:07:28 -0500
+Received: by mail-qa0-f50.google.com with SMTP id f12so4676325qad.9
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 13:07:28 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?Sm9oYW5uZXMgTMO2dGhiZXJn?= <johannes@kyriasis.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce kernel panics since 3.17(?)
-References: <20150212121057.GA1804@leeloo.kyriasis.com>
-In-Reply-To: <20150212121057.GA1804@leeloo.kyriasis.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAJAp7OhcFTuYfc7JOKW1SrVRbucuSWg5jcFaoVnSDgBxsyo2ng@mail.gmail.com>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+	<20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net>
+	<CAJAp7OhcFTuYfc7JOKW1SrVRbucuSWg5jcFaoVnSDgBxsyo2ng@mail.gmail.com>
+Date: Tue, 10 Feb 2015 05:07:28 +0800
+Message-ID: <CAAfg0W6dPupGLgwDF5FtNqEFvC4Y+GvFBAmXWcUQwXr2y6KugQ@mail.gmail.com> (sfid-20150209_220732_643856_7D77F026)
+Subject: Re: [PATCH 6/7] net: wireless: wcn36xx: remove powersaving for wcn3620
+From: Andy Green <andy.green@linaro.org>
+To: Bjorn Andersson <bjorn@kryo.se>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/12/2015 06:10 AM, Johannes Löthberg wrote:
-> Since sometime around version 3.16 or 3.17 I've been getting a lot of occasional
-> kernel panics related to my wifi driver. My laptop has a Realtek RTL8188CE
-> wireless card and uses the rtl8192ce driver.
+On 10 February 2015 at 01:54, Bjorn Andersson <bjorn@kryo.se> wrote:
+> On Sat, Jan 17, 2015 at 9:11 PM, Andy Green <andy.green@linaro.org> wrote:
+>> WCN3620 powersaving mode is not stable.  Disable it if we're
+>> on a wcn3620 chip type.
+>>
+>> Signed-off-by: Andy Green <andy.green@linaro.org>
+>> ---
+>>  drivers/net/wireless/ath/wcn36xx/main.c |    4 ++++
+>>  1 file changed, 4 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+>> index c4178c7..569d45b 100644
+>> --- a/drivers/net/wireless/ath/wcn36xx/main.c
+>> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
+>> @@ -924,6 +924,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+>>                 IEEE80211_HW_AMPDU_AGGREGATION |
+>>                 IEEE80211_HW_TIMING_BEACON_ONLY;
+>>
+>> +       /* 3620 powersaving currently unstable */
+>> +       if (wcn->chip_version == WCN36XX_CHIP_3620)
+>> +               wcn->hw->flags &= ~IEEE80211_HW_SUPPORTS_PS;
+>> +
 >
-> I have pictures of what I think is two identical kernel panics, a couple of days
-> apart:
+> Hi Andy,
 >
-> https://lh4.googleusercontent.com/yjwOnrDmioCwuC8FqIXlKMiBTOXddLyJkWTiInJoX2o=w421-h569-no
->
-> https://lh3.googleusercontent.com/-xM-1wSsVu4c/VKxDnlkgBbI/AAAAAAAAIng/HxtqgHgglHY/w421-h569-no/IMG_20150106_212020.jpg
->
->
-> It only seems to happen when I have several days of uptime on my laptop and just
-> use sleep all the time instead of shutting it down.
->
-> Also I have a picture of a kernel panic that is different from the previous ones:
->
-> https://lh3.googleusercontent.com/-Hj06Csglpa0/VKrI1al6QbI/AAAAAAAAImk/VzhmN-dfSB0/w657-h486-no/IMG_20150105_182236.jpg
->
->
-> Not sure how to debug it really, but figured that sending in a report would be
-> worth a shot.
->
+> I have the same problem (Data Abort Exception in wcnss) on 3680, this
+> with my wip smd code and a hacked up remoteproc-pil. I haven't spent
+> any effort on debugging this, but it looks like it's something related
+> to what we have ported to mainline (or lack thereof) rather than a
+> 3620 specific issue.
 
-What kernel were you running when you made the photos? Use the command 'uname 
--r'. When I get that information, I can then use the dump trace to determine the 
-locations of the oops.
+Makes sense since I only have 3620, I assumed it's related to that.
 
-Larry
+However he can work for a while with powersaving on, but ping
+latencies are +600-800ms and he's shaky.
 
+Later I found something mac80211 generic scan preparation or post-scan
+code (for scan initiated by wpa_supplicant) is able to stop wlan
+traffic after a few goes even if the actual scan mode smd is not sent.
 
+At that point I think a nice solution would be a donation of time from
+guys who specialize in wcn for a living to come and hand out a pony or
+two...
+
+-Andy
+
+> Regards,
+> Bjorn
