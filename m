@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35252 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752120AbbBWWBi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 17:01:38 -0500
-Message-ID: <1424728896.1899.4.camel@sipsolutions.net> (sfid-20150223_230144_756013_7AD36172)
-Subject: Re: [RFC] mac80211: use rhashtable for station table
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-Date: Mon, 23 Feb 2015 23:01:36 +0100
-In-Reply-To: <1424728360.1899.3.camel@sipsolutions.net> (sfid-20150223_225246_802504_8A0F3B9D)
-References: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
-	 <CAHNKnsSm1GOUMONPB4oB1tJ-OeWOG1XOhw=HEY8LPXhDEHEjbg@mail.gmail.com>
-	 <1424709235.3075.22.camel@sipsolutions.net>
-	 <CAHNKnsR0j1u6Eu2e19pzcu2Rw7nZ6D6BKV-cRg9KTwoKO74fdQ@mail.gmail.com>
-	 (sfid-20150223_222714_678902_C1EA88E2) <1424728360.1899.3.camel@sipsolutions.net>
-	 (sfid-20150223_225246_802504_8A0F3B9D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21073 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932227AbbBIHQN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2015 02:16:13 -0500
+From: "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	"Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+Subject: RE: [PATCH] cfg80211: add debugfs VHT80 allow map
+Date: Mon, 9 Feb 2015 07:16:02 +0000
+Message-ID: <1423466162219.33842@qti.qualcomm.com> (sfid-20150209_081621_814091_E7DED96D)
+References: <1423204546-22872-1-git-send-email-arnagara@qti.qualcomm.com>,<1423249860.2037.28.camel@sipsolutions.net>
+In-Reply-To: <1423249860.2037.28.camel@sipsolutions.net>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-02-23 at 22:52 +0100, Johannes Berg wrote:
+Hi Johannes,
 
-> We also can't rely on 4-byte alignment though, so perhaps we should do
-> something like
-> 
-> u32 sta_info_hash(void *addr, u32 len, u32 seed)
-> {
-> 	u16 *a = addr;
-> 
-> 	return jhash_3words(a[0], a[1], a[2], seed);
-> }
+I see your point here. I will upload one patch for printing this info from iw.
 
-Or better do
+I will also write another patch for removing HT40 one?
 
-	return jhash_2words(addr[0], (addr[1] << 16) | addr[2], seed);
+Thanks,
+Ashok
+________________________________________
+From: Johannes Berg <johannes@sipsolutions.net>
+Sent: Saturday, February 7, 2015 12:41 AM
+To: Nagarajan, Ashok Raj
+Cc: linux-wireless@vger.kernel.org; Manoharan, Rajkumar; Thiagarajan, Vasanthakumar
+Subject: Re: [PATCH] cfg80211: add debugfs VHT80 allow map
 
-since I have no idea how the missing high 16 bits would behave.
-(we can rely on 2-byte alignment, but not 4-byte)
+On Fri, 2015-02-06 at 12:05 +0530, Ashok Raj Nagarajan wrote:
+> Here is a output of this debugfs entry
+>
+> root@OpenWrt:/# cat /sys/kernel/debug/ieee80211/phy0/vht80allow_map
+> 2412 VHT80 N
+
+I'm not sure I see much point in this, in fact we could remove the HT40
+one?
+
+We expose this data to userspace, so you could change 'iw' to print it
+when dumping the list of channels in 'iw list' or similar.
 
 johannes
 
