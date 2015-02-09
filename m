@@ -1,105 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:34940 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753991AbbBAXRe (ORCPT
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:58856 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755818AbbBIWRX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2015 18:17:34 -0500
-Received: by mail-ie0-f174.google.com with SMTP id vy18so14162982iec.5
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 15:17:33 -0800 (PST)
-Received: from mail-ie0-f177.google.com (mail-ie0-f177.google.com. [209.85.223.177])
-        by mx.google.com with ESMTPSA id x3sm5065087ioi.34.2015.02.01.15.17.32
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
-        Sun, 01 Feb 2015 15:17:32 -0800 (PST)
-Received: by mail-ie0-f177.google.com with SMTP id vy18so14123074iec.8
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 15:17:32 -0800 (PST)
+	Mon, 9 Feb 2015 17:17:23 -0500
+Received: by mail-ig0-f171.google.com with SMTP id h15so19702481igd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 14:17:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <wrfjfvap1bk6.fsf@redhat.com>
-References: <1422717177-5865-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
-	<wrfjfvap1bk6.fsf@redhat.com>
-Date: Mon, 2 Feb 2015 00:17:32 +0100
-Message-ID: <CAKXHbyP10uukO7Y54OBTvWPUZ6RiVpG=8BcppzxfnJOMg+Mobw@mail.gmail.com> (sfid-20150202_001749_992598_D8178EEC)
-Subject: Re: [PATCH] staging: rtl8723au: hal: usb_ops_linux: Removed variables
- that is never used
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joe Perches <joe@perches.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+In-Reply-To: <54D92DFC.1080604@broadcom.com>
+References: <CAEZVCP4bNmfnHH=Ksi6wMQoqdZGbprUH5X_VA41GRf9=h2MT1A@mail.gmail.com>
+ <54D92DFC.1080604@broadcom.com>
+From: Steeve Morin <steeve.morin@gmail.com>
+Date: Mon, 9 Feb 2015 23:17:02 +0100
+Message-ID: <CAEZVCP7+gTqJJUNQuUDTGWG1BQ4_XY7Q79Cg-2daVourfasvEw@mail.gmail.com> (sfid-20150209_231727_025801_8F114275)
+Subject: Re: brcmfmac + AP6120 (brcm43362) doesn't connect to WPA2 AP
+ (unprotected ok)
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-02-02 0:01 GMT+01:00 Jes Sorensen <Jes.Sorensen@redhat.com>:
-> Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se> writes:
->> Variable was assigned a value that was never used.
->> I have also removed all the code that thereby serves no purpose.
+Thanks for answering.
+
+I'm using connmanctl [1]
+
+The funny thing is trying to make this gist, I tried and it connected
+succesfully....
+Could it be a race somewhere?
+
+[1] https://gist.github.com/steeve/10a9a643476cea99abf4#file-004-connmanctl
+
+On 9 February 2015 at 23:00, Arend van Spriel <arend@broadcom.com> wrote:
+> On 02/09/15 18:57, Steeve Morin wrote:
 >>
->> This was found using a static code analysis program called cppcheck
+>> Hi linux-wireless,
 >>
->> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
->> ---
->>  drivers/staging/rtl8723au/hal/usb_ops_linux.c |    9 +++------
->>  1 file changed, 3 insertions(+), 6 deletions(-)
+>> I'm running brcmfmac from backports-3.19-rc1-1 on linux 3.10. running
+>> on an arm Amlogic S805 (cortex-a5, arm7) board (CX-S859).
 >>
->> diff --git a/drivers/staging/rtl8723au/hal/usb_ops_linux.c b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
->> index a6d16ad..4ae0a8a 100644
->> --- a/drivers/staging/rtl8723au/hal/usb_ops_linux.c
->> +++ b/drivers/staging/rtl8723au/hal/usb_ops_linux.c
->> @@ -26,11 +26,10 @@ u8 rtl8723au_read8(struct rtw_adapter *padapter, u16 addr)
->>  {
->>       struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
->>       struct usb_device *udev = pdvobjpriv->pusbdev;
->> -     int len;
->>       u8 data;
+>> I had to apply multiple custom patches [1]:
+>> - Make sure the wifi chip is on via custom GPIO [1]
+>> - Remove a problematic piece of code related to power manager (will
+>> look into it later) [1]
+>> - Mix the mmc->max_blk_count on the host (would cause a BUG_ON
+>> assertion later on) [2] [3]
 >>
->>       mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
->> -     len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->> +     usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->>                             REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
->>                             addr, 0, &pdvobjpriv->usb_buf.val8, sizeof(data),
->>                             RTW_USB_CONTROL_MSG_TIMEOUT);
->> @@ -45,11 +44,10 @@ u16 rtl8723au_read16(struct rtw_adapter *padapter, u16 addr)
->>  {
->>       struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
->>       struct usb_device *udev = pdvobjpriv->pusbdev;
->> -     int len;
->>       u16 data;
+>> After that, I am able to modprobe brcmfmac see wlan0.
+>> The interface correctly scans for wifi aps, and I can connect to
+>> unprotected ones.
 >>
->>       mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
->> -     len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->> +     usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->>                             REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
->>                             addr, 0, &pdvobjpriv->usb_buf.val16, sizeof(data),
->>                             RTW_USB_CONTROL_MSG_TIMEOUT);
->> @@ -64,11 +62,10 @@ u32 rtl8723au_read32(struct rtw_adapter *padapter, u16 addr)
->>  {
->>       struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
->>       struct usb_device *udev = pdvobjpriv->pusbdev;
->> -     int len;
->>       u32 data;
+>> It fails, however, to connect to WPA/WPA2 protected aps. I have
+>> attached a debug log obtained with debug=0xffffff [4]
+>> I don't see any errors in it though...
 >>
->>       mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
->> -     len = usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->> +     usb_control_msg(udev, usb_rcvctrlpipe(udev, 0),
->>                             REALTEK_USB_VENQT_CMD_REQ, REALTEK_USB_VENQT_READ,
->>                             addr, 0, &pdvobjpriv->usb_buf.val32, sizeof(data),
->>                             RTW_USB_CONTROL_MSG_TIMEOUT);
+>> Would anyone of you guys have any idea why ?
 >
-> Again, fix the formatting if you want to make this change.
 >
-> NACK
+> In the log I don't see any connect attempt. Only seeing a scan completing.
+> So how do you try to connect?
 >
-> Jes
+> Regards,
+> Arend
+>
+>
+>> Thanks a lot,
+>>
+>> [1]
+>> https://gist.github.com/steeve/10a9a643476cea99abf4#file-backports-power-on-wifi-sdio-patch
+>> [2]
+>> https://gist.github.com/steeve/10a9a643476cea99abf4#file-fix-block-size-patch
+>> [3]
+>> https://github.com/codesnake/linux-amlogic/blob/master/drivers/amlogic/mmc/aml_sdio.c#L317
+>> [4] https://gist.github.com/steeve/10a9a643476cea99abf4#file-003-dmesg-log
+>
+>
 
 
-Hi
 
-I am sorry, please ignore this.
-I will not send any more patches.
-
-Kind regards
-Rickard Strandqvist
+-- 
+Steeve Morin
+twitter.com/steeve
+github.com/steeve
+linkd.in/smorin
