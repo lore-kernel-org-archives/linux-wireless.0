@@ -1,80 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59436 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750777AbbB0Nop (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2015 08:44:45 -0500
-Message-ID: <1425044670.1960.3.camel@sipsolutions.net> (sfid-20150227_144453_467950_52F23C2D)
-Subject: pull-request: mac80211 2015-02-27
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 27 Feb 2015 14:44:30 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:45434 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933313AbbBIRmJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Feb 2015 12:42:09 -0500
+Received: by mail-wg0-f54.google.com with SMTP id y19so2245523wgg.13
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 09:42:08 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH RFC] bcma: use two different initcalls if built-in
+Date: Mon,  9 Feb 2015 18:42:02 +0100
+Message-Id: <1423503722-20819-1-git-send-email-zajec5@gmail.com> (sfid-20150209_184213_753063_D809E99B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is needed as we can't initialize bus during fs_initcall.
+Initialization requires SPROM which depends on NVRAM which depends on
+mtd. Since mtd, spi, nand, spi-nor use standard module_init, we have to
+do the same in bcma.
+Without this we'll try to initialize SPROM without having a ready SPROM
+proviver registered using bcma_arch_register_fallback_sprom.
 
-Please pull some fixes I've currently accumulated - including the one
-for Linus's four-way-handshake problem.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+While this patch seems to work and I can compile bcma as built-in and
+module, I'm not too proud of it. I don't really like these #if(n)def
+tricks and I'm afraid bcma_modinit may be called even if
+bcma_modinit_early failed.
 
-Let me know if there are any issues.
+Do you see any better idea of solving this?
+---
+ drivers/bcma/main.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-Thanks,
-Johannes
-
-
-The following changes since commit 6514890f7aa8dd75fa46e282a1c7a8615e86f363:
-
-  tcp: fix tcp_should_expand_sndbuf() to use tcp_packets_in_flight() (2015-02-22 23:07:11 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-02-27
-
-for you to fetch changes up to 9c1c98a3bb7b7593b60264b9a07e001e68b46697:
-
-  mac80211: Send EAPOL frames at lowest rate (2015-02-26 21:03:06 +0100)
-
-----------------------------------------------------------------
-A few patches have accumulated, among them the fix for Linus's
-four-way-handshake problem. The others are various small fixes
-for problems all over, nothing really stands out.
-
-----------------------------------------------------------------
-Bob Copeland (1):
-      mac80211_hwsim: fix error handling in tx_frame_nl
-
-Eliad Peller (1):
-      mac80211: clear sdata->radar_required
-
-Jason Abele (1):
-      cfg80211: fix n_reg_rules to match world_regdom
-
-Jiri Slaby (1):
-      mac80211/minstrel: fix !x!=0 confusion
-
-Johannes Berg (1):
-      nl80211: fix memory leak in monitor flags parsing
-
-Jouni Malinen (1):
-      mac80211: Send EAPOL frames at lowest rate
-
-Junjie Mao (1):
-      cfg80211: calls nl80211_exit on error
-
-Samuel Tan (1):
-      nl80211: use loop index as type for net detect frequency results
-
- drivers/net/wireless/mac80211_hwsim.c |  5 ++++-
- net/mac80211/chan.c                   |  5 +++++
- net/mac80211/rc80211_minstrel.c       |  2 +-
- net/mac80211/tx.c                     |  1 +
- net/wireless/core.c                   |  1 +
- net/wireless/nl80211.c                | 12 +++++-------
- net/wireless/reg.c                    |  2 +-
- 7 files changed, 18 insertions(+), 10 deletions(-)
-
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 9635f10..c394207 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -637,13 +637,25 @@ static int bcma_device_uevent(struct device *dev, struct kobj_uevent_env *env)
+ 			      core->id.rev, core->id.class);
+ }
+ 
++/* Bus has to be registered early, before any bcma driver */
++static int __init bcma_modinit_early(void)
++{
++	return bus_register(&bcma_bus_type);
++}
++#ifndef MODULE
++fs_initcall(bcma_modinit_early);
++#endif
++
++/* Initialization has to be done later with SPI/mtd/NAND/SPROM available */
+ static int __init bcma_modinit(void)
+ {
+ 	int err;
+ 
+-	err = bus_register(&bcma_bus_type);
++#ifdef MODULE
++	err = bcma_modinit_early();
+ 	if (err)
+ 		return err;
++#endif
+ 
+ 	err = bcma_host_soc_register_driver();
+ 	if (err) {
+@@ -660,7 +672,7 @@ static int __init bcma_modinit(void)
+ 
+ 	return err;
+ }
+-fs_initcall(bcma_modinit);
++module_init(bcma_modinit);
+ 
+ static void __exit bcma_modexit(void)
+ {
+-- 
+1.8.4.5
 
