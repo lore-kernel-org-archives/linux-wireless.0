@@ -1,91 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:57573 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753108AbbBXK0Q (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:59944 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933111AbbBIRyZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:26:16 -0500
-Date: Tue, 24 Feb 2015 12:26:11 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Andrew McGregor <andrewmcgr@gmail.com>
-Cc: Sujith Manoharan <sujith@msujith.org>,
-	Adrian Chadd <adrian@freebsd.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: AR9462 problems connecting again..
-Message-ID: <20150224102611.GA30806@w1.fi> (sfid-20150224_112619_938236_74F667A8)
-References: <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
- <20150223171700.GA29730@w1.fi>
- <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
- <20150223213050.GA23232@w1.fi>
- <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
- <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
- <20150223224305.GA30228@w1.fi>
- <21739.50662.902775.901924@gargle.gargle.HOWL>
- <CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com>
- <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>
+	Mon, 9 Feb 2015 12:54:25 -0500
+Received: by mail-lb0-f169.google.com with SMTP id f15so31309136lbj.0
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 09:54:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>
+In-Reply-To: <20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net>
+References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
+	<20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net>
+Date: Mon, 9 Feb 2015 09:54:23 -0800
+Message-ID: <CAJAp7OhcFTuYfc7JOKW1SrVRbucuSWg5jcFaoVnSDgBxsyo2ng@mail.gmail.com> (sfid-20150209_185429_730143_DD094C2D)
+Subject: Re: [PATCH 6/7] net: wireless: wcn36xx: remove powersaving for wcn3620
+From: Bjorn Andersson <bjorn@kryo.se>
+To: Andy Green <andy.green@linaro.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>,
+	wcn36xx <wcn36xx@lists.infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 01:29:27PM +1100, Andrew McGregor wrote:
-> Over the weekend I found a bug in minstrel-ht that might well be
-> implicated here.
-> 
-> The last retransmit rate is meant to be a 'get the packet there
-> reliably' rate; minstrel-ht doesn't do that right, and can pick a
-> fairly flaky rate instead.
-> 
-> Can't generate a proper patch right now, so this diff might not apply
-> cleanly, but the fix is simply to change 75 to 99 in the two places
-> below:
+On Sat, Jan 17, 2015 at 9:11 PM, Andy Green <andy.green@linaro.org> wrote:
+> WCN3620 powersaving mode is not stable.  Disable it if we're
+> on a wcn3620 chip type.
+>
+> Signed-off-by: Andy Green <andy.green@linaro.org>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/main.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+> index c4178c7..569d45b 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/main.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/main.c
+> @@ -924,6 +924,10 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
+>                 IEEE80211_HW_AMPDU_AGGREGATION |
+>                 IEEE80211_HW_TIMING_BEACON_ONLY;
+>
+> +       /* 3620 powersaving currently unstable */
+> +       if (wcn->chip_version == WCN36XX_CHIP_3620)
+> +               wcn->hw->flags &= ~IEEE80211_HW_SUPPORTS_PS;
+> +
 
-While this may indeed be helpful, I don't think it is sufficient for
-this EAPOL frame related issue. What I would like to see is minstrel_ht
-using a basic rate (something non-HT) at the end of the retry series for
-EAPOL frames.
+Hi Andy,
 
-The current behavior looks very suspicious to me. The early EAPOL frames
-after association are being used to probe for higher rates. This results
-in the total number of retry attempts actually getting smaller than any
-other frame, i.e., minstrel_ht seems to be using significantly _less_
-robust choices for the EAPOL frames than following "normal" data frames!
-This should really be the other way around..
+I have the same problem (Data Abort Exception in wcnss) on 3680, this
+with my wip smd code and a hacked up remoteproc-pil. I haven't spent
+any effort on debugging this, but it looks like it's something related
+to what we have ported to mainline (or lack thereof) rather than a
+3620 specific issue.
 
-As an example, I'm seeing this on 5 GHz band (with the 75 to 99 change
-in place, but behavior was more or less identical without it):
-- the first EAPOL frame (msg 2/4) getting one attempt at MCS 3, 2
-  attempts at MCS 0, 2 attempts at MCS 0 (yes, identical to the previous
-  one) with total maximum of 5 attempts
-- the second EAPOL frame (msg 4/4) getting one attempt at MCS 9, 2
-  attempts at MCS 0, 2 attempts at MCS 0 with total maximum of 5
-  attempts
-- another data frame after this: 5 attempts at MCS 9, 5 attempts at MCS
-  3, 5 attempts at MCS 3 with total maximum of 15 attempts(!!)
-
-This cannot be the best approach here.. For the
-IEEE80211_TX_CTRL_PORT_CTRL_PROTO cases, there are identified issues
-where failing to deliver the frame results is significant issues either
-in getting connected in the first place or getting disconnected if
-rekeying fails. 
-
-I'm not sure how this would be implemented cleanly in minstrel_ht or
-whether that is even the best place (i.e., rate.c could do this
-instead), but I'd like that third attempt for control port cases to be
-dropped to use a (lowish) basic rate and non-MCS at that since there may
-be some interop issues with HT MCS early during association.
-Alternatively with drivers like ath9k that support 4 rate values, it
-would also be fine to add this basic rate attempt (or well, I'd have
-multiple, say 4, such attempts) as an additional 4th entry which does
-not currently seem to get used with minstrel at all.
-
-The "(lowish) basic rate" here could be defined as 6 Mbps OFDM for 5 GHz
-band and either that or maybe even 2 Mbps or 5.5 Mbps on 2.4 GHz (if
-included by the AP in basic rate set).
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Regards,
+Bjorn
