@@ -1,63 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54814 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41018 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932208AbbBZUOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 15:14:00 -0500
-Message-ID: <1424981635.1885.35.camel@sipsolutions.net> (sfid-20150226_211405_056983_9D4656F0)
-Subject: Re: Flaky AP has bad AIFSN, so no HT/VHT....
+	id S1754628AbbBJOT1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2015 09:19:27 -0500
+Message-ID: <1423577962.2215.2.camel@sipsolutions.net> (sfid-20150210_151935_356063_C89FE6AC)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 26 Feb 2015 21:13:55 +0100
-In-Reply-To: <54EF60F5.1030506@candelatech.com> (sfid-20150226_190753_768816_FA71C63F)
-References: <54EF60F5.1030506@candelatech.com>
-	 (sfid-20150226_190753_768816_FA71C63F)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Eyal Perry <eyalpe@dev.mellanox.co.il>
+Date: Tue, 10 Feb 2015 15:19:22 +0100
+In-Reply-To: <CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com> (sfid-20150210_113400_003683_520989B4)
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+	 <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
+	 <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423230785.31870.131.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkazCOin7VWLfrHUjtgKDPV6T+sFsk5FPS7D-morr4FZQ@mail.gmail.com>
+	 <CA+BoTQn3KRym0qCJ+fLav5LQgjfiN_-Eqz0xPSc2eXJ-ijNjQw@mail.gmail.com>
+	 <1423494690.31870.189.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com>
+	 (sfid-20150210_113400_003683_520989B4)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-02-26 at 10:07 -0800, Ben Greear wrote:
+On Tue, 2015-02-10 at 11:33 +0100, Michal Kazior wrote:
 
-> It looks like their beacon has bogus AIFSN info, and sniff of the beacon does
-> show AIFSN set to 0.
+> +       if (msdu->sk) {
+> +               ewma_add(&ar->tx_delay_us,
+> +                        ktime_to_ns(ktime_sub(ktime_get(), skb_cb->stamp)) /
+> +                        NSEC_PER_USEC);
+> +
+> +               ACCESS_ONCE(msdu->sk->sk_tx_completion_delay_cushion) =
+> +                               (ewma_read(&ar->tx_delay_us) *
+> +                                msdu->sk->sk_pacing_rate) >> 20;
+> +       }
 
-Yeah this is invalid - the spec requires at least 2.
-
-> Kernel dmesg logs:
-> 
-> wlan0: authenticated at: 1424969385.456415
-> wlan0: AP has invalid WMM params (AIFSN=0 for ACI 0), disabling WMM
-
-and then since we disable WMM we also can't do HT or VHT since they both
-require WMM (technically QoS, but that's mostly just different IE
-signalling)
-
-> wlan0: associate with 00:18:25:06:4a:b4 (try 1/3), at: 1424969385.457148
-> wlan0: RX AssocResp from 00:18:25:06:4a:b4 (capab=0x401 status=0 aid=2) at: 1424969385.476681
-> wlan0: associated at: 1424969385.477265
-> 
-> 
-> But a commercial phone connects just fine to this AP, and reports ~780Mbps link speed,
-> so it at least thinks it is doing VHT.
-> 
-> My question is, should we just warn and ignore this bad AIFSN, or is this really
-> a fatal issue as far as enabling WMM?
-
-It's hard to say what the AP meant when it said 0 ... did it really want
-the non-standard behaviour of 0, which will result in really bad medium
-access behaviour? Or should we override to use the minimum of 2?
-
-AFAIR at least the Intel device gets horribly confused and crashes when
-we actually ask it to use 0 - the backoff calculation then is rather
-strange anyway.
-
-Note that disabling WMM of course also makes use of *some* medium access
-rules, so there's perhaps the possibility of using the default value for
-ACs that have it as 0? OTOH, if we disable WMM, we'll use 3 for all
-frames, rather than 2/2/3/7 (for VO/VI/BE/BK) ...
-
-It's not really trivial though.
+To some extent, every wifi driver is going to have this problem. Perhaps
+we should do this in mac80211?
 
 johannes
 
