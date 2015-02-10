@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50936 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200AbbBLJ3J (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:54215 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754543AbbBJNRP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 04:29:09 -0500
-From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Increase AST table SKID length limit
-Date: Thu, 12 Feb 2015 14:58:42 +0530
-Message-ID: <1423733322-31113-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150212_102914_499763_409ACA29)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 10 Feb 2015 08:17:15 -0500
+Message-ID: <1423574228.28434.22.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150210_141747_087340_21D0A4DC)
+Subject: Re: [PATCH] rtlwifi: ratelimit skb allocation failure message
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 10 Feb 2015 05:17:08 -0800
+In-Reply-To: <1423558471-27278-1-git-send-email-colin.king@canonical.com>
+References: <1423558471-27278-1-git-send-email-colin.king@canonical.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current SKID length configuration causes firmware
-to reject peer creation for not able to allocate
-AST entries for peers. This issue is observed when
-least significant 3 bytes are used ramdomly to create
-client MAC addresses.
+On Tue, 2015-02-10 at 08:54 +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> when running low on memory I noticed rtlwifi was producing a large
+> quantity of repeated skb allocation failures messages.  This should
+> be ratelimited to reduce the noise.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/rtlwifi/pci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index c70efb9..ca0fd50 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -817,7 +817,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>  		/* get a new skb - if fail, old one will be reused */
+>  		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
+>  		if (unlikely(!new_skb)) {
+> -			pr_err("Allocation of new skb failed in %s\n",
+> +			pr_err_ratelimited("Allocation of new skb failed in %s\n",
+>  			       __func__);
 
-AST table SKID length configuration is increased to
-maximum value to fix this issue.
+Or even better, remove the message.
 
-Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/hw.h  | 1 +
- drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 460771f..b86996e 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -254,6 +254,7 @@ struct ath10k_pktlog_hdr {
-
- /* 10.2 parameters */
- #define TARGET_10_2_DMA_BURST_SIZE		1
-+#define TARGET_10_2_AST_SKID_LIMIT		128
-
- /* Target specific defines for WMI-TLV firmware */
- #define TARGET_TLV_NUM_VDEVS			3
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index aeea1c7..13290da 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3920,7 +3920,7 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
- 	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
- 	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
- 	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
--	config.ast_skid_limit = __cpu_to_le32(TARGET_10X_AST_SKID_LIMIT);
-+	config.ast_skid_limit = __cpu_to_le32(TARGET_10_2_AST_SKID_LIMIT);
- 	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
- 	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
- 	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
---
-1.9.1
 
