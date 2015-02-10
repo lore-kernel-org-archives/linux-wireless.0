@@ -1,56 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:55202 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965252AbbBBWxX convert rfc822-to-8bit (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:27287 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751032AbbBJI7z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 17:53:23 -0500
-Received: by mail-qa0-f54.google.com with SMTP id w8so31466458qac.13
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2015 14:53:23 -0800 (PST)
+	Tue, 10 Feb 2015 03:59:55 -0500
+Date: Tue, 10 Feb 2015 12:00:51 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: christophe.ricard@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: NFC: st21nfca: Add HCI transaction event support
+Message-ID: <20150210090051.GA31867@mwanda> (sfid-20150210_095958_378275_DB92044C)
 MIME-Version: 1.0
-In-Reply-To: <CAJ1dT9x+vWm4uZ-r9PZrTmKjEQc260NhOKoRzH=Ab=oWkeZ83w@mail.gmail.com>
-References: <CAJ1dT9x+vWm4uZ-r9PZrTmKjEQc260NhOKoRzH=Ab=oWkeZ83w@mail.gmail.com>
-From: Avery Pennarun <apenwarr@google.com>
-Date: Mon, 2 Feb 2015 17:53:02 -0500
-Message-ID: <CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com> (sfid-20150202_235327_374467_9937821D)
-Subject: Re: Open Source RRM & Hand-Over Optimization (WAS: Throughput
- regression with `tcp: refine TSO autosizing`)
-To: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bs@anyfi.net>
-Cc: David Reed <dpreed@reed.com>,
-	dstanley <dstanley@arubanetworks.com>,
-	Derrick Pallas <pallas@meraki.com>,
-	"cerowrt-devel@lists.bufferbloat.net"
-	<cerowrt-devel@lists.bufferbloat.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 2, 2015 at 11:44 AM, Björn Smedman <bs@anyfi.net> wrote:
-> On Mon, Feb 2, 2015 at 5:21 AM, Avery Pennarun <apenwarr@google.com> wrote:
->> While there is definitely some work to be done in handoff, it seems
->> like there are some find implementations of this already in existence.
->> Several brands of "enterprise access point" setups seem to do well at
->> this.  It would be nice if they interoperated, I guess.
->>
->> The fact that there's no open source version of this kind of handoff
->> feature bugs me, but we are working on it here and the work is all
->> planned to be open source, for example: (very early version)
->> https://gfiber.googlesource.com/vendor/google/platform/+/master/waveguide/
->
-> We've got an SDN-inspired architecture with 802.11 frame tunneling (a
-> la CAPWAP), airtime fairness, infrastructure initiated hand-over,
-> Opportunistic Key Caching (OKC), IEEE 802.11r Fast BSS Transition and
-> a few more goodies. It's currently free as in beer
-> (http://anyfi.net/software,
-> https://github.com/carrierwrt/carrierwrt/pull/7 and
-> http://www.anyfinetworks.com/download) up to 100 APs, but we're
-> definitely going to open source in one form or another.
->
-> We've also tried to raise some interest in fixing up CAPWAP
-> (https://www.ietf.org/mail-archive/web/opsawg/current/msg03196.html),
-> which is (unfortunately) the best open standard at the moment.
-> Interest seems marginal though...
+Hello Christophe Ricard,
 
-This sounds cool.  Is the CAPWAP/encapsulation stuff separable from
-the rest?  At 802.11ac speeds, a super fast WAN link, and a low-cost
-SoC, too many layers can be a killer.
+The patch 26fc6c7f02cb: "NFC: st21nfca: Add HCI transaction event
+support" from Feb 1, 2015, leads to the following static checker
+warning:
+
+	drivers/nfc/st21nfca/st21nfca_se.c:321 st21nfca_connectivity_event_received()
+	error: 'skb->data[1]' from user is not capped properly
+
+drivers/nfc/st21nfca/st21nfca_se.c
+   300  int st21nfca_connectivity_event_received(struct nfc_hci_dev *hdev, u8 host,
+   301                                  u8 event, struct sk_buff *skb)
+   302  {
+   303          int r = 0;
+   304          struct device *dev = &hdev->ndev->dev;
+   305          struct nfc_evt_transaction *transaction;
+   306  
+   307          pr_debug("connectivity gate event: %x\n", event);
+   308  
+   309          switch (event) {
+   310          case ST21NFCA_EVT_CONNECTIVITY:
+   311                  break;
+   312          case ST21NFCA_EVT_TRANSACTION:
+   313                  if (skb->len < NFC_MIN_AID_LENGTH + 2 &&
+   314                      skb->data[0] != NFC_EVT_TRANSACTION_AID_TAG)
+   315                          return -EPROTO;
+
+Here we don't trust skb->data[0].
+
+   316  
+   317                  transaction = (struct nfc_evt_transaction *)devm_kzalloc(dev,
+   318                                                     skb->len - 2, GFP_KERNEL);
+   319  
+   320                  transaction->aid_len = skb->data[1];
+   321                  memcpy(transaction->aid, &skb->data[2], skb->data[1]);
+                                                                ^^^^^^^^^^^^
+But here we trust skb->data[1].
+
+NFC code is hard to analyze because sometimes skb->data[] comes from the
+firmware and holds trusted values.  But sometimes it comes from the
+network and can overflow.  Smatch marks it all as untrusted so it causes
+a lot of false postives.
+
+Some of them have comments like:
+
+	net/nfc/hci/core.c:218 nfc_hci_cmd_received()
+	error: buffer overflow 'hdev->pipes' 127 <= 255
+
+But this one doesn't have a comment so it's hard for me as an outsider
+to say if this is a bug or not.
+
+   322  
+
+regards,
+dan carpenter
