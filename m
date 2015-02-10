@@ -1,177 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60225 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752076AbbBWTIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 14:08:53 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Daniele Alessandrelli <daniele.alessandrelli@gmail.com>
-Cc: Greg Kroah-Hartman <greg@kroah.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [PATCH] staging: rtl8723au: rtl8723a_hal_init.c: remove unnecessary braces
-References: <1424633324-9790-1-git-send-email-daniele.alessandrelli@gmail.com>
-Date: Mon, 23 Feb 2015 14:08:40 -0500
-In-Reply-To: <1424633324-9790-1-git-send-email-daniele.alessandrelli@gmail.com>
-	(Daniele Alessandrelli's message of "Sun, 22 Feb 2015 20:28:44 +0100")
-Message-ID: <wrfjmw448myv.fsf@redhat.com> (sfid-20150223_200859_434501_157F9C1B)
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:41766 "EHLO
+	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbbBJJ1y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Feb 2015 04:27:54 -0500
+Received: by mail-oi0-f48.google.com with SMTP id a3so9029474oib.7
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2015 01:27:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20141204143601.GA6798@redhat.com>
+References: <20141129191601.GA1234@kroah.com>
+	<CAD-4tLXYVtKJMWYW6cQ9aCL6rusUx3YpWSHys4xcTRN_dJ+kOA@mail.gmail.com>
+	<20141130184615.GA3122@kroah.com>
+	<CAD-4tLU-3otYOTO98s359z80SSbTJbiSstAYijiU__ekOPJkOA@mail.gmail.com>
+	<20141204012407.GA31191@kroah.com>
+	<CAD-4tLVrOqiUX2V9_VWMBbnFT-qEsO=zQF4qejd_N2H=scb4aw@mail.gmail.com>
+	<20141204043945.GA22144@kroah.com>
+	<CAGRGNgXiAAcFoUJyJiC2=yi7LGAU-=6L=NZpJxNj3V4E74RxCw@mail.gmail.com>
+	<20141204082348.GA1989@redhat.com>
+	<54802031.7010709@rempel-privat.de>
+	<20141204143601.GA6798@redhat.com>
+Date: Tue, 10 Feb 2015 14:57:53 +0530
+Message-ID: <CAD-4tLXy20=a+s7TLnaPrCPMBcw=9n8XFtnbM80E2vpzGfP8Wg@mail.gmail.com> (sfid-20150210_102800_541245_222D3311)
+Subject: Re: Ralink 6570 / Mediatek MT7601STA (was Re: Addition of a wifi
+ kernel module to the linux source tree)
+From: Parth Sane <laerdevstudios@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"driverdev-devel@linuxdriverproject.org"
+	<driverdev-devel@linuxdriverproject.org>,
+	Larry Finger <larry.finger@lwfinger.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniele Alessandrelli <daniele.alessandrelli@gmail.com> writes:
-> Fix all checkpatch "braces {} are not necessary" warnings for
-> rtl8723au/hal/rtl8723a_hal_init.c
+Hello everone!
+A few months earlier I had requested addition of the MT7601 WiFi
+dongle module into the kernel. I was told that the needful would be
+done in the rt2x00 driver. Could you guys update me with the status?
+Thanks a lot!
+-Parth Sane
+
+On 4 December 2014 at 20:06, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 >
-> Signed-off-by: Daniele Alessandrelli <daniele.alessandrelli@gmail.com>
-> ---
->  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c | 40 ++++++++---------------
->  1 file changed, 14 insertions(+), 26 deletions(-)
-
-Looks good to me.
-
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-
+> On Thu, Dec 04, 2014 at 09:49:53AM +0100, Oleksij Rempel wrote:
+> > So far i know, Felix is working on abgn+ac (MT7662 and MT7612) devices.
+> > MT7601STA is (a)bgn. Are there similar regs?
 >
-> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> index a5eadd4..e88d851 100644
-> --- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-> @@ -424,9 +424,8 @@ hal_ReadEFuse_WiFi(struct rtw_adapter *padapter,
->  			offset = GET_HDR_OFFSET_2_0(efuseHeader);
->  
->  			ReadEFuseByte23a(padapter, eFuse_Addr++, &efuseExtHdr);
-> -			if (ALL_WORDS_DISABLED(efuseExtHdr)) {
-> +			if (ALL_WORDS_DISABLED(efuseExtHdr))
->  				continue;
-> -			}
->  
->  			offset |= ((efuseExtHdr & 0xF0) >> 1);
->  			wden = (efuseExtHdr & 0x0F);
-> @@ -524,9 +523,8 @@ hal_ReadEFuse_BT(struct rtw_adapter *padapter,
->  
->  				ReadEFuseByte23a(padapter, eFuse_Addr++,
->  					      &efuseExtHdr);
-> -				if (ALL_WORDS_DISABLED(efuseExtHdr)) {
-> +				if (ALL_WORDS_DISABLED(efuseExtHdr))
->  					continue;
-> -				}
->  
->  				offset |= ((efuseExtHdr & 0xF0) >> 1);
->  				wden = (efuseExtHdr & 0x0F);
-> @@ -630,9 +628,8 @@ u16 rtl8723a_EfuseGetCurrentSize_WiFi(struct rtw_adapter *padapter)
->  			hoffset = GET_HDR_OFFSET_2_0(efuse_data);
->  			efuse_addr++;
->  			efuse_OneByteRead23a(padapter, efuse_addr, &efuse_data);
-> -			if (ALL_WORDS_DISABLED(efuse_data)) {
-> +			if (ALL_WORDS_DISABLED(efuse_data))
->  				continue;
-> -			}
->  
->  			hoffset |= ((efuse_data & 0xF0) >> 1);
->  			hworden = efuse_data & 0x0F;
-> @@ -721,9 +718,8 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
->  		}
->  
->  		/*  Check if we need to check next bank efuse */
-> -		if (efuse_addr < retU2) {
-> +		if (efuse_addr < retU2)
->  			break;	/*  don't need to check next bank. */
-> -		}
->  	}
->  
->  	retU2 = ((bank - 1) * EFUSE_BT_REAL_BANK_CONTENT_LEN) + efuse_addr;
-> @@ -1149,9 +1145,8 @@ static int _LLTWrite(struct rtw_adapter *padapter, u32 address, u32 data)
->  	/* polling */
->  	do {
->  		value = rtl8723au_read32(padapter, LLTReg);
-> -		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value)) {
-> +		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value))
->  			break;
-> -		}
->  
->  		if (count > POLLING_LLT_THRESHOLD) {
->  			RT_TRACE(_module_hal_init_c_, _drv_err_,
-> @@ -1174,16 +1169,14 @@ int InitLLTTable23a(struct rtw_adapter *padapter, u32 boundary)
->  
->  	for (i = 0; i < (txpktbuf_bndy - 1); i++) {
->  		status = _LLTWrite(padapter, i, i + 1);
-> -		if (status != _SUCCESS) {
-> +		if (status != _SUCCESS)
->  			return status;
-> -		}
->  	}
->  
->  	/*  end of list */
->  	status = _LLTWrite(padapter, (txpktbuf_bndy - 1), 0xFF);
-> -	if (status != _SUCCESS) {
-> +	if (status != _SUCCESS)
->  		return status;
-> -	}
->  
->  	/*  Make the other pages as ring buffer */
->  	/*  This ring buffer is used as beacon buffer if we config this
-> @@ -1191,16 +1184,14 @@ int InitLLTTable23a(struct rtw_adapter *padapter, u32 boundary)
->  	/*  Otherwise used as local loopback buffer. */
->  	for (i = txpktbuf_bndy; i < Last_Entry_Of_TxPktBuf; i++) {
->  		status = _LLTWrite(padapter, i, (i + 1));
-> -		if (_SUCCESS != status) {
-> +		if (_SUCCESS != status)
->  			return status;
-> -		}
->  	}
->  
->  	/*  Let last entry point to the start entry of ring buffer */
->  	status = _LLTWrite(padapter, Last_Entry_Of_TxPktBuf, txpktbuf_bndy);
-> -	if (status != _SUCCESS) {
-> +	if (status != _SUCCESS)
->  		return status;
-> -	}
->  
->  	return status;
->  }
-> @@ -1435,9 +1426,9 @@ static void _DisableAnalog(struct rtw_adapter *padapter, bool bWithoutHWSM)
->  /*  HW Auto state machine */
->  int CardDisableHWSM(struct rtw_adapter *padapter, u8 resetMCU)
->  {
-> -	if (padapter->bSurpriseRemoved) {
-> +	if (padapter->bSurpriseRemoved)
->  		return _SUCCESS;
-> -	}
-> +
->  	/*  RF Off Sequence ==== */
->  	_DisableRFAFEAndResetBB8192C(padapter);
->  
-> @@ -1459,9 +1450,8 @@ int CardDisableHWSM(struct rtw_adapter *padapter, u8 resetMCU)
->  /*  without HW Auto state machine */
->  int CardDisableWithoutHWSM(struct rtw_adapter *padapter)
->  {
-> -	if (padapter->bSurpriseRemoved) {
-> +	if (padapter->bSurpriseRemoved)
->  		return _SUCCESS;
-> -	}
->  
->  	/*  RF Off Sequence ==== */
->  	_DisableRFAFEAndResetBB8192C(padapter);
-> @@ -1875,9 +1865,8 @@ static void rtl8723a_cal_txdesc_chksum(struct tx_desc *ptxdesc)
->  	/*  Clear first */
->  	ptxdesc->txdw7 &= cpu_to_le32(0xffff0000);
->  
-> -	for (index = 0; index < count; index++) {
-> +	for (index = 0; index < count; index++)
->  		checksum ^= le16_to_cpu(*(usPtr + index));
-> -	}
->  
->  	ptxdesc->txdw7 |= cpu_to_le32(checksum & 0x0000ffff);
->  }
-> @@ -1925,9 +1914,8 @@ void rtl8723a_fill_fake_txdesc(struct rtw_adapter *padapter, u8 *pDesc,
->  		ptxdesc->txdw3 |= cpu_to_le32((8 << 28));
->  	}
->  
-> -	if (true == IsBTQosNull) {
-> +	if (true == IsBTQosNull)
->  		ptxdesc->txdw2 |= cpu_to_le32(BIT(23));	/*  BT NULL */
-> -	}
->  
->  	/* offset 16 */
->  	ptxdesc->txdw4 |= cpu_to_le32(BIT(8));	/* driver uses rate */
+> All Mediatek/Ralink devices I know have the same MAC registers, but
+> different BBP and RF registers.
+>
+> > In mt7601 code i see parts like "if (IS_RT3290(pAd) || IS_RT65XX(pAd) ||
+> > IS_MT7601(pAd))".  RT3290 is supported by rt2x00.
+>
+> Hence looks that support for this devices should be added to rt2x00.
+>
+> Stanislaw
+>
