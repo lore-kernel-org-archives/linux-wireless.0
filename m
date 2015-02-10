@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f173.google.com ([209.85.223.173]:36743 "EHLO
-	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751149AbbBDL50 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49399 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755994AbbBJNta convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 06:57:26 -0500
-Message-ID: <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150204_125731_338082_C854D4A2)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Wed, 04 Feb 2015 03:57:25 -0800
-In-Reply-To: <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 10 Feb 2015 08:49:30 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2015-02-07
+References: <87a90qosos.fsf@kamboji.qca.qualcomm.com>
+	<20150209.121342.1535841700027616341.davem@davemloft.net>
+Date: Tue, 10 Feb 2015 15:49:24 +0200
+In-Reply-To: <20150209.121342.1535841700027616341.davem@davemloft.net> (David
+	Miller's message of "Mon, 09 Feb 2015 12:13:42 -0800 (PST)")
+Message-ID: <8761b9op0b.fsf@kamboji.qca.qualcomm.com> (sfid-20150210_144937_224957_4970C9D1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-02-04 at 12:35 +0100, Michal Kazior wrote:
+David Miller <davem@davemloft.net> writes:
 
-> > (Or maybe wifi drivers should start to use skb->xmit_more as a signal to end aggregation)
-> 
-> This could work if your firmware/device supports this kind of thing.
-> To my understanding ath10k firmware doesn't.
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Sat, 07 Feb 2015 13:40:51 +0200
+>
+>> There's a small conflict in drivers/net/wireless/rtlwifi/pci.c, the fix
+>> is to leave the two labels like this:
+>> 
+>> 			schedule_work(&rtlpriv->works.lps_change_work);
+>> 		}
+>> end:
+>> 		skb = new_skb;
+>> no_new:
+>> 		if (rtlpriv->use_new_trx_flow) {
+>> 
+>> 
+>
+> That can't be the correct resolution:
+>
+> drivers/net/wireless/rtlwifi/pci.c: In function ‘_rtl_pci_rx_interrupt’:
+> drivers/net/wireless/rtlwifi/pci.c:934:1: warning: label ‘end’ defined but not used [-Wunused-label]
+>
+> So I've removed that label in the merge commit.
 
-This is a pure software signal. You do not need firmware support.
+Sorry about that, but great that you catched my mistake.
 
-Idea is the following :
-
-Your driver gets a train of messages, coming from upper layers (TCP, IP,
-qdisc)
-
-It can know that a packet is not the last one, by looking at
-skb->xmit_more.
-
-Basically, aggregation logic could use this signal as a very clear
-indicator you got the end of a train -> force the xmit right now.
-
-To disable gso you would have to use :
-
-ethtool -K wlan1 gso off
-
-
-
+-- 
+Kalle Valo
