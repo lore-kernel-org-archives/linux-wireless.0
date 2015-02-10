@@ -1,223 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49160 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752803AbbBMO6E (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:57644 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbbBJRbz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 09:58:04 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@nbd.name,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v2 03/10] mac80211: add new Minstrel statistic output via csv
-Date: Fri, 13 Feb 2015 15:57:45 +0100
-Message-Id: <1423839472-15625-4-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150213_160630_253018_4EE76B6D)
-In-Reply-To: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Tue, 10 Feb 2015 12:31:55 -0500
+Message-ID: <54DA4070.8080002@broadcom.com> (sfid-20150210_183158_807116_5D845F46)
+Date: Tue, 10 Feb 2015 18:31:28 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Steeve Morin <steeve.morin@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac + AP6120 (brcm43362) doesn't connect to WPA2 AP (unprotected
+ ok)
+References: <CAEZVCP4bNmfnHH=Ksi6wMQoqdZGbprUH5X_VA41GRf9=h2MT1A@mail.gmail.com> <54D92DFC.1080604@broadcom.com> <CAEZVCP7+gTqJJUNQuUDTGWG1BQ4_XY7Q79Cg-2daVourfasvEw@mail.gmail.com> <CAEZVCP6HNDsR=S4c5xYLr=UZZmQhA9WBwrzwT_5jJvfXz+gC1A@mail.gmail.com> <CAEZVCP6R4-aotR4K5=EhXzg0jEcgfoURAXmbc+Xeb3UZWNs0Kw@mail.gmail.com> <CAEZVCP4=ZRPFtdychXOhURvqaT02E_9dPpMf-zp2qB-eBsRRVQ@mail.gmail.com>
+In-Reply-To: <CAEZVCP4=ZRPFtdychXOhURvqaT02E_9dPpMf-zp2qB-eBsRRVQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new debugfs file "rc_stats_csv" to output Minstrels
-statistics in a common csv format that is easy to parse.
+On 02/10/15 02:37, Steeve Morin wrote:
+> I've managed to get a lease via udhcpc, over and over again, but as
+> soon as a scan operation comes along, I am now unable to get a lease.
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Signed-off-by: Stefan Venz <ikstream86@gmail.com>
----
- net/mac80211/rc80211_minstrel.h            |  6 +-
- net/mac80211/rc80211_minstrel_debugfs.c    | 95 ++++++++++++++++++++++++++----
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  2 +-
- 3 files changed, 88 insertions(+), 15 deletions(-)
+If you can provide a kernel log running into this situation I might get 
+a clue about what is happening.
 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 410efe6..9613e73 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -13,7 +13,6 @@
- #define EWMA_DIV	128
- #define SAMPLE_COLUMNS	10	/* number of columns in sample table */
- 
--
- /* scaled fraction values */
- #define MINSTREL_SCALE  16
- #define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
-@@ -24,7 +23,7 @@
- 
- /*
-  * Perform EWMA (Exponentially Weighted Moving Average) calculation
--  */
-+ */
- static inline int
- minstrel_ewma(int old, int new, int weight)
- {
-@@ -95,6 +94,7 @@ struct minstrel_sta_info {
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct dentry *dbg_stats;
-+	struct dentry *dbg_stats_csv;
- #endif
- };
- 
-@@ -121,7 +121,6 @@ struct minstrel_priv {
- 	u32 fixed_rate_idx;
- 	struct dentry *dbg_fixed_rate;
- #endif
--
- };
- 
- struct minstrel_debugfs_info {
-@@ -135,6 +134,7 @@ void minstrel_remove_sta_debugfs(void *priv, void *priv_sta);
- 
- /* debugfs */
- int minstrel_stats_open(struct inode *inode, struct file *file);
-+int minstrel_stats_csv_open(struct inode *inode, struct file *file);
- ssize_t minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos);
- int minstrel_stats_release(struct inode *inode, struct file *file);
- 
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index 2d70081..ab15ca6 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -54,6 +54,22 @@
- #include <net/mac80211.h>
- #include "rc80211_minstrel.h"
- 
-+ssize_t
-+minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos)
-+{
-+	struct minstrel_debugfs_info *ms;
-+
-+	ms = file->private_data;
-+	return simple_read_from_buffer(buf, len, ppos, ms->buf, ms->len);
-+}
-+
-+int
-+minstrel_stats_release(struct inode *inode, struct file *file)
-+{
-+	kfree(file->private_data);
-+	return 0;
-+}
-+
- int
- minstrel_stats_open(struct inode *inode, struct file *file)
- {
-@@ -115,25 +131,76 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	return 0;
- }
- 
--ssize_t
--minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos)
-+static const struct file_operations minstrel_stat_fops = {
-+	.owner = THIS_MODULE,
-+	.open = minstrel_stats_open,
-+	.read = minstrel_stats_read,
-+	.release = minstrel_stats_release,
-+	.llseek = default_llseek,
-+};
-+
-+int
-+minstrel_stats_csv_open(struct inode *inode, struct file *file)
- {
-+	struct minstrel_sta_info *mi = inode->i_private;
- 	struct minstrel_debugfs_info *ms;
-+	struct timeval tv;
-+	unsigned int i, tp, prob, eprob;
-+	char *p;
- 
--	ms = file->private_data;
--	return simple_read_from_buffer(buf, len, ppos, ms->buf, ms->len);
--}
-+	ms = kmalloc(2048, GFP_KERNEL);
-+	if (!ms)
-+		return -ENOMEM;
-+
-+	file->private_data = ms;
-+	p = ms->buf;
-+
-+	do_gettimeofday(&tv);
-+
-+	for (i = 0; i < mi->n_rates; i++) {
-+		struct minstrel_rate *mr = &mi->r[i];
-+		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
-+
-+		p += sprintf(p, "%ld.%.6ld,", tv.tv_sec, tv.tv_usec);
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[0]) ? "A," : ","));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[1]) ? "B," : ","));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[2]) ? "C," : ","));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[3]) ? "D," : ","));
-+		p += sprintf(p, "%s" ,((i == mi->max_prob_rate) ? "P," : ","));
-+
-+		p += sprintf(p, "%u%s", mr->bitrate / 2,
-+				(mr->bitrate & 1 ? ".5," : ","));
-+		p += sprintf(p, "%u,", i);
-+		p += sprintf(p, "%u,",mr->perfect_tx_time);
-+
-+		tp = MINSTREL_TRUNC(mrs->cur_tp / 10);
-+		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
-+		eprob = MINSTREL_TRUNC(mrs->probability * 1000);
-+
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u,%u,%u,"
-+				"%llu,%llu,%d,%d\n",
-+				tp / 10, tp % 10,
-+				eprob / 10, eprob % 10,
-+				prob / 10, prob % 10,
-+				mrs->retry_count,
-+				mrs->last_success,
-+				mrs->last_attempts,
-+				(unsigned long long)mrs->succ_hist,
-+				(unsigned long long)mrs->att_hist,
-+				mi->total_packets - mi->sample_packets,
-+				mi->sample_packets);
-+
-+	}
-+	ms->len = p - ms->buf;
-+
-+	WARN_ON(ms->len + sizeof(*ms) > 2048);
- 
--int
--minstrel_stats_release(struct inode *inode, struct file *file)
--{
--	kfree(file->private_data);
- 	return 0;
- }
- 
--static const struct file_operations minstrel_stat_fops = {
-+static const struct file_operations minstrel_stat_csv_fops = {
- 	.owner = THIS_MODULE,
--	.open = minstrel_stats_open,
-+	.open = minstrel_stats_csv_open,
- 	.read = minstrel_stats_read,
- 	.release = minstrel_stats_release,
- 	.llseek = default_llseek,
-@@ -146,6 +213,9 @@ minstrel_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir)
- 
- 	mi->dbg_stats = debugfs_create_file("rc_stats", S_IRUGO, dir, mi,
- 			&minstrel_stat_fops);
-+
-+	mi->dbg_stats_csv = debugfs_create_file("rc_stats_csv", S_IRUGO, dir,
-+			mi, &minstrel_stat_csv_fops);
- }
- 
- void
-@@ -154,4 +224,7 @@ minstrel_remove_sta_debugfs(void *priv, void *priv_sta)
- 	struct minstrel_sta_info *mi = priv_sta;
- 
- 	debugfs_remove(mi->dbg_stats);
-+
-+	debugfs_remove(mi->dbg_stats_csv);
- }
-+
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 7fc690f..b300513 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -112,7 +112,7 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 
- 	if (!msp->is_ht) {
- 		inode->i_private = &msp->legacy;
--		ret = minstrel_stats_open(inode, file);
-+		ret = minstrel_stats_csv_open(inode, file);
- 		inode->i_private = msp;
- 		return ret;
- 	}
--- 
-2.2.2
+Regards,
+Arend
+
+> On 10 February 2015 at 01:34, Steeve Morin<steeve.morin@gmail.com>  wrote:
+>> Also, using udhcpc fails to retrieve an IP with a rather strange "error"
+>> udhcpc (v1.22.1) started
+>> Sending discover...
+>> Sending select for 192.168.1.89...
+>> Sending select for 192.168.1.89...
+>> Sending select for 192.168.1.89...
+>> Sending discover...
+>> Sending discover...
+>>
+>> Which leads me to believe this might be due to data being lost somewhere...
+>>
+>> However, the rare times I managed to make it connect, SSH was
+>> functionning normally.
+>>
+>> Let me know if you need more log.
+>>
+>> Thanks
+>>
+>> On 10 February 2015 at 00:06, Steeve Morin<steeve.morin@gmail.com>  wrote:
+>>> The weird thing is that wpa_supplicant apparently manages to associate
+>>> with the AP (but i'm not really sure about that) [1]
+>>>
+>>> [1] https://gist.github.com/steeve/10a9a643476cea99abf4#file-005-wpa-supplicant-conf
+>>>
+>>> On 9 February 2015 at 23:17, Steeve Morin<steeve.morin@gmail.com>  wrote:
+>>>> Thanks for answering.
+>>>>
+>>>> I'm using connmanctl [1]
+>>>>
+>>>> The funny thing is trying to make this gist, I tried and it connected
+>>>> succesfully....
+>>>> Could it be a race somewhere?
+>>>>
+>>>> [1] https://gist.github.com/steeve/10a9a643476cea99abf4#file-004-connmanctl
+>>>>
+>>>> On 9 February 2015 at 23:00, Arend van Spriel<arend@broadcom.com>  wrote:
+>>>>> On 02/09/15 18:57, Steeve Morin wrote:
+>>>>>>
+>>>>>> Hi linux-wireless,
+>>>>>>
+>>>>>> I'm running brcmfmac from backports-3.19-rc1-1 on linux 3.10. running
+>>>>>> on an arm Amlogic S805 (cortex-a5, arm7) board (CX-S859).
+>>>>>>
+>>>>>> I had to apply multiple custom patches [1]:
+>>>>>> - Make sure the wifi chip is on via custom GPIO [1]
+>>>>>> - Remove a problematic piece of code related to power manager (will
+>>>>>> look into it later) [1]
+>>>>>> - Mix the mmc->max_blk_count on the host (would cause a BUG_ON
+>>>>>> assertion later on) [2] [3]
+>>>>>>
+>>>>>> After that, I am able to modprobe brcmfmac see wlan0.
+>>>>>> The interface correctly scans for wifi aps, and I can connect to
+>>>>>> unprotected ones.
+>>>>>>
+>>>>>> It fails, however, to connect to WPA/WPA2 protected aps. I have
+>>>>>> attached a debug log obtained with debug=0xffffff [4]
+>>>>>> I don't see any errors in it though...
+>>>>>>
+>>>>>> Would anyone of you guys have any idea why ?
+>>>>>
+>>>>>
+>>>>> In the log I don't see any connect attempt. Only seeing a scan completing.
+>>>>> So how do you try to connect?
+>>>>>
+>>>>> Regards,
+>>>>> Arend
+>>>>>
+>>>>>
+>>>>>> Thanks a lot,
+>>>>>>
+>>>>>> [1]
+>>>>>> https://gist.github.com/steeve/10a9a643476cea99abf4#file-backports-power-on-wifi-sdio-patch
+>>>>>> [2]
+>>>>>> https://gist.github.com/steeve/10a9a643476cea99abf4#file-fix-block-size-patch
+>>>>>> [3]
+>>>>>> https://github.com/codesnake/linux-amlogic/blob/master/drivers/amlogic/mmc/aml_sdio.c#L317
+>>>>>> [4] https://gist.github.com/steeve/10a9a643476cea99abf4#file-003-dmesg-log
+>>>>>
+>>>>>
+>>>>
+>>>>
+>>>>
+>>>> --
+>>>> Steeve Morin
+>>>> twitter.com/steeve
+>>>> github.com/steeve
+>>>> linkd.in/smorin
+>>>
+>>>
+>>>
+>>> --
+>>> Steeve Morin
+>>> twitter.com/steeve
+>>> github.com/steeve
+>>> linkd.in/smorin
+>>
+>>
+>>
+>> --
+>> Steeve Morin
+>> twitter.com/steeve
+>> github.com/steeve
+>> linkd.in/smorin
+>
+>
+>
 
