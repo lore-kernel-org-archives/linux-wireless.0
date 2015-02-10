@@ -1,68 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63668 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751925AbbBFJK5 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49366 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbbBJNsf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 04:10:57 -0500
-Message-ID: <54D4851F.8020402@broadcom.com> (sfid-20150206_101105_591514_6365C7FD)
-Date: Fri, 6 Feb 2015 10:10:55 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 10 Feb 2015 08:48:35 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Colin King <colin.king@canonical.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: ratelimit skb allocation failure message
+References: <1423558471-27278-1-git-send-email-colin.king@canonical.com>
+	<1423574228.28434.22.camel@edumazet-glaptop2.roam.corp.google.com>
+Date: Tue, 10 Feb 2015 15:48:26 +0200
+In-Reply-To: <1423574228.28434.22.camel@edumazet-glaptop2.roam.corp.google.com>
+	(Eric Dumazet's message of "Tue, 10 Feb 2015 05:17:08 -0800")
+Message-ID: <87a90lop1x.fsf@kamboji.qca.qualcomm.com> (sfid-20150210_144856_224446_B829C5A5)
 MIME-Version: 1.0
-To: Ben Adler <ben@phoenix-aerial.com>
-CC: brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: BCM4330 linux support
-References: <54D3FF89.502@phoenix-aerial.com>
-In-Reply-To: <54D3FF89.502@phoenix-aerial.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ lists
+Eric Dumazet <eric.dumazet@gmail.com> writes:
 
-On 02/06/15 00:40, Ben Adler wrote:
-> Hi Arend,
+> On Tue, 2015-02-10 at 08:54 +0000, Colin King wrote:
+>> From: Colin Ian King <colin.king@canonical.com>
+>> 
+>> when running low on memory I noticed rtlwifi was producing a large
+>> quantity of repeated skb allocation failures messages.  This should
+>> be ratelimited to reduce the noise.
+>> 
+>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>> ---
+>>  drivers/net/wireless/rtlwifi/pci.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+>> index c70efb9..ca0fd50 100644
+>> --- a/drivers/net/wireless/rtlwifi/pci.c
+>> +++ b/drivers/net/wireless/rtlwifi/pci.c
+>> @@ -817,7 +817,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>>  		/* get a new skb - if fail, old one will be reused */
+>>  		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
+>>  		if (unlikely(!new_skb)) {
+>> -			pr_err("Allocation of new skb failed in %s\n",
+>> +			pr_err_ratelimited("Allocation of new skb failed in %s\n",
+>>  			       __func__);
 >
-> I found your email on
-> https://wireless.wiki.kernel.org/en/users/Drivers/brcm80211 and would
-> like to ask your help regarding linux support for the Broadcom BCM4330
-> chipset. The page lists it as supported.
->
-> More precisely, I am trying to get WiFi to work on a Zotac ZBOX pico 320
-> which contains an Ampak AP6383 chip. This in turn contains a BCM4330...
-> which leads me to you.
+> Or even better, remove the message.
 
-Makes sense ;-)
+There's actually a pending patch for that, I'll send it to Dave ASAP:
 
-> So far, I was able to rip
->
-> 4330b2rtecdc.bin (md5 ca91920df0041bd9e31e3aef53ac3375)
-> T77H360.04_WB_nvram_20120731.txt (attached)
->
-> out of the windows driver and am able to scan for networks using linux
-> 3.19rc6, brcmfmac module and "iwlist wlan0 scanning". However, doing so,
-> I receive many error messages and cannot connect to an AP, let alone
-> start an AP with hostapd.
->
-> The firmware files in linux-firmware, don't seem to help either.
->
-> Arend, is it possible to make this chip work? Just STA, or also AP? If
-> so, which firmware and NVRAM files will I need?
+https://patchwork.kernel.org/patch/5671121/
 
-Well, I have this chip running on regular x86 laptop using special 
-adapter boards and it also runs on i.MX6 board. The windows firmware and 
-nvram should work. Can you send a kernel log preferably with driver 
-module loaded with 'debug=0xd416'.
-
-> The windows driver also contains 11
-> BCM4330B1_002.001.003.0967.<XXXX>.hcd files. Are those only for
-> bluetooth? Does bluetooth work in linux?
-
-Those .hcd file are indeed for bluetooth. I know next to nothing about 
-bluetooth. Sorry.
-
-> Thanks for your time!
-> Ben
-
-Regards,
-Arend
+-- 
+Kalle Valo
