@@ -1,113 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:53863 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932173AbbBLIPI (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38491 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750888AbbBJRBN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 03:15:08 -0500
-Date: Thu, 12 Feb 2015 09:14:59 +0100
-From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
-	<u.kleine-koenig@pengutronix.de>
-To: Robert Dolca <robert.dolca@intel.com>
-Cc: linux-nfc@ml01.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Berg Johannes <johannes.berg@intel.com>,
-	Clement Perrochaud <clement.perrochaud@nxp.com>
-Subject: Re: [PATCH v2 2/2] NFC: Add ACPI support for NXP PN544
-Message-ID: <20150212081459.GA28954@pengutronix.de> (sfid-20150212_091533_601935_7E2B3C2F)
-References: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
- <1422270817-10950-3-git-send-email-robert.dolca@intel.com>
+	Tue, 10 Feb 2015 12:01:13 -0500
+Message-ID: <54DA3957.10402@candelatech.com> (sfid-20150210_180116_646464_25E2D698)
+Date: Tue, 10 Feb 2015 09:01:11 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1422270817-10950-3-git-send-email-robert.dolca@intel.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Matti Laakso <malaakso@elisanet.fi>
+Subject: Re: [RFT] ath10k: restart fw on tx-credit timeout
+References: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com> <54D4E89A.7040602@candelatech.com> <CA+BoTQ=HqyGKOBdOmpWOn_VjH1UTWF9nN_PE0uanaGsdeJmB6Q@mail.gmail.com> <54D8DA6F.7040805@candelatech.com> <CA+BoTQk9C_7efUs6VTZrEz5ECxsvCgfA8ObrAXKjqMpTL8pggA@mail.gmail.com>
+In-Reply-To: <CA+BoTQk9C_7efUs6VTZrEz5ECxsvCgfA8ObrAXKjqMpTL8pggA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 02/09/2015 10:09 PM, Michal Kazior wrote:
+> On 9 February 2015 at 17:03, Ben Greear <greearb@candelatech.com> wrote:
+>> On 02/08/2015 10:24 PM, Michal Kazior wrote:
+>>> On 6 February 2015 at 17:15, Ben Greear <greearb@candelatech.com> wrote:
+> [...]
+>>>> At least in my tests, I could continue
+>>>> to receive network traffic while WMI was blocked.
+>>>
+>>>
+>>> Yeah. Traffic works with the tx-credit starvation as well but what
+>>> good is this if you have inconsistent driver-firmware state after
+>>> failing to send a few commands?
+>>
+>>
+>> I just mention it because someone debugging the system might
+>> wonder why the firmware is 'locked up' while it is still passing traffic.
+> 
+> I might as well include this info in the commit log.
+> 
+> 
+>> If it is just powersave issue, could you force (overriding wmi tx-credits
+>> limit)
+>> a flush at the 1 second mark and hope it recovers by 3 second timeout?
+> 
+> Well, there's a couple of problems with that.
+> 
+> 1) you suggest to call wmi_flush() which calls wmi_cmd_send() *while*
+> in wmi_cmd_send(),
+> 2) you're out of credits, how do you intend to submit a frame,
+> 3) yes, you can force it, but that's super ugly,
+> 4) and this still doesn't guarantee you'll get your tx-credit due to
+> firmware quirkiness.
 
-On Mon, Jan 26, 2015 at 01:13:37PM +0200, Robert Dolca wrote:
-> +	/* Get EN GPIO from ACPI */
-> +	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1);
-Actually devm_gpiod_get_index takes 4 arguments. In your case you should
-also pass GPIOD_OUT_LOW, then you can skip the gpiod_direction_output
-part below.
+If you do force the wmi send, ignoring credits, and even if you are running
+stock firmware with wmi credits replenishment issues, then you at least
+have a chance of recovering.  (Upstream firmware requires lots of WMI messages
+to flush, I think..like you can only flush per peer or something like that,
+so maybe there is no realistic way to flush with small number of WMI messages.)
 
-> +	if (IS_ERR(gpiod_en)) {
-> +		nfc_err(dev,
-> +			"Unable to get EN GPIO\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	phy->gpio_en  = desc_to_gpio(gpiod_en);
-Why don't you save a reference to the gpiod instead? Mixing usage of raw
-and gpiod might result in surprising results. For example
+I've hacked CT firmware to do a flush of all vdevs itself when it detects WMI hang.
+I don't have a good test bed to reproduce the problem reliably, but I should know
+after a few days if the flush works at all.  If not, then it's a moot point anyway.
 
-	gpiod_direction_output(gpiod_en, 0);
+Thanks,
+Ben
 
-might actually have the same result as
-
-	gpio_direction_output(gpio_en, 1);
-
-if the matching gpio is marked as active low.
-
-> +
-> +	/* Configuration EN GPIO */
-> +	ret = gpiod_direction_output(gpiod_en, 0);
-> +	if (ret) {
-> +		nfc_err(dev, "Fail EN pin direction\n");
-> +		return ret;
-> +	}
-> +
-> +	/* Get FW GPIO from ACPI */
-> +	gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2);
-> +	if (IS_ERR(gpiod_fw)) {
-> +		nfc_err(dev,
-> +			"Unable to get FW GPIO\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	phy->gpio_fw  = desc_to_gpio(gpiod_fw);
-> +
-> +	/* Configuration FW GPIO */
-> +	ret = gpiod_direction_output(gpiod_fw, 0);
-> +	if (ret) {
-> +		nfc_err(dev, "Fail FW pin direction\n");
-> +		return ret;
-> +	}
-The same comments apply here.
-
-> +
-> +	/* Get IRQ GPIO */
-> +	gpiod_irq = devm_gpiod_get_index(dev, PN544_GPIO_NAME_IRQ, 0);
-> +	if (IS_ERR(gpiod_irq)) {
-> +		nfc_err(dev,
-> +			"Unable to get IRQ GPIO\n");
-> +		return -ENODEV;
-> +	}
-> +
-> +	phy->gpio_irq = desc_to_gpio(gpiod_irq);
-> +
-> +	/* Configure IRQ GPIO */
-> +	ret = gpiod_direction_input(gpiod_irq);
-> +	if (ret) {
-> +		nfc_err(dev, "Fail IRQ pin direction\n");
-> +		return ret;
-> +	}
-> +
-> +	/* Map the pin to an IRQ */
-> +	ret = gpiod_to_irq(gpiod_irq);
-> +	if (ret < 0) {
-> +		nfc_err(dev, "Fail pin IRQ mapping\n");
-> +		return ret;
-> +	}
-and here.
-
-Best regards
-Uwe
 
 -- 
-Pengutronix e.K.                           | Uwe Kleine-König            |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
