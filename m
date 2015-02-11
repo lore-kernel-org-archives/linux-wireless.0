@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:41766 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211AbbBJJ1y (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:40957 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046AbbBKIdp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 04:27:54 -0500
-Received: by mail-oi0-f48.google.com with SMTP id a3so9029474oib.7
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2015 01:27:53 -0800 (PST)
+	Wed, 11 Feb 2015 03:33:45 -0500
+Received: by mail-wg0-f41.google.com with SMTP id b13so1902126wgh.0
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 00:33:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20141204143601.GA6798@redhat.com>
-References: <20141129191601.GA1234@kroah.com>
-	<CAD-4tLXYVtKJMWYW6cQ9aCL6rusUx3YpWSHys4xcTRN_dJ+kOA@mail.gmail.com>
-	<20141130184615.GA3122@kroah.com>
-	<CAD-4tLU-3otYOTO98s359z80SSbTJbiSstAYijiU__ekOPJkOA@mail.gmail.com>
-	<20141204012407.GA31191@kroah.com>
-	<CAD-4tLVrOqiUX2V9_VWMBbnFT-qEsO=zQF4qejd_N2H=scb4aw@mail.gmail.com>
-	<20141204043945.GA22144@kroah.com>
-	<CAGRGNgXiAAcFoUJyJiC2=yi7LGAU-=6L=NZpJxNj3V4E74RxCw@mail.gmail.com>
-	<20141204082348.GA1989@redhat.com>
-	<54802031.7010709@rempel-privat.de>
-	<20141204143601.GA6798@redhat.com>
-Date: Tue, 10 Feb 2015 14:57:53 +0530
-Message-ID: <CAD-4tLXy20=a+s7TLnaPrCPMBcw=9n8XFtnbM80E2vpzGfP8Wg@mail.gmail.com> (sfid-20150210_102800_541245_222D3311)
-Subject: Re: Ralink 6570 / Mediatek MT7601STA (was Re: Addition of a wifi
- kernel module to the linux source tree)
-From: Parth Sane <laerdevstudios@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
+In-Reply-To: <1423574079.28434.21.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	<1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com>
+	<1423574079.28434.21.camel@edumazet-glaptop2.roam.corp.google.com>
+Date: Wed, 11 Feb 2015 09:33:34 +0100
+Message-ID: <CA+BoTQkRp38nttSJgKs4dzQrn-TXpPbh4i-01YCF0BJQWrFi=Q@mail.gmail.com> (sfid-20150211_093354_580618_0CBF98F6)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Neal Cardwell <ncardwell@google.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"driverdev-devel@linuxdriverproject.org"
-	<driverdev-devel@linuxdriverproject.org>,
-	Larry Finger <larry.finger@lwfinger.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
+	Network Development <netdev@vger.kernel.org>,
+	Eyal Perry <eyalpe@dev.mellanox.co.il>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everone!
-A few months earlier I had requested addition of the MT7601 WiFi
-dongle module into the kernel. I was told that the needful would be
-done in the rt2x00 driver. Could you guys update me with the status?
-Thanks a lot!
--Parth Sane
+On 10 February 2015 at 14:14, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> On Tue, 2015-02-10 at 11:33 +0100, Michal Kazior wrote:
+>>                            ath10k_core_napi_dummy_poll, 64);
+>> +       ewma_init(&ar->tx_delay_us, 16384, 8);
+>
+>
+> 1) 16384 factor might be too big.
+>
+> 2) a weight of 8 seems too low given aggregation values used in wifi.
+>
+> On 32bit arches, the max range for ewma value would be 262144 usec,
+> a quarter of a second...
+>
+> You could use a factor of 64 instead, and a weight of 16.
 
-On 4 December 2014 at 20:06, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->
-> On Thu, Dec 04, 2014 at 09:49:53AM +0100, Oleksij Rempel wrote:
-> > So far i know, Felix is working on abgn+ac (MT7662 and MT7612) devices.
-> > MT7601STA is (a)bgn. Are there similar regs?
->
-> All Mediatek/Ralink devices I know have the same MAC registers, but
-> different BBP and RF registers.
->
-> > In mt7601 code i see parts like "if (IS_RT3290(pAd) || IS_RT65XX(pAd) ||
-> > IS_MT7601(pAd))".  RT3290 is supported by rt2x00.
->
-> Hence looks that support for this devices should be added to rt2x00.
->
-> Stanislaw
->
+64/16 seems to work fine as well.
+
+On a related note: I still wonder how to get single TCP flow to reach
+line rate with ath10k (it still doesn't; I reach line rate with
+multiple flows only). Isn't the tcp_limit_output_bytes just too small
+for devices like Wi-Fi where you can send aggregates of even 64*3*1500
+bytes long in a single shot and you can't expect even a single
+tx-completion of it to come in before its transmitted entirely? You
+effectively operate with bursts of traffic.
+
+Some numbers:
+ ath10k w/o cushion w/o aggregation 1 flow: UDP 65mbps, TCP 30mbps
+ ath10k w/ cushion w/o aggregation 1 flow: UDP 65mbps, TCP 59mbps
+ ath10k w/o cushion w/ aggregation 1 flow: UDP 650mbps, TCP 250mbps
+ ath10k w/ cushion w/ aggregation 1 flow: UDP 650mbps, TCP 250mbps
+ ath10k w/o cushion w/ aggregation 5 flows: UDP 650mbps, TCP 250mbps
+ ath10k w/ cushion w/ aggregation 5 flows: UDP 650mbps, TCP 600mbps
+
+"w/o aggregation" means forcing ath10k to use 1 A-MSDU and 1 A-MPDU
+per aggregate so latencies due to aggregation itself should be pretty
+much nil.
+
+If I set tcp_limit_output_bytes to 700K+ I can get ath10k w/ cushion
+w/ aggregation to reach 600mbps on a single flow.
+
+
+Michał
