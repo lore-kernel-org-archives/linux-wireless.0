@@ -1,154 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45240 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649AbbBGMZR (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:6417 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752445AbbBKMNE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Feb 2015 07:25:17 -0500
-Message-ID: <54D6042A.1020404@broadcom.com> (sfid-20150207_132625_408968_6D273E73)
-Date: Sat, 7 Feb 2015 13:25:14 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 11 Feb 2015 07:13:04 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1BC94lk012035
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:13:03 -0800
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1set0u7k6r-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:13:03 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/4] mwifiex: change datatype to bool for device capability flags
+Date: Wed, 11 Feb 2015 23:12:26 +0530
+Message-ID: <1423676547-5213-3-git-send-email-patila@marvell.com> (sfid-20150211_131314_217410_82524071)
+In-Reply-To: <1423676547-5213-1-git-send-email-patila@marvell.com>
+References: <1423676547-5213-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-To: Naveen Singh <naveen@nestlabs.com>
-CC: <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: WPA Supplicant not able to listen to events from driver
-References: <CAFK1zRDiMcKZWgU=DGh4bzjyV07STuKKyHi2az_s-=KCDiEK8A@mail.gmail.com>	<54D47FB5.3000303@broadcom.com> <CAFK1zRADFhojfB_3RsPaPi9WBdQ9RPgrzbwewYgE2nqWmS+vdQ@mail.gmail.com>
-In-Reply-To: <CAFK1zRADFhojfB_3RsPaPi9WBdQ9RPgrzbwewYgE2nqWmS+vdQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/15 22:24, Naveen Singh wrote:
-> Thanks it worked. But looks like every time we load the driver, phy
-> index kept on incrementing.
+This patch changes datatypes for device capability flags to bool.
+Patch also aggregates these variables at single place.
 
-That is expected. If I recall correctly it is a static counter in 
-cfg80211 that is used for assigning phy index upon wiphy_register call.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/pcie.c |  4 +--
+ drivers/net/wireless/mwifiex/pcie.h |  6 ++--
+ drivers/net/wireless/mwifiex/sdio.c |  8 ++---
+ drivers/net/wireless/mwifiex/sdio.h | 60 ++++++++++++++++++-------------------
+ 4 files changed, 39 insertions(+), 39 deletions(-)
 
-Regards,
-Arend
-
-> Regards
-> Naveen
->
-> On Fri, Feb 6, 2015 at 12:47 AM, Arend van Spriel <arend@broadcom.com
-> <mailto:arend@broadcom.com>> wrote:
->
->     On 02/06/15 04:22, Naveen Singh wrote:
->
->         Hi All
->         For my system we have cfg80211 built as loadable module. When we
->         unload
->         our WLAN driver cfg80211 gets unloaded as well.
->
->
->     So how is your WLAN driver unloaded. When unloading cfg80211 the
->     nl80211 netlink family is unregistered from the kernel probably
->     closing all user-space netlink sockets.
->
->     If you only 'rmmod' your WLAN driver than supplicant should be fine
->     handling it as cfg80211 is not unloaded. If you use 'modprobe -r' it
->     will unload dependent modules if their refcount is zero.
->
->     Regards,
->     Arend
->
->         After reloading the
->         driver I found that none of the events from driver never makes to
->         supplicant. I see that connect command from supplicant makes to
->         driver
->         but the NL_CONNECT_CMD netlink message from the driver is
->         dropped. On
->         further debugging I found that the messages are dropped in the
->         following
->         function sd it does not call *do_one_broadcast*. Looks like all the
->         previous bindings were lost. After killing the supplicant and
->         restarting
->         the supplicant I can see that the subscriptions are updated and
->         connection succeeded.
->
->         int netlink_broadcast_filtered(__struct sock *ssk, struct
->         sk_buff *skb,
->         u32 portid,
->         u32 group, gfp_t allocation,
->         int (*filter)(struct sock *dsk, struct sk_buff *skb, void *data),
->         void *filter_data)
->         {
->         struct net *net = sock_net(ssk);
->         struct netlink_broadcast_data info;
->         struct sock *sk;
->
->         skb = netlink_trim(skb, allocation);
->
->         info.exclude_sk = ssk;
->         info.net <http://info.net> <http://info.net> = net;
->         info.portid = portid;
->         info.group = group;
->         info.failure = 0;
->         info.delivery_failure = 0;
->         info.congested = 0;
->         info.delivered = 0;
->         info.allocation = allocation;
->         info.skb = skb;
->         info.skb2 = NULL;
->         info.tx_filter = filter;
->         info.tx_data = filter_data;
->
->         /* While we sleep in clone, do not allow to change socket list */
->
->         netlink_lock_table();
->
->         sk_for_each_bound(sk, &nl_table[ssk->sk_protocol].__mc_list)
->         d*o_one_broadcast(sk, &info); ==> This function is not called at
->         all as
->         it does not find any subscription at all. *
->
->         consume_skb(skb);
->
->         netlink_unlock_table();
->
->         if (info.delivery_failure) {
->         kfree_skb(info.skb2);
->         return -ENOBUFS;
->         }
->         consume_skb(info.skb2);
->
->         if (info.delivered) {
->         if (info.congested && (allocation & __GFP_WAIT))
->         yield();
->         My feeling is that as cfg80211 gets unloaded as well when driver is
->         unloaded, it loses all the subscription and hence none of the
->         message
->         from driver gets ever delivered to supplicant. But what
->         surprises me is
->         that although we cannot send messages from driver to supplicant
->         it is
->         not true in reverse direction. Connect command from supplicant
->         lands in
->         driver. Has anyone seen something similar? I have a workaround
->         right now
->         where i restart the supplicant whenever i unload and load the
->         driver.
->         But I would like to have a cleaner solution.
->
->
->         Regards
->         Naveen
->
->
->
->         _________________________________________________
->         HostAP mailing list
->         HostAP@lists.shmoo.com <mailto:HostAP@lists.shmoo.com>
->         http://lists.shmoo.com/__mailman/listinfo/hostap
->         <http://lists.shmoo.com/mailman/listinfo/hostap>
->
->
->     _________________________________________________
->     HostAP mailing list
->     HostAP@lists.shmoo.com <mailto:HostAP@lists.shmoo.com>
->     http://lists.shmoo.com/__mailman/listinfo/hostap
->     <http://lists.shmoo.com/mailman/listinfo/hostap>
->
->
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index a5828da..0640bd6 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -203,7 +203,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 		card->pcie.reg = data->reg;
+ 		card->pcie.blksz_fw_dl = data->blksz_fw_dl;
+ 		card->pcie.tx_buf_size = data->tx_buf_size;
+-		card->pcie.supports_fw_dump = data->supports_fw_dump;
++		card->pcie.can_dump_fw = data->can_dump_fw;
+ 		card->pcie.can_ext_scan = data->can_ext_scan;
+ 	}
+ 
+@@ -2271,7 +2271,7 @@ static void mwifiex_pcie_fw_dump_work(struct mwifiex_adapter *adapter)
+ 	int ret;
+ 	static char *env[] = { "DRIVER=mwifiex_pcie", "EVENT=fw_dump", NULL };
+ 
+-	if (!card->pcie.supports_fw_dump)
++	if (!card->pcie.can_dump_fw)
+ 		return;
+ 
+ 	for (idx = 0; idx < ARRAY_SIZE(mem_type_mapping_tbl); idx++) {
+diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
+index 666d40e..0e7ee8b 100644
+--- a/drivers/net/wireless/mwifiex/pcie.h
++++ b/drivers/net/wireless/mwifiex/pcie.h
+@@ -205,7 +205,7 @@ struct mwifiex_pcie_device {
+ 	const struct mwifiex_pcie_card_reg *reg;
+ 	u16 blksz_fw_dl;
+ 	u16 tx_buf_size;
+-	bool supports_fw_dump;
++	bool can_dump_fw;
+ 	bool can_ext_scan;
+ };
+ 
+@@ -214,7 +214,7 @@ static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
+ 	.reg            = &mwifiex_reg_8766,
+ 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+-	.supports_fw_dump = false,
++	.can_dump_fw = false,
+ 	.can_ext_scan = true,
+ };
+ 
+@@ -223,7 +223,7 @@ static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
+ 	.reg            = &mwifiex_reg_8897,
+ 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
+-	.supports_fw_dump = true,
++	.can_dump_fw = true,
+ 	.can_ext_scan = true,
+ };
+ 
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 91e36cd..78a9e86 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -105,8 +105,8 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 		card->tx_buf_size = data->tx_buf_size;
+ 		card->mp_tx_agg_buf_size = data->mp_tx_agg_buf_size;
+ 		card->mp_rx_agg_buf_size = data->mp_rx_agg_buf_size;
+-		card->supports_fw_dump = data->supports_fw_dump;
+-		card->auto_tdls = data->auto_tdls;
++		card->can_dump_fw = data->can_dump_fw;
++		card->can_auto_tdls = data->can_auto_tdls;
+ 		card->can_ext_scan = data->can_ext_scan;
+ 	}
+ 
+@@ -1887,7 +1887,7 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 		return -1;
+ 	}
+ 
+-	adapter->auto_tdls = card->auto_tdls;
++	adapter->auto_tdls = card->can_auto_tdls;
+ 	adapter->ext_scan = card->can_ext_scan;
+ 	return ret;
+ }
+@@ -2032,7 +2032,7 @@ static void mwifiex_sdio_fw_dump_work(struct work_struct *work)
+ 
+ 	mwifiex_dump_drv_info(adapter);
+ 
+-	if (!card->supports_fw_dump)
++	if (!card->can_dump_fw)
+ 		return;
+ 
+ 	for (idx = 0; idx < ARRAY_SIZE(mem_type_mapping_tbl); idx++) {
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 957cca2..3fe9fb4 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -238,9 +238,6 @@ struct sdio_mmc_card {
+ 	const struct mwifiex_sdio_card_reg *reg;
+ 	u8 max_ports;
+ 	u8 mp_agg_pkt_limit;
+-	bool supports_sdio_new_mode;
+-	bool has_control_mask;
+-	bool supports_fw_dump;
+ 	u16 tx_buf_size;
+ 	u32 mp_tx_agg_buf_size;
+ 	u32 mp_rx_agg_buf_size;
+@@ -255,7 +252,10 @@ struct sdio_mmc_card {
+ 	u8 curr_wr_port;
+ 
+ 	u8 *mp_regs;
+-	u8 auto_tdls;
++	bool supports_sdio_new_mode;
++	bool has_control_mask;
++	bool can_dump_fw;
++	bool can_auto_tdls;
+ 	bool can_ext_scan;
+ 
+ 	struct mwifiex_sdio_mpa_tx mpa_tx;
+@@ -267,13 +267,13 @@ struct mwifiex_sdio_device {
+ 	const struct mwifiex_sdio_card_reg *reg;
+ 	u8 max_ports;
+ 	u8 mp_agg_pkt_limit;
+-	bool supports_sdio_new_mode;
+-	bool has_control_mask;
+-	bool supports_fw_dump;
+ 	u16 tx_buf_size;
+ 	u32 mp_tx_agg_buf_size;
+ 	u32 mp_rx_agg_buf_size;
+-	u8 auto_tdls;
++	bool supports_sdio_new_mode;
++	bool has_control_mask;
++	bool can_dump_fw;
++	bool can_auto_tdls;
+ 	bool can_ext_scan;
+ };
+ 
+@@ -412,13 +412,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
+ 	.reg = &mwifiex_reg_sd87xx,
+ 	.max_ports = 16,
+ 	.mp_agg_pkt_limit = 8,
+-	.supports_sdio_new_mode = false,
+-	.has_control_mask = true,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+ 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+-	.supports_fw_dump = false,
+-	.auto_tdls = false,
++	.supports_sdio_new_mode = false,
++	.has_control_mask = true,
++	.can_dump_fw = false,
++	.can_auto_tdls = false,
+ 	.can_ext_scan = false,
+ };
+ 
+@@ -427,13 +427,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 = {
+ 	.reg = &mwifiex_reg_sd87xx,
+ 	.max_ports = 16,
+ 	.mp_agg_pkt_limit = 8,
+-	.supports_sdio_new_mode = false,
+-	.has_control_mask = true,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+ 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+-	.supports_fw_dump = false,
+-	.auto_tdls = false,
++	.supports_sdio_new_mode = false,
++	.has_control_mask = true,
++	.can_dump_fw = false,
++	.can_auto_tdls = false,
+ 	.can_ext_scan = true,
+ };
+ 
+@@ -442,13 +442,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 = {
+ 	.reg = &mwifiex_reg_sd87xx,
+ 	.max_ports = 16,
+ 	.mp_agg_pkt_limit = 8,
+-	.supports_sdio_new_mode = false,
+-	.has_control_mask = true,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+ 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+-	.supports_fw_dump = false,
+-	.auto_tdls = false,
++	.supports_sdio_new_mode = false,
++	.has_control_mask = true,
++	.can_dump_fw = false,
++	.can_auto_tdls = false,
+ 	.can_ext_scan = true,
+ };
+ 
+@@ -457,13 +457,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
+ 	.reg = &mwifiex_reg_sd8897,
+ 	.max_ports = 32,
+ 	.mp_agg_pkt_limit = 16,
+-	.supports_sdio_new_mode = true,
+-	.has_control_mask = false,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
+ 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+-	.supports_fw_dump = true,
+-	.auto_tdls = false,
++	.supports_sdio_new_mode = true,
++	.has_control_mask = false,
++	.can_dump_fw = true,
++	.can_auto_tdls = false,
+ 	.can_ext_scan = true,
+ };
+ 
+@@ -472,13 +472,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
+ 	.reg = &mwifiex_reg_sd8887,
+ 	.max_ports = 32,
+ 	.mp_agg_pkt_limit = 16,
+-	.supports_sdio_new_mode = true,
+-	.has_control_mask = false,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
+ 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+-	.supports_fw_dump = false,
+-	.auto_tdls = true,
++	.supports_sdio_new_mode = true,
++	.has_control_mask = false,
++	.can_dump_fw = false,
++	.can_auto_tdls = true,
+ 	.can_ext_scan = true,
+ };
+ 
+@@ -492,8 +492,8 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+ 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
+-	.supports_fw_dump = false,
+-	.auto_tdls = false,
++	.can_dump_fw = false,
++	.can_auto_tdls = false,
+ 	.can_ext_scan = true,
+ };
+ 
+-- 
+1.8.1.4
 
