@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:39770 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752343AbbBSTab (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:16714 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752445AbbBKMNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 14:30:31 -0500
-Received: by mail-wg0-f49.google.com with SMTP id l18so9205548wgh.8
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 11:30:30 -0800 (PST)
+	Wed, 11 Feb 2015 07:13:08 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1BCA4pk015501
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:13:07 -0800
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1sfwqx17jx-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:13:06 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 4/4] mwifiex: modify TX buff size for SD8887
+Date: Wed, 11 Feb 2015 23:12:27 +0530
+Message-ID: <1423676547-5213-4-git-send-email-patila@marvell.com> (sfid-20150211_131314_866114_C6C6A1AF)
+In-Reply-To: <1423676547-5213-1-git-send-email-patila@marvell.com>
+References: <1423676547-5213-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 20 Feb 2015 01:00:10 +0530
-Message-ID: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com> (sfid-20150219_203035_376982_5BB50F7C)
-Subject: Connection issues with BW Tracking in mac80211
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+FW crash has been observed while running iperf TX with SD8887
+devices. This is because of invalid TX buffer setting. SD8887
+supports 2K buffer sizes. This patch fixes this issue.
 
-The BW tracking feature in mac80211 is causing connection problems and
-operating mode/bw problems when switching b/w modes and bw's in AP.
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-For Eg. Initially if AP is operating in VHT-80MHz, and then we changed
-in to HT-40MHz, mac80211 cannot handle it because the VHT capability
-is mismatched b/w stored info (ifmgd->flags).
-
-I have tried your DISABLE_BW_TRACK patch, that helps making the
-connection but it doesn't update the chipset causing issues.
-
-Ideally we should be able to handle all the config changes right?
-
-
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index 3fe9fb4..c636944 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -472,7 +472,7 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
+ 	.reg = &mwifiex_reg_sd8887,
+ 	.max_ports = 32,
+ 	.mp_agg_pkt_limit = 16,
+-	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
++	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
+ 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+ 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+ 	.supports_sdio_new_mode = true,
 -- 
-Thanks,
-Regards,
-Chaitanya T K.
+1.8.1.4
+
