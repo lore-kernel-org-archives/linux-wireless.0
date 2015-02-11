@@ -1,35 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34880 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759233AbbBIKQy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 05:16:54 -0500
-Message-ID: <1423477011.2110.8.camel@sipsolutions.net> (sfid-20150209_111657_583305_39DD6933)
-Subject: Re: [PATCH] cfg80211: add debugfs VHT80 allow map
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	"Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-Date: Mon, 09 Feb 2015 11:16:51 +0100
-In-Reply-To: <1423466162219.33842@qti.qualcomm.com>
-References: <1423204546-22872-1-git-send-email-arnagara@qti.qualcomm.com>
-	,<1423249860.2037.28.camel@sipsolutions.net>
-	 <1423466162219.33842@qti.qualcomm.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:37270 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994AbbBKNRz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2015 08:17:55 -0500
+Message-ID: <1423660672.4847.15.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150211_141803_450438_EAAEAD60)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Eyal Perry <eyalpe@dev.mellanox.co.il>
+Date: Wed, 11 Feb 2015 05:17:52 -0800
+In-Reply-To: <CA+BoTQkRp38nttSJgKs4dzQrn-TXpPbh4i-01YCF0BJQWrFi=Q@mail.gmail.com>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com>
+	 <1423574079.28434.21.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkRp38nttSJgKs4dzQrn-TXpPbh4i-01YCF0BJQWrFi=Q@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[please don't top-post]
+On Wed, 2015-02-11 at 09:33 +0100, Michal Kazior wrote:
 
-On Mon, 2015-02-09 at 07:16 +0000, Nagarajan, Ashok Raj wrote:
-> Hi Johannes,
-> 
-> I see your point here. I will upload one patch for printing this info from iw.
-> 
-> I will also write another patch for removing HT40 one?
+> If I set tcp_limit_output_bytes to 700K+ I can get ath10k w/ cushion
+> w/ aggregation to reach 600mbps on a single flow.
 
-Sounds fine - any complaints from others?
+You know, there is a reason this sysctl exists in the first place ;)
 
-johannes
+The first suggestion I made to you was to raise it.
+
+The default setting must stay as is as long default Qdisc is pfifo_fast.
+
+I believe I already mentioned skb->truesize tricks for drivers willing
+to adjust the TSQ given their constraints.
+
 
