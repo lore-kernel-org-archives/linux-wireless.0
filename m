@@ -1,85 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mrs.ro ([109.74.194.28]:50846 "EHLO mrs.ro"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751850AbbBVMVH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2015 07:21:07 -0500
-Message-ID: <54E9C852.50809@mrs.ro> (sfid-20150222_132111_664352_169480CB)
-Date: Sun, 22 Feb 2015 14:15:14 +0200
-From: Valentin Manea <linux-wirelss@mrs.ro>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:37289 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751061AbbBKI5e convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2015 03:57:34 -0500
+Received: by mail-wi0-f175.google.com with SMTP id r20so15256942wiv.2
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 00:57:33 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: emmanuel.grumbach@intel.com, eran.harary@intel.com
-Subject: iwlwifi: ampdu_factor for iwl-6000 is set to 0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1423577962.2215.2.camel@sipsolutions.net>
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	<1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	<1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+	<1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
+	<1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423230785.31870.131.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkazCOin7VWLfrHUjtgKDPV6T+sFsk5FPS7D-morr4FZQ@mail.gmail.com>
+	<CA+BoTQn3KRym0qCJ+fLav5LQgjfiN_-Eqz0xPSc2eXJ-ijNjQw@mail.gmail.com>
+	<1423494690.31870.189.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com>
+	<1423577962.2215.2.camel@sipsolutions.net>
+Date: Wed, 11 Feb 2015 09:57:33 +0100
+Message-ID: <CA+BoTQn=YQQ_yUHvpAG3MMAw+=jxgLDiUMWxiTC3B3vkksTw9g@mail.gmail.com> (sfid-20150211_095742_482114_A655BAEA)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Eyal Perry <eyalpe@dev.mellanox.co.il>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 10 February 2015 at 15:19, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2015-02-10 at 11:33 +0100, Michal Kazior wrote:
+>
+>> +       if (msdu->sk) {
+>> +               ewma_add(&ar->tx_delay_us,
+>> +                        ktime_to_ns(ktime_sub(ktime_get(), skb_cb->stamp)) /
+>> +                        NSEC_PER_USEC);
+>> +
+>> +               ACCESS_ONCE(msdu->sk->sk_tx_completion_delay_cushion) =
+>> +                               (ewma_read(&ar->tx_delay_us) *
+>> +                                msdu->sk->sk_pacing_rate) >> 20;
+>> +       }
+>
+> To some extent, every wifi driver is going to have this problem. Perhaps
+> we should do this in mac80211?
 
-   Recently I started using kernel 3.19 from Ubuntu ppa and I noticed a 
-big drop in Wifi throughput. After some investigation I found that my 
-router was reporting the AMPDU factor changed from 3(in 3.18) to 0(in 3.19):
-cat 
-/sys/kernel/debug/ieee80211/phy1/netdev:wlan1/stations/c4:xx:xx:xx:xx:xx/ht_capa:
-ht supported
-cap: 0x1066
-         HT20/HT40
-         Dynamic SM Power Save
-         RX HT20 SGI
-         RX HT40 SGI
-         No RX STBC
-         Max AMSDU length: 3839 bytes
-         DSSS/CCK HT40
-ampdu factor/density: 3/5
-MCS mask: ff ff 00 00 00 00 00 00 00 00
-MCS tx params: 1
+Good point. I was actually thinking about it. I can try cooking a
+patch unless you want to do it yourself :-)
 
-ht supported
-cap: 0x1066
-         HT20/HT40
-         Dynamic SM Power Save
-         RX HT20 SGI
-         RX HT40 SGI
-         No RX STBC
-         Max AMSDU length: 3839 bytes
-         DSSS/CCK HT40
-ampdu factor/density: 0/5
-MCS mask: ff ff 00 00 00 00 00 00 00 00
-MCS tx params: 1
 
-   In my setup this means a 50% drop in downstream throughput(from 
-160Mbit/s to 80Mbit/s)
-
-   I tracked down the offending commit and it seems this is it:
-  iwlwifi: change max HT and VHT A-MPDU exponent 
-c064ddf318aa51647a30108f7cd151c208c62eef
-   A new mechanism was created to have per device ampd_factor:
-- ht_info->ampdu_factor = IEEE80211_HT_MAX_AMPDU_64K;
-+ ht_info->ampdu_factor = cfg->max_ht_ampdu_exponent;
-
-   however the max_ht_ampdu_exponent is not set for any of the iwl-6000 
-devices(including mine Intel Corporation Centrino Advanced-N 6235)
-
-#define IWL_DEVICE_6035						\
-	.fw_name_pre = IWL6030_FW_PRE,				\
-	.ucode_api_max = IWL6035_UCODE_API_MAX,			\
-	.ucode_api_ok = IWL6035_UCODE_API_OK,			\
-	.ucode_api_min = IWL6035_UCODE_API_MIN,			\
-	.device_family = IWL_DEVICE_FAMILY_6030,		\
-	.max_inst_size = IWL60_RTC_INST_SIZE,			\
-	.max_data_size = IWL60_RTC_DATA_SIZE,			\
-	.nvm_ver = EEPROM_6030_EEPROM_VERSION,		\
-	.nvm_calib_ver = EEPROM_6030_TX_POWER_VERSION,	\
-	.base_params = &iwl6000_g2_base_params,			\
-	.eeprom_params = &iwl6000_eeprom_params,		\
-	.led_mode = IWL_LED_RF_STATE
-
-   Since the original value of IEEE80211_HT_MAX_AMPDU_64K I would 
-suggest adding it to some iwl-6000 devices.
-   I did not submit any patches because I have no idea if there are 
-device which would not support this feature, however it worked before 
-with default value set to IEEE80211_HT_MAX_AMPDU_64K so I guess it must 
-be supported.
-
-Regards,
-Valentin
+Michał
