@@ -1,69 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:58891 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965690AbbBDMxP convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f41.google.com ([209.85.215.41]:42258 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754337AbbBKWvU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 07:53:15 -0500
-Received: by mail-wg0-f49.google.com with SMTP id k14so1526291wgh.8
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2015 04:53:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Wed, 4 Feb 2015 13:53:11 +0100
-Message-ID: <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com> (sfid-20150204_135320_650134_35405608)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Feb 2015 17:51:20 -0500
+Received: by labgf13 with SMTP id gf13so6561334lab.9
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 14:51:16 -0800 (PST)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] iwl4965: Enable checking of format strings
+Date: Wed, 11 Feb 2015 23:51:08 +0100
+Message-Id: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk> (sfid-20150211_235132_289178_CD5E9867)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 February 2015 at 13:38, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Wed, 2015-02-04 at 13:22 +0100, Michal Kazior wrote:
->> On 4 February 2015 at 12:57, Eric Dumazet <eric.dumazet@gmail.com> wrote:
->
->>
->> > To disable gso you would have to use :
->> >
->> > ethtool -K wlan1 gso off
->>
->> Oh, thanks! This works. However I can't turn it on:
->>
->> ; ethtool -K wlan1 gso on
->> Could not change any device features
->>
->> ..so I guess it makes no sense to re-run tests because:
->>
->> ; ethtool -k wlan1 | grep generic
->>         tx-checksum-ip-generic: on [fixed]
->> generic-segmentation-offload: off [requested on]
->> generic-receive-offload: on
->>
->> And this seems to never change.
->
-> GSO requires SG (Scatter Gather)
->
-> Are you sure this hardware has no SG support ?
+Since these fmt_* variables are just const char*, and not const
+char[], gcc (and smatch) doesn't to type checking of the arguments to
+the printf functions. Since the linker knows perfectly well to merge
+identical string constants, there's no point in having three static
+pointers waste memory and give an extra level of indirection.
 
-The hardware itself seems to be capable. The firmware is a problem
-though. I'm also not sure if mac80211 can handle this as is. No 802.11
-driver seems to support SG except wil6210 which uses cfg80211 and
-netdevs directly.
+This removes over 100 "non-constant format argument" warnings from
+smatch, accounting for about 20% of all such warnings in an
+allmodconfig.
 
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/net/wireless/iwlegacy/4965-debug.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Michał
+diff --git a/drivers/net/wireless/iwlegacy/4965-debug.c b/drivers/net/wireless/iwlegacy/4965-debug.c
+index e0597bfdddb8..18855325cc1c 100644
+--- a/drivers/net/wireless/iwlegacy/4965-debug.c
++++ b/drivers/net/wireless/iwlegacy/4965-debug.c
+@@ -28,10 +28,9 @@
+ #include "common.h"
+ #include "4965.h"
+ 
+-static const char *fmt_value = "  %-30s %10u\n";
+-static const char *fmt_table = "  %-30s %10u  %10u  %10u  %10u\n";
+-static const char *fmt_header =
+-    "%-32s    current  cumulative       delta         max\n";
++#define fmt_value "  %-30s %10u\n"
++#define fmt_table "  %-30s %10u  %10u  %10u  %10u\n"
++#define fmt_header "%-32s    current  cumulative       delta         max\n"
+ 
+ static int
+ il4965_stats_flag(struct il_priv *il, char *buf, int bufsz)
+-- 
+2.1.3
+
