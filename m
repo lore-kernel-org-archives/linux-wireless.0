@@ -1,54 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:42633 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751870AbbBTOMP (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44191 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751738AbbBKMM7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2015 09:12:15 -0500
-Received: by wesw62 with SMTP id w62so5785732wes.9
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2015 06:12:14 -0800 (PST)
-From: Sven Eckelmann <sven@open-mesh.com>
-To: Felix Fietkau <nbd@openwrt.org>, simon@open-mesh.com
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	marek@open-mesh.com, Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [PATCH v6 2/3] mac80211/minstrel_ht: use the new rate control API
-Date: Fri, 20 Feb 2015 15:12:10 +0100
-Message-ID: <2670025.E9NWYu3f4D@bentobox> (sfid-20150220_151218_990325_E48C8D50)
-In-Reply-To: <1366640083-1054-2-git-send-email-nbd@openwrt.org>
-References: <1366640083-1054-1-git-send-email-nbd@openwrt.org> <1366640083-1054-2-git-send-email-nbd@openwrt.org>
+	Wed, 11 Feb 2015 07:12:59 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1BCAECl015594
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:12:58 -0800
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1sfwqx17jk-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:12:58 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
+	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/4] mwifiex: more_task flag for main_process
+Date: Wed, 11 Feb 2015 23:12:24 +0530
+Message-ID: <1423676547-5213-1-git-send-email-patila@marvell.com> (sfid-20150211_131322_645382_AA15C4DA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Shengzhen Li <szli@marvell.com>
 
->  static void
-> @@ -846,6 +857,8 @@ minstrel_ht_update_caps(void *priv, struct
-> ieee80211_supported_band *sband,
-> 
->  	msp->is_ht = true;
->  	memset(mi, 0, sizeof(*mi));
-> +
-> +	mi->sta = sta;
->  	mi->stats_update = jiffies;
+This patch handles a corner case where TX packet would remain in
+driver queue till next packet comes in.
+Here is sequence:
+1. TX packet is queued via hard_start_xmit and main_work is queued
+2. SDIO interrupt comes in which directly call mwifiex_main_process.
+This starts executing main superloop.
+3. Now work from step1 is scheduled but at first check itself it sees
+mwifiex_processing is set and exits.
+4. Now if superloop from step2 has passed TX processing part of superloop
+this packet would remain in queue until next packet/command/SDIO interrupt
+arrives and queues main_work.
 
-minstrel_ht_update_caps can be called on init and on different other changes
-(rate_control_rate_update).
+This patch fixes this corner case by defining more_task flag which is set when
+mwifiex_processing is found to be true. At end of superloop we again check if
+more_task flag is set and if set, execute superloop again.
 
-Which lock protects mi from following scenario?
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/main.c | 16 +++++++++-------
+ drivers/net/wireless/mwifiex/main.h |  1 +
+ 2 files changed, 10 insertions(+), 7 deletions(-)
 
-context 1: memset(mi, 0, sizeof(*mi)); // mi->sta is now NULL
-context 2: minstrel_ht_update_rates -> rate_control_set_rates(mp->hw, mi->sta, rates)
-context 2: rate_control_set_rates dereferences pubsta->rates (mi->sta + 0x48) -> Kernel Oops
-context 1: mi->sta = sta
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 7e74b4f..74488ab 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -190,14 +190,16 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 
+ 	/* Check if already processing */
+ 	if (adapter->mwifiex_processing) {
++		adapter->more_task_flag = true;
+ 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		goto exit_main_proc;
+ 	} else {
+ 		adapter->mwifiex_processing = true;
+-		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 	}
+ process_start:
+ 	do {
++		adapter->more_task_flag = false;
++		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		if ((adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) ||
+ 		    (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY))
+ 			break;
+@@ -238,6 +240,7 @@ process_start:
+ 			adapter->pm_wakeup_fw_try = true;
+ 			mod_timer(&adapter->wakeup_timer, jiffies + (HZ*3));
+ 			adapter->if_ops.wakeup(adapter);
++			spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 			continue;
+ 		}
+ 
+@@ -295,8 +298,10 @@ process_start:
+ 		if ((adapter->ps_state == PS_STATE_SLEEP) ||
+ 		    (adapter->ps_state == PS_STATE_PRE_SLEEP) ||
+ 		    (adapter->ps_state == PS_STATE_SLEEP_CFM) ||
+-		    adapter->tx_lock_flag)
++		    adapter->tx_lock_flag){
++			spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 			continue;
++		}
+ 
+ 		if (!adapter->cmd_sent && !adapter->curr_cmd) {
+ 			if (mwifiex_exec_next_cmd(adapter) == -1) {
+@@ -330,15 +335,12 @@ process_start:
+ 			}
+ 			break;
+ 		}
++		spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 	} while (true);
+ 
+ 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+-	if (!adapter->delay_main_work &&
+-	    (adapter->int_status || IS_CARD_RX_RCVD(adapter))) {
+-		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
++	if (adapter->more_task_flag)
+ 		goto process_start;
+-	}
+-
+ 	adapter->mwifiex_processing = false;
+ 	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index f0a6af1..2089a30 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -774,6 +774,7 @@ struct mwifiex_adapter {
+ 	/* spin lock for main process */
+ 	spinlock_t main_proc_lock;
+ 	u32 mwifiex_processing;
++	u8 more_task_flag;
+ 	u16 tx_buf_size;
+ 	u16 curr_tx_buf_size;
+ 	u32 ioport;
+-- 
+1.8.1.4
 
-The first context is from one of the many rate_control_rate_update in mac80211
-and the second context is from ieee80211_tx_status.
-
-The question came up when discovering the OpenWrt bug report
- https://dev.openwrt.org/ticket/18388 (minstrel_ht_update_caps
-the thing most likely behind minstrel_remove_sta_debugfs+0xe8c/0x1674 - at least
-EPC is pointing inside this function for a build from this revision)
-
-Kind regards,
-	Sven Eckelmann
