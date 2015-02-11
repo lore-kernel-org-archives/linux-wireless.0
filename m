@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35270 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752072AbbBWWH3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 17:07:29 -0500
-Message-ID: <1424729246.1899.6.camel@sipsolutions.net> (sfid-20150223_230732_333088_8095987A)
-Subject: Re: [RFC] mac80211: use rhashtable for station table
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-Date: Mon, 23 Feb 2015 23:07:26 +0100
-In-Reply-To: <1424728896.1899.4.camel@sipsolutions.net> (sfid-20150223_230144_756013_7AD36172)
-References: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
-	 <CAHNKnsSm1GOUMONPB4oB1tJ-OeWOG1XOhw=HEY8LPXhDEHEjbg@mail.gmail.com>
-	 <1424709235.3075.22.camel@sipsolutions.net>
-	 <CAHNKnsR0j1u6Eu2e19pzcu2Rw7nZ6D6BKV-cRg9KTwoKO74fdQ@mail.gmail.com>
-	 (sfid-20150223_222714_678902_C1EA88E2) <1424728360.1899.3.camel@sipsolutions.net>
-	 (sfid-20150223_225246_802504_8A0F3B9D) <1424728896.1899.4.camel@sipsolutions.net>
-	 (sfid-20150223_230144_756013_7AD36172)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:55176 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752959AbbBKSoD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2015 13:44:03 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: David Miller <davem@davemloft.net>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: pull-request: wireless-drivers 2015-02-11
+Date: Wed, 11 Feb 2015 20:43:53 +0200
+Message-ID: <87iof8l252.fsf@kamboji.qca.qualcomm.com> (sfid-20150211_194427_434276_6B3A2524)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-02-23 at 23:01 +0100, Johannes Berg wrote:
-> On Mon, 2015-02-23 at 22:52 +0100, Johannes Berg wrote:
-> 
-> > We also can't rely on 4-byte alignment though, so perhaps we should do
-> > something like
-> > 
-> > u32 sta_info_hash(void *addr, u32 len, u32 seed)
-> > {
-> > 	u16 *a = addr;
-> > 
-> > 	return jhash_3words(a[0], a[1], a[2], seed);
-> > }
-> 
-> Or better do
-> 
-> 	return jhash_2words(addr[0], (addr[1] << 16) | addr[2], seed);
-> 
-> since I have no idea how the missing high 16 bits would behave.
-> (we can rely on 2-byte alignment, but not 4-byte)
+Hi Dave,
 
-Actually, we cannot rely on alignment, so we need to do this:
+here's one rtlwifi fix for 3.20. We have had two reports of this issue
+already, so it would be good to get this to -rc1 or -rc2.
 
-static u32 sta_addr_hash(const void *key, u32 length, u32 seed)
-{
-        return jhash(key, ETH_ALEN, seed);
-}
- 
-which still generates better code since the compiler can optimise based
-on the fixed length.
+I rebased wireless-drivers on top of net-next, so this patch applies to
+net-next. I hope that's ok.
 
-johannes
+Kalle
 
+The following changes since commit b0f9ca53cbb103e9240a29a974e0b6085e58f9f7:
+
+  ipv4: Namespecify TCP PMTU mechanism (2015-02-09 18:45:00 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-02-11
+
+for you to fetch changes up to aeb2d2a4c0ae1739a6e1782bd8c1c96aee8db4e1:
+
+  rtlwifi: Remove logging statement that is no longer needed (2015-02-10 16:09:11 +0200)
+
+----------------------------------------------------------------
+rtlwifi:
+
+* remove superfluous warning message which is not needed anymore
+
+----------------------------------------------------------------
+Larry Finger (1):
+      rtlwifi: Remove logging statement that is no longer needed
+
+ drivers/net/wireless/rtlwifi/pci.c |    5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
