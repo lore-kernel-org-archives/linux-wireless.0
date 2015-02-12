@@ -1,43 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:34953 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753003AbbBWPil (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:62039 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbbBLVSa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 10:38:41 -0500
-Received: by pabrd3 with SMTP id rd3so21190953pab.2
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 07:38:40 -0800 (PST)
-From: Rohan Joyce <rojoyce.github@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] nl80211: add NL80211_CMD_GET_TSF
-Date: Mon, 23 Feb 2015 23:38:05 +0800
-Message-Id: <1424705885-20987-1-git-send-email-rojoyce.github@gmail.com> (sfid-20150223_163850_184453_2191BE55)
-In-Reply-To: <1424701880.3075.0.camel@sipsolutions.net>
-References: <1424701880.3075.0.camel@sipsolutions.net>
+	Thu, 12 Feb 2015 16:18:30 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/3] ath: Introduce chirp parameter used by DFS
+Date: Thu, 12 Feb 2015 13:17:03 -0800
+Message-ID: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150212_221836_148606_AA09E809)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Some of radar types such as FCC radar type 5 require
+to look up chirp in pulse to detect genuine radar and
+it will prevent DFS channels from false radar detection.
 
-The motivation for this patch is to assist using a WiiU Gamepad with Linux. 
-The WiiU Gamepad is an input device that also contains an LCD touchscreen,
-speakers and a variety of sensors. The Gamepad connects to an access
-point (usually the WiiU console itself, but it can be coerced to connect
-to a properly configured hostap). The Gamepad provides five services over
-UDP. Two of the services that are provided (audio and video streaming to
-the device) use the TSF as a timestamp in the application layer. The
-firmware on the Gamepad checks to make sure that incoming packets for
-these services have timestamps within 1000us of its own internal clock,
-which is synced to the TSF of the access point.
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 52 ++++++++++++-------------
+ drivers/net/wireless/ath/dfs_pattern_detector.h |  4 ++
+ 2 files changed, 30 insertions(+), 26 deletions(-)
 
-At the moment, users who want to use this device have to manually apply 
-a kernel patch similar to that which was first posted to this list a year
-ago. This patch is my attempt to implement the functionality using a more
-conventional API and make it easier for end users.
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 3d57f87..b1de8c6 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -48,23 +48,23 @@ struct radar_types {
+ #define WIDTH_LOWER(X) ((X*(100-WIDTH_TOLERANCE)+50)/100)
+ #define WIDTH_UPPER(X) ((X*(100+WIDTH_TOLERANCE)+50)/100)
+ 
+-#define ETSI_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB)	\
++#define ETSI_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB, CHIRP)	\
+ {								\
+ 	ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),		\
+ 	(PRF2PRI(PMAX) - PRI_TOLERANCE),			\
+ 	(PRF2PRI(PMIN) * PRF + PRI_TOLERANCE), PRF, PPB * PRF,	\
+-	PPB_THRESH(PPB), PRI_TOLERANCE,				\
++	PPB_THRESH(PPB), PRI_TOLERANCE,	CHIRP			\
+ }
+ 
+ /* radar types as defined by ETSI EN-301-893 v1.5.1 */
+ static const struct radar_detector_specs etsi_radar_ref_types_v15[] = {
+-	ETSI_PATTERN(0,  0,  1,  700,  700, 1, 18),
+-	ETSI_PATTERN(1,  0,  5,  200, 1000, 1, 10),
+-	ETSI_PATTERN(2,  0, 15,  200, 1600, 1, 15),
+-	ETSI_PATTERN(3,  0, 15, 2300, 4000, 1, 25),
+-	ETSI_PATTERN(4, 20, 30, 2000, 4000, 1, 20),
+-	ETSI_PATTERN(5,  0,  2,  300,  400, 3, 10),
+-	ETSI_PATTERN(6,  0,  2,  400, 1200, 3, 15),
++	ETSI_PATTERN(0,  0,  1,  700,  700, 1, 18, false),
++	ETSI_PATTERN(1,  0,  5,  200, 1000, 1, 10, false),
++	ETSI_PATTERN(2,  0, 15,  200, 1600, 1, 15, false),
++	ETSI_PATTERN(3,  0, 15, 2300, 4000, 1, 25, false),
++	ETSI_PATTERN(4, 20, 30, 2000, 4000, 1, 20, false),
++	ETSI_PATTERN(5,  0,  2,  300,  400, 3, 10, false),
++	ETSI_PATTERN(6,  0,  2,  400, 1200, 3, 15, false),
+ };
+ 
+ static const struct radar_types etsi_radar_types_v15 = {
+@@ -73,21 +73,21 @@ static const struct radar_types etsi_radar_types_v15 = {
+ 	.radar_types		= etsi_radar_ref_types_v15,
+ };
+ 
+-#define FCC_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB)	\
++#define FCC_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB, CHIRP)	\
+ {								\
+ 	ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),		\
+ 	PMIN - PRI_TOLERANCE,					\
+ 	PMAX * PRF + PRI_TOLERANCE, PRF, PPB * PRF,		\
+-	PPB_THRESH(PPB), PRI_TOLERANCE,				\
++	PPB_THRESH(PPB), PRI_TOLERANCE,	CHIRP			\
+ }
+ 
+ static const struct radar_detector_specs fcc_radar_ref_types[] = {
+-	FCC_PATTERN(0, 0, 1, 1428, 1428, 1, 18),
+-	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23),
+-	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16),
+-	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12),
+-	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 1),
+-	FCC_PATTERN(5, 0, 1, 333, 333, 1, 9),
++	FCC_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
++	FCC_PATTERN(1, 0, 5, 150, 230, 1, 23, false),
++	FCC_PATTERN(2, 6, 10, 200, 500, 1, 16, false),
++	FCC_PATTERN(3, 11, 20, 200, 500, 1, 12, false),
++	FCC_PATTERN(4, 50, 100, 1000, 2000, 1, 1, true),
++	FCC_PATTERN(5, 0, 1, 333, 333, 1, 9, false),
+ };
+ 
+ static const struct radar_types fcc_radar_types = {
+@@ -98,15 +98,15 @@ static const struct radar_types fcc_radar_types = {
+ 
+ #define JP_PATTERN FCC_PATTERN
+ static const struct radar_detector_specs jp_radar_ref_types[] = {
+-	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18),
+-	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18),
+-	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18),
+-	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18),
+-	JP_PATTERN(4, 0, 5, 150, 230, 1, 23),
+-	JP_PATTERN(5, 6, 10, 200, 500, 1, 16),
+-	JP_PATTERN(6, 11, 20, 200, 500, 1, 12),
+-	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20),
+-	JP_PATTERN(5, 0, 1, 333, 333, 1, 9),
++	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
++	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, false),
++	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, false),
++	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, false),
++	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, false),
++	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, false),
++	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, false),
++	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, false),
++	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, false),
+ };
+ 
+ static const struct radar_types jp_radar_types = {
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.h b/drivers/net/wireless/ath/dfs_pattern_detector.h
+index dde2652..25a43d6 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.h
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.h
+@@ -40,12 +40,14 @@ struct ath_dfs_pool_stats {
+  * @freq: channel frequency in MHz
+  * @width: pulse duration in us
+  * @rssi: rssi of radar event
++ * @chirp: chirp detected in pulse
+  */
+ struct pulse_event {
+ 	u64 ts;
+ 	u16 freq;
+ 	u8 width;
+ 	u8 rssi;
++	bool chirp;
+ };
+ 
+ /**
+@@ -59,6 +61,7 @@ struct pulse_event {
+  * @ppb: pulses per bursts for this type
+  * @ppb_thresh: number of pulses required to trigger detection
+  * @max_pri_tolerance: pulse time stamp tolerance on both sides [us]
++ * @chirp: chirp required for the radar pattern
+  */
+ struct radar_detector_specs {
+ 	u8 type_id;
+@@ -70,6 +73,7 @@ struct radar_detector_specs {
+ 	u8 ppb;
+ 	u8 ppb_thresh;
+ 	u8 max_pri_tolerance;
++	bool chirp;
+ };
+ 
+ /**
+-- 
+1.9.1
 
-Should I include protocol implementation details specific to this device in
-the documentation of the NL80211_CMD_GET_TSF command?
-
-Thanks for your time,
-
-Rohan
