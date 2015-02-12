@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:48469 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932074AbbBCJAe convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13733 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752080AbbBLVSa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 04:00:34 -0500
-Received: by mail-we0-f174.google.com with SMTP id w55so38297433wes.5
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 01:00:33 -0800 (PST)
+	Thu, 12 Feb 2015 16:18:30 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] ath10k: Update chirp value in pulse event
+Date: Thu, 12 Feb 2015 13:17:04 -0800
+Message-ID: <1423775825-19498-2-git-send-email-poh@qca.qualcomm.com> (sfid-20150212_221837_417961_89A314E1)
+In-Reply-To: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com>
+References: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1422918363.21689.132.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	<54CFEB46.3050006@candelatech.com>
-	<1422918363.21689.132.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Tue, 3 Feb 2015 10:00:33 +0100
-Message-ID: <CA+BoTQko60aGP7QG+ELrgRmU=OFBZVc9n1X-ecGX2rLBnULSTA@mail.gmail.com> (sfid-20150203_100041_683055_7BEC8AAC)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 February 2015 at 00:06, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Mon, 2015-02-02 at 13:25 -0800, Ben Greear wrote:
->
->> It is a big throughput win to have fewer TCP ack packets on
->> wireless since it is a half-duplex environment.  Is there anything
->> we could improve so that we can have fewer acks and still get
->> good tcp stack behaviour?
->
-> First apply TCP stretch ack fixes to the sender. There is no way to get
-> good performance if the sender does not handle stretch ack.
->
-> d6b1a8a92a14 tcp: fix timing issue in CUBIC slope calculation
-> 9cd981dcf174 tcp: fix stretch ACK bugs in CUBIC
-> c22bdca94782 tcp: fix stretch ACK bugs in Reno
-> 814d488c6126 tcp: fix the timid additive increase on stretch ACKs
-> e73ebb0881ea tcp: stretch ACK fixes prep
->
-> Then, make sure you do not throttle ACK too long, especially if you hope
-> to get Gbit line rate on a 4 ms RTT flow.
->
-> GRO does not mean : send one ACK every ms, or after 3ms delay...
+Firmware reports chirp status in phy error event if it's detected
+and the chirp status is valuable to distinguish radar types.
+So save it to use for DFS parttern detector.
 
-I think it's worth pointing out that If you assume 3-frame A-MSDU and
-64-frame A-MPDU you get 192 frames (as far as TCP/IP is concerned) per
-aggregation window. Assuming effective 600mbps throughput:
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- python> 1.0/((((600/8)*1024*1024)/1500)/(3*64))
- 0.003663003663003663
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 81561e4..0c06361 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2550,7 +2550,7 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
+ 	pe.freq = ar->hw->conf.chandef.chan->center_freq;
+ 	pe.width = width;
+ 	pe.rssi = rssi;
+-
++	pe.chirp = (MS(reg0, RADAR_REPORT_REG0_PULSE_IS_CHIRP) != 0);
+ 	ath10k_dbg(ar, ATH10K_DBG_REGULATORY,
+ 		   "dfs add pulse freq: %d, width: %d, rssi %d, tsf: %llX\n",
+ 		   pe.freq, pe.width, pe.rssi, pe.ts);
+-- 
+1.9.1
 
-This is probably worst case, but still probably worth to keep in mind.
-
-ath10k has a knob to tune A-MSDU aggregation count. The default is "3"
-and it's what I've been testing so far.
-
-When I change it to "1" on sender I get 250->400mbps boost in TCP -P5
-but see no difference with -P1 (number of flows). Changing it to "1"
-on receiver yields no difference. I can try adding this configuration
-permutation to my future tests if you're interested.
-
-So that you have an idea - using "1" on sender degrades UDP throughput
-(even 690->500mbps in some cases).
-
-
-Michał
