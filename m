@@ -1,39 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47874 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752450AbbBYT3x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 14:29:53 -0500
-Message-ID: <1424892579.2050.31.camel@sipsolutions.net> (sfid-20150225_202956_902091_92445DDE)
-Subject: Re: Question on tx-power and number of chains.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 25 Feb 2015 20:29:39 +0100
-In-Reply-To: <54EE20C9.3080006@broadcom.com>
-References: <54EE19B5.9040807@candelatech.com>
-		 (sfid-20150225_195138_688914_DE56C6F2) <1424891437.2050.29.camel@sipsolutions.net>
-	 <54EE20C9.3080006@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:40946 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750801AbbBLSzY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2015 13:55:24 -0500
+Received: by mail-oi0-f41.google.com with SMTP id z81so4880245oif.0
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2015 10:55:24 -0800 (PST)
+Message-ID: <54DCF71A.8030207@lwfinger.net> (sfid-20150212_195527_560409_C4C4FD25)
+Date: Thu, 12 Feb 2015 12:55:22 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?Sm9oYW5uZXMgTMO2dGhiZXJn?= <johannes@kyriasis.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ce kernel panics since 3.17(?)
+References: <20150212121057.GA1804@leeloo.kyriasis.com> <54DCD708.3070402@lwfinger.net> <20150212172753.GA17043@leeloo.kyriasis.com>
+In-Reply-To: <20150212172753.GA17043@leeloo.kyriasis.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-02-25 at 20:21 +0100, Arend van Spriel wrote:
-> On 02/25/15 20:10, Johannes Berg wrote:
-> > On Wed, 2015-02-25 at 10:51 -0800, Ben Greear wrote:
-> >
-> >> Is there a table somewhere that explains how many chains are used by each
-> >> rate?
-> >
-> > mcsindex.com?
-> 
-> Nice. Adding that to my bookmarks. What happened to that quirky MCS32.
+On 02/12/2015 11:27 AM, Johannes Löthberg wrote:
+> On 12/02, Larry Finger wrote:
+>> On 02/12/2015 06:10 AM, Johannes Löthberg wrote:
+>>> Since sometime around version 3.16 or 3.17 I've been getting a lot of occasional
+>>> kernel panics related to my wifi driver. My laptop has a Realtek RTL8188CE
+>>> wireless card and uses the rtl8192ce driver.
+>>>
+>>> I have pictures of what I think is two identical kernel panics, a couple of days
+>>> apart:
+>>>
+>>> https://lh4.googleusercontent.com/yjwOnrDmioCwuC8FqIXlKMiBTOXddLyJkWTiInJoX2o=w421-h569-no
+>>>
+>>>
+>>> https://lh3.googleusercontent.com/-xM-1wSsVu4c/VKxDnlkgBbI/AAAAAAAAIng/HxtqgHgglHY/w421-h569-no/IMG_20150106_212020.jpg
+>>>
+>>>
+>>>
+>>> It only seems to happen when I have several days of uptime on my laptop and just
+>>> use sleep all the time instead of shutting it down.
+>>>
+>>> Also I have a picture of a kernel panic that is different from the previous
+>>> ones:
+>>>
+>>> https://lh3.googleusercontent.com/-Hj06Csglpa0/VKrI1al6QbI/AAAAAAAAImk/VzhmN-dfSB0/w657-h486-no/IMG_20150105_182236.jpg
+>>>
+>>>
+>>>
+>>> Not sure how to debug it really, but figured that sending in a report would be
+>>> worth a shot.
+>>>
+>>
+>> What kernel were you running when you made the photos? Use the command 'uname
+>> -r'. When I get that information, I can then use the dump trace to determine
+>> the locations of the oops.
+>>
+>> Larry
+>>
+>>
+>
+> For the first photo it was 3.18.3 and for the second one it seems like it should
+> be 3.18.1 from looking at my package manager's log.
 
-It's the unloved stepchild ;-)
+OK, that makes more sense than your original report of problems starting with 
+3.16 or 3.17. That bug was fixed in 3.18.4.
 
-They also removed all the other higher HT ones (>32) when adding VHT.
-You can still find an old version on archive.org IIRC.
+Larry
 
-johannes
 
