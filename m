@@ -1,36 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:38540 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751572AbbBFGwP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 01:52:15 -0500
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga01.intel.com ([192.55.52.88]:26021 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754204AbbBLD1A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2015 22:27:00 -0500
+Message-ID: <54DC1D7D.5050407@linux.intel.com> (sfid-20150212_042725_615546_4F2E91A4)
+Date: Thu, 12 Feb 2015 11:26:53 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Subject: Re: hostap: Delete an unnecessary check before the function call
- "kfree"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <54D26EA9.6020301@users.sourceforge.net>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Message-Id: <20150206065215.544AF140CED@smtp.codeaurora.org> (sfid-20150206_075236_556915_2FD1138B)
-Date: Fri,  6 Feb 2015 06:52:15 +0000 (UTC)
+To: Kalle Valo <kvalo@codeaurora.org>, brudley@broadcom.com,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From a05d35ab334c20970c236fb971dae88810078c88 Mon Sep 17 00:00:00 2001
+From: Fu Zhonghui <zhonghui.fu@linux.intel.com>
+Date: Thu, 12 Feb 2015 10:49:35 +0800
+Subject: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
 
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Wed, 4 Feb 2015 20:06:39 +0100
-> 
-> The kfree() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+WiFi chip has 2 SDIO functions, and PM core will trigger
+twice suspend/resume operations for one WiFi chip to do
+the same things. This patch avoid this case.
 
-Thanks, applied to wireless-drivers-next.git.
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Fu Zhonghui <zhonghui.fu@linux.intel.com>
+---
+Changes in v3:
+- Rebase to wireless-drivers-next/master branch
 
-Kalle Valo
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 7944224..b8832a7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1117,9 +1117,13 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ 	struct brcmf_bus *bus_if;
+ 	struct brcmf_sdio_dev *sdiodev;
+ 	mmc_pm_flag_t sdio_flags;
++	struct sdio_func *func = dev_to_sdio_func(dev);
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
+ 
++	if (func->num == 2)
++		return 0;
++
+ 	bus_if = dev_get_drvdata(dev);
+ 	sdiodev = bus_if->bus_priv.sdio;
+ 
+@@ -1148,9 +1152,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+ static int brcmf_ops_sdio_resume(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
++	struct brcmf_sdio_dev *sdiodev;
++	struct sdio_func *func = dev_to_sdio_func(dev);
+ 
+ 	brcmf_dbg(SDIO, "Enter\n");
++
++	if (func->num == 2)
++		return 0;
++
++	sdiodev = bus_if->bus_priv.sdio;
++
+ 	if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
+ 		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+ 	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+-- 1.9.1
+
