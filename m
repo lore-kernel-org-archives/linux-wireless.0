@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:37579 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756069AbbBGWXb (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:40256 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751043AbbBLU27 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Feb 2015 17:23:31 -0500
-Received: by mail-we0-f182.google.com with SMTP id l61so20010216wev.13
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Feb 2015 14:23:30 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH RFT] brcmfmac: respect reason when deleting (deauthenticating) STA
-Date: Sat,  7 Feb 2015 23:23:07 +0100
-Message-Id: <1423347787-8557-1-git-send-email-zajec5@gmail.com> (sfid-20150207_232334_043150_4C6DF00B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 12 Feb 2015 15:28:59 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
+Subject: Re: btcoex subsystem
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <874mr3xjnx.fsf_-_@kamboji.qca.qualcomm.com>
+Date: Thu, 12 Feb 2015 12:28:46 -0800
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Troy Tan <troy_tan@realsil.com.cn>, netdev@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org
+Message-Id: <D5A7B08D-EA98-4A6E-A6BF-E19D87B5066A@holtmann.org> (sfid-20150212_212909_111364_C5B61AF0)
+References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net> <1422304934-9239-6-git-send-email-Larry.Finger@lwfinger.net> <87h9v8zkuh.fsf@kamboji.qca.qualcomm.com> <EC423C22-AEA0-4232-A452-7A131C41780A@holtmann.org> <54CBA0CE.8030800@lwfinger.net> <B814EF26-CBC9-43E4-A6C9-761A013F85C1@holtmann.org> <874mr3xjnx.fsf_-_@kamboji.qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Kalle,
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index b59b8c6..a23bfaa 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -4272,7 +4272,7 @@ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
- 		return -EIO;
- 
- 	memcpy(&scbval.ea, params->mac, ETH_ALEN);
--	scbval.val = cpu_to_le32(WLAN_REASON_DEAUTH_LEAVING);
-+	scbval.val = cpu_to_le32(params->reason_code);
- 	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCB_DEAUTHENTICATE_FOR_REASON,
- 				     &scbval, sizeof(scbval));
- 	if (err)
--- 
-1.8.4.5
+>>> I will work on combining the latest BT drivers from Realtek with
+>>> btusb to see if I can achieve a patch that will both work with the
+>>> Realtek hardware, and get approval from the reviewers.
+>>> 
+>>> What would be an approved method of communicating between two kernel
+>>> modules? Is there some example in the kernel that I could study?
+>> 
+>> We need a btcoex subsystem that both WiFi and Bluetooth can register
+>> to and communicate with.
+> 
+> The need for this seems to periodically come up, I remember needing
+> something like that back in the Maemo wl1251 days and also ath6kl needed
+> this. Are there any ideas for this subsystem? How would this btcoex
+> subsystem work? What kind of information would it provide?
+> 
+> Is this something we should discuss at Ottawa?
+
+sadly something came up and I am not making it to Ottawa. However we should be talking about this at some point since Bluetooth has MWS for its coexistence which could be a good starting point. Something we have to look into for the Bluetooth subsystem at some point.
+
+Regards
+
+Marcel
 
