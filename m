@@ -1,82 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f173.google.com ([209.85.160.173]:41033 "EHLO
-	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028AbbBWV1N (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:48851 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751541AbbBLWOP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 16:27:13 -0500
-Received: by yks20 with SMTP id 20so731493yks.8
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 13:27:13 -0800 (PST)
+	Thu, 12 Feb 2015 17:14:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <1424709235.3075.22.camel@sipsolutions.net>
-References: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
- <CAHNKnsSm1GOUMONPB4oB1tJ-OeWOG1XOhw=HEY8LPXhDEHEjbg@mail.gmail.com> <1424709235.3075.22.camel@sipsolutions.net>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Tue, 24 Feb 2015 00:26:52 +0300
-Message-ID: <CAHNKnsR0j1u6Eu2e19pzcu2Rw7nZ6D6BKV-cRg9KTwoKO74fdQ@mail.gmail.com> (sfid-20150223_222718_360973_93C6ABFC)
-Subject: Re: [RFC] mac80211: use rhashtable for station table
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Thomas Graf <tgraf@suug.ch>
-Content-Type: text/plain; charset=ISO-8859-1
+Date: Thu, 12 Feb 2015 14:14:14 -0800
+Message-ID: <CAA93jw7W-gOJOgByeoN+Kn3yAznQ8XTcSm0biTx+dogHmMkDnA@mail.gmail.com> (sfid-20150212_231424_519934_1EC34A9C)
+Subject: Wifi outside the faraday cage (was: Throughput regression with `tcp:
+ refine TSO autosizing`)
+From: Dave Taht <dave.taht@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	Neal Cardwell <ncardwell@google.com>,
+	Eyal Perry <eyalpe@dev.mellanox.co.il>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	David Lang <david@lang.hm>,
+	Andrew McGregor <andrewmcgr@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2015-02-23 19:33 GMT+03:00 Johannes Berg <johannes@sipsolutions.net>:
-> On Sat, 2015-02-14 at 05:14 +0300, Sergey Ryazanov wrote:
+On Fri, Feb 6, 2015 at 1:57 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 5 February 2015 at 20:50, Dave Taht <dave.taht@gmail.com> wrote:
+> [...]
+>> And I really, really, really wish, that just once during this thread,
+>> someone had bothered to try running a test
+>> at a real world MCS rate - say MCS1, or MCS4, and measured the latency
+>> under load of that...
 >
->> A nice change! Couple of years ago I did some tests with real sets of
->> MACs and jhash gives a better distribution than usage of a last octet.
->>
->> BTW, why do you use full address and generic jhash? Hashing of two
->> least significant words could be faster. Isn't it?
+> Time between frame submission to firmware and tx-completion on one of
+> my ath10k machines:
+
+THANK YOU for running these tests!
+
 >
-> Well - not sure what you're trying to say? First you're saying jhash()
-> was clearly better and then you're saying I shouldn't use it? ;-)
+> Legacy 54mbps: ~18ms
+> Legacy 6mbps: ~37ms
+
+"legacy rates" are what many people actually achieve, given the
+limited market penetration ac has on clients and APs.
+
+> 11n MCS 3 (nss=0): ~13ms
+> 11n MCS 8 (nss=1): ~6-8ms
+> 11ac NSS=1 MCS=2: ~4-6ms
+> 11ac NSS=2 MCS=0: ~5-8ms
 >
-In first case, I mean the jhash _algorithm_, which has a better
-distribution, in second case I mean the _generic_ jhash() _function_
-and express my doubts about its performance. See below.
+> Keep in mind this is a clean room environment so retransmissions are
+> kept at minimum. Obviously with a noisy environment you'll get retries
+> at different rates and higher latency.
 
-> Anyway - just using the last two bytes (or even 16-bit words) won't
-> cover the case where the locally administered bit is set in an otherwise
-> unchanged address, which is getting more common for P2P.
+It is difficult to reconcile the results you get in the clean room
+with the results I get from measurements in the real wold. I encourage
+you to go test your code in coffee shops, in offices with wifi, and in
+hotels and apartment buildings in preference to testing in the lab.
+
+I typically measure induced delays in the 3 to 6 second range in your
+typical conference scenario, which I measure at every conference I go
+to. The latest talk, including data on that, is friday morning,
+starting at 2:15 or so, at nznog:
+
+http://new.livestream.com/i-filmservices/NZNOG2015/videos/75358960
+
+1) In the real world, I rarely see the maximum *rates*.
+
+I am personally quite fond of designing stuff with gears out of the
+middle of the Boston Gear Catalog. [1]. In looking over my largely
+outdoor wifi network, I see a cluster of values around mcs11,
+followed\by mcs4,3, 7 and 0, and *nothing* with MCS15. David lang is
+planning on doing some measurements at the SCALE conference next week,
+and I expect heaps of data from that, but I strongly suspect that the
+vast majority of connections in every circumstance except the
+test-bench are not even coming close to the maximum MCS rate in the
+standard(s).
+
+I would have thought that the lessons of the chromecast, where *every*
+attempt at reviewing it in an office environment failed, might have
+supplied industry clue that even 20Mbit to a given station is
+impossible in many cases due to airtime contention.
+
+Aggregates should be sized to have a maximum of 2 full ones stacked up
+at the rate being achieved for the destination, and the rest
+backlogged in the qdisc layer, if possible. 37ms backed up in the
+firmware is a lot, considering that the test above had no airtime
+contention in it, and no multicast.
+
+Drivers need to be aware that every TXOP is precious. I could see
+having a watchdog timer set on getting one packet into a wifi driver
+to wait a few hundred usec longer to fire off the write to the
+hardware in order to maximize aggregation by accumulating more packets
+to aggregate.
+
+I have hopes for xmit_more also being useful, but I am really not sure
+how well that works on single cores, interactions with napi, and with
+other wifi aggregates. It looks like adding xmit_more to the ag71xx
+driver will be easy...
+
+2) In the real world I see media acquisition times *far* greater than 1ms.
+
+Please feel free to test your drivers in coffee shops, in the office,
+at hotels, in apartments...
+
+And retries... let's not talk about retries...
+
+
+3) Longer AMPDUs lead to more tail loss and retries
+
+I have a paper around here somewhere that shows AMPDU loss and retries
+go up disproportionately as the length of transmission approaches 4ms.
+I hate drawing a conclusion from a paper I can't find, but my overall
+take on it is that as media acquisition time and retransmits go up,
+reducing AMPDU size from the maximum down to about 1ms at the current
+rate would lead to more fair, responsive, and fast-feeling wifi for
+everyone, improve ack clocking, flow mixing for web traffic, etc, etc.
+
+4) There is some fairly decent academic work on other aspects of
+excessive buffering at lower rates
+
+http://hph16.uwaterloo.ca/~bshihada/publications/buffer-AMPDU.pdf
+
+(there are problems with this paper, but at least it tests n)
+
+and see google scholar for bufferbloat related papers in 2014 and
+later on wifi and LTE.
+
+5) As for rate control, Minstrel was designed in an era when there
+wasn't one AP for every 4 people in the USA. Other people's rate
+controllers are even dumber, and minstrel-ht itself needs a hard look
+at n speeds, much less ac speeds.
+
+6) Everything I say above applies to both stations and APs.
+
+APs have FAR worse problems, where per-tid (station) queuing is really
+needed in order to effectively aggregate when two or more stations are
+in use. Statistically, with two or more stations using traffic,
+aggregation possibilities will go down rapidly on a FIFO, (and go down
+even faster with FQ in place without per sta queuing!),  and with the
+usual fixed buffersize underneath that, without per-tid queuing, this
+grows the delays enormously, and wastes space in txops.
+
+(please try the netperf-wrapper RTT_Fair tests on 2 or more stations.
+Add in some multicast traffic while you are at it.
+
+Some early tests I did of the ath10k showed it going from 600mbit to
+20mbit - at full rate in a lab with the stations located 2m away - on
+a 4-station test. Somewhere around there I gave up on wifi and worked
+on refining "cake" instead.)
+
+There are a zillion other things that can be improved in wifi, some of
+which I've already pointed to in the ieee talk, and the original
+thread forked with andrew mcgregor pitching in as to what can be
+improved in minstrel. [2]
+
+Wifi does not need to suck as bad as it does at mid to low rates and
+under contention. I find it really depressing that a technology that
+has billions of users, has so few people working on making it better.
+I hope to be able to spend some time on it myself, finally, starting
+in april.
+
+[1] https://books.google.com/books?id=7papZR4oVssC&pg=PA101&lpg=PA101&dq=feynman+gears&source=bl&ots=etPYearM00&sig=9R0R88rOfAxm_U21mMLOwxO6Mfg&hl=en&sa=X&ei=cjfcVM2VDY_XoASYiYCwDg&ved=0CDYQ6AEwBg#v=onepage&q=feynman%20gears&f=false
+
+[2] Other fork of this thread:
+https://lists.bufferbloat.net/pipermail/cerowrt-devel/2015-February/004001.html
+
 >
-> I also don't really see any major drawbacks to hashing it all?
->
-I agree that hashing all octets is not a drawback. But the jhash()
-function is tailored to the input data of variable length, while we
-have a vector of fixed length and appropriate functions. Could we do
-the hashing in following way:
+> Michał
 
-u32 sta_info_hash(void *addr, u32 len, u32 seed)
-{
-  u32 *k = addr + 2;
-  return jhash_1word(*k, seed);
-}
 
-structu rhashtable_pararms param = {
-  ...
-  .hashfn = sta_info_hash,
-  ...
-}
-
-or even (to account LA bit):
-
-u32 sta_info_hash(void *addr, u32 len, u32 seed)
-{
-  u32 *k = addr;
-  return jhash_2words(k[0], k[1], seed);
-}
-
-structu rhashtable_pararms param = {
-  ...
-  .key_len = 8,
-  .hashfn = sta_info_hash,
-  ...
-}
-
-This could save a couple of CPU circles and a couple of bytes in the
-output image :)
 
 -- 
-Sergey
+Dave Täht
+
+thttp://www.bufferbloat.net/projects/bloat/wiki/Upcoming_Talks
