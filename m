@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:24518 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754719AbbB0JIj (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4346 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752086AbbBLVSb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Feb 2015 04:08:39 -0500
-Message-ID: <54F03412.2050902@broadcom.com> (sfid-20150227_101009_441270_5D67191B)
-Date: Fri, 27 Feb 2015 10:08:34 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 12 Feb 2015 16:18:31 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/3] ath: Enhance radar detection by looking up chirp
+Date: Thu, 12 Feb 2015 13:17:05 -0800
+Message-ID: <1423775825-19498-3-git-send-email-poh@qca.qualcomm.com> (sfid-20150212_221836_801326_B597D303)
+In-Reply-To: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com>
+References: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-CC: Kalle Valo <kvalo@codeaurora.org>, Pat Erley <pat-lkml@erley.org>,
-	<brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
-	<meuleman@broadcom.com>, <linville@tuxdriver.com>,
-	<pieterpg@broadcom.com>, <hdegoede@redhat.com>, <wens@csie.org>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
-References: <54DC1D7D.5050407@linux.intel.com>	<54E0072D.3020802@linux.intel.com> <54E01209.7010300@erley.org>	<54E05961.7000201@broadcom.com> <878ufzi5s3.fsf@kamboji.qca.qualcomm.com> <54E19DA1.4030407@linux.intel.com> <54E1B9F4.6090302@broadcom.com> <54F02271.5070202@linux.intel.com>
-In-Reply-To: <54F02271.5070202@linux.intel.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/15 08:53, Fu, Zhonghui wrote:
->
-> On 2015/2/16 17:35, Arend van Spriel wrote:
->> On 02/16/15 08:34, Fu, Zhonghui wrote:
->>>
->>> On 2015/2/15 22:54, Kalle Valo wrote:
->>>> Arend van Spriel<arend@broadcom.com>   writes:
->>>>
->>>>> On 02/15/15 04:27, Pat Erley wrote:
->>>>>> On 02/14/2015 08:40 PM, Fu, Zhonghui wrote:
->>>>>>> Any comments to this patch? Can it be accepted?
->>>>> I assume that patches are queued up until after the merge window that
->>>>> we are currently in.
->>>> That's right. In the future I will most likely apply patches also during
->>>> the merge window, but as I'm still a greenhorn I'll be on the safe and
->>>> wait for the merge window to end.
->>> I am very glad to see this.
->>> Could you please tell which release candidate this patch will be likely merged into now?
->>
->> For which tree are you asking this? When the merge window ends and linus' tree has moved to 3.20-rc1, the wireless-drivers-next will move to that -rc1 as well and pending/accepted patches will be applied for the next kernel release. If you are asking when they will be in linus' tree than the answer is 3.21-rc1. Now if you say this patch solves a real problem for you (providing usual proof like log with stack trace) you can request it to go on the wireless-drivers tree to be fixed for 3.20.
->
-> I was in Chinese new-year vacation these few days. So sorry for late response.
->
-> Many thanks for your explanation first.
->
-> Now that there is not 3.20 version. My understanding is that this patch will be in linus' tree 4.1-rc1, right?
+Certain radar types such as FCC radar type 5 are using chirp
+in their pulses, hence looking up the chirp status will enhance
+to avoid false radar detection.
 
-Yes. It will go into linux-next first, which you can consider to be an 
-incubator where all stuff for the next release is integrated. Stuff will 
-be added there until 4.0 is released. At that moment the merge window 
-starts which moves all the stuff from linux-next into the mainline linux 
-repo to prepare 4.1-rc1.
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/dfs_pri_detector.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Now regarding your patch I have to give a heads up. Our pending patches 
-have been applied by Kalle and includes similar fix.
-
-Regards,
-Arend
-
->
-> Thanks,
-> Zhonghui
->
->>
->> Regards,
->> Arend
->> --
->> To unsubscribe from this list: send the line "unsubscribe netdev" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath/dfs_pri_detector.c b/drivers/net/wireless/ath/dfs_pri_detector.c
+index 43b6081..1b5ad19 100644
+--- a/drivers/net/wireless/ath/dfs_pri_detector.c
++++ b/drivers/net/wireless/ath/dfs_pri_detector.c
+@@ -390,6 +390,10 @@ static struct pri_sequence *pri_detector_add_pulse(struct pri_detector *de,
+ 	if ((ts - de->last_ts) < rs->max_pri_tolerance)
+ 		/* if delta to last pulse is too short, don't use this pulse */
+ 		return NULL;
++	/* radar detector spec needs chirp, but not detected */
++	if (rs->chirp && rs->chirp != event->chirp)
++		return NULL;
++
+ 	de->last_ts = ts;
+ 
+ 	max_updated_seq = pseq_handler_add_to_existing_seqs(de, ts);
+-- 
+1.9.1
 
