@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:46491 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932679AbbBBHIU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 02:08:20 -0500
-Date: Sun, 1 Feb 2015 23:07:23 -0800 (PST)
-From: David Lang <david@lang.hm>
-To: Avery Pennarun <apenwarr@google.com>
-cc: David Reed <dpreed@reed.com>, dstanley@arubanetworks.com,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	Stig Thormodsrud <stig@ubnt.com>, netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Jesper Dangaard Brouer <jbrouer@redhat.com>,
-	"cerowrt-devel@lists.bufferbloat.net"
-	<cerowrt-devel@lists.bufferbloat.net>,
-	Matt Mathis <mattmathis@google.com>,
-	Derrick Pallas <pallas@meraki.com>,
-	Kathy Giori <kgiori@qca.qualcomm.com>,
-	Mahesh Paolini-Subramanya <mahesh@dieswaytoofast.com>,
-	Jonathan Morton <chromatix99@gmail.com>,
-	Tim Shepard <shep@alum.mit.edu>
-Subject: Re: [Cerowrt-devel] Fwd: Throughput regression with `tcp: refine
- TSO autosizing`
-In-Reply-To: <CAPp0ZBa43kVBWN5iGgmW=-YQAkdm2DrmMN0URvVu=yXA-_TZCQ@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1502012249100.19609@nftneq.ynat.uz> (sfid-20150202_080826_390015_002728EC)
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com> <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com> <54CB5D08.2070906@broadcom.com> <1422623975.21689.77.camel@edumazet-glaptop2.roam.corp.google.com>
- <54CB8B69.1070807@broadcom.com> <CAA93jw5fqhz0Hiw74L2GXgtZ9JsMg+NtYydKxKzGDrvQcZn4hA@mail.gmail.com> <CAA93jw7b0E9jjQYXrEPzjLLC9j8xNC0TFYXpWVtgFameJaNBdw@mail.gmail.com> <1422741065.199624134@apps.rackspace.com> <CAPp0ZBb2nkA6Y0s=W0kw=zvyn0wi0NMBRsBCw_xcD61ScOmgQg@mail.gmail.com>
- <CAA_e5Z46Bu+zZZFzf_ejzA35Gw3g1_OG85yv6yd7MpbwZcE-nw@mail.gmail.com> <CAA93jw7=oTex0Mp-0ThvuDRUnfR0N8tzdOQ8DD7QYWphp1b=4w@mail.gmail.com> <CAJq5cE3ETbpEtecFHmhgHQveNRUhVfrzjTOygHm-TRCTwHNyKA@mail.gmail.com> <1422801814.796219699@apps.rackspace.com>
- <CAPp0ZBa43kVBWN5iGgmW=-YQAkdm2DrmMN0URvVu=yXA-_TZCQ@mail.gmail.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50936 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755200AbbBLJ3J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Feb 2015 04:29:09 -0500
+From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Increase AST table SKID length limit
+Date: Thu, 12 Feb 2015 14:58:42 +0530
+Message-ID: <1423733322-31113-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150212_102914_499763_409ACA29)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 1 Feb 2015, Avery Pennarun wrote:
+The current SKID length configuration causes firmware
+to reject peer creation for not able to allocate
+AST entries for peers. This issue is observed when
+least significant 3 bytes are used ramdomly to create
+client MAC addresses.
 
-> On Sun, Feb 1, 2015 at 9:43 AM,  <dpreed@reed.com> wrote:
->> I personally think that things like promoting semi-closed, essentially
->> proprietary ESSID-based bridged distribution systems as "good ideas" are
->> counterproductive to this goal.  But that's perhaps too radical for this
->> crowd.
->
-> Not sure what you mean here.  ESSID-based distribution systems seem
-> pretty well defined to me.  The only proprietary part is the
-> decision-making process for assisted roaming (ie. the "inter-AP
-> protocol") which is only an optional performance optimization.  There
-> really should be an open source version of this, and I'm in fact
-> feebly attempting to build one, but I don't feel like the world is
-> falling apart through not having it.  You can build a bridged
-> multi-BSS ESSID today with plain out-of-the-box hostapd.
+AST table SKID length configuration is increased to
+maximum value to fix this issue.
 
-I will be running a fully opensource bridged ESSID system at SCaLE this month. 
-last year we had ~2500 people and devices with ~50 APs deployed, and it worked 
-well. The only problem was that I needed to deploy a few more APs to cover some 
-of the hallway areas more reliably.
+Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/hw.h  | 1 +
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-There are tricks that the commercial systems pull that I can't currently 
-duplicate with opensource tools. But as Avery says, they are optimizations, not 
-something required for successful operation. It would be nice to get the 
-assisted roaming portion available. But it's not required.
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 460771f..b86996e 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -254,6 +254,7 @@ struct ath10k_pktlog_hdr {
 
-David Lang
+ /* 10.2 parameters */
+ #define TARGET_10_2_DMA_BURST_SIZE		1
++#define TARGET_10_2_AST_SKID_LIMIT		128
+
+ /* Target specific defines for WMI-TLV firmware */
+ #define TARGET_TLV_NUM_VDEVS			3
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index aeea1c7..13290da 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3920,7 +3920,7 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
+ 	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
+ 	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
+ 	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
+-	config.ast_skid_limit = __cpu_to_le32(TARGET_10X_AST_SKID_LIMIT);
++	config.ast_skid_limit = __cpu_to_le32(TARGET_10_2_AST_SKID_LIMIT);
+ 	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
+ 	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
+ 	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
+--
+1.9.1
+
