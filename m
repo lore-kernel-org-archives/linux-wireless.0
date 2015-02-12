@@ -1,99 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:59205 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752070AbbBBXZb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 18:25:31 -0500
-Received: by mail-pa0-f42.google.com with SMTP id bj1so88446084pad.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Feb 2015 15:25:31 -0800 (PST)
-Message-ID: <54D00764.40808@gmail.com> (sfid-20150203_002534_869366_8ED400C9)
-Date: Mon, 02 Feb 2015 15:25:24 -0800
-From: Florian Fainelli <f.fainelli@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:43749 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754204AbbBLDap (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Feb 2015 22:30:45 -0500
+Message-ID: <54DC1E5D.8060703@linux.intel.com> (sfid-20150212_043103_367437_0B053DAC)
+Date: Thu, 12 Feb 2015 11:30:37 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-To: Peter Oh <poh@codeaurora.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org, Peter Oh <poh@qca.qualcomm.com>
-Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
-References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com> <20150127213349.GA24933@localhost> <54C824DC.5080804@qca.qualcomm.com> <20150128043005.GB24933@localhost> <54C875FD.3070101@qca.qualcomm.com> (sfid-20150128_064104_435635_7E681844) <1422430643.1973.1.camel@sipsolutions.net> <54CC0B71.9050301@codeaurora.org> <1422882133.1930.10.camel@sipsolutions.net> <54CFB4F4.1070807@qca.qualcomm.com> <1422903279.8755.1.camel@sipsolutions.net> <54CFCCCF.900@codeaurora.org> <1422904939.8755.3.camel@sipsolutions.net> <54CFD1D1.8060901@codeaurora.org> <1422906446.8755.4.camel@sipsolutions.net> <54CFF4E0.1040207@codeaurora.org>
-In-Reply-To: <54CFF4E0.1040207@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+CC: Kalle Valo <kvalo@codeaurora.org>, brudley@broadcom.com,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] brcmfmac: avoid duplicated suspend/resume operation
+References: <54D83AF1.2020501@linux.intel.com> <54D871A9.4050603@broadcom.com>
+In-Reply-To: <54D871A9.4050603@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/02/15 14:06, Peter Oh wrote:
-> 
-> On 02/02/2015 11:47 AM, Johannes Berg wrote:
->> On Mon, 2015-02-02 at 11:36 -0800, Peter Oh wrote:
->>> On 02/02/2015 11:22 AM, Johannes Berg wrote:
->>>>>> You basically have the following sequence:
->>>>>>
->>>>>> iowrite()
->>>>>> ioread()
->>>>>>
->>>>>> If you look, you'll see that iowrite() is actually done (or should
->> be,
->>>>>> or perhaps with appropriate syncs) on an uncached mapping.
->>>>> since it's mmio, iowrite will be map to write, not out which is
->> cached
->>>>> mapping.
->>>>> That's why we address "posted write" here.
->>>>> If it's un-cached mapping which is volatile, we don't even need
->> ioread.
->>>> No, this isn't true - "posted write" in the context of this discussion
->>>> is about the PCIe bus. Memory writes that go through cache aren't
->>>> referred to as "posted writes", those are just (cached) memory writes.
->>>>
->>>>>>     As a result,
->>>>>> the only thing you care about here is the PCIe bus, not the CPU
->> cache
->>>>>> flush. And from there on that's just a question of PCIe bus
->> semantics.
->>>>> So how does ioread guarantee PCIe bus transaction done?
->>>> That's how PCIe works, operations are serialized, and read() has to
->> wait
->>>> for a response from the device
->>> do you know which mechanism or which instruction set makes read() wait
->>> for a response from the device?
->> I have no idea. I assume it's just like a DRAM read, the CPU stalls
->> while there's no response.
-> My explanation in this thread is all about how read() guarantees the
-> wait for a response from the device, therefore why mb() - replace from
-> wmb at patch set 2 - is compatible to read().
-> Briefly speaking,
-> read() -> dsb 'st' -> cpu (actually axi master in cpu) holding axi bus
-> -> cpu post write buffer on axi bus -> axi bus (axi slave which is PCIe
-> device) signals write completion when write transactions completed in
-> write response channel ->  cpu release axi bus -> cpu program counter
-> (pc) proceeds the next to read.
-> 
-> the exact same routines happen with mb().
-> mb() -> dsb 'st' -> cpu (actually axi master in cpu) holding axi bus ->
-> cpu post write buffer on axi bus -> axi bus (axi slave which is PCIe
-> device) signals write completion when write transactions completed in
-> write response channel ->  cpu release axi bus -> cpu program counter
-> (pc) proceeds the next to read.
-> 
-> Since axi bus master is waiting (blocking) for write completion signal
-> from axi slave (PCIe device), this is how read() and mb() guarantee
-> write command reaches to the device.
 
-PCIe writes are posted, so the only guarantee you can have by inserting
-such barriers is that writes from CPU to the PCIe RC (targeting PCIe
-device) is non-posted (as far as the busing between CPU and the PCIe RC
-is concerned), but past the PCIe RC, there is no such guarantee, because
-the PCIe specification allows for that and there is flow control, PCIe
-switches or other things that can alter the way your PCIe device ends-up
-being written to.
+On 2015/2/9 16:36, Arend van Spriel wrote:
+> On 02/09/15 05:43, Fu, Zhonghui wrote:
+>>  From ff39ed4af9f1c50358fe92ec4c8eaac9db183e00 Mon Sep 17 00:00:00 2001
+>> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>> Date: Mon, 26 Jan 2015 10:13:21 +0800
+>> Subject: [PATCH v2] brcmfmac: avoid duplicated suspend/resume operation
+>>
+>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>> twice suspend/resume operations for one WiFi chip to do
+>> the same things. This patch avoid this case.
+>
+> Well, another remark from Kalle was that this patch does not apply to wireless-drivers-next/master branch. So I tried to apply this patch and it failed. Please rebase this patch.
 
-The only way to make a "portable" synchronization barrier is to do a
-PCIe read from the same register you just wrote to, because then, the
-PCIe RC needs to guarantee the transaction ordering on the PCIe bus itself.
+I have re-based this patch to wireless-drivers-next/master branch and sent it with the subject "[PATCH v3] brcmfmac: avoid duplicated suspend/resume operation" in another mail.
 
-You might just be lucky and/or have very good HW which ensures that the
-ARM synchronization barriers are propagated to the memory region where
-your PCIe device BARs are mapped from the CPU perspective, but you
-definitively cannot rely on such assumptions, as there will be bogus HW
-there, for which only a subsequent ioread32() will work.
--- 
-Florian
+Thanks,
+Zhonghui
+ 
+>
+> Regards,
+> Arend
+>
+>> Acked-by: Arend van Spriel<arend@broadcom.com>
+>> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
+>> ---
+>> Changes in v2:
+>>   - Remove two "Acked-by" lines
+>>
+>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   17 +++++++++++++++--
+>>   1 files changed, 15 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> index 9880dae..618b545 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> @@ -1139,11 +1139,17 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
+>>   static int brcmf_ops_sdio_suspend(struct device *dev)
+>>   {
+>>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>> +    struct brcmf_sdio_dev *sdiodev;
+>>       mmc_pm_flag_t sdio_flags;
+>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>
+>>       brcmf_dbg(SDIO, "Enter\n");
+>>
+>> +    if (func->num == 2)
+>> +        return 0;
+>> +
+>> +    sdiodev = bus_if->bus_priv.sdio;
+>> +
+>>       atomic_set(&sdiodev->suspend, true);
+>>
+>>       if (sdiodev->wowl_enabled) {
+>> @@ -1164,9 +1170,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>>   static int brcmf_ops_sdio_resume(struct device *dev)
+>>   {
+>>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>> +    struct brcmf_sdio_dev *sdiodev;
+>> +    struct sdio_func *func = dev_to_sdio_func(dev);
+>>
+>>       brcmf_dbg(SDIO, "Enter\n");
+>> +
+>> +    if (func->num == 2)
+>> +        return 0;
+>> +
+>> +    sdiodev = bus_if->bus_priv.sdio;
+>> +
+>>       if (sdiodev->pdata&&  sdiodev->pdata->oob_irq_supported)
+>>           disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>>       brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+>> -- 1.7.1
+>>
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
