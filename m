@@ -1,13 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:39806 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965209AbbBDMWZ convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f169.google.com ([74.125.82.169]:40018 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617AbbBLHQW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 07:22:25 -0500
-Received: by mail-wg0-f46.google.com with SMTP id l2so1398386wgh.5
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2015 04:22:23 -0800 (PST)
+	Thu, 12 Feb 2015 02:16:22 -0500
+Received: by mail-we0-f169.google.com with SMTP id k48so8167271wev.0
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 23:16:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+In-Reply-To: <1423660672.4847.15.camel@edumazet-glaptop2.roam.corp.google.com>
 References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
 	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
 	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
@@ -19,63 +19,67 @@ References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
 	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
 	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
 	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Wed, 4 Feb 2015 13:22:23 +0100
-Message-ID: <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com> (sfid-20150204_132231_056489_17A7AA13)
+	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	<1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	<1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com>
+	<1423574079.28434.21.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CA+BoTQkRp38nttSJgKs4dzQrn-TXpPbh4i-01YCF0BJQWrFi=Q@mail.gmail.com>
+	<1423660672.4847.15.camel@edumazet-glaptop2.roam.corp.google.com>
+Date: Thu, 12 Feb 2015 08:16:20 +0100
+Message-ID: <CA+BoTQn6ane-jSFxVhQd5BDCNUrATohCbtrD9zUJBMxnN6Zy6w@mail.gmail.com> (sfid-20150212_081644_713174_950D0ADF)
 Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
 From: Michal Kazior <michal.kazior@tieto.com>
 To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+Cc: Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
 	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
+	Eyal Perry <eyalpe@dev.mellanox.co.il>,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 February 2015 at 12:57, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Wed, 2015-02-04 at 12:35 +0100, Michal Kazior wrote:
+On 11 February 2015 at 14:17, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> On Wed, 2015-02-11 at 09:33 +0100, Michal Kazior wrote:
 >
->> > (Or maybe wifi drivers should start to use skb->xmit_more as a signal to end aggregation)
->>
->> This could work if your firmware/device supports this kind of thing.
->> To my understanding ath10k firmware doesn't.
+>> If I set tcp_limit_output_bytes to 700K+ I can get ath10k w/ cushion
+>> w/ aggregation to reach 600mbps on a single flow.
 >
-> This is a pure software signal. You do not need firmware support.
+> You know, there is a reason this sysctl exists in the first place ;)
 >
-> Idea is the following :
+> The first suggestion I made to you was to raise it.
 >
-> Your driver gets a train of messages, coming from upper layers (TCP, IP,
-> qdisc)
+> The default setting must stay as is as long default Qdisc is pfifo_fast.
 >
-> It can know that a packet is not the last one, by looking at
-> skb->xmit_more.
->
-> Basically, aggregation logic could use this signal as a very clear
-> indicator you got the end of a train -> force the xmit right now.
+> I believe I already mentioned skb->truesize tricks for drivers willing
+> to adjust the TSQ given their constraints.
 
-There's no way to tell ath10k firmware: "xmit right now". The firmware
-does all tx aggregation logic by itself. Host driver just submits a
-frame and hopes it'll get out soon. It's not even a tx-ring you'd
-expect. Each frame has a host assigned id which firmware then uses in
-tx completion.
+Right. truesize didn't help in my early tests and once the cushion
+thing came about I had assumed that it's not relevant anymore.
 
+I just checked:
 
-> To disable gso you would have to use :
->
-> ethtool -K wlan1 gso off
+@@ -2620,6 +2621,12 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+        if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
+                ath10k_dbg(ar, ATH10K_DBG_MAC,
+"IEEE80211_TX_CTL_NO_CCK_RATE\n");
 
-Oh, thanks! This works. However I can't turn it on:
++       if (skb->sk) {
++               u32 trim = skb->truesize - (skb->truesize / 8);
++               skb->truesize -= trim;
++               atomic_sub(trim, &skb->sk->sk_wmem_alloc);
++       }
 
-; ethtool -K wlan1 gso on
-Could not change any device features
+With this I get 600mbps on a single flow. The /2 wasn't enough (it
+barely made a difference, 250->300mbps). The question is how do I know
+how much of trimming is too much? Could the tx completion delay be
+used to compute the trim factor, hmm..
 
-..so I guess it makes no sense to re-run tests because:
-
-; ethtool -k wlan1 | grep generic
-        tx-checksum-ip-generic: on [fixed]
-generic-segmentation-offload: off [requested on]
-generic-receive-offload: on
-
-And this seems to never change.
+Maybe this should be done in mac80211 as well?
 
 
 Michał
