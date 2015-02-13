@@ -1,92 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hetz2.bluebottle.com ([176.9.57.138]:36821 "EHLO
-	fe1.bluebottle.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753370AbbBYVMG (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49173 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753021AbbBMO6H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 16:12:06 -0500
-Received: from localhost (p57AB252B.dip0.t-ipconnect.de [87.171.37.43])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: bittorf@bluebottle.com)
-	by fe1.bluebottle.com (Postfix) with ESMTPSA id 28D4918D53
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 21:12:04 +0000 (UTC)
-Date: Wed, 25 Feb 2015 22:18:17 +0100
-From: Bastian Bittorf <bittorf@bluebottle.com>
+	Fri, 13 Feb 2015 09:58:07 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 To: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 0/10] Improve Minstrels & Minstrel-HTs common code
- base & statistics
-Message-ID: <20150225211817.GC8189@medion.lan> (sfid-20150225_221210_273892_DEFCE2AE)
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2 10/10] mac80211: add standard deviation to Minstrels throughput statistic
+Date: Fri, 13 Feb 2015 15:57:52 +0100
+Message-Id: <1423839472-15625-11-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150213_155813_010736_8DF83870)
+In-Reply-To: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 References: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=y
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Job <thomas@net.t-labs.tu-berlin.de> [13.02.2015 16:32]:
-> This patch series adds several improvements to the readability, the
-> output format of rc_stats and the calculated statistics of Minstrel
-> and Minstrel-HT. Variable names got more consistent and functions
-> got unified between both rate control algorithms.
+This patch adds the statistical descriptor "standard deviation"
+to better describe the current properties of Minstrel and
+Minstrel-HTs success probability distribution. The standard
+deviation (SD) is calculated as exponential weighted moving
+standard deviation (EWMSD) and its current value is added as
+new column in all rc_stats (in debugfs).
 
-i did intensive testing in our small testnet (~50 routers) with all
-kinds of platforms (ar71xx, x86, mpc85xx/ppc) and have no objections
-for this patch-series but a big "thumbs up" for very nice, readable
-and machine-parseable minstrel/rate-selector-output:
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+---
+ net/mac80211/rc80211_minstrel.c            | 19 ++++++++++++++-----
+ net/mac80211/rc80211_minstrel.h            | 22 +++++++++++++++++++++-
+ net/mac80211/rc80211_minstrel_debugfs.c    | 19 ++++++++++++-------
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 14 +++++++++-----
+ 4 files changed, 56 insertions(+), 18 deletions(-)
 
-root@KuechenJukebox:~ cat /sys/kernel/debug/ieee80211/phy0/netdev:wlan0/stations/f4:ec:38:9d:81:f0/rc_stats
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 42dfef8..c108f03 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -161,7 +161,7 @@ minstrel_update_rates(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ }
+ 
+ /*
+-* Recalculate success probabilities and counters for a given rate using EWMA
++* Recalculate statistics and counters of a given rate
+ */
+ void
+ minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
+@@ -169,11 +169,20 @@ minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
+ 	if (unlikely(mrs->attempts > 0)) {
+ 		mrs->sample_skipped = 0;
+ 		mrs->cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
+-		if (unlikely(!mrs->att_hist))
++		if (unlikely(!mrs->att_hist)) {
+ 			mrs->prob_ewma = mrs->cur_prob;
+-		else
++		} else {
++			/* update exponential weighted moving variance */
++			mrs->prob_ewmsd = minstrel_ewmsd(mrs->prob_ewmsd,
++							 mrs->cur_prob,
++							 mrs->prob_ewma,
++							 EWMA_LEVEL);
++
++			/*update exponential weighted moving avarage */
+ 			mrs->prob_ewma = minstrel_ewma(mrs->prob_ewma,
+-						     mrs->cur_prob, EWMA_LEVEL);
++						       mrs->cur_prob,
++						       EWMA_LEVEL);
++		}
+ 		mrs->att_hist += mrs->attempts;
+ 		mrs->succ_hist += mrs->success;
+ 	} else {
+@@ -200,7 +209,7 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
+ 
+-		/* Update success probabilities per rate */
++		/* Update statistics of success probability per rate */
+ 		minstrel_calc_rate_stats(mrs);
+ 
+ 		/* Sample less often below the 10% chance of success.
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 38158b0..713c81e 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -35,6 +35,24 @@ minstrel_ewma(int old, int new, int weight)
+ 	return old + incr;
+ }
+ 
++/*
++ * Perform EWMSD (Exponentially Weighted Moving Standard Deviation) calculation
++ */
++static inline int
++minstrel_ewmsd(int old_ewmsd, int cur_prob, int prob_ewma, int weight)
++{
++	int diff, incr, tmp_var;
++
++	/* calculate exponential weighted moving variance */
++	diff = MINSTREL_TRUNC((cur_prob - prob_ewma) * 1000000);
++	incr = (EWMA_DIV - weight) * diff / EWMA_DIV;
++	tmp_var = old_ewmsd * old_ewmsd;
++	tmp_var = weight * (tmp_var + diff * incr / 1000000) / EWMA_DIV;
++
++	/* return standard deviation */
++	return (u16) int_sqrt(tmp_var);
++}
++
+ struct minstrel_rate_stats {
+ 	/* current / last sampling period attempts/success counters */
+ 	u16 attempts, last_attempts;
+@@ -45,9 +63,11 @@ struct minstrel_rate_stats {
+ 
+ 	/* statistis of packet delivery probability
+ 	 *  cur_prob  - current prob within last update intervall
+-	 *  prob_ewma - exponential weighted moving average of prob */
++	 *  prob_ewma - exponential weighted moving average of prob
++	 *  prob_ewmsd - exp. weighted moving standard deviation of prob */
+ 	unsigned int cur_prob;
+ 	unsigned int prob_ewma;
++	u16 prob_ewmsd;
+ 
+ 	/* maximum retry counts */
+ 	u8 retry_count;
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index 182d552..a217a2c 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -85,10 +85,12 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 	file->private_data = ms;
+ 	p = ms->buf;
+ 	p += sprintf(p, "\n");
+-	p += sprintf(p, "best   __________rate_________    __statistics__    "
+-			"________last_______    ______sum-of________\n");
+-	p += sprintf(p, "rate  [name idx airtime max_tp]  [ ø(tp) ø(prob)]  "
+-			"[prob.|retry|suc|att]  [#success | #attempts]\n");
++	p += sprintf(p, "best   __________rate_________    ______"
++			"statistics______    ________last_______    "
++			"______sum-of________\n");
++	p += sprintf(p, "rate  [name idx airtime max_tp]  [ ø(tp) ø(prob) "
++			"sd(prob)]  [prob.|retry|suc|att]  "
++			"[#success | #attempts]\n");
+ 
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+@@ -110,11 +112,13 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u     %3u.%1u %3u"
+-				"   %3u %-3u   %9llu   %-9llu\n",
++		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u    %3u.%1u"
++				"     %3u.%1u %3u   %3u %-3u   "
++				"%9llu   %-9llu\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
++				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+ 				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+@@ -180,11 +184,12 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
++		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
+ 				"%llu,%llu,%d,%d\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
++				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+ 				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index e70961f..892e87ab 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -86,11 +86,13 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%4u.%1u    %4u.%1u   %3u.%1u    %3u.%1u "
+-				"%3u   %3u %-3u   %9llu   %-9llu\n",
++		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u    %3u.%1u"
++				"     %3u.%1u %3u   %3u %-3u   "
++				"%9llu   %-9llu\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
++				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+ 				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+@@ -128,10 +130,10 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 
+ 	p += sprintf(p, "\n");
+ 	p += sprintf(p, "              best   ____________rate__________    "
+-			"__statistics__    ________last_______    "
++			"______statistics______    ________last_______    "
+ 			"______sum-of________\n");
+ 	p += sprintf(p, "mode guard #  rate  [name   idx airtime  max_tp]  "
+-			"[ ø(tp) ø(prob)]  [prob.|retry|suc|att]  [#success | "
++			"[ ø(tp) ø(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | "
+ 			"#attempts]\n");
+ 
+ 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
+@@ -232,10 +234,12 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p,
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,%llu,%llu,",
++		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
++				"%u,%llu,%llu,",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
++				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+ 				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+-- 
+2.2.2
 
-              best   ____________rate__________    ___________statistics__________    ________last_______    ______sum-of________
-mode guard #  rate  [name   idx airtime  max_tp]  [ ø(tp) ø-2σ(tp) ø(prob) σ(prob)]  [prob.|retry|suc|att]  [#success | #attempts]
-CCK    LP  1          1.0M  120   10548     0.9      0.0      0.0     6.4     1.6       5.2   2     0 0            74   585      
-CCK    LP  1          2.0M  121    5476     1.8      0.0      0.0     0.0     0.0       0.0   0     0 0             0   2        
-CCK    LP  1          5.5M  122    2411     4.1      0.0      0.0     0.0     0.0       0.0   0     0 0             0   2        
-CCK    LP  1         11.0M  123    1535     6.5      1.2      1.1    18.7     0.7       0.0   0     0 0             1   3        
-HT20  LGI  1    CD   MCS0     0    1480     6.5      3.3      3.2    52.7     1.2      33.3   2     0 0           320   657      
-HT20  LGI  1  A   P  MCS1     1     740    12.5      9.9      9.7    79.8     0.9     100.0   3     2 2           645   1234     
-HT20  LGI  1         MCS2     2     496    18.1      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-HT20  LGI  1         MCS3     3     372    23.4      1.9      1.3     8.8     1.5       0.0   5     0 0            69   281      
-HT20  LGI  1         MCS4     4     248    33.1      0.0      0.0     0.0     0.0       0.0   0     0 0             0   2        
-HT20  LGI  1         MCS5     5     188    41.3      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-HT20  LGI  1         MCS6     6     168    45.0      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-HT20  LGI  1         MCS7     7     148    49.5      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-HT20  LGI  2         MCS8    10     740    12.5      0.0      0.0     0.0     0.0       0.0   0     0 0             0   2        
-HT20  LGI  2   B     MCS9    11     372    23.4      7.4      6.8    32.4     1.6       0.0   4     0 8            10   27       
-HT20  LGI  2         MCS10   12     248    33.1      0.0      0.0     0.0     0.0       0.0   0     0 0             0   2        
-HT20  LGI  2         MCS11   13     188    41.3      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-HT20  LGI  2         MCS12   14     124    56.1      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-HT20  LGI  2         MCS13   15      96    66.6      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-HT20  LGI  2         MCS14   16      84    72.4      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-HT20  LGI  2         MCS15   17      76    76.9      0.0      0.0     0.0     0.0       0.0   0     0 0             0   3        
-
-Total packet count::    ideal 1023      lookaround 48
-Average # of aggregated frames per A-MPDU: 2.7
-
-
-root@KuechenJukebox:~ cat /sys/kernel/debug/ieee80211/phy0/netdev:wlan0/stations/f4:ec:38:9d:81:f0/rc_stats_csv 
-1424897596.239275,CCK,LP,1,,,,,, 1.0M,120,10548,0.9,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,CCK,LP,1,,,,,, 2.0M,121,5476,1.8,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,CCK,LP,1,,,,,, 5.5M,122,2411,4.1,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,CCK,LP,1,,,,,,11.0M,123,1535,6.5,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,1,A,B,C,D,P,MCS0 ,0,1480,6.2,0.0,0.0,0.0,0.0,0.0,1,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,1,,,,,,MCS1 ,1,740,11.7,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,1,,,,,,MCS2 ,2,496,16.5,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,1,,,,,,MCS3 ,3,372,20.8,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,1,,,,,,MCS4 ,4,248,28.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,1,,,,,,MCS5 ,5,188,33.7,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,1,,,,,,MCS6 ,6,168,36.2,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,1,,,,,,MCS7 ,7,148,39.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,2,,,,,,MCS8 ,10,740,11.7,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,2,,,,,,MCS9 ,11,372,20.8,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,2,,,,,,MCS10,12,248,28.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,2,,,,,,MCS11,13,188,33.7,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,2,,,,,,MCS12,14,124,43.1,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,2,,,,,,MCS13,15,96,49.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,2,,,,,,MCS14,16,84,52.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-1424897596.239275,HT20,LGI,2,,,,,,MCS15,17,76,54.3,0.0,0.0,0.0,0.0,0.0,0,0,0,0,0,0,0,1.0
-
-
-
-so a just want to say:
-
-Tested-by: Bastian Bittorf
