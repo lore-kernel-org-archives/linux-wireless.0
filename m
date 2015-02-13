@@ -1,186 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:40752 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbbBYHxZ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48786 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751828AbbBMGle (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 02:53:25 -0500
-Received: by labgd6 with SMTP id gd6so2097062lab.7
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 23:53:23 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Subject: [PATCH v2 2/4] ath10k: make peer type configurable
-Date: Wed, 25 Feb 2015 08:55:09 +0100
-Message-Id: <1424850911-21017-3-git-send-email-marek.puzyniak@tieto.com> (sfid-20150225_085334_827217_FF94105F)
-In-Reply-To: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
-References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
+	Fri, 13 Feb 2015 01:41:34 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1D6eE8d012587
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2015 22:41:34 -0800
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1sfwqx69ky-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Feb 2015 22:41:34 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <gaoqs@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Marc Yang <yangyang@marvell.com>
+Subject: [PATCH] mwifiex: DMA alignment for RX packets
+Date: Fri, 13 Feb 2015 17:41:08 +0530
+Message-ID: <1423829468-9460-1-git-send-email-patila@marvell.com> (sfid-20150213_074138_391531_9E17C0F5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peer type was hardcoded to default value.
-For future implementation it is required
-to make is configurable.
+This patch adds support for DMA alignment of sk_buffs
+allocated for RX.
+Patch also adds support to modify skb allocation flags.
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Signed-off-by: Qingshui Gao <gaoqs@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c     | 17 +++++++++++------
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  8 +++++---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  5 +++--
- drivers/net/wireless/ath/ath10k/wmi.c     |  3 ++-
- drivers/net/wireless/ath/ath10k/wmi.h     |  6 ++++++
- 5 files changed, 27 insertions(+), 12 deletions(-)
+ drivers/net/wireless/mwifiex/decl.h |  1 +
+ drivers/net/wireless/mwifiex/main.h |  4 ++++
+ drivers/net/wireless/mwifiex/pcie.c |  6 ++++--
+ drivers/net/wireless/mwifiex/sdio.c |  5 +++--
+ drivers/net/wireless/mwifiex/util.c | 23 +++++++++++++++++++++++
+ 5 files changed, 35 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6d126d0..7378656 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -364,7 +364,8 @@ static u8 ath10k_parse_mpdudensity(u8 mpdudensity)
- 	}
- }
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index b364a2c..e7324da 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -33,6 +33,7 @@
+ #define MWIFIEX_MAX_BSS_NUM         (3)
  
--static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
-+static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr,
-+			      enum wmi_peer_type peer_type)
- {
- 	int ret;
+ #define MWIFIEX_DMA_ALIGN_SZ	    64
++#define MWIFIEX_RX_HEADROOM	    64
+ #define MAX_TXPD_SZ		    32
+ #define INTF_HDR_ALIGN		     4
  
-@@ -373,7 +374,7 @@ static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr)
- 	if (ar->num_peers >= ar->max_num_peers)
- 		return -ENOBUFS;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 2089a30..16be45e 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -140,6 +140,9 @@ enum {
  
--	ret = ath10k_wmi_peer_create(ar, vdev_id, addr);
-+	ret = ath10k_wmi_peer_create(ar, vdev_id, addr, peer_type);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to create wmi peer %pM on vdev %i: %i\n",
- 			    addr, vdev_id, ret);
-@@ -1187,7 +1188,8 @@ static void ath10k_control_ibss(struct ath10k_vif *arvif,
- 		return;
- 	}
+ #define MWIFIEX_DRV_INFO_SIZE_MAX 0x40000
  
--	ret = ath10k_peer_create(arvif->ar, arvif->vdev_id, self_peer);
-+	ret = ath10k_peer_create(arvif->ar, arvif->vdev_id, self_peer,
-+				 WMI_PEER_TYPE_DEFAULT);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to create IBSS self peer %pM for vdev %d: %d\n",
- 			    self_peer, arvif->vdev_id, ret);
-@@ -2417,7 +2419,8 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 				   peer_addr, vdev_id);
++/* Address alignment */
++#define MWIFIEX_ALIGN_ADDR(p, a) (((long)(p) + (a) - 1) & ~((a) - 1))
++
+ struct mwifiex_dbg {
+ 	u32 num_cmd_host_to_card_failure;
+ 	u32 num_cmd_sleep_cfm_host_to_card_failure;
+@@ -1418,6 +1421,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+ 			    u8 rx_rate, u8 ht_info);
  
- 		if (!peer) {
--			ret = ath10k_peer_create(ar, vdev_id, peer_addr);
-+			ret = ath10k_peer_create(ar, vdev_id, peer_addr,
-+						 WMI_PEER_TYPE_DEFAULT);
- 			if (ret)
- 				ath10k_warn(ar, "failed to create peer %pM on vdev %d: %d\n",
- 					    peer_addr, vdev_id, ret);
-@@ -3300,7 +3303,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	}
+ void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter);
++void *mwifiex_alloc_rx_buf(int rx_len, gfp_t flags);
  
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
--		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr);
-+		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr,
-+					 WMI_PEER_TYPE_DEFAULT);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to create vdev %i peer for AP: %d\n",
- 				    arvif->vdev_id, ret);
-@@ -4023,7 +4027,8 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			goto exit;
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
+index 0640bd6..4b463c3 100644
+--- a/drivers/net/wireless/mwifiex/pcie.c
++++ b/drivers/net/wireless/mwifiex/pcie.c
+@@ -498,7 +498,8 @@ static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
+ 
+ 	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
+ 		/* Allocate skb here so that firmware can DMA data from it */
+-		skb = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
++		skb = mwifiex_alloc_rx_buf(MWIFIEX_RX_DATA_BUF_SIZE,
++					   GFP_KERNEL | GFP_DMA);
+ 		if (!skb) {
+ 			dev_err(adapter->dev,
+ 				"Unable to allocate skb for RX ring.\n");
+@@ -1297,7 +1298,8 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 			}
  		}
  
--		ret = ath10k_peer_create(ar, arvif->vdev_id, sta->addr);
-+		ret = ath10k_peer_create(ar, arvif->vdev_id, sta->addr,
-+					 WMI_PEER_TYPE_DEFAULT);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to add peer %pM for vdev %d when adding a new sta: %i\n",
- 				    sta->addr, arvif->vdev_id, ret);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 04dc4b9..a2cded8 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -81,7 +81,8 @@ struct wmi_ops {
- 	struct sk_buff *(*gen_vdev_wmm_conf)(struct ath10k *ar, u32 vdev_id,
- 					     const struct wmi_wmm_params_all_arg *arg);
- 	struct sk_buff *(*gen_peer_create)(struct ath10k *ar, u32 vdev_id,
--					   const u8 peer_addr[ETH_ALEN]);
-+					   const u8 peer_addr[ETH_ALEN],
-+					   enum wmi_peer_type peer_type);
- 	struct sk_buff *(*gen_peer_delete)(struct ath10k *ar, u32 vdev_id,
- 					   const u8 peer_addr[ETH_ALEN]);
- 	struct sk_buff *(*gen_peer_flush)(struct ath10k *ar, u32 vdev_id,
-@@ -625,14 +626,15 @@ ath10k_wmi_vdev_wmm_conf(struct ath10k *ar, u32 vdev_id,
+-		skb_tmp = dev_alloc_skb(MWIFIEX_RX_DATA_BUF_SIZE);
++		skb_tmp = mwifiex_alloc_rx_buf(MWIFIEX_RX_DATA_BUF_SIZE,
++					       GFP_KERNEL | GFP_DMA);
+ 		if (!skb_tmp) {
+ 			dev_err(adapter->dev,
+ 				"Unable to allocate skb.\n");
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 78a9e86..57d85ab 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1357,7 +1357,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 			return -1;
+ 		rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
  
- static inline int
- ath10k_wmi_peer_create(struct ath10k *ar, u32 vdev_id,
--		       const u8 peer_addr[ETH_ALEN])
-+		       const u8 peer_addr[ETH_ALEN],
-+		       enum wmi_peer_type peer_type)
- {
- 	struct sk_buff *skb;
+-		skb = dev_alloc_skb(rx_len);
++		skb = mwifiex_alloc_rx_buf(rx_len, GFP_KERNEL | GFP_DMA);
+ 		if (!skb)
+ 			return -1;
  
- 	if (!ar->wmi.ops->gen_peer_create)
- 		return -EOPNOTSUPP;
+@@ -1454,7 +1454,8 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 			}
+ 			rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
  
--	skb = ar->wmi.ops->gen_peer_create(ar, vdev_id, peer_addr);
-+	skb = ar->wmi.ops->gen_peer_create(ar, vdev_id, peer_addr, peer_type);
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
+-			skb = dev_alloc_skb(rx_len);
++			skb = mwifiex_alloc_rx_buf(rx_len,
++						   GFP_KERNEL | GFP_DMA);
  
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 71614ba..809c046 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1681,7 +1681,8 @@ ath10k_wmi_tlv_op_gen_sta_keepalive(struct ath10k *ar,
- 
- static struct sk_buff *
- ath10k_wmi_tlv_op_gen_peer_create(struct ath10k *ar, u32 vdev_id,
--				  const u8 peer_addr[ETH_ALEN])
-+				  const u8 peer_addr[ETH_ALEN],
-+				  enum wmi_peer_type peer_type)
- {
- 	struct wmi_tlv_peer_create_cmd *cmd;
- 	struct wmi_tlv *tlv;
-@@ -1696,7 +1697,7 @@ ath10k_wmi_tlv_op_gen_peer_create(struct ath10k *ar, u32 vdev_id,
- 	tlv->len = __cpu_to_le16(sizeof(*cmd));
- 	cmd = (void *)tlv->value;
- 	cmd->vdev_id = __cpu_to_le32(vdev_id);
--	cmd->peer_type = __cpu_to_le32(WMI_TLV_PEER_TYPE_DEFAULT); /* FIXME */
-+	cmd->peer_type = __cpu_to_le32(peer_type);
- 	ether_addr_copy(cmd->peer_addr.addr, peer_addr);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv peer create\n");
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index aeea1c7..b285291 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4519,7 +4519,8 @@ ath10k_wmi_op_gen_vdev_spectral_enable(struct ath10k *ar, u32 vdev_id,
- 
- static struct sk_buff *
- ath10k_wmi_op_gen_peer_create(struct ath10k *ar, u32 vdev_id,
--			      const u8 peer_addr[ETH_ALEN])
-+			      const u8 peer_addr[ETH_ALEN],
-+			      enum wmi_peer_type peer_type)
- {
- 	struct wmi_peer_create_cmd *cmd;
- 	struct sk_buff *skb;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 20ce360..0ffa90a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4324,6 +4324,12 @@ struct wmi_peer_create_cmd {
- 	struct wmi_mac_addr peer_macaddr;
- } __packed;
- 
-+enum wmi_peer_type {
-+	WMI_PEER_TYPE_DEFAULT = 0,
-+	WMI_PEER_TYPE_BSS = 1,
-+	WMI_PEER_TYPE_TDLS = 2,
-+};
+ 			if (!skb) {
+ 				dev_err(adapter->dev, "%s: failed to alloc skb",
+diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
+index 47e215b..2148a57 100644
+--- a/drivers/net/wireless/mwifiex/util.c
++++ b/drivers/net/wireless/mwifiex/util.c
+@@ -631,3 +631,26 @@ void mwifiex_hist_data_reset(struct mwifiex_private *priv)
+ 	for (ix = 0; ix < MWIFIEX_MAX_SIG_STRENGTH; ix++)
+ 		atomic_set(&phist_data->sig_str[ix], 0);
+ }
 +
- struct wmi_peer_delete_cmd {
- 	__le32 vdev_id;
- 	struct wmi_mac_addr peer_macaddr;
++void *mwifiex_alloc_rx_buf(int rx_len, gfp_t flags)
++{
++	struct sk_buff *skb;
++	int buf_len, pad;
++
++	buf_len = rx_len + MWIFIEX_RX_HEADROOM + MWIFIEX_DMA_ALIGN_SZ;
++
++	skb = __dev_alloc_skb(buf_len, flags);
++
++	if (!skb)
++		return NULL;
++
++	skb_reserve(skb, MWIFIEX_RX_HEADROOM);
++
++	pad = MWIFIEX_ALIGN_ADDR(skb->data, MWIFIEX_DMA_ALIGN_SZ) -
++	      (long)skb->data;
++
++	skb_reserve(skb, pad);
++
++	return skb;
++}
++EXPORT_SYMBOL_GPL(mwifiex_alloc_rx_buf);
 -- 
-2.1.4
+1.8.1.4
 
