@@ -1,53 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:42070 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387AbbBXL3f (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:54532 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751594AbbBMHzt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 06:29:35 -0500
-Received: by wghl2 with SMTP id l2so4625562wgh.9
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 03:29:34 -0800 (PST)
+	Fri, 13 Feb 2015 02:55:49 -0500
+From: Mark Rustad <mrustad@gmail.com>
+Message-ID: <54DDAE03.4000502@gmail.com> (sfid-20150213_085611_397646_FA569D67)
+Date: Thu, 12 Feb 2015 23:55:47 -0800
 MIME-Version: 1.0
-In-Reply-To: <1424774105.2192.29.camel@sipsolutions.net>
-References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
- <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
- <1424772587.2192.14.camel@sipsolutions.net> <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com>
- <1424774105.2192.29.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 24 Feb 2015 16:59:01 +0530
-Message-ID: <CABPxzYJkoCWud=yfNHL5m2FUCPOc854i_L+VB4sN+o8Skb-Pnw@mail.gmail.com> (sfid-20150224_122942_707224_D679457C)
-Subject: Re: Connection issues with BW Tracking in mac80211
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	"Rustad, Mark D" <mark.d.rustad@intel.com>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iwl4965: Enable checking of format strings
+References: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>	<60178C37-F104-430E-92EB-B6DDFAEB2F99@intel.com> <87vbj7zb0e.fsf@rasmusvillemoes.dk>
+In-Reply-To: <87vbj7zb0e.fsf@rasmusvillemoes.dk>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 4:05 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2015-02-24 at 15:58 +0530, Krishna Chaitanya wrote:
->
->> STA (mac80211) connects to AP in VHT-80.
->> AP is reconfigured to 11n40 (stops beaconing for about 30secs and then
->> starts again).
->> STA loses connection (HW_CONN_TRACK), iee80211_connection_loss is called.
->> STA see's AP again and tries to connect,
->
-> But this goes through the supplicant, right? You actually get a full
-> connection loss (which I certainly would expect after 30 seconds)
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Our HW N/W lost event timeout is 5secs.
+On 2/12/15 2:20 AM, Rasmus Villemoes wrote:
+> Rather weak arguments, but I have three of them :-)
 
->>  but due to BW tracking in
->> mac80211 it doesn't connect.
->>
->> So i guess we are not resetting the tracking after losing connection.
->
-> Right, some flag is not getting reset correctly I suppose. I thought we
-> had pretty robust code for this, but I guess not.
->
-> Easiest might be to print the flags and other state for during all
-> connection attempts, and then compare
->  * VHT connection
->  * subsequent HT connection
->  * HT connection after reloading the driver
-Sure Johannes, will share the info.
+Yes, weak. All three.
+
+> (1) If I'm reading some code and spot a non-constant format
+> argument, I sometimes track back to see how e.g. fmt_value is
+> defined. If I then see it's a macro, I immediately think "ok, the
+> compiler is doing type-checking". If it is a const char[], I have
+> to remember that gcc also does it in that case (as opposed to for
+> example const char*const).
+
+GCC should check in both cases. The case you are replacing was not
+const char * const, but only const char *. Still, the compiler really
+should check either form, even though theoretically the pointer in the
+latter case could be changed, but the initial const value should be a
+good indication of what the parameters are expected to be. No real
+reason for the compiler not to check it.
+
+> (2) The names of these variables themselves may end up wasting a
+> few bytes in the image.
+
+Maybe in a debug image, but they should be stripped from any normal
+image. Really not a factor.
+
+> (3) gcc/the linker doesn't merge identical const char[] arrays
+> across translation units. It also doesn't consider their tails for
+> merging with string literals. So although these specific strings
+> are unlikely to appear elsewhere, a string such as "%10u\n" or
+> "max\n" couldn't be merged with one of the above.
+
+I haven't checked, but there is no theoretical reason that const char
+[] items could not be merged exactly as the literals are. Considering
+the boundaries the compiler guys push on optimization, doing such
+merging would be tame by comparison (speculative stores make me crazy).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.20 (Darwin)
+Comment: GPGTools - http://gpgtools.org
+
+iQIcBAEBAgAGBQJU3a3+AAoJEDwO/+eO4+5unvMP/jwxA4GmwC0d3VdGsVTJkMVd
+zg+jwbkhnMiaEj6uPAwV5LXV/IGyuYFgNjoiNDg9RD3trV9/3YAxdAKw1ffO+PWe
+lnmXSxaapLlCTapOsUdXPg88z9muQKrcfhnGyi+jt3BFeccXgtlHLsR0qVa4ddJw
+KVHByPg+AlTSNzSnROxHH3UAbxEuZmDy+g+xfbEFLCKNCgtrSX5jGyG2vJIY3lhF
+40VIdriUHz1QW4C1YYeJWMKwzml7Kln3u0T5MfDEtDfy6n7hiBhHczEgPjf7dnzd
+aY4+VtKTyjPWLRhyDoJfR9maaV9TsYHpheSuUVzAGwvb85wH32ugdfmcW2RPnRfC
+n9ThhtWd1WdJJpmq0xhLjc9bc3nrxJO8b2J/GMsT6SjGBhPGaaJSWY37UPhhOJOj
+akKkA6QwD0u6Yoc3de7unGsiKWayD7e2k3w3bus+kCSspmyn/OnkzZRc0X3nXd20
+suAWNZTalLWioqvI/hyvH3GMZxIuHTJoLRpTm+K7BQs7gBM9pD7OJOpn7XLtk2PM
+zPfEj8fAUMV17lzFdBP+M+pGT3HzjWVwTIUgujdA4vL6eqB1W+3fR7kqjUuQYc69
+aBaMde//i+HUPzTHZht2qXEb6K9EvSsz/XlhQrtAyu2gYY8PwchdZXH0NbAGqJ9C
+4BEAO4HYJijd4vVSNBFO
+=utge
+-----END PGP SIGNATURE-----
