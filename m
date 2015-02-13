@@ -1,290 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:36902 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752646AbbBYMpx (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49170 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752878AbbBMO6F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 07:45:53 -0500
-Received: by lbvn10 with SMTP id n10so3559429lbv.4
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 04:45:52 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFCv2 3/4] ath10k: add WMI support for WOW patterns
-Date: Wed, 25 Feb 2015 13:44:57 +0100
-Message-Id: <1424868298-17372-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150225_134558_441868_8AB6DE73)
-In-Reply-To: <1424868298-17372-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1424868298-17372-1-git-send-email-janusz.dziedzic@tieto.com>
+	Fri, 13 Feb 2015 09:58:05 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2 05/10] mac80211: unify Minstrel & Minstrel-HTs calculation of rate statistics
+Date: Fri, 13 Feb 2015 15:57:47 +0100
+Message-Id: <1423839472-15625-6-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150213_155826_049246_9C4A9337)
+In-Reply-To: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add WMI support for WOW patterns.
+This patch unifies the calculation of Minstrels and Minstrel-HTs
+per-rate statistic. The new common function minstrel_calc_rate_stats()
+is called when a statistic update is performed.
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  45 +++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 130 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  38 +++++++++
- 3 files changed, 213 insertions(+)
+ net/mac80211/rc80211_minstrel.c    | 44 ++++++++++++++++++++++++--------------
+ net/mac80211/rc80211_minstrel.h    |  3 +++
+ net/mac80211/rc80211_minstrel_ht.c | 28 +-----------------------
+ 3 files changed, 32 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index 1dee6ed..f038551 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -155,6 +155,14 @@ struct wmi_ops {
- 						    enum wmi_wow_wakeup_event event,
- 						    u32 enable);
- 	struct sk_buff *(*gen_wow_host_wakeup_ind)(struct ath10k *ar);
-+	struct sk_buff *(*gen_wow_add_pattern)(struct ath10k *ar, u32 vdev_id,
-+					       u32 pattern_id,
-+					       const u8 *pattern,
-+					       const u8 *mask,
-+					       int pattern_len,
-+					       int pattern_offset);
-+	struct sk_buff *(*gen_wow_del_pattern)(struct ath10k *ar, u32 vdev_id,
-+					       u32 pattern_id);
- };
- 
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -1130,4 +1138,41 @@ ath10k_wmi_wow_host_wakeup_ind(struct ath10k *ar)
- 	return ath10k_wmi_cmd_send(ar, skb, cmd_id);
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 7c86a00..4858e67 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -127,6 +127,32 @@ minstrel_update_rates(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 	rate_control_set_rates(mp->hw, mi->sta, ratetbl);
  }
  
-+static inline int
-+ath10k_wmi_wow_add_pattern(struct ath10k *ar, u32 vdev_id, u32 pattern_id,
-+			   const u8 *pattern, const u8 *mask,
-+			   int pattern_len, int pattern_offset)
++/*
++* Recalculate success probabilities and counters for a given rate using EWMA
++*/
++void
++minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
 +{
-+	struct sk_buff *skb;
-+	u32 cmd_id;
++	if (unlikely(mrs->attempts > 0)) {
++		mrs->sample_skipped = 0;
++		mrs->cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
++		if (unlikely(!mrs->att_hist))
++			mrs->probability = mrs->cur_prob;
++		else
++			mrs->probability = minstrel_ewma(mrs->probability,
++						     mrs->cur_prob, EWMA_LEVEL);
++		mrs->att_hist += mrs->attempts;
++		mrs->succ_hist += mrs->success;
++	} else {
++		mrs->sample_skipped++;
++	}
 +
-+	if (!ar->wmi.ops->gen_wow_add_pattern)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_wow_add_pattern(ar, vdev_id, pattern_id,
-+					       pattern, mask, pattern_len,
-+					       pattern_offset);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	cmd_id = ar->wmi.cmd->wow_add_wake_pattern_cmdid;
-+	return ath10k_wmi_cmd_send(ar, skb, cmd_id);
++	mrs->last_success = mrs->success;
++	mrs->last_attempts = mrs->attempts;
++	mrs->success = 0;
++	mrs->attempts = 0;
 +}
 +
-+static inline int
-+ath10k_wmi_wow_del_pattern(struct ath10k *ar, u32 vdev_id, u32 pattern_id)
-+{
-+	struct sk_buff *skb;
-+	u32 cmd_id;
+ static void
+ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ {
+@@ -146,22 +172,8 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		if (!usecs)
+ 			usecs = 1000000;
+ 
+-		if (unlikely(mrs->attempts > 0)) {
+-			mrs->sample_skipped = 0;
+-			mrs->cur_prob = MINSTREL_FRAC(mrs->success,
+-						      mrs->attempts);
+-			mrs->succ_hist += mrs->success;
+-			mrs->att_hist += mrs->attempts;
+-			mrs->probability = minstrel_ewma(mrs->probability,
+-							 mrs->cur_prob,
+-							 EWMA_LEVEL);
+-		} else
+-			mrs->sample_skipped++;
+-
+-		mrs->last_success = mrs->success;
+-		mrs->last_attempts = mrs->attempts;
+-		mrs->success = 0;
+-		mrs->attempts = 0;
++		/* Update success probabilities per rate */
++		minstrel_calc_rate_stats(mrs);
+ 
+ 		/* Update throughput per rate, reset thr. below 10% success */
+ 		if (mrs->probability < MINSTREL_FRAC(10, 100))
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 9613e73..728144c 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -132,6 +132,9 @@ extern const struct rate_control_ops mac80211_minstrel;
+ void minstrel_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir);
+ void minstrel_remove_sta_debugfs(void *priv, void *priv_sta);
+ 
++/* Recalculate success probabilities and counters for a given rate using EWMA */
++void minstrel_calc_rate_stats(struct minstrel_rate_stats *mr);
 +
-+	if (!ar->wmi.ops->gen_wow_del_pattern)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_wow_del_pattern(ar, vdev_id, pattern_id);
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	cmd_id = ar->wmi.cmd->wow_del_wake_pattern_cmdid;
-+	return ath10k_wmi_cmd_send(ar, skb, cmd_id);
-+}
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 3b40a13..deed5da 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -2601,6 +2601,134 @@ ath10k_wmi_tlv_gen_wow_host_wakeup_ind(struct ath10k *ar)
- 	return skb;
+ /* debugfs */
+ int minstrel_stats_open(struct inode *inode, struct file *file);
+ int minstrel_stats_csv_open(struct inode *inode, struct file *file);
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 80452cf..381d089 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -311,32 +311,6 @@ minstrel_get_ratestats(struct minstrel_ht_sta *mi, int index)
+ 	return &mi->groups[index / MCS_GROUP_RATES].rates[index % MCS_GROUP_RATES];
  }
  
-+static struct sk_buff *
-+ath10k_wmi_tlv_op_gen_wow_add_pattern(struct ath10k *ar, u32 vdev_id,
-+				      u32 pattern_id, const u8 *pattern,
-+				      const u8 *bitmask, int pattern_len,
-+				      int pattern_offset)
-+{
-+	struct wmi_tlv_wow_add_pattern_cmd *cmd;
-+	struct wmi_tlv_wow_bitmap_pattern *bitmap;
-+	struct wmi_tlv *tlv;
-+	struct sk_buff *skb;
-+	void *ptr;
-+	size_t len;
-+
-+	len = sizeof(*tlv) + sizeof(*cmd) +
-+	      sizeof(*tlv) +			/* array struct */
-+	      sizeof(*tlv) + sizeof(*bitmap) +  /* bitmap */
-+	      sizeof(*tlv) +			/* empty ipv4 sync */
-+	      sizeof(*tlv) +			/* empty ipv6 sync */
-+	      sizeof(*tlv) +			/* empty magic */
-+	      sizeof(*tlv) +			/* empty info timeout */
-+	      sizeof(*tlv) + sizeof(u32);	/* ratelimit interval */
-+
-+	skb = ath10k_wmi_alloc_skb(ar, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	/* cmd */
-+	ptr = (void *)skb->data;
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_WOW_ADD_PATTERN_CMD);
-+	tlv->len = __cpu_to_le16(sizeof(*cmd));
-+	cmd = (void *)tlv->value;
-+
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	cmd->pattern_id = __cpu_to_le32(pattern_id);
-+	cmd->pattern_type = __cpu_to_le32(WOW_BITMAP_PATTERN);
-+
-+	ptr += sizeof(*tlv);
-+	ptr += sizeof(*cmd);
-+
-+	/* bitmap */
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
-+	tlv->len = __cpu_to_le16(sizeof(*tlv) + sizeof(*bitmap));
-+
-+	ptr += sizeof(*tlv);
-+
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_WOW_BITMAP_PATTERN_T);
-+	tlv->len = __cpu_to_le16(sizeof(*bitmap));
-+	bitmap = (void *)tlv->value;
-+
-+	memcpy(bitmap->patternbuf, pattern, pattern_len);
-+	memcpy(bitmap->bitmaskbuf, bitmask, pattern_len);
-+	bitmap->pattern_offset = __cpu_to_le32(pattern_offset);
-+	bitmap->pattern_len = __cpu_to_le32(pattern_len);
-+	bitmap->bitmask_len = __cpu_to_le32(pattern_len);
-+	bitmap->pattern_id = __cpu_to_le32(pattern_id);
-+
-+	ptr += sizeof(*tlv);
-+	ptr += sizeof(*bitmap);
-+
-+	/* ipv4 sync */
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
-+	tlv->len = __cpu_to_le16(0);
-+
-+	ptr += sizeof(*tlv);
-+
-+	/* ipv6 sync */
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
-+	tlv->len = __cpu_to_le16(0);
-+
-+	ptr += sizeof(*tlv);
-+
-+	/* magic */
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
-+	tlv->len = __cpu_to_le16(0);
-+
-+	ptr += sizeof(*tlv);
-+
-+	/* pattern info timeout */
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_UINT32);
-+	tlv->len = __cpu_to_le16(0);
-+
-+	ptr += sizeof(*tlv);
-+
-+	/* ratelimit interval */
-+	tlv = ptr;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_ARRAY_UINT32);
-+	tlv->len = __cpu_to_le16(sizeof(u32));
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv wow add pattern vdev_id %d pattern_id %d, pattern_offset %d\n",
-+		   vdev_id, pattern_id, pattern_offset);
-+	return skb;
-+}
-+
-+static struct sk_buff *
-+ath10k_wmi_tlv_op_gen_wow_del_pattern(struct ath10k *ar, u32 vdev_id,
-+				      u32 pattern_id)
-+{
-+	struct wmi_tlv_wow_del_pattern_cmd *cmd;
-+	struct wmi_tlv *tlv;
-+	struct sk_buff *skb;
-+	size_t len;
-+
-+	len = sizeof(*tlv) + sizeof(*cmd);
-+	skb = ath10k_wmi_alloc_skb(ar, len);
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
-+
-+	tlv = (struct wmi_tlv *)skb->data;
-+	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_WOW_DEL_PATTERN_CMD);
-+	tlv->len = __cpu_to_le16(sizeof(*cmd));
-+	cmd = (void *)tlv->value;
-+
-+	cmd->vdev_id = __cpu_to_le32(vdev_id);
-+	cmd->pattern_id = __cpu_to_le32(pattern_id);
-+	cmd->pattern_type = __cpu_to_le32(WOW_BITMAP_PATTERN);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv wow del pattern vdev_id %d pattern_id %d\n",
-+		   vdev_id, pattern_id);
-+	return skb;
-+}
-+
- /****************/
- /* TLV mappings */
- /****************/
-@@ -2901,6 +3029,8 @@ static const struct wmi_ops wmi_tlv_ops = {
- 	.gen_wow_enable = ath10k_wmi_tlv_op_gen_wow_enable,
- 	.gen_wow_add_wakeup_event = ath10k_wmi_tlv_op_gen_wow_add_wakeup_event,
- 	.gen_wow_host_wakeup_ind = ath10k_wmi_tlv_gen_wow_host_wakeup_ind,
-+	.gen_wow_add_pattern = ath10k_wmi_tlv_op_gen_wow_add_pattern,
-+	.gen_wow_del_pattern = ath10k_wmi_tlv_op_gen_wow_del_pattern,
- };
+-
+-/*
+- * Recalculate success probabilities and counters for a rate using EWMA
+- */
+-static void
+-minstrel_calc_rate_ewma(struct minstrel_rate_stats *mr)
+-{
+-	if (unlikely(mr->attempts > 0)) {
+-		mr->sample_skipped = 0;
+-		mr->cur_prob = MINSTREL_FRAC(mr->success, mr->attempts);
+-		if (!mr->att_hist)
+-			mr->probability = mr->cur_prob;
+-		else
+-			mr->probability = minstrel_ewma(mr->probability,
+-				mr->cur_prob, EWMA_LEVEL);
+-		mr->att_hist += mr->attempts;
+-		mr->succ_hist += mr->success;
+-	} else {
+-		mr->sample_skipped++;
+-	}
+-	mr->last_success = mr->success;
+-	mr->last_attempts = mr->attempts;
+-	mr->success = 0;
+-	mr->attempts = 0;
+-}
+-
+ /*
+  * Calculate throughput based on the average A-MPDU length, taking into account
+  * the expected number of retransmissions and their expected length
+@@ -565,7 +539,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
  
- /************/
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-index 2456786..e13f788 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
-@@ -1469,6 +1469,44 @@ struct wmi_tlv_wow_event_info {
- 	__le32 data_len;
- } __packed;
+ 			mr = &mg->rates[i];
+ 			mr->retry_updated = false;
+-			minstrel_calc_rate_ewma(mr);
++			minstrel_calc_rate_stats(mr);
+ 			minstrel_ht_calc_tp(mi, group, i);
  
-+enum wmi_tlv_pattern_type {
-+	WOW_PATTERN_MIN = 0,
-+	WOW_BITMAP_PATTERN = WOW_PATTERN_MIN,
-+	WOW_IPV4_SYNC_PATTERN,
-+	WOW_IPV6_SYNC_PATTERN,
-+	WOW_WILD_CARD_PATTERN,
-+	WOW_TIMER_PATTERN,
-+	WOW_MAGIC_PATTERN,
-+	WOW_IPV6_RA_PATTERN,
-+	WOW_IOAC_PKT_PATTERN,
-+	WOW_IOAC_TMR_PATTERN,
-+	WOW_PATTERN_MAX
-+};
-+
-+#define WOW_DEFAULT_BITMAP_PATTERN_SIZE		148
-+#define WOW_DEFAULT_BITMASK_SIZE		148
-+
-+struct wmi_tlv_wow_bitmap_pattern {
-+	u8 patternbuf[WOW_DEFAULT_BITMAP_PATTERN_SIZE];
-+	u8 bitmaskbuf[WOW_DEFAULT_BITMASK_SIZE];
-+	__le32 pattern_offset;
-+	__le32 pattern_len;
-+	__le32 bitmask_len;
-+	__le32 pattern_id;
-+} __packed;
-+
-+struct wmi_tlv_wow_add_pattern_cmd {
-+	__le32 vdev_id;
-+	__le32 pattern_id;
-+	__le32 pattern_type;
-+} __packed;
-+
-+struct wmi_tlv_wow_del_pattern_cmd {
-+	__le32 vdev_id;
-+	__le32 pattern_id;
-+	__le32 pattern_type;
-+} __packed;
-+
- void ath10k_wmi_tlv_attach(struct ath10k *ar);
- 
- #endif
+ 			if (!mr->cur_tp)
 -- 
-1.9.1
+2.2.2
 
