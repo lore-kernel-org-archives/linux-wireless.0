@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gn237.zone.eu ([217.146.67.237]:17847 "EHLO gn237.zone.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932231AbbBOUsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 15:48:31 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH v2 4/7] rtlwifi: Remove unused defines from cam.h
-Date: Sun, 15 Feb 2015 22:46:48 +0200
-Message-Id: <1424033211-11696-5-git-send-email-plaes@plaes.org> (sfid-20150215_215012_460161_889FAFC8)
-In-Reply-To: <1424033211-11696-1-git-send-email-plaes@plaes.org>
-References: <1424033211-11696-1-git-send-email-plaes@plaes.org>
+Received: from mail-la0-f46.google.com ([209.85.215.46]:39334 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753AbbBMMbd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2015 07:31:33 -0500
+Received: by labgq15 with SMTP id gq15so16086222lab.6
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 04:31:32 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: workaround qca6174 sta powersave issue
+Date: Fri, 13 Feb 2015 13:30:15 +0100
+Message-Id: <1423830616-7516-1-git-send-email-michal.kazior@tieto.com> (sfid-20150213_133138_016401_0A4C401F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/rtlwifi/cam.h | 2 --
- 1 file changed, 2 deletions(-)
+qca6184 WLAN.RM.2.0-00073 has a bug in sta
+powersave state machine and requires peer param to
+be poked to enable the powersave.
 
-diff --git a/drivers/net/wireless/rtlwifi/cam.h b/drivers/net/wireless/rtlwifi/cam.h
-index 3550808..e2e647d 100644
---- a/drivers/net/wireless/rtlwifi/cam.h
-+++ b/drivers/net/wireless/rtlwifi/cam.h
-@@ -28,13 +28,11 @@
+Calling this unconditionally should be safe for
+other chips/firmwares.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 12 ++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  3 ++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index d6d2f0f..8ed0ba6 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1853,6 +1853,18 @@ static void ath10k_bss_assoc(struct ieee80211_hw *hw,
+ 	}
  
- #define CAM_CONTENT_COUNT				8
+ 	arvif->is_up = true;
++
++	/* Workaround: Some firmware revisions (tested with qca6174
++	 * WLAN.RM.2.0-00073) have buggy powersave state machine and must be
++	 * poked with peer param command.
++	 */
++	ret = ath10k_wmi_peer_set_param(ar, arvif->vdev_id, arvif->bssid,
++					WMI_PEER_DUMMY_VAR, 1);
++	if (ret) {
++		ath10k_warn(ar, "failed to poke peer %pM param for ps workaround on vdev %i: %d\n",
++			    arvif->bssid, arvif->vdev_id, ret);
++		return;
++	}
+ }
  
--#define CFG_DEFAULT_KEY					BIT(5)
- #define CFG_VALID					BIT(15)
+ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 20ce360..c56de92 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4436,7 +4436,8 @@ enum wmi_peer_param {
+ 	WMI_PEER_AUTHORIZE  = 0x3,
+ 	WMI_PEER_CHAN_WIDTH = 0x4,
+ 	WMI_PEER_NSS        = 0x5,
+-	WMI_PEER_USE_4ADDR  = 0x6
++	WMI_PEER_USE_4ADDR  = 0x6,
++	WMI_PEER_DUMMY_VAR  = 0xff, /* dummy parameter for STA PS workaround */
+ };
  
- #define PAIRWISE_KEYIDX					0
- #define CAM_PAIRWISE_KEY_POSITION			4
- 
--#define	CAM_CONFIG_USEDK				1
- #define	CAM_CONFIG_NO_USEDK				0
- 
- void rtl_cam_reset_all_entry(struct ieee80211_hw *hw);
+ struct wmi_peer_set_param_cmd {
 -- 
-2.3.0
+1.8.5.3
 
