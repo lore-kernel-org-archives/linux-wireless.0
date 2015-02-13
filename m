@@ -1,32 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14205 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751483AbbBDHSM (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:34262 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684AbbBMMEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 02:18:12 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] ath10k: change dma beacon cmd prototype
-References: <1421412811-6387-1-git-send-email-michal.kazior@tieto.com>
-	<1422440525-11115-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 4 Feb 2015 09:18:01 +0200
-In-Reply-To: <1422440525-11115-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 28 Jan 2015 11:22:04 +0100")
-Message-ID: <87a90uw3fa.fsf@kamboji.qca.qualcomm.com> (sfid-20150204_081815_598221_C9FA425A)
+	Fri, 13 Feb 2015 07:04:51 -0500
+Received: by mail-lb0-f171.google.com with SMTP id b6so15031686lbj.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 04:04:49 -0800 (PST)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: Mark Rustad <mrustad@gmail.com>,
+	"Rustad\, Mark D" <mark.d.rustad@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iwl4965: Enable checking of format strings
+References: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>
+	<60178C37-F104-430E-92EB-B6DDFAEB2F99@intel.com>
+	<87vbj7zb0e.fsf@rasmusvillemoes.dk> <54DDAE03.4000502@gmail.com>
+	<87y4o2xfgz.fsf@rasmusvillemoes.dk>
+	<063D6719AE5E284EB5DD2968C1650D6D1CAE3325@AcuExch.aculab.com>
+Date: Fri, 13 Feb 2015 13:04:47 +0100
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CAE3325@AcuExch.aculab.com>
+	(David Laight's message of "Fri, 13 Feb 2015 11:20:47 +0000")
+Message-ID: <87twyqxbj4.fsf@rasmusvillemoes.dk> (sfid-20150213_130513_516321_50D95EFD)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Fri, Feb 13 2015, David Laight <David.Laight@ACULAB.COM> wrote:
 
-> The command logic shouldn't really care about
-> arvif structure.
+> From: Rasmus Villemoes
+>> Well, probably the linker is allowed to overlap "anonymous" objects
+>> (string literals) with whatever const char[] (or indeed any const)
+>> object it finds containing the appropriate byte sequence. But I think
+>> language lawyers would insist that for
+>> 
+>> const char foo[] = "a string";
+>> const char bar[] = "a string";
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> A quick test shows those are separate strings.
+> But 'const char *foo = "xxx";' will share.
 
-Thanks, both patches applied to ath.git.
+Yes, of course, because in that case you are actually creating two
+objects, "xxx" which the linker will find some place to put, and foo
+which is initialized to the address of whereever "xxx" was/will be
+put. So one is wasting sizeof(const char*). Also, passing foo to a
+function means the compiler has to load the value of foo and use that,
+instead of simply passing the compile-time (well, link-time) constant
+address of "xxx".
 
--- 
-Kalle Valo
+> You also need -O1 to get the strings into .rodata.str.n so that the linker
+> can merge them.
+
+Sure, optimization has to be turned on, but isn't the kernel always
+compiled with -O2? ISTR that there are some things which won't even
+work/compile with -O0.
+
+Rasmus
