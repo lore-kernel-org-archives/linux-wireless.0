@@ -1,43 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:26734 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754390AbbBPHfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 02:35:03 -0500
-Message-ID: <54E19DA1.4030407@linux.intel.com> (sfid-20150216_083508_676697_BE0A5B88)
-Date: Mon, 16 Feb 2015 15:34:57 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Arend van Spriel <arend@broadcom.com>
-CC: Pat Erley <pat-lkml@erley.org>, brudley@broadcom.com,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
-	wens@csie.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
-References: <54DC1D7D.5050407@linux.intel.com>	<54E0072D.3020802@linux.intel.com> <54E01209.7010300@erley.org>	<54E05961.7000201@broadcom.com> <878ufzi5s3.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <878ufzi5s3.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49150 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752377AbbBMO6E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2015 09:58:04 -0500
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v2 0/10] Improve Minstrels & Minstrel-HTs common code base & statistics 
+Date: Fri, 13 Feb 2015 15:57:42 +0100
+Message-Id: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150213_155808_461719_C94B7B79)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch series adds several improvements to the readability, the
+output format of rc_stats and the calculated statistics of Minstrel
+and Minstrel-HT. Variable names got more consistent and functions
+got unified between both rate control algorithms.
 
-On 2015/2/15 22:54, Kalle Valo wrote:
-> Arend van Spriel <arend@broadcom.com> writes:
->
->> On 02/15/15 04:27, Pat Erley wrote:
->>> On 02/14/2015 08:40 PM, Fu, Zhonghui wrote:
->>>> Any comments to this patch? Can it be accepted?
->> I assume that patches are queued up until after the merge window that
->> we are currently in.
-> That's right. In the future I will most likely apply patches also during
-> the merge window, but as I'm still a greenhorn I'll be on the safe and
-> wait for the merge window to end.
-I am very glad to see this.
-Could you please tell which release candidate this patch will be likely merged into now?
+Greetings Thomas
 
+---
+Changes in v2:
+- fix define MACRO from CPTCFG_* into CONFIG_*
+- change standard deviation symbol sigma into "sd"
 
-Thanks,
-Zhonghui
-
+[PATCH v2 01/10] mac80211: enhance readability of Minstrels rc_stats
+[PATCH v2 02/10] mac80211: enhance readability of Minstrel-HTs
+[PATCH v2 03/10] mac80211: add new Minstrel statistic output via csv
+[PATCH v2 04/10] mac80211: add new Minstrel-HT statistic output via
+[PATCH v2 05/10] mac80211: unify Minstrel & Minstrel-HTs calculation
+[PATCH v2 06/10] mac80211: improve Minstrel variable & function
+[PATCH v2 07/10] mac80211: restructure per-rate throughput
+[PATCH v2 08/10] mac80211: add max. lossless throughput per rate to
+[PATCH v2 09/10] mac80211: reduce calculation costs of EWMA
+[PATCH v2 10/10] mac80211: add standard deviation to Minstrels
