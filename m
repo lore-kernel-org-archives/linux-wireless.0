@@ -1,119 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:34385 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752434AbbBCNMk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 08:12:40 -0500
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Anjana Sasindran <anjanasasindran123@gmail.com>,
-	Roberta Dobrescu <roberta.dobrescu@gmail.com>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] staging: rtl8723au: multiple condition with no effect - if identical to else
-Date: Tue,  3 Feb 2015 08:08:16 -0500
-Message-Id: <1422968896-26562-1-git-send-email-hofrat@osadl.org> (sfid-20150203_141243_366926_E8E1573F)
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:52832 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752758AbbBMMbe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2015 07:31:34 -0500
+Received: by mail-lb0-f176.google.com with SMTP id u10so15216499lbd.7
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 04:31:33 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/2] ath10k: disable multi-vif ps by default
+Date: Fri, 13 Feb 2015 13:30:16 +0100
+Message-Id: <1423830616-7516-2-git-send-email-michal.kazior@tieto.com> (sfid-20150213_133138_624809_64A7BFF9)
+In-Reply-To: <1423830616-7516-1-git-send-email-michal.kazior@tieto.com>
+References: <1423830616-7516-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A number if/else if/else branches are identical - so the condition has no
-effect on the effective code and can be significantly simplified - this 
-patch removes the condition and the duplicated code.
+Not all firmware revisions have a proper
+multi-interface client powersaving implementation,
+e.g. qca6174 WLAN.RM.2.0-00073.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
+@Kalle: 999.999.0.636 seems to work okay with
+multi-vif PS so you might want to bump it with the
+MULTI_VIF_PS_SUPPORT feature flag set.
 
-This looks like the output of some broken code-generator - unlikely someone
-wrote this by hand. In any case it needs a review by someone that knows the
-details of the driver. 
+ drivers/net/wireless/ath/ath10k/core.h |  7 +++++++
+ drivers/net/wireless/ath/ath10k/mac.c  | 31 +++++++++++++++++++++++++++++--
+ 2 files changed, 36 insertions(+), 2 deletions(-)
 
-Anyway the number of useless code repetition is potentially record breaking !
-
-Patch was compile tested for x86_64_defconfig + CONFIG_STAGING=y
-CONFIG_R8723AU=m, CONFIG_8723AU_BT_COEXIST=y
-
-Patch is against 3.0.19-rc7 (localversoin = -next-20150203)
-
- .../staging/rtl8723au/hal/rtl8723a_bt-coexist.c    |   60 +++-----------------
- 1 file changed, 8 insertions(+), 52 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-index 412d8cf..73cfddd 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
-@@ -7255,63 +7255,19 @@ btdm_2AntTdmaDurationAdjust(struct rtw_adapter *padapter, u8 bScoHid,
- 		RTPRINT(FBT, BT_TRACE, ("[BTCoex], first run TdmaDurationAdjust()!!\n"));
- 		if (bScoHid) {
- 			if (bTxPause) {
--				if (maxInterval == 1) {
--					btdm_2AntPsTdma(padapter, true, 15);
--					pBtdm8723->psTdmaDuAdjType = 15;
--				} else if (maxInterval == 2) {
--					btdm_2AntPsTdma(padapter, true, 15);
--					pBtdm8723->psTdmaDuAdjType = 15;
--				} else if (maxInterval == 3) {
--					btdm_2AntPsTdma(padapter, true, 15);
--					pBtdm8723->psTdmaDuAdjType = 15;
--				} else {
--					btdm_2AntPsTdma(padapter, true, 15);
--					pBtdm8723->psTdmaDuAdjType = 15;
--				}
-+				btdm_2AntPsTdma(padapter, true, 15);
-+				pBtdm8723->psTdmaDuAdjType = 15;
- 			} else {
--				if (maxInterval == 1) {
--					btdm_2AntPsTdma(padapter, true, 11);
--					pBtdm8723->psTdmaDuAdjType = 11;
--				} else if (maxInterval == 2) {
--					btdm_2AntPsTdma(padapter, true, 11);
--					pBtdm8723->psTdmaDuAdjType = 11;
--				} else if (maxInterval == 3) {
--					btdm_2AntPsTdma(padapter, true, 11);
--					pBtdm8723->psTdmaDuAdjType = 11;
--				} else {
--					btdm_2AntPsTdma(padapter, true, 11);
--					pBtdm8723->psTdmaDuAdjType = 11;
--				}
-+				btdm_2AntPsTdma(padapter, true, 11);
-+				pBtdm8723->psTdmaDuAdjType = 11;
- 			}
- 		} else {
- 			if (bTxPause) {
--				if (maxInterval == 1) {
--					btdm_2AntPsTdma(padapter, true, 7);
--					pBtdm8723->psTdmaDuAdjType = 7;
--				} else if (maxInterval == 2) {
--					btdm_2AntPsTdma(padapter, true, 7);
--					pBtdm8723->psTdmaDuAdjType = 7;
--				} else if (maxInterval == 3) {
--					btdm_2AntPsTdma(padapter, true, 7);
--					pBtdm8723->psTdmaDuAdjType = 7;
--				} else {
--					btdm_2AntPsTdma(padapter, true, 7);
--					pBtdm8723->psTdmaDuAdjType = 7;
--				}
-+				btdm_2AntPsTdma(padapter, true, 7);
-+				pBtdm8723->psTdmaDuAdjType = 7;
- 			} else {
--				if (maxInterval == 1) {
--					btdm_2AntPsTdma(padapter, true, 3);
--					pBtdm8723->psTdmaDuAdjType = 3;
--				} else if (maxInterval == 2) {
--					btdm_2AntPsTdma(padapter, true, 3);
--					pBtdm8723->psTdmaDuAdjType = 3;
--				} else if (maxInterval == 3) {
--					btdm_2AntPsTdma(padapter, true, 3);
--					pBtdm8723->psTdmaDuAdjType = 3;
--				} else {
--					btdm_2AntPsTdma(padapter, true, 3);
--					pBtdm8723->psTdmaDuAdjType = 3;
--				}
-+				btdm_2AntPsTdma(padapter, true, 3);
-+				pBtdm8723->psTdmaDuAdjType = 3;
- 			}
- 		}
- 		up = 0;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index d60e46f..c900ef2 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -288,6 +288,7 @@ struct ath10k_vif {
+ 	bool is_started;
+ 	bool is_up;
+ 	bool spectral_enabled;
++	bool ps;
+ 	u32 aid;
+ 	u8 bssid[ETH_ALEN];
+ 
+@@ -413,6 +414,12 @@ enum ath10k_fw_features {
+ 	 */
+ 	ATH10K_FW_FEATURE_WMI_10_2 = 4,
+ 
++	/* Some firmware revisions lack proper multi-interface client powersave
++	 * implementation. Enabling PS could result in connection drops,
++	 * traffic stalls, etc.
++	 */
++	ATH10K_FW_FEATURE_MULTI_VIF_PS_SUPPORT = 5,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8ed0ba6..bab8adc 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1253,6 +1253,20 @@ static int ath10k_mac_vif_recalc_ps_poll_count(struct ath10k_vif *arvif)
+ 	return 0;
+ }
+ 
++static int ath10k_mac_ps_vif_count(struct ath10k *ar)
++{
++	struct ath10k_vif *arvif;
++	int num = 0;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	list_for_each_entry(arvif, &ar->arvifs, list)
++		if (arvif->ps)
++			num++;
++
++	return num;
++}
++
+ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
+ {
+ 	struct ath10k *ar = arvif->ar;
+@@ -1262,13 +1276,24 @@ static int ath10k_mac_vif_setup_ps(struct ath10k_vif *arvif)
+ 	enum wmi_sta_ps_mode psmode;
+ 	int ret;
+ 	int ps_timeout;
++	bool enable_ps;
+ 
+ 	lockdep_assert_held(&arvif->ar->conf_mutex);
+ 
+ 	if (arvif->vif->type != NL80211_IFTYPE_STATION)
+ 		return 0;
+ 
+-	if (vif->bss_conf.ps) {
++	enable_ps = arvif->ps;
++
++	if (enable_ps && ath10k_mac_ps_vif_count(ar) > 1 &&
++	    !test_bit(ATH10K_FW_FEATURE_MULTI_VIF_PS_SUPPORT,
++		      ar->fw_features)) {
++		ath10k_warn(ar, "refusing to enable ps on vdev %i: not supported by fw\n",
++			    arvif->vdev_id);
++		enable_ps = false;
++	}
++
++	if (enable_ps) {
+ 		psmode = WMI_STA_PS_MODE_ENABLED;
+ 		param = WMI_STA_PS_PARAM_INACTIVITY_TIME;
+ 
+@@ -3546,7 +3571,9 @@ static void ath10k_bss_info_changed(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	if (changed & BSS_CHANGED_PS) {
+-		ret = ath10k_mac_vif_setup_ps(arvif);
++		arvif->ps = vif->bss_conf.ps;
++
++		ret = ath10k_config_ps(ar);
+ 		if (ret)
+ 			ath10k_warn(ar, "failed to setup ps on vdev %i: %d\n",
+ 				    arvif->vdev_id, ret);
 -- 
-1.7.10.4
+1.8.5.3
 
