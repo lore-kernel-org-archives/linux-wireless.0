@@ -1,32 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57490 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751164AbbBFX7w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 18:59:52 -0500
-Date: Sat, 7 Feb 2015 00:59:50 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4 2/2] cfg80211: Schedule timeout for all CRDA calls
-Message-ID: <20150206235950.GB19988@wotan.suse.de> (sfid-20150207_005955_897330_789100A7)
-References: <1422889166-29386-1-git-send-email-ilan.peer@intel.com> <1422889166-29386-2-git-send-email-ilan.peer@intel.com>
+Received: from smtp-out6.electric.net ([192.162.217.186]:58831 "EHLO
+	smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509AbbBMLfE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Feb 2015 06:35:04 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Rasmus Villemoes' <linux@rasmusvillemoes.dk>,
+	Mark Rustad <mrustad@gmail.com>
+CC: "Rustad, Mark D" <mark.d.rustad@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] iwl4965: Enable checking of format strings
+Date: Fri, 13 Feb 2015 11:20:47 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CAE3325@AcuExch.aculab.com> (sfid-20150213_123508_869498_DE5989A0)
+References: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>
+	<60178C37-F104-430E-92EB-B6DDFAEB2F99@intel.com>
+	<87vbj7zb0e.fsf@rasmusvillemoes.dk> <54DDAE03.4000502@gmail.com>
+ <87y4o2xfgz.fsf@rasmusvillemoes.dk>
+In-Reply-To: <87y4o2xfgz.fsf@rasmusvillemoes.dk>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1422889166-29386-2-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 02, 2015 at 09:59:26AM -0500, Ilan Peer wrote:
-> Timeout was scheduled only in case CRDA was called due to user hints,
-> but was not scheduled for other cases. This can result in regulatory
-> hint processing getting stuck in case that there is no CRDA configured.
+From: Rasmus Villemoes
+> Well, probably the linker is allowed to overlap "anonymous" objects
+> (string literals) with whatever const char[] (or indeed any const)
+> object it finds containing the appropriate byte sequence. But I think
+> language lawyers would insist that for
 > 
-> Change this by scheduling a timeout every time CRDA is called. In
-> addition, in restore_regulatory_settings() all pending requests are
-> restored (and not only the user ones).
-> 
-> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+> const char foo[] = "a string";
+> const char bar[] = "a string";
 
-Reviewed-by: Luis R. Rodriguez <mcgrof@suse.com>
+A quick test shows those are separate strings.
+But 'const char *foo = "xxx";' will share.
+You also need -O1 to get the strings into .rodata.str.n so that the linker
+can merge them.
 
-  Luis
+	David
+
