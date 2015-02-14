@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f177.google.com ([209.85.212.177]:36707 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751044AbbBXQZO (ORCPT
+Received: from mail-yk0-f170.google.com ([209.85.160.170]:39524 "EHLO
+	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753132AbbBNCPU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 11:25:14 -0500
+	Fri, 13 Feb 2015 21:15:20 -0500
+Received: by mail-yk0-f170.google.com with SMTP id 10so5368582ykt.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 18:15:20 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CALgkqUqi1U1PBCndKEtdKL0n=VLvBMbOO8HTA5jt-vHvy6WBXA@mail.gmail.com>
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
-	<CALgkqUqi1U1PBCndKEtdKL0n=VLvBMbOO8HTA5jt-vHvy6WBXA@mail.gmail.com>
-Date: Tue, 24 Feb 2015 18:25:12 +0200
-Message-ID: <CAEnQRZChVSH4f1Gaok-DKOXxreuJR5GrBPxmMdgZC=FL1QaJQA@mail.gmail.com> (sfid-20150224_172521_260466_4605C630)
-Subject: Re: [PATCH 0/8] Adds Intel FieldsPeak NFC solution driver
-From: Daniel Baluta <daniel.baluta@gmail.com>
-To: Greg Rose <gvrose8192@gmail.com>
-Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
+References: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Sat, 14 Feb 2015 05:14:59 +0300
+Message-ID: <CAHNKnsSm1GOUMONPB4oB1tJ-OeWOG1XOhw=HEY8LPXhDEHEjbg@mail.gmail.com> (sfid-20150214_032228_249262_CDB5E707)
+Subject: Re: [RFC] mac80211: use rhashtable for station table
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Thomas Graf <tgraf@suug.ch>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 6:14 PM, Greg Rose <gvrose8192@gmail.com> wrote:
-> I'm excited - what's NFC?
+2015-02-14 0:47 GMT+03:00 Johannes Berg <johannes@sipsolutions.net>:
+> We currently have a hand-rolled table with 256 entries and are
+> using the last byte of the MAC address as the hash. This hash
+> is obviously very fast, but collisions are easily created and
+> we waste a lot of space in the common case of just connecting
+> as a client to an AP where we just have a single station. The
+> other common case of an AP is also suboptimal due to the size
+> of the hash table and the ease of causing collisions.
+>
+> Convert all of this to use rhashtable with jhash, which gives
+> us the advantage of a far better hash function (with random
+> perturbation to avoid hash collision attacks) and of course
+> that the hash table grows and shrinks dynamically with chain
+> length, improving both cases above.
+>
+A nice change! Couple of years ago I did some tests with real sets of
+MACs and jhash gives a better distribution than usage of a last octet.
 
+BTW, why do you use full address and generic jhash? Hashing of two
+least significant words could be faster. Isn't it?
 
-Please don't do top posting.
-
-Other than that:
-
-http://en.wikipedia.org/wiki/Near_field_communication
-
-Daniel.
+-- 
+Sergey
