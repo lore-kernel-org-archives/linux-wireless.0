@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:43712 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751982AbbBRV1O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2015 16:27:14 -0500
-Received: by mail-ob0-f174.google.com with SMTP id wo20so7189777obc.5
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2015 13:27:14 -0800 (PST)
-Message-ID: <54E503B0.8020904@lwfinger.net> (sfid-20150218_222717_743532_A3C902A5)
-Date: Wed, 18 Feb 2015 15:27:12 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Mike Turner <miketurner.forum@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: rtl8192cu beacon fix unreliable
-References: <loom.20150213T114021-973@post.gmane.org>
-In-Reply-To: <loom.20150213T114021-973@post.gmane.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mout.gmx.net ([212.227.17.21]:50967 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754177AbbBNTw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2015 14:52:26 -0500
+From: Christian Engelmayer <cengelma@gmx.at>
+To: johannes@sipsolutions.net
+Cc: davem@davemloft.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Christian Engelmayer <cengelma@gmx.at>
+Subject: [PATCH] nl80211: Fix possible leak in nl80211_new_interface on MONITOR_FLAG_ACTIVE
+Date: Sat, 14 Feb 2015 20:52:01 +0100
+Message-Id: <1423943521-2896-1-git-send-email-cengelma@gmx.at> (sfid-20150214_205305_479140_60C5A3FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2015 04:48 AM, Mike Turner wrote:
-> When using hostapd and an rtl8192cu Wireless USB adaptor the beacon
-> doesn't start sometimes. This was tested with the
->
-> kernel/git/davem/net-next.git repository
->
-> and
->
-> 3423eb92315865d76cb8d488513bfef6ab9251d0
->
-> This behaviour is apparently random. If the beacon starts OK then it
-> continues. If a beacon isn't generated then it never starts. Repeating
-> cycles of hostapd stop/start may or may not generate a beacon. There are
-> no specific error messages displayed either on console or in syslog. I
-> have repeated hostapd stop/start a number of consecutive times and
-> received a beacon each time, however I have also done this a number of
-> times and never generated a beacon.
->
-> We have succesfully used the pvaret-rtl8192cu driver which is based on the
-> vendor driver and used that in conjunction with the modified hostapd code
-> that requires use of the rtl871xdrv driver interface and as far as we have
-> seen it always generates a beacon.
->
-> Platform is a custom designed Atmel-ARM CPU (AT91SAM9G25) with a D-Link
-> DWA-121.
+In case of NL80211_IFTYPE_MONITOR and flag MONITOR_FLAG_ACTIVE, the already
+allocated sk_buff 'msg' is not freed, when the function exits in case the
+feature is not supported. Detected by Coverity CID 1269116.
 
-Is send_beacon_frame() being called even when the beacon fails to start? Adding 
-a pr_info() at the start of the routine should answer that question.
+Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
+---
+Compile tested only. Applies against linux-next.
+---
+ net/wireless/nl80211.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Larry
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d78fd8b54515..38a7477dda81 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2663,8 +2663,10 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 				  &flags);
+ 
+ 	if (!err && (flags & MONITOR_FLAG_ACTIVE) &&
+-	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
++	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR)) {
++		nlmsg_free(msg);
+ 		return -EOPNOTSUPP;
++	}
+ 
+ 	wdev = rdev_add_virtual_intf(rdev,
+ 				nla_data(info->attrs[NL80211_ATTR_IFNAME]),
+-- 
+1.9.1
 
