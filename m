@@ -1,94 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:49962 "EHLO
-	ironport2-out.teksavvy.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751834AbbBSXep (ORCPT
+Received: from sender1.zohomail.com ([74.201.84.158]:35459 "EHLO
+	sender1.zohomail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753794AbbBNENi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 18:34:45 -0500
-Received: from [145.100.231.247] (client-145-100-231-247.erdg.usor.nl [145.100.231.247])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mx-deb.opendmz.com (Postfix) with ESMTPSA id B23DB39
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 18:24:56 -0500 (EST)
-Message-ID: <54E670C7.4070609@opendmz.com> (sfid-20150220_003450_104012_BFBB6BBA)
-Date: Fri, 20 Feb 2015 00:24:55 +0100
-From: Christopher van de Sande <cvandesande@opendmz.com>
+	Fri, 13 Feb 2015 23:13:38 -0500
+Received: by iebtr6 with SMTP id tr6so13380676ieb.7
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 19:58:32 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20150213151910.GA8503@kroah.com>
+References: <CAApG7tYL+9t729-VLiHhb5CqGvw3bxaH4czR+0wWwFF_iOjk_w@mail.gmail.com>
+	<20150213151910.GA8503@kroah.com>
+Date: Sat, 14 Feb 2015 16:58:32 +1300
+Message-ID: <CAApG7tbt_UDjnzRfCshR7pMMnug=vzdgtCSt8Pi+7dHMpri0aA@mail.gmail.com> (sfid-20150214_051342_317045_306117D2)
+Subject: Fwd: Kernel 3.6.0 works, newer doesn't
+From: Tim-Hinnerk Heuer <tim@heuer.nz>
 To: linux-wireless@vger.kernel.org
-Subject: [iwlwifi] fail to flush all tx fifo queues kernel 3.18.7
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Linux-Wireless!
-
-I've noticed that this issue has come up here a few times on this list.  
-I was really hoping my searching would lead me to a fix, but it 
-hasn't...so I'm asking for help.
-
-This started happening when I moved into an apartment complex that has 
-lots of wifi access points.  I don't have my own AP here, I'm using the 
-ones that are shared by the building, so I have no control over them.  
-The signal is on the weak side, but should be good enough to be usable.  
-iwconfig says Signal level=-61 dBm currently.
-
-I've read up on https://bugzilla.kernel.org/show_bug.cgi?id=56581 and 
-took the suggested options. They seem to give me the best results. 
-(Though I still get the failed to flush, and need to disable/re-enable 
-to get wireless working again).
-
-cat /etc/modprobe.d/iwlwifi.conf
-#options iwlwifi 11n_disable=1
-options iwlwifi swcrypto=1
-options mac80211 beacon_loss_count=1000
-
-firmware: iwlwifi 0000:03:00.0: loaded firmware version 18.168.6.1 
-op_mode iwldvm
-
-lspci -s 03:00.0 -v
-03:00.0 Network controller: Intel Corporation Centrino Wireless-N 2200 
-(rev c4)
-     Subsystem: Intel Corporation Centrino Wireless-N 2200 BGN
-     Flags: bus master, fast devsel, latency 0, IRQ 28
-     Memory at f1c00000 (64-bit, non-prefetchable) [size=8K]
-     Capabilities: [c8] Power Management version 3
-     Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-     Capabilities: [e0] Express Endpoint, MSI 00
-     Capabilities: [100] Advanced Error Reporting
-     Capabilities: [140] Device Serial Number 9c-4e-36-ff-ff-cd-31-a8
-     Kernel driver in use: iwlwifi
-     Kernel modules: iwlwifi
+Hi can someone here help with this issue, please? I'm willing to give
+more info if necessary or help out otherwise. I am a programmer but
+haven't done much with Linux drivers yet.
 
 
-Excerpt from dmesg:
-[ 4689.207088] wlp3s0: authenticate with c4:01:7c:75:da:c8
-[ 4689.225168] wlp3s0: send auth to c4:01:7c:75:da:c8 (try 1/3)
-[ 4689.229165] wlp3s0: authenticated
-[ 4689.230379] wlp3s0: associate with c4:01:7c:75:da:c8 (try 1/3)
-[ 4689.276300] wlp3s0: RX AssocResp from c4:01:7c:75:da:c8 (capab=0x431 
-status=0 aid=7)
-[ 4689.302835] wlp3s0: associated
-[ 6680.502600] iwlwifi 0000:03:00.0: fail to flush all tx fifo queues Q 0
-[ 6680.502608] iwlwifi 0000:03:00.0: Current SW read_ptr 43 write_ptr 44
-[ 6680.502665] iwl data: 00000000: 00 00 00 00 00 00 00 00 00 08 00 00 
-00 00 00 00  ................
-[ 6680.502683] iwlwifi 0000:03:00.0: FH TRBs(0) = 0x00000000
-[ 6680.502701] iwlwifi 0000:03:00.0: FH TRBs(1) = 0x8010206c
-[ 6680.502718] iwlwifi 0000:03:00.0: FH TRBs(2) = 0x00000000
-[ 6680.502735] iwlwifi 0000:03:00.0: FH TRBs(3) = 0x8030002b
-[ 6680.502752] iwlwifi 0000:03:00.0: FH TRBs(4) = 0x00000000
-[ 6680.502769] iwlwifi 0000:03:00.0: FH TRBs(5) = 0x00000000
-[ 6680.502786] iwlwifi 0000:03:00.0: FH TRBs(6) = 0x00000000
-[ 6680.502802] iwlwifi 0000:03:00.0: FH TRBs(7) = 0x0070908d
-[ 6680.502870] iwlwifi 0000:03:00.0: Q 0 is active and mapped to fifo 3 
-ra_tid 0x0000 [43,44]
+Hi there,
 
-I've even considered changing wireless cards, but my Lenovo T430 bios 
-whitelists only certain cards, so at the moment I seem to be stuck with 
-this one.
+Sorry, I'm new to this list, so excuse my newbie question.
 
-I don't suppose there's another firmware I can try?
+I have Linux 3.6.0-030600-generic #201209302035 SMP Mon Oct 1 00:36:01
+UTC 2012 x86_64 x86_64 x86_64 GNU/Linux installed and it works great.
+My WLAN driver works with this version, but not with any newer version
+of the kernel. Am I right that backports can help me with that?
 
-Thanks for your time,
-Chris.
+Can I somehow upgrade to a newer version of the kernel and keep my
+WIFI USB driver and maybe even upgrade to newer kernels? Or even
+better, does someone here have the capacity to fix the problem in
+newer kernels?
 
+My Wifi USB Card is the
+Asus USB N13
+
+```
+lsusb
+Bus 002 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 006 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+Bus 005 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 004: ID 0b05:1784 ASUSTek Computer, Inc. USB-N13
+802.11n Network Adapter (rev. A1) [Ralink RT3072]
+
+Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+
+sudo lsmod|grep rt
+xt_addrtype            12713  2
+x_tables               29846  6
+ip_tables,ipt_MASQUERADE,xt_conntrack,iptable_filter,xt_addrtype,iptable_nat
+rt2800usb              26998  0
+rt2x00usb              20762  1 rt2800usb
+rt2800lib              63557  1 rt2800usb
+rt2x00lib              55527  3 rt2x00usb,rt2800lib,rt2800usb
+mac80211              564631  3 rt2x00lib,rt2x00usb,rt2800lib
+cfg80211              212917  2 mac80211,rt2x00lib
+crc_ccitt              12667  1 rt2800lib
+parport_pc             32866  0
+parport                46562  3 lp,ppdev,parport_pc
+```
+
+Running Ubuntu 14.04.
+
+Thanks for your patience.
+Tim
+
+
+---------- Forwarded message ----------
+From: Greg KH <greg@kroah.com>
+Date: 14 February 2015 at 04:19
+Subject: Re: Kernel 3.6.0 works, newer doesn't
+To: Tim-Hinnerk Heuer <tim@heuer.nz>
+Cc: linux-usb@vger.kernel.org
+
+
+On Fri, Feb 13, 2015 at 11:20:33PM +1300, Tim-Hinnerk Heuer wrote:
+> Hi there,
+>
+> Sorry, I'm new to this list, so excuse my newbie question.
+>
+> I have Linux 3.6.0-030600-generic #201209302035 SMP Mon Oct 1 00:36:01
+> UTC 2012 x86_64 x86_64 x86_64 GNU/Linux installed and it works great.
+> My WLAN driver works with this version, but not with any newer version
+> of the kernel. Am I right that backports can help me with that?
+
+I suggest working with the driver authors of that driver to fix it to
+work with the latest kernel version.  It is merged into the main
+kernel.org repo, right?  Which one is it?
+
+The networking mailing list should be able to help you out the best, try
+sending this to the linux-wireless@vger.kernel.org
+
+hope this helps,
+
+greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
