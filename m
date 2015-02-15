@@ -1,63 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:38322 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbbBENDG (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:39929 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbbBOLJ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 08:03:06 -0500
-Message-ID: <1423141383.31870.39.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150205_140312_642098_1A20AB9B)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Thu, 05 Feb 2015 05:03:03 -0800
-In-Reply-To: <CA+BoTQnwcmu=YbKB17JQb7ZPwGZoQS7zQ6nT-WEJHjnBX34QKA@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQnwcmu=YbKB17JQb7ZPwGZoQS7zQ6nT-WEJHjnBX34QKA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sun, 15 Feb 2015 06:09:28 -0500
+Received: by mail-we0-f172.google.com with SMTP id k48so24309480wev.3
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2015 03:09:27 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <devicetree@vger.kernel.org>, Ido Yariv <ido@wizery.com>
+Subject: [PATCH v2] wlcore: add basic device-tree support
+Date: Sun, 15 Feb 2015 13:09:10 +0200
+Message-Id: <1423998550-8829-1-git-send-email-eliad@wizery.com> (sfid-20150215_120932_699864_67817BE7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-02-05 at 07:46 +0100, Michal Kazior wrote:
-> On 4 February 2015 at 22:11, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+When running with device-tree, we no longer have a board file
+that can set up the platform data for wlcore.
+Allow this data to be passed from DT.
 
-> > Most conservative patch would be :
-> >
-> > diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> > index 9c782a42665e1aaf43bfbca441631ee58da50c09..6a36317d6bb0447202dee15528130bd5e21248c4 100644
-> > --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> > +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> > @@ -1642,6 +1642,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
-> >                 break;
-> >         }
-> >         case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
-> > +               skb_orphan(skb);
-> >                 spin_lock_bh(&htt->tx_lock);
-> >                 __skb_queue_tail(&htt->tx_compl_q, skb);
-> >                 spin_unlock_bh(&htt->tx_lock);
-> 
-> I suppose you want to call skb_orphan() on actual data packets, right?
-> This skb is just a host-firmware communication buffer.
+For now, parse only the irq used. Other (optional) properties
+can be added later on.
 
-Right. I have no idea how you find the actual data packet at this stage.
+Signed-off-by: Ido Yariv <ido@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+previous submission of this patch got lost somewhere.
 
+this patch follows the expected way to pass SDIO function DT
+information, as was recently added by this patchset:
+http://www.spinics.net/lists/linux-mmc/msg27353.html
+
+ .../devicetree/bindings/net/wireless/ti,wlcore.txt | 31 +++++++++++
+ drivers/net/wireless/ti/wlcore/sdio.c              | 65 ++++++++++++++++++++--
+ 2 files changed, 90 insertions(+), 6 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+new file mode 100644
+index 0000000..df9af48
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+@@ -0,0 +1,31 @@
++TI Wilink (wlcore) SDIO devices
++
++This node provides properties for controlling the wilink wireless device. The
++node is expected to be specified as a child node to the SDIO controller that
++connects the device to the system.
++
++Required properties:
++
++ - compatible : Should be "ti,wlcore".
++ - interrupt-parent : the phandle for the interrupt controller to which the
++	device interrupts are connected.
++ - interrupts : specifies attributes for the out-of-band interrupt.
++
++Example:
++
++&mmc3 {
++	status = "okay";
++	vmmc-supply = <&wlan_en_reg>;
++	bus-width = <4>;
++	cap-power-off-card;
++	keep-power-in-suspend;
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlcore: wlcore@0 {
++		compatible = "ti,wlcore";
++		reg = <2>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <19 IRQ_TYPE_NONE>;
++	};
++};
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index d3dd7bf..317796b 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -34,6 +34,8 @@
+ #include <linux/wl12xx.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/printk.h>
++#include <linux/of.h>
++#include <linux/of_irq.h>
+ 
+ #include "wlcore.h"
+ #include "wl12xx_80211.h"
+@@ -214,6 +216,54 @@ static struct wl1271_if_operations sdio_ops = {
+ 	.set_block_size = wl1271_sdio_set_block_size,
+ };
+ 
++#ifdef CONFIG_OF
++static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
++{
++	struct device_node *np = dev->of_node;
++	struct wl12xx_platform_data *pdata;
++
++	if (!np || !of_device_is_compatible(np, "ti,wlcore")) {
++		dev_err(dev, "No platform data set\n");
++		return NULL;
++	}
++
++	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
++	if (!pdata)
++		return NULL;
++
++	pdata->irq = irq_of_parse_and_map(np, 0);
++	if (!pdata->irq) {
++		dev_err(dev, "No irq in platform data\n");
++		kfree(pdata);
++		return NULL;
++	}
++
++	return pdata;
++}
++#else
++static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
++{
++	return NULL;
++}
++#endif
++
++static struct wl12xx_platform_data *
++wlcore_get_platform_data(struct device *dev)
++{
++	struct wl12xx_platform_data *pdata;
++
++	pdata = wl12xx_get_platform_data();
++	if (!IS_ERR(pdata))
++		return kmemdup(pdata, sizeof(*pdata), GFP_KERNEL);
++
++	return wlcore_probe_of(dev);
++}
++
++static void wlcore_del_platform_data(struct wl12xx_platform_data *pdata)
++{
++	kfree(pdata);
++}
++
+ static int wl1271_probe(struct sdio_func *func,
+ 				  const struct sdio_device_id *id)
+ {
+@@ -245,12 +295,9 @@ static int wl1271_probe(struct sdio_func *func,
+ 	/* Use block mode for transferring over one block size of data */
+ 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+ 
+-	pdev_data.pdata = wl12xx_get_platform_data();
+-	if (IS_ERR(pdev_data.pdata)) {
+-		ret = PTR_ERR(pdev_data.pdata);
+-		dev_err(glue->dev, "missing wlan platform data: %d\n", ret);
++	pdev_data.pdata = wlcore_get_platform_data(&func->dev);
++	if (!pdev_data.pdata)
+ 		goto out_free_glue;
+-	}
+ 
+ 	/* if sdio can keep power while host is suspended, enable wow */
+ 	mmcflags = sdio_get_host_pm_caps(func);
+@@ -279,7 +326,7 @@ static int wl1271_probe(struct sdio_func *func,
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device");
+ 		ret = -ENOMEM;
+-		goto out_free_glue;
++		goto out_free_pdata;
+ 	}
+ 
+ 	glue->core->dev.parent = &func->dev;
+@@ -313,6 +360,9 @@ static int wl1271_probe(struct sdio_func *func,
+ out_dev_put:
+ 	platform_device_put(glue->core);
+ 
++out_free_pdata:
++	wlcore_del_platform_data(pdev_data.pdata);
++
+ out_free_glue:
+ 	kfree(glue);
+ 
+@@ -323,11 +373,14 @@ out:
+ static void wl1271_remove(struct sdio_func *func)
+ {
+ 	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
++	struct wlcore_platdev_data *pdev_data = glue->core->dev.platform_data;
++	struct wl12xx_platform_data *pdata = pdev_data->pdata;
+ 
+ 	/* Undo decrement done above in wl1271_probe */
+ 	pm_runtime_get_noresume(&func->dev);
+ 
+ 	platform_device_unregister(glue->core);
++	wlcore_del_platform_data(pdata);
+ 	kfree(glue);
+ }
+ 
+-- 
+1.8.5.2.229.g4448466.dirty
 
