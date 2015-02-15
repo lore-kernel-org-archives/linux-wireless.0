@@ -1,103 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f182.google.com ([74.125.82.182]:43800 "EHLO
-	mail-we0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755657AbbBHQMD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2015 11:12:03 -0500
-Received: by mail-we0-f182.google.com with SMTP id l61so22394480wev.13
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 08:12:02 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V3 4/4] bcma: enable support for PCIe Gen 2 host devices
-Date: Sun,  8 Feb 2015 17:11:50 +0100
-Message-Id: <1423411910-22399-4-git-send-email-zajec5@gmail.com> (sfid-20150208_171209_763371_4B9E9FF6)
-In-Reply-To: <1423411910-22399-1-git-send-email-zajec5@gmail.com>
-References: <1423409504-16435-1-git-send-email-zajec5@gmail.com>
- <1423411910-22399-1-git-send-email-zajec5@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:29001 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754400AbbBOCkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2015 21:40:53 -0500
+Message-ID: <54E0072D.3020802@linux.intel.com> (sfid-20150215_034057_312004_92B1ED92)
+Date: Sun, 15 Feb 2015 10:40:45 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kvalo@codeaurora.org>, brudley@broadcom.com,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+References: <54DC1D7D.5050407@linux.intel.com>
+In-Reply-To: <54DC1D7D.5050407@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/bcma_private.h |  1 +
- drivers/bcma/host_pci.c     | 15 ++++++++++++++-
- drivers/bcma/main.c         |  2 +-
- 3 files changed, 16 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 3692912..29565e3 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -26,6 +26,7 @@ bool bcma_wait_value(struct bcma_device *core, u16 reg, u32 mask, u32 value,
- 		     int timeout);
- void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core);
- void bcma_init_bus(struct bcma_bus *bus);
-+void bcma_unregister_cores(struct bcma_bus *bus);
- int bcma_bus_register(struct bcma_bus *bus);
- void bcma_bus_unregister(struct bcma_bus *bus);
- int __init bcma_bus_early_register(struct bcma_bus *bus);
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 5fb87a8..a62a2f9 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -213,16 +213,26 @@ static int bcma_host_pci_probe(struct pci_dev *dev,
- 	/* Initialize struct, detect chip */
- 	bcma_init_bus(bus);
- 
-+	/* Scan bus to find out generation of PCIe core */
-+	err = bcma_bus_scan(bus);
-+	if (err)
-+		goto err_pci_unmap_mmio;
-+
-+	if (bcma_find_core(bus, BCMA_CORE_PCIE2))
-+		bus->host_is_pcie2 = true;
-+
- 	/* Register */
- 	err = bcma_bus_register(bus);
- 	if (err)
--		goto err_pci_unmap_mmio;
-+		goto err_unregister_cores;
- 
- 	pci_set_drvdata(dev, bus);
- 
- out:
- 	return err;
- 
-+err_unregister_cores:
-+	bcma_unregister_cores(bus);
- err_pci_unmap_mmio:
- 	pci_iounmap(dev, bus->mmio);
- err_pci_release_regions:
-@@ -283,9 +293,12 @@ static const struct pci_device_id bcma_pci_bridge_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4357) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4358) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4359) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4360) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4365) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a0) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43b1) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4727) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43227) },	/* 0xa8db, BCM43217 (sic!) */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 43228) },	/* 0xa8dc */
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 38bde6e..9635f10 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -363,7 +363,7 @@ static int bcma_register_devices(struct bcma_bus *bus)
- 	return 0;
- }
- 
--static void bcma_unregister_cores(struct bcma_bus *bus)
-+void bcma_unregister_cores(struct bcma_bus *bus)
- {
- 	struct bcma_device *core, *tmp;
- 
--- 
-1.8.4.5
+Any comments to this patch? Can it be accepted?
+
+Thanks,
+Zhonghui
+
+On 2015/2/12 11:26, Fu, Zhonghui wrote:
+> From a05d35ab334c20970c236fb971dae88810078c88 Mon Sep 17 00:00:00 2001
+> From: Fu Zhonghui <zhonghui.fu@linux.intel.com>
+> Date: Thu, 12 Feb 2015 10:49:35 +0800
+> Subject: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+>
+> WiFi chip has 2 SDIO functions, and PM core will trigger
+> twice suspend/resume operations for one WiFi chip to do
+> the same things. This patch avoid this case.
+>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Fu Zhonghui <zhonghui.fu@linux.intel.com>
+> ---
+> Changes in v3:
+> - Rebase to wireless-drivers-next/master branch
+>
+>  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> index 7944224..b8832a7 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> @@ -1117,9 +1117,13 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>  	struct brcmf_bus *bus_if;
+>  	struct brcmf_sdio_dev *sdiodev;
+>  	mmc_pm_flag_t sdio_flags;
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>  
+>  	brcmf_dbg(SDIO, "Enter\n");
+>  
+> +	if (func->num == 2)
+> +		return 0;
+> +
+>  	bus_if = dev_get_drvdata(dev);
+>  	sdiodev = bus_if->bus_priv.sdio;
+>  
+> @@ -1148,9 +1152,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>  static int brcmf_ops_sdio_resume(struct device *dev)
+>  {
+>  	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+> +	struct brcmf_sdio_dev *sdiodev;
+> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>  
+>  	brcmf_dbg(SDIO, "Enter\n");
+> +
+> +	if (func->num == 2)
+> +		return 0;
+> +
+> +	sdiodev = bus_if->bus_priv.sdio;
+> +
+>  	if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
+>  		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>  	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+> -- 1.9.1
+>
 
