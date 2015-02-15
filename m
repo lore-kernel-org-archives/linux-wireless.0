@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:58589 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149AbbBVVYv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2015 16:24:51 -0500
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
-	Malcolm Priestley <tvboxspy@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 2/2 fix for 3.20] vt6655: Fix late setting of byRFType.
-Date: Sun, 22 Feb 2015 21:24:12 +0000
-Message-Id: <1424640252-3202-2-git-send-email-tvboxspy@gmail.com> (sfid-20150222_222456_237624_259C29EE)
-In-Reply-To: <1424640252-3202-1-git-send-email-tvboxspy@gmail.com>
-References: <1424640252-3202-1-git-send-email-tvboxspy@gmail.com>
+Received: from gn237.zone.eu ([217.146.67.237]:17785 "EHLO gn237.zone.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755233AbbBOUsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2015 15:48:23 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH v2 1/7] rtlwifi: Remove unused defines from rtl8192cu driver
+Date: Sun, 15 Feb 2015 22:46:45 +0200
+Message-Id: <1424033211-11696-2-git-send-email-plaes@plaes.org> (sfid-20150215_215120_631028_F75D2F6E)
+In-Reply-To: <1424033211-11696-1-git-send-email-plaes@plaes.org>
+References: <1424033211-11696-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-byRFType is not set prior to registration of mac80211 causing
-unpredictable operation after channel scans.
-
-With byRFType unset all channels are enabled this causes tx power
-to be set to values not present its eeprom.
-
-Move setting of this variable to vt6655_probe.
-
-byRFType must have a mask set. byRevId not used by driver and
-is removed.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org> # v3.19+
 ---
- drivers/staging/vt6655/device_main.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index f5c5872..03b2a90 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -330,16 +330,6 @@ static void device_init_registers(struct vnt_private *pDevice)
- 	/* zonetype initial */
- 	pDevice->byOriginalZonetype = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+index c1e33b0..6758808 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+@@ -32,8 +32,6 @@
  
--	/* Get RFType */
--	pDevice->byRFType = SROMbyReadEmbedded(pDevice->PortOffset, EEP_OFS_RFTYPE);
--
--	/* force change RevID for VT3253 emu */
--	if ((pDevice->byRFType & RF_EMU) != 0)
--			pDevice->byRevId = 0x80;
--
--	pDevice->byRFType &= RF_MASK;
--	pr_debug("pDevice->byRFType = %x\n", pDevice->byRFType);
--
- 	if (!pDevice->bZoneRegExist)
- 		pDevice->byZoneType = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
+ #define H2C_RA_MASK	6
  
-@@ -1780,6 +1770,12 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	MACvInitialize(priv->PortOffset);
- 	MACvReadEtherAddress(priv->PortOffset, priv->abyCurrentNetAddr);
+-#define LLT_POLLING_LLT_THRESHOLD		20
+-#define LLT_POLLING_READY_TIMEOUT_COUNT		100
+ #define LLT_LAST_ENTRY_OF_TX_PKT_BUFFER		255
  
-+	/* Get RFType */
-+	priv->byRFType = SROMbyReadEmbedded(priv->PortOffset, EEP_OFS_RFTYPE);
-+	priv->byRFType &= RF_MASK;
-+
-+	dev_dbg(&pcid->dev, "RF Type = %x\n", priv->byRFType);
-+
- 	device_get_options(priv);
- 	device_set_options(priv);
- 	/* Mask out the options cannot be set to the chip */
+ #define RX_PAGE_SIZE_REG_VALUE			PBP_128
 -- 
-2.1.0
+2.3.0
 
