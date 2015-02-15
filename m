@@ -1,54 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42444 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752215AbbBWTv0 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47089 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbbBOMC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 14:51:26 -0500
-From: "Kholaif, Ahmad" <akholaif@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
-Subject: RE: [PATCH 1/2] cfg80211: Allow NL80211_ATTR_IFINDEX to be added to
- vendor events
-Date: Mon, 23 Feb 2015 19:51:23 +0000
-Message-ID: <656e25eaa73746acb1108bd0943e502e@nalasexr02a.na.qualcomm.com> (sfid-20150223_205130_695406_B503DB1F)
-References: <1424442925-10778-1-git-send-email-jouni@qca.qualcomm.com>
- <1424705846.3075.3.camel@sipsolutions.net>
-In-Reply-To: <1424705846.3075.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Sun, 15 Feb 2015 07:02:59 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 0/9] wil6210 patches
+Date: Sun, 15 Feb 2015 14:02:29 +0200
+Message-Id: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150215_130316_050168_799FF95D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pj4gKy8qKg0KPj4gKyAqIGNmZzgwMjExX3ZlbmRvcl9ldmVudF9hbGxvY19leHQgLSBhbGxvY2F0
-ZSB2ZW5kb3Itc3BlY2lmaWMgZXZlbnQgDQo+PiArc2tiDQo+PiArICogQHdpcGh5OiB0aGUgd2lw
-aHkNCj4+ICsgKiBAZXZlbnRfaWR4OiBpbmRleCBvZiB0aGUgdmVuZG9yIGV2ZW50IGluIHRoZSB3
-aXBoeSdzIHZlbmRvcl9ldmVudHMNCj4+ICsgKiBAYXBwcm94bGVuOiBhbiB1cHBlciBib3VuZCBv
-ZiB0aGUgbGVuZ3RoIG9mIHRoZSBkYXRhIHRoYXQgd2lsbA0KPj4gKyAqCWJlIHB1dCBpbnRvIHRo
-ZSBza2INCj4+ICsgKiBAZ2ZwOiBhbGxvY2F0aW9uIGZsYWdzDQo+PiArICogQHdkZXY6IHRoZSB3
-aXJlbGVzcyBkZXZpY2UNCj4+ICsgKg0KPj4gKyAqIFRoaXMgZnVuY3Rpb24gYWxsb2NhdGVzIGFu
-ZCBwcmUtZmlsbHMgYW4gc2tiIGZvciBhbiBldmVudCBvbiB0aGUNCj4+ICsgKiB2ZW5kb3Itc3Bl
-Y2lmaWMgbXVsdGljYXN0IGdyb3VwLiBUaGlzIGlzIG90aGVyd2lzZSBpZGVudGljYWwgdG8NCj4+
-ICsgKiBjZmc4MDIxMV92ZW5kb3JfZXZlbnRfYWxsb2MoKSwgYnV0IGlmaW5kZXggb2YgdGhlIHNw
-ZWNpZmllZCANCj4+ICt3aXJlbGVzcyBkZXZpY2UNCj4+ICsgKiBpcyBhZGRlZCB0byB0aGUgZXZl
-bnQgbWVzc2FnZSBiZWZvcmUgdGhlIHZlbmRvciBkYXRhIGF0dHJpYnV0ZS4NCj4+ICsgKg0KPj4g
-KyAqIFdoZW4gZG9uZSBmaWxsaW5nIHRoZSBza2IsIGNhbGwgY2ZnODAyMTFfdmVuZG9yX2V2ZW50
-KCkgd2l0aCB0aGUNCj4+ICsgKiBza2IgdG8gc2VuZCB0aGUgZXZlbnQuDQo+ICsgKg0KPiArICog
-UmV0dXJuOiBBbiBhbGxvY2F0ZWQgYW5kIHByZS1maWxsZWQgc2tiLiAlTlVMTCBpZiBhbnkgZXJy
-b3JzIGhhcHBlbi4NCj4gKyAqLw0KPiArc3RhdGljIGlubGluZSBzdHJ1Y3Qgc2tfYnVmZiAqDQo+
-ICtjZmc4MDIxMV92ZW5kb3JfZXZlbnRfYWxsb2NfZXh0KHN0cnVjdCB3aXBoeSAqd2lwaHksIGlu
-dCBhcHByb3hsZW4sDQo+ICsJCQkJaW50IGV2ZW50X2lkeCwgZ2ZwX3QgZ2ZwLA0KPiArCQkJCXN0
-cnVjdCB3aXJlbGVzc19kZXYgKndkZXYpDQo+ICt7DQo+ICsJcmV0dXJuIF9fY2ZnODAyMTFfYWxs
-b2NfZXZlbnRfc2tiKHdpcGh5LCBOTDgwMjExX0NNRF9WRU5ET1IsDQo+ICsJCQkJCSAgTkw4MDIx
-MV9BVFRSX1ZFTkRPUl9EQVRBLA0KPiArCQkJCQkgIGV2ZW50X2lkeCwgYXBwcm94bGVuLCBnZnAs
-IHdkZXYpOw0KPiAgfQ0KDQo+IFRoaXMgZG9lc24ndCBzZWVtIG5lY2Vzc2FyeSwgd2h5IG5vdCBq
-dXN0IHVwZGF0ZSB0aGUgb3JpZ2luYWwgZnVuY3Rpb24gdG8gYWRkIGFuZCBkb2N1bWVudCB0aGUg
-bmV3IG9wdGlvbmFsIGFyZ3VtZW50Pw0KDQo+W2hvd2V2ZXIsIGluIHRoZSB1bmxpa2VseSBldmVu
-IHRoYXQgeW91IGNhbiBjb252aW5jZSBtZSBvdGhlcndpc2Ugd2UgbWF5IGhhdmUgdG8gYWRkIHRo
-aXMgdG8gdGhlIGRvY3VtZW50YXRpb24/XQ0KDQpUaGlzIG1lYW5zIHRoYXQgdGhpcyBrZXJuZWwg
-Y2hhbmdlIGNhbid0IGJlIHB1bGxlZCBpbiB3aXRob3V0IGNvcnJlc3BvbmRpbmcgZHJpdmVyIGNo
-YW5nZXMgdG8gY2FsbCAgY2ZnODAyMTFfdmVuZG9yX2V2ZW50X2FsbG9jKCkgd2l0aCBhIE5VTEwg
-Zm9yIHdkZXYuIFBsZWFzZSBjb25maXJtIGlmIHRoaXMgaXMgYWNjZXB0YWJsZTsgb3RoZXJ3aXNl
-LCB3ZSB3b3VsZCBuZWVkIHRvIHVzZSB0aGUgbmV3IHdyYXBwZXIgZGVmaW5lZCBhYm92ZS4NCg0K
-VGhhbmtzLA0KQWhtYWQgS2hvbGFpZg0K
+Boot loader starts kind of new era in the driver/firmware
+interaction. No more ability to boot operational firmware
+from on card flash, the only way is to download from the
+host.
+
+Removed is support for the old hardware. It is not supported
+any more by the new firmware. Removing it allow to compact
+code a bit.
+
+Also, after old hardware support is out, it is possible to benefit
+from fixes in the new hardware. See
+"enable fix for HW bug in 802.11->803.3 transform"
+
+Boris fixed division by 0 observed on some platforms
+
+Other are small improvements
+
+Boris Sorochkin (1):
+  wil6210: Fix division by zero in wil_vring_debugfs_show
+
+Vladimir Kondratiev (7):
+  wil6210: boot loader
+  wil6210: remove support for old hardware
+  wil6210: enable fix for HW bug in 802.11->803.3 transform
+  wil6210: branch prediction hints
+  wil6210: rename 'secure_pcp' to 'privacy'
+  wil6210: track privacy connection attribute
+  wil6210: Align Rx buffers on 4*n+2
+
+Vladimir Shulman (1):
+  wil6210: Change of threshold for tx vring idleness measurement
+
+ drivers/net/wireless/ath/wil6210/cfg80211.c  |  32 +++---
+ drivers/net/wireless/ath/wil6210/debugfs.c   |  26 +++--
+ drivers/net/wireless/ath/wil6210/ethtool.c   |  34 +++---
+ drivers/net/wireless/ath/wil6210/fw.c        |   3 +-
+ drivers/net/wireless/ath/wil6210/fw_inc.c    |   4 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c |  70 ++++-------
+ drivers/net/wireless/ath/wil6210/main.c      | 166 +++++++++++++++------------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c  |  22 +---
+ drivers/net/wireless/ath/wil6210/txrx.c      | 128 ++++++++++-----------
+ drivers/net/wireless/ath/wil6210/wil6210.h   |  34 ++++--
+ drivers/net/wireless/ath/wil6210/wmi.c       |   9 +-
+ 11 files changed, 252 insertions(+), 276 deletions(-)
+
+-- 
+2.1.0
+
