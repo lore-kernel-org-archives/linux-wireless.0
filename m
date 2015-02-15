@@ -1,104 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:43749 "EHLO mga14.intel.com"
+Received: from gn237.zone.eu ([217.146.67.237]:17918 "EHLO gn237.zone.eu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754204AbbBLDap (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2015 22:30:45 -0500
-Message-ID: <54DC1E5D.8060703@linux.intel.com> (sfid-20150212_043103_367437_0B053DAC)
-Date: Thu, 12 Feb 2015 11:30:37 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Kalle Valo <kvalo@codeaurora.org>, brudley@broadcom.com,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
-	wens@csie.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] brcmfmac: avoid duplicated suspend/resume operation
-References: <54D83AF1.2020501@linux.intel.com> <54D871A9.4050603@broadcom.com>
-In-Reply-To: <54D871A9.4050603@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+	id S932402AbbBOUsd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2015 15:48:33 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH v2 5/7] rtlwifi: Remove unused defines from base.h
+Date: Sun, 15 Feb 2015 22:46:49 +0200
+Message-Id: <1424033211-11696-6-git-send-email-plaes@plaes.org> (sfid-20150215_214939_532921_4CAAE77D)
+In-Reply-To: <1424033211-11696-1-git-send-email-plaes@plaes.org>
+References: <1424033211-11696-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+---
+ drivers/net/wireless/rtlwifi/base.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-On 2015/2/9 16:36, Arend van Spriel wrote:
-> On 02/09/15 05:43, Fu, Zhonghui wrote:
->>  From ff39ed4af9f1c50358fe92ec4c8eaac9db183e00 Mon Sep 17 00:00:00 2001
->> From: Zhonghui Fu<zhonghui.fu@linux.intel.com>
->> Date: Mon, 26 Jan 2015 10:13:21 +0800
->> Subject: [PATCH v2] brcmfmac: avoid duplicated suspend/resume operation
->>
->> WiFi chip has 2 SDIO functions, and PM core will trigger
->> twice suspend/resume operations for one WiFi chip to do
->> the same things. This patch avoid this case.
->
-> Well, another remark from Kalle was that this patch does not apply to wireless-drivers-next/master branch. So I tried to apply this patch and it failed. Please rebase this patch.
-
-I have re-based this patch to wireless-drivers-next/master branch and sent it with the subject "[PATCH v3] brcmfmac: avoid duplicated suspend/resume operation" in another mail.
-
-Thanks,
-Zhonghui
+diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
+index c6cb49c..dee4ac2 100644
+--- a/drivers/net/wireless/rtlwifi/base.h
++++ b/drivers/net/wireless/rtlwifi/base.h
+@@ -45,9 +45,6 @@ enum ap_peer {
+ #define RTL_TX_DESC_SIZE	32
+ #define RTL_TX_HEADER_SIZE	(RTL_TX_DESC_SIZE + RTL_TX_DUMMY_SIZE)
  
->
-> Regards,
-> Arend
->
->> Acked-by: Arend van Spriel<arend@broadcom.com>
->> Signed-off-by: Zhonghui Fu<zhonghui.fu@linux.intel.com>
->> ---
->> Changes in v2:
->>   - Remove two "Acked-by" lines
->>
->>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |   17 +++++++++++++++--
->>   1 files changed, 15 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> index 9880dae..618b545 100644
->> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->> @@ -1139,11 +1139,17 @@ void brcmf_sdio_wowl_config(struct device *dev, bool enabled)
->>   static int brcmf_ops_sdio_suspend(struct device *dev)
->>   {
->>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
->> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
->> +    struct brcmf_sdio_dev *sdiodev;
->>       mmc_pm_flag_t sdio_flags;
->> +    struct sdio_func *func = dev_to_sdio_func(dev);
->>
->>       brcmf_dbg(SDIO, "Enter\n");
->>
->> +    if (func->num == 2)
->> +        return 0;
->> +
->> +    sdiodev = bus_if->bus_priv.sdio;
->> +
->>       atomic_set(&sdiodev->suspend, true);
->>
->>       if (sdiodev->wowl_enabled) {
->> @@ -1164,9 +1170,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
->>   static int brcmf_ops_sdio_resume(struct device *dev)
->>   {
->>       struct brcmf_bus *bus_if = dev_get_drvdata(dev);
->> -    struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
->> +    struct brcmf_sdio_dev *sdiodev;
->> +    struct sdio_func *func = dev_to_sdio_func(dev);
->>
->>       brcmf_dbg(SDIO, "Enter\n");
->> +
->> +    if (func->num == 2)
->> +        return 0;
->> +
->> +    sdiodev = bus_if->bus_priv.sdio;
->> +
->>       if (sdiodev->pdata&&  sdiodev->pdata->oob_irq_supported)
->>           disable_irq_wake(sdiodev->pdata->oob_irq_nr);
->>       brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
->> -- 1.7.1
->>
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-#define HT_AMSDU_SIZE_4K	3839
+-#define HT_AMSDU_SIZE_8K	7935
+-
+ #define MAX_BIT_RATE_40MHZ_MCS15	300	/* Mbps */
+ #define MAX_BIT_RATE_40MHZ_MCS7		150	/* Mbps */
+ 
+@@ -61,9 +58,6 @@ enum ap_peer {
+ #define MAX_BIT_RATE_LONG_GI_1NSS_80MHZ_MCS9	390	/* Mbps */
+ #define MAX_BIT_RATE_LONG_GI_1NSS_80MHZ_MCS7	293	/* Mbps */
+ 
+-#define RTL_RATE_COUNT_LEGACY		12
+-#define RTL_CHANNEL_COUNT		14
+-
+ #define FRAME_OFFSET_FRAME_CONTROL	0
+ #define FRAME_OFFSET_DURATION		2
+ #define FRAME_OFFSET_ADDRESS1		4
+-- 
+2.3.0
 
