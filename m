@@ -1,61 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:38076 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933403AbbBBTP4 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47089 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754749AbbBOMDO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 14:15:56 -0500
-Message-ID: <54CFCCCF.900@codeaurora.org> (sfid-20150202_201559_539710_53FA2B92)
-Date: Mon, 02 Feb 2015 11:15:27 -0800
-From: Peter Oh <poh@codeaurora.org>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Peter Oh <poh@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
-	ath10k@lists.infradead.org
-Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
-References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com> <20150127213349.GA24933@localhost> <54C824DC.5080804@qca.qualcomm.com> <20150128043005.GB24933@localhost> <54C875FD.3070101@qca.qualcomm.com> (sfid-20150128_064104_435635_7E681844) <1422430643.1973.1.camel@sipsolutions.net> <54CC0B71.9050301@codeaurora.org> <1422882133.1930.10.camel@sipsolutions.net> <54CFB4F4.1070807@qca.qualcomm.com> <1422903279.8755.1.camel@sipsolutions.net>
-In-Reply-To: <1422903279.8755.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Sun, 15 Feb 2015 07:03:14 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 9/9] wil6210: Align Rx buffers on 4*n+2
+Date: Sun, 15 Feb 2015 14:02:38 +0200
+Message-Id: <1424001758-29529-10-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150215_130326_129536_DEF38768)
+In-Reply-To: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+For the normal (non-sniffer) mode of operation, align Rx buffer
+on 4*n+2, so IP header (after 14 bytes of Ethernet header)
+will start dword aligned. This accelerated IP stack a little bit.
 
-On 02/02/2015 10:54 AM, Johannes Berg wrote:
-> On Mon, 2015-02-02 at 09:33 -0800, Peter Oh wrote:
->
->>> The code (as it is before your patch) implies that it's trying to make
->>> sure that before it continues, any previous writes to the PCIe
-> device's
->>> registers are posted. The only way to ensure that is to do a read to
-> the
->>> registers, as the code does now.
->> Do you know how the read ensure that although the read code does not
->> check the return value?
->> Can you explain how a read ensures that posted write reaches PCIe
-> device?
->
-> You basically have the following sequence:
->
-> iowrite()
-> ioread()
->
-> If you look, you'll see that iowrite() is actually done (or should be,
-> or perhaps with appropriate syncs) on an uncached mapping.
-since it's mmio, iowrite will be map to write, not out which is cached 
-mapping.
-That's why we address "posted write" here.
-If it's un-cached mapping which is volatile, we don't even need ioread.
->   As a result,
-> the only thing you care about here is the PCIe bus, not the CPU cache
-> flush. And from there on that's just a question of PCIe bus semantics.
-So how does ioread guarantee PCIe bus transaction done?
->
-> johannes
->
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
-Regards,
-Peter
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 7f2f560..e1587b3 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -468,8 +468,11 @@ static int wil_rx_refill(struct wil6210_priv *wil, int count)
+ 	struct vring *v = &wil->vring_rx;
+ 	u32 next_tail;
+ 	int rc = 0;
++	/* 2 bytes headroom in normal operation mode to achieve dword
++	 * alignment for the IP header
++	 */
+ 	int headroom = ndev->type == ARPHRD_IEEE80211_RADIOTAP ?
+-			WIL6210_RTAP_SIZE : 0;
++			WIL6210_RTAP_SIZE : 2;
+ 
+ 	for (; next_tail = wil_vring_next_tail(v),
+ 			(next_tail != v->swhead) && (count-- > 0);
+-- 
+2.1.0
+
