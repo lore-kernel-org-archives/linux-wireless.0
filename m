@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49727 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751655AbbBMJio (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 04:38:44 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1D9YSY4030549
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 01:38:43 -0800
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1shdtj078k-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 01:38:43 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH] mwifiex: fix usb tx data payload offset issue
-Date: Fri, 13 Feb 2015 20:38:16 +0530
-Message-ID: <1423840096-14165-1-git-send-email-patila@marvell.com> (sfid-20150213_104018_930835_83F2A3F6)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from gn237.zone.eu ([217.146.67.237]:17847 "EHLO gn237.zone.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932231AbbBOUsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2015 15:48:31 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH v2 4/7] rtlwifi: Remove unused defines from cam.h
+Date: Sun, 15 Feb 2015 22:46:48 +0200
+Message-Id: <1424033211-11696-5-git-send-email-plaes@plaes.org> (sfid-20150215_215012_460161_889FAFC8)
+In-Reply-To: <1424033211-11696-1-git-send-email-plaes@plaes.org>
+References: <1424033211-11696-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhaoyang Liu <liuzy@marvell.com>
-
-Commit 84b313b35f8158d7 ("mwifiex: make tx packet 64 byte DMA aligned")
-induced payload offset issue for USB interface.
-
-There is no USB interface header for tx packets, so there's no need to
-pull interface length while processing tx skb.
-
-This patch fixes this issue.
-
-Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/mwifiex/txrx.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rtlwifi/cam.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index ac93557..ea4549f 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -80,11 +80,13 @@ EXPORT_SYMBOL_GPL(mwifiex_handle_rx_packet);
- int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
- 		       struct mwifiex_tx_param *tx_param)
- {
--	int ret = -1;
-+	int hroom, ret = -1;
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	u8 *head_ptr;
- 	struct txpd *local_tx_pd = NULL;
+diff --git a/drivers/net/wireless/rtlwifi/cam.h b/drivers/net/wireless/rtlwifi/cam.h
+index 3550808..e2e647d 100644
+--- a/drivers/net/wireless/rtlwifi/cam.h
++++ b/drivers/net/wireless/rtlwifi/cam.h
+@@ -28,13 +28,11 @@
  
-+	hroom = (adapter->iface_type == MWIFIEX_USB) ? 0 : INTF_HEADER_LEN;
-+
- 	if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
- 		head_ptr = mwifiex_process_uap_txpd(priv, skb);
- 	else
-@@ -92,11 +94,9 @@ int mwifiex_process_tx(struct mwifiex_private *priv, struct sk_buff *skb,
+ #define CAM_CONTENT_COUNT				8
  
- 	if (head_ptr) {
- 		if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA)
--			local_tx_pd =
--				(struct txpd *) (head_ptr + INTF_HEADER_LEN);
-+			local_tx_pd = (struct txpd *)(head_ptr + hroom);
- 		if (adapter->iface_type == MWIFIEX_USB) {
- 			adapter->data_sent = true;
--			skb_pull(skb, INTF_HEADER_LEN);
- 			ret = adapter->if_ops.host_to_card(adapter,
- 							   MWIFIEX_USB_EP_DATA,
- 							   skb, NULL);
+-#define CFG_DEFAULT_KEY					BIT(5)
+ #define CFG_VALID					BIT(15)
+ 
+ #define PAIRWISE_KEYIDX					0
+ #define CAM_PAIRWISE_KEY_POSITION			4
+ 
+-#define	CAM_CONFIG_USEDK				1
+ #define	CAM_CONFIG_NO_USEDK				0
+ 
+ void rtl_cam_reset_all_entry(struct ieee80211_hw *hw);
 -- 
-1.8.1.4
+2.3.0
 
