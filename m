@@ -1,31 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60813 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752145AbbBWObd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 09:31:33 -0500
-Message-ID: <1424701880.3075.0.camel@sipsolutions.net> (sfid-20150223_153139_207506_F3B7A260)
-Subject: Re: [PATCH 1/1] nl80211: add NL80211_CMD_GET_TSF
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rohan Joyce <rojoyce.github@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Mon, 23 Feb 2015 15:31:20 +0100
-In-Reply-To: <1424699832-19284-2-git-send-email-rojoyce.github@gmail.com> (sfid-20150223_151201_815020_CABEA63C)
-References: <1424699832-19284-1-git-send-email-rojoyce.github@gmail.com>
-	 <1424699832-19284-2-git-send-email-rojoyce.github@gmail.com>
-	 (sfid-20150223_151201_815020_CABEA63C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:47089 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754734AbbBOMDM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2015 07:03:12 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 8/9] wil6210: track privacy connection attribute
+Date: Sun, 15 Feb 2015 14:02:37 +0200
+Message-Id: <1424001758-29529-9-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150215_130319_819259_9A5CFE9B)
+In-Reply-To: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-02-23 at 21:57 +0800, Rohan Joyce wrote:
-> This patch adds a command NL80211_CMD_GET_TSF that retrieves the 64 bit time
-> synchronisation value for an interface. It returns the value in a uint64
-> attribute of type NL80211_ATTR_TSF.
+For the STA interface, track 'privacy'.
+Refactor safety checks to:
+- always print connection params
+- always check IE size validity
+- require RSN IE for secure connection
 
-This should explain why and how this could possibly be used - I don't
-see any reasonable usage since the TSF is quickly changing and this API
-doesn't really allow for any synchronisation.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 30 +++++++++++++++++------------
+ 1 file changed, 18 insertions(+), 12 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 38bd294..4bd708c 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -387,11 +387,25 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 	int ch;
+ 	int rc = 0;
+ 
++	wil_print_connect_params(wil, sme);
++
+ 	if (test_bit(wil_status_fwconnecting, wil->status) ||
+ 	    test_bit(wil_status_fwconnected, wil->status))
+ 		return -EALREADY;
+ 
+-	wil_print_connect_params(wil, sme);
++	if (sme->ie_len > WMI_MAX_IE_LEN) {
++		wil_err(wil, "IE too large (%td bytes)\n", sme->ie_len);
++		return -ERANGE;
++	}
++
++	rsn_eid = sme->ie ?
++			cfg80211_find_ie(WLAN_EID_RSN, sme->ie, sme->ie_len) :
++			NULL;
++
++	if (sme->privacy && !rsn_eid) {
++		wil_err(wil, "Missing RSN IE for secure connection\n");
++		return -EINVAL;
++	}
+ 
+ 	bss = cfg80211_get_bss(wiphy, sme->channel, sme->bssid,
+ 			       sme->ssid, sme->ssid_len,
+@@ -407,17 +421,9 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 		rc = -ENOENT;
+ 		goto out;
+ 	}
++	wil->privacy = sme->privacy;
+ 
+-	rsn_eid = sme->ie ?
+-			cfg80211_find_ie(WLAN_EID_RSN, sme->ie, sme->ie_len) :
+-			NULL;
+-	if (rsn_eid) {
+-		if (sme->ie_len > WMI_MAX_IE_LEN) {
+-			rc = -ERANGE;
+-			wil_err(wil, "IE too large (%td bytes)\n",
+-				sme->ie_len);
+-			goto out;
+-		}
++	if (wil->privacy) {
+ 		/* For secure assoc, send WMI_DELETE_CIPHER_KEY_CMD */
+ 		rc = wmi_del_cipher_key(wil, 0, bss->bssid);
+ 		if (rc) {
+@@ -450,7 +456,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 			bss->capability);
+ 		goto out;
+ 	}
+-	if (rsn_eid) {
++	if (wil->privacy) {
+ 		conn.dot11_auth_mode = WMI_AUTH11_SHARED;
+ 		conn.auth_mode = WMI_AUTH_WPA2_PSK;
+ 		conn.pairwise_crypto_type = WMI_CRYPT_AES_GCMP;
+-- 
+2.1.0
 
