@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:1712 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755092AbbBFRgx (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23278 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbbBOPPH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 12:36:53 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/6] brcmfmac: sdio suspend rework and debugfs change
-Date: Fri, 6 Feb 2015 18:36:41 +0100
-Message-ID: <1423244207-9707-1-git-send-email-arend@broadcom.com> (sfid-20150206_183703_964637_8B589B4B)
+	Sun, 15 Feb 2015 10:15:07 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/4] ath10k: implement fw stats for wmi-tlv
+References: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com>
+Date: Sun, 15 Feb 2015 17:15:00 +0200
+In-Reply-To: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Fri, 30 Jan 2015 10:47:20 +0100")
+Message-ID: <87vbj3gqa3.fsf@kamboji.qca.qualcomm.com> (sfid-20150215_161512_719088_C0D8E990)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here some late patches for 3.20 kernel. Most related to SDIO as that
-received a bit more attention last couple of weeks. Also added a debugfs
-file so users can provide us all the revinfo we could ask for.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This series is intended for v3.20 and applies to the master branch of
-the wireless-drivers-next repository.
+> There are some slight differences in fw stats
+> (sic) in wmi-tlv.
+>
+> Firmware has changed the querying scheme and no
+> longer requires the ping-pong to get all stats.
+> The patchset doesn't change this behaviour so with
+> wmi-tlv it's possible to see the following
+> warnings when reading fw stats:
+>
+>  ath10k_pci 0000:00:06.0: received unsolicited stats update event
+>
+> The logic in ath10k still produces correct results
+> so this is harmless.
+>
+> I wonder how to deal with this in a sane way. An
+> `if (op_ver == WMI_TLV)` is a little bad but
+> having a new ar->fw_feature flag just for a debug
+> facility like this is a bit silly. Or we can just
+> drop the warning and leave a comment. Ideas?
 
-Arend van Spriel (3):
-  brcmfmac: use helper function for changing SDIO state
-  brcmfmac: add debugfs file containing revision info
-  brcmfmac: make sdio suspend wait for threads to freeze
+I think we could just drop the warning and leave a comment. That
+shouldn't break anything, right?
 
-Hante Meuleman (3):
-  brcmfmac: Remove error print for invalid key index.
-  brcmfmac: Dont sleep when ctrl frames to transmit.
-  brcmfmac: Fix escan timer causing oops.
+> Michal Kazior (4):
+>   ath10k: add vdev stats processing
+>   ath10k: change request stats command prototype
+>   ath10k: add more wmi fw stat defines
+>   ath10k: implement fw stats for wmi-tlv
 
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   | 166 +++++++++++++++++----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |  11 +-
- drivers/net/wireless/brcm80211/brcmfmac/core.c     |  30 ++++
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c     | 109 ++++++++------
- drivers/net/wireless/brcm80211/brcmfmac/sdio.h     |  47 ++++--
- 5 files changed, 270 insertions(+), 93 deletions(-)
+Thanks, applied to ath.git.
 
 -- 
-1.9.1
-
+Kalle Valo
