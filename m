@@ -1,100 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:54110 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750967AbbBRIOe (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:52386 "EHLO
+	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754735AbbBONcR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Feb 2015 03:14:34 -0500
+	Sun, 15 Feb 2015 08:32:17 -0500
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
+	by mailout.nyi.internal (Postfix) with ESMTP id 747AF209D2
+	for <linux-wireless@vger.kernel.org>; Sun, 15 Feb 2015 08:32:16 -0500 (EST)
+Message-Id: <1424007136.2042747.227726249.45B6A0E2@webmail.messagingengine.com> (sfid-20150215_143338_943280_EAEC749D)
+From: "Nikita N." <nikitan@operamail.com>
+To: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	arend@broadcom.com
 MIME-Version: 1.0
-In-Reply-To: <20150217154538.GP8994@leverpostej>
-References: <1423998550-8829-1-git-send-email-eliad@wizery.com>
-	<2344371.zDnvJJhFdD@wuerfel>
-	<CAB3XZEe1HmOwQ3GcU5T3ruFybKdCVNiBwQbeLS3X4MMkL2G5uA@mail.gmail.com>
-	<20150217154538.GP8994@leverpostej>
-Date: Wed, 18 Feb 2015 10:14:33 +0200
-Message-ID: <CAB3XZEfESwUr6Tpcw71rzgZEnXZZpdgM0E1cdivBD01kGc1P0Q@mail.gmail.com> (sfid-20150218_091442_746532_03F8AF8A)
-Subject: Re: [PATCH v2] wlcore: add basic device-tree support
-From: Eliad Peller <eliad@wizery.com>
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Subject: BCM4313 lowering TX power
+Date: Sun, 15 Feb 2015 05:32:16 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 17, 2015 at 5:45 PM, Mark Rutland <mark.rutland@arm.com> wrote:
-> On Tue, Feb 17, 2015 at 03:39:03PM +0000, Eliad Peller wrote:
->> On Mon, Feb 16, 2015 at 12:06 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> > On Sunday 15 February 2015 13:09:10 Eliad Peller wrote:
->> > s
->> >> +
->> >> +This node provides properties for controlling the wilink wireless device. The
->> >> +node is expected to be specified as a child node to the SDIO controller that
->> >> +connects the device to the system.
->> >> +
->> >> +Required properties:
->> >> +
->> >> + - compatible : Should be "ti,wlcore".
->> >
->> > I think you should use the specific model number here. If I understand
->> > correctly, wlcore is the name of the driver that is used for multiple
->> > device implementation.
->> >
->> right, wlcore is the common driver part of wl12xx and wl18xx device drivers.
->> these DT properties are common for both.
->> can't we use a common binding as well in this case?
->
-> Just have a string for each; the driver can easily match them all and
-> handle them identically for now until we decide/realise we need to
-> handle them differently later.
->
-> Regardless, the compatible string should match some real part number
-> and/or standard rather than the Linux driver name.
->
-ok, makes sense.
+Hi Dear backports Devs for driver brcmsmac,
+Coming to the point, I want to lower the TX power of my BCM4313, under
+the official values set by the regdom, to any special value I need.
+So I'm trying to build such a "personal" patch, only for me, based on
+latest backports v3.19 and latest Ubuntu.
+Useless to say, "iwconfig <wlan> txpower" doesn't work, the resulting TX
+power doesn't change.
+I know it doesn't work because I can measure the RSSI coming out from
+the BCM4313, using another device: it doesn't change, whatever value I
+set.
 
->> >> +&mmc3 {
->> >> +     status = "okay";
->> >> +     vmmc-supply = <&wlan_en_reg>;
->> >> +     bus-width = <4>;
->> >> +     cap-power-off-card;
->> >> +     keep-power-in-suspend;
->> >> +
->> >> +     #address-cells = <1>;
->> >> +     #size-cells = <0>;
->> >> +     wlcore: wlcore@0 {
->> >> +             compatible = "ti,wlcore";
->> >> +             reg = <2>;
->> >> +             interrupt-parent = <&gpio0>;
->> >> +             interrupts = <19 IRQ_TYPE_NONE>;
->> >> +     };
->> >> +};
->> >
->> > It could make sense to specify a few extra properties here:
->> >
->> > - The platform data lists two clocks. How about adding them
->> >   here as optional clocks so we don't need to change the binding
->> >   again.
->> >
->> There were some very long threads previously regarding the correct way
->> to describe these clocks.
->> I prefer starting a working basic implementation and add the
->> controversial parts later on, as needed.
->
-> This could be problematic. Elsewhere we've later added properties that
-> should have been mandatory from the start but were masked by some
-> platform data somewhere. It would be very good to avoid that.
->
-that's a good argument.
-in this case, i'll start with submitting a binding only for wl18xx,
-which doesn't need the clock bindings (they are needed only for
-wl12xx).
+So, I gave a look at the code for the brcmsmac module, and I think I
+found the location where the TX power is *finally* set: inside
+wlc_lcnphy_txpower_recalc_target (phy_lcn.c), call to
+wlc_lcnphy_set_target_tx_pwr.
+AFAIU, in that function a table of tx_power_offsets (calculated by
+another function) is written in the device EPROM registry, and the TX
+power is set to the relative minimum.
 
-> What is problematic about describing the clock inputs to this block? Is
-> the problem specific to this block or to the specific clock
-> controller(s) it happens to be wired to?
-i'm referring to patches like this one:
-http://thread.gmane.org/gmane.linux.kernel/1520752
+Now, my question: is that the right way to change effectively the TX
+power?
+I need to ask You a confirmation about that, if that is correct, before
+I start building my patch.
+I don't want to frustrate my time developing in the wrong code, or
+damage the device, or other issues... :)
 
-Eliad.
+Thank you for your attention, and looking forward your feedback.
+
+-- 
+http://www.fastmail.com - mmm... Fastmail...
+
