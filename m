@@ -1,70 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:43824 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447AbbBWUGK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 15:06:10 -0500
-Received: by mail-ig0-f172.google.com with SMTP id l13so21155888iga.5
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 12:06:09 -0800 (PST)
+Received: from erley.org ([97.107.129.9]:55021 "EHLO remote.erley.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754393AbbBOD1Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Feb 2015 22:27:16 -0500
+Message-ID: <54E01209.7010300@erley.org> (sfid-20150215_042730_793161_3F89C52E)
+Date: Sat, 14 Feb 2015 21:27:05 -0600
+From: Pat Erley <pat-lkml@erley.org>
 MIME-Version: 1.0
-In-Reply-To: <20150223171700.GA29730@w1.fi>
-References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
-	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
-	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
-	<CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
-	<CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
-	<CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
-	<CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
-	<CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
-	<20150223171700.GA29730@w1.fi>
-Date: Mon, 23 Feb 2015 12:06:09 -0800
-Message-ID: <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com> (sfid-20150223_210614_636114_3669F8DD)
-Subject: Re: AR9462 problems connecting again..
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Jouni Malinen <j@w1.fi>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>, brudley@broadcom.com,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+References: <54DC1D7D.5050407@linux.intel.com> <54E0072D.3020802@linux.intel.com>
+In-Reply-To: <54E0072D.3020802@linux.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 23, 2015 at 9:17 AM, Jouni Malinen <j@w1.fi> wrote:
+On 02/14/2015 08:40 PM, Fu, Zhonghui wrote:
 >
-> mac80211: Do not encrypt EAPOL frames before peer has used the key
-
-Hmm. This patch does not seem to make a difference. I thought it did
-at first, but then removed the wpa_supplicant debugging, and got the
-same failures.
-
-On Sun, Feb 22, 2015 at 10:01 PM, Sujith Manoharan <sujith@msujith.org> wrote:
+> Any comments to this patch? Can it be accepted?
 >
-> Or 'iw dev wlp1s0 set bitrates ht-mcs-2.4 0' to choose the lowest
-> HT rate.
-
-This *might* have worked. But it's a bit hard to really make sure,
-since it sometimes does succeed even without debugging when I do
-nothing at all, but it did work twice in a row after doing that.
-
-> Sporadic association problems could be a problem with the chosen rates.
-> This would show the rates for the EAPOL frames:
+> Thanks,
+> Zhonghui
 >
-> iw dev wlp1s0 interface add mon0 type monitor
-> ifconfig mon0 up
+> On 2015/2/12 11:26, Fu, Zhonghui wrote:
+>>  From a05d35ab334c20970c236fb971dae88810078c88 Mon Sep 17 00:00:00 2001
+>> From: Fu Zhonghui <zhonghui.fu@linux.intel.com>
+>> Date: Thu, 12 Feb 2015 10:49:35 +0800
+>> Subject: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+>>
+>> WiFi chip has 2 SDIO functions, and PM core will trigger
+>> twice suspend/resume operations for one WiFi chip to do
+>> the same things. This patch avoid this case.
+>>
+>> Acked-by: Arend van Spriel <arend@broadcom.com>
+>> Signed-off-by: Fu Zhonghui <zhonghui.fu@linux.intel.com>
+>> ---
+>> Changes in v3:
+>> - Rebase to wireless-drivers-next/master branch
+>>
+>>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 13 ++++++++++++-
+>>   1 file changed, 12 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> index 7944224..b8832a7 100644
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+>> @@ -1117,9 +1117,13 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>>   	struct brcmf_bus *bus_if;
+>>   	struct brcmf_sdio_dev *sdiodev;
+>>   	mmc_pm_flag_t sdio_flags;
+>> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>>
+>>   	brcmf_dbg(SDIO, "Enter\n");
+>>
+>> +	if (func->num == 2)
+>> +		return 0;
+>> +
 
-Hmm. I don't actually see a "mon0" interface after the "iw dev
-interface add" thing. Yes, "iw" sees it when I do "iw dev", but
-"ifconfig" does not.
+Should it be >= 2 instead of == 2 so that if, in the future, a 3+
+SDIO function chip comes out, it's already handled?  Not that that
+should hold up the patch or anything, just a curiosity.
 
-This machine has a fairly minimal kernel config. Does that "type
-monitor" interface perhaps need some debug infrastructure that I
-haven't added?
+>>   	bus_if = dev_get_drvdata(dev);
+>>   	sdiodev = bus_if->bus_priv.sdio;
+>>
+>> @@ -1148,9 +1152,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
+>>   static int brcmf_ops_sdio_resume(struct device *dev)
+>>   {
+>>   	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+>> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+>> +	struct brcmf_sdio_dev *sdiodev;
+>> +	struct sdio_func *func = dev_to_sdio_func(dev);
+>>
+>>   	brcmf_dbg(SDIO, "Enter\n");
+>> +
+>> +	if (func->num == 2)
+>> +		return 0;
+>> +
+>> +	sdiodev = bus_if->bus_priv.sdio;
+>> +
+>>   	if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
+>>   		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
+>>   	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
+>> -- 1.9.1
+>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-> tshark -i mon0 -Y eapol -T fields -e radiotap.datarate -e wlan -e eapol -e wlan.sa -e wlan.da
-
-.. and then this fails, presumably for similar reasons.
-
-                        Linus
