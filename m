@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:53556 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752924AbbBBXFQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 18:05:16 -0500
-Message-ID: <54D0028E.6000503@codeaurora.org> (sfid-20150203_000523_707672_5C987273)
-Date: Mon, 02 Feb 2015 15:04:46 -0800
-From: Peter Oh <poh@codeaurora.org>
-MIME-Version: 1.0
-To: Adrian Chadd <adrian@freebsd.org>,
-	Sujith Manoharan <sujith@msujith.org>
-CC: Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	Peter Oh <poh@qca.qualcomm.com>
-Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
-References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com>	<20150127213349.GA24933@localhost>	<54C824DC.5080804@qca.qualcomm.com>	<20150128043005.GB24933@localhost>	<54C875FD.3070101@qca.qualcomm.com>	<1422430643.1973.1.camel@sipsolutions.net>	<54CC0B71.9050301@codeaurora.org>	<21708.11481.380046.994311@gargle.gargle.HOWL>	<54CC3640.2090209@codeaurora.org>	<21708.14493.458370.65799@gargle.gargle.HOWL> <CAJ-Vmok9X7Zu67A3xnTKkBbLYPhrxqxRkv7EzKpPAnTOw6baVQ@mail.gmail.com>
-In-Reply-To: <CAJ-Vmok9X7Zu67A3xnTKkBbLYPhrxqxRkv7EzKpPAnTOw6baVQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from gn237.zone.eu ([217.146.67.237]:17769 "EHLO gn237.zone.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754724AbbBOUsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Feb 2015 15:48:22 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH v2 0/7] rtlwifi: Unused #define removal
+Date: Sun, 15 Feb 2015 22:46:44 +0200
+Message-Id: <1424033211-11696-1-git-send-email-plaes@plaes.org> (sfid-20150215_215053_177312_0B7B409E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all,
 
-On 02/02/2015 02:26 PM, Adrian Chadd wrote:
-> On 30 January 2015 at 18:06, Sujith Manoharan <sujith@msujith.org> wrote:
->> Peter Oh wrote:
->>> Please refer the email thread that I mentioned about other architectures.
->>> (dsb is for ARM and other platforms have the equivalent instruction such
->>> as sfence, sync, mf, and dcs).
->> Ok.
->>
->>> Also the patch is updated with 2nd patch set replacing wmb to mb.
->> Would be good to test this on a MIPS platform...
->>
-> The Atheros mips74k stuff I have here does /not/ flush all the writes
-> out to the device and guarantee the device has seen everything with a
-> memory barrier. Just saying. Various drivers ended up needing
-> ioread()s in my experiments; mips sync operations weren't enough.
->
-> So I'd suggest abstracting it out like the linux dri i915 code has -
-> they define a "posting read" macro which they use whenever they need
-> to ensure it's definitely made it all the way out to the hardware and
-> through internal FIFOs so internal hardware has seen the state change.
-> Then you can redefine that to your hearts content based on platform.
-Thank you Adrian to head up the concern and suggestion.
-The other people also concerned about other architectures like mips, so 
-I was going to analysis it.
-But since you've already experienced the defects, let me hold the change 
-back until I find better for all.
->
->
-> -adrian
-Regards,
-Peter
+This is v2 of the rtlwifi unused #define cleanup patchset.
+
+Changes since v1:
+
+  - Rebase patches against wireless-driver-next tree.
+
+
+Priit Laes (7):
+  rtlwifi: Remove unused defines from rtl8192cu driver
+  rtlwifi: Remove unused defines from driver-specific def.h
+  rtlwifi: Remove unused RF6052_MAX_REG define
+  rtlwifi: Remove unused defines from cam.h
+  rtlwifi: Remove unused defines from base.h
+  rtlwifi: Remove unused defines from efuse.h
+  rtlwifi: Remove unused RTL_SUPPORTED_CTRL_FILTER define
+
+ drivers/net/wireless/rtlwifi/base.h          |  6 ----
+ drivers/net/wireless/rtlwifi/cam.h           |  2 --
+ drivers/net/wireless/rtlwifi/core.h          |  2 --
+ drivers/net/wireless/rtlwifi/efuse.h         |  6 ----
+ drivers/net/wireless/rtlwifi/rtl8188ee/def.h | 41 ----------------------------
+ drivers/net/wireless/rtlwifi/rtl8188ee/rf.h  |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/def.h | 41 ----------------------------
+ drivers/net/wireless/rtlwifi/rtl8192ce/rf.h  |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.h  |  2 --
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.h  |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192de/def.h | 39 --------------------------
+ drivers/net/wireless/rtlwifi/rtl8192ee/rf.h  |  1 -
+ drivers/net/wireless/rtlwifi/rtl8192se/def.h |  1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/def.h | 41 ----------------------------
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.h  |  1 -
+ drivers/net/wireless/rtlwifi/rtl8723be/rf.h  |  1 -
+ drivers/net/wireless/rtlwifi/rtl8821ae/def.h | 41 ----------------------------
+ drivers/net/wireless/rtlwifi/rtl8821ae/rf.h  |  1 -
+ 18 files changed, 229 deletions(-)
+
+-- 
+2.3.0
+
