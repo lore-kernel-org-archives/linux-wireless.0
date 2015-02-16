@@ -1,73 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:57437 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752076AbbBWVay (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:55709 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754944AbbBPKGS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 16:30:54 -0500
-Date: Mon, 23 Feb 2015 23:30:50 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: AR9462 problems connecting again..
-Message-ID: <20150223213050.GA23232@w1.fi> (sfid-20150223_223056_998835_E3E6970C)
-References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
- <CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
- <CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
- <CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
- <CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
- <CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
- <CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
- <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
- <20150223171700.GA29730@w1.fi>
- <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+	Mon, 16 Feb 2015 05:06:18 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	Ido Yariv <ido@wizery.com>
+Subject: Re: [PATCH v2] wlcore: add basic device-tree support
+Date: Mon, 16 Feb 2015 11:06:14 +0100
+Message-ID: <2344371.zDnvJJhFdD@wuerfel> (sfid-20150216_110622_419620_3B16066E)
+In-Reply-To: <1423998550-8829-1-git-send-email-eliad@wizery.com>
+References: <1423998550-8829-1-git-send-email-eliad@wizery.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 23, 2015 at 12:06:09PM -0800, Linus Torvalds wrote:
-> On Mon, Feb 23, 2015 at 9:17 AM, Jouni Malinen <j@w1.fi> wrote:
-> > mac80211: Do not encrypt EAPOL frames before peer has used the key
-> 
-> Hmm. This patch does not seem to make a difference. I thought it did
-> at first, but then removed the wpa_supplicant debugging, and got the
-> same failures.
+On Sunday 15 February 2015 13:09:10 Eliad Peller wrote:
+s
+> +
+> +This node provides properties for controlling the wilink wireless device. The
+> +node is expected to be specified as a child node to the SDIO controller that
+> +connects the device to the system.
+> +
+> +Required properties:
+> +
+> + - compatible : Should be "ti,wlcore".
 
-Interesting. That would seem to imply that this AP does not like
-something about the EAPOL-Key msg 4/4 from the station during the faster
-timing (no wpa_supplicant debug) and would even be unable to accept the
-responses during retransmissions.. I'm not sure what could cause that.
-Is there anything that the AP could provide as far as logging is
-concerned?
+I think you should use the specific model number here. If I understand
+correctly, wlcore is the name of the driver that is used for multiple
+device implementation.
 
-How far is the station from the AP? Would it be possible to see whether
-the behavior changes if you were within, say, five meters or so? This
-should allow the higher transmit rate proposed by minstrel_ht to work
-pretty reliably and that could confirm if this is indeed related to too
-high a rate being used here and then for some reason being unable to
-fall back to a sufficiently low rate to work at higher distance.
+> + - interrupt-parent : the phandle for the interrupt controller to which the
+> +	device interrupts are connected.
 
-It would be useful if you can capture the 802.11 frame exchange from a
-failed connection case with an external wireless sniffer. It sounds
-like this should be doable with iwlwifi and while I haven't tested this
-myself, I'd assume something like this would do the trick (this is
-assuming that the interface is not being used at the time, e.g., with
-wpa_supplicant):
+interrupt-parent should not be required
 
-sudo iw dev wlan0 set type monitor
-sudo ip link set wlan0 up
-sudo iw dev wlan0 set freq 2462 HT20
-sudo dumpcap -i wlan0 -w /tmp/wlan0.pcap
+> +&mmc3 {
+> +	status = "okay";
+> +	vmmc-supply = <&wlan_en_reg>;
+> +	bus-width = <4>;
+> +	cap-power-off-card;
+> +	keep-power-in-suspend;
+> +
+> +	#address-cells = <1>;
+> +	#size-cells = <0>;
+> +	wlcore: wlcore@0 {
+> +		compatible = "ti,wlcore";
+> +		reg = <2>;
+> +		interrupt-parent = <&gpio0>;
+> +		interrupts = <19 IRQ_TYPE_NONE>;
+> +	};
+> +};
 
-# test connection and stop dumpcap after the failure
-# and "sudo ip link set wlan0 down; sudo iw dev wlan0 set type station"
-# to restore normal station mode
+It could make sense to specify a few extra properties here:
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+- The platform data lists two clocks. How about adding them
+  here as optional clocks so we don't need to change the binding
+  again.
+
+> diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+> index d3dd7bf..317796b 100644
+> --- a/drivers/net/wireless/ti/wlcore/sdio.c
+> +++ b/drivers/net/wireless/ti/wlcore/sdio.c
+
+Please make this a two-patch series and keep the dt binding in a separate
+patch from the driver change.
+  
+> +#ifdef CONFIG_OF
+> +static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
+> +{
+> +	struct device_node *np = dev->of_node;
+> +	struct wl12xx_platform_data *pdata;
+> +
+> +	if (!np || !of_device_is_compatible(np, "ti,wlcore")) {
+> +		dev_err(dev, "No platform data set\n");
+> +		return NULL;
+> +	}
+> +
+> +	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
+> +	if (!pdata)
+> +		return NULL;
+
+Your method seems overly complicated. While a lot of drivers do the same
+thing, allocating a platform_data structure at probe time is really
+just extra work compared to making the platform_data optional and
+adding the required fields into the driver-private structure.
+
+	Arnd
+
