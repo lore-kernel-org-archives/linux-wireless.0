@@ -1,67 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:35522 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754785AbbBBEFC (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:33801 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754381AbbBPFRY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2015 23:05:02 -0500
-Received: by mail-qg0-f54.google.com with SMTP id q108so45927198qgd.13
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 20:05:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAA_e5Z5PfimZeC5cqSk_xFpKOBeZ74htLeEdwtKieAYWJaEX+A@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
- <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
- <54CB5D08.2070906@broadcom.com> <1422623975.21689.77.camel@edumazet-glaptop2.roam.corp.google.com>
- <54CB8B69.1070807@broadcom.com> <CAA93jw5fqhz0Hiw74L2GXgtZ9JsMg+NtYydKxKzGDrvQcZn4hA@mail.gmail.com>
- <CAA93jw7b0E9jjQYXrEPzjLLC9j8xNC0TFYXpWVtgFameJaNBdw@mail.gmail.com>
- <1422741065.199624134@apps.rackspace.com> <CAPp0ZBb2nkA6Y0s=W0kw=zvyn0wi0NMBRsBCw_xcD61ScOmgQg@mail.gmail.com>
- <CAA_e5Z46Bu+zZZFzf_ejzA35Gw3g1_OG85yv6yd7MpbwZcE-nw@mail.gmail.com>
- <CAA93jw7=oTex0Mp-0ThvuDRUnfR0N8tzdOQ8DD7QYWphp1b=4w@mail.gmail.com>
- <CAJq5cE3ETbpEtecFHmhgHQveNRUhVfrzjTOygHm-TRCTwHNyKA@mail.gmail.com>
- <1422801814.796219699@apps.rackspace.com> <CAA_e5Z5PfimZeC5cqSk_xFpKOBeZ74htLeEdwtKieAYWJaEX+A@mail.gmail.com>
-From: Avery Pennarun <apenwarr@google.com>
-Date: Sun, 1 Feb 2015 23:04:41 -0500
-Message-ID: <CAPp0ZBbKu-B3yPf0Et=XByJ1SrnxBgVbRXr9PBe0f6P08w87=Q@mail.gmail.com> (sfid-20150202_050508_489331_8D46043F)
-Subject: Re: [Cerowrt-devel] Fwd: Throughput regression with `tcp: refine TSO autosizing`
-To: Andrew McGregor <andrewmcgr@gmail.com>
-Cc: David Reed <dpreed@reed.com>,
-	Jonathan Morton <chromatix99@gmail.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Matt Mathis <mattmathis@google.com>,
-	Tim Shepard <shep@alum.mit.edu>, dstanley@arubanetworks.com,
-	Kathy Giori <kgiori@qca.qualcomm.com>,
-	Stig Thormodsrud <stig@ubnt.com>,
-	Derrick Pallas <pallas@meraki.com>,
-	"cerowrt-devel@lists.bufferbloat.net"
-	<cerowrt-devel@lists.bufferbloat.net>,
-	Mahesh Paolini-Subramanya <mahesh@dieswaytoofast.com>,
-	Jim Gettys <jg@freedesktop.org>,
-	Jesper Dangaard Brouer <jbrouer@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 16 Feb 2015 00:17:24 -0500
+Received: from [117.222.159.239] (port=14037 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YNE3f-000EUz-OK
+	for linux-wireless@vger.kernel.org; Mon, 16 Feb 2015 00:17:24 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 6/9] ath9k: Setup MCI statistics properly
+Date: Mon, 16 Feb 2015 10:49:58 +0530
+Message-Id: <1424064001-7009-7-git-send-email-sujith@msujith.org> (sfid-20150216_061729_148947_4EBE5A93)
+In-Reply-To: <1424064001-7009-1-git-send-email-sujith@msujith.org>
+References: <1424064001-7009-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 1, 2015 at 6:34 PM, Andrew McGregor <andrewmcgr@gmail.com> wrote:
-> I missed one item in my list of potential improvements: the most braindead
-> thing 802.11 has to say about rates is that broadcast and multicast packets
-> should be sent at 'the lowest basic rate in the current supported rate set',
-> which is really wasteful.  There are a couple of ways of dealing with this:
-> one, ignore the standard and pick the rate that is most likely to get the
-> frame to as many neighbours as possible (by a scan of the Minstrel tables).
-> Or two, fan it out as unicast, which might well take less airtime (due to
-> aggregation) as well as being much more likely to be delivered, since you
-> get ACKs and retries by doing that.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-As far as I can see, the only sensible thing to do with
-multicast/broadcast is some variation of the unicast fanout, unless
-you've got a truly huge number of nodes.  I don't know of any
-protocols (certainly not video streams) that actually work well with
-the kind of packet loss you see at medium/long range with wifi if
-retransmits aren't used.  I've heard that openwrt already has a patch
-included that does this kind of fanout at the bridge layer.
+Use a subroutine to enable MCI debug statistics
+if it is present in the global configuration.
 
-I've also heard of a new "reliable multicast" in some newer 802.11
-variant, which essentially sends out a single multicast packet and
-expects an ACK from each intended recipient.  Other than adding
-complexity, it seems like the best of both worlds.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 23 ++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/reg_mci.h    |  5 +++++
+ 2 files changed, 25 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index aca9015..de65ce1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -821,6 +821,25 @@ static void ar9003_mci_osla_setup(struct ath_hw *ah, bool enable)
+ 		      AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN, 1);
+ }
+ 
++static void ar9003_mci_stat_setup(struct ath_hw *ah)
++{
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++
++	if (!AR_SREV_9565(ah))
++		return;
++
++	if (mci->config & ATH_MCI_CONFIG_MCI_STAT_DBG) {
++		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
++			      AR_MCI_DBG_CNT_CTRL_ENABLE, 1);
++		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
++			      AR_MCI_DBG_CNT_CTRL_BT_LINKID,
++			      MCI_STAT_ALL_BT_LINKID);
++	} else {
++		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
++			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
++	}
++}
++
+ static void ar9003_mci_set_btcoex_ctrl_9565_1ANT(struct ath_hw *ah)
+ {
+ 	u32 regval;
+@@ -984,10 +1003,8 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 
+ 	mci->ready = true;
+ 	ar9003_mci_prep_interface(ah);
++	ar9003_mci_stat_setup(ah);
+ 
+-	if (AR_SREV_9565(ah))
+-		REG_RMW_FIELD(ah, AR_MCI_DBG_CNT_CTRL,
+-			      AR_MCI_DBG_CNT_CTRL_ENABLE, 0);
+ 	if (en_int)
+ 		ar9003_mci_enable_interrupt(ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg_mci.h b/drivers/net/wireless/ath/ath9k/reg_mci.h
+index 8d1572d..3bd7c21 100644
+--- a/drivers/net/wireless/ath/ath9k/reg_mci.h
++++ b/drivers/net/wireless/ath/ath9k/reg_mci.h
+@@ -265,9 +265,14 @@
+ #define AR_MCI_MISC                                     0x1a74
+ #define AR_MCI_MISC_HW_FIX_EN                           0x00000001
+ #define AR_MCI_MISC_HW_FIX_EN_S                         0
++
+ #define AR_MCI_DBG_CNT_CTRL                             0x1a78
+ #define AR_MCI_DBG_CNT_CTRL_ENABLE                      0x00000001
+ #define AR_MCI_DBG_CNT_CTRL_ENABLE_S                    0
++#define AR_MCI_DBG_CNT_CTRL_BT_LINKID                   0x000007f8
++#define AR_MCI_DBG_CNT_CTRL_BT_LINKID_S                 3
++
++#define MCI_STAT_ALL_BT_LINKID                          0xffff
+ 
+ #define AR_MCI_INTERRUPT_DEFAULT (AR_MCI_INTERRUPT_SW_MSG_DONE         | \
+ 				  AR_MCI_INTERRUPT_RX_INVALID_HDR      | \
+-- 
+2.3.0
+
