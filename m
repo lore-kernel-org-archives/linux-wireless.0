@@ -1,117 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:22346 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbbBOIbd (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:57553 "EHLO
+	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755302AbbBPNx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 03:31:33 -0500
-Message-ID: <54E05961.7000201@broadcom.com> (sfid-20150215_093137_690400_1895BF83)
-Date: Sun, 15 Feb 2015 09:31:29 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Pat Erley <pat-lkml@erley.org>
-CC: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>, <brudley@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, <meuleman@broadcom.com>,
-	<linville@tuxdriver.com>, <pieterpg@broadcom.com>,
-	<hdegoede@redhat.com>, <wens@csie.org>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	Mon, 16 Feb 2015 08:53:56 -0500
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
+	by mailout.nyi.internal (Postfix) with ESMTP id EC72C20B4F
+	for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2015 08:53:55 -0500 (EST)
+Message-Id: <1424094835.3188168.228077393.0E2006F5@webmail.messagingengine.com> (sfid-20150216_145401_293183_6C1ED195)
+From: "Nikita N." <nikitan@operamail.com>
+To: hauke@hauke-m.de, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org, arend@broadcom.com,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pat Erley <pat-lkml@erley.org>, brudley@broadcom.com,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
-References: <54DC1D7D.5050407@linux.intel.com> <54E0072D.3020802@linux.intel.com> <54E01209.7010300@erley.org>
-In-Reply-To: <54E01209.7010300@erley.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+MIME-Version: 1.0
+Content-Type: text/plain
+In-Reply-To: <1424007136.2042747.227726249.45B6A0E2@webmail.messagingengine.com>
+References: <1424007136.2042747.227726249.45B6A0E2@webmail.messagingengine.com>
+Subject: brcmsmac: TX power blocked in BCM4313
+Date: Mon, 16 Feb 2015 05:53:55 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/15 04:27, Pat Erley wrote:
-> On 02/14/2015 08:40 PM, Fu, Zhonghui wrote:
->>
->> Any comments to this patch? Can it be accepted?
+Hi Dear brcmsmac Devs,
+following up my previous email, since I didn't receive any feedback, I
+took the trouble to test my understandings myself.
+First of all, I want to report the following fact: the TX power is
+blocked/fixed to 19dbm, no matter what local regdom or power setting.
 
-I assume that patches are queued up until after the merge window that we 
-are currently in.
+If that is an issue or bug or else I leave the decision to you.
+Another fact is that, the Windows driver for that same interface, is
+capable to push the transceiver at least 10 RSSI points higher than
+linux backports brcmsmac driver, which means it is *DO* possible to
+change the TX power.
+In my personal case I want to lower it, but even that is not possible:
+no setting is working, neither changing the regdom (iw reg set) nor the
+power (iwconfig wlan0 txpower, iw dev wlan0 set txpower fixed, iw phy
+wlan0 set txpower fixed).
 
->> Thanks,
->> Zhonghui
->>
->> On 2015/2/12 11:26, Fu, Zhonghui wrote:
->>> From a05d35ab334c20970c236fb971dae88810078c88 Mon Sep 17 00:00:00 2001
->>> From: Fu Zhonghui <zhonghui.fu@linux.intel.com>
->>> Date: Thu, 12 Feb 2015 10:49:35 +0800
->>> Subject: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
->>>
->>> WiFi chip has 2 SDIO functions, and PM core will trigger
->>> twice suspend/resume operations for one WiFi chip to do
->>> the same things. This patch avoid this case.
->>>
->>> Acked-by: Arend van Spriel <arend@broadcom.com>
->>> Signed-off-by: Fu Zhonghui <zhonghui.fu@linux.intel.com>
->>> ---
->>> Changes in v3:
->>> - Rebase to wireless-drivers-next/master branch
->>>
->>> drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 13 ++++++++++++-
->>> 1 file changed, 12 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> index 7944224..b8832a7 100644
->>> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
->>> @@ -1117,9 +1117,13 @@ static int brcmf_ops_sdio_suspend(struct
->>> device *dev)
->>> struct brcmf_bus *bus_if;
->>> struct brcmf_sdio_dev *sdiodev;
->>> mmc_pm_flag_t sdio_flags;
->>> + struct sdio_func *func = dev_to_sdio_func(dev);
->>>
->>> brcmf_dbg(SDIO, "Enter\n");
->>>
->>> + if (func->num == 2)
->>> + return 0;
->>> +
->
-> Should it be >= 2 instead of == 2 so that if, in the future, a 3+
-> SDIO function chip comes out, it's already handled? Not that that
-> should hold up the patch or anything, just a curiosity.
+Now, as for my tests, I just tried to hard-code few values into the
+brcmsmac driver module, only to see if anything changes.
+In details I zeroed the values of all tx_power_offsets in the table
+populated in wlc_lcnphy_txpower_recalc_target (phy_lcn.c), and called
+wlc_lcnphy_set_target_tx_pwr with a value of 40 (minor that 52, which is
+the minimum I found debugging that function).
+Again, nothing changed (even if further calls to
+wlc_lcnphy_set_target_tx_pwr =40)
 
-The driver only claims functions 1 and 2 during the probe so that assure 
-it works for SDIO devices that have more than two functions.
+It is my wish to create a patch for that "issue", which I want first to
+test here locally to me, and if working&interesting, I can propose it
+for merging in next release.
+But, AMOF, now I'm just stuck.
 
-Regards,
-Arend
+In case anybody feels like giving away any hint/feedback, I would have
+few questions:
+1) is it "brcmsmac" linux backports driver still supported or
+deprecated?
+2) if deprecated, what is the supported driver for BCM4313?
+3) About my tests, was it correct zeroing all tx_power_offsets in the
+table and call wlc_lcnphy_set_target_tx_pwr=40, to get a TX power less
+that 19dbm?
+4) if it was not correct, or partially correct, what am I missing or
+doing wrong, in order to push the TX transceiver power less than 19dbm?
 
->>> bus_if = dev_get_drvdata(dev);
->>> sdiodev = bus_if->bus_priv.sdio;
->>>
->>> @@ -1148,9 +1152,16 @@ static int brcmf_ops_sdio_suspend(struct
->>> device *dev)
->>> static int brcmf_ops_sdio_resume(struct device *dev)
->>> {
->>> struct brcmf_bus *bus_if = dev_get_drvdata(dev);
->>> - struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
->>> + struct brcmf_sdio_dev *sdiodev;
->>> + struct sdio_func *func = dev_to_sdio_func(dev);
->>>
->>> brcmf_dbg(SDIO, "Enter\n");
->>> +
->>> + if (func->num == 2)
->>> + return 0;
->>> +
->>> + sdiodev = bus_if->bus_priv.sdio;
->>> +
->>> if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
->>> disable_irq_wake(sdiodev->pdata->oob_irq_nr);
->>> brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
->>> -- 1.9.1
->>>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>
->
+Thanks for your attention.
+-- 
+  Nikita N.
+  nikitan@operamail.com
+
+
+On Sun, Feb 15, 2015, at 05:32 AM, Nikita N. wrote:
+> Hi Dear backports Devs for driver brcmsmac,
+> Coming to the point, I want to lower the TX power of my BCM4313, under
+> the official values set by the regdom, to any special value I need.
+> So I'm trying to build such a "personal" patch, only for me, based on
+> latest backports v3.19 and latest Ubuntu.
+> Useless to say, "iwconfig <wlan> txpower" doesn't work, the resulting TX
+> power doesn't change.
+> I know it doesn't work because I can measure the RSSI coming out from
+> the BCM4313, using another device: it doesn't change, whatever value I
+> set.
+> 
+> So, I gave a look at the code for the brcmsmac module, and I think I
+> found the location where the TX power is *finally* set: inside
+> wlc_lcnphy_txpower_recalc_target (phy_lcn.c), call to
+> wlc_lcnphy_set_target_tx_pwr.
+> AFAIU, in that function a table of tx_power_offsets (calculated by
+> another function) is written in the device EPROM registry, and the TX
+> power is set to the relative minimum.
+> 
+> Now, my question: is that the right way to change effectively the TX
+> power?
+> I need to ask You a confirmation about that, if that is correct, before
+> I start building my patch.
+> I don't want to frustrate my time developing in the wrong code, or
+> damage the device, or other issues... :)
+> 
+> Thank you for your attention, and looking forward your feedback.
+> 
+> -- 
+> http://www.fastmail.com - mmm... Fastmail...
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+http://www.fastmail.com - The professional email service
 
