@@ -1,44 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54863 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752676AbbBZCRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 21:17:33 -0500
-Date: Thu, 26 Feb 2015 03:17:31 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, ArikX Nemtsov <arik@wizery.com>
-Subject: Re: [PATCH v7 2/3] cfg80211: Add API to change the indoor
-	regulatory setting
-Message-ID: <20150226021731.GH8749@wotan.suse.de> (sfid-20150226_031736_365072_910CC17A)
-References: <1424857624-24944-1-git-send-email-ilan.peer@intel.com> <1424857624-24944-2-git-send-email-ilan.peer@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424857624-24944-2-git-send-email-ilan.peer@intel.com>
+Received: from plaes.org ([188.166.43.21]:36843 "EHLO plaes.org"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755719AbbBPNIC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2015 08:08:02 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH v3 3/7] rtlwifi: Remove unused RF6052_MAX_REG define
+Date: Mon, 16 Feb 2015 15:01:53 +0200
+Message-Id: <1424091717-13212-1-git-send-email-plaes@plaes.org> (sfid-20150216_142133_441643_76F2000F)
+In-Reply-To: <1424091600-13121-1-git-send-email-plaes@plaes.org>
+References: <1424091600-13121-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 25, 2015 at 04:47:03AM -0500, Ilan Peer wrote:
->  	case NL80211_USER_REG_HINT_INDOOR:
-> -		return regulatory_hint_indoor_user();
-> +		is_indoor = !!info->attrs[NL80211_ATTR_REG_INDOOR];
-> +		if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
-> +			owner_nlportid = info->snd_portid;
-> +
-> +		return regulatory_hint_indoor(is_indoor, owner_nlportid);
->  	default:
->  		return -EINVAL;
->  	}
+Signed-off-by: Priit Laes <plaes@plaes.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8188ee/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192ce/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192de/def.h | 1 -
+ drivers/net/wireless/rtlwifi/rtl8192ee/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8723ae/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8723be/rf.h  | 1 -
+ drivers/net/wireless/rtlwifi/rtl8821ae/rf.h  | 1 -
+ 8 files changed, 8 deletions(-)
 
-You are changing this so that this can only work when
-NL80211_ATTR_REG_INDOOR is used however this should only
-be true if the info->attrs[NL80211_ATTR_SOCKET_OWNER
-was set as in the old days the usersapce API allowed
-for NL80211_ATTR_REG_INDOOR to not be set. Don't
-break old userspace.
+diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
+index 5c1472d..0eca030 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL92C_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 				     u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
+index d8fe68b..ebd72ca 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
+@@ -31,7 +31,6 @@
+ #define __RTL92C_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ #define RF6052_MAX_PATH			2
+ 
+ void rtl92ce_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
+index 11b439d..6f987de 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
+@@ -31,7 +31,6 @@
+ #define __RTL92CU_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ #define RF6052_MAX_PATH			2
+ 
+ void rtl92cu_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+index 4ca1fe1..0a443ed 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
+@@ -35,7 +35,6 @@
+ #define	MAX_MSS_DENSITY_1T				0x0A
+ 
+ #define RF6052_MAX_TX_PWR				0x3F
+-#define RF6052_MAX_REG					0x3F
+ #define RF6052_MAX_PATH					2
+ 
+ #define	PHY_RSSI_SLID_WIN_MAX				100
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
+index 8bdeed3..039c013 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL92E_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl92ee_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 				      u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
+index f3f45b1..7b44ebc 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL8723E_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl8723e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 				       u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/rf.h b/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
+index a6fea10..f423e15 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL8723BE_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl8723be_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 					u8 bandwidth);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
+index d9582ee..efd22bd 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
+@@ -27,7 +27,6 @@
+ #define __RTL8821AE_RF_H__
+ 
+ #define RF6052_MAX_TX_PWR		0x3F
+-#define RF6052_MAX_REG			0x3F
+ 
+ void rtl8821ae_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
+ 					u8 bandwidth);
+-- 
+2.3.0
 
-Fix that, and it seems fine. While at it please explain
-how / who send the userespace hint and that right now
-we don't do anything with the country IE indoor / outdoor
-flag.
-
- Luis
