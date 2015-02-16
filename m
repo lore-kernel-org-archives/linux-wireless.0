@@ -1,224 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:43690 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S966816AbbBECT1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 21:19:27 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@nbd.name,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 10/10] mac80211: add standard deviation to Minstrels throughput statistic
-Date: Thu,  5 Feb 2015 03:13:20 +0100
-Message-Id: <1423102400-9693-11-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150205_031935_326011_C6CA9183)
-In-Reply-To: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Received: from mga03.intel.com ([134.134.136.65]:26734 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754390AbbBPHfD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2015 02:35:03 -0500
+Message-ID: <54E19DA1.4030407@linux.intel.com> (sfid-20150216_083508_676697_BE0A5B88)
+Date: Mon, 16 Feb 2015 15:34:57 +0800
+From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Arend van Spriel <arend@broadcom.com>
+CC: Pat Erley <pat-lkml@erley.org>, brudley@broadcom.com,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, linux-wireless@vger.kernel.org,
+	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+References: <54DC1D7D.5050407@linux.intel.com>	<54E0072D.3020802@linux.intel.com> <54E01209.7010300@erley.org>	<54E05961.7000201@broadcom.com> <878ufzi5s3.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <878ufzi5s3.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the statistical descriptor "standard deviation"
-to better describe the current properties of Minstrel and
-Minstrel-HTs success probability distribution. The standard
-deviation (SD) is calculated as exponential weighted moving
-standard deviation (EWMSD) and its current value is added as
-new column in all rc_stats (in debugfs).
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- net/mac80211/rc80211_minstrel.c            | 19 ++++++++++++++-----
- net/mac80211/rc80211_minstrel.h            | 22 +++++++++++++++++++++-
- net/mac80211/rc80211_minstrel_debugfs.c    | 19 ++++++++++++-------
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 14 +++++++++-----
- 4 files changed, 56 insertions(+), 18 deletions(-)
+On 2015/2/15 22:54, Kalle Valo wrote:
+> Arend van Spriel <arend@broadcom.com> writes:
+>
+>> On 02/15/15 04:27, Pat Erley wrote:
+>>> On 02/14/2015 08:40 PM, Fu, Zhonghui wrote:
+>>>> Any comments to this patch? Can it be accepted?
+>> I assume that patches are queued up until after the merge window that
+>> we are currently in.
+> That's right. In the future I will most likely apply patches also during
+> the merge window, but as I'm still a greenhorn I'll be on the safe and
+> wait for the merge window to end.
+I am very glad to see this.
+Could you please tell which release candidate this patch will be likely merged into now?
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 42dfef8..c108f03 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -161,7 +161,7 @@ minstrel_update_rates(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- }
- 
- /*
--* Recalculate success probabilities and counters for a given rate using EWMA
-+* Recalculate statistics and counters of a given rate
- */
- void
- minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
-@@ -169,11 +169,20 @@ minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
- 	if (unlikely(mrs->attempts > 0)) {
- 		mrs->sample_skipped = 0;
- 		mrs->cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
--		if (unlikely(!mrs->att_hist))
-+		if (unlikely(!mrs->att_hist)) {
- 			mrs->prob_ewma = mrs->cur_prob;
--		else
-+		} else {
-+			/* update exponential weighted moving variance */
-+			mrs->prob_ewmsd = minstrel_ewmsd(mrs->prob_ewmsd,
-+							 mrs->cur_prob,
-+							 mrs->prob_ewma,
-+							 EWMA_LEVEL);
-+
-+			/*update exponential weighted moving avarage */
- 			mrs->prob_ewma = minstrel_ewma(mrs->prob_ewma,
--						     mrs->cur_prob, EWMA_LEVEL);
-+						       mrs->cur_prob,
-+						       EWMA_LEVEL);
-+		}
- 		mrs->att_hist += mrs->attempts;
- 		mrs->succ_hist += mrs->success;
- 	} else {
-@@ -200,7 +209,7 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- 		struct minstrel_rate *mr = &mi->r[i];
- 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
- 
--		/* Update success probabilities per rate */
-+		/* Update statistics of success probability per rate */
- 		minstrel_calc_rate_stats(mrs);
- 
- 		/* Sample less often below the 10% chance of success.
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 16b6e36..c7c2d5d 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -35,6 +35,24 @@ minstrel_ewma(int old, int new, int weight)
- 	return old + incr;
- }
- 
-+/*
-+ * Perform EWMSD (Exponentially Weighted Moving Standard Deviation) calculation
-+ */
-+static inline int
-+minstrel_ewmsd(int old_ewmsd, int cur_prob, int prob_ewma, int weight)
-+{
-+	int diff, incr, tmp_var;
-+
-+	/* calculate exponential weighted moving variance */
-+	diff = MINSTREL_TRUNC((cur_prob - prob_ewma) * 1000000);
-+	incr = (EWMA_DIV - weight) * diff / EWMA_DIV;
-+	tmp_var = old_ewmsd * old_ewmsd;
-+	tmp_var = weight * (tmp_var + diff * incr / 1000000) / EWMA_DIV;
-+
-+	/* return standard deviation */
-+	return (u16) int_sqrt(tmp_var);
-+}
-+
- struct minstrel_rate_stats {
- 	/* current / last sampling period attempts/success counters */
- 	u16 attempts, last_attempts;
-@@ -45,9 +63,11 @@ struct minstrel_rate_stats {
- 
- 	/* statistis of packet delivery probability
- 	 *  cur_prob  - current prob within last update intervall
--	 *  prob_ewma - exponential weighted moving average of prob */
-+	 *  prob_ewma - exponential weighted moving average of prob
-+	 *  prob_ewmsd - exp. weighted moving standard deviation of prob */
- 	unsigned int cur_prob;
- 	unsigned int prob_ewma;
-+	u16 prob_ewmsd;
- 
- 	/* maximum retry counts */
- 	u8 retry_count;
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index 182d552..48d1527 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -85,10 +85,12 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	file->private_data = ms;
- 	p = ms->buf;
- 	p += sprintf(p, "\n");
--	p += sprintf(p, "best   __________rate_________    __statistics__    "
--			"________last_______    ______sum-of________\n");
--	p += sprintf(p, "rate  [name idx airtime max_tp]  [ ø(tp) ø(prob)]  "
--			"[prob.|retry|suc|att]  [#success | #attempts]\n");
-+	p += sprintf(p, "best   __________rate_________    ______"
-+			"statistics______    ________last_______    "
-+			"______sum-of________\n");
-+	p += sprintf(p, "rate  [name idx airtime max_tp]  [ ø(tp) ø(prob) "
-+			"σ(prob)]  [prob.|retry|suc|att]  "
-+			"[#success | #attempts]\n");
- 
- 	for (i = 0; i < mi->n_rates; i++) {
- 		struct minstrel_rate *mr = &mi->r[i];
-@@ -110,11 +112,13 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u     %3u.%1u %3u"
--				"   %3u %-3u   %9llu   %-9llu\n",
-+		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u   %3u.%1u"
-+				"     %3u.%1u %3u   %3u %-3u   "
-+				"%9llu   %-9llu\n",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
-+				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
- 				prob / 10, prob % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
-@@ -180,11 +184,12 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
- 				"%llu,%llu,%d,%d\n",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
-+				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
- 				prob / 10, prob % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index e70961f..e7529c0 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -86,11 +86,13 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%4u.%1u    %4u.%1u   %3u.%1u    %3u.%1u "
--				"%3u   %3u %-3u   %9llu   %-9llu\n",
-+		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u   %3u.%1u"
-+				"     %3u.%1u %3u   %3u %-3u   "
-+				"%9llu   %-9llu\n",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
-+				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
- 				prob / 10, prob % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
-@@ -128,10 +130,10 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 
- 	p += sprintf(p, "\n");
- 	p += sprintf(p, "              best   ____________rate__________    "
--			"__statistics__    ________last_______    "
-+			"______statistics______    ________last_______    "
- 			"______sum-of________\n");
- 	p += sprintf(p, "mode guard #  rate  [name   idx airtime  max_tp]  "
--			"[ ø(tp) ø(prob)]  [prob.|retry|suc|att]  [#success | "
-+			"[ ø(tp) ø(prob) σ(prob)]  [prob.|retry|suc|att]  [#success | "
- 			"#attempts]\n");
- 
- 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
-@@ -232,10 +234,12 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p,
- 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,%llu,%llu,",
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
-+				"%u,%llu,%llu,",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
-+				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
- 				prob / 10, prob % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
--- 
-2.2.2
+
+Thanks,
+Zhonghui
 
