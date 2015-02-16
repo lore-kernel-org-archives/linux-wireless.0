@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56991 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753143AbbBZM52 convert rfc822-to-8bit (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:28533 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932081AbbBPJfy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 07:57:28 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [PATCH] ssb: Silence warning for unknown backplane revision
-References: <1424290178-25328-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Thu, 26 Feb 2015 14:57:23 +0200
-In-Reply-To: <1424290178-25328-1-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Wed, 18 Feb 2015 14:09:38 -0600")
-Message-ID: <87vbiode4s.fsf@kamboji.qca.qualcomm.com> (sfid-20150226_135731_263891_1D172CCE)
+	Mon, 16 Feb 2015 04:35:54 -0500
+Message-ID: <54E1B9F4.6090302@broadcom.com> (sfid-20150216_103618_902517_932D022B)
+Date: Mon, 16 Feb 2015 10:35:48 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+CC: Kalle Valo <kvalo@codeaurora.org>, Pat Erley <pat-lkml@erley.org>,
+	<brudley@broadcom.com>, Franky Lin <frankyl@broadcom.com>,
+	<meuleman@broadcom.com>, <linville@tuxdriver.com>,
+	<pieterpg@broadcom.com>, <hdegoede@redhat.com>, <wens@csie.org>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+References: <54DC1D7D.5050407@linux.intel.com>	<54E0072D.3020802@linux.intel.com> <54E01209.7010300@erley.org>	<54E05961.7000201@broadcom.com> <878ufzi5s3.fsf@kamboji.qca.qualcomm.com> <54E19DA1.4030407@linux.intel.com>
+In-Reply-To: <54E19DA1.4030407@linux.intel.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-
-> When using a BCM4318 in a PCMCIA format, I get a startup message that the
-> device uses backplane revision 0xF000000. Next a WARNING is logged. Despite
-> the message, the device works fine, This patch silences the warning.
+On 02/16/15 08:34, Fu, Zhonghui wrote:
 >
-> Cc: Rafał Miłecki <zajec5@gmail.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> On 2015/2/15 22:54, Kalle Valo wrote:
+>> Arend van Spriel<arend@broadcom.com>  writes:
+>>
+>>> On 02/15/15 04:27, Pat Erley wrote:
+>>>> On 02/14/2015 08:40 PM, Fu, Zhonghui wrote:
+>>>>> Any comments to this patch? Can it be accepted?
+>>> I assume that patches are queued up until after the merge window that
+>>> we are currently in.
+>> That's right. In the future I will most likely apply patches also during
+>> the merge window, but as I'm still a greenhorn I'll be on the safe and
+>> wait for the merge window to end.
+> I am very glad to see this.
+> Could you please tell which release candidate this patch will be likely merged into now?
 
-Should this go to 4.0?
+For which tree are you asking this? When the merge window ends and 
+linus' tree has moved to 3.20-rc1, the wireless-drivers-next will move 
+to that -rc1 as well and pending/accepted patches will be applied for 
+the next kernel release. If you are asking when they will be in linus' 
+tree than the answer is 3.21-rc1. Now if you say this patch solves a 
+real problem for you (providing usual proof like log with stack trace) 
+you can request it to go on the wireless-drivers tree to be fixed for 3.20.
 
--- 
-Kalle Valo
+Regards,
+Arend
