@@ -1,86 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toccata2.tricolour.ca ([204.225.221.17]:58950 "EHLO
-	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754521AbbBBOAx (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:39377 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752532AbbBPL6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 09:00:53 -0500
-Date: Mon, 2 Feb 2015 09:00:50 -0500
-From: Richard Guy Briggs <rgb@tricolour.ca>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
-	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
-Cc: info@netdev01.org, speakers@netdev01.org, attendees@netdev01.org
-Subject: Subject: NetDev 0.1 weekly update, registration working again
-Message-ID: <20150202140050.GD30763@toccata2.tricolour.ca> (sfid-20150202_150112_912560_D3FC4DB2)
+	Mon, 16 Feb 2015 06:58:41 -0500
+Received: by mail-lb0-f176.google.com with SMTP id u10so26705244lbd.7
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2015 03:58:40 -0800 (PST)
+Message-ID: <54E1DB6E.8020406@cogentembedded.com> (sfid-20150216_125903_400437_3C78A30E)
+Date: Mon, 16 Feb 2015 14:58:38 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Priit Laes <plaes@plaes.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/7] rtlwifi: Remove unused defines from rtl8192cu
+ driver
+References: <1424033211-11696-1-git-send-email-plaes@plaes.org> <1424033211-11696-2-git-send-email-plaes@plaes.org>
+In-Reply-To: <1424033211-11696-2-git-send-email-plaes@plaes.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fellow netheads:
+Hello.
 
+    You didn't sign off on the patches, so they can't be applied.
 
-Schedule:
-==========================
-The schedule is out.  It is currently a graphic image, but we are
-working on a proper non-graphic rendered clickable version.
-	https://www.netdev01.org/schedule
+WBR, Sergei
 
-
-Registration:
-==========================
-There was a glitch in the registration web site yesterday.  We apologize
-for the inconvenience and it is now working again.  Please try again if
-you had difficulty.
-https://onlineregistrations.ca/netdev01/
-$100/day, or $350 for 4 days (Cdn dollars). (online reg closes Feb 12th)
-Please register as early as practical.  Registering helps us plan properly for
-numbers of attendees, ensuring venue sizes and supplies are appropriate without
-wasting resources.
-
-
-Hotel discount rates deadline extended
-==========================
-The Westin Hotel is still holding a block of rooms for Netdev01 at a
-guaranteed rate of $159.00 or $179.00 (depending on the type of room
-required) and there are still a few rooms available.
-We've been able to negotiate an extention to the block of rooms at the
-hotel earlybird special rates beyond the discount rate deadline, but
-when they are gone, they are gone.  There were still several people able
-to register over the weekend.
-There are lots of big and small hotels in Ottawa, but they will fill up
-fast as Winterlude approaches, so book something soon.  There may be
-some possibilities to billet locally, but don't leave it last minute.
-Make your reservations at:
-https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
-
-
-Sponsors:
-=========
-NetDev 0.1 would like to gratefully acknowledge all our sponsors: 
-https://netdev01.org/sponsors
-CENGN			http://www.cengn.ca/
-Google			https://www.google.ca
-Qualcomm		https://www.qualcomm.com/
-Verizon			http://www.verizon.com/
-Cumulus Networks	http://cumulusnetworks.com/
-Mojatatu Networks	http://mojatatu.com/
-
-
--------------------------------------------------------------------------------
-THE Technical Conference on Linux Networking, February 14-17, 2015, Ottawa, Canada
-https://netdev01.org/
-
-Contact:			info@netdev01.info
-Main site:			https://www.netdev01.org/
-Travel/hotel/weather/clothing:	https://www.netdev01.org/travel
-RSS feed:			https://netdev01.org/atom
-Follow us on Twitter: @netdev01	https://twitter.com/netdev01
-
-	slainte mhath, RGB
-
---
-Richard Guy Briggs               --  ~\    -- ~\             <hpv.tricolour.ca>
-<www.TriColour.ca>                 --  \___   o \@      @        Ride yer bike!
-Ottawa, ON, CANADA                  --  Lo_>__M__\\/\%__\\/\%
-Vote! -- <greenparty.ca>_____GTVS6#790__(*)__(*)________(*)(*)_________________
