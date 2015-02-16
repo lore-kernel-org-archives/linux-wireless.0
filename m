@@ -1,63 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:46093 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753123AbbBBSwS (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:38780 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108AbbBPV4d convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 13:52:18 -0500
-Message-ID: <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150202_195223_388567_7F9506FB)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Mon, 02 Feb 2015 10:52:16 -0800
-In-Reply-To: <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 16 Feb 2015 16:56:33 -0500
+Received: by lamq1 with SMTP id q1so32317555lam.5
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2015 13:56:32 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 16 Feb 2015 22:56:32 +0100
+Message-ID: <CACna6rxVurWg7D9ObqM3wg+9i=cj9niA4XpV9pyOKoQSeO+e_w@mail.gmail.com> (sfid-20150216_225747_606364_4BB43990)
+Subject: Request for brcm/brcmfmac43602-pcie.bin
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: brcm80211 development <brcm80211-dev-list@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-02-02 at 11:27 +0100, Michal Kazior wrote:
+Hi,
 
-> While testing I've had my internal GRO patch for ath10k and no stretch
-> ack patches.
+We're moving forward with BCM43602 support in OpenWrt (using brcmfmac
+ofc), but it seems there isn't brcmfmac43602-pcie.bin available
+anywhere.
 
-Thanks for the data, I took a look at it.
+Could you send it for linux-firmware? It seems BCM43602 support is
+already in 3.17, so it'd be great to finally get fw for it :)
 
-I am afraid this GRO patch might be the problem.
-
-It seems to break ACK clocking badly (linux stack has a somewhat buggy
-tcp_tso_should_defer(), which relies on ACK being received smoothly, as
-no timer is setup to split the TSO packet.)
-
-I am seeing huge delays on ACK packets and bursts like that :
-
-05:01:53.413038 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 76745, win 4435, options [nop,nop,TS val 4294758508 ecr 4294757300], length 0
-05:01:53.413407 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 79641, win 4435, options [nop,nop,TS val 4294758508 ecr 4294757301], length 0
-05:01:53.413969 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 92673, win 4435, options [nop,nop,TS val 4294758510 ecr 4294757302], length 0
-05:01:53.413990 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 97017, win 4435, options [nop,nop,TS val 4294758510 ecr 4294757302], length 0
-05:01:53.414011 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 110049, win 4435, options [nop,nop,TS val 4294758510 ecr 4294757302], length 0
-...
-05:01:53.422663 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 189689, win 4435, options [nop,nop,TS val 4294758519 ecr 4294757310], length 0
-05:01:53.424354 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 198377, win 4435, options [nop,nop,TS val 4294758520 ecr 4294757311], length 0
-05:01:53.424400 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 202721, win 4435, options [nop,nop,TS val 4294758520 ecr 4294757313], length 0
-05:01:53.424409 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 205617, win 4435, options [nop,nop,TS val 4294758520 ecr 4294757313], length 0
-...
-05:01:53.450248 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 419921, win 4435, options [nop,nop,TS val 4294758547 ecr 4294757337], length 0
-05:01:53.450266 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 427161, win 4435, options [nop,nop,TS val 4294758547 ecr 4294757340], length 0
-05:01:53.450289 IP 192.168.1.2.5001 > 192.168.1.3.49669: Flags [.], ack 431505, win 4435, options [nop,nop,TS val 4294758547 ecr 4294757340], length 0
-
-Could you make again your experiments using upstream kernel (David
-Miller net tree) ?
-
-You also could post the GRO patch so that we can comment on it.
-
-Thanks
-
-
+-- 
+Rafał
