@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:62469 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751836AbbBHKwI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2015 05:52:08 -0500
-Received: by mail-wg0-f54.google.com with SMTP id l18so5557677wgh.13
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 02:52:06 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] brcmfmac: respect reason when deleting (deauthenticating) STA
-Date: Sun,  8 Feb 2015 11:51:47 +0100
-Message-Id: <1423392707-12417-1-git-send-email-zajec5@gmail.com> (sfid-20150208_115212_230206_730B0FF4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from plaes.org ([188.166.43.21]:36838 "EHLO plaes.org"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755659AbbBPNIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2015 08:08:00 -0500
+From: Priit Laes <plaes@plaes.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
+Subject: [PATCH v3 1/7] rtlwifi: Remove unused defines from rtl8192cu driver
+Date: Mon, 16 Feb 2015 14:59:54 +0200
+Message-Id: <1424091600-13121-2-git-send-email-plaes@plaes.org> (sfid-20150216_141955_251218_A5A5A0DB)
+In-Reply-To: <1424091600-13121-1-git-send-email-plaes@plaes.org>
+References: <1424091600-13121-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Starting with kernel 3.19 reason is provided by cfg80211.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Priit Laes <plaes@plaes.org>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index b59b8c6..a23bfaa 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -4272,7 +4272,7 @@ brcmf_cfg80211_del_station(struct wiphy *wiphy, struct net_device *ndev,
- 		return -EIO;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+index c1e33b0..6758808 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
+@@ -32,8 +32,6 @@
  
- 	memcpy(&scbval.ea, params->mac, ETH_ALEN);
--	scbval.val = cpu_to_le32(WLAN_REASON_DEAUTH_LEAVING);
-+	scbval.val = cpu_to_le32(params->reason_code);
- 	err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SCB_DEAUTHENTICATE_FOR_REASON,
- 				     &scbval, sizeof(scbval));
- 	if (err)
+ #define H2C_RA_MASK	6
+ 
+-#define LLT_POLLING_LLT_THRESHOLD		20
+-#define LLT_POLLING_READY_TIMEOUT_COUNT		100
+ #define LLT_LAST_ENTRY_OF_TX_PKT_BUFFER		255
+ 
+ #define RX_PAGE_SIZE_REG_VALUE			PBP_128
 -- 
-1.8.4.5
+2.3.0
 
