@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:37349 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbbBQTIE (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:59466 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753102AbbBPQ5e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2015 14:08:04 -0500
-Received: by labpn19 with SMTP id pn19so37711913lab.4
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2015 11:08:02 -0800 (PST)
-From: Denis Kirjanov <kda@linux-powerpc.org>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kirjanov <kda@linux-powerpc.org>
-Subject: [PATCH] mac80211: rx: check for the skb_copy_bits() return value
-Date: Tue, 17 Feb 2015 22:12:03 +0300
-Message-Id: <1424200323-5488-1-git-send-email-kda@linux-powerpc.org> (sfid-20150217_200808_846005_9A0EF378)
+	Mon, 16 Feb 2015 11:57:34 -0500
+Received: by mail-ob0-f169.google.com with SMTP id wp4so44136822obc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2015 08:57:34 -0800 (PST)
+Message-ID: <54E22177.6050105@lwfinger.net> (sfid-20150216_175738_295295_C72C2005)
+Date: Mon, 16 Feb 2015 10:57:27 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Alan Fisher <acf@unixcube.org>, linux-wireless@vger.kernel.org
+Subject: Re: PROBLEM: rtlwifi drops most IPv6 packets
+References: <54E19DD6.9050704@unixcube.org>
+In-Reply-To: <54E19DD6.9050704@unixcube.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Denis Kirjanov <kda@linux-powerpc.org>
----
- net/mac80211/rx.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+On 02/16/2015 01:35 AM, Alan Fisher wrote:
+> Hello!
+>
+> I have a machine with a Realtek RTL8188 wireless card. This card is handled by
+> the rtl8192 driver. The driver in kernel 3.16.0-4 causes most sent ARP packets
+> to be dropped. ARP packets appear to get through with the driver in kernel 3.19,
+> but IPv6 packets suffer instead. I have reproduced this when connected to
+> multiple access points.
+>
+> I think I have traced this issue to some code in the rtlwifi driver that does
+> special handling on "special" packets. The function rtl_is_special_data() in
+> base.c determines whether a packet is considered special. In the 3.16 kernel,
+> this includes ARP packets, wireless encryption packets, and DHCP/BOOTP packets.
+> IPv6 appears to have been added to this list as of kernel 3.19.
+>
+> It seems the idea is that certain important packets should be transmitted at the
+> lowest possible 802.11 rate. The rtl_is_special_data() function is used to
+> determine which packets to handle this way. Not treating any packets as special,
+> by adding a "return false;" at the beginning of rtl_is_special_data(), seems to
+> fix the problems with lost packets with both kernels.
+>
+> I would guess that some good reason exists for this special handling, but I
+> can't determine what it is. I couldn't find anything similar in iwlwifi. Either
+> way, it seems like a bug to send all IPv6 traffic at the lowest possible rate,
+> successful or not.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 1101563..4d3ec94 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -685,7 +685,8 @@ static int iwl80211_get_cs_keyid(const struct ieee80211_cipher_scheme *cs,
- 	if (skb->len < hdrlen + cs->hdr_len)
- 		return -EINVAL;
- 
--	skb_copy_bits(skb, hdrlen + cs->key_idx_off, &keyid, 1);
-+	if (skb_copy_bits(skb, hdrlen + cs->key_idx_off, &keyid, 1))
-+		return -EFAULT;
- 	keyid &= cs->key_idx_mask;
- 	keyid >>= cs->key_idx_shift;
- 
-@@ -1128,7 +1129,8 @@ ieee80211_rx_h_check(struct ieee80211_rx_data *rx)
- 			if (rx->skb->len < hdrlen + 8)
- 				return RX_DROP_MONITOR;
- 
--			skb_copy_bits(rx->skb, hdrlen + 6, &ethertype, 2);
-+			if (skb_copy_bits(rx->skb, hdrlen + 6, &ethertype, 2))
-+				return RX_DROP_MONITOR;
- 			if (ethertype == rx->sdata->control_port_protocol)
- 				return RX_CONTINUE;
- 		}
-@@ -1614,7 +1616,8 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 			 * no need to call ieee80211_wep_get_keyidx,
- 			 * it verifies a bunch of things we've done already
- 			 */
--			skb_copy_bits(rx->skb, hdrlen + 3, &keyid, 1);
-+			if (skb_copy_bits(rx->skb, hdrlen + 3, &keyid, 1))
-+				return RX_DROP_MONITOR;
- 			keyidx = keyid >> 6;
- 		}
- 
--- 
-2.1.3
+When you specify a card number, please include the letters after the numbers. 
+You say you have an RTL8188, but there are RTL8188EE, RTL8188CU, and RTL8188CE 
+devices. There are drivers rtl8192cu, and rtl8192ce, as well as rtl8192de, 
+rtl8192ee, and rtl8192se. I am guessing that you have an RTL8188CE, which uses 
+rtl8192ce. If this is wrong, please let me know.
+
+The purpose of rtl_is_special_data() is to ensure that management packets have 
+the highest probability of being successfully transmitted by sending them at a 
+low rate. This routine should never cause any packets to be dropped, only force 
+them to be transmitted slowly. Obviously, there is a problem with the current 
+implementation, and I will need to consult with the Realtek engineers. It also 
+occurs to me that mac80211 probably handles this function, and that it may be 
+possible to remove this routine, which is essentially what your workaround does.
+
+
+Larry
 
