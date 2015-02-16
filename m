@@ -1,129 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gn237.zone.eu ([217.146.67.237]:17827 "EHLO gn237.zone.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755414AbbBOUs2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 15:48:28 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH v2 3/7] rtlwifi: Remove unused RF6052_MAX_REG define
-Date: Sun, 15 Feb 2015 22:46:47 +0200
-Message-Id: <1424033211-11696-4-git-send-email-plaes@plaes.org> (sfid-20150215_215020_326666_BCF6807D)
-In-Reply-To: <1424033211-11696-1-git-send-email-plaes@plaes.org>
-References: <1424033211-11696-1-git-send-email-plaes@plaes.org>
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:11477 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752111AbbBPIMl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Feb 2015 03:12:41 -0500
+From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@qti.qualcomm.com>,
+	<vthiagar@qti.qualcomm.com>,
+	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Subject: [PATCH] cfg80211: remove ht40allow_map debugfs entry
+Date: Mon, 16 Feb 2015 13:42:19 +0530
+Message-ID: <1424074339-21427-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20150216_091244_539645_9CD4610B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/rtlwifi/rtl8188ee/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8192de/def.h | 1 -
- drivers/net/wireless/rtlwifi/rtl8192ee/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8723ae/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8723be/rf.h  | 1 -
- drivers/net/wireless/rtlwifi/rtl8821ae/rf.h  | 1 -
- 8 files changed, 8 deletions(-)
+We provide these information to userspace. So let us print there
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
-index 5c1472d..0eca030 100644
---- a/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8188ee/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL92C_RF_H__
+Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+---
+ net/wireless/debugfs.c | 63 --------------------------------------------------
+ 1 file changed, 63 deletions(-)
+
+diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
+index 4541577..680a8a2 100644
+--- a/net/wireless/debugfs.c
++++ b/net/wireless/debugfs.c
+@@ -40,68 +40,6 @@ DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
+ DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
+ 		      wiphy->retry_long);
  
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
+-static int ht_print_chan(struct ieee80211_channel *chan,
+-			 char *buf, int buf_size, int offset)
+-{
+-	if (WARN_ON(offset > buf_size))
+-		return 0;
+-
+-	if (chan->flags & IEEE80211_CHAN_DISABLED)
+-		return scnprintf(buf + offset,
+-				 buf_size - offset,
+-				 "%d Disabled\n",
+-				 chan->center_freq);
+-
+-	return scnprintf(buf + offset,
+-			 buf_size - offset,
+-			 "%d HT40 %c%c\n",
+-			 chan->center_freq,
+-			 (chan->flags & IEEE80211_CHAN_NO_HT40MINUS) ?
+-				' ' : '-',
+-			 (chan->flags & IEEE80211_CHAN_NO_HT40PLUS) ?
+-				' ' : '+');
+-}
+-
+-static ssize_t ht40allow_map_read(struct file *file,
+-				  char __user *user_buf,
+-				  size_t count, loff_t *ppos)
+-{
+-	struct wiphy *wiphy = file->private_data;
+-	char *buf;
+-	unsigned int offset = 0, buf_size = PAGE_SIZE, i, r;
+-	enum ieee80211_band band;
+-	struct ieee80211_supported_band *sband;
+-
+-	buf = kzalloc(buf_size, GFP_KERNEL);
+-	if (!buf)
+-		return -ENOMEM;
+-
+-	rtnl_lock();
+-
+-	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+-		sband = wiphy->bands[band];
+-		if (!sband)
+-			continue;
+-		for (i = 0; i < sband->n_channels; i++)
+-			offset += ht_print_chan(&sband->channels[i],
+-						buf, buf_size, offset);
+-	}
+-
+-	rtnl_unlock();
+-
+-	r = simple_read_from_buffer(user_buf, count, ppos, buf, offset);
+-
+-	kfree(buf);
+-
+-	return r;
+-}
+-
+-static const struct file_operations ht40allow_map_ops = {
+-	.read = ht40allow_map_read,
+-	.open = simple_open,
+-	.llseek = default_llseek,
+-};
+-
+ #define DEBUGFS_ADD(name)						\
+ 	debugfs_create_file(#name, S_IRUGO, phyd, &rdev->wiphy, &name## _ops);
  
- void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 				     u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-index d8fe68b..ebd72ca 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-@@ -31,7 +31,6 @@
- #define __RTL92C_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- #define RF6052_MAX_PATH			2
- 
- void rtl92ce_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
-index 11b439d..6f987de 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/rf.h
-@@ -31,7 +31,6 @@
- #define __RTL92CU_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- #define RF6052_MAX_PATH			2
- 
- void rtl92cu_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-index 4ca1fe1..0a443ed 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-@@ -35,7 +35,6 @@
- #define	MAX_MSS_DENSITY_1T				0x0A
- 
- #define RF6052_MAX_TX_PWR				0x3F
--#define RF6052_MAX_REG					0x3F
- #define RF6052_MAX_PATH					2
- 
- #define	PHY_RSSI_SLID_WIN_MAX				100
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
-index 8bdeed3..039c013 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ee/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL92E_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl92ee_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 				      u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
-index f3f45b1..7b44ebc 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723ae/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL8723E_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl8723e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 				       u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/rf.h b/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
-index a6fea10..f423e15 100644
---- a/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8723be/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL8723BE_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl8723be_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 					u8 bandwidth);
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h b/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
-index d9582ee..efd22bd 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/rf.h
-@@ -27,7 +27,6 @@
- #define __RTL8821AE_RF_H__
- 
- #define RF6052_MAX_TX_PWR		0x3F
--#define RF6052_MAX_REG			0x3F
- 
- void rtl8821ae_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw,
- 					u8 bandwidth);
+@@ -113,5 +51,4 @@ void cfg80211_debugfs_rdev_add(struct cfg80211_registered_device *rdev)
+ 	DEBUGFS_ADD(fragmentation_threshold);
+ 	DEBUGFS_ADD(short_retry_limit);
+ 	DEBUGFS_ADD(long_retry_limit);
+-	DEBUGFS_ADD(ht40allow_map);
+ }
 -- 
-2.3.0
+1.9.1
 
