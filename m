@@ -1,25 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:1639 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161474AbbBDUOK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51449 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932819AbbBQHLq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 15:14:10 -0500
-Message-ID: <54D27D90.8030005@broadcom.com> (sfid-20150204_211414_675546_FB6C5270)
-Date: Wed, 4 Feb 2015 21:14:08 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 17 Feb 2015 02:11:46 -0500
+Date: Tue, 17 Feb 2015 12:41:29 +0530
+From: Rajkumar <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] ath10k: Bypass PLL setting on target init for
+ QCA9888
+Message-ID: <20150217071125.GA27497@qca.qualcomm.com> (sfid-20150217_081236_478149_00B18784)
+References: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: about bitrate information
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Mon, Feb 09, 2015 at 11:16:53AM +0530, Rajkumar Manoharan wrote:
+> Some of of qca988x solutions are having global reset issue
+> during target initialization. Bypassing PLL setting before
+> downloading firmware and letting the SoC run on REF_CLK is fixing
+> the problem. Corresponding firmware change is also needed to set
+> the clock source once the target is initialized. Since 10.2.4
+> firmware is having this ROM patch, applying skip_clock_init only
+> for 10.2.4 firmware versions.
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+Kalle,
 
-Just a quick question about the bitrate info shown with 'iw link'. I 
-assume the MCS info reported is the MCS related to the bitrate number so 
-the current/last MCS used and not some maximum MCS.
+Its been pending for a while. Shall I resend this series?
 
-Regards,
-Arend
+-Rajkumar
