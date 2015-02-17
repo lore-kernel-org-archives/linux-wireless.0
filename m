@@ -1,127 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54475 "EHLO mx2.suse.de"
+Received: from unixcube.org ([174.136.111.132]:40783 "EHLO unixcube.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752450AbbBZCIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 21:08:01 -0500
-Date: Thu, 26 Feb 2015 03:07:58 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: "Peer, Ilan" <ilan.peer@intel.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ArikX Nemtsov <arik@wizery.com>
-Subject: Re: [PATCH v6 1/2] cfg80211: Add API to change the indoor
-	regulatory setting
-Message-ID: <20150226020758.GF8749@wotan.suse.de> (sfid-20150226_030806_424596_B35BBEE1)
-References: <1424224284-17377-1-git-send-email-ilan.peer@intel.com> <1424577430-24382-1-git-send-email-ilan.peer@intel.com> <20150224000317.GO20824@wotan.suse.de> <CB3B3D4774441E42AA3EA0E1BA8230A04D02200C@HASMSX106.ger.corp.intel.com>
+	id S1752125AbbBQI3G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2015 03:29:06 -0500
+Message-ID: <54E2FBCD.7070707@unixcube.org> (sfid-20150217_092913_224982_E8F6173F)
+Date: Tue, 17 Feb 2015 00:29:01 -0800
+From: Alan Fisher <acf@unixcube.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A04D02200C@HASMSX106.ger.corp.intel.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: PROBLEM: rtlwifi drops most IPv6 packets
+References: <54E19DD6.9050704@unixcube.org> <54E23664.70509@lwfinger.net>
+In-Reply-To: <54E23664.70509@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 25, 2015 at 02:30:40PM +0000, Peer, Ilan wrote:
-> Hi Luis,
-> 
-> > -----Original Message-----
-> > From: Luis R. Rodriguez [mailto:mcgrof@suse.com]
-> > Sent: Tuesday, February 24, 2015 02:03
-> > To: Peer, Ilan; Jouni Malinen
-> > Cc: linux-wireless@vger.kernel.org; ArikX Nemtsov
-> > Subject: Re: [PATCH v6 1/2] cfg80211: Add API to change the indoor
-> > regulatory setting
-> > 
-> > On Sat, Feb 21, 2015 at 10:57:10PM -0500, Ilan Peer wrote:
-> > > Previously, the indoor setting configuration assumed that as long as a
-> > > station interface is connected, the indoor environment setting does
-> > > not change. However, this assumption is problematic
-> > > as:
-> > >
-> > > - It is possible that a station interface is connected to a mobile
-> > >   AP, e.g., softAP or a P2P GO, where it is possible that both the
-> > >   station and the mobile AP move out of the indoor environment making
-> > >   the indoor setting invalid. In such a case, user space has no way to
-> > >   invalidate the setting.
-> > 
-> > At the protocol level should we consider the need for a dynamic environment
-> > change? Until then a change of environment likely should implicate an AP
-> > disconnect, which is what Linux does. With your changes in place we could do
-> > something even more graceful should the protocol allow for it.
-> > 
-> 
-> Not sure I follow ...
+Larry,
 
-OK right now we should disconnect if there are some regulatory params that do not
-agree. This event will also ony happen *rarely*. Even though this happens rarely
-I can find use for forcing this to happen in a not so rare case to help optimize
-RF spectrum use dynamically, if the protocol had a way to communicate a desired
-change in environment this could be reused for a dynaic RF spectrum change in
-environment.
+> I am guessing that you have an RTL8188CE, which uses rtl8192ce.
 
-> > For instance if the regulatory parameters for a country are the same for
-> > indoor and outdoro a change in environment should not require a disconnect.
-> > 
-> 
-> So you are suggesting to extend the mechanism to also indicate if a teardown
-> of active interfaces is needed or not? And if so, not sure that this should be done by
-> the kernel.
+Yep, my wireless card is an RTL8188CE
 
-If the AP *knew* a change in environment (now forget indoor/outdoor as that is
-rare today) was not disruptive this could be information that the STAs can
-get to use to evaluate and make a better decision as to whether or not it
-did need to tear down or not.
+> The purpose of rtl_is_special_data() is to ensure that management packets have the highest probability of being successfully transmitted by sending them at a low rate.
+...
+> It also occurs to me that mac80211 probably handles this function, and that it may be possible to remove this routine, which is essentially what your workaround does.
+I couldn't find any information on mac80211 treating certain packets (ARP, DHCP, etc...) as special. It does seem to handle automatic rate selection, though. I would think that would be enough to handle packet loss reasonably well. I believe the protocols tested for here all have mechanisms for handling lost packets. I also can't find any other 802.11 drivers which try to handle DHCP packets in a special way. I think it would be safe to remove this routine. I have a patch to do that, if you're okay with that change.
 
-> > If the change was from a more restrictive environment to a more liberal set of
-> > regulatory settings it could mean increasing TX power of the AP changing to a
-> > channel which perhaps was not allowed before.
-> > 
-> 
-> I think that such a flow needs to be handled in user-space by hostapd, which can
-> leverage the proper mechanisms to do the change, e.g., eCSA. 
+Regarding the patch, this change:
 
-Right but that's the AP, how would the STAs get that information? This is why
-I mentioned the idea of a possible protocol enhancement to let the AP inform
-STAs of an environmental change. The AP *could* feed more than just the boring
-parameters we're used to. Its OK this is just an idea, ignore it.
+-	} else if (0x86DD == ether_type) {
+-		return true;
+  	}
 
-> > If the change was from a less restrictive environment to a more restrictive
-> > environment the AP might want to change channels for instance or reduce TX
-> > power.
-> > 
-> 
-> Same as above. For example, hostapd handles DFS related channel changes in
-> user space. We also added flows to handle channel switch etc. in wpa_supplicant ...
-> and I need to resubmit them to hostap.
+successfully prevents IPv6 packets from being treated as special (and thus dropped).
 
-OK..
+However, this:
++	if (ETH_P_IP == ether_type || ETH_P_IPV6 == ether_type) {
+  		ip = (struct iphdr *)((u8 *)skb->data + offset +
 
-> > While change in indoor/outdoor might be something silly to consider given
-> > the likelihood of it being a common thing to happen that you change an AP
-> > from indoor / outdoor regularly I'd consider instead the possibility to reuse
-> > such a dynamic environment change notification for purposes of dynamic
-> > environmental adjustments of BSSes. Typically BSSes settings are static but RF
-> > environments change regularly so its silly to expect a BSS and its initial
-> > Automatic Channel Selection algorithm to be corrrect during the lifetime of a
-> > BSS.
-> > 
-> > > - A station interface disconnection does not necessarily imply that
-> > >   the device is no longer operating in an indoor environment, e.g.,
-> > >   it is possible that the station interface is roaming but is still
-> > >   stays indoor.
-> > 
-> > Sure.
-> > 
-> > You also fail to explain how we currently provide the indoor thing to the
-> > kernel, I think its worth providing that in the commit log and also explaining
-> > how we don't use the country IE environment thing at all.
-> > 
-> 
-> I explained some of the use cases in previous patches, e.g., AC power,
-> device type etc. I can add this, but I do not understand how country IE is related
-> here.
+seems to be reading an IPv4 header (struct iphdr) from an IPv6 packet. I believe a struct ipv6hdr should be used here.
 
-Mention it and the country IE is important given its the other place folks
-expect it to be deduced from -- and we don't use it at all. Without that
-information folks can assume we do unless they are familiar with the code.
-It provides useful context for your change, even for me!
+If we are to continue handling certain types of packets differently, IPv6 neighbor solicitation messages (like ARP in IPv4) and IPv6 router discovery messages (stateless IPv6 autoconfig, similar to DHCP in IPv4 networks) should probably be added to the list to maintain consistency with what is being handled for IPv4. These are both variants of ICMPv6 packets, although generally transmitting all ICMPv6 packets at the lowest rate is probably a bad idea, as ICMP echo is commonly used to measure network performance and should be treated the same as normal traffic.
 
-  Luis
+Thanks,
+Alan
+
+On 02/16/2015 10:26 AM, Larry Finger wrote:
+> On 02/16/2015 01:35 AM, Alan Fisher wrote:
+>
+> Alan,
+>
+> I looked at the routine, and it is returning true for all IPv6 packets.
+>
+> Does the attached patch for 3.18 or 3.19 help?
+>
+> Larry
+>
+
