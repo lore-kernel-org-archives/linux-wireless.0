@@ -1,127 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:39365 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933184AbbBJAfN (ORCPT
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33769 "EHLO
+	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756293AbbBQJDg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 19:35:13 -0500
-Received: by iecvy18 with SMTP id vy18so1585997iec.6
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 16:35:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAEZVCP6HNDsR=S4c5xYLr=UZZmQhA9WBwrzwT_5jJvfXz+gC1A@mail.gmail.com>
-References: <CAEZVCP4bNmfnHH=Ksi6wMQoqdZGbprUH5X_VA41GRf9=h2MT1A@mail.gmail.com>
- <54D92DFC.1080604@broadcom.com> <CAEZVCP7+gTqJJUNQuUDTGWG1BQ4_XY7Q79Cg-2daVourfasvEw@mail.gmail.com>
- <CAEZVCP6HNDsR=S4c5xYLr=UZZmQhA9WBwrzwT_5jJvfXz+gC1A@mail.gmail.com>
-From: Steeve Morin <steeve.morin@gmail.com>
-Date: Tue, 10 Feb 2015 01:34:52 +0100
-Message-ID: <CAEZVCP6R4-aotR4K5=EhXzg0jEcgfoURAXmbc+Xeb3UZWNs0Kw@mail.gmail.com> (sfid-20150210_013519_543775_1A6DD429)
-Subject: Re: brcmfmac + AP6120 (brcm43362) doesn't connect to WPA2 AP
- (unprotected ok)
+	Tue, 17 Feb 2015 04:03:36 -0500
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by mailout.nyi.internal (Postfix) with ESMTP id 8335020AC9
+	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2015 04:03:34 -0500 (EST)
+Message-Id: <1424163814.3140549.228461101.1C2E5AB1@webmail.messagingengine.com> (sfid-20150217_100415_356926_E0B52417)
+From: "Nikita N." <nikitan@operamail.com>
 To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Cc: hauke@hauke-m.de, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Pat Erley <pat-lkml@erley.org>, brudley@broadcom.com,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+Subject: Re: brcmsmac: TX power blocked in BCM4313
+Date: Tue, 17 Feb 2015 01:03:34 -0800
+In-Reply-To: <54E24B48.80601@broadcom.com>
+References: <1424007136.2042747.227726249.45B6A0E2@webmail.messagingengine.com>
+ <1424094835.3188168.228077393.0E2006F5@webmail.messagingengine.com>
+ <54E2107F.4000709@broadcom.com>
+ <1424112787.3303548.228201005.68F1D224@webmail.messagingengine.com>
+ <54E24B48.80601@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Also, using udhcpc fails to retrieve an IP with a rather strange "error"
-udhcpc (v1.22.1) started
-Sending discover...
-Sending select for 192.168.1.89...
-Sending select for 192.168.1.89...
-Sending select for 192.168.1.89...
-Sending discover...
-Sending discover...
+Hi Arend,
+ 
+> brcmsmac does assure tx power is within regulatory limits by enforcing a 
+> world regulatory domain. So what is not supported is modifying tx power 
+> settings through user-space.
 
-Which leads me to believe this might be due to data being lost somewhere...
+Yes, I believe that could be right, *a* world regulatory domain looks
+indeed enforced, the USA one only, which is pre-set default inside
+EEPROM registries device, isn't it?
+ 
+> I know, but that driver is not fully open-source as it links in a binary 
+> blob.
 
-However, the rare times I managed to make it connect, SSH was
-functionning normally.
+AFAIK, also brcmsmac needs at least 2 firmware files to operate, without
+those nothing works.
+Isn't it the same concept?
+ 
+> I totally lost track of this one. I am using brcmsmac in monitor mode 
+> using bcm43224 which captures 11n frames just fine. I will give it a try 
+> with a bcm4313. The assoc response in your capture shows undefined MCS 
+> set so maybe there really are no 11n MCS rates used (?).
 
-Let me know if you need more log.
+If that was a suggestion about to purchase a bcm43224 or any other
+Broadcom Corp. product, isn't really convincing, seen the overall
+support quality Customers are experiencing in here...
+About my capture file, in the case it was really incomplete someone
+could have informed me at least a year ago.
+But anyway no respectable QA Testing team needs a purchasing Customer to
+help in verifying such enormous issue, isn't it? 
+ 
+> Our team consist of two man working full-time on the upstream linux 
+> drivers. So our "customer care" is something that we try to deal with on 
+> the side and admittedly things slip between the cracks.
 
-Thanks
-
-On 10 February 2015 at 00:06, Steeve Morin <steeve.morin@gmail.com> wrote:
-> The weird thing is that wpa_supplicant apparently manages to associate
-> with the AP (but i'm not really sure about that) [1]
->
-> [1] https://gist.github.com/steeve/10a9a643476cea99abf4#file-005-wpa-supplicant-conf
->
-> On 9 February 2015 at 23:17, Steeve Morin <steeve.morin@gmail.com> wrote:
->> Thanks for answering.
->>
->> I'm using connmanctl [1]
->>
->> The funny thing is trying to make this gist, I tried and it connected
->> succesfully....
->> Could it be a race somewhere?
->>
->> [1] https://gist.github.com/steeve/10a9a643476cea99abf4#file-004-connmanctl
->>
->> On 9 February 2015 at 23:00, Arend van Spriel <arend@broadcom.com> wrote:
->>> On 02/09/15 18:57, Steeve Morin wrote:
->>>>
->>>> Hi linux-wireless,
->>>>
->>>> I'm running brcmfmac from backports-3.19-rc1-1 on linux 3.10. running
->>>> on an arm Amlogic S805 (cortex-a5, arm7) board (CX-S859).
->>>>
->>>> I had to apply multiple custom patches [1]:
->>>> - Make sure the wifi chip is on via custom GPIO [1]
->>>> - Remove a problematic piece of code related to power manager (will
->>>> look into it later) [1]
->>>> - Mix the mmc->max_blk_count on the host (would cause a BUG_ON
->>>> assertion later on) [2] [3]
->>>>
->>>> After that, I am able to modprobe brcmfmac see wlan0.
->>>> The interface correctly scans for wifi aps, and I can connect to
->>>> unprotected ones.
->>>>
->>>> It fails, however, to connect to WPA/WPA2 protected aps. I have
->>>> attached a debug log obtained with debug=0xffffff [4]
->>>> I don't see any errors in it though...
->>>>
->>>> Would anyone of you guys have any idea why ?
->>>
->>>
->>> In the log I don't see any connect attempt. Only seeing a scan completing.
->>> So how do you try to connect?
->>>
->>> Regards,
->>> Arend
->>>
->>>
->>>> Thanks a lot,
->>>>
->>>> [1]
->>>> https://gist.github.com/steeve/10a9a643476cea99abf4#file-backports-power-on-wifi-sdio-patch
->>>> [2]
->>>> https://gist.github.com/steeve/10a9a643476cea99abf4#file-fix-block-size-patch
->>>> [3]
->>>> https://github.com/codesnake/linux-amlogic/blob/master/drivers/amlogic/mmc/aml_sdio.c#L317
->>>> [4] https://gist.github.com/steeve/10a9a643476cea99abf4#file-003-dmesg-log
->>>
->>>
->>
->>
->>
->> --
->> Steeve Morin
->> twitter.com/steeve
->> github.com/steeve
->> linkd.in/smorin
->
->
->
-> --
-> Steeve Morin
-> twitter.com/steeve
-> github.com/steeve
-> linkd.in/smorin
-
-
+Really, *TWO* men? Are you kidding? Is that how much Broadcom Corp.
+values the Linux community?
+Needles to remind, even if Linux users don't pay for the OS license as
+Windows do, they do pay allright for any Broadcom hardware they
+purchase!
+Internet startups which sell a button on internet, they have Dev and QA
+team 5 times bigger than that!
+I sense a very gross capacity and resource planning competence issue in
+here.
+I kindly ask you, please forward that mail to your higher Managers, on
+my personal behalf, Thanks.
 
 -- 
-Steeve Morin
-twitter.com/steeve
-github.com/steeve
-linkd.in/smorin
+http://www.fastmail.com - Same, same, but different...
+
