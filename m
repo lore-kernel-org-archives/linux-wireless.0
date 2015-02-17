@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1162 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965181AbbBCHPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 02:15:11 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:55504 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754990AbbBQJMV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2015 04:12:21 -0500
+Received: by mail-wi0-f180.google.com with SMTP id h11so31481976wiw.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2015 01:12:20 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	<stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 15/19] iwlwifi: mvm: fix failure path when power_update fails in add_interface
-Date: Tue,  3 Feb 2015 09:14:34 +0200
-Message-Id: <1422947678-16917-15-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081517_235004_CA6429A2)
-In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
-References: <1422947482.30742.8.camel@egrumbacBox>
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 0/2] add per-vif TX power capability
+Date: Tue, 17 Feb 2015 10:12:16 +0100
+Message-Id: <1424164338-10547-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150217_101226_835910_3D2FCD91)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+Configure the HW with highest TX power among all vif when HW TPC has been
+enabled in order to add support to per-vif TX power capability. Cap per-packet
+TX power to vif configured power in the TX path
 
-When iwl_mvm_power_update_mac() is called, we have already added the
-mac context, so if this call fails we should remove the mac.
+Lorenzo Bianconi (2):
+  ath9k: add per-vif TX power capability
+  ath9k: add per-vif TX power capability to TX path
 
-CC: <stable@vger.kernel.org> [3.15+]
-Fixes: commit e5e7aa8e2561 ('iwlwifi: mvm: refactor power code')
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+ drivers/net/wireless/ath/ath9k/debug.c |  5 +++-
+ drivers/net/wireless/ath/ath9k/main.c  | 52 ++++++++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath9k/xmit.c  | 42 ++++++++++++++++++---------
+ 4 files changed, 77 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 51e02e6..1ff7ec0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1355,7 +1355,7 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
- 
- 	ret = iwl_mvm_power_update_mac(mvm);
- 	if (ret)
--		goto out_release;
-+		goto out_remove_mac;
- 
- 	/* beacon filtering */
- 	ret = iwl_mvm_disable_beacon_filter(mvm, vif, 0);
 -- 
-1.9.1
+2.1.0
 
