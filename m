@@ -1,46 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44326 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbbBMOEP (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:43932 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754990AbbBQJMY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 09:04:15 -0500
-Date: Fri, 13 Feb 2015 19:33:54 +0530
-From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Increase AST table SKID length limit
-Message-ID: <20150213140352.GA3958@senthilj-ThinkPad-L430> (sfid-20150213_150422_408229_B0AC8EC8)
-References: <1423733322-31113-1-git-send-email-sjegadee@qti.qualcomm.com>
- <54DCA6F1.90909@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <54DCA6F1.90909@candelatech.com>
+	Tue, 17 Feb 2015 04:12:24 -0500
+Received: by mail-wg0-f54.google.com with SMTP id y19so33771067wgg.13
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2015 01:12:23 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH 2/2] ath9k: add per-vif TX power capability to TX path
+Date: Tue, 17 Feb 2015 10:12:18 +0100
+Message-Id: <1424164338-10547-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150217_101229_101643_C54295A7)
+In-Reply-To: <1424164338-10547-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1424164338-10547-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 12, 2015 at 05:13:21AM -0800, Ben Greear wrote:
-> 
-> 
-> On 02/12/2015 01:28 AM, SenthilKumar Jegadeesan wrote:
-> >The current SKID length configuration causes firmware
-> >to reject peer creation for not able to allocate
-> >AST entries for peers. This issue is observed when
-> >least significant 3 bytes are used ramdomly to create
-> >client MAC addresses.
-> >
-> >AST table SKID length configuration is increased to
-> >maximum value to fix this issue.
-> 
-> If your firmware is like 10.1, then probably AST length should
-> really be same as config.num_peers?
-> 
-> 10.1 firmware definitely has same or similar issue in it's
-> AST table handling, for what that is worth.
-> 
-> Thanks,
-> Ben
+In order to add per-vif TX power capability cap per-packet TX power to vif
+configured power if the latter is lower than per-rate TX power and mac80211
+per-frame power. Use vif TX power if TPC has been disabled for current the
+interface
 
-I agree. New patch will address this case.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 42 +++++++++++++++++++++++------------
+ 1 file changed, 28 insertions(+), 14 deletions(-)
 
-Thanks,
-Senthil J
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 1b8e75c..0acd079 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1103,14 +1103,28 @@ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+ 	struct sk_buff *skb;
+ 	struct ath_frame_info *fi;
+ 	struct ieee80211_tx_info *info;
++	struct ieee80211_vif *vif;
+ 	struct ath_hw *ah = sc->sc_ah;
+ 
+ 	if (sc->tx99_state || !ah->tpc_enabled)
+ 		return MAX_RATE_POWER;
+ 
+ 	skb = bf->bf_mpdu;
+-	fi = get_frame_info(skb);
+ 	info = IEEE80211_SKB_CB(skb);
++	vif = info->control.vif;
++
++	if (!vif) {
++		max_power = sc->cur_chan->cur_txpower;
++		goto out;
++	}
++
++	if (vif->bss_conf.txpower_type != NL80211_TX_POWER_LIMITED) {
++		max_power = min_t(u8, sc->cur_chan->cur_txpower,
++				  2 * vif->bss_conf.txpower);
++		goto out;
++	}
++
++	fi = get_frame_info(skb);
+ 
+ 	if (!AR_SREV_9300_20_OR_LATER(ah)) {
+ 		int txpower = fi->tx_power;
+@@ -1147,25 +1161,25 @@ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+ 			txpower -= 2;
+ 
+ 		txpower = max(txpower, 0);
+-		max_power = min_t(u8, ah->tx_power[rateidx], txpower);
+-
+-		/* XXX: clamp minimum TX power at 1 for AR9160 since if
+-		 * max_power is set to 0, frames are transmitted at max
+-		 * TX power
+-		 */
+-		if (!max_power && !AR_SREV_9280_20_OR_LATER(ah))
+-			max_power = 1;
++		max_power = min_t(u8, ah->tx_power[rateidx],
++				  2 * vif->bss_conf.txpower);
++		max_power = min_t(u8, max_power, txpower);
+ 	} else if (!bf->bf_state.bfs_paprd) {
+ 		if (rateidx < 8 && (info->flags & IEEE80211_TX_CTL_STBC))
+-			max_power = min(ah->tx_power_stbc[rateidx],
+-					fi->tx_power);
++			max_power = min_t(u8, ah->tx_power_stbc[rateidx],
++					  2 * vif->bss_conf.txpower);
+ 		else
+-			max_power = min(ah->tx_power[rateidx], fi->tx_power);
++			max_power = min_t(u8, ah->tx_power[rateidx],
++					  2 * vif->bss_conf.txpower);
++		max_power = min(max_power, fi->tx_power);
+ 	} else {
+ 		max_power = ah->paprd_training_power;
+ 	}
+-
+-	return max_power;
++out:
++	/* XXX: clamp minimum TX power at 1 for AR9160 since if max_power
++	 * is set to 0, frames are transmitted at max TX power
++	 */
++	return (!max_power && !AR_SREV_9280_20_OR_LATER(ah)) ? 1 : max_power;
+ }
+ 
+ static void ath_buf_set_rate(struct ath_softc *sc, struct ath_buf *bf,
+-- 
+2.1.0
+
