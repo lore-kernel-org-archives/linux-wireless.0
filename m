@@ -1,39 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:40354 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570AbbBZQGy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 11:06:54 -0500
-Received: by mail-ob0-f175.google.com with SMTP id va2so11920802obc.6
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2015 08:06:54 -0800 (PST)
-Message-ID: <54EF449C.5090604@lwfinger.net> (sfid-20150226_170657_903537_DA9D3AD8)
-Date: Thu, 26 Feb 2015 10:06:52 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: [PATCH] ssb: Silence warning for unknown backplane revision
-References: <1424290178-25328-1-git-send-email-Larry.Finger@lwfinger.net> <87vbiode4s.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87vbiode4s.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:51652 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751110AbbBQP67 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2015 10:58:59 -0500
+Message-ID: <1424188728.31336.0.camel@dcbw.local> (sfid-20150217_165903_042727_AD742C69)
+Subject: Re: Can not download Intel 4965AGN Linux driver
+From: Dan Williams <dcbw@redhat.com>
+To: =?UTF-8?Q?=E8=82=96=E6=96=8C?= <xiaobin@fio.org.cn>
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Date: Tue, 17 Feb 2015 09:58:48 -0600
+In-Reply-To: <1c8b04a6.1399.14b97ff5cbe.Coremail.xiaobin@fio.org.cn>
+References: <1c8b04a6.1399.14b97ff5cbe.Coremail.xiaobin@fio.org.cn>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2015 06:57 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> When using a BCM4318 in a PCMCIA format, I get a startup message that the
->> device uses backplane revision 0xF000000. Next a WARNING is logged. Despite
->> the message, the device works fine, This patch silences the warning.
->>
->> Cc: Rafał Miłecki <zajec5@gmail.com>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->
-> Should this go to 4.0?
+On Tue, 2015-02-17 at 22:44 +0800, 肖斌 wrote:
+> Hello,
+> My laptop's wireless chip-set is Intel 4965AGN, and my OS is Ubuntu12.04, 
+> recently the wifi connection drops evey few minutes, so I'm trying to 
+> re-install the wifi driver, but the Linux driver seems not available on 
+> the internet:
+> https://wireless.wiki.kernel.org/en/users/drivers/iwlegacy
+> Where can I get the Linux wifi driver?
 
-As this one merely stops log spamming, sending it through NEXT is OK.
+The driver is built with your kernel, so there is no need to download it
+from anywhere.  When the kernel is updated you will get a new version of
+the driver.  If there are bugs in the driver, you should report them to
+your distro, and if they solve them, they will update the kernel and you
+will get the bug fixes.
 
-Larry
-
+Dan
 
