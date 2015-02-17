@@ -1,56 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:43212 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbbBAMAK (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:44462 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754709AbbBQX7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2015 07:00:10 -0500
-Received: by mail-we0-f172.google.com with SMTP id q59so34344206wes.3
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 04:00:09 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 1/6] staging: vt6655: move setting of PSTxDesc->buff_addr to vnt_tx_packet
-Date: Sun,  1 Feb 2015 11:59:38 +0000
-Message-Id: <1422791983-3408-1-git-send-email-tvboxspy@gmail.com> (sfid-20150201_130019_617519_9DD5C3F0)
+	Tue, 17 Feb 2015 18:59:53 -0500
+From: greearb@candelatech.com
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [RFC] mac80211_hwsim: notify user-space about channel change.
+Date: Tue, 17 Feb 2015 15:59:48 -0800
+Message-Id: <1424217588-29558-1-git-send-email-greearb@candelatech.com> (sfid-20150218_005956_617537_D2A9B91F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Keep setting of this part of the structure with the others.
+From: Ben Greear <greearb@candelatech.com>
 
-Only pTDInfo needs carried in the buffer structure.
+The goal is to allow the user-space application to properly
+filter packets before sending them down to the kernel.  This
+should more closely mimic what a real piece of hardware would
+do.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/staging/vt6655/device_main.c | 2 ++
- drivers/staging/vt6655/rxtx.c        | 1 -
- 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 58559fa..9a80144 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1217,6 +1217,8 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 	head_td->m_td1TD1.wReqCount =
- 			cpu_to_le16((u16)head_td->pTDInfo->dwReqCount);
- 
-+	head_td->buff_addr = cpu_to_le32(head_td->pTDInfo->skb_dma);
-+
- 	head_td->pTDInfo->byFlags = TD_FLAGS_NETIF_SKB;
- 
- 	if (dma_idx == TYPE_AC0DMA)
-diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
-index 9cade85..07ce3fd 100644
---- a/drivers/staging/vt6655/rxtx.c
-+++ b/drivers/staging/vt6655/rxtx.c
-@@ -1207,7 +1207,6 @@ s_cbFillTxBufHead(struct vnt_private *pDevice, unsigned char byPktType,
- 	ptdCurr->pTDInfo->dwReqCount = cbReqCount;
- 	ptdCurr->pTDInfo->dwHeaderLength = cbHeaderLength;
- 	ptdCurr->pTDInfo->skb_dma = ptdCurr->pTDInfo->buf_dma;
--	ptdCurr->buff_addr = cpu_to_le32(ptdCurr->pTDInfo->skb_dma);
- 
- 	return cbHeaderLength;
+This is against 3.17.8 (plus some hacks and back-ports).
+
+I think this will work for my own needs, but I am curious if others
+have suggestions for improvement.
+
+ drivers/net/wireless/mac80211_hwsim.c | 48 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mac80211_hwsim.h |  6 +++++
+ 2 files changed, 54 insertions(+)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index a3aaf37..3a45a45 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -851,6 +851,52 @@ static bool hwsim_ps_rx_ok(struct mac80211_hwsim_data *data,
+ 	return true;
  }
+ 
++static void mac80211_hwsim_check_nl_notify(struct mac80211_hwsim_data *data)
++{
++	struct sk_buff *skb;
++	u32 center_freq = 0;
++	u32 _portid;
++	void *msg_head;
++
++	/* wmediumd mode check */
++	_portid = ACCESS_ONCE(wmediumd_portid);
++
++	if (!_portid)
++		return;
++
++	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_ATOMIC);
++	if (skb == NULL)
++		goto err_print;
++
++	msg_head = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0,
++			       HWSIM_CMD_NOTIFY);
++	if (msg_head == NULL) {
++		printk(KERN_DEBUG "mac80211_hwsim: problem with msg_head, notify\n");
++		goto nla_put_failure;
++	}
++
++	if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER,
++		    ETH_ALEN, data->addresses[1].addr))
++		goto nla_put_failure;
++
++	if (data->channel)
++		center_freq = data->channel->center_freq;
++
++	if (nla_put_u32(skb, HWSIM_ATTR_FREQ, center_freq))
++		goto nla_put_failure;
++
++	genlmsg_end(skb, msg_head);
++	if (genlmsg_unicast(&init_net, skb, _portid))
++		goto err_print;
++
++	return;
++
++nla_put_failure:
++	nlmsg_free(skb);
++err_print:
++	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
++}
++
+ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 				       struct sk_buff *my_skb,
+ 				       int dst_portid)
+@@ -1399,6 +1445,8 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 				      HRTIMER_MODE_REL);
+ 	}
+ 
++	mac80211_hwsim_check_nl_notify(data);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index 85da35a..8f2306a 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -68,6 +68,11 @@ enum hwsim_tx_control_flags {
+  * @HWSIM_CMD_CREATE_RADIO: create a new radio with the given parameters,
+  *	returns the radio ID (>= 0) or negative on errors
+  * @HWSIM_CMD_DESTROY_RADIO: destroy a radio
++ * @HWSIM_CMD_NOTIFY: notify user-space about driver changes.  This is
++ * designed to help the user-space app better emulate radio hardware.
++ * This command uses:
++ *      %HWSIM_ATTR_FREQ # Notify current operating center frequency.
++ *      %HWSIM_ATTR_ADDR_TRANSMITTER # ID which radio we are notifying about.
+  * @__HWSIM_CMD_MAX: enum limit
+  */
+ enum {
+@@ -77,6 +82,7 @@ enum {
+ 	HWSIM_CMD_TX_INFO_FRAME,
+ 	HWSIM_CMD_CREATE_RADIO,
+ 	HWSIM_CMD_DESTROY_RADIO,
++	HWSIM_CMD_NOTIFY,
+ 	__HWSIM_CMD_MAX,
+ };
+ #define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
 -- 
-2.1.0
+1.7.11.7
 
