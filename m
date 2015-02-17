@@ -1,87 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29001 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754400AbbBOCkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Feb 2015 21:40:53 -0500
-Message-ID: <54E0072D.3020802@linux.intel.com> (sfid-20150215_034057_312004_92B1ED92)
-Date: Sun, 15 Feb 2015 10:40:45 +0800
-From: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>
+Received: from mail-ie0-f180.google.com ([209.85.223.180]:45414 "EHLO
+	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842AbbBQPjE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Feb 2015 10:39:04 -0500
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>, brudley@broadcom.com,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
-	wens@csie.org, linux-wireless@vger.kernel.org,
-	brcm80211-dev-list@broadcom.com, netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
-References: <54DC1D7D.5050407@linux.intel.com>
-In-Reply-To: <54DC1D7D.5050407@linux.intel.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2344371.zDnvJJhFdD@wuerfel>
+References: <1423998550-8829-1-git-send-email-eliad@wizery.com>
+	<2344371.zDnvJJhFdD@wuerfel>
+Date: Tue, 17 Feb 2015 17:39:03 +0200
+Message-ID: <CAB3XZEe1HmOwQ3GcU5T3ruFybKdCVNiBwQbeLS3X4MMkL2G5uA@mail.gmail.com> (sfid-20150217_163912_560553_4FDB7454)
+Subject: Re: [PATCH v2] wlcore: add basic device-tree support
+From: Eliad Peller <eliad@wizery.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Feb 16, 2015 at 12:06 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Sunday 15 February 2015 13:09:10 Eliad Peller wrote:
+> s
+>> +
+>> +This node provides properties for controlling the wilink wireless device. The
+>> +node is expected to be specified as a child node to the SDIO controller that
+>> +connects the device to the system.
+>> +
+>> +Required properties:
+>> +
+>> + - compatible : Should be "ti,wlcore".
+>
+> I think you should use the specific model number here. If I understand
+> correctly, wlcore is the name of the driver that is used for multiple
+> device implementation.
+>
+right, wlcore is the common driver part of wl12xx and wl18xx device drivers.
+these DT properties are common for both.
+can't we use a common binding as well in this case?
 
-Any comments to this patch? Can it be accepted?
+>> + - interrupt-parent : the phandle for the interrupt controller to which the
+>> +     device interrupts are connected.
+>
+> interrupt-parent should not be required
+>
+sure. i'll make it optional.
 
-Thanks,
-Zhonghui
+>> +&mmc3 {
+>> +     status = "okay";
+>> +     vmmc-supply = <&wlan_en_reg>;
+>> +     bus-width = <4>;
+>> +     cap-power-off-card;
+>> +     keep-power-in-suspend;
+>> +
+>> +     #address-cells = <1>;
+>> +     #size-cells = <0>;
+>> +     wlcore: wlcore@0 {
+>> +             compatible = "ti,wlcore";
+>> +             reg = <2>;
+>> +             interrupt-parent = <&gpio0>;
+>> +             interrupts = <19 IRQ_TYPE_NONE>;
+>> +     };
+>> +};
+>
+> It could make sense to specify a few extra properties here:
+>
+> - The platform data lists two clocks. How about adding them
+>   here as optional clocks so we don't need to change the binding
+>   again.
+>
+There were some very long threads previously regarding the correct way
+to describe these clocks.
+I prefer starting a working basic implementation and add the
+controversial parts later on, as needed.
 
-On 2015/2/12 11:26, Fu, Zhonghui wrote:
-> From a05d35ab334c20970c236fb971dae88810078c88 Mon Sep 17 00:00:00 2001
-> From: Fu Zhonghui <zhonghui.fu@linux.intel.com>
-> Date: Thu, 12 Feb 2015 10:49:35 +0800
-> Subject: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+>> diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+>> index d3dd7bf..317796b 100644
+>> --- a/drivers/net/wireless/ti/wlcore/sdio.c
+>> +++ b/drivers/net/wireless/ti/wlcore/sdio.c
 >
-> WiFi chip has 2 SDIO functions, and PM core will trigger
-> twice suspend/resume operations for one WiFi chip to do
-> the same things. This patch avoid this case.
+> Please make this a two-patch series and keep the dt binding in a separate
+> patch from the driver change.
 >
-> Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Fu Zhonghui <zhonghui.fu@linux.intel.com>
-> ---
-> Changes in v3:
-> - Rebase to wireless-drivers-next/master branch
->
->  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 13 ++++++++++++-
->  1 file changed, 12 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index 7944224..b8832a7 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -1117,9 +1117,13 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
->  	struct brcmf_bus *bus_if;
->  	struct brcmf_sdio_dev *sdiodev;
->  	mmc_pm_flag_t sdio_flags;
-> +	struct sdio_func *func = dev_to_sdio_func(dev);
->  
->  	brcmf_dbg(SDIO, "Enter\n");
->  
-> +	if (func->num == 2)
-> +		return 0;
-> +
->  	bus_if = dev_get_drvdata(dev);
->  	sdiodev = bus_if->bus_priv.sdio;
->  
-> @@ -1148,9 +1152,16 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
->  static int brcmf_ops_sdio_resume(struct device *dev)
->  {
->  	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-> -	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
-> +	struct brcmf_sdio_dev *sdiodev;
-> +	struct sdio_func *func = dev_to_sdio_func(dev);
->  
->  	brcmf_dbg(SDIO, "Enter\n");
-> +
-> +	if (func->num == 2)
-> +		return 0;
-> +
-> +	sdiodev = bus_if->bus_priv.sdio;
-> +
->  	if (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)
->  		disable_irq_wake(sdiodev->pdata->oob_irq_nr);
->  	brcmf_sdio_wd_timer(sdiodev->bus, BRCMF_WD_POLL_MS);
-> -- 1.9.1
->
+sure.
 
+>> +#ifdef CONFIG_OF
+>> +static struct wl12xx_platform_data *wlcore_probe_of(struct device *dev)
+>> +{
+>> +     struct device_node *np = dev->of_node;
+>> +     struct wl12xx_platform_data *pdata;
+>> +
+>> +     if (!np || !of_device_is_compatible(np, "ti,wlcore")) {
+>> +             dev_err(dev, "No platform data set\n");
+>> +             return NULL;
+>> +     }
+>> +
+>> +     pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
+>> +     if (!pdata)
+>> +             return NULL;
+>
+> Your method seems overly complicated. While a lot of drivers do the same
+> thing, allocating a platform_data structure at probe time is really
+> just extra work compared to making the platform_data optional and
+> adding the required fields into the driver-private structure.
+i see your point here.
+however, the driver already holds (and uses) a pointer describing the
+platform_data (in the non-dt case), so this patch simply takes
+leverage of the current behavior (and returns a similar pointer).
+
+thanks for the review!
+
+Eliad.
