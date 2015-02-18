@@ -1,50 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:60048 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753006AbbBXWiE convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 17:38:04 -0500
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
-Subject: Re: [ath9k-devel] AR9462 problems connecting again..
-From: =?utf-8?Q?Thomas_H=C3=BChn?= <thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <20150224181454.GA30859@w1.fi>
-Date: Tue, 24 Feb 2015 23:38:02 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Message-Id: <655DCF68-95EE-47F6-82D3-45F6E0999161@net.t-labs.tu-berlin.de> (sfid-20150224_233808_633936_0025BDD0)
-References: <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com> <20150223213050.GA23232@w1.fi> <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com> <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com> <20150223224305.GA30228@w1.fi> <21739.50662.902775.901924@gargle.gargle.HOWL> <CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com> <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com> <20150224102611.GA30806@w1.fi> <80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de> <20150224181454.GA30859@w1.fi>
-To: Jouni Malinen <j@w1.fi>
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:56237 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751649AbbBRVYK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2015 16:24:10 -0500
+Received: by mail-ob0-f176.google.com with SMTP id wo20so7294333obc.7
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2015 13:24:10 -0800 (PST)
+Message-ID: <54E502F8.9010306@lwfinger.net> (sfid-20150218_222414_173796_6CD05DD4)
+Date: Wed, 18 Feb 2015 15:24:08 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Jon Hunter <jgchunter@gmail.com>, linux-wireless@vger.kernel.org
+CC: coekbe@gmail.com
+Subject: Re: [RFC PATCH] rtl8192cu: Fix beacon support in AP mode
+References: <1424289074-27489-1-git-send-email-jgchunter@gmail.com>
+In-Reply-To: <1424289074-27489-1-git-send-email-jgchunter@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+On 02/18/2015 01:51 PM, Jon Hunter wrote:
+> When using the rtl8192cu in AP mode a few devices (an android phone,
+> iphone and ipad) were unable to associate, where as the laptops I tried
+> could. Using wireshark to sniff the wlan traffic, it appears that the
+> rtl8192cu is not beaconing, however, it is responding to broadcast
+> probe requests and so devices are able to detect the AP.
+>
+> Searching the archives the same issue was reported for this WLAN device
+> and a fix to send an initial beacon frame was proposed [1]. This was
+> rejected as it was modifying the rtlwifi core. This change does the
+> same but from within the rtl8192cu driver and appears to fix the problem.
+>
+> Please note that although this does fix the problem, I don't know if this
+> is the best way or correct way to fix the problem, hence the request for
+> comment.
+>
+> [1] http://permalink.gmane.org/gmane.linux.kernel.wireless.general/96770
+>
+> Signed-off-by: Jon Hunter <jgchunter@gmail.com>
+>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+> Cc: coekbe@gmail.com
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 19 +++++++++++++++++++
+>   1 file changed, 19 insertions(+)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> index fe4b699..4fbca80 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> @@ -1520,6 +1520,22 @@ void rtl92cu_set_beacon_related_registers(struct ieee80211_hw *hw)
+>   	_beacon_function_enable(hw, true, true);
+>   }
+>
+> +static void _beacon_send_frame(struct ieee80211_hw *hw)
+> +{
+> +	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> +	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+> +	struct ieee80211_sta *sta;
+> +	struct rtl_tcb_desc tcb_desc;
+> +	struct sk_buff *skb;
+> +	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
+> +
+> +	skb = ieee80211_beacon_get(hw, mac->vif);
+> +	sta = rtl_find_sta(hw, mac->bssid);
+> +
+> +	if (!rtlpriv->intf_ops->waitq_insert(hw, sta, skb))
+> +		rtlpriv->intf_ops->adapter_tx(hw, sta, skb, &tcb_desc);
+> +}
+> +
+>   void rtl92cu_set_beacon_interval(struct ieee80211_hw *hw)
+>   {
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> @@ -1529,6 +1545,9 @@ void rtl92cu_set_beacon_interval(struct ieee80211_hw *hw)
+>   	RT_TRACE(rtlpriv, COMP_BEACON, DBG_DMESG, "beacon_interval:%d\n",
+>   		 bcn_interval);
+>   	rtl_write_word(rtlpriv, REG_BCN_INTERVAL, bcn_interval);
+> +
+> +        /* Send initial beacon frame to start beaconing */
+> +	_beacon_send_frame(hw);
+>   }
+>
+>   void rtl92cu_update_interrupt_mask(struct ieee80211_hw *hw,
+>
 
-> Where is that mrr[3] part implemented? I did not find it when reviewing
-> the design (hw->max_rates >= 3 is used, but not >= 4) and this does not
-> match my experiments either when printing out all four values from
-> ath9k. In every single case I observed, the last entry was unused (idx =
-> -1) and only MCS values were used (i.e., not even a single case of basic
-> rate visible; basic rates being 6, 12, 24 Mbps OFDM in this specific
-> case with the AP that I used in the tests).
+In the current mainline merge between 3.19 and 3.20-rc1, there is code that 
+implements the initial beacon start in the core. The main commit is 
+33511b157bbc. A second commit, which fixes a problem in mesh beacons, is found 
+in 0b70dc273c13. These were much less intrusive than the one that was rejected, 
+thus they were accepted into the core. I just tested creating an AP using 
+NetworkManager and I was able to connect to a Kindle Fire HD, which is an 
+Android device.
 
-Minstrel_HT does only set mrr[0..2] and does not touch the fourth mrr[3], assumed chips with 4 mrr stages.
-In function minstrel_ht_update_rates() the rate table struct ieee80211_sta_rates is set for the first 3 out of 4 rates and the fouth rate (mrr[3]) is „-1“.
-In case of ath9k, the driver in xmit.c allocates in function ath_tx_fill_desc() a  struct ath_tx_info info by  memset(&info, 0, sizeof(info)) .. so all info->rates[xy].Rate == 0.
-Than function ath_buf_set_rate() sets all info->rates[xy].Rate to those values specified in the rate table (struct ieee8021_sta_rate) IF (!rates[i].count || (rates[i].idx < 0)) …
-… so info->rates[3].Rate is untouched and still  „0“.
+Do these patches not fix the problem for you? There is a report that the beacon 
+startup is unreliable. Perhaps it may be necessary to change the static 
+send_beacon_frame() in the core into rtl_send_beacon_frame(), make it be 
+exported, and call it from rtl92cu_set_beacon_interval().
 
-I just added a printk() to xmit.c in function ath_tx_fill_desc() just before ath9k_hw_set_txdesc() is called.
->From the log I get, e.g.:
-
-[  169.543554] mrr setup: mrr[0]:133 mrr[1]:132 mrr[2]:134 mrr[3]:0 
-
-I have not check yet if info->rates[3].Rate == 0 is the lowest possible rate… but I would guess so.
+Larry
 
 
-Greetings Thomas
+Larry
 
