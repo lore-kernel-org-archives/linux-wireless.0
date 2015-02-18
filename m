@@ -1,69 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:53749 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844AbbBZFzM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 00:55:12 -0500
-Received: by mail-ig0-f181.google.com with SMTP id hn18so12052228igb.2
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 21:55:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CA+55aFyvhgFMRAg2ftuN_cykGs_3-Oyabhi_N6S-J1daVFFRzw@mail.gmail.com>
-References: <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
-	<CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
-	<20150223224305.GA30228@w1.fi>
-	<21739.50662.902775.901924@gargle.gargle.HOWL>
-	<CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com>
-	<CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>
-	<20150224102611.GA30806@w1.fi>
-	<80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de>
-	<20150224181454.GA30859@w1.fi>
-	<54ED56D8.9030806@openwrt.org>
-	<20150225144723.GA6903@w1.fi>
-	<CA+55aFyvhgFMRAg2ftuN_cykGs_3-Oyabhi_N6S-J1daVFFRzw@mail.gmail.com>
-Date: Wed, 25 Feb 2015 21:55:11 -0800
-Message-ID: <CA+55aFxE7_RXc1hBo+e=iCj4KpeMev_WphH+tDHXnYC4HE5YvQ@mail.gmail.com> (sfid-20150226_065516_998654_B9A020B4)
-Subject: Re: [ath9k-devel] AR9462 problems connecting again..
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Jouni Malinen <j@w1.fi>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from skprod2.natinst.com ([130.164.80.23]:42559 "EHLO ni.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754443AbbBRRSG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2015 12:18:06 -0500
+From: Josh Cartwright <joshc@ni.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Jason Liu <r64343@freescale.com>
+Subject: [PATCH -stable] ath6kl: fix struct hif_scatter_req list handling
+Date: Wed, 18 Feb 2015 11:17:14 -0600
+Message-Id: <1424279834-25559-1-git-send-email-joshc@ni.com> (sfid-20150218_181849_556265_8538A003)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 25, 2015 at 10:14 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> I'm talking about the two from Jouni - the "don't encrypt EAPOL
-> frames" one, and the one-liner that makes all EAPOL frames go at the
-> lowest data rate.
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 
-So I just found out and confirmed that this is not Atheros-specific in
-any way - it looks like it's simply the UniFi AP that does not like
-high-data-rate authentification frames at all.
+commit 31b9cc9a873dcab161999622314f98a75d838975 upstream.
 
-Because it looks like the brcmsmac driver has *exactly* the same
-behavior with this AP (in an Apple Macbook air). I assume brcmsmac
-uses the net/80211/tx.c logic too.
+Jason noticed that with Yocto GCC 4.8.1 ath6kl crashes with this iperf command:
 
-And Jouni's one-liner fixes that one too, although as usual, maybe
-there is some testing noise, and I screwed something up. This time I
-only did the one-liner, so that's the critical one.
+iperf -c $TARGET_IP -i 5 -t 50 -w 1M
 
-It's interesting to note how nothing else has been unhappy with that
-network (admittedly it's been mainly android devices and a HP printer
-that I've tested), so it looks like everybody else does low-rate
-authentication packets anyway.
+The crash was:
 
-So this actually looks like a Ubiquiti UniFi AP bug to me, but it also
-looks like presumably everybody else does low-rate initial packets,
-and our kernel 802.11 layer should just follow suit. The whole
-robustness principle and "be conservative in what you send, and
-liberal in what you accept" etc.
+Unable to handle kernel paging request at virtual address 1a480000
+pgd = 80004000
+[1a480000] *pgd=00000000
+Internal error: Oops: 805 [#1] SMP ARM
+Modules linked in: ath6kl_sdio ath6kl_core [last unloaded: ath6kl_core]
+CPU: 0 PID: 1953 Comm: kworker/u4:0 Not tainted 3.10.9-1.0.0_alpha+dbf364b #1
+Workqueue: ath6kl ath6kl_sdio_write_async_work [ath6kl_sdio]
+task: dcc9a680 ti: dc9ae000 task.ti: dc9ae000
+PC is at v7_dma_clean_range+0x20/0x38
+LR is at dma_cache_maint_page+0x50/0x54
+pc : [<8001a6f8>]    lr : [<800170fc>]    psr: 20000093
+sp : dc9afcf8  ip : 8001a748  fp : 00000004
+r10: 00000000  r9 : 00000001  r8 : 00000000
+r7 : 00000001  r6 : 00000000  r5 : 80cb7000  r4 : 03f9a480
+r3 : 0000001f  r2 : 00000020  r1 : 1a480000  r0 : 1a480000
+Flags: nzCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+Control: 10c53c7d  Table: 6cc5004a  DAC: 00000015
+Process kworker/u4:0 (pid: 1953, stack limit = 0xdc9ae238)
+Stack: (0xdc9afcf8 to 0xdc9b0000)
+fce0:                                                       80c9b29c 00000000
+fd00: 00000000 80017134 8001a748 dc302ac0 00000000 00000000 dc454a00 80c12ed8
+fd20: dc115410 80017238 00000000 dc454a10 00000001 80017588 00000001 00000000
+fd40: 00000000 dc302ac0 dc9afe38 dc9afe68 00000004 80c12ed8 00000000 dc454a00
+fd60: 00000004 80436f88 00000000 00000000 00000600 0000ffff 0000000c 80c113c4
+fd80: 80c9b29c 00000001 00000004 dc115470 60000013 dc302ac0 dc46e000 dc302800
+fda0: dc9afe10 dc302b78 60000013 dc302ac0 dc46e000 00000035 dc46e5b0 80438c90
+fdc0: dc9afe10 dc302800 dc302800 dc9afe68 dc9afe38 80424cb4 00000005 dc9afe10
+fde0: dc9afe20 80424de8 dc9afe10 dc302800 dc46e910 80424e90 dc473c00 dc454f00
+fe00: 000001b5 7f619d64 dcc7c830 00000000 00000000 dc9afe38 dc9afe68 00000000
+fe20: 00000000 00000000 dc9afe28 dc9afe28 80424d80 00000000 00000035 9cac0034
+fe40: 00000000 00000000 00000000 00000000 000001b5 00000000 00000000 00000000
+fe60: dc9afe68 dc9afe10 3b9aca00 00000000 00000080 00000034 00000000 00000100
+fe80: 00000000 00000000 dc9afe10 00000004 dc454a00 00000000 dc46e010 dc46e96c
+fea0: dc46e000 dc46e964 00200200 00100100 dc46e910 7f619ec0 00000600 80c0e770
+fec0: dc15a900 dcc7c838 00000000 dc46e954 8042d434 dcc44680 dc46e954 dc004400
+fee0: dc454500 00000000 00000000 dc9ae038 dc004400 8003c450 dcc44680 dc004414
+ff00: dc46e954 dc454500 00000001 dcc44680 dc004414 dcc44698 dc9ae000 dc9ae030
+ff20: 00000001 dc9ae000 dc004400 8003d158 8003d020 00000000 00000000 80c53941
+ff40: dc9aff64 dcb71ea0 00000000 dcc44680 8003d020 00000000 00000000 00000000
+ff60: 00000000 80042480 00000000 00000000 000000f8 dcc44680 00000000 00000000
+ff80: dc9aff80 dc9aff80 00000000 00000000 dc9aff90 dc9aff90 dc9affac dcb71ea0
+ffa0: 800423cc 00000000 00000000 8000e018 00000000 00000000 00000000 00000000
+ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+ffe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
+[<8001a6f8>] (v7_dma_clean_range+0x20/0x38) from [<800170fc>] (dma_cache_maint_page+0x50/0x54)
+[<800170fc>] (dma_cache_maint_page+0x50/0x54) from [<80017134>] (__dma_page_cpu_to_dev+0x34/0x9c)
+[<80017134>] (__dma_page_cpu_to_dev+0x34/0x9c) from [<80017238>] (arm_dma_map_page+0x64/0x68)
+[<80017238>] (arm_dma_map_page+0x64/0x68) from [<80017588>] (arm_dma_map_sg+0x7c/0xf4)
+[<80017588>] (arm_dma_map_sg+0x7c/0xf4) from [<80436f88>] (sdhci_send_command+0x894/0xe00)
+[<80436f88>] (sdhci_send_command+0x894/0xe00) from [<80438c90>] (sdhci_request+0xc0/0x1ec)
+[<80438c90>] (sdhci_request+0xc0/0x1ec) from [<80424cb4>] (mmc_start_request+0xb8/0xd4)
+[<80424cb4>] (mmc_start_request+0xb8/0xd4) from [<80424de8>] (__mmc_start_req+0x60/0x84)
+[<80424de8>] (__mmc_start_req+0x60/0x84) from [<80424e90>] (mmc_wait_for_req+0x10/0x20)
+[<80424e90>] (mmc_wait_for_req+0x10/0x20) from [<7f619d64>] (ath6kl_sdio_scat_rw.isra.10+0x1dc/0x240 [ath6kl_sdio])
+[<7f619d64>] (ath6kl_sdio_scat_rw.isra.10+0x1dc/0x240 [ath6kl_sdio]) from [<7f619ec0>] (ath6kl_sdio_write_async_work+0x5c/0x104 [ath6kl_sdio])
+[<7f619ec0>] (ath6kl_sdio_write_async_work+0x5c/0x104 [ath6kl_sdio]) from [<8003c450>] (process_one_work+0x10c/0x370)
+[<8003c450>] (process_one_work+0x10c/0x370) from [<8003d158>] (worker_thread+0x138/0x3fc)
+[<8003d158>] (worker_thread+0x138/0x3fc) from [<80042480>] (kthread+0xb4/0xb8)
+[<80042480>] (kthread+0xb4/0xb8) from [<8000e018>] (ret_from_fork+0x14/0x3c)
+Code: e1a02312 e2423001 e1c00003 f57ff04f (ee070f3a)
+---[ end trace 0c038f0b8e0b67a3 ]---
+Kernel panic - not syncing: Fatal exception
 
-                        Linus
+Jason's analysis:
+
+  "The GCC 4.8.1 compiler will not do the for-loop till scat_entries, instead,
+   it only run one round loop. This may be caused by that the GCC 4.8.1 thought
+   that the scat_list only have one item and then no need to do full iteration,
+   but this is simply wrong by looking at the assebly code. This will cause the sg
+   buffer not get set when scat_entries > 1 and thus lead to kernel panic.
+
+   Note: This issue not observed with GCC 4.7.2, only found on the GCC 4.8.1)"
+
+Fix this by using the normal [0] style for defining unknown number of list
+entries following the struct. This also fixes corruption with scat_q_depth, which
+was mistankely added to the end of struct and overwritten if there were more
+than item in the scat list.
+
+Reported-by: Jason Liu <r64343@freescale.com>
+Tested-by: Jason Liu <r64343@freescale.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+We ran into this issue in the 3.14.y stable tree which has been fixed upstream
+since 3.16.  Please consider pulling it back to 3.14.y at least;  it may be
+relevant further back, but it isn't clear when the issue first cropped up.  I'm
+hoping Kalle can comment.
+
+Thanks,
+  Josh
+
+ drivers/net/wireless/ath/ath6kl/hif.h  | 4 ++--
+ drivers/net/wireless/ath/ath6kl/sdio.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
+index 61f6b21..dc6bd8c 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -197,9 +197,9 @@ struct hif_scatter_req {
+ 	/* bounce buffer for upper layers to copy to/from */
+ 	u8 *virt_dma_buf;
+ 
+-	struct hif_scatter_item scat_list[1];
+-
+ 	u32 scat_q_depth;
++
++	struct hif_scatter_item scat_list[0];
+ };
+ 
+ struct ath6kl_irq_proc_registers {
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 7126bdd..6bf15a3 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -348,7 +348,7 @@ static int ath6kl_sdio_alloc_prep_scat_req(struct ath6kl_sdio *ar_sdio,
+ 	int i, scat_req_sz, scat_list_sz, size;
+ 	u8 *virt_buf;
+ 
+-	scat_list_sz = (n_scat_entry - 1) * sizeof(struct hif_scatter_item);
++	scat_list_sz = n_scat_entry * sizeof(struct hif_scatter_item);
+ 	scat_req_sz = sizeof(*s_req) + scat_list_sz;
+ 
+ 	if (!virt_scat)
+-- 
+2.3.0
+
