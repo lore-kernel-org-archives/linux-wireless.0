@@ -1,56 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36551 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755172AbbBTTFY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Feb 2015 14:05:24 -0500
-Message-ID: <1424459121.20313.27.camel@redhat.com> (sfid-20150220_200527_696384_8ED6E35B)
-Subject: Re: General question about Broadcom b43 driver and its source.
-From: Dan Williams <dcbw@redhat.com>
-To: Tom Cipollone <minertom11551@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 20 Feb 2015 13:05:21 -0600
-In-Reply-To: <CAACrVkg-_CZsS_znKEscnmAMOSbSmkVLmR3ezLDKhCoKx2xxHg@mail.gmail.com>
-References: <CAACrVkg-_CZsS_znKEscnmAMOSbSmkVLmR3ezLDKhCoKx2xxHg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:56607 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752724AbbBRUXS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Feb 2015 15:23:18 -0500
+Message-ID: <54E4F4B4.4080904@candelatech.com> (sfid-20150218_212336_586027_E75717E2)
+Date: Wed, 18 Feb 2015 12:23:16 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath10k: Increase AST table SKID length limit
+References: <1423841776-16288-1-git-send-email-sjegadee@qti.qualcomm.com>
+In-Reply-To: <1423841776-16288-1-git-send-email-sjegadee@qti.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-02-20 at 09:36 -0800, Tom Cipollone wrote:
-> Hello. I am new to this forum but have been designing hardware for 33
-> years. I am new, however, to wireless software. I have designed
-> modem/residential gateway boards with BCM63138 and others but not the
-> software so please forgive what may seem like simpleton questions.
+Have you tried testing this with 30+ stations
+associated and streaming data, and with other traffic on
+nearby channels (say, channel 1 and 6)?
+
+We see bad performance drop-off when we set number-of-peers above
+100 (with CT firmware).  My kernel will set AST skid limit to number-of-peers + number-of-vdevs.
+
+Performance is best at 32 peers or less (so skid is about 40).
+
+I am wondering if the root cause is firmware/hardware walking the full skid-length for pkts
+from un-associated peers on same (or neighbouring) channels, or maybe unlucky hash distribution
+in existing peers?
+
+Thanks,
+Ben
+
+
+On 02/13/2015 07:36 AM, SenthilKumar Jegadeesan wrote:
+> The current SKID length configuration causes firmware
+> to reject peer creation for not able to allocate
+> AST entries for peers. This issue is observed when
+> least significant 3 bytes are used ramdomly to create
+> client MAC addresses.
 > 
-> My question concerns the b43 driver. The documentation claims that it
-> was reverse engineered from the BCM4306 component. I expect that the
-> 4306 documentation is very proprietary because I was not able to find
-> it even though I have customer access to Broadcom customer support.
+> AST table SKID length configuration is increased to
+> maximum value to fix this issue.
 > 
-> 1) I have a RT-N16 router, with a BCM4718 WiFi. I expect that the
-> BCM4718 is backwards compatible with the BCM4306?
+> Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/hw.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+> index 460771f..7f04645 100644
+> --- a/drivers/net/wireless/ath/ath10k/hw.h
+> +++ b/drivers/net/wireless/ath/ath10k/hw.h
+> @@ -223,7 +223,7 @@ struct ath10k_pktlog_hdr {
+>  #define TARGET_10X_NUM_WDS_ENTRIES		32
+>  #define TARGET_10X_DMA_BURST_SIZE		0
+>  #define TARGET_10X_MAC_AGGR_DELIM		0
+> -#define TARGET_10X_AST_SKID_LIMIT		16
+> +#define TARGET_10X_AST_SKID_LIMIT		128
+>  #define TARGET_10X_NUM_STATIONS			128
+>  #define TARGET_10X_NUM_PEERS			((TARGET_10X_NUM_STATIONS) + \
+>  						 (TARGET_10X_NUM_VDEVS))
+> --
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-I wouldn't necessarily expect so; the 4306 is a really old 802.11g part
-from 2003, while the 4718 is a newer 802.11n dual-band part from 2009.
-There are a ton of different parts, and 6 years is a *lot* of time.
-Don't expect they'll be compatible in any way; any compatibility they do
-have is a gift.
 
-But there's already b43 (and brcmsmac) support for the 4718 (via the
-4716 of which it's based) in the upstream kernel, AFAICT.
-
-> 2) Where can I find the reverse engineered source code for the b43
-> driver? I have OpenWrt loaded and have compiled it before loading the
-> .trx file onto my RT-N16. I have been looking on liinux-wireless but
-> was referred to kernel-backports.
-
-In the Linux kernel:
-
-(4718)
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/b43
-
-(4306)
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/b43legacy
-
-Dan
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
