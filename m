@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:23278 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067AbbBOPPH (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:43712 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751982AbbBRV1O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 10:15:07 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/4] ath10k: implement fw stats for wmi-tlv
-References: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com>
-Date: Sun, 15 Feb 2015 17:15:00 +0200
-In-Reply-To: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 30 Jan 2015 10:47:20 +0100")
-Message-ID: <87vbj3gqa3.fsf@kamboji.qca.qualcomm.com> (sfid-20150215_161512_719088_C0D8E990)
+	Wed, 18 Feb 2015 16:27:14 -0500
+Received: by mail-ob0-f174.google.com with SMTP id wo20so7189777obc.5
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2015 13:27:14 -0800 (PST)
+Message-ID: <54E503B0.8020904@lwfinger.net> (sfid-20150218_222717_743532_A3C902A5)
+Date: Wed, 18 Feb 2015 15:27:12 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Mike Turner <miketurner.forum@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: rtl8192cu beacon fix unreliable
+References: <loom.20150213T114021-973@post.gmane.org>
+In-Reply-To: <loom.20150213T114021-973@post.gmane.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> There are some slight differences in fw stats
-> (sic) in wmi-tlv.
+On 02/13/2015 04:48 AM, Mike Turner wrote:
+> When using hostapd and an rtl8192cu Wireless USB adaptor the beacon
+> doesn't start sometimes. This was tested with the
 >
-> Firmware has changed the querying scheme and no
-> longer requires the ping-pong to get all stats.
-> The patchset doesn't change this behaviour so with
-> wmi-tlv it's possible to see the following
-> warnings when reading fw stats:
+> kernel/git/davem/net-next.git repository
 >
->  ath10k_pci 0000:00:06.0: received unsolicited stats update event
+> and
 >
-> The logic in ath10k still produces correct results
-> so this is harmless.
+> 3423eb92315865d76cb8d488513bfef6ab9251d0
 >
-> I wonder how to deal with this in a sane way. An
-> `if (op_ver == WMI_TLV)` is a little bad but
-> having a new ar->fw_feature flag just for a debug
-> facility like this is a bit silly. Or we can just
-> drop the warning and leave a comment. Ideas?
+> This behaviour is apparently random. If the beacon starts OK then it
+> continues. If a beacon isn't generated then it never starts. Repeating
+> cycles of hostapd stop/start may or may not generate a beacon. There are
+> no specific error messages displayed either on console or in syslog. I
+> have repeated hostapd stop/start a number of consecutive times and
+> received a beacon each time, however I have also done this a number of
+> times and never generated a beacon.
+>
+> We have succesfully used the pvaret-rtl8192cu driver which is based on the
+> vendor driver and used that in conjunction with the modified hostapd code
+> that requires use of the rtl871xdrv driver interface and as far as we have
+> seen it always generates a beacon.
+>
+> Platform is a custom designed Atmel-ARM CPU (AT91SAM9G25) with a D-Link
+> DWA-121.
 
-I think we could just drop the warning and leave a comment. That
-shouldn't break anything, right?
+Is send_beacon_frame() being called even when the beacon fails to start? Adding 
+a pr_info() at the start of the routine should answer that question.
 
-> Michal Kazior (4):
->   ath10k: add vdev stats processing
->   ath10k: change request stats command prototype
->   ath10k: add more wmi fw stat defines
->   ath10k: implement fw stats for wmi-tlv
+Larry
 
-Thanks, applied to ath.git.
 
--- 
-Kalle Valo
