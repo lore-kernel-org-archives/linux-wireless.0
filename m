@@ -1,223 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:43683 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752540AbbBECTX (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:43893 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754961AbbBRTvb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 21:19:23 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@nbd.name,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 03/10] mac80211: add new Minstrel statistic output via csv
-Date: Thu,  5 Feb 2015 03:13:13 +0100
-Message-Id: <1423102400-9693-4-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150205_033630_139206_A19DCD17)
-In-Reply-To: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1423102400-9693-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Wed, 18 Feb 2015 14:51:31 -0500
+Received: by wesu56 with SMTP id u56so3231714wes.10
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Feb 2015 11:51:30 -0800 (PST)
+From: Jon Hunter <jgchunter@gmail.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Jon Hunter <jgchunter@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>, coekbe@gmail.com
+Subject: [RFC PATCH] rtl8192cu: Fix beacon support in AP mode
+Date: Wed, 18 Feb 2015 19:51:14 +0000
+Message-Id: <1424289074-27489-1-git-send-email-jgchunter@gmail.com> (sfid-20150218_205136_483882_7072FBAD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new debugfs file "rc_stats_csv" to output Minstrels
-statistics in a common csv format that is easy to parse.
+When using the rtl8192cu in AP mode a few devices (an android phone,
+iphone and ipad) were unable to associate, where as the laptops I tried
+could. Using wireshark to sniff the wlan traffic, it appears that the
+rtl8192cu is not beaconing, however, it is responding to broadcast
+probe requests and so devices are able to detect the AP.
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Signed-off-by: Stefan Venz <ikstream86@gmail.com>
+Searching the archives the same issue was reported for this WLAN device
+and a fix to send an initial beacon frame was proposed [1]. This was
+rejected as it was modifying the rtlwifi core. This change does the
+same but from within the rtl8192cu driver and appears to fix the problem.
+
+Please note that although this does fix the problem, I don't know if this
+is the best way or correct way to fix the problem, hence the request for
+comment.
+
+[1] http://permalink.gmane.org/gmane.linux.kernel.wireless.general/96770
+
+Signed-off-by: Jon Hunter <jgchunter@gmail.com>
+
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: coekbe@gmail.com
 ---
- net/mac80211/rc80211_minstrel.h            |  6 +-
- net/mac80211/rc80211_minstrel_debugfs.c    | 95 ++++++++++++++++++++++++++----
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  2 +-
- 3 files changed, 88 insertions(+), 15 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 410efe6..9613e73 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -13,7 +13,6 @@
- #define EWMA_DIV	128
- #define SAMPLE_COLUMNS	10	/* number of columns in sample table */
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+index fe4b699..4fbca80 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -1520,6 +1520,22 @@ void rtl92cu_set_beacon_related_registers(struct ieee80211_hw *hw)
+ 	_beacon_function_enable(hw, true, true);
+ }
  
--
- /* scaled fraction values */
- #define MINSTREL_SCALE  16
- #define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
-@@ -24,7 +23,7 @@
- 
- /*
-  * Perform EWMA (Exponentially Weighted Moving Average) calculation
--  */
-+ */
- static inline int
- minstrel_ewma(int old, int new, int weight)
- {
-@@ -95,6 +94,7 @@ struct minstrel_sta_info {
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct dentry *dbg_stats;
-+	struct dentry *dbg_stats_csv;
- #endif
- };
- 
-@@ -121,7 +121,6 @@ struct minstrel_priv {
- 	u32 fixed_rate_idx;
- 	struct dentry *dbg_fixed_rate;
- #endif
--
- };
- 
- struct minstrel_debugfs_info {
-@@ -135,6 +134,7 @@ void minstrel_remove_sta_debugfs(void *priv, void *priv_sta);
- 
- /* debugfs */
- int minstrel_stats_open(struct inode *inode, struct file *file);
-+int minstrel_stats_csv_open(struct inode *inode, struct file *file);
- ssize_t minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos);
- int minstrel_stats_release(struct inode *inode, struct file *file);
- 
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index 2d70081..ab15ca6 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -54,6 +54,22 @@
- #include <net/mac80211.h>
- #include "rc80211_minstrel.h"
- 
-+ssize_t
-+minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos)
++static void _beacon_send_frame(struct ieee80211_hw *hw)
 +{
-+	struct minstrel_debugfs_info *ms;
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	struct ieee80211_sta *sta;
++	struct rtl_tcb_desc tcb_desc;
++	struct sk_buff *skb;
++	memset(&tcb_desc, 0, sizeof(struct rtl_tcb_desc));
 +
-+	ms = file->private_data;
-+	return simple_read_from_buffer(buf, len, ppos, ms->buf, ms->len);
++	skb = ieee80211_beacon_get(hw, mac->vif);
++	sta = rtl_find_sta(hw, mac->bssid);
++
++	if (!rtlpriv->intf_ops->waitq_insert(hw, sta, skb))
++		rtlpriv->intf_ops->adapter_tx(hw, sta, skb, &tcb_desc);
 +}
 +
-+int
-+minstrel_stats_release(struct inode *inode, struct file *file)
-+{
-+	kfree(file->private_data);
-+	return 0;
-+}
-+
- int
- minstrel_stats_open(struct inode *inode, struct file *file)
+ void rtl92cu_set_beacon_interval(struct ieee80211_hw *hw)
  {
-@@ -115,25 +131,76 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	return 0;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -1529,6 +1545,9 @@ void rtl92cu_set_beacon_interval(struct ieee80211_hw *hw)
+ 	RT_TRACE(rtlpriv, COMP_BEACON, DBG_DMESG, "beacon_interval:%d\n",
+ 		 bcn_interval);
+ 	rtl_write_word(rtlpriv, REG_BCN_INTERVAL, bcn_interval);
++
++        /* Send initial beacon frame to start beaconing */
++	_beacon_send_frame(hw);
  }
  
--ssize_t
--minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos)
-+static const struct file_operations minstrel_stat_fops = {
-+	.owner = THIS_MODULE,
-+	.open = minstrel_stats_open,
-+	.read = minstrel_stats_read,
-+	.release = minstrel_stats_release,
-+	.llseek = default_llseek,
-+};
-+
-+int
-+minstrel_stats_csv_open(struct inode *inode, struct file *file)
- {
-+	struct minstrel_sta_info *mi = inode->i_private;
- 	struct minstrel_debugfs_info *ms;
-+	struct timeval tv;
-+	unsigned int i, tp, prob, eprob;
-+	char *p;
- 
--	ms = file->private_data;
--	return simple_read_from_buffer(buf, len, ppos, ms->buf, ms->len);
--}
-+	ms = kmalloc(2048, GFP_KERNEL);
-+	if (!ms)
-+		return -ENOMEM;
-+
-+	file->private_data = ms;
-+	p = ms->buf;
-+
-+	do_gettimeofday(&tv);
-+
-+	for (i = 0; i < mi->n_rates; i++) {
-+		struct minstrel_rate *mr = &mi->r[i];
-+		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
-+
-+		p += sprintf(p, "%ld.%.6ld,", tv.tv_sec, tv.tv_usec);
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[0]) ? "A," : ","));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[1]) ? "B," : ","));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[2]) ? "C," : ","));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[3]) ? "D," : ","));
-+		p += sprintf(p, "%s" ,((i == mi->max_prob_rate) ? "P," : ","));
-+
-+		p += sprintf(p, "%u%s", mr->bitrate / 2,
-+				(mr->bitrate & 1 ? ".5," : ","));
-+		p += sprintf(p, "%u,", i);
-+		p += sprintf(p, "%u,",mr->perfect_tx_time);
-+
-+		tp = MINSTREL_TRUNC(mrs->cur_tp / 10);
-+		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
-+		eprob = MINSTREL_TRUNC(mrs->probability * 1000);
-+
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u,%u,%u,"
-+				"%llu,%llu,%d,%d\n",
-+				tp / 10, tp % 10,
-+				eprob / 10, eprob % 10,
-+				prob / 10, prob % 10,
-+				mrs->retry_count,
-+				mrs->last_success,
-+				mrs->last_attempts,
-+				(unsigned long long)mrs->succ_hist,
-+				(unsigned long long)mrs->att_hist,
-+				mi->total_packets - mi->sample_packets,
-+				mi->sample_packets);
-+
-+	}
-+	ms->len = p - ms->buf;
-+
-+	WARN_ON(ms->len + sizeof(*ms) > 2048);
- 
--int
--minstrel_stats_release(struct inode *inode, struct file *file)
--{
--	kfree(file->private_data);
- 	return 0;
- }
- 
--static const struct file_operations minstrel_stat_fops = {
-+static const struct file_operations minstrel_stat_csv_fops = {
- 	.owner = THIS_MODULE,
--	.open = minstrel_stats_open,
-+	.open = minstrel_stats_csv_open,
- 	.read = minstrel_stats_read,
- 	.release = minstrel_stats_release,
- 	.llseek = default_llseek,
-@@ -146,6 +213,9 @@ minstrel_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir)
- 
- 	mi->dbg_stats = debugfs_create_file("rc_stats", S_IRUGO, dir, mi,
- 			&minstrel_stat_fops);
-+
-+	mi->dbg_stats_csv = debugfs_create_file("rc_stats_csv", S_IRUGO, dir,
-+			mi, &minstrel_stat_csv_fops);
- }
- 
- void
-@@ -154,4 +224,7 @@ minstrel_remove_sta_debugfs(void *priv, void *priv_sta)
- 	struct minstrel_sta_info *mi = priv_sta;
- 
- 	debugfs_remove(mi->dbg_stats);
-+
-+	debugfs_remove(mi->dbg_stats_csv);
- }
-+
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 7fc690f..b300513 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -112,7 +112,7 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 
- 	if (!msp->is_ht) {
- 		inode->i_private = &msp->legacy;
--		ret = minstrel_stats_open(inode, file);
-+		ret = minstrel_stats_csv_open(inode, file);
- 		inode->i_private = msp;
- 		return ret;
- 	}
+ void rtl92cu_update_interrupt_mask(struct ieee80211_hw *hw,
 -- 
-2.2.2
+1.9.1
 
