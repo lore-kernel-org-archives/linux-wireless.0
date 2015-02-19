@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plaes.org ([188.166.43.21]:36838 "EHLO plaes.org"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755659AbbBPNIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 08:08:00 -0500
-From: Priit Laes <plaes@plaes.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Priit Laes <plaes@plaes.org>
-Subject: [PATCH v3 1/7] rtlwifi: Remove unused defines from rtl8192cu driver
-Date: Mon, 16 Feb 2015 14:59:54 +0200
-Message-Id: <1424091600-13121-2-git-send-email-plaes@plaes.org> (sfid-20150216_141955_251218_A5A5A0DB)
-In-Reply-To: <1424091600-13121-1-git-send-email-plaes@plaes.org>
-References: <1424091600-13121-1-git-send-email-plaes@plaes.org>
+Received: from mail2.candelatech.com ([208.74.158.173]:33382 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbbBSFDu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Feb 2015 00:03:50 -0500
+Message-ID: <54E56EAC.2030906@candelatech.com> (sfid-20150219_060413_085151_CC377132)
+Date: Wed, 18 Feb 2015 21:03:40 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: ath10k <ath10k@lists.infradead.org>, linux-wireless@vger.kernel.org
+Subject: Re: station kickout
+References: <54D29F71.50603@candelatech.com> <87d25bi98f.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87d25bi98f.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Priit Laes <plaes@plaes.org>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.h | 2 --
- 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-index c1e33b0..6758808 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.h
-@@ -32,8 +32,6 @@
- 
- #define H2C_RA_MASK	6
- 
--#define LLT_POLLING_LLT_THRESHOLD		20
--#define LLT_POLLING_READY_TIMEOUT_COUNT		100
- #define LLT_LAST_ENTRY_OF_TX_PKT_BUFFER		255
- 
- #define RX_PAGE_SIZE_REG_VALUE			PBP_128
+
+On 02/15/2015 05:40 AM, Kalle Valo wrote:
+> (Adding linux-wireless)
+>
+> Ben Greear <greearb@candelatech.com> writes:
+>
+>> In AP mode, it seems that 3.17-ish kernels (at least) always set station kickout
+>> to hard-coded value of 50.
+>>
+>> Is this something that should be configurable?  Maybe a module parameter
+>> if nothing else?
+>
+> Or should we add this to nl80211/cfg80211/mac80211? I would guess other
+> drivers also have similar functionality.
+
+I guess that is up to Johannes.  Do we really gain anything useful by letting
+firmware take care of this?  Might be best to just disable the firmware option
+entirely and let the rest of the mac80211 stack take care of detecting
+loss of connectivity?
+
+Thanks,
+Ben
+
 -- 
-2.3.0
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
