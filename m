@@ -1,110 +1,327 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:59908 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753311AbbBXRyt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 12:54:49 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
-Subject: Re: [ath9k-devel] AR9462 problems connecting again..
-From: =?utf-8?Q?Thomas_H=C3=BChn?= <thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <20150224102611.GA30806@w1.fi>
-Date: Tue, 24 Feb 2015 18:54:47 +0100
-Cc: Andrew McGregor <andrewmcgr@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Message-Id: <80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de> (sfid-20150224_185452_158547_357A1341)
-References: <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com> <20150223171700.GA29730@w1.fi> <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com> <20150223213050.GA23232@w1.fi> <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com> <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com> <20150223224305.GA30228@w1.fi> <21739.50662.902775.901924@gargle.gargle.HOWL> <CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com> <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com> <20150224102611.GA30806@w1.fi>
-To: Jouni Malinen <j@w1.fi>
+Received: from skprod3.natinst.com ([130.164.80.24]:40309 "EHLO ni.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752612AbbBSVq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Feb 2015 16:46:29 -0500
+From: James Minor <james.minor@ni.com>
+To: johannes@sipsolutions.net, linville@tuxdriver.com,
+	davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, xander.huff@ni.com, joshc@ni.com,
+	joseph.hershberger@ni.com, ben.shelton@ni.com, jaeden.amero@ni.com,
+	rich.tollerton@ni.com, brad.mouring@ni.com,
+	James Minor <james.minor@ni.com>
+Subject: [PATCH v2] wext: Return -E2BIG when the buffer is too small for the full scan results, including IEs.
+Date: Thu, 19 Feb 2015 15:42:22 -0600
+Message-Id: <1424382142-13346-1-git-send-email-james.minor@ni.com> (sfid-20150219_224635_348876_1B8B87CF)
+In-Reply-To: <54E6561F.4050109@ni.com>
+References: <54E6561F.4050109@ni.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+When using the wext compatibility code in cfg80211, part of the IEs
+can be truncated if the passed user buffer is large enough for the
+BSS but not large enough for all of the IEs.  This can cause an EAP
+network to show up as a PSK network.
 
-Currently Minstrel_HT just skips EAPOL packets for its rate sampling on non-mrr chips by testing: (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO)
-On mrr hardware it uses them for probing. 
-But the general MRR-chain should look like this for ath5k and ath9k chips that support 4 mrr chains:
+These changes allow the scan to always return -E2BIG in that case.
 
-mrr[0]:= max_tp_rate[0]
-mrr[1]:= max_tp_rate[1]
-mrr[2]:= max_prob_rate
-mrr[3]:= basic_rate
+Signed-off-by: James Minor <james.minor@ni.com>
+---
+ net/wireless/scan.c | 84 ++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 74 insertions(+), 10 deletions(-)
 
-So for Minstrel Sampling Packets as well as for data packets, the 4th mrr stage should use the slowest rate in case all other 3 mrr stages failed with their retry attempts.
-
-I do see two possible options for control frames like EAPOL to be send out in a more robust fashion:
- - exclude those frames from AMPDU aggragates 
- - change their mrr setup to be more conservative
-
-What do you think about this ?
-
-Greetings Thomas
-
-
-> Am 24.02.2015 um 11:26 schrieb Jouni Malinen <j@w1.fi>:
-> 
-> On Tue, Feb 24, 2015 at 01:29:27PM +1100, Andrew McGregor wrote:
->> Over the weekend I found a bug in minstrel-ht that might well be
->> implicated here.
->> 
->> The last retransmit rate is meant to be a 'get the packet there
->> reliably' rate; minstrel-ht doesn't do that right, and can pick a
->> fairly flaky rate instead.
->> 
->> Can't generate a proper patch right now, so this diff might not apply
->> cleanly, but the fix is simply to change 75 to 99 in the two places
->> below:
-> 
-> While this may indeed be helpful, I don't think it is sufficient for
-> this EAPOL frame related issue. What I would like to see is minstrel_ht
-> using a basic rate (something non-HT) at the end of the retry series for
-> EAPOL frames.
-> 
-> The current behavior looks very suspicious to me. The early EAPOL frames
-> after association are being used to probe for higher rates. This results
-> in the total number of retry attempts actually getting smaller than any
-> other frame, i.e., minstrel_ht seems to be using significantly _less_
-> robust choices for the EAPOL frames than following "normal" data frames!
-> This should really be the other way around..
-> 
-> As an example, I'm seeing this on 5 GHz band (with the 75 to 99 change
-> in place, but behavior was more or less identical without it):
-> - the first EAPOL frame (msg 2/4) getting one attempt at MCS 3, 2
->  attempts at MCS 0, 2 attempts at MCS 0 (yes, identical to the previous
->  one) with total maximum of 5 attempts
-> - the second EAPOL frame (msg 4/4) getting one attempt at MCS 9, 2
->  attempts at MCS 0, 2 attempts at MCS 0 with total maximum of 5
->  attempts
-> - another data frame after this: 5 attempts at MCS 9, 5 attempts at MCS
->  3, 5 attempts at MCS 3 with total maximum of 15 attempts(!!)
-> 
-> This cannot be the best approach here.. For the
-> IEEE80211_TX_CTRL_PORT_CTRL_PROTO cases, there are identified issues
-> where failing to deliver the frame results is significant issues either
-> in getting connected in the first place or getting disconnected if
-> rekeying fails. 
-> 
-> I'm not sure how this would be implemented cleanly in minstrel_ht or
-> whether that is even the best place (i.e., rate.c could do this
-> instead), but I'd like that third attempt for control port cases to be
-> dropped to use a (lowish) basic rate and non-MCS at that since there may
-> be some interop issues with HT MCS early during association.
-> Alternatively with drivers like ath9k that support 4 rate values, it
-> would also be fine to add this basic rate attempt (or well, I'd have
-> multiple, say 4, such attempts) as an additional 4th entry which does
-> not currently seem to get used with minstrel at all.
-> 
-> The "(lowish) basic rate" here could be defined as 6 Mbps OFDM for 5 GHz
-> band and either that or maybe even 2 Mbps or 5.5 Mbps on 2.4 GHz (if
-> included by the AP in basic rate set).
-> 
-> -- 
-> Jouni Malinen                                            PGP id EFC895FA
-> _______________________________________________
-> ath9k-devel mailing list
-> ath9k-devel@lists.ath9k.org
-> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index c705c3e..7659c29 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -58,6 +58,12 @@
+ 
+ #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
+ 
++#define CHECK_BUF_FULL(p, c, e)		       \
++	do {                                   \
++		if (unlikely(p == c))	       \
++			e = -E2BIG;	       \
++	} while (0)
++
+ static void bss_free(struct cfg80211_internal_bss *bss)
+ {
+ 	struct cfg80211_bss_ies *ies;
+@@ -1239,15 +1245,17 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ }
+ EXPORT_SYMBOL_GPL(cfg80211_wext_siwscan);
+ 
+-static void ieee80211_scan_add_ies(struct iw_request_info *info,
+-				   const struct cfg80211_bss_ies *ies,
+-				   char **current_ev, char *end_buf)
++static int ieee80211_scan_add_ies(struct iw_request_info *info,
++				  const struct cfg80211_bss_ies *ies,
++				  char **current_ev, char *end_buf)
+ {
+ 	const u8 *pos, *end, *next;
+ 	struct iw_event iwe;
++	char *prev_ev;
++	int err = 0;
+ 
+ 	if (!ies)
+-		return;
++		return err;
+ 
+ 	/*
+ 	 * If needed, fragment the IEs buffer (at IE boundaries) into short
+@@ -1264,10 +1272,11 @@ static void ieee80211_scan_add_ies(struct iw_request_info *info,
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd = IWEVGENIE;
+ 		iwe.u.data.length = next - pos;
++		prev_ev = *current_ev;
+ 		*current_ev = iwe_stream_add_point(info, *current_ev,
+ 						   end_buf, &iwe,
+ 						   (void *)pos);
+-
++		CHECK_BUF_FULL(prev_ev, *current_ev, err);
+ 		pos = next;
+ 	}
+ 
+@@ -1275,10 +1284,13 @@ static void ieee80211_scan_add_ies(struct iw_request_info *info,
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd = IWEVGENIE;
+ 		iwe.u.data.length = end - pos;
++		prev_ev = *current_ev;
+ 		*current_ev = iwe_stream_add_point(info, *current_ev,
+ 						   end_buf, &iwe,
+ 						   (void *)pos);
++		CHECK_BUF_FULL(prev_ev, *current_ev, err);
+ 	}
++	return err;
+ }
+ 
+ static char *
+@@ -1292,27 +1304,36 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 	u8 *buf, *cfg, *p;
+ 	int rem, i, sig;
+ 	bool ismesh = false;
++	char *prev_ev;
++	char *orig_ev = current_ev;
++	int err = 0;
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWAP;
+ 	iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
+ 	memcpy(iwe.u.ap_addr.sa_data, bss->pub.bssid, ETH_ALEN);
++	prev_ev = current_ev;
+ 	current_ev = iwe_stream_add_event(info, current_ev, end_buf, &iwe,
+ 					  IW_EV_ADDR_LEN);
++	CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
+ 	iwe.u.freq.m = ieee80211_frequency_to_channel(bss->pub.channel->center_freq);
+ 	iwe.u.freq.e = 0;
++	prev_ev = current_ev;
+ 	current_ev = iwe_stream_add_event(info, current_ev, end_buf, &iwe,
+ 					  IW_EV_FREQ_LEN);
++	CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+ 	iwe.cmd = SIOCGIWFREQ;
+ 	iwe.u.freq.m = bss->pub.channel->center_freq;
+ 	iwe.u.freq.e = 6;
++	prev_ev = current_ev;
+ 	current_ev = iwe_stream_add_event(info, current_ev, end_buf, &iwe,
+ 					  IW_EV_FREQ_LEN);
++	CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 
+ 	if (wiphy->signal_type != CFG80211_SIGNAL_TYPE_NONE) {
+ 		memset(&iwe, 0, sizeof(iwe));
+@@ -1341,8 +1362,10 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			/* not reached */
+ 			break;
+ 		}
++		prev_ev = current_ev;
+ 		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
+ 						  &iwe, IW_EV_QUAL_LEN);
++		CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 	}
+ 
+ 	memset(&iwe, 0, sizeof(iwe));
+@@ -1352,8 +1375,10 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 	else
+ 		iwe.u.data.flags = IW_ENCODE_DISABLED;
+ 	iwe.u.data.length = 0;
++	prev_ev = current_ev;
+ 	current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+ 					  &iwe, "");
++	CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 
+ 	rcu_read_lock();
+ 	ies = rcu_dereference(bss->pub.ies);
+@@ -1371,16 +1396,20 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			iwe.cmd = SIOCGIWESSID;
+ 			iwe.u.data.length = ie[1];
+ 			iwe.u.data.flags = 1;
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+ 							  &iwe, (u8 *)ie + 2);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			break;
+ 		case WLAN_EID_MESH_ID:
+ 			memset(&iwe, 0, sizeof(iwe));
+ 			iwe.cmd = SIOCGIWESSID;
+ 			iwe.u.data.length = ie[1];
+ 			iwe.u.data.flags = 1;
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+ 							  &iwe, (u8 *)ie + 2);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			break;
+ 		case WLAN_EID_MESH_CONFIG:
+ 			ismesh = true;
+@@ -1395,41 +1424,55 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			sprintf(buf, "Mesh Network Path Selection Protocol ID: "
+ 				"0x%02X", cfg[0]);
+ 			iwe.u.data.length = strlen(buf);
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			sprintf(buf, "Path Selection Metric ID: 0x%02X",
+ 				cfg[1]);
+ 			iwe.u.data.length = strlen(buf);
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			sprintf(buf, "Congestion Control Mode ID: 0x%02X",
+ 				cfg[2]);
+ 			iwe.u.data.length = strlen(buf);
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			sprintf(buf, "Synchronization ID: 0x%02X", cfg[3]);
+ 			iwe.u.data.length = strlen(buf);
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			sprintf(buf, "Authentication ID: 0x%02X", cfg[4]);
+ 			iwe.u.data.length = strlen(buf);
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			sprintf(buf, "Formation Info: 0x%02X", cfg[5]);
+ 			iwe.u.data.length = strlen(buf);
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			sprintf(buf, "Capabilities: 0x%02X", cfg[6]);
+ 			iwe.u.data.length = strlen(buf);
++			prev_ev = current_ev;
+ 			current_ev = iwe_stream_add_point(info, current_ev,
+ 							  end_buf,
+ 							  &iwe, buf);
++			CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 			kfree(buf);
+ 			break;
+ 		case WLAN_EID_SUPP_RATES:
+@@ -1445,8 +1488,10 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			for (i = 0; i < ie[1]; i++) {
+ 				iwe.u.bitrate.value =
+ 					((ie[i + 2] & 0x7f) * 500000);
++				prev_ev = p;
+ 				p = iwe_stream_add_value(info, current_ev, p,
+ 						end_buf, &iwe, IW_EV_PARAM_LEN);
++				CHECK_BUF_FULL((u8 *) prev_ev, p, err);
+ 			}
+ 			current_ev = p;
+ 			break;
+@@ -1465,8 +1510,10 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 			iwe.u.mode = IW_MODE_MASTER;
+ 		else
+ 			iwe.u.mode = IW_MODE_ADHOC;
++		prev_ev = current_ev;
+ 		current_ev = iwe_stream_add_event(info, current_ev, end_buf,
+ 						  &iwe, IW_EV_UINT_LEN);
++		CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 	}
+ 
+ 	buf = kmalloc(31, GFP_ATOMIC);
+@@ -1475,22 +1522,31 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 		iwe.cmd = IWEVCUSTOM;
+ 		sprintf(buf, "tsf=%016llx", (unsigned long long)(ies->tsf));
+ 		iwe.u.data.length = strlen(buf);
++		prev_ev = current_ev;
+ 		current_ev = iwe_stream_add_point(info, current_ev, end_buf,
+ 						  &iwe, buf);
++		CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 		memset(&iwe, 0, sizeof(iwe));
+ 		iwe.cmd = IWEVCUSTOM;
+ 		sprintf(buf, " Last beacon: %ums ago",
+ 			elapsed_jiffies_msecs(bss->ts));
+ 		iwe.u.data.length = strlen(buf);
++		prev_ev = current_ev;
+ 		current_ev = iwe_stream_add_point(info, current_ev,
+ 						  end_buf, &iwe, buf);
++		CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 		kfree(buf);
+ 	}
+ 
+-	ieee80211_scan_add_ies(info, ies, &current_ev, end_buf);
++	if (!err)
++		err = ieee80211_scan_add_ies(info, ies, &current_ev, end_buf);
++
+ 	rcu_read_unlock();
+ 
+-	return current_ev;
++	if (err)
++		return orig_ev;
++	else
++		return current_ev;
+ }
+ 
+ 
+@@ -1499,22 +1555,30 @@ static int ieee80211_scan_results(struct cfg80211_registered_device *rdev,
+ 				  char *buf, size_t len)
+ {
+ 	char *current_ev = buf;
++	char *prev_ev;
+ 	char *end_buf = buf + len;
+ 	struct cfg80211_internal_bss *bss;
++	int err = 0;
+ 
+ 	spin_lock_bh(&rdev->bss_lock);
+ 	cfg80211_bss_expire(rdev);
+ 
+ 	list_for_each_entry(bss, &rdev->bss_list, list) {
+ 		if (buf + len - current_ev <= IW_EV_ADDR_LEN) {
+-			spin_unlock_bh(&rdev->bss_lock);
+-			return -E2BIG;
++			err = -E2BIG;
++			goto out_unlock;
+ 		}
++		prev_ev = current_ev;
+ 		current_ev = ieee80211_bss(&rdev->wiphy, info, bss,
+ 					   current_ev, end_buf);
++		CHECK_BUF_FULL(prev_ev, current_ev, err);
+ 	}
++out_unlock:
+ 	spin_unlock_bh(&rdev->bss_lock);
+-	return current_ev - buf;
++	if (err)
++		return err;
++	else
++		return current_ev - buf;
+ }
+ 
+ 
+-- 
+1.9.1
 
