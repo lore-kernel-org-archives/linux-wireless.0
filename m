@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:39631 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704AbbBJLHn (ORCPT
+Received: from mail-we0-f178.google.com ([74.125.82.178]:38084 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753246AbbBSV27 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 06:07:43 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix wmm params per vdev
-References: <CADnKcViRWR1Ex-=QGzROQGYKNcZLMSu+mLDJ8-KhUuf=acDXdQ@mail.gmail.com>
-Date: Tue, 10 Feb 2015 13:07:31 +0200
-In-Reply-To: <CADnKcViRWR1Ex-=QGzROQGYKNcZLMSu+mLDJ8-KhUuf=acDXdQ@mail.gmail.com>
-	(Marek Puzyniak's message of "Tue, 10 Feb 2015 09:27:13 +0100")
-Message-ID: <87egpynhxo.fsf@kamboji.qca.qualcomm.com> (sfid-20150210_120746_623426_CF095812)
+	Thu, 19 Feb 2015 16:28:59 -0500
+Received: by wesw55 with SMTP id w55so2240001wes.5
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 13:28:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 20 Feb 2015 02:58:38 +0530
+Message-ID: <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com> (sfid-20150219_222907_540544_14913882)
+Subject: Re: Connection issues with BW Tracking in mac80211
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marek Puzyniak <marek.puzyniak@tieto.com> writes:
-
-> On 6 February 2015 at 14:41, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
->> During wmm tests changing wmm parameters did not change anything.
->> This was because of mismatch in WMM params per vdev command.
->> WMM params per vdev uses different command structure than wmm params
->> per pdev command. Also txop for per vdev settings has the
->> same units as provided by mac80211.
->>
->> Patch concerns qca6174.
->>
->> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+On Fri, Feb 20, 2015 at 1:00 AM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> Hi Johannes,
 >
-> Kalle,
+> The BW tracking feature in mac80211 is causing connection problems and
+> operating mode/bw problems when switching b/w modes and bw's in AP.
 >
-> Please do not merge this patch yet. I need to clarify some side effects.
-> I will inform you about next steps.
+> For Eg. Initially if AP is operating in VHT-80MHz, and then we changed
+> in to HT-40MHz, mac80211 cannot handle it because the VHT capability
+> is mismatched b/w stored info (ifmgd->flags).
+>
+> I have tried your DISABLE_BW_TRACK patch, that helps making the
+> connection but it doesn't update the chipset causing issues.
+>
+> Ideally we should be able to handle all the config changes right?
 
-Ok, I have dropped the patch. Please resend if it's ok to apply.
-
--- 
-Kalle Valo
+Before that i have a basic question? Should we reset our tracking after
+the connection is lost, in my case above the connection was lost (Config
+change in A triggers a reboot), still mac80211 is tracking the BW changes?
