@@ -1,73 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:39581 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754133AbbBEEtl (ORCPT
+Received: from mail-we0-f172.google.com ([74.125.82.172]:40466 "EHLO
+	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752371AbbBSS1q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 23:49:41 -0500
-Received: from [117.199.130.171] (port=13666 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YJENo-002ASp-O8
-	for linux-wireless@vger.kernel.org; Wed, 04 Feb 2015 23:49:41 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/7] ath9k: Fix descriptors for keep-alive frame
-Date: Thu,  5 Feb 2015 10:22:38 +0530
-Message-Id: <1423111964-19626-2-git-send-email-sujith@msujith.org> (sfid-20150205_054952_110576_715F35D7)
-In-Reply-To: <1423111964-19626-1-git-send-email-sujith@msujith.org>
-References: <1423111964-19626-1-git-send-email-sujith@msujith.org>
+	Thu, 19 Feb 2015 13:27:46 -0500
+Received: by wesx3 with SMTP id x3so1402565wes.7
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 10:27:45 -0800 (PST)
+Message-ID: <54E62B1C.9010908@gmail.com> (sfid-20150219_192750_463706_A5ED0D3A)
+Date: Thu, 19 Feb 2015 19:27:40 +0100
+From: wim torfs <wtorfs@gmail.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?M=E1rio_Lopes?= <mjlopes@inescporto.pt>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Issue with frame injection on monitor interface (ath9k)
+References: <20150219155345.54713ultwqjbtrsp@horde.inescporto.pt>
+In-Reply-To: <20150219155345.54713ultwqjbtrsp@horde.inescporto.pt>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Along with AR9462, AR9565 also has an extra field
-in the TX descriptor which needs to be zeroed out
-for the keep alive frame. This makes the earlier
-REG_WRITE redundant, so it can be removed.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_wow.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+On 02/19/2015 03:53 PM, Mário Lopes wrote:
+> Hi everyone.
+>
+> When using frame injection over monitor interface, with handmade packet
+> with Radiotap header + QoS + Data, at sender I capture the packet with
+> tcpdump and it is equal to the one I sent.
+> Although, at receiver station, the packet is diferent, FCS was
+> recalculated or forced to active and calculated, MCS is not the one I
+> supplied, sequence number (QoS field) is not the same, amongst other
+> things.
+> Also, QoS Ack policy was "No Ack" at sender (QoS Control = 0x0020), a
+> Ack frame was transmitted to sender and the received packet arrived with
+> QoS Control = 0x0000.
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_wow.c b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-index 86bfc96..5e707c8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-@@ -74,8 +74,6 @@ static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
- 	for (i = 0; i < KAL_NUM_DESC_WORDS; i++)
- 		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
- 
--	REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + i * 4), ctl[i]);
--
- 	data_word[0] = (KAL_FRAME_TYPE << 2) | (KAL_FRAME_SUB_TYPE << 4) |
- 		       (KAL_TO_DS << 8) | (KAL_DURATION_ID << 16);
- 	data_word[1] = (ap_mac_addr[3] << 24) | (ap_mac_addr[2] << 16) |
-@@ -88,9 +86,11 @@ static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
- 		       (ap_mac_addr[1] << 8) | (ap_mac_addr[0]);
- 	data_word[5] = (ap_mac_addr[5] << 8) | (ap_mac_addr[4]);
- 
--	if (AR_SREV_9462_20(ah)) {
--		/* AR9462 2.0 has an extra descriptor word (time based
--		 * discard) compared to other chips */
-+	if (AR_SREV_9462_20_OR_LATER(ah) || AR_SREV_9565(ah)) {
-+		/*
-+		 * AR9462 2.0 and AR9565 have an extra descriptor word
-+		 * (time based discard) compared to other chips.
-+		 */
- 		REG_WRITE(ah, (AR_WOW_KA_DESC_WORD2 + (12 * 4)), 0);
- 		wow_ka_data_word0 = AR_WOW_TXBUF(13);
- 	} else {
-@@ -99,7 +99,6 @@ static void ath9k_wow_create_keep_alive_pattern(struct ath_hw *ah)
- 
- 	for (i = 0; i < KAL_NUM_DATA_WORDS; i++)
- 		REG_WRITE(ah, (wow_ka_data_word0 + i*4), data_word[i]);
--
- }
- 
- int ath9k_hw_wow_apply_pattern(struct ath_hw *ah, u8 *user_pattern,
--- 
-2.2.2
+Mario,
+
+If I'm not mistaken, the mac80211 parses your injected packet, retrieves 
+relevant information, such as flags from the radiotap header, removes 
+the radiotap header from your packet and then proceeds with sending the 
+packet as any normal packet towards the radio interface.
+
+This, however, means that either the mac80211 rate control algorithm is 
+calls or the ath9k rate control algorithm, depending on your kernel 
+configuration. The ath9k driver uses this rate control information to 
+compose the tx descriptor, after which the packet is handed over to the 
+hardware.
+I believe it is also the hardware (transmitter side or receiver side, 
+that I don't know), which fills in the actual rate used for the 
+transmission in your packet, since the hardware is capable of 
+retransmitting your packet with a lower rate when transmissions fail too 
+much at the highest rate from the rate selection algorithm.
+
+You mentioned that you monitor interface captures the packet as you have 
+sent it. If I remember correctly, the mac80211 forwards this packet 
+towards the monitor interface when the tx status of ath9k has been 
+received, so basically, you receive transmission status information, 
+along with your originally sent packet. Sequence numbers should have 
+been adjusted in this packet I think, however, the transmission rate 
+will be the same as you have specified.
+
+If you would like to send at a specific rate, you would need to use the 
+relevant iw commands to fix the transmission rate (or hack ath9k to 
+transmit at a fixed rate).
+
+Best regards,
+Wim.
+
 
