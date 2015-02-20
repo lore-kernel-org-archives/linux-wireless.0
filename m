@@ -1,44 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41125 "EHLO sipsolutions.net"
+Received: from trubo.inescn.pt ([192.35.246.20]:50972 "EHLO trubo.inescn.pt"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751605AbbBXUIb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 15:08:31 -0500
-Message-ID: <1424808508.2192.38.camel@sipsolutions.net> (sfid-20150224_210835_770679_D762C232)
-Subject: Re: [PATCH v5] mac80211: Allow 0 for NL80211_MESHCONF_PLINK_TIMEOUT
- to disable STA expiration
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org, me@bobcopeland.com
-Date: Tue, 24 Feb 2015 21:08:28 +0100
-In-Reply-To: <1424785336-3268-1-git-send-email-masashi.honma@gmail.com> (sfid-20150224_144229_413961_1475FA92)
-References: <CAFk-A4=OJyzuQ04i=c5F2HpX+n8JK6RSbZrNKGU7M6J8EteH8w@mail.gmail.com>
-	 <1424785336-3268-1-git-send-email-masashi.honma@gmail.com>
-	 (sfid-20150224_144229_413961_1475FA92)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753745AbbBTKL6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2015 05:11:58 -0500
+Message-ID: <20150220111149.11345nax1t6qevdx@horde.inescporto.pt> (sfid-20150220_111202_191036_E4FEADBB)
+Date: Fri, 20 Feb 2015 11:11:49 +0100
+From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inescporto.pt>
+To: wim torfs <wtorfs@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Issue with frame injection on monitor interface (ath9k)
+References: <20150219155345.54713ultwqjbtrsp@horde.inescporto.pt>
+	<54E62B1C.9010908@gmail.com>
+In-Reply-To: <54E62B1C.9010908@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset=ISO-8859-1;
+	DelSp="Yes";
+	format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-02-24 at 22:42 +0900, Masashi Honma wrote:
-> Both wpa_supplicant and mac80211 has inactivity timer. By default
-> wpa_supplicant will be timed out in 5 minutes and mac80211's it is 30 minutes.
-> If wpa_supplicant uses more long timer than mac80211, wpa_supplicant will get
-> unexpected disconnection by mac80211. This patch adds functionality of disabling
-> mac80211 inactivity timer to avoid to prevent wpa_supplicant inactivity timer.
-> 
-> I have thought setting 0xffffffff to NL80211_MESHCONF_PLINK_TIMEOUT will solve
-> this problem without this patch. But the approach does not work on 32 bit
-> system. To explain the reason, I will show STA expiration rule in kernel. This
-> is the expression.
-> 
-> (current jiffies) > (frame Rx jiffies + NL80211_MESHCONF_PLINK_TIMEOUT * 250)
-> 
-> On 32bit system, right side could be over flow and be unexpected small value if
-> NL80211_MESHCONF_PLINK_TIMEOUT is sufficiently large. STA expiration occurs by
-> this reason. So I made this patch.
+Before trying Radiotap header approach, I did disable Ack's with iw  
+but the transmition rate remained at basic rate (6 Mbit/s) despite  
+forcing higher MCS with iw, so it was useless.
+Could be this a bug in the driver, unicast traffic sent with NoAck  
+flag treated as a broadcast, despite higher bitrate forcing?
+Returning to Radiotap, what's the point of injecting a frame with  
+radiotap header if it isn't going to be used? I didn't try all the  
+possible combinations, but the ones I tryied, they where changed  
+before arriving at receiver.
 
-Applied, I've reworded and rewrapped the commit log - in the future
-please send commit logs with at most 72 characters per line.
+Thanks.
 
-johannes
+BR,
+Mário Lopes.
 
+
+Quoting wim torfs <wtorfs@gmail.com>:
+
+>
+>
+> On 02/19/2015 03:53 PM, Mário Lopes wrote:
+>> Hi everyone.
+>>
+>> When using frame injection over monitor interface, with handmade packet
+>> with Radiotap header + QoS + Data, at sender I capture the packet with
+>> tcpdump and it is equal to the one I sent.
+>> Although, at receiver station, the packet is diferent, FCS was
+>> recalculated or forced to active and calculated, MCS is not the one I
+>> supplied, sequence number (QoS field) is not the same, amongst other
+>> things.
+>> Also, QoS Ack policy was "No Ack" at sender (QoS Control = 0x0020), a
+>> Ack frame was transmitted to sender and the received packet arrived with
+>> QoS Control = 0x0000.
+>>
+>
+> Mario,
+>
+> If I'm not mistaken, the mac80211 parses your injected packet,  
+> retrieves relevant information, such as flags from the radiotap  
+> header, removes the radiotap header from your packet and then  
+> proceeds with sending the packet as any normal packet towards the  
+> radio interface.
+>
+> This, however, means that either the mac80211 rate control algorithm  
+> is calls or the ath9k rate control algorithm, depending on your  
+> kernel configuration. The ath9k driver uses this rate control  
+> information to compose the tx descriptor, after which the packet is  
+> handed over to the hardware.
+> I believe it is also the hardware (transmitter side or receiver  
+> side, that I don't know), which fills in the actual rate used for  
+> the transmission in your packet, since the hardware is capable of  
+> retransmitting your packet with a lower rate when transmissions fail  
+> too much at the highest rate from the rate selection algorithm.
+>
+> You mentioned that you monitor interface captures the packet as you  
+> have sent it. If I remember correctly, the mac80211 forwards this  
+> packet towards the monitor interface when the tx status of ath9k has  
+> been received, so basically, you receive transmission status  
+> information, along with your originally sent packet. Sequence  
+> numbers should have been adjusted in this packet I think, however,  
+> the transmission rate will be the same as you have specified.
+>
+> If you would like to send at a specific rate, you would need to use  
+> the relevant iw commands to fix the transmission rate (or hack ath9k  
+> to transmit at a fixed rate).
+>
+> Best regards,
+> Wim.
+>
+>
+
+
+
+----------------------------------------------------------------
+This message was sent using IMP, the Internet Messaging Program.
