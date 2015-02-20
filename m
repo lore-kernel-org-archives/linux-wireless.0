@@ -1,55 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16352 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754353AbbBDIuH (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:56038 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753610AbbBTRYp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 03:50:07 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/4] ath10k: implement fw stats for wmi-tlv
-References: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 4 Feb 2015 10:49:55 +0200
-In-Reply-To: <1422611244-20767-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 30 Jan 2015 10:47:20 +0100")
-Message-ID: <874mr2uklo.fsf@kamboji.qca.qualcomm.com> (sfid-20150204_095011_843114_C1FD57B6)
+	Fri, 20 Feb 2015 12:24:45 -0500
+Received: by mail-ob0-f174.google.com with SMTP id wo20so25137632obc.5
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2015 09:24:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAMArcTXL7Ydka54p6HvRvP=LvFo+w56YnMMrSuUo+PnAsy1TbQ@mail.gmail.com>
+References: <1424443813-13634-1-git-send-email-ap420073@gmail.com>
+	<loom.20150220T175341-637@post.gmane.org>
+	<CAMArcTXL7Ydka54p6HvRvP=LvFo+w56YnMMrSuUo+PnAsy1TbQ@mail.gmail.com>
+Date: Fri, 20 Feb 2015 17:24:44 +0000
+Message-ID: <CALA4C6UWNY3cMe6BskMNOOK4BZV40hNpnpocTKkRNSvOqHbfOA@mail.gmail.com> (sfid-20150220_182448_749621_90CAF9E1)
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Fix some beacon issue
+From: Mike Turner <miketurner.forum@gmail.com>
+To: "ap420073 ." <ap420073@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Fri, Feb 20, 2015 at 5:16 PM, ap420073 . <ap420073@gmail.com> wrote:
+> can you tell me hostapd options and detailed situation?
+> 2015-02-21 1:58 GMT+09:00 Mike Turner : > Taehee Yoo writes: > >> >>
+> Sometimes rtl8192cu is not sending beacon frame. >> This patch fix this
+> issue. >> >> Signed-off-by: Taehee Yoo > > > > Tried this and it doesn't
+> help. Beacon transmission still isn't > consistent. Can hostapd have an
+> effect on this? > > > -- > To unsubscribe from this list: send the line
+> "unsubscribe linux-wireless" in > the body of a message to
+> majordomo@vger.kernel.org > More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
 
-> There are some slight differences in fw stats
-> (sic) in wmi-tlv.
->
-> Firmware has changed the querying scheme and no
-> longer requires the ping-pong to get all stats.
-> The patchset doesn't change this behaviour so with
-> wmi-tlv it's possible to see the following
-> warnings when reading fw stats:
->
->  ath10k_pci 0000:00:06.0: received unsolicited stats update event
->
-> The logic in ath10k still produces correct results
-> so this is harmless.
->
-> I wonder how to deal with this in a sane way. An
-> `if (op_ver == WMI_TLV)` is a little bad but
-> having a new ar->fw_feature flag just for a debug
-> facility like this is a bit silly. Or we can just
-> drop the warning and leave a comment. Ideas?
+hostapd.conf file here
 
-I think we could just remove the warning.
+interface=wlan0
+driver=nl80211
+channel=3
+hw_mode=g
+preamble=1
+dtim_period=2
+beacon_int=100
+logger_syslog=-1
+logger_syslog_level=0
+logger_stdout=-1
+logger_stdout_level=0
+dump_file=/tmp/hostapd.dump
+ctrl_interface=/var/run/hostapd
+ctrl_interface_group=0
+supported_rates=60 90 120 180 240 360 480 540
+basic_rates=60 90 120 180 240
+ssid=SSID_SETUP3
+max_num_sta=5
+macaddr_acl=0
+auth_algs=3
+ieee80211d=0
+uapsd_advertisement_enabled=1
+wep_rekey_period=0
+own_ip_addr=127.0.0.1
+wpa_group_rekey=0
+wpa_strict_rekey=0
+wpa_gmk_rekey=0
+wpa_ptk_rekey=0
+#ap_table_max_size=255
+#ap_table_expiration_time=60
+eap_server=1
+disassoc_low_ack=1
+ap_max_inactivity=4294967295
 
-> Michal Kazior (4):
->   ath10k: add vdev stats processing
->   ath10k: change request stats command prototype
->   ath10k: add more wmi fw stat defines
->   ath10k: implement fw stats for wmi-tlv
+#WPA settings
+#WPA algorithm used (WPA2 in this case)
+wpa=2
+#AP password
+wpa_passphrase=Ssid_WIT
+#WPA key mangement type
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+#encription algorithm
+rsn_pairwise=CCMP
 
-There was a conflict in patch 2 but 3-way merge solved it automatically.
-Please check the result in the pending branch.
+Hostapd version 1.0
 
--- 
-Kalle Valo
+Atmel ARM at91sam9g25 CPU on custom designed hardware using D-link
+DWA-121 USB WiFi adaptor.
+
+Test using '/etc/init.d/hostapd stop' and '/etc/init.d/hostapd start'
+repeatedly.
+Can get multiple working cycles before a failure, and can get multiple
+failed cycles before correct transmission.
