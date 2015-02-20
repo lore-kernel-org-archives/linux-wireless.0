@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54349 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753430AbbA3NbQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Jan 2015 08:31:16 -0500
-Message-ID: <1422624670.1919.21.camel@sipsolutions.net> (sfid-20150130_143122_683505_DF6DAC56)
-Subject: Re: [PATCH v2 2/7] ath10k: implement chanctx API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 30 Jan 2015 14:31:10 +0100
-In-Reply-To: <CA+BoTQnkqzHNWTFSc9VB4_itCK_+jC6HC8GmdMKiyrhu-Sz9Cg@mail.gmail.com> (sfid-20150130_142217_389536_71E3C7E4)
-References: <1422607287-12289-1-git-send-email-michal.kazior@tieto.com>
-	 <1422621086-28970-1-git-send-email-michal.kazior@tieto.com>
-	 <1422621086-28970-3-git-send-email-michal.kazior@tieto.com>
-	 <1422621903.1919.7.camel@sipsolutions.net>
-	 <CA+BoTQkdszYWbNJcV+1dDFsaSJ3aoTuC=ORUMr_aJx7_aQmcqw@mail.gmail.com>
-	 <1422623054.1919.18.camel@sipsolutions.net>
-	 <CA+BoTQnkqzHNWTFSc9VB4_itCK_+jC6HC8GmdMKiyrhu-Sz9Cg@mail.gmail.com>
-	 (sfid-20150130_142217_389536_71E3C7E4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:40903 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754351AbbBTNFY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2015 08:05:24 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/3] ath10k: fix wrong symlink name on error path
+Date: Fri, 20 Feb 2015 18:34:11 +0530
+Message-ID: <1424437452-28161-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150220_140537_387905_2E986D22)
+In-Reply-To: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-01-30 at 14:22 +0100, Michal Kazior wrote:
+Wrong symlink name is used on error path of thermal registration
+and also correcting the error message.
 
-> You'd probably have to add quite a few mutex_lock(iflist_mtx) around
-> drv_*() calls (not directly but somewhere at their call trees) to
-> guarantee driver can use lock-free iterate() version (which doesn't
-> exist yet). This could be tricky.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/thermal.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Well, I was thinking you'd only use it in some places now - but it does
-seem a bit difficult to maintain.
-
-We've not typically had to worry about using the synchronous versions
-much since we mostly just need a single interface so we just pass it out
-and use it there, or so.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index 8992c17..7c54bb1 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -243,7 +243,7 @@ int ath10k_thermal_register(struct ath10k *ar)
+ 	ret = sysfs_create_link(&ar->dev->kobj, &cdev->device.kobj,
+ 				"cooling_device");
+ 	if (ret) {
+-		ath10k_err(ar, "failed to create thermal symlink\n");
++		ath10k_err(ar, "failed to create cooling device symlink\n");
+ 		goto err_cooling_destroy;
+ 	}
+ 
+@@ -281,7 +281,7 @@ int ath10k_thermal_register(struct ath10k *ar)
+ err_remove_file:
+ 	sysfs_remove_file(&ar->dev->kobj, &dev_attr_quiet_period.attr);
+ err_remove_link:
+-	sysfs_remove_link(&ar->dev->kobj, "thermal_sensor");
++	sysfs_remove_link(&ar->dev->kobj, "cooling_device");
+ err_cooling_destroy:
+ 	thermal_cooling_device_unregister(cdev);
+ 	return ret;
+-- 
+2.3.0
 
