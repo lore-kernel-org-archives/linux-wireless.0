@@ -1,61 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:34520 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965339AbbBCNZY (ORCPT
+Received: from mail-we0-f175.google.com ([74.125.82.175]:42633 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870AbbBTOMP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 08:25:24 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Subject: Re: [V2,for,3.19,3/7] rtlwifi: rtl8192ee: Fix adhoc fail
-References: <20150203131516.799471409D0@smtp.codeaurora.org>
-Date: Tue, 03 Feb 2015 15:23:50 +0200
-In-Reply-To: <20150203131516.799471409D0@smtp.codeaurora.org> (Kalle Valo's
-	message of "Tue, 3 Feb 2015 13:15:16 +0000 (UTC)")
-Message-ID: <87r3u7w2l5.fsf@kamboji.qca.qualcomm.com> (sfid-20150203_142531_787308_F4B61062)
+	Fri, 20 Feb 2015 09:12:15 -0500
+Received: by wesw62 with SMTP id w62so5785732wes.9
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Feb 2015 06:12:14 -0800 (PST)
+From: Sven Eckelmann <sven@open-mesh.com>
+To: Felix Fietkau <nbd@openwrt.org>, simon@open-mesh.com
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	marek@open-mesh.com, Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [PATCH v6 2/3] mac80211/minstrel_ht: use the new rate control API
+Date: Fri, 20 Feb 2015 15:12:10 +0100
+Message-ID: <2670025.E9NWYu3f4D@bentobox> (sfid-20150220_151218_990325_E48C8D50)
+In-Reply-To: <1366640083-1054-2-git-send-email-nbd@openwrt.org>
+References: <1366640083-1054-1-git-send-email-nbd@openwrt.org> <1366640083-1054-2-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Hi,
 
->> From: Troy Tan <troy_tan@realsil.com.cn>
->> 
->> When the buffer descriptor index exceeds 2, then a TX HANG condition
->> will result.
->> 
->> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org> [V3.18]
->
-> Thanks, 4 patches applied to wireless-drivers-next.git:
->
-> b661a5da5776 rtlwifi: rtl8192ee: Fix adhoc fail
-> 6e5f44361628 rtlwifi: rtl8192ee: Fix TX hang due to failure to update TX write point
-> 92ff754240b8 rtlwifi: rtl8192ee: Fix parsing of received packet
-> 21b39ddb5bb2 rtlwifi: rtl8192ee: Fix DMA stalls
->
-> 3 patches skipped:
+>  static void
+> @@ -846,6 +857,8 @@ minstrel_ht_update_caps(void *priv, struct
+> ieee80211_supported_band *sband,
+> 
+>  	msp->is_ht = true;
+>  	memset(mi, 0, sizeof(*mi));
+> +
+> +	mi->sta = sta;
+>  	mi->stats_update = jiffies;
 
-I had to skip these three patches because of my mistake. So what I did
-was that I had merged ("fast forwarded") the net tree into my
-wireless-drivers tree and not realising I should not do that. So now I
-can't merge wireless-drivers into wireless-drivers-next anymore, as it
-will pull unnecessary net changes.
+minstrel_ht_update_caps can be called on init and on different other changes
+(rate_control_rate_update).
 
-> [V2,for,3.19,1/7] rtlwifi: Remove logging statement that is no longer
-> needed
+Which lock protects mi from following scenario?
 
-I'll apply this after 3.20-rc1 is released, it should apply then without
-problems (or the conflicts are easy for me to fix). Luckily this is just
-a cosmetic error and can wait for 3.20-rc2, right?
+context 1: memset(mi, 0, sizeof(*mi)); // mi->sta is now NULL
+context 2: minstrel_ht_update_rates -> rate_control_set_rates(mp->hw, mi->sta, rates)
+context 2: rate_control_set_rates dereferences pubsta->rates (mi->sta + 0x48) -> Kernel Oops
+context 1: mi->sta = sta
 
-> [V2,for,3.19,2/7] rtlwifi: rtl8192ee: Fix handling of new style descriptors
-> [V2,for,3.19,6/7] rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
+The first context is from one of the many rate_control_rate_update in mac80211
+and the second context is from ieee80211_tx_status.
 
-Not sure what to do with these one. Should you rebase and send them now?
+The question came up when discovering the OpenWrt bug report
+ https://dev.openwrt.org/ticket/18388 (minstrel_ht_update_caps
+the thing most likely behind minstrel_remove_sta_debugfs+0xe8c/0x1674 - at least
+EPC is pointing inside this function for a build from this revision)
 
--- 
-Kalle Valo
+Kind regards,
+	Sven Eckelmann
