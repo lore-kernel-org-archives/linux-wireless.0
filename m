@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22251 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754867AbbBONkX (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:60287 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754432AbbBTT3D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 08:40:23 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: ath10k <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: station kickout
-References: <54D29F71.50603@candelatech.com>
-Date: Sun, 15 Feb 2015 15:40:16 +0200
-In-Reply-To: <54D29F71.50603@candelatech.com> (Ben Greear's message of "Wed,
-	04 Feb 2015 14:38:41 -0800")
-Message-ID: <87d25bi98f.fsf@kamboji.qca.qualcomm.com> (sfid-20150215_144027_441021_D104BD92)
+	Fri, 20 Feb 2015 14:29:03 -0500
+Message-ID: <54E78AFA.1000400@broadcom.com> (sfid-20150220_202908_421787_1060756C)
+Date: Fri, 20 Feb 2015 20:28:58 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	Ahmad Kholaif <akholaif@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] cfg80211: Allow NL80211_ATTR_IFINDEX to be added
+ to vendor events
+References: <1424442925-10778-1-git-send-email-jouni@qca.qualcomm.com>
+In-Reply-To: <1424442925-10778-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Adding linux-wireless)
-
-Ben Greear <greearb@candelatech.com> writes:
-
-> In AP mode, it seems that 3.17-ish kernels (at least) always set station kickout
-> to hard-coded value of 50.
+On 02/20/15 15:35, Jouni Malinen wrote:
+> @@ -7405,6 +7405,12 @@ __cfg80211_alloc_vendor_skb(struct cfg80211_registered_device *rdev,
+>   			goto nla_put_failure;
+>   	}
 >
-> Is this something that should be configurable?  Maybe a module parameter
-> if nothing else?
+> +	if (wdev&&  wdev->netdev) {
+> +		if (nla_put_u32(skb, NL80211_ATTR_IFINDEX,
+> +				wdev->netdev->ifindex))
+> +			goto nla_put_failure;
+> +	}
+> +
 
-Or should we add this to nl80211/cfg80211/mac80211? I would guess other
-drivers also have similar functionality.
+Could consider putting wdev id in there as well.
 
--- 
-Kalle Valo
+Regards,
+Arend
