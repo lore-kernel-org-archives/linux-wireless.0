@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:59795 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808AbbBEHY0 (ORCPT
+Received: from ssl.serverraum.org ([88.198.40.39]:49499 "EHLO
+	ssl.serverraum.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754490AbbBTSMP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 02:24:26 -0500
-Received: by mail-oi0-f46.google.com with SMTP id a141so5232988oig.5
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2015 23:24:26 -0800 (PST)
-Message-ID: <54D31AA8.6060502@lwfinger.net> (sfid-20150205_082431_666127_D662D3E5)
-Date: Thu, 05 Feb 2015 01:24:24 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 20 Feb 2015 13:12:15 -0500
+Message-ID: <54E778F9.1000500@m-labs.hk> (sfid-20150220_191224_510510_13707D9F)
+Date: Fri, 20 Feb 2015 11:12:09 -0700
+From: Sebastien Bourdeauducq <sb@m-labs.hk>
 MIME-Version: 1.0
-To: Ken D'Ambrosio <ken@jots.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ee (Thinkpad T440s)
-References: <10a90ab7a6c186362f339481b531832f@webmail.jots.org> <54D00FA4.2060907@lwfinger.net> <8f26bf9461a88199ef8d8c86f7ee98f9@webmail.jots.org>
-In-Reply-To: <8f26bf9461a88199ef8d8c86f7ee98f9@webmail.jots.org>
+To: Arend van Spriel <arend@broadcom.com>
+CC: brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Simon Raffeiner (SCC)" <simon.raffeiner@kit.edu>
+Subject: Re: brcmfmac43241b4-sdio / Thinkpad Tablet 10 issues
+References: <54E2E1CD.5020203@m-labs.hk> <54E31CD5.70901@broadcom.com>
+In-Reply-To: <54E31CD5.70901@broadcom.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2015 12:56 AM, Ken D'Ambrosio wrote:
-> Feb  5 01:51:19 minasithil kernel: [ 3141.801171] rtl8192ee 0000:03:00.0:
-> Refused to change power state, currently in D3
+On Tuesday, February 17, 2015 03:49 AM, Arend van Spriel wrote:
+> So it is a one-off and not showing the issue you are seeing. Your issue
+> seems to be due to failing firmware so you may need b5 firmware.
 
-Above is the serious problem. The wifi device is not powering on. Sometimes this 
-can be caused by some state left by Windows. Do you dual boot?
+Making some progress :)
 
-Do any ACPI warning messages appear in the early boot log?
+I have extracted the firmwares from the Lenovo Windows driver, which 
+contains:
 
-I found some mention of a module named thinkpad_acpi. Is it loaded?
+43241b4rtecdc.bin  4324b5rtecdc.bin  4330b2rtecdc.bin  43341b0rtecdc.bin
 
-I have asked the Realtek people if they have any suggestions.
+I have used 4324b5rtecdc.bin in place of brcmfmac43241b4-sdio.bin in 
+/lib/firmware. This time it goes further, and I can scan for networks, 
+associate (only tried without encryption so far), and transmit packets 
+(which are correctly received by another device in monitor mode).
 
-Larry
+However, the MAC address reported by ifconfig does not match the one in 
+brcmfmac43241b4-sdio.txt, and the brcmfmac device fails to correctly 
+receive packets.
 
+The RX packets fall in three categories:
+1) dropped at a lower level
+2) reported as "dropped" by ifconfig
+3) received but corrupted, shown with ethertype 0x886c and containing 
+the string "wl0" which I guess is related to the firmware and should not 
+be there.
+
+I guess that the driver has bugs with decoding some of the data sent by 
+the card.
+
+I'm sending you privately a log with debug=0x1416 (association + DHCP) 
+and a pcap trace showing packets of category 3.
+
+Sebastien
