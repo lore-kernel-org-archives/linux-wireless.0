@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:44725 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbbBPFRP (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:41636 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752018AbbBTCJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 00:17:15 -0500
-Received: from [117.222.159.239] (port=14037 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YNE3W-000EUz-AG
-	for linux-wireless@vger.kernel.org; Mon, 16 Feb 2015 00:17:15 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/9] ath9k patches
-Date: Mon, 16 Feb 2015 10:49:52 +0530
-Message-Id: <1424064001-7009-1-git-send-email-sujith@msujith.org> (sfid-20150216_061719_114778_424532A0)
+	Thu, 19 Feb 2015 21:09:27 -0500
+MIME-Version: 1.0
+In-Reply-To: <36119.1424394185@turing-police.cc.vt.edu>
+References: <1422889166-29386-1-git-send-email-ilan.peer@intel.com>
+ <20150206235802.GA19988@wotan.suse.de> <CB3B3D4774441E42AA3EA0E1BA8230A04D01068E@HASMSX106.ger.corp.intel.com>
+ <20150210200027.GG19988@wotan.suse.de> <CB3B3D4774441E42AA3EA0E1BA8230A04D017CEB@HASMSX106.ger.corp.intel.com>
+ <20150220005344.GF20824@wotan.suse.de> <36119.1424394185@turing-police.cc.vt.edu>
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Date: Thu, 19 Feb 2015 18:09:04 -0800
+Message-ID: <CAB=NE6VJEm9sL+KZFAAYHGR4=hEhT_NjM3k1W5tGEuXp98x2eg@mail.gmail.com> (sfid-20150220_030946_602689_A7426ECC)
+Subject: Re: [PATCH v4 1/2] cfg80211: Add API to change the indoor regulatory setting
+To: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+Cc: "Peer, Ilan" <ilan.peer@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ArikX Nemtsov <arik@wizery.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, Feb 19, 2015 at 5:03 PM,  <Valdis.Kletnieks@vt.edu> wrote:
+> On Fri, 20 Feb 2015 01:53:44 +0100, "Luis R. Rodriguez" said:
+>> Wider community:
+>>
+>> anyone aware of any *need* in the kernel to know whether one is indoor or
+>> not on a device running Linux other than wifi? Clearly it should be something
+>> that might be of interest to at least other RF devices, so that is at least
+>> one possibilty to consider already, but what else?
+>
+> I can think of a lot of reasons for the kernel to make indoor/outdoor
+> status available to userspace, but am coming up empty why the kernel itself
+> should care....
 
-ath9k patches for -next.
+Some devices enable regulatory control through the kernel, in such
+cases the wireless-regdb is used and there is an INDOOR flag that
+enables / disables specific functionality.
 
-Sujith Manoharan (9):
-  ath9k: Move MCI registers to reg_mci.h
-  ath9k: Remove useless check in MCI reset
-  ath9k: Add new MCI configuration parameters
-  ath9k: Handle 2-ANT AR9565 in MCI reset
-  ath9k: Fix MCI TX control
-  ath9k: Setup MCI statistics properly
-  ath9k: Prepare MCI interface correctly
-  ath9k: Fix GPM initialization
-  ath9k: Mute BT properly
-
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 158 ++++++++++----
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |  24 ++-
- drivers/net/wireless/ath/ath9k/hw.h         |   1 +
- drivers/net/wireless/ath/ath9k/mci.c        |   5 +-
- drivers/net/wireless/ath/ath9k/reg.h        | 275 ------------------------
- drivers/net/wireless/ath/ath9k/reg_mci.h    | 310 ++++++++++++++++++++++++++++
- 6 files changed, 449 insertions(+), 324 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/reg_mci.h
-
--- 
-2.3.0
-
+ Luis
