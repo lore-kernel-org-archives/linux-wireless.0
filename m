@@ -1,75 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f175.google.com ([209.85.223.175]:41048 "EHLO
-	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751861AbbBWWWd (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:42133 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754214AbbBTNFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 17:22:33 -0500
-Received: by iecrd18 with SMTP id rd18so27327828iec.8
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 14:22:32 -0800 (PST)
+	Fri, 20 Feb 2015 08:05:07 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 1/3] ath10k: add sysfs entry to configure quiet period
+Date: Fri, 20 Feb 2015 18:34:10 +0530
+Message-ID: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150220_140607_921968_8F461B5D)
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
-References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
-	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
-	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
-	<CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
-	<CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
-	<CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
-	<CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
-	<CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
-	<20150223171700.GA29730@w1.fi>
-	<CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
-	<20150223213050.GA23232@w1.fi>
-	<CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
-Date: Mon, 23 Feb 2015 14:22:32 -0800
-Message-ID: <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com> (sfid-20150223_232236_816588_C6A48EC5)
-Subject: Re: AR9462 problems connecting again..
-From: Adrian Chadd <adrian@freebsd.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jouni Malinen <j@w1.fi>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 February 2015 at 13:53, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Mon, Feb 23, 2015 at 1:30 PM, Jouni Malinen <j@w1.fi> wrote:
->>
->> How far is the station from the AP? Would it be possible to see whether
->> the behavior changes if you were within, say, five meters or so?
->
-> Well, it was pretty much within five meters already, but there was a
-> thin wall in between (and the old AP was right next to the laptop,
-> which might add some noise even if they are on different channels).
-> Going closer does seem to help, but again, it's not like this is 100%
-> reproducible to begin with.
->
-> So the theory that the driver starts at too high a transmit rate, and
-> then does not handle failures well, might be true. Of course, "not
-> handle failures well" is something of an understatement.
->
->> It would be useful if you can capture the 802.11 frame exchange from a
->> failed connection case with an external wireless sniffer.
->
-> I will try with my (much more reliable) iwlwifi laptop. At least the
-> merge window is over, so I should have some time. Knock wood.
+Add support to configure quiet period via sysfs entry. This will
+be helpful to experiment different quiet period values along with
+different duty cycle ratio.
 
-Hm, can we just hack mac80211/ath9k to set /all/ EAPOL frames to the
-lowest negotiated basic rate and test? That way we don't have to worry
-about things resetting fixed rates or whatnot.
+To configure quiet period as 30ms,
 
-I've done that with FreeBSD's atheros/intel drivers and net80211 stack
-to fix exactly these, although I'm thinking about adding a patch based
-on Jouni's note about EAPOL encrypting the final response.
+echo 30 >/sys/class/ieee80211/phyX/device/quiet_period
 
-Does ath9k have an easy interface for dumping out the TX descriptors
-and response? That way we can see (a) what it's transmitting as, and
-(b) whether the hardware indicated it got an ACK for the particular
-frame.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/thermal.c | 57 +++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/thermal.h |  1 +
+ 2 files changed, 55 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index 0d89ab5..8992c17 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -96,8 +96,7 @@ static int ath10k_thermal_set_cur_dutycycle(struct thermal_cooling_device *cdev,
+ 		ret = -ENETDOWN;
+ 		goto out;
+ 	}
+-	period = max(ATH10K_QUIET_PERIOD_MIN,
+-		     (ATH10K_QUIET_PERIOD_DEFAULT / num_bss));
++	period = ar->thermal.quiet_period;
+ 	duration = (period * (100 - duty_cycle)) / 100;
+ 	enabled = duration ? 1 : 0;
+ 
+@@ -184,6 +183,48 @@ static struct attribute *ath10k_hwmon_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(ath10k_hwmon);
+ 
++static ssize_t ath10k_thermal_show_quiet_period(struct device *dev,
++						struct device_attribute *attr,
++						char *buf)
++{
++	struct ath10k *ar = dev_get_drvdata(dev);
++	u32 period;
++
++	mutex_lock(&ar->conf_mutex);
++	period = ar->thermal.quiet_period;
++	mutex_unlock(&ar->conf_mutex);
++
++	return sprintf(buf, "%u\n", period);
++}
++
++static ssize_t ath10k_thermal_store_quiet_period(struct device *dev,
++						 struct device_attribute *attr,
++						 const char *buf, size_t count)
++{
++	struct ath10k *ar = dev_get_drvdata(dev);
++	u32 period;
++	int ret;
++
++	ret = kstrtou32(buf, 0, &period);
++	if (ret)
++		return ret;
++
++	if (period < ATH10K_QUIET_PERIOD_MIN) {
++		ath10k_warn(ar, "Quiet period %u can not be lesser than 25ms\n",
++			    period);
++		return -EINVAL;
++	}
++	mutex_lock(&ar->conf_mutex);
++	ar->thermal.quiet_period = period;
++	mutex_unlock(&ar->conf_mutex);
++
++	return count;
++}
++
++static DEVICE_ATTR(quiet_period, S_IRUGO | S_IWUSR,
++		   ath10k_thermal_show_quiet_period,
++		   ath10k_thermal_store_quiet_period);
++
+ int ath10k_thermal_register(struct ath10k *ar)
+ {
+ 	struct thermal_cooling_device *cdev;
+@@ -208,6 +249,13 @@ int ath10k_thermal_register(struct ath10k *ar)
+ 
+ 	ar->thermal.cdev = cdev;
+ 
++	ret = sysfs_create_file(&ar->dev->kobj, &dev_attr_quiet_period.attr);
++	if (ret) {
++		ath10k_err(ar, "failed to create quiet period sysfs entry\n");
++		goto err_remove_link;
++	}
++	ar->thermal.quiet_period = ATH10K_QUIET_PERIOD_DEFAULT;
++
+ 	/* Do not register hwmon device when temperature reading is not
+ 	 * supported by firmware
+ 	 */
+@@ -226,10 +274,12 @@ int ath10k_thermal_register(struct ath10k *ar)
+ 		ath10k_err(ar, "failed to register hwmon device: %ld\n",
+ 			   PTR_ERR(hwmon_dev));
+ 		ret = -EINVAL;
+-		goto err_remove_link;
++		goto err_remove_file;
+ 	}
+ 	return 0;
+ 
++err_remove_file:
++	sysfs_remove_file(&ar->dev->kobj, &dev_attr_quiet_period.attr);
+ err_remove_link:
+ 	sysfs_remove_link(&ar->dev->kobj, "thermal_sensor");
+ err_cooling_destroy:
+@@ -241,4 +291,5 @@ void ath10k_thermal_unregister(struct ath10k *ar)
+ {
+ 	thermal_cooling_device_unregister(ar->thermal.cdev);
+ 	sysfs_remove_link(&ar->dev->kobj, "cooling_device");
++	sysfs_remove_file(&ar->dev->kobj, &dev_attr_quiet_period.attr);
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
+index 5e87d9a..050f41d 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.h
++++ b/drivers/net/wireless/ath/ath10k/thermal.h
+@@ -29,6 +29,7 @@ struct ath10k_thermal {
+ 
+ 	/* protected by conf_mutex */
+ 	u32 duty_cycle;
++	u32 quiet_period;
+ 	/* temperature value in Celcius degree
+ 	 * protected by data_lock
+ 	 */
+-- 
+2.3.0
 
--adrian
