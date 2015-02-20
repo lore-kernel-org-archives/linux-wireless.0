@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from n9-42.mail.139.com ([221.176.9.42]:51478 "EHLO
-	n9-42.mail.139.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751994AbbBKKI3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2015 05:08:29 -0500
-Message-ID: <1423528570.19464.1.camel@am335x> (sfid-20150211_110848_946603_075133F4)
-Subject: Re: [PATCH] ath9k_htc: add adaptive usb receive flow control to
- repair soft lockup with monitor mode
-From: Yuwei Zheng <yuweizheng@139.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	netdev@vger.kernel.org, zhengyuwei@360.cn
-Date: Tue, 10 Feb 2015 08:36:10 +0800
-In-Reply-To: <87oap0n6rv.fsf@kamboji.qca.qualcomm.com>
-References: <1423506672-6686-1-git-send-email-yuweizheng@139.com>
-	 <87oap0n6rv.fsf@kamboji.qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36551 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755172AbbBTTFY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Feb 2015 14:05:24 -0500
+Message-ID: <1424459121.20313.27.camel@redhat.com> (sfid-20150220_200527_696384_8ED6E35B)
+Subject: Re: General question about Broadcom b43 driver and its source.
+From: Dan Williams <dcbw@redhat.com>
+To: Tom Cipollone <minertom11551@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 20 Feb 2015 13:05:21 -0600
+In-Reply-To: <CAACrVkg-_CZsS_znKEscnmAMOSbSmkVLmR3ezLDKhCoKx2xxHg@mail.gmail.com>
+References: <CAACrVkg-_CZsS_znKEscnmAMOSbSmkVLmR3ezLDKhCoKx2xxHg@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 三, 2015-02-11 at 11:20 +0200, Kalle Valo wrote:
-> Yuwei Zheng <yuweizheng@139.com> writes:
+On Fri, 2015-02-20 at 09:36 -0800, Tom Cipollone wrote:
+> Hello. I am new to this forum but have been designing hardware for 33
+> years. I am new, however, to wireless software. I have designed
+> modem/residential gateway boards with BCM63138 and others but not the
+> software so please forgive what may seem like simpleton questions.
 > 
-> > The ath9k_hif_usb_rx_cb function excute on  the interrupt context, and ath9k_rx_tasklet excute
-> > on the soft irq context. In other words, the ath9k_hif_usb_rx_cb have more chance to excute than
-> > ath9k_rx_tasklet.  So in the worst condition,  the rx.rxbuf receive list is always full,
-> > and the do {}while(true) loop will not be break. The kernel get a soft lockup panic. 
-> >  
-> > [59011.007210] BUG: soft lockup - CPU#0 stuck for 23s!
-> > [kworker/0:0:30609]
-> > [59011.030560] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
-> > [59013.804486] BUG: scheduling while atomic: kworker/0:0/30609/0x40010100
-> > [59013.858522] Kernel panic - not syncing: softlockup: hung tasks
-> >  
-> > [59014.038891] Exception stack(0xdf4bbc38 to 0xdf4bbc80)
-> > [59014.046834] bc20:                                                       de57b950 60000113
-> > [59014.059579] bc40: 00000000 bb32bb32 60000113 de57b948 de57b500 dc7bb440 df4bbcd0 00000000
-> > [59014.072337] bc60: de57b950 60000113 df4bbcd0 df4bbc80 c04c259d c04c25a0 60000133 ffffffff
-> > [59014.085233] [<c04c28db>] (__irq_svc+0x3b/0x5c) from [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10)
-> > [59014.100437] [<c04c25a0>] (_raw_spin_unlock_irqrestore+0xc/0x10) from [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc])
-> > [59014.118267] [<bf9c2089>] (ath9k_rx_tasklet+0x290/0x490 [ath9k_htc]) from [<c0036d23>] (tasklet_action+0x3b/0x98)
-> > [59014.134132] [<c0036d23>] (tasklet_action+0x3b/0x98) from [<c0036709>] (__do_softirq+0x99/0x16c)
-> > [59014.147784] [<c0036709>] (__do_softirq+0x99/0x16c) from [<c00369f7>] (irq_exit+0x5b/0x5c)
-> > [59014.160653] [<c00369f7>] (irq_exit+0x5b/0x5c) from [<c000cfc3>] (handle_IRQ+0x37/0x78)
-> > [59014.173124] [<c000cfc3>] (handle_IRQ+0x37/0x78) from [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68)
-> > [59014.187225] [<c00085df>] (omap3_intc_handle_irq+0x5f/0x68) from [<c04c28db>](__irq_svc+0x3b/0x5c)
-> >  
-> > This bug can be see with low performance board, such as uniprocessor beagle bone board. Add some debug message in the ath9k_hif_usb_rx_cb
-> > function may trigger this bug quickly.
-> >  
-> > Signed-off-by: Yuwei Zheng <yuweizheng@139.com>
+> My question concerns the b43 driver. The documentation claims that it
+> was reverse engineered from the BCM4306 component. I expect that the
+> 4306 documentation is very proprietary because I was not able to find
+> it even though I have customer access to Broadcom customer support.
 > 
-> The word wrapping is still wrong, please limit the line length to 72
-> chars or so. This is the second time I'm mentioning that. Also add v2,
-> v3 and so on when you send new versions of the patch, otherwise I will
-> not know what version I should use. And even better if you add a
-> changelog after "---" line.
-> 
-> Documentation/SubmittingPatches should tell you all this.
-> 
+> 1) I have a RT-N16 router, with a BCM4718 WiFi. I expect that the
+> BCM4718 is backwards compatible with the BCM4306?
 
-I have modified and resubmited as you suggest.
-Thanks.
+I wouldn't necessarily expect so; the 4306 is a really old 802.11g part
+from 2003, while the 4718 is a newer 802.11n dual-band part from 2009.
+There are a ton of different parts, and 6 years is a *lot* of time.
+Don't expect they'll be compatible in any way; any compatibility they do
+have is a gift.
 
+But there's already b43 (and brcmsmac) support for the 4718 (via the
+4716 of which it's based) in the upstream kernel, AFAICT.
 
+> 2) Where can I find the reverse engineered source code for the b43
+> driver? I have OpenWrt loaded and have compiled it before loading the
+> .trx file onto my RT-N16. I have been looking on liinux-wireless but
+> was referred to kernel-backports.
 
+In the Linux kernel:
 
+(4718)
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/b43
+
+(4306)
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/net/wireless/b43legacy
+
+Dan
 
