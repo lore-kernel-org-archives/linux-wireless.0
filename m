@@ -1,97 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f177.google.com ([74.125.82.177]:61542 "EHLO
-	mail-we0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750792AbbBLGrD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 01:47:03 -0500
-Received: by mail-we0-f177.google.com with SMTP id m14so2135363wev.8
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 22:47:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1423717162-7788-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1423717162-7788-1-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Thu, 12 Feb 2015 07:47:01 +0100
-Message-ID: <CA+BoTQmFhuK5vt8UnDu7CkH2=vUqGY8WkkXEgwoSb-NUoEYH-w@mail.gmail.com> (sfid-20150212_074709_293512_863ED2D2)
-Subject: Re: [PATCH] ath10k: Fix interrupt storm
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from omr1.cc.vt.edu ([198.82.141.52]:58012 "EHLO omr1.cc.vt.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753810AbbBTBDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Feb 2015 20:03:16 -0500
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: "Peer, Ilan" <ilan.peer@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ArikX Nemtsov <arik@wizery.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 1/2] cfg80211: Add API to change the indoor regulatory setting
+In-Reply-To: Your message of "Fri, 20 Feb 2015 01:53:44 +0100."
+             <20150220005344.GF20824@wotan.suse.de>
+From: Valdis.Kletnieks@vt.edu
+References: <1422889166-29386-1-git-send-email-ilan.peer@intel.com> <20150206235802.GA19988@wotan.suse.de> <CB3B3D4774441E42AA3EA0E1BA8230A04D01068E@HASMSX106.ger.corp.intel.com> <20150210200027.GG19988@wotan.suse.de> <CB3B3D4774441E42AA3EA0E1BA8230A04D017CEB@HASMSX106.ger.corp.intel.com>
+            <20150220005344.GF20824@wotan.suse.de>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="==_Exmh_1424394185_1945P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Date: Thu, 19 Feb 2015 20:03:05 -0500
+Message-ID: <36119.1424394185@turing-police.cc.vt.edu> (sfid-20150220_020350_980618_0CBB52E1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 February 2015 at 05:59, Vasanthakumar Thiagarajan
-<vthiagar@qti.qualcomm.com> wrote:
-> Promiscuous mode is enabled when wlan interface is added to
-> bridge. ath10k creates a monitor mode when promiscuous mode
-> is enabled. When monitor vdev is runing along with other
-> vdev(s) there is a huge number of interrupts generated
-> especially in noisy condition. Fix this by not enabling
-> promiscuous(monitor) mode when already a vdev is running.
-> This does not change the support of virtual interface of
-> type monitor along with other vdevs.
+--==_Exmh_1424394185_1945P
+Content-Type: text/plain; charset=us-ascii
+
+On Fri, 20 Feb 2015 01:53:44 +0100, "Luis R. Rodriguez" said:
+> Wider community:
 >
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c |   16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index d6d2f0f..310e608 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -932,6 +932,14 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
->                 return ret;
->         }
->
-> +       if (ar->filter_flags & FIF_PROMISC_IN_BSS) {
-> +               ar->filter_flags &= ~FIF_PROMISC_IN_BSS;
-> +               ath10k_dbg(ar, ATH10K_DBG_MAC, "Disabling promiscuous mode when we start a vdev\n");
+> anyone aware of any *need* in the kernel to know whether one is indoor or
+> not on a device running Linux other than wifi? Clearly it should be something
+> that might be of interest to at least other RF devices, so that is at least
+> one possibilty to consider already, but what else?
 
-The debug message style is: "mac <message>", i.e. "mac disabling
-promiscuous mode because vdev is started".
+I can think of a lot of reasons for the kernel to make indoor/outdoor
+status available to userspace, but am coming up empty why the kernel itself
+should care....
 
+--==_Exmh_1424394185_1945P
+Content-Type: application/pgp-signature
 
-> +               ret = ath10k_monitor_recalc(ar);
-> +               if (ret)
-> +                       return ret;
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Exmh version 2.5 07/13/2001
 
-If you fail you should undo whatever the function did if it makes
-sense. In this case it makes sense to stop the vdev.
+iQIVAwUBVOaHyQdmEQWDXROgAQJSJw/9FmjgQdrU8Cb2BQBYNZ6jfXuG0Fh0rYfc
+XBP3OzLsq26Ka/S5E4QXGE+pQjPEoMmH4qZwCItQZTkSbcEpEcMZiS8afC1EFN19
+nGd7rPMvHvGW1gFvKhurYPBaEzce4rzQBfrbJ2Dz6qPQGSObZsF1NdOtPE1L7eyb
+joj3C82DKUuOIeJ8akeCPmMQmJIuFeqlo7AX3kMTzUOU/AIpUbAN6IIEb2XA13nw
+ml9/XgtZZ8c7Dt+F4XSAex2eoUIEvdPEYYy8UXxnhT5LxLONh7n+bVR4Auvbq2Gd
+eohpLCgIsmGJZ/JKm1hKBwKOOC/DoxWiC2OmMzDXimcS4dSy5BKxTYHpH/gTxS94
+Xm1Vd+Ro6T3KlRAsVtBheg4vzOGH8tqtbj2A7mPLWC6+THKZhk6i04dc8fqPw7Le
+fdXDeobCe3TKoDD3MoBnLlFgE3eWVd/BiPa7gmL0Q5DNWcdhrqZ4GmV7r3TNTHt6
+Cfj3/vB46zzqsUY5BOhigCTndSz+g7DPGp8C7+5p016xXMCwuN7JJoqcj5SBxA17
+a3+CN0Qc+Oo0ouAi0Yg+qEsHiBkYq2kWfMFt02YlTjFGCA/o/ouK/C2TRiBbHCl/
+6VJxAV8hPIW+tbJm3EQvqXWKdpPR789CP4op6dpOmerR8GBhx0BCLBpAGavMzZyD
+PuGYBbRhkWo=
+=+Pxw
+-----END PGP SIGNATURE-----
 
-
-> +       }
-> +
->         ar->num_started_vdevs++;
->         ath10k_recalc_radar_detection(ar);
->
-> @@ -3369,6 +3377,14 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
->
->         changed_flags &= SUPPORTED_FILTERS;
->         *total_flags &= SUPPORTED_FILTERS;
-> +       if (*total_flags & FIF_PROMISC_IN_BSS) {
-> +               if (ar->num_started_vdevs) {
-> +                       ath10k_dbg(ar, ATH10K_DBG_MAC,
-> +                                  "Not enabling promiscuous mode when already a vdev is running\n");
-
-Message style.
-
-
-> +                       mutex_unlock(&ar->conf_mutex);
-> +                       return;
-> +               }
-> +       }
->         ar->filter_flags = *total_flags;
->
->         ret = ath10k_monitor_recalc(ar);
-
-Anyway the entire logic should go to ath10k_monitor_recalc(). It
-already has access to it and just put calls to this function in
-adequate callsites.
-
-Moreover I'm pretty sure this patch breaks STA 4addr bridging. I'm
-worried it also breaks other stuff (e.g  some IBSS usecases or even
-some AP usecases) but I don't have time to check this now.
-
-
-Michał
+--==_Exmh_1424394185_1945P--
