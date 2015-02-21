@@ -1,395 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35283 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135AbbBWWLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 17:11:10 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:38579 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323AbbBUPxE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2015 10:53:04 -0500
+Received: by lbiz11 with SMTP id z11so11527511lbi.5
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2015 07:53:02 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: use rhashtable for station table
-Date: Mon, 23 Feb 2015 23:11:06 +0100
-Message-Id: <1424729466-13380-1-git-send-email-johannes@sipsolutions.net> (sfid-20150223_231114_751056_B7210C06)
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 3/3] mac80211: add VHT support for IBSS
+Date: Sat, 21 Feb 2015 16:52:41 +0100
+Message-Id: <1424533961-3869-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150221_165312_828717_BDF3981A)
+In-Reply-To: <1424533961-3869-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1424533961-3869-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Add VHT80/VHT160 support for IBSS.
+Drivers could activate this feature by
+setting NL80211_EXT_FEATURE_VHT_IBSS flag.
 
-We currently have a hand-rolled table with 256 entries and are
-using the last byte of the MAC address as the hash. This hash
-is obviously very fast, but collisions are easily created and
-we waste a lot of space in the common case of just connecting
-as a client to an AP where we just have a single station. The
-other common case of an AP is also suboptimal due to the size
-of the hash table and the ease of causing collisions.
-
-Convert all of this to use rhashtable with jhash, which gives
-us the advantage of a far better hash function (with random
-perturbation to avoid hash collision attacks) and of course
-that the hash table grows and shrinks dynamically with chain
-length, improving both cases above.
-
-Use a specialised hash function (using jhash, but with fixed
-length) to achieve better compiler optimisation as suggested
-by Sergey Ryazanov.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- net/mac80211/ieee80211_i.h |  3 +-
- net/mac80211/main.c        |  9 +++--
- net/mac80211/rx.c          |  4 +-
- net/mac80211/sta_info.c    | 92 +++++++++++++++++++++-------------------------
- net/mac80211/sta_info.h    | 37 +++++--------------
- net/mac80211/status.c      |  4 +-
- 6 files changed, 64 insertions(+), 85 deletions(-)
+ net/mac80211/ht.c          |  2 --
+ net/mac80211/ibss.c        | 62 ++++++++++++++++++++++++++++++++--------
+ net/mac80211/ieee80211_i.h |  5 ++++
+ net/mac80211/mesh_plink.c  |  4 +++
+ net/mac80211/util.c        | 70 ++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 129 insertions(+), 14 deletions(-)
 
+diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
+index ff630be..7a76ce6 100644
+--- a/net/mac80211/ht.c
++++ b/net/mac80211/ht.c
+@@ -252,8 +252,6 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	}
+ 
+-	if (bw != sta->sta.bandwidth)
+-		changed = true;
+ 	sta->sta.bandwidth = bw;
+ 
+ 	sta->cur_max_bandwidth =
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 14acc21..cf8c05c 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -188,6 +188,15 @@ ieee80211_ibss_build_presp(struct ieee80211_sub_if_data *sdata,
+ 		 */
+ 		pos = ieee80211_ie_build_ht_oper(pos, &sband->ht_cap,
+ 						 chandef, 0);
++
++		if (chandef->width != NL80211_CHAN_WIDTH_20 &&
++		    chandef->width != NL80211_CHAN_WIDTH_40 &&
++		    sband->vht_cap.vht_supported) {
++			pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
++							 sband->vht_cap.cap);
++			pos = ieee80211_ie_build_vht_oper(pos, &sband->vht_cap,
++							  chandef);
++		}
+ 	}
+ 
+ 	if (local->hw.queues >= IEEE80211_NUM_ACS)
+@@ -411,6 +420,11 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 		chan_type = cfg80211_get_chandef_type(&sdata->u.ibss.chandef);
+ 		cfg80211_chandef_create(&chandef, cbss->channel, chan_type);
+ 		break;
++	case NL80211_CHAN_WIDTH_80:
++	case NL80211_CHAN_WIDTH_160:
++		chandef = sdata->u.ibss.chandef;
++		chandef.chan = cbss->channel;
++		break;
+ 	case NL80211_CHAN_WIDTH_5:
+ 	case NL80211_CHAN_WIDTH_10:
+ 		cfg80211_chandef_create(&chandef, cbss->channel,
+@@ -995,6 +1009,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 	enum ieee80211_band band = rx_status->band;
+ 	enum nl80211_bss_scan_width scan_width;
+ 	struct ieee80211_supported_band *sband = local->hw.wiphy->bands[band];
++	enum nl80211_chan_width width = sdata->u.ibss.chandef.width;
+ 	bool rates_updated = false;
+ 
+ 	channel = ieee80211_get_channel(local->hw.wiphy, rx_status->freq);
+@@ -1042,12 +1057,16 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 			sta->sta.wme = true;
+ 
+ 		if (sta && elems->ht_operation && elems->ht_cap_elem &&
+-		    sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT &&
+-		    sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_5 &&
+-		    sdata->u.ibss.chandef.width != NL80211_CHAN_WIDTH_10) {
++		    width != NL80211_CHAN_WIDTH_20_NOHT &&
++		    width != NL80211_CHAN_WIDTH_5 &&
++		    width != NL80211_CHAN_WIDTH_10) {
+ 			/* we both use HT */
+ 			struct ieee80211_ht_cap htcap_ie;
+ 			struct cfg80211_chan_def chandef;
++			struct ieee80211_vht_cap vhtcap_ie;
++			struct ieee80211_sta_vht_cap vht_cap;
++			const struct ieee80211_vht_operation *vht_oper;
++			enum ieee80211_sta_rx_bandwidth bw = sta->sta.bandwidth;
+ 
+ 			ieee80211_ht_oper_to_chandef(channel,
+ 						     elems->ht_operation,
+@@ -1055,17 +1074,36 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 
+ 			memcpy(&htcap_ie, elems->ht_cap_elem, sizeof(htcap_ie));
+ 
+-			/*
+-			 * fall back to HT20 if we don't use or use
+-			 * the other extension channel
+-			 */
+-			if (chandef.center_freq1 !=
+-			    sdata->u.ibss.chandef.center_freq1)
+-				htcap_ie.cap_info &=
+-					cpu_to_le16(~IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+-
+ 			rates_updated |= ieee80211_ht_cap_ie_to_sta_ht_cap(
+ 						sdata, sband, &htcap_ie, sta);
++
++			if (elems->vht_operation && elems->vht_cap_elem &&
++			    width != NL80211_CHAN_WIDTH_20 &&
++			    width != NL80211_CHAN_WIDTH_40) {
++				/* we both use VHT */
++				vht_cap = sta->sta.vht_cap;
++				vht_oper = elems->vht_operation;
++
++				ieee80211_vht_oper_to_chandef(channel, vht_oper,
++							      &chandef);
++				memcpy(&vhtcap_ie, elems->vht_cap_elem,
++				       sizeof(vhtcap_ie));
++				ieee80211_vht_cap_ie_to_sta_vht_cap(sdata,
++								    sband,
++								    &vhtcap_ie,
++								    sta);
++				if (memcmp(&vht_cap, &sta->sta.vht_cap,
++					   sizeof(vht_cap)))
++						rates_updated |= true;
++			}
++
++			if (bw != sta->sta.bandwidth)
++				rates_updated |= true;
++
++			if (!cfg80211_chandef_compatible(&sdata->u.ibss.chandef,
++							 &chandef))
++				/* TODO handle incompatible chandefs */
++				WARN_ON_ONCE(1);
+ 		}
+ 
+ 		if (sta && rates_updated) {
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3afe36824703..798392398ab5 100644
+index b1451b3..e71ed27 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -26,6 +26,7 @@
- #include <linux/etherdevice.h>
- #include <linux/leds.h>
- #include <linux/idr.h>
-+#include <linux/rhashtable.h>
- #include <net/ieee80211_radiotap.h>
- #include <net/cfg80211.h>
- #include <net/mac80211.h>
-@@ -1195,7 +1196,7 @@ struct ieee80211_local {
- 	spinlock_t tim_lock;
- 	unsigned long num_sta;
- 	struct list_head sta_list;
--	struct sta_info __rcu *sta_hash[STA_HASH_SIZE];
-+	struct rhashtable sta_hash;
- 	struct timer_list sta_cleanup;
- 	int sta_generation;
+@@ -1968,6 +1968,8 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 			       u16 prot_mode);
+ u8 *ieee80211_ie_build_vht_cap(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
+ 			       u32 cap);
++u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
++				const struct cfg80211_chan_def *chandef);
+ int ieee80211_parse_bitrates(struct cfg80211_chan_def *chandef,
+ 			     const struct ieee80211_supported_band *sband,
+ 			     const u8 *srates, int srates_len, u32 *rates);
+@@ -1983,6 +1985,9 @@ u8 *ieee80211_add_wmm_info_ie(u8 *buf, u8 qosinfo);
+ void ieee80211_ht_oper_to_chandef(struct ieee80211_channel *control_chan,
+ 				  const struct ieee80211_ht_operation *ht_oper,
+ 				  struct cfg80211_chan_def *chandef);
++void ieee80211_vht_oper_to_chandef(struct ieee80211_channel *control_chan,
++				   const struct ieee80211_vht_operation *oper,
++				   struct cfg80211_chan_def *chandef);
+ u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c);
  
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 5e09d354c5a5..95d59d24b271 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -557,6 +557,9 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 
- 	local = wiphy_priv(wiphy);
- 
-+	if (sta_info_init(local))
-+		goto err_free;
-+
- 	local->hw.wiphy = wiphy;
- 
- 	local->hw.priv = (char *)local + ALIGN(sizeof(*local), NETDEV_ALIGN);
-@@ -629,8 +632,6 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	spin_lock_init(&local->ack_status_lock);
- 	idr_init(&local->ack_status_frames);
- 
--	sta_info_init(local);
--
- 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
- 		skb_queue_head_init(&local->pending[i]);
- 		atomic_set(&local->agg_queue_stop[i], 0);
-@@ -650,6 +651,9 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 	ieee80211_roc_setup(local);
- 
- 	return &local->hw;
-+ err_free:
-+	wiphy_free(wiphy);
-+	return NULL;
- }
- EXPORT_SYMBOL(ieee80211_alloc_hw_nm);
- 
-@@ -1173,7 +1177,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- 
- 	destroy_workqueue(local->workqueue);
- 	wiphy_unregister(local->hw.wiphy);
--	sta_info_stop(local);
- 	ieee80211_wep_free(local);
- 	ieee80211_led_exit(local);
- 	kfree(local->int_scan_req);
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index ed38d8302659..aa238a66ae2e 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3417,7 +3417,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	__le16 fc;
- 	struct ieee80211_rx_data rx;
- 	struct ieee80211_sub_if_data *prev;
--	struct sta_info *sta, *tmp, *prev_sta;
-+	struct sta_info *sta, *prev_sta;
- 	int err = 0;
- 
- 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
-@@ -3454,7 +3454,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
- 	if (ieee80211_is_data(fc)) {
- 		prev_sta = NULL;
- 
--		for_each_sta_info(local, hdr->addr2, sta, tmp) {
-+		for_each_sta_info(local, hdr->addr2, sta) {
- 			if (!prev_sta) {
- 				prev_sta = sta;
- 				continue;
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 00ca8dcc2bcf..db7749347e01 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -68,28 +68,7 @@
- static int sta_info_hash_del(struct ieee80211_local *local,
- 			     struct sta_info *sta)
- {
--	struct sta_info *s;
--
--	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
--				      lockdep_is_held(&local->sta_mtx));
--	if (!s)
--		return -ENOENT;
--	if (s == sta) {
--		rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)],
--				   s->hnext);
--		return 0;
--	}
--
--	while (rcu_access_pointer(s->hnext) &&
--	       rcu_access_pointer(s->hnext) != sta)
--		s = rcu_dereference_protected(s->hnext,
--					lockdep_is_held(&local->sta_mtx));
--	if (rcu_access_pointer(s->hnext)) {
--		rcu_assign_pointer(s->hnext, sta->hnext);
--		return 0;
--	}
--
--	return -ENOENT;
-+	return rhashtable_remove(&local->sta_hash, &sta->hash_node) ? 0 : -ENOENT;
- }
- 
- static void __cleanup_single_sta(struct sta_info *sta)
-@@ -159,18 +138,8 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr)
- {
- 	struct ieee80211_local *local = sdata->local;
--	struct sta_info *sta;
- 
--	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
--				    lockdep_is_held(&local->sta_mtx));
--	while (sta) {
--		if (sta->sdata == sdata &&
--		    ether_addr_equal(sta->sta.addr, addr))
--			break;
--		sta = rcu_dereference_check(sta->hnext,
--					    lockdep_is_held(&local->sta_mtx));
--	}
--	return sta;
-+	return rhashtable_lookup(&local->sta_hash, addr);
- }
- 
- /*
-@@ -183,17 +152,11 @@ struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 
--	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
--				    lockdep_is_held(&local->sta_mtx));
--	while (sta) {
--		if ((sta->sdata == sdata ||
--		     (sta->sdata->bss && sta->sdata->bss == sdata->bss)) &&
--		    ether_addr_equal(sta->sta.addr, addr))
--			break;
--		sta = rcu_dereference_check(sta->hnext,
--					    lockdep_is_held(&local->sta_mtx));
--	}
--	return sta;
-+	for_each_sta_info(local, addr, sta)
-+		if (sta->sdata == sdata ||
-+		    (sta->sdata->bss && sta->sdata->bss == sdata->bss))
-+			return sta;
-+	return NULL;
- }
- 
- struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
-@@ -250,9 +213,7 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
- static void sta_info_hash_add(struct ieee80211_local *local,
- 			      struct sta_info *sta)
- {
--	lockdep_assert_held(&local->sta_mtx);
--	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
--	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
-+	rhashtable_insert(&local->sta_hash, &sta->hash_node);
- }
- 
- static void sta_deliver_ps_frames(struct work_struct *wk)
-@@ -992,19 +953,50 @@ static void sta_info_cleanup(unsigned long data)
- 		  round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL));
- }
- 
--void sta_info_init(struct ieee80211_local *local)
-+#ifdef CONFIG_PROVE_LOCKING
-+static int sta_info_mutex_is_held(void *parent)
-+{
-+	struct ieee80211_local *local = parent;
-+	return lockdep_is_held(&local->sta_mtx);
-+}
-+#endif
-+
-+static u32 sta_addr_hash(const void *key, u32 length, u32 seed)
-+{
-+	return jhash(key, ETH_ALEN, seed);
-+}
-+
-+int sta_info_init(struct ieee80211_local *local)
- {
-+	struct rhashtable_params params = {
-+		.head_offset = offsetof(struct sta_info, hash_node),
-+		.key_offset = offsetof(struct sta_info, sta.addr),
-+		.key_len = ETH_ALEN,
-+		.hashfn = sta_addr_hash,
-+#ifdef CONFIG_PROVE_LOCKING
-+		.mutex_is_held = sta_info_mutex_is_held,
-+		.parent = local,
-+#endif
-+	};
-+	int err;
-+
-+	err = rhashtable_init(&local->sta_hash, &params);
-+	if (err)
-+		return err;
-+
- 	spin_lock_init(&local->tim_lock);
- 	mutex_init(&local->sta_mtx);
- 	INIT_LIST_HEAD(&local->sta_list);
- 
- 	setup_timer(&local->sta_cleanup, sta_info_cleanup,
- 		    (unsigned long)local);
-+	return 0;
- }
- 
- void sta_info_stop(struct ieee80211_local *local)
- {
- 	del_timer_sync(&local->sta_cleanup);
-+	rhashtable_destroy(&local->sta_hash);
- }
- 
- 
-@@ -1071,13 +1063,13 @@ struct ieee80211_sta *ieee80211_find_sta_by_ifaddr(struct ieee80211_hw *hw,
- 					       const u8 *addr,
- 					       const u8 *localaddr)
- {
--	struct sta_info *sta, *nxt;
-+	struct sta_info *sta;
- 
- 	/*
- 	 * Just return a random station if localaddr is NULL
- 	 * ... first in list.
- 	 */
--	for_each_sta_info(hw_to_local(hw), addr, sta, nxt) {
-+	for_each_sta_info(hw_to_local(hw), addr, sta) {
- 		if (localaddr &&
- 		    !ether_addr_equal(sta->sdata->vif.addr, localaddr))
- 			continue;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 925e68fe64c7..dd8a15e6ede4 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -16,6 +16,7 @@
- #include <linux/workqueue.h>
- #include <linux/average.h>
- #include <linux/etherdevice.h>
-+#include <linux/rhashtable.h>
- #include "key.h"
- 
- /**
-@@ -265,7 +266,7 @@ struct ieee80211_tx_latency_stat {
-  *
-  * @list: global linked list entry
-  * @free_list: list entry for keeping track of stations to free
-- * @hnext: hash table linked list pointer
-+ * @hash_node: hash node for rhashtable
-  * @local: pointer to the global information
-  * @sdata: virtual interface this station belongs to
-  * @ptk: peer keys negotiated with this station, if any
-@@ -359,7 +360,7 @@ struct sta_info {
- 	/* General information, mostly static */
- 	struct list_head list, free_list;
- 	struct rcu_head rcu_head;
--	struct sta_info __rcu *hnext;
-+	struct rhash_head hash_node;
- 	struct ieee80211_local *local;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
-@@ -557,10 +558,6 @@ rcu_dereference_protected_tid_tx(struct sta_info *sta, int tid)
- 					 lockdep_is_held(&sta->ampdu_mlme.mtx));
- }
- 
--#define STA_HASH_SIZE 256
--#define STA_HASH(sta) (sta[5])
--
--
- /* Maximum number of frames to buffer per power saving station per AC */
- #define STA_MAX_TX_BUFFER	64
- 
-@@ -581,28 +578,14 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
- 				  const u8 *addr);
- 
--static inline
--void for_each_sta_info_type_check(struct ieee80211_local *local,
--				  const u8 *addr,
--				  struct sta_info *sta,
--				  struct sta_info *nxt)
--{
--}
-+#define sta_bucket(sh, _a)						\
-+	rht_dereference_rcu((sh)->tbl, sh)->buckets[rhashtable_hashfn(sh, _a, ETH_ALEN)]
- 
--#define for_each_sta_info(local, _addr, _sta, nxt)			\
--	for (	/* initialise loop */					\
--		_sta = rcu_dereference(local->sta_hash[STA_HASH(_addr)]),\
--		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL;	\
--		/* typecheck */						\
--		for_each_sta_info_type_check(local, (_addr), _sta, nxt),\
--		/* continue condition */				\
--		_sta;							\
--		/* advance loop */					\
--		_sta = nxt,						\
--		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL	\
--	     )								\
-+#define for_each_sta_info(local, _a, _sta)				\
-+	rht_for_each_entry_rcu(_sta, sta_bucket(&local->sta_hash, (_a)),\
-+			       hash_node)				\
- 	/* compare address and run code only if it matches */		\
--	if (ether_addr_equal(_sta->sta.addr, (_addr)))
-+	if (ether_addr_equal(_sta->sta.addr, (_a)))
- 
- /*
-  * Get STA info by index, BROKEN!
-@@ -637,7 +620,7 @@ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
- 
- void sta_info_recalc_tim(struct sta_info *sta);
- 
--void sta_info_init(struct ieee80211_local *local);
-+int sta_info_init(struct ieee80211_local *local);
- void sta_info_stop(struct ieee80211_local *local);
- 
- /**
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index e679b7c9b160..f8719cf55a01 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -722,7 +722,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ int __must_check
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index b488e18..9875d82 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -382,6 +382,7 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 	enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
  	struct ieee80211_supported_band *sband;
- 	struct ieee80211_sub_if_data *sdata;
- 	struct net_device *prev_dev = NULL;
--	struct sta_info *sta, *tmp;
-+	struct sta_info *sta;
- 	int retry_count;
- 	int rates_idx;
- 	bool send_to_cooked;
-@@ -739,7 +739,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	sband = local->hw.wiphy->bands[info->band];
- 	fc = hdr->frame_control;
+ 	u32 rates, basic_rates = 0, changed = 0;
++	enum ieee80211_sta_rx_bandwidth bw = sta->sta.bandwidth;
  
--	for_each_sta_info(local, hdr->addr1, sta, tmp) {
-+	for_each_sta_info(local, hdr->addr1, sta) {
- 		/* skip wrong virtual interface */
- 		if (!ether_addr_equal(hdr->addr2, sta->sdata->vif.addr))
- 			continue;
+ 	sband = local->hw.wiphy->bands[band];
+ 	rates = ieee80211_sta_get_rates(sdata, elems, band, &basic_rates);
+@@ -401,6 +402,9 @@ static void mesh_sta_info_init(struct ieee80211_sub_if_data *sdata,
+ 					      elems->ht_cap_elem, sta))
+ 		changed |= IEEE80211_RC_BW_CHANGED;
+ 
++	if (bw != sta->sta.bandwidth)
++		changed |= IEEE80211_RC_BW_CHANGED;
++
+ 	/* HT peer is operating 20MHz-only */
+ 	if (elems->ht_operation &&
+ 	    !(elems->ht_operation->ht_param &
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 8428f4a..4522200 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2344,6 +2344,43 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 	return pos + sizeof(struct ieee80211_ht_operation);
+ }
+ 
++u8 *ieee80211_ie_build_vht_oper(u8 *pos, struct ieee80211_sta_vht_cap *vht_cap,
++				const struct cfg80211_chan_def *chandef)
++{
++	struct ieee80211_vht_operation *vht_oper;
++
++	/* Build VHT Operation */
++	*pos++ = WLAN_EID_VHT_OPERATION;
++	*pos++ = sizeof(struct ieee80211_vht_operation);
++
++	vht_oper = (struct ieee80211_vht_operation *)pos;
++
++	vht_oper->center_freq_seg1_idx =
++			ieee80211_frequency_to_channel(chandef->center_freq1);
++	vht_oper->center_freq_seg2_idx = 0;
++
++	/* 1 stream, MCS0-7 as a min Basic VHT MCS rates */
++	vht_oper->basic_mcs_set = cpu_to_le16(0xfffc);
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_80:
++		vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80MHZ;
++		break;
++	case NL80211_CHAN_WIDTH_80P80:
++		vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_80P80MHZ;
++		vht_oper->center_freq_seg2_idx =
++			ieee80211_frequency_to_channel(chandef->center_freq2);
++		break;
++	case NL80211_CHAN_WIDTH_160:
++		vht_oper->chan_width = IEEE80211_VHT_CHANWIDTH_160MHZ;
++		break;
++	default:
++		return pos;
++	}
++
++	return pos + sizeof(struct ieee80211_vht_operation);
++}
++
+ void ieee80211_ht_oper_to_chandef(struct ieee80211_channel *control_chan,
+ 				  const struct ieee80211_ht_operation *ht_oper,
+ 				  struct cfg80211_chan_def *chandef)
+@@ -2373,6 +2410,39 @@ void ieee80211_ht_oper_to_chandef(struct ieee80211_channel *control_chan,
+ 	cfg80211_chandef_create(chandef, control_chan, channel_type);
+ }
+ 
++void ieee80211_vht_oper_to_chandef(struct ieee80211_channel *control_chan,
++				   const struct ieee80211_vht_operation *oper,
++				   struct cfg80211_chan_def *chandef)
++{
++	if (!oper)
++		return;
++
++	chandef->chan = control_chan;
++
++	switch (oper->chan_width) {
++	case IEEE80211_VHT_CHANWIDTH_USE_HT:
++		break;
++	case IEEE80211_VHT_CHANWIDTH_80MHZ:
++		chandef->width = NL80211_CHAN_WIDTH_80;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_160MHZ:
++		chandef->width = NL80211_CHAN_WIDTH_160;
++		break;
++	case IEEE80211_VHT_CHANWIDTH_80P80MHZ:
++		chandef->width = NL80211_CHAN_WIDTH_80P80;
++		break;
++	default:
++		break;
++	}
++
++	chandef->center_freq1 =
++		ieee80211_channel_to_frequency(oper->center_freq_seg1_idx,
++					       control_chan->band);
++	chandef->center_freq2 =
++		ieee80211_channel_to_frequency(oper->center_freq_seg2_idx,
++					       control_chan->band);
++}
++
+ int ieee80211_parse_bitrates(struct cfg80211_chan_def *chandef,
+ 			     const struct ieee80211_supported_band *sband,
+ 			     const u8 *srates, int srates_len, u32 *rates)
 -- 
-2.1.4
+1.9.1
 
