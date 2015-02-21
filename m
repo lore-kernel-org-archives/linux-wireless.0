@@ -1,127 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:59244 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752833AbbBYPov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 10:44:51 -0500
-From: Ilan Peer <ilan.peer@intel.com>
+Received: from mail-la0-f48.google.com ([209.85.215.48]:34970 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751527AbbBUPxC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Feb 2015 10:53:02 -0500
+Received: by labgm9 with SMTP id gm9so11561779lab.2
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Feb 2015 07:53:01 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: mcgrof@suse.com, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v7 1/3] cfg80211: Simplify the handling of regulatory indoor setting
-Date: Wed, 25 Feb 2015 04:47:02 -0500
-Message-Id: <1424857624-24944-1-git-send-email-ilan.peer@intel.com> (sfid-20150225_164454_917736_761DD1B3)
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/3] mac80211: IBSS fix scan request
+Date: Sat, 21 Feb 2015 16:52:40 +0100
+Message-Id: <1424533961-3869-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150221_165311_238833_443799E2)
+In-Reply-To: <1424533961-3869-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1424533961-3869-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Directly update the indoor setting without wrapping it as
-a regulatory request, to simplify the processing.
+In case of wide bandwidth scan all channels we have
+in chandef, not only control one.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- net/wireless/reg.c | 34 +++-------------------------------
- 1 file changed, 3 insertions(+), 31 deletions(-)
+ net/mac80211/ibss.c        | 80 ++++++++++++++++++++++++++++++++++++++++++++--
+ net/mac80211/ieee80211_i.h |  3 +-
+ net/mac80211/scan.c        | 25 +++++++++------
+ 3 files changed, 96 insertions(+), 12 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b586d0d..c24c8bf 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -82,17 +82,12 @@
-  *	be intersected with the current one.
-  * @REG_REQ_ALREADY_SET: the regulatory request will not change the current
-  *	regulatory settings, and no further processing is required.
-- * @REG_REQ_USER_HINT_HANDLED: a non alpha2  user hint was handled and no
-- *	further processing is required, i.e., not need to update last_request
-- *	etc. This should be used for user hints that do not provide an alpha2
-- *	but some other type of regulatory hint, i.e., indoor operation.
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index b606b53..14acc21 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -1273,7 +1273,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 
+ 	scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
+ 	ieee80211_request_ibss_scan(sdata, ifibss->ssid, ifibss->ssid_len,
+-				    NULL, scan_width);
++				    NULL, 0, scan_width);
+ }
+ 
+ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+@@ -1312,6 +1312,75 @@ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ 				  capability, 0, true);
+ }
+ 
++static unsigned ibss_setup_channels(struct wiphy *wiphy,
++				    struct ieee80211_channel **channels,
++				    unsigned int channels_max,
++				    u32 center_freq, u32 width)
++{
++	struct ieee80211_channel *chan = NULL;
++	unsigned int n_chan = 0;
++	u32 start_freq, end_freq, freq;
++
++	if (width <= 20) {
++		start_freq = center_freq;
++		end_freq = center_freq;
++	} else {
++		start_freq = center_freq - width/2 + 10;
++		end_freq = center_freq + width/2 - 10;
++	}
++
++	for (freq = start_freq; freq <= end_freq; freq += 20) {
++		chan = ieee80211_get_channel(wiphy, freq);
++		if (!chan)
++			continue;
++		if (n_chan >= channels_max)
++			return n_chan;
++
++		channels[n_chan] = chan;
++		n_chan++;
++	}
++
++	return n_chan;
++}
++
++static unsigned int
++ieee80211_ibss_setup_scan_channels(struct wiphy *wiphy,
++				   const struct cfg80211_chan_def *chandef,
++				   struct ieee80211_channel **channels,
++				   unsigned int channels_max)
++{
++	unsigned int n_chan = 0;
++	u32 width, cf1, cf2 = 0;
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_40:
++		width = 40;
++		break;
++	case NL80211_CHAN_WIDTH_80P80:
++		cf2 = chandef->center_freq2;
++	case NL80211_CHAN_WIDTH_80:
++		width = 80;
++		break;
++	case NL80211_CHAN_WIDTH_160:
++		width = 160;
++		break;
++	default:
++		width = 20;
++		break;
++	}
++
++	cf1 = chandef->center_freq1;
++
++	n_chan = ibss_setup_channels(wiphy, channels, channels_max, cf1, width);
++
++	if (cf2)
++		n_chan += ibss_setup_channels(wiphy, &channels[n_chan],
++					      channels_max - n_chan, cf2,
++					      width);
++
++	return n_chan;
++}
++
+ /*
+  * This function is called with state == IEEE80211_IBSS_MLME_SEARCH
   */
- enum reg_request_treatment {
- 	REG_REQ_OK,
- 	REG_REQ_IGNORE,
- 	REG_REQ_INTERSECT,
- 	REG_REQ_ALREADY_SET,
--	REG_REQ_USER_HINT_HANDLED,
- };
+@@ -1381,11 +1450,18 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 	/* Selected IBSS not found in current scan results - try to scan */
+ 	if (time_after(jiffies, ifibss->last_scan_completed +
+ 					IEEE80211_SCAN_INTERVAL)) {
++		struct ieee80211_channel *channels[8];
++		unsigned int num = 0;
++
+ 		sdata_info(sdata, "Trigger new scan to find an IBSS to join\n");
  
- static struct regulatory_request core_request_world = {
-@@ -1248,13 +1243,6 @@ static bool reg_request_cell_base(struct regulatory_request *request)
- 	return request->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE;
- }
++		num = ieee80211_ibss_setup_scan_channels(local->hw.wiphy,
++							 &ifibss->chandef,
++							 channels,
++							 ARRAY_SIZE(channels));
+ 		scan_width = cfg80211_chandef_to_scan_width(&ifibss->chandef);
+ 		ieee80211_request_ibss_scan(sdata, ifibss->ssid,
+-					    ifibss->ssid_len, chan,
++					    ifibss->ssid_len, channels, num,
+ 					    scan_width);
+ 	} else {
+ 		int interval = IEEE80211_SCAN_INTERVAL;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3afe368..b1451b3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1556,7 +1556,8 @@ int ieee80211_mesh_finish_csa(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_scan_work(struct work_struct *work);
+ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				const u8 *ssid, u8 ssid_len,
+-				struct ieee80211_channel *chan,
++				struct ieee80211_channel **channels,
++				unsigned int n_channels,
+ 				enum nl80211_bss_scan_width scan_width);
+ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
+ 			   struct cfg80211_scan_request *req);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 05f0d71..7bb6a93 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -928,11 +928,12 @@ int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
  
--static bool reg_request_indoor(struct regulatory_request *request)
--{
--	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
--		return false;
--	return request->user_reg_hint_type == NL80211_USER_REG_HINT_INDOOR;
--}
--
- bool reg_last_request_cell_base(void)
+ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 				const u8 *ssid, u8 ssid_len,
+-				struct ieee80211_channel *chan,
++				struct ieee80211_channel **channels,
++				unsigned int n_channels,
+ 				enum nl80211_bss_scan_width scan_width)
  {
- 	return reg_request_cell_base(get_last_request());
-@@ -1833,11 +1821,6 @@ __reg_process_hint_user(struct regulatory_request *user_request)
- {
- 	struct regulatory_request *lr = get_last_request();
+ 	struct ieee80211_local *local = sdata->local;
+-	int ret = -EBUSY;
++	int ret = -EBUSY, i, n_ch = 0;
+ 	enum ieee80211_band band;
  
--	if (reg_request_indoor(user_request)) {
--		reg_is_indoor = true;
--		return REG_REQ_USER_HINT_HANDLED;
--	}
--
- 	if (reg_request_cell_base(user_request))
- 		return reg_ignore_cell_hint(user_request);
+ 	mutex_lock(&local->mtx);
+@@ -942,9 +943,8 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 		goto unlock;
  
-@@ -1885,8 +1868,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
+ 	/* fill internal scan request */
+-	if (!chan) {
+-		int i, max_n;
+-		int n_ch = 0;
++	if (!channels) {
++		int max_n;
  
- 	treatment = __reg_process_hint_user(user_request);
- 	if (treatment == REG_REQ_IGNORE ||
--	    treatment == REG_REQ_ALREADY_SET ||
--	    treatment == REG_REQ_USER_HINT_HANDLED) {
-+	    treatment == REG_REQ_ALREADY_SET) {
- 		reg_free_request(user_request);
- 		return treatment;
+ 		for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 			if (!local->hw.wiphy->bands[band])
+@@ -969,12 +969,19 @@ int ieee80211_request_ibss_scan(struct ieee80211_sub_if_data *sdata,
+ 
+ 		local->int_scan_req->n_channels = n_ch;
+ 	} else {
+-		if (WARN_ON_ONCE(chan->flags & (IEEE80211_CHAN_NO_IR |
+-						IEEE80211_CHAN_DISABLED)))
++		for (i = 0; i < n_channels; i++) {
++			if (channels[i]->flags & (IEEE80211_CHAN_NO_IR |
++						  IEEE80211_CHAN_DISABLED))
++				continue;
++
++			local->int_scan_req->channels[n_ch] = channels[i];
++			n_ch++;
++		}
++
++		if (WARN_ON_ONCE(n_ch == 0))
+ 			goto unlock;
+ 
+-		local->int_scan_req->channels[0] = chan;
+-		local->int_scan_req->n_channels = 1;
++		local->int_scan_req->n_channels = n_ch;
  	}
-@@ -1947,7 +1929,6 @@ reg_process_hint_driver(struct wiphy *wiphy,
- 	case REG_REQ_OK:
- 		break;
- 	case REG_REQ_IGNORE:
--	case REG_REQ_USER_HINT_HANDLED:
- 		reg_free_request(driver_request);
- 		return treatment;
- 	case REG_REQ_INTERSECT:
-@@ -2047,7 +2028,6 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
- 	case REG_REQ_OK:
- 		break;
- 	case REG_REQ_IGNORE:
--	case REG_REQ_USER_HINT_HANDLED:
- 		/* fall through */
- 	case REG_REQ_ALREADY_SET:
- 		reg_free_request(country_ie_request);
-@@ -2086,8 +2066,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	case NL80211_REGDOM_SET_BY_USER:
- 		treatment = reg_process_hint_user(reg_request);
- 		if (treatment == REG_REQ_IGNORE ||
--		    treatment == REG_REQ_ALREADY_SET ||
--		    treatment == REG_REQ_USER_HINT_HANDLED)
-+		    treatment == REG_REQ_ALREADY_SET)
- 			return;
- 		queue_delayed_work(system_power_efficient_wq,
- 				   &reg_timeout, msecs_to_jiffies(3142));
-@@ -2311,16 +2290,9 @@ int regulatory_hint_user(const char *alpha2,
  
- int regulatory_hint_indoor_user(void)
- {
--	struct regulatory_request *request;
- 
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
--	if (!request)
--		return -ENOMEM;
- 
--	request->wiphy_idx = WIPHY_IDX_INVALID;
--	request->initiator = NL80211_REGDOM_SET_BY_USER;
--	request->user_reg_hint_type = NL80211_USER_REG_HINT_INDOOR;
--	queue_regulatory_request(request);
-+	reg_is_indoor = true;
- 
- 	return 0;
- }
+ 	local->int_scan_req->ssids = &local->scan_ssid;
 -- 
-1.8.3.2
+1.9.1
 
