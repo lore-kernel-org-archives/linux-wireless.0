@@ -1,38 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:59787 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966624AbbBDQqB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 11:46:01 -0500
-Message-ID: <54D24CC3.9010006@users.sourceforge.net> (sfid-20150204_174606_946966_4CFCC8A2)
-Date: Wed, 04 Feb 2015 17:45:55 +0100
-From: SF Markus Elfring <elfring@users.sourceforge.net>
+Received: from mail-ie0-f171.google.com ([209.85.223.171]:46013 "EHLO
+	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752006AbbBVRzb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2015 12:55:31 -0500
+Received: by iecat20 with SMTP id at20so18508415iec.12
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2015 09:55:30 -0800 (PST)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Solomon Peachy <pizza@shaftnet.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH 0/2] CW1200: Deletion of an unnecessary check
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <21737.31821.275628.187581@gargle.gargle.HOWL>
+References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
+	<21737.31821.275628.187581@gargle.gargle.HOWL>
+Date: Sun, 22 Feb 2015 09:55:30 -0800
+Message-ID: <CA+55aFyXizDkXOt=RyHYfYaGrC3eJyj3oSLjZdXoL7x7rPmxSQ@mail.gmail.com> (sfid-20150222_185535_184857_09A9D60F)
+Subject: Re: AR9462 problems connecting again..
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: multipart/mixed; boundary=90e6ba6e889ccd074e050fb0fdc2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 4 Feb 2015 17:31:00 +0100
+--90e6ba6e889ccd074e050fb0fdc2
+Content-Type: text/plain; charset=UTF-8
 
-Another update suggestion was taken into account after a patch was applied
-from static source code analysis.
+On Sat, Feb 21, 2015 at 10:50 PM, Sujith Manoharan <sujith@msujith.org> wrote:
+>
+> Can you please post the output of 'iw dev wlp1s0 scan' ?
 
-Markus Elfring (2):
-  Delete an unnecessary check before the function call "release_firmware"
-  Less function calls in cw1200_load_firmware_cw1200() after error detection
+Attached.
 
- drivers/net/wireless/cw1200/fwio.c | 40 +++++++++++++++++++++++---------------
- 1 file changed, 24 insertions(+), 16 deletions(-)
+It's the "UniFi-home" SSID that doesn't work. The 1gnoraNT one is the
+old working one that I'm obviously associated with, and that has
+multiple AP's.
 
--- 
-2.2.2
+(The UniFi-home also has two AP's, but they should all show up as a
+single network)
 
+                 Linus
+
+--90e6ba6e889ccd074e050fb0fdc2
+Content-Type: application/octet-stream; name=out
+Content-Disposition: attachment; filename=out
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_i6gqgkh30
+
+QlNTIDYwOmE0OjRjOjhkOjk5OjI0KG9uIHdscDFzMCkgLS0gYXNzb2NpYXRlZAoJVFNGOiA0NjY2
+NzQ4NTkgdXNlYyAoMGQsIDAwOjA3OjQ2KQoJZnJlcTogNTgwNQoJYmVhY29uIGludGVydmFsOiAx
+MDAgVFVzCgljYXBhYmlsaXR5OiBFU1MgUHJpdmFjeSAoMHgwMDExKQoJc2lnbmFsOiAtMTcuMDAg
+ZEJtCglsYXN0IHNlZW46IDE3OCBtcyBhZ28KCUluZm9ybWF0aW9uIGVsZW1lbnRzIGZyb20gUHJv
+YmUgUmVzcG9uc2UgZnJhbWU6CglTU0lEOiAxZ25vcmFOVAoJU3VwcG9ydGVkIHJhdGVzOiA2LjAq
+IDkuMCAxMi4wKiAxOC4wIDI0LjAqIDM2LjAgNDguMCA1NC4wIAoJUlNOOgkgKiBWZXJzaW9uOiAx
+CgkJICogR3JvdXAgY2lwaGVyOiBDQ01QCgkJICogUGFpcndpc2UgY2lwaGVyczogQ0NNUAoJCSAq
+IEF1dGhlbnRpY2F0aW9uIHN1aXRlczogUFNLCgkJICogQ2FwYWJpbGl0aWVzOiAxNi1QVEtTQS1S
+QyAxLUdUS1NBLVJDICgweDAwMGMpCglIVCBjYXBhYmlsaXRpZXM6CgkJQ2FwYWJpbGl0aWVzOiAw
+eDliZAoJCQlSWCBMRFBDCgkJCUhUMjAKCQkJU00gUG93ZXIgU2F2ZSBkaXNhYmxlZAoJCQlSWCBH
+cmVlbmZpZWxkCgkJCVJYIEhUMjAgU0dJCgkJCVRYIFNUQkMKCQkJUlggU1RCQyAxLXN0cmVhbQoJ
+CQlNYXggQU1TRFUgbGVuZ3RoOiA3OTM1IGJ5dGVzCgkJCU5vIERTU1MvQ0NLIEhUNDAKCQlNYXhp
+bXVtIFJYIEFNUERVIGxlbmd0aCA2NTUzNSBieXRlcyAoZXhwb25lbnQ6IDB4MDAzKQoJCU1pbmlt
+dW0gUlggQU1QRFUgdGltZSBzcGFjaW5nOiA0IHVzZWMgKDB4MDUpCgkJSFQgUlggTUNTIHJhdGUg
+aW5kZXhlcyBzdXBwb3J0ZWQ6IDAtMjMKCQlIVCBUWCBNQ1MgcmF0ZSBpbmRleGVzIGFyZSB1bmRl
+ZmluZWQKCUhUIG9wZXJhdGlvbjoKCQkgKiBwcmltYXJ5IGNoYW5uZWw6IDE2MQoJCSAqIHNlY29u
+ZGFyeSBjaGFubmVsIG9mZnNldDogbm8gc2Vjb25kYXJ5CgkJICogU1RBIGNoYW5uZWwgd2lkdGg6
+IDIwIE1IegoJCSAqIFJJRlM6IDEKCQkgKiBIVCBwcm90ZWN0aW9uOiBubwoJCSAqIG5vbi1HRiBw
+cmVzZW50OiAxCgkJICogT0JTUyBub24tR0YgcHJlc2VudDogMAoJCSAqIGR1YWwgYmVhY29uOiAw
+CgkJICogZHVhbCBDVFMgcHJvdGVjdGlvbjogMAoJCSAqIFNUQkMgYmVhY29uOiAwCgkJICogTC1T
+SUcgVFhPUCBQcm90OiAwCgkJICogUENPIGFjdGl2ZTogMAoJCSAqIFBDTyBwaGFzZTogMAoJRXh0
+ZW5kZWQgY2FwYWJpbGl0aWVzOiA2CglXTU06CSAqIFBhcmFtZXRlciB2ZXJzaW9uIDEKCQkgKiB1
+LUFQU0QKCQkgKiBCRTogQ1cgMTUtMTAyMywgQUlGU04gMwoJCSAqIEJLOiBDVyAxNS0xMDIzLCBB
+SUZTTiA3CgkJICogVkk6IENXIDctMTUsIEFJRlNOIDIsIFRYT1AgMzAwOCB1c2VjCgkJICogVk86
+IENXIDMtNywgQUlGU04gMiwgVFhPUCAxNTA0IHVzZWMKQlNTIDYwOmE0OjRjOjhkOjk5OjIwKG9u
+IHdscDFzMCkKCVRTRjogNDc0Njk1NjEzIHVzZWMgKDBkLCAwMDowNzo1NCkKCWZyZXE6IDI0MzcK
+CWJlYWNvbiBpbnRlcnZhbDogMTAwIFRVcwoJY2FwYWJpbGl0eTogRVNTIFByaXZhY3kgU2hvcnRT
+bG90VGltZSAoMHgwNDExKQoJc2lnbmFsOiAxLjAwIGRCbQoJbGFzdCBzZWVuOiA2NzA4IG1zIGFn
+bwoJSW5mb3JtYXRpb24gZWxlbWVudHMgZnJvbSBQcm9iZSBSZXNwb25zZSBmcmFtZToKCVNTSUQ6
+IDFnbm9yYU5UCglTdXBwb3J0ZWQgcmF0ZXM6IDEuMCogMi4wKiA1LjUqIDExLjAqIDE4LjAgMjQu
+MCAzNi4wIDU0LjAgCglEUyBQYXJhbWV0ZXIgc2V0OiBjaGFubmVsIDYKCUVSUDogPG5vIGZsYWdz
+PgoJRVJQIEQ0LjA6IDxubyBmbGFncz4KCVJTTjoJICogVmVyc2lvbjogMQoJCSAqIEdyb3VwIGNp
+cGhlcjogQ0NNUAoJCSAqIFBhaXJ3aXNlIGNpcGhlcnM6IENDTVAKCQkgKiBBdXRoZW50aWNhdGlv
+biBzdWl0ZXM6IFBTSwoJCSAqIENhcGFiaWxpdGllczogMTYtUFRLU0EtUkMgMS1HVEtTQS1SQyAo
+MHgwMDBjKQoJRXh0ZW5kZWQgc3VwcG9ydGVkIHJhdGVzOiA2LjAgOS4wIDEyLjAgNDguMCAKCUhU
+IGNhcGFiaWxpdGllczoKCQlDYXBhYmlsaXRpZXM6IDB4MTliZAoJCQlSWCBMRFBDCgkJCUhUMjAK
+CQkJU00gUG93ZXIgU2F2ZSBkaXNhYmxlZAoJCQlSWCBHcmVlbmZpZWxkCgkJCVJYIEhUMjAgU0dJ
+CgkJCVRYIFNUQkMKCQkJUlggU1RCQyAxLXN0cmVhbQoJCQlNYXggQU1TRFUgbGVuZ3RoOiA3OTM1
+IGJ5dGVzCgkJCURTU1MvQ0NLIEhUNDAKCQlNYXhpbXVtIFJYIEFNUERVIGxlbmd0aCA2NTUzNSBi
+eXRlcyAoZXhwb25lbnQ6IDB4MDAzKQoJCU1pbmltdW0gUlggQU1QRFUgdGltZSBzcGFjaW5nOiA0
+IHVzZWMgKDB4MDUpCgkJSFQgUlggTUNTIHJhdGUgaW5kZXhlcyBzdXBwb3J0ZWQ6IDAtMjMKCQlI
+VCBUWCBNQ1MgcmF0ZSBpbmRleGVzIGFyZSB1bmRlZmluZWQKCUhUIG9wZXJhdGlvbjoKCQkgKiBw
+cmltYXJ5IGNoYW5uZWw6IDYKCQkgKiBzZWNvbmRhcnkgY2hhbm5lbCBvZmZzZXQ6IG5vIHNlY29u
+ZGFyeQoJCSAqIFNUQSBjaGFubmVsIHdpZHRoOiAyMCBNSHoKCQkgKiBSSUZTOiAxCgkJICogSFQg
+cHJvdGVjdGlvbjogbm8KCQkgKiBub24tR0YgcHJlc2VudDogMQoJCSAqIE9CU1Mgbm9uLUdGIHBy
+ZXNlbnQ6IDAKCQkgKiBkdWFsIGJlYWNvbjogMAoJCSAqIGR1YWwgQ1RTIHByb3RlY3Rpb246IDAK
+CQkgKiBTVEJDIGJlYWNvbjogMAoJCSAqIEwtU0lHIFRYT1AgUHJvdDogMAoJCSAqIFBDTyBhY3Rp
+dmU6IDAKCQkgKiBQQ08gcGhhc2U6IDAKCUV4dGVuZGVkIGNhcGFiaWxpdGllczogNgoJV01NOgkg
+KiBQYXJhbWV0ZXIgdmVyc2lvbiAxCgkJICogdS1BUFNECgkJICogQkU6IENXIDE1LTEwMjMsIEFJ
+RlNOIDMKCQkgKiBCSzogQ1cgMTUtMTAyMywgQUlGU04gNwoJCSAqIFZJOiBDVyA3LTE1LCBBSUZT
+TiAyLCBUWE9QIDMwMDggdXNlYwoJCSAqIFZPOiBDVyAzLTcsIEFJRlNOIDIsIFRYT1AgMTUwNCB1
+c2VjCkJTUyAyMDo5ZjpkYjplNzo4MDo4MChvbiB3bHAxczApCglUU0Y6IDE2MDc2NzE0Mzk1MCB1
+c2VjICgxZCwgMjA6Mzk6MjcpCglmcmVxOiAyNDYyCgliZWFjb24gaW50ZXJ2YWw6IDEwMCBUVXMK
+CWNhcGFiaWxpdHk6IEVTUyBQcml2YWN5IFNob3J0UHJlYW1ibGUgU2hvcnRTbG90VGltZSAoMHgw
+NDMxKQoJc2lnbmFsOiAtNDkuMDAgZEJtCglsYXN0IHNlZW46IDY2NTIgbXMgYWdvCglJbmZvcm1h
+dGlvbiBlbGVtZW50cyBmcm9tIFByb2JlIFJlc3BvbnNlIGZyYW1lOgoJU1NJRDogVW5pRmktaG9t
+ZQoJU3VwcG9ydGVkIHJhdGVzOiAxLjAqIDIuMCogNS41KiAxMS4wKiA2LjAqIDkuMCAxMi4wKiAx
+OC4wIAoJRFMgUGFyYW1ldGVyIHNldDogY2hhbm5lbCAxMQoJRVJQOiA8bm8gZmxhZ3M+CglSU046
+CSAqIFZlcnNpb246IDEKCQkgKiBHcm91cCBjaXBoZXI6IENDTVAKCQkgKiBQYWlyd2lzZSBjaXBo
+ZXJzOiBDQ01QCgkJICogQXV0aGVudGljYXRpb24gc3VpdGVzOiBQU0sKCQkgKiBDYXBhYmlsaXRp
+ZXM6IDEtUFRLU0EtUkMgMS1HVEtTQS1SQyAoMHgwMDAwKQoJRXh0ZW5kZWQgc3VwcG9ydGVkIHJh
+dGVzOiAyNC4wKiAzNi4wIDQ4LjAgNTQuMCAKCUhUIGNhcGFiaWxpdGllczoKCQlDYXBhYmlsaXRp
+ZXM6IDB4MWFjCgkJCUhUMjAKCQkJU00gUG93ZXIgU2F2ZSBkaXNhYmxlZAoJCQlSWCBIVDIwIFNH
+SQoJCQlUWCBTVEJDCgkJCVJYIFNUQkMgMS1zdHJlYW0KCQkJTWF4IEFNU0RVIGxlbmd0aDogMzgz
+OSBieXRlcwoJCQlObyBEU1NTL0NDSyBIVDQwCgkJTWF4aW11bSBSWCBBTVBEVSBsZW5ndGggNjU1
+MzUgYnl0ZXMgKGV4cG9uZW50OiAweDAwMykKCQlNaW5pbXVtIFJYIEFNUERVIHRpbWUgc3BhY2lu
+ZzogOCB1c2VjICgweDA2KQoJCUhUIFJYIE1DUyByYXRlIGluZGV4ZXMgc3VwcG9ydGVkOiAwLTE1
+CgkJSFQgVFggTUNTIHJhdGUgaW5kZXhlcyBhcmUgdW5kZWZpbmVkCglIVCBvcGVyYXRpb246CgkJ
+ICogcHJpbWFyeSBjaGFubmVsOiAxMQoJCSAqIHNlY29uZGFyeSBjaGFubmVsIG9mZnNldDogbm8g
+c2Vjb25kYXJ5CgkJICogU1RBIGNoYW5uZWwgd2lkdGg6IDIwIE1IegoJCSAqIFJJRlM6IDEKCQkg
+KiBIVCBwcm90ZWN0aW9uOiBubwoJCSAqIG5vbi1HRiBwcmVzZW50OiAxCgkJICogT0JTUyBub24t
+R0YgcHJlc2VudDogMAoJCSAqIGR1YWwgYmVhY29uOiAwCgkJICogZHVhbCBDVFMgcHJvdGVjdGlv
+bjogMAoJCSAqIFNUQkMgYmVhY29uOiAwCgkJICogTC1TSUcgVFhPUCBQcm90OiAwCgkJICogUENP
+IGFjdGl2ZTogMAoJCSAqIFBDTyBwaGFzZTogMAoJV01NOgkgKiBQYXJhbWV0ZXIgdmVyc2lvbiAx
+CgkJICogQkU6IENXIDE1LTEwMjMsIEFJRlNOIDMKCQkgKiBCSzogQ1cgMTUtMTAyMywgQUlGU04g
+NwoJCSAqIFZJOiBDVyA3LTE1LCBBSUZTTiAyLCBUWE9QIDMwMDggdXNlYwoJCSAqIFZPOiBDVyAz
+LTcsIEFJRlNOIDIsIFRYT1AgMTUwNCB1c2VjCg==
+--90e6ba6e889ccd074e050fb0fdc2--
