@@ -1,272 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60462 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751314AbbBFLNT (ORCPT
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:33263 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752201AbbBVVb2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 06:13:19 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t16B9kXd022453
-	for <linux-wireless@vger.kernel.org>; Fri, 6 Feb 2015 03:13:19 -0800
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1scthm86vd-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 03:13:19 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 4/5] mwifiex: change datatype to bool for device capability flags
-Date: Fri, 6 Feb 2015 22:11:45 +0530
-Message-ID: <1423240906-12951-4-git-send-email-patila@marvell.com> (sfid-20150206_121323_739998_A3108F7F)
-In-Reply-To: <1423240906-12951-1-git-send-email-patila@marvell.com>
-References: <1423240906-12951-1-git-send-email-patila@marvell.com>
+	Sun, 22 Feb 2015 16:31:28 -0500
+Received: by qcxm20 with SMTP id m20so8431528qcx.0
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2015 13:31:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACaajQv0g90p1jKi_v4PAAimhE8EJ+5uY7_B78paZxXSOLn6gA@mail.gmail.com>
+References: <CACaajQsqPMzwD=EqdD5_XfWAPmkn-52VVNHF1ntFZ6ofEH4D-w@mail.gmail.com>
+ <CACaajQs1r1tE-GXv7cmAL9w8q2cwn_iiDttp6tLFB7BdSBNDPw@mail.gmail.com>
+ <54BD2684.30701@broadcom.com> <CACaajQuCfe-POEecGmet7R3GG8sg5KPzdteU+sHD8Vs5TBLzyA@mail.gmail.com>
+ <54BE2E98.1030109@broadcom.com> <CACaajQv0g90p1jKi_v4PAAimhE8EJ+5uY7_B78paZxXSOLn6gA@mail.gmail.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Date: Mon, 23 Feb 2015 01:31:12 +0400
+Message-ID: <CACaajQtfH92PH4h01NKuih-bfLX3b+OtpEjW-Ox9raoAHte8xw@mail.gmail.com> (sfid-20150222_223132_317195_C5AD39B6)
+Subject: Re: b43 bcm43228 and linux 3.18.3
+To: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes datatypes for device capability flags to bool.
-Patch also aggregates these variables at single place.
+I'm switch to 3.19 kernel, now debug info contains:
+[  286.557369] b43-phy0 ERROR: PHY transmission error
+[  286.557551] b43-phy0 ERROR: PHY transmission error
+[  290.412335] b43-phy0 ERROR: PHY transmission error
+[  303.809876] b43-phy0 debug: Switching to 5 GHz band
+[  303.957855] b43-phy0 debug: Switching to 2.4 GHz band
+[  304.296705] b43-phy0 debug: Switching to 5 GHz band
+[  304.444641] b43-phy0 debug: Switching to 2.4 GHz band
+[  304.784427] b43-phy0 debug: Switching to 5 GHz band
+[  304.932492] b43-phy0 debug: Switching to 2.4 GHz band
+[  305.273372] b43-phy0 debug: Switching to 5 GHz band
+[  305.424327] b43-phy0 debug: Switching to 2.4 GHz band
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c |  4 +--
- drivers/net/wireless/mwifiex/pcie.h |  6 ++--
- drivers/net/wireless/mwifiex/sdio.c |  8 ++---
- drivers/net/wireless/mwifiex/sdio.h | 60 ++++++++++++++++++-------------------
- 4 files changed, 39 insertions(+), 39 deletions(-)
+and i have sometimes stuck in tcp/udp transmissions.
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 29c4e8e..4b463c3 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -203,7 +203,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 		card->pcie.reg = data->reg;
- 		card->pcie.blksz_fw_dl = data->blksz_fw_dl;
- 		card->pcie.tx_buf_size = data->tx_buf_size;
--		card->pcie.supports_fw_dump = data->supports_fw_dump;
-+		card->pcie.can_dump_fw = data->can_dump_fw;
- 		card->pcie.can_ext_scan = data->can_ext_scan;
- 	}
- 
-@@ -2273,7 +2273,7 @@ static void mwifiex_pcie_fw_dump_work(struct mwifiex_adapter *adapter)
- 	int ret;
- 	static char *env[] = { "DRIVER=mwifiex_pcie", "EVENT=fw_dump", NULL };
- 
--	if (!card->pcie.supports_fw_dump)
-+	if (!card->pcie.can_dump_fw)
- 		return;
- 
- 	for (idx = 0; idx < ARRAY_SIZE(mem_type_mapping_tbl); idx++) {
-diff --git a/drivers/net/wireless/mwifiex/pcie.h b/drivers/net/wireless/mwifiex/pcie.h
-index 666d40e..0e7ee8b 100644
---- a/drivers/net/wireless/mwifiex/pcie.h
-+++ b/drivers/net/wireless/mwifiex/pcie.h
-@@ -205,7 +205,7 @@ struct mwifiex_pcie_device {
- 	const struct mwifiex_pcie_card_reg *reg;
- 	u16 blksz_fw_dl;
- 	u16 tx_buf_size;
--	bool supports_fw_dump;
-+	bool can_dump_fw;
- 	bool can_ext_scan;
- };
- 
-@@ -214,7 +214,7 @@ static const struct mwifiex_pcie_device mwifiex_pcie8766 = {
- 	.reg            = &mwifiex_reg_8766,
- 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
--	.supports_fw_dump = false,
-+	.can_dump_fw = false,
- 	.can_ext_scan = true,
- };
- 
-@@ -223,7 +223,7 @@ static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
- 	.reg            = &mwifiex_reg_8897,
- 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
--	.supports_fw_dump = true,
-+	.can_dump_fw = true,
- 	.can_ext_scan = true,
- };
- 
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 998f3cb..57d85ab 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -105,8 +105,8 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 		card->tx_buf_size = data->tx_buf_size;
- 		card->mp_tx_agg_buf_size = data->mp_tx_agg_buf_size;
- 		card->mp_rx_agg_buf_size = data->mp_rx_agg_buf_size;
--		card->supports_fw_dump = data->supports_fw_dump;
--		card->auto_tdls = data->auto_tdls;
-+		card->can_dump_fw = data->can_dump_fw;
-+		card->can_auto_tdls = data->can_auto_tdls;
- 		card->can_ext_scan = data->can_ext_scan;
- 	}
- 
-@@ -1888,7 +1888,7 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
- 		return -1;
- 	}
- 
--	adapter->auto_tdls = card->auto_tdls;
-+	adapter->auto_tdls = card->can_auto_tdls;
- 	adapter->ext_scan = card->can_ext_scan;
- 	return ret;
- }
-@@ -2033,7 +2033,7 @@ static void mwifiex_sdio_fw_dump_work(struct work_struct *work)
- 
- 	mwifiex_dump_drv_info(adapter);
- 
--	if (!card->supports_fw_dump)
-+	if (!card->can_dump_fw)
- 		return;
- 
- 	for (idx = 0; idx < ARRAY_SIZE(mem_type_mapping_tbl); idx++) {
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index 957cca2..3fe9fb4 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -238,9 +238,6 @@ struct sdio_mmc_card {
- 	const struct mwifiex_sdio_card_reg *reg;
- 	u8 max_ports;
- 	u8 mp_agg_pkt_limit;
--	bool supports_sdio_new_mode;
--	bool has_control_mask;
--	bool supports_fw_dump;
- 	u16 tx_buf_size;
- 	u32 mp_tx_agg_buf_size;
- 	u32 mp_rx_agg_buf_size;
-@@ -255,7 +252,10 @@ struct sdio_mmc_card {
- 	u8 curr_wr_port;
- 
- 	u8 *mp_regs;
--	u8 auto_tdls;
-+	bool supports_sdio_new_mode;
-+	bool has_control_mask;
-+	bool can_dump_fw;
-+	bool can_auto_tdls;
- 	bool can_ext_scan;
- 
- 	struct mwifiex_sdio_mpa_tx mpa_tx;
-@@ -267,13 +267,13 @@ struct mwifiex_sdio_device {
- 	const struct mwifiex_sdio_card_reg *reg;
- 	u8 max_ports;
- 	u8 mp_agg_pkt_limit;
--	bool supports_sdio_new_mode;
--	bool has_control_mask;
--	bool supports_fw_dump;
- 	u16 tx_buf_size;
- 	u32 mp_tx_agg_buf_size;
- 	u32 mp_rx_agg_buf_size;
--	u8 auto_tdls;
-+	bool supports_sdio_new_mode;
-+	bool has_control_mask;
-+	bool can_dump_fw;
-+	bool can_auto_tdls;
- 	bool can_ext_scan;
- };
- 
-@@ -412,13 +412,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8786 = {
- 	.reg = &mwifiex_reg_sd87xx,
- 	.max_ports = 16,
- 	.mp_agg_pkt_limit = 8,
--	.supports_sdio_new_mode = false,
--	.has_control_mask = true,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
--	.supports_fw_dump = false,
--	.auto_tdls = false,
-+	.supports_sdio_new_mode = false,
-+	.has_control_mask = true,
-+	.can_dump_fw = false,
-+	.can_auto_tdls = false,
- 	.can_ext_scan = false,
- };
- 
-@@ -427,13 +427,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8787 = {
- 	.reg = &mwifiex_reg_sd87xx,
- 	.max_ports = 16,
- 	.mp_agg_pkt_limit = 8,
--	.supports_sdio_new_mode = false,
--	.has_control_mask = true,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
--	.supports_fw_dump = false,
--	.auto_tdls = false,
-+	.supports_sdio_new_mode = false,
-+	.has_control_mask = true,
-+	.can_dump_fw = false,
-+	.can_auto_tdls = false,
- 	.can_ext_scan = true,
- };
- 
-@@ -442,13 +442,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8797 = {
- 	.reg = &mwifiex_reg_sd87xx,
- 	.max_ports = 16,
- 	.mp_agg_pkt_limit = 8,
--	.supports_sdio_new_mode = false,
--	.has_control_mask = true,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
--	.supports_fw_dump = false,
--	.auto_tdls = false,
-+	.supports_sdio_new_mode = false,
-+	.has_control_mask = true,
-+	.can_dump_fw = false,
-+	.can_auto_tdls = false,
- 	.can_ext_scan = true,
- };
- 
-@@ -457,13 +457,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
- 	.reg = &mwifiex_reg_sd8897,
- 	.max_ports = 32,
- 	.mp_agg_pkt_limit = 16,
--	.supports_sdio_new_mode = true,
--	.has_control_mask = false,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
--	.supports_fw_dump = true,
--	.auto_tdls = false,
-+	.supports_sdio_new_mode = true,
-+	.has_control_mask = false,
-+	.can_dump_fw = true,
-+	.can_auto_tdls = false,
- 	.can_ext_scan = true,
- };
- 
-@@ -472,13 +472,13 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8887 = {
- 	.reg = &mwifiex_reg_sd8887,
- 	.max_ports = 32,
- 	.mp_agg_pkt_limit = 16,
--	.supports_sdio_new_mode = true,
--	.has_control_mask = false,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
--	.supports_fw_dump = false,
--	.auto_tdls = true,
-+	.supports_sdio_new_mode = true,
-+	.has_control_mask = false,
-+	.can_dump_fw = false,
-+	.can_auto_tdls = true,
- 	.can_ext_scan = true,
- };
- 
-@@ -492,8 +492,8 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8801 = {
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_2K,
- 	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
- 	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_16K,
--	.supports_fw_dump = false,
--	.auto_tdls = false,
-+	.can_dump_fw = false,
-+	.can_auto_tdls = false,
- 	.can_ext_scan = true,
- };
- 
+2015-01-20 13:48 GMT+03:00 Vasiliy Tolstov <v.tolstov@selfip.ru>:
+> 2015-01-20 13:31 GMT+03:00 Arend van Spriel <arend@broadcom.com>:
+>> 'b/g' is in 2.4G band. 'n' is in both 2.4G and 5G band. Assume it can do 'a'
+>> as well. Anyway, does that router let you specify the SSID for both 2.4G and
+>> 5G. Are you using same SSID for both?
+>
+>
+> As i see i can't specify different SSID for 2.4G and 5G (only one ssid
+> available). Does it possible to not roam between bands in b43 driver?
+>
+> --
+> Vasiliy Tolstov,
+> e-mail: v.tolstov@selfip.ru
+> jabber: vase@selfip.ru
+
+
+
 -- 
-1.8.1.4
-
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
+jabber: vase@selfip.ru
