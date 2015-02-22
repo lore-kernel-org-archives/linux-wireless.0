@@ -1,97 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1142 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933559AbbBCHPH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 02:15:07 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
-	David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/19] iwlwifi: mvm: Fix a few EBS error handling bugs
-Date: Tue,  3 Feb 2015 09:14:33 +0200
-Message-Id: <1422947678-16917-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081531_491015_7A54FAEF)
-In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
-References: <1422947482.30742.8.camel@egrumbacBox>
+Received: from mail-ig0-f174.google.com ([209.85.213.174]:43077 "EHLO
+	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751992AbbBVSY7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2015 13:24:59 -0500
+Received: by mail-ig0-f174.google.com with SMTP id b16so13650076igk.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2015 10:24:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
+References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
+Date: Sun, 22 Feb 2015 10:24:58 -0800
+Message-ID: <CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com> (sfid-20150222_192503_394692_F3952889)
+Subject: Re: AR9462 problems connecting again..
+From: Adrian Chadd <adrian@freebsd.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+On 21 February 2015 at 15:34, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> So I've had problems connecting to some networks before on my
+> Chromebook Pixel, but now I'm testing a new Ubiquiti network at home,
+> and can see this issue at home too.
+>
+> I know the wireless works, because other devices work fine on that
+> network. Also, I know the AR9462 works, because I still have my old
+> network up and it connects to that.
+>
+> And it *occasionally* connects to the new one. But it's rare, and it
+> clearly has problems.
+>
+> It looks something like this:
+>
+> [   73.757869] wlp1s0: authenticate with 20:9f:db:e7:80:80
+> [   73.771471] wlp1s0: send auth to 20:9f:db:e7:80:80 (try 1/3)
+> [   73.773706] wlp1s0: authenticated
+> [   73.775122] wlp1s0: associate with 20:9f:db:e7:80:80 (try 1/3)
+> [   73.787434] wlp1s0: RX AssocResp from 20:9f:db:e7:80:80
+> (capab=0x431 status=0 aid=9)
+> [   73.787573] wlp1s0: associated
+> [   77.784931] wlp1s0: deauthenticated from 20:9f:db:e7:80:80 (Reason:
+> 2=PREV_AUTH_NOT_VALID)
+>
+> and the password I used definitely is right, and sometimes works.
+> Despite that PREV_AUTH_NOT_VALID thing.
+>
+> Any suggestions for what I should do to give you guys any sane and
+> useful debug output?
 
-Last EBS status wasn't set to success in the initialization, which
-caused the first scan to be without EBS. Fix that.
+Just a wild shot - try disabling fast authentication and see if that
+makes a difference?
 
-When EBS is not enabled by the driver, the FW still sends ebs_status success,
-which can override EBS failure state. Consider only EBS failures, to avoid
-such override. Last_ebs_success is set back to true upon disconnection.
+wpa_supplicant.conf:
 
-Last_ebs_success wasn't set in umac scan abort flow, fix that too.
+fast_reauth=0
 
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Reviewed-by: Alexander Bondar <alexander.bondar@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c  |  3 +++
- drivers/net/wireless/iwlwifi/mvm/scan.c | 13 ++++++++++---
- 2 files changed, 13 insertions(+), 3 deletions(-)
+I recall having issues with fast_reauth once, but I never stuck around
+that location long enough to debug it.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index b6181ef..2dffc36 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -568,6 +568,9 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	if (!mvm->scan_cmd)
- 		goto out_free;
- 
-+	/* Set EBS as successful as long as not stated otherwise by the FW. */
-+	mvm->last_ebs_successful = true;
-+
- 	err = iwl_mvm_mac_setup_register(mvm);
- 	if (err)
- 		goto out_free;
-diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
-index 3bd5f34..4169e3d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
-@@ -704,7 +704,8 @@ int iwl_mvm_rx_scan_offload_complete_notif(struct iwl_mvm *mvm,
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- 	}
- 
--	mvm->last_ebs_successful = !ebs_status;
-+	if (ebs_status)
-+		mvm->last_ebs_successful = false;
- 
- 	return 0;
- }
-@@ -2025,7 +2026,9 @@ int iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
- 		       notif->ebs_status == IWL_SCAN_EBS_SUCCESS ?
- 				"success" : "failed");
- 
--	mvm->last_ebs_successful = !notif->ebs_status;
-+	if (notif->ebs_status)
-+		mvm->last_ebs_successful = false;
-+
- 	mvm->scan_uid[uid_idx] = 0;
- 
- 	if (!sched) {
-@@ -2058,10 +2061,14 @@ static bool iwl_scan_umac_done_check(struct iwl_notif_wait_data *notif_wait,
- 
- 	/*
- 	 * Clear scan uid of scans that was aborted from above and completed
--	 * in FW so the RX handler does nothing.
-+	 * in FW so the RX handler does nothing. Set last_ebs_successful here if
-+	 * needed.
- 	 */
- 	scan_done->mvm->scan_uid[uid_idx] = 0;
- 
-+	if (notif->ebs_status)
-+		scan_done->mvm->last_ebs_successful = false;
-+
- 	return !iwl_mvm_find_scan_type(scan_done->mvm, scan_done->type);
- }
- 
--- 
-1.9.1
 
+
+
+-adrian
