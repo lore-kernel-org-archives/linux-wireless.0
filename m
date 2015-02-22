@@ -1,34 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:55504 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754990AbbBQJMV (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:58030 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752006AbbBVTj7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2015 04:12:21 -0500
-Received: by mail-wi0-f180.google.com with SMTP id h11so31481976wiw.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2015 01:12:20 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: nbd@openwrt.org, thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH 0/2] add per-vif TX power capability
-Date: Tue, 17 Feb 2015 10:12:16 +0100
-Message-Id: <1424164338-10547-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20150217_101226_835910_3D2FCD91)
+	Sun, 22 Feb 2015 14:39:59 -0500
+Received: by mail-ig0-f178.google.com with SMTP id hl2so13907482igb.5
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2015 11:39:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
+References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
+	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
+	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
+Date: Sun, 22 Feb 2015 11:39:58 -0800
+Message-ID: <CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com> (sfid-20150222_204002_535240_57C11244)
+Subject: Re: AR9462 problems connecting again..
+From: Adrian Chadd <adrian@freebsd.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure the HW with highest TX power among all vif when HW TPC has been
-enabled in order to add support to per-vif TX power capability. Cap per-packet
-TX power to vif configured power in the TX path
+On 22 February 2015 at 10:30, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Sun, Feb 22, 2015 at 10:24 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+>>
+>> Just a wild shot - try disabling fast authentication and see if that
+>> makes a difference?
+>>
+>> wpa_supplicant.conf:
+>>
+>> fast_reauth=0
+>>
+>> I recall having issues with fast_reauth once, but I never stuck around
+>> that location long enough to debug it.
+>
+> Nope. Did that, killed wpa_supplicant (which restarts it), tried
+> connecting, still failed.
 
-Lorenzo Bianconi (2):
-  ath9k: add per-vif TX power capability
-  ath9k: add per-vif TX power capability to TX path
+Hm, can you enable wpa debugging to log everything whilst it's
+associating / reassociating?
 
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/debug.c |  5 +++-
- drivers/net/wireless/ath/ath9k/main.c  | 52 ++++++++++++++++++++++++++++------
- drivers/net/wireless/ath/ath9k/xmit.c  | 42 ++++++++++++++++++---------
- 4 files changed, 77 insertions(+), 23 deletions(-)
+(maybe log_devel debug? I tend to run wpa_supplicant at the command
+line with debugging enabled, rather than doing it after-the-fact.)
 
--- 
-2.1.0
 
+
+
+-adrian
