@@ -1,83 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:36838 "EHLO bifrost.lang.hm"
+Received: from mga02.intel.com ([134.134.136.20]:59272 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965142AbbBBX1o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 18:27:44 -0500
-Date: Mon, 2 Feb 2015 15:27:02 -0800 (PST)
-From: David Lang <david@lang.hm>
-To: Avery Pennarun <apenwarr@google.com>
-cc: =?ISO-8859-15?Q?Bj=F6rn_Smedman?= <bs@anyfi.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"cerowrt-devel@lists.bufferbloat.net"
-	<cerowrt-devel@lists.bufferbloat.net>,
-	dstanley <dstanley@arubanetworks.com>,
-	Derrick Pallas <pallas@meraki.com>
-Subject: Re: [Cerowrt-devel] Open Source RRM & Hand-Over Optimization (WAS:
- Throughput regression with `tcp: refine TSO autosizing`)
-In-Reply-To: <CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1502021506460.8636@nftneq.ynat.uz> (sfid-20150203_002753_385201_611AF3B4)
-References: <CAJ1dT9x+vWm4uZ-r9PZrTmKjEQc260NhOKoRzH=Ab=oWkeZ83w@mail.gmail.com> <CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com>
+	id S1752025AbbBVMT3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2015 07:19:29 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "linux-wirelss@mrs.ro" <linux-wirelss@mrs.ro>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Harary, Eran" <eran.harary@intel.com>
+Subject: Re: iwlwifi: ampdu_factor for iwl-6000 is set to 0
+Date: Sun, 22 Feb 2015 12:19:24 +0000
+Message-ID: <1424607564.20465.1.camel@egrumbacBox> (sfid-20150222_131933_247902_A325E5E5)
+References: <54E9C852.50809@mrs.ro>
+In-Reply-To: <54E9C852.50809@mrs.ro>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="680960-1537533407-1422919622=:8636"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---680960-1537533407-1422919622=:8636
-Content-Type: TEXT/PLAIN; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8BIT
-
-On Mon, 2 Feb 2015, Avery Pennarun wrote:
-
-> On Mon, Feb 2, 2015 at 11:44 AM, Björn Smedman <bs@anyfi.net> wrote:
->> On Mon, Feb 2, 2015 at 5:21 AM, Avery Pennarun <apenwarr@google.com> wrote:
->>> While there is definitely some work to be done in handoff, it seems
->>> like there are some find implementations of this already in existence.
->>> Several brands of "enterprise access point" setups seem to do well at
->>> this.  It would be nice if they interoperated, I guess.
->>>
->>> The fact that there's no open source version of this kind of handoff
->>> feature bugs me, but we are working on it here and the work is all
->>> planned to be open source, for example: (very early version)
->>> https://gfiber.googlesource.com/vendor/google/platform/+/master/waveguide/
->>
->> We've got an SDN-inspired architecture with 802.11 frame tunneling (a
->> la CAPWAP), airtime fairness, infrastructure initiated hand-over,
->> Opportunistic Key Caching (OKC), IEEE 802.11r Fast BSS Transition and
->> a few more goodies. It's currently free as in beer
->> (http://anyfi.net/software,
->> https://github.com/carrierwrt/carrierwrt/pull/7 and
->> http://www.anyfinetworks.com/download) up to 100 APs, but we're
->> definitely going to open source in one form or another.
-
-Please keep in touch, when it is released open source I'd be very interested in 
-trying it for SCaLE. I'll probably exceed your 100 radio free limit this year, 
-and it's hard to justify using non-free code at a linux conference (not 
-impossible, but not something I'm going to try to do 3 weeks before the show :-)
-
-I'm doing social engineering to push people to the 5GHz network (SSID for 5G is 
-scale, for 2.4 is scale-slow), it would be great to be able to do this directly. 
-And better handoffs as people move around would be good.
-
-It would also be good if something like this could help identify gaps in 
-coverage. If it can identify cases where users go from having coverage to poor 
-connectivity to having coverage, we can manually investigate to see where in the 
-building that is and see what we can do to fix it.
-
-David Lang
-
->> We've also tried to raise some interest in fixing up CAPWAP
->> (https://www.ietf.org/mail-archive/web/opsawg/current/msg03196.html),
->> which is (unfortunately) the best open standard at the moment.
->> Interest seems marginal though...
->
-> This sounds cool.  Is the CAPWAP/encapsulation stuff separable from
-> the rest?  At 802.11ac speeds, a super fast WAN link, and a low-cost
-> SoC, too many layers can be a killer.
-> _______________________________________________
-> Cerowrt-devel mailing list
-> Cerowrt-devel@lists.bufferbloat.net
-> https://lists.bufferbloat.net/listinfo/cerowrt-devel
---680960-1537533407-1422919622=:8636--
+SGksDQoNCk9uIFN1biwgMjAxNS0wMi0yMiBhdCAxNDoxNSArMDIwMCwgVmFsZW50aW4gTWFuZWEg
+d3JvdGU6DQo+IEhpLA0KPiANCj4gICAgUmVjZW50bHkgSSBzdGFydGVkIHVzaW5nIGtlcm5lbCAz
+LjE5IGZyb20gVWJ1bnR1IHBwYSBhbmQgSSBub3RpY2VkIGEgDQo+IGJpZyBkcm9wIGluIFdpZmkg
+dGhyb3VnaHB1dC4gQWZ0ZXIgc29tZSBpbnZlc3RpZ2F0aW9uIEkgZm91bmQgdGhhdCBteSANCj4g
+cm91dGVyIHdhcyByZXBvcnRpbmcgdGhlIEFNUERVIGZhY3RvciBjaGFuZ2VkIGZyb20gMyhpbiAz
+LjE4KSB0byAwKGluIDMuMTkpOg0KPiBjYXQgDQo+IC9zeXMva2VybmVsL2RlYnVnL2llZWU4MDIx
+MS9waHkxL25ldGRldjp3bGFuMS9zdGF0aW9ucy9jNDp4eDp4eDp4eDp4eDp4eC9odF9jYXBhOg0K
+PiBodCBzdXBwb3J0ZWQNCj4gY2FwOiAweDEwNjYNCj4gICAgICAgICAgSFQyMC9IVDQwDQo+ICAg
+ICAgICAgIER5bmFtaWMgU00gUG93ZXIgU2F2ZQ0KPiAgICAgICAgICBSWCBIVDIwIFNHSQ0KPiAg
+ICAgICAgICBSWCBIVDQwIFNHSQ0KPiAgICAgICAgICBObyBSWCBTVEJDDQo+ICAgICAgICAgIE1h
+eCBBTVNEVSBsZW5ndGg6IDM4MzkgYnl0ZXMNCj4gICAgICAgICAgRFNTUy9DQ0sgSFQ0MA0KPiBh
+bXBkdSBmYWN0b3IvZGVuc2l0eTogMy81DQo+IE1DUyBtYXNrOiBmZiBmZiAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMA0KPiBNQ1MgdHggcGFyYW1zOiAxDQo+IA0KPiBodCBzdXBwb3J0ZWQNCj4gY2Fw
+OiAweDEwNjYNCj4gICAgICAgICAgSFQyMC9IVDQwDQo+ICAgICAgICAgIER5bmFtaWMgU00gUG93
+ZXIgU2F2ZQ0KPiAgICAgICAgICBSWCBIVDIwIFNHSQ0KPiAgICAgICAgICBSWCBIVDQwIFNHSQ0K
+PiAgICAgICAgICBObyBSWCBTVEJDDQo+ICAgICAgICAgIE1heCBBTVNEVSBsZW5ndGg6IDM4Mzkg
+Ynl0ZXMNCj4gICAgICAgICAgRFNTUy9DQ0sgSFQ0MA0KPiBhbXBkdSBmYWN0b3IvZGVuc2l0eTog
+MC81DQo+IE1DUyBtYXNrOiBmZiBmZiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMA0KPiBNQ1MgdHgg
+cGFyYW1zOiAxDQo+IA0KPiAgICBJbiBteSBzZXR1cCB0aGlzIG1lYW5zIGEgNTAlIGRyb3AgaW4g
+ZG93bnN0cmVhbSB0aHJvdWdocHV0KGZyb20gDQo+IDE2ME1iaXQvcyB0byA4ME1iaXQvcykNCj4g
+DQo+ICAgIEkgdHJhY2tlZCBkb3duIHRoZSBvZmZlbmRpbmcgY29tbWl0IGFuZCBpdCBzZWVtcyB0
+aGlzIGlzIGl0Og0KPiAgIGl3bHdpZmk6IGNoYW5nZSBtYXggSFQgYW5kIFZIVCBBLU1QRFUgZXhw
+b25lbnQgDQo+IGMwNjRkZGYzMThhYTUxNjQ3YTMwMTA4ZjdjZDE1MWMyMDhjNjJlZWYNCj4gICAg
+QSBuZXcgbWVjaGFuaXNtIHdhcyBjcmVhdGVkIHRvIGhhdmUgcGVyIGRldmljZSBhbXBkX2ZhY3Rv
+cjoNCj4gLSBodF9pbmZvLT5hbXBkdV9mYWN0b3IgPSBJRUVFODAyMTFfSFRfTUFYX0FNUERVXzY0
+SzsNCj4gKyBodF9pbmZvLT5hbXBkdV9mYWN0b3IgPSBjZmctPm1heF9odF9hbXBkdV9leHBvbmVu
+dDsNCj4gDQo+ICAgIGhvd2V2ZXIgdGhlIG1heF9odF9hbXBkdV9leHBvbmVudCBpcyBub3Qgc2V0
+IGZvciBhbnkgb2YgdGhlIGl3bC02MDAwIA0KPiBkZXZpY2VzKGluY2x1ZGluZyBtaW5lIEludGVs
+IENvcnBvcmF0aW9uIENlbnRyaW5vIEFkdmFuY2VkLU4gNjIzNSkNCj4gDQo+ICNkZWZpbmUgSVdM
+X0RFVklDRV82MDM1CQkJCQkJXA0KPiAJLmZ3X25hbWVfcHJlID0gSVdMNjAzMF9GV19QUkUsCQkJ
+CVwNCj4gCS51Y29kZV9hcGlfbWF4ID0gSVdMNjAzNV9VQ09ERV9BUElfTUFYLAkJCVwNCj4gCS51
+Y29kZV9hcGlfb2sgPSBJV0w2MDM1X1VDT0RFX0FQSV9PSywJCQlcDQo+IAkudWNvZGVfYXBpX21p
+biA9IElXTDYwMzVfVUNPREVfQVBJX01JTiwJCQlcDQo+IAkuZGV2aWNlX2ZhbWlseSA9IElXTF9E
+RVZJQ0VfRkFNSUxZXzYwMzAsCQlcDQo+IAkubWF4X2luc3Rfc2l6ZSA9IElXTDYwX1JUQ19JTlNU
+X1NJWkUsCQkJXA0KPiAJLm1heF9kYXRhX3NpemUgPSBJV0w2MF9SVENfREFUQV9TSVpFLAkJCVwN
+Cj4gCS5udm1fdmVyID0gRUVQUk9NXzYwMzBfRUVQUk9NX1ZFUlNJT04sCQlcDQo+IAkubnZtX2Nh
+bGliX3ZlciA9IEVFUFJPTV82MDMwX1RYX1BPV0VSX1ZFUlNJT04sCVwNCj4gCS5iYXNlX3BhcmFt
+cyA9ICZpd2w2MDAwX2cyX2Jhc2VfcGFyYW1zLAkJCVwNCj4gCS5lZXByb21fcGFyYW1zID0gJml3
+bDYwMDBfZWVwcm9tX3BhcmFtcywJCVwNCj4gCS5sZWRfbW9kZSA9IElXTF9MRURfUkZfU1RBVEUN
+Cj4gDQo+ICAgIFNpbmNlIHRoZSBvcmlnaW5hbCB2YWx1ZSBvZiBJRUVFODAyMTFfSFRfTUFYX0FN
+UERVXzY0SyBJIHdvdWxkIA0KPiBzdWdnZXN0IGFkZGluZyBpdCB0byBzb21lIGl3bC02MDAwIGRl
+dmljZXMuDQo+ICAgIEkgZGlkIG5vdCBzdWJtaXQgYW55IHBhdGNoZXMgYmVjYXVzZSBJIGhhdmUg
+bm8gaWRlYSBpZiB0aGVyZSBhcmUgDQo+IGRldmljZSB3aGljaCB3b3VsZCBub3Qgc3VwcG9ydCB0
+aGlzIGZlYXR1cmUsIGhvd2V2ZXIgaXQgd29ya2VkIGJlZm9yZSANCj4gd2l0aCBkZWZhdWx0IHZh
+bHVlIHNldCB0byBJRUVFODAyMTFfSFRfTUFYX0FNUERVXzY0SyBzbyBJIGd1ZXNzIGl0IG11c3Qg
+DQo+IGJlIHN1cHBvcnRlZC4NCj4gDQoNClRoYW5rIHlvdSBmb3IgeW91ciByZXBvcnQgYW5kIGFu
+YWx5c2lzLiBZb3Ugc2F2ZWQgdXMgYSBsb3Qgb2YgdGltZS4NCkknbGwgc2VuZCBhIGZpeC4NCg==
