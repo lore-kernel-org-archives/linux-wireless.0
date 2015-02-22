@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:59246 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161127AbbBDRyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 12:54:47 -0500
-Message-ID: <54D25CDC.3040405@users.sourceforge.net> (sfid-20150204_185511_357238_DF6CF226)
-Date: Wed, 04 Feb 2015 18:54:36 +0100
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	netdev@vger.kernel.org
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] ath9k: Delete an unnecessary check before the function call
- "relay_close"
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-wi0-f171.google.com ([209.85.212.171]:58589 "EHLO
+	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbbBVVYv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2015 16:24:51 -0500
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@linuxdriverproject.org,
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 2/2 fix for 3.20] vt6655: Fix late setting of byRFType.
+Date: Sun, 22 Feb 2015 21:24:12 +0000
+Message-Id: <1424640252-3202-2-git-send-email-tvboxspy@gmail.com> (sfid-20150222_222456_237624_259C29EE)
+In-Reply-To: <1424640252-3202-1-git-send-email-tvboxspy@gmail.com>
+References: <1424640252-3202-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 4 Feb 2015 18:48:28 +0100
+byRFType is not set prior to registration of mac80211 causing
+unpredictable operation after channel scans.
 
-The relay_close() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
+With byRFType unset all channels are enabled this causes tx power
+to be set to values not present its eeprom.
 
-This issue was detected by using the Coccinelle software.
+Move setting of this variable to vt6655_probe.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+byRFType must have a mask set. byRevId not used by driver and
+is removed.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v3.19+
 ---
- drivers/net/wireless/ath/ath9k/common-spectral.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6655/device_main.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
-index ec93ddf..5cee231 100644
---- a/drivers/net/wireless/ath/ath9k/common-spectral.c
-+++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
-@@ -582,7 +582,7 @@ static struct rchan_callbacks rfs_spec_scan_cb = {
+diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
+index f5c5872..03b2a90 100644
+--- a/drivers/staging/vt6655/device_main.c
++++ b/drivers/staging/vt6655/device_main.c
+@@ -330,16 +330,6 @@ static void device_init_registers(struct vnt_private *pDevice)
+ 	/* zonetype initial */
+ 	pDevice->byOriginalZonetype = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
  
- void ath9k_cmn_spectral_deinit_debug(struct ath_spec_scan_priv *spec_priv)
- {
--	if (config_enabled(CONFIG_ATH9K_DEBUGFS) && spec_priv->rfs_chan_spec_scan) {
-+	if (config_enabled(CONFIG_ATH9K_DEBUGFS)) {
- 		relay_close(spec_priv->rfs_chan_spec_scan);
- 		spec_priv->rfs_chan_spec_scan = NULL;
- 	}
+-	/* Get RFType */
+-	pDevice->byRFType = SROMbyReadEmbedded(pDevice->PortOffset, EEP_OFS_RFTYPE);
+-
+-	/* force change RevID for VT3253 emu */
+-	if ((pDevice->byRFType & RF_EMU) != 0)
+-			pDevice->byRevId = 0x80;
+-
+-	pDevice->byRFType &= RF_MASK;
+-	pr_debug("pDevice->byRFType = %x\n", pDevice->byRFType);
+-
+ 	if (!pDevice->bZoneRegExist)
+ 		pDevice->byZoneType = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
+ 
+@@ -1780,6 +1770,12 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
+ 	MACvInitialize(priv->PortOffset);
+ 	MACvReadEtherAddress(priv->PortOffset, priv->abyCurrentNetAddr);
+ 
++	/* Get RFType */
++	priv->byRFType = SROMbyReadEmbedded(priv->PortOffset, EEP_OFS_RFTYPE);
++	priv->byRFType &= RF_MASK;
++
++	dev_dbg(&pcid->dev, "RF Type = %x\n", priv->byRFType);
++
+ 	device_get_options(priv);
+ 	device_set_options(priv);
+ 	/* Mask out the options cannot be set to the chip */
 -- 
-2.2.2
+2.1.0
 
