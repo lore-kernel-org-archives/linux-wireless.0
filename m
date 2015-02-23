@@ -1,189 +1,395 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:42254 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbbBYMpy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 07:45:54 -0500
-Received: by lbiw7 with SMTP id w7so3525585lbi.9
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 04:45:53 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFCv2 4/4] ath10k: add WOW patterns support
-Date: Wed, 25 Feb 2015 13:44:58 +0100
-Message-Id: <1424868298-17372-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150225_134600_046841_0E81312F)
-In-Reply-To: <1424868298-17372-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1424868298-17372-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35283 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752135AbbBWWLK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 17:11:10 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: use rhashtable for station table
+Date: Mon, 23 Feb 2015 23:11:06 +0100
+Message-Id: <1424729466-13380-1-git-send-email-johannes@sipsolutions.net> (sfid-20150223_231114_751056_B7210C06)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add patterns support for WOW.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+We currently have a hand-rolled table with 256 entries and are
+using the last byte of the MAC address as the hash. This hash
+is obviously very fast, but collisions are easily created and
+we waste a lot of space in the common case of just connecting
+as a client to an AP where we just have a single station. The
+other common case of an AP is also suboptimal due to the size
+of the hash table and the ease of causing collisions.
+
+Convert all of this to use rhashtable with jhash, which gives
+us the advantage of a far better hash function (with random
+perturbation to avoid hash collision attacks) and of course
+that the hash table grows and shrinks dynamically with chain
+length, improving both cases above.
+
+Use a specialised hash function (using jhash, but with fixed
+length) to achieve better compiler optimisation as suggested
+by Sergey Ryazanov.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c    |  1 +
- drivers/net/wireless/ath/ath10k/hw.h      |  1 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  2 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |  4 +++
- drivers/net/wireless/ath/ath10k/wow.c     | 49 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wow.h     |  1 +
- 6 files changed, 56 insertions(+), 2 deletions(-)
+ net/mac80211/ieee80211_i.h |  3 +-
+ net/mac80211/main.c        |  9 +++--
+ net/mac80211/rx.c          |  4 +-
+ net/mac80211/sta_info.c    | 92 +++++++++++++++++++++-------------------------
+ net/mac80211/sta_info.h    | 37 +++++--------------
+ net/mac80211/status.c      |  4 +-
+ 6 files changed, 64 insertions(+), 85 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 39bf8fb..5bcf83ff 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -972,6 +972,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_TLV_NUM_MSDU_DESC;
-+		ar->wow.max_num_patterns = TARGET_TLV_NUM_WOW_PATTERNS;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 	case ATH10K_FW_WMI_OP_VERSION_MAX:
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 460771f..a06291b 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -263,6 +263,7 @@ struct ath10k_pktlog_hdr {
- 						 2)
- #define TARGET_TLV_NUM_TIDS			((TARGET_TLV_NUM_PEERS) * 2)
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
-+#define TARGET_TLV_NUM_WOW_PATTERNS		22
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 3afe36824703..798392398ab5 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -26,6 +26,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/leds.h>
+ #include <linux/idr.h>
++#include <linux/rhashtable.h>
+ #include <net/ieee80211_radiotap.h>
+ #include <net/cfg80211.h>
+ #include <net/mac80211.h>
+@@ -1195,7 +1196,7 @@ struct ieee80211_local {
+ 	spinlock_t tim_lock;
+ 	unsigned long num_sta;
+ 	struct list_head sta_list;
+-	struct sta_info __rcu *sta_hash[STA_HASH_SIZE];
++	struct rhashtable sta_hash;
+ 	struct timer_list sta_cleanup;
+ 	int sta_generation;
  
- /* Number of Copy Engines supported */
- #define CE_COUNT 8
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index deed5da..d8e20c6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1229,7 +1229,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cfg->num_tdls_conn_table_entries = __cpu_to_le32(0x20);
- 	cfg->beacon_tx_offload_max_vdev = __cpu_to_le32(2);
- 	cfg->num_multicast_filter_entries = __cpu_to_le32(5);
--	cfg->num_wow_filters = __cpu_to_le32(0x16);
-+	cfg->num_wow_filters = __cpu_to_le32(ar->wow.max_num_patterns);
- 	cfg->num_keep_alive_pattern = __cpu_to_le32(6);
- 	cfg->keep_alive_pattern_size = __cpu_to_le32(0);
- 	cfg->max_tdls_concurrent_sleep_sta = __cpu_to_le32(1);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 7e0c9eb..b985dfd 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -5005,6 +5005,10 @@ struct wmi_wow_ev_arg {
- 	u32 data_len;
- };
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 5e09d354c5a5..95d59d24b271 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -557,6 +557,9 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
  
-+#define WOW_MIN_PATTERN_SIZE	1
-+#define WOW_MAX_PATTERN_SIZE	148
-+#define WOW_MAX_PKT_OFFSET	128
+ 	local = wiphy_priv(wiphy);
+ 
++	if (sta_info_init(local))
++		goto err_free;
 +
- struct ath10k;
- struct ath10k_vif;
- struct ath10k_fw_stats_pdev;
-diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
-index 77c2b4d..5c95fa4 100644
---- a/drivers/net/wireless/ath/ath10k/wow.c
-+++ b/drivers/net/wireless/ath/ath10k/wow.c
-@@ -23,9 +23,15 @@
- #include "wmi.h"
- #include "wmi-ops.h"
+ 	local->hw.wiphy = wiphy;
  
--static const struct wiphy_wowlan_support ath10k_wowlan_support = {
-+static struct wiphy_wowlan_support ath10k_wowlan_support = {
- 	.flags = WIPHY_WOWLAN_DISCONNECT |
- 		 WIPHY_WOWLAN_MAGIC_PKT,
-+	/* .n_patterns is set during driver runtime
-+	 * per hw/fw capabilities
-+	 */
-+	.pattern_min_len = WOW_MIN_PATTERN_SIZE,
-+	.pattern_max_len = WOW_MAX_PATTERN_SIZE,
-+	.max_pkt_offset = WOW_MAX_PKT_OFFSET,
- };
+ 	local->hw.priv = (char *)local + ALIGN(sizeof(*local), NETDEV_ALIGN);
+@@ -629,8 +632,6 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	spin_lock_init(&local->ack_status_lock);
+ 	idr_init(&local->ack_status_frames);
  
- static int ath10k_wow_vif_cleanup(struct ath10k_vif *arvif)
-@@ -42,6 +48,15 @@ static int ath10k_wow_vif_cleanup(struct ath10k_vif *arvif)
- 		}
- 	}
+-	sta_info_init(local);
+-
+ 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++) {
+ 		skb_queue_head_init(&local->pending[i]);
+ 		atomic_set(&local->agg_queue_stop[i], 0);
+@@ -650,6 +651,9 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 	ieee80211_roc_setup(local);
  
-+	for (i = 0; i < ar->wow.max_num_patterns; i++) {
-+		ret = ath10k_wmi_wow_del_pattern(ar, arvif->vdev_id, i);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to delete wow pattern %d for vdev %i: %d\n",
-+				    i, arvif->vdev_id, ret);
-+			return ret;
-+		}
-+	}
-+
- 	return 0;
+ 	return &local->hw;
++ err_free:
++	wiphy_free(wiphy);
++	return NULL;
+ }
+ EXPORT_SYMBOL(ieee80211_alloc_hw_nm);
+ 
+@@ -1173,7 +1177,6 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 
+ 	destroy_workqueue(local->workqueue);
+ 	wiphy_unregister(local->hw.wiphy);
+-	sta_info_stop(local);
+ 	ieee80211_wep_free(local);
+ 	ieee80211_led_exit(local);
+ 	kfree(local->int_scan_req);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index ed38d8302659..aa238a66ae2e 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3417,7 +3417,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	__le16 fc;
+ 	struct ieee80211_rx_data rx;
+ 	struct ieee80211_sub_if_data *prev;
+-	struct sta_info *sta, *tmp, *prev_sta;
++	struct sta_info *sta, *prev_sta;
+ 	int err = 0;
+ 
+ 	fc = ((struct ieee80211_hdr *)skb->data)->frame_control;
+@@ -3454,7 +3454,7 @@ static void __ieee80211_rx_handle_packet(struct ieee80211_hw *hw,
+ 	if (ieee80211_is_data(fc)) {
+ 		prev_sta = NULL;
+ 
+-		for_each_sta_info(local, hdr->addr2, sta, tmp) {
++		for_each_sta_info(local, hdr->addr2, sta) {
+ 			if (!prev_sta) {
+ 				prev_sta = sta;
+ 				continue;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 00ca8dcc2bcf..db7749347e01 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -68,28 +68,7 @@
+ static int sta_info_hash_del(struct ieee80211_local *local,
+ 			     struct sta_info *sta)
+ {
+-	struct sta_info *s;
+-
+-	s = rcu_dereference_protected(local->sta_hash[STA_HASH(sta->sta.addr)],
+-				      lockdep_is_held(&local->sta_mtx));
+-	if (!s)
+-		return -ENOENT;
+-	if (s == sta) {
+-		rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)],
+-				   s->hnext);
+-		return 0;
+-	}
+-
+-	while (rcu_access_pointer(s->hnext) &&
+-	       rcu_access_pointer(s->hnext) != sta)
+-		s = rcu_dereference_protected(s->hnext,
+-					lockdep_is_held(&local->sta_mtx));
+-	if (rcu_access_pointer(s->hnext)) {
+-		rcu_assign_pointer(s->hnext, sta->hnext);
+-		return 0;
+-	}
+-
+-	return -ENOENT;
++	return rhashtable_remove(&local->sta_hash, &sta->hash_node) ? 0 : -ENOENT;
  }
  
-@@ -70,6 +85,8 @@ static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
- 	int ret, i;
- 	unsigned long wow_mask = 0;
- 	struct ath10k *ar = arvif->ar;
-+	const struct cfg80211_pkt_pattern *patterns = wowlan->patterns;
-+	int pattern_id = 0;
+ static void __cleanup_single_sta(struct sta_info *sta)
+@@ -159,18 +138,8 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+ 			      const u8 *addr)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+-	struct sta_info *sta;
  
- 	/* Setup requested WOW features */
- 	switch (arvif->vdev_type) {
-@@ -100,6 +117,35 @@ static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
- 		break;
- 	}
+-	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
+-				    lockdep_is_held(&local->sta_mtx));
+-	while (sta) {
+-		if (sta->sdata == sdata &&
+-		    ether_addr_equal(sta->sta.addr, addr))
+-			break;
+-		sta = rcu_dereference_check(sta->hnext,
+-					    lockdep_is_held(&local->sta_mtx));
+-	}
+-	return sta;
++	return rhashtable_lookup(&local->sta_hash, addr);
+ }
  
-+	for (i = 0; i < wowlan->n_patterns; i++) {
-+		u8 bitmask[WOW_MAX_PATTERN_SIZE] = {};
-+		int j;
+ /*
+@@ -183,17 +152,11 @@ struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 
+-	sta = rcu_dereference_check(local->sta_hash[STA_HASH(addr)],
+-				    lockdep_is_held(&local->sta_mtx));
+-	while (sta) {
+-		if ((sta->sdata == sdata ||
+-		     (sta->sdata->bss && sta->sdata->bss == sdata->bss)) &&
+-		    ether_addr_equal(sta->sta.addr, addr))
+-			break;
+-		sta = rcu_dereference_check(sta->hnext,
+-					    lockdep_is_held(&local->sta_mtx));
+-	}
+-	return sta;
++	for_each_sta_info(local, addr, sta)
++		if (sta->sdata == sdata ||
++		    (sta->sdata->bss && sta->sdata->bss == sdata->bss))
++			return sta;
++	return NULL;
+ }
+ 
+ struct sta_info *sta_info_get_by_idx(struct ieee80211_sub_if_data *sdata,
+@@ -250,9 +213,7 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+ static void sta_info_hash_add(struct ieee80211_local *local,
+ 			      struct sta_info *sta)
+ {
+-	lockdep_assert_held(&local->sta_mtx);
+-	sta->hnext = local->sta_hash[STA_HASH(sta->sta.addr)];
+-	rcu_assign_pointer(local->sta_hash[STA_HASH(sta->sta.addr)], sta);
++	rhashtable_insert(&local->sta_hash, &sta->hash_node);
+ }
+ 
+ static void sta_deliver_ps_frames(struct work_struct *wk)
+@@ -992,19 +953,50 @@ static void sta_info_cleanup(unsigned long data)
+ 		  round_jiffies(jiffies + STA_INFO_CLEANUP_INTERVAL));
+ }
+ 
+-void sta_info_init(struct ieee80211_local *local)
++#ifdef CONFIG_PROVE_LOCKING
++static int sta_info_mutex_is_held(void *parent)
++{
++	struct ieee80211_local *local = parent;
++	return lockdep_is_held(&local->sta_mtx);
++}
++#endif
 +
-+		if (patterns[i].pattern_len > WOW_MAX_PATTERN_SIZE)
-+			continue;
++static u32 sta_addr_hash(const void *key, u32 length, u32 seed)
++{
++	return jhash(key, ETH_ALEN, seed);
++}
 +
-+		/* convert bytemask to bitmask */
-+		for (j = 0; j < patterns[i].pattern_len; j++)
-+			if (patterns[i].mask[j/8] & BIT(j%8))
-+				bitmask[j] = 0xff;
++int sta_info_init(struct ieee80211_local *local)
+ {
++	struct rhashtable_params params = {
++		.head_offset = offsetof(struct sta_info, hash_node),
++		.key_offset = offsetof(struct sta_info, sta.addr),
++		.key_len = ETH_ALEN,
++		.hashfn = sta_addr_hash,
++#ifdef CONFIG_PROVE_LOCKING
++		.mutex_is_held = sta_info_mutex_is_held,
++		.parent = local,
++#endif
++	};
++	int err;
 +
-+		ret = ath10k_wmi_wow_add_pattern(ar, arvif->vdev_id,
-+						 pattern_id,
-+						 patterns[i].pattern,
-+						 bitmask,
-+						 patterns[i].pattern_len,
-+						 patterns[i].pkt_offset);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to add pattern %i to vdev %i: %d\n",
-+				    pattern_id,
-+				    arvif->vdev_id, ret);
-+			return ret;
-+		}
++	err = rhashtable_init(&local->sta_hash, &params);
++	if (err)
++		return err;
 +
-+		pattern_id++;
-+		__set_bit(WOW_PATTERN_MATCH_EVENT, &wow_mask);
-+	}
-+
- 	for (i = 0; i < WOW_EVENT_MAX; i++) {
- 		if (!test_bit(i, &wow_mask))
+ 	spin_lock_init(&local->tim_lock);
+ 	mutex_init(&local->sta_mtx);
+ 	INIT_LIST_HEAD(&local->sta_list);
+ 
+ 	setup_timer(&local->sta_cleanup, sta_info_cleanup,
+ 		    (unsigned long)local);
++	return 0;
+ }
+ 
+ void sta_info_stop(struct ieee80211_local *local)
+ {
+ 	del_timer_sync(&local->sta_cleanup);
++	rhashtable_destroy(&local->sta_hash);
+ }
+ 
+ 
+@@ -1071,13 +1063,13 @@ struct ieee80211_sta *ieee80211_find_sta_by_ifaddr(struct ieee80211_hw *hw,
+ 					       const u8 *addr,
+ 					       const u8 *localaddr)
+ {
+-	struct sta_info *sta, *nxt;
++	struct sta_info *sta;
+ 
+ 	/*
+ 	 * Just return a random station if localaddr is NULL
+ 	 * ... first in list.
+ 	 */
+-	for_each_sta_info(hw_to_local(hw), addr, sta, nxt) {
++	for_each_sta_info(hw_to_local(hw), addr, sta) {
+ 		if (localaddr &&
+ 		    !ether_addr_equal(sta->sdata->vif.addr, localaddr))
  			continue;
-@@ -274,6 +320,7 @@ int ath10k_wow_init(struct ieee80211_hw *hw)
- 	if (!test_bit(ATH10K_FW_FEATURE_WOWLAN_SUPPORT, ar->fw_features))
- 		return 0;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 925e68fe64c7..dd8a15e6ede4 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -16,6 +16,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/average.h>
+ #include <linux/etherdevice.h>
++#include <linux/rhashtable.h>
+ #include "key.h"
  
-+	ath10k_wowlan_support.n_patterns = ar->wow.max_num_patterns;
- 	ar->hw->wiphy->wowlan = &ath10k_wowlan_support;
+ /**
+@@ -265,7 +266,7 @@ struct ieee80211_tx_latency_stat {
+  *
+  * @list: global linked list entry
+  * @free_list: list entry for keeping track of stations to free
+- * @hnext: hash table linked list pointer
++ * @hash_node: hash node for rhashtable
+  * @local: pointer to the global information
+  * @sdata: virtual interface this station belongs to
+  * @ptk: peer keys negotiated with this station, if any
+@@ -359,7 +360,7 @@ struct sta_info {
+ 	/* General information, mostly static */
+ 	struct list_head list, free_list;
+ 	struct rcu_head rcu_head;
+-	struct sta_info __rcu *hnext;
++	struct rhash_head hash_node;
+ 	struct ieee80211_local *local;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct ieee80211_key __rcu *gtk[NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS];
+@@ -557,10 +558,6 @@ rcu_dereference_protected_tid_tx(struct sta_info *sta, int tid)
+ 					 lockdep_is_held(&sta->ampdu_mlme.mtx));
+ }
  
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath10k/wow.h b/drivers/net/wireless/ath/ath10k/wow.h
-index 32b724a..6c8bfe0 100644
---- a/drivers/net/wireless/ath/ath10k/wow.h
-+++ b/drivers/net/wireless/ath/ath10k/wow.h
-@@ -17,6 +17,7 @@
- #define _WOW_H_
+-#define STA_HASH_SIZE 256
+-#define STA_HASH(sta) (sta[5])
+-
+-
+ /* Maximum number of frames to buffer per power saving station per AC */
+ #define STA_MAX_TX_BUFFER	64
  
- struct ath10k_wow {
-+	u32 max_num_patterns;
- 	struct completion wakeup_completed;
- };
+@@ -581,28 +578,14 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
+ struct sta_info *sta_info_get_bss(struct ieee80211_sub_if_data *sdata,
+ 				  const u8 *addr);
  
+-static inline
+-void for_each_sta_info_type_check(struct ieee80211_local *local,
+-				  const u8 *addr,
+-				  struct sta_info *sta,
+-				  struct sta_info *nxt)
+-{
+-}
++#define sta_bucket(sh, _a)						\
++	rht_dereference_rcu((sh)->tbl, sh)->buckets[rhashtable_hashfn(sh, _a, ETH_ALEN)]
+ 
+-#define for_each_sta_info(local, _addr, _sta, nxt)			\
+-	for (	/* initialise loop */					\
+-		_sta = rcu_dereference(local->sta_hash[STA_HASH(_addr)]),\
+-		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL;	\
+-		/* typecheck */						\
+-		for_each_sta_info_type_check(local, (_addr), _sta, nxt),\
+-		/* continue condition */				\
+-		_sta;							\
+-		/* advance loop */					\
+-		_sta = nxt,						\
+-		nxt = _sta ? rcu_dereference(_sta->hnext) : NULL	\
+-	     )								\
++#define for_each_sta_info(local, _a, _sta)				\
++	rht_for_each_entry_rcu(_sta, sta_bucket(&local->sta_hash, (_a)),\
++			       hash_node)				\
+ 	/* compare address and run code only if it matches */		\
+-	if (ether_addr_equal(_sta->sta.addr, (_addr)))
++	if (ether_addr_equal(_sta->sta.addr, (_a)))
+ 
+ /*
+  * Get STA info by index, BROKEN!
+@@ -637,7 +620,7 @@ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
+ 
+ void sta_info_recalc_tim(struct sta_info *sta);
+ 
+-void sta_info_init(struct ieee80211_local *local);
++int sta_info_init(struct ieee80211_local *local);
+ void sta_info_stop(struct ieee80211_local *local);
+ 
+ /**
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index e679b7c9b160..f8719cf55a01 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -722,7 +722,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_sub_if_data *sdata;
+ 	struct net_device *prev_dev = NULL;
+-	struct sta_info *sta, *tmp;
++	struct sta_info *sta;
+ 	int retry_count;
+ 	int rates_idx;
+ 	bool send_to_cooked;
+@@ -739,7 +739,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	sband = local->hw.wiphy->bands[info->band];
+ 	fc = hdr->frame_control;
+ 
+-	for_each_sta_info(local, hdr->addr1, sta, tmp) {
++	for_each_sta_info(local, hdr->addr1, sta) {
+ 		/* skip wrong virtual interface */
+ 		if (!ether_addr_equal(hdr->addr2, sta->sdata->vif.addr))
+ 			continue;
 -- 
-1.9.1
+2.1.4
 
