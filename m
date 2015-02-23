@@ -1,65 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:59611 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753236AbbBIGYb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 01:24:31 -0500
-Received: by mail-wi0-f181.google.com with SMTP id fb4so14662866wid.2
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 22:24:30 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:60225 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752076AbbBWTIx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 14:08:53 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Daniele Alessandrelli <daniele.alessandrelli@gmail.com>
+Cc: Greg Kroah-Hartman <greg@kroah.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH] staging: rtl8723au: rtl8723a_hal_init.c: remove unnecessary braces
+References: <1424633324-9790-1-git-send-email-daniele.alessandrelli@gmail.com>
+Date: Mon, 23 Feb 2015 14:08:40 -0500
+In-Reply-To: <1424633324-9790-1-git-send-email-daniele.alessandrelli@gmail.com>
+	(Daniele Alessandrelli's message of "Sun, 22 Feb 2015 20:28:44 +0100")
+Message-ID: <wrfjmw448myv.fsf@redhat.com> (sfid-20150223_200859_434501_157F9C1B)
 MIME-Version: 1.0
-In-Reply-To: <54D4E89A.7040602@candelatech.com>
-References: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com>
-	<54D4E89A.7040602@candelatech.com>
-Date: Mon, 9 Feb 2015 07:24:30 +0100
-Message-ID: <CA+BoTQ=HqyGKOBdOmpWOn_VjH1UTWF9nN_PE0uanaGsdeJmB6Q@mail.gmail.com> (sfid-20150209_072435_109204_FA12D939)
-Subject: Re: [RFT] ath10k: restart fw on tx-credit timeout
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Matti Laakso <malaakso@elisanet.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 February 2015 at 17:15, Ben Greear <greearb@candelatech.com> wrote:
-> On 02/06/2015 04:05 AM, Michal Kazior wrote:
->>
->> It makes little sense to continue and let
->> firmware-host state become inconsistent if a WMI
->> command can't be submitted to firmware.
->>
->> This effectively prevents after-affects of
->> tx-credit starvation bug which include spurious
->> sta kickout events and inability to associate new
->> stations after some time when acting as AP.
->>
->> This should also speed up recovery/teardown in
->> some cases when firmware stops responding for some
->> reason.
+Daniele Alessandrelli <daniele.alessandrelli@gmail.com> writes:
+> Fix all checkpatch "braces {} are not necessary" warnings for
+> rtl8723au/hal/rtl8723a_hal_init.c
 >
+> Signed-off-by: Daniele Alessandrelli <daniele.alessandrelli@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c | 40 ++++++++---------------
+>  1 file changed, 14 insertions(+), 26 deletions(-)
+
+Looks good to me.
+
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+
 >
-> I have not seen a WMI timeout since I added keep-alive
-> and CE polling in my firmware, but the patch looks OK
-> to me.
-
-This is mainly aimed at the tx-credit starvation due to mgmt-tx being
-stuck on client powersave buffering.
-
-
-> You might add something about 'WMI' in that warning
-> message to make it more clear what is not being
-> responsive.
-
-Good point.
-
-
-> At least in my tests, I could continue
-> to receive network traffic while WMI was blocked.
-
-Yeah. Traffic works with the tx-credit starvation as well but what
-good is this if you have inconsistent driver-firmware state after
-failing to send a few commands?
-
-
-Michał
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> index a5eadd4..e88d851 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+> @@ -424,9 +424,8 @@ hal_ReadEFuse_WiFi(struct rtw_adapter *padapter,
+>  			offset = GET_HDR_OFFSET_2_0(efuseHeader);
+>  
+>  			ReadEFuseByte23a(padapter, eFuse_Addr++, &efuseExtHdr);
+> -			if (ALL_WORDS_DISABLED(efuseExtHdr)) {
+> +			if (ALL_WORDS_DISABLED(efuseExtHdr))
+>  				continue;
+> -			}
+>  
+>  			offset |= ((efuseExtHdr & 0xF0) >> 1);
+>  			wden = (efuseExtHdr & 0x0F);
+> @@ -524,9 +523,8 @@ hal_ReadEFuse_BT(struct rtw_adapter *padapter,
+>  
+>  				ReadEFuseByte23a(padapter, eFuse_Addr++,
+>  					      &efuseExtHdr);
+> -				if (ALL_WORDS_DISABLED(efuseExtHdr)) {
+> +				if (ALL_WORDS_DISABLED(efuseExtHdr))
+>  					continue;
+> -				}
+>  
+>  				offset |= ((efuseExtHdr & 0xF0) >> 1);
+>  				wden = (efuseExtHdr & 0x0F);
+> @@ -630,9 +628,8 @@ u16 rtl8723a_EfuseGetCurrentSize_WiFi(struct rtw_adapter *padapter)
+>  			hoffset = GET_HDR_OFFSET_2_0(efuse_data);
+>  			efuse_addr++;
+>  			efuse_OneByteRead23a(padapter, efuse_addr, &efuse_data);
+> -			if (ALL_WORDS_DISABLED(efuse_data)) {
+> +			if (ALL_WORDS_DISABLED(efuse_data))
+>  				continue;
+> -			}
+>  
+>  			hoffset |= ((efuse_data & 0xF0) >> 1);
+>  			hworden = efuse_data & 0x0F;
+> @@ -721,9 +718,8 @@ u16 rtl8723a_EfuseGetCurrentSize_BT(struct rtw_adapter *padapter)
+>  		}
+>  
+>  		/*  Check if we need to check next bank efuse */
+> -		if (efuse_addr < retU2) {
+> +		if (efuse_addr < retU2)
+>  			break;	/*  don't need to check next bank. */
+> -		}
+>  	}
+>  
+>  	retU2 = ((bank - 1) * EFUSE_BT_REAL_BANK_CONTENT_LEN) + efuse_addr;
+> @@ -1149,9 +1145,8 @@ static int _LLTWrite(struct rtw_adapter *padapter, u32 address, u32 data)
+>  	/* polling */
+>  	do {
+>  		value = rtl8723au_read32(padapter, LLTReg);
+> -		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value)) {
+> +		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value))
+>  			break;
+> -		}
+>  
+>  		if (count > POLLING_LLT_THRESHOLD) {
+>  			RT_TRACE(_module_hal_init_c_, _drv_err_,
+> @@ -1174,16 +1169,14 @@ int InitLLTTable23a(struct rtw_adapter *padapter, u32 boundary)
+>  
+>  	for (i = 0; i < (txpktbuf_bndy - 1); i++) {
+>  		status = _LLTWrite(padapter, i, i + 1);
+> -		if (status != _SUCCESS) {
+> +		if (status != _SUCCESS)
+>  			return status;
+> -		}
+>  	}
+>  
+>  	/*  end of list */
+>  	status = _LLTWrite(padapter, (txpktbuf_bndy - 1), 0xFF);
+> -	if (status != _SUCCESS) {
+> +	if (status != _SUCCESS)
+>  		return status;
+> -	}
+>  
+>  	/*  Make the other pages as ring buffer */
+>  	/*  This ring buffer is used as beacon buffer if we config this
+> @@ -1191,16 +1184,14 @@ int InitLLTTable23a(struct rtw_adapter *padapter, u32 boundary)
+>  	/*  Otherwise used as local loopback buffer. */
+>  	for (i = txpktbuf_bndy; i < Last_Entry_Of_TxPktBuf; i++) {
+>  		status = _LLTWrite(padapter, i, (i + 1));
+> -		if (_SUCCESS != status) {
+> +		if (_SUCCESS != status)
+>  			return status;
+> -		}
+>  	}
+>  
+>  	/*  Let last entry point to the start entry of ring buffer */
+>  	status = _LLTWrite(padapter, Last_Entry_Of_TxPktBuf, txpktbuf_bndy);
+> -	if (status != _SUCCESS) {
+> +	if (status != _SUCCESS)
+>  		return status;
+> -	}
+>  
+>  	return status;
+>  }
+> @@ -1435,9 +1426,9 @@ static void _DisableAnalog(struct rtw_adapter *padapter, bool bWithoutHWSM)
+>  /*  HW Auto state machine */
+>  int CardDisableHWSM(struct rtw_adapter *padapter, u8 resetMCU)
+>  {
+> -	if (padapter->bSurpriseRemoved) {
+> +	if (padapter->bSurpriseRemoved)
+>  		return _SUCCESS;
+> -	}
+> +
+>  	/*  RF Off Sequence ==== */
+>  	_DisableRFAFEAndResetBB8192C(padapter);
+>  
+> @@ -1459,9 +1450,8 @@ int CardDisableHWSM(struct rtw_adapter *padapter, u8 resetMCU)
+>  /*  without HW Auto state machine */
+>  int CardDisableWithoutHWSM(struct rtw_adapter *padapter)
+>  {
+> -	if (padapter->bSurpriseRemoved) {
+> +	if (padapter->bSurpriseRemoved)
+>  		return _SUCCESS;
+> -	}
+>  
+>  	/*  RF Off Sequence ==== */
+>  	_DisableRFAFEAndResetBB8192C(padapter);
+> @@ -1875,9 +1865,8 @@ static void rtl8723a_cal_txdesc_chksum(struct tx_desc *ptxdesc)
+>  	/*  Clear first */
+>  	ptxdesc->txdw7 &= cpu_to_le32(0xffff0000);
+>  
+> -	for (index = 0; index < count; index++) {
+> +	for (index = 0; index < count; index++)
+>  		checksum ^= le16_to_cpu(*(usPtr + index));
+> -	}
+>  
+>  	ptxdesc->txdw7 |= cpu_to_le32(checksum & 0x0000ffff);
+>  }
+> @@ -1925,9 +1914,8 @@ void rtl8723a_fill_fake_txdesc(struct rtw_adapter *padapter, u8 *pDesc,
+>  		ptxdesc->txdw3 |= cpu_to_le32((8 << 28));
+>  	}
+>  
+> -	if (true == IsBTQosNull) {
+> +	if (true == IsBTQosNull)
+>  		ptxdesc->txdw2 |= cpu_to_le32(BIT(23));	/*  BT NULL */
+> -	}
+>  
+>  	/* offset 16 */
+>  	ptxdesc->txdw4 |= cpu_to_le32(BIT(8));	/* driver uses rate */
