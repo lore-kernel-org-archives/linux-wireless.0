@@ -1,49 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:55752 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754781AbbBGL6C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Feb 2015 06:58:02 -0500
-Date: Sat, 7 Feb 2015 13:57:58 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 3/3] mac80211: don't defer scans in case of radar
- detection
-Message-ID: <20150207115758.GA503@w1.fi> (sfid-20150207_125806_988414_A00AA915)
-References: <1420645811-17877-1-git-send-email-eliad@wizery.com>
- <1420645811-17877-3-git-send-email-eliad@wizery.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1420645811-17877-3-git-send-email-eliad@wizery.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35360 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753110AbbBWW2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 17:28:44 -0500
+Message-ID: <1424730522.1899.7.camel@sipsolutions.net> (sfid-20150223_232847_152681_040049AB)
+Subject: Re: [PATCH] mac80211: use rhashtable for station table
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Mon, 23 Feb 2015 23:28:42 +0100
+In-Reply-To: <1424729466-13380-1-git-send-email-johannes@sipsolutions.net> (sfid-20150223_231114_751056_B7210C06)
+References: <1424729466-13380-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20150223_231114_751056_B7210C06)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 07, 2015 at 05:50:11PM +0200, Eliad Peller wrote:
-> Radar detection can last indefinite time. There is no
-> point in deferring a scan request in this case - simply
-> return -EBUSY.
+Err, well, I need to rebase this patch on the changed rhashtable APIs in
+net-next :) WIP.
 
-> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> @@ -505,7 +505,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
-> -	if (local->scan_req)
-> +	if (local->scan_req || ieee80211_is_radar_required(local))
->  		return -EBUSY;
+johannes
 
-This seems to be breaking a hwsim test case sequence of ap_vht80plus80
-followed by ap_vht80. In such a case, all the HT40 scans for ap_vht80
-fail due to this added condition resulting in -EBUSY being returned
-every time. It looks like this happens even if I change ap_vht80 to use
-the same country code (US) as ap_vht80plus80, so the change in the
-country code does not explain this either.
-
-I'm not sure what is causing the issue here, but it looks like something
-in ap_vht80plus80 (i.e., an attempt to enable a channel combination that
-would require DFS on one of the 80 MHz segments) leaves behind state
-that makes ieee80211_is_radar_required(local) return true even when it
-shouldn't. DFS for 80+80 is not yet supported, so I'd assume this is
-somehow related to that. Anyway, I don't think mac80211 should behave in
-this way.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
