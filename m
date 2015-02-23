@@ -1,109 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from theos.kyriasis.com ([212.71.254.33]:46990 "EHLO
-	theos.kyriasis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057AbbBLR17 (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:41117 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120AbbBWXAk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 12:27:59 -0500
-Date: Thu, 12 Feb 2015 18:27:53 +0100
-From: Johannes =?utf-8?B?TMO2dGhiZXJn?= <johannes@kyriasis.com>
-To: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: rtl8192ce kernel panics since 3.17(?)
-Message-ID: <20150212172753.GA17043@leeloo.kyriasis.com> (sfid-20150212_182823_320409_E94E0FA7)
-References: <20150212121057.GA1804@leeloo.kyriasis.com>
- <54DCD708.3070402@lwfinger.net>
+	Mon, 23 Feb 2015 18:00:40 -0500
+Received: by iecrd18 with SMTP id rd18so27547144iec.8
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 15:00:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
-In-Reply-To: <54DCD708.3070402@lwfinger.net>
+In-Reply-To: <20150223224305.GA30228@w1.fi>
+References: <CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
+	<CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
+	<CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
+	<CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
+	<CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
+	<20150223171700.GA29730@w1.fi>
+	<CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+	<20150223213050.GA23232@w1.fi>
+	<CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
+	<CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
+	<20150223224305.GA30228@w1.fi>
+Date: Mon, 23 Feb 2015 15:00:39 -0800
+Message-ID: <CA+55aFzpmD+XOF4PTePgi6WnRTyXbVUQxc7kgwvmFbfG_2VoTg@mail.gmail.com> (sfid-20150224_000043_897533_649C4DEE)
+Subject: Re: AR9462 problems connecting again..
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---OgqxwSJOaUobr8KG
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On 12/02, Larry Finger wrote:
->On 02/12/2015 06:10 AM, Johannes L=C3=B6thberg wrote:
->>Since sometime around version 3.16 or 3.17 I've been getting a lot of occ=
-asional
->>kernel panics related to my wifi driver. My laptop has a Realtek RTL8188CE
->>wireless card and uses the rtl8192ce driver.
->>
->>I have pictures of what I think is two identical kernel panics, a couple =
-of days
->>apart:
->>
->>https://lh4.googleusercontent.com/yjwOnrDmioCwuC8FqIXlKMiBTOXddLyJkWTiInJ=
-oX2o=3Dw421-h569-no
->>
->>https://lh3.googleusercontent.com/-xM-1wSsVu4c/VKxDnlkgBbI/AAAAAAAAIng/Hx=
-tqgHgglHY/w421-h569-no/IMG_20150106_212020.jpg
->>
->>
->>It only seems to happen when I have several days of uptime on my laptop a=
-nd just
->>use sleep all the time instead of shutting it down.
->>
->>Also I have a picture of a kernel panic that is different from the previo=
-us ones:
->>
->>https://lh3.googleusercontent.com/-Hj06Csglpa0/VKrI1al6QbI/AAAAAAAAImk/Vz=
-hmN-dfSB0/w657-h486-no/IMG_20150105_182236.jpg
->>
->>
->>Not sure how to debug it really, but figured that sending in a report wou=
-ld be
->>worth a shot.
->>
+On Mon, Feb 23, 2015 at 2:43 PM, Jouni Malinen <j@w1.fi> wrote:
 >
->What kernel were you running when you made the photos? Use the command=20
->'uname -r'. When I get that information, I can then use the dump trace=20
->to determine the locations of the oops.
->
->Larry
->
->
+> This did not get exactly supportive response when this was proposed last
+> time (Sep 2013). Anyway, for a quick test, this can be done with the
+> following one-liner:
 
-For the first photo it was 3.18.3 and for the second one it seems like=20
-it should be 3.18.1 from looking at my package manager's log.
+fwiw, that one-liner seems to work fine for me.
 
---=20
-Sincerely,
-  Johannes L=C3=B6thberg
-  PGP Key ID: 0x50FB9B273A9D0BB5
-  https://theos.kyriasis.com/~kyrias/
+Which I guess is not a huge surprise.
 
---OgqxwSJOaUobr8KG
-Content-Type: application/pgp-signature
+Side note: I've done the "turn off wifi and turn it back on" several
+times to test that patch, and it has worked every time. BUT I also see
+this odd behavior where the logs show that it tries to authenticate
+twice: the first time it does that "send auth to 20:9f .." thing three
+times (looks like 100ms apart), and nothing happens so it does
+"authentication with 20:9f .. timed out". Then it waits three seconds
+and tries again, and now it succeeds on the first try.
 
------BEGIN PGP SIGNATURE-----
+The only downside of that seems to be that it takes an extra 3s to
+connect to the network - but it does now seem to *reliably* connect -
+so it's not a big problem, but I wonder why it should be that
+repeatable. Is there some difference between the first and the second
+time it tries to authenticate?
 
-iQQcBAEBCgAGBQJU3OKTAAoJEJAcHDIOsNRdulQf/1LkD3SHg6ZN1LcIR1KmXlgj
-bDchvu4X0ZW0MhwGdU9qMdm6b2AFnPAR5RnCo+IXQtNiM4pZSRxkQG3eWNRZsqjN
-5TYz5dmgqsRw9cQxvjV5vD3f8wjZ9fLBvssL4mKPj554q1c6qZ0BjvE+9oOzrAU3
-mRS+9LU17RZT64UB/fqxhoRxvTLAWtgW5FagR5ZwJ7MeNTPXOWlSmuAISZNFjAcF
-LN6aR9+SKyeKT8dh3LMgtSRhnrjIkMB21hD9Pzvhu/PS/BZ4IexVGZ6AT6aSBLFF
-smjjQQDUqjG42+3IkGixoPP/rLw1sHMDKJDyyrFfEjoket9CNimszGddHdUymiCv
-tXSCtXEd2n1tq+T+rNON6SMgNuf1ntWFcxnAmSC040PyFzQteXFHBETvFGJNfkfm
-lzVw+6KhgchqzJNJ45NJ+tfaXFmHji+NiUkET/+GyfA0iSJQoauvvBjjED2PKaJA
-IW4sgyMTtlp7LwB460j83SMz3QJWdQjTa7sYmnRRd06FKZxJ2xWNvKiRrCX3BaqY
-0maf5pCkqKvL6JhoyNBgUotR55ohfh1jAl4T6yDyit5wqYgyJp7NWu7S8fUAvEvc
-WjBWIILtYvMV7RliZgPTBXiOrgbCfbr8UpFOKBs9Kf9Mvxkk3lk6ph76grfcOqfc
-SdV2jejPVFxOv5n3XsNLuZjsgsKAwOL984skxEO9onoDvj0khZZSHtrX85jQ3azr
-fKCogQPQvN5VfFKpLHd72dRgLQNpMbnSQClivoiNtTbi7Zt9cFcw/lIlxp8TJepk
-muB/HOrRRAi7dB8Mp6A9D4I9k1X4Ph1lcAv1FCn8xuKk3HA/87iUlT8ZAT2AVdnO
-nAK6olW8dbY4K8mzPJ76j4uNifEXC0dm694sl9IwgJQXPagfAnWkSJB/NB0iSF4c
-sxFZC3bHhcCnBXl6jrisOJp+PdjTp8H0xYlK0yOCk9IGr6sss8G9iEMSsR64/5ff
-V2rTuro2KqAbj/s8v8KHfVT1Ws7WLjmWXaeYgKIXy6BrdTUtaVD6nl7k/1tD6WL8
-DXrVPHxXKwt2/jQ3AhG6Hpa6lWEpbs+1osqvfNq9ff9RXq1TArbFNKZae0jJKWJF
-dkwtDJckdvQaZphjowzZPfw3zyCIByD5IVviNeJEUGlUPGKWQzrTpHhzJKcK1XwU
-TriGZsm4n6Pj4rO6PxHv2o3fVUyHUHdach3zapP7mpKz/t+EzaGBXaoLEtc7AUuk
-haf3jwZ6MH286h5vXhPfp0v3XMAC417DrjOe0yIqRuWQCgPmU7Irs4g+R4p0hhYd
-RNafQtJy0/6Yy+pdLylm4Wq3+IOqmzpAoBm5OUtOHhIrgbvq+ns9KfBJPbC2enY=
-=nr6Y
------END PGP SIGNATURE-----
+Anyway, even if people don't like that particular patch, it does seem
+like *something* like that should be done.
 
---OgqxwSJOaUobr8KG--
+                         Linus
