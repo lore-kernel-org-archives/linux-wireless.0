@@ -1,162 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:58737 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752860AbbBAMAS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Feb 2015 07:00:18 -0500
-Received: by mail-we0-f169.google.com with SMTP id u56so34421385wes.0
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Feb 2015 04:00:17 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 6/6] staging: vt6656: parse cts fall back out of vnt_fill_cts_head
-Date: Sun,  1 Feb 2015 11:59:43 +0000
-Message-Id: <1422791983-3408-6-git-send-email-tvboxspy@gmail.com> (sfid-20150201_130029_213274_3E5385F5)
-In-Reply-To: <1422791983-3408-1-git-send-email-tvboxspy@gmail.com>
-References: <1422791983-3408-1-git-send-email-tvboxspy@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:60813 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752145AbbBWObd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 09:31:33 -0500
+Message-ID: <1424701880.3075.0.camel@sipsolutions.net> (sfid-20150223_153139_207506_F3B7A260)
+Subject: Re: [PATCH 1/1] nl80211: add NL80211_CMD_GET_TSF
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rohan Joyce <rojoyce.github@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Mon, 23 Feb 2015 15:31:20 +0100
+In-Reply-To: <1424699832-19284-2-git-send-email-rojoyce.github@gmail.com> (sfid-20150223_151201_815020_CABEA63C)
+References: <1424699832-19284-1-git-send-email-rojoyce.github@gmail.com>
+	 <1424699832-19284-2-git-send-email-rojoyce.github@gmail.com>
+	 (sfid-20150223_151201_815020_CABEA63C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Creating new function vnt_fill_cts_fb_head for the fall back rates.
+On Mon, 2015-02-23 at 21:57 +0800, Rohan Joyce wrote:
+> This patch adds a command NL80211_CMD_GET_TSF that retrieves the 64 bit time
+> synchronisation value for an interface. It returns the value in a uint64
+> attribute of type NL80211_ATTR_TSF.
 
-The check for fb_option is now done in vnt_rxtx_cts.
+This should explain why and how this could possibly be used - I don't
+see any reasonable usage since the TSF is quickly changing and this API
+doesn't really allow for any synchronisation.
 
-This fixes checkpatch warning
-WARNING: else is not generally useful after a break or return
-	559: FILE: drivers/staging/vt6656/rxtx.c:559:
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6656/rxtx.c | 99 +++++++++++++++++++++++--------------------
- 1 file changed, 54 insertions(+), 45 deletions(-)
-
-diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
-index 3b90497..33baf26 100644
---- a/drivers/staging/vt6656/rxtx.c
-+++ b/drivers/staging/vt6656/rxtx.c
-@@ -518,60 +518,66 @@ static u16 vnt_rxtx_rts_a_fb_head(struct vnt_usb_send_context *tx_context,
- 	return vnt_rxtx_datahead_a_fb(tx_context, &buf->data_head);
- }
- 
--static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
--	union vnt_tx_data_head *head)
-+static u16 vnt_fill_cts_fb_head(struct vnt_usb_send_context *tx_context,
-+				union vnt_tx_data_head *head)
- {
- 	struct vnt_private *priv = tx_context->priv;
-+	struct vnt_cts_fb *buf = &head->cts_g_fb;
- 	u32 cts_frame_len = 14;
- 	u16 current_rate = tx_context->tx_rate;
- 
--	if (tx_context->fb_option) {
--		/* Auto Fall back */
--		struct vnt_cts_fb *buf = &head->cts_g_fb;
--		/* Get SignalField,ServiceField,Length */
--		vnt_get_phy_field(priv, cts_frame_len,
--			priv->top_cck_basic_rate, PK_TYPE_11B, &buf->b);
--		buf->duration_ba =
--			vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA,
--						   tx_context->pkt_type,
--						   current_rate);
--		/* Get CTSDuration_ba_f0 */
--		buf->cts_duration_ba_f0 =
--			vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA_F0,
--						   tx_context->pkt_type,
--						   priv->tx_rate_fb0);
--		/* Get CTSDuration_ba_f1 */
--		buf->cts_duration_ba_f1 =
--			vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA_F1,
--						   tx_context->pkt_type,
--						   priv->tx_rate_fb1);
--		/* Get CTS Frame body */
--		buf->data.duration = buf->duration_ba;
--		buf->data.frame_control =
--			cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
-+	/* Get SignalField,ServiceField,Length */
-+	vnt_get_phy_field(priv, cts_frame_len, priv->top_cck_basic_rate,
-+			  PK_TYPE_11B, &buf->b);
- 
--		ether_addr_copy(buf->data.ra, priv->current_net_addr);
-+	buf->duration_ba =
-+		vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA,
-+					   tx_context->pkt_type,
-+					   current_rate);
-+	/* Get CTSDuration_ba_f0 */
-+	buf->cts_duration_ba_f0 =
-+		vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA_F0,
-+					   tx_context->pkt_type,
-+					   priv->tx_rate_fb0);
-+	/* Get CTSDuration_ba_f1 */
-+	buf->cts_duration_ba_f1 =
-+		vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA_F1,
-+					   tx_context->pkt_type,
-+					   priv->tx_rate_fb1);
-+	/* Get CTS Frame body */
-+	buf->data.duration = buf->duration_ba;
-+	buf->data.frame_control =
-+		cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
- 
--		return vnt_rxtx_datahead_g_fb(tx_context, &buf->data_head);
--	} else {
--		struct vnt_cts *buf = &head->cts_g;
--		/* Get SignalField,ServiceField,Length */
--		vnt_get_phy_field(priv, cts_frame_len,
--			priv->top_cck_basic_rate, PK_TYPE_11B, &buf->b);
--		/* Get CTSDuration_ba */
--		buf->duration_ba =
--			vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA,
--						   tx_context->pkt_type,
--						   current_rate);
--		/*Get CTS Frame body*/
--		buf->data.duration = buf->duration_ba;
--		buf->data.frame_control =
--			cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
-+	ether_addr_copy(buf->data.ra, priv->current_net_addr);
- 
--		ether_addr_copy(buf->data.ra, priv->current_net_addr);
-+	return vnt_rxtx_datahead_g_fb(tx_context, &buf->data_head);
-+}
- 
--		return vnt_rxtx_datahead_g(tx_context, &buf->data_head);
--	}
-+static u16 vnt_fill_cts_head(struct vnt_usb_send_context *tx_context,
-+			     union vnt_tx_data_head *head)
-+{
-+	struct vnt_private *priv = tx_context->priv;
-+	struct vnt_cts *buf = &head->cts_g;
-+	u32 cts_frame_len = 14;
-+	u16 current_rate = tx_context->tx_rate;
-+
-+	/* Get SignalField,ServiceField,Length */
-+	vnt_get_phy_field(priv, cts_frame_len, priv->top_cck_basic_rate,
-+			  PK_TYPE_11B, &buf->b);
-+	/* Get CTSDuration_ba */
-+	buf->duration_ba =
-+		vnt_get_rtscts_duration_le(tx_context, CTSDUR_BA,
-+					   tx_context->pkt_type,
-+					   current_rate);
-+	/*Get CTS Frame body*/
-+	buf->data.duration = buf->duration_ba;
-+	buf->data.frame_control =
-+		cpu_to_le16(IEEE80211_FTYPE_CTL | IEEE80211_STYPE_CTS);
-+
-+	ether_addr_copy(buf->data.ra, priv->current_net_addr);
-+
-+	return vnt_rxtx_datahead_g(tx_context, &buf->data_head);
- }
- 
- static u16 vnt_rxtx_rts(struct vnt_usb_send_context *tx_context,
-@@ -628,6 +634,9 @@ static u16 vnt_rxtx_cts(struct vnt_usb_send_context *tx_context,
- 		head = &tx_head->tx_cts.tx.mic.head;
- 
- 	/* Fill CTS */
-+	if (tx_context->fb_option)
-+		return vnt_fill_cts_fb_head(tx_context, head);
-+
- 	return vnt_fill_cts_head(tx_context, head);
- }
- 
--- 
-2.1.0
+johannes
 
