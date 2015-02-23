@@ -1,83 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:46786 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbbBJLud (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:54863 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752253AbbBWRiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 06:50:33 -0500
-Received: by lams18 with SMTP id s18so19651751lam.13
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Feb 2015 03:50:32 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] mac80211: disable u-APSD queues by default
-Date: Tue, 10 Feb 2015 12:48:44 +0100
-Message-Id: <1423568924-11895-1-git-send-email-michal.kazior@tieto.com> (sfid-20150210_125036_697510_C6A88C7A)
+	Mon, 23 Feb 2015 12:38:18 -0500
+Message-ID: <54EB6589.6040803@candelatech.com> (sfid-20150223_183822_317203_48CAED2D)
+Date: Mon, 23 Feb 2015 09:38:17 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211-hwsim:  Don't enqueue pkts that do not want
+ txstatus.
+References: <1423592732-17256-1-git-send-email-greearb@candelatech.com> <1424707739.3075.19.camel@sipsolutions.net>
+In-Reply-To: <1424707739.3075.19.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some APs experience problems when working with
-U-APSD. Decreasing the probability of that
-happening by using legacy mode for all ACs but VO
-isn't enough.
+On 02/23/2015 08:08 AM, Johannes Berg wrote:
+> On Tue, 2015-02-10 at 10:25 -0800, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> Otherwise, skb is not cleaned up until there is some timeout
+>> and the tx-queue quickly becomes overly full.
+> 
+>> +++ b/drivers/net/wireless/mac80211_hwsim.c
+>> @@ -928,10 +928,14 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+>>  	genlmsg_end(skb, msg_head);
+>>  	genlmsg_unicast(&init_net, skb, dst_portid);
+>>  
+>> -	/* Enqueue the packet */
+>> -	skb_queue_tail(&data->pending, my_skb);
+>>  	data->tx_pkts++;
+>>  	data->tx_bytes += my_skb->len;
+>> +
+>> +	/* Enqueue the packet if we are expecting a tx-status response */
+>> +	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
+>> +		skb_queue_tail(&data->pending, my_skb);
+>> +	else
+>> +		ieee80211_free_txskb(hw, my_skb);
+> 
+> This doesn't really seem right - essentially it means that whatever you
+> just gave to userspace is now completely useless?
+> 
+> It seems skb_orphan() could/should be put here.
 
-Cisco 4410N originally forced us to enable VO by
-default only because it treated non-VO ACs as
-legacy.
+I don't understand your complaint, why is what I gave to user-space useless?
 
-However some APs (notably Netgear R7000) silently
-reclassify packets to different ACs. Since u-APSD
-ACs require trigger frames for frame retrieval
-clients would never see some frames (e.g. ARP
-responses) or would fetch them accidentally after
-a long time.
+If we just orphan them, does that clean up the skb memory properly?
 
-It makes little sense to enable u-APSD queues by
-default because it needs userspace applications to
-be aware of it to actually take advantage of the
-possible additional powersavings. Implicitly
-depending on driver autotrigger frame support
-doesn't make much sense.
+If not, what eventually frees the skb?
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/ieee80211_i.h | 23 +++++++++++++++++------
- 1 file changed, 17 insertions(+), 6 deletions(-)
+Thanks,
+Ben
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 3afe368..c0e089c 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -58,13 +58,24 @@ struct ieee80211_local;
- #define IEEE80211_UNSET_POWER_LEVEL	INT_MIN
- 
- /*
-- * Some APs experience problems when working with U-APSD. Decrease the
-- * probability of that happening by using legacy mode for all ACs but VO.
-- * The AP that caused us trouble was a Cisco 4410N. It ignores our
-- * setting, and always treats non-VO ACs as legacy.
-+ * Some APs experience problems when working with U-APSD. Decreasing the
-+ * probability of that happening by using legacy mode for all ACs but VO isn't
-+ * enough.
-+ *
-+ * Cisco 4410N originally forced us to enable VO by default only because it
-+ * treated non-VO ACs as legacy.
-+ *
-+ * However some APs (notably Netgear R7000) silently reclassify packets to
-+ * different ACs. Since u-APSD ACs require trigger frames for frame retrieval
-+ * clients would never see some frames (e.g. ARP responses) or would fetch them
-+ * accidentally after a long time.
-+ *
-+ * It makes little sense to enable u-APSD queues by default because it needs
-+ * userspace applications to be aware of it to actually take advantage of the
-+ * possible additional powersavings. Implicitly depending on driver autotrigger
-+ * frame support doesn't make much sense.
-  */
--#define IEEE80211_DEFAULT_UAPSD_QUEUES \
--	IEEE80211_WMM_IE_STA_QOSINFO_AC_VO
-+#define IEEE80211_DEFAULT_UAPSD_QUEUES 0
- 
- #define IEEE80211_DEFAULT_MAX_SP_LEN		\
- 	IEEE80211_WMM_IE_STA_QOSINFO_SP_ALL
+> 
+> johannes
+> 
+
+
 -- 
-1.8.5.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
