@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:39377 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752532AbbBPL6l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 06:58:41 -0500
-Received: by mail-lb0-f176.google.com with SMTP id u10so26705244lbd.7
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Feb 2015 03:58:40 -0800 (PST)
-Message-ID: <54E1DB6E.8020406@cogentembedded.com> (sfid-20150216_125903_400437_3C78A30E)
-Date: Mon, 16 Feb 2015 14:58:38 +0300
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-MIME-Version: 1.0
-To: Priit Laes <plaes@plaes.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/7] rtlwifi: Remove unused defines from rtl8192cu
- driver
-References: <1424033211-11696-1-git-send-email-plaes@plaes.org> <1424033211-11696-2-git-send-email-plaes@plaes.org>
-In-Reply-To: <1424033211-11696-2-git-send-email-plaes@plaes.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:33155 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752156AbbBWQJP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 11:09:15 -0500
+Message-ID: <1424707739.3075.19.camel@sipsolutions.net> (sfid-20150223_170918_359044_10C22D97)
+Subject: Re: [PATCH] mac80211-hwsim:  Don't enqueue pkts that do not want
+ txstatus.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 23 Feb 2015 17:08:59 +0100
+In-Reply-To: <1423592732-17256-1-git-send-email-greearb@candelatech.com>
+References: <1423592732-17256-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+On Tue, 2015-02-10 at 10:25 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> Otherwise, skb is not cleaned up until there is some timeout
+> and the tx-queue quickly becomes overly full.
 
-    You didn't sign off on the patches, so they can't be applied.
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -928,10 +928,14 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+>  	genlmsg_end(skb, msg_head);
+>  	genlmsg_unicast(&init_net, skb, dst_portid);
+>  
+> -	/* Enqueue the packet */
+> -	skb_queue_tail(&data->pending, my_skb);
+>  	data->tx_pkts++;
+>  	data->tx_bytes += my_skb->len;
+> +
+> +	/* Enqueue the packet if we are expecting a tx-status response */
+> +	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
+> +		skb_queue_tail(&data->pending, my_skb);
+> +	else
+> +		ieee80211_free_txskb(hw, my_skb);
 
-WBR, Sergei
+This doesn't really seem right - essentially it means that whatever you
+just gave to userspace is now completely useless?
+
+It seems skb_orphan() could/should be put here.
+
+johannes
 
