@@ -1,138 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:33480 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752137AbbBEHiW (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:58120 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752453AbbBWKze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 02:38:22 -0500
-Received: by mail-ob0-f171.google.com with SMTP id gq1so5732383obb.2
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Feb 2015 23:38:22 -0800 (PST)
-Message-ID: <54D31DEC.9030002@lwfinger.net> (sfid-20150205_083825_895808_C7FAE912)
-Date: Thu, 05 Feb 2015 01:38:20 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 23 Feb 2015 05:55:34 -0500
+Received: by mail-wg0-f48.google.com with SMTP id l18so24806604wgh.7
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 02:55:33 -0800 (PST)
+Message-ID: <54EB0722.2030509@gmail.com> (sfid-20150223_115540_796888_C470A191)
+Date: Mon, 23 Feb 2015 11:55:30 +0100
+From: wim torfs <wtorfs@gmail.com>
 MIME-Version: 1.0
-To: Ken D'Ambrosio <ken@jots.org>
-CC: linux-wireless@vger.kernel.org,
-	Larry Finger <larry.finger@gmail.com>
-Subject: Re: rtl8192ee (Thinkpad T440s)
-References: <10a90ab7a6c186362f339481b531832f@webmail.jots.org> <54D00FA4.2060907@lwfinger.net> <8f26bf9461a88199ef8d8c86f7ee98f9@webmail.jots.org>
-In-Reply-To: <8f26bf9461a88199ef8d8c86f7ee98f9@webmail.jots.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Jouni Malinen <j@w1.fi>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Adrian Chadd <adrian@freebsd.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: AR9462 problems connecting again..
+References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com> <CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com> <CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com> <CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com> <CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com> <CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com> <CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com> <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com> <20150223103741.GA3594@w1.fi>
+In-Reply-To: <20150223103741.GA3594@w1.fi>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2015 12:56 AM, Ken D'Ambrosio wrote:
-> Hi!  Want to thank you for the reply.  Gave it a shot; no dice.  See comments
-> below.
->
-> On 2015-02-02 19:00, Larry Finger wrote:
->> On 02/02/2015 05:24 PM, Ken D'Ambrosio wrote:
->>> Hi, all.  Just got a new Thinkpad, and needless to say, tried to fire it up on
->>> the network.  Ubuntu 14.04 didn't have the driver, so I tried 14.10, which did.
->>> I thought I was good until I tried to connect; the laptop would see all the
->>> advertised WAPs, but wouldn't connect to any of them (including my security-free
->>> ones).  I then downloaded the 3.19 RC and tried that -- same deal.  I see a few
->>> extra git commits in -next; any idea if that will be of any assistance?  Is
->>> there anything I can dig through in my logs to help flesh out what the
->>> problem is?
+If it is the case that the 4-way handshake fails, then I have seen this 
+issue before. The problem is that messages 1 to 4 are sent with the 
+previous key. However, right after sending message 4/4, does 
+wpa_supplicant set the new key. In some cases, such as in a high 
+throughput environment, this could result that the key is set even 
+before the last packet is sent out. As a result, the AP receives a 
+packet which is encrypted with the wrong key, since it still listens 
+with the old key.
+
+I did not notice this issue while authenticating for the first time, 
+only after the first rekey operation.
+
+A solution would be to adjust wpa_supplicant to wait for the 
+transmission ack before it sets its key, however, this causes issues 
+with the key reception and transmission count, which could be 
+circumvented by copying the old counter values upon setting the new key, 
+but this is a dirty hack. Another solution would require some more 
+invasive operations, that is, the new key should somehow be linked to 
+the message 4/4 and should only be set by the driver upon transmission 
+of the message 4/4.
+
+Best regards,
+Wim.
+
+
+On 02/23/2015 11:37 AM, Jouni Malinen wrote:
+> On Sun, Feb 22, 2015 at 05:41:25PM -0800, Linus Torvalds wrote:
+>> Ok. Attached is what seems to be the relevant part of the
+>> wpa_supplicant.log file.
 >>
->> Logs are always helpful. As some of us do not use Ubuntu, a kernel
->> version as shown by 'uname -r' is a lot more helpful that what version
->> of Ubuntu you are using.
+>> The datestamp has been changed so that it can be matched up with the
+>> dmesg, and I added empty lines for pauses when I was trying to figure
+>> out what the heck it was doing, but other than that it's the raw log.
 >
-> Sorry; I'll be more specific going forward.  Current kernel I'm using is
-> 3.19.0-rc7-next-20150204.  The included driver did not work:
+>> 14:07:16.059389: nl80211: Authenticate (ifindex=3)
+>> 14:07:16.390659: nl80211: MLME event 37; timeout with 20:9f:db:e7:80:80
 >
-> ------------------------ cut here ----------------------------------------------
+> I'm assuming this is unrelated to the issue of getting disconnected
+> after 4-way handshake, but anyway, something here prevent the simple
+> Authentication frame exchange from completing (i.e., either the AP did
+> not reply to these these frames or the response was lost for some
+> reason). The following attempt did you go through without issues.
 >
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation (wlan0)
-> starting connection 'whateveryouwant'
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> (wlan0): device state
-> change: disconnected -> prepare (reason 'none') [30 40 0]
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> NetworkManager state is
-> now CONNECTING
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation (wlan0) Stage
-> 1 of 5 (Device Prepare) scheduled...
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation (wlan0) Stage
-> 1 of 5 (Device Prepare) started...
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation (wlan0) Stage
-> 2 of 5 (Device Configure) scheduled...
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation (wlan0) Stage
-> 1 of 5 (Device Prepare) complete.
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation (wlan0) Stage
-> 2 of 5 (Device Configure) starting...
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> (wlan0): device state
-> change: prepare -> config (reason 'none') [40 50 0]
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation
-> (wlan0/wireless): connection 'whateveryouwant' requires no security.  No secrets
-> needed.
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Config: added 'ssid'
-> value 'whateveryouwant'
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Config: added 'scan_ssid'
-> value '1'
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Config: added 'key_mgmt'
-> value 'NONE'
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Activation (wlan0) Stage
-> 2 of 5 (Device Configure) complete.
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> Config: set interface
-> ap_scan to 1
-> Feb  5 01:05:21 minasithil NetworkManager[864]: <info> (wlan0): supplicant
-> interface state: disconnected -> scanning
-> Feb  5 01:05:46 minasithil NetworkManager[864]: <warn> Activation
-> (wlan0/wireless): association took too long, failing activation.
-> Feb  5 01:05:46 minasithil NetworkManager[864]: <info> (wlan0): device state
-> change: config -> failed (reason 'SSID not found') [50 120 53]
-> Feb  5 01:05:46 minasithil NetworkManager[864]: <info> NetworkManager state is
-> now DISCONNECTED
-> Feb  5 01:05:46 minasithil NetworkManager[864]: <warn> Activation (wlan0) failed
-> for connection 'whateveryouwant'
-> Feb  5 01:05:46 minasithil NetworkManager[864]: <info> (wlan0): device state
-> change: failed -> disconnected (reason 'none') [120 30 0]
-> Feb  5 01:05:46 minasithil NetworkManager[864]: <info> (wlan0): deactivating
-> device (reason 'none') [0]
-> Feb  5 01:05:46 minasithil NetworkManager[864]: <info> (wlan0): supplicant
-> interface state: scanning -> disconnected
-> Feb  5 01:05:46 minasithil NetworkManager[864]: <warn> Couldn't disconnect
-> supplicant interface: This interface is not connected.
+>> 14:07:19.478850: nl80211: Authenticate (ifindex=3)
+>> 14:07:19.493911: nl80211: Authenticate event
 >
-> ------------------------ cut here ----------------------------------------------
+>> 14:07:19.494223: nl80211: Associate (ifindex=3)
+>> 14:07:19.503237: nl80211: Associate event
 >
->> Kernel 3.19-rc4 from the wireless-drivers repo contains all those
->> commits in -next, and it works fine here. At this point, I have been
->> connected for 27 hours with a WPA2 connection.
->>
->> You can also try the repo at
->> http://github.com/lwfinger/rtlwifi-new.git. The master branch should
->> be OK. If not, try the troy branch.
+>> 14:07:19.504682: wlp1s0: WPA: RX message 1 of 4-Way Handshake from 20:9f:db:e7:80:80 (ver=2)
+>> 14:07:19.505850: wlp1s0: WPA: Sending EAPOL-Key 2/4
+>> 14:07:19.510108: wlp1s0: WPA: RX message 3 of 4-Way Handshake from 20:9f:db:e7:80:80 (ver=2)
+>> 14:07:19.510233: wlp1s0: WPA: Sending EAPOL-Key 4/4
 >
-> I tried both branches; they both failed identically:
-> Feb  5 01:51:19 minasithil kernel: [ 3141.801171] rtl8192ee 0000:03:00.0:
-> Refused to change power state, currently in D3
-> Feb  5 01:51:19 minasithil kernel: [ 3141.801349]
-> rtl8192ee:_rtl92ee_read_adapter_info():<0-0> RTL819X Not boot from eeprom, check
-> it !!
-> Feb  5 01:51:19 minasithil kernel: [ 3141.801375] Using firmware
-> rtlwifi/rtl8192eefw_new.bin
-> Feb  5 01:51:19 minasithil kernel: [ 3141.803189] ieee80211 phy2: Selected rate
-> control algorithm 'rtl_rc'
-> Feb  5 01:51:19 minasithil kernel: [ 3141.803855] rtlwifi: wireless switch is on
-> Feb  5 01:51:19 minasithil kernel: [ 3141.825219] rtl8192ee 0000:03:00.0 wlan8:
-> renamed from wlan0
-> Feb  5 01:51:19 minasithil kernel: [ 3141.899361]
-> rtl8192ee:rtl92ee_hw_init():<0-0> Init MAC failed
-> Feb  5 01:51:19 minasithil kernel: [ 3141.977804]
-> rtl8192ee:rtl92ee_hw_init():<0-0> Init MAC failed
-> [repeat ad nauseum until module is removed]
-> Feb  5 01:51:26 minasithil kernel: [ 3148.373955] IPv6: ADDRCONF(NETDEV_UP):
-> wlan8: link is not ready
+> So it looks like both the AP and the station are able to send and
+> receive EAPOL frames. EAPOL-Key message 1/4..3/4 worked fine. However,
+> I'm assuming msg 4/4 did not make it through for some reason.
 >
-> Thanks for any insights...
-
-I heard from the Realtek engineer already, and he reminded me that we know of 
-this problem. One pin of the PCI interface is not correctly powered, and that 
-causes a boot from efuse to fail. The troy branch has code to work around this 
-condition; however it was not turned on. If you pull again, this option is now 
-enabled. See https://github.com/lwfinger/rtlwifi_new/issues/3 to read what has 
-previously been posted.
-
-Larry
-
+>> 14:07:19.510338: wlp1s0: WPA: Installing PTK to the driver
+>> 14:07:19.510405: wpa_driver_nl80211_set_key: ifindex=3 alg=3 addr=0x7f0ab41cad68 key_idx=0 set_tx=1 seq_len=6 key_len=16
+>> 14:07:19.510435:    addr=20:9f:db:e7:80:80
+>
+> And this is where IEEE 802.11 RSN gets a bit messy.. The station
+> installs a key for encrypting all unicast frames to the AP now that it
+> believes 4-way handshake has been completed successfully.
+>
+>> 14:07:19.511009: wlp1s0: WPA: Installing GTK to the driver (keyidx=1 tx=0 len=16)
+>
+> And same for a key to decrypt received broadcast/multicast frames.
+>
+>> 14:07:19.511205: wlp1s0: WPA: Key negotiation completed with 20:9f:db:e7:80:80 [PTK=CCMP GTK=CCMP]
+>> 14:07:19.511223: wlp1s0: Cancelling authentication timeout
+>> 14:07:19.511238: wlp1s0: State: GROUP_HANDSHAKE ->  COMPLETED
+>> 14:07:19.511253: wlp1s0: CTRL-EVENT-CONNECTED - Connection to 20:9f:db:e7:80:80 completed [id=0 id_str=]
+>
+> As far as the station is concerned, everything looked fine until here
+> and connection was established successfully.
+>
+>> 14:07:20.512476: wlp1s0: WPA: RX message 3 of 4-Way Handshake from 20:9f:db:e7:80:80 (ver=2)
+>
+> However, the AP disagrees.. It looks like this specific AP uses a one
+> second timeout on EAPOL-Key timeouts. This EAPOL-Key frame was likely
+> unencrypted since the AP did not receive (or accept, but more likely not
+> receive) msg 4/4. We are currently allowing such unencrypted EAPOL
+> frames (but not other ethertypes) to get processed even when the
+> pairwise key has been configured.
+>
+>> 14:07:20.512674: wlp1s0: WPA: Sending EAPOL-Key 4/4
+>
+> And here's an attempt to reply.. Alas, this will likely go out encrypted
+> since we have the pairwise key configured and the AP will be dropping it
+> most likely since it would configure the pairwise key for this station
+> only after having receive valid 4/4.
+>
+>> 14:07:20.513170: wpa_driver_nl80211_set_key: ifindex=3 alg=3 addr=0x7f0ab41cad68 key_idx=0 set_tx=1 seq_len=6 key_len=16
+>
+> And station reconfigured the key..
+>
+>> 14:07:21.513331: wlp1s0: WPA: RX message 3 of 4-Way Handshake from 20:9f:db:e7:80:80 (ver=2)
+>> 14:07:22.514320: wlp1s0: WPA: RX message 3 of 4-Way Handshake from 20:9f:db:e7:80:80 (ver=2)
+>
+> These are the following two retries from AP, one second apart. Trying
+> EAPOL-Key frames four times in normal behavior, so based on timing here,
+> the issue is in AP not receiving (or accepting) msg 4/4.
+>
+>> 14:07:23.542903: nl80211: Deauthenticate event
+>
+> And this is the expected deauthentication by the AP after the last
+> EAPOL-Key frame retransmission failed to get a valid response.
+>
+>
+> So yes, this is a race condition of sorts. It is interesting if verbose
+> debugging in wpa_supplicant is enough to make this less likely to fail.
+> That will give some more time between the EAPOL-Key msg 4/4 transmission
+> (packet socket send() on the netdev) and pairwise key configuration
+> (netlink send). In theory, it could be possible to get even the first
+> EAPOL-Key msg 4/4 encrypted if the kernel operations for Data frame
+> transmission and nl80211 key configuration get reordered. Though, if
+> that were to be happening commonly, we would see significantly more
+> issues with this, so I'd assume this is not really the main issue here.
+>
+> I'm not sure why the AP would not accept EAPOL-Key msg 4/4, so it would
+> be interesting to see a wireless capture log to confirm that the first
+> attempt of sending that out did indeed result in the frame going out and
+> doing so without encryption.
+>
+>
+> As far as making this issue less likely to cause connectivity issues, I
+> guess we could make mac80211 do a similar hack that some drivers use
+> here and force the EAPOL-Key msg 4/4 retransmissions to go out without
+> encryption even though the pairwise key was configured. I think it would
+> be nicer to control this from user space (i.e., wpa_supplicant could
+> indicate with the send command that the frame needs to go out without
+> encryption), but that is unfortunately not something that the current
+> mechanism used for sending out EAPOL frames in station mode supports.
+> mac80211 should be able to track this state if it were to look at which
+> EAPOL-Key frames has been exchanged and start encrypting them only after
+> the AP has transmitted an encrypted frame with the new pairwise key.
+> This is somewhat ugly, but doable. (Though, this would be yet another
+> justification for finally trying to come up with an alternative
+> mechanism for handling EAPOL frame TX/RX that is really a special case
+> for IEEE 802.1X.)
+>
