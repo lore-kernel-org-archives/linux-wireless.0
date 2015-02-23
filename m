@@ -1,32 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49131 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755151AbbBIUNp (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:57437 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752076AbbBWVay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 15:13:45 -0500
-Date: Mon, 09 Feb 2015 12:13:42 -0800 (PST)
-Message-Id: <20150209.121342.1535841700027616341.davem@davemloft.net> (sfid-20150209_211353_647783_2810F417)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2015-02-07
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87a90qosos.fsf@kamboji.qca.qualcomm.com>
-References: <87a90qosos.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
+	Mon, 23 Feb 2015 16:30:54 -0500
+Date: Mon, 23 Feb 2015 23:30:50 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: AR9462 problems connecting again..
+Message-ID: <20150223213050.GA23232@w1.fi> (sfid-20150223_223056_998835_E3E6970C)
+References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
+ <CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
+ <CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
+ <CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
+ <CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
+ <CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
+ <CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
+ <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
+ <20150223171700.GA29730@w1.fi>
+ <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogS2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1cm9yYS5vcmc+DQpEYXRlOiBTYXQsIDA3IEZl
-YiAyMDE1IDEzOjQwOjUxICswMjAwDQoNCj4gVGhlcmUncyBhIHNtYWxsIGNvbmZsaWN0IGluIGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvcGNpLmMsIHRoZSBmaXgNCj4gaXMgdG8gbGVhdmUg
-dGhlIHR3byBsYWJlbHMgbGlrZSB0aGlzOg0KPiANCj4gCQkJc2NoZWR1bGVfd29yaygmcnRscHJp
-di0+d29ya3MubHBzX2NoYW5nZV93b3JrKTsNCj4gCQl9DQo+IGVuZDoNCj4gCQlza2IgPSBuZXdf
-c2tiOw0KPiBub19uZXc6DQo+IAkJaWYgKHJ0bHByaXYtPnVzZV9uZXdfdHJ4X2Zsb3cpIHsNCj4g
-DQo+IA0KDQpUaGF0IGNhbid0IGJlIHRoZSBjb3JyZWN0IHJlc29sdXRpb246DQoNCmRyaXZlcnMv
-bmV0L3dpcmVsZXNzL3J0bHdpZmkvcGNpLmM6IEluIGZ1bmN0aW9uIKFfcnRsX3BjaV9yeF9pbnRl
-cnJ1cHSiOg0KZHJpdmVycy9uZXQvd2lyZWxlc3MvcnRsd2lmaS9wY2kuYzo5MzQ6MTogd2Fybmlu
-ZzogbGFiZWwgoWVuZKIgZGVmaW5lZCBidXQgbm90IHVzZWQgWy1XdW51c2VkLWxhYmVsXQ0KDQpT
-byBJJ3ZlIHJlbW92ZWQgdGhhdCBsYWJlbCBpbiB0aGUgbWVyZ2UgY29tbWl0Lg0KDQo+IFBsZWFz
-ZSBsZXQgbWUga25vdyBpZiB0aGVyZSBhcmUgYW55IGlzc3VlcyBhbmQgc29ycnkgZm9yIGJlaW5n
-IGxhdGUuDQoNClB1bGxlZCwgdGhhbmtzIGEgbG90Lg0K
+On Mon, Feb 23, 2015 at 12:06:09PM -0800, Linus Torvalds wrote:
+> On Mon, Feb 23, 2015 at 9:17 AM, Jouni Malinen <j@w1.fi> wrote:
+> > mac80211: Do not encrypt EAPOL frames before peer has used the key
+> 
+> Hmm. This patch does not seem to make a difference. I thought it did
+> at first, but then removed the wpa_supplicant debugging, and got the
+> same failures.
+
+Interesting. That would seem to imply that this AP does not like
+something about the EAPOL-Key msg 4/4 from the station during the faster
+timing (no wpa_supplicant debug) and would even be unable to accept the
+responses during retransmissions.. I'm not sure what could cause that.
+Is there anything that the AP could provide as far as logging is
+concerned?
+
+How far is the station from the AP? Would it be possible to see whether
+the behavior changes if you were within, say, five meters or so? This
+should allow the higher transmit rate proposed by minstrel_ht to work
+pretty reliably and that could confirm if this is indeed related to too
+high a rate being used here and then for some reason being unable to
+fall back to a sufficiently low rate to work at higher distance.
+
+It would be useful if you can capture the 802.11 frame exchange from a
+failed connection case with an external wireless sniffer. It sounds
+like this should be doable with iwlwifi and while I haven't tested this
+myself, I'd assume something like this would do the trick (this is
+assuming that the interface is not being used at the time, e.g., with
+wpa_supplicant):
+
+sudo iw dev wlan0 set type monitor
+sudo ip link set wlan0 up
+sudo iw dev wlan0 set freq 2462 HT20
+sudo dumpcap -i wlan0 -w /tmp/wlan0.pcap
+
+# test connection and stop dumpcap after the failure
+# and "sudo ip link set wlan0 down; sudo iw dev wlan0 set type station"
+# to restore normal station mode
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
