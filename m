@@ -1,134 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:46720 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbbBLT0Y (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44293 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752453AbbBWSpK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 14:26:24 -0500
-Date: Thu, 12 Feb 2015 20:26:16 +0100
-From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
-	<u.kleine-koenig@pengutronix.de>
-To: Robert Dolca <robert.dolca@intel.com>
-Cc: linux-nfc@ml01.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Berg Johannes <johannes.berg@intel.com>,
-	Clement Perrochaud <clement.perrochaud@nxp.com>
-Subject: Re: [PATCH v2 2/2] NFC: Add ACPI support for NXP PN544
-Message-ID: <20150212192616.GH10842@pengutronix.de> (sfid-20150212_202646_782067_D4A6253F)
-References: <1422270817-10950-1-git-send-email-robert.dolca@intel.com>
- <1422270817-10950-3-git-send-email-robert.dolca@intel.com>
- <20150212081459.GA28954@pengutronix.de>
- <20150212174843.GA4007@rdolca-desk.ger.corp.intel.com>
+	Mon, 23 Feb 2015 13:45:10 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1YPy0C-0003Tw-22
+	for linux-wireless@vger.kernel.org; Mon, 23 Feb 2015 13:45:09 -0500
+Received: from localhost.localdomain (localhost.localdomain [127.0.0.1])
+	by localhost.localdomain (8.14.9/8.14.6) with ESMTP id t1NIaK7m011611
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 13:36:20 -0500
+Received: (from linville@localhost)
+	by localhost.localdomain (8.14.9/8.14.9/Submit) id t1NIaKYw011610
+	for linux-wireless@vger.kernel.org; Mon, 23 Feb 2015 13:36:20 -0500
+Date: Mon, 23 Feb 2015 13:36:20 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-testing rebased on v4.0-rc1
+Message-ID: <20150223183619.GB29292@tuxdriver.com> (sfid-20150223_194514_764328_A8861D2A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20150212174843.GA4007@rdolca-desk.ger.corp.intel.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Robert,
+The wireless-testing tree has been rebased on v4.0-rc1.  At present
+the only other patch is the one that adds "-wl" to the version number.
 
-On Thu, Feb 12, 2015 at 07:48:43PM +0200, Robert Dolca wrote:
-> On Thu, Feb 12, 2015 at 09:14:59AM +0100, Uwe Kleine-König wrote:
-> > On Mon, Jan 26, 2015 at 01:13:37PM +0200, Robert Dolca wrote:
-> > > +	/* Get EN GPIO from ACPI */
-> > > +	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1);
-> > Actually devm_gpiod_get_index takes 4 arguments. In your case you should
-> > also pass GPIOD_OUT_LOW, then you can skip the gpiod_direction_output
-> > part below.
-> > 
-> > > +	if (IS_ERR(gpiod_en)) {
-> > > +		nfc_err(dev,
-> > > +			"Unable to get EN GPIO\n");
-> > > +		return -ENODEV;
-> > > +	}
-> > > +
-> > > +	phy->gpio_en  = desc_to_gpio(gpiod_en);
-> > Why don't you save a reference to the gpiod instead? Mixing usage of raw
-> > and gpiod might result in surprising results. For example
-> > 
-> > 	gpiod_direction_output(gpiod_en, 0);
-> > 
-> > might actually have the same result as
-> > 
-> > 	gpio_direction_output(gpio_en, 1);
-> > 
-> > if the matching gpio is marked as active low.
-> > 
-> > > +
-> > > +	/* Configuration EN GPIO */
-> > > +	ret = gpiod_direction_output(gpiod_en, 0);
-> > > +	if (ret) {
-> > > +		nfc_err(dev, "Fail EN pin direction\n");
-> > > +		return ret;
-> > > +	}
-> > > +
-> > > +	/* Get FW GPIO from ACPI */
-> > > +	gpiod_fw = devm_gpiod_get_index(dev, PN544_GPIO_NAME_FW, 2);
-> > > +	if (IS_ERR(gpiod_fw)) {
-> > > +		nfc_err(dev,
-> > > +			"Unable to get FW GPIO\n");
-> > > +		return -ENODEV;
-> > > +	}
-> > > +
-> > > +	phy->gpio_fw  = desc_to_gpio(gpiod_fw);
-> > > +
-> > > +	/* Configuration FW GPIO */
-> > > +	ret = gpiod_direction_output(gpiod_fw, 0);
-> > > +	if (ret) {
-> > > +		nfc_err(dev, "Fail FW pin direction\n");
-> > > +		return ret;
-> > > +	}
-> > The same comments apply here.
-> > 
-> > > +
-> > > +	/* Get IRQ GPIO */
-> > > +	gpiod_irq = devm_gpiod_get_index(dev, PN544_GPIO_NAME_IRQ, 0);
-> > > +	if (IS_ERR(gpiod_irq)) {
-> > > +		nfc_err(dev,
-> > > +			"Unable to get IRQ GPIO\n");
-> > > +		return -ENODEV;
-> > > +	}
-> > > +
-> > > +	phy->gpio_irq = desc_to_gpio(gpiod_irq);
-> > > +
-> > > +	/* Configure IRQ GPIO */
-> > > +	ret = gpiod_direction_input(gpiod_irq);
-> > > +	if (ret) {
-> > > +		nfc_err(dev, "Fail IRQ pin direction\n");
-> > > +		return ret;
-> > > +	}
-> > > +
-> > > +	/* Map the pin to an IRQ */
-> > > +	ret = gpiod_to_irq(gpiod_irq);
-> > > +	if (ret < 0) {
-> > > +		nfc_err(dev, "Fail pin IRQ mapping\n");
-> > > +		return ret;
-> > > +	}
-> > and here.
- 
-> Also as far as I know the device tree implementation will not give you the
-> gpiod data structure. It gives you only the gpio index.
-What is "the device tree implementation"? If devm_gpiod_get_index gets
-the information which gpio to use from a device tree that doesn't change
-the return type, you still get a struct gpio_desc pointer. And it can
-very well return a descriptor with GPIO_ACTIVE_LOW set, see the
-implementation of of_find_gpio.
- 
-> Keeping both gpiod and gpio depending on the enumeration method is unscallable
-> so I didn't choose that.
-And if the descriptor has GPIO_ACTIVE_LOW set, you should better not
-ignore it. The best thing to do here AFAIUI is to first convert the
-driver to gpiod and then add your ACPI support in an additional patch.
+FYI...
 
-And then please (this was the main motivation for my reply) your the
-4-parameter version of devm_gpiod_get_index.
-
-Best regards
-Uwe
-
+John
 -- 
-Pengutronix e.K.                           | Uwe Kleine-König            |
-Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
