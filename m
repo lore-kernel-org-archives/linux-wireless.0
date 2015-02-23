@@ -1,51 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54389 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754208AbbBDMz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 07:55:26 -0500
-Message-ID: <1423054520.4741.2.camel@sipsolutions.net> (sfid-20150204_135534_224162_DF59142C)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Wed, 04 Feb 2015 13:55:20 +0100
-In-Reply-To: <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com> (sfid-20150204_135320_650134_35405608)
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 (sfid-20150204_135320_650134_35405608)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:61081 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172AbbBWAy7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Feb 2015 19:54:59 -0500
+Received: by mail-ig0-f176.google.com with SMTP id hl2so14772287igb.3
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2015 16:54:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
+References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
+	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
+	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
+	<CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
+	<CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
+	<CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
+Date: Sun, 22 Feb 2015 16:54:58 -0800
+Message-ID: <CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com> (sfid-20150223_015811_318055_F54C68F9)
+Subject: Re: AR9462 problems connecting again..
+From: Adrian Chadd <adrian@freebsd.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-02-04 at 13:53 +0100, Michal Kazior wrote:
+On 22 February 2015 at 15:00, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Sun, Feb 22, 2015 at 1:50 PM, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+>>
+>> Ugh. When I add "-dd" to the command line, it has now worked three
+>> times in a row, when before it worked once out of ten tries.
+>>
+>> So my guess is that it's something timing-dependent.
+>
+> So it stays working with -dd, but I do get *occasional* failures that
+> then seem to clear up on retry. So it ends up working in the end, but
+> I think I have a few example failures in the logs.
+>
+> So for example, from my dmesg, I get this:
+>
+> [14:07:15] wlp1s0: authenticate with 20:9f:db:e7:80:80
+> [14:07:15] wlp1s0: send auth to 20:9f:db:e7:80:80 (try 1/3)
+> [14:07:15] wlp1s0: send auth to 20:9f:db:e7:80:80 (try 2/3)
+> [14:07:15] wlp1s0: send auth to 20:9f:db:e7:80:80 (try 3/3)
+> [14:07:15] wlp1s0: authentication with 20:9f:db:e7:80:80 timed out
+> [14:07:18] wlp1s0: authenticate with 20:9f:db:e7:80:80
+> [14:07:18] wlp1s0: send auth to 20:9f:db:e7:80:80 (try 1/3)
+> [14:07:18] wlp1s0: authenticated
+> [14:07:18] wlp1s0: associate with 20:9f:db:e7:80:80 (try 1/3)
+> [14:07:18] wlp1s0: RX AssocResp from 20:9f:db:e7:80:80 (capab=0x431
+> status=0 aid=16)
+> [14:07:18] wlp1s0: associated
+> [14:07:22] wlp1s0: deauthenticated from 20:9f:db:e7:80:80 (Reason:
+> 2=PREV_AUTH_NOT_VALID)
+>
+> with another failure at 14:07:22, but then it ends up working a bit
+> later at 14:07:33.
+>
+> I've got the wpa supplicant log for this timeframe, but I'd rather not
+> send it out in public. I see "[REMOVED] for what looks like the key
+> data, but there's a lot of other hex data. Is any of it sensitive?
 
-> The hardware itself seems to be capable. The firmware is a problem
-> though. I'm also not sure if mac80211 can handle this as is. No 802.11
-> driver seems to support SG except wil6210 which uses cfg80211 and
-> netdevs directly.
+I /think/ it's okay? The removed stuff is the pre-shared key pieces.
 
-mac80211 cannot deal with this right now. This would make a good topic
-for the workshop since there's interest elsewhere in this as well. It's
-probably not terribly hard to do as far as mac80211 is concerned.
+So if I were debugging this (on any OS); I'd start by looking at
+what's going on over the air. I'd be worried that there's something
+failing to transmit right / be heard by the recipient. In the past
+it's been things like EAPOL frames not going out at basic rate (and
+listening to the rate control code for what rate it should be
+transmitted at) and that makes it transmit at rates wholly unsuited
+for the initial handshake.
 
-How much offload do you really have though? Sometimes people just want
-to build A-MSDUs.
+Do you have another laptop with an atheros NIC in it that you could
+use in monitor mode to capture all the frames?
 
-johannes
+(Also, you can email me the log file privately if you'd like.)
 
+
+
+-adrian
