@@ -1,29 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33325 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751898AbbBWQcN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 11:32:13 -0500
-Message-ID: <1424709127.3075.20.camel@sipsolutions.net> (sfid-20150223_173216_856137_4451FC66)
-Subject: Re: [RFC] mac80211: use rhashtable for station table
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>
-Date: Mon, 23 Feb 2015 17:32:07 +0100
-In-Reply-To: <54DE76F2.4080107@candelatech.com>
-References: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
-	 <54DE76F2.4080107@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:39361 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752076AbbBWMGf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 07:06:35 -0500
+Received: by lbvn10 with SMTP id n10so17967614lbv.6
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 04:06:34 -0800 (PST)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8821ae: Remove duplicate hex prefixes
+Date: Mon, 23 Feb 2015 13:05:59 +0100
+Message-Id: <1424693160-7805-1-git-send-email-linux@rasmusvillemoes.dk> (sfid-20150223_130658_924825_683D6534)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-02-13 at 14:13 -0800, Ben Greear wrote:
+The # flag in %X means print a 0X prefix. Remove the extra 0x prefix.
 
-> Oooh, maybe finally time to mix local addr with peer addr to
-> make lots of vifs connected to same AP hash well too? :)
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+The file uses a mix of explicit 0x prefixes and # flags, as well as a
+mix of %x and %X, so it's not clear what the most consistent choice
+would be.
 
-As we discussed before, mixing it in isn't actually possible. Your patch
-will get easier to maintain (if you also convert it) though :)
+ drivers/net/wireless/rtlwifi/rtl8821ae/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+index 8ec8200002c7..3aca53d9acfb 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+@@ -1515,7 +1515,7 @@ static bool _rtl8821ae_dynamic_rqpn(struct ieee80211_hw *hw, u32 boundary,
+ 				      (u8 *)(&support_remote_wakeup));
+ 
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "boundary=0x%#X, NPQ_RQPNValue=0x%#X, RQPNValue=0x%#X\n",
++		 "boundary=%#X, NPQ_RQPNValue=%#X, RQPNValue=%#X\n",
+ 		  boundary, npq_rqpn_value, rqpn_val);
+ 
+ 	/* stop PCIe DMA
+-- 
+2.1.3
 
