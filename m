@@ -1,173 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:49379 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754766AbbBDQsu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 11:48:50 -0500
-Message-ID: <54D24D6A.2020404@users.sourceforge.net> (sfid-20150204_174911_706380_5F51DD94)
-Date: Wed, 04 Feb 2015 17:48:42 +0100
-From: SF Markus Elfring <elfring@users.sourceforge.net>
+Received: from mail.w1.fi ([212.71.239.96]:57473 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751832AbbBWXN1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 18:13:27 -0500
+Date: Tue, 24 Feb 2015 01:13:23 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: AR9462 problems connecting again..
+Message-ID: <20150223231323.GA31115@w1.fi> (sfid-20150224_001330_916589_D5702F49)
+References: <CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
+ <CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
+ <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
+ <20150223171700.GA29730@w1.fi>
+ <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+ <20150223213050.GA23232@w1.fi>
+ <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
+ <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
+ <20150223224305.GA30228@w1.fi>
+ <CA+55aFzpmD+XOF4PTePgi6WnRTyXbVUQxc7kgwvmFbfG_2VoTg@mail.gmail.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Solomon Peachy <pizza@shaftnet.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH 2/2] CW1200: Less function calls in cw1200_load_firmware_cw1200()
- after error detection
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net> <54D24CC3.9010006@users.sourceforge.net>
-In-Reply-To: <54D24CC3.9010006@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFzpmD+XOF4PTePgi6WnRTyXbVUQxc7kgwvmFbfG_2VoTg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 4 Feb 2015 17:28:41 +0100
+On Mon, Feb 23, 2015 at 03:00:39PM -0800, Linus Torvalds wrote:
+> On Mon, Feb 23, 2015 at 2:43 PM, Jouni Malinen <j@w1.fi> wrote:
+> >
+> > This did not get exactly supportive response when this was proposed last
+> > time (Sep 2013). Anyway, for a quick test, this can be done with the
+> > following one-liner:
+> 
+> fwiw, that one-liner seems to work fine for me.
 
-The functions kfree() and release_firmware() were called in a few cases
-by the cw1200_load_firmware_cw1200() function during error handling even if
-the passed variables contained still a null pointer.
+Good to know. That seems to confirm that the issue is most likely in
+some of the higher HT rates not working with that AP for some reason at
+least for EAPOL frames immediately following the association. This
+should really have worked since I'm pretty sure minstrel will add a
+lower MCS index as a fallback rate, but maybe there are some interop
+issues or just close enough to being below the required signal strength
+(though, I'd find that somewhat unlikely unless there is something
+messed up with the antennas etc. taken into account your description on
+how close the devices are and what's between them).
 
-Corresponding implementation details could be improved by adjustments for
-jump targets.
+> Side note: I've done the "turn off wifi and turn it back on" several
+> times to test that patch, and it has worked every time. BUT I also see
+> this odd behavior where the logs show that it tries to authenticate
+> twice: the first time it does that "send auth to 20:9f .." thing three
+> times (looks like 100ms apart), and nothing happens so it does
+> "authentication with 20:9f .. timed out". Then it waits three seconds
+> and tries again, and now it succeeds on the first try.
+> 
+> The only downside of that seems to be that it takes an extra 3s to
+> connect to the network - but it does now seem to *reliably* connect -
+> so it's not a big problem, but I wonder why it should be that
+> repeatable. Is there some difference between the first and the second
+> time it tries to authenticate?
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/cw1200/fwio.c | 37 +++++++++++++++++++++++--------------
- 1 file changed, 23 insertions(+), 14 deletions(-)
+There have been some issues in this area in the past, but it is a bit
+difficult to say what could have caused it here without a wireless
+capture from the operating channel of the AP. It is possible that those
+Authentication frames were not actually transmitted due to some issue or
+they could have even been sent out on incorrect channel, etc. That
+shouldn't really happen that frequently (i.e., others should be seeing
+and reporting this as well..), but it's possible something gets messed
+up in channel configuration.
 
-diff --git a/drivers/net/wireless/cw1200/fwio.c b/drivers/net/wireless/cw1200/fwio.c
-index 581dfde..30e7646 100644
---- a/drivers/net/wireless/cw1200/fwio.c
-+++ b/drivers/net/wireless/cw1200/fwio.c
-@@ -66,25 +66,31 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 	do { \
- 		ret = cw1200_apb_write_32(priv, CW1200_APB(reg), (val)); \
- 		if (ret < 0) \
--			goto error; \
-+			goto exit; \
-+	} while (0)
-+#define APB_WRITE2(reg, val) \
-+	do { \
-+		ret = cw1200_apb_write_32(priv, CW1200_APB(reg), (val)); \
-+		if (ret < 0) \
-+			goto free_buffer; \
- 	} while (0)
- #define APB_READ(reg, val) \
- 	do { \
- 		ret = cw1200_apb_read_32(priv, CW1200_APB(reg), &(val)); \
- 		if (ret < 0) \
--			goto error; \
-+			goto free_buffer; \
- 	} while (0)
- #define REG_WRITE(reg, val) \
- 	do { \
- 		ret = cw1200_reg_write_32(priv, (reg), (val)); \
- 		if (ret < 0) \
--			goto error; \
-+			goto exit; \
- 	} while (0)
- #define REG_READ(reg, val) \
- 	do { \
- 		ret = cw1200_reg_read_32(priv, (reg), &(val)); \
- 		if (ret < 0) \
--			goto error; \
-+			goto exit; \
- 	} while (0)
- 
- 	switch (priv->hw_revision) {
-@@ -142,14 +148,14 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 	ret = request_firmware(&firmware, fw_path, priv->pdev);
- 	if (ret) {
- 		pr_err("Can't load firmware file %s.\n", fw_path);
--		goto error;
-+		goto exit;
- 	}
- 
- 	buf = kmalloc(DOWNLOAD_BLOCK_SIZE, GFP_KERNEL | GFP_DMA);
- 	if (!buf) {
- 		pr_err("Can't allocate firmware load buffer.\n");
- 		ret = -ENOMEM;
--		goto error;
-+		goto firmware_release;
- 	}
- 
- 	/* Check if the bootloader is ready */
-@@ -163,7 +169,7 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 	if (val32 != DOWNLOAD_I_AM_HERE) {
- 		pr_err("Bootloader is not ready.\n");
- 		ret = -ETIMEDOUT;
--		goto error;
-+		goto free_buffer;
- 	}
- 
- 	/* Calculcate number of download blocks */
-@@ -171,7 +177,7 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 
- 	/* Updating the length in Download Ctrl Area */
- 	val32 = firmware->size; /* Explicit cast from size_t to u32 */
--	APB_WRITE(DOWNLOAD_IMAGE_SIZE_REG, val32);
-+	APB_WRITE2(DOWNLOAD_IMAGE_SIZE_REG, val32);
- 
- 	/* Firmware downloading loop */
- 	for (block = 0; block < num_blocks; block++) {
-@@ -183,7 +189,7 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 		if (val32 != DOWNLOAD_PENDING) {
- 			pr_err("Bootloader reported error %d.\n", val32);
- 			ret = -EIO;
--			goto error;
-+			goto free_buffer;
- 		}
- 
- 		/* loop until put - get <= 24K */
-@@ -198,7 +204,7 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 		if ((put - get) > (DOWNLOAD_FIFO_SIZE - DOWNLOAD_BLOCK_SIZE)) {
- 			pr_err("Timeout waiting for FIFO.\n");
- 			ret = -ETIMEDOUT;
--			goto error;
-+			goto free_buffer;
- 		}
- 
- 		/* calculate the block size */
-@@ -220,12 +226,12 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 		if (ret < 0) {
- 			pr_err("Can't write firmware block @ %d!\n",
- 			       put & (DOWNLOAD_FIFO_SIZE - 1));
--			goto error;
-+			goto free_buffer;
- 		}
- 
- 		/* update the put register */
- 		put += block_size;
--		APB_WRITE(DOWNLOAD_PUT_REG, put);
-+		APB_WRITE2(DOWNLOAD_PUT_REG, put);
- 	} /* End of firmware download loop */
- 
- 	/* Wait for the download completion */
-@@ -238,18 +244,21 @@ static int cw1200_load_firmware_cw1200(struct cw1200_common *priv)
- 	if (val32 != DOWNLOAD_SUCCESS) {
- 		pr_err("Wait for download completion failed: 0x%.8X\n", val32);
- 		ret = -ETIMEDOUT;
--		goto error;
-+		goto free_buffer;
- 	} else {
- 		pr_info("Firmware download completed.\n");
- 		ret = 0;
- 	}
- 
--error:
-+free_buffer:
- 	kfree(buf);
-+firmware_release:
- 	release_firmware(firmware);
-+exit:
- 	return ret;
- 
- #undef APB_WRITE
-+#undef APB_WRITE2
- #undef APB_READ
- #undef REG_WRITE
- #undef REG_READ
+> Anyway, even if people don't like that particular patch, it does seem
+> like *something* like that should be done.
+
+Agreed. Just need to figure out a suitable compromise somewhere in the
+middle of the minimum and close-to-maximum rates. As far as ath9k is
+concerned, it would actually support four different rates for retry
+series where minstrel uses only three, so it would be easy even for that
+driver on its own to add a lower rate at the end if we cannot find
+consensus on something more generic in mac80211. That said, I'd rather
+see minstrel getting more conservative for EAPOL frames.
+
 -- 
-2.2.2
-
+Jouni Malinen                                            PGP id EFC895FA
