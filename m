@@ -1,84 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:42420 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973AbbBJMzB (ORCPT
+Received: from mail-yk0-f173.google.com ([209.85.160.173]:41033 "EHLO
+	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028AbbBWV1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 07:55:01 -0500
-Message-ID: <1423572896.28434.13.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150210_135510_394373_791B8B50)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Eyal Perry <eyalpe@dev.mellanox.co.il>
-Date: Tue, 10 Feb 2015 04:54:56 -0800
-In-Reply-To: <CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=u_xPuqTVOVaFTQNRrJ+UTXe89SY+=+7Y1LpxxrkRDfg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 23 Feb 2015 16:27:13 -0500
+Received: by yks20 with SMTP id 20so731493yks.8
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 13:27:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1424709235.3075.22.camel@sipsolutions.net>
+References: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
+ <CAHNKnsSm1GOUMONPB4oB1tJ-OeWOG1XOhw=HEY8LPXhDEHEjbg@mail.gmail.com> <1424709235.3075.22.camel@sipsolutions.net>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Tue, 24 Feb 2015 00:26:52 +0300
+Message-ID: <CAHNKnsR0j1u6Eu2e19pzcu2Rw7nZ6D6BKV-cRg9KTwoKO74fdQ@mail.gmail.com> (sfid-20150223_222718_360973_93C6ABFC)
+Subject: Re: [RFC] mac80211: use rhashtable for station table
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Thomas Graf <tgraf@suug.ch>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-02-10 at 11:33 +0100, Michal Kazior wrote:
+2015-02-23 19:33 GMT+03:00 Johannes Berg <johannes@sipsolutions.net>:
+> On Sat, 2015-02-14 at 05:14 +0300, Sergey Ryazanov wrote:
+>
+>> A nice change! Couple of years ago I did some tests with real sets of
+>> MACs and jhash gives a better distribution than usage of a last octet.
+>>
+>> BTW, why do you use full address and generic jhash? Hashing of two
+>> least significant words could be faster. Isn't it?
+>
+> Well - not sure what you're trying to say? First you're saying jhash()
+> was clearly better and then you're saying I shouldn't use it? ;-)
+>
+In first case, I mean the jhash _algorithm_, which has a better
+distribution, in second case I mean the _generic_ jhash() _function_
+and express my doubts about its performance. See below.
 
-> +       if (msdu->sk) {
-> +               ewma_add(&ar->tx_delay_us,
-> +                        ktime_to_ns(ktime_sub(ktime_get(), skb_cb->stamp)) /
-> +                        NSEC_PER_USEC);
-> +
-> +               ACCESS_ONCE(msdu->sk->sk_tx_completion_delay_cushion) =
-> +                               (ewma_read(&ar->tx_delay_us) *
-> +                                msdu->sk->sk_pacing_rate) >> 20;
-> +       }
-> +
+> Anyway - just using the last two bytes (or even 16-bit words) won't
+> cover the case where the locally administered bit is set in an otherwise
+> unchanged address, which is getting more common for P2P.
+>
+> I also don't really see any major drawbacks to hashing it all?
+>
+I agree that hashing all octets is not a drawback. But the jhash()
+function is tailored to the input data of variable length, while we
+have a vector of fixed length and appropriate functions. Could we do
+the hashing in following way:
 
-Hi Michal
+u32 sta_info_hash(void *addr, u32 len, u32 seed)
+{
+  u32 *k = addr + 2;
+  return jhash_1word(*k, seed);
+}
 
-This is almost it ;)
+structu rhashtable_pararms param = {
+  ...
+  .hashfn = sta_info_hash,
+  ...
+}
 
-As I said you must do this using u64 arithmetics, we still support 32bit
-kernels.
+or even (to account LA bit):
 
-Also, >> 20 instead of / 1000000 introduces a 5% error, I would use a
-plain divide, as the compiler will use a reciprocal divide (ie : a
-multiply)
+u32 sta_info_hash(void *addr, u32 len, u32 seed)
+{
+  u32 *k = addr;
+  return jhash_2words(k[0], k[1], seed);
+}
 
-We use >> 10 instead of /1000 because a 2.4 % error is probably okay.
+structu rhashtable_pararms param = {
+  ...
+  .key_len = 8,
+  .hashfn = sta_info_hash,
+  ...
+}
 
-        ewma_add(&ar->tx_delay_us,
-                 ktime_to_ns(ktime_sub(ktime_get(),
-skb_cb->stamp)) /
-	                        NSEC_PER_USEC);
-	u64 val = (u64)ewma_read(&ar->tx_delay_us) *
-                   msdu->sk->sk_pacing_rate;
+This could save a couple of CPU circles and a couple of bytes in the
+output image :)
 
-	do_div(val, USEC_PER_SEC);
-		
-        ACCESS_ONCE(msdu->sk->sk_tx_completion_delay_cushion) =
-                    (u32)val;
-                 
-(WRITE_ONCE() would be better for new kernels, but ACCESS_ONCE() is ok
-since we probably want to backport to stable kernels)
-
-
-Thanks
-
-
+-- 
+Sergey
