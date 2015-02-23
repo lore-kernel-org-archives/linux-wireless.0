@@ -1,141 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1144 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35565 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965050AbbBCHPE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 02:15:04 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S1751832AbbBWXeC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 18:34:02 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 10/19] iwlwifi: mvm: improve TDLS ch-sw state machine
-Date: Tue,  3 Feb 2015 09:14:29 +0200
-Message-Id: <1422947678-16917-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081511_436226_A173BF22)
-In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
-References: <1422947482.30742.8.camel@egrumbacBox>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: simplify station assignment in ieee80211_tx_prepare()
+Date: Tue, 24 Feb 2015 00:33:58 +0100
+Message-Id: <1424734438-18209-1-git-send-email-johannes@sipsolutions.net> (sfid-20150224_003406_438906_A7AC85CE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add a response-received state and add more limits on allowed requests
-in each state of the connection. Previously ch-switch requests from
-other peers could interrupt an outgoing active ch-switch. Also stale
-packets from the current peer could disrupt the channel switch state.
+There's no need for the second conditional as the same will be
+done immediately afterwards if there's no station assigned.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Remove the useless conditional, move fallback assignment into
+the else branch and don't try to look up a multicast address
+which cannot be found anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/mvm.h  |  1 +
- drivers/net/wireless/iwlwifi/mvm/tdls.c | 48 +++++++++++++++++++++++----------
- 2 files changed, 35 insertions(+), 14 deletions(-)
+ net/mac80211/tx.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 7773ffc..fc80b7b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -532,6 +532,7 @@ enum {
- enum iwl_mvm_tdls_cs_state {
- 	IWL_MVM_TDLS_SW_IDLE = 0,
- 	IWL_MVM_TDLS_SW_REQ_SENT,
-+	IWL_MVM_TDLS_SW_RESP_RCVD,
- 	IWL_MVM_TDLS_SW_REQ_RCVD,
- 	IWL_MVM_TDLS_SW_ACTIVE,
- };
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tdls.c b/drivers/net/wireless/iwlwifi/mvm/tdls.c
-index c0e00ba..ea1831c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tdls.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tdls.c
-@@ -228,6 +228,8 @@ iwl_mvm_tdls_cs_state_str(enum iwl_mvm_tdls_cs_state state)
- 		return "IDLE";
- 	case IWL_MVM_TDLS_SW_REQ_SENT:
- 		return "REQ SENT";
-+	case IWL_MVM_TDLS_SW_RESP_RCVD:
-+		return "RESP RECEIVED";
- 	case IWL_MVM_TDLS_SW_REQ_RCVD:
- 		return "REQ RECEIVED";
- 	case IWL_MVM_TDLS_SW_ACTIVE:
-@@ -325,17 +327,27 @@ iwl_mvm_tdls_check_action(struct iwl_mvm *mvm,
- 			ret = -EINVAL;
- 		break;
- 	case IWL_MVM_TDLS_SW_REQ_SENT:
-+		/* only allow requests from the same peer */
-+		if (!same_peer)
-+			ret = -EBUSY;
-+		else if (type == TDLS_SEND_CHAN_SW_RESP_AND_MOVE_CH &&
-+			 !peer_initiator)
-+			/*
-+			 * We received a ch-switch request while an outgoing
-+			 * one is pending. Allow it if the peer is the link
-+			 * initiator.
-+			 */
-+			ret = -EBUSY;
-+		else if (type == TDLS_SEND_CHAN_SW_REQ)
-+			/* wait for idle before sending another request */
-+			ret = -EBUSY;
-+		break;
-+	case IWL_MVM_TDLS_SW_RESP_RCVD:
- 		/*
--		 * We received a ch-switch request while an outgoing one is
--		 * pending. Allow it to proceed if the other peer is the same
--		 * one we sent to, and we are not the link initiator.
-+		 * we are waiting for the FW to give an "active" notification,
-+		 * so ignore requests in the meantime
- 		 */
--		if (type == TDLS_SEND_CHAN_SW_RESP_AND_MOVE_CH) {
--			if (!same_peer)
--				ret = -EBUSY;
--			else if (!peer_initiator) /* we are the initiator */
--				ret = -EBUSY;
--		}
-+		ret = -EBUSY;
- 		break;
- 	case IWL_MVM_TDLS_SW_REQ_RCVD:
- 		/* as above, allow the link initiator to proceed */
-@@ -349,9 +361,12 @@ iwl_mvm_tdls_check_action(struct iwl_mvm *mvm,
- 		}
- 		break;
- 	case IWL_MVM_TDLS_SW_ACTIVE:
--		/* we don't allow initiations during active channel switch */
--		if (type == TDLS_SEND_CHAN_SW_REQ)
--			ret = -EINVAL;
-+		/*
-+		 * the only valid request when active is a request to return
-+		 * to the base channel by the current off-channel peer
-+		 */
-+		if (type != TDLS_MOVE_CH || !same_peer)
-+			ret = -EBUSY;
- 		break;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 88a18ffe2975..76b95ce23113 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1167,13 +1167,9 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 		tx->sta = rcu_dereference(sdata->u.vlan.sta);
+ 		if (!tx->sta && sdata->dev->ieee80211_ptr->use_4addr)
+ 			return TX_DROP;
+-	} else if (info->flags & (IEEE80211_TX_CTL_INJECTED |
+-				  IEEE80211_TX_INTFL_NL80211_FRAME_TX) ||
+-		   tx->sdata->control_port_protocol == tx->skb->protocol) {
++	} else if (!is_multicast_ether_addr(hdr->addr1)) {
+ 		tx->sta = sta_info_get_bss(sdata, hdr->addr1);
  	}
+-	if (!tx->sta)
+-		tx->sta = sta_info_get(sdata, hdr->addr1);
  
-@@ -473,6 +488,8 @@ iwl_mvm_tdls_config_channel_switch(struct iwl_mvm *mvm,
- 					     type == TDLS_SEND_CHAN_SW_REQ ?
- 					     IWL_MVM_TDLS_SW_REQ_SENT :
- 					     IWL_MVM_TDLS_SW_REQ_RCVD);
-+	} else {
-+		iwl_mvm_tdls_update_cs_state(mvm, IWL_MVM_TDLS_SW_RESP_RCVD);
- 	}
- 
- out:
-@@ -657,12 +674,15 @@ iwl_mvm_tdls_recv_channel_switch(struct ieee80211_hw *hw,
- 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
- 	enum iwl_tdls_channel_switch_type type;
- 	unsigned int delay;
-+	const char *action_str =
-+		params->action_code == WLAN_TDLS_CHANNEL_SWITCH_REQUEST ?
-+		"REQ" : "RESP";
- 
- 	mutex_lock(&mvm->mutex);
- 
- 	IWL_DEBUG_TDLS(mvm,
--		       "Received TDLS ch switch action %d from %pM status %d\n",
--		       params->action_code, params->sta->addr, params->status);
-+		       "Received TDLS ch switch action %s from %pM status %d\n",
-+		       action_str, params->sta->addr, params->status);
- 
- 	/*
- 	 * we got a non-zero status from a peer we were switching to - move to
+ 	if (tx->sta && ieee80211_is_data_qos(hdr->frame_control) &&
+ 	    !ieee80211_is_qos_nullfunc(hdr->frame_control) &&
 -- 
-1.9.1
+2.1.4
 
