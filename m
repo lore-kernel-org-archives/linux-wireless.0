@@ -1,82 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:37753 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438AbbBCKCm convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:41048 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861AbbBWWWd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 05:02:42 -0500
-Received: by mail-la0-f42.google.com with SMTP id ms9so49847435lab.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 02:02:41 -0800 (PST)
+	Mon, 23 Feb 2015 17:22:33 -0500
+Received: by iecrd18 with SMTP id rd18so27327828iec.8
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 14:22:32 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com>
-References: <CAJ1dT9x+vWm4uZ-r9PZrTmKjEQc260NhOKoRzH=Ab=oWkeZ83w@mail.gmail.com>
-	<CAPp0ZBZfdmwJNAtR6R1ue0OAj1pYh+L_kxRrixXD=3keLgKZKQ@mail.gmail.com>
-Date: Tue, 3 Feb 2015 11:02:41 +0100
-Message-ID: <CAJ1dT9x58-ZGWX7Gku3a8K-GskvaX6=C=Lyo24PE6=cjBfjw2Q@mail.gmail.com> (sfid-20150203_110248_606822_FF219BDB)
-Subject: Re: Open Source RRM & Hand-Over Optimization (WAS: Throughput
- regression with `tcp: refine TSO autosizing`)
-From: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bs@anyfi.net>
-To: Avery Pennarun <apenwarr@google.com>
-Cc: David Reed <dpreed@reed.com>,
-	dstanley <dstanley@arubanetworks.com>,
-	Derrick Pallas <pallas@meraki.com>,
-	"cerowrt-devel@lists.bufferbloat.net"
-	<cerowrt-devel@lists.bufferbloat.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
+References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
+	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
+	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
+	<CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
+	<CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
+	<CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
+	<CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
+	<CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
+	<20150223171700.GA29730@w1.fi>
+	<CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+	<20150223213050.GA23232@w1.fi>
+	<CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
+Date: Mon, 23 Feb 2015 14:22:32 -0800
+Message-ID: <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com> (sfid-20150223_232236_816588_C6A48EC5)
+Subject: Re: AR9462 problems connecting again..
+From: Adrian Chadd <adrian@freebsd.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 2, 2015 at 11:53 PM, Avery Pennarun <apenwarr@google.com> wrote:
-> On Mon, Feb 2, 2015 at 11:44 AM, Björn Smedman <bs@anyfi.net> wrote:
->> On Mon, Feb 2, 2015 at 5:21 AM, Avery Pennarun <apenwarr@google.com> wrote:
->>> While there is definitely some work to be done in handoff, it seems
->>> like there are some find implementations of this already in existence.
->>> Several brands of "enterprise access point" setups seem to do well at
->>> this.  It would be nice if they interoperated, I guess.
->>>
->>> The fact that there's no open source version of this kind of handoff
->>> feature bugs me, but we are working on it here and the work is all
->>> planned to be open source, for example: (very early version)
->>> https://gfiber.googlesource.com/vendor/google/platform/+/master/waveguide/
+On 23 February 2015 at 13:53, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Mon, Feb 23, 2015 at 1:30 PM, Jouni Malinen <j@w1.fi> wrote:
 >>
->> We've got an SDN-inspired architecture with 802.11 frame tunneling (a
->> la CAPWAP), airtime fairness, infrastructure initiated hand-over,
->> Opportunistic Key Caching (OKC), IEEE 802.11r Fast BSS Transition and
->> a few more goodies. It's currently free as in beer
->> (http://anyfi.net/software,
->> https://github.com/carrierwrt/carrierwrt/pull/7 and
->> http://www.anyfinetworks.com/download) up to 100 APs, but we're
->> definitely going to open source in one form or another.
->>
->> We've also tried to raise some interest in fixing up CAPWAP
->> (https://www.ietf.org/mail-archive/web/opsawg/current/msg03196.html),
->> which is (unfortunately) the best open standard at the moment.
->> Interest seems marginal though...
+>> How far is the station from the AP? Would it be possible to see whether
+>> the behavior changes if you were within, say, five meters or so?
 >
-> This sounds cool.  Is the CAPWAP/encapsulation stuff separable from
-> the rest?  At 802.11ac speeds, a super fast WAN link, and a low-cost
-> SoC, too many layers can be a killer.
+> Well, it was pretty much within five meters already, but there was a
+> thin wall in between (and the old AP was right next to the laptop,
+> which might add some noise even if they are on different channels).
+> Going closer does seem to help, but again, it's not like this is 100%
+> reproducible to begin with.
+>
+> So the theory that the driver starts at too high a transmit rate, and
+> then does not handle failures well, might be true. Of course, "not
+> handle failures well" is something of an understatement.
+>
+>> It would be useful if you can capture the 802.11 frame exchange from a
+>> failed connection case with an external wireless sniffer.
+>
+> I will try with my (much more reliable) iwlwifi laptop. At least the
+> merge window is over, so I should have some time. Knock wood.
 
-Our current architecture is a bit "fixed function" with tunneling
-built in. That's because it's targeted at guest access / homespots
-where there's typically a "local MAC" for the home Wi-Fi network
-(which we don't touch), and for guests you usually want to tunnel
-anyway. Many use L2oGRE to tunnel a "second SSID" in this use-case,
-but since the visited AP is a point of attack we think you should
-encrypt "through" the AP. You can do that without any extra overhead
-since you're just shoveling encrypted 802.11 frames from one interface
-to another, but you're right it's a bit slower in practice: in the
-extreme case of frame shoveling in user space you're limited to about
-40 Mbps (for guests) on a $10 SoC (but home Wi-Fi throughput is not
-impacted).
+Hm, can we just hack mac80211/ath9k to set /all/ EAPOL frames to the
+lowest negotiated basic rate and test? That way we don't have to worry
+about things resetting fixed rates or whatnot.
 
-What we're working on now though is an "Open wSwitch" that lets you
-pick and choose which frames to tunnel and where, even within one BSS
-/ for a single STA. You'll also be able to set the temporal key (TK)
-from a central location so that you can do e.g. OKC / 802.11r combined
-with local bridging. This should make it possible to do both the
-secure guest access and the more enterprisy stuff over the same
-control plane protocol. We're also planning to put the 802.11
-tunneling in kernel space this time, which should easily get you 100
-Mbps of AES-128-CCM through a cheap SoC (and into/out of a cheap
-mobile device!).
+I've done that with FreeBSD's atheros/intel drivers and net80211 stack
+to fix exactly these, although I'm thinking about adding a patch based
+on Jouni's note about EAPOL encrypting the final response.
+
+Does ath9k have an easy interface for dumping out the TX descriptors
+and response? That way we can see (a) what it's transmitting as, and
+(b) whether the hardware indicated it got an ACK for the particular
+frame.
+
+
+-adrian
