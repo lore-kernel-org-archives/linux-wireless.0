@@ -1,86 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:38461 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933770AbbBCLvB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 06:51:01 -0500
-Received: by mail-wg0-f42.google.com with SMTP id x13so44230457wgg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 03:51:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Tue, 3 Feb 2015 12:50:59 +0100
-Message-ID: <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com> (sfid-20150203_125110_261310_30C121D4)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:35569 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751832AbbBWXew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 18:34:52 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: emmanuel.grumbach@intel.com,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: iterate using station list in AP SMPS
+Date: Tue, 24 Feb 2015 00:34:49 +0100
+Message-Id: <1424734489-19115-1-git-send-email-johannes@sipsolutions.net> (sfid-20150224_003454_686600_68CAC6A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 February 2015 at 02:18, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Mon, 2015-02-02 at 10:52 -0800, Eric Dumazet wrote:
->
->> It seems to break ACK clocking badly (linux stack has a somewhat buggy
->> tcp_tso_should_defer(), which relies on ACK being received smoothly, as
->> no timer is setup to split the TSO packet.)
->
-> Following patch might help the TSO split defer logic.
->
-> It would avoid setting the TSO defer 'pseudo timer' twice, if/when TCP
-> Small Queue logic prevented the xmit at the expiration of first 'timer'.
->
-> This patch clears the tso_deferred variable only if we could really
-> send something.
->
-> Please try it, thanks !
-[..patch..]
+From: Johannes Berg <johannes.berg@intel.com>
 
-I've done a second round of tests. I've added the A-MSDU count
-parameter I've mentioned in my other email into the mix.
+When changing AP SMPS, we need to look up all the stations
+for this interface, so there's no reason to iterate over
+hash chains rather than doing the simpler iteration over
+the station list.
 
- net - net/master (includes stretch ack patches)
- net-tso - net/master + your TSO defer patch
- net-gro - net/master + my ath10k GRO patch
- net-gro-tso - net/master + duh
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c | 69 ++++++++++++++++++++++++------------------------------
+ 1 file changed, 30 insertions(+), 39 deletions(-)
 
-Here's the best of amsdu count 1 and 3:
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index dd4ff36c557a..06557e4f9588 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2273,7 +2273,6 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct sta_info *sta;
+ 	enum ieee80211_smps_mode old_req;
+-	int i;
+ 
+ 	if (WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_AP))
+ 		return -EINVAL;
+@@ -2301,48 +2300,40 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
+ 	       smps_mode, atomic_read(&sdata->u.ap.num_mcast_sta));
+ 
+ 	mutex_lock(&sdata->local->sta_mtx);
+-	for (i = 0; i < STA_HASH_SIZE; i++) {
+-		for (sta = rcu_dereference_protected(sdata->local->sta_hash[i],
+-				lockdep_is_held(&sdata->local->sta_mtx));
+-		     sta;
+-		     sta = rcu_dereference_protected(sta->hnext,
+-				lockdep_is_held(&sdata->local->sta_mtx))) {
+-			/*
+-			 * Only stations associated to our AP and
+-			 * associated VLANs
+-			 */
+-			if (sta->sdata->bss != &sdata->u.ap)
+-				continue;
++	list_for_each_entry(sta, &sdata->local->sta_list, list) {
++		/*
++		 * Only stations associated to our AP and
++		 * associated VLANs
++		 */
++		if (sta->sdata->bss != &sdata->u.ap)
++			continue;
+ 
+-			/* This station doesn't support MIMO - skip it */
+-			if (sta_info_tx_streams(sta) == 1)
+-				continue;
++		/* This station doesn't support MIMO - skip it */
++		if (sta_info_tx_streams(sta) == 1)
++			continue;
+ 
+-			/*
+-			 * Don't wake up a STA just to send the action frame
+-			 * unless we are getting more restrictive.
+-			 */
+-			if (test_sta_flag(sta, WLAN_STA_PS_STA) &&
+-			    !ieee80211_smps_is_restrictive(sta->known_smps_mode,
+-							   smps_mode)) {
+-				ht_dbg(sdata,
+-				       "Won't send SMPS to sleeping STA %pM\n",
+-				       sta->sta.addr);
+-				continue;
+-			}
++		/*
++		 * Don't wake up a STA just to send the action frame
++		 * unless we are getting more restrictive.
++		 */
++		if (test_sta_flag(sta, WLAN_STA_PS_STA) &&
++		    !ieee80211_smps_is_restrictive(sta->known_smps_mode,
++						   smps_mode)) {
++			ht_dbg(sdata, "Won't send SMPS to sleeping STA %pM\n",
++			       sta->sta.addr);
++			continue;
++		}
+ 
+-			/*
+-			 * If the STA is not authorized, wait until it gets
+-			 * authorized and the action frame will be sent then.
+-			 */
+-			if (!test_sta_flag(sta, WLAN_STA_AUTHORIZED))
+-				continue;
++		/*
++		 * If the STA is not authorized, wait until it gets
++		 * authorized and the action frame will be sent then.
++		 */
++		if (!test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++			continue;
+ 
+-			ht_dbg(sdata, "Sending SMPS to %pM\n", sta->sta.addr);
+-			ieee80211_send_smps_action(sdata, smps_mode,
+-						   sta->sta.addr,
+-						   sdata->vif.bss_conf.bssid);
+-		}
++		ht_dbg(sdata, "Sending SMPS to %pM\n", sta->sta.addr);
++		ieee80211_send_smps_action(sdata, smps_mode, sta->sta.addr,
++					   sdata->vif.bss_conf.bssid);
+ 	}
+ 	mutex_unlock(&sdata->local->sta_mtx);
+ 
+-- 
+2.1.4
 
- ; for (i in */output.txt) { echo $i; for (j in (1 3)) { cat $i | awk
-'x && /Mbits/ {y=$0}; x && y && !/Mbits/ {print y; x=0; y=""}; /set
-amsdu cnt to '$j'/{x=1}' | awk '{ if (x < $(NF-1)) {x=$(NF-1)} }
-END{print "A-MSDU limit='$j', " x " Mbits/sec"}' } }
- net-gro-tso/output.txt
- A-MSDU limit=1, 436 Mbits/sec
- A-MSDU limit=3, 284 Mbits/sec
- net-gro/output.txt
- A-MSDU limit=1, 444 Mbits/sec
- A-MSDU limit=3, 283 Mbits/sec
- net-tso/output.txt
- A-MSDU limit=1, 376 Mbits/sec
- A-MSDU limit=3, 251 Mbits/sec
- net/output.txt
- A-MSDU limit=1, 387 Mbits/sec
- A-MSDU limit=3, 260 Mbits/sec
-
-IOW:
- - stretch acks / TSO defer don't seem to help much (when compared to
-throughput results from yesterday)
- - GRO helps
- - disabling A-MSDU on sender helps
- - net/master+GRO still doesn't reach the performance from before the
-regression (~600mbps w/ GRO)
-
-You can grab logs and dumps here: http://www.filedropper.com/test2tar
-
-
-Michał
