@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49787 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752586AbbBXKCb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:02:31 -0500
-From: Robert Dolca <robert.dolca@intel.com>
-To: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	Robert Dolca <robert.dolca@intel.com>
-Subject: [PATCH 1/8] NFC: NCI: Allow connection close with dev down
-Date: Tue, 24 Feb 2015 12:01:45 +0200
-Message-Id: <1424772112-27399-2-git-send-email-robert.dolca@intel.com> (sfid-20150224_110637_689049_69BA7D02)
-In-Reply-To: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:34370 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752266AbbBWSAj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 13:00:39 -0500
+Received: by mail-wi0-f176.google.com with SMTP id h11so19721147wiw.3
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Feb 2015 10:00:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+ <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 23 Feb 2015 23:30:18 +0530
+Message-ID: <CABPxzYKMi3HUY96+4Cc0LjJk=aoVbit36OBVwTDfgULT++d-tg@mail.gmail.com> (sfid-20150223_190042_225126_C2BCE001)
+Subject: Re: Connection issues with BW Tracking in mac80211
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By calling __nci_request instead of nci_request allows the driver to use
-the function while initializing the device (setup stage)
+On Fri, Feb 20, 2015 at 2:58 AM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Fri, Feb 20, 2015 at 1:00 AM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> Hi Johannes,
+>>
+>> The BW tracking feature in mac80211 is causing connection problems and
+>> operating mode/bw problems when switching b/w modes and bw's in AP.
+>>
+>> For Eg. Initially if AP is operating in VHT-80MHz, and then we changed
+>> in to HT-40MHz, mac80211 cannot handle it because the VHT capability
+>> is mismatched b/w stored info (ifmgd->flags).
+>>
+>> I have tried your DISABLE_BW_TRACK patch, that helps making the
+>> connection but it doesn't update the chipset causing issues.
+>>
+>> Ideally we should be able to handle all the config changes right?
+>
+> Before that i have a basic question? Should we reset our tracking after
+> the connection is lost, in my case above the connection was lost (Config
+> change in A triggers a reboot), still mac80211 is tracking the BW changes?
 
-Signed-off-by: Robert Dolca <robert.dolca@intel.com>
----
- net/nfc/nci/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Any ideas johannes? Currenlty we kind-of disabled BW tracking as a work around
+for this issue.
 
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 9575a18..c4dd5d8 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -558,7 +558,7 @@ static void nci_core_conn_close_req(struct nci_dev *ndev, unsigned long opt)
- 
- int nci_core_conn_close(struct nci_dev *ndev, u8 conn_id)
- {
--	return nci_request(ndev, nci_core_conn_close_req, conn_id,
-+	return __nci_request(ndev, nci_core_conn_close_req, conn_id,
- 				msecs_to_jiffies(NCI_CMD_TIMEOUT));
- }
- EXPORT_SYMBOL(nci_core_conn_close);
--- 
-1.9.1
+mlme.c: Removed the capability checks.
 
+if (!cfg80211_chandef_valid(&chandef)) {
+sdata_info(sdata,
+"AP %pM chandef invalid - disconnect\n",
+ifmgd->bssid);
+return -EINVAL;
+}
