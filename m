@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44147 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33328 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932155AbbBBSyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 13:54:43 -0500
-Message-ID: <1422903279.8755.1.camel@sipsolutions.net> (sfid-20150202_195446_222419_94D350C5)
-Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
+	id S1751935AbbBWQd5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 11:33:57 -0500
+Message-ID: <1424709235.3075.22.camel@sipsolutions.net> (sfid-20150223_173401_135454_EA963663)
+Subject: Re: [RFC] mac80211: use rhashtable for station table
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Oh <poh@qca.qualcomm.com>
-Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org
-Date: Mon, 02 Feb 2015 19:54:39 +0100
-In-Reply-To: <54CFB4F4.1070807@qca.qualcomm.com>
-References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com>
-	 <20150127213349.GA24933@localhost> <54C824DC.5080804@qca.qualcomm.com>
-	 <20150128043005.GB24933@localhost> <54C875FD.3070101@qca.qualcomm.com>
-	 (sfid-20150128_064104_435635_7E681844) <1422430643.1973.1.camel@sipsolutions.net>
-	 <54CC0B71.9050301@codeaurora.org>
-	 <1422882133.1930.10.camel@sipsolutions.net>
-	 <54CFB4F4.1070807@qca.qualcomm.com>
+To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Thomas Graf <tgraf@suug.ch>
+Date: Mon, 23 Feb 2015 17:33:55 +0100
+In-Reply-To: <CAHNKnsSm1GOUMONPB4oB1tJ-OeWOG1XOhw=HEY8LPXhDEHEjbg@mail.gmail.com> (sfid-20150214_031521_538381_CAA3F347)
+References: <1423864049-8961-1-git-send-email-johannes@sipsolutions.net>
+	 <CAHNKnsSm1GOUMONPB4oB1tJ-OeWOG1XOhw=HEY8LPXhDEHEjbg@mail.gmail.com>
+	 (sfid-20150214_031521_538381_CAA3F347)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-02-02 at 09:33 -0800, Peter Oh wrote:
+On Sat, 2015-02-14 at 05:14 +0300, Sergey Ryazanov wrote:
 
-> > The code (as it is before your patch) implies that it's trying to make
-> > sure that before it continues, any previous writes to the PCIe device's
-> > registers are posted. The only way to ensure that is to do a read to the
-> > registers, as the code does now.
+> A nice change! Couple of years ago I did some tests with real sets of
+> MACs and jhash gives a better distribution than usage of a last octet.
+> 
+> BTW, why do you use full address and generic jhash? Hashing of two
+> least significant words could be faster. Isn't it?
 
-> Do you know how the read ensure that although the read code does not 
-> check the return value?
-> Can you explain how a read ensures that posted write reaches PCIe device?
+Well - not sure what you're trying to say? First you're saying jhash()
+was clearly better and then you're saying I shouldn't use it? ;-)
 
-You basically have the following sequence:
+Anyway - just using the last two bytes (or even 16-bit words) won't
+cover the case where the locally administered bit is set in an otherwise
+unchanged address, which is getting more common for P2P.
 
-iowrite()
-ioread()
-
-If you look, you'll see that iowrite() is actually done (or should be,
-or perhaps with appropriate syncs) on an uncached mapping. As a result,
-the only thing you care about here is the PCIe bus, not the CPU cache
-flush. And from there on that's just a question of PCIe bus semantics.
+I also don't really see any major drawbacks to hashing it all?
 
 johannes
 
