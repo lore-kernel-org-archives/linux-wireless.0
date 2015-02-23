@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:41636 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752018AbbBTCJ1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42444 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752215AbbBWTv0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 21:09:27 -0500
+	Mon, 23 Feb 2015 14:51:26 -0500
+From: "Kholaif, Ahmad" <akholaif@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Subject: RE: [PATCH 1/2] cfg80211: Allow NL80211_ATTR_IFINDEX to be added to
+ vendor events
+Date: Mon, 23 Feb 2015 19:51:23 +0000
+Message-ID: <656e25eaa73746acb1108bd0943e502e@nalasexr02a.na.qualcomm.com> (sfid-20150223_205130_695406_B503DB1F)
+References: <1424442925-10778-1-git-send-email-jouni@qca.qualcomm.com>
+ <1424705846.3075.3.camel@sipsolutions.net>
+In-Reply-To: <1424705846.3075.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <36119.1424394185@turing-police.cc.vt.edu>
-References: <1422889166-29386-1-git-send-email-ilan.peer@intel.com>
- <20150206235802.GA19988@wotan.suse.de> <CB3B3D4774441E42AA3EA0E1BA8230A04D01068E@HASMSX106.ger.corp.intel.com>
- <20150210200027.GG19988@wotan.suse.de> <CB3B3D4774441E42AA3EA0E1BA8230A04D017CEB@HASMSX106.ger.corp.intel.com>
- <20150220005344.GF20824@wotan.suse.de> <36119.1424394185@turing-police.cc.vt.edu>
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Thu, 19 Feb 2015 18:09:04 -0800
-Message-ID: <CAB=NE6VJEm9sL+KZFAAYHGR4=hEhT_NjM3k1W5tGEuXp98x2eg@mail.gmail.com> (sfid-20150220_030946_602689_A7426ECC)
-Subject: Re: [PATCH v4 1/2] cfg80211: Add API to change the indoor regulatory setting
-To: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
-Cc: "Peer, Ilan" <ilan.peer@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ArikX Nemtsov <arik@wizery.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 19, 2015 at 5:03 PM,  <Valdis.Kletnieks@vt.edu> wrote:
-> On Fri, 20 Feb 2015 01:53:44 +0100, "Luis R. Rodriguez" said:
->> Wider community:
->>
->> anyone aware of any *need* in the kernel to know whether one is indoor or
->> not on a device running Linux other than wifi? Clearly it should be something
->> that might be of interest to at least other RF devices, so that is at least
->> one possibilty to consider already, but what else?
->
-> I can think of a lot of reasons for the kernel to make indoor/outdoor
-> status available to userspace, but am coming up empty why the kernel itself
-> should care....
-
-Some devices enable regulatory control through the kernel, in such
-cases the wireless-regdb is used and there is an INDOOR flag that
-enables / disables specific functionality.
-
- Luis
+Pj4gKy8qKg0KPj4gKyAqIGNmZzgwMjExX3ZlbmRvcl9ldmVudF9hbGxvY19leHQgLSBhbGxvY2F0
+ZSB2ZW5kb3Itc3BlY2lmaWMgZXZlbnQgDQo+PiArc2tiDQo+PiArICogQHdpcGh5OiB0aGUgd2lw
+aHkNCj4+ICsgKiBAZXZlbnRfaWR4OiBpbmRleCBvZiB0aGUgdmVuZG9yIGV2ZW50IGluIHRoZSB3
+aXBoeSdzIHZlbmRvcl9ldmVudHMNCj4+ICsgKiBAYXBwcm94bGVuOiBhbiB1cHBlciBib3VuZCBv
+ZiB0aGUgbGVuZ3RoIG9mIHRoZSBkYXRhIHRoYXQgd2lsbA0KPj4gKyAqCWJlIHB1dCBpbnRvIHRo
+ZSBza2INCj4+ICsgKiBAZ2ZwOiBhbGxvY2F0aW9uIGZsYWdzDQo+PiArICogQHdkZXY6IHRoZSB3
+aXJlbGVzcyBkZXZpY2UNCj4+ICsgKg0KPj4gKyAqIFRoaXMgZnVuY3Rpb24gYWxsb2NhdGVzIGFu
+ZCBwcmUtZmlsbHMgYW4gc2tiIGZvciBhbiBldmVudCBvbiB0aGUNCj4+ICsgKiB2ZW5kb3Itc3Bl
+Y2lmaWMgbXVsdGljYXN0IGdyb3VwLiBUaGlzIGlzIG90aGVyd2lzZSBpZGVudGljYWwgdG8NCj4+
+ICsgKiBjZmc4MDIxMV92ZW5kb3JfZXZlbnRfYWxsb2MoKSwgYnV0IGlmaW5kZXggb2YgdGhlIHNw
+ZWNpZmllZCANCj4+ICt3aXJlbGVzcyBkZXZpY2UNCj4+ICsgKiBpcyBhZGRlZCB0byB0aGUgZXZl
+bnQgbWVzc2FnZSBiZWZvcmUgdGhlIHZlbmRvciBkYXRhIGF0dHJpYnV0ZS4NCj4+ICsgKg0KPj4g
+KyAqIFdoZW4gZG9uZSBmaWxsaW5nIHRoZSBza2IsIGNhbGwgY2ZnODAyMTFfdmVuZG9yX2V2ZW50
+KCkgd2l0aCB0aGUNCj4+ICsgKiBza2IgdG8gc2VuZCB0aGUgZXZlbnQuDQo+ICsgKg0KPiArICog
+UmV0dXJuOiBBbiBhbGxvY2F0ZWQgYW5kIHByZS1maWxsZWQgc2tiLiAlTlVMTCBpZiBhbnkgZXJy
+b3JzIGhhcHBlbi4NCj4gKyAqLw0KPiArc3RhdGljIGlubGluZSBzdHJ1Y3Qgc2tfYnVmZiAqDQo+
+ICtjZmc4MDIxMV92ZW5kb3JfZXZlbnRfYWxsb2NfZXh0KHN0cnVjdCB3aXBoeSAqd2lwaHksIGlu
+dCBhcHByb3hsZW4sDQo+ICsJCQkJaW50IGV2ZW50X2lkeCwgZ2ZwX3QgZ2ZwLA0KPiArCQkJCXN0
+cnVjdCB3aXJlbGVzc19kZXYgKndkZXYpDQo+ICt7DQo+ICsJcmV0dXJuIF9fY2ZnODAyMTFfYWxs
+b2NfZXZlbnRfc2tiKHdpcGh5LCBOTDgwMjExX0NNRF9WRU5ET1IsDQo+ICsJCQkJCSAgTkw4MDIx
+MV9BVFRSX1ZFTkRPUl9EQVRBLA0KPiArCQkJCQkgIGV2ZW50X2lkeCwgYXBwcm94bGVuLCBnZnAs
+IHdkZXYpOw0KPiAgfQ0KDQo+IFRoaXMgZG9lc24ndCBzZWVtIG5lY2Vzc2FyeSwgd2h5IG5vdCBq
+dXN0IHVwZGF0ZSB0aGUgb3JpZ2luYWwgZnVuY3Rpb24gdG8gYWRkIGFuZCBkb2N1bWVudCB0aGUg
+bmV3IG9wdGlvbmFsIGFyZ3VtZW50Pw0KDQo+W2hvd2V2ZXIsIGluIHRoZSB1bmxpa2VseSBldmVu
+IHRoYXQgeW91IGNhbiBjb252aW5jZSBtZSBvdGhlcndpc2Ugd2UgbWF5IGhhdmUgdG8gYWRkIHRo
+aXMgdG8gdGhlIGRvY3VtZW50YXRpb24/XQ0KDQpUaGlzIG1lYW5zIHRoYXQgdGhpcyBrZXJuZWwg
+Y2hhbmdlIGNhbid0IGJlIHB1bGxlZCBpbiB3aXRob3V0IGNvcnJlc3BvbmRpbmcgZHJpdmVyIGNo
+YW5nZXMgdG8gY2FsbCAgY2ZnODAyMTFfdmVuZG9yX2V2ZW50X2FsbG9jKCkgd2l0aCBhIE5VTEwg
+Zm9yIHdkZXYuIFBsZWFzZSBjb25maXJtIGlmIHRoaXMgaXMgYWNjZXB0YWJsZTsgb3RoZXJ3aXNl
+LCB3ZSB3b3VsZCBuZWVkIHRvIHVzZSB0aGUgbmV3IHdyYXBwZXIgZGVmaW5lZCBhYm92ZS4NCg0K
+VGhhbmtzLA0KQWhtYWQgS2hvbGFpZg0K
