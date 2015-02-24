@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:49186 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbbBSRzo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 12:55:44 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: fix quiet duration configuration
-Date: Thu, 19 Feb 2015 23:25:06 +0530
-Message-ID: <1424368506-18193-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150219_185546_482125_5C540122)
-In-Reply-To: <1424368506-18193-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1424368506-18193-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:38165 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752481AbbBXKOQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:14:16 -0500
+Message-ID: <1424772854.2192.19.camel@sipsolutions.net> (sfid-20150224_111419_785623_FFD1C544)
+Subject: Re: [PATCH] mac80211-hwsim:  Don't enqueue pkts that do not want
+ txstatus.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 24 Feb 2015 11:14:14 +0100
+In-Reply-To: <54EB6589.6040803@candelatech.com>
+References: <1423592732-17256-1-git-send-email-greearb@candelatech.com>
+	 <1424707739.3075.19.camel@sipsolutions.net>
+	 <54EB6589.6040803@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Duty cycle is nothing but percentage of one period in which a
-signal is active. But it is wrongly interpreted as ratio of quiet
-duration. So fix the quiet duration to the remaining percentage
-of duty cycle (active ratio).
+On Mon, 2015-02-23 at 09:38 -0800, Ben Greear wrote:
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/thermal.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> > This doesn't really seem right - essentially it means that whatever you
+> > just gave to userspace is now completely useless?
+> > 
+> > It seems skb_orphan() could/should be put here.
+> 
+> I don't understand your complaint, why is what I gave to user-space useless?
 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index aede750..0d89ab5 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -98,7 +98,7 @@ static int ath10k_thermal_set_cur_dutycycle(struct thermal_cooling_device *cdev,
- 	}
- 	period = max(ATH10K_QUIET_PERIOD_MIN,
- 		     (ATH10K_QUIET_PERIOD_DEFAULT / num_bss));
--	duration = (period * duty_cycle) / 100;
-+	duration = (period * (100 - duty_cycle)) / 100;
- 	enabled = duration ? 1 : 0;
- 
- 	ret = ath10k_wmi_pdev_set_quiet_mode(ar, period, duration,
--- 
-2.3.0
+userspace is supposed to give back the SKB pointer as a cookie when it
+reports whether or not it was transmitted correctly, and then we will
+free the SKB afterwards.
+
+Note that I also just merged a patch from Bob in this area.
+
+> If we just orphan them, does that clean up the skb memory properly?
+
+No, of course not, but it removes it from socket accounting. This may be
+what you want, although I'm not really sure it's the right thing to do
+since it would make this behave differently than other drivers which
+also don't orphan the SKB (and shouldn't - you can consider the SKB on
+this queue as being on the HW DMA queue where it should still be
+accounted for correctly)
+
+I think perhaps you just want Bob's patch to fix the case of too slow
+userspace.
+
+> If not, what eventually frees the skb?
+
+The tx status path does.
+
+johannes
 
