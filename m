@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44271 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:38112 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754826AbbBBTWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 14:22:24 -0500
-Message-ID: <1422904939.8755.3.camel@sipsolutions.net> (sfid-20150202_202227_916955_C0D688E0)
-Subject: Re: [PATCH] ath10k: Replace ioread with wmb for data sync
+	id S1752177AbbBXKI4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:08:56 -0500
+Message-ID: <1424772528.2192.13.camel@sipsolutions.net> (sfid-20150224_110908_827929_83DF8C16)
+Subject: Re: Connection issues with BW Tracking in mac80211
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Oh <poh@codeaurora.org>
-Cc: Peter Oh <poh@qca.qualcomm.com>, linux-wireless@vger.kernel.org,
-	Bob Copeland <me@bobcopeland.com>, ath10k@lists.infradead.org
-Date: Mon, 02 Feb 2015 20:22:19 +0100
-In-Reply-To: <54CFCCCF.900@codeaurora.org>
-References: <1422311118-11320-1-git-send-email-poh@qca.qualcomm.com>
-	 <20150127213349.GA24933@localhost> <54C824DC.5080804@qca.qualcomm.com>
-	 <20150128043005.GB24933@localhost> <54C875FD.3070101@qca.qualcomm.com>
-	 (sfid-20150128_064104_435635_7E681844) <1422430643.1973.1.camel@sipsolutions.net>
-	 <54CC0B71.9050301@codeaurora.org>
-	 <1422882133.1930.10.camel@sipsolutions.net>
-	 <54CFB4F4.1070807@qca.qualcomm.com>
-	 <1422903279.8755.1.camel@sipsolutions.net> <54CFCCCF.900@codeaurora.org>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 24 Feb 2015 11:08:48 +0100
+In-Reply-To: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com> (sfid-20150219_203032_581866_79C1F323)
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+	 (sfid-20150219_203032_581866_79C1F323)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2015-02-20 at 01:00 +0530, Krishna Chaitanya wrote:
+> Hi Johannes,
+> 
+> The BW tracking feature in mac80211 is causing connection problems and
+> operating mode/bw problems when switching b/w modes and bw's in AP.
+> 
+> For Eg. Initially if AP is operating in VHT-80MHz, and then we changed
+> in to HT-40MHz, mac80211 cannot handle it because the VHT capability
+> is mismatched b/w stored info (ifmgd->flags).
 
-> > You basically have the following sequence:
-> >
-> > iowrite()
-> > ioread()
-> >
-> > If you look, you'll see that iowrite() is actually done (or should be,
-> > or perhaps with appropriate syncs) on an uncached mapping.
-> since it's mmio, iowrite will be map to write, not out which is cached 
-> mapping.
-> That's why we address "posted write" here.
-> If it's un-cached mapping which is volatile, we don't even need ioread.
+How are you doing such a change? I was assuming that the BSS would cease
+to exist if it was reconfigured in such a way.
 
-No, this isn't true - "posted write" in the context of this discussion
-is about the PCIe bus. Memory writes that go through cache aren't
-referred to as "posted writes", those are just (cached) memory writes.
+> I have tried your DISABLE_BW_TRACK patch, that helps making the
+> connection but it doesn't update the chipset causing issues.
 
-> >   As a result,
-> > the only thing you care about here is the PCIe bus, not the CPU cache
-> > flush. And from there on that's just a question of PCIe bus semantics.
-> So how does ioread guarantee PCIe bus transaction done?
+Well, that was clearly going to happen.
 
-That's how PCIe works, operations are serialized, and read() has to wait
-for a response from the device (but write doesn't - which is "posted
-write")
+> Ideally we should be able to handle all the config changes right?
+
+Not sure. How does this config change work? I'd have expected the AP to
+stop beaconing and kick everyone out if you actually reconfigured it to
+no longer have VHT since then it can't do VHT rates any more either
+according to the new config?
+
+What exactly are you doing, and how does the AP behave, and what do you
+expect to happen?
 
 johannes
 
