@@ -1,37 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.10]:51314 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754740AbbBFOxs convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:59135 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929AbbBXR4E convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 09:53:48 -0500
-Date: Fri, 6 Feb 2015 15:53:43 +0100
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Peter Oh <poh@qca.qualcomm.com>
-Cc: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: Replace ioread with mb to drain write buffer
-Message-ID: <20150206155343.5fe43aa9@north> (sfid-20150206_155403_514091_2C8F5A71)
-In-Reply-To: <20150206095846.5d46f11e@north>
-References: <7a87e5df81499e4d26a4f8bedf76ed3250a6f7bb.1422663244.git.poh@qca.qualcomm.com>
-	<20150206095846.5d46f11e@north>
+	Tue, 24 Feb 2015 12:56:04 -0500
+Received: by mail-ig0-f182.google.com with SMTP id h15so28946932igd.3
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 09:56:03 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20150224175316.GN30928@merlin.infradead.org>
+References: <1424124587-28065-1-git-send-email-zajec5@gmail.com>
+	<20150224175316.GN30928@merlin.infradead.org>
+Date: Tue, 24 Feb 2015 18:56:03 +0100
+Message-ID: <CACna6rxMG=XqrnwmVRtcvHG_i9_7sg4XVqnvq_TrY3sdDjMZaA@mail.gmail.com> (sfid-20150224_185608_495913_CF3768B8)
+Subject: Re: [PATCH] brcm: drop executable from brcmfmac43143-sdio.bin
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Kyle McMartin <kyle@infradead.org>
+Cc: linux-firmware@kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 6 Feb 2015 09:58:46 +0100, Jakub Kiciński wrote:
-> On Fri, 30 Jan 2015 16:14:30 -0800, Peter Oh wrote:
-> > Using ioread() to perform draining write buffer is excessive.
-> > Use compact API, mb(), that intended to be used for the case.
-> > It reduces total 14 CPU clocks per interrupt.
-> >
-> > Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
-> 
-> I have no idea what the code does but this change looks suspicious. 
-> Usually the point of ioread() is to flush the interconnect buffers 
-> while mb() ensures ordering only from the CPU perspective.
-> 
-> Could you provide the reason *why* flushing buffers is unnecessary
-> in the commit message?
+On 24 February 2015 at 18:53, Kyle McMartin <kyle@infradead.org> wrote:
+> On Mon, Feb 16, 2015 at 11:09:47PM +0100, Rafał Miłecki wrote:
+>> It isn't supposed to be run on host obviously.
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>
+> Ah, I was working backwards and Marcel sent a patch more recently which
+> fixed this and a few other files.
+>
+> Sorry about that -- Kyle
 
-I just noticed the discussion on the first version of the patch.
-Sorry about the noise.
+I don't mind (AKA care so much), no prob :) Thanks for handling this.
