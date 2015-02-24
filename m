@@ -1,33 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51310 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756194AbbBJOKG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 09:10:06 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [V2, for, 3.19,
- 1/7] rtlwifi: Remove logging statement that is no longer needed
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1421773286-1039-2-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>
-Message-Id: <20150210141006.3A232140EB6@smtp.codeaurora.org> (sfid-20150210_151020_315445_4DC0B783)
-Date: Tue, 10 Feb 2015 14:10:06 +0000 (UTC)
+Received: from mga02.intel.com ([134.134.136.20]:49787 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752284AbbBXKCa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:02:30 -0500
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH 0/8] Adds Intel FieldsPeak NFC solution driver
+Date: Tue, 24 Feb 2015 12:01:44 +0200
+Message-Id: <1424772112-27399-1-git-send-email-robert.dolca@intel.com> (sfid-20150224_110810_936097_7FF06E46)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch adds support for Intel's FieldsPeak NFC solution.
+The device is enumerated with ACPI and platform init.
 
-> In commit e9538cf4f907 ("rtlwifi: Fix error when accessing unmapped memory
-> in skb"), a printk was included to indicate that the condition had been
-> reached. There is now enough evidence from other users that the fix is
-> working. That logging statement can now be removed.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> [V3.18]
+In order to implement the driver the nci_core_conn_create was
+modified in order to report the ID of the newly created connection.
+Fixed a bug that prevented to close a connection from the driver while
+the dev was down.
 
-Thanks, applied to wireless-drivers.git.
+The max packet size of a connection can be retrieved by the driver.
 
-Kalle Valo
+The init, reset NCI functions can be called from the driver. The driver
+can also send command to the device using the NFC subsystem using the
+request - response blocking method.
+
+Robert Dolca (8):
+  NFC: NCI: Allow connection close with dev down
+  NFC: NCI: Exporting NFC command and data send API
+  NFC: NCI: Adds NCI init and reset API for drivers
+  NFC: NCI: Add a special nci_request for driver
+  NFC: NCI: Don't call setup if previous NCI request failed
+  NFC: NCI: Add function to get max packet size for conn
+  NFC: NCI: Adds a way to get the new connection ID
+  NFC: Add Intel FieldsPeak NFC solution driver
+
+ drivers/nfc/Kconfig                |   1 +
+ drivers/nfc/fdp/Kconfig            |  22 ++
+ drivers/nfc/fdp/Makefile           |  10 +
+ drivers/nfc/fdp/cmd.c              | 196 +++++++++++++++
+ drivers/nfc/fdp/core.c             | 503 +++++++++++++++++++++++++++++++++++++
+ drivers/nfc/fdp/fdp.h              | 115 +++++++++
+ drivers/nfc/fdp/i2c.c              | 454 +++++++++++++++++++++++++++++++++
+ drivers/nfc/fdp/ntf.c              |  68 +++++
+ drivers/nfc/fdp/rsp.c              | 117 +++++++++
+ drivers/nfc/st21nfcb/st21nfcb_se.c |   2 +-
+ include/linux/platform_data/fdp.h  |  33 +++
+ include/net/nfc/nci_core.h         |  18 +-
+ net/nfc/nci/core.c                 |  53 +++-
+ net/nfc/nci/data.c                 |  13 +
+ net/nfc/nci/rsp.c                  |   6 +
+ 15 files changed, 1601 insertions(+), 10 deletions(-)
+ create mode 100644 drivers/nfc/fdp/Kconfig
+ create mode 100644 drivers/nfc/fdp/Makefile
+ create mode 100644 drivers/nfc/fdp/cmd.c
+ create mode 100644 drivers/nfc/fdp/core.c
+ create mode 100644 drivers/nfc/fdp/fdp.h
+ create mode 100644 drivers/nfc/fdp/i2c.c
+ create mode 100644 drivers/nfc/fdp/ntf.c
+ create mode 100644 drivers/nfc/fdp/rsp.c
+ create mode 100644 include/linux/platform_data/fdp.h
+
+-- 
+1.9.1
+
