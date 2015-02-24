@@ -1,77 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38864 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932523AbbBZNvd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 08:51:33 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH] mac80211: Send EAPOL frames at lowest rate
-Date: Thu, 26 Feb 2015 15:50:50 +0200
-Message-ID: <1424958650-11165-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20150226_145248_184491_431E55ED)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:38117 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751663AbbBXKJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:09:49 -0500
+Message-ID: <1424772587.2192.14.camel@sipsolutions.net> (sfid-20150224_110953_455053_0ABE8072)
+Subject: Re: Connection issues with BW Tracking in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 24 Feb 2015 11:09:47 +0100
+In-Reply-To: <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com> (sfid-20150219_222859_339480_EFF9350E)
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+	 <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
+	 (sfid-20150219_222859_339480_EFF9350E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current minstrel_ht rate control behavior is somewhat optimistic in
-trying to find optimum TX rate. While this is usually fine for normal
-Data frames, there are cases where a more conservative set of retry
-parameters would be beneficial to make the connection more robust.
+On Fri, 2015-02-20 at 02:58 +0530, Krishna Chaitanya wrote:
 
-EAPOL frames are critical to the authentication and especially the
-EAPOL-Key message 4/4 (the last message in the 4-way handshake) is
-important to get through to the AP. If that message is lost, the only
-recovery mechanism in many cases is to reassociate with the AP and start
-from scratch. This can often be avoided by trying to send the frame with
-more conservative rate and/or with more link layer retries.
+> Before that i have a basic question? Should we reset our tracking after
+> the connection is lost, in my case above the connection was lost (Config
+> change in A triggers a reboot), still mac80211 is tracking the BW changes?
 
-In most cases, minstrel_ht is currently using the initial EAPOL-Key
-frames for probing higher rates and this results in only five link layer
-transmission attempts (one at high(ish) MCS and four at MCS0). While
-this works with most APs, it looks like there are some deployed APs that
-may have issues with the EAPOL frames using HT MCS immediately after
-association. Similarly, there may be issues in cases where the signal
-strength or radio environment is not good enough to be able to get
-frames through even at couple of MCS 0 tries.
+Huh??
 
-The best approach for this would likely to be to reduce the TX rate for
-the last rate (3rd rate parameter in the set) to a low basic rate (say,
-6 Mbps on 5 GHz and 2 or 5.5 Mbps on 2.4 GHz), but doing that cleanly
-requires some more effort. For now, we can start with a simple one-liner
-that forces the minimum rate to be used for EAPOL frames similarly how
-the TX rate is selected for the IEEE 802.11 Management frames. This does
-result in a small extra latency added to the cases where the AP would be
-able to receive the higher rate, but taken into account how small number
-of EAPOL frames are used, this is likely to be insignificant. A future
-optimization in the minstrel_ht design can also allow this patch to be
-reverted to get back to the more optimized initial TX rate.
+So the AP does restart, but mac80211 tries to stay connected to it? That
+seems pretty unlikely. The tracking *shouldn't* have any knowledge of
+what happened before the association, but there could be bugs in the
+flags assignment I guess.
 
-It should also be noted that many drivers that do not use minstrel as
-the rate control algorithm are already doing similar workarounds by
-forcing the lowest TX rate to be used for EAPOL frames.
-
-Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- net/mac80211/tx.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index af5446c..14ff5e4 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -565,6 +565,7 @@ ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
- 		if (tx->sdata->control_port_no_encrypt)
- 			info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
- 		info->control.flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
-+		info->flags |= IEEE80211_TX_CTL_USE_MINRATE;
- 	}
- 
- 	return TX_CONTINUE;
--- 
-1.9.1
+johannes
 
