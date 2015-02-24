@@ -1,99 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:57159 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759524AbbBIXHG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 18:07:06 -0500
-Received: by mail-ig0-f178.google.com with SMTP id hl2so19924636igb.5
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 15:07:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAEZVCP7+gTqJJUNQuUDTGWG1BQ4_XY7Q79Cg-2daVourfasvEw@mail.gmail.com>
-References: <CAEZVCP4bNmfnHH=Ksi6wMQoqdZGbprUH5X_VA41GRf9=h2MT1A@mail.gmail.com>
- <54D92DFC.1080604@broadcom.com> <CAEZVCP7+gTqJJUNQuUDTGWG1BQ4_XY7Q79Cg-2daVourfasvEw@mail.gmail.com>
-From: Steeve Morin <steeve.morin@gmail.com>
-Date: Tue, 10 Feb 2015 00:06:45 +0100
-Message-ID: <CAEZVCP6HNDsR=S4c5xYLr=UZZmQhA9WBwrzwT_5jJvfXz+gC1A@mail.gmail.com> (sfid-20150210_000711_546795_D5B90798)
-Subject: Re: brcmfmac + AP6120 (brcm43362) doesn't connect to WPA2 AP
- (unprotected ok)
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:49837 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753092AbbBXKCm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:02:42 -0500
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH 6/8] NFC: NCI: Add function to get max packet size for conn
+Date: Tue, 24 Feb 2015 12:01:50 +0200
+Message-Id: <1424772112-27399-7-git-send-email-robert.dolca@intel.com> (sfid-20150224_110350_332602_2DAA468A)
+In-Reply-To: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The weird thing is that wpa_supplicant apparently manages to associate
-with the AP (but i'm not really sure about that) [1]
+FDP driver needs to send the firmware as regular packets
+(not fragmented). That's whay the driver should have a way to
+get the max packet size for a given connection.
 
-[1] https://gist.github.com/steeve/10a9a643476cea99abf4#file-005-wpa-supplicant-conf
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+---
+ include/net/nfc/nci_core.h |  1 +
+ net/nfc/nci/data.c         | 12 ++++++++++++
+ 2 files changed, 13 insertions(+)
 
-On 9 February 2015 at 23:17, Steeve Morin <steeve.morin@gmail.com> wrote:
-> Thanks for answering.
->
-> I'm using connmanctl [1]
->
-> The funny thing is trying to make this gist, I tried and it connected
-> succesfully....
-> Could it be a race somewhere?
->
-> [1] https://gist.github.com/steeve/10a9a643476cea99abf4#file-004-connmanctl
->
-> On 9 February 2015 at 23:00, Arend van Spriel <arend@broadcom.com> wrote:
->> On 02/09/15 18:57, Steeve Morin wrote:
->>>
->>> Hi linux-wireless,
->>>
->>> I'm running brcmfmac from backports-3.19-rc1-1 on linux 3.10. running
->>> on an arm Amlogic S805 (cortex-a5, arm7) board (CX-S859).
->>>
->>> I had to apply multiple custom patches [1]:
->>> - Make sure the wifi chip is on via custom GPIO [1]
->>> - Remove a problematic piece of code related to power manager (will
->>> look into it later) [1]
->>> - Mix the mmc->max_blk_count on the host (would cause a BUG_ON
->>> assertion later on) [2] [3]
->>>
->>> After that, I am able to modprobe brcmfmac see wlan0.
->>> The interface correctly scans for wifi aps, and I can connect to
->>> unprotected ones.
->>>
->>> It fails, however, to connect to WPA/WPA2 protected aps. I have
->>> attached a debug log obtained with debug=0xffffff [4]
->>> I don't see any errors in it though...
->>>
->>> Would anyone of you guys have any idea why ?
->>
->>
->> In the log I don't see any connect attempt. Only seeing a scan completing.
->> So how do you try to connect?
->>
->> Regards,
->> Arend
->>
->>
->>> Thanks a lot,
->>>
->>> [1]
->>> https://gist.github.com/steeve/10a9a643476cea99abf4#file-backports-power-on-wifi-sdio-patch
->>> [2]
->>> https://gist.github.com/steeve/10a9a643476cea99abf4#file-fix-block-size-patch
->>> [3]
->>> https://github.com/codesnake/linux-amlogic/blob/master/drivers/amlogic/mmc/aml_sdio.c#L317
->>> [4] https://gist.github.com/steeve/10a9a643476cea99abf4#file-003-dmesg-log
->>
->>
->
->
->
-> --
-> Steeve Morin
-> twitter.com/steeve
-> github.com/steeve
-> linkd.in/smorin
-
-
-
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index 42ec342..d79f90e 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -321,6 +321,7 @@ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb);
+ void nci_rx_data_packet(struct nci_dev *ndev, struct sk_buff *skb);
+ int nci_send_cmd(struct nci_dev *ndev, __u16 opcode, __u8 plen, void *payload);
+ int nci_send_data(struct nci_dev *ndev, __u8 conn_id, struct sk_buff *skb);
++__u8 nci_conn_max_data_pkt_payload_size(struct nci_dev *ndev, __u8 conn_id);
+ void nci_data_exchange_complete(struct nci_dev *ndev, struct sk_buff *skb,
+ 				__u8 conn_id, int err);
+ void nci_hci_data_received_cb(void *context, struct sk_buff *skb, int err);
+diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
+index 83acd18..056f841 100644
+--- a/net/nfc/nci/data.c
++++ b/net/nfc/nci/data.c
+@@ -90,6 +90,18 @@ static inline void nci_push_data_hdr(struct nci_dev *ndev,
+ 	nci_pbf_set((__u8 *)hdr, pbf);
+ }
+ 
++__u8 nci_conn_max_data_pkt_payload_size(struct nci_dev *ndev, __u8 conn_id)
++{
++	struct nci_conn_info *conn_info;
++
++	conn_info = nci_get_conn_info_by_conn_id(ndev, conn_id);
++	if (!conn_info)
++		return 0;
++
++	return conn_info->max_pkt_payload_len;
++}
++EXPORT_SYMBOL(nci_conn_max_data_pkt_payload_size);
++
+ static int nci_queue_tx_data_frags(struct nci_dev *ndev,
+ 				   __u8 conn_id,
+ 				   struct sk_buff *skb) {
 -- 
-Steeve Morin
-twitter.com/steeve
-github.com/steeve
-linkd.in/smorin
+1.9.1
+
