@@ -1,60 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f52.google.com ([74.125.82.52]:40933 "EHLO
-	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756233AbbBFMGv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 07:06:51 -0500
-Received: by mail-wg0-f52.google.com with SMTP id y19so13083277wgg.11
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 04:06:50 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org, malaakso@elisanet.fi,
-	greearb@candelatech.com, Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFT] ath10k: restart fw on tx-credit timeout
-Date: Fri,  6 Feb 2015 13:05:54 +0100
-Message-Id: <1423224354-24955-1-git-send-email-michal.kazior@tieto.com> (sfid-20150206_130701_163834_82A6B8B9)
+Received: from mga11.intel.com ([192.55.52.93]:61263 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753048AbbBXKCl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:02:41 -0500
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH 7/8] NFC: NCI: Adds a way to get the new connection ID
+Date: Tue, 24 Feb 2015 12:01:51 +0200
+Message-Id: <1424772112-27399-8-git-send-email-robert.dolca@intel.com> (sfid-20150224_110518_367509_CACB7261)
+In-Reply-To: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It makes little sense to continue and let
-firmware-host state become inconsistent if a WMI
-command can't be submitted to firmware.
+nci_core_conn_create not has a new parameter so it can return
+the ID of the new connection. Also not you can't call nci_core_conn_create
+without waiting the answer for the previous call.
 
-This effectively prevents after-affects of
-tx-credit starvation bug which include spurious
-sta kickout events and inability to associate new
-stations after some time when acting as AP.
-
-This should also speed up recovery/teardown in
-some cases when firmware stops responding for some
-reason.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/nfc/st21nfcb/st21nfcb_se.c |  2 +-
+ include/net/nfc/nci_core.h         | 11 ++++++++---
+ net/nfc/nci/core.c                 | 13 ++++++++++---
+ net/nfc/nci/rsp.c                  |  6 ++++++
+ 4 files changed, 25 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index aeea1c7..776b257 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1045,9 +1045,15 @@ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id)
- 		(ret != -EAGAIN);
- 	}), 3*HZ);
+diff --git a/drivers/nfc/st21nfcb/st21nfcb_se.c b/drivers/nfc/st21nfcb/st21nfcb_se.c
+index 7c82e9d..8694675 100644
+--- a/drivers/nfc/st21nfcb/st21nfcb_se.c
++++ b/drivers/nfc/st21nfcb/st21nfcb_se.c
+@@ -515,7 +515,7 @@ static int st21nfcb_hci_network_init(struct nci_dev *ndev)
+ 	r = nci_core_conn_create(ndev, NCI_DESTINATION_NFCEE, 1,
+ 				 sizeof(struct core_conn_create_dest_spec_params) +
+ 				 sizeof(struct dest_spec_params),
+-				 dest_params);
++				 dest_params, NULL);
+ 	if (r != NCI_STATUS_OK)
+ 		goto free_dest_params;
  
--	if (ret)
-+	if (ret) {
- 		dev_kfree_skb_any(skb);
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index d79f90e..a331755 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -240,6 +240,11 @@ struct nci_dev {
+ 	/* Save RF Discovery ID or NFCEE ID under conn_create */
+ 	__u8			cur_id;
  
-+		if (ret == -EAGAIN) {
-+			ath10k_warn(ar, "firmware unresponsive, restarting..\n");
-+			queue_work(ar->workqueue, &ar->restart_work);
-+		}
-+	}
++	/* Pointer to the address where the next connection ID
++	 * will be stored */
++	__u8			*next_conn_id;
++	__u8			conn_busy;
 +
- 	return ret;
+ 	/* stored during nci_data_exchange */
+ 	struct sk_buff		*rx_data_reassembly;
+ 
+@@ -266,9 +271,9 @@ int nci_set_config(struct nci_dev *ndev, __u8 id, size_t len, __u8 *val);
+ int nci_nfcee_discover(struct nci_dev *ndev, u8 action);
+ int nci_nfcee_mode_set(struct nci_dev *ndev, u8 nfcee_id, u8 nfcee_mode);
+ int nci_core_conn_create(struct nci_dev *ndev, u8 destination_type,
+-			 u8 number_destination_params,
+-			 size_t params_len,
+-			 struct core_conn_create_dest_spec_params *params);
++			 u8 number_destination_params, size_t params_len,
++			 struct core_conn_create_dest_spec_params *params,
++			 u8 *conn_id);
+ int nci_core_conn_close(struct nci_dev *ndev, u8 conn_id);
+ 
+ struct nci_hci_dev *nci_hci_allocate(struct nci_dev *ndev);
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index d2e7adf..aaa56f1 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -554,14 +554,19 @@ static void nci_core_conn_create_req(struct nci_dev *ndev, unsigned long opt)
  }
  
+ int nci_core_conn_create(struct nci_dev *ndev, u8 destination_type,
+-			 u8 number_destination_params,
+-			 size_t params_len,
+-			 struct core_conn_create_dest_spec_params *params)
++			 u8 number_destination_params, size_t params_len,
++			 struct core_conn_create_dest_spec_params *params,
++			 u8 *conn_id)
+ {
+ 	int r;
+ 	struct nci_core_conn_create_cmd *cmd;
+ 	struct core_conn_create_data data;
+ 
++	if (ndev->conn_busy)
++		return -EBUSY;
++
++	ndev->conn_busy = 1;
++
+ 	data.length = params_len + sizeof(struct nci_core_conn_create_cmd);
+ 	cmd = kzalloc(data.length, GFP_KERNEL);
+ 	if (!cmd)
+@@ -573,11 +578,13 @@ int nci_core_conn_create(struct nci_dev *ndev, u8 destination_type,
+ 
+ 	data.cmd = cmd;
+ 	ndev->cur_id = params->value[DEST_SPEC_PARAMS_ID_INDEX];
++	ndev->next_conn_id = conn_id;
+ 
+ 	r = __nci_request(ndev, nci_core_conn_create_req,
+ 			  (unsigned long)&data,
+ 			  msecs_to_jiffies(NCI_CMD_TIMEOUT));
+ 	kfree(cmd);
++	ndev->conn_busy = 0;
+ 	return r;
+ }
+ EXPORT_SYMBOL(nci_core_conn_create);
+diff --git a/net/nfc/nci/rsp.c b/net/nfc/nci/rsp.c
+index 02486bc..9aa9de2 100644
+--- a/net/nfc/nci/rsp.c
++++ b/net/nfc/nci/rsp.c
+@@ -244,6 +244,12 @@ static void nci_core_conn_create_rsp_packet(struct nci_dev *ndev,
+ 		conn_info->id = ndev->cur_id;
+ 		conn_info->conn_id = rsp->conn_id;
+ 
++		/* Set the conn ID to the address provided by the caller */
++		if (ndev->next_conn_id) {
++			*ndev->next_conn_id = rsp->conn_id;
++			ndev->next_conn_id = NULL;
++		}
++
+ 		/* Note: data_exchange_cb and data_exchange_cb_context need to
+ 		 * be specify out of nci_core_conn_create_rsp_packet
+ 		 */
 -- 
-1.8.5.3
+1.9.1
 
