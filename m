@@ -1,125 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34243 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751334AbbBFLM2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 06:12:28 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t16AwVwi030145
-	for <linux-wireless@vger.kernel.org>; Fri, 6 Feb 2015 03:12:28 -0800
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1sca52atye-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 03:12:27 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 1/5] mwifiex: more_task flag for main_process
-Date: Fri, 6 Feb 2015 22:11:42 +0530
-Message-ID: <1423240906-12951-1-git-send-email-patila@marvell.com> (sfid-20150206_121234_372501_91C76097)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:41154 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750955AbbBXULh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 15:11:37 -0500
+Message-ID: <1424808692.2192.40.camel@sipsolutions.net> (sfid-20150224_211140_840201_9F2A0034)
+Subject: Re: [PATCH 1/1] nl80211: add NL80211_CMD_GET_TSF
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rohan Joyce <rojoyce.github@gmail.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Tue, 24 Feb 2015 21:11:32 +0100
+In-Reply-To: <1424705885-20987-1-git-send-email-rojoyce.github@gmail.com> (sfid-20150223_163842_631527_DEEDB1C8)
+References: <1424701880.3075.0.camel@sipsolutions.net>
+	 <1424705885-20987-1-git-send-email-rojoyce.github@gmail.com>
+	 (sfid-20150223_163842_631527_DEEDB1C8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch handles a corner case where TX packet would remain in
-driver queue till next packet comes in.
-Here is sequence:
-1. TX packet is queued via hard_start_xmit and main_work is queued
-2. SDIO interrupt comes in which directly call mwifiex_main_process.
-This starts executing main superloop.
-3. Now work from step1 is scheduled but at first check itself it sees
-mwifiex_processing is set and exits.
-4. Now if superloop from step2 has passed TX processing part of superloop
-this packet would remain in queue until next packet/command/SDIO interrupt
-arrives and queues main_work.
+On Mon, 2015-02-23 at 23:38 +0800, Rohan Joyce wrote:
+> Hi,
+> 
+> The motivation for this patch is to assist using a WiiU Gamepad with Linux. 
+> The WiiU Gamepad is an input device that also contains an LCD touchscreen,
+> speakers and a variety of sensors. The Gamepad connects to an access
+> point (usually the WiiU console itself, but it can be coerced to connect
+> to a properly configured hostap). The Gamepad provides five services over
+> UDP. Two of the services that are provided (audio and video streaming to
+> the device) use the TSF as a timestamp in the application layer. The
+> firmware on the Gamepad checks to make sure that incoming packets for
+> these services have timestamps within 1000us of its own internal clock,
+> which is synced to the TSF of the access point.
 
-This patch fixes this corner case by defining more_task flag which is set when
-mwifiex_processing is found to be true. At end of superloop we again check if
-more_task flag is set and if set, execute superloop again.
+Oh, right, I remember now.
 
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c | 16 +++++++++-------
- drivers/net/wireless/mwifiex/main.h |  1 +
- 2 files changed, 10 insertions(+), 7 deletions(-)
+> At the moment, users who want to use this device have to manually apply 
+> a kernel patch similar to that which was first posted to this list a year
+> ago. This patch is my attempt to implement the functionality using a more
+> conventional API and make it easier for end users.
+> 
+> Should I include protocol implementation details specific to this device in
+> the documentation of the NL80211_CMD_GET_TSF command?
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 7e74b4f..74488ab 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -190,14 +190,16 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
- 
- 	/* Check if already processing */
- 	if (adapter->mwifiex_processing) {
-+		adapter->more_task_flag = true;
- 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 		goto exit_main_proc;
- 	} else {
- 		adapter->mwifiex_processing = true;
--		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 	}
- process_start:
- 	do {
-+		adapter->more_task_flag = false;
-+		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 		if ((adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) ||
- 		    (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY))
- 			break;
-@@ -238,6 +240,7 @@ process_start:
- 			adapter->pm_wakeup_fw_try = true;
- 			mod_timer(&adapter->wakeup_timer, jiffies + (HZ*3));
- 			adapter->if_ops.wakeup(adapter);
-+			spin_lock_irqsave(&adapter->main_proc_lock, flags);
- 			continue;
- 		}
- 
-@@ -295,8 +298,10 @@ process_start:
- 		if ((adapter->ps_state == PS_STATE_SLEEP) ||
- 		    (adapter->ps_state == PS_STATE_PRE_SLEEP) ||
- 		    (adapter->ps_state == PS_STATE_SLEEP_CFM) ||
--		    adapter->tx_lock_flag)
-+		    adapter->tx_lock_flag){
-+			spin_lock_irqsave(&adapter->main_proc_lock, flags);
- 			continue;
-+		}
- 
- 		if (!adapter->cmd_sent && !adapter->curr_cmd) {
- 			if (mwifiex_exec_next_cmd(adapter) == -1) {
-@@ -330,15 +335,12 @@ process_start:
- 			}
- 			break;
- 		}
-+		spin_lock_irqsave(&adapter->main_proc_lock, flags);
- 	} while (true);
- 
- 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
--	if (!adapter->delay_main_work &&
--	    (adapter->int_status || IS_CARD_RX_RCVD(adapter))) {
--		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-+	if (adapter->more_task_flag)
- 		goto process_start;
--	}
--
- 	adapter->mwifiex_processing = false;
- 	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index f0a6af1..2089a30 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -774,6 +774,7 @@ struct mwifiex_adapter {
- 	/* spin lock for main process */
- 	spinlock_t main_proc_lock;
- 	u32 mwifiex_processing;
-+	u8 more_task_flag;
- 	u16 tx_buf_size;
- 	u16 curr_tx_buf_size;
- 	u32 ioport;
--- 
-1.8.1.4
+Not necessarily, but some information about why this is needed would be
+good.
+
+I guess since this has no way of using something like 11v this really is
+the only chance.
+
+Note that you'll need to add a feature capability flag for this - many
+drivers, even ones based on mac80211, will not be able to implement this
+properly so relying only on the presence of the callback will not work
+properly.
+
+johannes
 
