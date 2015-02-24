@@ -1,129 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26032 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933023AbbBIQUm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 11:20:42 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211_hwsim: Add minimal capability for vendor command/event testing
-Date: Mon, 9 Feb 2015 18:19:49 +0200
-Message-ID: <1423498789-11760-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20150209_172045_621406_C55E003D)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:49814 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752586AbbBXKCf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:02:35 -0500
+From: Robert Dolca <robert.dolca@intel.com>
+To: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	Robert Dolca <robert.dolca@intel.com>
+Subject: [PATCH 4/8] NFC: NCI: Add a special nci_request for driver
+Date: Tue, 24 Feb 2015 12:01:48 +0200
+Message-Id: <1424772112-27399-5-git-send-email-robert.dolca@intel.com> (sfid-20150224_110431_260948_4CF68EBB)
+In-Reply-To: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows wpa_supplicant/hostapd to send a vendor command and verify
-response to that command and event.
+This patch adds nci_request_driver and nci_req_complete_driver
+as a wrapper for __nci_request. When nci_req_complete_driver is
+called it also sets cmd_cnt to 1. This is done because the response is not
+sent to the NFC subsystem so cmd_cnt is not decremented there.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+nci_send_cmd was previously exported in order to send commands to
+the device from the driver. It shouldn't be used without
+nci_req_complete_driver because cmd_cnt will have the wrong value.
+
+Signed-off-by: Robert Dolca <robert.dolca@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 83 +++++++++++++++++++++++++++++++++++
- 1 file changed, 83 insertions(+)
+ include/net/nfc/nci_core.h |  4 ++++
+ net/nfc/nci/core.c         | 19 +++++++++++++++++++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 74f4e1c..d2bba4c 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -330,6 +330,83 @@ static const struct ieee80211_rate hwsim_rates[] = {
- 	{ .bitrate = 540 }
- };
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index 4358d0a..42ec342 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -333,6 +333,10 @@ void nci_clear_target_list(struct nci_dev *ndev);
+ #define NCI_REQ_CANCELED	2
  
-+#define OUI_QCA 0x001374
-+#define QCA_NL80211_SUBCMD_TEST 1
-+enum qca_nl80211_vendor_subcmds {
-+	QCA_WLAN_VENDOR_ATTR_TEST = 8,
-+	QCA_WLAN_VENDOR_ATTR_MAX = QCA_WLAN_VENDOR_ATTR_TEST
-+};
-+
-+static const struct nla_policy
-+hwsim_vendor_test_policy[QCA_WLAN_VENDOR_ATTR_MAX + 1] = {
-+	[QCA_WLAN_VENDOR_ATTR_MAX] = { .type = NLA_U32 },
-+};
-+
-+static int mac80211_hwsim_vendor_cmd_test(struct wiphy *wiphy,
-+					  struct wireless_dev *wdev,
-+					  const void *data, int data_len)
+ void nci_req_complete(struct nci_dev *ndev, int result);
++int nci_request_driver(struct nci_dev *ndev,
++		       void (*req)(struct nci_dev *ndev, unsigned long opt),
++		       unsigned long opt, __u32 timeout);
++void nci_req_complete_driver(struct nci_dev *ndev, int result);
+ struct nci_conn_info *nci_get_conn_info_by_conn_id(struct nci_dev *ndev,
+ 						   int conn_id);
+ 
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 317b94b..1a449ac 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -74,6 +74,17 @@ void nci_req_complete(struct nci_dev *ndev, int result)
+ 	}
+ }
+ 
++void nci_req_complete_driver(struct nci_dev *ndev, int result)
 +{
-+	struct sk_buff *skb;
-+	struct nlattr *tb[QCA_WLAN_VENDOR_ATTR_MAX + 1];
-+	int err;
-+	u32 val;
++	nci_req_complete(ndev, result);
 +
-+	err = nla_parse(tb, QCA_WLAN_VENDOR_ATTR_MAX, data, data_len,
-+			hwsim_vendor_test_policy);
-+	if (err)
-+		return err;
-+	if (!tb[QCA_WLAN_VENDOR_ATTR_TEST])
-+		return -EINVAL;
-+	val = nla_get_u32(tb[QCA_WLAN_VENDOR_ATTR_TEST]);
-+	wiphy_debug(wiphy, "%s: test=%u\n", __func__, val);
-+
-+	/* Send a vendor event as a test. Note that this would not normally be
-+	 * done within a command handler, but rather, based on some other
-+	 * trigger. For simplicity, this command is used to trigger the event
-+	 * here.
-+	 *
-+	 * event_idx = 0 (index in mac80211_hwsim_vendor_commands)
-+	 */
-+	skb = cfg80211_vendor_event_alloc(wiphy, 100, 0, GFP_KERNEL);
-+	if (skb) {
-+		/* skb_put() or nla_put() will fill up data within
-+		 * NL80211_ATTR_VENDOR_DATA.
-+		 */
-+
-+		/* Add vendor data */
-+		nla_put_u32(skb, QCA_WLAN_VENDOR_ATTR_TEST, val + 1);
-+
-+		/* Send the event - this will call nla_nest_end() */
-+		cfg80211_vendor_event(skb, GFP_KERNEL);
-+	}
-+
-+	/* Send a response to the command */
-+	skb = cfg80211_vendor_cmd_alloc_reply_skb(wiphy, 10);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	/* skb_put() or nla_put() will fill up data within
-+	 * NL80211_ATTR_VENDOR_DATA
-+	 */
-+	nla_put_u32(skb, QCA_WLAN_VENDOR_ATTR_TEST, val + 2);
-+
-+	return cfg80211_vendor_cmd_reply(skb);
++	/* trigger the next cmd */
++	atomic_set(&ndev->cmd_cnt, 1);
++	if (!skb_queue_empty(&ndev->cmd_q))
++		queue_work(ndev->cmd_wq, &ndev->cmd_work);
 +}
++EXPORT_SYMBOL(nci_req_complete_driver);
 +
-+static struct wiphy_vendor_command mac80211_hwsim_vendor_commands[] = {
-+	{
-+		.info = { .vendor_id = OUI_QCA,
-+			  .subcmd = QCA_NL80211_SUBCMD_TEST },
-+		.flags = WIPHY_VENDOR_CMD_NEED_NETDEV,
-+		.doit = mac80211_hwsim_vendor_cmd_test,
-+	}
-+};
-+
-+/* Advertise support vendor specific events */
-+static const struct nl80211_vendor_cmd_info mac80211_hwsim_vendor_events[] = {
-+	{ .vendor_id = OUI_QCA, .subcmd = 1 },
-+};
-+
- static const struct ieee80211_iface_limit hwsim_if_limits[] = {
- 	{ .max = 1, .types = BIT(NL80211_IFTYPE_ADHOC) },
- 	{ .max = 2048,  .types = BIT(NL80211_IFTYPE_STATION) |
-@@ -2418,6 +2495,12 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	hw->max_rates = 4;
- 	hw->max_rate_tries = 11;
+ static void nci_req_cancel(struct nci_dev *ndev, int err)
+ {
+ 	if (ndev->req_status == NCI_REQ_PEND) {
+@@ -127,6 +138,14 @@ static int __nci_request(struct nci_dev *ndev,
+ 	return rc;
+ }
  
-+	hw->wiphy->vendor_commands = mac80211_hwsim_vendor_commands;
-+	hw->wiphy->n_vendor_commands =
-+		ARRAY_SIZE(mac80211_hwsim_vendor_commands);
-+	hw->wiphy->vendor_events = mac80211_hwsim_vendor_events;
-+	hw->wiphy->n_vendor_events = ARRAY_SIZE(mac80211_hwsim_vendor_events);
++int nci_request_driver(struct nci_dev *ndev,
++		       void (*req)(struct nci_dev *ndev, unsigned long opt),
++		       unsigned long opt, __u32 timeout)
++{
++	return __nci_request(ndev, req, opt, timeout);
++}
++EXPORT_SYMBOL(nci_request_driver);
 +
- 	if (param->reg_strict)
- 		hw->wiphy->regulatory_flags |= REGULATORY_STRICT_REG;
- 	if (param->regd) {
+ inline int nci_request(struct nci_dev *ndev,
+ 		       void (*req)(struct nci_dev *ndev,
+ 				   unsigned long opt),
 -- 
 1.9.1
 
