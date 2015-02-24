@@ -1,178 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52351 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751641AbbBYLVZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 06:21:25 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1PBIlTS006443
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 03:21:25 -0800
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1spfpbvyt2-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 03:21:24 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
-	<szli@marvell.com>, Marc Yang <yangyang@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 1/4] mwifiex: avoid queue_work while work is ongoing
-Date: Wed, 25 Feb 2015 22:20:54 +0530
-Message-ID: <1424883057-12102-2-git-send-email-patila@marvell.com> (sfid-20150225_122128_878623_AB6B2098)
-In-Reply-To: <1424883057-12102-1-git-send-email-patila@marvell.com>
-References: <1424883057-12102-1-git-send-email-patila@marvell.com>
+Received: from cantor2.suse.de ([195.135.220.15]:51599 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752311AbbBXADU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Feb 2015 19:03:20 -0500
+Date: Tue, 24 Feb 2015 01:03:17 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Ilan Peer <ilan.peer@intel.com>, Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org, ArikX Nemtsov <arik@wizery.com>
+Subject: Re: [PATCH v6 1/2] cfg80211: Add API to change the indoor
+	regulatory setting
+Message-ID: <20150224000317.GO20824@wotan.suse.de> (sfid-20150224_010323_718145_FD1D005F)
+References: <1424224284-17377-1-git-send-email-ilan.peer@intel.com> <1424577430-24382-1-git-send-email-ilan.peer@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1424577430-24382-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marc Yang <yangyang@marvell.com>
+On Sat, Feb 21, 2015 at 10:57:10PM -0500, Ilan Peer wrote:
+> Previously, the indoor setting configuration assumed that as
+> long as a station interface is connected, the indoor environment
+> setting does not change. However, this assumption is problematic
+> as:
+> 
+> - It is possible that a station interface is connected to a mobile
+>   AP, e.g., softAP or a P2P GO, where it is possible that both the
+>   station and the mobile AP move out of the indoor environment making
+>   the indoor setting invalid. In such a case, user space has no way to
+>   invalidate the setting.
 
-Current code does not check whether main_work_queue or
-rx_work_queue is running when preparing to do queue_work,
-this code fix add check before calling queue_work, reducing
-unnecessary queue_work switch.
+At the protocol level should we consider the need for a dynamic environment
+change? Until then a change of environment likely should implicate an AP
+disconnect, which is what Linux does. With your changes in place we could
+do something even more graceful should the protocol allow for it.
 
-This change instead sets more_task flag to ensure we run main_process
-superloop once again.
+For instance if the regulatory parameters for a country are the same for
+indoor and outdoro a change in environment should not require a disconnect.
 
-Signed-off-by: Marc Yang <yangyang@marvell.com>
-Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/main.c | 38 +++++++++++++++++++++++++++++++------
- drivers/net/wireless/mwifiex/main.h |  1 +
- drivers/net/wireless/mwifiex/pcie.c |  2 +-
- drivers/net/wireless/mwifiex/usb.c  |  4 ++--
- 4 files changed, 36 insertions(+), 9 deletions(-)
+If the change was from a more restrictive environment to a more liberal
+set of regulatory settings it could mean increasing TX power of the AP
+changing to a channel which perhaps was not allowed before.
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 74488ab..447eb6f 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -131,6 +131,34 @@ static int mwifiex_unregister(struct mwifiex_adapter *adapter)
- 	return 0;
- }
- 
-+void mwifiex_queue_main_work(struct mwifiex_adapter *adapter)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&adapter->main_proc_lock, flags);
-+	if (adapter->mwifiex_processing) {
-+		adapter->more_task_flag = true;
-+		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-+	} else {
-+		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-+		queue_work(adapter->workqueue, &adapter->main_work);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mwifiex_queue_main_work);
-+
-+static void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
-+	if (adapter->rx_processing) {
-+		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-+	} else {
-+		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-+		queue_work(adapter->rx_workqueue, &adapter->rx_work);
-+	}
-+}
-+
- static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
- {
- 	unsigned long flags;
-@@ -154,7 +182,7 @@ static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
- 			if (adapter->if_ops.submit_rem_rx_urbs)
- 				adapter->if_ops.submit_rem_rx_urbs(adapter);
- 			adapter->delay_main_work = false;
--			queue_work(adapter->workqueue, &adapter->main_work);
-+			mwifiex_queue_main_work(adapter);
- 		}
- 		mwifiex_handle_rx_packet(adapter, skb);
- 	}
-@@ -214,9 +242,7 @@ process_start:
- 		if (atomic_read(&adapter->rx_pending) >= HIGH_RX_PENDING &&
- 		    adapter->iface_type != MWIFIEX_USB) {
- 			adapter->delay_main_work = true;
--			if (!adapter->rx_processing)
--				queue_work(adapter->rx_workqueue,
--					   &adapter->rx_work);
-+			mwifiex_queue_rx_work(adapter);
- 			break;
- 		}
- 
-@@ -229,7 +255,7 @@ process_start:
- 		}
- 
- 		if (adapter->rx_work_enabled && adapter->data_received)
--			queue_work(adapter->rx_workqueue, &adapter->rx_work);
-+			mwifiex_queue_rx_work(adapter);
- 
- 		/* Need to wake up the card ? */
- 		if ((adapter->ps_state == PS_STATE_SLEEP) &&
-@@ -606,7 +632,7 @@ int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb)
- 	atomic_inc(&priv->adapter->tx_pending);
- 	mwifiex_wmm_add_buf_txqueue(priv, skb);
- 
--	queue_work(priv->adapter->workqueue, &priv->adapter->main_work);
-+	mwifiex_queue_main_work(priv->adapter);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 16be45e..801a23b 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1422,6 +1422,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
- 
- void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter);
- void *mwifiex_alloc_rx_buf(int rx_len, gfp_t flags);
-+void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
- 
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 4b463c3..c0ff33e 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -2101,7 +2101,7 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- 		goto exit;
- 
- 	mwifiex_interrupt_status(adapter);
--	queue_work(adapter->workqueue, &adapter->main_work);
-+	mwifiex_queue_main_work(adapter);
- 
- exit:
- 	return IRQ_HANDLED;
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 2238730..3adf1f6 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -193,7 +193,7 @@ static void mwifiex_usb_rx_complete(struct urb *urb)
- 		dev_dbg(adapter->dev, "info: recv_length=%d, status=%d\n",
- 			recv_length, status);
- 		if (status == -EINPROGRESS) {
--			queue_work(adapter->workqueue, &adapter->main_work);
-+			mwifiex_queue_main_work(adapter);
- 
- 			/* urb for data_ep is re-submitted now;
- 			 * urb for cmd_ep will be re-submitted in callback
-@@ -262,7 +262,7 @@ static void mwifiex_usb_tx_complete(struct urb *urb)
- 					    urb->status ? -1 : 0);
- 	}
- 
--	queue_work(adapter->workqueue, &adapter->main_work);
-+	mwifiex_queue_main_work(adapter);
- 
- 	return;
- }
--- 
-1.8.1.4
+If the change was from a less restrictive environment to a more restrictive
+environment the AP might want to change channels for instance or reduce
+TX power.
 
+While change in indoor/outdoor might be something silly to consider given
+the likelihood of it being a common thing to happen that you change an
+AP from indoor / outdoor regularly I'd consider instead the possibility to
+reuse such a dynamic environment change notification for purposes of dynamic
+environmental adjustments of BSSes. Typically BSSes settings are static but RF
+environments change regularly so its silly to expect a BSS and its initial
+Automatic Channel Selection algorithm to be corrrect during the lifetime of a
+BSS.
+
+> - A station interface disconnection does not necessarily imply that
+>   the device is no longer operating in an indoor environment, e.g.,
+>   it is possible that the station interface is roaming but is still
+>   stays indoor.
+
+Sure.
+
+You also fail to explain how we currently provide the indoor
+thing to the kernel, I think its worth providing that in the commit
+log and also explaining how we don't use the country IE environment
+thing at all.
+
+> To handle the above, extend the indoor configuration API to allow
+> user space to indicate a change of indoor settings, and allow it to
+> indicate weather it controls the indoor setting, such that:
+> 
+> 1. If the user space process explicitly indicates that it is going
+>    to control the indoor setting, do not clear the indoor setting
+>    internally, unless the socket is released. The user space process
+>    should use the NL80211_ATTR_SOCKET_OWNER attribute in the command
+>    to state that it is going to control the indoor setting.
+> 2. Reset the indoor setting when restoring the regulatory settings in
+>    case it is not owned by a user space process.
+> 
+> While at it directly update the indoor setting without wrapping it as
+> a regulatory request, to simplify the processing.
+
+Please wrap that specific change into its own separate commit, it
+will make it easier to review the changes and also make this change
+atomic.
+
+  Luis
