@@ -1,96 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:41457 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752644AbbBEM5V (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:47324 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752761AbbBXWum (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 07:57:21 -0500
-Message-ID: <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150205_135729_146928_D3850FBC)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
+	Tue, 24 Feb 2015 17:50:42 -0500
+Received: by mail-ig0-f172.google.com with SMTP id l13so30872181iga.5
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 14:50:41 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <655DCF68-95EE-47F6-82D3-45F6E0999161@net.t-labs.tu-berlin.de>
+References: <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+	<20150223213050.GA23232@w1.fi>
+	<CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
+	<CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
+	<20150223224305.GA30228@w1.fi>
+	<21739.50662.902775.901924@gargle.gargle.HOWL>
+	<CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com>
+	<CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>
+	<20150224102611.GA30806@w1.fi>
+	<80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de>
+	<20150224181454.GA30859@w1.fi>
+	<655DCF68-95EE-47F6-82D3-45F6E0999161@net.t-labs.tu-berlin.de>
+Date: Tue, 24 Feb 2015 14:50:41 -0800
+Message-ID: <CAJ-Vmomaz00eyLW5Roqg-V8dU6577APMu9FBnszRb+aMsHX8Jw@mail.gmail.com> (sfid-20150224_235046_001505_9C83D1D9)
+Subject: Re: [ath9k-devel] AR9462 problems connecting again..
+From: Adrian Chadd <adrian@freebsd.org>
+To: =?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>
+Cc: Jouni Malinen <j@w1.fi>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Andrew McGregor <andrewmcgr@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Thu, 05 Feb 2015 04:57:18 -0800
-In-Reply-To: <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-02-05 at 09:38 +0100, Michal Kazior wrote:
-> On 4 February 2015 at 22:11, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> > I do not see how a TSO patch could hurt a flow not using TSO/GSO.
-> >
-> > This makes no sense.
-> 
-> Hmm..
-> 
-> @@ -2018,8 +2053,8 @@ static bool tcp_write_xmit(struct sock *sk,
-> unsigned int mss_now, int nonagle,
->                  * of queued bytes to ensure line rate.
->                  * One example is wifi aggregation (802.11 AMPDU)
->                  */
-> -               limit = max_t(unsigned int, sysctl_tcp_limit_output_bytes,
-> -                             sk->sk_pacing_rate >> 10);
-> +               limit = max(2 * skb->truesize, sk->sk_pacing_rate >> 10);
-> +               limit = min_t(u32, limit, sysctl_tcp_limit_output_bytes);
-> 
->                 if (atomic_read(&sk->sk_wmem_alloc) > limit) {
->                         set_bit(TSQ_THROTTLED, &tp->tsq_flags);
-> 
-> Doesn't this effectively invert how tcp_limit_output_bytes is used?
-> This would explain why raising the limit wasn't changing anything
-> anymore when you asked me do so. Only decreasing it yielded any
-> change.
-> 
-> I've added a printk to show up the new and old values. Excerpt from logs:
-> 
-> [  114.782740] (4608 39126 131072 = 39126) vs (131072 39126 = 131072)
-> 
-> (2*truesize, pacing_rate, tcp_limit = limit) vs (tcp_limit, pacing_rate = limit)
-> 
-> Reverting this patch hunk alone fixes my TCP problem. Not that I'm
-> saying the old logic was correct (it seems it wasn't, a limit should
-> be applied as min(value, max_value), right?).
-> 
-> Anyway the change doesn't seem to be TSO-only oriented so it would
-> explain the "makes no sense".
+Hi,
 
+I thought about doing this for rate probing with FreeBSD's sample rate
+algorithm, but after actually having to use the damned thing in noisy
+environments I realised that it just wasn't worth the effort to
+optimise rate control selection whilst doing EAPOL frames.
 
-The intention is to control the queues to the following :
+If we did more useful software retransmission at lower rates then
+sure, one could just be much more conservative about the rates and
+retry a few times at a lower rate. However, since that isn't the case
+and we only get three or so attempts at EAPOL exchange - once a second
+- before an AP decides we're no good, I figured I'd just skip anything
+other than the lowest basic rates for the frame exchange and make it
+associate quicker.
 
-1 ms of buffering, but limited to a configurable value.
-
-On a 40Gbps flow, 1ms represents 5 MB, which is insane.
-
-We do not want to queue 5 MB of traffic, this would destroy latencies
-for all concurrent flows. (Or would require having fq_codel or fq as
-packet schedulers, instead of default pfifo_fast)
-
-This is why having 1.5 ms delay between the transmit and TX completion
-is a problem in your case.
-
- 
+I had the same problem with DHCP - initial DHCP leases were failing
+because the rate control code started high/medium and didn't degrade
+quickly enough before the next round of DHCP attempts. DHCP backs off
+even more aggressively, so failing that initial DHCP was quite
+expensive.
 
 
 
+-adrian
