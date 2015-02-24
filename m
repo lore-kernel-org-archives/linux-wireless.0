@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54863 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752253AbbBWRiS (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:36987 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413AbbBXK23 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 12:38:18 -0500
-Message-ID: <54EB6589.6040803@candelatech.com> (sfid-20150223_183822_317203_48CAED2D)
-Date: Mon, 23 Feb 2015 09:38:17 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 24 Feb 2015 05:28:29 -0500
+Received: by wghk14 with SMTP id k14so4299154wgh.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 02:28:27 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1424772587.2192.14.camel@sipsolutions.net>
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+ <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com> <1424772587.2192.14.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 24 Feb 2015 15:58:07 +0530
+Message-ID: <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com> (sfid-20150224_112832_461802_E89B7D61)
+Subject: Re: Connection issues with BW Tracking in mac80211
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211-hwsim:  Don't enqueue pkts that do not want
- txstatus.
-References: <1423592732-17256-1-git-send-email-greearb@candelatech.com> <1424707739.3075.19.camel@sipsolutions.net>
-In-Reply-To: <1424707739.3075.19.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/23/2015 08:08 AM, Johannes Berg wrote:
-> On Tue, 2015-02-10 at 10:25 -0800, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> Otherwise, skb is not cleaned up until there is some timeout
->> and the tx-queue quickly becomes overly full.
-> 
->> +++ b/drivers/net/wireless/mac80211_hwsim.c
->> @@ -928,10 +928,14 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
->>  	genlmsg_end(skb, msg_head);
->>  	genlmsg_unicast(&init_net, skb, dst_portid);
->>  
->> -	/* Enqueue the packet */
->> -	skb_queue_tail(&data->pending, my_skb);
->>  	data->tx_pkts++;
->>  	data->tx_bytes += my_skb->len;
->> +
->> +	/* Enqueue the packet if we are expecting a tx-status response */
->> +	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS)
->> +		skb_queue_tail(&data->pending, my_skb);
->> +	else
->> +		ieee80211_free_txskb(hw, my_skb);
-> 
-> This doesn't really seem right - essentially it means that whatever you
-> just gave to userspace is now completely useless?
-> 
-> It seems skb_orphan() could/should be put here.
+On Tue, Feb 24, 2015 at 3:39 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2015-02-20 at 02:58 +0530, Krishna Chaitanya wrote:
+>
+>> Before that i have a basic question? Should we reset our tracking after
+>> the connection is lost, in my case above the connection was lost (Config
+>> change in A triggers a reboot), still mac80211 is tracking the BW changes?
+>
+> Huh??
+>
+> So the AP does restart, but mac80211 tries to stay connected to it? That
+> seems pretty unlikely. The tracking *shouldn't* have any knowledge of
+> what happened before the association, but there could be bugs in the
+> flags assignment I guess.
+Let me explain the sequences.
 
-I don't understand your complaint, why is what I gave to user-space useless?
+STA (mac80211) connects to AP in VHT-80.
+AP is reconfigured to 11n40 (stops beaconing for about 30secs and then
+starts again).
+STA loses connection (HW_CONN_TRACK), iee80211_connection_loss is called.
+STA see's AP again and tries to connect, but due to BW tracking in
+mac80211 it doesn't connect.
 
-If we just orphan them, does that clean up the skb memory properly?
-
-If not, what eventually frees the skb?
-
-Thanks,
-Ben
-
-> 
-> johannes
-> 
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+So i guess we are not resetting the tracking after losing connection.
