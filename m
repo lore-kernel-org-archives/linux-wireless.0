@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:32898 "EHLO
+Received: from s72.web-hosting.com ([198.187.29.22]:49351 "EHLO
 	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862AbbBMDA4 (ORCPT
+	with ESMTP id S1752229AbbBXA0I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 22:00:56 -0500
+	Mon, 23 Feb 2015 19:26:08 -0500
 From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Message-ID: <21725.27048.780919.425963@gargle.gargle.HOWL> (sfid-20150213_040106_650999_8E2A105D)
-Date: Fri, 13 Feb 2015 08:34:08 +0530
-To: Davide Pesavento <davidepesa@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: NULL pointer dereference in ath_isr+0x27/0x250 [ath9k]
-In-Reply-To: <CADfzvvYn74U73GNwkezrpqGf3w96GYbcioSZg9A9RQxwF5edug@mail.gmail.com>
-References: <CADfzvvYn74U73GNwkezrpqGf3w96GYbcioSZg9A9RQxwF5edug@mail.gmail.com>
+Message-ID: <21739.50662.902775.901924@gargle.gargle.HOWL> (sfid-20150224_012612_884194_A02F80C0)
+Date: Tue, 24 Feb 2015 05:59:26 +0530
+To: Jouni Malinen <j@w1.fi>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: AR9462 problems connecting again..
+In-Reply-To: <20150223224305.GA30228@w1.fi>
+References: <CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
+	<CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
+	<CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
+	<CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
+	<CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
+	<20150223171700.GA29730@w1.fi>
+	<CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+	<20150223213050.GA23232@w1.fi>
+	<CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
+	<CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
+	<20150223224305.GA30228@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Davide Pesavento wrote:
-> I have no experience in debugging kernel panics, but running gdb on
-> vmlinux seems to point to the test_bit() call in ath_isr, which
-> dereferences the "struct ath_common *common" pointer.
+Jouni Malinen wrote:
+> Even I think that this goes a bit too far especially on 2.4 GHz band,
+> but I would actually consider limiting EAPOL frames to using non-HT/VHT
+> (e.g., 6 Mbps OFDM at least for EAPOL-Key frames) to avoid some
+> interoperability issues. I would say that the current minstrel_ht
+> behavior is somewhat excessive for EAPOL-Key frames in the other
+> direction. Using MCS 14 with fallback to something like MCS 5 for the
+> second Data frame after an association can certainly fail.
 > 
-> I looked around a bit and noticed that in ath9k/pci.c:ath_pci_probe(),
-> the interrupt handler is registered with request_irq() before invoking
-> ath9k_init_device(), which takes care of allocating the ath_hw
-> structure. Therefore it might happen that an interrupt fires and
-> ath_isr() tries to use the structure before it's allocated.
+> Number of Linux drivers do already limit EAPOL frame TX rate, so this
+> specific item is mainly applicable only to driver that use minstrel from
+> mac80211 (e.g., ath9k). Though, that IEEE80211_TX_CTL_USE_MINRATE would
+> likely affect most mac80211 drivers.
 
-Please try with a recent kernel that contains these fixes
-IRQ handling:
-
-  commit 56bdbe0d6ac59c3eb17c2b9d715fb2e41467e354
-  Author: Felix Fietkau <nbd@openwrt.org>
-  Date:   Sun Nov 30 21:58:30 2014 +0100
-
-  ath9k: prevent early IRQs from accessing hardware
-
-  commit ef739ab6aac38b25e473f418ecfe1fb433346fa1
-  Author: Felix Fietkau <nbd@openwrt.org>
-  Date:   Sun Nov 30 21:58:31 2014 +0100
-
-  ath9k: set ATH_OP_INVALID before disabling hardware
+We had this in the ath9k RC, where EAPOL frames were sent out at min-rate
+on the VO queue. I think instead of re-introducing it in the driver,
+having it in minstrel is cleaner.
 
 Sujith
