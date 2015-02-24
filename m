@@ -1,41 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:52752 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751348AbbBHNw6 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38010 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753325AbbBXO2G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2015 08:52:58 -0500
-From: Dedy Lansky <dlansky@codeaurora.org>
+	Tue, 24 Feb 2015 09:28:06 -0500
+Message-ID: <54EC8A74.2080700@candelatech.com> (sfid-20150224_152810_024971_91B91AF9)
+Date: Tue, 24 Feb 2015 06:28:04 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Dedy Lansky <dlansky@codeaurora.org>,
-	linux-wireless@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Subject: [PATCH v2 0/2] cfg80211: PBSS Basic Support
-Date: Sun,  8 Feb 2015 15:52:02 +0200
-Message-Id: <1423403524-22540-1-git-send-email-dlansky@codeaurora.org> (sfid-20150208_145305_061525_3930F03A)
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211-hwsim:  Don't enqueue pkts that do not want
+ txstatus.
+References: <1423592732-17256-1-git-send-email-greearb@candelatech.com>	 <1424707739.3075.19.camel@sipsolutions.net>	 <54EB6589.6040803@candelatech.com> <1424772854.2192.19.camel@sipsolutions.net>
+In-Reply-To: <1424772854.2192.19.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211: PBSS Basic Support
 
-Dedy Lansky (2):
-  cfg80211: add bss_type and privacy arguments in cfg80211_get_bss()
-  cfg80211: add support for connecting to PBSS network type
 
- drivers/net/wireless/ath/ath10k/mac.c       |  3 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c  |  9 +--
- drivers/net/wireless/ath/wil6210/cfg80211.c |  2 +-
- drivers/net/wireless/cw1200/sta.c           |  4 +-
- drivers/net/wireless/libertas/cfg.c         |  6 +-
- drivers/net/wireless/mwifiex/cfg80211.c     |  8 +--
- include/net/cfg80211.h                      | 42 +++++++++++++-
- net/mac80211/ibss.c                         | 43 ++++-----------
- net/wireless/ibss.c                         |  2 +-
- net/wireless/mlme.c                         |  6 +-
- net/wireless/scan.c                         | 86 ++++++++++++++++++++++++++---
- net/wireless/sme.c                          | 22 ++++----
- net/wireless/trace.h                        | 24 ++++----
- 13 files changed, 177 insertions(+), 80 deletions(-)
+On 02/24/2015 02:14 AM, Johannes Berg wrote:
+> On Mon, 2015-02-23 at 09:38 -0800, Ben Greear wrote:
+>
+>>> This doesn't really seem right - essentially it means that whatever you
+>>> just gave to userspace is now completely useless?
+>>>
+>>> It seems skb_orphan() could/should be put here.
+>>
+>> I don't understand your complaint, why is what I gave to user-space useless?
+>
+> userspace is supposed to give back the SKB pointer as a cookie when it
+> reports whether or not it was transmitted correctly, and then we will
+> free the SKB afterwards.
+
+If there is no status to return, then why would user-space call back at all?
+
+Should user-space *always* return a status even when not requested to?
+
+Thanks,
+Ben
+
+
+> Note that I also just merged a patch from Bob in this area.
+>
+>> If we just orphan them, does that clean up the skb memory properly?
+>
+> No, of course not, but it removes it from socket accounting. This may be
+> what you want, although I'm not really sure it's the right thing to do
+> since it would make this behave differently than other drivers which
+> also don't orphan the SKB (and shouldn't - you can consider the SKB on
+> this queue as being on the HW DMA queue where it should still be
+> accounted for correctly)
+>
+> I think perhaps you just want Bob's patch to fix the case of too slow
+> userspace.
+>
+>> If not, what eventually frees the skb?
+>
+> The tx status path does.
+>
+> johannes
+>
 
 -- 
-1.9.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
