@@ -1,43 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41394 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752345AbbBXUrt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 15:47:49 -0500
-Message-ID: <1424810867.2192.60.camel@sipsolutions.net> (sfid-20150224_214752_281898_0CFADFAC)
-Subject: Re: Connection issues with BW Tracking in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 24 Feb 2015 21:47:47 +0100
-In-Reply-To: <CABPxzYL4Fz+y7dpp650RyqXVWtL5WC4YkvsQ1_=znOmrmUZF5A@mail.gmail.com> (sfid-20150224_213325_720148_1E90D9CE)
-References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
-	 <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
-	 <1424772587.2192.14.camel@sipsolutions.net>
-	 <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com>
-	 <1424774105.2192.29.camel@sipsolutions.net>
-	 <CABPxzYJkoCWud=yfNHL5m2FUCPOc854i_L+VB4sN+o8Skb-Pnw@mail.gmail.com>
-	 <CABPxzYL4Fz+y7dpp650RyqXVWtL5WC4YkvsQ1_=znOmrmUZF5A@mail.gmail.com>
-	 (sfid-20150224_213325_720148_1E90D9CE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.w1.fi ([212.71.239.96]:57573 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753108AbbBXK0Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:26:16 -0500
+Date: Tue, 24 Feb 2015 12:26:11 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Andrew McGregor <andrewmcgr@gmail.com>
+Cc: Sujith Manoharan <sujith@msujith.org>,
+	Adrian Chadd <adrian@freebsd.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: AR9462 problems connecting again..
+Message-ID: <20150224102611.GA30806@w1.fi> (sfid-20150224_112619_938236_74F667A8)
+References: <CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
+ <20150223171700.GA29730@w1.fi>
+ <CA+55aFz0pAMbtczpe9fe5m9HjTysNVm3639VyNc3hrpkdenSGg@mail.gmail.com>
+ <20150223213050.GA23232@w1.fi>
+ <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>
+ <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>
+ <20150223224305.GA30228@w1.fi>
+ <21739.50662.902775.901924@gargle.gargle.HOWL>
+ <CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com>
+ <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-02-25 at 02:03 +0530, Krishna Chaitanya wrote:
-
-> Use case2: When changing from HT40-VHT80, the connection goes through
-> but it still connected as HT40 (vht_ie from cfg80211 is returned
-> null).
+On Tue, Feb 24, 2015 at 01:29:27PM +1100, Andrew McGregor wrote:
+> Over the weekend I found a bug in minstrel-ht that might well be
+> implicated here.
 > 
-> Can you think of any reason why the bss_list is not updated cfg80211?
-> Note: iwconfig and wpa_supplicant both show same behavior.
+> The last retransmit rate is meant to be a 'get the packet there
+> reliably' rate; minstrel-ht doesn't do that right, and can pick a
+> fairly flaky rate instead.
+> 
+> Can't generate a proper patch right now, so this diff might not apply
+> cleanly, but the fix is simply to change 75 to 99 in the two places
+> below:
 
-Well, there's no flushing, only overwriting by new results - but if you
-previuosly got both beacons and probe responses each one will stick
-around until you get them again.
+While this may indeed be helpful, I don't think it is sufficient for
+this EAPOL frame related issue. What I would like to see is minstrel_ht
+using a basic rate (something non-HT) at the end of the retry series for
+EAPOL frames.
 
-This sounds synthetic - just run your test scripts with "iw wlan0 scan
-flush".
+The current behavior looks very suspicious to me. The early EAPOL frames
+after association are being used to probe for higher rates. This results
+in the total number of retry attempts actually getting smaller than any
+other frame, i.e., minstrel_ht seems to be using significantly _less_
+robust choices for the EAPOL frames than following "normal" data frames!
+This should really be the other way around..
 
-johannes
+As an example, I'm seeing this on 5 GHz band (with the 75 to 99 change
+in place, but behavior was more or less identical without it):
+- the first EAPOL frame (msg 2/4) getting one attempt at MCS 3, 2
+  attempts at MCS 0, 2 attempts at MCS 0 (yes, identical to the previous
+  one) with total maximum of 5 attempts
+- the second EAPOL frame (msg 4/4) getting one attempt at MCS 9, 2
+  attempts at MCS 0, 2 attempts at MCS 0 with total maximum of 5
+  attempts
+- another data frame after this: 5 attempts at MCS 9, 5 attempts at MCS
+  3, 5 attempts at MCS 3 with total maximum of 15 attempts(!!)
 
+This cannot be the best approach here.. For the
+IEEE80211_TX_CTRL_PORT_CTRL_PROTO cases, there are identified issues
+where failing to deliver the frame results is significant issues either
+in getting connected in the first place or getting disconnected if
+rekeying fails. 
+
+I'm not sure how this would be implemented cleanly in minstrel_ht or
+whether that is even the best place (i.e., rate.c could do this
+instead), but I'd like that third attempt for control port cases to be
+dropped to use a (lowish) basic rate and non-MCS at that since there may
+be some interop issues with HT MCS early during association.
+Alternatively with drivers like ath9k that support 4 rate values, it
+would also be fine to add this basic rate attempt (or well, I'd have
+multiple, say 4, such attempts) as an additional 4th entry which does
+not currently seem to get used with minstrel at all.
+
+The "(lowish) basic rate" here could be defined as 6 Mbps OFDM for 5 GHz
+band and either that or maybe even 2 Mbps or 5.5 Mbps on 2.4 GHz (if
+included by the AP in basic rate set).
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
