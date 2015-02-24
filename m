@@ -1,39 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:45214 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbbBWF6F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 00:58:05 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21738.49703.178808.216467@gargle.gargle.HOWL> (sfid-20150223_070019_788516_032E1B84)
-Date: Mon, 23 Feb 2015 11:31:11 +0530
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: Re: [ath9k-devel] AR9462 problems connecting again..
-In-Reply-To: <21738.48812.661312.969621@gargle.gargle.HOWL>
-References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
-	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
-	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
-	<CAJ-Vmokz5h8BoHfgziT9qa_hmiGYk+oDrQUzaMdjKesT5zvaug@mail.gmail.com>
-	<CA+55aFz8EzduL5t49DWtqf1F5X1e=xbgGLfKJV9Mopv21YAP6w@mail.gmail.com>
-	<CA+55aFwxqnLCcfaW36pa4aFW_S3EtLvAb4Z6NowjUV6btog+6w@mail.gmail.com>
-	<CAJ-VmomoWa_tC4ytbLp=3CbVDCv5XCyQai3X8R3TqJtCm=s91w@mail.gmail.com>
-	<CA+55aFwc6Uz7HOQ6S6SzSkWY39QBYWnURFjvQXC6QWNmoFB4=Q@mail.gmail.com>
-	<21738.48812.661312.969621@gargle.gargle.HOWL>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37964 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751612AbbBXJvh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 04:51:37 -0500
+Message-ID: <1424771494.2192.5.camel@sipsolutions.net> (sfid-20150224_105146_316987_E53B9A5C)
+Subject: Re: [PATCH] mac80211: clear sdata->radar_required
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 24 Feb 2015 10:51:34 +0100
+In-Reply-To: <1423391767-1185-1-git-send-email-eliad@wizery.com> (sfid-20150208_113618_677322_945BE617)
+References: <1423391767-1185-1-git-send-email-eliad@wizery.com>
+	 (sfid-20150208_113618_677322_945BE617)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
-> 'iw dev wlp1s0 set bitrates ht-mcs-2.4 1' would choose a lower
-> rate for the key-exchange frames.
+On Sun, 2015-02-08 at 12:36 +0200, Eliad Peller wrote:
+> If ieee80211_vif_use_channel() fails, we have to clear
+> sdata->radar_required (which we might have just set).
+> 
+> Failing to do it results in stale radar_required field
+> which prevents starting new scan requests.
 
-Or 'iw dev wlp1s0 set bitrates ht-mcs-2.4 0' to choose the lowest
-HT rate.
+Applied, but I fixed it to use = false instead of = 0.
 
-Sujith
+johannes
+
