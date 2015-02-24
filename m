@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53454 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752130AbbBPFRX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 00:17:23 -0500
-Received: from [117.222.159.239] (port=14037 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YNE3e-000EUz-Dd
-	for linux-wireless@vger.kernel.org; Mon, 16 Feb 2015 00:17:22 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/9] ath9k: Fix MCI TX control
-Date: Mon, 16 Feb 2015 10:49:57 +0530
-Message-Id: <1424064001-7009-6-git-send-email-sujith@msujith.org> (sfid-20150216_061727_840617_F118286C)
-In-Reply-To: <1424064001-7009-1-git-send-email-sujith@msujith.org>
-References: <1424064001-7009-1-git-send-email-sujith@msujith.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38266 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752108AbbBXKfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 05:35:09 -0500
+Message-ID: <1424774105.2192.29.camel@sipsolutions.net> (sfid-20150224_113513_770720_CB049C9B)
+Subject: Re: Connection issues with BW Tracking in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 24 Feb 2015 11:35:05 +0100
+In-Reply-To: <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com> (sfid-20150224_112828_368221_B3751798)
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+	 <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
+	 <1424772587.2192.14.camel@sipsolutions.net>
+	 <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com>
+	 (sfid-20150224_112828_368221_B3751798)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Tue, 2015-02-24 at 15:58 +0530, Krishna Chaitanya wrote:
 
-This patch makes sure that the antenna configuration
-is used properly when setting AR_MCI_TX_CTRL.
+> STA (mac80211) connects to AP in VHT-80.
+> AP is reconfigured to 11n40 (stops beaconing for about 30secs and then
+> starts again).
+> STA loses connection (HW_CONN_TRACK), iee80211_connection_loss is called.
+> STA see's AP again and tries to connect,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 8 ++++++--
- drivers/net/wireless/ath/ath9k/ar9003_mci.h | 4 ++++
- 2 files changed, 10 insertions(+), 2 deletions(-)
+But this goes through the supplicant, right? You actually get a full
+connection loss (which I certainly would expect after 30 seconds)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 1a48528..aca9015 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -973,8 +973,12 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 		  (SM(0xe801, AR_MCI_MSG_ATTRIBUTES_TABLE_INVALID_HDR) |
- 		   SM(0x0000, AR_MCI_MSG_ATTRIBUTES_TABLE_CHECKSUM)));
- 
--	REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
--		    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
-+	if (MCI_ANT_ARCH_PA_LNA_SHARED(mci))
-+		REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
-+			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
-+	else
-+		REG_SET_BIT(ah, AR_MCI_TX_CTRL,
-+			    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
- 
- 	ar9003_mci_observation_set_up(ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 6f305ab..174ebea 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -118,6 +118,10 @@ enum mci_gpm_coex_bt_update_flags_op {
- #define ATH_MCI_ANT_ARCH_2_ANT_PA_LNA_SHARED     0x03
- #define ATH_MCI_ANT_ARCH_3_ANT                   0x04
- 
-+#define MCI_ANT_ARCH_PA_LNA_SHARED(mci)					\
-+	((MS(mci->config, ATH_MCI_CONFIG_ANT_ARCH) == ATH_MCI_ANT_ARCH_1_ANT_PA_LNA_SHARED) || \
-+	 (MS(mci->config, ATH_MCI_CONFIG_ANT_ARCH) == ATH_MCI_ANT_ARCH_2_ANT_PA_LNA_SHARED))
-+
- enum mci_message_header {		/* length of payload */
- 	MCI_LNA_CTRL     = 0x10,        /* len = 0 */
- 	MCI_CONT_NACK    = 0x20,        /* len = 0 */
--- 
-2.3.0
+>  but due to BW tracking in
+> mac80211 it doesn't connect.
+> 
+> So i guess we are not resetting the tracking after losing connection.
+
+Right, some flag is not getting reset correctly I suppose. I thought we
+had pretty robust code for this, but I guess not.
+
+Easiest might be to print the flags and other state for during all
+connection attempts, and then compare
+ * VHT connection
+ * subsequent HT connection
+ * HT connection after reloading the driver
+
+johannes
 
