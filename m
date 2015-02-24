@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:55752 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752443AbbBKMNC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2015 07:13:02 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1BC91jp012010
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:13:01 -0800
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1set0u7k6m-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Feb 2015 04:13:01 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <yangyang@marvell.com>,
-	<szli@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCH 2/4] mwifiex: do not process mgmt rx on uninitialized interface
-Date: Wed, 11 Feb 2015 23:12:25 +0530
-Message-ID: <1423676547-5213-2-git-send-email-patila@marvell.com> (sfid-20150211_131317_043771_30158B2C)
-In-Reply-To: <1423676547-5213-1-git-send-email-patila@marvell.com>
-References: <1423676547-5213-1-git-send-email-patila@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:37975 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751383AbbBXJyR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 04:54:17 -0500
+Message-ID: <1424771654.2192.8.camel@sipsolutions.net> (sfid-20150224_105422_434336_49C94B0B)
+Subject: Re: [PATCH] nl80211: use loop index as type for net detect
+ frequency results
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, pstew@chromium.org,
+	samueltan@chromium.org
+Date: Tue, 24 Feb 2015 10:54:14 +0100
+In-Reply-To: <1423510155-7449-1-git-send-email-luca@coelho.fi>
+References: <1423510155-7449-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a crash which was happening because of RX of
-management frames on uninitialzed interface. Now we drop management
-frames for interfaces where cfg80211 has not registered any management
-subtype reception or interface has no NL80211 iftype set.
+On Mon, 2015-02-09 at 21:29 +0200, Luca Coelho wrote:
+> From: Samuel Tan <samueltan@chromium.org>
+> 
+> We currently add nested members of the NL80211_ATTR_SCAN_FREQUENCIES
+> as NLA_U32 attributes of type NL80211_ATTR_WIPHY_FREQ in
+> cfg80211_net_detect_results. However, since there can be an arbitrary number of
+> frequency results, we should use the loop index of the loop used to add the
+> frequency results to NL80211_ATTR_SCAN_FREQUENCIES as the type (i.e. nla_type)
+> for each result attribute, rather than a fixed type.
+> 
+> This change is in line with how nested members are added to
+> NL80211_ATTR_SCAN_FREQUENCIES in the functions nl80211_send_wowlan_nd and
+> nl80211_add_scan_req.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/util.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Applied, thanks.
 
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 3085506..47e215b 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -367,6 +367,13 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 	if (!skb)
- 		return -1;
- 
-+	if (!priv->mgmt_frame_mask ||
-+	    priv->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED) {
-+		dev_dbg(priv->adapter->dev,
-+			"do not receive mgmt frames on uninitialized intf");
-+		return -1;
-+	}
-+
- 	rx_pd = (struct rxpd *)skb->data;
- 
- 	skb_pull(skb, le16_to_cpu(rx_pd->rx_pkt_offset));
--- 
-1.8.1.4
+johannes
 
