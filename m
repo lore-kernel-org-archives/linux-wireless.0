@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.9]:42310 "EHLO mx3.wp.pl"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37399 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932213AbbBZTCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 14:02:04 -0500
-Date: Thu, 26 Feb 2015 20:01:57 +0100
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Sergei Antonov <saproj@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: mt7601u dies during channel switch (was: MediaTek WiFi hardware
- support in upstream kernel)
-Message-ID: <20150226200157.2f8162fb@north> (sfid-20150226_200220_597952_5D2A923E)
-In-Reply-To: <CABikg9xRG2WBvLPzG-W4tOXpWyRYhZ_sJdZ7h8vE=hELochREg@mail.gmail.com>
-References: <544DB5A8.7090405@openmailbox.org>
-	<20141027152026.GB19976@tuxdriver.com>
-	<544E8CB4.3000607@rempel-privat.de>
-	<20141028134608.GA26283@tuxdriver.com>
-	<544FA303.5060303@broadcom.com>
-	<544FA627.3000004@rempel-privat.de>
-	<5450BEB2.60208@openwrt.org>
-	<5461F937.9060004@rempel-privat.de>
-	<5463CB6C.3030204@openwrt.org>
-	<5463D28F.9080106@lwfinger.net>
-	<20150206182915.7467bac7@north>
-	<CABikg9yw8Py59KyJ1mP6bfCrMPuup7v9xb1J=_JKC4gT_GS4rA@mail.gmail.com>
-	<20150225103311.436f4321@north>
-	<CABikg9xU+vj_W+TF4d7=x52u8abhkXC0qPGsOgRUMXDhRA0NFQ@mail.gmail.com>
-	<20150226170522.01605ac4@north>
-	<CABikg9xRG2WBvLPzG-W4tOXpWyRYhZ_sJdZ7h8vE=hELochREg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1752336AbbBXIFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Feb 2015 03:05:52 -0500
+Message-ID: <1424765148.2192.1.camel@sipsolutions.net> (sfid-20150224_090555_777852_57598D47)
+Subject: Re: [PATCH 1/2] cfg80211: Allow NL80211_ATTR_IFINDEX to be added to
+ vendor events
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Kholaif, Ahmad" <akholaif@qca.qualcomm.com>
+Cc: "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Date: Tue, 24 Feb 2015 09:05:48 +0100
+In-Reply-To: <656e25eaa73746acb1108bd0943e502e@nalasexr02a.na.qualcomm.com>
+References: <1424442925-10778-1-git-send-email-jouni@qca.qualcomm.com>
+	 <1424705846.3075.3.camel@sipsolutions.net>
+	 <656e25eaa73746acb1108bd0943e502e@nalasexr02a.na.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 26 Feb 2015 19:50:04 +0100, Sergei Antonov wrote:
-> Jakub, I'll do all of it, but for now just one quick question: what
-> firmware binary blob should I use with your driver? Maybe I just took
-> a wrong firmware... You can send me yours.
 
-I have the one from vendor package.  The MD5 sum is
+> This means that this kernel change can't be pulled in without
+> corresponding driver changes to call  cfg80211_vendor_event_alloc()
+> with a NULL for wdev. Please confirm if this is acceptable; otherwise,
+> we would need to use the new wrapper defined above.
 
-# md5sum /usr/lib/firmware/mt7601u.bin 
-696cedb8e76ecc0cda9f9b0d3972c64d  /usr/lib/firmware/mt7601u.bin
+This is fine to me, there are very few such users anyway (make sure to
+update in a single patch.)
+
+johannes
+
