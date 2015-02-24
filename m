@@ -1,39 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([91.250.116.113]:35660 "EHLO
-	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbbBQWJM (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:44392 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752403AbbBXNm2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2015 17:09:12 -0500
-Message-ID: <54E3BA37.4070009@einfach.org> (sfid-20150217_230917_638755_A5DAF69F)
-Date: Tue, 17 Feb 2015 22:01:27 +0000
-From: Bruno Randolf <br1@einfach.org>
-MIME-Version: 1.0
-To: Mark Gannon <mark@truenorth.nu>, linux-wireless@vger.kernel.org
-Subject: Re: Proper Method for Accessing Radiotap Functionality
-References: <1700680.ayfkHzEjcQ@scooby>
-In-Reply-To: <1700680.ayfkHzEjcQ@scooby>
-Content-Type: text/plain; charset=utf-8
+	Tue, 24 Feb 2015 08:42:28 -0500
+Received: by padet14 with SMTP id et14so36040970pad.11
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 05:42:28 -0800 (PST)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: me@bobcopeland.com, johannes@sipsolutions.net,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH v5] mac80211: Allow 0 for NL80211_MESHCONF_PLINK_TIMEOUT to disable STA expiration
+Date: Tue, 24 Feb 2015 22:42:16 +0900
+Message-Id: <1424785336-3268-1-git-send-email-masashi.honma@gmail.com> (sfid-20150224_144231_799698_4A3CF89C)
+In-Reply-To: <CAFk-A4=OJyzuQ04i=c5F2HpX+n8JK6RSbZrNKGU7M6J8EteH8w@mail.gmail.com>
+References: <CAFk-A4=OJyzuQ04i=c5F2HpX+n8JK6RSbZrNKGU7M6J8EteH8w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/2015 09:32 PM, Mark Gannon wrote:
-> 
-> Since I'm new to this domain, let me start by thanking you for your patience.
-> 
-> I've noticed that libpcap based  packet injection software (packetspammer and 
-> reaver) are transmitting packets twice with different radiotap headers between 
-> the original and the duplicate on my box (ath9k).  In order to troubleshoot, 
-> I'd like to improve control over the  radiotap headers.   Packetspammer 
-> includes its own version of the relevant files (e.g ieee80211_radiotap.h) and 
-> reaver does the least possible.  While the relevant header files are included 
-> with the kernel, they aren't in the linux-headers package on Gentoo or 
-> included anywhere under /usr/include.   I do have nl80211.h file that will let 
-> me query settings, but doesn't understand anything about radiotap.  
-> 
-> What is the proper way to include querying and generating radiotap headers?
+Both wpa_supplicant and mac80211 has inactivity timer. By default
+wpa_supplicant will be timed out in 5 minutes and mac80211's it is 30 minutes.
+If wpa_supplicant uses more long timer than mac80211, wpa_supplicant will get
+unexpected disconnection by mac80211. This patch adds functionality of disabling
+mac80211 inactivity timer to avoid to prevent wpa_supplicant inactivity timer.
 
-http://git.sipsolutions.net/?p=radiotap.git
+I have thought setting 0xffffffff to NL80211_MESHCONF_PLINK_TIMEOUT will solve
+this problem without this patch. But the approach does not work on 32 bit
+system. To explain the reason, I will show STA expiration rule in kernel. This
+is the expression.
 
-http://www.radiotap.org/
+(current jiffies) > (frame Rx jiffies + NL80211_MESHCONF_PLINK_TIMEOUT * 250)
 
-bruno
+On 32bit system, right side could be over flow and be unexpected small value if
+NL80211_MESHCONF_PLINK_TIMEOUT is sufficiently large. STA expiration occurs by
+this reason. So I made this patch.
+
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ include/uapi/linux/nl80211.h | 3 ++-
+ net/mac80211/mesh.c          | 3 ++-
+ net/wireless/nl80211.c       | 2 +-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1cbc3aa..0c71180 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3092,7 +3092,8 @@ enum nl80211_mesh_power_mode {
+  *
+  * @NL80211_MESHCONF_PLINK_TIMEOUT: If no tx activity is seen from a STA we've
+  *	established peering with for longer than this time (in seconds), then
+- *	remove it from the STA's list of peers.  Default is 30 minutes.
++ *	remove it from the STA's list of peers. You may set this to 0 to disable
++ *	the removal of the STA. Default is 30 minutes.
+  *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+  */
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 0c8b2a7..acf441f 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -574,7 +574,8 @@ static void ieee80211_mesh_housekeeping(struct ieee80211_sub_if_data *sdata)
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+ 	u32 changed;
+ 
+-	ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
++	if (ifmsh->mshcfg.plink_timeout > 0)
++		ieee80211_sta_expire(sdata, ifmsh->mshcfg.plink_timeout * HZ);
+ 	mesh_path_expire(sdata);
+ 
+ 	changed = mesh_accept_plinks_update(sdata);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e9ad9d9..bef52af 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5261,7 +5261,7 @@ do {									    \
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshAwakeWindowDuration,
+ 				  0, 65535, mask,
+ 				  NL80211_MESHCONF_AWAKE_WINDOW, nla_get_u16);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, plink_timeout, 1, 0xffffffff,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, plink_timeout, 0, 0xffffffff,
+ 				  mask, NL80211_MESHCONF_PLINK_TIMEOUT,
+ 				  nla_get_u32);
+ 	if (mask_out)
+-- 
+2.1.0
+
