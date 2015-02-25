@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:56634 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751442AbbBKIdY (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34075 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752434AbbBYLQH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Feb 2015 03:33:24 -0500
-From: Bas Peters <baspeters93@gmail.com>
-To: kvalo@codeaurora.org
-Cc: Bas Peters <baspeters93@gmail.com>, linville@tuxdriver.com,
-	johannes.berg@intel.com, dcbw@redhat.com,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: libertas: debugfs.c: remove unnecessary check before calling debugfs_remove
-Date: Wed, 11 Feb 2015 09:33:06 +0100
-Message-Id: <1423643586-11002-1-git-send-email-baspeters93@gmail.com> (sfid-20150211_093400_805127_683B848A)
+	Wed, 25 Feb 2015 06:16:07 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1PBG6jn016672
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 03:16:06 -0800
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1srpgjbfxw-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 03:16:06 -0800
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH] mwifiex: do not initialize ext_scan in mwifiex_init_adapter
+Date: Wed, 25 Feb 2015 22:15:41 +0530
+Message-ID: <1424882741-11937-1-git-send-email-patila@marvell.com> (sfid-20150225_121612_203197_5BB86A91)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Debugfs_remove will check for error or NULL for us, so it is not
-necessary to do this here.
+Features which are device specific are already updated in
+interface specific initialization e.g. register_dev.
+We should not initialize them in mwifiex_init_adapter();
+else this would overwrite earlier settings.
 
-Signed-off-by: Bas Peters <baspeters93@gmail.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/libertas/debugfs.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/mwifiex/init.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/libertas/debugfs.c b/drivers/net/wireless/libertas/debugfs.c
-index cc6a0a5..26cbf1d 100644
---- a/drivers/net/wireless/libertas/debugfs.c
-+++ b/drivers/net/wireless/libertas/debugfs.c
-@@ -742,8 +742,7 @@ void lbs_debugfs_init(void)
- 
- void lbs_debugfs_remove(void)
- {
--	if (lbs_dir)
--		 debugfs_remove(lbs_dir);
-+	debugfs_remove(lbs_dir);
- }
- 
- void lbs_debugfs_init_one(struct lbs_private *priv, struct net_device *dev)
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index b77ba74..2e1df02 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -296,7 +296,6 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+ 	memset(&adapter->arp_filter, 0, sizeof(adapter->arp_filter));
+ 	adapter->arp_filter_size = 0;
+ 	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
+-	adapter->ext_scan = false;
+ 	adapter->key_api_major_ver = 0;
+ 	adapter->key_api_minor_ver = 0;
+ 	memset(adapter->perm_addr, 0xff, ETH_ALEN);
 -- 
-2.1.0
+1.8.1.4
 
