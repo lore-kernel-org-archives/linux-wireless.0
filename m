@@ -1,86 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:48408 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752470AbbBBPZp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 10:25:45 -0500
+Received: from narfation.org ([79.140.41.39]:56375 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751590AbbBYJlr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2015 04:41:47 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: simon@open-mesh.com, linux-wireless@vger.kernel.org,
+	johannes@sipsolutions.net, marek@open-mesh.com,
+	Antonio Quartulli <antonio@open-mesh.com>
+Subject: Re: [PATCH v6 2/3] mac80211/minstrel_ht: use the new rate control API
+Date: Wed, 25 Feb 2015 10:35:05 +0100
+Message-ID: <8006741.C7YlhOg3U7@bentobox> (sfid-20150225_104153_601408_755C830E)
+In-Reply-To: <2670025.E9NWYu3f4D@bentobox>
+References: <1366640083-1054-1-git-send-email-nbd@openwrt.org> <1366640083-1054-2-git-send-email-nbd@openwrt.org> <2670025.E9NWYu3f4D@bentobox>
 MIME-Version: 1.0
-In-Reply-To: <CAPp0ZBbKu-B3yPf0Et=XByJ1SrnxBgVbRXr9PBe0f6P08w87=Q@mail.gmail.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<54CB5D08.2070906@broadcom.com>
-	<1422623975.21689.77.camel@edumazet-glaptop2.roam.corp.google.com>
-	<54CB8B69.1070807@broadcom.com>
-	<CAA93jw5fqhz0Hiw74L2GXgtZ9JsMg+NtYydKxKzGDrvQcZn4hA@mail.gmail.com>
-	<CAA93jw7b0E9jjQYXrEPzjLLC9j8xNC0TFYXpWVtgFameJaNBdw@mail.gmail.com>
-	<1422741065.199624134@apps.rackspace.com>
-	<CAPp0ZBb2nkA6Y0s=W0kw=zvyn0wi0NMBRsBCw_xcD61ScOmgQg@mail.gmail.com>
-	<CAA_e5Z46Bu+zZZFzf_ejzA35Gw3g1_OG85yv6yd7MpbwZcE-nw@mail.gmail.com>
-	<CAA93jw7=oTex0Mp-0ThvuDRUnfR0N8tzdOQ8DD7QYWphp1b=4w@mail.gmail.com>
-	<CAJq5cE3ETbpEtecFHmhgHQveNRUhVfrzjTOygHm-TRCTwHNyKA@mail.gmail.com>
-	<1422801814.796219699@apps.rackspace.com>
-	<CAA_e5Z5PfimZeC5cqSk_xFpKOBeZ74htLeEdwtKieAYWJaEX+A@mail.gmail.com>
-	<CAPp0ZBbKu-B3yPf0Et=XByJ1SrnxBgVbRXr9PBe0f6P08w87=Q@mail.gmail.com>
-Date: Mon, 2 Feb 2015 10:25:45 -0500
-Message-ID: <CAGhGL2CnECP=3JkYEeshjqh7p1ra1jUunvVkSDQftGA+CVrPug@mail.gmail.com> (sfid-20150202_162554_598508_86C84B46)
-Subject: Re: [Cerowrt-devel] Fwd: Throughput regression with `tcp: refine TSO autosizing`
-From: Jim Gettys <jg@freedesktop.org>
-To: Avery Pennarun <apenwarr@google.com>
-Cc: Andrew McGregor <andrewmcgr@gmail.com>,
-	David Reed <dpreed@reed.com>,
-	Jonathan Morton <chromatix99@gmail.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Matt Mathis <mattmathis@google.com>,
-	Tim Shepard <shep@alum.mit.edu>,
-	"dstanley@arubanetworks.com" <dstanley@arubanetworks.com>,
-	Kathy Giori <kgiori@qca.qualcomm.com>,
-	Stig Thormodsrud <stig@ubnt.com>,
-	Derrick Pallas <pallas@meraki.com>,
-	"cerowrt-devel@lists.bufferbloat.net"
-	<cerowrt-devel@lists.bufferbloat.net>,
-	Mahesh Paolini-Subramanya <mahesh@dieswaytoofast.com>,
-	Jesper Dangaard Brouer <jbrouer@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 1, 2015 at 11:04 PM, Avery Pennarun <apenwarr@google.com> wrote:
-> On Sun, Feb 1, 2015 at 6:34 PM, Andrew McGregor <andrewmcgr@gmail.com> wrote:
->> I missed one item in my list of potential improvements: the most braindead
->> thing 802.11 has to say about rates is that broadcast and multicast packets
->> should be sent at 'the lowest basic rate in the current supported rate set',
->> which is really wasteful.  There are a couple of ways of dealing with this:
->> one, ignore the standard and pick the rate that is most likely to get the
->> frame to as many neighbours as possible (by a scan of the Minstrel tables).
->> Or two, fan it out as unicast, which might well take less airtime (due to
->> aggregation) as well as being much more likely to be delivered, since you
->> get ACKs and retries by doing that.
->
-> As far as I can see, the only sensible thing to do with
-> multicast/broadcast is some variation of the unicast fanout, unless
-> you've got a truly huge number of nodes.  I don't know of any
-> protocols (certainly not video streams) that actually work well with
-> the kind of packet loss you see at medium/long range with wifi if
-> retransmits aren't used.  I've heard that openwrt already has a patch
-> included that does this kind of fanout at the bridge layer.
+Hi Felix,
 
-I gather some Windows drivers from some vendors do this unicast fanout
-(claim made by one of their engineers in an early homenet meeting).
+On Friday 20 February 2015 15:12:10 Sven Eckelmann wrote:
+> >  static void
+> > 
+> > @@ -846,6 +857,8 @@ minstrel_ht_update_caps(void *priv, struct
+> > ieee80211_supported_band *sband,
+> > 
+> >  	msp->is_ht = true;
+> >  	memset(mi, 0, sizeof(*mi));
+> > 
+> > +
+> > +	mi->sta = sta;
+> > 
+> >  	mi->stats_update = jiffies;
+> 
+> minstrel_ht_update_caps can be called on init and on different other changes
+> (rate_control_rate_update).
+> 
+> Which lock protects mi from following scenario?
+> 
+> context 1: memset(mi, 0, sizeof(*mi)); // mi->sta is now NULL
+> context 2: minstrel_ht_update_rates -> rate_control_set_rates(mp->hw,
+>            mi->sta, rates)
+> context 2: rate_control_set_rates dereferences
+>            pubsta->rates (mi->sta + 0x48) -> Kernel Oops
+> context 1: mi->sta = sta
+> 
+> The first context is from one of the many rate_control_rate_update in
+> mac80211 and the second context is from ieee80211_tx_status.
+> 
+> The question came up when discovering the OpenWrt bug report
+>  https://dev.openwrt.org/ticket/18388 (minstrel_ht_update_caps
+> the thing most likely behind minstrel_remove_sta_debugfs+0xe8c/0x1674 - at
+> least EPC is pointing inside this function for a build from this revision)
 
->
-> I've also heard of a new "reliable multicast" in some newer 802.11
-> variant, which essentially sends out a single multicast packet and
-> expects an ACK from each intended recipient.  Other than adding
-> complexity, it seems like the best of both worlds.
+I have someone here who says that he can reproduce this problem with a current 
+mac80211 from OpenWrt in ~40 min in a mesh setup with a lot of multicast. I 
+gave them following test patch to check if it could be related to the scenario 
+explained earlier:
 
-So long as it times out in some very small, finite time.  We don't
-want a repeat of the infinite retry bugs Dave found in drivers a few
-years back...
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -1126,7 +1126,8 @@ minstrel_ht_update_caps(void *priv, stru
+ 	use_vht = 0;
+ 
+ 	msp->is_ht = true;
+-	memset(mi, 0, sizeof(*mi));
++	/* don't reset the first entry of mi which is the sta pointer */
++	memset(((u8 *)mi) + sizeof(mi->sta), 0, sizeof(*mi) - sizeof(mi->sta));
+ 
+ 	mi->sta = sta;
+ 	mi->stats_update = jiffies;
 
-"Reliable multicast" ultimately is an oxymoron, particularly on a
-medium with hundreds/one bandwidth variation.  One remote low
-bandwidth station cannot be allowed to drag the entire network to the
-basement.
-                                     - Jim
+
+He reported back that the mesh nodes were now running fine since 7 hours. It 
+is also tested in another network which now runs since 1 1/2 days and were not 
+able to run stable for more then 20 hours at max before applying that patch.
+
+These numbers are no definitive proof but at least suggest that there could be 
+a connection. Maybe you already had some concept how to protect from this 
+problem and have not fully implemented it. Would be nice to hear back from 
+you.
+
+Kind regards,
+	Sven
