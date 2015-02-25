@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4346 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086AbbBLVSb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 16:18:31 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath: Enhance radar detection by looking up chirp
-Date: Thu, 12 Feb 2015 13:17:05 -0800
-Message-ID: <1423775825-19498-3-git-send-email-poh@qca.qualcomm.com> (sfid-20150212_221836_801326_B597D303)
-In-Reply-To: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com>
-References: <1423775825-19498-1-git-send-email-poh@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:43654 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750771AbbBYHw0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2015 02:52:26 -0500
+Message-ID: <1424850736.2050.0.camel@sipsolutions.net> (sfid-20150225_085230_511466_DDD7DFE7)
+Subject: Re: [RFC] zero-copy AMSDU processing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Wed, 25 Feb 2015 08:52:16 +0100
+In-Reply-To: <3723348.23HgaGqW1o@lx-wigig-72>
+References: <1708052.J876aMsZU2@lx-wigig-72>
+	 <1424680539.2782.1.camel@sipsolutions.net> <3723348.23HgaGqW1o@lx-wigig-72>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Certain radar types such as FCC radar type 5 are using chirp
-in their pulses, hence looking up the chirp status will enhance
-to avoid false radar detection.
+On Wed, 2015-02-25 at 09:07 +0200, Vladimir Kondratiev wrote:
+> On Monday, February 23, 2015 09:35:39 AM Johannes Berg wrote:
+> > If the SKB has pages (rather than being linear, as
+> > ieee80211_amsdu_to_8023s() assumes) then what Emmanuel said would
+> > probably be the best approach, although it could be possible that would
+> > mess up truesize accounting and lead to lower performance. Certainly
+> > you'd want to do it only for suitably large packets (at least bigger
+> > than 128 bytes or so)
+> 
+> Why is it important whether it has pages? Looks like I can play with
+> pointers to the linear part as well.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/dfs_pri_detector.c | 4 ++++
- 1 file changed, 4 insertions(+)
+I don't think that will work - it would crash later trying to free that
+page, no?
 
-diff --git a/drivers/net/wireless/ath/dfs_pri_detector.c b/drivers/net/wireless/ath/dfs_pri_detector.c
-index 43b6081..1b5ad19 100644
---- a/drivers/net/wireless/ath/dfs_pri_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pri_detector.c
-@@ -390,6 +390,10 @@ static struct pri_sequence *pri_detector_add_pulse(struct pri_detector *de,
- 	if ((ts - de->last_ts) < rs->max_pri_tolerance)
- 		/* if delta to last pulse is too short, don't use this pulse */
- 		return NULL;
-+	/* radar detector spec needs chirp, but not detected */
-+	if (rs->chirp && rs->chirp != event->chirp)
-+		return NULL;
-+
- 	de->last_ts = ts;
- 
- 	max_updated_seq = pseq_handler_add_to_existing_seqs(de, ts);
--- 
-1.9.1
+Oh - you mean just skb_pull() and friends? That might actually work,
+yeah.
+
+johannes
 
