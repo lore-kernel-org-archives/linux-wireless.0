@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40256 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751043AbbBLU27 convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:46247 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbbBYHxE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Feb 2015 15:28:59 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
-Subject: Re: btcoex subsystem
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <874mr3xjnx.fsf_-_@kamboji.qca.qualcomm.com>
-Date: Thu, 12 Feb 2015 12:28:46 -0800
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Troy Tan <troy_tan@realsil.com.cn>, netdev@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Message-Id: <D5A7B08D-EA98-4A6E-A6BF-E19D87B5066A@holtmann.org> (sfid-20150212_212909_111364_C5B61AF0)
-References: <1422304934-9239-1-git-send-email-Larry.Finger@lwfinger.net> <1422304934-9239-6-git-send-email-Larry.Finger@lwfinger.net> <87h9v8zkuh.fsf@kamboji.qca.qualcomm.com> <EC423C22-AEA0-4232-A452-7A131C41780A@holtmann.org> <54CBA0CE.8030800@lwfinger.net> <B814EF26-CBC9-43E4-A6C9-761A013F85C1@holtmann.org> <874mr3xjnx.fsf_-_@kamboji.qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+	Wed, 25 Feb 2015 02:53:04 -0500
+Received: by lams18 with SMTP id s18so2044474lam.13
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 23:53:02 -0800 (PST)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH v2 0/4] ath10k: add basic tdls support
+Date: Wed, 25 Feb 2015 08:55:07 +0100
+Message-Id: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20150225_085309_309112_B53DB2CA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+This patchset introduces tdls funtionality without tdls peer uapsd
+and tdls channel switching. Tdls is supported by qca6174 hardware
+what is indicated by firmware through supported services.
+Tdls station when authorized requires some parameters that are filled in
+by rate control initialization. Because of that this patches contains
+one patch for mac80211 which moves rate control initialization before
+calling drivers station state with transition to authorized state.
 
->>> I will work on combining the latest BT drivers from Realtek with
->>> btusb to see if I can achieve a patch that will both work with the
->>> Realtek hardware, and get approval from the reviewers.
->>> 
->>> What would be an approved method of communicating between two kernel
->>> modules? Is there some example in the kernel that I could study?
->> 
->> We need a btcoex subsystem that both WiFi and Bluetooth can register
->> to and communicate with.
-> 
-> The need for this seems to periodically come up, I remember needing
-> something like that back in the Maemo wl1251 days and also ath6kl needed
-> this. Are there any ideas for this subsystem? How would this btcoex
-> subsystem work? What kind of information would it provide?
-> 
-> Is this something we should discuss at Ottawa?
+v2:
+-introduce tdls peer counter
+-minor changes after review
 
-sadly something came up and I am not making it to Ottawa. However we should be talking about this at some point since Bluetooth has MWS for its coexistence which could be a good starting point. Something we have to look into for the Bluetooth subsystem at some point.
+Marek Puzyniak (3):
+  ath10k: make peer type configurable
+  mac80211: initialize rate control earlier for tdls station
+  ath10k: introduce basic tdls functionality
 
-Regards
+Michal Kazior (1):
+  ath10k: unify tx mode and dispatch
 
-Marcel
+ drivers/net/wireless/ath/ath10k/core.h    |   3 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c  |   8 -
+ drivers/net/wireless/ath/ath10k/htt_tx.c  |  30 ++-
+ drivers/net/wireless/ath/ath10k/mac.c     | 307 +++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/mac.h     |   8 +
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  50 ++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 157 ++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  52 +++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |   3 +-
+ drivers/net/wireless/ath/ath10k/wmi.h     |  43 +++++
+ net/mac80211/cfg.c                        |  20 +-
+ 11 files changed, 597 insertions(+), 84 deletions(-)
+
+-- 
+2.1.4
 
