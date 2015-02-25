@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:49406 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752696AbbBZKBO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 05:01:14 -0500
-Message-ID: <54EEEEE5.2040305@broadcom.com> (sfid-20150226_110119_452497_AC8DAC2A)
-Date: Thu, 26 Feb 2015 11:01:09 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: Jouni Malinen <j@w1.fi>, Felix Fietkau <nbd@openwrt.org>,
-	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	Andrew McGregor <andrewmcgr@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [ath9k-devel] AR9462 problems connecting again..
-References: <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>	<CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>	<20150223224305.GA30228@w1.fi>	<21739.50662.902775.901924@gargle.gargle.HOWL>	<CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com>	<CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>	<20150224102611.GA30806@w1.fi>	<80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de>	<20150224181454.GA30859@w1.fi>	<54ED56D8.9030806@openwrt.org>	<20150225144723.GA6903@w1.fi>	<CA+55aFyvhgFMRAg2ftuN_cykGs_3-Oyabhi_N6S-J1daVFFRzw@mail.gmail.com> <CA+55aFxE7_RXc1hBo+e=iCj4KpeMev_WphH+tDHXnYC4HE5YvQ@mail.gmail.com>
-In-Reply-To: <CA+55aFxE7_RXc1hBo+e=iCj4KpeMev_WphH+tDHXnYC4HE5YvQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:44882 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751760AbbBYKee (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2015 05:34:34 -0500
+Message-ID: <1424860462.2050.10.camel@sipsolutions.net> (sfid-20150225_113436_819873_E12ACD8A)
+Subject: Re: [PATCH v3] wext: Return -E2BIG when the buffer is too small for
+ the full scan results, including IEs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: James Minor <james.minor@ni.com>
+Cc: linville@tuxdriver.com, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, xander.huff@ni.com, joshc@ni.com,
+	joseph.hershberger@ni.com, ben.shelton@ni.com, jaeden.amero@ni.com,
+	rich.tollerton@ni.com, brad.mouring@ni.com
+Date: Wed, 25 Feb 2015 11:34:22 +0100
+In-Reply-To: <1424804300-7469-1-git-send-email-james.minor@ni.com>
+References: <1424707044.3075.14.camel@sipsolutions.net>
+	 <1424804300-7469-1-git-send-email-james.minor@ni.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/15 06:55, Linus Torvalds wrote:
-> Because it looks like the brcmsmac driver has*exactly*  the same
-> behavior with this AP (in an Apple Macbook air). I assume brcmsmac
-> uses the net/80211/tx.c logic too.
+On Tue, 2015-02-24 at 12:58 -0600, James Minor wrote:
+> When using the wext compatibility code in cfg80211, part of the IEs
+> can be truncated if the passed user buffer is large enough for the
+> BSS but not large enough for all of the IEs.  This can cause an EAP
+> network to show up as a PSK network.
+> 
+> These changes allow the scan to always return -E2BIG in that case.
 
-That makes sense as brcmsmac is a mac80211 driver that uses the 
-minstrel-ht rate control algorithm. iwlwifi is also a mac80211 driver 
-but it uses a different rate control algorithm so if you have that lying 
-around it would be interesting to test that (if you did not already do 
-that).
+I've applied a patch similar to this - please check mac80211-next. I
+wasn't really happy with the inline either after I looked more closely,
+so I created new _check() wrappers in the wext header file and used
+those here now.
 
-Regards,
-Arend
+I did change the control flow, which you seem to have been reluctant to
+do, but it ultimately seemed like the better option.
+
+johannes
+
