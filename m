@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:61794 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933339AbbBCKkS (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:28201 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752943AbbBYTye (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 05:40:18 -0500
-Received: by mail-we0-f173.google.com with SMTP id w62so44151481wes.4
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Feb 2015 02:40:17 -0800 (PST)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [RFC 0/4] ath10k: add basic tdls support
-Date: Tue,  3 Feb 2015 11:41:50 +0100
-Message-Id: <1422960114-25137-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20150203_114029_834182_773BDA0D)
+	Wed, 25 Feb 2015 14:54:34 -0500
+Message-ID: <54EE2877.2040906@broadcom.com> (sfid-20150225_205437_422173_244C8C49)
+Date: Wed, 25 Feb 2015 20:54:31 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Jocky Wilson <jockyw2001@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac43241b4-sdio / Thinkpad Tablet 10 issues
+References: <54E2E1CD.5020203@m-labs.hk> <54E31CD5.70901@broadcom.com> <54E778F9.1000500@m-labs.hk> <loom.20150225T131550-21@post.gmane.org>
+In-Reply-To: <loom.20150225T131550-21@post.gmane.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset introduces tdls funtionality without tdls peer uapsd
-and tdls channel switching. Tdls is supported by qca6174 hardware
-what is indicated by firmware through supported services.
-Tdls station when authorized requires some parameters that are filled in
-by rate control initialization. Because of that this patches contains
-one patch for mac80211 which moves rate control initialization before
-calling drivers station state with transition to authorized state.
-        
-This patchset is RFC because it based on patchset from Michal:
-ath10k: add multi-channel support
-which is still under review.
+On 02/25/15 13:23, Jocky Wilson wrote:
+> Sebastien Bourdeauducq<sb@...>  writes:
+>
+>>
+>> On Tuesday, February 17, 2015 03:49 AM, Arend van Spriel wrote:
+>>> So it is a one-off and not showing the issue you are seeing. Your issue
+>>> seems to be due to failing firmware so you may need b5 firmware.
+>>
+>> Making some progress :)
+>> ...
+>> I guess that the driver has bugs with decoding some of the data sent by
+>> the card.
+>>
+> I can confirm this with my Thinkpad Tablet 8
+> which has same chip revision.
+> Arend: do you need anything else to be tested?
 
-Marek Puzyniak (3):
-  ath10k: make peer type configurable
-  mac80211: initialize rate control earlier for tdls station
-  ath10k: introduce basic tdls functionality
+Nope. As it turns out this chip revision indeed needs b5 firmware. As 
+windows and linux use different firmware we will need to release that to 
+linux-firmware and modify brcmfmac to pick it up properly. Keep an eye 
+out for those patches.
 
-Michal Kazior (1):
-  ath10k: unify tx mode and dispatch
+Regards,
+Arend
 
- drivers/net/wireless/ath/ath10k/core.h    |   2 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  |   8 -
- drivers/net/wireless/ath/ath10k/htt_tx.c  |  30 ++--
- drivers/net/wireless/ath/ath10k/mac.c     | 263 ++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/mac.h     |   8 +
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  50 +++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 156 +++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  52 ++++++
- drivers/net/wireless/ath/ath10k/wmi.c     |   3 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |  43 +++++
- net/mac80211/cfg.c                        |  20 ++-
- 11 files changed, 561 insertions(+), 74 deletions(-)
-
--- 
-2.1.4
+> /JockyW
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
