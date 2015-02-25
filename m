@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:39861 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbbBZQFZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 11:05:25 -0500
-Message-ID: <54EF4442.8020006@lwfinger.net> (sfid-20150226_170534_988955_86D9F8FB)
-Date: Thu, 26 Feb 2015 10:05:22 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Stable <stable@vger.kernel.org>, Alan Fisher <acf@unixcube.org>
-Subject: Re: [PATCH] rtlwifi: Improve handling of IPv6 packets
-References: <1424791381-31863-1-git-send-email-Larry.Finger@lwfinger.net> <87zj80de63.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87zj80de63.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:43741 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750764AbbBYIC4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2015 03:02:56 -0500
+Message-ID: <1424851368.2050.8.camel@sipsolutions.net> (sfid-20150225_090318_319715_14031CCE)
+Subject: Re: Connection issues with BW Tracking in mac80211
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 25 Feb 2015 09:02:48 +0100
+In-Reply-To: <CABPxzY+Z97Q4JSSaR2GfGnxbbR721qJ-v_AjG4Kc1TGetHF4ng@mail.gmail.com> (sfid-20150224_221135_386626_6E22A752)
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+	 <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
+	 <1424772587.2192.14.camel@sipsolutions.net>
+	 <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com>
+	 <1424774105.2192.29.camel@sipsolutions.net>
+	 <CABPxzYJkoCWud=yfNHL5m2FUCPOc854i_L+VB4sN+o8Skb-Pnw@mail.gmail.com>
+	 <CABPxzYL4Fz+y7dpp650RyqXVWtL5WC4YkvsQ1_=znOmrmUZF5A@mail.gmail.com>
+	 <1424810867.2192.60.camel@sipsolutions.net>
+	 <CABPxzY+Z97Q4JSSaR2GfGnxbbR721qJ-v_AjG4Kc1TGetHF4ng@mail.gmail.com>
+	 (sfid-20150224_221135_386626_6E22A752)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/26/2015 06:56 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> Routine rtl_is_special_data() is supposed to identify packets that need to
->> use a low bit rate so that the probability of successful transmission is
->> high. The current version has a bug that causes all IPv6 packets to be
->> labelled as special, with a corresponding low rate of transmission. A
->> complete fix will be quite intrusive, but until that is available, all
->> IPv6 packets are identified as regular.
->>
->> This patch also removes a magic number.
->>
->> Reported-and-tested-by: Alan Fisher <acf@unixcube.org>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org> [3.18+]
->> Cc: Alan Fisher <acf@unixcube.org>
->
-> Should this go to 4.0?
+On Wed, 2015-02-25 at 02:41 +0530, Krishna Chaitanya wrote:
+> On Wed, Feb 25, 2015 at 2:17 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2015-02-25 at 02:03 +0530, Krishna Chaitanya wrote:
+> >
+> >> Use case2: When changing from HT40-VHT80, the connection goes through
+> >> but it still connected as HT40 (vht_ie from cfg80211 is returned
+> >> null).
+> >>
+> >> Can you think of any reason why the bss_list is not updated cfg80211?
+> >> Note: iwconfig and wpa_supplicant both show same behavior.
+> >
+> > Well, there's no flushing, only overwriting by new results - but if you
+> > previuosly got both beacons and probe responses each one will stick
+> > around until you get them again.
+> We do have the scan results expiry time of 30secs, that will flush the
+> results from bss_list right? Even the get_bss checks for aging?
 
-Yes. I should have indicated that in the subject.
+Yes but if you scan in the meantime the scan result is marked as recent
+again, even if some old data might be kept. Perhaps we should split that
+into timestamps for probe and beacons separately, but that'd certainly
+complicate the code significantly for little gain.
 
-My expectation is that any patch that has a Cc for Stable should be applied as 
-soon as possible.
-
-Larry
+johannes
 
