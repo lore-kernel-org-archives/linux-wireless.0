@@ -1,39 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57403 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932076AbbBZNAY (ORCPT
+Received: from mail-la0-f52.google.com ([209.85.215.52]:38204 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752416AbbBYHx3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 08:00:24 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/7] ath9k: Fix descriptors for keep-alive frame
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1423111964-19626-2-git-send-email-sujith@msujith.org>
-To: Sujith Manoharan <sujith@msujith.org>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20150226130024.13350140424@smtp.codeaurora.org> (sfid-20150226_140028_892265_168935A6)
-Date: Thu, 26 Feb 2015 13:00:24 +0000 (UTC)
+	Wed, 25 Feb 2015 02:53:29 -0500
+Received: by lamq1 with SMTP id q1so2109452lam.5
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 23:53:28 -0800 (PST)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH v2 3/4] mac80211: initialize rate control earlier for tdls station
+Date: Wed, 25 Feb 2015 08:55:10 +0100
+Message-Id: <1424850911-21017-4-git-send-email-marek.puzyniak@tieto.com> (sfid-20150225_085335_433402_71CE8ACD)
+In-Reply-To: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently when TDLS station in driver goes from assoc
+to authorized state it can not use rate control parameters
+because rate control is not initialized yet. Some drivers
+require parameters already initialized by rate control when
+entering authorized state. It can be done by initializing
+rate control after station transition to authorized state
+but before notifying driver about that.
 
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> Along with AR9462, AR9565 also has an extra field
-> in the TX descriptor which needs to be zeroed out
-> for the keep alive frame. This makes the earlier
-> REG_WRITE redundant, so it can be removed.
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+---
+ net/mac80211/cfg.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-Thanks, 7 patches applied to wireless-drivers-next.git:
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index dd4ff36..ae24ed3 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -983,12 +983,21 @@ static int sta_apply_auth_flags(struct ieee80211_local *local,
+ 	}
+ 
+ 	if (mask & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
+-		if (set & BIT(NL80211_STA_FLAG_AUTHORIZED))
++		if (set & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
++			/*
++			 * When peer becomes authorized, init rate control as
++			 * well. Some drivers require rate control initialized
++			 * before drv_sta_state() is called.
++			 */
++			if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
++				rate_control_rate_init(sta);
++
+ 			ret = sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
+-		else if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++		} else if (test_sta_flag(sta, WLAN_STA_AUTHORIZED)) {
+ 			ret = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+-		else
++		} else {
+ 			ret = 0;
++		}
+ 		if (ret)
+ 			return ret;
+ 	}
+@@ -1377,11 +1386,6 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 	if (err)
+ 		goto out_err;
+ 
+-	/* When peer becomes authorized, init rate control as well */
+-	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) &&
+-	    test_sta_flag(sta, WLAN_STA_AUTHORIZED))
+-		rate_control_rate_init(sta);
+-
+ 	mutex_unlock(&local->sta_mtx);
+ 
+ 	if ((sdata->vif.type == NL80211_IFTYPE_AP ||
+-- 
+2.1.4
 
-2a0eef1ac629 ath9k: Fix descriptors for keep-alive frame
-0d35024cad0f ath9k: Set keep awake timer
-ff6f0c036b32 ath9k: Add new MCI states
-b39adc63bf0c ath9k: Check MCI PowerSave state
-6aaefab6cfe8 ath9k: Handle additional patterns on wakeup
-3277b20270ee ath9k: Clear additional WoW events
-aa96af82b873 ath9k: Restart TSF2 timers on wakeup
-
-Kalle Valo
