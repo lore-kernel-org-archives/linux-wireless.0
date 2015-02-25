@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:38202 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751023AbbBDVLp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 16:11:45 -0500
-Message-ID: <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150204_221152_938302_BBAECAD7)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:60798 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752646AbbBYUw4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2015 15:52:56 -0500
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2070.6\))
+Subject: Re: [ath9k-devel] AR9462 problems connecting again..
+From: =?utf-8?Q?Thomas_H=C3=BChn?= <thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <20150225145319.GA7006@w1.fi>
+Date: Wed, 25 Feb 2015 21:52:55 +0100
+Cc: Andrew McGregor <andrewmcgr@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Wed, 04 Feb 2015 13:11:43 -0800
-In-Reply-To: <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Message-Id: <38DE7E62-563E-4CC5-A147-40AB4B01220A@net.t-labs.tu-berlin.de> (sfid-20150225_215302_629861_4D7C57AD)
+References: <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com> <CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com> <20150223224305.GA30228@w1.fi> <21739.50662.902775.901924@gargle.gargle.HOWL> <CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com> <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com> <20150224102611.GA30806@w1.fi> <80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de> <20150224181454.GA30859@w1.fi> <655DCF68-95EE-47F6-82D3-45F6E0999161@net.t-labs.tu-berlin.de> <20150225145319.GA7006@w1.fi>
+To: Jouni Malinen <j@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I do not see how a TSO patch could hurt a flow not using TSO/GSO.
+Hi Jouni,
 
-This makes no sense.
+>> In case of ath9k, the driver in xmit.c allocates in function ath_tx_fill_desc() a  struct ath_tx_info info by  memset(&info, 0, sizeof(info)) .. so all info->rates[xy].Rate == 0.
+>> Than function ath_buf_set_rate() sets all info->rates[xy].Rate to those values specified in the rate table (struct ieee8021_sta_rate) IF (!rates[i].count || (rates[i].idx < 0)) …
+>> … so info->rates[3].Rate is untouched and still  „0“.
+> 
+> Sure, it can be 0 and so is the number of tries at that rate..
 
-ath10k tx completions being batched/deferred to a tasklet might increase
-probability to hit this condition in tcp_wfree() :
+You are absolutely right … as the tries are 0 as well, the 4th mrr[3] is not used. I missed that obvious point.
 
-        /* If this softirq is serviced by ksoftirqd, we are likely under stress.
-         * Wait until our queues (qdisc + devices) are drained.
-         * This gives :
-         * - less callbacks to tcp_write_xmit(), reducing stress (batches)
-         * - chance for incoming ACK (processed by another cpu maybe)
-         *   to migrate this flow (skb->ooo_okay will be eventually set)
-         */
-        if (wmem >= SKB_TRUESIZE(1) && this_cpu_ksoftirqd() == current)
-                goto out;
 
-Meaning tcp stack waits all skbs left qdisc/NIC queues before queuing
-additional packets.
+>> I just added a printk() to xmit.c in function ath_tx_fill_desc() just before ath9k_hw_set_txdesc() is called.
+>> From the log I get, e.g.:
+>> 
+>> [  169.543554] mrr setup: mrr[0]:133 mrr[1]:132 mrr[2]:134 mrr[3]:0 
+>> 
+>> I have not check yet if info->rates[3].Rate == 0 is the lowest possible rate… but I would guess so.
+> 
+> It is not and even if it were, it does not matter since this 4th item is
+> used for _0_ tries. I've verified the exact behavior with a sniffer for
+> a case where the target device does not ACK frames. ath9k ends up
+> sending at exactly the three different rates indicated in the first
+> three values and nothing else. With RC probing (which happens to occur
+> for the initial EAPOL frames, this results in only one attempt at
+> MCS(>0) and two + two attempts at MCS0. No non-MCS rates are tried. As
+> pointed out previously, this is likely fine for normal data frames, but
+> not for EAPOL.
 
-I would try to call skb_orphan() in ath10k if you really want to keep
-these batches.
+I do agree in changing the way to assign a (mrr) rate set for  EAPOL frames in the most robust fashion.
 
-I have hard time to understand why tx completed packets go through
-ath10k_htc_rx_completion_handler().. anyway...
+Greetings Thomas
 
-Most conservative patch would be :
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 9c782a42665e1aaf43bfbca441631ee58da50c09..6a36317d6bb0447202dee15528130bd5e21248c4 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1642,6 +1642,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	}
- 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
-+		skb_orphan(skb);
- 		spin_lock_bh(&htt->tx_lock);
- 		__skb_queue_tail(&htt->tx_compl_q, skb);
- 		spin_unlock_bh(&htt->tx_lock);
-
+> 
+> -- 
+> Jouni Malinen                                            PGP id EFC895FA
+> _______________________________________________
+> ath9k-devel mailing list
+> ath9k-devel@lists.ath9k.org
+> https://lists.ath9k.org/mailman/listinfo/ath9k-devel
 
