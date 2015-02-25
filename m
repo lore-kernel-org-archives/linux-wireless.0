@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49150 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752377AbbBMO6E (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18434 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750828AbbBYHHt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 09:58:04 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@nbd.name,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v2 0/10] Improve Minstrels & Minstrel-HTs common code base & statistics 
-Date: Fri, 13 Feb 2015 15:57:42 +0100
-Message-Id: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150213_155808_461719_C94B7B79)
+	Wed, 25 Feb 2015 02:07:49 -0500
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Subject: Re: [RFC] zero-copy AMSDU processing
+Date: Wed, 25 Feb 2015 09:07:45 +0200
+Message-ID: <3723348.23HgaGqW1o@lx-wigig-72> (sfid-20150225_080752_066652_1503DF4A)
+In-Reply-To: <1424680539.2782.1.camel@sipsolutions.net>
+References: <1708052.J876aMsZU2@lx-wigig-72> <1424680539.2782.1.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds several improvements to the readability, the
-output format of rc_stats and the calculated statistics of Minstrel
-and Minstrel-HT. Variable names got more consistent and functions
-got unified between both rate control algorithms.
+On Monday, February 23, 2015 09:35:39 AM Johannes Berg wrote:
+> If the SKB has pages (rather than being linear, as
+> ieee80211_amsdu_to_8023s() assumes) then what Emmanuel said would
+> probably be the best approach, although it could be possible that would
+> mess up truesize accounting and lead to lower performance. Certainly
+> you'd want to do it only for suitably large packets (at least bigger
+> than 128 bytes or so)
 
-Greetings Thomas
+Why is it important whether it has pages? Looks like I can play with
+pointers to the linear part as well.
 
----
-Changes in v2:
-- fix define MACRO from CPTCFG_* into CONFIG_*
-- change standard deviation symbol sigma into "sd"
+I am thinking about the following scenario: in DMG (60G), max. MSDU size
+is 7920, so one have to account for this when establishing BACK. Then,
+I foresee it will be popular that MTU will be configured to 1500 (Ethernet
+bridging, just laziness etc.), so actual aggregations on the air would be 5x
+smaller that it could be. Then, I'd like to aggregate 5 packets 1500 bytes
+each into A-MSDU prior to aggregating it to A_MPDU. Then, I'll have
+good A-MPDU size. But, having more then 2Gbps throughput, I need
+effective way to de-aggregate A-MSDU on Rx side.
 
-[PATCH v2 01/10] mac80211: enhance readability of Minstrels rc_stats
-[PATCH v2 02/10] mac80211: enhance readability of Minstrel-HTs
-[PATCH v2 03/10] mac80211: add new Minstrel statistic output via csv
-[PATCH v2 04/10] mac80211: add new Minstrel-HT statistic output via
-[PATCH v2 05/10] mac80211: unify Minstrel & Minstrel-HTs calculation
-[PATCH v2 06/10] mac80211: improve Minstrel variable & function
-[PATCH v2 07/10] mac80211: restructure per-rate throughput
-[PATCH v2 08/10] mac80211: add max. lossless throughput per rate to
-[PATCH v2 09/10] mac80211: reduce calculation costs of EWMA
-[PATCH v2 10/10] mac80211: add standard deviation to Minstrels
+Thanks, Vladimir
