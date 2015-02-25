@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:33999 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932286AbbBCNPR (ORCPT
+Received: from mail-ob0-f180.google.com ([209.85.214.180]:45581 "EHLO
+	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752960AbbBYUXo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 08:15:17 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 25 Feb 2015 15:23:44 -0500
+Received: by mail-ob0-f180.google.com with SMTP id vb8so6400756obc.11
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 12:23:43 -0800 (PST)
+Message-ID: <54EE2F4D.6080609@lwfinger.net> (sfid-20150225_212401_429347_F945B07F)
+Date: Wed, 25 Feb 2015 14:23:41 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Subject: Re: [V2,for,3.19,3/7] rtlwifi: rtl8192ee: Fix adhoc fail
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1421773286-1039-4-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-	netdev@vger.kernel.org, Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Message-Id: <20150203131516.799471409D0@smtp.codeaurora.org> (sfid-20150203_141526_454925_E237D166)
-Date: Tue,  3 Feb 2015 13:15:16 +0000 (UTC)
+To: Taehee Yoo <ap420073@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add case in rtl92cu_get_hw_reg
+References: <1424892841-6446-1-git-send-email-ap420073@gmail.com>
+In-Reply-To: <1424892841-6446-1-git-send-email-ap420073@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 02/25/2015 01:34 PM, Taehee Yoo wrote:
+> Add HAL_DEF_WOWLAN case in rtl92cu_get_hw_reg
+>
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 
-> From: Troy Tan <troy_tan@realsil.com.cn>
-> 
-> When the buffer descriptor index exceeds 2, then a TX HANG condition
-> will result.
-> 
-> Signed-off-by: Troy Tan <troy_tan@realsil.com.cn>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> [V3.18]
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Thanks, 4 patches applied to wireless-drivers-next.git:
+@Kalle: This is V2. V1 is not OK.
 
-b661a5da5776 rtlwifi: rtl8192ee: Fix adhoc fail
-6e5f44361628 rtlwifi: rtl8192ee: Fix TX hang due to failure to update TX write point
-92ff754240b8 rtlwifi: rtl8192ee: Fix parsing of received packet
-21b39ddb5bb2 rtlwifi: rtl8192ee: Fix DMA stalls
+Larry
 
-3 patches skipped:
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 2 ++
+>   1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> index fe4b699..96bae39 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> @@ -1589,6 +1589,8 @@ void rtl92cu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+>   	case HW_VAR_DATA_FILTER:
+>   		*((u16 *) (val)) = rtl_read_word(rtlpriv, REG_RXFLTMAP2);
+>   		break;
+> +	case HAL_DEF_WOWLAN:
+> +		break;
+>   	default:
+>   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+>   			 "switch case not processed\n");
+>
 
-[V2,for,3.19,1/7] rtlwifi: Remove logging statement that is no longer needed
-[V2,for,3.19,2/7] rtlwifi: rtl8192ee: Fix handling of new style descriptors
-[V2,for,3.19,6/7] rtlwifi: rtl8192ee: Fix problems with calculating free space in FIFO
-
-Kalle Valo
