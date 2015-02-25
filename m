@@ -1,98 +1,390 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.9]:18627 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751866AbbBYJdP convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f49.google.com ([209.85.215.49]:37143 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751229AbbBYHxU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 04:33:15 -0500
-Date: Wed, 25 Feb 2015 10:33:11 +0100
-From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-To: Sergei Antonov <saproj@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: mt7601u dies during channel switch (was: MediaTek WiFi hardware
- support in upstream kernel)
-Message-ID: <20150225103311.436f4321@north> (sfid-20150225_103321_268839_40F03E44)
-In-Reply-To: <CABikg9yw8Py59KyJ1mP6bfCrMPuup7v9xb1J=_JKC4gT_GS4rA@mail.gmail.com>
-References: <544DB5A8.7090405@openmailbox.org>
-	<20141027152026.GB19976@tuxdriver.com>
-	<544E8CB4.3000607@rempel-privat.de>
-	<20141028134608.GA26283@tuxdriver.com>
-	<544FA303.5060303@broadcom.com>
-	<544FA627.3000004@rempel-privat.de>
-	<5450BEB2.60208@openwrt.org>
-	<5461F937.9060004@rempel-privat.de>
-	<5463CB6C.3030204@openwrt.org>
-	<5463D28F.9080106@lwfinger.net>
-	<20150206182915.7467bac7@north>
-	<CABikg9yw8Py59KyJ1mP6bfCrMPuup7v9xb1J=_JKC4gT_GS4rA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 25 Feb 2015 02:53:20 -0500
+Received: by labhs14 with SMTP id hs14so2118370lab.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Feb 2015 23:53:18 -0800 (PST)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH v2 1/4] ath10k: unify tx mode and dispatch
+Date: Wed, 25 Feb 2015 08:55:08 +0100
+Message-Id: <1424850911-21017-2-git-send-email-marek.puzyniak@tieto.com> (sfid-20150225_085334_182053_812AFC12)
+In-Reply-To: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 25 Feb 2015 01:49:02 +0100, Sergei Antonov wrote:
-> On 6 February 2015 at 18:29, Jakub Kiciński <moorray3@wp.pl> wrote:
-> > Hello everyone!
-> >
-> > I put together a mac80211 driver for Mediatek MT7601U.  It's partially
-> > based on Felix's mt76, but I'm not sure if it will make sense to merge
-> > the two together.  MT7601U is a pretty old 1x1 bgn chip for USB dongles
-> > and mt76 now only supports the latest and greatest ac APs.
-> >
-> > I'm testing STA functionality right now and it seems to be working ok.
-> > The code is very much a work in progress but if anyone is interested you
-> > can get it here:
-> >
-> > https://github.com/kuba-moo/mt7601u
-> 
-> Hi, Jakub! I happen to have 7601 dongle, so I tested you driver. There
-> were some problems, see "dmesg | grep mt7" output:
+From: Michal Kazior <michal.kazior@tieto.com>
 
-OK, let me start with a set of basic questions.
+There are a few different tx paths depending on
+firmware and frame itself.
 
-What device do you have (brand + model or picture on ebay please;))?
-What's the device ID?
-What platform are you working on?
-Is this error persistent or a one-time thing?
-Does the vendor driver work with your device?
-Can you also show content of
-/sys/kernel/debug/ieee80211/phy*/mt76/eeprom_param
-?
+Creating a uniform decision will make it possible
+to switch between different txmode easier, both
+for testing and for future features as well.
 
-> [    3.174960] mt7601u 3-5:1.0: ASIC revision: 76010001  MAC revision: 76010500
-> [    3.181705] mt7601u 3-5:1.0: Firmware Version: 0.1.00 Build: 7640
-> Build time: 201302052146____
-> [    3.573018] mt7601u 3-5:1.0: Warning: unsupported EEPROM version 0d
-> [    3.574853] mt7601u 3-5:1.0: EEPROM ver:0d fae:00
-> [    3.816647] usbcore: registered new interface driver mt7601u
-> [   10.461251] mt7601u_add_interface idx:0
-> [   10.463193] mt7601u_bss_info_changed 0000000e
-> [   10.469748] mt7601u_conf_tx 03 <- 0000
-> [   10.473738] mt7601u_conf_tx 02 <- 0001
-> [   10.477856] mt7601u_conf_tx 01 <- 0002
-> [   10.481980] mt7601u_conf_tx 00 <- 0003
-> [   10.486849] mt7601u_bss_info_changed 00002000
-> [   10.488671] mt7601u_config ffffffff ch:1
-> [   10.504305] mt76_configure_filter changed:0 total:80000000
-> [   10.508327] mt76_configure_filter changed:0 total:80000000
-> [   10.550671] mt76_configure_filter changed:0 total:80000000
-> [   10.616870] mt7601u_config 00000100 ch:1
-> [   10.619449] mt76_configure_filter changed:10 total:80000010
-> [   10.621541] mt7601u_config 00000040 ch:1
-> [   10.692407] mt7601u_config 00000040 ch:2
-> [   10.992113] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
-> [   11.291819] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
-> [   11.591524] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
-> [   11.891230] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
-> [   12.190936] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
-> [   12.192790] mt7601u 3-5:1.0: Error: mt7601u_mcu_wait_resp timed out
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h   |   2 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   8 --
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  30 +++---
+ drivers/net/wireless/ath/ath10k/mac.c    | 155 ++++++++++++++++++++++++-------
+ drivers/net/wireless/ath/ath10k/mac.h    |   8 ++
+ 5 files changed, 144 insertions(+), 59 deletions(-)
 
-Firmware clearly died somewhere between switch to channel 1 and to
-channel 2...  I made some changes to the FW loading routine, I will try
-to check the traces later today to confirm that I didn't break anything.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index d60e46f..94a8788 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -82,6 +82,8 @@ struct ath10k_skb_cb {
+ 	dma_addr_t paddr;
+ 	u8 eid;
+ 	u8 vdev_id;
++	enum ath10k_hw_txrx_mode txmode;
++	bool is_protected;
+ 
+ 	struct {
+ 		u8 tid;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index c1da44f..6d4bb5e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -637,14 +637,6 @@ static int ath10k_htt_rx_crypto_tail_len(struct ath10k *ar,
+ 	return 0;
+ }
+ 
+-struct rfc1042_hdr {
+-	u8 llc_dsap;
+-	u8 llc_ssap;
+-	u8 llc_ctrl;
+-	u8 snap_oui[3];
+-	__be16 snap_type;
+-} __packed;
+-
+ struct amsdu_subframe_hdr {
+ 	u8 dst[ETH_ALEN];
+ 	u8 src[ETH_ALEN];
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index cbd2bc9..5b2c61b 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -420,9 +420,8 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	int res;
+ 	u8 flags0 = 0;
+ 	u16 msdu_id, flags1 = 0;
+-	dma_addr_t paddr;
+-	u32 frags_paddr;
+-	bool use_frags;
++	dma_addr_t paddr = 0;
++	u32 frags_paddr = 0;
+ 
+ 	res = ath10k_htt_tx_inc_pending(htt);
+ 	if (res)
+@@ -440,12 +439,6 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	prefetch_len = min(htt->prefetch_len, msdu->len);
+ 	prefetch_len = roundup(prefetch_len, 4);
+ 
+-	/* Since HTT 3.0 there is no separate mgmt tx command. However in case
+-	 * of mgmt tx using TX_FRM there is not tx fragment list. Instead of tx
+-	 * fragment list host driver specifies directly frame pointer. */
+-	use_frags = htt->target_version_major < 3 ||
+-		    !ieee80211_is_mgmt(hdr->frame_control);
+-
+ 	skb_cb->htt.txbuf = dma_pool_alloc(htt->tx_pool, GFP_ATOMIC,
+ 					   &paddr);
+ 	if (!skb_cb->htt.txbuf) {
+@@ -466,7 +459,12 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	if (res)
+ 		goto err_free_txbuf;
+ 
+-	if (likely(use_frags)) {
++	switch (skb_cb->txmode) {
++	case ATH10K_HW_TXRX_RAW:
++	case ATH10K_HW_TXRX_NATIVE_WIFI:
++		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
++		/* pass through */
++	case ATH10K_HW_TXRX_ETHERNET:
+ 		frags = skb_cb->htt.txbuf->frags;
+ 
+ 		frags[0].paddr = __cpu_to_le32(skb_cb->paddr);
+@@ -474,15 +472,17 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 		frags[1].paddr = 0;
+ 		frags[1].len = 0;
+ 
+-		flags0 |= SM(ATH10K_HW_TXRX_NATIVE_WIFI,
+-			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
++		flags0 |= SM(skb_cb->txmode, HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
+ 
+ 		frags_paddr = skb_cb->htt.txbuf_paddr;
+-	} else {
++		break;
++	case ATH10K_HW_TXRX_MGMT:
+ 		flags0 |= SM(ATH10K_HW_TXRX_MGMT,
+ 			     HTT_DATA_TX_DESC_FLAGS0_PKT_TYPE);
++		flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
+ 
+ 		frags_paddr = skb_cb->paddr;
++		break;
+ 	}
+ 
+ 	/* Normally all commands go through HTC which manages tx credits for
+@@ -508,11 +508,9 @@ int ath10k_htt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 			prefetch_len);
+ 	skb_cb->htt.txbuf->htc_hdr.flags = 0;
+ 
+-	if (!ieee80211_has_protected(hdr->frame_control))
++	if (!skb_cb->is_protected)
+ 		flags0 |= HTT_DATA_TX_DESC_FLAGS0_NO_ENCRYPT;
+ 
+-	flags0 |= HTT_DATA_TX_DESC_FLAGS0_MAC_HDR_PRESENT;
+-
+ 	flags1 |= SM((u16)vdev_id, HTT_DATA_TX_DESC_FLAGS1_VDEV_ID);
+ 	flags1 |= SM((u16)tid, HTT_DATA_TX_DESC_FLAGS1_EXT_TID);
+ 	if (msdu->ip_summed == CHECKSUM_PARTIAL) {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index d6d2f0f..6d126d0 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2182,6 +2182,43 @@ static u8 ath10k_tx_h_get_vdev_id(struct ath10k *ar, struct ieee80211_vif *vif)
+ 	return 0;
+ }
+ 
++static enum ath10k_hw_txrx_mode
++ath10k_tx_h_get_txmode(struct ath10k *ar, struct ieee80211_vif *vif,
++		       struct sk_buff *skb)
++{
++	const struct ieee80211_hdr *hdr = (void *)skb->data;
++	__le16 fc = hdr->frame_control;
++
++	if (!vif || vif->type == NL80211_IFTYPE_MONITOR)
++		return ATH10K_HW_TXRX_RAW;
++
++	if (ieee80211_is_mgmt(fc))
++		return ATH10K_HW_TXRX_MGMT;
++
++	/* Workaround:
++	 *
++	 * NullFunc frames are mostly used to ping if a client or AP are still
++	 * reachable and responsive. This implies tx status reports must be
++	 * accurate - otherwise either mac80211 or userspace (e.g. hostapd) can
++	 * come to a conclusion that the other end disappeared and tear down
++	 * BSS connection or it can never disconnect from BSS/client (which is
++	 * the case).
++	 *
++	 * Firmware with HTT older than 3.0 delivers incorrect tx status for
++	 * NullFunc frames to driver. However there's a HTT Mgmt Tx command
++	 * which seems to deliver correct tx reports for NullFunc frames. The
++	 * downside of using it is it ignores client powersave state so it can
++	 * end up disconnecting sleeping clients in AP mode. It should fix STA
++	 * mode though because AP don't sleep.
++	 */
++	if (ar->htt.target_version_major < 3 &&
++	    (ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
++	    !test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX, ar->fw_features))
++		return ATH10K_HW_TXRX_MGMT;
++
++	return ATH10K_HW_TXRX_NATIVE_WIFI;
++}
++
+ /* HTT Tx uses Native Wifi tx mode which expects 802.11 frames without QoS
+  * Control in the header.
+  */
+@@ -2211,6 +2248,33 @@ static void ath10k_tx_h_nwifi(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	}
+ }
+ 
++static void ath10k_tx_h_8023(struct sk_buff *skb)
++{
++	struct ieee80211_hdr *hdr;
++	struct rfc1042_hdr *rfc1042;
++	struct ethhdr *eth;
++	size_t hdrlen;
++	u8 da[ETH_ALEN];
++	u8 sa[ETH_ALEN];
++	__be16 type;
++
++	hdr = (void *)skb->data;
++	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	rfc1042 = (void *)skb->data + hdrlen;
++
++	ether_addr_copy(da, ieee80211_get_DA(hdr));
++	ether_addr_copy(sa, ieee80211_get_SA(hdr));
++	type = rfc1042->snap_type;
++
++	skb_pull(skb, hdrlen + sizeof(*rfc1042));
++	skb_push(skb, sizeof(*eth));
++
++	eth = (void *)skb->data;
++	ether_addr_copy(eth->h_dest, da);
++	ether_addr_copy(eth->h_source, sa);
++	eth->h_proto = type;
++}
++
+ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
+ 				       struct ieee80211_vif *vif,
+ 				       struct sk_buff *skb)
+@@ -2247,45 +2311,51 @@ static bool ath10k_mac_need_offchan_tx_work(struct ath10k *ar)
+ 		 ar->htt.target_version_minor >= 4);
+ }
+ 
+-static void ath10k_tx_htt(struct ath10k *ar, struct sk_buff *skb)
++static int ath10k_mac_tx_wmi_mgmt(struct ath10k *ar, struct sk_buff *skb)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	struct sk_buff_head *q = &ar->wmi_mgmt_tx_queue;
+ 	int ret = 0;
+ 
+-	if (ar->htt.target_version_major >= 3) {
+-		/* Since HTT 3.0 there is no separate mgmt tx command */
+-		ret = ath10k_htt_tx(&ar->htt, skb);
+-		goto exit;
++	spin_lock_bh(&ar->data_lock);
++
++	if (skb_queue_len(q) == ATH10K_MAX_NUM_MGMT_PENDING) {
++		ath10k_warn(ar, "wmi mgmt tx queue is full\n");
++		ret = -ENOSPC;
++		goto unlock;
+ 	}
+ 
+-	if (ieee80211_is_mgmt(hdr->frame_control)) {
+-		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
+-			     ar->fw_features)) {
+-			if (skb_queue_len(&ar->wmi_mgmt_tx_queue) >=
+-			    ATH10K_MAX_NUM_MGMT_PENDING) {
+-				ath10k_warn(ar, "reached WMI management transmit queue limit\n");
+-				ret = -EBUSY;
+-				goto exit;
+-			}
++	__skb_queue_tail(q, skb);
++	ieee80211_queue_work(ar->hw, &ar->wmi_mgmt_tx_work);
+ 
+-			skb_queue_tail(&ar->wmi_mgmt_tx_queue, skb);
+-			ieee80211_queue_work(ar->hw, &ar->wmi_mgmt_tx_work);
+-		} else {
+-			ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
+-		}
+-	} else if (!test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
+-			     ar->fw_features) &&
+-		   ieee80211_is_nullfunc(hdr->frame_control)) {
+-		/* FW does not report tx status properly for NullFunc frames
+-		 * unless they are sent through mgmt tx path. mac80211 sends
+-		 * those frames when it detects link/beacon loss and depends
+-		 * on the tx status to be correct. */
+-		ret = ath10k_htt_mgmt_tx(&ar->htt, skb);
+-	} else {
+-		ret = ath10k_htt_tx(&ar->htt, skb);
++unlock:
++	spin_unlock_bh(&ar->data_lock);
++
++	return ret;
++}
++
++static void ath10k_mac_tx(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct ath10k_skb_cb *cb = ATH10K_SKB_CB(skb);
++	struct ath10k_htt *htt = &ar->htt;
++	int ret = 0;
++
++	switch (cb->txmode) {
++	case ATH10K_HW_TXRX_RAW:
++	case ATH10K_HW_TXRX_NATIVE_WIFI:
++	case ATH10K_HW_TXRX_ETHERNET:
++		ret = ath10k_htt_tx(htt, skb);
++		break;
++	case ATH10K_HW_TXRX_MGMT:
++		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
++			     ar->fw_features))
++			ret = ath10k_mac_tx_wmi_mgmt(ar, skb);
++		else if (ar->htt.target_version_major >= 3)
++			ret = ath10k_htt_tx(htt, skb);
++		else
++			ret = ath10k_htt_mgmt_tx(htt, skb);
++		break;
+ 	}
+ 
+-exit:
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
+ 			    ret);
+@@ -2358,7 +2428,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 		ar->offchan_tx_skb = skb;
+ 		spin_unlock_bh(&ar->data_lock);
+ 
+-		ath10k_tx_htt(ar, skb);
++		ath10k_mac_tx(ar, skb);
+ 
+ 		ret = wait_for_completion_timeout(&ar->offchan_tx_completed,
+ 						  3 * HZ);
+@@ -2572,6 +2642,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
++	__le16 fc = hdr->frame_control;
+ 
+ 	/* We should disable CCK RATE due to P2P */
+ 	if (info->flags & IEEE80211_TX_CTL_NO_CCK_RATE)
+@@ -2580,12 +2651,26 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
+ 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
+ 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
++	ATH10K_SKB_CB(skb)->txmode = ath10k_tx_h_get_txmode(ar, vif, skb);
++	ATH10K_SKB_CB(skb)->is_protected = ieee80211_has_protected(fc);
+ 
+-	/* it makes no sense to process injected frames like that */
+-	if (vif && vif->type != NL80211_IFTYPE_MONITOR) {
++	switch (ATH10K_SKB_CB(skb)->txmode) {
++	case ATH10K_HW_TXRX_MGMT:
++	case ATH10K_HW_TXRX_NATIVE_WIFI:
+ 		ath10k_tx_h_nwifi(hw, skb);
+ 		ath10k_tx_h_add_p2p_noa_ie(ar, vif, skb);
+ 		ath10k_tx_h_seq_no(vif, skb);
++		break;
++	case ATH10K_HW_TXRX_ETHERNET:
++		ath10k_tx_h_8023(skb);
++		break;
++	case ATH10K_HW_TXRX_RAW:
++		/* FIXME: Packet injection isn't implemented. It should be
++		 * doable with firmware 10.2 on qca988x.
++		 */
++		WARN_ON_ONCE(1);
++		ieee80211_free_txskb(hw, skb);
++		return;
+ 	}
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN) {
+@@ -2607,7 +2692,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	ath10k_tx_htt(ar, skb);
++	ath10k_mac_tx(ar, skb);
+ }
+ 
+ /* Must not be called with conf_mutex held as workers can use that also. */
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index 6829611..7b63def 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -28,6 +28,14 @@ struct ath10k_generic_iter {
+ 	int ret;
+ };
+ 
++struct rfc1042_hdr {
++	u8 llc_dsap;
++	u8 llc_ssap;
++	u8 llc_ctrl;
++	u8 snap_oui[3];
++	__be16 snap_type;
++} __packed;
++
+ struct ath10k *ath10k_mac_create(size_t priv_size);
+ void ath10k_mac_destroy(struct ath10k *ar);
+ int ath10k_mac_register(struct ath10k *ar);
+-- 
+2.1.4
 
-> Is it because of "unsupported EEPROM version 0d"?
-
-Don't think so.  It's just for compatibility with vendor driver,
-they warn too.  All new devices have EEPROM ver == 0x0d though.  I plan
-to ask MediaTek about it in a week or two (Chinese New Year) and
-remove the warning.
