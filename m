@@ -1,93 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:59869 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752951AbbBFOIU convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:55729 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753189AbbBYSve (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 09:08:20 -0500
-Received: by mail-wi0-f174.google.com with SMTP id n3so2735825wiv.1
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 06:08:19 -0800 (PST)
+	Wed, 25 Feb 2015 13:51:34 -0500
+Received: from [192.168.100.236] (unknown [50.251.239.81])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id 536A540A959
+	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 10:51:34 -0800 (PST)
+Message-ID: <54EE19B5.9040807@candelatech.com> (sfid-20150225_195138_688914_DE56C6F2)
+Date: Wed, 25 Feb 2015 10:51:33 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	<1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	<1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	<1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	<1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
-	<1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
-	<1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
-	<1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
-	<1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
-	<1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
-	<1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
-	<1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Fri, 6 Feb 2015 15:08:19 +0100
-Message-ID: <CA+BoTQnEvF_mi68gyFns67oKC=8jEYdi3tLuW5dNj20KwUNs9A@mail.gmail.com> (sfid-20150206_150825_684695_AED2110D)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Neal Cardwell <ncardwell@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Eyal Perry <eyalpe@dev.mellanox.co.il>
-Content-Type: text/plain; charset=UTF-8
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Question on tx-power and number of chains.
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 February 2015 at 14:40, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Fri, 2015-02-06 at 10:42 +0100, Michal Kazior wrote:
->
->> The above brings back previous behaviour, i.e. I can get 600mbps TCP
->> on 5 flows again. Single flow is still (as it was before TSO
->> autosizing) limited to roughly ~280mbps.
->>
->> I never really bothered before to understand why I need to push a few
->> flows through ath10k to max it out, i.e. if I run a single UDP flow I
->> get ~300mbps while with, e.g. 5 I get 670mbps easily.
->>
->
-> For single UDP flow, tweaking /proc/sys/net/core/wmem_default might be
-> enough : UDP has no callback from TX completion to feed following frames
-> (No write queue like TCP)
->
-> # cat /proc/sys/net/core/wmem_default
-> 212992
-> # ethtool -C eth1 tx-usecs 1024 tx-frames 120
-> # ./netperf -H remote -t UDP_STREAM -- -m 1450
-> Socket  Message  Elapsed      Messages
-> Size    Size     Time         Okay Errors   Throughput
-> bytes   bytes    secs            #      #   10^6bits/sec
->
-> 212992    1450   10.00      697705      0     809.27
-> 212992           10.00      673412            781.09
->
-> # echo 800000 >/proc/sys/net/core/wmem_default
-> # ./netperf -H remote -t UDP_STREAM -- -m 1450
-> Socket  Message  Elapsed      Messages
-> Size    Size     Time         Okay Errors   Throughput
-> bytes   bytes    secs            #      #   10^6bits/sec
->
-> 800000    1450   10.00     7329221      0    8501.84
-> 212992           10.00     7284051           8449.44
+Suppose a NIC wants to decrease TX power for certain rates based on the
+number of chains (ie, subtract amount A from requested rate for 2 chains,
+and B for 3 chains).
 
-Hmm.. I confirm it works. However the value at which I get full rate
-on a single flow is more than 2048K. Also using non-default
-wmem_default seems to introduce packet loss as per iperf reports at
-the receiver. I suppose this is kind of expected but on the other hand
-wmem_default=262992 and 5 flows of UDP max the device out with 0
-packet loss.
+I assume the NIC wants to do this is because if the pkt is transmitted out each antenna,
+then there is ~3x the power put onto the air.
 
+Now, the question is, should this power-decrease be per rate,
+and perhaps different for each rate, or can all rates use all
+tx-chains (and so tx-power should be decreased the same maximum amount
+based on the hardware's number of chains for each rate).
 
-Michał
+I am thinking that CCK rates can only ever be transmitted by a single
+chain, so in that case those rates would not need their power decreased
+from the requested?
+
+And if that is so, what about the /a/g/ rates, and lower-speed HT/VHT
+rates as well?
+
+Is there a table somewhere that explains how many chains are used by each
+rate?
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
