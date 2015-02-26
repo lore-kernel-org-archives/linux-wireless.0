@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.12]:5297 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755154AbbBPJvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Feb 2015 04:51:25 -0500
-Received: from out.poczta.wp.pl ([212.77.101.240])
-          (envelope-sender <sp2ong@wp.pl>)
-          by smtp.wp.pl (WP-SMTPD) with SMTP
-          for <linux-wireless@vger.kernel.org>; 16 Feb 2015 10:51:23 +0100
-Date: Mon, 16 Feb 2015 10:51:23 +0100
-From: Waldek <sp2ong@wp.pl>
-To: linux-wireless@vger.kernel.org
-Subject: 10/5 Mhz channel width is possible ?
-Message-ID: <54e1bd9b748a00.69475037@wp.pl> (sfid-20150216_105130_571140_90560010)
+Received: from smtp.codeaurora.org ([198.145.29.96]:57635 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbbBZNDy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 08:03:54 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: brcm80211: drop unreachable else case
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1423229210-7313-1-git-send-email-hofrat@osadl.org>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Fabian Frederick <fabf@skynet.be>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Message-Id: <20150226130354.06FE5140580@smtp.codeaurora.org> (sfid-20150226_140418_235613_49FBD4D6)
+Date: Thu, 26 Feb 2015 13:03:53 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-Hi,
+> the if/elseif/else is exhaustive - there is no 4th case given the 
+>   rssi_ctrl_mask = RADIO_2055_NBRSSI_SEL | RADIO_2055_WBRSSI_G1_SEL | 
+>   RADIO_2055_WBRSSI_G2_SEL;
+> so this unreachable else case (dead code) can be dropped.
+> 
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-I have linux kernel version 3.19 and iw tool v3.17. I have use USB WIFI WN722N which use ATH9k_htc driver from kernel
-I would like setup channel width 5 MHZ form my ad-hoc Mesh network base on olsrd
+Thanks, applied to wireless-drivers-next.git.
 
-I have try setup in following
-
-iw wlan0 set type ibss
-ip link set wlan0 up
-iw wlan0 ibss join MYNet 2447 5MHZ
-
-but I have message:
-
-command failed: Invalid argument (-22)
-
-when I use 
-iw wlan0 ibss join MYNet 2447
-
-no error message but channel width is 20 Mhz
-
-I have see syntax iw tools:
-
- iw   dev <devname> ibss join <SSID> <freq in MHz> [HT20|HT40+|HT40-|NOHT|5MHZ|10MHZ] [fixed-freq] [<fixed bssid>] [beacon-interval <TU>] [basic-rates <rate in Mbps,rate2,...>] [mcast-rate <rate in Mbps>] [key d:0:abcde]
-
-it is look that in ibss mode I can set 10 or 5 Mhz width channel but don't work
-
-I have local network which working on OpenWRT with UBNT devices with channel width 5 Mhz
-I would like get access to my local network from my laptop with Linux and use USB WIFI WN722N
-
-What is wrong ??
-
-Thank you for help and any suggestion
-
-Waldek
-
-
-
-
-
-
+Kalle Valo
