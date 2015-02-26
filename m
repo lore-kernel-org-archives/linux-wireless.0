@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1101 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964928AbbBCHOo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 02:14:44 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/19] iwlwifi: mvm: don't reprobe if we fail during reconfig and fw_restart is false
-Date: Tue,  3 Feb 2015 09:14:21 +0200
-Message-Id: <1422947678-16917-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081448_699517_D388D129)
-In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
-References: <1422947482.30742.8.camel@egrumbacBox>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:33436 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753420AbbBZN4v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 08:56:51 -0500
+Received: by wghb13 with SMTP id b13so11013594wgh.0
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2015 05:56:50 -0800 (PST)
+Message-ID: <54EF261E.4040109@gmail.com> (sfid-20150226_145657_825011_F4F9FAFE)
+Date: Thu, 26 Feb 2015 14:56:46 +0100
+From: poma <pomidorabelisima@gmail.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?SmFrdWIgS2ljacWEc2tp?= <moorray3@wp.pl>,
+	linux-wireless@vger.kernel.org
+CC: Larry Finger <Larry.Finger@lwfinger.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Etna <etna@openmailbox.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: MediaTek WiFi hardware support in upstream kernel
+References: <544DB5A8.7090405@openmailbox.org>	<20141027152026.GB19976@tuxdriver.com>	<544E8CB4.3000607@rempel-privat.de>	<20141028134608.GA26283@tuxdriver.com>	<544FA303.5060303@broadcom.com>	<544FA627.3000004@rempel-privat.de>	<5450BEB2.60208@openwrt.org>	<5461F937.9060004@rempel-privat.de>	<5463CB6C.3030204@openwrt.org>	<5463D28F.9080106@lwfinger.net> <20150206182915.7467bac7@north>
+In-Reply-To: <20150206182915.7467bac7@north>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On 06.02.2015 18:29, Jakub Kiciński wrote:
+> Hello everyone!
+> 
+> I put together a mac80211 driver for Mediatek MT7601U.  It's partially
+> based on Felix's mt76, but I'm not sure if it will make sense to merge
+> the two together.  MT7601U is a pretty old 1x1 bgn chip for USB dongles
+> and mt76 now only supports the latest and greatest ac APs.
+> 
+> I'm testing STA functionality right now and it seems to be working ok.
+> The code is very much a work in progress but if anyone is interested you
+> can get it here:
+> 
+> https://github.com/kuba-moo/mt7601u
+> 
+> Cheers,
+> kuba
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-If we don't want to restart the firmware, don't reprobe either in case
-of a failure during reconfiguration.  This allows us to debug failures
-in the reconfig flow as well.
+How many mt7601u module editions exists there? :)
+- vendor's
+- vendor's patched (how many forms of the same)
+- your reinvented
+- the one on which pán Gruszka allegedly works?
+- any more?
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/ops.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
-index 8bf8c2a..b1dea68 100644
---- a/drivers/net/wireless/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
-@@ -870,7 +870,10 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 	 * If WoWLAN fw asserted, don't restart either, mac80211
- 	 * can't recover this since we're already half suspended.
- 	 */
--	if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)) {
-+	if (!mvm->restart_fw && fw_error) {
-+		schedule_work(&mvm->fw_error_dump_wk);
-+	} else if (test_and_set_bit(IWL_MVM_STATUS_IN_HW_RESTART,
-+				    &mvm->status)) {
- 		struct iwl_mvm_reprobe *reprobe;
- 
- 		IWL_ERR(mvm,
-@@ -894,16 +897,13 @@ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error)
- 		reprobe->dev = mvm->trans->dev;
- 		INIT_WORK(&reprobe->work, iwl_mvm_reprobe_wk);
- 		schedule_work(&reprobe->work);
--	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR &&
--		   (!fw_error || mvm->restart_fw)) {
-+	} else if (mvm->cur_ucode == IWL_UCODE_REGULAR) {
- 		/* don't let the transport/FW power down */
- 		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
- 
- 		if (fw_error && mvm->restart_fw > 0)
- 			mvm->restart_fw--;
- 		ieee80211_restart_hw(mvm->hw);
--	} else if (fw_error) {
--		schedule_work(&mvm->fw_error_dump_wk);
- 	}
- }
- 
--- 
-1.9.1
 
