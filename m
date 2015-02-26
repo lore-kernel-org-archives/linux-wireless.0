@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:54215 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754543AbbBJNRP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55268 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752983AbbBZMFW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 08:17:15 -0500
-Message-ID: <1423574228.28434.22.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150210_141747_087340_21D0A4DC)
-Subject: Re: [PATCH] rtlwifi: ratelimit skb allocation failure message
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Tue, 10 Feb 2015 05:17:08 -0800
-In-Reply-To: <1423558471-27278-1-git-send-email-colin.king@canonical.com>
-References: <1423558471-27278-1-git-send-email-colin.king@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 26 Feb 2015 07:05:22 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH 9/9] wil6210: Align Rx buffers on 4*n+2
+References: <1424001758-29529-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1424001758-29529-10-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<2609868.jbmxKLRXsk@lx-wigig-72>
+Date: Thu, 26 Feb 2015 14:05:14 +0200
+In-Reply-To: <2609868.jbmxKLRXsk@lx-wigig-72> (Vladimir Kondratiev's message
+	of "Thu, 19 Feb 2015 08:47:11 +0200")
+Message-ID: <874mq8ev45.fsf@kamboji.qca.qualcomm.com> (sfid-20150226_130525_758484_A35B96E4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-02-10 at 08:54 +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> when running low on memory I noticed rtlwifi was producing a large
-> quantity of repeated skb allocation failures messages.  This should
-> be ratelimited to reduce the noise.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/net/wireless/rtlwifi/pci.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index c70efb9..ca0fd50 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -817,7 +817,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
->  		/* get a new skb - if fail, old one will be reused */
->  		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
->  		if (unlikely(!new_skb)) {
-> -			pr_err("Allocation of new skb failed in %s\n",
-> +			pr_err_ratelimited("Allocation of new skb failed in %s\n",
->  			       __func__);
+Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com> writes:
 
-Or even better, remove the message.
+> On Sunday, February 15, 2015 02:02:38 PM Vladimir Kondratiev wrote:
+>> For the normal (non-sniffer) mode of operation, align Rx buffer
+>> on 4*n+2, so IP header (after 14 bytes of Ethernet header)
+>> will start dword aligned. This accelerated IP stack a little bit.
+>> 
+>> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+>> 
+> Kalle,
+>
+> please do not apply this patch. I found last minute problem with it - 
+> hardware is not always happy.
+>
+> For now, drop it please. I will do more testing and re-submit this
+> patch if everything wends OK.
 
+Ok, I dropped this patch. Patches 1-8 are still on my queue.
 
+-- 
+Kalle Valo
