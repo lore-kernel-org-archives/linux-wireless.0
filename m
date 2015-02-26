@@ -1,353 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:45906 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755260AbbBBMsS (ORCPT
+Received: from mx3.wp.pl ([212.77.101.10]:20604 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752307AbbBZQF0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 07:48:18 -0500
-Received: from [117.216.55.194] (port=15247 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YIGQL-002djK-Ki
-	for linux-wireless@vger.kernel.org; Mon, 02 Feb 2015 07:48:18 -0500
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/6] ath9k: Fix issues with WoW enable
-Date: Mon,  2 Feb 2015 18:21:10 +0530
-Message-Id: <1422881473-24580-4-git-send-email-sujith@msujith.org> (sfid-20150202_135440_027704_2C9ADD7D)
-In-Reply-To: <1422881473-24580-1-git-send-email-sujith@msujith.org>
-References: <1422881473-24580-1-git-send-email-sujith@msujith.org>
+	Thu, 26 Feb 2015 11:05:26 -0500
+Date: Thu, 26 Feb 2015 17:05:22 +0100
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Sergei Antonov <saproj@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mt7601u dies during channel switch (was: MediaTek WiFi hardware
+ support in upstream kernel)
+Message-ID: <20150226170522.01605ac4@north> (sfid-20150226_170533_003457_7C930F64)
+In-Reply-To: <CABikg9xU+vj_W+TF4d7=x52u8abhkXC0qPGsOgRUMXDhRA0NFQ@mail.gmail.com>
+References: <544DB5A8.7090405@openmailbox.org>
+	<20141027152026.GB19976@tuxdriver.com>
+	<544E8CB4.3000607@rempel-privat.de>
+	<20141028134608.GA26283@tuxdriver.com>
+	<544FA303.5060303@broadcom.com>
+	<544FA627.3000004@rempel-privat.de>
+	<5450BEB2.60208@openwrt.org>
+	<5461F937.9060004@rempel-privat.de>
+	<5463CB6C.3030204@openwrt.org>
+	<5463D28F.9080106@lwfinger.net>
+	<20150206182915.7467bac7@north>
+	<CABikg9yw8Py59KyJ1mP6bfCrMPuup7v9xb1J=_JKC4gT_GS4rA@mail.gmail.com>
+	<20150225103311.436f4321@north>
+	<CABikg9xU+vj_W+TF4d7=x52u8abhkXC0qPGsOgRUMXDhRA0NFQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+On Thu, 26 Feb 2015 00:58:59 +0100, Sergei Antonov wrote:
+> On 25 February 2015 at 10:33, Jakub Kiciński <moorray3@wp.pl> wrote:
+> > On Wed, 25 Feb 2015 01:49:02 +0100, Sergei Antonov wrote:
+> >> On 6 February 2015 at 18:29, Jakub Kiciński <moorray3@wp.pl> wrote:
+> >> > Hello everyone!
+> >> >
+> >> > I put together a mac80211 driver for Mediatek MT7601U.  It's partially
+> >> > based on Felix's mt76, but I'm not sure if it will make sense to merge
+> >> > the two together.  MT7601U is a pretty old 1x1 bgn chip for USB dongles
+> >> > and mt76 now only supports the latest and greatest ac APs.
+> >> >
+> >> > I'm testing STA functionality right now and it seems to be working ok.
+> >> > The code is very much a work in progress but if anyone is interested you
+> >> > can get it here:
+> >> >
+> >> > https://github.com/kuba-moo/mt7601u
+> >>
+> >> Hi, Jakub! I happen to have 7601 dongle, so I tested you driver. There
+> >> were some problems, see "dmesg | grep mt7" output:
+> >
+> > OK, let me start with a set of basic questions.
+> >
+> > What device do you have (brand + model or picture on ebay please;))?
+> 
+> http://www.ebay.de/itm/221662285066
+> 
+> > What's the device ID?
+> 
+> Bus 003 Device 006: ID 148f:7601 Ralink Technology, Corp.
+> 
+> > What platform are you working on?
+> 
+> Linux linux64 3.19.0-05375-gd347efe #17 SMP Sun Feb 15 16:38:24 CET
+> 2015 x86_64 GNU/Linux
+> 
+> > Is this error persistent or a one-time thing?
+> 
+> It is persistent.
+> 
+> > Does the vendor driver work with your device?
 
-This patch addresses several issues with the
-ath9k_hw_wow_enable() routine:
+Thanks for the information, I have exactly that device here and it
+works fine, including on x86_64.  You can try going back to commits
+19cdcb583f18 ("don't allow AMPDUs with probe rates") and 
+e9d7b296fea0 ("mitigate DMA problems on very poor link") from my repo.
+Maybe I did screw something up when cleaning up the MCU code.
 
-* The usage of set/clr variables is removed. Writing
-  the required values to registers is cleaner.
+> Yes. I took DPO_MT7601U_LinuxSTA_3.0.0.4_20130913.tar.bz2, applied
+> rt2870-mt7601Usta-kuid_t-kgid_t.patch (can bee easily googled, it is
+> needed to compile for recent kernels) and the device was able to
+> connect to my AP. The only suspicious thing was that the output to the
+> console was very verbose. I didn't take time to see if it was just
+> trace or a sign of a problem. I can repeat this and look more closely.
+> I can also look deeper into the critical moment between ch1 and ch2
+> you mention.
 
-* The shift value of 28 for the contention window field
-  in AR_WOW_PATTERN is incorrect, change it to 27.
+I would appreciate if you could set RTDebugLevel to RT_DEBUG_LOUD in
+src/os/linux/rt_linux.c of the vendor driver (line 54) and get a full
+log of it associating to an AP.  Please post it somewhere like
+pastebin.com or attach to an email.  Let me know if you need help.
 
-* Disabling Keep Alive needs to be done based on the
-  LINK_CHANGE option. This is done unconditionally now,
-  fix this.
+> > Can you also show content of
+> > /sys/kernel/debug/ieee80211/phy*/mt76/eeprom_param
+> > ?
+> 
+> /sys/kernel/debug is empty on my machine.
 
-* The workaround for the D1/D3 issue is required only
-  for AR9462.
+You can mount it by saying (as root):
+# mount -t debugfs /sys/kernel/debug/
 
-* The bitfield for enabling pattern matching for packets
-  less than 256 bytes has expanded for new chips, handle
-  this accordingly.
+> I did 'git pull' now, recompiled the driver, rebooted. Here is the
+> relevant piece of dmesg output:
+> 
+> [   10.931816] mt7601u_add_interface idx:0
+> [   10.933012] mt7601u_bss_info_changed 0000000e
+> [   10.934126] [prot transition] mode:0000 bgprot:0 non-gf:0 non-ht:0
+> [   10.937859] mt7601u_conf_tx 03 <- 0000
+> [   10.942100] mt7601u_conf_tx 02 <- 0001
+> [   10.945173] mt7601u_conf_tx 01 <- 0002
+> [   10.949340] mt7601u_conf_tx 00 <- 0003
+> [   10.952607] mt7601u_bss_info_changed 00002000
+> [   10.953611] mt7601u_config ffffffff ch:1
+> [   10.967710] mt76_configure_filter changed:0 total:80000000
+> [   10.967725] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
+> [   10.970070] mt76_configure_filter changed:0 total:80000000
+> [   10.980384] cfg80211: Calling CRDA to update world regulatory domain
+> [   11.012397] mt76_configure_filter changed:0 total:80000000
+> [   11.080505] mt7601u_config 00000100 ch:1
+> [   11.082447] mt76_configure_filter changed:10 total:80000010
+> [   11.083827] mt7601u_config 00000040 ch:1
+> [   11.128025] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.2
+> domain=0x0007 address=0x00000000c99a6000 flags=0x0010]
+> [   11.129175] AMD-Vi: Event logged [IO_PAGE_FAULT device=00:12.2
+> domain=0x0007 address=0x00000000c99a6040 flags=0x0010]
+> [   11.155951] mt7601u_config 00000040 ch:2
+> [   11.455658] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
+> [   11.755362] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
+> [   12.055067] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
+> [   12.354758] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
+> [   12.654476] mt7601u 3-5:1.0: Warning: mt7601u_mcu_wait_resp retrying
+> [   12.655597] mt7601u 3-5:1.0: Error: mt7601u_mcu_wait_resp timed out
+> [   12.656593] mt7601u_config 00000040 ch:3
+> [   13.154228] mt7601u 3-5:1.0: Error: send MCU cmd failed:-110
+> [   13.155318] mt7601u_config 00000040 ch:4
+> [   13.653709] mt7601u 3-5:1.0: Error: send MCU cmd failed:-110
+> 
+> Note the two messages about IO_PAGE_FAULT in device 00:12.2. This
+> device is a USB controller:
+> [    2.181191] ehci-pci 0000:00:12.2: EHCI Host Controller
+> But this controller is not guilty :), it works fine with other USB devices.
 
-* General cleanup.
+Perhaps I have some errors in DMA programming.  Can you disable all
+automatic WiFi things so they don't mess with the device (NetworkManger
+etc.), make sure the interface is not brought up, and then try (as
+root):
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_wow.c | 181 ++++++++++++++--------------
- drivers/net/wireless/ath/ath9k/hw.h         |   2 +-
- drivers/net/wireless/ath/ath9k/reg_wow.h    |   5 +-
- 3 files changed, 93 insertions(+), 95 deletions(-)
+iw dev wlan1 interface add monT type monitor
+ifconfig monT up
+iw dev monT set channel 2
+iw dev monT set channel 1
+iw dev monT set channel 2 HT40+
+iw dev monT set channel 10 HT40-
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_wow.c b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-index 4b53d0b..6ffa0e0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_wow.c
-@@ -222,14 +222,9 @@ EXPORT_SYMBOL(ath9k_hw_wow_wakeup);
- void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
- {
- 	u32 wow_event_mask;
-+	u32 keep_alive, magic_pattern, host_pm_ctrl;
- 	u32 set, clr;
- 
--	/*
--	 * wow_event_mask is a mask to the AR_WOW_PATTERN register to
--	 * indicate which WoW events we have enabled. The WoW events
--	 * are from the 'pattern_enable' in this function and
--	 * 'pattern_count' of ath9k_hw_wow_apply_pattern()
--	 */
- 	wow_event_mask = ah->wow.wow_event_mask;
- 
- 	/*
-@@ -249,152 +244,154 @@ void ath9k_hw_wow_enable(struct ath_hw *ah, u32 pattern_enable)
- 	}
- 
- 	/*
--	 * set the power states appropriately and enable PME
-+	 * AR_PMCTRL_HOST_PME_EN - Override PME enable in configuration
-+	 *                         space and allow MAC to generate WoW anyway.
-+	 *
-+	 * AR_PMCTRL_PWR_PM_CTRL_ENA - ???
-+	 *
-+	 * AR_PMCTRL_AUX_PWR_DET - PCI core SYS_AUX_PWR_DET signal,
-+	 *                         needs to be set for WoW in PCI mode.
-+	 *
-+	 * AR_PMCTRL_WOW_PME_CLR - WoW Clear Signal going to the MAC.
-+	 *
-+	 * Set the power states appropriately and enable PME.
-+	 *
-+	 * Set and clear WOW_PME_CLEAR for the chip
-+	 * to generate next wow signal.
- 	 */
--	set = AR_PMCTRL_HOST_PME_EN | AR_PMCTRL_PWR_PM_CTRL_ENA |
--	      AR_PMCTRL_AUX_PWR_DET | AR_PMCTRL_WOW_PME_CLR;
-+	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, AR_PMCTRL_HOST_PME_EN |
-+		    			 AR_PMCTRL_PWR_PM_CTRL_ENA |
-+		    			 AR_PMCTRL_AUX_PWR_DET |
-+		    			 AR_PMCTRL_WOW_PME_CLR);
-+	REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, AR_PMCTRL_WOW_PME_CLR);
- 
- 	/*
--	 * set and clear WOW_PME_CLEAR registers for the chip
--	 * to generate next wow signal.
-+	 * Random Backoff.
-+	 *
-+	 * 31:28 in AR_WOW_PATTERN : Indicates the number of bits used in the
-+	 *                           contention window. For value N,
-+	 *                           the random backoff will be selected between
-+	 *                           0 and (2 ^ N) - 1.
- 	 */
--	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, set);
--	clr = AR_PMCTRL_WOW_PME_CLR;
--	REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, clr);
-+	REG_SET_BIT(ah, AR_WOW_PATTERN,
-+		    AR_WOW_BACK_OFF_SHIFT(AR_WOW_PAT_BACKOFF));
- 
- 	/*
--	 * Setup for:
--	 *	- beacon misses
--	 *	- magic pattern
--	 *	- keep alive timeout
--	 *	- pattern matching
-+	 * AIFS time, Slot time, Keep Alive count.
- 	 */
--
-+	REG_SET_BIT(ah, AR_WOW_COUNT, AR_WOW_AIFS_CNT(AR_WOW_CNT_AIFS_CNT) |
-+		    		      AR_WOW_SLOT_CNT(AR_WOW_CNT_SLOT_CNT) |
-+		    		      AR_WOW_KEEP_ALIVE_CNT(AR_WOW_CNT_KA_CNT));
- 	/*
--	 * Program default values for pattern backoff, aifs/slot/KAL count,
--	 * beacon miss timeout, KAL timeout, etc.
-+	 * Beacon timeout.
- 	 */
--	set = AR_WOW_BACK_OFF_SHIFT(AR_WOW_PAT_BACKOFF);
--	REG_SET_BIT(ah, AR_WOW_PATTERN, set);
--
--	set = AR_WOW_AIFS_CNT(AR_WOW_CNT_AIFS_CNT) |
--	      AR_WOW_SLOT_CNT(AR_WOW_CNT_SLOT_CNT) |
--	      AR_WOW_KEEP_ALIVE_CNT(AR_WOW_CNT_KA_CNT);
--	REG_SET_BIT(ah, AR_WOW_COUNT, set);
--
- 	if (pattern_enable & AH_WOW_BEACON_MISS)
--		set = AR_WOW_BEACON_TIMO;
--	/* We are not using beacon miss, program a large value */
-+		REG_WRITE(ah, AR_WOW_BCN_TIMO, AR_WOW_BEACON_TIMO);
- 	else
--		set = AR_WOW_BEACON_TIMO_MAX;
--
--	REG_WRITE(ah, AR_WOW_BCN_TIMO, set);
-+		REG_WRITE(ah, AR_WOW_BCN_TIMO, AR_WOW_BEACON_TIMO_MAX);
- 
- 	/*
--	 * Keep alive timo in ms except AR9280
-+	 * Keep alive timeout in ms.
- 	 */
- 	if (!pattern_enable)
--		set = AR_WOW_KEEP_ALIVE_NEVER;
-+		REG_WRITE(ah, AR_WOW_KEEP_ALIVE_TIMO, AR_WOW_KEEP_ALIVE_NEVER);
- 	else
--		set = KAL_TIMEOUT * 32;
--
--	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_TIMO, set);
-+		REG_WRITE(ah, AR_WOW_KEEP_ALIVE_TIMO, KAL_TIMEOUT * 32);
- 
- 	/*
--	 * Keep alive delay in us. based on 'power on clock',
--	 * therefore in usec
-+	 * Keep alive delay in us.
- 	 */
--	set = KAL_DELAY * 1000;
--	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_DELAY, set);
-+	REG_WRITE(ah, AR_WOW_KEEP_ALIVE_DELAY, KAL_DELAY * 1000);
- 
- 	/*
--	 * Create keep alive pattern to respond to beacons
-+	 * Create keep alive pattern to respond to beacons.
- 	 */
- 	ath9k_wow_create_keep_alive_pattern(ah);
- 
- 	/*
--	 * Configure MAC WoW Registers
-+	 * Configure keep alive register.
- 	 */
--	set = 0;
-+	keep_alive = REG_READ(ah, AR_WOW_KEEP_ALIVE);
-+
- 	/* Send keep alive timeouts anyway */
--	clr = AR_WOW_KEEP_ALIVE_AUTO_DIS;
-+	keep_alive &= ~AR_WOW_KEEP_ALIVE_AUTO_DIS;
- 
--	if (pattern_enable & AH_WOW_LINK_CHANGE)
-+	if (pattern_enable & AH_WOW_LINK_CHANGE) {
-+		keep_alive &= ~AR_WOW_KEEP_ALIVE_FAIL_DIS;
- 		wow_event_mask |= AR_WOW_KEEP_ALIVE_FAIL;
--	else
--		set = AR_WOW_KEEP_ALIVE_FAIL_DIS;
-+	} else {
-+		keep_alive |= AR_WOW_KEEP_ALIVE_FAIL_DIS;
-+	}
- 
--	set = AR_WOW_KEEP_ALIVE_FAIL_DIS;
--	REG_RMW(ah, AR_WOW_KEEP_ALIVE, set, clr);
-+	REG_WRITE(ah, AR_WOW_KEEP_ALIVE, keep_alive);
- 
- 	/*
--	 * we are relying on a bmiss failure. ensure we have
--	 * enough threshold to prevent false positives
-+	 * We are relying on a bmiss failure, ensure we have
-+	 * enough threshold to prevent false positives.
- 	 */
- 	REG_RMW_FIELD(ah, AR_RSSI_THR, AR_RSSI_THR_BM_THR,
- 		      AR_WOW_BMISSTHRESHOLD);
- 
--	set = 0;
--	clr = 0;
--
- 	if (pattern_enable & AH_WOW_BEACON_MISS) {
--		set = AR_WOW_BEACON_FAIL_EN;
- 		wow_event_mask |= AR_WOW_BEACON_FAIL;
-+		REG_SET_BIT(ah, AR_WOW_BCN_EN, AR_WOW_BEACON_FAIL_EN);
- 	} else {
--		clr = AR_WOW_BEACON_FAIL_EN;
-+		REG_CLR_BIT(ah, AR_WOW_BCN_EN, AR_WOW_BEACON_FAIL_EN);
- 	}
- 
--	REG_RMW(ah, AR_WOW_BCN_EN, set, clr);
--
--	set = 0;
--	clr = 0;
- 	/*
--	 * Enable the magic packet registers
-+	 * Enable the magic packet registers.
- 	 */
-+	magic_pattern = REG_READ(ah, AR_WOW_PATTERN);
-+	magic_pattern |= AR_WOW_MAC_INTR_EN;
-+
- 	if (pattern_enable & AH_WOW_MAGIC_PATTERN_EN) {
--		set = AR_WOW_MAGIC_EN;
-+		magic_pattern |= AR_WOW_MAGIC_EN;
- 		wow_event_mask |= AR_WOW_MAGIC_PAT_FOUND;
- 	} else {
--		clr = AR_WOW_MAGIC_EN;
-+		magic_pattern &= ~AR_WOW_MAGIC_EN;
- 	}
--	set |= AR_WOW_MAC_INTR_EN;
--	REG_RMW(ah, AR_WOW_PATTERN, set, clr);
- 
-+	REG_WRITE(ah, AR_WOW_PATTERN, magic_pattern);
-+
-+	/*
-+	 * Enable pattern matching for packets which are less
-+	 * than 256 bytes.
-+	 */
- 	REG_WRITE(ah, AR_WOW_PATTERN_MATCH_LT_256B,
- 		  AR_WOW_PATTERN_SUPPORTED);
- 
- 	/*
--	 * Set the power states appropriately and enable PME
-+	 * Set the power states appropriately and enable PME.
- 	 */
--	clr = 0;
--	set = AR_PMCTRL_PWR_STATE_D1D3 | AR_PMCTRL_HOST_PME_EN |
--	      AR_PMCTRL_PWR_PM_CTRL_ENA;
-+	host_pm_ctrl = REG_READ(ah, AR_PCIE_PM_CTRL);
-+	host_pm_ctrl |= AR_PMCTRL_PWR_STATE_D1D3 |
-+			AR_PMCTRL_HOST_PME_EN |
-+			AR_PMCTRL_PWR_PM_CTRL_ENA;
-+	host_pm_ctrl &= ~AR_PCIE_PM_CTRL_ENA;
- 
--	clr = AR_PCIE_PM_CTRL_ENA;
--	REG_RMW(ah, AR_PCIE_PM_CTRL, set, clr);
-+	if (AR_SREV_9462(ah)) {
-+		/*
-+		 * This is needed to prevent the chip waking up
-+		 * the host within 3-4 seconds with certain
-+		 * platform/BIOS.
-+		 */
-+		host_pm_ctrl &= ~AR_PMCTRL_PWR_STATE_D1D3;
-+		host_pm_ctrl |= AR_PMCTRL_PWR_STATE_D1D3_REAL;
-+	}
-+
-+	REG_WRITE(ah, AR_PCIE_PM_CTRL, host_pm_ctrl);
- 
- 	/*
--	 * this is needed to prevent the chip waking up
--	 * the host within 3-4 seconds with certain
--	 * platform/BIOS. The fix is to enable
--	 * D1 & D3 to match original definition and
--	 * also match the OTP value. Anyway this
--	 * is more related to SW WOW.
-+	 * Enable sequence number generation when asleep.
- 	 */
--	clr = AR_PMCTRL_PWR_STATE_D1D3;
--	REG_CLR_BIT(ah, AR_PCIE_PM_CTRL, clr);
--
--	set = AR_PMCTRL_PWR_STATE_D1D3_REAL;
--	REG_SET_BIT(ah, AR_PCIE_PM_CTRL, set);
--
- 	REG_CLR_BIT(ah, AR_STA_ID1, AR_STA_ID1_PRESERVE_SEQNUM);
- 
--	/* to bring down WOW power low margin */
--	set = BIT(13);
--	REG_SET_BIT(ah, AR_PCIE_PHY_REG3, set);
-+	/* To bring down WOW power low margin */
-+	REG_SET_BIT(ah, AR_PCIE_PHY_REG3, BIT(13));
-+
- 	/* HW WoW */
--	clr = BIT(5);
--	REG_CLR_BIT(ah, AR_PCU_MISC_MODE3, clr);
-+	REG_CLR_BIT(ah, AR_PCU_MISC_MODE3, BIT(5));
- 
- 	ath9k_hw_set_powermode_wow_sleep(ah);
- 	ah->wow.wow_event_mask = wow_event_mask;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index c8b3d8f..e82e570 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -199,7 +199,7 @@
- #define KAL_NUM_DESC_WORDS	12
- #define KAL_ANTENNA_MODE	1
- #define KAL_TO_DS		1
--#define KAL_DELAY		4	/*delay of 4ms between 2 KAL frames */
-+#define KAL_DELAY		4	/* delay of 4ms between 2 KAL frames */
- #define KAL_TIMEOUT		900
- 
- #define MAX_PATTERN_SIZE		256
-diff --git a/drivers/net/wireless/ath/ath9k/reg_wow.h b/drivers/net/wireless/ath/ath9k/reg_wow.h
-index 83f27f9..3abfca5 100644
---- a/drivers/net/wireless/ath/ath9k/reg_wow.h
-+++ b/drivers/net/wireless/ath/ath9k/reg_wow.h
-@@ -68,7 +68,7 @@
- #define AR_CLR_MAC_INTERRUPT            0x20
- #define AR_CLR_KA_INTERRUPT             0x40
- 
--#define AR_WOW_BACK_OFF_SHIFT(x)        ((x & 0xf) << 28) /* in usecs */
-+#define AR_WOW_BACK_OFF_SHIFT(x)        ((x & 0xf) << 27) /* in usecs */
- #define AR_WOW_MAC_INTR_EN              0x00040000
- #define AR_WOW_MAGIC_EN                 0x00010000
- #define AR_WOW_PATTERN_EN(x)            (x & 0xff)
-@@ -113,7 +113,8 @@
- #define AR_WOW_KA_DESC_WORD2            0xe000
- #define AR_WOW_TB_PATTERN(i)            (0xe100 + (i << 8))
- #define AR_WOW_TB_MASK(i)               (0xec00 + (i << 5))
--#define AR_WOW_PATTERN_SUPPORTED        0xff
-+#define AR_WOW_PATTERN_SUPPORTED_LEGACY 0xff
-+#define AR_WOW_PATTERN_SUPPORTED        0xffff
- #define AR_WOW_LENGTH_MAX               0xff
- #define AR_WOW_LEN1_SHIFT(_i)           ((0x3 - ((_i) & 0x3)) << 0x3)
- #define AR_WOW_LENGTH1_MASK(_i)         (AR_WOW_LENGTH_MAX << AR_WOW_LEN1_SHIFT(_i))
--- 
-2.2.2
-
+(I assume wlan1 is the mt7601u.) See if after any of these commands the
+errors will appear.
