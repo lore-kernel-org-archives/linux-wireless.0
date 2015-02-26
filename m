@@ -1,121 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35569 "EHLO sipsolutions.net"
+Received: from cantor2.suse.de ([195.135.220.15]:36770 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832AbbBWXew (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Feb 2015 18:34:52 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: emmanuel.grumbach@intel.com,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: iterate using station list in AP SMPS
-Date: Tue, 24 Feb 2015 00:34:49 +0100
-Message-Id: <1424734489-19115-1-git-send-email-johannes@sipsolutions.net> (sfid-20150224_003454_686600_68CAC6A6)
+	id S1752971AbbBZRlp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 12:41:45 -0500
+Date: Thu, 26 Feb 2015 18:41:43 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, ArikX Nemtsov <arik@wizery.com>
+Subject: Re: [PATCH v8 2/3] cfg80211: Add API to change the indoor
+	regulatory setting
+Message-ID: <20150226174143.GM8749@wotan.suse.de> (sfid-20150226_184148_611015_3B272F01)
+References: <1424944447-10988-1-git-send-email-ilan.peer@intel.com> <1424944447-10988-2-git-send-email-ilan.peer@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1424944447-10988-2-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Feb 26, 2015 at 04:54:06AM -0500, Ilan Peer wrote:
+> Previously, the indoor setting configuration assumed that as
+> long as a station interface is connected, the indoor environment
+> setting does not change. However, this assumption is problematic
+> as:
+> 
+> - It is possible that a station interface is connected to a mobile
+>   AP, e.g., softAP or a P2P GO, where it is possible that both the
+>   station and the mobile AP move out of the indoor environment making
+>   the indoor setting invalid. In such a case, user space has no way to
+>   invalidate the setting.
+> - A station interface disconnection does not necessarily imply that
+>   the device is no longer operating in an indoor environment, e.g.,
+>   it is possible that the station interface is roaming but is still
+>   stays indoor.
+> 
+> To handle the above, extend the indoor configuration API to allow
+> user space to indicate a change of indoor settings, and allow it to
+> indicate weather it controls the indoor setting, such that:
+> 
+> 1. If the user space process explicitly indicates that it is going
+>    to control the indoor setting, do not clear the indoor setting
+>    internally, unless the socket is released. The user space process
+>    should use the NL80211_ATTR_SOCKET_OWNER attribute in the command
+>    to state that it is going to control the indoor setting.
+> 2. Reset the indoor setting when restoring the regulatory settings in
+>    case it is not owned by a user space process.
+> 
+> Based on the above, a user space tool that continuously monitors the
+> indoor settings, i.e., tracking power setting, location etc., can
+> indicate environment changes to the regulatory core.
+> 
+> Currently, in case a received country IE includes environment
+> information (indicates that the country IE applies only to
+> indoor operation or only to outdoor operation) it is currently not
+> used.
 
-When changing AP SMPS, we need to look up all the stations
-for this interface, so there's no reason to iterate over
-hash chains rather than doing the simpler iteration over
-the station list.
+Since I spotted an issue and you have to remake this patch
+please also change this to:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c | 69 ++++++++++++++++++++++++------------------------------
- 1 file changed, 30 insertions(+), 39 deletions(-)
+It should be noted that currently userspace is the only
+provided mechanism used to hint to the regulatory core
+over the indoor/outdoor environment -- while the country
+IEs do have an environment setting this has been completely
+ignored by the regulatory core by design  for a while now
+since country IEs typically can contain bogus data.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index dd4ff36c557a..06557e4f9588 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2273,7 +2273,6 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
- {
- 	struct sta_info *sta;
- 	enum ieee80211_smps_mode old_req;
--	int i;
- 
- 	if (WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_AP))
- 		return -EINVAL;
-@@ -2301,48 +2300,40 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
- 	       smps_mode, atomic_read(&sdata->u.ap.num_mcast_sta));
- 
- 	mutex_lock(&sdata->local->sta_mtx);
--	for (i = 0; i < STA_HASH_SIZE; i++) {
--		for (sta = rcu_dereference_protected(sdata->local->sta_hash[i],
--				lockdep_is_held(&sdata->local->sta_mtx));
--		     sta;
--		     sta = rcu_dereference_protected(sta->hnext,
--				lockdep_is_held(&sdata->local->sta_mtx))) {
--			/*
--			 * Only stations associated to our AP and
--			 * associated VLANs
--			 */
--			if (sta->sdata->bss != &sdata->u.ap)
--				continue;
-+	list_for_each_entry(sta, &sdata->local->sta_list, list) {
-+		/*
-+		 * Only stations associated to our AP and
-+		 * associated VLANs
-+		 */
-+		if (sta->sdata->bss != &sdata->u.ap)
-+			continue;
- 
--			/* This station doesn't support MIMO - skip it */
--			if (sta_info_tx_streams(sta) == 1)
--				continue;
-+		/* This station doesn't support MIMO - skip it */
-+		if (sta_info_tx_streams(sta) == 1)
-+			continue;
- 
--			/*
--			 * Don't wake up a STA just to send the action frame
--			 * unless we are getting more restrictive.
--			 */
--			if (test_sta_flag(sta, WLAN_STA_PS_STA) &&
--			    !ieee80211_smps_is_restrictive(sta->known_smps_mode,
--							   smps_mode)) {
--				ht_dbg(sdata,
--				       "Won't send SMPS to sleeping STA %pM\n",
--				       sta->sta.addr);
--				continue;
--			}
-+		/*
-+		 * Don't wake up a STA just to send the action frame
-+		 * unless we are getting more restrictive.
-+		 */
-+		if (test_sta_flag(sta, WLAN_STA_PS_STA) &&
-+		    !ieee80211_smps_is_restrictive(sta->known_smps_mode,
-+						   smps_mode)) {
-+			ht_dbg(sdata, "Won't send SMPS to sleeping STA %pM\n",
-+			       sta->sta.addr);
-+			continue;
-+		}
- 
--			/*
--			 * If the STA is not authorized, wait until it gets
--			 * authorized and the action frame will be sent then.
--			 */
--			if (!test_sta_flag(sta, WLAN_STA_AUTHORIZED))
--				continue;
-+		/*
-+		 * If the STA is not authorized, wait until it gets
-+		 * authorized and the action frame will be sent then.
-+		 */
-+		if (!test_sta_flag(sta, WLAN_STA_AUTHORIZED))
-+			continue;
- 
--			ht_dbg(sdata, "Sending SMPS to %pM\n", sta->sta.addr);
--			ieee80211_send_smps_action(sdata, smps_mode,
--						   sta->sta.addr,
--						   sdata->vif.bss_conf.bssid);
--		}
-+		ht_dbg(sdata, "Sending SMPS to %pM\n", sta->sta.addr);
-+		ieee80211_send_smps_action(sdata, smps_mode, sta->sta.addr,
-+					   sdata->vif.bss_conf.bssid);
- 	}
- 	mutex_unlock(&sdata->local->sta_mtx);
- 
--- 
-2.1.4
+> @@ -4984,7 +4988,15 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+>  		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+>  		return regulatory_hint_user(data, user_reg_hint_type);
+>  	case NL80211_USER_REG_HINT_INDOOR:
+> -		return regulatory_hint_indoor_user();
+> +		if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
+> +			owner_nlportid = info->snd_portid;
+> +			is_indoor = !!info->attrs[NL80211_ATTR_REG_INDOOR];
+> +		} else {
+> +			owner_nlportid = 0;
+> +			is_indoor = true;
+> +		}
+> +
+> +		return regulatory_hint_indoor(is_indoor, owner_nlportid);
 
+Good, this looks better now. But you are missing the chance that a secondary
+random interface can come up and override that environmental information
+without checking for previous users. I'll illustrate below.
+
+>  	default:
+> @@ -2288,15 +2291,51 @@ int regulatory_hint_user(const char *alpha2,
+>  	return 0;
+>  }
+>  
+> -int regulatory_hint_indoor_user(void)
+> +int regulatory_hint_indoor(bool is_indoor, u32 portid)
+>  {
+> +	spin_lock(&reg_indoor_lock);
+>  
+> +	/*
+> +	 * Process only if there is a real change, so the original port ID is
+> +	 * saved (to handle cases that several processes try to change the
+> +	 * indoor setting).
+> +	 */
+> +	if (reg_is_indoor == is_indoor) {
+> +		spin_unlock(&reg_indoor_lock);
+> +		return 0;
+> +	}
+>  
+> -	reg_is_indoor = true;
+> +	reg_is_indoor = is_indoor;
+> +	if (reg_is_indoor)
+> +		reg_is_indoor_portid = portid;
+> +	else
+> +		reg_is_indoor_portid = 0;
+
+Why do we ignore port id if we go outdoor? Also we seem to allow
+interfaces to disagree on the setting, how are you handling that here?
+Don't tell me that cannot happen, I want you to think about that and
+handle it.
+
+  Luis
