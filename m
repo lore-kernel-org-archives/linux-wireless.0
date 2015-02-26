@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:39447 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761232AbbBIVkc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 16:40:32 -0500
-Received: by labgq15 with SMTP id gq15so16377840lab.6
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 13:40:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAAfg0W58Wssa=OKRSGtxY4rQJCzP0uTw__Rd278fc1v7Q0fqUw@mail.gmail.com>
-References: <20150118050741.31866.36490.stgit@114-36-241-182.dynamic.hinet.net>
-	<20150118051111.31866.39208.stgit@114-36-241-182.dynamic.hinet.net>
-	<CAJAp7OhcFTuYfc7JOKW1SrVRbucuSWg5jcFaoVnSDgBxsyo2ng@mail.gmail.com>
-	<CAAfg0W6dPupGLgwDF5FtNqEFvC4Y+GvFBAmXWcUQwXr2y6KugQ@mail.gmail.com>
-	<CAJAp7OjLDCzLYeb3LHNs1sOHWM64XZWzr46UQ2vNirH_2JibNg@mail.gmail.com>
-	<CAAfg0W58Wssa=OKRSGtxY4rQJCzP0uTw__Rd278fc1v7Q0fqUw@mail.gmail.com>
-Date: Mon, 9 Feb 2015 13:40:30 -0800
-Message-ID: <CAJAp7Ojpgm=U+AmBSEZrOpv_B7aGpa-rNPiXPjoDbRTS6C84Tw@mail.gmail.com> (sfid-20150209_224038_448384_46D01C6F)
-Subject: Re: [PATCH 6/7] net: wireless: wcn36xx: remove powersaving for wcn3620
-From: Bjorn Andersson <bjorn@kryo.se>
-To: Andy Green <andy.green@linaro.org>
-Cc: netdev <netdev@vger.kernel.org>,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:54778 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752169AbbBZUHe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 15:07:34 -0500
+Message-ID: <1424981243.1885.31.camel@sipsolutions.net> (sfid-20150226_210737_745382_2063C683)
+Subject: Re: [PATCH] mac80211: Send EAPOL frames at lowest rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Date: Thu, 26 Feb 2015 21:07:23 +0100
+In-Reply-To: <CA+55aFyMoNhwYKcYwfs7Jjxh-wQbQK92Gqs8pv9AcLJUwk13RA@mail.gmail.com> (sfid-20150226_190127_554604_DDFD2747)
+References: <1424958650-11165-1-git-send-email-jouni@qca.qualcomm.com>
+	 <CA+55aFyMoNhwYKcYwfs7Jjxh-wQbQK92Gqs8pv9AcLJUwk13RA@mail.gmail.com>
+	 (sfid-20150226_190127_554604_DDFD2747)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 9, 2015 at 1:28 PM, Andy Green <andy.green@linaro.org> wrote:
-> On 10 February 2015 at 05:11, Bjorn Andersson <bjorn@kryo.se> wrote:
->> On Feb 9, 2015 1:07 PM, "Andy Green" <andy.green@linaro.org> wrote:
->>>
->>> On 10 February 2015 at 01:54, Bjorn Andersson <bjorn@kryo.se> wrote:
->>> > On Sat, Jan 17, 2015 at 9:11 PM, Andy Green <andy.green@linaro.org>
-[..]
->>> At that point I think a nice solution would be a donation of time from
->>> guys who specialize in wcn for a living to come and hand out a pony or
->>> two...
->>>
->>
->> I agree, my goal is that we get this running in mainline (smd, smsm, smp2p
->> and remoteproc-tz) so that people with the domain knowledge can go in and
->> make it work well.
->
-[..]
->
-> Can I ask if smdtty will also appear?  I uplevelled and hacked smdtty
-> a bit from a 3.10 reference tree for 8916-qrd, and I was able to get
-> wcn3620 BT working stably for BT keyboard + mouse and even ad2p.
->
-> However the hack bound together smdtty ch2 + 3 in smdtty driver and
-> made it understand about the missing hci protocol byte... this is far
-> from reasonable for upstream, but it works like the 3.10 except needs
-> no special bluez / userland treatment.  So I'm curious if no smdtty
-> how the split smd hci / acl link in firmware will appear coherently to
-> userspace as a normal uart.
->
+Linus, Jouni, all,
 
-I'm not entirely sure how we're to proceed with this one.
+Thanks everyone. I've applied this patch to my mac80211 tree - I'll send
+it out to davem tomorrow I think.
 
-In msm-3.4 with BlueZ the kernel has a driver named hci_smd, that
-consumes the two channels and register with the hci core.
+Jouni, given that hwsim uses minstrel as well, perhaps we could have a
+test case in the wpa_supplicant tests in some way that checks this? I'm
+thinking we could hook into the AP and remove it from the radio group
+right after sending 3/4, so that 4/4 would get retransmitted? I don't
+actually know though if hwsim really honours all the rate stuff,
+something to look into perhaps.
 
-In msm-3.10 Qualcomm have dropped this, because they are running
-bluedroid which instead consumes the two smd channels in userspace
-(through the smd_pkt driver).
+> Also "Tested-by:", and I'd suggest marking it for stable too (although
+> I understand that David generally doesn't use stable tags, and just
+> sends them separately to the stable tree).
 
-We need smd_pkt for modem related matters anyways, so on that we can
-run bluedroid and we could bring in hci_smd for use with BlueZ. But
-then we would have to configure the kernel based on what stack we want
-to run on top.
+Done - and yeah, he does that, but I add stable tags anyway since I
+don't want to track it down later. So far he hasn't complained :-)
 
-So we should probably look into userspace and try to consolidate
-things there before deciding where to take this.
+> My main laptop is iwlwifi, and the only reason that worked is
+> apparently that the iwlwifi driver already basically does something
+> similar on its own.
 
-Regards,
-Bjorn
+Yes, and it also starts out at a lower rate.
+
+> All the other devices I have apparently don't use the 802.11 code even
+> if they are Linux-based (ie mostly android, and presumably they use
+> some vendor driver rather than the minstrel rate-handling code).
+
+Indeed, very few of them do. The only ones I'm aware of are (fairly old)
+phones using the TI wifi chip - my Motorola razr i for example actually
+runs mac80211. However, it also doesn't use minstrel, so I guess you
+won't find a phone using this :-)
+
+johannes
+
