@@ -1,81 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:33769 "EHLO
-	out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756293AbbBQJDg (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:41225 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753923AbbBZPr5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Feb 2015 04:03:36 -0500
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-	by mailout.nyi.internal (Postfix) with ESMTP id 8335020AC9
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Feb 2015 04:03:34 -0500 (EST)
-Message-Id: <1424163814.3140549.228461101.1C2E5AB1@webmail.messagingengine.com> (sfid-20150217_100415_356926_E0B52417)
-From: "Nikita N." <nikitan@operamail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: hauke@hauke-m.de, brcm80211-dev-list@broadcom.com,
-	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Pat Erley <pat-lkml@erley.org>, brudley@broadcom.com,
-	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
-	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
-	wens@csie.org, netdev@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+	Thu, 26 Feb 2015 10:47:57 -0500
+Received: by wghl18 with SMTP id l18so12058994wgh.8
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2015 07:47:56 -0800 (PST)
+Received: from [192.168.0.2] (host179-171-dynamic.56-82-r.retail.telecomitalia.it. [82.56.171.179])
+        by mx.google.com with ESMTPSA id n6sm1976736wjy.8.2015.02.26.07.47.55
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 26 Feb 2015 07:47:56 -0800 (PST)
+Message-ID: <54EF402E.5020105@gmail.com> (sfid-20150226_164805_471195_B1FCD71D)
+Date: Thu, 26 Feb 2015 16:47:58 +0100
+From: angelo <angelo70@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: Re: brcmsmac: TX power blocked in BCM4313
-Date: Tue, 17 Feb 2015 01:03:34 -0800
-In-Reply-To: <54E24B48.80601@broadcom.com>
-References: <1424007136.2042747.227726249.45B6A0E2@webmail.messagingengine.com>
- <1424094835.3188168.228077393.0E2006F5@webmail.messagingengine.com>
- <54E2107F.4000709@broadcom.com>
- <1424112787.3303548.228201005.68F1D224@webmail.messagingengine.com>
- <54E24B48.80601@broadcom.com>
+To: linux-wireless@vger.kernel.org
+Subject: BCM43362, sdio module sn8000
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
- 
-> brcmsmac does assure tx power is within regulatory limits by enforcing a 
-> world regulatory domain. So what is not supported is modifying tx power 
-> settings through user-space.
+Dear all,
 
-Yes, I believe that could be right, *a* world regulatory domain looks
-indeed enforced, the USA one only, which is pre-set default inside
-EEPROM registries device, isn't it?
- 
-> I know, but that driver is not fully open-source as it links in a binary 
-> blob.
+was trying to have working a wifi module, sn8000 from muRata,
+with a bcm43362 from a imx6q.
 
-AFAIK, also brcmsmac needs at least 2 firmware files to operate, without
-those nothing works.
-Isn't it the same concept?
- 
-> I totally lost track of this one. I am using brcmsmac in monitor mode 
-> using bcm43224 which captures 11n frames just fine. I will give it a try 
-> with a bcm4313. The assoc response in your capture shows undefined MCS 
-> set so maybe there really are no 11n MCS rates used (?).
+I have actually a 3.10 kernel, patched with same patch done on
+3.14 for bcm43362, but i have no responses from the sdio module.
 
-If that was a suggestion about to purchase a bcm43224 or any other
-Broadcom Corp. product, isn't really convincing, seen the overall
-support quality Customers are experiencing in here...
-About my capture file, in the case it was really incomplete someone
-could have informed me at least a year ago.
-But anyway no respectable QA Testing team needs a purchasing Customer to
-help in verifying such enormous issue, isn't it? 
- 
-> Our team consist of two man working full-time on the upstream linux 
-> drivers. So our "customer care" is something that we try to deal with on 
-> the side and admittedly things slip between the cracks.
+Seems sdio probing exits for timeout (110).
 
-Really, *TWO* men? Are you kidding? Is that how much Broadcom Corp.
-values the Linux community?
-Needles to remind, even if Linux users don't pay for the OS license as
-Windows do, they do pay allright for any Broadcom hardware they
-purchase!
-Internet startups which sell a button on internet, they have Dev and QA
-team 5 times bigger than that!
-I sense a very gross capacity and resource planning competence issue in
-here.
-I kindly ask you, please forward that mail to your higher Managers, on
-my personal behalf, Thanks.
+Module is correctly powered, and set to sdio 4 wires module.
+I am also using devicetree, uhsdc controller is enabled and
+should be set up correctly.
 
--- 
-http://www.fastmail.com - Same, same, but different...
+Every suggestion is appreciated,
 
+Regards
+Angelo
