@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:49771 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161186AbbBDTKn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Feb 2015 14:10:43 -0500
-Message-ID: <54D26EA9.6020301@users.sourceforge.net> (sfid-20150204_201107_140807_1741A6AD)
-Date: Wed, 04 Feb 2015 20:10:33 +0100
-From: SF Markus Elfring <elfring@users.sourceforge.net>
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:46103 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752986AbbBZTDn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 14:03:43 -0500
+Received: by iecvy18 with SMTP id vy18so19415129iec.13
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2015 11:03:43 -0800 (PST)
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-CC: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH] HostAP: Delete an unnecessary check before the function call
- "kfree"
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.sourceforge.net>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20150226102000.GA4839@w1.fi>
+References: <20150223224305.GA30228@w1.fi>
+	<21739.50662.902775.901924@gargle.gargle.HOWL>
+	<CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com>
+	<CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>
+	<20150224102611.GA30806@w1.fi>
+	<80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de>
+	<20150224181454.GA30859@w1.fi>
+	<54ED56D8.9030806@openwrt.org>
+	<20150225144723.GA6903@w1.fi>
+	<CA+55aFyvhgFMRAg2ftuN_cykGs_3-Oyabhi_N6S-J1daVFFRzw@mail.gmail.com>
+	<20150226102000.GA4839@w1.fi>
+Date: Thu, 26 Feb 2015 11:03:42 -0800
+Message-ID: <CAJ-Vmomp74+ninUMVO-XmfPqnV=mh3Hu0qYETpeP0Bq9b0OZgQ@mail.gmail.com> (sfid-20150226_200347_439045_68357499)
+Subject: Re: [ath9k-devel] AR9462 problems connecting again..
+From: Adrian Chadd <adrian@freebsd.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Andrew McGregor <andrewmcgr@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 4 Feb 2015 20:06:39 +0100
+On 26 February 2015 at 02:20, Jouni Malinen <j@w1.fi> wrote:
+> On Wed, Feb 25, 2015 at 10:14:45AM -0800, Linus Torvalds wrote:
+>> While I realize that people may disagree about the exact details of
+>> how to fix this in the long run, may I suggest that in the meantime we
+>> at least get the two workaround patches applied?
+>
+>> Does anybody hate Jouni's two patches *so* much that they can
+>> articulate *why* it would be wrong to apply them as interim patches?
+>> And if so, do you have better patches for me to try? Because if not..
+>
+> Of all people, I do actually have some hatred on the one-liner to force
+> minimum rate for all EAPOL TX attempts. That is punishing the vast
+> majority of cases where the AP is perfectly fine with higher MCS rates
+> being used (and MCS 0 being sufficient fallback option) for EAPOL. Being
+> able to use higher TX rates as the initial attempt is a nice feature and
+> even though this may be limited to number of upstream Linux drivers
+> today, that part of the feature is an improvement, IMHO. This can even
+> be more robust in some environments especially when going through long
+> EAP exchange with certain types of interference.
 
-The kfree() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
+I remember running the math - well, the "airtime" math, and realised
+it was almost always cheaper to do the single, non-aggregated EAPOL
+frame exchange at the lowest rate than to try higher rates and fall
+back to the lowest rates.
 
-This issue was detected by using the Coccinelle software.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/hostap/hostap_ap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/hostap/hostap_ap.c b/drivers/net/wireless/hostap/hostap_ap.c
-index 5965255..fd8d83d 100644
---- a/drivers/net/wireless/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/hostap/hostap_ap.c
-@@ -145,7 +145,7 @@ static void ap_free_sta(struct ap_data *ap, struct sta_info *sta)
- 	if (sta->aid > 0)
- 		ap->sta_aid[sta->aid - 1] = NULL;
- 
--	if (!sta->ap && sta->u.sta.challenge)
-+	if (!sta->ap)
- 		kfree(sta->u.sta.challenge);
- 	del_timer_sync(&sta->timer);
- #endif /* PRISM2_NO_KERNEL_IEEE80211_MGMT */
--- 
-2.2.2
 
+-adrian
