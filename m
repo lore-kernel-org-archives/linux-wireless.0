@@ -1,68 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:38425 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751822AbbB1TzU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Feb 2015 14:55:20 -0500
-MIME-Version: 1.0
-In-Reply-To: <1425078600-29882-1-git-send-email-filipayazi@gmail.com>
-References: <1425078600-29882-1-git-send-email-filipayazi@gmail.com>
-Date: Sat, 28 Feb 2015 21:55:17 +0200
-Message-ID: <CANUX_P22MQEVkFsC_ToYiSTMVSB+QpSOMCb=d3+AH4224nhocw@mail.gmail.com> (sfid-20150228_205533_229119_B9AC649B)
-Subject: Re: [PATCH] iwlwifi: mvm: check time event is over before disconnecting
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Filip Ayazi <filipayazi@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:28400 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751761AbbBZPv4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 10:51:56 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org, mcgrof@suse.com
+Cc: Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH v3 3/3] cfg80211: Schedule timeout for all CRDA calls
+Date: Thu, 26 Feb 2015 04:54:07 -0500
+Message-Id: <1424944447-10988-3-git-send-email-ilan.peer@intel.com> (sfid-20150226_165159_809463_A3CFE026)
+In-Reply-To: <1424944447-10988-1-git-send-email-ilan.peer@intel.com>
+References: <1424944447-10988-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 28, 2015 at 1:10 AM, Filip Ayazi <filipayazi@gmail.com> wrote:
-> On the 7260 time event was often ended before end_time and connections failed
-> with "No association and the time event is over already...".
-> This checks that the time event is actually over before disconnecting.
->
-> Signed-off-by: Filip Ayazi <filipayazi@gmail.com>
+Timeout was scheduled only in case CRDA was called due to user hints,
+but was not scheduled for other cases. This can result in regulatory
+hint processing getting stuck in case that there is no CRDA configured.
 
-While this patch is wrong I'd like to know if it helps.
-The patch is wrong because even if the driver thinks the time event
-should still be running, if the firmware indicates it has already
-ended, we should still disconnect. The reason for the disconnection is
-that we can't be sure that the firmware will have the proper timing
-for the beacon and hence for the DTIM. Both are critical to get a
-decent behavior while saving power.
-In any case, I doubt this patch does actually something because the
-firmware and the driver should really be close in their timings. If
-they aren't, it is fundamental bug in the firmware. While the firmware
-does have bugs just like any piece of software, I doubt it has such
-big ones :)
+Change this by scheduling a timeout every time CRDA is called. In
+addition, in restore_regulatory_settings() all pending requests are
+restored (and not only the user ones).
 
-> ---
->  drivers/net/wireless/iwlwifi/mvm/time-event.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-> index 54fafbf..b0aa892 100644
-> --- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
-> +++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-> @@ -256,7 +256,8 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
->                 }
->         }
->
-> -       if (le32_to_cpu(notif->action) & TE_V2_NOTIF_HOST_EVENT_END) {
-> +       if (le32_to_cpu(notif->action) & TE_V2_NOTIF_HOST_EVENT_END &&
-> +           time_after(jiffies, te_data->end_jiffies)) {
->                 IWL_DEBUG_TE(mvm,
->                              "TE ended - current time %lu, estimated end %lu\n",
->                              jiffies, te_data->end_jiffies);
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ net/wireless/reg.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 4ccf563..442bb52 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -552,6 +552,9 @@ reg_call_crda(struct regulatory_request *request)
+ {
+ 	if (call_crda(request->alpha2))
+ 		return REG_REQ_IGNORE;
++
++	queue_delayed_work(system_power_efficient_wq,
++			   &reg_timeout, msecs_to_jiffies(3142));
+ 	return REG_REQ_OK;
+ }
+ 
+@@ -1791,8 +1794,7 @@ static void reg_set_request_processed(void)
+ 		need_more_processing = true;
+ 	spin_unlock(&reg_requests_lock);
+ 
+-	if (lr->initiator == NL80211_REGDOM_SET_BY_USER)
+-		cancel_delayed_work(&reg_timeout);
++	cancel_delayed_work(&reg_timeout);
+ 
+ 	if (need_more_processing)
+ 		schedule_work(&reg_work);
+@@ -2071,8 +2073,6 @@ static void reg_process_hint(struct regulatory_request *reg_request)
+ 		if (treatment == REG_REQ_IGNORE ||
+ 		    treatment == REG_REQ_ALREADY_SET)
+ 			return;
+-		queue_delayed_work(system_power_efficient_wq,
+-				   &reg_timeout, msecs_to_jiffies(3142));
+ 		return;
+ 	case NL80211_REGDOM_SET_BY_DRIVER:
+ 		if (!wiphy)
+@@ -2497,7 +2497,6 @@ static void restore_regulatory_settings(bool reset_user)
+ 	char alpha2[2];
+ 	char world_alpha2[2];
+ 	struct reg_beacon *reg_beacon, *btmp;
+-	struct regulatory_request *reg_request, *tmp;
+ 	LIST_HEAD(tmp_reg_req_list);
+ 	struct cfg80211_registered_device *rdev;
+ 
+@@ -2525,11 +2524,7 @@ static void restore_regulatory_settings(bool reset_user)
+ 	 * settings.
+ 	 */
+ 	spin_lock(&reg_requests_lock);
+-	list_for_each_entry_safe(reg_request, tmp, &reg_requests_list, list) {
+-		if (reg_request->initiator != NL80211_REGDOM_SET_BY_USER)
+-			continue;
+-		list_move_tail(&reg_request->list, &tmp_reg_req_list);
+-	}
++	list_splice_tail_init(&reg_requests_list, &tmp_reg_req_list);
+ 	spin_unlock(&reg_requests_lock);
+ 
+ 	/* Clear beacon hints */
+-- 
+1.8.3.2
+
