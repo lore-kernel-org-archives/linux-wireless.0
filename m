@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41961 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752307AbbBZSHu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 13:07:50 -0500
-Received: from [192.168.100.236] (unknown [50.251.239.81])
-	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id E51EC40AB7C
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2015 10:07:49 -0800 (PST)
-Message-ID: <54EF60F5.1030506@candelatech.com> (sfid-20150226_190753_768816_FA71C63F)
-Date: Thu, 26 Feb 2015 10:07:49 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from cantor2.suse.de ([195.135.220.15]:54863 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752676AbbBZCRd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Feb 2015 21:17:33 -0500
+Date: Thu, 26 Feb 2015 03:17:31 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: Ilan Peer <ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org, ArikX Nemtsov <arik@wizery.com>
+Subject: Re: [PATCH v7 2/3] cfg80211: Add API to change the indoor
+	regulatory setting
+Message-ID: <20150226021731.GH8749@wotan.suse.de> (sfid-20150226_031736_365072_910CC17A)
+References: <1424857624-24944-1-git-send-email-ilan.peer@intel.com> <1424857624-24944-2-git-send-email-ilan.peer@intel.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Flaky AP has bad AIFSN, so no HT/VHT....
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1424857624-24944-2-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-One of our customers reported that our ath10k stations were only able
-to connect at 54Mbps speeds.  This is using somewhat hacked 3.17.8 kernel,
-but it looks like 3.19 has the same code checks for AIFSN.
+On Wed, Feb 25, 2015 at 04:47:03AM -0500, Ilan Peer wrote:
+>  	case NL80211_USER_REG_HINT_INDOOR:
+> -		return regulatory_hint_indoor_user();
+> +		is_indoor = !!info->attrs[NL80211_ATTR_REG_INDOOR];
+> +		if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
+> +			owner_nlportid = info->snd_portid;
+> +
+> +		return regulatory_hint_indoor(is_indoor, owner_nlportid);
+>  	default:
+>  		return -EINVAL;
+>  	}
 
-It looks like their beacon has bogus AIFSN info, and sniff of the beacon does
-show AIFSN set to 0.
+You are changing this so that this can only work when
+NL80211_ATTR_REG_INDOOR is used however this should only
+be true if the info->attrs[NL80211_ATTR_SOCKET_OWNER
+was set as in the old days the usersapce API allowed
+for NL80211_ATTR_REG_INDOOR to not be set. Don't
+break old userspace.
 
-Kernel dmesg logs:
+Fix that, and it seems fine. While at it please explain
+how / who send the userespace hint and that right now
+we don't do anything with the country IE indoor / outdoor
+flag.
 
-wlan0: authenticated at: 1424969385.456415
-wlan0: AP has invalid WMM params (AIFSN=0 for ACI 0), disabling WMM
-wlan0: associate with 00:18:25:06:4a:b4 (try 1/3), at: 1424969385.457148
-wlan0: RX AssocResp from 00:18:25:06:4a:b4 (capab=0x401 status=0 aid=2) at: 1424969385.476681
-wlan0: associated at: 1424969385.477265
-
-
-But a commercial phone connects just fine to this AP, and reports ~780Mbps link speed,
-so it at least thinks it is doing VHT.
-
-My question is, should we just warn and ignore this bad AIFSN, or is this really
-a fatal issue as far as enabling WMM?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+ Luis
