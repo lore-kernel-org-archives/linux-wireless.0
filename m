@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38251 "EHLO sipsolutions.net"
+Received: from mx3.wp.pl ([212.77.101.9]:42310 "EHLO mx3.wp.pl"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751179AbbBXKdQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Feb 2015 05:33:16 -0500
-Message-ID: <1424773990.2192.27.camel@sipsolutions.net> (sfid-20150224_113339_525209_1E7A4DA9)
-Subject: Re: [PATCH 8/8] NFC: Add Intel FieldsPeak NFC solution driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Robert Dolca <robert.dolca@intel.com>
-Cc: linux-nfc@ml01.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
-Date: Tue, 24 Feb 2015 11:33:10 +0100
-In-Reply-To: <1424772112-27399-9-git-send-email-robert.dolca@intel.com> (sfid-20150224_110328_126821_85458A24)
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
-	 <1424772112-27399-9-git-send-email-robert.dolca@intel.com>
-	 (sfid-20150224_110328_126821_85458A24)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S932213AbbBZTCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 14:02:04 -0500
+Date: Thu, 26 Feb 2015 20:01:57 +0100
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Sergei Antonov <saproj@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: mt7601u dies during channel switch (was: MediaTek WiFi hardware
+ support in upstream kernel)
+Message-ID: <20150226200157.2f8162fb@north> (sfid-20150226_200220_597952_5D2A923E)
+In-Reply-To: <CABikg9xRG2WBvLPzG-W4tOXpWyRYhZ_sJdZ7h8vE=hELochREg@mail.gmail.com>
+References: <544DB5A8.7090405@openmailbox.org>
+	<20141027152026.GB19976@tuxdriver.com>
+	<544E8CB4.3000607@rempel-privat.de>
+	<20141028134608.GA26283@tuxdriver.com>
+	<544FA303.5060303@broadcom.com>
+	<544FA627.3000004@rempel-privat.de>
+	<5450BEB2.60208@openwrt.org>
+	<5461F937.9060004@rempel-privat.de>
+	<5463CB6C.3030204@openwrt.org>
+	<5463D28F.9080106@lwfinger.net>
+	<20150206182915.7467bac7@north>
+	<CABikg9yw8Py59KyJ1mP6bfCrMPuup7v9xb1J=_JKC4gT_GS4rA@mail.gmail.com>
+	<20150225103311.436f4321@north>
+	<CABikg9xU+vj_W+TF4d7=x52u8abhkXC0qPGsOgRUMXDhRA0NFQ@mail.gmail.com>
+	<20150226170522.01605ac4@north>
+	<CABikg9xRG2WBvLPzG-W4tOXpWyRYhZ_sJdZ7h8vE=hELochREg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have no idea about NFC, but 
+On Thu, 26 Feb 2015 19:50:04 +0100, Sergei Antonov wrote:
+> Jakub, I'll do all of it, but for now just one quick question: what
+> firmware binary blob should I use with your driver? Maybe I just took
+> a wrong firmware... You can send me yours.
 
-> +config NFC_FDP
-> +	tristate "Intel FDP NFC driver"
-> +	depends on NFC_NCI
-> +	select CRC_CCITT
-> +	default n
-> +	---help---
-> +	  Intel FDP core driver.
-> +	  This is a driver based on the NCI NFC kernel layers.
-> +
-> +	  To compile this driver as a module, choose m here. The module will
-> +	  be called pn547.
+I have the one from vendor package.  The MD5 sum is
 
-this seems like a copy/paste error? Certainly it's called fdp?
-
-johannes
-
+# md5sum /usr/lib/firmware/mt7601u.bin 
+696cedb8e76ecc0cda9f9b0d3972c64d  /usr/lib/firmware/mt7601u.bin
