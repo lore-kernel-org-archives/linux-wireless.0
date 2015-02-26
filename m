@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49174 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752935AbbBMO6G (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:39861 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752169AbbBZQFZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 09:58:06 -0500
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@nbd.name,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v2 09/10] mac80211: reduce calculation costs of EWMA
-Date: Fri, 13 Feb 2015 15:57:51 +0100
-Message-Id: <1423839472-15625-10-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150213_155819_088585_11A0B77D)
-In-Reply-To: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Thu, 26 Feb 2015 11:05:25 -0500
+Message-ID: <54EF4442.8020006@lwfinger.net> (sfid-20150226_170534_988955_86D9F8FB)
+Date: Thu, 26 Feb 2015 10:05:22 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Stable <stable@vger.kernel.org>, Alan Fisher <acf@unixcube.org>
+Subject: Re: [PATCH] rtlwifi: Improve handling of IPv6 packets
+References: <1424791381-31863-1-git-send-email-Larry.Finger@lwfinger.net> <87zj80de63.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87zj80de63.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch reduces the calculation costs of the EWMA macro from
-"2x multiplication and 1 addition" down to "1x multiplication and
-2x additions". This slightly improves performance depending on the
-CPU architecture.
+On 02/26/2015 06:56 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> Routine rtl_is_special_data() is supposed to identify packets that need to
+>> use a low bit rate so that the probability of successful transmission is
+>> high. The current version has a bug that causes all IPv6 packets to be
+>> labelled as special, with a corresponding low rate of transmission. A
+>> complete fix will be quite intrusive, but until that is available, all
+>> IPv6 packets are identified as regular.
+>>
+>> This patch also removes a magic number.
+>>
+>> Reported-and-tested-by: Alan Fisher <acf@unixcube.org>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Stable <stable@vger.kernel.org> [3.18+]
+>> Cc: Alan Fisher <acf@unixcube.org>
+>
+> Should this go to 4.0?
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
----
- net/mac80211/rc80211_minstrel.h | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+Yes. I should have indicated that in the subject.
 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 6693d8d..38158b0 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -27,7 +27,12 @@
- static inline int
- minstrel_ewma(int old, int new, int weight)
- {
--	return (new * (EWMA_DIV - weight) + old * weight) / EWMA_DIV;
-+	int diff, incr;
-+
-+	diff = new - old;
-+	incr = (EWMA_DIV - weight) * diff / EWMA_DIV;
-+
-+	return old + incr;
- }
- 
- struct minstrel_rate_stats {
--- 
-2.2.2
+My expectation is that any patch that has a Cc for Stable should be applied as 
+soon as possible.
+
+Larry
 
