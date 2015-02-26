@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:43354 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756488AbbBFRhF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57588 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263AbbBZNBq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 12:37:05 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 2/6] brcmfmac: Remove error print for invalid key index.
-Date: Fri, 6 Feb 2015 18:36:43 +0100
-Message-ID: <1423244207-9707-3-git-send-email-arend@broadcom.com> (sfid-20150206_183717_774443_C5592010)
-In-Reply-To: <1423244207-9707-1-git-send-email-arend@broadcom.com>
-References: <1423244207-9707-1-git-send-email-arend@broadcom.com>
+	Thu, 26 Feb 2015 08:01:46 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: brcmfmac: use msecs_to_jiffies for time conversion
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1423218405-17624-1-git-send-email-hofrat@osadl.org>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Message-Id: <20150226130145.AE5D214056F@smtp.codeaurora.org> (sfid-20150226_140208_118938_CC257C57)
+Date: Thu, 26 Feb 2015 13:01:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
 
-When a key is set or cleared with an unsupported key index then
-brcmfmac will print an error. With most wpa_supplicants this is
-happening a lot. The error print is confusing and not needed.
+> This is only an API consolidation and should make things more readable
+> it replaces var * HZ / 1000 by msecs_to_jiffies(var).
+> 
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 1 -
- 1 file changed, 1 deletion(-)
+Thanks, applied to wireless-drivers-next.git.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index b59b8c6..bc86009 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -2252,7 +2252,6 @@ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
- 
- 	if (key_idx >= BRCMF_MAX_DEFAULT_KEYS) {
- 		/* we ignore this key index in this case */
--		brcmf_err("invalid key index (%d)\n", key_idx);
- 		return -EINVAL;
- 	}
- 
--- 
-1.9.1
-
+Kalle Valo
