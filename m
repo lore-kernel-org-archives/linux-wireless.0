@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:38389 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755825AbbBJNxm (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:49406 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752696AbbBZKBO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Feb 2015 08:53:42 -0500
-Message-ID: <54DA0D17.7070403@canonical.com> (sfid-20150210_145402_585108_F00DE65E)
-Date: Tue, 10 Feb 2015 13:52:23 +0000
-From: Colin Ian King <colin.king@canonical.com>
+	Thu, 26 Feb 2015 05:01:14 -0500
+Message-ID: <54EEEEE5.2040305@broadcom.com> (sfid-20150226_110119_452497_AC8DAC2A)
+Date: Thu, 26 Feb 2015 11:01:09 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: ratelimit skb allocation failure message
-References: <1423558471-27278-1-git-send-email-colin.king@canonical.com>	<1423574228.28434.22.camel@edumazet-glaptop2.roam.corp.google.com> <87a90lop1x.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87a90lop1x.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Jouni Malinen <j@w1.fi>, Felix Fietkau <nbd@openwrt.org>,
+	=?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@net.t-labs.tu-berlin.de>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	Andrew McGregor <andrewmcgr@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [ath9k-devel] AR9462 problems connecting again..
+References: <CA+55aFyNqdNk5aq17YdqTCjiWpZ9=ifF3ii+Ko=EzUWZgnCGoQ@mail.gmail.com>	<CAJ-Vmo=Tu9vBgm2xwqHWqXhx6df9h5cff5_ivERShJ9QPdwYww@mail.gmail.com>	<20150223224305.GA30228@w1.fi>	<21739.50662.902775.901924@gargle.gargle.HOWL>	<CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com>	<CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com>	<20150224102611.GA30806@w1.fi>	<80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de>	<20150224181454.GA30859@w1.fi>	<54ED56D8.9030806@openwrt.org>	<20150225144723.GA6903@w1.fi>	<CA+55aFyvhgFMRAg2ftuN_cykGs_3-Oyabhi_N6S-J1daVFFRzw@mail.gmail.com> <CA+55aFxE7_RXc1hBo+e=iCj4KpeMev_WphH+tDHXnYC4HE5YvQ@mail.gmail.com>
+In-Reply-To: <CA+55aFxE7_RXc1hBo+e=iCj4KpeMev_WphH+tDHXnYC4HE5YvQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/02/15 13:48, Kalle Valo wrote:
-> Eric Dumazet <eric.dumazet@gmail.com> writes:
-> 
->> On Tue, 2015-02-10 at 08:54 +0000, Colin King wrote:
->>> From: Colin Ian King <colin.king@canonical.com>
->>>
->>> when running low on memory I noticed rtlwifi was producing a large
->>> quantity of repeated skb allocation failures messages.  This should
->>> be ratelimited to reduce the noise.
->>>
->>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
->>> ---
->>>  drivers/net/wireless/rtlwifi/pci.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
->>> index c70efb9..ca0fd50 100644
->>> --- a/drivers/net/wireless/rtlwifi/pci.c
->>> +++ b/drivers/net/wireless/rtlwifi/pci.c
->>> @@ -817,7 +817,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
->>>  		/* get a new skb - if fail, old one will be reused */
->>>  		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
->>>  		if (unlikely(!new_skb)) {
->>> -			pr_err("Allocation of new skb failed in %s\n",
->>> +			pr_err_ratelimited("Allocation of new skb failed in %s\n",
->>>  			       __func__);
->>
->> Or even better, remove the message.
-> 
-> There's actually a pending patch for that, I'll send it to Dave ASAP:
-> 
-> https://patchwork.kernel.org/patch/5671121/
-> 
-Thanks!
+On 02/26/15 06:55, Linus Torvalds wrote:
+> Because it looks like the brcmsmac driver has*exactly*  the same
+> behavior with this AP (in an Apple Macbook air). I assume brcmsmac
+> uses the net/80211/tx.c logic too.
+
+That makes sense as brcmsmac is a mac80211 driver that uses the 
+minstrel-ht rate control algorithm. iwlwifi is also a mac80211 driver 
+but it uses a different rate control algorithm so if you have that lying 
+around it would be interesting to test that (if you did not already do 
+that).
+
+Regards,
+Arend
