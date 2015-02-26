@@ -1,58 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:33436 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753420AbbBZN4v (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38864 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932523AbbBZNvd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Feb 2015 08:56:51 -0500
-Received: by wghb13 with SMTP id b13so11013594wgh.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2015 05:56:50 -0800 (PST)
-Message-ID: <54EF261E.4040109@gmail.com> (sfid-20150226_145657_825011_F4F9FAFE)
-Date: Thu, 26 Feb 2015 14:56:46 +0100
-From: poma <pomidorabelisima@gmail.com>
+	Thu, 26 Feb 2015 08:51:33 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH] mac80211: Send EAPOL frames at lowest rate
+Date: Thu, 26 Feb 2015 15:50:50 +0200
+Message-ID: <1424958650-11165-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20150226_145248_184491_431E55ED)
 MIME-Version: 1.0
-To: =?UTF-8?B?SmFrdWIgS2ljacWEc2tp?= <moorray3@wp.pl>,
-	linux-wireless@vger.kernel.org
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Etna <etna@openmailbox.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
-Subject: Re: MediaTek WiFi hardware support in upstream kernel
-References: <544DB5A8.7090405@openmailbox.org>	<20141027152026.GB19976@tuxdriver.com>	<544E8CB4.3000607@rempel-privat.de>	<20141028134608.GA26283@tuxdriver.com>	<544FA303.5060303@broadcom.com>	<544FA627.3000004@rempel-privat.de>	<5450BEB2.60208@openwrt.org>	<5461F937.9060004@rempel-privat.de>	<5463CB6C.3030204@openwrt.org>	<5463D28F.9080106@lwfinger.net> <20150206182915.7467bac7@north>
-In-Reply-To: <20150206182915.7467bac7@north>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06.02.2015 18:29, Jakub Kiciński wrote:
-> Hello everyone!
-> 
-> I put together a mac80211 driver for Mediatek MT7601U.  It's partially
-> based on Felix's mt76, but I'm not sure if it will make sense to merge
-> the two together.  MT7601U is a pretty old 1x1 bgn chip for USB dongles
-> and mt76 now only supports the latest and greatest ac APs.
-> 
-> I'm testing STA functionality right now and it seems to be working ok.
-> The code is very much a work in progress but if anyone is interested you
-> can get it here:
-> 
-> https://github.com/kuba-moo/mt7601u
-> 
-> Cheers,
-> kuba
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+The current minstrel_ht rate control behavior is somewhat optimistic in
+trying to find optimum TX rate. While this is usually fine for normal
+Data frames, there are cases where a more conservative set of retry
+parameters would be beneficial to make the connection more robust.
 
-How many mt7601u module editions exists there? :)
-- vendor's
-- vendor's patched (how many forms of the same)
-- your reinvented
-- the one on which pán Gruszka allegedly works?
-- any more?
+EAPOL frames are critical to the authentication and especially the
+EAPOL-Key message 4/4 (the last message in the 4-way handshake) is
+important to get through to the AP. If that message is lost, the only
+recovery mechanism in many cases is to reassociate with the AP and start
+from scratch. This can often be avoided by trying to send the frame with
+more conservative rate and/or with more link layer retries.
 
+In most cases, minstrel_ht is currently using the initial EAPOL-Key
+frames for probing higher rates and this results in only five link layer
+transmission attempts (one at high(ish) MCS and four at MCS0). While
+this works with most APs, it looks like there are some deployed APs that
+may have issues with the EAPOL frames using HT MCS immediately after
+association. Similarly, there may be issues in cases where the signal
+strength or radio environment is not good enough to be able to get
+frames through even at couple of MCS 0 tries.
+
+The best approach for this would likely to be to reduce the TX rate for
+the last rate (3rd rate parameter in the set) to a low basic rate (say,
+6 Mbps on 5 GHz and 2 or 5.5 Mbps on 2.4 GHz), but doing that cleanly
+requires some more effort. For now, we can start with a simple one-liner
+that forces the minimum rate to be used for EAPOL frames similarly how
+the TX rate is selected for the IEEE 802.11 Management frames. This does
+result in a small extra latency added to the cases where the AP would be
+able to receive the higher rate, but taken into account how small number
+of EAPOL frames are used, this is likely to be insignificant. A future
+optimization in the minstrel_ht design can also allow this patch to be
+reverted to get back to the more optimized initial TX rate.
+
+It should also be noted that many drivers that do not use minstrel as
+the rate control algorithm are already doing similar workarounds by
+forcing the lowest TX rate to be used for EAPOL frames.
+
+Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ net/mac80211/tx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index af5446c..14ff5e4 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -565,6 +565,7 @@ ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
+ 		if (tx->sdata->control_port_no_encrypt)
+ 			info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 		info->control.flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
++		info->flags |= IEEE80211_TX_CTL_USE_MINRATE;
+ 	}
+ 
+ 	return TX_CONTINUE;
+-- 
+1.9.1
 
