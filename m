@@ -1,67 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:46422 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752189AbbBFMDv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Feb 2015 07:03:51 -0500
-Received: by mail-we0-f171.google.com with SMTP id k11so13280916wes.2
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Feb 2015 04:03:50 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v3 0/7] ath10k: add multi-channel support
-Date: Fri,  6 Feb 2015 13:02:47 +0100
-Message-Id: <1423224174-24764-1-git-send-email-michal.kazior@tieto.com> (sfid-20150206_130358_266662_32F77823)
+Received: from s3.sipsolutions.net ([5.9.151.49]:54814 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932208AbbBZUOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 15:14:00 -0500
+Message-ID: <1424981635.1885.35.camel@sipsolutions.net> (sfid-20150226_211405_056983_9D4656F0)
+Subject: Re: Flaky AP has bad AIFSN, so no HT/VHT....
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 26 Feb 2015 21:13:55 +0100
+In-Reply-To: <54EF60F5.1030506@candelatech.com> (sfid-20150226_190753_768816_FA71C63F)
+References: <54EF60F5.1030506@candelatech.com>
+	 (sfid-20150226_190753_768816_FA71C63F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New qca6174 with wmi-tlv firmware supports
-multi-channel operation. To make use of it
-ath10k needs a few changes: implement mac80211's
-chanctx API and rework tx queue control a bit.
+On Thu, 2015-02-26 at 10:07 -0800, Ben Greear wrote:
 
-There are still rough edges (involving seldom
-beacon reports from firmware causing beacon loss
-in some cases, etc). Hopefully this will be fixed
-either in driver or firmware eventually.
+> It looks like their beacon has bogus AIFSN info, and sniff of the beacon does
+> show AIFSN set to 0.
 
+Yeah this is invalid - the spec requires at least 2.
 
-Changes since RFC:
- * I've sent `ath10k: defer AP self-peer removal
-   wait` separately now because it's not really
-   required for multi-channel per se
+> Kernel dmesg logs:
+> 
+> wlan0: authenticated at: 1424969385.456415
+> wlan0: AP has invalid WMM params (AIFSN=0 for ACI 0), disabling WMM
 
-v2:
- * fix null deref after rebasing
- * fix commit log typo
+and then since we disable WMM we also can't do HT or VHT since they both
+require WMM (technically QoS, but that's mostly just different IE
+signalling)
 
-v3:
- * remove some duplication wrt mac80211 [Johannes]
- * small fixes
+> wlan0: associate with 00:18:25:06:4a:b4 (try 1/3), at: 1424969385.457148
+> wlan0: RX AssocResp from 00:18:25:06:4a:b4 (capab=0x401 status=0 aid=2) at: 1424969385.476681
+> wlan0: associated at: 1424969385.477265
+> 
+> 
+> But a commercial phone connects just fine to this AP, and reports ~780Mbps link speed,
+> so it at least thinks it is doing VHT.
+> 
+> My question is, should we just warn and ignore this bad AIFSN, or is this really
+> a fatal issue as far as enabling WMM?
 
+It's hard to say what the AP meant when it said 0 ... did it really want
+the non-standard behaviour of 0, which will result in really bad medium
+access behaviour? Or should we override to use the minimum of 2?
 
-Michal Kazior (7):
-  ath10k: allow empty ssid vdev config
-  ath10k: implement chanctx API
-  ath10k: implement adaptive qcs command
-  ath10k: protect ar->arvifs linking with data_lock
-  ath10k: rework tx queue locking
-  ath10k: implement tx pause wmi event
-  ath10k: enable multi-channel on supported devices
+AFAIR at least the Intel device gets horribly confused and crashes when
+we actually ask it to use 0 - the backoff calculation then is rather
+strange anyway.
 
- drivers/net/wireless/ath/ath10k/core.h    |  18 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  | 102 +++-
- drivers/net/wireless/ath/ath10k/htt_tx.c  |  11 +-
- drivers/net/wireless/ath/ath10k/mac.c     | 750 +++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/mac.h     |  68 +++
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  16 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 118 ++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  46 ++
- drivers/net/wireless/ath/ath10k/wmi.c     |  18 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |   1 +
- 10 files changed, 1024 insertions(+), 124 deletions(-)
+Note that disabling WMM of course also makes use of *some* medium access
+rules, so there's perhaps the possibility of using the default value for
+ACs that have it as 0? OTOH, if we disable WMM, we'll use 3 for all
+frames, rather than 2/2/3/7 (for VO/VI/BE/BK) ...
 
--- 
-1.8.5.3
+It's not really trivial though.
+
+johannes
 
