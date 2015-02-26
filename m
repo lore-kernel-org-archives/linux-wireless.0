@@ -1,113 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sender1.zohomail.com ([74.201.84.158]:35459 "EHLO
-	sender1.zohomail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753794AbbBNENi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 23:13:38 -0500
-Received: by iebtr6 with SMTP id tr6so13380676ieb.7
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Feb 2015 19:58:32 -0800 (PST)
+Received: from foo.stuge.se ([212.116.89.98]:47258 "EHLO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753941AbbBZQEM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Feb 2015 11:04:12 -0500
+Message-ID: <20150226160409.16582.qmail@stuge.se> (sfid-20150226_170420_457780_15757910)
+Date: Thu, 26 Feb 2015 17:04:09 +0100
+From: Peter Stuge <peter@stuge.se>
+To: Jouni Malinen <j@w1.fi>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Andrew McGregor <andrewmcgr@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Thomas =?utf-8?B?SMO8aG4=?= <thomas@net.t-labs.tu-berlin.de>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [ath9k-devel] AR9462 problems connecting again..
+References: <21739.50662.902775.901924@gargle.gargle.HOWL> <CAA_e5Z4zuDMS+CJvFbw4F5M9OZxgS-NZzL2E3d3GSvpRr_TbQw@mail.gmail.com> <CAA_e5Z5PqfcYss9fADFewBTgnxrYMy5U6XbRz-J5doEyKgugTg@mail.gmail.com> <20150224102611.GA30806@w1.fi> <80AA1103-EBCD-4C18-A950-B03FF516E5AC@net.t-labs.tu-berlin.de> <20150224181454.GA30859@w1.fi> <54ED56D8.9030806@openwrt.org> <20150225144723.GA6903@w1.fi> <CA+55aFyvhgFMRAg2ftuN_cykGs_3-Oyabhi_N6S-J1daVFFRzw@mail.gmail.com> <20150226102000.GA4839@w1.fi>
 MIME-Version: 1.0
-In-Reply-To: <20150213151910.GA8503@kroah.com>
-References: <CAApG7tYL+9t729-VLiHhb5CqGvw3bxaH4czR+0wWwFF_iOjk_w@mail.gmail.com>
-	<20150213151910.GA8503@kroah.com>
-Date: Sat, 14 Feb 2015 16:58:32 +1300
-Message-ID: <CAApG7tbt_UDjnzRfCshR7pMMnug=vzdgtCSt8Pi+7dHMpri0aA@mail.gmail.com> (sfid-20150214_051342_317045_306117D2)
-Subject: Fwd: Kernel 3.6.0 works, newer doesn't
-From: Tim-Hinnerk Heuer <tim@heuer.nz>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150226102000.GA4839@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi can someone here help with this issue, please? I'm willing to give
-more info if necessary or help out otherwise. I am a programmer but
-haven't done much with Linux drivers yet.
+Jouni Malinen wrote:
+> punishing the vast majority of cases where the AP is perfectly fine
+> with higher MCS rates
+
+First make it work (everywhere), then make it fast (where possible).
 
 
-Hi there,
-
-Sorry, I'm new to this list, so excuse my newbie question.
-
-I have Linux 3.6.0-030600-generic #201209302035 SMP Mon Oct 1 00:36:01
-UTC 2012 x86_64 x86_64 x86_64 GNU/Linux installed and it works great.
-My WLAN driver works with this version, but not with any newer version
-of the kernel. Am I right that backports can help me with that?
-
-Can I somehow upgrade to a newer version of the kernel and keep my
-WIFI USB driver and maybe even upgrade to newer kernels? Or even
-better, does someone here have the capacity to fix the problem in
-newer kernels?
-
-My Wifi USB Card is the
-Asus USB N13
-
-```
-lsusb
-Bus 002 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
-Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 006 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-
-Bus 005 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 001 Device 004: ID 0b05:1784 ASUSTek Computer, Inc. USB-N13
-802.11n Network Adapter (rev. A1) [Ralink RT3072]
-
-Bus 001 Device 002: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub
-Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
-
-Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
-
-sudo lsmod|grep rt
-xt_addrtype            12713  2
-x_tables               29846  6
-ip_tables,ipt_MASQUERADE,xt_conntrack,iptable_filter,xt_addrtype,iptable_nat
-rt2800usb              26998  0
-rt2x00usb              20762  1 rt2800usb
-rt2800lib              63557  1 rt2800usb
-rt2x00lib              55527  3 rt2x00usb,rt2800lib,rt2800usb
-mac80211              564631  3 rt2x00lib,rt2x00usb,rt2800lib
-cfg80211              212917  2 mac80211,rt2x00lib
-crc_ccitt              12667  1 rt2800lib
-parport_pc             32866  0
-parport                46562  3 lp,ppdev,parport_pc
-```
-
-Running Ubuntu 14.04.
-
-Thanks for your patience.
-Tim
-
-
----------- Forwarded message ----------
-From: Greg KH <greg@kroah.com>
-Date: 14 February 2015 at 04:19
-Subject: Re: Kernel 3.6.0 works, newer doesn't
-To: Tim-Hinnerk Heuer <tim@heuer.nz>
-Cc: linux-usb@vger.kernel.org
-
-
-On Fri, Feb 13, 2015 at 11:20:33PM +1300, Tim-Hinnerk Heuer wrote:
-> Hi there,
->
-> Sorry, I'm new to this list, so excuse my newbie question.
->
-> I have Linux 3.6.0-030600-generic #201209302035 SMP Mon Oct 1 00:36:01
-> UTC 2012 x86_64 x86_64 x86_64 GNU/Linux installed and it works great.
-> My WLAN driver works with this version, but not with any newer version
-> of the kernel. Am I right that backports can help me with that?
-
-I suggest working with the driver authors of that driver to fix it to
-work with the latest kernel version.  It is merged into the main
-kernel.org repo, right?  Which one is it?
-
-The networking mailing list should be able to help you out the best, try
-sending this to the linux-wireless@vger.kernel.org
-
-hope this helps,
-
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+//Peter
