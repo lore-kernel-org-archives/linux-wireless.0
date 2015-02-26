@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f46.google.com ([74.125.82.46]:61605 "EHLO
-	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760141AbbBIPiT (ORCPT
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:64873 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753475AbbBZQ6l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 10:38:19 -0500
-Received: by mail-wg0-f46.google.com with SMTP id a1so6159881wgh.5
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 07:38:17 -0800 (PST)
+	Thu, 26 Feb 2015 11:58:41 -0500
+Received: by mail-ob0-f170.google.com with SMTP id va2so12392937obc.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Feb 2015 08:58:39 -0800 (PST)
+Message-ID: <54EF50BD.1010703@lwfinger.net> (sfid-20150226_175844_460738_F1507512)
+Date: Thu, 26 Feb 2015 10:58:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Mon, 9 Feb 2015 10:38:16 -0500
-Message-ID: <CAJa-X977Am+yhM-yPx7SU-ELntNh998eFmeDF0O2Odw5kxK6Sg@mail.gmail.com> (sfid-20150209_163822_318401_0B496EAB)
-Subject: Monitor Mode: NULL data(QOS) packets(Not Control/Mgmt/Ack/Response/key
- packets) from IPhone 6 Plus to ASUS Router(STA to AP) but not Vice Versa.
-From: s prasad <sprasad.kandregula@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: brilliantov@byterg.ru, linux-wireless@vger.kernel.org
+Subject: Re: RTL8192cu: not work on linux-2.6.35
+References: <54EEFD4D.3060009@byterg.ru>
+In-Reply-To: <54EEFD4D.3060009@byterg.ru>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-Good morning. Thank you for reading this mail. Am sorry for sending
-second same mail.
+On 02/26/2015 05:02 AM, Brilliantov Kirill Vladimirovich wrote:
+> Hello!
+> I work with board on FreeScale iMX287 CPU and use linux-2.6.35.
+> For use WiFi USB Trendnet TEW-648UBM I download driver
+> (rtl8188C_8192C_usb_linux_v4.0.2_9000.20130911.tar.gz) from Realtek site and
+> build it.
 
-Problem:
-While sniffing always getting NULL function data packets(QOS) from
-IPhone 6 plus to Router(STA to AP). But, AP to STA are in proper
-format.
+--snip--
 
-Environment:
-I have one set up, which comprises of "router(ASUS 900N), IPhone 6 Plus
-and Laptop".
-Driver: rt2800usb
-Sniffer (USB Wireless dongle): Wireless Dual Band Adaptor (Roseu ill)
-450Mbps  (chip-set rt3573).
-Operation System: Fedora
-Driver Package: Observed on 3.14.22-1 and Latest  v3.19-rc1/.
+> Yes, this chip supported in latest linux, unfortunately now I can't run new
+> linux on board.
+>
+> Can you help run rtl8192cu on linux-2.6.35?
+> Thank you and excuse me for my bad english.
+
+Sorry, but there is no way that any of us can support a Realtek vendor driver. 
+In addition, I have never tested any of the non-mac80211 drivers for the 
+RTL8188CU or RTL8192CU devices.
+
+You have the latest vendor driver that I know about.
+
+Larry
 
 
-Observations:
-Able to sniff both directions data from laptop to router.
-"usb_fill_bulk_urb" in function rt2x00usb_kick_tx_entry
-(./rt2x00usb.c:311) giving data packets as NULL function data subtype.
-
-Please help me.
-
-Thanks and Regards,
-S Prasad
