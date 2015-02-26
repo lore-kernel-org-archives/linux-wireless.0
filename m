@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:57672 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751810AbbBVS6j convert rfc822-to-8bit (ORCPT
+Received: from mx3.wp.pl ([212.77.101.9]:37780 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932076AbbBZOkb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Feb 2015 13:58:39 -0500
-Received: by mail-ob0-f173.google.com with SMTP id uy5so32982666obc.4
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Feb 2015 10:58:39 -0800 (PST)
+	Thu, 26 Feb 2015 09:40:31 -0500
+Date: Thu, 26 Feb 2015 15:40:28 +0100
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: poma <pomidorabelisima@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Etna <etna@openmailbox.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>
+Subject: Re: MediaTek WiFi hardware support in upstream kernel
+Message-ID: <20150226154028.380b96f2@north> (sfid-20150226_154034_312344_BDB44BEF)
+In-Reply-To: <54EF261E.4040109@gmail.com>
+References: <544DB5A8.7090405@openmailbox.org>
+	<20141027152026.GB19976@tuxdriver.com>
+	<544E8CB4.3000607@rempel-privat.de>
+	<20141028134608.GA26283@tuxdriver.com>
+	<544FA303.5060303@broadcom.com>
+	<544FA627.3000004@rempel-privat.de>
+	<5450BEB2.60208@openwrt.org>
+	<5461F937.9060004@rempel-privat.de>
+	<5463CB6C.3030204@openwrt.org>
+	<5463D28F.9080106@lwfinger.net>
+	<20150206182915.7467bac7@north>
+	<54EF261E.4040109@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
-References: <CA+55aFz0uxAA+W0ekMwEgMS-TtqtO8hdzpgrOPvn8hv8c11BKQ@mail.gmail.com>
-	<CAJ-VmonjXw3_swWQe=gDcARwaFYN06wxF-tBBMB3jhp1f-KZxg@mail.gmail.com>
-	<CA+55aFxd-m+xj444yL0WqiTMvN8_4vT+m0Zue31Vt4shFYOEKA@mail.gmail.com>
-Date: Sun, 22 Feb 2015 10:58:38 -0800
-Message-ID: <CAA93jw4yckBgpoBf_ysDd2s8rJ5HKgx7VoTP9tnkPeSt6jn_2w@mail.gmail.com> (sfid-20150222_200125_977653_2485ABD8)
-Subject: Re: [ath9k-devel] AR9462 problems connecting again..
-From: Dave Taht <dave.taht@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 22, 2015 at 10:30 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Sun, Feb 22, 2015 at 10:24 AM, Adrian Chadd <adrian@freebsd.org> wrote:
->>
->> Just a wild shot - try disabling fast authentication and see if that
->> makes a difference?
->>
->> wpa_supplicant.conf:
->>
->> fast_reauth=0
->>
->> I recall having issues with fast_reauth once, but I never stuck around
->> that location long enough to debug it.
->
-> Nope. Did that, killed wpa_supplicant (which restarts it), tried
-> connecting, still failed.
+On Thu, 26 Feb 2015 14:56:46 +0100, poma wrote:
+> On 06.02.2015 18:29, Jakub Kiciński wrote:
+> > Hello everyone!
+> > 
+> > I put together a mac80211 driver for Mediatek MT7601U.  It's partially
+> > based on Felix's mt76, but I'm not sure if it will make sense to merge
+> > the two together.  MT7601U is a pretty old 1x1 bgn chip for USB dongles
+> > and mt76 now only supports the latest and greatest ac APs.
+> > 
+> > I'm testing STA functionality right now and it seems to be working ok.
+> > The code is very much a work in progress but if anyone is interested you
+> > can get it here:
+> > 
+> > https://github.com/kuba-moo/mt7601u
+> > 
+> > Cheers,
+> > kuba
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+> How many mt7601u module editions exists there? :)
+> - vendor's
+> - vendor's patched (how many forms of the same)
+> - your reinvented
+> - the one on which pán Gruszka allegedly works?
+> - any more?
 
-Hint: Several unifi (and most ubnt) products are well supported by
-openwrt directly, which by reflashing your device to it via their web
-interface would
-
-A) probably fix the problem, and
-B) give you more insight into fixing it, if it persists, by giving you
-full access on both sides of the connection.
-
-https://downloads.openwrt.org/snapshots/trunk/ar71xx/generic/
-
-I have been replacing ubnt´s default firmware on first boot for 6+
-years now. It is good hardware, after you do that.
-
--- 
-Dave Täht
-
-http://www.bufferbloat.net/projects/cerowrt/wiki
+I assume you mean to ask how many different drivers are there.
+There is the vendor 3.0.0.4 STA driver which only has client
+functionality.  Many patched versions of this driver exist on GitHub.
+There is also an older version of vendor driver which can work as an
+AP.  My mac80211-based driver is the only non-vendor version I'm aware
+of.
