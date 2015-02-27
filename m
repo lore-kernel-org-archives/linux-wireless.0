@@ -1,48 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34752 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753762AbbBBVZ2 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:60068 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303AbbB0IOs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Feb 2015 16:25:28 -0500
-Message-ID: <54CFEB46.3050006@candelatech.com> (sfid-20150202_222535_918906_F24D1EC9)
-Date: Mon, 02 Feb 2015 13:25:26 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Fri, 27 Feb 2015 03:14:48 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH v3 1/2] dt: bindings: add wl18xx wireless device
+Date: Fri, 27 Feb 2015 09:14:39 +0100
+Message-ID: <36252734.kTKJHJAt2s@wuerfel> (sfid-20150227_091509_488949_65682285)
+In-Reply-To: <1424362401-8228-1-git-send-email-eliad@wizery.com>
+References: <1424362401-8228-1-git-send-email-eliad@wizery.com>
 MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>  <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>  <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>  <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>  <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com> <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-In-Reply-To: <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/02/2015 10:52 AM, Eric Dumazet wrote:
-> On Mon, 2015-02-02 at 11:27 +0100, Michal Kazior wrote:
-> 
->> While testing I've had my internal GRO patch for ath10k and no stretch
->> ack patches.
-> 
-> Thanks for the data, I took a look at it.
-> 
-> I am afraid this GRO patch might be the problem.
-> 
-> It seems to break ACK clocking badly (linux stack has a somewhat buggy
-> tcp_tso_should_defer(), which relies on ACK being received smoothly, as
-> no timer is setup to split the TSO packet.)
+On Thursday 19 February 2015 18:13:20 Eliad Peller wrote:
+> +Required properties:
+> + - compatible : Should be "ti,wl18xx".
 
-It is a big throughput win to have fewer TCP ack packets on
-wireless since it is a half-duplex environment.  Is there anything
-we could improve so that we can have fewer acks and still get
-good tcp stack behaviour?
+Do not use wildcards in the compatible string, use specific model numbers.
 
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+	Arnd
