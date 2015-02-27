@@ -1,63 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.inescn.pt ([192.35.246.20]:32975 "EHLO trubo.inescn.pt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751010AbbBSO7a convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34203 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201AbbB0IHV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Feb 2015 09:59:30 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by trubo.inescn.pt (8.13.8/8.14.3/7) with ESMTP id t1JErrGB009963
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 14:53:53 GMT
-Received: from trubo.inescn.pt ([127.0.0.1])
-	by localhost (trubo.inescn.pt [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id gBmmZxuzgnH6 for <linux-wireless@vger.kernel.org>;
-	Thu, 19 Feb 2015 14:53:48 +0000 (WET)
-Received: from grover.inescn.pt (grover.inescn.pt [194.117.24.20])
-	by trubo.inescn.pt (8.13.8/8.14.4/3) with ESMTP id t1JErjfq009956
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=FAIL)
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 14:53:45 GMT
-Received: from grover.inescn.pt (localhost.localdomain [127.0.0.1])
-	by grover.inescn.pt (8.13.8/8.13.8/7) with ESMTP id t1JErjf3022071
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Thu, 19 Feb 2015 14:53:45 GMT
-Received: (from apache@localhost)
-	by grover.inescn.pt (8.13.8/8.13.8/Submit) id t1JErjBH022069
-	for linux-wireless@vger.kernel.org; Thu, 19 Feb 2015 14:53:45 GMT
-Message-ID: <20150219155345.54713ultwqjbtrsp@horde.inescporto.pt> (sfid-20150219_155933_931495_00F2831B)
-Date: Thu, 19 Feb 2015 15:53:45 +0100
-From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inescporto.pt>
-To: linux-wireless@vger.kernel.org
-Subject: Issue with frame injection on monitor interface (ath9k)
+	Fri, 27 Feb 2015 03:07:21 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
+Subject: Re: libertas: remove unnecessary check before calling debugfs_remove
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1423643586-11002-1-git-send-email-baspeters93@gmail.com>
+To: Bas Peters <baspeters93@gmail.com>
+Cc: Bas Peters <baspeters93@gmail.com>, linville@tuxdriver.com,
+	johannes.berg@intel.com, dcbw@redhat.com,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20150227080720.BA59C13FA62@smtp.codeaurora.org> (sfid-20150227_090741_474336_BEBB6591)
+Date: Fri, 27 Feb 2015 08:07:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone.
 
-When using frame injection over monitor interface, with handmade  
-packet with Radiotap header + QoS + Data, at sender I capture the  
-packet with tcpdump and it is equal to the one I sent.
-Although, at receiver station, the packet is diferent, FCS was  
-recalculated or forced to active and calculated, MCS is not the one I  
-supplied, sequence number (QoS field) is not the same, amongst other  
-things.
-Also, QoS Ack policy was "No Ack" at sender (QoS Control = 0x0020), a  
-Ack frame was transmitted to sender and the received packet arrived  
-with QoS Control = 0x0000.
+> Debugfs_remove will check for error or NULL for us, so it is not
+> necessary to do this here.
+> 
+> Signed-off-by: Bas Peters <baspeters93@gmail.com>
 
-Tested with Microtik R52n-M (AR9220) on following operating systems:
-- AP-STA using Ubuntu Ubuntu 14.04.1 LTS;
-- AdHoc using OpenWRT r43000, with kmod-ath9k version  
-3.10.49+2014-11-04-1 and kmod-mac80211 version 3.10.49+2014-11-04-1.
+Thanks, applied to wireless-drivers-next.git.
 
-Regarding to OpenWRT, this malfunction was reported here:  
-https://dev.openwrt.org/ticket/18913
-
-Thanks.
-
-
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
+Kalle Valo
