@@ -1,79 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57376 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbbB1KIj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35182 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753430AbbB0IP7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Feb 2015 05:08:39 -0500
-From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-Subject: [PATCH] mac80211: send station PMF configuration to driver
-Date: Sat, 28 Feb 2015 15:38:16 +0530
-Message-ID: <1425118096-22089-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150228_110844_409746_BFDD1C30)
+	Fri, 27 Feb 2015 03:15:59 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/9] wil6210: boot loader
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1424001758-29529-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Message-Id: <20150227081559.4250014006E@smtp.codeaurora.org> (sfid-20150227_091603_352900_C923AED6)
+Date: Fri, 27 Feb 2015 08:15:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In HT mode, firmware is not encrypting ADDBA request as PMF
-configuration is not set in peer flags during association.
 
-Enable mac80211 to provide station PMF configuration to driver.
+> Introduce boot loader. Instead of the operational firmware,
+> very small boot loader is burned to the on-board flash. Boot loader
+> initializes hardware upon reset, and prepares for low power mode.
+> Boot loader reports MAC address and detects radio chip connected.
+> 
+> Driver loads firmware only when bringing up interface. All information
+> required to set up network interface, most important is MAC address,
+> reported by the boot loader
+> 
+> The firmware composed of 2 files:
+> - wil6210.fw - firmware itself (compiled code + data)
+> - wil6210.board - board file (various board and radio dependent
+>   calibrations and parameters)
+> 
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Thanks, 8 patches applied to wireless-drivers-next.git:
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d52914b..1502086 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1488,6 +1488,8 @@ struct ieee80211_sta_rates {
-  * @tdls: indicates whether the STA is a TDLS peer
-  * @tdls_initiator: indicates the STA is an initiator of the TDLS link. Only
-  *	valid if the STA is a TDLS peer in the first place.
-+ * @mfp: indicates whether the STA supports management frame
-+ *	protection.
-  */
- struct ieee80211_sta {
- 	u32 supp_rates[IEEE80211_NUM_BANDS];
-@@ -1504,6 +1506,7 @@ struct ieee80211_sta {
- 	struct ieee80211_sta_rates __rcu *rates;
- 	bool tdls;
- 	bool tdls_initiator;
-+	bool mfp;
+2cd0f021b847 wil6210: boot loader
+9a5511b58b25 wil6210: remove support for old hardware
+e3351277ac58 wil6210: enable fix for HW bug in 802.11->803.3 transform
+33c477fdab25 wil6210: branch prediction hints
+0436fd9a2d1e wil6210: Change of threshold for tx vring idleness measurement
+8f55cbec7f88 wil6210: Fix division by zero in wil_vring_debugfs_show
+774974e50432 wil6210: rename 'secure_pcp' to 'privacy'
+344a7024e01f wil6210: track privacy connection attribute
 
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index dd4ff36..c124626 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1068,6 +1068,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		sta->sta.wme = set & BIT(NL80211_STA_FLAG_WME);
-
- 	if (mask & BIT(NL80211_STA_FLAG_MFP)) {
-+		sta->sta.mfp = !!(set & BIT(NL80211_STA_FLAG_MFP));
- 		if (set & BIT(NL80211_STA_FLAG_MFP))
- 			set_sta_flag(sta, WLAN_STA_MFP);
- 		else
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 10ac632..52c34cd 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2969,8 +2969,12 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
-
- 	rate_control_rate_init(sta);
-
--	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
-+	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED) {
- 		set_sta_flag(sta, WLAN_STA_MFP);
-+		sta->sta.mfp = true;
-+	} else {
-+		sta->sta.mfp = false;
-+	}
-
- 	sta->sta.wme = elems.wmm_param;
-
---
-1.9.1
-
+Kalle Valo
