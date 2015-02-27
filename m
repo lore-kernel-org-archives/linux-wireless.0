@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from toccata2.tricolour.ca ([204.225.221.17]:55451 "EHLO
-	toccata2.tricolour.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752AbbBENFY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Feb 2015 08:05:24 -0500
-Date: Thu, 5 Feb 2015 08:05:18 -0500
-From: Richard Guy Briggs <rgb@tricolour.ca>
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	lwn@lwn.net, netdev01@lists.netfilter.org, lartc@vger.kernel.org,
-	netfilter@vger.kernel.org, netfilter-devel@vger.kernel.org
-Cc: info@netdev01.org, speakers@netdev01.org, attendees@netdev01.org
-Subject: NetDev 0.1 final schedule and new sponsor update
-Message-ID: <20150205130518.GK4239@toccata2.tricolour.ca> (sfid-20150205_140539_258477_11A0865A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:60599 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752394AbbB0Q4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2015 11:56:18 -0500
+Message-ID: <1425056171.1960.8.camel@sipsolutions.net> (sfid-20150227_175622_792919_6CD60E4B)
+Subject: Re: [PATCH] nl80211: add notes about userspace API/ABI modifications
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi
+Date: Fri, 27 Feb 2015 17:56:11 +0100
+In-Reply-To: <54F0A0CB.2050804@broadcom.com>
+References: <1425047563-9988-1-git-send-email-johannes@sipsolutions.net>
+	 <54F0A0CB.2050804@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fellow netheads:
+On Fri, 2015-02-27 at 17:52 +0100, Arend van Spriel wrote:
+> On 02/27/15 15:32, Johannes Berg wrote:
+> > From: Johannes Berg<johannes.berg@intel.com>
+> >
+> > Add notes about userspace ABI/API modifications, including the
+> > fact that we decided that API submissions should come with a
+> > driver implementation.
+> 
+> Should we also consider Cc: to linux-api mailing list or do you think 
+> nl80211 api has sufficient capable reviewers.
 
+Well, I don't know for sure, but I'd rather not overload the people
+there ... there are very few there anyway. And probably most people have
+no idea what wifi is ;-)
 
-New Sponsor:
-==========================
-We thank Intel for supporting Netdev01. Intel is well known in its
-tradition for supporting open source projects.  http://www.intel.com/
+> There is probably a reason 
+> for adding these notes now ;-)
 
+Well, that's mostly the discussion on "need to have an upstream user"
 
-Schedule:
-==========================
-The final schedule is out coded with session links.
-	https://www.netdev01.org/schedule
+johannes
 
-
-Registration:
-==========================
-https://onlineregistrations.ca/netdev01/
-$100/day, or $350 for 4 days (Cdn dollars). (online reg closes Feb 12th)
-Please register as early as practical.  Registering helps us plan properly for
-numbers of attendees, ensuring venue sizes and supplies are appropriate without
-wasting resources.
-
-
-Hotel discount rates deadline extended
-==========================
-The Westin Hotel may still have rooms for Netdev01 available.
-There are lots of big and small hotels in Ottawa, but they will fill up
-fast as Winterlude approaches, so book something soon.  There may be
-some possibilities to billet locally, but don't leave it last minute.
-Make your reservations at:
-https://www.starwoodmeeting.com/StarGroupsWeb/res?id=1412035802&key=1AC9C1F8
-
-
-Sponsors:
-=========
-NetDev 0.1 would like to gratefully acknowledge all our sponsors: 
-https://netdev01.org/sponsors
-CENGN			http://www.cengn.ca/
-Google			https://www.google.ca
-Qualcomm		https://www.qualcomm.com/
-Verizon			http://www.verizon.com/
-Cumulus Networks	http://cumulusnetworks.com/
-Mojatatu Networks	http://mojatatu.com/
-
-
--------------------------------------------------------------------------------
-THE Technical Conference on Linux Networking, February 14-17, 2015, Ottawa, Canada
-https://netdev01.org/
-
-Contact:			info@netdev01.info
-Main site:			https://www.netdev01.org/
-Travel/hotel/weather/clothing:	https://www.netdev01.org/travel
-RSS feed:			https://netdev01.org/atom
-Follow us on Twitter: @netdev01	https://twitter.com/netdev01
