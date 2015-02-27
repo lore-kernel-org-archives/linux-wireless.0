@@ -1,81 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:45434 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933313AbbBIRmJ (ORCPT
+Received: from smtprelay0235.hostedemail.com ([216.40.44.235]:41261 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752291AbbB0MgX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Feb 2015 12:42:09 -0500
-Received: by mail-wg0-f54.google.com with SMTP id y19so2245523wgg.13
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Feb 2015 09:42:08 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH RFC] bcma: use two different initcalls if built-in
-Date: Mon,  9 Feb 2015 18:42:02 +0100
-Message-Id: <1423503722-20819-1-git-send-email-zajec5@gmail.com> (sfid-20150209_184213_753063_D809E99B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 27 Feb 2015 07:36:23 -0500
+Message-ID: <1425040579.2690.9.camel@perches.com> (sfid-20150227_133643_542634_EAA1D9D1)
+Subject: Re: [PATCH net-next] wireless: test sscanf return values
+From: Joe Perches <joe@perches.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Fri, 27 Feb 2015 04:36:19 -0800
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CAF0B29@AcuExch.aculab.com>
+References: <1425015791.2690.7.camel@perches.com>
+	 <063D6719AE5E284EB5DD2968C1650D6D1CAF0B29@AcuExch.aculab.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed as we can't initialize bus during fs_initcall.
-Initialization requires SPROM which depends on NVRAM which depends on
-mtd. Since mtd, spi, nand, spi-nor use standard module_init, we have to
-do the same in bcma.
-Without this we'll try to initialize SPROM without having a ready SPROM
-proviver registered using bcma_arch_register_fallback_sprom.
+On Fri, 2015-02-27 at 10:35 +0000, David Laight wrote:
+> From: Joe Perches
+> > At some point, it'd be good to make sscanf use __must_check
+> > so make sure the net/ uses of sscanf use the return value.
+> 
+> Isn't it much safer to avoid sscanf() completely and use
+> a different function for converting numerics?
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-While this patch seems to work and I can compile bcma as built-in and
-module, I'm not too proud of it. I don't really like these #if(n)def
-tricks and I'm afraid bcma_modinit may be called even if
-bcma_modinit_early failed.
+It's generally better to use something other than sscanf.
+That doesn't mean sscanf isn't useful.
 
-Do you see any better idea of solving this?
----
- drivers/bcma/main.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 9635f10..c394207 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -637,13 +637,25 @@ static int bcma_device_uevent(struct device *dev, struct kobj_uevent_env *env)
- 			      core->id.rev, core->id.class);
- }
- 
-+/* Bus has to be registered early, before any bcma driver */
-+static int __init bcma_modinit_early(void)
-+{
-+	return bus_register(&bcma_bus_type);
-+}
-+#ifndef MODULE
-+fs_initcall(bcma_modinit_early);
-+#endif
-+
-+/* Initialization has to be done later with SPI/mtd/NAND/SPROM available */
- static int __init bcma_modinit(void)
- {
- 	int err;
- 
--	err = bus_register(&bcma_bus_type);
-+#ifdef MODULE
-+	err = bcma_modinit_early();
- 	if (err)
- 		return err;
-+#endif
- 
- 	err = bcma_host_soc_register_driver();
- 	if (err) {
-@@ -660,7 +672,7 @@ static int __init bcma_modinit(void)
- 
- 	return err;
- }
--fs_initcall(bcma_modinit);
-+module_init(bcma_modinit);
- 
- static void __exit bcma_modexit(void)
- {
--- 
-1.8.4.5
 
