@@ -1,32 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54883 "EHLO mx2.suse.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59079 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753063AbbBZCSN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 21:18:13 -0500
-Date: Thu, 26 Feb 2015 03:18:11 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v7 3/3] cfg80211: Schedule timeout for all CRDA calls
-Message-ID: <20150226021811.GI8749@wotan.suse.de> (sfid-20150226_031816_239187_0CE5B125)
-References: <1424857624-24944-1-git-send-email-ilan.peer@intel.com> <1424857624-24944-3-git-send-email-ilan.peer@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424857624-24944-3-git-send-email-ilan.peer@intel.com>
+	id S1750752AbbB0Muf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2015 07:50:35 -0500
+Message-ID: <1425041427.1960.1.camel@sipsolutions.net> (sfid-20150227_135038_921784_14B098F4)
+Subject: Re: [PATCH v2 3/4] mac80211: initialize rate control earlier for
+ tdls station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Fri, 27 Feb 2015 13:50:27 +0100
+In-Reply-To: <1424850911-21017-4-git-send-email-marek.puzyniak@tieto.com> (sfid-20150225_085335_433402_71CE8ACD)
+References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
+	 <1424850911-21017-4-git-send-email-marek.puzyniak@tieto.com>
+	 (sfid-20150225_085335_433402_71CE8ACD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 25, 2015 at 04:47:04AM -0500, Ilan Peer wrote:
-> Timeout was scheduled only in case CRDA was called due to user hints,
-> but was not scheduled for other cases. This can result in regulatory
-> hint processing getting stuck in case that there is no CRDA configured.
-> 
-> Change this by scheduling a timeout every time CRDA is called. In
-> addition, in restore_regulatory_settings() all pending requests are
-> restored (and not only the user ones).
-> 
-> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
++Arik.
 
-I think I had acked this already. If so add the tag.
+It'd be nice (for me anyway) if you didn't send this in a series of
+other patches I don't care about - I only ever saw this due to
+patchwork.
 
-  Luis
+On Wed, 2015-02-25 at 08:55 +0100, Marek Puzyniak wrote:
+> Currently when TDLS station in driver goes from assoc
+> to authorized state it can not use rate control parameters
+> because rate control is not initialized yet. Some drivers
+> require parameters already initialized by rate control when
+> entering authorized state. It can be done by initializing
+> rate control after station transition to authorized state
+> but before notifying driver about that.
+
+Arik, you have a similar patch handling only NSS. Does this one look
+fine to you, and would it solve the problem your other patch solved?
+
+johannes
+
