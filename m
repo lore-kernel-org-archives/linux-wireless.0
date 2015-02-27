@@ -1,39 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60875 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752872AbbBMSHA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Feb 2015 13:07:00 -0500
-Message-ID: <1423850815.2936.4.camel@sipsolutions.net> (sfid-20150213_190705_239723_1C038CFF)
-Subject: Re: [PATCH 1/3] mwifiex: add cfg80211 set_default_mgmt_key handler
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com, huxm@marvell.com, Li Long <longli@marvell.com>
-Date: Fri, 13 Feb 2015 19:06:55 +0100
-In-Reply-To: <1423764954-30412-1-git-send-email-patila@marvell.com> (sfid-20150212_134627_640778_2A1810BC)
-References: <1423764954-30412-1-git-send-email-patila@marvell.com>
-	 (sfid-20150212_134627_640778_2A1810BC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46829 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399AbbB0Jyl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2015 04:54:41 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V3 2/2] ath10k: Fix interrupt storm
+Date: Fri, 27 Feb 2015 15:20:06 +0530
+Message-ID: <1425030606-21933-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150227_105449_382583_1C5F4404)
+In-Reply-To: <1425030606-21933-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1425030606-21933-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-02-12 at 23:45 +0530, Avinash Patil wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> It is observed that hostapd failed to setup with management frame
-> protection mode enabled when using mwifiex.
-> 
-> This is because hostapd will try to install IGTK using
-> cfg80211 set_default_mgmt_key handler.
-> 
-> we have already support IGTK install in set_key handler, so just work
-> around this issue by add an empty cfg80211_set_default_mgmt_key handler.
+Promiscuous mode is enabled when wlan interface is added to
+bridge. ath10k creates a monitor mode when promiscuous mode
+is enabled. When monitor vdev is runing along with other
+vdev(s) there is a huge number of interrupts generated
+especially in noisy condition. Fix this by not enabling
+promiscuous(monitor) mode when already a vdev is running.
+As disabling promiscuous mode may have issues with 4-address
+bridging in STA mode, the change is done specific to non-sta/ibss
+mode types. This does not change the support of virtual interface of
+type monitor along with other vdevs of any type.
 
-I believe that this is incorrect since the key should only be installed
-for TX after this handler, not in the set_key handler. This should make
-a difference in the case of rekeying? Perhaps hostapd doesn't actually
-program the key until rekeying with all stations finishes though.
+This could fix manangement frame drop in fw due to unavailable
+buffers because in monitor mode device receives everything seen
+on the air. In noisy condition, disabling monitor mode helps assoc
+go through without any issue.
 
-johannes
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   35 +++++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3b5aaa3..885e984 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -766,12 +766,36 @@ static int ath10k_monitor_stop(struct ath10k *ar)
+ 	return 0;
+ }
+ 
++static bool ath10k_disable_promisc_mode(struct ath10k *ar)
++{
++	struct ath10k_vif *arvif;
++
++	if (!ar->num_started_vdevs)
++		return false;
++
++	list_for_each_entry(arvif, &ar->arvifs, list) {
++		/* Disabling promiscuous mode when STA/IBSS is running */
++		if (arvif->vdev_type == WMI_VDEV_TYPE_STA ||
++		    arvif->vdev_type == WMI_VDEV_TYPE_IBSS)
++			return false;
++	}
++
++	return true;
++}
++
+ static int ath10k_monitor_recalc(struct ath10k *ar)
+ {
+ 	bool should_start;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	if ((ar->filter_flags & FIF_PROMISC_IN_BSS) &&
++	    ath10k_disable_promisc_mode(ar)) {
++		ar->filter_flags &= ~FIF_PROMISC_IN_BSS;
++		ath10k_dbg(ar, ATH10K_DBG_MAC,
++			   "mac disabling promiscuous mode because vdev is started\n");
++	}
++
+ 	should_start = ar->monitor ||
+ 		       ar->filter_flags & FIF_PROMISC_IN_BSS ||
+ 		       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
+@@ -969,6 +993,10 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+ 	ar->num_started_vdevs++;
+ 	ath10k_recalc_radar_detection(ar);
+ 
++	ret = ath10k_monitor_recalc(ar);
++	if (ret)
++		ath10k_vdev_stop(arvif);
++
+ 	return ret;
+ }
+ 
+@@ -3476,6 +3504,13 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
+ 
+ 	changed_flags &= SUPPORTED_FILTERS;
+ 	*total_flags &= SUPPORTED_FILTERS;
++	if (*total_flags & FIF_PROMISC_IN_BSS) {
++		if (ar->num_started_vdevs) {
++			ath10k_dbg(ar, ATH10K_DBG_MAC,
++				   "mac does not enable promiscuous mode when already a vdev is running\n");
++			*total_flags &= ~FIF_PROMISC_IN_BSS;
++		}
++	}
+ 	ar->filter_flags = *total_flags;
+ 
+ 	ret = ath10k_monitor_recalc(ar);
+-- 
+1.7.9.5
 
