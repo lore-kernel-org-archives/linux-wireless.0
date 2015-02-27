@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:42125 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752892AbbBHNRu (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34296 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093AbbB0IKw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Feb 2015 08:17:50 -0500
-Received: by mail-wg0-f49.google.com with SMTP id k14so21782799wgh.8
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Feb 2015 05:17:49 -0800 (PST)
+	Fri, 27 Feb 2015 03:10:52 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAB3XZEfJt=YKP8+SKie7L_4sdxcdrGUtzruDvrjFKDvXKo2L3w@mail.gmail.com>
-References: <1420645811-17877-1-git-send-email-eliad@wizery.com>
-	<1420645811-17877-3-git-send-email-eliad@wizery.com>
-	<20150207115758.GA503@w1.fi>
-	<CALhHN=rj=1OE8xv_q4cTRVkF_=Ko-3amjn4_6tYHXg9dtev=9A@mail.gmail.com>
-	<CAB3XZEfJt=YKP8+SKie7L_4sdxcdrGUtzruDvrjFKDvXKo2L3w@mail.gmail.com>
-Date: Sun, 8 Feb 2015 14:17:49 +0100
-Message-ID: <CALhHN=pxxL9Wr9aURjZV8fQ7uvSV6e49KTLbEAzUZ0zTDhPsqw@mail.gmail.com> (sfid-20150208_141754_003991_76752CE4)
-Subject: Re: [PATCH v2 3/3] mac80211: don't defer scans in case of radar detection
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Jouni Malinen <j@w1.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [1/4] mwifiex: more_task flag for main_process
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1423676547-5213-1-git-send-email-patila@marvell.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <yangyang@marvell.com>, <szli@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Message-Id: <20150227081051.979A913FB80@smtp.codeaurora.org> (sfid-20150227_091101_728685_F292B45E)
+Date: Fri, 27 Feb 2015 08:10:51 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 February 2015 at 11:57, Eliad Peller <eliad@wizery.com> wrote:
-> On Sat, Feb 7, 2015 at 9:17 PM, Janusz Dziedzic
-> <janusz.dziedzic@tieto.com> wrote:
->> BTW, what in case we will start AP on first interface (DFS channel),
->> on second one we will try to connect to other AP. As I understand this
->> correctly, second iface (STA iface) will not allow to scan (connect)
->> ...?
->>
-> right.
-> The rationale behind it that you must listen constantly to detect
-> radar events, which prevents scanning off-channel.
-> (i guess an exception for on-channel scanning can be added if needed, though)
->
-Still I can image hw with hw_scan() support that could have dedicated
-"hw part" for scanning.
-So, driver should made this decision (allow or not) base on hw features.
 
-BR
-Janusz
+> From: Shengzhen Li <szli@marvell.com>
+> 
+> This patch handles a corner case where TX packet would remain in
+> driver queue till next packet comes in.
+> Here is sequence:
+> 1. TX packet is queued via hard_start_xmit and main_work is queued
+> 2. SDIO interrupt comes in which directly call mwifiex_main_process.
+> This starts executing main superloop.
+> 3. Now work from step1 is scheduled but at first check itself it sees
+> mwifiex_processing is set and exits.
+> 4. Now if superloop from step2 has passed TX processing part of superloop
+> this packet would remain in queue until next packet/command/SDIO interrupt
+> arrives and queues main_work.
+> 
+> This patch fixes this corner case by defining more_task flag which is set when
+> mwifiex_processing is found to be true. At end of superloop we again check if
+> more_task flag is set and if set, execute superloop again.
+> 
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
 
->> Other case, what if we start DFS AP and allow to scan in AP mode (eg
->> for ACS purpose, allow to choose better channel and do CSA ...)?
-> ditto. you just have to make sure you keep listening on the operating channel.
->
-> Eliad.
+Thanks, 4 patches applied to wireless-drivers-next.git:
+
+04c7b363c9f7 mwifiex: more_task flag for main_process
+7521ce6eb2d3 mwifiex: do not process mgmt rx on uninitialized interface
+b4e8aebbc7c2 mwifiex: change datatype to bool for device capability flags
+1c4c24eb7e96 mwifiex: modify TX buff size for SD8887
+
+Kalle Valo
