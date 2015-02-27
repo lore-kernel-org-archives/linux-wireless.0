@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:1101 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60320 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964928AbbBCHOn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 02:14:43 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/19] iwlwifi: mvm: check IWL_UCODE_TLV_API_SCD_CFG in API and not in capa
-Date: Tue,  3 Feb 2015 09:14:20 +0200
-Message-Id: <1422947678-16917-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150203_081446_806287_33584B58)
-In-Reply-To: <1422947482.30742.8.camel@egrumbacBox>
-References: <1422947482.30742.8.camel@egrumbacBox>
+	id S1754791AbbB0QbD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Feb 2015 11:31:03 -0500
+Message-ID: <1425054660.1960.7.camel@sipsolutions.net> (sfid-20150227_173110_009881_7362BE8C)
+Subject: Re: Intel Wireless 7260 - Possible bug within iwlwifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?=D0=91=D0=BE=D1=80=D0=B8=D1=81=D0=BB=D0=B0=D0=B2_?=
+	 =?UTF-8?Q?=D0=A1=D1=8A=D0=B1=D0=B5=D0=B2?=
+	<borislavsabev@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 27 Feb 2015 17:31:00 +0100
+In-Reply-To: <CA+uMeVcwpfOfQ=TnQA5omYga5Qu1bynNYz1gAQbcR4VqpFcXXg@mail.gmail.com> (sfid-20150227_171142_538428_5980AB84)
+References: <CA+uMeVeu0y892+HPCNK5zbuk48WTawaue9p5j690D9n77yzw1w@mail.gmail.com>
+	 <CA+uMeVct4LSHw9HsxFm1DCdEPDr81_SpkHFeyQptd2eR1+1XSg@mail.gmail.com>
+	 <CA+uMeVcwpfOfQ=TnQA5omYga5Qu1bynNYz1gAQbcR4VqpFcXXg@mail.gmail.com>
+	 (sfid-20150227_171142_538428_5980AB84)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IWL_UCODE_TLV_API_SCD_CFG is a new API and hence, check if
-enabled in the correct field.
+On Fri, 2015-02-27 at 18:11 +0200, Борислав Събев wrote:
 
-Fixes: 0294d9eece86 ("iwlwifi: mvm: let the firmware configure the scheduler")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mvm.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> The problem is that If our WiFi goes down (or we need to restart the
+> router) after the router is back up the connection could not be
+> established again.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 979ac23..7773ffc 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -874,7 +874,7 @@ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
- 
- static inline bool iwl_mvm_is_scd_cfg_supported(struct iwl_mvm *mvm)
- {
--	return mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_API_SCD_CFG;
-+	return mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_SCD_CFG;
- }
- 
- extern const u8 iwl_mvm_ac_to_tx_fifo[];
--- 
-1.9.1
+I'm not sure I understand - the below has nothing to do with the router?
+
+> In the dmesg line: "[  167.863245] iwlwifi 0000:02:00.0: RF_KILL bit
+> toggled to disable radio."      is produced when we try to stop/start
+> the adapter via its hardware button or the button in NetworkManager.
+
+That's pretty normal. Does it also show "to enable radio"? If you're
+saying it just gets stuck in rfkill-disabled state then this is much
+more likely a platform than iwlwifi issue, perhaps in the ACPI or other
+platform rfkill drivers.
+
+> Hope this helps to solve the issue for everyone.
+> Again I have 4 machines with this issue so I can also test different
+> stuff on Debian 8 Jessie & Ubuntu 14.04!
+
+I have no idea what you'd want to test :)
+
+johannes
 
