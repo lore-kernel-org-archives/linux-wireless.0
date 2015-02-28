@@ -1,50 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:49006 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725AbbBCPED (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57376 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbbB1KIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Feb 2015 10:04:03 -0500
-Message-ID: <1422975839.907.17.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150203_160410_573524_1281A049)
-Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	eyalpe@dev.mellanox.co.il
-Date: Tue, 03 Feb 2015 07:03:59 -0800
-In-Reply-To: <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
-	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
-	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
-	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
-	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Sat, 28 Feb 2015 05:08:39 -0500
+From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Subject: [PATCH] mac80211: send station PMF configuration to driver
+Date: Sat, 28 Feb 2015 15:38:16 +0530
+Message-ID: <1425118096-22089-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150228_110844_409746_BFDD1C30)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-02-03 at 06:27 -0800, Eric Dumazet wrote:
+In HT mode, firmware is not encrypting ADDBA request as PMF
+configuration is not set in peer flags during association.
 
-> Are packets TX completed after a timer or something ?
-> 
-> Some very heavy stuff might run from tasklet (or other softirq triggered) event.
-> 
+Enable mac80211 to provide station PMF configuration to driver.
 
-Right, commit 6c5151a9ffa9f796f2d707617cecb6b6b241dff8
-("ath10k: batch htt tx/rx completions")
-is very suspicious.
+Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
 
-Please revert it.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d52914b..1502086 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1488,6 +1488,8 @@ struct ieee80211_sta_rates {
+  * @tdls: indicates whether the STA is a TDLS peer
+  * @tdls_initiator: indicates the STA is an initiator of the TDLS link. Only
+  *	valid if the STA is a TDLS peer in the first place.
++ * @mfp: indicates whether the STA supports management frame
++ *	protection.
+  */
+ struct ieee80211_sta {
+ 	u32 supp_rates[IEEE80211_NUM_BANDS];
+@@ -1504,6 +1506,7 @@ struct ieee80211_sta {
+ 	struct ieee80211_sta_rates __rcu *rates;
+ 	bool tdls;
+ 	bool tdls_initiator;
++	bool mfp;
 
-BTW, ath10k_htt_txrx_compl_task() runs from softirq context, so the 
-_bh() prefixes are not really needed.
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index dd4ff36..c124626 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1068,6 +1068,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 		sta->sta.wme = set & BIT(NL80211_STA_FLAG_WME);
 
-It seems lot of batching happens in wifi drivers, not necessarily at the
-right places.
+ 	if (mask & BIT(NL80211_STA_FLAG_MFP)) {
++		sta->sta.mfp = !!(set & BIT(NL80211_STA_FLAG_MFP));
+ 		if (set & BIT(NL80211_STA_FLAG_MFP))
+ 			set_sta_flag(sta, WLAN_STA_MFP);
+ 		else
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 10ac632..52c34cd 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2969,8 +2969,12 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
 
+ 	rate_control_rate_init(sta);
 
+-	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
++	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED) {
+ 		set_sta_flag(sta, WLAN_STA_MFP);
++		sta->sta.mfp = true;
++	} else {
++		sta->sta.mfp = false;
++	}
+
+ 	sta->sta.wme = elems.wmm_param;
+
+--
+1.9.1
 
