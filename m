@@ -1,52 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47215 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751013AbbBOPvU (ORCPT
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:47017 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752714AbbB1Uqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Feb 2015 10:51:20 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix AP/IBSS CSA with template based fw
-References: <1423749198-11346-1-git-send-email-michal.kazior@tieto.com>
-Date: Sun, 15 Feb 2015 17:51:14 +0200
-In-Reply-To: <1423749198-11346-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 12 Feb 2015 14:53:18 +0100")
-Message-ID: <87mw4fgolp.fsf@kamboji.qca.qualcomm.com> (sfid-20150215_165128_181988_5CE25D55)
+	Sat, 28 Feb 2015 15:46:42 -0500
+Message-ID: <54F2292E.5000803@gmail.com> (sfid-20150228_214701_923166_2CD7C2A4)
+Date: Sat, 28 Feb 2015 21:46:38 +0100
+From: Filip Ayazi <filipayazi@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: mvm: check time event is over before disconnecting
+References: <1425078600-29882-1-git-send-email-filipayazi@gmail.com> <CANUX_P22MQEVkFsC_ToYiSTMVSB+QpSOMCb=d3+AH4224nhocw@mail.gmail.com>
+In-Reply-To: <CANUX_P22MQEVkFsC_ToYiSTMVSB+QpSOMCb=d3+AH4224nhocw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> qca6174 with wmi-tlv firmware uses offloaded
-> beaconing scheme (i.e. templates). This requires a
-> little different approach when implementing CSA.
+On 02/28/2015 08:55 PM, Emmanuel Grumbach wrote:
+> On Sat, Feb 28, 2015 at 1:10 AM, Filip Ayazi <filipayazi@gmail.com> wrote:
+>> On the 7260 time event was often ended before end_time and connections failed
+>> with "No association and the time event is over already...".
+>> This checks that the time event is actually over before disconnecting.
+>>
+>> Signed-off-by: Filip Ayazi <filipayazi@gmail.com>
+> While this patch is wrong I'd like to know if it helps.
+It helped here (7260 on Lenovo E440).
+I get a TE with unknown action message and successful connection now,
+used to be TE ended with current time < end time and a disconnect,
+even on networks with excellent signal strength. It used to happen
+about 30% of the time with no apparent pattern, sometimes restarting
+the interface fixed the issue.
+> The patch is wrong because even if the driver thinks the time event
+> should still be running, if the firmware indicates it has already
+> ended, we should still disconnect. The reason for the disconnection is
+> that we can't be sure that the firmware will have the proper timing
+> for the beacon and hence for the DTIM. Both are critical to get a
+> decent behavior while saving power.
+You are right, few hours ago, after waking from suspend, I could not switch
+the interface on (ifconfig said SIOCSIFFLAGS: Input/output error), reloading
+iwlmvm module helped, so this was likely the cause.
+> In any case, I doubt this patch does actually something because the
+> firmware and the driver should really be close in their timings. If
+> they aren't, it is fundamental bug in the firmware. While the firmware
+> does have bugs just like any piece of software, I doubt it has such
+> big ones :)
+I do not see any other explanation apart from faulty hardware,
+which doesn't seem likely :)
 >
-> Add missing code to update CS count and report CSA
-> completion to mac80211. Without it channel switch
-> was never finished.
->
-> To avoid races during interface teardown data_lock
-> has been used to protect is_up and is_started so
-> they can be compared against before scheduling
-> count down work.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->
-> @Kalle: I'm deferring the chanctx patchset v4
-> until this gets applied. I'd like to avoid posting
-> patches without a valid parent id and leaving you
-> with some weird conflicts and implicit depndencies
-> in the code to deal with.
+>> ---
+>>   drivers/net/wireless/iwlwifi/mvm/time-event.c | 3 ++-
+>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+>> index 54fafbf..b0aa892 100644
+>> --- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
+>> +++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+>> @@ -256,7 +256,8 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
+>>                  }
+>>          }
+>>
+>> -       if (le32_to_cpu(notif->action) & TE_V2_NOTIF_HOST_EVENT_END) {
+>> +       if (le32_to_cpu(notif->action) & TE_V2_NOTIF_HOST_EVENT_END &&
+>> +           time_after(jiffies, te_data->end_jiffies)) {
+>>                  IWL_DEBUG_TE(mvm,
+>>                               "TE ended - current time %lu, estimated end %lu\n",
+>>                               jiffies, te_data->end_jiffies);
+>> --
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Ok.
-
-I actually had strange conflicts already with this patch (in mac.c). As
-I'm travelling, please check my resolution from the pending branch very
-carefully. I might have done something stupid.
-
--- 
-Kalle Valo
