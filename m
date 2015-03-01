@@ -1,65 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40125 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751430AbbCNQOP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 12:14:15 -0400
-Message-ID: <55045E56.1050904@candelatech.com> (sfid-20150314_171418_997046_69F81821)
-Date: Sat, 14 Mar 2015 09:14:14 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Bob Copeland <me@bobcopeland.com>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211-hwsim and tx-rates.
-References: <5500AEAB.8010605@candelatech.com> <5500B417.9070307@broadcom.com> <5500BC5A.9040809@candelatech.com> <20150314104742.GA13495@localhost>
-In-Reply-To: <20150314104742.GA13495@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga14.intel.com ([192.55.52.115]:49636 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751894AbbCAHK4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 02:10:56 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 16/16] mac80211: allow iterating inactive interfaces
+Date: Sun,  1 Mar 2015 09:10:15 +0200
+Message-Id: <1425193815-17785-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_083417_526530_309F649B)
+In-Reply-To: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Arik Nemtsov <arik@wizery.com>
 
+Sometimes the driver might want to modify private data in interfaces
+that are down. One possible use-case is cleaning up interface state
+after HW recovery. Some interfaces that were up before the recovery took
+place might be down now, but they might still be "dirty".
 
-On 03/14/2015 03:47 AM, Bob Copeland wrote:
-> On Wed, Mar 11, 2015 at 03:06:18PM -0700, Ben Greear wrote:
->> I don't see a good way to tie that idx to an actual rate (which involves
->> flags, nss, mcs values, etc).
->>
->> Maybe I should also just send the info I care about, which is a 'bps' rate,
->> channel-width indication, SGI, etc as separate netlink attributes....
->
-> My wmediumd fork (https://github.com/bcopeland/wmediumd) could benefit from
-> this as well -- right now it assumes you use OFDM rates only.
->
-> It probably makes sense to send the driver rate array as a separate
-> netlink message though instead of in-band with CMD_FRAME, since it doesn't
-> change per frame and amount of data sent over netlink in the datapath already
-> imposes a performance limit.
+Introduce a new iterate_interfaces() API and a new ACTIVE iterator flag.
+This way the internal implementation of the both active and inactive
+APIs remains the same.
 
-It can change with every packet based on rate-control logic, right?
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h | 35 ++++++++++++++++++++++++++++++-----
+ net/mac80211/util.c    | 29 ++++++++++++++++-------------
+ 2 files changed, 46 insertions(+), 18 deletions(-)
 
-Possibly the power is mostly constant, but I thought I saw email about someone
-working on rate-ctrl logic that adjusted power on a per-packet basis, so
-thought it best to put in there now.
-
-And, it seems unlikely to me that an extra 16 bytes or so would make a
-great deal of difference.  Using hash tables instead of linear walks
-and other things would likely improve performance more?
-
->
-> Is your simulator available somewhere?
-
-No, sorry..it is a closed source thing that I am working on with another
-company...even I do not have any real rights to the code.  After a period
-of time I may be able to start work on a similar simulator project, but for now all
-I can contribute publicly is the kernel parts that must necessarily be open-source.
-
-For what it's worth, the patch I posted seems to work with the user-space
-app I've been working on.
-
-Thanks,
-Ben
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dcd309b..4a4619d 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -4353,13 +4353,33 @@ void ieee80211_sched_scan_stopped(struct ieee80211_hw *hw);
+  *	haven't been re-added to the driver yet.
+  * @IEEE80211_IFACE_ITER_RESUME_ALL: During resume, iterate over all
+  *	interfaces, even if they haven't been re-added to the driver yet.
++ * @IEEE80211_IFACE_ITER_ACTIVE: Iterate only active interfaces (netdev is up).
+  */
+ enum ieee80211_interface_iteration_flags {
+ 	IEEE80211_IFACE_ITER_NORMAL	= 0,
+ 	IEEE80211_IFACE_ITER_RESUME_ALL	= BIT(0),
++	IEEE80211_IFACE_ITER_ACTIVE	= BIT(1),
+ };
+ 
+ /**
++ * ieee80211_iterate_interfaces - iterate interfaces
++ *
++ * This function iterates over the interfaces associated with a given
++ * hardware and calls the callback for them. This includes active as well as
++ * inactive interfaces. This function allows the iterator function to sleep.
++ * Will iterate over a new interface during add_interface().
++ *
++ * @hw: the hardware struct of which the interfaces should be iterated over
++ * @iter_flags: iteration flags, see &enum ieee80211_interface_iteration_flags
++ * @iterator: the iterator function to call
++ * @data: first argument of the iterator function
++ */
++void ieee80211_iterate_interfaces(struct ieee80211_hw *hw, u32 iter_flags,
++				  void (*iterator)(void *data, u8 *mac,
++						   struct ieee80211_vif *vif),
++				  void *data);
++
++/**
+  * ieee80211_iterate_active_interfaces - iterate active interfaces
+  *
+  * This function iterates over the interfaces associated with a given
+@@ -4374,11 +4394,16 @@ enum ieee80211_interface_iteration_flags {
+  * @iterator: the iterator function to call
+  * @data: first argument of the iterator function
+  */
+-void ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw,
+-					 u32 iter_flags,
+-					 void (*iterator)(void *data, u8 *mac,
+-						struct ieee80211_vif *vif),
+-					 void *data);
++static inline void
++ieee80211_iterate_active_interfaces(struct ieee80211_hw *hw, u32 iter_flags,
++				    void (*iterator)(void *data, u8 *mac,
++						     struct ieee80211_vif *vif),
++				    void *data)
++{
++	ieee80211_iterate_interfaces(hw,
++				     iter_flags | IEEE80211_IFACE_ITER_ACTIVE,
++				     iterator, data);
++}
+ 
+ /**
+  * ieee80211_iterate_active_interfaces_atomic - iterate active interfaces
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 32788674..37d85d3 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -625,13 +625,14 @@ void ieee80211_wake_vif_queues(struct ieee80211_local *local,
+ 					reason, true);
+ }
+ 
+-static void __iterate_active_interfaces(struct ieee80211_local *local,
+-					u32 iter_flags,
+-					void (*iterator)(void *data, u8 *mac,
+-						struct ieee80211_vif *vif),
+-					void *data)
++static void __iterate_interfaces(struct ieee80211_local *local,
++				 u32 iter_flags,
++				 void (*iterator)(void *data, u8 *mac,
++						  struct ieee80211_vif *vif),
++				 void *data)
+ {
+ 	struct ieee80211_sub_if_data *sdata;
++	bool active_only = iter_flags & IEEE80211_IFACE_ITER_ACTIVE;
+ 
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		switch (sdata->vif.type) {
+@@ -645,9 +646,9 @@ static void __iterate_active_interfaces(struct ieee80211_local *local,
+ 			break;
+ 		}
+ 		if (!(iter_flags & IEEE80211_IFACE_ITER_RESUME_ALL) &&
+-		    !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
++		    active_only && !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
+ 			continue;
+-		if (ieee80211_sdata_running(sdata))
++		if (ieee80211_sdata_running(sdata) || !active_only)
+ 			iterator(data, sdata->vif.addr,
+ 				 &sdata->vif);
+ 	}
+@@ -656,12 +657,12 @@ static void __iterate_active_interfaces(struct ieee80211_local *local,
+ 				      lockdep_is_held(&local->iflist_mtx) ||
+ 				      lockdep_rtnl_is_held());
+ 	if (sdata &&
+-	    (iter_flags & IEEE80211_IFACE_ITER_RESUME_ALL ||
++	    (iter_flags & IEEE80211_IFACE_ITER_RESUME_ALL || !active_only ||
+ 	     sdata->flags & IEEE80211_SDATA_IN_DRIVER))
+ 		iterator(data, sdata->vif.addr, &sdata->vif);
+ }
+ 
+-void ieee80211_iterate_active_interfaces(
++void ieee80211_iterate_interfaces(
+ 	struct ieee80211_hw *hw, u32 iter_flags,
+ 	void (*iterator)(void *data, u8 *mac,
+ 			 struct ieee80211_vif *vif),
+@@ -670,10 +671,10 @@ void ieee80211_iterate_active_interfaces(
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+ 	mutex_lock(&local->iflist_mtx);
+-	__iterate_active_interfaces(local, iter_flags, iterator, data);
++	__iterate_interfaces(local, iter_flags, iterator, data);
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+-EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces);
++EXPORT_SYMBOL_GPL(ieee80211_iterate_interfaces);
+ 
+ void ieee80211_iterate_active_interfaces_atomic(
+ 	struct ieee80211_hw *hw, u32 iter_flags,
+@@ -684,7 +685,8 @@ void ieee80211_iterate_active_interfaces_atomic(
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 
+ 	rcu_read_lock();
+-	__iterate_active_interfaces(local, iter_flags, iterator, data);
++	__iterate_interfaces(local, iter_flags | IEEE80211_IFACE_ITER_ACTIVE,
++			     iterator, data);
+ 	rcu_read_unlock();
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_atomic);
+@@ -699,7 +701,8 @@ void ieee80211_iterate_active_interfaces_rtnl(
+ 
+ 	ASSERT_RTNL();
+ 
+-	__iterate_active_interfaces(local, iter_flags, iterator, data);
++	__iterate_interfaces(local, iter_flags | IEEE80211_IFACE_ITER_ACTIVE,
++			     iterator, data);
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_iterate_active_interfaces_rtnl);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
+
