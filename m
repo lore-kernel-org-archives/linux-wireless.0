@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54110 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754540AbbCBRko (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 12:40:44 -0500
-From: Florian Westphal <fw@strlen.de>
-To: <netdev@vger.kernel.org>
-Cc: Florian Westphal <fw@strlen.de>, linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 05/14] drivers: wireless: ar5523: use container_of
-Date: Mon,  2 Mar 2015 18:40:19 +0100
-Message-Id: <1425318028-26531-6-git-send-email-fw@strlen.de> (sfid-20150302_184309_049292_4FF59E7F)
-In-Reply-To: <1425318028-26531-1-git-send-email-fw@strlen.de>
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+Received: from mga09.intel.com ([134.134.136.24]:50389 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753303AbbCATcm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:32:42 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 26/31] iwlwifi: mvm: add trigger for firmware dump upon channel switch
+Date: Sun,  1 Mar 2015 21:31:39 +0200
+Message-Id: <1425238304-498-26-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203417_620848_07C9B897)
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
+References: <1425238186.30202.5.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compile tested only due to lack of hw.
+We fire the trigger when the channel switch starts, but
+the delay is configurable. That makes is easier to catch
+channel switches that fail.
 
-If we want to shrink skb->cb then we'd have to see about
-reducing struct ieee80211_tx_info, which gets embedded inside
-skb->cb[].
-
-It provides a scratch space to be used by wireless drivers.
-ar5523 uses the maximum space available today (40 bytes), but it seems
-we don't need this -- data->skb pointer seems to always point back to the
-skb whose cb buffer the data structure resides, iow, given a pointer to the
-embedded control buffer we can infer the skb address.
-
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Florian Westphal <fw@strlen.de>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ar5523/ar5523.c | 8 ++++----
- drivers/net/wireless/ath/ar5523/ar5523.h | 1 -
- 2 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h | 2 ++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c      | 3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index f920506..7410ac0 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -779,8 +779,6 @@ static void ar5523_tx(struct ieee80211_hw *hw,
- 		ieee80211_stop_queues(hw);
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index 7d74126..1ee58b3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -243,12 +243,14 @@ iwl_fw_error_next_data(struct iwl_fw_error_dump_data *data)
+  * @FW_DBG_TRIGGER_FW_ASSERT: trigger log collection when the firmware asserts
+  * @FW_DBG_TRIGGER_MISSED_BEACONS: trigger log collection when beacons are
+  *	missed.
++ * @FW_DBG_TRIGGER_CHANNEL_SWITCH: trigger log collection upon channel switch.
+  */
+ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_INVALID = 0,
+ 	FW_DBG_TRIGGER_USER,
+ 	FW_DBG_TRIGGER_FW_ASSERT,
+ 	FW_DBG_TRIGGER_MISSED_BEACONS,
++	FW_DBG_TRIGGER_CHANNEL_SWITCH,
  
--	data->skb = skb;
--
- 	spin_lock_irqsave(&ar->tx_data_list_lock, flags);
- 	list_add_tail(&data->list, &ar->tx_queue_pending);
- 	spin_unlock_irqrestore(&ar->tx_data_list_lock, flags);
-@@ -817,10 +815,12 @@ static void ar5523_tx_work_locked(struct ar5523 *ar)
- 		if (!data)
- 			break;
+ 	/* must be last */
+ 	FW_DBG_TRIGGER_MAX,
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 3b6b9f6..5a5d5c8 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -3481,6 +3481,9 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ 	IWL_DEBUG_MAC80211(mvm, "pre CSA to freq %d\n",
+ 			   chsw->chandef.center_freq1);
  
--		skb = data->skb;
-+		txi = container_of((void *)data, struct ieee80211_tx_info, driver_data);
- 		txqid = 0;
--		txi = IEEE80211_SKB_CB(skb);
++	iwl_fw_dbg_trigger_simple_stop(mvm, vif, FW_DBG_TRIGGER_CHANNEL_SWITCH,
++				       NULL, 0);
 +
-+		skb = container_of((void *) txi, struct sk_buff, cb);
- 		paylen = skb->len;
-+
- 		urb = usb_alloc_urb(0, GFP_KERNEL);
- 		if (!urb) {
- 			ar5523_err(ar, "Failed to allocate TX urb\n");
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.h b/drivers/net/wireless/ath/ar5523/ar5523.h
-index 00c6fd3..9a322a6 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.h
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.h
-@@ -74,7 +74,6 @@ struct ar5523_tx_cmd {
- struct ar5523_tx_data {
- 	struct list_head	list;
- 	struct ar5523		*ar;
--	struct sk_buff		*skb;
- 	struct urb		*urb;
- };
- 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_AP:
+ 		csa_vif =
 -- 
-2.0.5
+1.9.1
 
