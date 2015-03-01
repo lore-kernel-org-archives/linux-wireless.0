@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:12068 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024AbbCJPj4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 11:39:56 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] ath10k: add symlink for hwmon device
-References: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<1424437452-28161-3-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Tue, 10 Mar 2015 17:39:46 +0200
-In-Reply-To: <1424437452-28161-3-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Fri, 20 Feb 2015 18:34:12 +0530")
-Message-ID: <87pp8gyi7x.fsf@kamboji.qca.qualcomm.com> (sfid-20150310_163959_531302_A09F4FE9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga09.intel.com ([134.134.136.24]:24060 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752173AbbCATcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:32:08 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/31] iwlwifi: mvm: fix BT coex shared antenna activity check
+Date: Sun,  1 Mar 2015 21:31:22 +0200
+Message-Id: <1425238304-498-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203213_792781_133E117E)
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
+References: <1425238186.30202.5.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+From: Eyal Shapira <eyal@wizery.com>
 
-> Add symbloic link "thermal_sensors" for hwmon devices for better
-> readability.
->
-> /sys/class/ieee80211/phyX/device/thermal_sensors ->
-> sys/class/ieee80211/phyX/device/hwmon/hwmonY
+The shared antenna should be forbidden to use only if there's
+high BT activity. Comparing to BT_OFF was effectively causing
+us to always forbid using the shared antenna for SISO. This
+leads to degraded performance in scenarios where the shared
+antenna would have better performance.
 
-I don't get it, how does that improve readability? Also I don't see any
-other driver doing this, so isn't this just some private hack and not a
-proper generic interface?
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+index d530ef3..85144d5 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+@@ -1176,7 +1176,7 @@ bool iwl_mvm_bt_coex_is_ant_avail_old(struct iwl_mvm *mvm, u8 ant)
+ bool iwl_mvm_bt_coex_is_shared_ant_avail_old(struct iwl_mvm *mvm)
+ {
+ 	u32 ag = le32_to_cpu(mvm->last_bt_notif_old.bt_activity_grading);
+-	return ag == BT_OFF;
++	return ag < BT_HIGH_TRAFFIC;
+ }
+ 
+ bool iwl_mvm_bt_coex_is_tpc_allowed_old(struct iwl_mvm *mvm,
 -- 
-Kalle Valo
+1.9.1
+
