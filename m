@@ -1,799 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:46311
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752791AbbCOTS6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 15:18:58 -0400
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mga09.intel.com ([134.134.136.24]:24100 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751967AbbCATc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:32:26 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH v2] mac80211: add an intermediate software queue implementation
-Date: Sun, 15 Mar 2015 20:18:53 +0100
-Message-Id: <1426447133-28317-1-git-send-email-nbd@openwrt.org> (sfid-20150315_201903_490181_991C6108)
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/31] iwlwifi: mvm: support beacon statistics for BSS client
+Date: Sun,  1 Mar 2015 21:31:30 +0200
+Message-Id: <1425238304-498-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203418_534398_33CF5129)
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
+References: <1425238186.30202.5.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows drivers to request per-vif and per-sta-tid queues from which
-they can pull frames. This makes it easier to keep the hardware queues
-short, and to improve fairness between clients and vifs.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The task of scheduling packet transmission is left up to the driver -
-queueing is controlled by mac80211. Drivers can only dequeue packets by
-calling ieee80211_tx_dequeue. This makes it possible to add active queue
-management later without changing drivers using this code.
+Report the average beacon signal and the number of received beacons as
+measured by the firmware.
 
-This can also be used as a starting point to implement A-MSDU
-aggregation in a way that does not add artificially induced latency.
+Since the firmware just counts, and doesn't reset the counter at all,
+clear it in the firmware whenever we associate. However, accumulate it
+over firmware restart.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Since clearing the statistics in the firmware will also clear the ones
+for the radio statistics, add those to the accumulator when cleared.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/net/mac80211.h     | 77 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/driver-ops.h  | 17 ++++++++++
- net/mac80211/ieee80211_i.h | 14 ++++++++
- net/mac80211/iface.c       | 26 +++++++++++++++
- net/mac80211/main.c        |  3 ++
- net/mac80211/rx.c          | 15 +++++++++
- net/mac80211/sta_info.c    | 83 +++++++++++++++++++++++++++++++++++++++++-----
- net/mac80211/sta_info.h    |  3 ++
- net/mac80211/trace.h       | 34 +++++++++++++++++++
- net/mac80211/tx.c          | 72 ++++++++++++++++++++++++++++++++++++++--
- net/mac80211/util.c        | 38 +++++++++++++++++++++
- 11 files changed, 370 insertions(+), 12 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 53 ++++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      | 10 +++++-
+ drivers/net/wireless/iwlwifi/mvm/rx.c       | 14 ++++++++
+ drivers/net/wireless/iwlwifi/mvm/utils.c    |  9 +++--
+ 4 files changed, 82 insertions(+), 4 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a1db2ea..21b03e3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -84,6 +84,33 @@
-  *
-  */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 0f986d7..ce5a5ff 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1322,6 +1322,11 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
  
-+/**
-+ * DOC: mac80211 software tx queueing
-+ *
-+ * mac80211 provides an optional intermediate queueing implementation designed
-+ * to allow the driver to keep hardware queues short and provide some fairness
-+ * between different stations/interfaces.
-+ * In this model, the driver pulls data frames from the mac80211 queue instead
-+ * of letting mac80211 push them via drv_tx(). Management frames are still sent
-+ * via drv_tx().
-+ *
-+ * Intermediate queues (struct ieee80211_txq) are kept per-sta per-tid, with a
-+ * single per-vif queue for multicast data frames.
-+ *
-+ * The driver is expected to initialize its private per-queue data for stations
-+ * and interfaces in the .add_interface and .sta_add ops.
-+ *
-+ * The driver can not access the queue directly. To dequeue a frame, it calls
-+ * ieee80211_tx_dequeue(). Whenever mac80211 adds a new frame to a queue, it
-+ * calls the .wake_tx_queue driver op.
-+ *
-+ * For AP powersave TIM handling, the driver only needs to indicate if it has
-+ * buffered packets in the driver specific data structures. For frames buffered
-+ * in the ieee80211_txq struct, mac80211 sets TIM and the driver is expected
-+ * to dequeue and transmit packets on demand via the .release_buffered_frames
-+ * op.
-+ */
-+
- struct device;
+ 	mutex_lock(&mvm->mutex);
  
- /**
-@@ -1257,6 +1284,8 @@ struct ieee80211_vif {
- 	u8 cab_queue;
- 	u8 hw_queue[IEEE80211_NUM_ACS];
++	/* make sure that beacon statistics don't go backwards with FW reset */
++	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status))
++		mvmvif->beacon_stats.accu_num_beacons +=
++			mvmvif->beacon_stats.num_beacons;
++
+ 	/* Allocate resources for the MAC context, and add it to the fw  */
+ 	ret = iwl_mvm_mac_ctxt_init(mvm, vif);
+ 	if (ret)
+@@ -1815,6 +1820,11 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
  
-+	struct ieee80211_txq *txq;
+ 	if (changes & BSS_CHANGED_ASSOC) {
+ 		if (bss_conf->assoc) {
++			/* clear statistics to get clean beacon counter */
++			iwl_mvm_request_statistics(mvm, true);
++			memset(&mvmvif->beacon_stats, 0,
++			       sizeof(mvmvif->beacon_stats));
 +
- 	struct ieee80211_chanctx_conf __rcu *chanctx_conf;
+ 			/* add quota for this interface */
+ 			ret = iwl_mvm_update_quotas(mvm, NULL);
+ 			if (ret) {
+@@ -3597,7 +3607,7 @@ static int iwl_mvm_mac_get_survey(struct ieee80211_hw *hw, int idx,
+ 	mutex_lock(&mvm->mutex);
  
- 	u32 driver_flags;
-@@ -1519,6 +1548,8 @@ struct ieee80211_sta {
- 	bool tdls_initiator;
- 	bool mfp;
- 
-+	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-@@ -1547,6 +1578,27 @@ struct ieee80211_tx_control {
- };
- 
- /**
-+ * struct ieee80211_txq - Software intermediate tx queue
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @sta: station table entry, may be NULL for per-vif queue
-+ * @tid: the TID for this queue (unset for per-vif queue)
-+ * @ac: the AC for this queue
-+ *
-+ * The driver can obtain packets from this queue by calling
-+ * ieee80211_tx_dequeue().
-+ */
-+struct ieee80211_txq {
-+	struct ieee80211_vif *vif;
-+	struct ieee80211_sta *sta;
-+	u8 tid;
-+	u8 ac;
-+
-+	/* must be last */
-+	u8 drv_priv[0] __aligned(sizeof(void *));
-+};
-+
-+/**
-  * enum ieee80211_hw_flags - hardware flags
-  *
-  * These flags are used to indicate hardware capabilities to
-@@ -1770,6 +1822,8 @@ enum ieee80211_hw_flags {
-  *	within &struct ieee80211_sta.
-  * @chanctx_data_size: size (in bytes) of the drv_priv data area
-  *	within &struct ieee80211_chanctx_conf.
-+ * @txq_data_size: size (in bytes) of the drv_priv data area
-+ *	within @struct ieee80211_txq.
-  *
-  * @max_rates: maximum number of alternate rate retry stages the hw
-  *	can handle.
-@@ -1818,6 +1872,9 @@ enum ieee80211_hw_flags {
-  * @n_cipher_schemes: a size of an array of cipher schemes definitions.
-  * @cipher_schemes: a pointer to an array of cipher scheme definitions
-  *	supported by HW.
-+ *
-+ * @txq_ac_max_pending: maximum number of frames per AC pending in all txq
-+ *	entries for a vif.
-  */
- struct ieee80211_hw {
- 	struct ieee80211_conf conf;
-@@ -1830,6 +1887,7 @@ struct ieee80211_hw {
- 	int vif_data_size;
- 	int sta_data_size;
- 	int chanctx_data_size;
-+	int txq_data_size;
- 	u16 queues;
- 	u16 max_listen_interval;
- 	s8 max_signal;
-@@ -1846,6 +1904,7 @@ struct ieee80211_hw {
- 	u8 uapsd_max_sp_len;
- 	u8 n_cipher_schemes;
- 	const struct ieee80211_cipher_scheme *cipher_schemes;
-+	int txq_ac_max_pending;
- };
- 
- /**
-@@ -3007,6 +3066,8 @@ enum ieee80211_reconfig_type {
-  *	response template is provided, together with the location of the
-  *	switch-timing IE within the template. The skb can only be used within
-  *	the function call.
-+ *
-+ * @wake_tx_queue: Called when new packets have been added to the queue.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -3238,6 +3299,9 @@ struct ieee80211_ops {
- 	void (*tdls_recv_channel_switch)(struct ieee80211_hw *hw,
- 					 struct ieee80211_vif *vif,
- 					 struct ieee80211_tdls_ch_sw_params *params);
-+
-+	void (*wake_tx_queue)(struct ieee80211_hw *hw,
-+			      struct ieee80211_txq *txq);
- };
- 
- /**
-@@ -5259,4 +5323,17 @@ void ieee80211_unreserve_tid(struct ieee80211_sta *sta, u8 tid);
-  */
- size_t ieee80211_ie_split(const u8 *ies, size_t ielen,
- 			  const u8 *ids, int n_ids, size_t offset);
-+
-+/**
-+ * ieee80211_tx_dequeue - dequeue a packet from a software tx queue
-+ *
-+ * @hw: pointer as obtained from ieee80211_alloc_hw()
-+ * @txq: pointer obtained from .add_tx_queue() call
-+ *
-+ * Returns the sjb if successful, ERR_PTR(-EAGAIN) if no frame was available.
-+ */
-+struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
-+				     struct ieee80211_txq *txq);
-+
-+
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index fdeda17..418f739 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1367,4 +1367,21 @@ drv_tdls_recv_channel_switch(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
+ 	if (mvm->ucode_loaded) {
+-		ret = iwl_mvm_request_statistics(mvm);
++		ret = iwl_mvm_request_statistics(mvm, false);
+ 		if (ret)
+ 			goto out;
+ 	}
+@@ -3627,6 +3637,46 @@ static int iwl_mvm_mac_get_survey(struct ieee80211_hw *hw, int idx,
+ 	return ret;
  }
  
-+static inline void drv_wake_tx_queue(struct ieee80211_local *local,
-+				     struct txq_info *txq)
++static void iwl_mvm_mac_sta_statistics(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif,
++				       struct ieee80211_sta *sta,
++				       struct station_info *sinfo)
 +{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(txq->txq.vif);
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
 +
-+	if (!check_sdata_in_driver(sdata))
++	if (!(mvm->fw->ucode_capa.capa[0] &
++				IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS))
 +		return;
 +
-+	if (txq->txq.sta)
-+		trace_drv_wake_sta_tx_queue(local, sdata, txq->txq.sta,
-+					    txq->txq.tid);
-+	else
-+		trace_drv_wake_vif_tx_queue(local, sdata);
++	/* if beacon filtering isn't on mac80211 does it anyway */
++	if (!(vif->driver_flags & IEEE80211_VIF_BEACON_FILTER))
++		return;
 +
-+	local->ops->wake_tx_queue(&local->hw, &txq->txq);
++	if (!vif->bss_conf.assoc)
++		return;
++
++	mutex_lock(&mvm->mutex);
++
++	if (mvmvif->ap_sta_id != mvmsta->sta_id)
++		goto unlock;
++
++	if (iwl_mvm_request_statistics(mvm, false))
++		goto unlock;
++
++	sinfo->rx_beacon = mvmvif->beacon_stats.num_beacons +
++			   mvmvif->beacon_stats.accu_num_beacons;
++	sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_RX);
++	if (mvmvif->beacon_stats.avg_signal) {
++		/* firmware only reports a value after RXing a few beacons */
++		sinfo->rx_beacon_signal_avg = mvmvif->beacon_stats.avg_signal;
++		sinfo->filled |= BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG);
++	}
++ unlock:
++	mutex_unlock(&mvm->mutex);
 +}
 +
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 486a790..b4dc4f1 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -809,6 +809,13 @@ struct mac80211_qos_map {
- 	struct rcu_head rcu_head;
+ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.tx = iwl_mvm_mac_tx,
+ 	.ampdu_action = iwl_mvm_mac_ampdu_action,
+@@ -3694,4 +3744,5 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.set_default_unicast_key = iwl_mvm_set_default_unicast_key,
+ #endif
+ 	.get_survey = iwl_mvm_mac_get_survey,
++	.sta_statistics = iwl_mvm_mac_sta_statistics,
+ };
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 90a1ea3..5e383db 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -337,6 +337,9 @@ struct iwl_mvm_vif_bf_data {
+  * @beacon_skb: the skb used to hold the AP/GO beacon template
+  * @smps_requests: the SMPS requests of differents parts of the driver,
+  *	combined on update to yield the overall request to mac80211.
++ * @beacon_stats: beacon statistics, containing the # of received beacons,
++ *	# of received beacons accumulated over FW restart, and the current
++ *	average signal of beacons retrieved from the firmware
+  */
+ struct iwl_mvm_vif {
+ 	u16 id;
+@@ -354,6 +357,11 @@ struct iwl_mvm_vif {
+ 	bool ps_disabled;
+ 	struct iwl_mvm_vif_bf_data bf_data;
+ 
++	struct {
++		u32 num_beacons, accu_num_beacons;
++		u8 avg_signal;
++	} beacon_stats;
++
+ 	u32 ap_beacon_time;
+ 
+ 	enum iwl_tsf_id tsf_id;
+@@ -963,7 +971,7 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ int iwl_mvm_rx_statistics(struct iwl_mvm *mvm,
+ 			  struct iwl_rx_cmd_buffer *rxb,
+ 			  struct iwl_device_cmd *cmd);
+-int iwl_mvm_request_statistics(struct iwl_mvm *mvm);
++int iwl_mvm_request_statistics(struct iwl_mvm *mvm, bool clear);
+ void iwl_mvm_accu_radio_stats(struct iwl_mvm *mvm);
+ 
+ /* NVM */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
+index 2486931..b86ff66 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
+@@ -427,6 +427,7 @@ struct iwl_mvm_stat_data {
+ 	struct iwl_mvm *mvm;
+ 	__le32 mac_id;
+ 	__s8 beacon_filter_average_energy;
++	struct mvm_statistics_general_v8 *general;
  };
  
-+struct txq_info {
-+	struct sk_buff_head queue;
-+
-+	/* keep last! */
-+	struct ieee80211_txq txq;
-+};
-+
- struct ieee80211_sub_if_data {
- 	struct list_head list;
+ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+@@ -441,6 +442,17 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+ 	u16 id = le32_to_cpu(data->mac_id);
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
  
-@@ -853,6 +860,7 @@ struct ieee80211_sub_if_data {
- 	bool control_port_no_encrypt;
- 	int encrypt_headroom;
- 
-+	atomic_t txqs_len[IEEE80211_NUM_ACS];
- 	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
- 	struct mac80211_qos_map __rcu *qos_map;
- 
-@@ -1902,6 +1910,12 @@ static inline bool ieee80211_can_run_worker(struct ieee80211_local *local)
- 	return true;
- }
- 
-+void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
-+			     struct sta_info *sta,
-+			     struct txq_info *txq, int tid);
-+void ieee80211_flush_tx_queue(struct ieee80211_local *local,
-+			      struct ieee80211_txq *txq);
-+
- void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- 			 u16 transaction, u16 auth_alg, u16 status,
- 			 const u8 *extra, size_t extra_len, const u8 *bssid,
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b49812f..d29e0f7 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -969,6 +969,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	}
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
-+	if (sdata->vif.txq)
-+		ieee80211_flush_tx_queue(local, sdata->vif.txq);
-+
- 	if (local->open_count == 0)
- 		ieee80211_clear_tx_pending(local);
- 
-@@ -1753,6 +1756,15 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 	ieee80211_setup_sdata(sdata, type);
- 
- 	if (ndev) {
-+		struct txq_info *txqi = NULL;
-+
-+		if (local->ops->wake_tx_queue) {
-+			txqi = kzalloc(sizeof(*txqi) +
-+				      local->hw.txq_data_size, GFP_KERNEL);
-+			if (txqi)
-+				ieee80211_init_tx_queue(sdata, NULL, txqi, 0);
-+		}
-+
- 		if (params) {
- 			ndev->ieee80211_ptr->use_4addr = params->use_4addr;
- 			if (type == NL80211_IFTYPE_STATION)
-@@ -1765,6 +1777,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 
- 		ret = register_netdevice(ndev);
- 		if (ret) {
-+			kfree(txqi);
- 			free_netdev(ndev);
- 			return ret;
- 		}
-@@ -1782,6 +1795,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 
- void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
- {
-+	struct txq_info *txqi;
- 	ASSERT_RTNL();
- 
- 	mutex_lock(&sdata->local->iflist_mtx);
-@@ -1790,6 +1804,11 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
- 
- 	synchronize_rcu();
- 
-+	if (sdata->vif.txq) {
-+		txqi = container_of(sdata->vif.txq, struct txq_info, txq);
-+		kfree(txqi);
++	/* This doesn't need the MAC ID check since it's not taking the
++	 * data copied into the "data" struct, but rather the data from
++	 * the notification directly.
++	 */
++	if (data->general) {
++		mvmvif->beacon_stats.num_beacons =
++			le32_to_cpu(data->general->beacon_counter[mvmvif->id]);
++		mvmvif->beacon_stats.avg_signal =
++			-data->general->beacon_average_energy[mvmvif->id];
 +	}
 +
- 	if (sdata->dev) {
- 		unregister_netdevice(sdata->dev);
+ 	if (mvmvif->id != id)
+ 		return;
+ 
+@@ -525,6 +537,8 @@ void iwl_mvm_handle_rx_statistics(struct iwl_mvm *mvm,
+ 			le64_to_cpu(stats->general.on_time_rf);
+ 		mvm->radio_stats.on_time_scan =
+ 			le64_to_cpu(stats->general.on_time_scan);
++
++		data.general = &stats->general;
  	} else {
-@@ -1813,6 +1832,7 @@ void ieee80211_sdata_stop(struct ieee80211_sub_if_data *sdata)
- void ieee80211_remove_interfaces(struct ieee80211_local *local)
+ 		struct iwl_notif_statistics_v8 *stats = (void *)&pkt->data;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index 8bdfb8b..a501223 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -643,9 +643,11 @@ void iwl_mvm_update_smps(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	ieee80211_request_smps(vif, smps_mode);
+ }
+ 
+-int iwl_mvm_request_statistics(struct iwl_mvm *mvm)
++int iwl_mvm_request_statistics(struct iwl_mvm *mvm, bool clear)
  {
- 	struct ieee80211_sub_if_data *sdata, *tmp;
-+	struct txq_info *txqi;
- 	LIST_HEAD(unreg_list);
- 	LIST_HEAD(wdev_list);
- 
-@@ -1831,6 +1851,12 @@ void ieee80211_remove_interfaces(struct ieee80211_local *local)
- 	list_for_each_entry_safe(sdata, tmp, &local->interfaces, list) {
- 		list_del(&sdata->list);
- 
-+		if (sdata->vif.txq) {
-+			txqi = container_of(sdata->vif.txq, struct txq_info,
-+					   txq);
-+			kfree(txqi);
-+		}
-+
- 		if (sdata->dev)
- 			unregister_netdevice_queue(sdata->dev, &unreg_list);
- 		else
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 2f51e6d..df94567 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1035,6 +1035,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	local->dynamic_ps_forced_timeout = -1;
- 
-+	if (!local->hw.txq_ac_max_pending)
-+		local->hw.txq_ac_max_pending = 64;
-+
- 	result = ieee80211_wep_init(local);
- 	if (result < 0)
- 		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 944bdc0..dfba093 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1184,6 +1184,7 @@ static void sta_ps_start(struct sta_info *sta)
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	struct ps_data *ps;
-+	int tid;
- 
- 	if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
- 	    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-@@ -1197,6 +1198,20 @@ static void sta_ps_start(struct sta_info *sta)
- 		drv_sta_notify(local, sdata, STA_NOTIFY_SLEEP, &sta->sta);
- 	ps_dbg(sdata, "STA %pM aid %d enters power save mode\n",
- 	       sta->sta.addr, sta->sta.aid);
-+
-+	if (!sta->txqi)
-+		return;
-+
-+	for (tid = 0; tid < IEEE80211_NUM_TIDS; tid++) {
-+		struct txq_info *txqi;
-+
-+		txqi = container_of(sta->sta.txq[tid], struct txq_info, txq);
-+
-+		if (!skb_queue_len(&txqi->queue))
-+			set_bit(tid, &sta->txq_buffered_tids);
-+		else
-+			clear_bit(tid, &sta->txq_buffered_tids);
-+	}
- }
- 
- static void sta_ps_end(struct sta_info *sta)
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index d94004e..f6352bb 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -118,6 +118,11 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 		atomic_dec(&ps->num_sta_ps);
- 	}
- 
-+	if (sta->txqi) {
-+		for (i = 0; i < IEEE80211_NUM_TIDS; i++)
-+			ieee80211_flush_tx_queue(local, sta->sta.txq[i]);
-+	}
-+
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		local->total_ps_buffered -= skb_queue_len(&sta->ps_tx_buf[ac]);
- 		ieee80211_purge_tx_queue(&local->hw, &sta->ps_tx_buf[ac]);
-@@ -234,6 +239,7 @@ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
- 
- 	sta_dbg(sta->sdata, "Destroyed STA %pM\n", sta->sta.addr);
- 
-+	kfree(sta->txqi);
- 	kfree(rcu_dereference_raw(sta->sta.rates));
- 	kfree(sta);
- }
-@@ -285,11 +291,12 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 				const u8 *addr, gfp_t gfp)
- {
- 	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_hw *hw = &local->hw;
- 	struct sta_info *sta;
- 	struct timespec uptime;
- 	int i;
- 
--	sta = kzalloc(sizeof(*sta) + local->hw.sta_data_size, gfp);
-+	sta = kzalloc(sizeof(*sta) + hw->sta_data_size, gfp);
- 	if (!sta)
- 		return NULL;
- 
-@@ -321,11 +328,25 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	for (i = 0; i < ARRAY_SIZE(sta->chain_signal_avg); i++)
- 		ewma_init(&sta->chain_signal_avg[i], 1024, 8);
- 
--	if (sta_prepare_rate_control(local, sta, gfp)) {
--		kfree(sta);
--		return NULL;
-+	if (local->ops->wake_tx_queue) {
-+		void *txq_data;
-+		int size = sizeof(struct txq_info) +
-+			   ALIGN(hw->txq_data_size, sizeof(void *));
-+
-+		txq_data = kcalloc(IEEE80211_NUM_TIDS, size, gfp);
-+		if (!txq_data)
-+			goto free;
-+
-+		sta->txqi = txq_data;
-+		for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-+			struct txq_info *txq = txq_data + i * size;
-+			ieee80211_init_tx_queue(sdata, sta, txq, i);
-+		}
- 	}
- 
-+	if (sta_prepare_rate_control(local, sta, gfp))
-+		goto free_txq;
-+
- 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
- 		/*
- 		 * timer_to_tid must be initialized with identity mapping
-@@ -346,7 +367,7 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	if (sdata->vif.type == NL80211_IFTYPE_AP ||
- 	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
- 		struct ieee80211_supported_band *sband =
--			local->hw.wiphy->bands[ieee80211_get_sdata_band(sdata)];
-+			hw->wiphy->bands[ieee80211_get_sdata_band(sdata)];
- 		u8 smps = (sband->ht_cap.cap & IEEE80211_HT_CAP_SM_PS) >>
- 				IEEE80211_HT_CAP_SM_PS_SHIFT;
- 		/*
-@@ -371,6 +392,12 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 	sta_dbg(sdata, "Allocated STA %pM\n", sta->sta.addr);
- 
- 	return sta;
-+
-+free_txq:
-+	kfree(sta->txqi);
-+free:
-+	kfree(sta);
-+	return NULL;
- }
- 
- static int sta_info_insert_check(struct sta_info *sta)
-@@ -640,6 +667,8 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
- 
- 		indicate_tim |=
- 			sta->driver_buffered_tids & tids;
-+		indicate_tim |=
-+			sta->txq_buffered_tids & tids;
- 	}
- 
-  done:
-@@ -1071,7 +1100,7 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff_head pending;
--	int filtered = 0, buffered = 0, ac;
-+	int filtered = 0, buffered = 0, ac, i;
- 	unsigned long flags;
- 	struct ps_data *ps;
- 
-@@ -1090,10 +1119,25 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
- 
- 	BUILD_BUG_ON(BITS_TO_LONGS(IEEE80211_NUM_TIDS) > 1);
- 	sta->driver_buffered_tids = 0;
-+	sta->txq_buffered_tids = 0;
- 
- 	if (!(local->hw.flags & IEEE80211_HW_AP_LINK_PS))
- 		drv_sta_notify(local, sdata, STA_NOTIFY_AWAKE, &sta->sta);
- 
-+	if (sta->txqi) {
-+		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
-+			struct txq_info *txqi;
-+
-+			txqi = container_of(sta->sta.txq[i], struct txq_info,
-+					    txq);
-+
-+			if (!skb_queue_len(&txqi->queue))
-+				continue;
-+
-+			drv_wake_tx_queue(local, txqi);
-+		}
-+	}
-+
- 	skb_queue_head_init(&pending);
- 
- 	/* sync with ieee80211_tx_h_unicast_ps_buf */
-@@ -1254,7 +1298,7 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 	struct ieee80211_local *local = sdata->local;
- 	bool more_data = false;
--	int ac;
-+	int ac, tid;
- 	unsigned long driver_release_tids = 0;
- 	struct sk_buff_head frames;
- 
-@@ -1275,8 +1319,10 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 		/* if we already have frames from software, then we can't also
- 		 * release from hardware queues
- 		 */
--		if (skb_queue_empty(&frames))
-+		if (skb_queue_empty(&frames)) {
- 			driver_release_tids |= sta->driver_buffered_tids & tids;
-+			driver_release_tids |= sta->txq_buffered_tids & tids;
-+		}
- 
- 		if (driver_release_tids) {
- 			/* If the driver has data on more than one TID then
-@@ -1447,6 +1493,8 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 
- 		sta_info_recalc_tim(sta);
- 	} else {
-+		unsigned long tids = sta->txq_buffered_tids & driver_release_tids;
-+
- 		/*
- 		 * We need to release a frame that is buffered somewhere in the
- 		 * driver ... it'll have to handle that.
-@@ -1466,8 +1514,25 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 		 * that the TID(s) became empty before returning here from the
- 		 * release function.
- 		 * Either way, however, when the driver tells us that the TID(s)
--		 * became empty we'll do the TIM recalculation.
-+		 * became empty or we find that a txq became empty, we'll do the
-+		 * TIM recalculation.
- 		 */
-+
-+		if (!sta->txqi)
-+			return;
-+
-+		for (tid = 0; tid < IEEE80211_NUM_TIDS; tid++) {
-+			struct txq_info *txqi;
-+
-+			txqi = container_of(sta->sta.txq[tid], struct txq_info,
-+					    txq);
-+
-+			if (!(tids & BIT(tid)) || skb_queue_len(&txqi->queue))
-+				continue;
-+
-+			sta_info_recalc_tim(sta);
-+			break;
-+		}
- 	}
- }
- 
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 248f56e..3c12997 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -274,6 +274,7 @@ struct sta_ampdu_mlme {
-  *	entered power saving state, these are also delivered to
-  *	the station when it leaves powersave or polls for frames
-  * @driver_buffered_tids: bitmap of TIDs the driver has data buffered on
-+ * @txq_buffered_tids: bitmap of TIDs that mac80211 has txq data buffered on
-  * @rx_packets: Number of MSDUs received from this STA
-  * @rx_bytes: Number of bytes received from this STA
-  * @last_rx: time (in jiffies) when last frame was received from this STA
-@@ -368,6 +369,8 @@ struct sta_info {
- 	struct sk_buff_head ps_tx_buf[IEEE80211_NUM_ACS];
- 	struct sk_buff_head tx_filtered[IEEE80211_NUM_ACS];
- 	unsigned long driver_buffered_tids;
-+	unsigned long txq_buffered_tids;
-+	struct txq_info *txqi;
- 
- 	/* Updated from RX path only, no locking requirements */
- 	unsigned long rx_packets;
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 263a956..5eb5553 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -2312,6 +2312,40 @@ TRACE_EVENT(drv_tdls_recv_channel_switch,
- 	)
- );
- 
-+DEFINE_EVENT(local_sdata_evt, drv_wake_vif_tx_queue,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata),
-+	TP_ARGS(local, sdata)
-+);
-+
-+TRACE_EVENT(drv_wake_sta_tx_queue,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_sta *sta,
-+		 u8 tid),
-+
-+	TP_ARGS(local, sdata, sta, tid),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		STA_ENTRY
-+		__field(u8, tid)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->tid = tid;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " tid: 0x%x",
-+		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->tid
-+	)
-+);
-+
- #ifdef CONFIG_MAC80211_MESSAGE_TRACING
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM mac80211_msg
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 65cb4bb..6f6b503 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1219,13 +1219,80 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 	return TX_CONTINUE;
- }
- 
-+static void ieee80211_drv_tx(struct ieee80211_local *local,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *pubsta,
-+			     struct sk_buff *skb)
-+{
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_control control = {
-+		.sta = pubsta
+-	struct iwl_statistics_cmd scmd = {};
++	struct iwl_statistics_cmd scmd = {
++		.flags = clear ? cpu_to_le32(IWL_STATISTICS_FLG_CLEAR) : 0,
 +	};
-+	struct ieee80211_txq *txq = NULL;
-+	struct txq_info *txqi;
-+	u8 ac;
-+
-+	if (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE)
-+		goto tx_normal;
-+
-+	if (ieee80211_is_mgmt(hdr->frame_control) ||
-+	    ieee80211_is_ctl(hdr->frame_control))
-+		goto tx_normal;
-+
-+	if (pubsta) {
-+		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-+		txq = pubsta->txq[tid];
-+	} else if (vif) {
-+		txq = vif->txq;
-+	}
-+
-+	if (!txq)
-+		goto tx_normal;
-+
-+	ac = txq->ac;
-+	txqi = container_of(txq, struct txq_info, txq);
-+	atomic_inc(&sdata->txqs_len[ac]);
-+	if (atomic_read(&sdata->txqs_len[ac]) >= local->hw.txq_ac_max_pending)
-+		netif_stop_subqueue(sdata->dev, ac);
-+
-+	skb_queue_tail(&txqi->queue, skb);
-+	drv_wake_tx_queue(local, txqi);
-+
-+	return;
-+
-+tx_normal:
-+	drv_tx(local, &control, skb);
-+}
-+
-+struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
-+				     struct ieee80211_txq *txq)
-+{
-+	struct ieee80211_local *local = hw_to_local(hw);
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(txq->vif);
-+	struct txq_info *txqi = container_of(txq, struct txq_info, txq);
-+	struct sk_buff *skb;
-+	u8 ac = txq->ac;
-+
-+	skb = skb_dequeue(&txqi->queue);
-+	if (!skb)
-+		return ERR_PTR(-EAGAIN);
-+
-+	atomic_dec(&sdata->txqs_len[ac]);
-+	if (__netif_subqueue_stopped(sdata->dev, ac))
-+		ieee80211_propagate_queue_wake(local, sdata->vif.hw_queue[ac]);
-+
-+	return skb;
-+}
-+EXPORT_SYMBOL(ieee80211_tx_dequeue);
-+
- static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 			       struct ieee80211_vif *vif,
- 			       struct ieee80211_sta *sta,
- 			       struct sk_buff_head *skbs,
- 			       bool txpending)
- {
--	struct ieee80211_tx_control control;
- 	struct sk_buff *skb, *tmp;
- 	unsigned long flags;
+ 	struct iwl_host_cmd cmd = {
+ 		.id = STATISTICS_CMD,
+ 		.len[0] = sizeof(scmd),
+@@ -661,6 +663,9 @@ int iwl_mvm_request_statistics(struct iwl_mvm *mvm)
+ 	iwl_mvm_handle_rx_statistics(mvm, cmd.resp_pkt);
+ 	iwl_free_resp(&cmd);
  
-@@ -1283,10 +1350,9 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
- 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
- 
- 		info->control.vif = vif;
--		control.sta = sta;
- 
- 		__skb_unlink(skb, skbs);
--		drv_tx(local, &control, skb);
-+		ieee80211_drv_tx(local, vif, sta, skb);
- 	}
- 
- 	return true;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 37d85d3..45cb02e 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -308,6 +308,11 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
- 		for (ac = 0; ac < n_acs; ac++) {
- 			int ac_queue = sdata->vif.hw_queue[ac];
- 
-+			if (local->ops->wake_tx_queue &&
-+			    (atomic_read(&sdata->txqs_len[ac]) >
-+			     local->hw.txq_ac_max_pending))
-+				continue;
++	if (clear)
++		iwl_mvm_accu_radio_stats(mvm);
 +
- 			if (ac_queue == queue ||
- 			    (sdata->vif.cab_queue == queue &&
- 			     local->queue_stop_reasons[ac_queue] == 0 &&
-@@ -3307,3 +3312,36 @@ u8 *ieee80211_add_wmm_info_ie(u8 *buf, u8 qosinfo)
- 
- 	return buf;
+ 	return 0;
  }
-+
-+void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
-+			     struct sta_info *sta,
-+			     struct txq_info *txqi, int tid)
-+{
-+	skb_queue_head_init(&txqi->queue);
-+	txqi->txq.vif = &sdata->vif;
-+
-+	if (sta) {
-+		txqi->txq.sta = &sta->sta;
-+		sta->sta.txq[tid] = &txqi->txq;
-+		txqi->txq.ac = ieee802_1d_to_ac[tid & 7];
-+	} else {
-+		sdata->vif.txq = &txqi->txq;
-+		txqi->txq.ac = IEEE80211_AC_BE;
-+	}
-+}
-+
-+void ieee80211_flush_tx_queue(struct ieee80211_local *local,
-+			      struct ieee80211_txq *txq)
-+{
-+	struct txq_info *txqi = container_of(txq, struct txq_info, txq);
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(txq->vif);
-+	struct sk_buff *skb;
-+	int n = 0;
-+
-+	while ((skb = skb_dequeue(&txqi->queue)) != NULL) {
-+		n++;
-+		ieee80211_free_txskb(&local->hw, skb);
-+	}
-+
-+	atomic_sub(n, &sdata->txqs_len[txq->ac]);
-+}
+ 
 -- 
-2.2.2
+1.9.1
 
