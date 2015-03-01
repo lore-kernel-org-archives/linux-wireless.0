@@ -1,67 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32351 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756540AbbCCMXu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 07:23:50 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [RFC 2/2] mac80211: store low ack threshold in bss config
-Date: Tue, 3 Mar 2015 17:53:03 +0530
-Message-ID: <1425385383-25482-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150303_132414_408422_0D5F0F3D)
-In-Reply-To: <1425385383-25482-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1425385383-25482-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:24109 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753264AbbCATcf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:32:35 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/31] iwlwifi: mvm: use only 40 ms for fragmented scan
+Date: Sun,  1 Mar 2015 21:31:35 +0200
+Message-Id: <1425238304-498-22-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203417_847087_AD554C87)
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
+References: <1425238186.30202.5.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Store the low ack threshold configured by user in BSS config.
-This will be used by driver for triggering low ack event whenever
-the station is not ACKing the number of frames mentioned in
-threshold.
+From: David Spinadel <david.spinadel@intel.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+20 ms fragments are no longer required by system.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/net/mac80211.h | 3 +++
- net/mac80211/cfg.c     | 1 +
- 2 files changed, 4 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d52914b..ec769dd 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -383,6 +383,8 @@ enum ieee80211_rssi_event {
-  *	userspace), whereas TPC is disabled if %txpower_type is set to
-  *	NL80211_TX_POWER_FIXED (use value configured from userspace)
-  * @p2p_noa_attr: P2P NoA attribute for P2P powersave
-+ * @low_ack_threshold: Number of consecutive packet loss to trigger low ack
-+ *	event by driver.
-  */
- struct ieee80211_bss_conf {
- 	const u8 *bssid;
-@@ -419,6 +421,7 @@ struct ieee80211_bss_conf {
- 	int txpower;
- 	enum nl80211_tx_power_setting txpower_type;
- 	struct ieee80211_p2p_noa_attr p2p_noa_attr;
-+	int low_ack_threshold;
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index dd4ff36..514d3ab 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -772,6 +772,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
- 	sdata->vif.bss_conf.dtim_period = params->dtim_period;
- 	sdata->vif.bss_conf.enable_beacon = true;
-+	sdata->vif.bss_conf.low_ack_threshold = params->low_ack_threshold;
- 
- 	sdata->vif.bss_conf.ssid_len = params->ssid_len;
- 	if (params->ssid_len)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index ca3a187..c8377e1 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -230,7 +230,7 @@ static void iwl_mvm_scan_calc_params(struct iwl_mvm *mvm,
+ 			 * If there is more than one active interface make
+ 			 * passive scan more fragmented.
+ 			 */
+-			frag_passive_dwell = (global_cnt < 2) ? 40 : 20;
++			frag_passive_dwell = 40;
+ 			params->max_out_time = frag_passive_dwell;
+ 		} else {
+ 			params->suspend_time = 120;
 -- 
-2.3.1
+1.9.1
 
