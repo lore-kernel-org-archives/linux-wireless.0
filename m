@@ -1,38 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:16021 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752161AbbCZA3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 20:29:41 -0400
-Date: Thu, 26 Mar 2015 01:29:37 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Robert Dolca <robert.dolca@intel.com>
-Cc: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 3/8] NFC: NCI: Adds NCI init and reset API for drivers
-Message-ID: <20150326002937.GB10954@ribalta.home> (sfid-20150326_012956_943477_F48A5D8E)
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
- <1424772112-27399-4-git-send-email-robert.dolca@intel.com>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:37358 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877AbbCAWVK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 17:21:10 -0500
+Received: by wivr20 with SMTP id r20so10952375wiv.2
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Mar 2015 14:21:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424772112-27399-4-git-send-email-robert.dolca@intel.com>
+In-Reply-To: <1425238304-498-8-git-send-email-emmanuel.grumbach@intel.com>
+References: <1425238186.30202.5.camel@egrumbacBox> <1425238304-498-8-git-send-email-emmanuel.grumbach@intel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 2 Mar 2015 09:20:48 +1100
+Message-ID: <CAGRGNgX2r+uLv8CBJwf8LK_3NdtDoiFqqpcS2sRckjJykbNxbg@mail.gmail.com> (sfid-20150301_232219_639456_1EF838D7)
+Subject: Re: [PATCH 08/31] iwlwifi: mvm: rs: print single stream params via debugfs
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Robert,
+Hi Emmanuel,
 
-On Tue, Feb 24, 2015 at 12:01:47PM +0200, Robert Dolca wrote:
-> In order to communicate with the device during the setup
-> phase, the driver may need to initialize the device. After
-> the setup is done the driver should reset the device to leave
-> it in the same state that it was before the setup function
-> call.
-I would prefer not to export those symbols, but instead introduce a
-quirk bitmap to let the NCI core know that your device expects the core
-to be initialized before calling the setup ops.
-That would be done from nci_open_device().
+On Mon, Mar 2, 2015 at 6:31 AM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> From: Eyal Shapira <eyal@wizery.com>
+>
+> Add this to the info printed when reading rate_scale_table.
+> Useful for debugging.
+>
+> Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Cheers,
-Samuel.
+This signoff chain doesn't look right to me (however other people
+might not care): Shouldn't Eyal have used their intel.com email
+address in the author field?
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
