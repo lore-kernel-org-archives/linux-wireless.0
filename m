@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:62196 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:49636 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752372AbbCZAaF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 20:30:05 -0400
-Date: Thu, 26 Mar 2015 01:29:56 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Robert Dolca <robert.dolca@intel.com>
-Cc: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 5/8] NFC: NCI: Don't call setup if previous NCI request
- failed
-Message-ID: <20150326002956.GD10954@ribalta.home> (sfid-20150326_013035_283264_00BF31B5)
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
- <1424772112-27399-6-git-send-email-robert.dolca@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424772112-27399-6-git-send-email-robert.dolca@intel.com>
+	id S1751283AbbCAHKk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 02:10:40 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/16] mac80211: remove useless double check for open_count in __ieee80211_suspend()
+Date: Sun,  1 Mar 2015 09:10:07 +0200
+Message-Id: <1425193815-17785-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_081048_545911_F432C7A7)
+In-Reply-To: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Robert,
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-On Tue, Feb 24, 2015 at 12:01:49PM +0200, Robert Dolca wrote:
-> If the previous nci_request (NCI reset) failed the setup function
-> was being called anyway. It shouldn't be called if the reset failed.
-> 
-> The result of the setup function is taken into consideration. If it
-> fails the init should fail.
-> 
-> Signed-off-by: Robert Dolca <robert.dolca@intel.com>
-> ---
->  net/nfc/nci/core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-> index 1a449ac..d2e7adf 100644
-> --- a/net/nfc/nci/core.c
-> +++ b/net/nfc/nci/core.c
-> @@ -365,8 +365,8 @@ static int nci_open_device(struct nci_dev *ndev)
->  	rc = __nci_request(ndev, nci_reset_req, 0,
->  			   msecs_to_jiffies(NCI_RESET_TIMEOUT));
->  
-> -	if (ndev->ops->setup)
-> -		ndev->ops->setup(ndev);
-> +	if (!rc && ndev->ops->setup)
-> +		rc = ndev->ops->setup(ndev);
-That one makes sense.
+We check local->open_count at the top of the __ieee80211_suspend(), so
+there's no need to check for it again.  open_count is protected by the
+rtnl, so there's no chance for it to have change between the two
+calls.
 
-Cheers,
-Samuel.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/pm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index bd185f3..46ffe3a 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -59,7 +59,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 	cancel_work_sync(&local->dynamic_ps_enable_work);
+ 	del_timer_sync(&local->dynamic_ps_timer);
+ 
+-	local->wowlan = wowlan && local->open_count;
++	local->wowlan = wowlan;
+ 	if (local->wowlan) {
+ 		int err;
+ 
+-- 
+1.9.1
+
