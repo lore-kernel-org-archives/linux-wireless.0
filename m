@@ -1,52 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:53362 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752584AbbCIIq1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 04:46:27 -0400
-Received: from [117.207.78.0] (port=10150 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YUtKU-0033Ry-Mz
-	for linux-wireless@vger.kernel.org; Mon, 09 Mar 2015 04:46:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from mga09.intel.com ([134.134.136.24]:24060 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752280AbbCATbw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:31:52 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/5] ath9k: Add PCIE powersave macros
-Date: Mon,  9 Mar 2015 14:20:06 +0530
-Message-Id: <1425891010-21522-2-git-send-email-sujith@msujith.org> (sfid-20150309_094638_187828_FD780398)
-In-Reply-To: <1425891010-21522-1-git-send-email-sujith@msujith.org>
-References: <1425891010-21522-1-git-send-email-sujith@msujith.org>
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/31] iwlwifi: mvm: rs: fix BT Coex check to look at the correct ant
+Date: Sun,  1 Mar 2015 21:31:15 +0200
+Message-Id: <1425238304-498-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203155_864365_EADFB6B7)
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
+References: <1425238186.30202.5.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Eyal Shapira <eyal@wizery.com>
 
-These will be used to handle chip-specific
-power save configuration.
+The check to avoid the shared antenna was passed the wrong
+antenna parameter. It should have checked whether the antenna of
+the next column we're considering is allowed and instead it was
+passed the current antenna.
+This could lead to a wrong choice of the next column in the rs
+algorithm and non optimal performance.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Fixes: commit 219fb66b49fac64bb ("iwlwifi: mvm: rs - don't use the shared antenna when BT load is high")
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 29a25d9..2bb3b33 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -309,6 +309,12 @@ enum ath9k_hw_hang_checks {
- 	HW_MAC_HANG               = BIT(5),
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 1e82434..2e45b81 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -134,9 +134,12 @@ enum rs_column_mode {
+ #define MAX_NEXT_COLUMNS 7
+ #define MAX_COLUMN_CHECKS 3
+ 
++struct rs_tx_column;
++
+ typedef bool (*allow_column_func_t) (struct iwl_mvm *mvm,
+ 				     struct ieee80211_sta *sta,
+-				     struct iwl_scale_tbl_info *tbl);
++				     struct iwl_scale_tbl_info *tbl,
++				     const struct rs_tx_column *next_col);
+ 
+ struct rs_tx_column {
+ 	enum rs_column_mode mode;
+@@ -147,13 +150,15 @@ struct rs_tx_column {
  };
  
-+#define AR_PCIE_PLL_PWRSAVE_CONTROL BIT(0)
-+#define AR_PCIE_PLL_PWRSAVE_ON_D3   BIT(1)
-+#define AR_PCIE_PLL_PWRSAVE_ON_D0   BIT(2)
-+#define AR_PCIE_CDR_PWRSAVE_ON_D3   BIT(3)
-+#define AR_PCIE_CDR_PWRSAVE_ON_D0   BIT(4)
-+
- struct ath9k_ops_config {
- 	int dma_beacon_response_time;
- 	int sw_beacon_response_time;
+ static bool rs_ant_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			 struct iwl_scale_tbl_info *tbl)
++			 struct iwl_scale_tbl_info *tbl,
++			 const struct rs_tx_column *next_col)
+ {
+-	return iwl_mvm_bt_coex_is_ant_avail(mvm, tbl->rate.ant);
++	return iwl_mvm_bt_coex_is_ant_avail(mvm, next_col->ant);
+ }
+ 
+ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			  struct iwl_scale_tbl_info *tbl)
++			  struct iwl_scale_tbl_info *tbl,
++			  const struct rs_tx_column *next_col)
+ {
+ 	if (!sta->ht_cap.ht_supported)
+ 		return false;
+@@ -171,7 +176,8 @@ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ }
+ 
+ static bool rs_siso_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			  struct iwl_scale_tbl_info *tbl)
++			  struct iwl_scale_tbl_info *tbl,
++			  const struct rs_tx_column *next_col)
+ {
+ 	if (!sta->ht_cap.ht_supported)
+ 		return false;
+@@ -180,7 +186,8 @@ static bool rs_siso_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ }
+ 
+ static bool rs_sgi_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			 struct iwl_scale_tbl_info *tbl)
++			 struct iwl_scale_tbl_info *tbl,
++			 const struct rs_tx_column *next_col)
+ {
+ 	struct rs_rate *rate = &tbl->rate;
+ 	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+@@ -1557,7 +1564,7 @@ static enum rs_column rs_get_next_column(struct iwl_mvm *mvm,
+ 
+ 		for (j = 0; j < MAX_COLUMN_CHECKS; j++) {
+ 			allow_func = next_col->checks[j];
+-			if (allow_func && !allow_func(mvm, sta, tbl))
++			if (allow_func && !allow_func(mvm, sta, tbl, next_col))
+ 				break;
+ 		}
+ 
 -- 
-2.3.1
+1.9.1
 
