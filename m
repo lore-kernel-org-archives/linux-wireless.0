@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:44495 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751166AbbCOAPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 20:15:19 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	m.v.b@runbox.com
-Subject: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's rtw_security.c
-Date: Sat, 14 Mar 2015 20:10:25 -0400
-Message-Id: <1426378241-32469-1-git-send-email-m.v.b@runbox.com> (sfid-20150315_012008_176615_86042CFC)
+Received: from smtprelay0195.hostedemail.com ([216.40.44.195]:56265 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751166AbbCATmL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:42:11 -0500
+Message-ID: <1425238927.31561.5.camel@perches.com> (sfid-20150301_204219_113918_CF9CBC97)
+Subject: Re: [PATCH 08/31] iwlwifi: mvm: rs: print single stream params via
+ debugfs
+From: Joe Perches <joe@perches.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>
+Date: Sun, 01 Mar 2015 11:42:07 -0800
+In-Reply-To: <1425238304-498-8-git-send-email-emmanuel.grumbach@intel.com>
+References: <1425238186.30202.5.camel@egrumbacBox>
+	 <1425238304-498-8-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These commits address a number of checkpatch.pl warnings and errors
-in rtl8723au's rtw_security.c.
+On Sun, 2015-03-01 at 21:31 +0200, Emmanuel Grumbach wrote:
+> From: Eyal Shapira <eyal@wizery.com>
+> 
+> Add this to the info printed when reading rate_scale_table.
+> Useful for debugging.
+[]
+> diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+[]
+> @@ -3369,6 +3370,16 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+>  			lq_sta->lq.agg_frame_cnt_limit);
+>  
+>  	desc += sprintf(buff+desc, "reduced tpc=%d\n", lq_sta->lq.reduced_tpc);
+> +	ss_params = le32_to_cpu(lq_sta->lq.ss_params);
+> +	desc += sprintf(buff+desc, "single stream params: %s%s%s%s\n",
+> +			(ss_params & LQ_SS_PARAMS_VALID) ?
+> +			"VALID," : "INVALID",
+> +			(ss_params & LQ_SS_BFER_ALLOWED) ?
+> +			"BFER," : "",
+> +			(ss_params & LQ_SS_STBC_1SS_ALLOWED) ?
+> +			"STBC," : "",
+> +			(ss_params & LQ_SS_FORCE) ?
+> +			"FORCE" : "");
 
-Prior to this set of commits, checkpatch.pl reported the following:
-	total: 77 errors, 138 warnings, 1621 lines checked
+Are all things exclusive?
+If no, the output is not easily readable.
 
-After applying this set of commits, checkpatch.pl reports the following:
-	total: 0 errors, 34 warnings, 1613 lines checked
-where the only remaining warnings relate to lines longer than 80
-characters and quoted strings split across multiple lines.
+It would probably be better to use:
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+	desc += sprintf(buff+desc, "single stream params: %s%s%s%s\n",
+			(ss_params & LQ_SS_PARAMS_VALID) ?
+			"VALID" : "INVALID",
+			(ss_params & LQ_SS_BFER_ALLOWED) ?
+			", BFER" : "",
+			(ss_params & LQ_SS_STBC_1SS_ALLOWED) ?
+			", STBC" : "",
+			(ss_params & LQ_SS_FORCE) ?
+			", FORCE" : "");
 
-There are also a number of commits which improve the code in other ways.
-For example, the commit titled "Reorganize a few functions to remove
-indentation" reworks two functions to make them more readable, whereas
-the commit titled "Rework two byte array comparisons" reworks two CRC
-verifications for the same reason.
-
-All of the individual commits have been verified to compile successfully
-individually via the use of the interactive rebase feature of git.
-
-v2: Please see the individual commit messages for the changes
-    since v1. In summary, the following commits have been updated:
-    - Reformat whitespace to increase readability
-    - Fix "before/around/after" whitespace issues
-    - Rework two byte array comparisons
-
-M. Vefa Bicakci (16):
-  staging: rtl8723au: Reformat whitespace to increase readability
-  staging: rtl8723au: Fix "before/around/after" whitespace issues
-  staging: rtl8723au: else should follow close brace
-  staging: rtl8723au: Fix the indentation of two lines
-  staging: rtl8723au: Reorganize a few functions to remove indentation
-  staging: rtl8723au: Do not initialize a static to 0
-  staging: rtl8723au: else is not generally useful after a return
-  staging: rtl8723au: Remove unneeded curly braces
-  staging: rtl8723au: trailing statements should be on next line
-  staging: rtl8723au: that open brace should be on the previous line
-  staging: rtl8723au: No spaces at the start of a line
-  staging: rtl8723au: Adjust whitespace in and around comments
-  staging: rtl8723au: suspect code indent for conditional statements
-  staging: rtl8723au: Rework two byte array comparisons
-  staging: rtl8723au: Correct a typo in a trace log line
-  staging: rtl8723au: Remove unneeded comments
-
- drivers/staging/rtl8723au/core/rtw_security.c | 772 +++++++++++++-------------
- 1 file changed, 382 insertions(+), 390 deletions(-)
-
--- 
-2.1.4
 
