@@ -1,88 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:34007 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbbCSI2C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 04:28:02 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH] ath10k: fix htt t2h message conflicts among firmware revisions
-References: <1426066382-481-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Thu, 19 Mar 2015 10:27:52 +0200
-In-Reply-To: <1426066382-481-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Wed, 11 Mar 2015 15:03:02 +0530")
-Message-ID: <878uetl7cn.fsf@kamboji.qca.qualcomm.com> (sfid-20150319_092808_792213_E403EC8C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga09.intel.com ([134.134.136.24]:24109 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751182AbbCATcd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:32:33 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/31] iwlwifi: mvm: allow to force the Rx chains from debugfs
+Date: Sun,  1 Mar 2015 21:31:34 +0200
+Message-Id: <1425238304-498-21-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203419_126260_147A0812)
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
+References: <1425238186.30202.5.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+This is useful to debug weird antenna problems.
 
-> Target to host HTT messages are conflicting between 10.x and other
-> firmware revisions. By maintaining separate HTT T2H tables for each
-> firmware revisions (main, 10x and tlv) similar to WMI abstraction,
-> solves the conflicts.
->
-> Cc: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c | 54 ++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mvm.h         |  1 +
+ drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c    |  2 +
+ 3 files changed, 57 insertions(+)
 
-So this is needed to get managements frames over HTT working, right?
-It's good to mention that in the commit log, does this look ok:
-
-Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Date:   Wed Mar 11 15:03:02 2015 +0530
-
-    ath10k: fix htt t2h message conflicts among firmware revisions
-    
-    Target to host HTT messages are conflicting between 10.x and other
-    firmware revisions. By maintaining separate HTT T2H tables for each
-    firmware revisions (main, 10x and tlv) similar to WMI abstraction,
-    solves the conflicts.
-    
-    This fix is needed to get management frames over HTT (ie.
-    ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX disabled) working with 10.2.4.48-2 firmware.
-    Otherwise there will be unknown htt events and nothing works:
-    
-    [30087.438343] ath10k_pci 0000:02:00.0: htt event (19) not handled
-    [30087.448691] ath10k_pci 0000:02:00.0: htt event (19) not handled
-    [30149.032974] ath10k_pci 0000:02:00.0: htt event (19) not handled
-    
-    Cc: Michal Kazior <michal.kazior@tieto.com>
-    Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-> @@ -66,6 +146,26 @@ int ath10k_htt_init(struct ath10k *ar)
->  		8 + /* llc snap */
->  		2; /* ip4 dscp or ip6 priority */
->  
-> +	switch (ar->wmi.op_version) {
-> +	case ATH10K_FW_WMI_OP_VERSION_MAIN:
-> +		ar->htt.t2h_msg_types = htt_main_t2h_msg_types;
-> +		ar->htt.t2h_msg_types_max = HTT_MAIN_T2H_NUM_MSGS;
-> +		break;
-> +	case ATH10K_FW_WMI_OP_VERSION_10_1:
-> +	case ATH10K_FW_WMI_OP_VERSION_10_2:
-> +	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
-> +		ar->htt.t2h_msg_types = htt_10x_t2h_msg_types;
-> +		ar->htt.t2h_msg_types_max = HTT_10X_T2H_NUM_MSGS;
-> +		break;
-> +	case ATH10K_FW_WMI_OP_VERSION_TLV:
-> +		ar->htt.t2h_msg_types = htt_tlv_t2h_msg_types;
-> +		ar->htt.t2h_msg_types_max = HTT_TLV_T2H_NUM_MSGS;
-> +		break;
-> +	case ATH10K_FW_WMI_OP_VERSION_UNSET:
-> +	case ATH10K_FW_WMI_OP_VERSION_MAX:
-> +		WARN_ON(1);
-> +		return -EINVAL;
-> +	}
->  	return 0;
-
-When I was adding WMI_OP_VERSION, my idea was that we will add similar
-version for HTT as well once we need it. But I guess this is good enough
-for now, we can add HTT_OP_VERSION later if more changes are needed.
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+index 5fe1459..7faad90 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/iwlwifi/mvm/debugfs-vif.c
+@@ -545,6 +545,57 @@ static ssize_t iwl_dbgfs_uapsd_misbehaving_write(struct ieee80211_vif *vif,
+ 	return ret ? count : -EINVAL;
+ }
+ 
++static ssize_t iwl_dbgfs_rx_phyinfo_write(struct ieee80211_vif *vif, char *buf,
++					  size_t count, loff_t *ppos)
++{
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mvm *mvm = mvmvif->mvm;
++	struct ieee80211_chanctx_conf *chanctx_conf;
++	struct iwl_mvm_phy_ctxt *phy_ctxt;
++	u16 value;
++	int ret;
++
++	ret = kstrtou16(buf, 0, &value);
++	if (ret)
++		return ret;
++
++	mutex_lock(&mvm->mutex);
++	rcu_read_lock();
++
++	chanctx_conf = rcu_dereference(vif->chanctx_conf);
++	/* make sure the channel context is assigned */
++	if (!chanctx_conf) {
++		rcu_read_unlock();
++		mutex_unlock(&mvm->mutex);
++		return -EINVAL;
++	}
++
++	phy_ctxt = &mvm->phy_ctxts[*(u16 *)chanctx_conf->drv_priv];
++	rcu_read_unlock();
++
++	mvm->dbgfs_rx_phyinfo = value;
++
++	ret = iwl_mvm_phy_ctxt_changed(mvm, phy_ctxt, &chanctx_conf->min_def,
++				       chanctx_conf->rx_chains_static,
++				       chanctx_conf->rx_chains_dynamic);
++	mutex_unlock(&mvm->mutex);
++
++	return ret ?: count;
++}
++
++static ssize_t iwl_dbgfs_rx_phyinfo_read(struct file *file,
++					 char __user *user_buf,
++					 size_t count, loff_t *ppos)
++{
++	struct ieee80211_vif *vif = file->private_data;
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	char buf[8];
++
++	snprintf(buf, sizeof(buf), "0x%04x\n", mvmvif->mvm->dbgfs_rx_phyinfo);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, sizeof(buf));
++}
++
+ #define MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz) \
+ 	_MVM_DEBUGFS_WRITE_FILE_OPS(name, bufsz, struct ieee80211_vif)
+ #define MVM_DEBUGFS_READ_WRITE_FILE_OPS(name, bufsz) \
+@@ -560,6 +611,7 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(pm_params, 32);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(bf_params, 256);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(low_latency, 10);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(uapsd_misbehaving, 20);
++MVM_DEBUGFS_READ_WRITE_FILE_OPS(rx_phyinfo, 10);
+ 
+ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ {
+@@ -595,6 +647,8 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 				 S_IRUSR | S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE_VIF(uapsd_misbehaving, mvmvif->dbgfs_dir,
+ 				 S_IRUSR | S_IWUSR);
++	MVM_DEBUGFS_ADD_FILE_VIF(rx_phyinfo, mvmvif->dbgfs_dir,
++				 S_IRUSR | S_IWUSR);
+ 
+ 	if (vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
+ 	    mvmvif == mvm->bf_allowed_vif)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index f78a006..885d096 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -681,6 +681,7 @@ struct iwl_mvm {
+ 
+ 	struct iwl_mvm_frame_stats drv_rx_stats;
+ 	spinlock_t drv_stats_lock;
++	u16 dbgfs_rx_phyinfo;
+ #endif
+ 
+ 	struct iwl_mvm_phy_ctxt phy_ctxts[NUM_PHY_CTX];
+diff --git a/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
+index 5b43616..1bd10ed 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c
+@@ -175,6 +175,8 @@ static void iwl_mvm_phy_ctxt_cmd_data(struct iwl_mvm *mvm,
+ 	cmd->rxchain_info |= cpu_to_le32(idle_cnt << PHY_RX_CHAIN_CNT_POS);
+ 	cmd->rxchain_info |= cpu_to_le32(active_cnt <<
+ 					 PHY_RX_CHAIN_MIMO_CNT_POS);
++	if (unlikely(mvm->dbgfs_rx_phyinfo))
++		cmd->rxchain_info = cpu_to_le32(mvm->dbgfs_rx_phyinfo);
+ 
+ 	cmd->txchain_info = cpu_to_le32(iwl_mvm_get_valid_tx_ant(mvm));
+ }
 -- 
-Kalle Valo
+1.9.1
+
