@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:37502 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118AbbCIHSr (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:41981 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751844AbbCARuM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 03:18:47 -0400
-MIME-Version: 1.0
-In-Reply-To: <2658240.aoSloEbWge@wuerfel>
-References: <1424362401-8228-1-git-send-email-eliad@wizery.com>
-	<2194797.iarD5YIxEd@wuerfel>
-	<CAB3XZEfc3qV_o+0paM=HNdySKWwiJDfH=kJ8u0tz1ae+3ujxVw@mail.gmail.com>
-	<2658240.aoSloEbWge@wuerfel>
-Date: Mon, 9 Mar 2015 09:18:46 +0200
-Message-ID: <CAB3XZEczvZH8rYOD-P7iuU4RSurArpRp6JGYX1X22O8tj7v8Qg@mail.gmail.com> (sfid-20150309_081859_282119_4BD149C2)
-Subject: Re: [PATCH v3 2/2] wl18xx: add basic device-tree support
-From: Eliad Peller <eliad@wizery.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 1 Mar 2015 12:50:12 -0500
+From: Colin King <colin.king@canonical.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] wil6210: increase cmd buffer size to avoid sscanf buffer overflow
+Date: Sun,  1 Mar 2015 17:48:33 +0000
+Message-Id: <1425232113-5010-1-git-send-email-colin.king@canonical.com> (sfid-20150301_185037_411623_9E1565FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 8, 2015 at 11:53 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Sunday 08 March 2015 13:13:13 Eliad Peller wrote:
->>
->> > I've looked up the what boards actually use this data and found that
->> > all of them already support booting from DT: some omap2 boards using
->> > arch/arm/mach-omap2/pdata-quirks.c to provide the data, and the
->> > davinci 850evm. Can you make sure you add the correct data to all
->> > of these dts files as part of your series and remove the
->> > wl12xx_platform_data references?
->>
->> AFAICT, these board files add wl12xx platform data, while the new DT
->> support is only for wl18xx.
->>
->
-> How can you tell the difference? What I see is that omap3pandora
-> (and nothing else) calls wl1251_set_platform_data(), while
-> da850-evm and all omap3/omap4 boards use wl12xx_set_platform_data().
->
-> The latter seems to refer to all wl12xx and wl18xx variants except
-> for wl1251, based on my (very limited) understanding of that code.
+From: Colin Ian King <colin.king@canonical.com>
 
-right.
-i got mislead because legacy_init_wl12xx() is defined there only for
-CONFIG_WL12XX (and not for CONFIG_WL18XX).
-it looks like only "isee,omap3-igep0020-rev-f" and
-"isee,omap3-igep0020-rev-g" have pdata quirks for wl18xx (and thus
-initialize the pdata clocks to 0).
+cppcheck detected a buffer overflow:
 
-sorry for the trivial question, but what's the standard way to submit
-such patch? should i simply add a third patch to the patchset which
-removes the pdata quirk and adds the missing dts definition? i don't
-have such board, so i can only compile-test it.
+[drivers/net/wireless/ath/wil6210/debugfs.c:634]: (error) Width 8
+  given in format string (no. 1) is larger than destination buffer
+  'cmd[8]', use %7s to prevent overflowing it.
 
-thanks,
-Eliad.
+For the current %8s sscanf we require cmd to be 9 chars long
+so increase it by 1 byte to prevent the sscan overflow (rather
+than reduce the %8s specifier to %7s as cppcheck recommends).
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 45c3558e..29aab12 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -618,7 +618,7 @@ static ssize_t wil_write_back(struct file *file, const char __user *buf,
+ 	struct wil6210_priv *wil = file->private_data;
+ 	int rc;
+ 	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
+-	char cmd[8];
++	char cmd[9];
+ 	int p1, p2, p3;
+ 
+ 	if (!kbuf)
+-- 
+2.1.4
+
