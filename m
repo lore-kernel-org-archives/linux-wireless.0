@@ -1,271 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45419 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495AbbCKPLj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 11:11:39 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/7] brcmfmac: rename chip download functions
-Date: Wed, 11 Mar 2015 16:11:29 +0100
-Message-ID: <1426086693-13876-4-git-send-email-arend@broadcom.com> (sfid-20150311_161152_301730_1ED53CD9)
-In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
-References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:50389 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753264AbbCATco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:32:44 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/31] iwlwifi: mvm: add trigger for firmware dump upon command response
+Date: Sun,  1 Mar 2015 21:31:40 +0200
+Message-Id: <1425238304-498-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203417_725053_D9501D98)
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
+References: <1425238186.30202.5.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions brcmf_chip_[enter/exit]_download() are not exclusively
-used for firmware download so rename these more appropriate.
+This will allow to collect the data as soon the firmware
+sends a specific notification of command response.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/chip.c | 26 +++++++++++++-------------
- drivers/net/wireless/brcm80211/brcmfmac/chip.h |  8 ++++----
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 10 +++++-----
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 17 ++++++++---------
- 4 files changed, 30 insertions(+), 31 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  3 +++
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h       | 11 ++++++++
+ drivers/net/wireless/iwlwifi/mvm/ops.c           | 34 ++++++++++++++++++++++++
+ 3 files changed, 48 insertions(+)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index cb08f4e..d68e37d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -807,7 +807,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 		err = -EINVAL;
- 	if (WARN_ON(!ops->prepare))
- 		err = -EINVAL;
--	if (WARN_ON(!ops->exit_dl))
-+	if (WARN_ON(!ops->activate))
- 		err = -EINVAL;
- 	if (err < 0)
- 		return ERR_PTR(-EINVAL);
-@@ -905,7 +905,7 @@ void brcmf_chip_resetcore(struct brcmf_core *pub, u32 prereset, u32 reset,
- }
- 
- static void
--brcmf_chip_cm3_enterdl(struct brcmf_chip_priv *chip)
-+brcmf_chip_cm3_set_passive(struct brcmf_chip_priv *chip)
- {
- 	struct brcmf_core *core;
- 
-@@ -919,7 +919,7 @@ brcmf_chip_cm3_enterdl(struct brcmf_chip_priv *chip)
- 	brcmf_chip_resetcore(core, 0, 0, 0);
- }
- 
--static bool brcmf_chip_cm3_exitdl(struct brcmf_chip_priv *chip)
-+static bool brcmf_chip_cm3_set_active(struct brcmf_chip_priv *chip)
- {
- 	struct brcmf_core *core;
- 
-@@ -929,7 +929,7 @@ static bool brcmf_chip_cm3_exitdl(struct brcmf_chip_priv *chip)
- 		return false;
- 	}
- 
--	chip->ops->exit_dl(chip->ctx, &chip->pub, 0);
-+	chip->ops->activate(chip->ctx, &chip->pub, 0);
- 
- 	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_ARM_CM3);
- 	brcmf_chip_resetcore(core, 0, 0, 0);
-@@ -938,7 +938,7 @@ static bool brcmf_chip_cm3_exitdl(struct brcmf_chip_priv *chip)
- }
- 
- static inline void
--brcmf_chip_cr4_enterdl(struct brcmf_chip_priv *chip)
-+brcmf_chip_cr4_set_passive(struct brcmf_chip_priv *chip)
- {
- 	struct brcmf_core *core;
- 
-@@ -951,11 +951,11 @@ brcmf_chip_cr4_enterdl(struct brcmf_chip_priv *chip)
- 			     D11_BCMA_IOCTL_PHYCLOCKEN);
- }
- 
--static bool brcmf_chip_cr4_exitdl(struct brcmf_chip_priv *chip, u32 rstvec)
-+static bool brcmf_chip_cr4_set_active(struct brcmf_chip_priv *chip, u32 rstvec)
- {
- 	struct brcmf_core *core;
- 
--	chip->ops->exit_dl(chip->ctx, &chip->pub, rstvec);
-+	chip->ops->activate(chip->ctx, &chip->pub, rstvec);
- 
- 	/* restore ARM */
- 	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_ARM_CR4);
-@@ -964,7 +964,7 @@ static bool brcmf_chip_cr4_exitdl(struct brcmf_chip_priv *chip, u32 rstvec)
- 	return true;
- }
- 
--void brcmf_chip_enter_download(struct brcmf_chip *pub)
-+void brcmf_chip_set_passive(struct brcmf_chip *pub)
- {
- 	struct brcmf_chip_priv *chip;
- 	struct brcmf_core *arm;
-@@ -974,14 +974,14 @@ void brcmf_chip_enter_download(struct brcmf_chip *pub)
- 	chip = container_of(pub, struct brcmf_chip_priv, pub);
- 	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CR4);
- 	if (arm) {
--		brcmf_chip_cr4_enterdl(chip);
-+		brcmf_chip_cr4_set_passive(chip);
- 		return;
- 	}
- 
--	brcmf_chip_cm3_enterdl(chip);
-+	brcmf_chip_cm3_set_passive(chip);
- }
- 
--bool brcmf_chip_exit_download(struct brcmf_chip *pub, u32 rstvec)
-+bool brcmf_chip_set_active(struct brcmf_chip *pub, u32 rstvec)
- {
- 	struct brcmf_chip_priv *chip;
- 	struct brcmf_core *arm;
-@@ -991,9 +991,9 @@ bool brcmf_chip_exit_download(struct brcmf_chip *pub, u32 rstvec)
- 	chip = container_of(pub, struct brcmf_chip_priv, pub);
- 	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CR4);
- 	if (arm)
--		return brcmf_chip_cr4_exitdl(chip, rstvec);
-+		return brcmf_chip_cr4_set_active(chip, rstvec);
- 
--	return brcmf_chip_cm3_exitdl(chip);
-+	return brcmf_chip_cm3_set_active(chip);
- }
- 
- bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.h b/drivers/net/wireless/brcm80211/brcmfmac/chip.h
-index c32908d..7b7b629 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.h
-@@ -64,7 +64,7 @@ struct brcmf_core {
-  * @write32: write 32-bit value over bus.
-  * @prepare: prepare bus for core configuration.
-  * @setup: bus-specific core setup.
-- * @exit_dl: exit download state.
-+ * @active: chip becomes active.
-  *	The callback should use the provided @rstvec when non-zero.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index 1ee58b3..1d5195b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -244,6 +244,8 @@ iwl_fw_error_next_data(struct iwl_fw_error_dump_data *data)
+  * @FW_DBG_TRIGGER_MISSED_BEACONS: trigger log collection when beacons are
+  *	missed.
+  * @FW_DBG_TRIGGER_CHANNEL_SWITCH: trigger log collection upon channel switch.
++ * @FW_DBG_TRIGGER_FW_NOTIF: trigger log collection when the firmware sends a
++ *	command response or a notification.
   */
- struct brcmf_buscore_ops {
-@@ -72,7 +72,7 @@ struct brcmf_buscore_ops {
- 	void (*write32)(void *ctx, u32 addr, u32 value);
- 	int (*prepare)(void *ctx);
- 	int (*setup)(void *ctx, struct brcmf_chip *chip);
--	void (*exit_dl)(void *ctx, struct brcmf_chip *chip, u32 rstvec);
-+	void (*activate)(void *ctx, struct brcmf_chip *chip, u32 rstvec);
- };
+ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_INVALID = 0,
+@@ -251,6 +253,7 @@ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_FW_ASSERT,
+ 	FW_DBG_TRIGGER_MISSED_BEACONS,
+ 	FW_DBG_TRIGGER_CHANNEL_SWITCH,
++	FW_DBG_TRIGGER_FW_NOTIF,
  
- struct brcmf_chip *brcmf_chip_attach(void *ctx,
-@@ -84,8 +84,8 @@ bool brcmf_chip_iscoreup(struct brcmf_core *core);
- void brcmf_chip_coredisable(struct brcmf_core *core, u32 prereset, u32 reset);
- void brcmf_chip_resetcore(struct brcmf_core *core, u32 prereset, u32 reset,
- 			  u32 postreset);
--void brcmf_chip_enter_download(struct brcmf_chip *ci);
--bool brcmf_chip_exit_download(struct brcmf_chip *ci, u32 rstvec);
-+void brcmf_chip_set_passive(struct brcmf_chip *ci);
-+bool brcmf_chip_set_active(struct brcmf_chip *ci, u32 rstvec);
- bool brcmf_chip_sr_capable(struct brcmf_chip *pub);
+ 	/* must be last */
+ 	FW_DBG_TRIGGER_MAX,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 85745dc..49388c2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -541,6 +541,17 @@ struct iwl_fw_dbg_trigger_missed_bcon {
+ } __packed;
  
- #endif /* BRCMF_AXIDMP_H */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 61c053a..81e544f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -509,7 +509,7 @@ static void brcmf_pcie_attach(struct brcmf_pciedev_info *devinfo)
- 
- static int brcmf_pcie_enter_download_state(struct brcmf_pciedev_info *devinfo)
- {
--	brcmf_chip_enter_download(devinfo->ci);
-+	brcmf_chip_set_passive(devinfo->ci);
- 
- 	if (devinfo->ci->chip == BRCM_CC_43602_CHIP_ID) {
- 		brcmf_pcie_select_core(devinfo, BCMA_CORE_ARM_CR4);
-@@ -536,7 +536,7 @@ static int brcmf_pcie_exit_download_state(struct brcmf_pciedev_info *devinfo,
- 		brcmf_chip_resetcore(core, 0, 0, 0);
- 	}
- 
--	return !brcmf_chip_exit_download(devinfo->ci, resetintr);
-+	return !brcmf_chip_set_active(devinfo->ci, resetintr);
+ /**
++ * struct iwl_fw_dbg_trigger_cmd - configures trigger for messages from FW.
++ * cmds: the list of commands to trigger the collection on
++ */
++struct iwl_fw_dbg_trigger_cmd {
++	struct cmd {
++		u8 cmd_id;
++		u8 group_id;
++	} __packed cmds[16];
++} __packed;
++
++/**
+  * struct iwl_fw_dbg_conf_tlv - a TLV that describes a debug configuration.
+  * @id: conf id
+  * @usniffer: should the uSniffer image be used
+diff --git a/drivers/net/wireless/iwlwifi/mvm/ops.c b/drivers/net/wireless/iwlwifi/mvm/ops.c
+index f1c5751..fe40922 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/iwlwifi/mvm/ops.c
+@@ -685,6 +685,38 @@ static void iwl_mvm_async_handlers_wk(struct work_struct *wk)
+ 	mutex_unlock(&mvm->mutex);
  }
  
++static inline void iwl_mvm_rx_check_trigger(struct iwl_mvm *mvm,
++					    struct iwl_rx_packet *pkt)
++{
++	struct iwl_fw_dbg_trigger_tlv *trig;
++	struct iwl_fw_dbg_trigger_cmd *cmds_trig;
++	char buf[32];
++	int i;
++
++	if (!iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_FW_NOTIF))
++		return;
++
++	trig = iwl_fw_dbg_get_trigger(mvm->fw, FW_DBG_TRIGGER_FW_NOTIF);
++	cmds_trig = (void *)trig->data;
++
++	if (!iwl_fw_dbg_trigger_check_stop(mvm, NULL, trig))
++		return;
++
++	for (i = 0; i < ARRAY_SIZE(cmds_trig->cmds); i++) {
++		/* don't collect on CMD 0 */
++		if (!cmds_trig->cmds[i].cmd_id)
++			break;
++
++		if (cmds_trig->cmds[i].cmd_id != pkt->hdr.cmd)
++			continue;
++
++		memset(buf, 0, sizeof(buf));
++		snprintf(buf, sizeof(buf), "CMD 0x%02x received", pkt->hdr.cmd);
++		iwl_mvm_fw_dbg_collect_trig(mvm, trig, buf, sizeof(buf));
++		break;
++	}
++}
++
+ static int iwl_mvm_rx_dispatch(struct iwl_op_mode *op_mode,
+ 			       struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd)
+@@ -693,6 +725,8 @@ static int iwl_mvm_rx_dispatch(struct iwl_op_mode *op_mode,
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 	u8 i;
  
-@@ -1566,8 +1566,8 @@ static int brcmf_pcie_buscoreprep(void *ctx)
- }
- 
- 
--static void brcmf_pcie_buscore_exitdl(void *ctx, struct brcmf_chip *chip,
--				      u32 rstvec)
-+static void brcmf_pcie_buscore_activate(void *ctx, struct brcmf_chip *chip,
-+					u32 rstvec)
- {
- 	struct brcmf_pciedev_info *devinfo = (struct brcmf_pciedev_info *)ctx;
- 
-@@ -1577,7 +1577,7 @@ static void brcmf_pcie_buscore_exitdl(void *ctx, struct brcmf_chip *chip,
- 
- static const struct brcmf_buscore_ops brcmf_pcie_buscore_ops = {
- 	.prepare = brcmf_pcie_buscoreprep,
--	.exit_dl = brcmf_pcie_buscore_exitdl,
-+	.activate = brcmf_pcie_buscore_activate,
- 	.read32 = brcmf_pcie_buscore_read32,
- 	.write32 = brcmf_pcie_buscore_write32,
- };
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index 9df16c1..fff3b26 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -3357,7 +3357,7 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
- 	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
- 
- 	/* Keep arm in reset */
--	brcmf_chip_enter_download(bus->ci);
-+	brcmf_chip_set_passive(bus->ci);
- 
- 	rstvec = get_unaligned_le32(fw->data);
- 	brcmf_dbg(SDIO, "firmware rstvec: %x\n", rstvec);
-@@ -3378,7 +3378,7 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
- 	}
- 
- 	/* Take arm out of reset */
--	if (!brcmf_chip_exit_download(bus->ci, rstvec)) {
-+	if (!brcmf_chip_set_active(bus->ci, rstvec)) {
- 		brcmf_err("error getting out of ARM core reset\n");
- 		goto err;
- 	}
-@@ -3771,8 +3771,8 @@ static int brcmf_sdio_buscoreprep(void *ctx)
- 	return 0;
- }
- 
--static void brcmf_sdio_buscore_exitdl(void *ctx, struct brcmf_chip *chip,
--				      u32 rstvec)
-+static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
-+					u32 rstvec)
- {
- 	struct brcmf_sdio_dev *sdiodev = ctx;
- 	struct brcmf_core *core;
-@@ -3815,7 +3815,7 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
- 
- static const struct brcmf_buscore_ops brcmf_sdio_buscore_ops = {
- 	.prepare = brcmf_sdio_buscoreprep,
--	.exit_dl = brcmf_sdio_buscore_exitdl,
-+	.activate = brcmf_sdio_buscore_activate,
- 	.read32 = brcmf_sdio_buscore_read32,
- 	.write32 = brcmf_sdio_buscore_write32,
- };
-@@ -4239,12 +4239,11 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
- 				sdio_claim_host(bus->sdiodev->func[1]);
- 				brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
- 				/* Leave the device in state where it is
--				 * 'quiet'. This is done by putting it in
--				 * download_state which essentially resets
--				 * all necessary cores.
-+				 * 'passive'. This is done by resetting all
-+				 * necessary cores.
- 				 */
- 				msleep(20);
--				brcmf_chip_enter_download(bus->ci);
-+				brcmf_chip_set_passive(bus->ci);
- 				brcmf_sdio_clkctl(bus, CLK_NONE, false);
- 				sdio_release_host(bus->sdiodev->func[1]);
- 			}
++	iwl_mvm_rx_check_trigger(mvm, pkt);
++
+ 	/*
+ 	 * Do the notification wait before RX handlers so
+ 	 * even if the RX handler consumes the RXB we have
 -- 
 1.9.1
 
