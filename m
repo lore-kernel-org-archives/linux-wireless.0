@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49800 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755927AbbCCPHk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 10:07:40 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: Improve handling of IPv6 packets
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1424791381-31863-1-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Stable <stable@vger.kernel.org>,
-	Alan Fisher <acf@unixcube.org>
-Message-Id: <20150303150739.BBC7C14162A@smtp.codeaurora.org> (sfid-20150303_160747_771787_A3993378)
-Date: Tue,  3 Mar 2015 15:07:39 +0000 (UTC)
+Received: from mga09.intel.com ([134.134.136.24]:24060 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752909AbbCATcK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 14:32:10 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/31] iwlwifi: mvm: remove unused function in BT coex
+Date: Sun,  1 Mar 2015 21:31:23 +0200
+Message-Id: <1425238304-498-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203215_957174_10A5C5FB)
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
+References: <1425238186.30202.5.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Eyal Shapira <eyal@wizery.com>
 
-> Routine rtl_is_special_data() is supposed to identify packets that need to
-> use a low bit rate so that the probability of successful transmission is
-> high. The current version has a bug that causes all IPv6 packets to be
-> labelled as special, with a corresponding low rate of transmission. A
-> complete fix will be quite intrusive, but until that is available, all
-> IPv6 packets are identified as regular.
-> 
-> This patch also removes a magic number.
-> 
-> Reported-and-tested-by: Alan Fisher <acf@unixcube.org>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> [3.18+]
-> Cc: Alan Fisher <acf@unixcube.org>
+Cleanup unused code.
 
-Thanks, applied to wireless-drivers.git.
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 6 ------
+ drivers/net/wireless/iwlwifi/mvm/mvm.h         | 1 -
+ 2 files changed, 7 deletions(-)
 
-Kalle Valo
+diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+index 85144d5..adfd1ec 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
++++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
+@@ -1167,12 +1167,6 @@ bool iwl_mvm_bt_coex_is_mimo_allowed_old(struct iwl_mvm *mvm,
+ 	return lut_type != BT_COEX_LOOSE_LUT;
+ }
+ 
+-bool iwl_mvm_bt_coex_is_ant_avail_old(struct iwl_mvm *mvm, u8 ant)
+-{
+-	u32 ag = le32_to_cpu(mvm->last_bt_notif_old.bt_activity_grading);
+-	return ag < BT_HIGH_TRAFFIC;
+-}
+-
+ bool iwl_mvm_bt_coex_is_shared_ant_avail_old(struct iwl_mvm *mvm)
+ {
+ 	u32 ag = le32_to_cpu(mvm->last_bt_notif_old.bt_activity_grading);
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 6c69d05..07b91d6 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -1238,7 +1238,6 @@ bool iwl_mvm_bt_coex_is_tpc_allowed(struct iwl_mvm *mvm,
+ u8 iwl_mvm_bt_coex_tx_prio(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+ 			   struct ieee80211_tx_info *info, u8 ac);
+ 
+-bool iwl_mvm_bt_coex_is_ant_avail_old(struct iwl_mvm *mvm, u8 ant);
+ bool iwl_mvm_bt_coex_is_shared_ant_avail_old(struct iwl_mvm *mvm);
+ void iwl_mvm_bt_coex_vif_change_old(struct iwl_mvm *mvm);
+ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm);
+-- 
+1.9.1
+
