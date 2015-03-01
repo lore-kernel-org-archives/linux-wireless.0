@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42229 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752833AbbC2Nng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2015 09:43:36 -0400
-Date: Sun, 29 Mar 2015 15:43:31 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: [PATCH 84/86] brcm80211: drop pci_ids include
-Message-ID: <1427635734-24786-85-git-send-email-mst@redhat.com> (sfid-20150329_154532_799379_9BC25B61)
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427635734-24786-1-git-send-email-mst@redhat.com>
+Received: from s72.web-hosting.com ([198.187.29.22]:39836 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbbCAGUS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Mar 2015 01:20:18 -0500
+Received: from [117.199.133.19] (port=11028 helo=sujith-pixel.localdomain)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YRxEf-002K5A-4c
+	for linux-wireless@vger.kernel.org; Sun, 01 Mar 2015 01:20:17 -0500
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/6] ath9k: Initialize MCI state correctly
+Date: Sun,  1 Mar 2015 11:53:45 +0530
+Message-Id: <1425191029-13667-3-git-send-email-sujith@msujith.org> (sfid-20150301_072029_440265_84C7CCCB)
+In-Reply-To: <1425191029-13667-1-git-send-email-sujith@msujith.org>
+References: <1425191029-13667-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This file does not use any pci ids, drop
-pci_ids.h include.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+The MCI configuration values are assigned
+in ath9k_hw_btcoex_init_mci() which are used
+by the MCI reset routine. When initializing
+BTCOEX/MCI, ath_mci_setup() ends up using
+uninitialized data. Fix this by setting up
+the configuration parameters before issuing
+a MCI reset.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/gpio.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index 5c4755d..da479d4 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -18,7 +18,6 @@
- #include <linux/kernel.h>
- #include <linux/kthread.h>
- #include <linux/printk.h>
--#include <uapi/linux/pci_ids.h>
- #include <linux/netdevice.h>
- #include <linux/interrupt.h>
- #include <linux/sched.h>
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 78695b5..257ffce 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -415,12 +415,11 @@ int ath9k_init_btcoex(struct ath_softc *sc)
+ 		if (ath9k_hw_mci_is_enabled(ah)) {
+ 			sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
+ 			INIT_LIST_HEAD(&sc->btcoex.mci.info);
++			ath9k_hw_btcoex_init_mci(ah);
+ 
+ 			r = ath_mci_setup(sc);
+ 			if (r)
+ 				return r;
+-
+-			ath9k_hw_btcoex_init_mci(ah);
+ 		}
+ 
+ 		break;
 -- 
-MST
+2.3.0
 
