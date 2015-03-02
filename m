@@ -1,77 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:44662 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753638AbbCOARq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 20:17:46 -0400
-Message-ID: <5504CF99.7040201@runbox.com> (sfid-20150315_011804_046137_96907C13)
-Date: Sat, 14 Mar 2015 20:17:29 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/16] staging: rtl8723au: Improve readability of two
- very long lines
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>	 <1426216532-24058-15-git-send-email-m.v.b@runbox.com>	 <550305D5.9080209@lwfinger.net> <1426263881.11459.17.camel@perches.com>	 <55049722.9090702@runbox.com> <1426370106.6696.16.camel@perches.com>
-In-Reply-To: <1426370106.6696.16.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-la0-f43.google.com ([209.85.215.43]:33087 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751117AbbCBJKZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 04:10:25 -0500
+Received: by lamq1 with SMTP id q1so5725141lam.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 01:10:23 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/3] ath10k: always save/restore pci config space
+Date: Mon,  2 Mar 2015 10:09:03 +0100
+Message-Id: <1425287344-30594-2-git-send-email-michal.kazior@tieto.com> (sfid-20150302_101036_254852_C8CA7C94)
+In-Reply-To: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
+References: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14/03/15 05:55 PM, Joe Perches wrote:
-> On Sat, 2015-03-14 at 16:16 -0400, M. Vefa Bicakci wrote:
->> On 13/03/15 12:24 PM, Joe Perches wrote:
->>> On Fri, 2015-03-13 at 10:44 -0500, Larry Finger wrote:
->>>> On 03/12/2015 10:15 PM, M. Vefa Bicakci wrote:
->>>>> Improve the readability of an if statement and its very long trace
->>>>> output line in rtl8723au's rtw_security.c.
->>> []
->>>>> diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
->>> []
->>>>> @@ -759,9 +759,21 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
->>>>>
->>>>>   	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length-4));
->>>>>
->>>>> -	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
->>>>> -		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
->>>>> -				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
->>>>> +	if (crc[3] != payload[length - 1] ||
->>>>> +			crc[2] != payload[length - 2] ||
->>>>> +			crc[1] != payload[length - 3] ||
->>>>> +			crc[0] != payload[length - 4]) {
->>>>
->>>> The continuation lines should be lined up with the opening paren. This should be
->>>>
->>>> 	if (crc[3] != payload[length - 1] ||
->>>> 	    crc[2] != payload[length - 2] ||
->>>> 	    crc[1] != payload[length - 3] ||
->>>> 	    crc[0] != payload[length - 4]) {
->>>
->>> Maybe:
->>> 	if (memcmp(&crc, &payload[length - 4], 4)) {
->>> 		RT_TRACE(etc, "%08x vs %4phN",
->>> 			 crc, &payload[length - 4])
-> []
->> I have addressed your comments in my local repository, and I hope to send out
->> the second version of the commits for review by tomorrow.
-> 
-> Maybe it'd be more sensible to use something like:
-> 
-> 	u32 crc, orig_crc;
-> 
-> 	[...]
-> 
-> 	crc = le32_to_cpu(getcrc32(payload, length - 4));
-> 	orig_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
-> 
-> 	if (crc != orig_crc) {
-> 		RT_TRACE(etc, "bad crc: %08x vs %08x", crc, orig_crc);
-> 
+The check isn't really necessary and couldn't even
+work because becase pci_restore_state() restores
+only first 64 bytes of PCI configuration space.
 
-Hello Joe,
+This is necessary for future WoWLAN support.
 
-Thank you for the suggestion! I have just sent out the second version of the
-commits for review, and I implemented your suggestion as well.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 37 +++++++++++------------------------
+ 1 file changed, 11 insertions(+), 26 deletions(-)
 
-Vefa
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index cbf82ff..d06b264 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2053,24 +2053,15 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ 
+ #ifdef CONFIG_PM
+ 
+-#define ATH10K_PCI_PM_CONTROL 0x44
+-
+ static int ath10k_pci_hif_suspend(struct ath10k *ar)
+ {
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct pci_dev *pdev = ar_pci->pdev;
+-	u32 val;
+ 
+ 	ath10k_pci_sleep(ar);
+ 
+-	pci_read_config_dword(pdev, ATH10K_PCI_PM_CONTROL, &val);
+-
+-	if ((val & 0x000000ff) != 0x3) {
+-		pci_save_state(pdev);
+-		pci_disable_device(pdev);
+-		pci_write_config_dword(pdev, ATH10K_PCI_PM_CONTROL,
+-				       (val & 0xffffff00) | 0x03);
+-	}
++	pci_save_state(pdev);
++	pci_disable_device(pdev);
+ 
+ 	return 0;
+ }
+@@ -2088,22 +2079,16 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
+-	pci_read_config_dword(pdev, ATH10K_PCI_PM_CONTROL, &val);
++	pci_restore_state(pdev);
+ 
+-	if ((val & 0x000000ff) != 0) {
+-		pci_restore_state(pdev);
+-		pci_write_config_dword(pdev, ATH10K_PCI_PM_CONTROL,
+-				       val & 0xffffff00);
+-		/*
+-		 * Suspend/Resume resets the PCI configuration space,
+-		 * so we have to re-disable the RETRY_TIMEOUT register (0x41)
+-		 * to keep PCI Tx retries from interfering with C3 CPU state
+-		 */
+-		pci_read_config_dword(pdev, 0x40, &val);
+-
+-		if ((val & 0x0000ff00) != 0)
+-			pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+-	}
++	/* Suspend/Resume resets the PCI configuration space, so we have to
++	 * re-disable the RETRY_TIMEOUT register (0x41) to keep PCI Tx retries
++	 * from interfering with C3 CPU state. pci_restore_state won't help
++	 * here since it only restores the first 64 bytes pci config header.
++	 */
++	pci_read_config_dword(pdev, 0x40, &val);
++	if ((val & 0x0000ff00) != 0)
++		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+ 
+ 	return ret;
+ }
+-- 
+1.8.5.3
 
