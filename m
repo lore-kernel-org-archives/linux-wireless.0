@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6469 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752744AbbC3QUB (ORCPT
+Received: from mail-we0-f176.google.com ([74.125.82.176]:33175 "EHLO
+	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589AbbCBKRC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 12:20:01 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: implement more versatile set_bitrate_mask
-References: <1427201836-7741-1-git-send-email-michal.kazior@tieto.com>
-	<1427201836-7741-3-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 30 Mar 2015 19:19:38 +0300
-In-Reply-To: <1427201836-7741-3-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 24 Mar 2015 12:57:16 +0000")
-Message-ID: <87mw2u31b8.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_182007_465714_C1C56803)
+	Mon, 2 Mar 2015 05:17:02 -0500
+Received: by wevk48 with SMTP id k48so32280745wev.0
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 02:17:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1425288321.1906.1.camel@sipsolutions.net>
+References: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
+	<1425287344-30594-2-git-send-email-michal.kazior@tieto.com>
+	<1425287785.1906.0.camel@sipsolutions.net>
+	<CA+BoTQnrS74yx=V_sPvTgzkoZeWbOBFawqXZMAv6oEhUypmoQA@mail.gmail.com>
+	<1425288321.1906.1.camel@sipsolutions.net>
+Date: Mon, 2 Mar 2015 11:17:00 +0100
+Message-ID: <CA+BoTQnk8FBRwqTuq=ZAp__exwHejO1HncNhcVOASwn8+dKu=g@mail.gmail.com> (sfid-20150302_111706_737169_03F202E1)
+Subject: Re: [PATCH 2/3] ath10k: always save/restore pci config space
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
-
-> Until now only a single fixed tx rate or nss was
-> allowed to be set.
+On 2 March 2015 at 10:25, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2015-03-02 at 10:23 +0100, Michal Kazior wrote:
 >
-> The patch attempts to improve this by allowing
-> most bitrate masks. The limitation is VHT MCS
-> rates cannot be expressed separately and only the
-> following VHT MCS ranges are supported: none, 0-7,
-> 0-8, and 0-9.
+>> > I believe the whole thing isn't necessary at all since the kernel's PCIe
+>> > layer will take care of it.
+>>
+>> You mean only the pci_save_state() and pci_disable_device() or, the
+>> resume counterpart as well? Hmm.
 >
-> This keeps the old behaviour when requesting
-> single tx rate or single nss. The new bitrate mask
-> logic is only applied to other cases that would
-> return -EINVAL until now.
+> Resume as well - but I believe it's all-or-nothing.
 >
-> Depending on firmware revisions some combinations
-> may crash firmware so use with care, please.
+>> Earlier the resume counterpart didn't do any restore stuff and the
+>> device ended up pretty confused..
 >
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> which may explain this.
 
-kbuild reported:
+Hmm.. I removed the save/restore/enable/disable completely and
+re-tested. It seems to work fine as well.
 
-drivers/net/wireless/ath/ath10k/mac.c:2163 ath10k_peer_assoc_h_ht() warn: buffer overflow 'vht_mcs_mask' 8 <= 9
+I'll post a v2 later then. Thanks!
 
--- 
-Kalle Valo
+
+Michał
