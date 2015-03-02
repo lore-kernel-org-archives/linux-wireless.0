@@ -1,90 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:63563 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751460AbbCUIrm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:42 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 09/18] ath9k: ath9k_hw_loadnf: use REG_RMW
-Date: Sat, 21 Mar 2015 09:47:12 +0100
-Message-Id: <1426927641-18474-10-git-send-email-linux@rempel-privat.de> (sfid-20150321_094800_912530_84E7034B)
-In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
-References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64564 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753370AbbCBMUB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 07:20:01 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V5 1/2] ath10k: Move ath10k_vdev_stop() up before ath10k_vdev_start_restart()
+Date: Mon, 2 Mar 2015 17:45:27 +0530
+Message-ID: <1425298528-3067-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150302_132007_091017_68736CCD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/calib.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+This patches does not modify any functionality. Just a code move
+so that ath10k_vdev_stop() can be used in ath10k_vdev_start_restart()
+for any failure cases which involves vdev_stop().
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index e200a6e..3e2e24e 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -238,7 +238,6 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- {
- 	struct ath9k_nfcal_hist *h = NULL;
- 	unsigned i, j;
--	int32_t val;
- 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
-@@ -246,6 +245,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (ah->caldata)
- 		h = ah->caldata->nfCalHist;
- 
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	for (i = 0; i < NUM_NF_READINGS; i++) {
- 		if (chainmask & (1 << i)) {
- 			s16 nfval;
-@@ -258,10 +258,8 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 			else
- 				nfval = default_nf;
- 
--			val = REG_READ(ah, ah->nf_regs[i]);
--			val &= 0xFFFFFE00;
--			val |= (((u32) nfval << 1) & 0x1ff);
--			REG_WRITE(ah, ah->nf_regs[i], val);
-+			REG_RMW(ah, ah->nf_regs[i],
-+				(((u32) nfval << 1) & 0x1ff), 0x1ff);
- 		}
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+V2:
+     - Call ath10k_vdev_stop() when ath10k_monitor_recalc() failed.
+       This results in code move done in patch 1.
+
+V3:
+     - Make change specific to AP mode and update the commit log.
+
+V4:
+     - Rename the helper which is used to check is promisc mode is
+       to be disbled.
+     - Add warn when ath10k_monitor_recalc() and ath10k_vdev_stop()
+       fails.
+
+V5:
+    - Do not clear FIF_PROMISC_IN_BSS in ath10k_mac_should_disable_promisc().
+     
+ drivers/net/wireless/ath/ath10k/mac.c |   66 ++++++++++++++++-----------------
+ 1 file changed, 33 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0f39af7..3b5aaa3 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -872,6 +872,39 @@ static void ath10k_recalc_radar_detection(struct ath10k *ar)
  	}
- 
-@@ -274,6 +272,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
- 		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
- 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-+	REG_RMW_BUFFER_FLUSH(ah);
- 
- 	/*
- 	 * Wait for load to complete, should be fast, a few 10s of us.
-@@ -309,19 +308,17 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	 * by the median we just loaded.  This will be initial (and max) value
- 	 * of next noise floor calibration the baseband does.
- 	 */
--	ENABLE_REGWRITE_BUFFER(ah);
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	for (i = 0; i < NUM_NF_READINGS; i++) {
- 		if (chainmask & (1 << i)) {
- 			if ((i >= AR5416_MAX_CHAINS) && !IS_CHAN_HT40(chan))
- 				continue;
- 
--			val = REG_READ(ah, ah->nf_regs[i]);
--			val &= 0xFFFFFE00;
--			val |= (((u32) (-50) << 1) & 0x1ff);
--			REG_WRITE(ah, ah->nf_regs[i], val);
-+			REG_RMW(ah, ah->nf_regs[i],
-+					(((u32) (-50) << 1) & 0x1ff), 0x1ff);
- 		}
- 	}
--	REGWRITE_BUFFER_FLUSH(ah);
-+	REG_RMW_BUFFER_FLUSH(ah);
- 
- 	return 0;
  }
+ 
++static int ath10k_vdev_stop(struct ath10k_vif *arvif)
++{
++	struct ath10k *ar = arvif->ar;
++	int ret;
++
++	lockdep_assert_held(&ar->conf_mutex);
++
++	reinit_completion(&ar->vdev_setup_done);
++
++	ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
++	if (ret) {
++		ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
++			    arvif->vdev_id, ret);
++		return ret;
++	}
++
++	ret = ath10k_vdev_setup_sync(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
++			    arvif->vdev_id, ret);
++		return ret;
++	}
++
++	WARN_ON(ar->num_started_vdevs == 0);
++
++	if (ar->num_started_vdevs != 0) {
++		ar->num_started_vdevs--;
++		ath10k_recalc_radar_detection(ar);
++	}
++
++	return ret;
++}
++
+ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+ {
+ 	struct ath10k *ar = arvif->ar;
+@@ -949,39 +982,6 @@ static int ath10k_vdev_restart(struct ath10k_vif *arvif)
+ 	return ath10k_vdev_start_restart(arvif, true);
+ }
+ 
+-static int ath10k_vdev_stop(struct ath10k_vif *arvif)
+-{
+-	struct ath10k *ar = arvif->ar;
+-	int ret;
+-
+-	lockdep_assert_held(&ar->conf_mutex);
+-
+-	reinit_completion(&ar->vdev_setup_done);
+-
+-	ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
+-			    arvif->vdev_id, ret);
+-		return ret;
+-	}
+-
+-	ret = ath10k_vdev_setup_sync(ar);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to synchronize setup for vdev %i stop: %d\n",
+-			    arvif->vdev_id, ret);
+-		return ret;
+-	}
+-
+-	WARN_ON(ar->num_started_vdevs == 0);
+-
+-	if (ar->num_started_vdevs != 0) {
+-		ar->num_started_vdevs--;
+-		ath10k_recalc_radar_detection(ar);
+-	}
+-
+-	return ret;
+-}
+-
+ static int ath10k_mac_setup_bcn_p2p_ie(struct ath10k_vif *arvif,
+ 				       struct sk_buff *bcn)
+ {
 -- 
-1.9.1
+1.7.9.5
 
