@@ -1,67 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:34946 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753427AbbCIIqc (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54433 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753590AbbCBTDS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 04:46:32 -0400
-Received: from [117.207.78.0] (port=10150 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YUtKZ-0033Ry-N0
-	for linux-wireless@vger.kernel.org; Mon, 09 Mar 2015 04:46:32 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/5] ath9k: Fix RTT chainmask usage
-Date: Mon,  9 Mar 2015 14:20:10 +0530
-Message-Id: <1425891010-21522-6-git-send-email-sujith@msujith.org> (sfid-20150309_094641_380611_2FC24785)
-In-Reply-To: <1425891010-21522-1-git-send-email-sujith@msujith.org>
-References: <1425891010-21522-1-git-send-email-sujith@msujith.org>
+	Mon, 2 Mar 2015 14:03:18 -0500
+Date: Mon, 2 Mar 2015 20:03:16 +0100
+From: Florian Westphal <fw@strlen.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Florian Westphal <fw@strlen.de>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC 08/14] net: wireless: mac80211: shrink
+ ieee80211_tx_info
+Message-ID: <20150302190316.GB9762@breakpoint.cc> (sfid-20150302_200322_945049_3B6D36BD)
+References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+ <1425318028-26531-9-git-send-email-fw@strlen.de>
+ <1425322425.1906.4.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1425322425.1906.4.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2015-03-02 at 18:40 +0100, Florian Westphal wrote:
+> > to make it fit into (future) 44-byte sized skb->cb[].
+> > 
+> > This works, since flags is only used to store values
+> > from mac80211_tx_control_flags enum, and these are just 2 bits.
+> > We can thus move this to the padding hole inside the union.
+> > 
+> > Also add BUILD_BUG_ON magic to make sure that the new flags
+> > field doesn't share storage w. other members of the union.
+> 
+> This is really ugly - what's the point of this?
 
-Since the RTT registers need to be configured for all
-valid chains irrespective of the runtime chainmask,
-use the actual chainmask of the chip.
+Eventually reducing skb size to make it fit into 3 cachelines again even
+on 64bit architectures.  For that 40 bytes need to go.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_rtt.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> Mind you - we are actually acutely out of space and would rather have
+> *more*, not less.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_rtt.c b/drivers/net/wireless/ath/ath9k/ar9003_rtt.c
-index 9344188..e4d11fa 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_rtt.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_rtt.c
-@@ -106,7 +106,7 @@ void ar9003_hw_rtt_load_hist(struct ath_hw *ah)
- 	int chain, i;
- 
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(ah->rxchainmask & (1 << chain)))
-+		if (!(ah->caps.rx_chainmask & (1 << chain)))
- 			continue;
- 		for (i = 0; i < MAX_RTT_TABLE_ENTRY; i++) {
- 			ar9003_hw_rtt_load_hist_entry(ah, chain, i,
-@@ -171,7 +171,7 @@ void ar9003_hw_rtt_fill_hist(struct ath_hw *ah)
- 	int chain, i;
- 
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(ah->rxchainmask & (1 << chain)))
-+		if (!(ah->caps.rx_chainmask & (1 << chain)))
- 			continue;
- 		for (i = 0; i < MAX_RTT_TABLE_ENTRY; i++) {
- 			ah->caldata->rtt_table[chain][i] =
-@@ -193,7 +193,7 @@ void ar9003_hw_rtt_clear_hist(struct ath_hw *ah)
- 	int chain, i;
- 
- 	for (chain = 0; chain < AR9300_MAX_CHAINS; chain++) {
--		if (!(ah->rxchainmask & (1 << chain)))
-+		if (!(ah->caps.rx_chainmask & (1 << chain)))
- 			continue;
- 		for (i = 0; i < MAX_RTT_TABLE_ENTRY; i++)
- 			ar9003_hw_rtt_load_hist_entry(ah, chain, i, 0);
--- 
-2.3.1
+:-(
 
+I'm not familiar with mac80211, aside from that it seemed to me
+that 40 byte cb would be doable, given enough work.
+
+Where are to main problems, exactly?
+
+I known that pushing something into ->cb is a lot easier than e.g. keeping
+extra state on stack, but, IMO cb should really only be used when you
+need to associate data strictly with an skb so that this data is still
+availabe even when skb gets queued somewehere.
+
+Is there a document somewhere that lists all of the per-skb data that
+mac80211 needs to store (or wants to store)?
+
+Thanks,
+Florian
