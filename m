@@ -1,85 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.msg.oleane.net ([62.161.4.1]:36728 "EHLO
-	smtp01.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756549AbbCMPxj convert rfc822-to-8bit (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54734 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751914AbbCBUmH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 11:53:39 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Dan Williams'" <dcbw@redhat.com>
-Cc: "'wim torfs'" <wtorfs@gmail.com>, <linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>	 <5502D558.90306@gmail.com> <033201d05d93$5aa1c030$0fe54090$@acksys.fr> <1426255583.19064.6.camel@redhat.com>
-In-Reply-To: <1426255583.19064.6.camel@redhat.com>
-Subject: RE: ARP dropped during WPA handshake
-Date: Fri, 13 Mar 2015 16:53:22 +0100
-Message-ID: <034401d05da5$d5c0be30$81423a90$@acksys.fr> (sfid-20150313_165343_007514_C2D62E3E)
+	Mon, 2 Mar 2015 15:42:07 -0500
+Date: Mon, 2 Mar 2015 21:42:03 +0100
+From: Florian Westphal <fw@strlen.de>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Florian Westphal <fw@strlen.de>, netdev@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
+Message-ID: <20150302204203.GD9762@breakpoint.cc> (sfid-20150302_214212_919854_22A4A738)
+References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+ <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Below, a tcpdump capture from sta.
-> > 17:43:12.964096 EAPOL key (3) v2, len 95
-> > 17:43:12.998439 EAPOL key (3) v1, len 117
-> > 17:43:13.062409 ARP, Request who-has 10.32.61.100 tell 10.32.0.1,
-> > length 28
-> > 17:43:13.079989 EAPOL key (3) v2, len 151
-> > 17:43:13.082764 EAPOL key (3) v1, len 95
-> > 17:43:14.062381 ARP, Request who-has 10.32.61.100 tell 10.32.0.1,
-> > length 28
-> > 17:43:14.127101 ARP, Reply 10.32.61.100 is-at b8:88:e3:45:1d:c6 (oui
-> > Unknown), length 46
-> > 17:43:14.127123 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length
-> > 1470
-> > 17:43:14.127136 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length
-> > 1470
-> >
-> > You can see the ARP request during the WPA Handshake.
+Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> > remarks/known issues:
+> > - adds __packet attribute to a few structures.
+> >   Its needed to not have padding at end of the structure, else
+> >   we get build assertion errors even if all members fit into cb[].
+> > - checkpatch isn't happy yet.
+> > - dccp changes are untested (its on my todo list)
+> > - rxrpc change is untested (on todo list).
+> > - wireless changes are untested, I don't own any of the affected hw.
+> > 
+> > The idea is to figure out what needs to be done to make build_skb() and
+> > friends only touch the first 3 cachelines of the skb on all architectures.
+> > 
+> > We'd need to reduce skbuff by 40 bytes to achieve this for allyesconfig.
+> > 
+> > Other sk_buff reduction ideas being worked:
+> > 
+> > - move truesize to shinfo (which has 4 byte hole)
+> > - turn ->data into offset on 64bit platforms (intrusive, > 1000 files
+> >   affected)
+> > - move pointers that are ususally not needed (nf_bridge, secpath) to the end,
+> >   with flag field that tells us when pointer is valid (so we don't have
+> >   to memset() them unconditionally at allocation time).
+> > - seems we could already to this for the inner header fields since the're only
+> >   valid once ->encapsulation / inner_protocol_type is set.
+> > 
+> > Comments and more ideas welcome.
 > 
-> During the initial WPA handshake the connection is not fully set up, and so
-> no general traffic can (nor should) pass between the STA and AP.
-> That includes ARP and any L2/L3+ protocols, except for EAP and wifi
-> management packets.
-> 
-> The interface itself must be IFF_UP before it can pass traffic, including the
-> WPA handshake traffic.  IFF_UP only means that the interface can be
-> configured at the L2 level and the hardware is active, it does *not* mean the
-> interface can pass traffic.
-> 
-> Whatever is causing the ARPs shouldn't be doing that yet, and should be fixed
-> to use the interface's "operstate" or IFF_LOWER_UP instead of IFF_UP.  Only
-> when the supplicant changes the interface's operstate to IF_OPER_UP is the
-> interface *actually* ready to pass traffic.  IFF_UP is not sufficient.
-> 
+> Size of skb->cb[] is not the major factor. Trying to gain 4 or 8 bytes
+> is not going to improve performance a lot.
 
-Thanks for your reply. 
+Thats right, goal is to have build_skb etc. only touch 3 cachelines,
+and have those layers that need some particular feature initialise it on
+demand.
 
-It seems wpa_supplicant set the operstate to IF_OPER_DORMANT when he received the ASSOCIATED Event from the driver (through netlink). And set the operstate to IF_OPER_UP in case of wpa handshake success.
+We could move skb->cb to end of skb, so that its not covered by the
+initial allocation memset anymore.
 
-Is it normal the local ip stack send arp when netdev it is on IF_OPER_DORMANT state?
-	
+Obviously that won't buy us anything at this point since gro needs
+to zero it out (GRO skb cb is 48 bytes).
 
-> 
-> 
-> > 	Any suggestion will be appreciate.
-> >
-> > Cedric.
-> > >
-> > > > Thanks for your help.
-> > > >
-> > > > Cedric Voncken
-> > > >
-> > > >
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe
-> > > > linux-wireless" in the body of a message to
-> > > > majordomo@vger.kernel.org More majordomo info at
-> > > > http://vger.kernel.org/majordomo-info.html
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe
-> > linux-wireless" in the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> The real problem is that we clear it in skb_alloc()/build_skb(), instead
+> of each layer doing so at demand, and only the part that matters for
+> this layer.
 
+Thats right.  Do you think its worth to already move cb[] near the end
+of skb and alter build_skb to not clear it anymore?
 
+Which of the ideas, in your opinion, is worth pursuing first (if any)?
+
+I'd love to get rid of nf_bridge* pointer and use percpu storage
+area for it but I did not yet find a simple way to deal with when
+skb that uses this percpu state leaves bridge code and is then dropped
+or queued later -- we need to make sure that another skb isn't accidentally
+believed to have valid nf_bridge context.
+
+kfree_skb doesn't seem to be a nice place to add bridge crap to, and
+neither is netif_rx...
