@@ -1,86 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:19662 "EHLO mga01.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51908 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751492AbbCLGxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 02:53:38 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 3/7] mac80211: ignore CSA to same channel
-Date: Thu, 12 Mar 2015 08:53:26 +0200
-Message-Id: <1426143210-25635-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_075347_999236_B85EA5C7)
-In-Reply-To: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1751880AbbCBTS6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 14:18:58 -0500
+Message-ID: <1425323929.1906.12.camel@sipsolutions.net> (sfid-20150302_201906_972709_BFD272A6)
+Subject: Re: [PATCH RFC 08/14] net: wireless: mac80211: shrink
+ ieee80211_tx_info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Westphal <fw@strlen.de>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Mon, 02 Mar 2015 20:18:49 +0100
+In-Reply-To: <20150302190316.GB9762@breakpoint.cc>
+References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+	 <1425318028-26531-9-git-send-email-fw@strlen.de>
+	 <1425322425.1906.4.camel@sipsolutions.net>
+	 <20150302190316.GB9762@breakpoint.cc>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2015-03-02 at 20:03 +0100, Florian Westphal wrote:
 
-If the AP is confused and starts doing a CSA to the same channel,
-just ignore that request instead of trying to act it out since it
-was likely sent in error anyway.
+> Eventually reducing skb size to make it fit into 3 cachelines again even
+> on 64bit architectures.  For that 40 bytes need to go.
 
-In the case of the bug I was investigating the GO was misbehaving
-and sending out a beacon with CSA IEs still included after having
-actually done the channel switch.
+That seems like a worthy goal I guess (I guess you should've copied a
+patch 0/N to us).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 13 +++++++++++++
- 2 files changed, 14 insertions(+)
+> > Mind you - we are actually acutely out of space and would rather have
+> > *more*, not less.
+> 
+> :-(
+> 
+> I'm not familiar with mac80211, aside from that it seemed to me
+> that 40 byte cb would be doable, given enough work.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 0266c57..994d1b3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -453,6 +453,7 @@ struct ieee80211_if_managed {
- 	unsigned int flags;
- 
- 	bool csa_waiting_bcn;
-+	bool csa_ignored_same_chan;
- 
- 	bool beacon_crc_valid;
- 	u32 beacon_crc;
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 1999bc0..6205206 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1150,6 +1150,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 		return;
- 	}
- 
-+	if (cfg80211_chandef_identical(&csa_ie.chandef,
-+				       &sdata->vif.bss_conf.chandef)) {
-+		if (ifmgd->csa_ignored_same_chan)
-+			return;
-+		sdata_info(sdata,
-+			   "AP %pM tries to chanswitch to same channel, ignore\n",
-+			   ifmgd->associated->bssid);
-+		ifmgd->csa_ignored_same_chan = true;
-+		return;
-+	}
-+
- 	mutex_lock(&local->mtx);
- 	mutex_lock(&local->chanctx_mtx);
- 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
-@@ -1194,6 +1205,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
- 	sdata->vif.csa_active = true;
- 	sdata->csa_chandef = csa_ie.chandef;
- 	sdata->csa_block_tx = csa_ie.mode;
-+	ifmgd->csa_ignored_same_chan = false;
- 
- 	if (sdata->csa_block_tx)
- 		ieee80211_stop_vif_queues(local, sdata,
-@@ -2076,6 +2088,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	sdata->vif.csa_active = false;
- 	ifmgd->csa_waiting_bcn = false;
-+	ifmgd->csa_ignored_same_chan = false;
- 	if (sdata->csa_block_tx) {
- 		ieee80211_wake_vif_queues(local, sdata,
- 					  IEEE80211_QUEUE_STOP_REASON_CSA);
--- 
-1.9.1
+Right now it is, mostly, yes.
+
+> Where are to main problems, exactly?
+
+Well, that depends. Right now clearly we're not really using all of it
+as you saw (even if this patch moving bits here and there is really
+ugly) but there are multiple things:
+ 1) Of course mac80211 isn't static, it keeps getting developed! Right
+now for
+    example we need to fix single TCP flow throughput over wifi, and for
+that we
+    need a timestamp. That won't even fit into skb->cb any more right
+now; we'll
+    probably be able to get away with (ab)using skb->tstamp or doing
+reshuffling
+    similar to yours to get some space, but that's just lucky this time.
+ 2) We're actually out of flags that are kept from TX generation to TX
+    destruction and it's almost certain that we'll need to add more
+things.
+
+Also, we already do a lot of bit twiddling here, doing it even more
+makes the code even harder to follow. It's bad enough as is if you ask
+me.
+
+> I known that pushing something into ->cb is a lot easier than e.g. keeping
+> extra state on stack, but, IMO cb should really only be used when you
+> need to associate data strictly with an skb so that this data is still
+> availabe even when skb gets queued somewehere.
+
+Right, and we do that. We've in the past moved out data from here to
+elsewhere, but it's extremely tedious and error-prone, and I'm not sure
+we have much that we can possibly move now, since we do need to hang on
+to SKBs in many cases like client powersaving etc.
+
+> Is there a document somewhere that lists all of the per-skb data that
+> mac80211 needs to store (or wants to store)?
+
+Not really, sorry.
+
+> +                                       enum mac80211_tx_control_flags flags:2;
+> +                                       /* used for BUILD_BUG_ON validation that ->flags won't
+> +                                        * overlap with jiffies below */
+> +                                       char flags_end[0];
+
+That "jiffies" should probably say "other members (currently jiffies)"
+or something ... I got a bit confused here.
+
+johannes
 
