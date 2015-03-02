@@ -1,144 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38055 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750882AbbC2GQ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2015 02:16:59 -0400
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@suse.com, Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH] cfg80211: Stop calling crda if it is not responsive
-Date: Sun, 29 Mar 2015 09:18:51 +0300
-Message-Id: <1427609931-6113-1-git-send-email-ilan.peer@intel.com> (sfid-20150329_081902_084943_B4703242)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28085 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753766AbbCBIAy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 03:00:54 -0500
+From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Subject: [PATCH v2] mac80211: send station PMF configuration to driver
+Date: Mon, 2 Mar 2015 13:29:40 +0530
+Message-ID: <1425283180-3848-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150302_090103_462038_6EC087B3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch eeca9fce1d71a4955855ceb0c3b13c1eb9db27c1 (cfg80211: Schedule
-timeout for all CRDA call) introduced a regression, where in case
-that crda is not installed (or not configured properly etc.), the
-regulatory core will needlessly continue to call it.
+Add support to provide station PMF configuration to driver.
 
-Fix this by stop calling CRDA after too many continuous failures.
+Some device drivers, offload part of aggregation including ADDBa/DELBa
+negotiations to low layers. In such scenario, PMF configuration of
+station needs to be provided to driver to enable encryption of
+ADDBa/DELBa action frames.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
 ---
- net/wireless/nl80211.c |  2 +-
- net/wireless/reg.c     | 20 ++++++++++++++++++--
- net/wireless/reg.h     |  9 ++++++++-
- 3 files changed, 27 insertions(+), 4 deletions(-)
+ include/net/mac80211.h | 3 +++
+ net/mac80211/cfg.c     | 1 +
+ net/mac80211/mlme.c    | 6 +++++-
+ 3 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b020853..3f4c768 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5655,7 +5655,7 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
- 
--	r = set_regdom(rd);
-+	r = set_regdom(rd, REGD_SOURCE_CRDA);
- 	/* set_regdom took ownership */
- 	rd = NULL;
- 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 8c6cf52..3efc26e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -135,6 +135,11 @@ static spinlock_t reg_indoor_lock;
- /* Used to track the userspace process controlling the indoor setting */
- static u32 reg_is_indoor_portid;
- 
-+/* Max number of consecutive attempts to communicate with CRDA  */
-+#define REG_MAX_CRDA_TIMEOUTS 10
-+
-+static u32 reg_crda_timeouts;
-+
- static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
- {
- 	return rtnl_dereference(cfg80211_regdomain);
-@@ -485,7 +490,7 @@ static void reg_regdb_search(struct work_struct *work)
- 	mutex_unlock(&reg_regdb_search_mutex);
- 
- 	if (!IS_ERR_OR_NULL(regdom))
--		set_regdom(regdom);
-+		set_regdom(regdom, REGD_SOURCE_INTERNAL_DB);
- 
- 	rtnl_unlock();
- }
-@@ -544,6 +549,11 @@ static int call_crda(const char *alpha2)
- 	/* query internal regulatory database (if it exists) */
- 	reg_regdb_query(alpha2);
- 
-+	if (reg_crda_timeouts > REG_MAX_CRDA_TIMEOUTS) {
-+		pr_info("Exceeded CRDA call max attempts. Not calling CRDA\n");
-+		return -EINVAL;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d52914b..1502086 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1488,6 +1488,8 @@ struct ieee80211_sta_rates {
+  * @tdls: indicates whether the STA is a TDLS peer
+  * @tdls_initiator: indicates the STA is an initiator of the TDLS link. Only
+  *	valid if the STA is a TDLS peer in the first place.
++ * @mfp: indicates whether the STA supports management frame
++ *	protection.
+  */
+ struct ieee80211_sta {
+ 	u32 supp_rates[IEEE80211_NUM_BANDS];
+@@ -1504,6 +1506,7 @@ struct ieee80211_sta {
+ 	struct ieee80211_sta_rates __rcu *rates;
+ 	bool tdls;
+ 	bool tdls_initiator;
++	bool mfp;
+
+ 	/* must be last */
+ 	u8 drv_priv[0] __aligned(sizeof(void *));
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index dd4ff36..c124626 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1068,6 +1068,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 		sta->sta.wme = set & BIT(NL80211_STA_FLAG_WME);
+
+ 	if (mask & BIT(NL80211_STA_FLAG_MFP)) {
++		sta->sta.mfp = !!(set & BIT(NL80211_STA_FLAG_MFP));
+ 		if (set & BIT(NL80211_STA_FLAG_MFP))
+ 			set_sta_flag(sta, WLAN_STA_MFP);
+ 		else
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 10ac632..52c34cd 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2969,8 +2969,12 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
+
+ 	rate_control_rate_init(sta);
+
+-	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
++	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED) {
+ 		set_sta_flag(sta, WLAN_STA_MFP);
++		sta->sta.mfp = true;
++	} else {
++		sta->sta.mfp = false;
 +	}
-+
- 	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
- }
- 
-@@ -2893,7 +2903,8 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
-  * multiple drivers can be ironed out later. Caller must've already
-  * kmalloc'd the rd structure.
-  */
--int set_regdom(const struct ieee80211_regdomain *rd)
-+int set_regdom(const struct ieee80211_regdomain *rd,
-+	       enum ieee80211_regd_source regd_src)
- {
- 	struct regulatory_request *lr;
- 	bool user_reset = false;
-@@ -2904,6 +2915,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
- 		return -EINVAL;
- 	}
- 
-+	if (regd_src == REGD_SOURCE_CRDA)
-+		reg_crda_timeouts = 0;
-+
- 	lr = get_last_request();
- 
- 	/* Note that this doesn't update the wiphys, this is done below */
-@@ -3063,6 +3077,7 @@ static void reg_timeout_work(struct work_struct *work)
- {
- 	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, restoring regulatory settings\n");
- 	rtnl_lock();
-+	reg_crda_timeouts++;
- 	restore_regulatory_settings(true);
- 	rtnl_unlock();
- }
-@@ -3113,6 +3128,7 @@ int __init regulatory_init(void)
- 	spin_lock_init(&reg_pending_beacons_lock);
- 	spin_lock_init(&reg_indoor_lock);
- 
-+	reg_crda_timeouts = 0;
- 	reg_regdb_size_check();
- 
- 	rcu_assign_pointer(cfg80211_regdomain, cfg80211_world_regdom);
-diff --git a/net/wireless/reg.h b/net/wireless/reg.h
-index a2c4e16..3f310a5 100644
---- a/net/wireless/reg.h
-+++ b/net/wireless/reg.h
-@@ -16,6 +16,11 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+enum ieee80211_regd_source {
-+	REGD_SOURCE_INTERNAL_DB = 0,
-+	REGD_SOURCE_CRDA,
-+};
-+
- extern const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
- 
- bool reg_is_valid_request(const char *alpha2);
-@@ -46,7 +51,9 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy);
- int __init regulatory_init(void);
- void regulatory_exit(void);
- 
--int set_regdom(const struct ieee80211_regdomain *rd);
-+int set_regdom(const struct ieee80211_regdomain *rd,
-+	       enum ieee80211_regd_source regd_src);
-+
- unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
- 				   const struct ieee80211_reg_rule *rule);
- 
--- 
+
+ 	sta->sta.wme = elems.wmm_param;
+
+--
 1.9.1
 
