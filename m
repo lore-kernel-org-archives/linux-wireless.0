@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48542 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801AbbCTGDx (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:35033 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751199AbbCBJK0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 02:03:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Eliad Peller <eliad@wizery.com>,
-	Pontus Fuchs <pontus.fuchs@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap\@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v7 5/6] ARM: dts: add wl12xx/wl18xx bindings
-References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
-	<1426696710-6891-6-git-send-email-eliad@wizery.com>
-	<550AD7C1.2030405@gmail.com>
-	<CAB3XZEfpD7YkwdU7OJJaNFy=MnYVY3-fOVxkA48Vu01LzU0GFg@mail.gmail.com>
-	<20150319212505.GN31346@atomide.com>
-Date: Fri, 20 Mar 2015 08:03:43 +0200
-In-Reply-To: <20150319212505.GN31346@atomide.com> (Tony Lindgren's message of
-	"Thu, 19 Mar 2015 14:25:06 -0700")
-Message-ID: <87h9tgi4sg.fsf@kamboji.qca.qualcomm.com> (sfid-20150320_070359_044926_AF1B43AD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 2 Mar 2015 04:10:26 -0500
+Received: by lbjf15 with SMTP id f15so696397lbj.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 01:10:25 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/3] ath10k: re-enable pci device upon resume
+Date: Mon,  2 Mar 2015 10:09:04 +0100
+Message-Id: <1425287344-30594-3-git-send-email-michal.kazior@tieto.com> (sfid-20150302_101034_780337_34D9FC4B)
+In-Reply-To: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
+References: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tony Lindgren <tony@atomide.com> writes:
+This balances out pci_disable_device() from
+ath10k_pci_hif_suspend().
 
->> > Tested OK (boot, scan, join, ping) on Pandaboard ES.
->> >
->> thanks for testing it!
->
-> Great. As suggested by Kalle, I'll apply all these into
-> omap-for-v4.1/wl12xx branch and send a pull request for
-> the arm-soc probably on Friday if no issues are found.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Great, thank you. Just in case you want this:
-
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
-
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index d06b264..1295345 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2079,6 +2079,12 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
++	ret = pci_enable_device(pdev);
++	if (ret) {
++		ath10k_err(ar, "failed to enable pci device: %d\n", ret);
++		return ret;
++	}
++
+ 	pci_restore_state(pdev);
+ 
+ 	/* Suspend/Resume resets the PCI configuration space, so we have to
 -- 
-Kalle Valo
+1.8.5.3
+
