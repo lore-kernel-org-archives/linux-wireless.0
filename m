@@ -1,40 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49609 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751477AbbCCPFJ convert rfc822-to-8bit (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:46805 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752274AbbCBJKY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 10:05:09 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH][FIX][RESEND] b43: fix support for 5 GHz only BCM43228 model
-References: <1424103816-10566-1-git-send-email-zajec5@gmail.com>
-	<1425313135-28225-1-git-send-email-zajec5@gmail.com>
-Date: Tue, 03 Mar 2015 17:05:02 +0200
-In-Reply-To: <1425313135-28225-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Mon, 2 Mar 2015
- 17:18:55 +0100")
-Message-ID: <87k2yy86ld.fsf@kamboji.qca.qualcomm.com> (sfid-20150303_160514_588529_A41DE7C8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Mon, 2 Mar 2015 04:10:24 -0500
+Received: by lams18 with SMTP id s18so28869658lam.13
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 01:10:22 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/3] ath10k: fix some pci wake/sleep issues
+Date: Mon,  2 Mar 2015 10:09:02 +0100
+Message-Id: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com> (sfid-20150302_101033_581899_10E54E02)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+In some cases the device ends up sleeping while
+ath10k didn't expect it to leading to reading
+garbage from registers, e.g. when shared irqs are
+used and the driver is in powered down state.
 
-> It was incorrectly detected as 2 GHz device.
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> Cc: stable@vger.kernel.org # 3.17+
-> ---
-> Kalle: can you take it for 3.20, please?
+This effectively makes the device remain awake all
+the time even when all interfaces are down.
 
-Thanks, applied to wireless-drivers.git.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 37 ++++++++++++++++++++++++++++++-----
+ 1 file changed, 32 insertions(+), 5 deletions(-)
 
-> RESEND: It seems patchwork didn't catch my patch. Trying again.
-
-Odd, I still don't see it in patchwork. I wonder what caused that?
-
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index e6972b0..cbf82ff 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -819,6 +819,21 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
+ 	return -ETIMEDOUT;
+ }
+ 
++/* The rule is host is forbidden from accessing device registers while it's
++ * asleep. Currently ath10k_pci_wake() and ath10k_pci_sleep() calls aren't
++ * balanced and the device is kept awake all the time. This is intended for a
++ * simpler solution for the following problems:
++ *
++ *   * device can enter sleep during s2ram without the host knowing,
++ *
++ *   * irq handlers access registers which is a problem if other device asserts
++ *     a shared irq line when ath10k is between hif_power_down() and
++ *     hif_power_up().
++ *
++ * FIXME: If power consumption is a concern (and there are *real* gains) then a
++ * refcounted wake/sleep needs to be implemented.
++ */
++
+ static int ath10k_pci_wake(struct ath10k *ar)
+ {
+ 	ath10k_pci_reg_write32(ar, PCIE_SOC_WAKE_ADDRESS,
+@@ -2034,8 +2049,6 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
+ 	/* Currently hif_power_up performs effectively a reset and hif_stop
+ 	 * resets the chip as well so there's no point in resetting here.
+ 	 */
+-
+-	ath10k_pci_sleep(ar);
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -2048,6 +2061,8 @@ static int ath10k_pci_hif_suspend(struct ath10k *ar)
+ 	struct pci_dev *pdev = ar_pci->pdev;
+ 	u32 val;
+ 
++	ath10k_pci_sleep(ar);
++
+ 	pci_read_config_dword(pdev, ATH10K_PCI_PM_CONTROL, &val);
+ 
+ 	if ((val & 0x000000ff) != 0x3) {
+@@ -2065,6 +2080,13 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
+ 	struct pci_dev *pdev = ar_pci->pdev;
+ 	u32 val;
++	int ret;
++
++	ret = ath10k_pci_wake(ar);
++	if (ret) {
++		ath10k_err(ar, "failed to wake device up on resume: %d\n", ret);
++		return ret;
++	}
+ 
+ 	pci_read_config_dword(pdev, ATH10K_PCI_PM_CONTROL, &val);
+ 
+@@ -2083,7 +2105,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
+ 			pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+ 	}
+ 
+-	return 0;
++	return ret;
+ }
+ #endif
+ 
+@@ -2177,6 +2199,13 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
+ {
+ 	struct ath10k *ar = arg;
+ 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++	int ret;
++
++	ret = ath10k_pci_wake(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to wake device up on irq: %d\n", ret);
++		return IRQ_NONE;
++	}
+ 
+ 	if (ar_pci->num_msi_intrs == 0) {
+ 		if (!ath10k_pci_irq_pending(ar))
+@@ -2681,8 +2710,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
+ 		goto err_sleep;
+ 	}
+ 
+-	ath10k_pci_sleep(ar);
+-
+ 	ret = ath10k_core_register(ar, chip_id);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
 -- 
-Kalle Valo
+1.8.5.3
+
