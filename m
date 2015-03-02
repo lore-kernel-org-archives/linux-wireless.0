@@ -1,62 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:32787 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343AbbCaKdE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34344 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753529AbbCBPO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 06:33:04 -0400
-Received: by lajy8 with SMTP id y8so9215384laj.0
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 03:33:03 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v6 1/7] ath10k: allow empty ssid vdev config
-Date: Tue, 31 Mar 2015 10:26:20 +0000
-Message-Id: <1427797586-5132-2-git-send-email-michal.kazior@tieto.com> (sfid-20150331_123310_434569_D9DCFC20)
-In-Reply-To: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com>
-References: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 2 Mar 2015 10:14:28 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 21/32] wireless: use %*pb[l] to print bitmaps including cpumasks and nodemasks
+References: <1422108218-25398-1-git-send-email-tj@kernel.org>
+	<1422108218-25398-22-git-send-email-tj@kernel.org>
+Date: Mon, 02 Mar 2015 17:14:22 +0200
+In-Reply-To: <1422108218-25398-22-git-send-email-tj@kernel.org> (Tejun Heo's
+	message of "Sat, 24 Jan 2015 09:03:27 -0500")
+Message-ID: <87zj7va0tt.fsf@kamboji.qca.qualcomm.com> (sfid-20150302_161445_366436_F513C45C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to reject a valid
-firmware configuration combination.
+Tejun Heo <tj@kernel.org> writes:
 
-Since SSID isn't known early on it might make
-sense to allow driver to start vdev without SSID
-and restart it later.
+> printk and friends can now formap bitmaps using '%*pb[l]'.  cpumask
+> and nodemask also provide cpumask_pr_args() and nodemask_pr_args()
+> respectively which can be used to generate the two printf arguments
+> necessary to format the specified cpu/nodemask.
+>
+> This patch is dependent on the following two patches.
+>
+>  lib/vsprintf: implement bitmap printing through '%*pb[l]'
+>  cpumask, nodemask: implement cpumask/nodemask_pr_args()
+>
+> Please wait till the forementioned patches are merged to mainline
+> before applying to subsystem trees.
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: linux-wireless@vger.kernel.org
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
- 2 files changed, 4 deletions(-)
+This was already applied so I'm dropping it from my queue.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 7bfb45492027..ac3b4fd5b752 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1518,8 +1518,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- 	void *ptr;
- 	u32 flags = 0;
- 
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 4778031b8635..da2fc1d99291 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4244,8 +4244,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
- 	const char *cmdname;
- 	u32 flags = 0;
- 
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
 -- 
-2.1.4
-
+Kalle Valo
