@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:38847 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753355AbbCMIRT convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39134 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266AbbCBLHM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 04:17:19 -0400
+	Mon, 2 Mar 2015 06:07:12 -0500
+Message-ID: <54F44353.1090907@qti.qualcomm.com> (sfid-20150302_120717_466562_842B63AA)
+Date: Mon, 2 Mar 2015 16:32:43 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CABxcv=mETO9ESVa04YjRO1d-h5ksEwvwGKb1G-jxVk6ttr9JYg@mail.gmail.com>
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
-	<1426162154-8716-6-git-send-email-eliad@wizery.com>
-	<CABxcv=mETO9ESVa04YjRO1d-h5ksEwvwGKb1G-jxVk6ttr9JYg@mail.gmail.com>
-Date: Fri, 13 Mar 2015 09:17:18 +0100
-Message-ID: <CAFqH_53D52WGDZUTv=w7SguTeROwrzmn9XLB+cTg-3y+Q4FxfQ@mail.gmail.com> (sfid-20150313_092322_463410_E2E8CA35)
-Subject: Re: [PATCH v6 5/6] ARM: dts: add wl12xx/wl18xx bindings
-From: Enric Balletbo Serra <eballetbo@gmail.com>
-To: Javier Martinez Canillas <javier@dowhile0.org>
-Cc: Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	=?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
-	Tony Lindgren <tony@atomide.com>, Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Pau Pajuel <paupa13@gmail.com>,
-	=?UTF-8?Q?Agust=C3=AD?= <afontquerni@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH V3 2/2] ath10k: Fix interrupt storm
+References: <1425030606-21933-1-git-send-email-vthiagar@qti.qualcomm.com>	<1425030606-21933-2-git-send-email-vthiagar@qti.qualcomm.com>	<CA+BoTQ=UFo=2Fa8FXw6JTGKkNLoG=m56py0a8AShyh3nTJ+TKQ@mail.gmail.com>	<1425288686058.83668@qti.qualcomm.com>	<54F438C5.802@qti.qualcomm.com> <CA+BoTQmLciCZ4dXbH4rO1vU32OQzNgF+cJT-tkFcOKvq00Ur1Q@mail.gmail.com>
+In-Reply-To: <CA+BoTQmLciCZ4dXbH4rO1vU32OQzNgF+cJT-tkFcOKvq00Ur1Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-2015-03-13 9:01 GMT+01:00 Javier Martinez Canillas <javier@dowhile0.org>:
-> Hello Eliad,
 >
-> On Thu, Mar 12, 2015 at 1:09 PM, Eliad Peller <eliad@wizery.com> wrote:
->> Replace all the pdata-quirks for setting wl12xx/wl18xx
->> platform data with proper DT definitions.
+>
+>>>> @@ -3476,6 +3504,13 @@ static void ath10k_configure_filter(struct
+>>>> ieee80211_hw *hw,
+>>>>
+>>>>           changed_flags &= SUPPORTED_FILTERS;
+>>>>           *total_flags &= SUPPORTED_FILTERS;
+>>>> +       if (*total_flags & FIF_PROMISC_IN_BSS) {
+>>>> +               if (ar->num_started_vdevs) {
+>>>> +                       ath10k_dbg(ar, ATH10K_DBG_MAC,
+>>>> +                                  "mac does not enable promiscuous mode
+>>>> when already a vdev is running\n");
+>>>> +                       *total_flags &= ~FIF_PROMISC_IN_BSS;
+>>>> +               }
+>>>> +       }
+>>>
+>>>
+>>> There's no need for that, is there? The monitor_recalc() is supposed
+>>> to deal with this.
 >>
->> The patch was compile-tested only.
 >>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
+>> Right, but we may not want to create any inconsistencies between
+>> *total_flags and actual
+>> filters enabled in the driver?.
 >
-> I wanted to test your series but I realized that the IGEPv2 I've
-> access is the old revision that has another SDIO wlan module instead
-> of a Wilink8.
->
-> Maybe Enric have the new revision? I also added to Pau Pajuel as cc
-> who still works in the company manufacturing these boards so he should
-> be able to test it.
->
+> See the "DOC: Frame filtering" in include/net/mac80211.h. ath10k
+> either always delivers frames IN_BSS (AP operation) or can be forced
+> to (via monitor vdev for STA/IBSS operation) so FIF_PROMISC_IN_BSS
+> should never be cleared.
 
-Sorry, now I only have an old revision too, so I can't test, cc'ing
-Agustí that has access to the hardware, maybe he can test it or he can
-provide to us a board ;)
+Your are right. We should not be clearing that flag as long as we support
+that functionality in one or other way. Thanks.
 
-> But in any case, your patch looks good to me so for the
-> arch/arm/boot/dts/omap3-igep00* changes:
->
-> Acked-by: Javier Martinez Canillas <javier@dowhile0.org>
->
-
-For my part also looks good.
-
-Acked-by: Enric Balletbo i Serra <eballetbo@gmail.com>
-
-Best regards,
-   Enric
-
-> Best regards,
-> Javier
+Vasanth
