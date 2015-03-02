@@ -1,48 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20442 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754002AbbCLOHv convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 10:07:51 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2CE4Oet008640
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 07:07:50 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1t2q5a3h6e-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 07:07:50 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>
-Date: Thu, 12 Mar 2015 07:07:49 -0700
-Subject: RE: [PATCH] mwifiex: fix a bug in Rx multiport aggregation logic
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B16A0745C@SC-VEXCH1.marvell.com> (sfid-20150312_150754_142367_93B07332)
-References: <1426145920-5288-1-git-send-email-akarwar@marvell.com>
-In-Reply-To: <1426145920-5288-1-git-send-email-akarwar@marvell.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:36909 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755159AbbCBTtZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 14:49:25 -0500
+Message-ID: <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150302_204937_206043_D772E0D6)
+Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Florian Westphal <fw@strlen.de>
+Cc: netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Date: Mon, 02 Mar 2015 11:49:23 -0800
+In-Reply-To: <1425318028-26531-1-git-send-email-fw@strlen.de>
+References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
-> Sent: Thursday, March 12, 2015 1:09 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: Cathy Luo; Avinash Patil; Amitkumar Karwar
-> Subject: [PATCH] mwifiex: fix a bug in Rx multiport aggregation logic
+On Mon, 2015-03-02 at 18:40 +0100, Florian Westphal wrote:
+> Following patches shrink all in-tree users of skb->cb[] so that kernel
+> still builds with skb->cb[] set to 44 bytes.
 > 
-> From: Cathy Luo <cluo@marvell.com>
+> This would create a 4-byte hole, it would be easy to reorder skb
+> members so this hole is filled.
 > 
-> It's been observed Rx aggregated packets are always followed by a
-> single Rx packet. This patch improves our logic to add that extra
-> packet in next aggregation.
+> pahole dump for vmlinux with allyesconfig (+this patch series):
 > 
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
+> http://www.strlen.de/fw/pahole.txt.gz
+> 
+> remarks/known issues:
+> - adds __packet attribute to a few structures.
+>   Its needed to not have padding at end of the structure, else
+>   we get build assertion errors even if all members fit into cb[].
+> - checkpatch isn't happy yet.
+> - dccp changes are untested (its on my todo list)
+> - rxrpc change is untested (on todo list).
+> - wireless changes are untested, I don't own any of the affected hw.
+> 
+> The idea is to figure out what needs to be done to make build_skb() and
+> friends only touch the first 3 cachelines of the skb on all architectures.
+> 
+> We'd need to reduce skbuff by 40 bytes to achieve this for allyesconfig.
+> 
+> Other sk_buff reduction ideas being worked:
+> 
+> - move truesize to shinfo (which has 4 byte hole)
+> - turn ->data into offset on 64bit platforms (intrusive, > 1000 files
+>   affected)
+> - move pointers that are ususally not needed (nf_bridge, secpath) to the end,
+>   with flag field that tells us when pointer is valid (so we don't have
+>   to memset() them unconditionally at allocation time).
+> - seems we could already to this for the inner header fields since the're only
+>   valid once ->encapsulation / inner_protocol_type is set.
+> 
+> Comments and more ideas welcome.
 
-Please ignore this patch. This is same as "[PATCH 1/3] mwifiex: fix 
-a bug..." sent separately.
+Size of skb->cb[] is not the major factor. Trying to gain 4 or 8 bytes
+is not going to improve performance a lot.
 
-Regards,
-Amit
+The real problem is that we clear it in skb_alloc()/build_skb(), instead
+of each layer doing so at demand, and only the part that matters for
+this layer.
+
+Basically, skb->cb[] could be 80 or 160 bytes instead of 48, and we
+should not care, as long as no layer does a stupid/lazy 
+
+memset(skb->cb, 0, sizeof(skb->cb))
+
+Presumably skb_clone() could be extended to receive the length of
+skb->cb[] that current layer cares about.
+
+
