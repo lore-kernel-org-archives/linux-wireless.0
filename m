@@ -1,61 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:38654 "EHLO mail.us.es"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51792 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751353AbbCMNtk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 09:49:40 -0400
-Date: Fri, 13 Mar 2015 14:53:29 +0100
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: Richard Weinberger <richard@nod.at>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
-	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
-Subject: Re: [PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc
- file
-Message-ID: <20150313135329.GA6054@salvia> (sfid-20150313_144949_339991_69AD4FF5)
-References: <1426246276-15839-1-git-send-email-richard@nod.at>
- <1426246276-15839-5-git-send-email-richard@nod.at>
- <20150313121539.GA14488@salvia>
- <5502E99A.2060901@nod.at>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5502E99A.2060901@nod.at>
+	id S1753635AbbCBSxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 13:53:47 -0500
+Message-ID: <1425322425.1906.4.camel@sipsolutions.net> (sfid-20150302_195354_759126_A9E6657C)
+Subject: Re: [PATCH RFC 08/14] net: wireless: mac80211: shrink
+ ieee80211_tx_info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Westphal <fw@strlen.de>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Mon, 02 Mar 2015 19:53:45 +0100
+In-Reply-To: <1425318028-26531-9-git-send-email-fw@strlen.de> (sfid-20150302_184059_463522_70F2B3E8)
+References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+	 <1425318028-26531-9-git-send-email-fw@strlen.de>
+	 (sfid-20150302_184059_463522_70F2B3E8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 13, 2015 at 02:43:54PM +0100, Richard Weinberger wrote:
-> Am 13.03.2015 um 13:15 schrieb Pablo Neira Ayuso:
-> > On Fri, Mar 13, 2015 at 12:31:16PM +0100, Richard Weinberger wrote:
-> >> The printed values are all of type unsigned integer, therefore use
-> >> %u instead of %d. Otherwise an user can face negative values.
-> >>
-> >> Fixes:
-> >> $ cat /proc/net/netfilter/nfnetlink_queue
-> >>     0  29508   278 2 65531     0 2004213241 -2129885586  1
-> >>     1 -27747     0 2 65531     0     0        0  1
-> >>     2 -27748     0 2 65531     0     0        0  1
-> > 
-> > I guess you want to access stats on dropped packets.
+On Mon, 2015-03-02 at 18:40 +0100, Florian Westphal wrote:
+> to make it fit into (future) 44-byte sized skb->cb[].
 > 
-> Correct. :)
+> This works, since flags is only used to store values
+> from mac80211_tx_control_flags enum, and these are just 2 bits.
+> We can thus move this to the padding hole inside the union.
 > 
-> > I prefer if you extend nfnetlink_queue to provide statistics through
-> > nfnetlink_queue, so you don't have to manually parse this text-based
-> > /proc entry and we can deprecate this interface. That shouldn't have
-> > been there in first place.
-> 
-> You mean statistics via netlink attributes? I can add that!
+> Also add BUILD_BUG_ON magic to make sure that the new flags
+> field doesn't share storage w. other members of the union.
 
-Add a new NFQNL_CFG_CMD_STATS command to request the statistics. If
-NLM_F_DUMP is set, then we'll basically provide the full list of
-instances. Otherwise, in case you want to retrieve stats for a
-specific netlink socket, you can use the netlink portID as index.
-And you'll have to add attributes for this new command, yes.
+This is really ugly - what's the point of this?
 
-> But I think we should also fix the format string of the proc file
-> as the fix is easy and non-intrusive.
+Mind you - we are actually acutely out of space and would rather have
+*more*, not less.
 
-Unfortunately we don't know how many people are relying on that
-output, I prefer to remain conservative and provide a proper netlink
-interface for this.
+johannes
+
