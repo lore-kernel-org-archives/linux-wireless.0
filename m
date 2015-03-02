@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0180.hostedemail.com ([216.40.44.180]:45507 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752407AbbCCIhp (ORCPT
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54117 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753962AbbCBRks (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 03:37:45 -0500
-Message-ID: <1425371858.17273.3.camel@perches.com> (sfid-20150303_093828_358464_823966A1)
-Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
- memset
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 03 Mar 2015 00:37:38 -0800
-In-Reply-To: <1425370617.2450.3.camel@sipsolutions.net>
-References: <cover.1425354527.git.joe@perches.com>
-	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
-	 <1425370617.2450.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 2 Mar 2015 12:40:48 -0500
+From: Florian Westphal <fw@strlen.de>
+To: <netdev@vger.kernel.org>
+Cc: Florian Westphal <fw@strlen.de>, linux-wireless@vger.kernel.org
+Subject: [PATCH RFC 09/14] net: wireless: mac80211: shrink private driver area
+Date: Mon,  2 Mar 2015 18:40:23 +0100
+Message-Id: <1425318028-26531-10-git-send-email-fw@strlen.de> (sfid-20150302_184214_486235_3C68A9D8)
+In-Reply-To: <1425318028-26531-1-git-send-email-fw@strlen.de>
+References: <1425318028-26531-1-git-send-email-fw@strlen.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-03-03 at 09:16 +0100, Johannes Berg wrote:
-> On Mon, 2015-03-02 at 19:54 -0800, Joe Perches wrote:
-> > Use the built-in function instead of memset.
-> 
-> Please don't use <foo> in the title, especially not if the patch only
-> introduces usage of eth_zero_addr(). It's easier to look for in the
-> commit log without it.
-> 
-> Other than that, I guess I'll apply this, but I really wish there was a
-> way to distinguish more easily which of these require alignment and
-> which don't.
+This makes the structure fit 44-byte sized skb->cb[].
 
-My guess is the eth_zero_addr and eth_broadcast functions
-are always taking aligned(2) arguments, just like all the
-is_<foo>_ether_addr functions.
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Florian Westphal <fw@strlen.de>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
+ include/net/mac80211.h                 | 8 +++-----
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-> eth_zero_addr() doesn,t but is_zero_ether_addr() does. So does
-> ether_addr_copy(). Frankly, it's getting a bit confusing, so I can't
-> really fault anyone for using memset()/memcpy().
-
-I suspect more than anything else all these are historic.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 0f8e946..2ed77cf 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -184,12 +184,12 @@ struct ath_frame_info {
+ 	struct ath_buf *bf;
+ 	u16 framelen;
+ 	s8 txq;
+-	enum ath9k_key_type keytype;
+ 	u8 keyix;
+ 	u8 rtscts_rate;
+ 	u8 retries : 7;
+ 	u8 baw_tracked : 1;
+ 	u8 tx_power;
++	enum ath9k_key_type keytype:2;
+ };
+ 
+ struct ath_rxbuf {
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 36c2599..372c25a 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -627,11 +627,11 @@ enum mac80211_rate_control_flags {
+ };
+ 
+ 
+-/* there are 40 bytes if you don't need the rateset to be kept */
+-#define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
++/* there are 32 bytes if you don't need the rateset to be kept */
++#define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 32
+ 
+ /* if you do need the rateset, then you have less space */
+-#define IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE 24
++#define IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE 16
+ 
+ /* maximum number of rate stages */
+ #define IEEE80211_TX_MAX_RATES	4
+@@ -765,8 +765,6 @@ struct ieee80211_tx_info {
+ 		struct {
+ 			struct ieee80211_tx_rate driver_rates[
+ 				IEEE80211_TX_MAX_RATES];
+-			u8 pad[4];
+-
+ 			void *rate_driver_data[
+ 				IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE / sizeof(void *)];
+ 		};
+-- 
+2.0.5
 
