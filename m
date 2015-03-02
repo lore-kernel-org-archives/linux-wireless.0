@@ -1,37 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37930 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51782 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754603AbbCLNGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:06:30 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 45/49] iwlwifi: update copyright to include 2015
-Date: Thu, 12 Mar 2015 15:04:30 +0200
-Message-Id: <1426165474-25586-45-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_140736_273824_780FFCC2)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+	id S1753037AbbCBSw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 13:52:58 -0500
+Message-ID: <1425322373.1906.3.camel@sipsolutions.net> (sfid-20150302_195307_676073_BFDDA618)
+Subject: Re: [PATCH RFC 09/14] net: wireless: mac80211: shrink private
+ driver area
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Florian Westphal <fw@strlen.de>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Mon, 02 Mar 2015 19:52:53 +0100
+In-Reply-To: <1425318028-26531-10-git-send-email-fw@strlen.de> (sfid-20150302_184214_486235_3C68A9D8)
+References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+	 <1425318028-26531-10-git-send-email-fw@strlen.de>
+	 (sfid-20150302_184214_486235_3C68A9D8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-drv.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Mon, 2015-03-02 at 18:40 +0100, Florian Westphal wrote:
+> This makes the structure fit 44-byte sized skb->cb[].
+> 
+> Cc: linux-wireless@vger.kernel.org
+> Signed-off-by: Florian Westphal <fw@strlen.de>
+> ---
+>  drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
+>  include/net/mac80211.h                 | 8 +++-----
+>  2 files changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 0f8e946..2ed77cf 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.h b/drivers/net/wireless/iwlwifi/iwl-drv.h
-index adf522c..67a3a24 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.h
-@@ -68,7 +68,7 @@
- 
- /* for all modules */
- #define DRV_NAME        "iwlwifi"
--#define DRV_COPYRIGHT	"Copyright(c) 2003- 2014 Intel Corporation"
-+#define DRV_COPYRIGHT	"Copyright(c) 2003- 2015 Intel Corporation"
- #define DRV_AUTHOR     "<ilw@linux.intel.com>"
- 
- /* radio config bits (actual values from NVM definition) */
--- 
-1.9.1
+This is clearly not a mac80211 patch.
+
+johannes
 
