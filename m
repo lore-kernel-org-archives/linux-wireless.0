@@ -1,22 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57102 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932388AbbCQVdY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 17:33:24 -0400
-Message-ID: <1426628001.1985.62.camel@sipsolutions.net> (sfid-20150317_223327_798512_A701BCE3)
-Subject: Re: [PATCH] mac80211: fix typo in debug output
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Tue, 17 Mar 2015 22:33:21 +0100
-In-Reply-To: <1426620755-17861-1-git-send-email-michael-dev@fami-braun.de>
-References: <1426620755-17861-1-git-send-email-michael-dev@fami-braun.de>
-Content-Type: text/plain
+Received: from shards.monkeyblade.net ([149.20.54.216]:54508 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266AbbCBWRw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 17:17:52 -0500
+Date: Mon, 02 Mar 2015 17:17:47 -0500 (EST)
+Message-Id: <20150302.171747.1423128180512348489.davem@davemloft.net> (sfid-20150302_231759_886936_D2368ADD)
+To: eric.dumazet@gmail.com
+Cc: fw@strlen.de, netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+	<1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please resend with signed-off-by.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Date: Mon, 02 Mar 2015 11:49:23 -0800
 
-johannes
+> Size of skb->cb[] is not the major factor. Trying to gain 4 or 8 bytes
+> is not going to improve performance a lot.
+> 
+> The real problem is that we clear it in skb_alloc()/build_skb(), instead
+> of each layer doing so at demand, and only the part that matters for
+> this layer.
+> 
+> Basically, skb->cb[] could be 80 or 160 bytes instead of 48, and we
+> should not care, as long as no layer does a stupid/lazy 
+> 
+> memset(skb->cb, 0, sizeof(skb->cb))
+> 
+> Presumably skb_clone() could be extended to receive the length of
+> skb->cb[] that current layer cares about.
 
+Regardless, I think Florian's work has value.
