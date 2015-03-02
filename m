@@ -1,153 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24060 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752280AbbCATby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 14:31:54 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/31] iwlwifi: mvm: rs: adapt rate matching to new STBC/BFER
-Date: Sun,  1 Mar 2015 21:31:16 +0200
-Message-Id: <1425238304-498-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203157_973128_A1B0CC98)
-In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
-References: <1425238186.30202.5.camel@egrumbacBox>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49006 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbbCBLdI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 06:33:08 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V4 2/2] ath10k: Fix interrupt storm
+Date: Mon, 2 Mar 2015 16:58:00 +0530
+Message-ID: <1425295680-2269-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150302_123312_954990_C3DA1050)
+In-Reply-To: <1425295680-2269-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1425295680-2269-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Promiscuous mode is enabled when wlan interface is added to
+bridge. ath10k creates a monitor mode when promiscuous mode
+is enabled. When monitor vdev is running along with other
+vdev(s) there is a huge number of interrupts generated
+especially in noisy condition. Fix this by not enabling
+promiscuous(monitor) mode when already a vdev is running.
+As disabling promiscuous mode may have issues with 4-address
+bridging in STA mode, the change is done specific to non-sta/ibss
+mode types. This does not change the support of virtual interface of
+type monitor along with other vdevs of any type.
 
-Once the FW supports autonomous decision between STBC/BFER/SISO
-we no longer set the STBC bit and ANT_AB in the rate table.
-However the FW rate in the tx response will have the STBC
-or BFER bit set and the antennas set to ANT_AB in case these
-were chosen by it. This will cause us to discard any such
-response as unmatching the current LQ table and thus break
-the rs search cycle completely.
-Fix this by relaxing the rate matching in case we're working
-with the new API and STBC/BFER are used.
+This could fix management frame drop in fw due to unavailable
+buffers because in monitor mode device receives everything seen
+on the air. In noisy condition, disabling monitor mode helps assoc
+go through without any issue.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 45 ++++++++++++++++++++++++++++-------
- drivers/net/wireless/iwlwifi/mvm/rs.h |  1 +
- 2 files changed, 37 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c |   34 +++++++++++++++++++++++++++++++--
+ 1 file changed, 32 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 2e45b81..37002cf 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -807,6 +807,8 @@ static int rs_rate_from_ucode_rate(const u32 ucode_rate,
- 		rate->ldpc = true;
- 	if (ucode_rate & RATE_MCS_VHT_STBC_MSK)
- 		rate->stbc = true;
-+	if (ucode_rate & RATE_MCS_BF_MSK)
-+		rate->bfer = true;
- 
- 	rate->bw = ucode_rate & RATE_MCS_CHAN_WIDTH_MSK;
- 
-@@ -816,7 +818,9 @@ static int rs_rate_from_ucode_rate(const u32 ucode_rate,
- 
- 		if (nss == 1) {
- 			rate->type = LQ_HT_SISO;
--			WARN_ON_ONCE(!rate->stbc && num_of_ant != 1);
-+			WARN_ONCE(!rate->stbc && !rate->bfer && num_of_ant != 1,
-+				  "stbc %d bfer %d",
-+				  rate->stbc, rate->bfer);
- 		} else if (nss == 2) {
- 			rate->type = LQ_HT_MIMO2;
- 			WARN_ON_ONCE(num_of_ant != 2);
-@@ -829,7 +833,9 @@ static int rs_rate_from_ucode_rate(const u32 ucode_rate,
- 
- 		if (nss == 1) {
- 			rate->type = LQ_VHT_SISO;
--			WARN_ON_ONCE(!rate->stbc && num_of_ant != 1);
-+			WARN_ONCE(!rate->stbc && !rate->bfer && num_of_ant != 1,
-+				  "stbc %d bfer %d",
-+				  rate->stbc, rate->bfer);
- 		} else if (nss == 2) {
- 			rate->type = LQ_VHT_MIMO2;
- 			WARN_ON_ONCE(num_of_ant != 2);
-@@ -1008,13 +1014,32 @@ static void rs_get_lower_rate_down_column(struct iwl_lq_sta *lq_sta,
- 		rs_get_lower_rate_in_column(lq_sta, rate);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3b5aaa3..c220c51 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -766,6 +766,26 @@ static int ath10k_monitor_stop(struct ath10k *ar)
+ 	return 0;
  }
  
--/* Check if both rates are identical */
-+/* Check if both rates are identical
-+ * allow_ant_mismatch enables matching a SISO rate on ANT_A or ANT_B
-+ * with a rate indicating STBC/BFER and ANT_AB.
-+ */
- static inline bool rs_rate_equal(struct rs_rate *a,
--				 struct rs_rate *b)
--{
-+				 struct rs_rate *b,
-+				 bool allow_ant_mismatch)
-+
++static bool ath10k_mac_should_disable_promisc(struct ath10k *ar)
 +{
-+	bool ant_match = (a->ant == b->ant) && (a->stbc == b->stbc) &&
-+		(a->bfer == b->bfer);
++	struct ath10k_vif *arvif;
 +
-+	if (allow_ant_mismatch) {
-+		if (a->stbc || a->bfer) {
-+			WARN_ONCE(a->ant != ANT_AB, "stbc %d bfer %d ant %d",
-+				  a->stbc, a->bfer, a->ant);
-+			ant_match |= (b->ant == ANT_A || b->ant == ANT_B);
-+		} else if (b->stbc || b->bfer) {
-+			WARN_ONCE(b->ant != ANT_AB, "stbc %d bfer %d ant %d",
-+				  b->stbc, b->bfer, b->ant);
-+			ant_match |= (a->ant == ANT_A || a->ant == ANT_B);
-+		}
++	if (!(ar->filter_flags & FIF_PROMISC_IN_BSS))
++		return true;
++
++	if (!ar->num_started_vdevs)
++		return false;
++
++	list_for_each_entry(arvif, &ar->arvifs, list)
++		if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
++			return false;
++
++	ath10k_dbg(ar, ATH10K_DBG_MAC,
++		   "mac disabling promiscuous mode because vdev is started\n");
++	ar->filter_flags &= ~FIF_PROMISC_IN_BSS;
++	return true;
++}
++
+ static int ath10k_monitor_recalc(struct ath10k *ar)
+ {
+ 	bool should_start;
+@@ -773,7 +793,7 @@ static int ath10k_monitor_recalc(struct ath10k *ar)
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+ 	should_start = ar->monitor ||
+-		       ar->filter_flags & FIF_PROMISC_IN_BSS ||
++		       !ath10k_mac_should_disable_promisc(ar);
+ 		       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MAC,
+@@ -910,7 +930,7 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+ 	struct ath10k *ar = arvif->ar;
+ 	struct cfg80211_chan_def *chandef = &ar->chandef;
+ 	struct wmi_vdev_start_request_arg arg = {};
+-	int ret = 0;
++	int ret = 0, ret2;
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -969,6 +989,16 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+ 	ar->num_started_vdevs++;
+ 	ath10k_recalc_radar_detection(ar);
+ 
++	ret = ath10k_monitor_recalc(ar);
++	if (ret) {
++		ath10k_warn(ar, "mac failed to recalc monitor for vdev %i restart %d: %d\n",
++			    arg.vdev_id, restart, ret);
++		ret2 = ath10k_vdev_stop(arvif);
++		if (ret2)
++			ath10k_warn(ar, "mac failed to stop vdev %i restart %d: %d\n",
++				    arg.vdev_id, restart, ret2);
 +	}
 +
- 	return (a->type == b->type) && (a->bw == b->bw) && (a->sgi == b->sgi) &&
--		(a->ldpc == b->ldpc) && (a->index == b->index) &&
--		(a->ant == b->ant);
-+		(a->ldpc == b->ldpc) && (a->index == b->index) && ant_match;
+ 	return ret;
  }
  
- /* Check if both rates share the same column */
-@@ -1023,7 +1048,7 @@ static inline bool rs_rate_column_match(struct rs_rate *a,
- {
- 	bool ant_match;
- 
--	if (a->stbc)
-+	if (a->stbc || a->bfer)
- 		ant_match = (b->ant == ANT_A || b->ant == ANT_B);
- 	else
- 		ant_match = (a->ant == b->ant);
-@@ -1061,6 +1086,8 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	u32 tx_resp_hwrate = (uintptr_t)info->status.status_driver_data[1];
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	struct iwl_lq_sta *lq_sta = &mvmsta->lq_sta;
-+	bool allow_ant_mismatch = mvm->fw->ucode_capa.api[0] &
-+		IWL_UCODE_TLV_API_LQ_SS_PARAMS;
- 
- 	/* Treat uninitialized rate scaling data same as non-existing. */
- 	if (!lq_sta) {
-@@ -1110,7 +1137,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	rs_rate_from_ucode_rate(tx_resp_hwrate, info->band, &tx_resp_rate);
- 
- 	/* Here we actually compare this rate to the latest LQ command */
--	if (!rs_rate_equal(&tx_resp_rate, &lq_rate)) {
-+	if (!rs_rate_equal(&tx_resp_rate, &lq_rate, allow_ant_mismatch)) {
- 		IWL_DEBUG_RATE(mvm,
- 			       "initial tx resp rate 0x%x does not match 0x%x\n",
- 			       tx_resp_hwrate, lq_hwrate);
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.h b/drivers/net/wireless/iwlwifi/mvm/rs.h
-index dc4ef3d..4cb278f 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.h
-@@ -170,6 +170,7 @@ struct rs_rate {
- 	bool sgi;
- 	bool ldpc;
- 	bool stbc;
-+	bool bfer;
- };
- 
- 
 -- 
-1.9.1
+1.7.9.5
 
