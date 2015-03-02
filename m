@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:9914 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754306AbbCCTtW (ORCPT
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:37495 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824AbbCBJXy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 14:49:22 -0500
-Message-ID: <54F6103C.5090108@broadcom.com> (sfid-20150303_204938_105002_5A747526)
-Date: Tue, 3 Mar 2015 20:49:16 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Mon, 2 Mar 2015 04:23:54 -0500
+Received: by wivr20 with SMTP id r20so13225552wiv.2
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 01:23:53 -0800 (PST)
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
-	Pat Erley <pat-lkml@erley.org>, <brudley@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>, <meuleman@broadcom.com>,
-	<linville@tuxdriver.com>, <pieterpg@broadcom.com>,
-	<hdegoede@redhat.com>, <wens@csie.org>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
-References: <54DC1D7D.5050407@linux.intel.com>	<54E0072D.3020802@linux.intel.com> <54E01209.7010300@erley.org>	<54E05961.7000201@broadcom.com>	<878ufzi5s3.fsf@kamboji.qca.qualcomm.com>	<54E19DA1.4030407@linux.intel.com> <54E1B9F4.6090302@broadcom.com>	<54F02271.5070202@linux.intel.com> <54F03412.2050902@broadcom.com> <874mq3bfnu.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <874mq3bfnu.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1425287785.1906.0.camel@sipsolutions.net>
+References: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
+	<1425287344-30594-2-git-send-email-michal.kazior@tieto.com>
+	<1425287785.1906.0.camel@sipsolutions.net>
+Date: Mon, 2 Mar 2015 10:23:53 +0100
+Message-ID: <CA+BoTQnrS74yx=V_sPvTgzkoZeWbOBFawqXZMAv6oEhUypmoQA@mail.gmail.com> (sfid-20150302_102359_087675_0642F7A9)
+Subject: Re: [PATCH 2/3] ath10k: always save/restore pci config space
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/02/15 16:08, Kalle Valo wrote:
-> Arend van Spriel<arend@broadcom.com>  writes:
->
->>> Now that there is not 3.20 version. My understanding is that this
->>> patch will be in linus' tree 4.1-rc1, right?
+On 2 March 2015 at 10:16, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2015-03-02 at 10:09 +0100, Michal Kazior wrote:
+>> The check isn't really necessary and couldn't even
+>> work because becase pci_restore_state() restores
+>> only first 64 bytes of PCI configuration space.
 >>
->> Yes. It will go into linux-next first, which you can consider to be an
->> incubator where all stuff for the next release is integrated. Stuff
->> will be added there until 4.0 is released. At that moment the merge
->> window starts which moves all the stuff from linux-next into the
->> mainline linux repo to prepare 4.1-rc1.
->>
->> Now regarding your patch I have to give a heads up. Our pending
->> patches have been applied by Kalle and includes similar fix.
+>> This is necessary for future WoWLAN support.
 >
-> Yeah, Zhonghui's patch doesn't apply anymore. There is similar code in
-> wireless-drivers-next but still a bit different. So what should we do?
-> Is the driver ok now?
+>> +     pci_save_state(pdev);
+>> +     pci_disable_device(pdev);
+>
+> I believe the whole thing isn't necessary at all since the kernel's PCIe
+> layer will take care of it.
 
-The idea of Zhonghui's patch was to avoid entering suspend and resume 
-callbacks twice. The current behavior is same as his patch intended so 
-yes the driver is ok (pending undiscovered bugs :-p ).
+You mean only the pci_save_state() and pci_disable_device() or, the
+resume counterpart as well? Hmm.
 
-Regards,
-Arend
+Earlier the resume counterpart didn't do any restore stuff and the
+device ended up pretty confused..
+
+
+Michał
