@@ -1,150 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:37530 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753328AbbCIIqb (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37504 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753894AbbCBLcd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 04:46:31 -0400
-Received: from [117.207.78.0] (port=10150 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YUtKY-0033Ry-DS
-	for linux-wireless@vger.kernel.org; Mon, 09 Mar 2015 04:46:30 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/5] ath9k: Check allowed PCIE powersave configuration
-Date: Mon,  9 Mar 2015 14:20:09 +0530
-Message-Id: <1425891010-21522-5-git-send-email-sujith@msujith.org> (sfid-20150309_094642_559520_F6526C60)
-In-Reply-To: <1425891010-21522-1-git-send-email-sujith@msujith.org>
-References: <1425891010-21522-1-git-send-email-sujith@msujith.org>
+	Mon, 2 Mar 2015 06:32:33 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH V4 1/2] ath10k: Move ath10k_vdev_stop() up before ath10k_vdev_start_restart()
+Date: Mon, 2 Mar 2015 16:57:59 +0530
+Message-ID: <1425295680-2269-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150302_123237_391042_A3461A94)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+This patches does not modify any functionality. Just a code move
+so that ath10k_vdev_stop() can be used in ath10k_vdev_start_restart()
+for any failure cases which involves vdev_stop().
 
-When assigning the initvals for PCIE sleep/awake
-registers, check the configuration that has been
-assigned to pll_pwrsave during initialization. Also,
-display a warning if we don't have valid arrays.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_hw.c | 73 +++++++++++++++++++++++-------
- 1 file changed, 57 insertions(+), 16 deletions(-)
+V2:
+     - Call ath10k_vdev_stop() when ath10k_monitor_recalc() failed.
+       This results in code move done in patch 1.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index ea33f8d..df176e6 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -231,10 +231,20 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 			       ar9462_2p1_modes_fast_clock);
- 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
- 			       ar9462_2p1_baseband_core_txfir_coeff_japan_2484);
--		INIT_INI_ARRAY(&ah->iniPcieSerdes,
--			       ar9462_2p1_pciephy_clkreq_disable_L1);
--		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
--			       ar9462_2p1_pciephy_clkreq_disable_L1);
+V3:
+     - Make change specific to AP mode and update the commit log.
+
+V4:
+     - Rename the helper which is used to check is promisc mode is
+       to be disbled.
+     - Add warn when ath10k_monitor_recalc() and ath10k_vdev_stop()
+       fails.
+     
+ drivers/net/wireless/ath/ath10k/mac.c |   66 ++++++++++++++++-----------------
+ 1 file changed, 33 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0f39af7..3b5aaa3 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -872,6 +872,39 @@ static void ath10k_recalc_radar_detection(struct ath10k *ar)
+ 	}
+ }
+ 
++static int ath10k_vdev_stop(struct ath10k_vif *arvif)
++{
++	struct ath10k *ar = arvif->ar;
++	int ret;
 +
-+		/* Awake -> Sleep Setting */
-+		if ((ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) &&
-+		    (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_ON_D3)) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+				       ar9462_2p1_pciephy_clkreq_disable_L1);
-+		}
++	lockdep_assert_held(&ar->conf_mutex);
 +
-+		/* Sleep -> Awake Setting */
-+		if ((ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) &&
-+		    (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_ON_D0)) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+				       ar9462_2p1_pciephy_clkreq_disable_L1);
-+		}
- 	} else if (AR_SREV_9462_20(ah)) {
- 
- 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE], ar9462_2p0_mac_core);
-@@ -262,11 +272,18 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 				ar9462_2p0_common_rx_gain);
- 
- 		/* Awake -> Sleep Setting */
--		INIT_INI_ARRAY(&ah->iniPcieSerdes,
--			       ar9462_2p0_pciephy_clkreq_disable_L1);
-+		if ((ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) &&
-+		    (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_ON_D3)) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+				       ar9462_2p0_pciephy_clkreq_disable_L1);
-+		}
++	reinit_completion(&ar->vdev_setup_done);
 +
- 		/* Sleep -> Awake Setting */
--		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
--			       ar9462_2p0_pciephy_clkreq_disable_L1);
-+		if ((ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) &&
-+		    (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_ON_D0)) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+				       ar9462_2p0_pciephy_clkreq_disable_L1);
-+		}
- 
- 		/* Fast clock modal settings */
- 		INIT_INI_ARRAY(&ah->iniModesFastClock,
-@@ -456,10 +473,19 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			       ar9565_1p1_Modes_lowest_ob_db_tx_gain_table);
- 
--		INIT_INI_ARRAY(&ah->iniPcieSerdes,
--			       ar9565_1p1_pciephy_clkreq_disable_L1);
--		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
--			       ar9565_1p1_pciephy_clkreq_disable_L1);
-+		/* Awake -> Sleep Setting */
-+		if ((ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) &&
-+		    (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_ON_D3)) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+				       ar9565_1p1_pciephy_clkreq_disable_L1);
-+		}
-+
-+		/* Sleep -> Awake Setting */
-+		if ((ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) &&
-+		    (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_ON_D0)) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+				       ar9565_1p1_pciephy_clkreq_disable_L1);
-+		}
- 
- 		INIT_INI_ARRAY(&ah->iniModesFastClock,
- 				ar9565_1p1_modes_fast_clock);
-@@ -491,10 +517,19 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
- 		INIT_INI_ARRAY(&ah->iniModesTxGain,
- 			       ar9565_1p0_Modes_lowest_ob_db_tx_gain_table);
- 
--		INIT_INI_ARRAY(&ah->iniPcieSerdes,
--			       ar9565_1p0_pciephy_clkreq_disable_L1);
--		INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
--			       ar9565_1p0_pciephy_clkreq_disable_L1);
-+		/* Awake -> Sleep Setting */
-+		if ((ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) &&
-+		    (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_ON_D3)) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdes,
-+				       ar9565_1p0_pciephy_clkreq_disable_L1);
-+		}
-+
-+		/* Sleep -> Awake Setting */
-+		if ((ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) &&
-+		    (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_ON_D0)) {
-+			INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
-+				       ar9565_1p0_pciephy_clkreq_disable_L1);
-+		}
- 
- 		INIT_INI_ARRAY(&ah->iniModesFastClock,
- 				ar9565_1p0_modes_fast_clock);
-@@ -1130,6 +1165,12 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
- 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
- 
- 	ar9003_hw_init_mode_regs(ah);
-+
-+	if (AR_SREV_9003_PCOEM(ah)) {
-+		WARN_ON(!ah->iniPcieSerdes.ia_array);
-+		WARN_ON(!ah->iniPcieSerdesLowPower.ia_array);
++	ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
++	if (ret) {
++		ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
++			    arvif->vdev_id, ret);
++		return ret;
 +	}
 +
- 	priv_ops->init_mode_gain_regs = ar9003_hw_init_mode_gain_regs;
- 	priv_ops->init_hang_checks = ar9003_hw_init_hang_checks;
- 	priv_ops->detect_mac_hang = ar9003_hw_detect_mac_hang;
++	ret = ath10k_vdev_setup_sync(ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
++			    arvif->vdev_id, ret);
++		return ret;
++	}
++
++	WARN_ON(ar->num_started_vdevs == 0);
++
++	if (ar->num_started_vdevs != 0) {
++		ar->num_started_vdevs--;
++		ath10k_recalc_radar_detection(ar);
++	}
++
++	return ret;
++}
++
+ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
+ {
+ 	struct ath10k *ar = arvif->ar;
+@@ -949,39 +982,6 @@ static int ath10k_vdev_restart(struct ath10k_vif *arvif)
+ 	return ath10k_vdev_start_restart(arvif, true);
+ }
+ 
+-static int ath10k_vdev_stop(struct ath10k_vif *arvif)
+-{
+-	struct ath10k *ar = arvif->ar;
+-	int ret;
+-
+-	lockdep_assert_held(&ar->conf_mutex);
+-
+-	reinit_completion(&ar->vdev_setup_done);
+-
+-	ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
+-			    arvif->vdev_id, ret);
+-		return ret;
+-	}
+-
+-	ret = ath10k_vdev_setup_sync(ar);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to synchronize setup for vdev %i stop: %d\n",
+-			    arvif->vdev_id, ret);
+-		return ret;
+-	}
+-
+-	WARN_ON(ar->num_started_vdevs == 0);
+-
+-	if (ar->num_started_vdevs != 0) {
+-		ar->num_started_vdevs--;
+-		ath10k_recalc_radar_detection(ar);
+-	}
+-
+-	return ret;
+-}
+-
+ static int ath10k_mac_setup_bcn_p2p_ie(struct ath10k_vif *arvif,
+ 				       struct sk_buff *bcn)
+ {
 -- 
-2.3.1
+1.7.9.5
 
