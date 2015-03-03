@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:35188 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750853AbbCKGK5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32351 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756540AbbCCMXu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 02:10:57 -0400
-Received: by wggy19 with SMTP id y19so6791187wgg.2
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 23:10:56 -0700 (PDT)
+	Tue, 3 Mar 2015 07:23:50 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [RFC 2/2] mac80211: store low ack threshold in bss config
+Date: Tue, 3 Mar 2015 17:53:03 +0530
+Message-ID: <1425385383-25482-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150303_132414_408422_0D5F0F3D)
+In-Reply-To: <1425385383-25482-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1425385383-25482-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1426028412-17438-1-git-send-email-greearb@candelatech.com>
-References: <1426028412-17438-1-git-send-email-greearb@candelatech.com>
-Date: Wed, 11 Mar 2015 07:10:55 +0100
-Message-ID: <CALhHN=q0C0KWzTrjCztxcjLUjHKN8CXfBJG7o7AyU4gZgBfGRg@mail.gmail.com> (sfid-20150311_071100_691815_038B715A)
-Subject: Re: [PATCH] iw: Allow configuring empty legacy and ht ratesets.
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 March 2015 at 00:00,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> This allows one to configure exactly one rate for drivers
-> such as ath10k that will only allow a single rate to be
-> configured.
->
+Store the low ack threshold configured by user in BSS config.
+This will be used by driver for triggering low ack event whenever
+the station is not ACKing the number of frames mentioned in
+threshold.
 
-Hello,
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ include/net/mac80211.h | 3 +++
+ net/mac80211/cfg.c     | 1 +
+ 2 files changed, 4 insertions(+)
 
-But iw already support setting single rate with ath10k.
-This is example from ath10k commit log:
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d52914b..ec769dd 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -383,6 +383,8 @@ enum ieee80211_rssi_event {
+  *	userspace), whereas TPC is disabled if %txpower_type is set to
+  *	NL80211_TX_POWER_FIXED (use value configured from userspace)
+  * @p2p_noa_attr: P2P NoA attribute for P2P powersave
++ * @low_ack_threshold: Number of consecutive packet loss to trigger low ack
++ *	event by driver.
+  */
+ struct ieee80211_bss_conf {
+ 	const u8 *bssid;
+@@ -419,6 +421,7 @@ struct ieee80211_bss_conf {
+ 	int txpower;
+ 	enum nl80211_tx_power_setting txpower_type;
+ 	struct ieee80211_p2p_noa_attr p2p_noa_attr;
++	int low_ack_threshold;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index dd4ff36..514d3ab 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -772,6 +772,7 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 	sdata->vif.bss_conf.dtim_period = params->dtim_period;
+ 	sdata->vif.bss_conf.enable_beacon = true;
++	sdata->vif.bss_conf.low_ack_threshold = params->low_ack_threshold;
+ 
+ 	sdata->vif.bss_conf.ssid_len = params->ssid_len;
+ 	if (params->ssid_len)
+-- 
+2.3.1
 
-    Example:
-    iw wlanX set bitrates legacy-5 ht-mcs-5 vht-mcs-5 2:9
-    will setup VHT, nss=2, mcs=9
-
-    iw wlanX set bitrates legacy-5 18 ht-mcs-5 vht-mcs-5
-    will setup legacy, 18Mbps
-
-    iw wlanX set bitrates legacy-5 ht-mcs-5 3 vht-mcs-5
-    will setup HT, nss=1, mcs=3
-
-    iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9
-    will setup nss=1
-
-    iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9 2:0-9
-    will setup nss=2
-
-BR
-Janusz
