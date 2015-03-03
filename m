@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:21490 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932583AbbCQLZh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51951 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756971AbbCCPoe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 07:25:37 -0400
-From: Avinash Patil <patila@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Li Long <longli@marvell.com>
-Date: Tue, 17 Mar 2015 04:25:29 -0700
-Subject: RE: [PATCH 1/3] mwifiex: add cfg80211 set_default_mgmt_key handler
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC667483FF70@SC-VEXCH2.marvell.com> (sfid-20150317_122555_061504_E55F5454)
-References: <1423764954-30412-1-git-send-email-patila@marvell.com>
-	 (sfid-20150212_134627_640778_2A1810BC)
- <1423850815.2936.4.camel@sipsolutions.net>
-In-Reply-To: <1423850815.2936.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 3 Mar 2015 10:44:34 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jonas Gorski <jogo@openwrt.org>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>, stable@vger.kernel.org
+Subject: Re: [PATCH][FIX][RESEND] b43: fix support for 5 GHz only BCM43228 model
+References: <1424103816-10566-1-git-send-email-zajec5@gmail.com>
+	<1425313135-28225-1-git-send-email-zajec5@gmail.com>
+	<87k2yy86ld.fsf@kamboji.qca.qualcomm.com>
+	<CAOiHx==ZbVCsymBFhn60nBU2-gHU2HPdp1T9xdZpK9OVjAzFUw@mail.gmail.com>
+Date: Tue, 03 Mar 2015 17:44:25 +0200
+In-Reply-To: <CAOiHx==ZbVCsymBFhn60nBU2-gHU2HPdp1T9xdZpK9OVjAzFUw@mail.gmail.com>
+	(Jonas Gorski's message of "Tue, 3 Mar 2015 16:38:54 +0100")
+Message-ID: <87fv9m84rq.fsf@kamboji.qca.qualcomm.com> (sfid-20150303_164438_454080_0DCB3D4A)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBb
-bWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IEZyaWRheSwgRmVicnVh
-cnkgMTMsIDIwMTUgMTE6MzcgUE0NCj4gVG86IEF2aW5hc2ggUGF0aWwNCj4gQ2M6IGxpbnV4LXdp
-cmVsZXNzQHZnZXIua2VybmVsLm9yZzsgQW1pdGt1bWFyIEthcndhcjsgQ2F0aHkgTHVvOyBYaW5t
-aW5nIEh1Ow0KPiBMaSBMb25nDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8zXSBtd2lmaWV4OiBh
-ZGQgY2ZnODAyMTEgc2V0X2RlZmF1bHRfbWdtdF9rZXkgaGFuZGxlcg0KPiANCj4gT24gVGh1LCAy
-MDE1LTAyLTEyIGF0IDIzOjQ1ICswNTMwLCBBdmluYXNoIFBhdGlsIHdyb3RlOg0KPiA+IEZyb206
-IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4NCj4gPiBJdCBpcyBvYnNlcnZlZCB0
-aGF0IGhvc3RhcGQgZmFpbGVkIHRvIHNldHVwIHdpdGggbWFuYWdlbWVudCBmcmFtZQ0KPiA+IHBy
-b3RlY3Rpb24gbW9kZSBlbmFibGVkIHdoZW4gdXNpbmcgbXdpZmlleC4NCj4gPg0KPiA+IFRoaXMg
-aXMgYmVjYXVzZSBob3N0YXBkIHdpbGwgdHJ5IHRvIGluc3RhbGwgSUdUSyB1c2luZw0KPiA+IGNm
-ZzgwMjExIHNldF9kZWZhdWx0X21nbXRfa2V5IGhhbmRsZXIuDQo+ID4NCj4gPiB3ZSBoYXZlIGFs
-cmVhZHkgc3VwcG9ydCBJR1RLIGluc3RhbGwgaW4gc2V0X2tleSBoYW5kbGVyLCBzbyBqdXN0IHdv
-cmsNCj4gPiBhcm91bmQgdGhpcyBpc3N1ZSBieSBhZGQgYW4gZW1wdHkgY2ZnODAyMTFfc2V0X2Rl
-ZmF1bHRfbWdtdF9rZXkgaGFuZGxlci4NCj4gDQo+IEkgYmVsaWV2ZSB0aGF0IHRoaXMgaXMgaW5j
-b3JyZWN0IHNpbmNlIHRoZSBrZXkgc2hvdWxkIG9ubHkgYmUgaW5zdGFsbGVkIGZvciBUWA0KPiBh
-ZnRlciB0aGlzIGhhbmRsZXIsIG5vdCBpbiB0aGUgc2V0X2tleSBoYW5kbGVyLiBUaGlzIHNob3Vs
-ZCBtYWtlIGEgZGlmZmVyZW5jZQ0KPiBpbiB0aGUgY2FzZSBvZiByZWtleWluZz8gUGVyaGFwcyBo
-b3N0YXBkIGRvZXNuJ3QgYWN0dWFsbHkgcHJvZ3JhbSB0aGUga2V5DQo+IHVudGlsIHJla2V5aW5n
-IHdpdGggYWxsIHN0YXRpb25zIGZpbmlzaGVzIHRob3VnaC4NCiANCkkgYmVsaWV2ZSB0aGF0IHNl
-dF9kZWZ1YWx0X21nbXRfa2V5IGFuZCBjb3JyZXNwb25kaW5nIGNoYW5nZXMgaW4gaG9zdGFwZCAm
-IGNmZzgwMjExIGFyZSBkZXNpZ25lZCB3aXRoIGZvY3VzIG9uIG1hYzgwMjExLg0KT3VyIGRlc2ln
-biBpcyBhIGJpdCBkaWZmZXJlbnQgaW4gYSB3YXkgYWxsIFBNRiBpcyBoYW5kbGVkIGluIEZXOyBh
-bHNvIHdlIGRvbid0IHN1cHBvcnQgdHdvIHBhaXIgb2YgR1RLL0lHVEtzLg0KV2UgYWxyZWFkeSBo
-YXZlIGluc3RhbGxlZCBJR1RLIHRvIEZXIGluIGFkZF9rZXkgaGFuZGxlci4NCg0KPiBqb2hhbm5l
-cw0KDQo=
+Jonas Gorski <jogo@openwrt.org> writes:
+
+> On Tue, Mar 3, 2015 at 4:05 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> RESEND: It seems patchwork didn't catch my patch. Trying again.
+>>
+>> Odd, I still don't see it in patchwork. I wonder what caused that?
+>
+> I also see it neither in my b43-dev nor linux-wireless archives, nor
+> does google find it (only your reply).
+
+Ok, that explains why patchwork didn't catch it (it scans patches from
+the linux-wireless mailing list). I already applied the patch to
+wireless-drivers.git but I would appreciate if people would still review
+it:
+
+commit 0ff66cffde47de51c155ebdd2356403276c04cc4
+Author: Rafał Miłecki <zajec5@gmail.com>
+Date:   Mon Mar 2 17:18:55 2015 +0100
+
+    b43: fix support for 5 GHz only BCM43228 model
+    
+    It was incorrectly detected as 2 GHz device.
+    
+    Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+    Cc: stable@vger.kernel.org # 3.17+
+    Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index ccbdb05b28cd..75345c1e8c34 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -5370,6 +5370,7 @@ static void b43_supported_bands(struct b43_wldev *dev, bool *have_2ghz_phy,
+ 	case 0x432a: /* BCM4321 */
+ 	case 0x432d: /* BCM4322 */
+ 	case 0x4352: /* BCM43222 */
++	case 0x435a: /* BCM43228 */
+ 	case 0x4333: /* BCM4331 */
+ 	case 0x43a2: /* BCM4360 */
+ 	case 0x43b3: /* BCM4352 */
+
+
+-- 
+Kalle Valo
