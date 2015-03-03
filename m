@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44725 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932332AbbCBVWe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 16:22:34 -0500
-Date: Mon, 2 Mar 2015 22:22:32 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, ArikX Nemtsov <arik@wizery.com>
-Subject: Re: [PATCH v9 2/3] cfg80211: Add API to change the indoor
-	regulatory setting
-Message-ID: <20150302212232.GW8749@wotan.suse.de> (sfid-20150302_222246_590583_B1500D04)
-References: <1425189749-15271-1-git-send-email-ilan.peer@intel.com> <1425189749-15271-2-git-send-email-ilan.peer@intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36641 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751592AbbCCLwV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 06:52:21 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2015-03-01
+References: <1425238186.30202.5.camel@egrumbacBox>
+Date: Tue, 03 Mar 2015 13:52:14 +0200
+In-Reply-To: <1425238186.30202.5.camel@egrumbacBox> (Emmanuel Grumbach's
+	message of "Sun, 1 Mar 2015 19:29:45 +0000")
+Message-ID: <87r3t69u35.fsf@kamboji.qca.qualcomm.com> (sfid-20150303_125224_669355_E2D2630E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425189749-15271-2-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 01, 2015 at 01:02:28AM -0500, Ilan Peer wrote:
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index c24c8bf..f88d512 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -128,9 +128,12 @@ static int reg_num_devs_support_basehint;
->   * State variable indicating if the platform on which the devices
->   * are attached is operating in an indoor environment. The state variable
->   * is relevant for all registered devices.
-> - * (protected by RTNL)
->   */
->  static bool reg_is_indoor;
-> +static spinlock_t reg_indoor_lock;
-> +
-> +/* Used to track the userspace process controlling the indoor setting */
-> +static u32 reg_is_indoor_portid;
->  
->  static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
->  {
-> @@ -2288,15 +2291,52 @@ int regulatory_hint_user(const char *alpha2,
->  	return 0;
->  }
->  
-> -int regulatory_hint_indoor_user(void)
-> +int regulatory_hint_indoor(bool is_indoor, u32 portid)
->  {
-> +	spin_lock(&reg_indoor_lock);
-> +
-> +	/* Other user space processes cannot override the current owner */
-> +	if (reg_is_indoor_portid && reg_is_indoor_portid != portid) {
-> +		spin_unlock(&reg_indoor_lock);
-> +		return -EPERM;
-> +	}
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-I am not satisfied with this solution to conflict. I don't want to think
-about the solution to this for you -- please address the conflicts with
-sensible solutions.
+> Hi Kalle,
+>
+> This is a pull request for 4.1. As usual the details are in the tag.
+> Please note that I have another set of 30-ish patch already after this
+> pull request. A dependency in mac80211 was solved, so I can now finally
+> send lots of work that has been made long ago. But that's for the next
+> pull request.
+>
+> I also have bits for 4.0 but that will wait since your tree isn't ready
+> yet for accepting patches for 4.0.
+>
+> Thanks and let me know if you have issues!
+>
+>
+> The following changes since commit f5af19d10d151c5a2afae3306578f485c244db25:
+>
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2015-02-17 17:41:19 -0800)
+>
+> are available in the git repository at:
+>
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2015-03-01
 
-> +
-> +	if (reg_is_indoor == is_indoor) {
-> +		spin_unlock(&reg_indoor_lock);
-> +		return 0;
-> +	}
+Thanks, pulled.
 
-For instance this is a solution to agreement, but yet the above
-only allows for one wiphy to set this setting and limiting the
-wireless core. That's rather silly. We've addressed bigger
-conflicts than this for regulatory -- I have confidence you
-can address this well.
-  Luis
+-- 
+Kalle Valo
