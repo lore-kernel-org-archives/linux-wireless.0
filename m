@@ -1,108 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:48082 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751399AbbCPIxy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 04:53:54 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath10k: harmonize error case handling in ath10k_core_start
-Date: Mon, 16 Mar 2015 04:48:57 -0400
-Message-Id: <1426495737-18691-1-git-send-email-hofrat@osadl.org> (sfid-20150316_095417_281351_8B06CDD7)
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:56906 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752603AbbCCLnH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 06:43:07 -0500
+Date: Tue, 3 Mar 2015 12:43:02 +0100
+From: Florian Westphal <fw@strlen.de>
+To: David Miller <davem@davemloft.net>
+Cc: eric.dumazet@gmail.com, fw@strlen.de, netdev@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
+Message-ID: <20150303114302.GE9762@breakpoint.cc> (sfid-20150303_124316_999232_49793CB9)
+References: <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
+ <20150302.171747.1423128180512348489.davem@davemloft.net>
+ <1425355325.5130.157.camel@edumazet-glaptop2.roam.corp.google.com>
+ <20150302.230534.2012113468290945834.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150302.230534.2012113468290945834.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All of the bringup/init functions called in ath10k_core_start return 0 
-on success and != 0 on failure. ath10k_wmi_wait_for_service_ready(),
-ath10k_wmi_wait_for_unified_ready() and their call sites were adjusted
-to fit this model.
-The return type of wait_for_completion_timeout is unsigned long not int so
-ath10k_wmi_wait_for_service_ready() and ath10k_wmi_wait_for_unified_ready()
-were fixed up accordingly.
+David Miller <davem@davemloft.net> wrote:
+> From: Eric Dumazet <eric.dumazet@gmail.com>
+> Date: Mon, 02 Mar 2015 20:02:05 -0800
+> 
+> > About the GRO layout change, reason why 'struct sk_buff *last;' is at
+> > the end of struct napi_gro_cb is that this field is not used in fast
+> > path.
+> 
+> Understood.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+Moved it back to end, thanks!
 
-This was initially in two separate patches which were joined as suggested
-by Sergei Shtylyov <sergei.shtylyov@cogentembedded.com> to ensure that it
-will not break bisection - thanks!
+> While reviewing this I noticed that the jiffies timestamp in GRO cb
+> could really be u32 if we want instead of full "unsigned long".
 
-Patch was only compile test with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
+Made it an u16 at the moment -- then __packed is no longer needed
+and it fits in 40 bytes.
 
-Patch is against 4.0-rc3 (localversion-next is -next-20150316)
+> > Note : We could try to use one bit in skb to advertise zero shinfo(skb).
+> > 
+> > Many skbs have a zeroed shinfo() (but shinfo->dataref == 1) , and
+> > dereferencing skb_shinfo adds a cache line miss. 
+> > 
+> > -> We could avoid memset(shinfo, 0, offsetof(struct skb_shared_info,
+> > dataref)) & atomic_set(&shinfo->dataref, 1); 
+> > 
+> >  in alloc_skb() and friends completely.
+> > 
+> > Unfortunately this kind of change would be quite invasive...
+>
+> Right, all these kinds of things touch everything.
 
- drivers/net/wireless/ath/ath10k/core.c |    6 ++----
- drivers/net/wireless/ath/ath10k/wmi.c  |   20 ++++++++++++--------
- 2 files changed, 14 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c0e454b..e97069f 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1080,9 +1080,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 
- 	if (mode == ATH10K_FIRMWARE_MODE_NORMAL) {
- 		status = ath10k_wmi_wait_for_service_ready(ar);
--		if (status <= 0) {
-+		if (status) {
- 			ath10k_warn(ar, "wmi service ready event not received");
--			status = -ETIMEDOUT;
- 			goto err_hif_stop;
- 		}
- 	}
-@@ -1098,9 +1097,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 	}
- 
- 	status = ath10k_wmi_wait_for_unified_ready(ar);
--	if (status <= 0) {
-+	if (status) {
- 		ath10k_err(ar, "wmi unified ready event not received\n");
--		status = -ETIMEDOUT;
- 		goto err_hif_stop;
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c7ea77e..19ed27a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -884,20 +884,24 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
- 
- int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
- {
--	int ret;
-+	unsigned long time_left;
- 
--	ret = wait_for_completion_timeout(&ar->wmi.service_ready,
--					  WMI_SERVICE_READY_TIMEOUT_HZ);
--	return ret;
-+	time_left = wait_for_completion_timeout(&ar->wmi.service_ready,
-+						WMI_SERVICE_READY_TIMEOUT_HZ);
-+	if (!time_left)
-+		return -ETIMEDOUT;
-+	return 0;
- }
- 
- int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar)
- {
--	int ret;
-+	unsigned long time_left;
- 
--	ret = wait_for_completion_timeout(&ar->wmi.unified_ready,
--					  WMI_UNIFIED_READY_TIMEOUT_HZ);
--	return ret;
-+	time_left = wait_for_completion_timeout(&ar->wmi.unified_ready,
-+						WMI_UNIFIED_READY_TIMEOUT_HZ);
-+	if (!time_left)
-+		return -ETIMEDOUT;
-+	return 0;
- }
- 
- struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len)
--- 
-1.7.10.4
-
+Indeed, but thanks for the hint Eric -- I'll investigate.
