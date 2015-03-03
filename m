@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8705 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752985AbbC3Nl6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 09:41:58 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Sujith Manoharan <sujith@msujith.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 3/4] ath10k: Fix no-ack frame status
-References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
-	<1418226973-13779-3-git-send-email-sujith@msujith.org>
-	<87oarazecg.fsf@kamboji.qca.qualcomm.com>
-	<21646.15326.159197.316821@gargle.gargle.HOWL>
-	<87vblduxlk.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 30 Mar 2015 16:41:48 +0300
-In-Reply-To: <87vblduxlk.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 15 Dec 2014 10:27:19 +0200")
-Message-ID: <87a8yu4n6r.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_154204_378937_FE4C582E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54763 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754839AbbCCJXe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 04:23:34 -0500
+Message-ID: <1425374612.2450.22.camel@sipsolutions.net> (sfid-20150303_102339_042959_041019AB)
+Subject: Re: [PATCH 2/3] mac80211: IBSS fix scan request
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 03 Mar 2015 10:23:32 +0100
+In-Reply-To: <1424533961-3869-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150221_165301_817676_E828A7F3)
+References: <1424533961-3869-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1424533961-3869-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20150221_165301_817676_E828A7F3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Discussion from last December)
+On Sat, 2015-02-21 at 16:52 +0100, Janusz Dziedzic wrote:
+> In case of wide bandwidth scan all channels we have
+> in chandef, not only control one.
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+I think you should say why :)
 
-> Sujith Manoharan <sujith@msujith.org> writes:
->
->> Kalle Valo wrote:
->>> Johannes, are you planning to take this? Or should I take this once the
->>> corresponding mac80211 patch trickles down to my tree?
->>
->> Kalle, can you please pick this one ? I'll rebase and send the ath9k patch
->> to John once he starts merging patches.
->
-> Yes, I'll take this patch once I have the mac80211 dependency in my
-> tree. I marked the patch as "Awaiting Upstream" in patchwork so that I
-> don't forget, hopefully :)
->
-> https://patchwork.kernel.org/patch/5470621/
 
-Naturally I did forget this :) But the patch is in pending branch now.
+> @@ -1381,11 +1450,18 @@ static void ieee80211_sta_find_ibss(struct
+> ieee80211_sub_if_data *sdata)
+>         /* Selected IBSS not found in current scan results - try to
+> scan */
+>         if (time_after(jiffies, ifibss->last_scan_completed +
+>                                         IEEE80211_SCAN_INTERVAL)) {
+> +               struct ieee80211_channel *channels[8];
+> +               unsigned int num = 0;
 
--- 
-Kalle Valo
+no need to initialize 'num' here.
+
+johannes
+
