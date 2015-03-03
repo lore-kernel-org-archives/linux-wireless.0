@@ -1,131 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.inescn.pt ([192.35.246.20]:50758 "EHLO trubo.inescn.pt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754584AbbCMRJA convert rfc822-to-8bit (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:9914 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754306AbbCCTtW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 13:09:00 -0400
-Message-ID: <20150313180825.60326lqvicjf9dvt@horde.inescporto.pt> (sfid-20150313_180907_547894_923F3F83)
-Date: Fri, 13 Mar 2015 18:08:25 +0100
-From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inescporto.pt>
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Specific tx rates with ath10k
-References: <5501DAF7.1000800@candelatech.com>
-	<20150313103721.13586092dzqt9w41@horde.inescporto.pt>
-	<55030897.4050606@candelatech.com>
-In-Reply-To: <55030897.4050606@candelatech.com>
+	Tue, 3 Mar 2015 14:49:22 -0500
+Message-ID: <54F6103C.5090108@broadcom.com> (sfid-20150303_204938_105002_5A747526)
+Date: Tue, 3 Mar 2015 20:49:16 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "Fu, Zhonghui" <zhonghui.fu@linux.intel.com>,
+	Pat Erley <pat-lkml@erley.org>, <brudley@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>, <meuleman@broadcom.com>,
+	<linville@tuxdriver.com>, <pieterpg@broadcom.com>,
+	<hdegoede@redhat.com>, <wens@csie.org>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] brcmfmac: avoid duplicated suspend/resume operation
+References: <54DC1D7D.5050407@linux.intel.com>	<54E0072D.3020802@linux.intel.com> <54E01209.7010300@erley.org>	<54E05961.7000201@broadcom.com>	<878ufzi5s3.fsf@kamboji.qca.qualcomm.com>	<54E19DA1.4030407@linux.intel.com> <54E1B9F4.6090302@broadcom.com>	<54F02271.5070202@linux.intel.com> <54F03412.2050902@broadcom.com> <874mq3bfnu.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <874mq3bfnu.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not on that specific setup. I'm using OpenWRT (ath9k & ath10k) and  
-Ubuntu 14 (ath9k only).
+On 03/02/15 16:08, Kalle Valo wrote:
+> Arend van Spriel<arend@broadcom.com>  writes:
+>
+>>> Now that there is not 3.20 version. My understanding is that this
+>>> patch will be in linus' tree 4.1-rc1, right?
+>>
+>> Yes. It will go into linux-next first, which you can consider to be an
+>> incubator where all stuff for the next release is integrated. Stuff
+>> will be added there until 4.0 is released. At that moment the merge
+>> window starts which moves all the stuff from linux-next into the
+>> mainline linux repo to prepare 4.1-rc1.
+>>
+>> Now regarding your patch I have to give a heads up. Our pending
+>> patches have been applied by Kalle and includes similar fix.
+>
+> Yeah, Zhonghui's patch doesn't apply anymore. There is similar code in
+> wireless-drivers-next but still a bit different. So what should we do?
+> Is the driver ok now?
 
-There are some equipment that send broadcast traffic as unicast in  
-order to reduce airtime. I don't know which, just remembered about  
-that on some published papers.
-I would be very usefull to transmit broadcast traffic as real  
-broadcast traffic at HT/VHT speeds in order to reduce air time, which  
-speed is based on last sent unicast frame speed or build a pessimist  
-rate adaptation algoritm with a sort of link with rate adaptation  
-algoritm used for unicast traffic.
+The idea of Zhonghui's patch was to avoid entering suspend and resume 
+callbacks twice. The current behavior is same as his patch intended so 
+yes the driver is ok (pending undiscovered bugs :-p ).
 
-
-Quoting Ben Greear <greearb@candelatech.com>:
-
-> On 03/13/2015 02:37 AM, Mário Lopes wrote:
->> Hi.
->>
->> You can change to fixed bitrate for all types of traffic for  
->> 802.11g/a modes, even on ath10k:
->> for 2.4 GHz @ 54 Mbit/s - iw dev wiface set bitrates legacy-2.4 54
->> for 5 GHz @ 54 Mbit/s - iw dev wiface set bitrates legacy-5 54
->
-> Have you actually tried this with an ath10k AP and seen that beacons
-> and broadcast go out at 54Mbps?
->
-> If so, please let me know what firmware version you are using.
->
->> Setting fixed speed for HT and VHT modes currently only takes  
->> effect on unicast traffic, I would like that this could be applied  
->> to other types of traffic in a
->> future ath9k/ath10k driver.
->
-> I know beacons won't go out at HT speeds, at least not with the
-> logic that I tried in the firmware...but I have not checked to
-> see if my patch allows setting broadcast to HT speeds....
->
-> Thanks,
-> Ben
->
->>
->>
->> Quoting Ben Greear <greearb@candelatech.com>:
->>
->>> Ath10k firmware gives ability to set specific fixed rate-control rates
->>> for beacons/mgt, multicast, broadcast, and regular traffic.
->>>
->>> The ath10k driver only sets regular traffic currently.
->>>
->>> I had previously hacked my firmware to just set all rate types when
->>> ath10k driver requested to set the rate.
->>>
->>> But, that is not what my customer needs.
->>>
->>> So, I am now planning to add some debugfs entries to allow users to set
->>> beacon/mgt, multicast and broadcast rates individually (I don't  
->>> have time or interest
->>> right now to try patching things top to bottom to try to get this feature
->>> into mac80211 stack or 'iw').
->>>
->>> My question is, for when user just runs a command like this:
->>>
->>> ./local/sbin/iw dev vap1 set bitrates legacy-2.4 6 ht-mcs-2.4
->>>
->>> What is the desired behaviour?
->>>
->>> Set all rates (beacons/mgt, bcast, multicast, regular) to the same
->>> fixed speed, or just a certain subset of these traffic types?
->>>
->>> I can make my firmware do whatever combination is required, and then
->>> users can over-ride the values by using debugfs.....
->>>
->>> As a note, ath10k firmware will NOT send beacons at HT speeds, so
->>> if you fix an HT rate, then firmware will ignore that for the beacons/mgt
->>> ratecontrol type.
->>>
->>> Thanks,
->>> Ben
->>>
->>> --
->>> Ben Greear <greearb@candelatech.com>
->>> Candela Technologies Inc  http://www.candelatech.com
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe  
->>> linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->>
->>
->> ----------------------------------------------------------------
->> This message was sent using IMP, the Internet Messaging Program.
->>
->
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
+Regards,
+Arend
