@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from a.ns.miles-group.at ([95.130.255.143]:65278 "EHLO radon.swed.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752906AbbCMNUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 09:20:09 -0400
-Message-ID: <5502E3FD.50803@nod.at> (sfid-20150313_142031_677896_61AD1F05)
-Date: Fri, 13 Mar 2015 14:19:57 +0100
-From: Richard Weinberger <richard@nod.at>
-MIME-Version: 1.0
-To: Pablo Neira Ayuso <pablo@netfilter.org>
-CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
-	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
-Subject: Re: [PATCH 3/4] netfilter: Fix portid types
-References: <1426246276-15839-1-git-send-email-richard@nod.at> <1426246276-15839-4-git-send-email-richard@nod.at> <20150313130155.GA1044@salvia>
-In-Reply-To: <20150313130155.GA1044@salvia>
-Content-Type: text/plain; charset=windows-1252
+Received: from shards.monkeyblade.net ([149.20.54.216]:56537 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754577AbbCCEFg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 23:05:36 -0500
+Date: Mon, 02 Mar 2015 23:05:34 -0500 (EST)
+Message-Id: <20150302.230534.2012113468290945834.davem@davemloft.net> (sfid-20150303_050544_059522_6D727CC8)
+To: eric.dumazet@gmail.com
+Cc: fw@strlen.de, netdev@vger.kernel.org, johannes@sipsolutions.net,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1425355325.5130.157.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
+	<20150302.171747.1423128180512348489.davem@davemloft.net>
+	<1425355325.5130.157.camel@edumazet-glaptop2.roam.corp.google.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 13.03.2015 um 14:01 schrieb Pablo Neira Ayuso:
-> On Fri, Mar 13, 2015 at 12:31:15PM +0100, Richard Weinberger wrote:
->> The netlink portid is an unsigned integer, use this type
->> also in netfilter.
-> 
-> This small cleanup I can still take it but...
-> 
->> Signed-off-by: Richard Weinberger <richard@nod.at>
->> ---
->>  net/netfilter/nfnetlink_log.c        | 4 ++--
->>  net/netfilter/nfnetlink_queue_core.c | 7 ++++---
->>  2 files changed, 6 insertions(+), 5 deletions(-)
->>
->> diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
->> index 11d85b3..7f00846 100644
->> --- a/net/netfilter/nfnetlink_log.c
->> +++ b/net/netfilter/nfnetlink_log.c
->> @@ -62,7 +62,7 @@ struct nfulnl_instance {
->>  	struct timer_list timer;
->>  	struct net *net;
->>  	struct user_namespace *peer_user_ns;	/* User namespace of the peer process */
->> -	int peer_portid;			/* PORTID of the peer process */
->> +	unsigned int peer_portid;		/* PORTID of the peer process */
-> 
-> I think you have to use u32 for consistency. Other spots use the
-> datatype for the netlink portid.
-> 
-> I think same thing applies to other patches.
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Date: Mon, 02 Mar 2015 20:02:05 -0800
 
-Of course! Will re-spin with u32.
+> About the GRO layout change, reason why 'struct sk_buff *last;' is at
+> the end of struct napi_gro_cb is that this field is not used in fast
+> path.
 
-Thanks,
-//richard
+Understood.
+
+While reviewing this I noticed that the jiffies timestamp in GRO cb
+could really be u32 if we want instead of full "unsigned long".
+
+> Note : We could try to use one bit in skb to advertise zero shinfo(skb).
+> 
+> Many skbs have a zeroed shinfo() (but shinfo->dataref == 1) , and
+> dereferencing skb_shinfo adds a cache line miss. 
+> 
+> -> We could avoid memset(shinfo, 0, offsetof(struct skb_shared_info,
+> dataref)) & atomic_set(&shinfo->dataref, 1); 
+> 
+>  in alloc_skb() and friends completely.
+> 
+> Unfortunately this kind of change would be quite invasive...
+
+Right, all these kinds of things touch everything.
