@@ -1,121 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54385 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751056AbbCMOG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 10:06:28 -0400
-Message-ID: <1426255583.19064.6.camel@redhat.com> (sfid-20150313_150631_762476_BF138485)
-Subject: Re: ARP dropped during WPA handshake
-From: Dan Williams <dcbw@redhat.com>
-To: voncken <cedric.voncken@acksys.fr>
-Cc: "'wim torfs'" <wtorfs@gmail.com>, linux-wireless@vger.kernel.org
-Date: Fri, 13 Mar 2015 09:06:23 -0500
-In-Reply-To: <033201d05d93$5aa1c030$0fe54090$@acksys.fr>
-References: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>
-	 <5502D558.90306@gmail.com> <033201d05d93$5aa1c030$0fe54090$@acksys.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:52582 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751589AbbCCBaF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 20:30:05 -0500
+Message-ID: <54F50E61.7040608@codeaurora.org> (sfid-20150303_023010_648372_96FEF586)
+Date: Mon, 02 Mar 2015 17:29:05 -0800
+From: Peter Oh <poh@codeaurora.org>
+MIME-Version: 1.0
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath: support new FCC DFS Radar Type 1
+References: <1424902634-18275-1-git-send-email-poh@qca.qualcomm.com> <54F04AD5.3030406@neratec.com>
+In-Reply-To: <54F04AD5.3030406@neratec.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-03-13 at 14:41 +0100, voncken wrote:
-> > 
-> > 
-> > On 03/13/2015 12:36 PM, Cedric VONCKEN wrote:
-> > > My test plateforme is very simple, One sta (with openwrt), one AP and
-> > > a computer connected to the AP.
-> > > I launch iperf on the sta and power up the AP.
-> > >
-> > > With wireshark I can observe 1 s delay between the frame EAPOL 4/4 and
-> > > the arp request sent by the sta. I can observe the delay only if my
-> > > sta uses architecture with more 1 cpu.
-> > >
-> > > When the sta received the Authentication response, mac80211 sets the
-> > > iface on UP state. This state allows wpa_supplicant to send the EAPOL
-> > > frame for WPA handshake but other frames are dropped.
-> > >
-> > > If an arp request is sent by the local ip stack during the WPA
-> > > handshake this arp will be dropped and we need to wait the end of arp
-> > > timeout (1 s).
-> > >
-> > > Have you any suggestion / pointer to fix this issue?
-> > >
-> > 
-> > I had a situation where ARP requests were sent and responses were replied,
-> > but the requester did not accept the responses and therefore was
-> continuously
-> > sending request. However, this was in an IBSS and WPA encryption, which is
-> > not really supported if I understand well. RSN worked like a charm,
-> though.
-> > The issue was related to the type of encryption. This could also be an
-> issue
-> > in your case, however, AP is well supported, so hard to tell. I'm not
-> really
-> > a security expert.
-> > 
-> > My point being, you will get better and faster support if you could
-> specify
-> > which encryption protocol you use, the specific parameters, etc.
-> > 
-> > br,
-> > Wim.
-> > 
-> 
-> My platform is very simple. I use 2 equipment. Both equipment are based on
-> mips64 processor, use ATH9K driver and openwrt.
-> One equipment is configured in AP mode with WPA2-PSK, another equipment is
-> configured in station mode. 
-> I can access to the sta through ssh. 
-> 
-> Below, a tcpdump capture from sta.
-> 17:43:12.964096 EAPOL key (3) v2, len 95
-> 17:43:12.998439 EAPOL key (3) v1, len 117
-> 17:43:13.062409 ARP, Request who-has 10.32.61.100 tell 10.32.0.1, length 28
-> 17:43:13.079989 EAPOL key (3) v2, len 151
-> 17:43:13.082764 EAPOL key (3) v1, len 95
-> 17:43:14.062381 ARP, Request who-has 10.32.61.100 tell 10.32.0.1, length 28
-> 17:43:14.127101 ARP, Reply 10.32.61.100 is-at b8:88:e3:45:1d:c6 (oui
-> Unknown), length 46
-> 17:43:14.127123 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length 1470
-> 17:43:14.127136 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length 1470
-> 
-> You can see the ARP request during the WPA Handshake.
 
-During the initial WPA handshake the connection is not fully set up, and
-so no general traffic can (nor should) pass between the STA and AP.
-That includes ARP and any L2/L3+ protocols, except for EAP and wifi
-management packets.
-
-The interface itself must be IFF_UP before it can pass traffic,
-including the WPA handshake traffic.  IFF_UP only means that the
-interface can be configured at the L2 level and the hardware is active,
-it does *not* mean the interface can pass traffic.
-
-Whatever is causing the ARPs shouldn't be doing that yet, and should be
-fixed to use the interface's "operstate" or IFF_LOWER_UP instead of
-IFF_UP.  Only when the supplicant changes the interface's operstate to
-IF_OPER_UP is the interface *actually* ready to pass traffic.  IFF_UP is
-not sufficient.
-
-Dan
-
-
-> 	Any suggestion will be appreciate.
-> 
-> Cedric.
-> > 
-> > > Thanks for your help.
-> > >
-> > > Cedric Voncken
-> > >
-> > >
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe
-> > > linux-wireless" in the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+On 02/27/2015 02:45 AM, Zefir Kurtisi wrote:
+> On 02/25/2015 11:17 PM, Peter Oh wrote:
+>> Add support for new FCC DFS rules released on August 14, 2014.
+>> FCC has added a new radar type named Radar Type 1 and original
+>> Radar Type 1 is renamed to Radar Type 0 in consequence.
+>> In fact, the type ID does nothing to functionalities.
+>> In other words, even if we re-order the IDs, DFS detection will
+>> work as well, but we give the ID with matching to FCC doc.
+>>
+>> By adding this support, the drivers using this DFS function are
+>> able to support both of old and new FCC DFS rules simultaneously
+>> without any other changes.
+>>
+>> [...]
+> Peter,
+>
+> while trying to solve detection of the special FCC type 1 radar pattern
+> with the
+> pri_detector at hand is a valid approach, it is neither suitable nor
+> effective.
+>
+> It is not suitable because in the way you do, it will not reach the
+> required
+> detection probability required to pass certification. This is because you
+> take the
+> very first pri to configure its detector specs, which is way too
+> optimistic. You
+> have to consider that the detector must be able to detect properly with
+> only 50%
+> of the pulses seen. In this particular case, you would ignore a lot of
+> type 1
+> patterns, since the resulting visibility gap causes temporary false PRIs
+> that
+> won't be considered. You might want to have a look on my slides 15ff in
+> [1] for an
+> idea what needs to be handled.
+>
+> Generally, to reach the detection probability requirements, the design of
+> the
+> PRI-detector at hand follows a full-coverage search with fast cancellation
+> approach. For that, it allows collecting potential pattern candidates and
+> a
+> posteriori correction of initial assumptions. It is specifically targeting
+> at
+> radar patterns defined through PRI-ranges, where constant PRI-ranges are
+> supported
+> as special cases by setting the same values for pri_min and pri_max (as is
+> done
+> for pattern 0). With support for PRI-ranges and unique PRIs, everything
+> needed to
+> detect pattern 1 is there, but defining it as a PRI-range over all the
+> unique 23
+> PRIs is the wrong way.
+>
+> The correct approach is more simple, robust, and efficient: define all
+> those 23
+> unique PRIs as sub-patterns for type 1 with individual specs. Would look
+> like:
+>
+> #define TYPE1_PPB(X) ((19 * 100000) / (36 * X))
+> static const struct radar_detector_specs fcc_radar_ref_types[] = {
+> 	FCC_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
+> 	FCC_PATTERN(101, 0, 1, 518, 518, 1, TYPE1_PPB(518), false),
+> 	FCC_PATTERN(102, 0, 1, ..., ..., 1, ..., false),
+> 	[...],
+> 	FCC_PATTERN(123, 0, 1, 3066, 3066, 1, TYPE1_PPB(3066), false),
+> 	FCC_PATTERN(2, 0, 5, 150, 230, 1, 23, false),
+> 	FCC_PATTERN(3, 6, 10, 200, 500, 1, 16, false),
+> 	FCC_PATTERN(4, 11, 20, 200, 500, 1, 12, false),
+> 	FCC_PATTERN(5, 50, 100, 1000, 2000, 1, 1, true),
+> 	FCC_PATTERN(6, 0, 1, 333, 333, 1, 9, false),
+> };
+>
+>
+> Hope it helps, and sorry I didn't do myself, but so far we are only
+> working in
+> ETSI domains and ignored FCC completely.
+Thank you Zefir for the advice and I'll review and update the code based 
+on your comment.
+>
+> Cheers,
+> Zefir
+>
+> [1]
+> http://linuxwireless.sipsolutions.net/attachments/en/developers/DFS/Vancou
+> ver2011-Slides-DFS.pdf
+>
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
+Thanks,
+Peter
