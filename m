@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57536 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbbCKWGT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:40744 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819AbbCCFvd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 18:06:19 -0400
-Message-ID: <5500BC5A.9040809@candelatech.com> (sfid-20150311_230622_086449_4F7FFDFA)
-Date: Wed, 11 Mar 2015 15:06:18 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 3 Mar 2015 00:51:33 -0500
+From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+Subject: [PATCH V2 2/2] ath10k: Enable encrytion of ADDBA request in PMF configuration
+Date: Tue, 3 Mar 2015 11:20:48 +0530
+Message-ID: <1425361848-24727-2-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150303_065135_947312_40DDB0CC)
+In-Reply-To: <1425361848-24727-1-git-send-email-sjegadee@qti.qualcomm.com>
+References: <1425361848-24727-1-git-send-email-sjegadee@qti.qualcomm.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211-hwsim and tx-rates.
-References: <5500AEAB.8010605@candelatech.com> <5500B417.9070307@broadcom.com>
-In-Reply-To: <5500B417.9070307@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/2015 02:31 PM, Arend van Spriel wrote:
-> On 03/11/15 22:07, Ben Greear wrote:
->> When using the user-space transport, the netlink frame sent to user-space
->> has a rate index and retry count, and nothing else.  Is there a
->> reliable way to know in user-space what index maps to what actual rate?
-> 
-> Not sure what you are exactly looking for, but maybe the function cfg80211_calculate_bitrate() in net/wireless/util.c may provide you some answers.
+In HT mode, firmware is not encrypting ADDBA request as PMF
+configuration is not set in peer flags during association.
 
-Well, that would be useful in the kernel, but in user-space w/hardware sim,
-as far as I can tell we only have this rate info:
+Set peer flags for MFP enabled station in ath10k driver.
 
-/**
- * struct hwsim_tx_rate - rate selection/status
- *
- * @idx: rate index to attempt to send with
- * @count: number of tries in this rate before going to the next rate
- *
- * A value of -1 for @idx indicates an invalid rate and, if used
- * in an array of retry rates, that no more rates should be tried.
- *
- * When used for transmit status reporting, the driver should
- * always report the rate and number of retries used.
- *
- */
-struct hwsim_tx_rate {
-	s8 idx;
-	u8 count;
-} __packed;
+This change depends on mac80211 patch "[PATCH] mac80211: send
+station PMF configuration to driver".
 
+Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-I don't see a good way to tie that idx to an actual rate (which involves
-flags, nss, mcs values, etc).
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0c69687..83baed7 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1759,6 +1759,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
+ 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
+ 	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
 
-Maybe I should also just send the info I care about, which is a 'bps' rate,
-channel-width indication, SGI, etc as separate netlink attributes....
++	if (sta->mfp)
++		arg->peer_flags |= ar->wmi.peer_flags->wmi_peer_pmf;
++
+ 	return 0;
+ }
 
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--
+1.9.1
 
