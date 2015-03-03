@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38557 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751368AbbCJQEm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 12:04:42 -0400
-Message-ID: <1426003477.1926.5.camel@sipsolutions.net> (sfid-20150310_170454_089776_95131D75)
-Subject: Re: [PATCH v2] mac80211: Get IV len from key conf and not cipher
- scheme
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Max Stepanov <Max.Stepanov@intel.com>
-Date: Tue, 10 Mar 2015 17:04:37 +0100
-In-Reply-To: <5842EA9CC042B141995329508713AD672105A9B0@ILMAIL1.corp.local>
-References: <5842EA9CC042B141995329508713AD672105A9B0@ILMAIL1.corp.local>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from blu004-omc1s21.hotmail.com ([65.55.116.32]:51256 "EHLO
+	BLU004-OMC1S21.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753930AbbCCVPd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 16:15:33 -0500
+Message-ID: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl> (sfid-20150303_221549_853590_F48461C3)
+Date: Wed, 4 Mar 2015 05:16:18 +0800
+From: Chen Gang <xili_gchen_5257@hotmail.com>
+MIME-Version: 1.0
+To: zajec5@gmail.com
+CC: linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] bcma: Kconfig: Let it depend on PCI
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not sure I could follow your discussion...
+bcma also needs PCI, just like IOMEM and DMA, so let it depend on PCI,
+or will cause building break for allmodconfig under c6x:
 
-> @@ -790,14 +789,17 @@ ieee80211_crypto_cs_encrypt(struct 
-> ieee80211_tx_data *tx,
->   		return TX_CONTINUE;
->   	}
-> 
-> -	if (unlikely(skb_headroom(skb) < cs->hdr_len &&
-> -		     pskb_expand_head(skb, cs->hdr_len, 0, GFP_ATOMIC)))
-> +	if (iv_len == 0)
-> +		return TX_CONTINUE;
+    CC [M]  drivers/bcma/driver_pcie2.o
+  drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
+  drivers/bcma/driver_pcie2.c:196:8: error: implicit declaration of function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
+    err = pcie_set_readrq(dev, pcie2->reqsize);
+          ^
 
-How can this be correct? You have a cipher scheme, so you want to
-encrypt, but now you're not doing that? Perhaps you should drop the
-frame instead?
+Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+---
+ drivers/bcma/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
-
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index 0ee48be..8be284e 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -1,6 +1,6 @@
+ config BCMA_POSSIBLE
+ 	bool
+-	depends on HAS_IOMEM && HAS_DMA
++	depends on HAS_IOMEM && HAS_DMA && PCI
+ 	default y
+ 
+ menu "Broadcom specific AMBA"
+-- 
+1.9.3
