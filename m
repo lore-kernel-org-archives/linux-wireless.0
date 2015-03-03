@@ -1,67 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:32777 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751327AbbCJInk (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43479 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756127AbbCCNsf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 04:43:40 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 3 Mar 2015 08:48:35 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21758.44950.886418.51899@gargle.gargle.HOWL> (sfid-20150310_094346_316485_3B89F2F2)
-Date: Tue, 10 Mar 2015 14:17:18 +0530
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 0/7] ath9k patches
-In-Reply-To: <1425976534-1194-1-git-send-email-sujith@msujith.org>
-References: <1425976534-1194-1-git-send-email-sujith@msujith.org>
+Subject: Re: wil6210: increase cmd buffer size to avoid sscanf buffer overflow
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1425232113-5010-1-git-send-email-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20150303134834.AA167140CD2@smtp.codeaurora.org> (sfid-20150303_144856_431451_DE108F20)
+Date: Tue,  3 Mar 2015 13:48:34 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
 
-Sorry, I forgot to mention that this is intended for -next.
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> cppcheck detected a buffer overflow:
+> 
+> [drivers/net/wireless/ath/wil6210/debugfs.c:634]: (error) Width 8
+>   given in format string (no. 1) is larger than destination buffer
+>   'cmd[8]', use %7s to prevent overflowing it.
+> 
+> For the current %8s sscanf we require cmd to be 9 chars long
+> so increase it by 1 byte to prevent the sscan overflow (rather
+> than reduce the %8s specifier to %7s as cppcheck recommends).
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Sujith
+Thanks, applied to wireless-drivers-next.git.
 
-Sujith Manoharan wrote:
-> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> 
-> This series adds initial support for AIC.
-> 
-> Active Interference Cancellation is a method
-> implemented in the HW to counter WLAN RX
-> sensitivity degradation when BT is transmitting
-> at the same time. This feature is supported by
-> cards like WB222 based on AR9462.
-> 
-> Sujith Manoharan (7):
->   ath9k: Add initial structures for AIC
->   ath9k: Register private AIC ops
->   ath9k: Add register definitions for AIC
->   ath9k: Handle MCI_STATE_AIC_CAL_SINGLE
->   ath9k: Finish AIC calibration
->   ath9k: Process the AIC calibration results
->   ath9k: Disable AIC by default
-> 
->  drivers/net/wireless/ath/ath9k/Makefile     |   3 +-
->  drivers/net/wireless/ath/ath9k/ar9003_aic.c | 534 ++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath9k/ar9003_aic.h |  58 +++
->  drivers/net/wireless/ath/ath9k/ar9003_hw.c  |   1 +
->  drivers/net/wireless/ath/ath9k/ar9003_mci.c |   5 +
->  drivers/net/wireless/ath/ath9k/ar9003_phy.h |  25 --
->  drivers/net/wireless/ath/ath9k/btcoex.h     |  12 +
->  drivers/net/wireless/ath/ath9k/hw-ops.h     |   8 +
->  drivers/net/wireless/ath/ath9k/hw.h         |   6 +
->  drivers/net/wireless/ath/ath9k/reg_aic.h    | 168 +++++++++
->  10 files changed, 794 insertions(+), 26 deletions(-)
->  create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.c
->  create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.h
->  create mode 100644 drivers/net/wireless/ath/ath9k/reg_aic.h
-> 
-> -- 
-> 2.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Kalle Valo
