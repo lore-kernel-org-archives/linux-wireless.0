@@ -1,122 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:57385 "EHLO aibo.runbox.com"
+Received: from mail.byterg.ru ([217.12.248.131]:50238 "EHLO mail.byterg.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752054AbbC1Mxm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:53:42 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
-	m.v.b@runbox.com
-Subject: [PATCH v4 12/15] staging: rtl8723au: suspect code indent for conditional statements
-Date: Sat, 28 Mar 2015 08:52:45 -0400
-Message-Id: <1427547168-12078-13-git-send-email-m.v.b@runbox.com> (sfid-20150328_135558_773032_C86ABABF)
-In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
-References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+	id S1752322AbbCCIWI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 03:22:08 -0500
+Received: from [192.168.10.51]
+	 by mail.byterg.ru with esmtp  (envelope-from <brilliantov@byterg.ru>)
+	 id 1YShBe-0003BN-OJ
+	for linux-wireless@vger.kernel.org; Tue, 03 Mar 2015 11:24:14 +0400
+Message-ID: <54F56F50.6070505@byterg.ru> (sfid-20150303_092212_305523_BB3D19DD)
+Date: Tue, 03 Mar 2015 11:22:40 +0300
+From: Brilliantov Kirill Vladimirovich <brilliantov@byterg.ru>
+Reply-To: brilliantov@byterg.ru
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: 8188e: possible recursive locking detected on linux-3.18.7
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a number of indentation-with-spaces-and-tabs issues in
-rtl8723au's rtw_security.c, according to checkpatch.pl:
-	WARNING: suspect code indent for conditional statements
+Hello!
+I work with linux-3.18.7 on board with FreeScale iMX287 ARM CPU, for 
+tests I use USB TP-Link TL-WN725N on RTL8188e chip.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+[    7.802249] usb 1-1: new high-speed USB device number 2 using ci_hdrc
+[    7.982221] Chip Version Info: 
+CHIP_8188E_Normal_Chip_TSMC_D_CUT_1T1R_RomVer(0)
 
----
+ifconfig wlan0 up
+[   50.193673] MAC Address = e8:de:27:a3:ee:9d
 
-v3: Make sure that all edited lines are at most 80 characters wide.
----
- drivers/staging/rtl8723au/core/rtw_security.c | 46 ++++++++++++++++-----------
- 1 file changed, 27 insertions(+), 19 deletions(-)
+iwlist wlan0 scan
+[   56.633485]
+[   56.635036] =============================================
+[   56.640453] [ INFO: possible recursive locking detected ]
+[   56.645876] 3.18.7+ #40 Not tainted
+[   56.649379] ---------------------------------------------
+[   56.654794] RTW_CMD_THREAD/84 is trying to acquire lock:
+[   56.660118]  (&(&(pqueue->lock))->rlock){+.-...}, at: [<c0232fdc>] 
+_rtw_alloc_network+0x14/0xc4
+[   56.668948]
+[   56.668948] but task is already holding lock:
+[   56.674801]  (&(&(pqueue->lock))->rlock){+.-...}, at: [<c0235de8>] 
+rtw_update_scanned_network+0x18/0x250
+[   56.684378]
+[   56.684378] other info that might help us debug this:
+[   56.690924]  Possible unsafe locking scenario:
+[   56.690924]
+[   56.696858]        CPU0
+[   56.699313]        ----
+[   56.701766]   lock(&(&(pqueue->lock))->rlock);
+[   56.706244]   lock(&(&(pqueue->lock))->rlock);
+[   56.710721]
+[   56.710721]  *** DEADLOCK ***
+[   56.710721]
+[   56.716662]  May be due to missing lock nesting notation
+[   56.716662]
+[   56.723474] 2 locks held by RTW_CMD_THREAD/84:
+[   56.727927]  #0:  (&(&(pmlmepriv->lock))->rlock){+.....}, at: 
+[<c023609c>] rtw_survey_event_callback+0x7c/0x1c4
+[   56.738115]  #1:  (&(&(pqueue->lock))->rlock){+.-...}, at: 
+[<c0235de8>] rtw_update_scanned_network+0x18/0x250
+[   56.748125]
+[   56.748125] stack backtrace:
+[   56.752516] CPU: 0 PID: 84 Comm: RTW_CMD_THREAD Not tainted 3.18.7+ #40
+[   56.759198] [<c000e010>] (unwind_backtrace) from [<c000c47c>] 
+(show_stack+0x10/0x14)
+[   56.767002] [<c000c47c>] (show_stack) from [<c003cfa0>] 
+(validate_chain+0xd14/0x1154)
+[   56.774878] [<c003cfa0>] (validate_chain) from [<c003d940>] 
+(__lock_acquire+0x560/0xbb0)
+[   56.783011] [<c003d940>] (__lock_acquire) from [<c003dff4>] 
+(lock_acquire+0x64/0x78)
+[   56.790804] [<c003dff4>] (lock_acquire) from [<c035cbf4>] 
+(_raw_spin_lock_bh+0x44/0x58)
+[   56.798865] [<c035cbf4>] (_raw_spin_lock_bh) from [<c0232fdc>] 
+(_rtw_alloc_network+0x14/0xc4)
+[   56.807442] [<c0232fdc>] (_rtw_alloc_network) from [<c0235e68>] 
+(rtw_update_scanned_network+0x98/0x250)
+[   56.816881] [<c0235e68>] (rtw_update_scanned_network) from 
+[<c0236118>] (rtw_survey_event_callback+0xf8/0x1c4)
+[   56.826922] [<c0236118>] (rtw_survey_event_callback) from 
+[<c023683c>] (mlme_evt_hdl+0x5c/0xec)
+[   56.835658] [<c023683c>] (mlme_evt_hdl) from [<c022aef0>] 
+(rtw_cmd_thread+0x110/0x348)
+[   56.843623] [<c022aef0>] (rtw_cmd_thread) from [<c002c964>] 
+(kthread+0xb8/0xd4)
+[   56.850972] [<c002c964>] (kthread) from [<c0009680>] 
+(ret_from_fork+0x14/0x34)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 8591b49664..4330479ee0 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -761,8 +761,16 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 
- 	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
- 	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
--	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
--				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+			 ("rtw_wep_decrypt23a:icv error "
-+			  "crc[3](%x)!= payload[length-1](%x) || "
-+			  "crc[2](%x)!= payload[length-2](%x) || "
-+			  "crc[1](%x)!= payload[length-3](%x) || "
-+			  "crc[0](%x)!= payload[length-4](%x)\n",
-+			  crc[3], payload[length - 1],
-+			  crc[2], payload[length - 2],
-+			  crc[1], payload[length - 3],
-+			  crc[0], payload[length - 4]));
- 		res = _FAIL;
- 	}
- 
-@@ -909,9 +917,9 @@ static void mix_column(u8 *in, u8 *out)
- 
- 	for (i = 0; i < 4; i++) {
- 		if ((in[i] & 0x80) == 0x80)
--		    add1b[i] = 0x1b;
-+			add1b[i] = 0x1b;
- 		else
--		    add1b[i] = 0x00;
-+			add1b[i] = 0x00;
- 	}
- 
- 	swap_halfs[0] = in[2]; /* Swap halfs */
-@@ -966,21 +974,21 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
- 
- 	for (round = 0; round < 11; round++) {
- 		if (round == 0) {
--		    xor_128(round_key, data, ciphertext);
--		    next_key(round_key, round);
-+			xor_128(round_key, data, ciphertext);
-+			next_key(round_key, round);
- 		} else if (round == 10) {
--		    byte_sub(ciphertext, intermediatea);
--		    shift_row(intermediatea, intermediateb);
--		    xor_128(intermediateb, round_key, ciphertext);
-+			byte_sub(ciphertext, intermediatea);
-+			shift_row(intermediatea, intermediateb);
-+			xor_128(intermediateb, round_key, ciphertext);
- 		} else { /* 1 - 9 */
--		    byte_sub(ciphertext, intermediatea);
--		    shift_row(intermediatea, intermediateb);
--		    mix_column(&intermediateb[0], &intermediatea[0]);
--		    mix_column(&intermediateb[4], &intermediatea[4]);
--		    mix_column(&intermediateb[8], &intermediatea[8]);
--		    mix_column(&intermediateb[12], &intermediatea[12]);
--		    xor_128(intermediatea, round_key, ciphertext);
--		    next_key(round_key, round);
-+			byte_sub(ciphertext, intermediatea);
-+			shift_row(intermediatea, intermediateb);
-+			mix_column(&intermediateb[0], &intermediatea[0]);
-+			mix_column(&intermediateb[4], &intermediatea[4]);
-+			mix_column(&intermediateb[8], &intermediatea[8]);
-+			mix_column(&intermediateb[12], &intermediatea[12]);
-+			xor_128(intermediatea, round_key, ciphertext);
-+			next_key(round_key, round);
- 		}
- 	}
- 
-@@ -1481,7 +1489,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 		for (j = 0; j < 16; j++)
- 			padded_buffer[j] = 0x00;
- 		for (j = 0; j < payload_remainder; j++)
--		    padded_buffer[j] = message[payload_index++];
-+			padded_buffer[j] = message[payload_index++];
- 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
- 		aes128k128d(key, chain_buffer, aes_out);
- 	}
-@@ -1511,7 +1519,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 				      message, pn_vector, num_blocks+1);
- 
- 		for (j = 0; j < 16; j++)
--			 padded_buffer[j] = 0x00;
-+			padded_buffer[j] = 0x00;
- 		for (j = 0; j < payload_remainder; j++)
- 			padded_buffer[j] = message[payload_index + j];
- 		aes128k128d(key, ctr_preload, aes_out);
+I get network list success.
+
+This problem fixed in next linux versions?
+Thank you and excuse me for my bad english.
+
 -- 
-2.1.4
+Best regards,
+Brilliantov Kirill Vladimirovich
 
