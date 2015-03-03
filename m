@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0188.hostedemail.com ([216.40.44.188]:47999 "EHLO
+Received: from smtprelay0039.hostedemail.com ([216.40.44.39]:39263 "EHLO
 	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751506AbbCNVzJ (ORCPT
+	by vger.kernel.org with ESMTP id S932398AbbCCTDW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 17:55:09 -0400
-Message-ID: <1426370106.6696.16.camel@perches.com> (sfid-20150314_225514_413560_F05FE5EE)
-Subject: Re: [PATCH 14/16] staging: rtl8723au: Improve readability of two
- very long lines
+	Tue, 3 Mar 2015 14:03:22 -0500
+Message-ID: <1425409397.17273.38.camel@perches.com> (sfid-20150303_200417_634300_617152E0)
+Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
+ memset
 From: Joe Perches <joe@perches.com>
-To: "M. Vefa Bicakci" <m.v.b@runbox.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Sat, 14 Mar 2015 14:55:06 -0700
-In-Reply-To: <55049722.9090702@runbox.com>
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
-	 <1426216532-24058-15-git-send-email-m.v.b@runbox.com>
-	 <550305D5.9080209@lwfinger.net> <1426263881.11459.17.camel@perches.com>
-	 <55049722.9090702@runbox.com>
+To: David Miller <davem@davemloft.net>
+Cc: johannes@sipsolutions.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 03 Mar 2015 11:03:17 -0800
+In-Reply-To: <20150303.135737.630359651880852880.davem@davemloft.net>
+References: <cover.1425354527.git.joe@perches.com>
+	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
+	 <1425370617.2450.3.camel@sipsolutions.net>
+	 <20150303.135737.630359651880852880.davem@davemloft.net>
 Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2015-03-14 at 16:16 -0400, M. Vefa Bicakci wrote:
-> On 13/03/15 12:24 PM, Joe Perches wrote:
-> > On Fri, 2015-03-13 at 10:44 -0500, Larry Finger wrote:
-> >> On 03/12/2015 10:15 PM, M. Vefa Bicakci wrote:
-> >>> Improve the readability of an if statement and its very long trace
-> >>> output line in rtl8723au's rtw_security.c.
-> > []
-> >>> diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-> > []
-> >>> @@ -759,9 +759,21 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
-> >>>
-> >>>   	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length-4));
-> >>>
-> >>> -	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
-> >>> -		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
-> >>> -				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
-> >>> +	if (crc[3] != payload[length - 1] ||
-> >>> +			crc[2] != payload[length - 2] ||
-> >>> +			crc[1] != payload[length - 3] ||
-> >>> +			crc[0] != payload[length - 4]) {
-> >>
-> >> The continuation lines should be lined up with the opening paren. This should be
-> >>
-> >> 	if (crc[3] != payload[length - 1] ||
-> >> 	    crc[2] != payload[length - 2] ||
-> >> 	    crc[1] != payload[length - 3] ||
-> >> 	    crc[0] != payload[length - 4]) {
-> > 
-> > Maybe:
-> > 	if (memcmp(&crc, &payload[length - 4], 4)) {
-> > 		RT_TRACE(etc, "%08x vs %4phN",
-> > 			 crc, &payload[length - 4])
-[]
-> I have addressed your comments in my local repository, and I hope to send out
-> the second version of the commits for review by tomorrow.
+On Tue, 2015-03-03 at 13:57 -0500, David Miller wrote:
+> From: Johannes Berg <johannes@sipsolutions.net>
+> Date: Tue, 03 Mar 2015 09:16:57 +0100
+> 
+> > Other than that, I guess I'll apply this, but I really wish there was a
+> > way to distinguish more easily which of these require alignment and
+> > which don't.
+> 
+> You can't apply "this" without the dependency patch #1.
+> 
+> Therefore this should probably all go through my tree.
 
-Maybe it'd be more sensible to use something like:
+Hey David.
 
-	u32 crc, orig_crc;
+The eth_<foo>_addr functions already exist so
+1/14 isn't a dependency.
 
-	[...]
-
-	crc = le32_to_cpu(getcrc32(payload, length - 4));
-	orig_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
-
-	if (crc != orig_crc) {
-		RT_TRACE(etc, "bad crc: %08x vs %08x", crc, orig_crc);
+It's just a trivial improvement on existing code
+with CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS and
+at least the arm 4.6.3 compiler.
 
 
