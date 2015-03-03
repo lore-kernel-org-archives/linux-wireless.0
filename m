@@ -1,120 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0212.hostedemail.com ([216.40.44.212]:59877 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754174AbbCCDzv (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52592 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756888AbbCCR7V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 22:55:51 -0500
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org, ath9k-devel@lists.ath9k.org,
-	b43-dev@lists.infradead.org, libertas-dev@lists.infradead.org,
-	xen-devel@lists.xenproject.org
-Cc: linux-kernel@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	linux-bluetooth@vger.kernel.org
-Subject: [PATCH net-next 00/14] Use eth_<foo>_addr instead of memset
-Date: Mon,  2 Mar 2015 19:54:45 -0800
-Message-Id: <cover.1425354527.git.joe@perches.com> (sfid-20150303_050014_507324_04715994)
+	Tue, 3 Mar 2015 12:59:21 -0500
+Message-ID: <54F5F678.7030202@candelatech.com> (sfid-20150303_185934_405351_8E45E6D8)
+Date: Tue, 03 Mar 2015 09:59:20 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: increase station kickout threshold
+References: <1425385230-25308-1-git-send-email-rmanohar@qti.qualcomm.com> <1425385230-25308-2-git-send-email-rmanohar@qti.qualcomm.com>
+In-Reply-To: <1425385230-25308-2-git-send-email-rmanohar@qti.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches (14):
-  etherdevice: Add eth_<foo>_addr CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS code
-  ethernet: Use eth_<foo>_addr instead of memset
-  net: usb: Use eth_<foo>_addr instead of memset
-  wireless: Use eth_<foo>_addr instead of memset
-  netconsole: Use eth_<foo>_addr instead of memset
-  xen: Use eth_<foo>_addr instead of memset
-  8021q: Use eth_<foo>_addr instead of memset
-  appletalk: Use eth_<foo>_addr instead of memset
-  atm: Use eth_<foo>_addr instead of memset
-  bluetooth: Use eth_<foo>_addr instead of memset
-  ethernet: Use eth_<foo>_addr instead of memset
-  mac80211: Use eth_<foo>_addr instead of memset
-  wireless: Use eth_<foo>_addr instead of memset
-  l2tp: Use eth_<foo>_addr instead of memset
+On 03/03/2015 04:20 AM, Rajkumar Manoharan wrote:
+> Since the station kickout threshold is also counting software
+> reries (Default sw count in firmware is 16), increasing the threshold
+> to try with already 20 data frames before kicking out the station.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/core.h | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> index 7cba781..5a0b7cb 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -50,8 +50,8 @@
+>
+>   #define ATH10K_MAX_NUM_MGMT_PENDING 128
+>
+> -/* number of failed packets */
+> -#define ATH10K_KICKOUT_THRESHOLD 50
+> +/* number of failed packets (includes sw reties) */
+> +#define ATH10K_KICKOUT_THRESHOLD (20 * 16)
 
- drivers/net/ethernet/amd/pcnet32.c                 |  2 +-
- .../net/ethernet/broadcom/bnx2x/bnx2x_ethtool.c    |  2 +-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c   |  6 ++--
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c  |  2 +-
- drivers/net/ethernet/cisco/enic/enic_main.c        |  8 +++---
- drivers/net/ethernet/emulex/benet/be_cmds.c        |  2 +-
- drivers/net/ethernet/emulex/benet/be_main.c        |  2 +-
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |  4 +--
- drivers/net/ethernet/mellanox/mlx4/en_netdev.c     |  4 +--
- drivers/net/ethernet/mellanox/mlx4/en_selftest.c   |  2 +-
- drivers/net/ethernet/micrel/ksz884x.c              |  2 +-
- drivers/net/ethernet/qlogic/netxen/netxen_nic_hw.c |  2 +-
- drivers/net/ethernet/qlogic/qlge/qlge_main.c       |  2 +-
- drivers/net/ethernet/smsc/smsc911x.c               |  2 +-
- drivers/net/ethernet/ti/netcp_core.c               |  2 +-
- drivers/net/ethernet/toshiba/ps3_gelic_wireless.c  |  4 +--
- drivers/net/ethernet/xscale/ixp4xx_eth.c           |  2 +-
- drivers/net/netconsole.c                           |  5 ++--
- drivers/net/usb/catc.c                             |  4 +--
- drivers/net/usb/cdc_mbim.c                         |  2 +-
- drivers/net/usb/lg-vl600.c                         |  2 +-
- drivers/net/usb/qmi_wwan.c                         |  2 +-
- drivers/net/wireless/airo.c                        |  4 +--
- drivers/net/wireless/at76c50x-usb.c                |  6 ++--
- drivers/net/wireless/ath/ath10k/mac.c              |  2 +-
- drivers/net/wireless/ath/ath5k/base.c              |  2 +-
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |  2 +-
- drivers/net/wireless/ath/ath6kl/main.c             |  2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |  2 +-
- drivers/net/wireless/ath/ath9k/main.c              |  4 +--
- drivers/net/wireless/atmel.c                       | 16 +++++------
- drivers/net/wireless/b43/main.c                    |  8 +++---
- drivers/net/wireless/b43legacy/main.c              |  8 +++---
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 12 ++++----
- drivers/net/wireless/brcm80211/brcmfmac/flowring.c |  2 +-
- drivers/net/wireless/brcm80211/brcmfmac/p2p.c      |  2 +-
- drivers/net/wireless/cw1200/sta.c                  |  2 +-
- drivers/net/wireless/cw1200/txrx.c                 |  2 +-
- drivers/net/wireless/hostap/hostap_80211_tx.c      |  4 +--
- drivers/net/wireless/hostap/hostap_ap.c            |  8 +++---
- drivers/net/wireless/hostap/hostap_info.c          |  2 +-
- drivers/net/wireless/hostap/hostap_main.c          |  4 +--
- drivers/net/wireless/hostap/hostap_wlan.h          | 33 +++++++++++-----------
- drivers/net/wireless/ipw2x00/ipw2100.c             |  8 +++---
- drivers/net/wireless/ipw2x00/ipw2200.c             |  6 ++--
- drivers/net/wireless/iwlegacy/common.c             |  2 +-
- drivers/net/wireless/iwlwifi/mvm/power.c           |  3 +-
- drivers/net/wireless/libertas/main.c               |  4 +--
- drivers/net/wireless/libertas_tf/main.c            |  4 +--
- drivers/net/wireless/mac80211_hwsim.c              |  6 ++--
- drivers/net/wireless/mwifiex/cfg80211.c            |  8 +++---
- drivers/net/wireless/mwifiex/init.c                |  4 +--
- drivers/net/wireless/mwifiex/sta_event.c           |  2 +-
- drivers/net/wireless/mwifiex/wmm.c                 |  2 +-
- drivers/net/wireless/mwl8k.c                       |  2 +-
- drivers/net/wireless/orinoco/wext.c                |  2 +-
- drivers/net/wireless/p54/fwio.c                    |  2 +-
- drivers/net/wireless/p54/main.c                    |  8 +++---
- drivers/net/wireless/ray_cs.c                      |  2 +-
- drivers/net/wireless/rndis_wlan.c                  | 28 +++++++++---------
- drivers/net/wireless/rtlwifi/core.c                |  6 ++--
- drivers/net/wireless/ti/wl1251/main.c              |  4 +--
- drivers/net/wireless/ti/wlcore/cmd.c               |  4 +--
- drivers/net/xen-netback/interface.c                |  2 +-
- include/linux/etherdevice.h                        | 12 +++++++-
- net/8021q/vlan_dev.c                               |  2 +-
- net/appletalk/aarp.c                               |  6 ++--
- net/atm/lec.c                                      |  4 +--
- net/bluetooth/bnep/netdev.c                        |  2 +-
- net/ethernet/eth.c                                 |  4 +--
- net/l2tp/l2tp_eth.c                                |  2 +-
- net/mac80211/cfg.c                                 |  2 +-
- net/mac80211/ibss.c                                |  2 +-
- net/mac80211/mesh.c                                |  2 +-
- net/mac80211/mlme.c                                | 10 +++----
- net/wireless/ibss.c                                |  2 +-
- net/wireless/nl80211.c                             |  4 +--
- net/wireless/trace.h                               |  9 +++---
- net/wireless/wext-sme.c                            |  2 +-
- 79 files changed, 190 insertions(+), 176 deletions(-)
+Maybe add comment about '20 packets with 16 retries each', so that users know what
+number is what?
+
+Thanks,
+Ben
+
+>
+>   /*
+>    * Use insanely high numbers to make sure that the firmware implementation
+>
+
 
 -- 
-2.1.2
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
