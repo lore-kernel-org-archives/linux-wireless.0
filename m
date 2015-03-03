@@ -1,101 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:41326 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751694AbbCMMRV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 08:17:21 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 13 Mar 2015 14:17:07 +0200
-Message-Id: <1426249027-22165-3-git-send-email-luca@coelho.fi> (sfid-20150313_131728_129333_3833C378)
-In-Reply-To: <1426249027-22165-1-git-send-email-luca@coelho.fi>
-References: <1426249027-22165-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH iw 2/2] iw: add a delay option to net-detect
+Received: from arrakis.dune.hu ([78.24.191.176]:58058 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755968AbbCCPuZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 10:50:25 -0500
+MIME-Version: 1.0
+In-Reply-To: <87fv9m84rq.fsf@kamboji.qca.qualcomm.com>
+References: <1424103816-10566-1-git-send-email-zajec5@gmail.com>
+ <1425313135-28225-1-git-send-email-zajec5@gmail.com> <87k2yy86ld.fsf@kamboji.qca.qualcomm.com>
+ <CAOiHx==ZbVCsymBFhn60nBU2-gHU2HPdp1T9xdZpK9OVjAzFUw@mail.gmail.com> <87fv9m84rq.fsf@kamboji.qca.qualcomm.com>
+From: Jonas Gorski <jogo@openwrt.org>
+Date: Tue, 3 Mar 2015 16:49:56 +0100
+Message-ID: <CAOiHx==Br=rzsXavM=hN99hPUi_rEKjoYfT2+JFy-Jb5+Ex0xw@mail.gmail.com> (sfid-20150303_165029_057227_CDD8D551)
+Subject: Re: [PATCH][FIX][RESEND] b43: fix support for 5 GHz only BCM43228 model
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Tue, Mar 3, 2015 at 4:44 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Jonas Gorski <jogo@openwrt.org> writes:
+>
+>> On Tue, Mar 3, 2015 at 4:05 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>> RESEND: It seems patchwork didn't catch my patch. Trying again.
+>>>
+>>> Odd, I still don't see it in patchwork. I wonder what caused that?
+>>
+>> I also see it neither in my b43-dev nor linux-wireless archives, nor
+>> does google find it (only your reply).
+>
+> Ok, that explains why patchwork didn't catch it (it scans patches from
+> the linux-wireless mailing list). I already applied the patch to
+> wireless-drivers.git but I would appreciate if people would still review
+> it:
+>
+> commit 0ff66cffde47de51c155ebdd2356403276c04cc4
+> Author: Rafał Miłecki <zajec5@gmail.com>
+> Date:   Mon Mar 2 17:18:55 2015 +0100
+>
+>     b43: fix support for 5 GHz only BCM43228 model
+>
+>     It was incorrectly detected as 2 GHz device.
+>
+>     Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>     Cc: stable@vger.kernel.org # 3.17+
+>     Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+>
+> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> index ccbdb05b28cd..75345c1e8c34 100644
+> --- a/drivers/net/wireless/b43/main.c
+> +++ b/drivers/net/wireless/b43/main.c
+> @@ -5370,6 +5370,7 @@ static void b43_supported_bands(struct b43_wldev *dev, bool *have_2ghz_phy,
+>         case 0x432a: /* BCM4321 */
+>         case 0x432d: /* BCM4322 */
+>         case 0x4352: /* BCM43222 */
+> +       case 0x435a: /* BCM43228 */
 
-Add an option that allows the initial net-detect scan to be delayed by
-the specified number of seconds.
+Broadcom agrees with that (taken from a broadcom sdk for bcm47xx):
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
----
- wowlan.c | 31 +++++++++++++++++++++++++++----
- 1 file changed, 27 insertions(+), 4 deletions(-)
+#define BCM43228_D11N_ID        0x4359          /* 43228 802.11n
+DualBand device */
+#define BCM43228_D11N5G_ID      0x435a          /* 43228 802.11n 5GHz device */
 
-diff --git a/wowlan.c b/wowlan.c
-index fb7d956..12abc76 100644
---- a/wowlan.c
-+++ b/wowlan.c
-@@ -193,7 +193,7 @@ static int wowlan_parse_net_detect(struct nl_msg *msg, int *argc, char ***argv)
- 	int c  = *argc;
- 	char *end, **v = *argv;
- 	int err = 0, i = 0;
--	unsigned int freq, interval = 0;
-+	unsigned int freq, interval = 0, delay = 0;
- 	bool have_matchset = false, have_freqs = false;
- 
- 	nd = nla_nest_start(msg, NL80211_WOWLAN_TRIG_NET_DETECT);
-@@ -236,6 +236,25 @@ static int wowlan_parse_net_detect(struct nl_msg *msg, int *argc, char ***argv)
- 				NLA_PUT_U32(msg,
- 					    NL80211_ATTR_SCHED_SCAN_INTERVAL,
- 					    interval);
-+			} else if (!strcmp(v[0], "delay")) {
-+				c--; v++;
-+				if (c == 0) {
-+					err = -EINVAL;
-+					goto nla_put_failure;
-+				}
-+
-+				if (delay) {
-+					err = -EINVAL;
-+					goto nla_put_failure;
-+				}
-+				delay = strtoul(v[0], &end, 10);
-+				if (*end) {
-+					err = -EINVAL;
-+					goto nla_put_failure;
-+				}
-+				NLA_PUT_U32(msg,
-+					    NL80211_ATTR_SCHED_SCAN_DELAY,
-+					    delay);
- 			} else if (!strcmp(v[0], "matches")) {
- 				parse_state = ND_MATCH;
- 				if (have_matchset) {
-@@ -454,7 +473,7 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
- 	return err;
- }
- COMMAND(wowlan, enable, "[any] [disconnect] [magic-packet] [gtk-rekey-failure] [eap-identity-request]"
--	" [4way-handshake] [rfkill-release] [net-detect interval <in_msecs> [freqs <freq>+] [matches [ssid <ssid>]+]]"
-+	" [4way-handshake] [rfkill-release] [net-detect interval <in_msecs> [delay <in_secs> [freqs <freq>+] [matches [ssid <ssid>]+]]"
- 	" [tcp <config-file>] [patterns [offset1+]<pattern1> ...]",
- 	NL80211_CMD_SET_WOWLAN, 0, CIB_PHY, handle_wowlan_enable,
- 	"Enable WoWLAN with the given triggers.\n"
-@@ -472,7 +491,7 @@ COMMAND(wowlan, enable, "[any] [disconnect] [magic-packet] [gtk-rekey-failure] [
- 	"  [data.seq=len,offset[,start]]\n"
- 	"  [data.tok=len,offset,<token stream>]\n\n"
- 	"Net-detect configuration example:\n"
--	" iw phy0 wowlan enable net-detect interval 5000 freqs 2412 2422 matches ssid foo ssid bar");
-+	" iw phy0 wowlan enable net-detect interval 5000 delay 30 freqs 2412 2422 matches ssid foo ssid bar");
- 
- 
- static int handle_wowlan_disable(struct nl80211_state *state, struct nl_cb *cb,
-@@ -534,9 +553,13 @@ static int print_wowlan_handler(struct nl_msg *msg, void *arg)
- 			  nla_len(trig[NL80211_WOWLAN_TRIG_NET_DETECT]), NULL);
- 
- 		if (nd[NL80211_ATTR_SCHED_SCAN_INTERVAL])
--			printf("\tscan interval: %d msecs\n",
-+			printf("\tscan interval: %u msecs\n",
- 			       nla_get_u32(nd[NL80211_ATTR_SCHED_SCAN_INTERVAL]));
- 
-+		if (nd[NL80211_ATTR_SCHED_SCAN_DELAY])
-+			printf("\tintial scan delay: %u secs\n",
-+			       nla_get_u32(nd[NL80211_ATTR_SCHED_SCAN_DELAY]));
-+
- 		if (nd[NL80211_ATTR_SCHED_SCAN_MATCH]) {
- 			printf("\tmatches:\n");
- 			nla_for_each_nested(match,
--- 
-2.1.4
 
+If that's enough for you, feel free to add a Reviewed-By from me.
+
+
+Jonas
