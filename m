@@ -1,70 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10919 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138AbbCWKEC (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:41949 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbbCCEUt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 06:04:02 -0400
-Message-ID: <550FE50F.10303@broadcom.com> (sfid-20150323_110407_909404_C57D69B4)
-Date: Mon, 23 Mar 2015 11:03:59 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Stefano Cappa <stefano.cappa@mail.polimi.it>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: informations about Linux wifi driver's architecture today
-References: <1427048376242.67051@mail.polimi.it>,<CAMowtuMgAPsgAKuwSibjAzhDbqEdZGatikCiKks6f3w=4oth+Q@mail.gmail.com> <1427059313289.43792@mail.polimi.it>
-In-Reply-To: <1427059313289.43792@mail.polimi.it>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Mon, 2 Mar 2015 23:20:49 -0500
+From: Fred Chou <fred.chou.nd@gmail.com>
+To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Fred Chou <fred.chou.nd@gmail.com>
+Subject: [PATCH] ath9k_htc: avoid memcpy when downloading firmware
+Date: Tue,  3 Mar 2015 12:24:03 +0800
+Message-Id: <1425356643-2707-1-git-send-email-fred.chou.nd@gmail.com> (sfid-20150303_052125_252936_96BC8F7B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/22/15 22:21, Stefano Cappa wrote:
-> Hi
-> I prefer a generic version, without specific things, like this one: h**p://postimg.org/image/hfkpjt3ux/ created by Johannes Berg.
->
-> And, if available something for the broadcom chip bcm4339.
+From: Fred Chou <fred.chou.nd@gmail.com>
 
-Hi Stefano,
+The temporary buffer to hold firmware data is not really needed,
+and memcpy can be avoided by using data pointer instead.
 
-The bcm4339 is supported by the brcmfmac driver and is a cfg8211-based 
-driver aka fullmac device where the 802.11 stack runs on the device. I 
-did write up some stuff about the driver internally, but we can consider 
-putting it on wireless.kernel.org under creative commons license.
+Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-Regards,
-Arend
-
-> Thank you.
->
-> ________________________________________
-> Da: Kathy Giori<kathy.giori@gmail.com>
-> Inviato: domenica 22 marzo 2015 19.35
-> A: Stefano Cappa
-> Cc: linux-wireless@vger.kernel.org
-> Oggetto: Re: informations about Linux wifi driver's architecture today
->
-> On Sun, Mar 22, 2015 at 11:19 AM, Stefano Cappa
-> <stefano.cappa@mail.polimi.it>  wrote:
->> Hi!
->> some months ago, i saw the presentation of Johannes Berg in PDF, but now it isn't available, probably because it's very old.
->>
->> This slides will be updated to a new release?
->>
->> I have this slide and in page 5/35 (2009-02-26) there is the "Architecture - planned". This is the actual architecture or there are some differences in 2015? If yes, where i can find the new version of this page, with a little diagram?
->
-> Ciao Stefano,
->
-> Perhaps Johannes can post a current overview diagram on the Linux
-> wireless wiki (if you share with him which diagram you want to be
-> updated).
->
-> In terms of vendor-specific architecture, and how it fits in, Kalle
-> Valo posted a high-level diagram for ath10k:
-> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/architecture
->
-> Are you mainly interested in the architecture of vendor-agnostic upper
-> layers or a description of a specific vendor driver?
-> kg--
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 10c02f5..0bc35a8 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -986,30 +986,22 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ 	const void *data = hif_dev->fw_data;
+ 	size_t len = hif_dev->fw_size;
+ 	u32 addr = AR9271_FIRMWARE;
+-	u8 *buf = kzalloc(4096, GFP_KERNEL);
+ 	u32 firm_offset;
+ 
+-	if (!buf)
+-		return -ENOMEM;
+-
+ 	while (len) {
+ 		transfer = min_t(size_t, len, 4096);
+-		memcpy(buf, data, transfer);
+ 
+ 		err = usb_control_msg(hif_dev->udev,
+ 				      usb_sndctrlpipe(hif_dev->udev, 0),
+ 				      FIRMWARE_DOWNLOAD, 0x40 | USB_DIR_OUT,
+-				      addr >> 8, 0, buf, transfer, HZ);
+-		if (err < 0) {
+-			kfree(buf);
++				      addr >> 8, 0, data, transfer, HZ);
++		if (err < 0)
+ 			return err;
+-		}
+ 
+ 		len -= transfer;
+ 		data += transfer;
+ 		addr += transfer;
+ 	}
+-	kfree(buf);
+ 
+ 	if (IS_AR7010_DEVICE(hif_dev->usb_device_id->driver_info))
+ 		firm_offset = AR7010_FIRMWARE_TEXT;
+-- 
+1.9.1
 
