@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:43860 "EHLO mail.us.es"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54919 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750774AbbCMM6F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 08:58:05 -0400
-Date: Fri, 13 Mar 2015 14:01:55 +0100
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: Richard Weinberger <richard@nod.at>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
-	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
-Subject: Re: [PATCH 3/4] netfilter: Fix portid types
-Message-ID: <20150313130155.GA1044@salvia> (sfid-20150313_135831_788515_E16A88A7)
-References: <1426246276-15839-1-git-send-email-richard@nod.at>
- <1426246276-15839-4-git-send-email-richard@nod.at>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426246276-15839-4-git-send-email-richard@nod.at>
+	id S1756015AbbCCKBY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 05:01:24 -0500
+Message-ID: <1425376880.2450.32.camel@sipsolutions.net> (sfid-20150303_110131_640671_0ADD62CC)
+Subject: Re: [PATCH 00/16] Various patches from our internal tree
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luciano Coelho <luciano.coelho@intel.com>
+Date: Tue, 03 Mar 2015 11:01:20 +0100
+In-Reply-To: <1425376034.2450.28.camel@sipsolutions.net> (sfid-20150303_104726_514804_825F6ABE)
+References: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1425376034.2450.28.camel@sipsolutions.net>
+	 (sfid-20150303_104726_514804_825F6ABE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 13, 2015 at 12:31:15PM +0100, Richard Weinberger wrote:
-> The netlink portid is an unsigned integer, use this type
-> also in netfilter.
-
-This small cleanup I can still take it but...
-
-> Signed-off-by: Richard Weinberger <richard@nod.at>
-> ---
->  net/netfilter/nfnetlink_log.c        | 4 ++--
->  net/netfilter/nfnetlink_queue_core.c | 7 ++++---
->  2 files changed, 6 insertions(+), 5 deletions(-)
+On Tue, 2015-03-03 at 10:47 +0100, Johannes Berg wrote:
+> All applied, except for 
 > 
-> diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
-> index 11d85b3..7f00846 100644
-> --- a/net/netfilter/nfnetlink_log.c
-> +++ b/net/netfilter/nfnetlink_log.c
-> @@ -62,7 +62,7 @@ struct nfulnl_instance {
->  	struct timer_list timer;
->  	struct net *net;
->  	struct user_namespace *peer_user_ns;	/* User namespace of the peer process */
-> -	int peer_portid;			/* PORTID of the peer process */
-> +	unsigned int peer_portid;		/* PORTID of the peer process */
+> > Arik Nemtsov (4):
+> >   mac80211: update TDLS sta spatial streams before auth
+> 
+> this one where I'm trying to see if it can be combined with another
+> patch.
 
-I think you have to use u32 for consistency. Other spots use the
-datatype for the netlink portid.
+And patch 15 broke the TI driver build, so I've dropped that.
 
-I think same thing applies to other patches.
+johannes
+
