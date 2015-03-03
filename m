@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:59440 "EHLO mail.hofr.at"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54666 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751201AbbCKTP3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 15:15:29 -0400
-Date: Wed, 11 Mar 2015 20:15:26 +0100
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>, Valdis.Kletnieks@vt.edu,
-	Bj??rn Mork <bjorn@mork.no>,
-	Jeff Haran <Jeff.Haran@citrix.com>,
-	Pat Erley <pat-lkml@erley.org>, ath10k@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RFC v2] ath10k: move code from parameter list into a
-	function
-Message-ID: <20150311191526.GA24455@opentech.at> (sfid-20150311_201550_067104_10B1A7D2)
-References: <1426100519-20636-1-git-send-email-hofrat@osadl.org> <1426101010.1904.9.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426101010.1904.9.camel@sipsolutions.net>
+	id S1754484AbbCCJAY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 04:00:24 -0500
+Message-ID: <1425373219.2450.13.camel@sipsolutions.net> (sfid-20150303_100028_843335_0F2CED36)
+Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
+ memset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 03 Mar 2015 10:00:19 +0100
+In-Reply-To: <1425372748.17273.6.camel@perches.com>
+References: <cover.1425354527.git.joe@perches.com>
+	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
+	 <1425370617.2450.3.camel@sipsolutions.net>
+	 <1425371858.17273.3.camel@perches.com>
+	 <1425372295.2450.9.camel@sipsolutions.net>
+	 <1425372748.17273.6.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 11 Mar 2015, Johannes Berg wrote:
+On Tue, 2015-03-03 at 00:52 -0800, Joe Perches wrote:
 
-> On Wed, 2015-03-11 at 15:01 -0400, Nicholas Mc Guire wrote:
-> > Putting code into the parameter list of wait_event_timeout() might be
-> > legal C-code but not really readable - the "inline" code is simply
-> > moved into a function and that passed to wait_event_timeout() as the
-> > condition.
+> > > My guess is the eth_zero_addr and eth_broadcast functions
+> > > are always taking aligned(2) arguments, just like all the
+> > > is_<foo>_ether_addr functions.
+> > 
+> > Err, are you serious???
 > 
-> Arguably, that's even more unreadable since if you don't know this macro
-> well you might assume the function is called only once, which is clearly
-> not true...
+> Yes.
 > 
-> Don't get me wrong, I'm not opposed to this change, but if you ask me
-> it's not completely clear that this makes it more readable.
->
-I'm not into this long enough to say what is better and if the consensus
-is that this patch is no more readable than the original code
-and no more maintainable either, then it is not worth the effort.
+> > That *clearly* isn't true, and if it was then
+> > this patch wouldn't be safe at all.
+> 
+> And why is that?
+> 
+> Until patch 1 of this series, eth_zero_addr and
+> eth_broadcast_addr was just an inline for a memset.
+> 
+> Even after patch 1, it's effectively still memset.
 
-so thanks for your comments!
+Exactly. It therefore *doesn't* require an aligned(2) argument, unlike
+what you stated above, hence my question if you're serious (and perhaps
+looking at some other code that I don't have).
 
-thx!
-hofrat 
+My argument/complaint is that it isn't obvious from these which ones do
+require aligned(2) argument. Therefore, it's not obvious without going
+back to the definitions where the conversion is safe and where it isn't.
+Clearly, for example, memcmp() cannot always be replaced with
+ether_addr_equal().
+
+johannes
+
