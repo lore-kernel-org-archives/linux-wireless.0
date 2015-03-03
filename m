@@ -1,35 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:37630 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753129AbbCWUuE (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35109 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755752AbbCCOlA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 16:50:04 -0400
-Message-ID: <55107C78.2080707@broadcom.com> (sfid-20150323_215013_322714_63465877)
-Date: Mon, 23 Mar 2015 21:50:00 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 3 Mar 2015 09:41:00 -0500
+Message-ID: <54F5C813.4030505@gmail.com> (sfid-20150303_154128_013572_0AB8C45C)
+Date: Tue, 03 Mar 2015 22:41:23 +0800
+From: Fred Chou <fred.chou.nd@gmail.com>
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?J=FCrgen_Bausa?= <juergen.Bausa@online.de>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: Broadcom 43340
-References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	 	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	 	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir>	  <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com>	  <loom.20150315T213441-211@post.gmane.org> <5505F651.3060607@broadcom.com>	  <loom.20150317T214603-379@post.gmane.org>	 <1426634407.11120.50.camel@redhat.com>	 <loom.20150318T222315-999@post.gmane.org> <1426714179.26901.37.camel@redhat.com> <5509F0B5.7030601@broadcom.com> <loom.20150319T215852-35@post.gmane.org> <550B4241.4040101@broadcom.com> <loom.20150321T213803-13@post.gmane.org> <550EBF89.7030702@broadcom.com> <loom.20150322T210447-841@post.gmane.org> <550FE268.10601@broadcom.com> <loom.20150323T210645-746@post.gmane.org>
-In-Reply-To: <loom.20150323T210645-746@post.gmane.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Eric Dumazet <eric.dumazet@gmail.com>
+CC: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: avoid memcpy when downloading firmware
+References: <1425356643-2707-1-git-send-email-fred.chou.nd@gmail.com> <1425362407.5130.161.camel@edumazet-glaptop2.roam.corp.google.com>
+In-Reply-To: <1425362407.5130.161.camel@edumazet-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/23/15 21:09, Jürgen Bausa wrote:
-> Arend van Spriel<arend@...>  writes:
->
->>> I now got it working. Just put 'sleeep 20' before the commands and now it
->>> works perfectly.
->>
->> Holding the boot for 20s is steep, but I guess a working device trumps a
->> fast boot
->>
->
-> Systemd runs even rc.local in parallel. So it doesn't hold the boot process.
 
-You make me feel old ;-)
 
-Regards,
-Arend
+On 3/3/2015 2:00 PM, Eric Dumazet wrote:
+> On Tue, 2015-03-03 at 12:24 +0800, Fred Chou wrote:
+>> From: Fred Chou <fred.chou.nd@gmail.com>
+>>
+>> The temporary buffer to hold firmware data is not really needed,
+>> and memcpy can be avoided by using data pointer instead.
+>>
+>> Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/hif_usb.c | 12 ++----------
+>>  1 file changed, 2 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+>> index 10c02f5..0bc35a8 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+>> @@ -986,30 +986,22 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+>>  	const void *data = hif_dev->fw_data;
+> 
+> Here data can be vmalloc() backed.
+> 
+>>  	size_t len = hif_dev->fw_size;
+>>  	u32 addr = AR9271_FIRMWARE;
+>> -	u8 *buf = kzalloc(4096, GFP_KERNEL);
+> 
+> Here buf is kmalloc() backed.
+> 
+>>  	u32 firm_offset;
+>>  
+>> -	if (!buf)
+>> -		return -ENOMEM;
+>> -
+>>  	while (len) {
+>>  		transfer = min_t(size_t, len, 4096);
+>> -		memcpy(buf, data, transfer);
+>>  
+>>  		err = usb_control_msg(hif_dev->udev,
+>>  				      usb_sndctrlpipe(hif_dev->udev, 0),
+>>  				      FIRMWARE_DOWNLOAD, 0x40 | USB_DIR_OUT,
+>> -				      addr >> 8, 0, buf, transfer, HZ);
+> 
+> 
+> Are you sure usb_control_msg() accepts vmalloc()ed buffers ?
+> 
+> My guess is the answer is no.
+> 
+> 
+
+I agree, and I would like to drop the patch. Thanks.
