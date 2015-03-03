@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:34677 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753296AbbCNJmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 05:42:13 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath10k: core: match wait_for_completion_timeout return type
-Date: Sat, 14 Mar 2015 05:37:37 -0400
-Message-Id: <1426325858-19808-1-git-send-email-hofrat@osadl.org> (sfid-20150314_104238_389155_75EA8C0A)
+Received: from mail-we0-f169.google.com ([74.125.82.169]:44749 "EHLO
+	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbbCCGdb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 01:33:31 -0500
+Received: by wesk11 with SMTP id k11so37740108wes.11
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 22:33:30 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH next] bcma: add missing includes
+Date: Tue,  3 Mar 2015 07:32:57 +0100
+Message-Id: <1425364377-12771-1-git-send-email-zajec5@gmail.com> (sfid-20150303_073348_141987_FFBE46EB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-An appropriately named unsigned long is added and the assignments fixed up.
-
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
+ drivers/bcma/driver_pci_host.c | 1 +
+ drivers/bcma/driver_pcie2.c    | 1 +
+ 2 files changed, 2 insertions(+)
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
-
-Patch is against 4.0-rc3 (localversion-next is -next-20150313)
-
- drivers/net/wireless/ath/ath10k/core.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c0e454b..5fd833e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1151,6 +1151,7 @@ EXPORT_SYMBOL(ath10k_core_start);
- int ath10k_wait_for_suspend(struct ath10k *ar, u32 suspend_opt)
- {
- 	int ret;
-+	unsigned long time_left;
+diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
+index c8a6b74..c42cec7 100644
+--- a/drivers/bcma/driver_pci_host.c
++++ b/drivers/bcma/driver_pci_host.c
+@@ -11,6 +11,7 @@
  
- 	reinit_completion(&ar->target_suspend);
+ #include "bcma_private.h"
+ #include <linux/pci.h>
++#include <linux/slab.h>
+ #include <linux/export.h>
+ #include <linux/bcma/bcma.h>
+ #include <asm/paccess.h>
+diff --git a/drivers/bcma/driver_pcie2.c b/drivers/bcma/driver_pcie2.c
+index 4568bc7..b1a6e32 100644
+--- a/drivers/bcma/driver_pcie2.c
++++ b/drivers/bcma/driver_pcie2.c
+@@ -10,6 +10,7 @@
  
-@@ -1160,9 +1161,9 @@ int ath10k_wait_for_suspend(struct ath10k *ar, u32 suspend_opt)
- 		return ret;
- 	}
+ #include "bcma_private.h"
+ #include <linux/bcma/bcma.h>
++#include <linux/pci.h>
  
--	ret = wait_for_completion_timeout(&ar->target_suspend, 1 * HZ);
-+	time_left = wait_for_completion_timeout(&ar->target_suspend, 1 * HZ);
- 
--	if (ret == 0) {
-+	if (!time_left) {
- 		ath10k_warn(ar, "suspend timed out - target pause event never came\n");
- 		return -ETIMEDOUT;
- 	}
+ /**************************************************
+  * R/W ops.
 -- 
-1.7.10.4
+1.8.4.5
 
