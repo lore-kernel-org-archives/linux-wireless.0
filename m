@@ -1,83 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24949 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751609AbbCMGic (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 02:38:32 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2D6ZVwV007167
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:31 -0700
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1t3pmg8hw8-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:31 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
-	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
-	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 0/9] mwifiex throughput enhancements 
-Date: Fri, 13 Mar 2015 17:37:50 +0530
-Message-ID: <1426248479-28451-1-git-send-email-patila@marvell.com> (sfid-20150313_073835_203392_33EA5E96)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:54780 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752490AbbCCJ2w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 04:28:52 -0500
+Message-ID: <1425374929.2450.25.camel@sipsolutions.net> (sfid-20150303_102901_278791_7092392B)
+Subject: Re: [PATCH 3/3] mac80211: add VHT support for IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 03 Mar 2015 10:28:49 +0100
+In-Reply-To: <1424533961-3869-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150221_165308_246956_55F2621E)
+References: <1424533961-3869-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1424533961-3869-3-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20150221_165308_246956_55F2621E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series is culmination of two month long activity for
-throughput enhancment which involved collecting multiple data points
-including multiple driver idle times, study of FW<->SDIO bus<->driver
-interaction and profiling and different approaches to overcoming current
-shortcomings in driver.
+On Sat, 2015-02-21 at 16:52 +0100, Janusz Dziedzic wrote:
 
-For TX, we have tried to optimize data path and reduce delays incurred during
-scheduling of work items and idle timeout between TX write to FW and TX DONE
-from FW.
+> @@ -1055,17 +1074,36 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+>  
+>  			memcpy(&htcap_ie, elems->ht_cap_elem, sizeof(htcap_ie));
+>  
+> -			/*
+> -			 * fall back to HT20 if we don't use or use
+> -			 * the other extension channel
+> -			 */
+> -			if (chandef.center_freq1 !=
+> -			    sdata->u.ibss.chandef.center_freq1)
+> -				htcap_ie.cap_info &=
+> -					cpu_to_le16(~IEEE80211_HT_CAP_SUP_WIDTH_20_40);
+> -
+>  			rates_updated |= ieee80211_ht_cap_ie_to_sta_ht_cap(
+>  						sdata, sband, &htcap_ie, sta);
+> +
+> +			if (elems->vht_operation && elems->vht_cap_elem &&
+> +			    width != NL80211_CHAN_WIDTH_20 &&
+> +			    width != NL80211_CHAN_WIDTH_40) {
+> +				/* we both use VHT */
+> +				vht_cap = sta->sta.vht_cap;
+> +				vht_oper = elems->vht_operation;
+> +
+> +				ieee80211_vht_oper_to_chandef(channel, vht_oper,
+> +							      &chandef);
+> +				memcpy(&vhtcap_ie, elems->vht_cap_elem,
+> +				       sizeof(vhtcap_ie));
+> +				ieee80211_vht_cap_ie_to_sta_vht_cap(sdata,
+> +								    sband,
+> +								    &vhtcap_ie,
+> +								    sta);
+> +				if (memcmp(&vht_cap, &sta->sta.vht_cap,
+> +					   sizeof(vht_cap)))
+> +						rates_updated |= true;
 
-For RX, this patch series adds a new type of aggregation- single port
-aggregation for SDIO. SP aggregation needs FW support and it would be
-enabled only when FW advertises support for SP aggregation.
+Some refactoring would be great, with expressions and argument lists
+like this.
 
-Our experiments show improvement of almost 30% in TX and 40% in RX on
-both X86 based and ARM based platforms.
+> +                       if (!
+> cfg80211_chandef_compatible(&sdata->u.ibss.chandef,
+> +                                                        &chandef))
+> +                               /* TODO handle incompatible chandefs
+> */
+> +                               WARN_ON_ONCE(1);
 
-Avinash Patil (3):
-  mwifiex: lock main process till reinitialization of vif is over
-  mwifiex: rename alloc_rx_buf to alloc_dma_aligned_buf
-  mwifiex: enhance SD8897 MP aggregation limits
+That seems like an unaddressed TODO? I don't think you should warn on a
+remote problem.
 
-Shengzhen Li (1):
-  mwifiex: avoid queue_work while work is ongoing
-
-Zhaoyang Liu (5):
-  mwifiex: get rid of BA setup helper functions
-  mwifiex: remove_bss_prio_lock
-  mwifiex: preprocess packets from TX queue
-  mwifiex: add SDIO rx single port aggregation
-  mwifiex: delay skb allocation for RX until cmd53 over
-
- drivers/net/wireless/mwifiex/11n.c           |  18 ++-
- drivers/net/wireless/mwifiex/11n.h           |  32 ------
- drivers/net/wireless/mwifiex/11n_aggr.c      |  16 ++-
- drivers/net/wireless/mwifiex/11n_rxreorder.c |   7 +-
- drivers/net/wireless/mwifiex/cfg80211.c      |  33 ++++++
- drivers/net/wireless/mwifiex/decl.h          |  10 +-
- drivers/net/wireless/mwifiex/fw.h            |   9 ++
- drivers/net/wireless/mwifiex/init.c          |   5 +
- drivers/net/wireless/mwifiex/main.c          |  71 ++++++++++--
- drivers/net/wireless/mwifiex/main.h          |  27 ++++-
- drivers/net/wireless/mwifiex/pcie.c          |  10 +-
- drivers/net/wireless/mwifiex/sdio.c          | 163 ++++++++++++++++++++-------
- drivers/net/wireless/mwifiex/sdio.h          |  14 ++-
- drivers/net/wireless/mwifiex/sta_cmd.c       |  40 +++++++
- drivers/net/wireless/mwifiex/sta_cmdresp.c   |  21 ++++
- drivers/net/wireless/mwifiex/txrx.c          | 125 ++++++++++++++++++++
- drivers/net/wireless/mwifiex/usb.c           |   4 +-
- drivers/net/wireless/mwifiex/util.c          |   4 +-
- drivers/net/wireless/mwifiex/wmm.c           |  48 ++++----
- drivers/net/wireless/mwifiex/wmm.h           |   2 +
- 20 files changed, 529 insertions(+), 130 deletions(-)
-
--- 
-1.8.1.4
+johannes
 
