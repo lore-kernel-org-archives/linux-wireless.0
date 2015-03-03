@@ -1,71 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plaes.org ([188.166.43.21]:54671 "EHLO plaes.org"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751769AbbCVNgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 09:36:08 -0400
-From: Priit Laes <plaes@plaes.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Joe Perches <joe@perches.com>, Priit Laes <plaes@plaes.org>
-Subject: [PATCH v2 3/4] rtlwifi: Rename rtl_translate_todbm to rtl_signalpower_todbm
-Date: Sun, 22 Mar 2015 15:35:19 +0200
-Message-Id: <1427031320-10913-4-git-send-email-plaes@plaes.org> (sfid-20150322_143626_897493_58D3DCF0)
-In-Reply-To: <1427031320-10913-1-git-send-email-plaes@plaes.org>
-References: <1427031320-10913-1-git-send-email-plaes@plaes.org>
+Received: from smtprelay0061.hostedemail.com ([216.40.44.61]:58801 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752042AbbCCIwb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 03:52:31 -0500
+Message-ID: <1425372748.17273.6.camel@perches.com> (sfid-20150303_095251_187046_9C700624)
+Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
+ memset
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 03 Mar 2015 00:52:28 -0800
+In-Reply-To: <1425372295.2450.9.camel@sipsolutions.net>
+References: <cover.1425354527.git.joe@perches.com>
+	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
+	 <1425370617.2450.3.camel@sipsolutions.net>
+	 <1425371858.17273.3.camel@perches.com>
+	 <1425372295.2450.9.camel@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Priit Laes <plaes@plaes.org>
----
- drivers/net/wireless/rtlwifi/stats.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+On Tue, 2015-03-03 at 09:44 +0100, Johannes Berg wrote:
+> > > Other than that, I guess I'll apply this, but I really wish there was a
+> > > way to distinguish more easily which of these require alignment and
+> > > which don't.
+> > 
+> > My guess is the eth_zero_addr and eth_broadcast functions
+> > are always taking aligned(2) arguments, just like all the
+> > is_<foo>_ether_addr functions.
+> 
+> Err, are you serious???
 
-diff --git a/drivers/net/wireless/rtlwifi/stats.c b/drivers/net/wireless/rtlwifi/stats.c
-index 9ebeb6e..4cce472 100644
---- a/drivers/net/wireless/rtlwifi/stats.c
-+++ b/drivers/net/wireless/rtlwifi/stats.c
-@@ -48,14 +48,9 @@ u8 rtl_evm_db_to_percentage(char value)
- }
- EXPORT_SYMBOL(rtl_evm_db_to_percentage);
- 
--static long rtl_translate_todbm(struct ieee80211_hw *hw,
--			 u8 signal_strength_index)
-+static long rtl_signalpower_todbm(u8 signal_strength_index)
- {
--	long signal_power;
--
--	signal_power = (long)((signal_strength_index + 1) >> 1);
--	signal_power -= 95;
--	return signal_power;
-+	return (long)((signal_strength_index + 1) >> 1) - 95;
- }
- 
- long rtl_signal_scale_mapping(long currsig)
-@@ -93,7 +88,7 @@ static void rtl_process_ui_rssi(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
- 	u8 rfpath;
--	u32 last_rssi, tmpval;
-+	u32 last_rssi;
- 
- 	if (!pstatus->packet_toself && !pstatus->packet_beacon)
- 		return;
-@@ -112,10 +107,9 @@ static void rtl_process_ui_rssi(struct ieee80211_hw *hw,
- 	    pstatus->signalstrength;
- 	if (rtlpriv->stats.ui_rssi.index >= PHY_RSSI_SLID_WIN_MAX)
- 		rtlpriv->stats.ui_rssi.index = 0;
--	tmpval = rtlpriv->stats.ui_rssi.total_val /
--		rtlpriv->stats.ui_rssi.total_num;
--	rtlpriv->stats.signal_strength = rtl_translate_todbm(hw,
--		(u8) tmpval);
-+	rtlpriv->stats.signal_strength = rtl_signalpower_todbm(
-+		(u8)rtlpriv->stats.ui_rssi.total_val /
-+			rtlpriv->stats.ui_rssi.total_num);
- 	pstatus->rssi = rtlpriv->stats.signal_strength;
- 
- 	if (pstatus->is_cck)
--- 
-2.3.3
+Yes.
+
+> That *clearly* isn't true, and if it was then
+> this patch wouldn't be safe at all.
+
+And why is that?
+
+Until patch 1 of this series, eth_zero_addr and
+eth_broadcast_addr was just an inline for a memset.
+
+Even after patch 1, it's effectively still memset.
 
