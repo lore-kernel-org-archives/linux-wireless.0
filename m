@@ -1,41 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0184.hostedemail.com ([216.40.44.184]:45329 "EHLO
+Received: from smtprelay0082.hostedemail.com ([216.40.44.82]:42715 "EHLO
 	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932193AbbCPRMJ (ORCPT
+	by vger.kernel.org with ESMTP id S1756165AbbCCD4x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 13:12:09 -0400
-Message-ID: <1426525919.23897.11.camel@perches.com> (sfid-20150316_181247_230243_BD2F2476)
-Subject: Re: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's
- rtw_security.c
+	Mon, 2 Mar 2015 22:56:53 -0500
 From: Joe Perches <joe@perches.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	"M. Vefa Bicakci" <m.v.b@runbox.com>,
-	Matthias Beyer <mail@beyermatthias.de>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net
-Date: Mon, 16 Mar 2015 10:11:59 -0700
-In-Reply-To: <20150316170714.GB20171@kroah.com>
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-	 <20150315093142.GY24643@lucy.3gs> <10669062.ZZNVxH5Tl9@lenny>
-	 <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org>
-	 <1426524927.23897.9.camel@perches.com> <20150316170714.GB20171@kroah.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+To: netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of memset
+Date: Mon,  2 Mar 2015 19:54:58 -0800
+Message-Id: <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com> (sfid-20150303_045744_790155_F786C7AE)
+In-Reply-To: <cover.1425354527.git.joe@perches.com>
+References: <cover.1425354527.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-16 at 18:07 +0100, Greg KH wrote:
-> On Mon, Mar 16, 2015 at 09:55:27AM -0700, Joe Perches wrote:
-> > On Mon, 2015-03-16 at 12:01 -0400, Jes Sorensen wrote:
-> > > For staging patches, you should always post patches against the
-> > > staging-next tree. Please rebase them and repost them.
-> > Greg is now preferring patches against his
-> > staging-testing branch
-> staging-testing only lasts a day or so before it turns into
-> staging-next, so you are usually safe with using staging-next.
+Use the built-in function instead of memset.
 
-Yeah but that usually is nothing but painful for
-those that are unfortunate enough to hit it.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ net/wireless/ibss.c     | 2 +-
+ net/wireless/nl80211.c  | 4 ++--
+ net/wireless/trace.h    | 9 +++++----
+ net/wireless/wext-sme.c | 2 +-
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index e24fc58..6309b9c 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -533,7 +533,7 @@ int cfg80211_ibss_wext_giwap(struct net_device *dev,
+ 	else if (wdev->wext.ibss.bssid)
+ 		memcpy(ap_addr->sa_data, wdev->wext.ibss.bssid, ETH_ALEN);
+ 	else
+-		memset(ap_addr->sa_data, 0, ETH_ALEN);
++		eth_zero_addr(ap_addr->sa_data);
+ 
+ 	wdev_unlock(wdev);
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d78fd8b..96fe328 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5683,8 +5683,8 @@ static int nl80211_parse_random_mac(struct nlattr **attrs,
+ 	int i;
+ 
+ 	if (!attrs[NL80211_ATTR_MAC] && !attrs[NL80211_ATTR_MAC_MASK]) {
+-		memset(mac_addr, 0, ETH_ALEN);
+-		memset(mac_addr_mask, 0, ETH_ALEN);
++		eth_zero_addr(mac_addr);
++		eth_zero_addr(mac_addr_mask);
+ 		mac_addr[0] = 0x2;
+ 		mac_addr_mask[0] = 0x3;
+ 
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index b17b369..a00ee88 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -7,6 +7,7 @@
+ #include <linux/tracepoint.h>
+ 
+ #include <linux/rtnetlink.h>
++#include <linux/etherdevice.h>
+ #include <net/cfg80211.h>
+ #include "core.h"
+ 
+@@ -15,7 +16,7 @@
+ 	if (given_mac)						     \
+ 		memcpy(__entry->entry_mac, given_mac, ETH_ALEN);     \
+ 	else							     \
+-		memset(__entry->entry_mac, 0, ETH_ALEN);	     \
++		eth_zero_addr(__entry->entry_mac);		     \
+ 	} while (0)
+ #define MAC_PR_FMT "%pM"
+ #define MAC_PR_ARG(entry_mac) (__entry->entry_mac)
+@@ -1077,7 +1078,7 @@ TRACE_EVENT(rdev_auth,
+ 		if (req->bss)
+ 			MAC_ASSIGN(bssid, req->bss->bssid);
+ 		else
+-			memset(__entry->bssid, 0, ETH_ALEN);
++			eth_zero_addr(__entry->bssid);
+ 		__entry->auth_type = req->auth_type;
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", auth type: %d, bssid: " MAC_PR_FMT,
+@@ -1103,7 +1104,7 @@ TRACE_EVENT(rdev_assoc,
+ 		if (req->bss)
+ 			MAC_ASSIGN(bssid, req->bss->bssid);
+ 		else
+-			memset(__entry->bssid, 0, ETH_ALEN);
++			eth_zero_addr(__entry->bssid);
+ 		MAC_ASSIGN(prev_bssid, req->prev_bssid);
+ 		__entry->use_mfp = req->use_mfp;
+ 		__entry->flags = req->flags;
+@@ -1153,7 +1154,7 @@ TRACE_EVENT(rdev_disassoc,
+ 		if (req->bss)
+ 			MAC_ASSIGN(bssid, req->bss->bssid);
+ 		else
+-			memset(__entry->bssid, 0, ETH_ALEN);
++			eth_zero_addr(__entry->bssid);
+ 		__entry->reason_code = req->reason_code;
+ 		__entry->local_state_change = req->local_state_change;
+ 	),
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 368611c..a4e8af3 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -322,7 +322,7 @@ int cfg80211_mgd_wext_giwap(struct net_device *dev,
+ 	if (wdev->current_bss)
+ 		memcpy(ap_addr->sa_data, wdev->current_bss->pub.bssid, ETH_ALEN);
+ 	else
+-		memset(ap_addr->sa_data, 0, ETH_ALEN);
++		eth_zero_addr(ap_addr->sa_data);
+ 	wdev_unlock(wdev);
+ 
+ 	return 0;
+-- 
+2.1.2
 
