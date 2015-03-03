@@ -1,44 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51265 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbbCTGaJ (ORCPT
+Received: from mail-wg0-f52.google.com ([74.125.82.52]:37693 "EHLO
+	mail-wg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757457AbbCCRpt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 02:30:09 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 3 Mar 2015 12:45:49 -0500
+Received: by wggx13 with SMTP id x13so1402372wgg.4
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 09:45:48 -0800 (PST)
+Message-ID: <54F5F359.3020901@gmail.com> (sfid-20150303_184600_687510_4966B111)
+Date: Tue, 03 Mar 2015 18:46:01 +0100
+From: Till Kamppeter <till.kamppeter@gmail.com>
 MIME-Version: 1.0
-Subject: Re: rtl8188ee: fix build break due to missing
- rtl_hal_pwrseqcmdparsingdefinition
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1426349237-7501-1-git-send-email-jeff.layton@primarydata.com>
-To: Jeff Layton <jeff.layton@primarydata.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Message-Id: <20150320063008.965E3140B84@smtp.codeaurora.org> (sfid-20150320_073013_512693_920648A5)
-Date: Fri, 20 Mar 2015 06:30:08 +0000 (UTC)
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>
+Subject: Google Summer of Code 2015 - We were not selected this year
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
-> I've been getting this error when building mainline kernels using
-> Fedora's config files:
-> 
->     drivers/net/wireless/rtlwifi/rtl8188ee/hw.c: In function ‘_rtl88ee_init_mac’:
->     drivers/net/wireless/rtlwifi/rtl8188ee/hw.c:853:2: error: implicit declaration of function ‘rtl_hal_pwrseqcmdparsing’ [-Werror=implicit-function-declaration]
->       if (!rtl_hal_pwrseqcmdparsing(rtlpriv, PWR_CUT_ALL_MSK,
->       ^
->     cc1: some warnings being treated as errors
->     scripts/Makefile.build:258: recipe for target 'drivers/net/wireless/rtlwifi/rtl8188ee/hw.o' failed
-> 
-> I'm not sure if this is the correct fix, but it does seem to allow the
-> build to complete. I suspect that this was broken by commit 34ed780a6afc
-> (rtlwifi: Fix problems with building an allyesconfig). Most of the files
-> that removed the include of pwrseqcmd.h, added one for ../pwrseqcmd.h.
-> The rtl8188ee driver had it removed it but didn't add the include of the
-> file in the parent directory.
-> 
-> Signed-off-by: Jeff Layton <jeff.layton@primarydata.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+unfortunately, the Linux Foundation was not selected as mentoring
+organization by Google this year. So we cannot run student projects
+funded by Google this year.
 
-Thanks, applied to wireless-drivers-next.git.
+   Till
 
-Kalle Valo
