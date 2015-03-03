@@ -1,73 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56949 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754147AbbCIRB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 13:01:56 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: Larry.Finger@lwfinger.net, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH v2 0/1] New driver: rtl8723au (mac80211)
-Date: Mon,  9 Mar 2015 13:00:52 -0400
-Message-Id: <1425920453-25099-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20150309_180201_277617_5854D43E)
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:40613 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751617AbbCCNSK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 08:18:10 -0500
+Received: by iebtr6 with SMTP id tr6so57624777ieb.7
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 05:18:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87ioei9t28.fsf@kamboji.qca.qualcomm.com>
+References: <1425364377-12771-1-git-send-email-zajec5@gmail.com>
+	<87ioei9t28.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 3 Mar 2015 14:18:09 +0100
+Message-ID: <CACna6ry0DFNr1fN-ZA_8AULQ5sJSzS3Gq+SKyn+FOnD+2KsZ3A@mail.gmail.com> (sfid-20150303_141815_171059_90359B9D)
+Subject: Re: [PATCH next] bcma: add missing includes
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 3 March 2015 at 13:14, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Rafał Miłecki <zajec5@gmail.com> writes:
+>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>
+> Please, no empty commit logs. I don't (yet) require that with all
+> patches, but this definitely needs one. Is this ok:
+>
+> bcma: add missing includes
+>
+> kbuild found out that commit 804e27dee49e ("bcma: support bringing up
+> bus hosted on PCIe Gen 2") broke the build on m68k:
+>
+>    drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
+>>> drivers/bcma/driver_pcie2.c:196:2: error: implicit declaration of function 'pcie_set_readrq' [-Werror\
+> =implicit-function-declaration]
+>      err = pcie_set_readrq(dev, pcie2->reqsize);
+>      ^
+>    cc1: some warnings being treated as errors
+>
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-This is a new driver for the rtl8723au which was written from scratch,
-to utilize the Linux mac80211 stack.
-
-This has been a pet project for me for some time I finally feel it
-is stable enough to submit. I have used it for a while without any
-serious issues.
-
-I started working on cleaning up the vendor provided driver in
-staging/rtl8723au over a year ago. After spending 6 months on it, it
-became obvious to me that it was a rather hopeless task, and I started
-writing this driver from scratch. I do not have any specs for the
-chip, so everything is based on knowledge I obtained from dissecting
-the vendor driver.
-
-Special thanks to Larry Finger for help with the original rtl8723au
-driver, and Johannes Berg for answering all my silly questions about
-802.11 innards and the mac80211 stack. Had I known then what I know
-today about 802.11, I probably would never have so mad as to start
-this project in the first place!
-
-v2 of the patch fixes the endian problem reported by Joe Perches, and
-adds a module debug parameter so one doesn't have to recompile the
-driver to change the debug mask (I was convinced I had that as a
-module parameter already). The latter was suggested by Larry Finger.
-
-In addition I fixed up a few cases of trailing whitespaces, a few
-indentation issues, and a few workarounds to reduce the scriptkiddies
-complaining about checkpatch warnings. I did run checkpatch on this
-one, and there are zero legitimate warnings left that needs to be
-dealt with.
-
-There are still some debug portions and code that is #if 0'ed out. I
-prefer to keep this in place for now as some of it is meant to be
-enabled later, and other portions I use to match up tables and code to
-the vendor driver when trying to trace issues when debugging.
-
-Cheers,
-Jes
-
-
-Jes Sorensen (1):
-  New driver: rtl8723au (mac80211)
-
- MAINTAINERS                          |    9 +
- drivers/net/wireless/Kconfig         |   19 +
- drivers/net/wireless/Makefile        |    2 +
- drivers/net/wireless/rtl8xxxu.c      | 4502 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/rtl8xxxu.h      |  494 ++++
- drivers/net/wireless/rtl8xxxu_regs.h |  940 +++++++
- 6 files changed, 5966 insertions(+)
- create mode 100644 drivers/net/wireless/rtl8xxxu.c
- create mode 100644 drivers/net/wireless/rtl8xxxu.h
- create mode 100644 drivers/net/wireless/rtl8xxxu_regs.h
+You're right, I could to better :| Yes, your version looks OK.
 
 -- 
-2.1.0
-
+Rafał
