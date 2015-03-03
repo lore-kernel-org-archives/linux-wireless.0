@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:46908 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750AbbCKNi5 (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:35813 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754046AbbCCJdw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 09:38:57 -0400
+	Tue, 3 Mar 2015 04:33:52 -0500
+Received: by wivz2 with SMTP id z2so1793315wiv.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 01:33:51 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CABxcv==yx3dy-beEF9cf1mKo1vjCh_LU6iLuvn1z-SKz9xG0qA@mail.gmail.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
-	<6286151.8rcX893TN6@wuerfel>
-	<CABxcv=mPVxW=BqL2PUL=AtS74kcqMG1yxC1WqMpxGiNOqGAnyQ@mail.gmail.com>
-	<2353601.si5uCETVn2@wuerfel>
-	<CABxcv==yx3dy-beEF9cf1mKo1vjCh_LU6iLuvn1z-SKz9xG0qA@mail.gmail.com>
-Date: Wed, 11 Mar 2015 15:38:56 +0200
-Message-ID: <CAB3XZEfi49qMsB7A3p4Y7r9emzSbeyUGVy4-njzey1UnJU0qzA@mail.gmail.com> (sfid-20150311_143902_680946_8EF52477)
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-From: Eliad Peller <eliad@wizery.com>
-To: Javier Martinez Canillas <javier@dowhile0.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Tony Lindgren <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
+In-Reply-To: <1425374168.2450.17.camel@sipsolutions.net>
+References: <1423568924-11895-1-git-send-email-michal.kazior@tieto.com> <1425374168.2450.17.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 3 Mar 2015 15:03:31 +0530
+Message-ID: <CABPxzY+hcmAHCzn+JvYRurDYO3yZ=_bRkDFODrbRMJ0L75yZ9A@mail.gmail.com> (sfid-20150303_103356_579418_6B00FFD8)
+Subject: Re: [PATCH] mac80211: disable u-APSD queues by default
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 3:21 PM, Javier Martinez Canillas
-<javier@dowhile0.org> wrote:
-> On Wed, Mar 11, 2015 at 2:17 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> On Wednesday 11 March 2015 14:07:11 Javier Martinez Canillas wrote:
->>>
->>> Right now it seems that all boards in mainline with a WiLink6 part are
->>> using internal clocks. So as a first step I think that adding an
->>> optional refclock-frequency and tcxoclock-frequency properties should
->>> be enough.
->>>
->>> It would be good if the driver supports getting the refclock and
->>> tcxoclock from an external provider in case a board gets these from
->>> external clocks but that can be done as a followup if there are boards
->>> in the future using that design.
->>>
->>> But please bear in mind that I'm not familiar with the clock handling
->>> in WiLink6 since the WiLink8 part used in the IGEP boards does not
->>> need these clocks and I only looked at Luciano's previous patches and
->>> the WiLink today driver today. So it would be good if Eliad can double
->>> check my assumptions to see if those are correct.
+On Tue, Mar 3, 2015 at 2:46 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2015-02-10 at 12:48 +0100, Michal Kazior wrote:
+>> Some APs experience problems when working with
+>> U-APSD. Decreasing the probability of that
+>> happening by using legacy mode for all ACs but VO
+>> isn't enough.
 >>
-sounds right. that's what i know as well.
-
->> Sounds good. I'd also be fine with not implementing the case for
->> external clocks in the code until we need (and can test) it, but
->> I think it should be specified in the binding from the start.
+>> Cisco 4410N originally forced us to enable VO by
+>> default only because it treated non-VO ACs as
+>> legacy.
 >>
-> Agreed.
+>> However some APs (notably Netgear R7000) silently
+>> reclassify packets to different ACs. Since u-APSD
+>> ACs require trigger frames for frame retrieval
+>> clients would never see some frames (e.g. ARP
+>> responses) or would fetch them accidentally after
+>> a long time.
 >
-great. so i'll implement the internal clocks case only.
+> This makes me a little sad, but I've applied this and even added a Cc
+> stable tag due to the interoperability issues.
+>
+Mixed mode (uapsd + legacy) is not really the optimal
+configuration, where we expect STA to send trigger frames periodically
+to retrieve the DL packets (especially very first packet).
 
-thanks,
-Eliad.
+But still if we want power save, i suggest going for
+All u-apsd (0xF), so that AP will inform us by setting the TIM bit
+and we can retrieve the first frame.
+(We have this patch internally and it works well).
