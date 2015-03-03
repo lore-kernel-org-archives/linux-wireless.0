@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2on0083.outbound.protection.outlook.com ([65.55.169.83]:34112
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753644AbbCaBO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 21:14:56 -0400
-Received: by igbqf9 with SMTP id qf9so4329554igb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2015 17:40:43 -0700 (PDT)
-MIME-Version: 1.0
-From: Ashkan Parcham Kashani <ashkan.parchamkashani@mail.utoronto.ca>
-Date: Mon, 30 Mar 2015 20:40:23 -0400
-Message-ID: <CAPZAZS58=O1SHtnDeVrGLpvpBAg85-WQ_LNbsuqDbAu5GeQXBA@mail.gmail.com> (sfid-20150331_031459_793870_B8AB9873)
-Subject: Re: Wireless Module: Carl9170 driver and firmware communication
-To: <linux-wireless@vger.kernel.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:54526 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752772AbbCCIRH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 03:17:07 -0500
+Message-ID: <1425370617.2450.3.camel@sipsolutions.net> (sfid-20150303_091728_901620_9B48410B)
+Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
+ memset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 03 Mar 2015 09:16:57 +0100
+In-Reply-To: <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
+References: <cover.1425354527.git.joe@perches.com>
+	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear linux-wireless mailing list,
+On Mon, 2015-03-02 at 19:54 -0800, Joe Perches wrote:
+> Use the built-in function instead of memset.
 
-I'm working on a project where I need to communicate some additional
-control information between the carl9170 driver and firmware. I am not
-exactly sure where the best place to add this extra information would be. I
-assumed that the DMA might work if I can extend it and reserve some
-space for the controls. I only need a few bytes for the communication.
+Please don't use <foo> in the title, especially not if the patch only
+introduces usage of eth_zero_addr(). It's easier to look for in the
+commit log without it.
 
-I also considered using device registers for this, but it's hard to
-find documentation of which registers may be free to use.
+Other than that, I guess I'll apply this, but I really wish there was a
+way to distinguish more easily which of these require alignment and
+which don't.
 
-It would be great to get some opinions on the best way to do this;
-would you have any advice?
+eth_zero_addr() doesn,t but is_zero_ether_addr() does. So does
+ether_addr_copy(). Frankly, it's getting a bit confusing, so I can't
+really fault anyone for using memset()/memcpy().
 
-If the DMA is a possible way to go, how would I go about extending it?
-To my understanding, the firmware sets the needed sizes, and the
-driver allocates the DMA accorting to specification.
+johannes
 
-I'm also wondering how one would go about interrupting the firmware.
-At times, the driver will need to interrupt the firmware, in which
-case the firmware should stop transmitting any packets it is currently
-transmitting.
-
-Any help would be much appreciated. Thanks so much!
---
-Ashkan Kashani
-ashkan.parchamkashani@mail.utoronto.ca
-4th year Engineering Science | Universtiy of Toronto
