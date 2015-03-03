@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:35437 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751333AbbCNWNz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39637 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752068AbbCCMj7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 18:13:55 -0400
-Received: by webcq43 with SMTP id cq43so14091045web.2
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2015 15:13:54 -0700 (PDT)
-Message-ID: <5504B29F.8000305@gmail.com> (sfid-20150314_231400_662091_C0950D39)
-Date: Sat, 14 Mar 2015 23:13:51 +0100
-From: Ochal Christophe <christophe.ochal@gmail.com>
+	Tue, 3 Mar 2015 07:39:59 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <liuzy@marvell.com>, <szli@marvell.com>
+Subject: Re: [PATCH 3/4] mwifiex: remove_bss_prio_lock
+References: <1424883057-12102-1-git-send-email-patila@marvell.com>
+	<1424883057-12102-4-git-send-email-patila@marvell.com>
+Date: Tue, 03 Mar 2015 14:39:52 +0200
+In-Reply-To: <1424883057-12102-4-git-send-email-patila@marvell.com> (Avinash
+	Patil's message of "Wed, 25 Feb 2015 22:20:56 +0530")
+Message-ID: <8761ai9rvr.fsf@kamboji.qca.qualcomm.com> (sfid-20150303_134003_363786_A31DEDFD)
 MIME-Version: 1.0
-To: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Broadcom 43340
-References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir>
-In-Reply-To: <20150314213907.3f1167bb@mir>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+Avinash Patil <patila@marvell.com> writes:
 
-On 03/14/2015 09:39 PM, Stefan Lippers-Hollmann wrote:
-> You don't need to run windows for that, the nvram (calibration data, 
-> probably the MAC address and related device specific data) is stored 
-> in your mainboard's firmware - and exposed to userspace (under linux) 
-> via /sys/firmware/efi/efivars/. You just need to identify the correct 
-> file and copy it to a place where linux expects to find it 
-> (/lib/firmware/brcm/brcmfmac43340-sdio.txt). Regards Stefan 
-> Lippers-Hollmann 
+> From: Zhaoyang Liu <liuzy@marvell.com>
+>
+> This patch does away with spinlock in
+> mwifiex_wmm_get_highest_priolist_ptr in order to improve TP.
+>
+> Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Amitkumar Karwar <patila@marvell.com>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
 
-Thanks for the hint, that did it, I'm online!
+[...]
 
-With Kind Regards,
-Christophe Ochal
+> @@ -727,6 +730,25 @@ static int mwifiex_deinit_priv_params(struct mwifiex_private *priv)
+>  	}
+>  
+>  	mwifiex_deauthenticate(priv, NULL);
+> +
+> +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+> +	adapter->main_locked = true;
+> +	if (adapter->mwifiex_processing) {
+> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+> +		flush_workqueue(adapter->workqueue);
+> +	} else {
+> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+> +	}
+> +
+> +	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
+> +	adapter->rx_locked = true;
+> +	if (adapter->rx_processing) {
+> +		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+> +		flush_workqueue(adapter->rx_workqueue);
+> +	} else {
+> +		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+> +	}
+
+And here the horrible hack just grows to other functions.
+
+-- 
+Kalle Valo
