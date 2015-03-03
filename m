@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57799 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753302AbbC3Ica (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:32:30 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [v3,01/18] ath9k_htc: add new WMI_REG_RMW_CMDID command
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1427049003-8443-2-git-send-email-linux@rempel-privat.de>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	Oleksij Rempel <linux@rempel-privat.de>
-Message-Id: <20150330083229.A29981401F7@smtp.codeaurora.org> (sfid-20150330_103234_501538_02175664)
-Date: Mon, 30 Mar 2015 08:32:29 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:54675 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751535AbbCCJIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 04:08:52 -0500
+Message-ID: <1425373729.2450.14.camel@sipsolutions.net> (sfid-20150303_100856_573282_3FF5644A)
+Subject: Re: [PATCH v2 1/2] cfg80211: add bss_type and privacy arguments in
+ cfg80211_get_bss()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dedy Lansky <dlansky@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Date: Tue, 03 Mar 2015 10:08:49 +0100
+In-Reply-To: <1423403524-22540-2-git-send-email-dlansky@codeaurora.org>
+References: <1423403524-22540-1-git-send-email-dlansky@codeaurora.org>
+	 <1423403524-22540-2-git-send-email-dlansky@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Since usb bus add extra delay on each request, a command
-> with read + write requests is too expensive. We can dramtically
-> reduce usb load by moving this command to firmware.
+On Sun, 2015-02-08 at 15:52 +0200, Dedy Lansky wrote:
+> Background: 802.11ad adds new network type (PBSS) and changes "capability"
+> field interpretation for the DMG (60G) band.
+> Same 2 bits that was interpreted as "ESS" and "IBSS", are re-used as
+> 2-bit field with 3 valid values (and 1 reserved). Valid values are:
+> "IBSS", "PBSS" (new) and "AP".
 > 
-> In my tests, this patch will reduce channel scan time
-> for about 5-10 seconds.
+> New enum added into cfg80211.h - ieee80211_bss_type with valid network types.
+> When searching for particular network type in cfg80211_get_bss,
+> "capa_mask" and "capa_val" would not work due to difference described above.
+> Thus, need to decouple network type (bss_type) and handle it separately.
 > 
-> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+> Remaining bits in "capa_mask" and "capa_val" are used only for PRIVACY matching
+> so replace those two with privacy enum.
 
-Thanks, 18 patches applied to wireless-drivers-next.git:
+Applied, with minor changes.
 
-8badb50cfab6 ath9k_htc: add new WMI_REG_RMW_CMDID command
-8d1cbdef8a64 ath9k: ar9271_hw_pa_cal - use defs instead of magin numbers
-0202a553f59b ath9k: ar9271_hw_pa_cal: use proper makroses.
-93442c85d23a ath9k: ar9271_hw_pa_cal: use RMW buffer
-d55ce0a6f983 ath9k: add multi_read to be compatible with ath9k_htc
-a57cb45a0a05 ath9k: add new function ath9k_hw_read_array
-03822782e829 ath9k: ar9271_hw_pa_cal: use REG_READ_ARRAY
-9c05babd933e ath9k: use one shot read in ath9k_hw_update_mibstats
-9830ba6c9ad0 ath9k: ath9k_hw_loadnf: use REG_RMW
-3df5dd901d1a ath9k: write buffer related optimisation in ar5008_hw_set_channel_regs
-10e03ef6b466 ath9k: ath9k_hw_set_4k_power_cal_tabl: use rmw buffer
-7b37e0d4db03 ath9k: use rmw buffer in ath9k_hw_set_operating_mode and ath9k_hw_reset
-18d6616f1bb1 ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-2028523b6dce ath9k: ath9k_hw_analog_shift_rmw: use REG_RMW
-ad10e0d65030 ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-2dfc0247f0ff ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
-b1c1a26461a7 ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
-eaa4059d56fd ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
+johannes
 
-Kalle Valo
