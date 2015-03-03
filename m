@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39351 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933036AbbCEMMv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 07:12:51 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH next] bcma: make bcma_host_pci_(up|down) calls safe for every config
-References: <1425467681-15988-1-git-send-email-zajec5@gmail.com>
-Date: Thu, 05 Mar 2015 14:12:44 +0200
-In-Reply-To: <1425467681-15988-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 4 Mar 2015
- 12:14:41 +0100")
-Message-ID: <87egp363sz.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_131258_490771_33EAEE16)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:54803 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752068AbbCCJhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 04:37:00 -0500
+Message-ID: <1425375418.2450.27.camel@sipsolutions.net> (sfid-20150303_103705_801558_6A0CD887)
+Subject: Re: [PATCH] mac80211: disable u-APSD queues by default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 Mar 2015 10:36:58 +0100
+In-Reply-To: <CABPxzY+hcmAHCzn+JvYRurDYO3yZ=_bRkDFODrbRMJ0L75yZ9A@mail.gmail.com> (sfid-20150303_103352_166684_105D9687)
+References: <1423568924-11895-1-git-send-email-michal.kazior@tieto.com>
+	 <1425374168.2450.17.camel@sipsolutions.net>
+	 <CABPxzY+hcmAHCzn+JvYRurDYO3yZ=_bRkDFODrbRMJ0L75yZ9A@mail.gmail.com>
+	 (sfid-20150303_103352_166684_105D9687)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
 
-> We were providing declarations but actual code was compiled only with
-> CONFIG_BCMA_HOST_PCI set. This could result in:
-> ERROR: "bcma_host_pci_down" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
-> ERROR: "bcma_host_pci_up" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
-> ERROR: "bcma_host_pci_down" [drivers/net/wireless/b43/b43.ko] undefined!
-> ERROR: "bcma_host_pci_up" [drivers/net/wireless/b43/b43.ko] undefined!
->
-> Reported-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> >> Cisco 4410N originally forced us to enable VO by
+> >> default only because it treated non-VO ACs as
+> >> legacy.
 
-Thanks, applied to wireless-drivers-next.git.
+> Mixed mode (uapsd + legacy) is not really the optimal
+> configuration, where we expect STA to send trigger frames periodically
+> to retrieve the DL packets (especially very first packet).
+> 
+> But still if we want power save, i suggest going for
+> All u-apsd (0xF), so that AP will inform us by setting the TIM bit
+> and we can retrieve the first frame.
+> (We have this patch internally and it works well).
 
--- 
-Kalle Valo
+Except where it doesn't work, like on the Cisco 4410N - see above.
+
+johannes
+
