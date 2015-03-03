@@ -1,121 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:57370 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753414AbbC1Mxl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:53:41 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
-	m.v.b@runbox.com
-Subject: [PATCH v4 13/15] staging: rtl8723au: Rework two byte array comparisons
-Date: Sat, 28 Mar 2015 08:52:46 -0400
-Message-Id: <1427547168-12078-14-git-send-email-m.v.b@runbox.com> (sfid-20150328_135620_334208_90E5CCC2)
-In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
-References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+Received: from smtprelay0037.hostedemail.com ([216.40.44.37]:39082 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755945AbbCCD4u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Mar 2015 22:56:50 -0500
+From: Joe Perches <joe@perches.com>
+To: netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH net-next 12/14] mac80211: Use eth_<foo>_addr instead of memset
+Date: Mon,  2 Mar 2015 19:54:57 -0800
+Message-Id: <ed752a8f58f38dc7be7d38cda40b9c900677844c.1425354528.git.joe@perches.com> (sfid-20150303_045754_855783_B1E9067F)
+In-Reply-To: <cover.1425354527.git.joe@perches.com>
+References: <cover.1425354527.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prior to this commit, rtl8723au's rtw_security.c had two instances of
-byte array comparisons (for CRC checks) where the individual elements
-of the byte arrays were compared one by one and an error trace would
-be output if the byte arrays were determined to be different.
+Use the built-in function instead of memset.
 
-This commit improves the readability of the CRC verification by
-placing the individual 4 bytes of each byte array into an 32-bit
-unsigned integer and comparing the two resulting integers.
-
-Thanks to Larry Finger for spotting the code style issues in the
-previous version of this commit, and thanks to Joe Perches for
-suggesting the use of 32-bit integer comparisons instead of byte
-array comparisons.
-
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
-
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
+ net/mac80211/cfg.c  |  2 +-
+ net/mac80211/ibss.c |  2 +-
+ net/mac80211/mesh.c |  2 +-
+ net/mac80211/mlme.c | 10 +++++-----
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
-v2: Correct code style issues and compare 32-bit integers instead of
-    byte arrays. Update the commit message to better reflect the nature
-    of the changes.
----
- drivers/staging/rtl8723au/core/rtw_security.c | 39 ++++++++++-----------------
- 1 file changed, 14 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 4330479ee0..eb3544866a 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -210,7 +210,7 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
- 		     struct recv_frame *precvframe)
- {
- 	/*  exclude ICV */
--	u8 crc[4];
-+	u32 actual_crc, expected_crc;
- 	struct arc4context mycontext;
- 	int length;
- 	u32 keylength;
-@@ -243,19 +243,14 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
- 	arcfour_encrypt(&mycontext, payload, payload, length);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index dd4ff36..74f509c 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1488,7 +1488,7 @@ static void mpath_set_pinfo(struct mesh_path *mpath, u8 *next_hop,
+ 	if (next_hop_sta)
+ 		memcpy(next_hop, next_hop_sta->sta.addr, ETH_ALEN);
+ 	else
+-		memset(next_hop, 0, ETH_ALEN);
++		eth_zero_addr(next_hop);
  
- 	/* calculate icv and compare the icv */
--	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
-+	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
-+	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
+ 	memset(pinfo, 0, sizeof(*pinfo));
  
--	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
--	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
-+	if (actual_crc != expected_crc) {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--			 ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload"
--			  "[length-1](%x) || crc[2](%x)!= payload[length-2](%x)"
--			  " || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)"
--			  "!= payload[length-4](%x)\n",
--			  crc[3], payload[length - 1],
--			  crc[2], payload[length - 2],
--			  crc[1], payload[length - 3],
--			  crc[0], payload[length - 4]));
-+			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
-+			  "actual: %08x, expected: %08x\n",
-+			  actual_crc, expected_crc));
- 	}
- }
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index b606b53..f9b0758 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -1742,7 +1742,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
  
-@@ -702,7 +697,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 	u32 pnh;
- 	u8 rc4key[16];
- 	u8 ttkey[16];
--	u8 crc[4];
-+	u32 actual_crc, expected_crc;
- 	struct arc4context mycontext;
- 	int length;
- 	u32 prwskeylen;
-@@ -757,20 +752,14 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 	arcfour_init(&mycontext, rc4key, 16);
- 	arcfour_encrypt(&mycontext, payload, payload, length);
+ 	ieee80211_ibss_disconnect(sdata);
+ 	ifibss->ssid_len = 0;
+-	memset(ifibss->bssid, 0, ETH_ALEN);
++	eth_zero_addr(ifibss->bssid);
  
--	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
-+	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
-+	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
+ 	/* remove beacon */
+ 	kfree(sdata->u.ibss.ie);
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 0c8b2a7..49a44bc 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -520,7 +520,7 @@ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
+ 	} else {
+ 		*fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
+ 		/* RA TA DA SA */
+-		memset(hdr->addr1, 0, ETH_ALEN);   /* RA is resolved later */
++		eth_zero_addr(hdr->addr1);   /* RA is resolved later */
+ 		memcpy(hdr->addr2, meshsa, ETH_ALEN);
+ 		memcpy(hdr->addr3, meshda, ETH_ALEN);
+ 		memcpy(hdr->addr4, meshsa, ETH_ALEN);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 10ac632..9f6f356 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2033,7 +2033,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_flush_queues(local, sdata, false);
  
--	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
--	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
-+	if (actual_crc != expected_crc) {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--			 ("rtw_wep_decrypt23a:icv error "
--			  "crc[3](%x)!= payload[length-1](%x) || "
--			  "crc[2](%x)!= payload[length-2](%x) || "
--			  "crc[1](%x)!= payload[length-3](%x) || "
--			  "crc[0](%x)!= payload[length-4](%x)\n",
--			  crc[3], payload[length - 1],
--			  crc[2], payload[length - 2],
--			  crc[1], payload[length - 3],
--			  crc[0], payload[length - 4]));
-+			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
-+			  "actual: %08x, expected: %08x\n",
-+			  actual_crc, expected_crc));
- 		res = _FAIL;
- 	}
+ 	/* clear bssid only after building the needed mgmt frames */
+-	memset(ifmgd->bssid, 0, ETH_ALEN);
++	eth_zero_addr(ifmgd->bssid);
  
+ 	/* remove AP and TDLS peers */
+ 	sta_info_flush(sdata);
+@@ -2464,7 +2464,7 @@ static void ieee80211_destroy_auth_data(struct ieee80211_sub_if_data *sdata,
+ 		del_timer_sync(&sdata->u.mgd.timer);
+ 		sta_info_destroy_addr(sdata, auth_data->bss->bssid);
+ 
+-		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
++		eth_zero_addr(sdata->u.mgd.bssid);
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
+ 		sdata->u.mgd.flags = 0;
+ 		mutex_lock(&sdata->local->mtx);
+@@ -2777,7 +2777,7 @@ static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
+ 		del_timer_sync(&sdata->u.mgd.timer);
+ 		sta_info_destroy_addr(sdata, assoc_data->bss->bssid);
+ 
+-		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
++		eth_zero_addr(sdata->u.mgd.bssid);
+ 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
+ 		sdata->u.mgd.flags = 0;
+ 		mutex_lock(&sdata->local->mtx);
+@@ -4474,7 +4474,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ 
+  err_clear:
+-	memset(ifmgd->bssid, 0, ETH_ALEN);
++	eth_zero_addr(ifmgd->bssid);
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
+ 	ifmgd->auth_data = NULL;
+  err_free:
+@@ -4817,7 +4817,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	return 0;
+  err_clear:
+-	memset(ifmgd->bssid, 0, ETH_ALEN);
++	eth_zero_addr(ifmgd->bssid);
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
+ 	ifmgd->assoc_data = NULL;
+  err_free:
 -- 
-2.1.4
+2.1.2
 
