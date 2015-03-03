@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52065 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54612 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751316AbbCSOeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 10:34:14 -0400
-Date: Thu, 19 Mar 2015 15:30:34 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [1/3] rt2x00usb: initialize the read value in case of failure
-Message-ID: <20150319143033.GA2516@redhat.com> (sfid-20150319_153419_529959_A165E397)
-References: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
- <20150316160652.789B313FBE6@smtp.codeaurora.org>
- <20150316164100.GA6208@linutronix.de>
- <20150317083414.GA1276@linutronix.de>
- <20150318131124.GA11724@redhat.com>
- <550ACDF2.30507@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <550ACDF2.30507@linutronix.de>
+	id S1752137AbbCCIo7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Mar 2015 03:44:59 -0500
+Message-ID: <1425372295.2450.9.camel@sipsolutions.net> (sfid-20150303_094559_604376_B1B7D1D4)
+Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
+ memset
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 03 Mar 2015 09:44:55 +0100
+In-Reply-To: <1425371858.17273.3.camel@perches.com>
+References: <cover.1425354527.git.joe@perches.com>
+	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
+	 <1425370617.2450.3.camel@sipsolutions.net>
+	 <1425371858.17273.3.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 19, 2015 at 02:24:02PM +0100, Sebastian Andrzej Siewior wrote:
-> On 03/18/2015 02:11 PM, Stanislaw Gruszka wrote:
-> > On Tue, Mar 17, 2015 at 09:34:14AM +0100, Sebastian Andrzej Siewior wrote:
-> >> I have no idea what AutoRun mode is (it seems that the stick already
-> >> has a firmware and is happy with it) and I have no clue why the firmware
-> >> decides to lie about it. I looked at the vendor driver I found at github
-> >> (which seems to be from 2012-10-22, DPO_RT5572_LinuxSTA_2.6.1.3) and
-> >> well, I look again if someone says it is worth looking… They seem to do
-> >> some kind "firmware is comming" magic which might be already done in the
-> >> current driver at a different spot but I think the main question is why
-> >> request is answered wrong. I *think* the vendor driver sends the
-> >> USB_MODE_AUTORUN request only once but it is hard to tell…
-> > 
-> > Does the below patch solve the issue ?
-> 
-> So you kill the please-load-the-firware bit and avoid further questions
-> regarding its state. Yes, it helps as in my test-case is now running
-> for ~15h. I see the "NIC in AutoRun mode" just once. Thanks.
-> 
-> I am still curious why it answers wrong but lets hope the first answer
-> is correct :)
 
-I don't know, perhaps this value is only valid at initialization stage.
-Looks that vendor driver reads it only once and saves it as flag in the
-memory.
+> > Other than that, I guess I'll apply this, but I really wish there was a
+> > way to distinguish more easily which of these require alignment and
+> > which don't.
+> 
+> My guess is the eth_zero_addr and eth_broadcast functions
+> are always taking aligned(2) arguments, just like all the
+> is_<foo>_ether_addr functions.
 
-Stanislaw
+Err, are you serious??? That *clearly* isn't true, and if it was then
+this patch wouldn't be safe at all.
+
+> > eth_zero_addr() doesn,t but is_zero_ether_addr() does. So does
+> > ether_addr_copy(). Frankly, it's getting a bit confusing, so I can't
+> > really fault anyone for using memset()/memcpy().
+> 
+> I suspect more than anything else all these are historic.
+
+I'd expect a mix here, certainly. Not all of them are really old though.
+
+johannes
+
