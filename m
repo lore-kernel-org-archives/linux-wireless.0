@@ -1,31 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:57838 "EHLO arrakis.dune.hu"
+Received: from mga01.intel.com ([192.55.52.88]:48200 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756206AbbCCPjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 10:39:31 -0500
+	id S1758437AbbCDSZ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 13:25:56 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "alban.gruin@gmail.com" <alban.gruin@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: [PATCH] iwlwifi: mvm: fix usage of debug specific variables
+Date: Wed, 4 Mar 2015 18:25:51 +0000
+Message-ID: <1425493551.2820.5.camel@egrumbacBox> (sfid-20150304_192619_433872_4C6385FA)
+References: <871tl4ej9w.fsf@ylate.i-did-not-set--mail-host-address--so-tickle-me>
+In-Reply-To: <871tl4ej9w.fsf@ylate.i-did-not-set--mail-host-address--so-tickle-me>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87k2yy86ld.fsf@kamboji.qca.qualcomm.com>
-References: <1424103816-10566-1-git-send-email-zajec5@gmail.com>
- <1425313135-28225-1-git-send-email-zajec5@gmail.com> <87k2yy86ld.fsf@kamboji.qca.qualcomm.com>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Tue, 3 Mar 2015 16:38:54 +0100
-Message-ID: <CAOiHx==ZbVCsymBFhn60nBU2-gHU2HPdp1T9xdZpK9OVjAzFUw@mail.gmail.com> (sfid-20150303_163935_857643_7A48F239)
-Subject: Re: [PATCH][FIX][RESEND] b43: fix support for 5 GHz only BCM43228 model
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>, stable@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 3, 2015 at 4:05 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> RESEND: It seems patchwork didn't catch my patch. Trying again.
->
-> Odd, I still don't see it in patchwork. I wonder what caused that?
-
-I also see it neither in my b43-dev nor linux-wireless archives, nor
-does google find it (only your reply).
-
-
-Jonas
+SGksDQoNCg0KT24gV2VkLCAyMDE1LTAzLTA0IGF0IDE4OjU5ICswMTAwLCBBbGJhbiBHcnVpbiB3
+cm90ZToNCj4gU29tZSB2YXJpYWJsZXMgaW4gc3RydWN0cyAiaXdsX212bSIgYW5kICJpd2xfbXZt
+X3ZpZiIgYXJlIHVzZWQgZm9yIGRlYnVnDQo+IHB1cnBvc2UsIGFuZCBhcmUgZGVjbGFyZWQgb25s
+eSBpZiBDT05GSUdfSVdMV0lGSV9ERUJVR0ZTIGlzDQo+IHNldC4gSG93ZXZlciwgc29tZSBvZiB0
+aGVzZSB2YXJpYWJsZXMgYXJlIHVzZWQgZXZlbiBpZg0KPiBDT05GSUdfSVdMV0lGSV9ERUJVR0ZT
+IGlzIG5vdCBzZXQsIHJlc3VsdGluZyBpbiBhIGNvbXBpbGF0aW9uIGVycm9yLg0KPiBUaGlzIHBh
+dGNoIGFpbXMgdG8gZml4IHRoaXMgaXNzdWUgYnkgYWRkaW5nIGEgcHJlcHJvY2Vzc29yIGNvbmRp
+dGlvbg0KPiB3aGVyZSB0aGVzZSB2YXJpYWJsZXMgYXJlIHVzZWQuDQo+IA0KDQoNCm9oIHdlbGwu
+Li4gdGhhbmtzIGZvciB0aGUgaGVhZHMgdXAuDQpZb3VyIHBhdGNoIGlzIG5vdCBwZXJmZWN0LCBi
+dXQgSSdsbCBmaXggdGhlIHByb2JsZW1zIGluIG91ciBpbnRlcm5hbA0KdHJlZSBhbmQgdGhlIGZp
+eCB3aWxsIGJlIHB1c2hlZCBvdXQgc29vbi4NCg0KVGhhbmtzIQ0KDQo+IFNpZ25lZC1vZmYtYnk6
+IEFsYmFuIEdydWluIDxhbGJhbi5ncnVpbkBnbWFpbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbWFjLWN0eHQuYyB8IDQgKysrKw0KPiAgZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vcGh5LWN0eHQuYyB8IDMgKysrDQo+ICAyIGZpbGVzIGNo
+YW5nZWQsIDcgaW5zZXJ0aW9ucygrKQ0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvaXdsd2lmaS9tdm0vbWFjLWN0eHQuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
+bXZtL21hYy1jdHh0LmMNCj4gaW5kZXggNTgxYjNiOC4uNDJiZDU0NSAxMDA2NDQNCj4gLS0tIGEv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbWFjLWN0eHQuYw0KPiArKysgYi9kcml2
+ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9tYWMtY3R4dC5jDQo+IEBAIC0xMzc1LDEwICsx
+Mzc1LDEyIEBAIHN0YXRpYyB2b2lkIGl3bF9tdm1fYmVhY29uX2xvc3NfaXRlcmF0b3Iodm9pZCAq
+X2RhdGEsIHU4ICptYWMsDQo+ICB7DQo+ICAJc3RydWN0IGl3bF9taXNzZWRfYmVhY29uc19ub3Rp
+ZiAqbWlzc2VkX2JlYWNvbnMgPSBfZGF0YTsNCj4gIAlzdHJ1Y3QgaXdsX212bV92aWYgKm12bXZp
+ZiA9IGl3bF9tdm1fdmlmX2Zyb21fbWFjODAyMTEodmlmKTsNCj4gKyNpZmRlZiBDT05GSUdfSVdM
+V0lGSV9ERUJVR0ZTDQo+ICAJc3RydWN0IGl3bF9tdm0gKm12bSA9IG12bXZpZi0+bXZtOw0KPiAg
+CXN0cnVjdCBpd2xfZndfZGJnX3RyaWdnZXJfbWlzc2VkX2Jjb24gKmJjb25fdHJpZzsNCj4gIAlz
+dHJ1Y3QgaXdsX2Z3X2RiZ190cmlnZ2VyX3RsdiAqdHJpZ2dlcjsNCj4gIAl1MzIgc3RvcF90cmln
+X21pc3NlZF9iY29uLCBzdG9wX3RyaWdfbWlzc2VkX2Jjb25fc2luY2Vfcng7DQo+ICsjZW5kaWYN
+Cj4gIAl1MzIgcnhfbWlzc2VkX2Jjb24sIHJ4X21pc3NlZF9iY29uX3NpbmNlX3J4Ow0KPiAgDQo+
+ICAJaWYgKG12bXZpZi0+aWQgIT0gKHUxNilsZTMyX3RvX2NwdShtaXNzZWRfYmVhY29ucy0+bWFj
+X2lkKSkNCj4gQEAgLTEzOTUsNiArMTM5Nyw3IEBAIHN0YXRpYyB2b2lkIGl3bF9tdm1fYmVhY29u
+X2xvc3NfaXRlcmF0b3Iodm9pZCAqX2RhdGEsIHU4ICptYWMsDQo+ICAJICAgICBJV0xfTVZNX01J
+U1NFRF9CRUFDT05TX1RIUkVTSE9MRCkNCj4gIAkJaWVlZTgwMjExX2JlYWNvbl9sb3NzKHZpZik7
+DQo+ICANCj4gKyNpZmRlZiBDT05GSUdfSVdMV0lGSV9ERUJVR0ZTDQo+ICAJaWYgKCFpd2xfZndf
+ZGJnX3RyaWdnZXJfZW5hYmxlZChtdm0tPmZ3LA0KPiAgCQkJCQlGV19EQkdfVFJJR0dFUl9NSVNT
+RURfQkVBQ09OUykpDQo+ICAJCXJldHVybjsNCj4gQEAgLTE0MTQsNiArMTQxNyw3IEBAIHN0YXRp
+YyB2b2lkIGl3bF9tdm1fYmVhY29uX2xvc3NfaXRlcmF0b3Iodm9pZCAqX2RhdGEsIHU4ICptYWMs
+DQo+ICAJaWYgKHJ4X21pc3NlZF9iY29uX3NpbmNlX3J4ID49IHN0b3BfdHJpZ19taXNzZWRfYmNv
+bl9zaW5jZV9yeCB8fA0KPiAgCSAgICByeF9taXNzZWRfYmNvbiA+PSBzdG9wX3RyaWdfbWlzc2Vk
+X2Jjb24pDQo+ICAJCWl3bF9tdm1fZndfZGJnX2NvbGxlY3RfdHJpZyhtdm0sIHRyaWdnZXIsIE5V
+TEwsIDApOw0KPiArI2VuZGlmDQo+ICB9DQo+ICANCj4gIGludCBpd2xfbXZtX3J4X21pc3NlZF9i
+ZWFjb25zX25vdGlmKHN0cnVjdCBpd2xfbXZtICptdm0sDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJz
+L25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9waHktY3R4dC5jIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvaXdsd2lmaS9tdm0vcGh5LWN0eHQuYw0KPiBpbmRleCAxYmQxMGVkLi44NTBjNzJjIDEwMDY0
+NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9waHktY3R4dC5jDQo+
+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3BoeS1jdHh0LmMNCj4gQEAg
+LTE3NSw4ICsxNzUsMTEgQEAgc3RhdGljIHZvaWQgaXdsX212bV9waHlfY3R4dF9jbWRfZGF0YShz
+dHJ1Y3QgaXdsX212bSAqbXZtLA0KPiAgCWNtZC0+cnhjaGFpbl9pbmZvIHw9IGNwdV90b19sZTMy
+KGlkbGVfY250IDw8IFBIWV9SWF9DSEFJTl9DTlRfUE9TKTsNCj4gIAljbWQtPnJ4Y2hhaW5faW5m
+byB8PSBjcHVfdG9fbGUzMihhY3RpdmVfY250IDw8DQo+ICAJCQkJCSBQSFlfUlhfQ0hBSU5fTUlN
+T19DTlRfUE9TKTsNCj4gKw0KPiArI2lmZGVmIENPTkZJR19JV0xXSUZJX0RFQlVHRlMNCj4gIAlp
+ZiAodW5saWtlbHkobXZtLT5kYmdmc19yeF9waHlpbmZvKSkNCj4gIAkJY21kLT5yeGNoYWluX2lu
+Zm8gPSBjcHVfdG9fbGUzMihtdm0tPmRiZ2ZzX3J4X3BoeWluZm8pOw0KPiArI2VuZGlmDQo+ICAN
+Cj4gIAljbWQtPnR4Y2hhaW5faW5mbyA9IGNwdV90b19sZTMyKGl3bF9tdm1fZ2V0X3ZhbGlkX3R4
+X2FudChtdm0pKTsNCj4gIH0NCg0K
