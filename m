@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plaes.org ([188.166.43.21]:51905 "EHLO plaes.org"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752324AbbCKUDs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 16:03:48 -0400
-From: Priit Laes <plaes@plaes.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Priit Laes <plaes@plaes.org>
-Subject: [PATCH 2/6] rtlwifi: Clean rtl_evm_db_to_percentage a bit
-Date: Wed, 11 Mar 2015 22:03:25 +0200
-Message-Id: <1426104209-6913-3-git-send-email-plaes@plaes.org> (sfid-20150311_210407_585177_AF05DB78)
-In-Reply-To: <1426104209-6913-1-git-send-email-plaes@plaes.org>
-References: <1426104209-6913-1-git-send-email-plaes@plaes.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:47808 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150AbbCDObI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 09:31:08 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jim Davis <jim.epost@gmail.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, zajec5@gmail.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: randconfig build error with next-20150303, in drivers/bcma/driver_pcie2.c
+References: <CA+r1Zhio+Kp30y4DHS0SW20PjZrAY3PZLXjskykpa8CY0tcrMA@mail.gmail.com>
+Date: Wed, 04 Mar 2015 16:31:00 +0200
+In-Reply-To: <CA+r1Zhio+Kp30y4DHS0SW20PjZrAY3PZLXjskykpa8CY0tcrMA@mail.gmail.com>
+	(Jim Davis's message of "Tue, 3 Mar 2015 09:11:39 -0700")
+Message-ID: <87d24o7s2j.fsf@kamboji.qca.qualcomm.com> (sfid-20150304_153219_596372_36281CAF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Priit Laes <plaes@plaes.org>
----
- drivers/net/wireless/rtlwifi/stats.c | 11 ++---------
- 1 file changed, 2 insertions(+), 9 deletions(-)
+Jim Davis <jim.epost@gmail.com> writes:
 
-diff --git a/drivers/net/wireless/rtlwifi/stats.c b/drivers/net/wireless/rtlwifi/stats.c
-index 874e7d1..2021223 100644
---- a/drivers/net/wireless/rtlwifi/stats.c
-+++ b/drivers/net/wireless/rtlwifi/stats.c
-@@ -39,15 +39,8 @@ EXPORT_SYMBOL(rtl_query_rxpwrpercentage);
- 
- u8 rtl_evm_db_to_percentage(char value)
- {
--	char ret_val;
--	ret_val = value;
--
--	if (ret_val >= 0)
--		ret_val = 0;
--	if (ret_val <= -33)
--		ret_val = -33;
--	ret_val = 0 - ret_val;
--	ret_val *= 3;
-+	char ret_val = clamp(-value, 0, 33) * 3;
-+
- 	if (ret_val == 99)
- 		ret_val = 100;
- 
+> Building with the attached random configuration file,
+>
+> drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
+> drivers/bcma/driver_pcie2.c:196:2: error: implicit declaration of
+> function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
+>   err = pcie_set_readrq(dev, pcie2->reqsize);
+>   ^
+
+This should fix it:
+
+bcma: add missing includes
+
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=2264fc857decd45798368f46861d9aecac23546f
+
 -- 
-2.3.1
-
+Kalle Valo
