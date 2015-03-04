@@ -1,209 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:45811 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932635AbbCQR2Q (ORCPT
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:59252 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758945AbbCDPqb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 13:28:16 -0400
-From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@nbd.name,
-	thomas@net.t-labs.tu-berlin.de
-Subject: [PATCH v3 03/10] mac80211: add new Minstrel statistic output via csv
-Date: Tue, 17 Mar 2015 18:29:12 +0100
-Message-Id: <1426613359-31306-3-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150317_182826_105921_A6B7430A)
-In-Reply-To: <1426613359-31306-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
-References: <1426613359-31306-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	Wed, 4 Mar 2015 10:46:31 -0500
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by mailout.nyi.internal (Postfix) with ESMTP id B6E1F208E4
+	for <linux-wireless@vger.kernel.org>; Wed,  4 Mar 2015 10:39:29 -0500 (EST)
+Message-Id: <1425483570.3947119.235432705.0D7855AE@webmail.messagingengine.com> (sfid-20150304_164651_694015_5554D545)
+From: "Nikita N." <nikitan@operamail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: hauke@hauke-m.de, brcm80211-dev-list@broadcom.com,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Pat Erley <pat-lkml@erley.org>, brudley@broadcom.com,
+	Franky Lin <frankyl@broadcom.com>, meuleman@broadcom.com,
+	linville@tuxdriver.com, pieterpg@broadcom.com, hdegoede@redhat.com,
+	wens@csie.org, netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+In-Reply-To: <1424163814.3140549.228461101.1C2E5AB1@webmail.messagingengine.com>
+References: <1424007136.2042747.227726249.45B6A0E2@webmail.messagingengine.com>
+ <1424094835.3188168.228077393.0E2006F5@webmail.messagingengine.com>
+ <54E2107F.4000709@broadcom.com>
+ <1424112787.3303548.228201005.68F1D224@webmail.messagingengine.com>
+ <54E24B48.80601@broadcom.com>
+ <1424163814.3140549.228461101.1C2E5AB1@webmail.messagingengine.com>
+Subject: brcmsmac not compliant to 802.11 for BCM4313
+Date: Wed, 04 Mar 2015 07:39:30 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new debugfs file "rc_stats_csv" to output Minstrels
-statistics in a common csv format that is easy to parse.
+Dear Arend,
+as followup to my last inquiry, since it's passed more than 2 weeks, I'm
+afraid I didn't receive any answer.
+As from subject, I finally discovered that brcmsmac is not compliant to
+802.11 regulations for BCM4313.
+So, as purchasing customer, and member of Linux users community, I try
+to propose my questions to you again now, 3 in total:
+ 
+1) Regulatory domain - you wrote "brcmsmac does assure tx power is
+within regulatory limits by enforcing a world regulatory domain"
+That affirmation is *FALSE*.
+I spent the whole weekend putting brcmsmac under heavy trace, all
+functions, above all the phy ones.
+Some code "supposes" to enforce a regulatory domain, but the effect is
+total null.
+I tried recompile the regulatory domain database, those functions did
+not retrieve the new values.
+Whatever values I set for domain 00, the effect was null - BCM4313 kept
+functioning independently.
+The functions, phy and not, which are "supposed" to set the eeprom
+registries for regdomain enforce, have effect null - the BCM4313 kept
+functioning independently.
+I tried setting random numbers in those functions and registries, the
+effect was null - the BCM4313 kept functioning independently.
+At the edge of my frustration, I started commenting away from the code
+those whole phy functions, the effect was null again - the BCM4313 kept
+functioning independently.
+I don't know for what Broadcom hw device were written and *tested* those
+functions - but sure is, they do *NOT* work for BCM4313.
+Could you please explain how/where the BCM4313 is supposed to "enforcing
+a world regulatory domain" ?
 
-Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Signed-off-by: Stefan Venz <ikstream86@gmail.com>
----
- net/mac80211/rc80211_minstrel.h         |  6 +--
- net/mac80211/rc80211_minstrel_debugfs.c | 95 +++++++++++++++++++++++++++++----
- 2 files changed, 87 insertions(+), 14 deletions(-)
+2) MCS - 11n modulated frames are not detected in BCM4313 monitor mode -
+I informed you about this issue more than 1 year ago, and again 2 weeks
+ago.
+The issue still reproduces, and no sign of any fix.
+When/in what backports version, this issue is supposed to be fixed
+finally?
 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 410efe6..9613e73 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -13,7 +13,6 @@
- #define EWMA_DIV	128
- #define SAMPLE_COLUMNS	10	/* number of columns in sample table */
- 
--
- /* scaled fraction values */
- #define MINSTREL_SCALE  16
- #define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
-@@ -24,7 +23,7 @@
- 
- /*
-  * Perform EWMA (Exponentially Weighted Moving Average) calculation
--  */
-+ */
- static inline int
- minstrel_ewma(int old, int new, int weight)
- {
-@@ -95,6 +94,7 @@ struct minstrel_sta_info {
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	struct dentry *dbg_stats;
-+	struct dentry *dbg_stats_csv;
- #endif
- };
- 
-@@ -121,7 +121,6 @@ struct minstrel_priv {
- 	u32 fixed_rate_idx;
- 	struct dentry *dbg_fixed_rate;
- #endif
--
- };
- 
- struct minstrel_debugfs_info {
-@@ -135,6 +134,7 @@ void minstrel_remove_sta_debugfs(void *priv, void *priv_sta);
- 
- /* debugfs */
- int minstrel_stats_open(struct inode *inode, struct file *file);
-+int minstrel_stats_csv_open(struct inode *inode, struct file *file);
- ssize_t minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos);
- int minstrel_stats_release(struct inode *inode, struct file *file);
- 
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index 2d70081..8c35402 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -54,6 +54,22 @@
- #include <net/mac80211.h>
- #include "rc80211_minstrel.h"
- 
-+ssize_t
-+minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos)
-+{
-+	struct minstrel_debugfs_info *ms;
-+
-+	ms = file->private_data;
-+	return simple_read_from_buffer(buf, len, ppos, ms->buf, ms->len);
-+}
-+
-+int
-+minstrel_stats_release(struct inode *inode, struct file *file)
-+{
-+	kfree(file->private_data);
-+	return 0;
-+}
-+
- int
- minstrel_stats_open(struct inode *inode, struct file *file)
- {
-@@ -115,25 +131,76 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	return 0;
- }
- 
--ssize_t
--minstrel_stats_read(struct file *file, char __user *buf, size_t len, loff_t *ppos)
-+static const struct file_operations minstrel_stat_fops = {
-+	.owner = THIS_MODULE,
-+	.open = minstrel_stats_open,
-+	.read = minstrel_stats_read,
-+	.release = minstrel_stats_release,
-+	.llseek = default_llseek,
-+};
-+
-+int
-+minstrel_stats_csv_open(struct inode *inode, struct file *file)
- {
-+	struct minstrel_sta_info *mi = inode->i_private;
- 	struct minstrel_debugfs_info *ms;
-+	struct timeval tv;
-+	unsigned int i, tp, prob, eprob;
-+	char *p;
- 
--	ms = file->private_data;
--	return simple_read_from_buffer(buf, len, ppos, ms->buf, ms->len);
--}
-+	ms = kmalloc(2048, GFP_KERNEL);
-+	if (!ms)
-+		return -ENOMEM;
-+
-+	file->private_data = ms;
-+	p = ms->buf;
-+
-+	do_gettimeofday(&tv);
-+
-+	for (i = 0; i < mi->n_rates; i++) {
-+		struct minstrel_rate *mr = &mi->r[i];
-+		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
-+
-+		p += sprintf(p, "%ld.%.6ld,", tv.tv_sec, tv.tv_usec);
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[0]) ? "A" : ""));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[1]) ? "B" : ""));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[2]) ? "C" : ""));
-+		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[3]) ? "D" : ""));
-+		p += sprintf(p, "%s" ,((i == mi->max_prob_rate) ? "P" : ""));
-+
-+		p += sprintf(p, ",%u%s", mr->bitrate / 2,
-+				(mr->bitrate & 1 ? ".5," : ","));
-+		p += sprintf(p, "%u,", i);
-+		p += sprintf(p, "%u,",mr->perfect_tx_time);
-+
-+		tp = MINSTREL_TRUNC(mrs->cur_tp / 10);
-+		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
-+		eprob = MINSTREL_TRUNC(mrs->probability * 1000);
-+
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u,%u,%u,"
-+				"%llu,%llu,%d,%d\n",
-+				tp / 10, tp % 10,
-+				eprob / 10, eprob % 10,
-+				prob / 10, prob % 10,
-+				mrs->retry_count,
-+				mrs->last_success,
-+				mrs->last_attempts,
-+				(unsigned long long)mrs->succ_hist,
-+				(unsigned long long)mrs->att_hist,
-+				mi->total_packets - mi->sample_packets,
-+				mi->sample_packets);
-+
-+	}
-+	ms->len = p - ms->buf;
-+
-+	WARN_ON(ms->len + sizeof(*ms) > 2048);
- 
--int
--minstrel_stats_release(struct inode *inode, struct file *file)
--{
--	kfree(file->private_data);
- 	return 0;
- }
- 
--static const struct file_operations minstrel_stat_fops = {
-+static const struct file_operations minstrel_stat_csv_fops = {
- 	.owner = THIS_MODULE,
--	.open = minstrel_stats_open,
-+	.open = minstrel_stats_csv_open,
- 	.read = minstrel_stats_read,
- 	.release = minstrel_stats_release,
- 	.llseek = default_llseek,
-@@ -146,6 +213,9 @@ minstrel_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir)
- 
- 	mi->dbg_stats = debugfs_create_file("rc_stats", S_IRUGO, dir, mi,
- 			&minstrel_stat_fops);
-+
-+	mi->dbg_stats_csv = debugfs_create_file("rc_stats_csv", S_IRUGO, dir,
-+			mi, &minstrel_stat_csv_fops);
- }
- 
- void
-@@ -154,4 +224,7 @@ minstrel_remove_sta_debugfs(void *priv, void *priv_sta)
- 	struct minstrel_sta_info *mi = priv_sta;
- 
- 	debugfs_remove(mi->dbg_stats);
-+
-+	debugfs_remove(mi->dbg_stats_csv);
- }
-+
+3) I explicitly purchased this BCM4313 already 1 year ago, with the
+following specs: 0x4313 rev 0x01 package 0x08, 3 cores ChipCommon,
+IEEE802.11 and PCIe.
+I have been searching for any technical datasheet specification document
+about BCM4313 on Broadcom website and others.
+Did not find any.
+Could you please send me a detailed technical datasheet specification
+document about BCM4313, for programming/dev purposes?
+
+Thank you & Greetings
+
+
+
+On Tue, Feb 17, 2015, at 01:03 AM, Nikita N. wrote:
+> Hi Arend,
+>  
+> > brcmsmac does assure tx power is within regulatory limits by enforcing a 
+> > world regulatory domain. So what is not supported is modifying tx power 
+> > settings through user-space.
+> 
+> Yes, I believe that could be right, *a* world regulatory domain looks
+> indeed enforced, the USA one only, which is pre-set default inside
+> EEPROM registries device, isn't it?
+>  
+> > I know, but that driver is not fully open-source as it links in a binary 
+> > blob.
+> 
+> AFAIK, also brcmsmac needs at least 2 firmware files to operate, without
+> those nothing works.
+> Isn't it the same concept?
+>  
+> > I totally lost track of this one. I am using brcmsmac in monitor mode 
+> > using bcm43224 which captures 11n frames just fine. I will give it a try 
+> > with a bcm4313. The assoc response in your capture shows undefined MCS 
+> > set so maybe there really are no 11n MCS rates used (?).
+> 
+> If that was a suggestion about to purchase a bcm43224 or any other
+> Broadcom Corp. product, isn't really convincing, seen the overall
+> support quality Customers are experiencing in here...
+> About my capture file, in the case it was really incomplete someone
+> could have informed me at least a year ago.
+> But anyway no respectable QA Testing team needs a purchasing Customer to
+> help in verifying such enormous issue, isn't it? 
+>  
+> > Our team consist of two man working full-time on the upstream linux 
+> > drivers. So our "customer care" is something that we try to deal with on 
+> > the side and admittedly things slip between the cracks.
+> 
+> Really, *TWO* men? Are you kidding? Is that how much Broadcom Corp.
+> values the Linux community?
+> Needles to remind, even if Linux users don't pay for the OS license as
+> Windows do, they do pay allright for any Broadcom hardware they
+> purchase!
+> Internet startups which sell a button on internet, they have Dev and QA
+> team 5 times bigger than that!
+> I sense a very gross capacity and resource planning competence issue in
+> here.
+> I kindly ask you, please forward that mail to your higher Managers, on
+> my personal behalf, Thanks.
+> 
+> -- 
+> http://www.fastmail.com - Same, same, but different...
+> 
+
 -- 
-2.3.0
+http://www.fastmail.com - Or how I learned to stop worrying and
+                          love email again
 
