@@ -1,66 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51504 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076AbbCKPxy (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14104 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933197AbbCDMGc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 11:53:54 -0400
-Message-ID: <55006511.6020101@candelatech.com> (sfid-20150311_165357_712243_FCECFBE9)
-Date: Wed, 11 Mar 2015 08:53:53 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 4 Mar 2015 07:06:32 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>,
+	<kernel-janitors@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Delete unnecessary checks before the function call "release_firmware"
+References: <5307CAA2.8060406@users.sourceforge.net>
+	<alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+	<530A086E.8010901@users.sourceforge.net>
+	<alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+	<530A72AA.3000601@users.sourceforge.net>
+	<alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+	<530B5FB6.6010207@users.sourceforge.net>
+	<alpine.DEB.2.10.1402241710370.2074@hadrien>
+	<530C5E18.1020800@users.sourceforge.net>
+	<alpine.DEB.2.10.1402251014170.2080@hadrien>
+	<530CD2C4.4050903@users.sourceforge.net>
+	<alpine.DEB.2.10.1402251840450.7035@hadrien>
+	<530CF8FF.8080600@users.sourceforge.net>
+	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+	<530DD06F.4090703@users.sourceforge.net>
+	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+	<5317A59D.4@users.sourceforge.net>
+	<54D26614.2080708@users.sourceforge.net>
+Date: Wed, 4 Mar 2015 14:06:21 +0200
+In-Reply-To: <54D26614.2080708@users.sourceforge.net> (SF Markus Elfring's
+	message of "Wed, 04 Feb 2015 19:33:56 +0100")
+Message-ID: <87twy16k76.fsf@kamboji.qca.qualcomm.com> (sfid-20150304_130654_459331_4BF40EF0)
 MIME-Version: 1.0
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] iw: Allow configuring empty legacy and ht ratesets.
-References: <1426028412-17438-1-git-send-email-greearb@candelatech.com> <CALhHN=q0C0KWzTrjCztxcjLUjHKN8CXfBJG7o7AyU4gZgBfGRg@mail.gmail.com>
-In-Reply-To: <CALhHN=q0C0KWzTrjCztxcjLUjHKN8CXfBJG7o7AyU4gZgBfGRg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/10/2015 11:10 PM, Janusz Dziedzic wrote:
-> On 11 March 2015 at 00:00,  <greearb@candelatech.com> wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> This allows one to configure exactly one rate for drivers
->> such as ath10k that will only allow a single rate to be
->> configured.
->>
-> 
-> Hello,
-> 
-> But iw already support setting single rate with ath10k.
-> This is example from ath10k commit log:
+SF Markus Elfring <elfring@users.sourceforge.net> writes:
 
-Ahh, I see.  I was confused about what syntax to use for 'iw', must have
-typo'd something early on and then though the limitation was in the parser.
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Wed, 4 Feb 2015 19:30:23 +0100
+>
+> The release_firmware() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
+>
+> This issue was detected by using the Coccinelle software.
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-Thanks,
-Ben
-
-> 
->     Example:
->     iw wlanX set bitrates legacy-5 ht-mcs-5 vht-mcs-5 2:9
->     will setup VHT, nss=2, mcs=9
-> 
->     iw wlanX set bitrates legacy-5 18 ht-mcs-5 vht-mcs-5
->     will setup legacy, 18Mbps
-> 
->     iw wlanX set bitrates legacy-5 ht-mcs-5 3 vht-mcs-5
->     will setup HT, nss=1, mcs=3
-> 
->     iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9
->     will setup nss=1
-> 
->     iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9 2:0-9
->     will setup nss=2
-> 
-> BR
-> Janusz
-> 
-
+Thanks, applied to ath.git.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Kalle Valo
