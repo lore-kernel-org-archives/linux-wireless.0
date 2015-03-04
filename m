@@ -1,80 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:37033 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751850AbbC0Od5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2015 10:33:57 -0400
-Received: by igcxg11 with SMTP id xg11so21516367igc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2015 07:33:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1426849379-7562-7-git-send-email-marek.puzyniak@tieto.com>
-References: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com>
-	<1426849379-7562-7-git-send-email-marek.puzyniak@tieto.com>
-Date: Fri, 27 Mar 2015 10:33:56 -0400
-Message-ID: <CADnKcVhg8ZVD8Nn7pqjtCUWWOiO_8Zp7-U0zaMh4FKL-pj3bLg@mail.gmail.com> (sfid-20150327_153400_579884_D9925B14)
-Subject: Re: [PATCH v4 6/6] ath10k: introduce basic tdls functionality
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Marek Kwaczynski <marek.kwaczynski@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:53451 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933544AbbCDL35 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 06:29:57 -0500
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org, mcgrof@suse.com
+Cc: Ilan Peer <ilan.peer@intel.com>, ArikX Nemtsov <arik@wizery.com>
+Subject: [PATCH v10 2/3] cfg80211: Add API to change the indoor regulatory setting
+Date: Wed,  4 Mar 2015 00:32:06 -0500
+Message-Id: <1425447127-22958-2-git-send-email-ilan.peer@intel.com> (sfid-20150304_123016_680217_7F2A7CC0)
+In-Reply-To: <1425447127-22958-1-git-send-email-ilan.peer@intel.com>
+References: <1425447127-22958-1-git-send-email-ilan.peer@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Previously, the indoor setting configuration assumed that as
+long as a station interface is connected, the indoor environment
+setting does not change. However, this assumption is problematic
+as:
 
-On 20 March 2015 at 07:02, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
-> This patch introduces tdls without tdls peer uapsd
-> and tdls channel switching.
-> Transmitting tdls data frames works only for ethernet
-> type frames, that's why data addressed to tdls sta
-> is in ethernet format.
->
-> This patch depends on:
-> mac80211: initialize rate control earlier for tdls station
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Marek Kwaczynski <marek.kwaczynski@tieto.com>
-> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-> ---
-[...]
+- It is possible that a station interface is connected to a mobile
+  AP, e.g., softAP or a P2P GO, where it is possible that both the
+  station and the mobile AP move out of the indoor environment making
+  the indoor setting invalid. In such a case, user space has no way to
+  invalidate the setting.
+- A station interface disconnection does not necessarily imply that
+  the device is no longer operating in an indoor environment, e.g.,
+  it is possible that the station interface is roaming but is still
+  stays indoor.
 
-> +static int ath10_mac_tdls_vifs_count(struct ieee80211_hw *hw)
-[...]
-> +               num_tdls_vifs = ath10_mac_tdls_vifs_count(hw);
-[...]
+To handle the above, extend the indoor configuration API to allow
+user space to indicate a change of indoor settings, and allow it to
+indicate weather it controls the indoor setting, such that:
 
-I found typo in my patch. This can be fixed by
+1. If the user space process explicitly indicates that it is going
+   to control the indoor setting, do not clear the indoor setting
+   internally, unless the socket is released. The user space process
+   should use the NL80211_ATTR_SOCKET_OWNER attribute in the command
+   to state that it is going to control the indoor setting.
+2. Reset the indoor setting when restoring the regulatory settings in
+   case it is not owned by a user space process.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c
-b/drivers/net/wireless/ath/ath10k/mac.c
-index 4e2be87..5eb6c98 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4613,7 +4613,7 @@ static void ath10k_mac_tdls_vifs_count_iter(void
-*data, u8 *mac,
-                (*num_tdls_vifs)++;
- }
+Based on the above, a user space tool that continuously monitors the
+indoor settings, i.e., tracking power setting, location etc., can
+indicate environment changes to the regulatory core.
 
--static int ath10_mac_tdls_vifs_count(struct ieee80211_hw *hw)
-+static int ath10k_mac_tdls_vifs_count(struct ieee80211_hw *hw)
+It should be noted that currently user space is the only provided mechanism
+used to hint to the regulatory core over the indoor/outdoor environment --
+while the country IEs do have an environment setting this has been completely
+ignored by the regulatory core by design for a while now since country IEs
+typically can contain bogus data.
+
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: ArikX Nemtsov <arik@wizery.com>
+---
+ include/uapi/linux/nl80211.h |  9 +++++++
+ net/wireless/nl80211.c       | 19 ++++++++++++++-
+ net/wireless/reg.c           | 57 ++++++++++++++++++++++++++++++++++++++++----
+ net/wireless/reg.h           | 15 +++++++++++-
+ 4 files changed, 94 insertions(+), 6 deletions(-)
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 37e7f39..ae16ba9 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1697,6 +1697,10 @@ enum nl80211_commands {
+  *	If set during scheduled scan start then the new scan req will be
+  *	owned by the netlink socket that created it and the scheduled scan will
+  *	be stopped when the socket is closed.
++ *	If set during configuration of regulatory indoor operation then the
++ *	regulatory indoor configuration would be owned by the netlink socket
++ *	that configured the indoor setting, and the indoor operation would be
++ *	cleared when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+@@ -1752,6 +1756,9 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_SCHED_SCAN_DELAY: delay before a scheduled scan (or a
+  *	WoWLAN net-detect scan) is started, u32 in seconds.
++
++ * @NL80211_ATTR_REG_INDOOR: flag attribute, if set indicates that the device
++ *      is operating in an indoor environment.
+  *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+@@ -2120,6 +2127,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_SCHED_SCAN_DELAY,
+ 
++	NL80211_ATTR_REG_INDOOR,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 07cef3d..b020853 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -399,6 +399,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_WIPHY_SELF_MANAGED_REG] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_NETNS_FD] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
++	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
+ };
+ 
+ /* policy for the key attributes */
+@@ -4958,7 +4959,10 @@ static int parse_reg_rule(struct nlattr *tb[],
+ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
  {
-        int num_tdls_vifs = 0;
+ 	char *data = NULL;
++	bool is_indoor;
+ 	enum nl80211_user_reg_hint_type user_reg_hint_type;
++	u32 owner_nlportid;
++
+ 
+ 	/*
+ 	 * You should only get this when cfg80211 hasn't yet initialized
+@@ -4984,7 +4988,15 @@ static int nl80211_req_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 		data = nla_data(info->attrs[NL80211_ATTR_REG_ALPHA2]);
+ 		return regulatory_hint_user(data, user_reg_hint_type);
+ 	case NL80211_USER_REG_HINT_INDOOR:
+-		return regulatory_hint_indoor_user();
++		if (info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++			owner_nlportid = info->snd_portid;
++			is_indoor = !!info->attrs[NL80211_ATTR_REG_INDOOR];
++		} else {
++			owner_nlportid = 0;
++			is_indoor = true;
++		}
++
++		return regulatory_hint_indoor(is_indoor, owner_nlportid);
+ 	default:
+ 		return -EINVAL;
+ 	}
+@@ -12810,6 +12822,11 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 
+ 	rcu_read_unlock();
+ 
++	/*
++	 * It is possible that the user space process that is controlling the
++	 * indoor setting disappeared, so notify the regulatory core.
++	 */
++	regulatory_netlink_notify(notify->portid);
+ 	return NOTIFY_OK;
+ }
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index c24c8bf..4239dd4 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -128,9 +128,12 @@ static int reg_num_devs_support_basehint;
+  * State variable indicating if the platform on which the devices
+  * are attached is operating in an indoor environment. The state variable
+  * is relevant for all registered devices.
+- * (protected by RTNL)
+  */
+ static bool reg_is_indoor;
++static spinlock_t reg_indoor_lock;
++
++/* Used to track the userspace process controlling the indoor setting */
++static u32 reg_is_indoor_portid;
+ 
+ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+ {
+@@ -2288,15 +2291,50 @@ int regulatory_hint_user(const char *alpha2,
+ 	return 0;
+ }
+ 
+-int regulatory_hint_indoor_user(void)
++int regulatory_hint_indoor(bool is_indoor, u32 portid)
+ {
++	spin_lock(&reg_indoor_lock);
++
++	/* It is possible that more than one user space process is trying to
++	 * configure the indoor setting. To handle such cases, clear the indoor
++	 * setting in case that some process does not think that the device
++	 * is operating in an indoor environment. In addition, if a user space
++	 * process indicates that it is controlling the indoor setting, save its
++	 * portid, i.e., make it the owner.
++	 */
++	reg_is_indoor = is_indoor;
++	if (reg_is_indoor) {
++		if (!reg_is_indoor_portid)
++			reg_is_indoor_portid = portid;
++	} else {
++		reg_is_indoor_portid = 0;
++	}
+ 
++	spin_unlock(&reg_indoor_lock);
+ 
+-	reg_is_indoor = true;
++	if (!is_indoor)
++		reg_check_channels();
+ 
+ 	return 0;
+ }
+ 
++void regulatory_netlink_notify(u32 portid)
++{
++	spin_lock(&reg_indoor_lock);
++
++	if (reg_is_indoor_portid != portid) {
++		spin_unlock(&reg_indoor_lock);
++		return;
++	}
++
++	reg_is_indoor = false;
++	reg_is_indoor_portid = 0;
++
++	spin_unlock(&reg_indoor_lock);
++
++	reg_check_channels();
++}
++
+ /* Driver hints */
+ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
+ {
+@@ -2464,7 +2502,17 @@ static void restore_regulatory_settings(bool reset_user)
+ 
+ 	ASSERT_RTNL();
+ 
+-	reg_is_indoor = false;
++	/*
++	 * Clear the indoor setting in case that it is not controlled by user
++	 * space, as otherwise there is no guarantee that the device is still
++	 * operating in an indoor environment.
++	 */
++	spin_lock(&reg_indoor_lock);
++	if (reg_is_indoor && !reg_is_indoor_portid) {
++		reg_is_indoor = false;
++		reg_check_channels();
++	}
++	spin_unlock(&reg_indoor_lock);
+ 
+ 	reset_regdomains(true, &world_regdom);
+ 	restore_alpha2(alpha2, reset_user);
+@@ -3061,6 +3109,7 @@ int __init regulatory_init(void)
+ 
+ 	spin_lock_init(&reg_requests_lock);
+ 	spin_lock_init(&reg_pending_beacons_lock);
++	spin_lock_init(&reg_indoor_lock);
+ 
+ 	reg_regdb_size_check();
+ 
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index 4b45d6e..a2c4e16 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -25,7 +25,20 @@ enum nl80211_dfs_regions reg_get_dfs_region(struct wiphy *wiphy);
+ 
+ int regulatory_hint_user(const char *alpha2,
+ 			 enum nl80211_user_reg_hint_type user_reg_hint_type);
+-int regulatory_hint_indoor_user(void);
++
++/**
++ * regulatory_hint_indoor - hint operation in indoor env. or not
++ * @is_indoor: if true indicates that user space thinks that the
++ * device is operating in an indoor environment.
++ * @portid: the netlink port ID on which the hint was given.
++ */
++int regulatory_hint_indoor(bool is_indoor, u32 portid);
++
++/**
++ * regulatory_netlink_notify - notify on released netlink socket
++ * @portid: the netlink socket port ID
++ */
++void regulatory_netlink_notify(u32 portid);
+ 
+ void wiphy_regulatory_register(struct wiphy *wiphy);
+ void wiphy_regulatory_deregister(struct wiphy *wiphy);
+-- 
+1.8.3.2
 
-@@ -4704,7 +4704,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
-                        goto exit;
-
-                num_tdls_stations = ath10k_mac_tdls_vif_stations_count(hw, vif);
--               num_tdls_vifs = ath10_mac_tdls_vifs_count(hw);
-+               num_tdls_vifs = ath10k_mac_tdls_vifs_count(hw);
-
-                if (num_tdls_vifs >= ar->max_num_tdls_vdevs &&
-                    num_tdls_stations == 0) {
-
-
-Should I resend this patch or whole patch-set, or maybe it can be
-handled in another way.
-
-Marek
