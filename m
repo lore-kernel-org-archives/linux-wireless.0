@@ -1,34 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43606 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752490AbbCCNyn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 08:54:43 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [PATCH] ssb: Silence warning for unknown backplane revision
-References: <1424290178-25328-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Tue, 03 Mar 2015 15:54:37 +0200
-In-Reply-To: <1424290178-25328-1-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Wed, 18 Feb 2015 14:09:38 -0600")
-Message-ID: <87wq2y89uq.fsf@kamboji.qca.qualcomm.com> (sfid-20150303_145446_503896_E440E406)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:34145 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758246AbbCDTxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 14:53:33 -0500
+Message-ID: <1425498807.1810.14.camel@sipsolutions.net> (sfid-20150304_205336_144077_04F9324E)
+Subject: Re: [PATCH crda 2/4] allow people to turn off -Werror
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 04 Mar 2015 20:53:27 +0100
+In-Reply-To: <1425498714-8654-2-git-send-email-vapier@gentoo.org> (sfid-20150304_205207_348128_4A5AEDAB)
+References: <1425498714-8654-1-git-send-email-vapier@gentoo.org>
+	 <1425498714-8654-2-git-send-email-vapier@gentoo.org>
+	 (sfid-20150304_205207_348128_4A5AEDAB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Wed, 2015-03-04 at 14:51 -0500, Mike Frysinger wrote:
+> From: Mike Frysinger <vapier@chromium.org>
+> 
+> Forcing -Werror at build time easily breaks across compiler settings,
+> compiler versions, architectures, C libraries, etc...  Add a knob so
+> distro peeps can turn it off.
 
-> When using a BCM4318 in a PCMCIA format, I get a startup message that the
-> device uses backplane revision 0xF000000. Next a WARNING is logged. Despite
-> the message, the device works fine, This patch silences the warning.
->
-> Cc: Rafał Miłecki <zajec5@gmail.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> +WERROR = -Werror
 
-Thanks, applied to wireless-drivers-next.git.
+Doesn't that need ?= ?
 
--- 
-Kalle Valo
+johannes
+
