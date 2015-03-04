@@ -1,78 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:35705 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753410AbbCaLHu (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:45662 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754869AbbCDCMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 07:07:50 -0400
-Received: by lbdc10 with SMTP id c10so9576890lbd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 04:07:48 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: use scan burst for hw roc
-Date: Tue, 31 Mar 2015 11:03:48 +0000
-Message-Id: <1427799828-9539-2-git-send-email-michal.kazior@tieto.com> (sfid-20150331_130754_442356_54EAEA93)
-In-Reply-To: <1427799828-9539-1-git-send-email-michal.kazior@tieto.com>
-References: <1427799828-9539-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 3 Mar 2015 21:12:21 -0500
+Received: by labge10 with SMTP id ge10so41483182lab.12
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 18:12:19 -0800 (PST)
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 2/2] ath5k: fix reset race
+Date: Wed,  4 Mar 2015 05:12:11 +0300
+Message-Id: <1425435131-12701-3-git-send-email-ryazanov.s.a@gmail.com> (sfid-20150304_031224_967965_02D74C1A)
+In-Reply-To: <1425435131-12701-1-git-send-email-ryazanov.s.a@gmail.com>
+References: <1425435131-12701-1-git-send-email-ryazanov.s.a@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This improves chances of getting onto a foreign
-channel and thus makes P2P a bit more reliable.
+To prepare for reset ath5k should finish all asynchronous tasks. At
+first, it disables the interrupt generation, then it waits for the
+interrupt handler and tasklets completion, and then proceeds to the HW
+configuration update. But it does not consider that the interrupt
+handler or tasklet re-enables the interrupt generation. And we fall in a
+situation when ath5k assumes that interrupts are disabled, but it is
+not.
 
-Without scan burst it was possible for firmware to
-not switch to foreign channel resulting in "failed
-to switch to channel for roc scan" warning. This
-would also effectively fail some offchan tx
-requests and lead to P2P find/connect taking
-longer. This could be observed when other vifs
-were running/busy, e.g. with P2P GO.
+This can lead to different consequences, such as reception of the frame,
+when we do not expect it. Under certain circumstances, this can lead to
+the following warning:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+  WARNING: at ath5k/base.c:589 ath5k_tasklet_rx+0x318/0x6ec [ath5k]()
+  invalid hw_rix: 1a
+  [..]
+  Call Trace:
+  [<802656a8>] show_stack+0x48/0x70
+  [<802dd92c>] warn_slowpath_common+0x88/0xbc
+  [<802dd98c>] warn_slowpath_fmt+0x2c/0x38
+  [<81b51be8>] ath5k_tasklet_rx+0x318/0x6ec [ath5k]
+  [<8028ac64>] tasklet_action+0x8c/0xf0
+  [<80075804>] __do_softirq+0x180/0x32c
+  [<80196ce8>] irq_exit+0x54/0x70
+  [<80041848>] ret_from_irq+0x0/0x4
+  [<80182fdc>] ioread32+0x4/0xc
+  [<81b4c42c>] ath5k_hw_set_sleep_clock+0x2ec/0x474 [ath5k]
+  [<81b4cf28>] ath5k_hw_reset+0x50/0xeb8 [ath5k]
+  [<81b50900>] ath5k_reset+0xd4/0x310 [ath5k]
+  [<81b557e8>] ath5k_config+0x4c/0x104 [ath5k]
+  [<80d01770>] ieee80211_hw_config+0x2f4/0x35c [mac80211]
+  [<80d09aa8>] ieee80211_scan_work+0x2e4/0x414 [mac80211]
+  [<8022c3f4>] process_one_work+0x28c/0x400
+  [<802df8f8>] worker_thread+0x258/0x3c0
+  [<801b5710>] kthread+0xe0/0xec
+  [<800418a8>] ret_from_kernel_thread+0x14/0x1c
+
+Fix this issue by adding a new status flag, which forbids to re-enable
+the interrupt generation until the HW configuration is completed.
+
+Note: previous patch, which reorders the Rx disable code helps to avoid
+the above warning, but not fixes the root cause of unexpected frame
+receiving.
+
+CC: Jiri Slaby <jirislaby@gmail.com>
+CC: Nick Kossifidis <mickflemm@gmail.com>
+CC: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Reported-by: Christophe Prevotaux <cprevotaux@nltinc.com>
+Tested-by: Christophe Prevotaux <cprevotaux@nltinc.com>
+Tested-by: Eric Bree <ebree@nltinc.com>
+Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c     | 1 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 +-
- drivers/net/wireless/ath/ath10k/wmi.h     | 1 +
- 3 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath5k/ath5k.h | 1 +
+ drivers/net/wireless/ath/ath5k/base.c  | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index cb5d253e87d9..1d48eaafe42b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5069,6 +5069,7 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
- 	arg.max_scan_time = scan_time_msec;
- 	arg.scan_ctrl_flags |= WMI_SCAN_FLAG_PASSIVE;
- 	arg.scan_ctrl_flags |= WMI_SCAN_FILTER_PROBE_REQ;
-+	arg.burst_duration_ms = duration;
+diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
+index 1ed7a88..7ca0d6f 100644
+--- a/drivers/net/wireless/ath/ath5k/ath5k.h
++++ b/drivers/net/wireless/ath/ath5k/ath5k.h
+@@ -1283,6 +1283,7 @@ struct ath5k_hw {
+ #define ATH_STAT_PROMISC	1
+ #define ATH_STAT_LEDSOFT	2		/* enable LED gpio status */
+ #define ATH_STAT_STARTED	3		/* opened & irqs enabled */
++#define ATH_STAT_RESET		4		/* hw reset */
  
- 	ret = ath10k_start_scan(ar, &arg);
- 	if (ret) {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 7bfb45492027..8a6f6fdf4bdc 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1358,7 +1358,7 @@ ath10k_wmi_tlv_op_gen_start_scan(struct ath10k *ar,
- 	cmd = (void *)tlv->value;
+ 	unsigned int		filter_flags;	/* HW flags, AR5K_RX_FILTER_* */
+ 	unsigned int		fif_filter_flags; /* Current FIF_* filter flags */
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index 34b2f15..41848e1 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -1523,6 +1523,9 @@ ath5k_set_current_imask(struct ath5k_hw *ah)
+ 	enum ath5k_int imask;
+ 	unsigned long flags;
  
- 	ath10k_wmi_put_start_scan_common(&cmd->common, arg);
--	cmd->burst_duration_ms = __cpu_to_le32(0);
-+	cmd->burst_duration_ms = __cpu_to_le32(arg->burst_duration_ms);
- 	cmd->num_channels = __cpu_to_le32(arg->n_channels);
- 	cmd->num_ssids = __cpu_to_le32(arg->n_ssids);
- 	cmd->num_bssids = __cpu_to_le32(arg->n_bssids);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 00b5799c5cdb..ef47ab5c4c9f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2168,6 +2168,7 @@ struct wmi_start_scan_arg {
- 	u32 max_scan_time;
- 	u32 probe_delay;
- 	u32 scan_ctrl_flags;
-+	u32 burst_duration_ms;
++	if (test_bit(ATH_STAT_RESET, ah->status))
++		return;
++
+ 	spin_lock_irqsave(&ah->irqlock, flags);
+ 	imask = ah->imask;
+ 	if (ah->rx_pending)
+@@ -2862,6 +2865,8 @@ ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
  
- 	u32 ie_len;
- 	u32 n_channels;
+ 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET, "resetting\n");
+ 
++	__set_bit(ATH_STAT_RESET, ah->status);
++
+ 	ath5k_hw_set_imr(ah, 0);
+ 	synchronize_irq(ah->irq);
+ 	ath5k_stop_tasklets(ah);
+@@ -2952,6 +2957,8 @@ ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
+ 	 */
+ /*	ath5k_chan_change(ah, c); */
+ 
++	__clear_bit(ATH_STAT_RESET, ah->status);
++
+ 	ath5k_beacon_config(ah);
+ 	/* intrs are enabled by ath5k_beacon_config */
+ 
 -- 
-2.1.4
+2.0.4
 
