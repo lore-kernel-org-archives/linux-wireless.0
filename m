@@ -1,46 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56912 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755404AbbCGHTG (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:45987 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805AbbCDCMT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2015 02:19:06 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2015-03-06
-References: <874mpy2gw5.fsf@kamboji.qca.qualcomm.com>
-	<20150306.154639.1922888192237476633.davem@davemloft.net>
-Date: Sat, 07 Mar 2015 09:18:58 +0200
-In-Reply-To: <20150306.154639.1922888192237476633.davem@davemloft.net> (David
-	Miller's message of "Fri, 06 Mar 2015 15:46:39 -0500 (EST)")
-Message-ID: <87vbid1di5.fsf@kamboji.qca.qualcomm.com> (sfid-20150307_081945_056981_3D7B1137)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 3 Mar 2015 21:12:19 -0500
+Received: by lbiz12 with SMTP id z12so13346005lbi.12
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 18:12:17 -0800 (PST)
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Jiri Slaby <jirislaby@gmail.com>,
+	Nick Kossifidis <mickflemm@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [PATCH 1/2] ath5k: channel change fix
+Date: Wed,  4 Mar 2015 05:12:10 +0300
+Message-Id: <1425435131-12701-2-git-send-email-ryazanov.s.a@gmail.com> (sfid-20150304_031222_619486_CEE43589)
+In-Reply-To: <1425435131-12701-1-git-send-email-ryazanov.s.a@gmail.com>
+References: <1425435131-12701-1-git-send-email-ryazanov.s.a@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
+ath5k updates the channel pointer and after that it stops the Rx logic
+and apply channel to HW. In case of channel switch, such sequence
+creates a small window when a frame, which is received on the old
+channel is considered as a frame received on the new one.
 
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Fri, 06 Mar 2015 19:08:10 +0200
->
->> here's a pull request for net-next. Lots of smaller fixes and cleanup,
->> major changes are documented in the signed tag and available below
->> 
->> Do note that I wasn't able compile net-next (commit 23375a0fd549) with
->> my config:
->> 
->> wireless-drivers-next/include/net/switchdev.h:133: multiple definition of `netdev_switch_fib_ipv4_abort'
->> net/bridge/br.o:wireless-drivers-next/include/net/switchdev.h:133: first defined here
->> net/bridge/br_netlink.o: In function `netdev_switch_fib_ipv4_abort':
->> wireless-drivers-next/include/net/switchdev.h:133: multiple definition of `netdev_switch_fib_ipv4_abort'
->> net/bridge/br.o:wireless-drivers-next/include/net/switchdev.h:133: first defined here
->> 
->> But this pull request should still merge to net-next without conflicts.
->
-> Yeah I just applied a fix for that.
+The most notable consequence of this situation occurs during the switch
+from 2 GHz band (CCK+OFDM) to the 5GHz band (OFDM-only). Frame received
+with CCK rate, e.g. beacon received at the 1mbps, causes the following
+warning:
 
-Thanks, net-next compiles now for me.
+  WARNING: at ath5k/base.c:589 ath5k_tasklet_rx+0x318/0x6ec [ath5k]()
+  invalid hw_rix: 1a
+  [..]
+  Call Trace:
+  [<802656a8>] show_stack+0x48/0x70
+  [<802dd92c>] warn_slowpath_common+0x88/0xbc
+  [<802dd98c>] warn_slowpath_fmt+0x2c/0x38
+  [<81b51be8>] ath5k_tasklet_rx+0x318/0x6ec [ath5k]
+  [<8028ac64>] tasklet_action+0x8c/0xf0
+  [<80075804>] __do_softirq+0x180/0x32c
+  [<80196ce8>] irq_exit+0x54/0x70
+  [<80041848>] ret_from_irq+0x0/0x4
+  [<80182fdc>] ioread32+0x4/0xc
+  [<81b4c42c>] ath5k_hw_set_sleep_clock+0x2ec/0x474 [ath5k]
+  [<81b4cf28>] ath5k_hw_reset+0x50/0xeb8 [ath5k]
+  [<81b50900>] ath5k_reset+0xd4/0x310 [ath5k]
+  [<81b557e8>] ath5k_config+0x4c/0x104 [ath5k]
+  [<80d01770>] ieee80211_hw_config+0x2f4/0x35c [mac80211]
+  [<80d09aa8>] ieee80211_scan_work+0x2e4/0x414 [mac80211]
+  [<8022c3f4>] process_one_work+0x28c/0x400
+  [<802df8f8>] worker_thread+0x258/0x3c0
+  [<801b5710>] kthread+0xe0/0xec
+  [<800418a8>] ret_from_kernel_thread+0x14/0x1c
 
+The easiest way to reproduce this warning is to run scan with dualband
+NIC in noisy environments, when the channel 11 runs multiple APs. In my
+tests if the APs num >= 12, the warning appears in the first few
+seconds of scanning.
+
+In order to fix this, the Rx disable code moved to a higher level and
+placed before the channel pointer update. This is also makes the code a
+bit more symmetrical, since we disable and enable the Rx in the same
+function.
+
+In fact, at the pointer update time new frames should not appear,
+because interrupt generation at this point should already be disabled.
+The next patch should address this issue.
+
+CC: Jiri Slaby <jirislaby@gmail.com>
+CC: Nick Kossifidis <mickflemm@gmail.com>
+CC: Luis R. Rodriguez <mcgrof@do-not-panic.com>
+Reported-by: Christophe Prevotaux <cprevotaux@nltinc.com>
+Tested-by: Christophe Prevotaux <cprevotaux@nltinc.com>
+Tested-by: Eric Bree <ebree@nltinc.com>
+Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/base.c  | 24 +++++++++++++++++++++---
+ drivers/net/wireless/ath/ath5k/reset.c | 24 ------------------------
+ 2 files changed, 21 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+index bc9cb35..34b2f15 100644
+--- a/drivers/net/wireless/ath/ath5k/base.c
++++ b/drivers/net/wireless/ath/ath5k/base.c
+@@ -2858,7 +2858,7 @@ ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
+ {
+ 	struct ath_common *common = ath5k_hw_common(ah);
+ 	int ret, ani_mode;
+-	bool fast;
++	bool fast = chan && modparam_fastchanswitch ? 1 : 0;
+ 
+ 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET, "resetting\n");
+ 
+@@ -2876,11 +2876,29 @@ ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
+ 	 * so we should also free any remaining
+ 	 * tx buffers */
+ 	ath5k_drain_tx_buffs(ah);
++
++	/* Stop PCU */
++	ath5k_hw_stop_rx_pcu(ah);
++
++	/* Stop DMA
++	 *
++	 * Note: If DMA didn't stop continue
++	 * since only a reset will fix it.
++	 */
++	ret = ath5k_hw_dma_stop(ah);
++
++	/* RF Bus grant won't work if we have pending
++	 * frames
++	 */
++	if (ret && fast) {
++		ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
++			  "DMA didn't stop, falling back to normal reset\n");
++		fast = false;
++	}
++
+ 	if (chan)
+ 		ah->curchan = chan;
+ 
+-	fast = ((chan != NULL) && modparam_fastchanswitch) ? 1 : 0;
+-
+ 	ret = ath5k_hw_reset(ah, ah->opmode, ah->curchan, fast, skip_pcu);
+ 	if (ret) {
+ 		ATH5K_ERR(ah, "can't reset hardware (%d)\n", ret);
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index b9b651e..99e62f9 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -1169,30 +1169,6 @@ ath5k_hw_reset(struct ath5k_hw *ah, enum nl80211_iftype op_mode,
+ 	if (ah->ah_version == AR5K_AR5212)
+ 		ath5k_hw_set_sleep_clock(ah, false);
+ 
+-	/*
+-	 * Stop PCU
+-	 */
+-	ath5k_hw_stop_rx_pcu(ah);
+-
+-	/*
+-	 * Stop DMA
+-	 *
+-	 * Note: If DMA didn't stop continue
+-	 * since only a reset will fix it.
+-	 */
+-	ret = ath5k_hw_dma_stop(ah);
+-
+-	/* RF Bus grant won't work if we have pending
+-	 * frames */
+-	if (ret && fast) {
+-		ATH5K_DBG(ah, ATH5K_DEBUG_RESET,
+-			"DMA didn't stop, falling back to normal reset\n");
+-		fast = false;
+-		/* Non fatal, just continue with
+-		 * normal reset */
+-		ret = 0;
+-	}
+-
+ 	mode = channel->hw_value;
+ 	switch (mode) {
+ 	case AR5K_MODE_11A:
 -- 
-Kalle Valo
+2.0.4
+
