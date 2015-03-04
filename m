@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:36920 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750833AbbCAGUQ (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:46300 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805AbbCDCMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 01:20:16 -0500
-Received: from [117.199.133.19] (port=11028 helo=sujith-pixel.localdomain)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YRxEd-002K5A-VD
-	for linux-wireless@vger.kernel.org; Sun, 01 Mar 2015 01:20:16 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+	Tue, 3 Mar 2015 21:12:17 -0500
+Received: by lbiz11 with SMTP id z11so15299756lbi.13
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 18:12:16 -0800 (PST)
+Received: from rsa-laptop.internal.lan ([217.25.229.52])
+        by mx.google.com with ESMTPSA id w9sm481491lae.35.2015.03.03.18.12.13
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 03 Mar 2015 18:12:15 -0800 (PST)
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
 To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/6] ath9k: Remove useless return value check
-Date: Sun,  1 Mar 2015 11:53:44 +0530
-Message-Id: <1425191029-13667-2-git-send-email-sujith@msujith.org> (sfid-20150301_072031_660902_FD8E3EAB)
-In-Reply-To: <1425191029-13667-1-git-send-email-sujith@msujith.org>
-References: <1425191029-13667-1-git-send-email-sujith@msujith.org>
+Subject: [PATCH 0/2] ath5k: reset path fixes
+Date: Wed,  4 Mar 2015 05:12:09 +0300
+Message-Id: <1425435131-12701-1-git-send-email-ryazanov.s.a@gmail.com> (sfid-20150304_031220_769137_06957449)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Couple of patches for the reset code path to address the
+"invalid hw_rix" warning and to make reset more robust.
 
-ath_init_btcoex_timer() always returns 0, so
-checking for error conditions is not required.
+Patch 1 helps to avoid warning by fixing the order of rx disable and
+channel update actions.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/gpio.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+Patch 2 fixes the root cause, which is interrupt disable/enable race
+between tasklet and reset function.
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index da344b2..78695b5 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -271,7 +271,7 @@ static void ath_btcoex_no_stomp_timer(unsigned long arg)
- 	ath9k_ps_restore(sc);
- }
- 
--static int ath_init_btcoex_timer(struct ath_softc *sc)
-+static void ath_init_btcoex_timer(struct ath_softc *sc)
- {
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 
-@@ -287,8 +287,6 @@ static int ath_init_btcoex_timer(struct ath_softc *sc)
- 			(unsigned long) sc);
- 
- 	spin_lock_init(&btcoex->btcoex_lock);
--
--	return 0;
- }
- 
- /*
-@@ -409,9 +407,8 @@ int ath9k_init_btcoex(struct ath_softc *sc)
- 		break;
- 	case ATH_BTCOEX_CFG_3WIRE:
- 		ath9k_hw_btcoex_init_3wire(sc->sc_ah);
--		r = ath_init_btcoex_timer(sc);
--		if (r)
--			return -1;
-+		ath_init_btcoex_timer(sc);
-+
- 		txq = sc->tx.txq_map[IEEE80211_AC_BE];
- 		ath9k_hw_init_btcoex_hw(sc->sc_ah, txq->axq_qnum);
- 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+The second patch contains a more generic fix, which is enough to
+prevent the warning. But I think that the first patch should be applied
+too, just in case. If no one has any objections.
+
+Sergey Ryazanov (2):
+  ath5k: channel change fix
+  ath5k: fix reset race
+
+ drivers/net/wireless/ath/ath5k/ath5k.h |  1 +
+ drivers/net/wireless/ath/ath5k/base.c  | 31 ++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath5k/reset.c | 24 ------------------------
+ 3 files changed, 29 insertions(+), 27 deletions(-)
+
 -- 
-2.3.0
+2.0.4
 
