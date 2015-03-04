@@ -1,30 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53207 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753753AbbCQKIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 06:08:16 -0400
-Message-ID: <1426586894.1985.9.camel@sipsolutions.net> (sfid-20150317_110822_238764_BAF97829)
-Subject: Re: [PATCHv2 3/3] mac80211: add VHT support for IBSS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 17 Mar 2015 11:08:14 +0100
-In-Reply-To: <1425884296-7074-3-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150309_075909_274719_4CE55AB8)
-References: <1425884296-7074-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1425884296-7074-3-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150309_075909_274719_4CE55AB8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:41540 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755702AbbCDLOx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 06:14:53 -0500
+Received: by widex7 with SMTP id ex7so29631784wid.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2015 03:14:52 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, Arnd Bergmann <arnd@arndb.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH next] bcma: make bcma_host_pci_(up|down) calls safe for every config
+Date: Wed,  4 Mar 2015 12:14:41 +0100
+Message-Id: <1425467681-15988-1-git-send-email-zajec5@gmail.com> (sfid-20150304_121456_989721_2FC7FE3E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-09 at 07:58 +0100, Janusz Dziedzic wrote:
-> Add VHT support for IBSS. Drivers could activate
-> this feature by setting NL80211_EXT_FEATURE_VHT_IBSS
-> flag.
+We were providing declarations but actual code was compiled only with
+CONFIG_BCMA_HOST_PCI set. This could result in:
+ERROR: "bcma_host_pci_down" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
+ERROR: "bcma_host_pci_up" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
+ERROR: "bcma_host_pci_down" [drivers/net/wireless/b43/b43.ko] undefined!
+ERROR: "bcma_host_pci_up" [drivers/net/wireless/b43/b43.ko] undefined!
 
-I'm assuming this needs patch 1 to go in first, so am not applying this.
-If I'm wrong let me know, or just resend with the changed patch 1.
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ include/linux/bcma/bcma.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-johannes
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 037620b..44057b4 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -434,8 +434,17 @@ static inline struct bcma_device *bcma_find_core(struct bcma_bus *bus,
+ 	return bcma_find_core_unit(bus, coreid, 0);
+ }
+ 
++#ifdef CONFIG_BCMA_HOST_PCI
+ extern void bcma_host_pci_up(struct bcma_bus *bus);
+ extern void bcma_host_pci_down(struct bcma_bus *bus);
++#else
++static inline void bcma_host_pci_up(struct bcma_bus *bus)
++{
++}
++static inline void bcma_host_pci_down(struct bcma_bus *bus)
++{
++}
++#endif
+ 
+ extern bool bcma_core_is_enabled(struct bcma_device *core);
+ extern void bcma_core_disable(struct bcma_device *core, u32 flags);
+-- 
+1.8.4.5
 
