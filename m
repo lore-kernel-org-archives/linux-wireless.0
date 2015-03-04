@@ -1,29 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45661 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752764AbbC3Isq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:48:46 -0400
-Message-ID: <1427705323.26117.13.camel@sipsolutions.net> (sfid-20150330_104849_881689_465E7879)
-Subject: Re: [PATCHv3 1/2] mac80211: IBSS fix scan request
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 30 Mar 2015 10:48:43 +0200
-In-Reply-To: <1426829821-5001-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150320_063832_806899_28F92BA1)
-References: <1426829821-5001-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20150320_063832_806899_28F92BA1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33956 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757750AbbCDPBj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 10:01:39 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 3/4] mac80211: initialize rate control earlier for tdls station
+References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
+	<1424850911-21017-4-git-send-email-marek.puzyniak@tieto.com>
+	<1425041427.1960.1.camel@sipsolutions.net>
+Date: Wed, 4 Mar 2015 17:01:29 +0200
+In-Reply-To: <1425041427.1960.1.camel@sipsolutions.net> (Johannes Berg's
+	message of "Fri, 27 Feb 2015 13:50:27 +0100")
+Message-ID: <878ufc7qnq.fsf@kamboji.qca.qualcomm.com> (sfid-20150304_160144_027411_B7D70FD3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-03-20 at 06:37 +0100, Janusz Dziedzic wrote:
-> In case of wide bandwidth (wider than 20MHz) used by IBSS,
-> scan all channels in chandef to be able to find neighboring
-> IBSS netwqworks that use the same overall channels but a different
-> control channel.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Both applied.
+> +Arik.
+>
+> It'd be nice (for me anyway) if you didn't send this in a series of
+> other patches I don't care about - I only ever saw this due to
+> patchwork.
 
-johannes
+Yes, mac80211 and driver patches need to be sent in separate series. I
+will drop this series for now, please resend ath10k patches separetely.
 
+AND please clearly document what mac80211 patches the ath10k patches
+depend on.
+
+-- 
+Kalle Valo
