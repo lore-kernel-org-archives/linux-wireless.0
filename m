@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:37851 "EHLO muru.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932178AbbCPV37 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 17:29:59 -0400
-Date: Mon, 16 Mar 2015 14:25:09 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Eliad Peller <eliad@wizery.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Sekhar Nori <nsekhar@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Luciano Coelho <luca@coelho.fi>
-Subject: Re: [PATCH v6 6/6] wlcore: remove wl12xx_platform_data
-Message-ID: <20150316212508.GI12397@atomide.com> (sfid-20150316_223006_133451_991AFBF6)
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
- <201503162158.50587@pali>
- <20150316210143.GF12397@atomide.com>
- <201503162215.06436@pali>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:33587 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933105AbbCDKi6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 05:38:58 -0500
+Received: by iecar1 with SMTP id ar1so66082321iec.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2015 02:38:57 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <201503162215.06436@pali>
+In-Reply-To: <CA+XVXfdnTATvbPSkHmGSyMF5d++OmYySskD7D50YvH-wf4eM=w@mail.gmail.com>
+References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
+	<1424850911-21017-4-git-send-email-marek.puzyniak@tieto.com>
+	<1425041427.1960.1.camel@sipsolutions.net>
+	<CA+XVXfchZ+L1iH47S=rM04vJbjBSKA4O8TYuhEkfZuLpNb9QDA@mail.gmail.com>
+	<1425374299.2450.18.camel@sipsolutions.net>
+	<CA+XVXffHENxD3z9dTn_LC9c7Ot0Q4FgyEoHLjdeiDTFWQGuF9w@mail.gmail.com>
+	<1425377192.2450.34.camel@sipsolutions.net>
+	<CA+XVXfdu2fCLXBP1VkMOX9nnoqCiH+h=pwzGAQ2KkBrf-H9MCQ@mail.gmail.com>
+	<1425456998.1810.3.camel@sipsolutions.net>
+	<CA+XVXfdnTATvbPSkHmGSyMF5d++OmYySskD7D50YvH-wf4eM=w@mail.gmail.com>
+Date: Wed, 4 Mar 2015 11:38:57 +0100
+Message-ID: <CADnKcVjWiHi1RsYwiE6buMduq19i3A5qt8w93VLz6dRg-qLOLQ@mail.gmail.com> (sfid-20150304_113908_306161_531E99BD)
+Subject: Re: [PATCH v2 3/4] mac80211: initialize rate control earlier for tdls station
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Pali Rohár <pali.rohar@gmail.com> [150316 14:15]:
-> On Monday 16 March 2015 22:01:43 Tony Lindgren wrote:
-> > * Pali Rohár <pali.rohar@gmail.com> [150316 13:59]:
-> > > On Monday 16 March 2015 16:29:39 Tony Lindgren wrote:
-> > > > I believe the last pending issues is the support for
-> > > > ATAG_REVISION in device tree mode as posted by Pali.
-> > > 
-> > > No. In DT boot there is missing /proc/atags file (readable
-> > > by userspace processes).
-> > 
-> > Oh OK thanks for the update.
-> > 
-> > > And also broken AES/SHA/MD5 support. Fix for crypto DT stuff
-> > > I already sent.
-> > 
-> > But this is not a regression in mainline with legacy boot vs
-> > device tree based booting, right? Sounds like it never worked
-> > in the mainline or am thinking of some other set of patches?
-> > 
-> > Regards,
-> > 
-> > Tony
-> 
-> In legacy board code are DMA channels defined. In DT files not. 
-> So I think this is regression. Omap secure devices are broken in 
-> both legacy & DT code, but non secure could work with legacy 
-> code. But all devices booted with DT are broken.
+On 4 March 2015 at 11:04, Arik Nemtsov <arik@wizery.com> wrote:
+> I can do it, but I'll probably only get to it next week.
 
-OK I'll apply the DMA channels into omap-for-v4.0/fixes in
-that case.
+I will try to prepare patch this week, if not I will wait for Arik's
+proposition.
 
-Regards,
+For ath10k rate control need to be initialised before moving to
+STA_AUTHORIZED, so initialising rate control before STA_ASSOC is
+perfectly fine.
 
-Tony
+Marek
