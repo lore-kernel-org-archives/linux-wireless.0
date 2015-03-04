@@ -1,74 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:57603 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751418AbbCFPU1 (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:38154 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805AbbCDNgL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 10:20:27 -0500
-Message-ID: <54F9C5B8.9080004@broadcom.com> (sfid-20150306_162029_498763_1D9FE04C)
-Date: Fri, 6 Mar 2015 16:20:24 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Wed, 4 Mar 2015 08:36:11 -0500
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Pontus Fuchs <pontusf@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: Perform bound checking on vendor command buffer
-References: <1425655123-18916-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1425655123-18916-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <CACna6ryi4ACAfkYRDGTWkwGh9PQrj9zxcnaWjO56m1dyhmiFGA@mail.gmail.com>
+References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
+	<CACna6rxJ_uQHmpQS9NPs9JW=zNS4oc2-_cH6nXG0Z9CWu7iW7A@mail.gmail.com>
+	<CACna6ryi4ACAfkYRDGTWkwGh9PQrj9zxcnaWjO56m1dyhmiFGA@mail.gmail.com>
+Date: Wed, 4 Mar 2015 14:36:10 +0100
+Message-ID: <CACna6rxtvwQxrsRuRt0XLAyQg5rKFf2VqNm6Vrzic5gMCbJDcg@mail.gmail.com> (sfid-20150304_143631_192159_6833A0C9)
+Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Chen Gang <xili_gchen_5257@hotmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/15 16:18, Arend van Spriel wrote:
-> From: Pontus Fuchs<pontusf@broadcom.com>
+On 4 March 2015 at 13:08, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 4 March 2015 at 07:19, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> On 3 March 2015 at 22:16, Chen Gang <xili_gchen_5257@hotmail.com> wrote:
+>>> bcma also needs PCI, just like IOMEM and DMA, so let it depend on PCI,
+>>> or will cause building break for allmodconfig under c6x:
+>>>
+>>>     CC [M]  drivers/bcma/driver_pcie2.o
+>>>   drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
+>>>   drivers/bcma/driver_pcie2.c:196:8: error: implicit declaration of function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
+>>>     err = pcie_set_readrq(dev, pcie2->reqsize);
+>>>           ^
+>>>
+>>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+>>> ---
+>>>  drivers/bcma/Kconfig | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+>>> index 0ee48be..8be284e 100644
+>>> --- a/drivers/bcma/Kconfig
+>>> +++ b/drivers/bcma/Kconfig
+>>> @@ -1,6 +1,6 @@
+>>>  config BCMA_POSSIBLE
+>>>         bool
+>>> -       depends on HAS_IOMEM && HAS_DMA
+>>> +       depends on HAS_IOMEM && HAS_DMA && PCI
+>>>         default y
+>>>
+>>>  menu "Broadcom specific AMBA"
+>>> --
+>>> 1.9.3
+>>
+>> Hm, I'm not sure how to ideally handle this. Cc-ing few ppl, maybe
+>> they have something to add.
+>>
+>> In fact there are SoCs (not using PCI host code obviously) with
+>> everything embedded (without any PCI host mode cores). So note
+>> following info about driver_pci.c and driver_pcie2.c:
+>> 1) For BCMA_HOST_PCI
+>> They are required, because of needed host-related PCI(e) core initialization.
+>> 2) For BCMA_HOST_SOC
+>> They are needed only if your SoC has PCI(e) host cores and you want to use them.
+>>
+>> So I guess in theory we could have BCMA_DRIVER_PCI and *require* it
+>> for BCMA_HOST_PCI only.
 >
-> A short or malformed vendor command buffer could cause reads outside
-> the command buffer.
->
-> Cc: stable@vger.kernel.org # v3.19
-> Signed-off-by: Pontus Fuchs<pontusf@broadcom.com>
-> [arend@broadcom.com: slightly modified debug trace output]
-> Signed-off-by: Arend van Spriel<arend@broadcom.com>
-> ---
+> After thinking about this.
+> We already have Kconfig entries for other internal drivers, so I guess
+> it makes sense to do the same for PCIe.
 
-Hi Kalle,
+I've just realized that implementing my idea (optional PCIe core
+drivers) will require reworking following functions:
+bcma_core_pci_irq_ctl
+bcma_core_pci_power_save
+bcma_core_pci_irq_ctl
+bcma_core_pci_init
+bcma_core_pcie2_init
+bcma_core_pci_early_init
+to make them safe to call ever without BCMA_DRIVER_PCI(E).
 
-Forgot to mention this is for v4.0 kernel.
+To do that we should clean headers first, which is what I started doing in
+[PATCH next] bcma: move internal function declarations to private header
 
-Regards,
-Arend
+So I think that for now we could just accept Chen's patch and then
+improve PCIe handling in bcma dropping this dependency at some point.
 
->   drivers/net/wireless/brcm80211/brcmfmac/vendor.c | 15 ++++++++++++---
->   1 file changed, 12 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-> index 50cdf70..8eff275 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
-> @@ -39,13 +39,22 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
->   	void *dcmd_buf = NULL, *wr_pointer;
->   	u16 msglen, maxmsglen = PAGE_SIZE - 0x100;
->
-> -	brcmf_dbg(TRACE, "cmd %x set %d len %d\n", cmdhdr->cmd, cmdhdr->set,
-> -		  cmdhdr->len);
-> +	if (len<  sizeof(*cmdhdr)) {
-> +		brcmf_err("vendor command too short: %d\n", len);
-> +		return -EINVAL;
-> +	}
->
->   	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
->   	ifp = vif->ifp;
->
-> -	len -= sizeof(struct brcmf_vndr_dcmd_hdr);
-> +	brcmf_dbg(TRACE, "ifidx=%d, cmd=%d\n", ifp->ifidx, cmdhdr->cmd);
-> +
-> +	if (cmdhdr->offset>  len) {
-> +		brcmf_err("bad buffer offset %d>  %d\n", cmdhdr->offset, len);
-> +		return -EINVAL;
-> +	}
-> +
-> +	len -= cmdhdr->offset;
->   	ret_len = cmdhdr->len;
->   	if (ret_len>  0 || len>  0) {
->   		if (len>  BRCMF_DCMD_MAXLEN) {
+Any other opinions?
 
+-- 
+Rafał
