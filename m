@@ -1,103 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24060 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752280AbbCATbw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 14:31:52 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/31] iwlwifi: mvm: rs: fix BT Coex check to look at the correct ant
-Date: Sun,  1 Mar 2015 21:31:15 +0200
-Message-Id: <1425238304-498-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203155_864365_EADFB6B7)
-In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
-References: <1425238186.30202.5.camel@egrumbacBox>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29657 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933767AbbCDGvc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 01:51:32 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 1/2] ath10k: fix rts profile for second rate series
+Date: Wed, 4 Mar 2015 12:20:46 +0530
+Message-ID: <1425451847-14505-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150304_075205_210953_50920E21)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+By default rts protection is enabled in firmware for the second
+rateset. Currently ath10k selects RTS profile (only for software
+retries), when legacy stations are associated or asked by mac80211.
+On congested environment, when AP is running in HT/VHT mode and
+there are no legacy clients associated, this will impact the
+robustness. Also enabling RTS protection only for second rateset will
+not impact performance on clear environment. Fix that.
 
-The check to avoid the shared antenna was passed the wrong
-antenna parameter. It should have checked whether the antenna of
-the next column we're considering is allowed and instead it was
-passed the current antenna.
-This could lead to a wrong choice of the next column in the rs
-algorithm and non optimal performance.
-
-Fixes: commit 219fb66b49fac64bb ("iwlwifi: mvm: rs - don't use the shared antenna when BT load is high")
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 1e82434..2e45b81 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -134,9 +134,12 @@ enum rs_column_mode {
- #define MAX_NEXT_COLUMNS 7
- #define MAX_COLUMN_CHECKS 3
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 84a243e..37141b3 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -798,12 +798,14 @@ static int ath10k_recalc_rtscts_prot(struct ath10k_vif *arvif)
  
-+struct rs_tx_column;
-+
- typedef bool (*allow_column_func_t) (struct iwl_mvm *mvm,
- 				     struct ieee80211_sta *sta,
--				     struct iwl_scale_tbl_info *tbl);
-+				     struct iwl_scale_tbl_info *tbl,
-+				     const struct rs_tx_column *next_col);
+ 	vdev_param = ar->wmi.vdev_param->enable_rtscts;
  
- struct rs_tx_column {
- 	enum rs_column_mode mode;
-@@ -147,13 +150,15 @@ struct rs_tx_column {
- };
+-	if (arvif->use_cts_prot || arvif->num_legacy_stations > 0)
+-		rts_cts |= SM(WMI_RTSCTS_ENABLED, WMI_RTSCTS_SET);
++	rts_cts |= SM(WMI_RTSCTS_ENABLED, WMI_RTSCTS_SET);
  
- static bool rs_ant_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			 struct iwl_scale_tbl_info *tbl)
-+			 struct iwl_scale_tbl_info *tbl,
-+			 const struct rs_tx_column *next_col)
- {
--	return iwl_mvm_bt_coex_is_ant_avail(mvm, tbl->rate.ant);
-+	return iwl_mvm_bt_coex_is_ant_avail(mvm, next_col->ant);
- }
+ 	if (arvif->num_legacy_stations > 0)
+ 		rts_cts |= SM(WMI_RTSCTS_ACROSS_SW_RETRIES,
+ 			      WMI_RTSCTS_PROFILE);
++	else
++		rts_cts |= SM(WMI_RTSCTS_FOR_SECOND_RATESERIES,
++			      WMI_RTSCTS_PROFILE);
  
- static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			  struct iwl_scale_tbl_info *tbl)
-+			  struct iwl_scale_tbl_info *tbl,
-+			  const struct rs_tx_column *next_col)
- {
- 	if (!sta->ht_cap.ht_supported)
- 		return false;
-@@ -171,7 +176,8 @@ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- }
- 
- static bool rs_siso_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			  struct iwl_scale_tbl_info *tbl)
-+			  struct iwl_scale_tbl_info *tbl,
-+			  const struct rs_tx_column *next_col)
- {
- 	if (!sta->ht_cap.ht_supported)
- 		return false;
-@@ -180,7 +186,8 @@ static bool rs_siso_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- }
- 
- static bool rs_sgi_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			 struct iwl_scale_tbl_info *tbl)
-+			 struct iwl_scale_tbl_info *tbl,
-+			 const struct rs_tx_column *next_col)
- {
- 	struct rs_rate *rate = &tbl->rate;
- 	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
-@@ -1557,7 +1564,7 @@ static enum rs_column rs_get_next_column(struct iwl_mvm *mvm,
- 
- 		for (j = 0; j < MAX_COLUMN_CHECKS; j++) {
- 			allow_func = next_col->checks[j];
--			if (allow_func && !allow_func(mvm, sta, tbl))
-+			if (allow_func && !allow_func(mvm, sta, tbl, next_col))
- 				break;
- 		}
- 
+ 	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
+ 					 rts_cts);
 -- 
-1.9.1
+2.3.1
 
