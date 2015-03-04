@@ -1,137 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:42467 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbbCLSGY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 14:06:24 -0400
-From: greearb@candelatech.com
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [RFC] mac80211-hwsim:  Pass rate-ctrl flags and tx-power to user-space
-Date: Thu, 12 Mar 2015 11:06:19 -0700
-Message-Id: <1426183579-6539-1-git-send-email-greearb@candelatech.com> (sfid-20150312_190627_361605_15CFFA19)
+Received: from s3.sipsolutions.net ([5.9.151.49]:59952 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759208AbbCDJey (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 04:34:54 -0500
+Message-ID: <1425461691.1810.5.camel@sipsolutions.net> (sfid-20150304_103459_330965_6C119033)
+Subject: Re: [PATCH 06/16] mac80211: tell drivers the user TX power
+ restriction
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Avri Altman <avri.altman@intel.com>
+Date: Wed, 04 Mar 2015 10:34:51 +0100
+In-Reply-To: <1425193815-17785-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_081046_434588_D9AF83D5)
+References: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1425193815-17785-7-git-send-email-emmanuel.grumbach@intel.com>
+	 (sfid-20150301_081046_434588_D9AF83D5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Sun, 2015-03-01 at 09:10 +0200, Emmanuel Grumbach wrote:
+> From: Avri Altman <avri.altman@intel.com>
+> 
+> Allow drivers to obtain the user's TX power restrictions in
+> order to be able to  apply it properly on (for example)
+> hardware scanning which operations on a set of channels,
+> in which case mac80211 cannot properly apply the per-channel
+> regulatory limits, and the currently exposed txpower value,
+> which is the minimum  of the user setting, channel regulatory
+> and possible 11h AP reduction isn't  appropriate to use
+> since scanning is done on many channels.
+> 
+> Note that drivers need to be careful when using this value
+> and must ensure that  regulatory is maintained, i.e. the
+> new value cannot be used as-is.
 
-The flags field allows user-space to properly decode what the
-rate->idx really means.  The tx-power field is useful as well,
-in case user-space is interested in doing something clever with
-path-loss calculations.
+Actually, given that it looks like this conflicts with other things
+we're doing, we're probably going to find another approach. I'll drop
+this for now from my tree.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 21 ++++++++++++++++++++-
- drivers/net/wireless/mac80211_hwsim.h |  8 ++++++++
- 2 files changed, 28 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 6603d08..300826e 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -504,6 +504,9 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
- 	[HWSIM_ATTR_REG_CUSTOM_REG] = { .type = NLA_U32 },
- 	[HWSIM_ATTR_REG_STRICT_REG] = { .type = NLA_FLAG },
- 	[HWSIM_ATTR_SUPPORT_P2P_DEVICE] = { .type = NLA_FLAG },
-+	[HWSIM_ATTR_TX_INFO2] = { .type = NLA_UNSPEC,
-+				  .len = IEEE80211_TX_MAX_RATES *
-+				         sizeof(struct hwsim_tx_rate2)},
- };
- 
- static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
-@@ -909,6 +912,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	unsigned int hwsim_flags = 0;
- 	int i;
- 	struct hwsim_tx_rate tx_attempts[IEEE80211_TX_MAX_RATES];
-+	struct hwsim_tx_rate2 tx_attempts2[IEEE80211_TX_MAX_RATES];
- 
- 	if (data->ps != PS_DISABLED)
- 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-@@ -960,6 +964,8 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		tx_attempts[i].idx = info->status.rates[i].idx;
- 		tx_attempts[i].count = info->status.rates[i].count;
-+		tx_attempts2[i].rc_flags = info->status.rates[i].flags;
-+		tx_attempts2[i].power_level = data->power_level;
- 	}
- 
- 	if (nla_put(skb, HWSIM_ATTR_TX_INFO,
-@@ -967,6 +973,11 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 		    tx_attempts))
- 		goto nla_put_failure;
- 
-+	if (nla_put(skb, HWSIM_ATTR_TX_INFO2,
-+		    sizeof(struct hwsim_tx_rate2)*IEEE80211_TX_MAX_RATES,
-+		    tx_attempts2))
-+		goto nla_put_failure;
-+
- 	/* We create a cookie to identify this skb */
- 	if (nla_put_u64(skb, HWSIM_ATTR_COOKIE, (unsigned long) my_skb))
- 		goto nla_put_failure;
-@@ -2395,6 +2406,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	struct mac80211_hwsim_data *data2;
- 	struct ieee80211_tx_info *txi;
- 	struct hwsim_tx_rate *tx_attempts;
-+	struct hwsim_tx_rate2 *tx_attempts2;
- 	unsigned long ret_skb_ptr;
- 	struct sk_buff *skb, *tmp;
- 	const u8 *src;
-@@ -2438,6 +2450,12 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	tx_attempts = (struct hwsim_tx_rate *)nla_data(
- 		       info->attrs[HWSIM_ATTR_TX_INFO]);
- 
-+	if (info->attrs[HWSIM_ATTR_TX_INFO2])
-+		tx_attempts2 = (struct hwsim_tx_rate2 *)nla_data(
-+		       info->attrs[HWSIM_ATTR_TX_INFO2]);
-+	else
-+		tx_attempts2 = NULL;
-+
- 	/* now send back TX status */
- 	txi = IEEE80211_SKB_CB(skb);
- 
-@@ -2446,7 +2464,8 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		txi->status.rates[i].idx = tx_attempts[i].idx;
- 		txi->status.rates[i].count = tx_attempts[i].count;
--		/*txi->status.rates[i].flags = 0;*/
-+		if (tx_attempts2)
-+			txi->status.rates[i].flags = tx_attempts2[i].rc_flags;
- 	}
- 
- 	txi->status.ack_signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
-index 6ca9fd5..d0fee89 100644
---- a/drivers/net/wireless/mac80211_hwsim.h
-+++ b/drivers/net/wireless/mac80211_hwsim.h
-@@ -121,6 +121,7 @@ enum {
-  * @HWSIM_ATTR_RADIO_NAME: Name of radio, e.g. phy666
-  * @HWSIM_ATTR_NO_VIF:  Do not create vif (wlanX) when creating radio.
-  * @HWSIM_ATTR_FREQ: Frequency at which packet is transmitted or received.
-+ * @HWSIM_ATTR_TX_INFO2: hwsim_tx_rate2 array
-  * @__HWSIM_ATTR_MAX: enum limit
-  */
- 
-@@ -146,6 +147,7 @@ enum {
- 	HWSIM_ATTR_RADIO_NAME,
- 	HWSIM_ATTR_NO_VIF,
- 	HWSIM_ATTR_FREQ,
-+	HWSIM_ATTR_TX_INFO2,
- 	__HWSIM_ATTR_MAX,
- };
- #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
-@@ -168,4 +170,10 @@ struct hwsim_tx_rate {
- 	u8 count;
- } __packed;
- 
-+/* Auxilary info to allow user-space to better understand the rate */
-+struct hwsim_tx_rate2 {
-+	u16 rc_flags; /* rate-ctrl flags (see mac80211_rate_control_flags) */
-+	s16 power_level;
-+} __packed;
-+
- #endif /* __MAC80211_HWSIM_H */
--- 
-1.7.11.7
+johannes
 
