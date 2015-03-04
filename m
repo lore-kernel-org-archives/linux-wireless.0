@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54748 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751678AbbCCJSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 04:18:25 -0500
-Message-ID: <1425374299.2450.18.camel@sipsolutions.net> (sfid-20150303_101829_592217_D20D77BC)
-Subject: Re: [PATCH v2 3/4] mac80211: initialize rate control earlier for
- tdls station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Date: Tue, 03 Mar 2015 10:18:19 +0100
-In-Reply-To: <CA+XVXfchZ+L1iH47S=rM04vJbjBSKA4O8TYuhEkfZuLpNb9QDA@mail.gmail.com> (sfid-20150301_092138_211960_577091EE)
-References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
-	 <1424850911-21017-4-git-send-email-marek.puzyniak@tieto.com>
-	 <1425041427.1960.1.camel@sipsolutions.net>
-	 <CA+XVXfchZ+L1iH47S=rM04vJbjBSKA4O8TYuhEkfZuLpNb9QDA@mail.gmail.com>
-	 (sfid-20150301_092138_211960_577091EE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from blu004-omc1s14.hotmail.com ([65.55.116.25]:55412 "EHLO
+	BLU004-OMC1S14.hotmail.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933401AbbCDHeG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Mar 2015 02:34:06 -0500
+Message-ID: <BLU436-SMTP37961E670B2BEAB516F79CB91E0@phx.gbl> (sfid-20150304_083428_707352_62FF6EB9)
+Date: Wed, 4 Mar 2015 15:41:55 +0800
+From: Chen Gang <xili_gchen_5257@hotmail.com>
+MIME-Version: 1.0
+To: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
+References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
+In-Reply-To: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-03-01 at 10:21 +0200, Arik Nemtsov wrote:
 
-> > Arik, you have a similar patch handling only NSS. Does this one look
-> > fine to you, and would it solve the problem your other patch solved?
+Sorry for my carelessness, I deleted the original reply mail to me (may
+also deleted another mails to me, too).
+
+The hotmail is not stable, I am just struggling with it (it can not work
+well with linux-kernel@vger.kernel.org).
+
+Could you forward your original reply to me again?
+
+Thanks.
+
+On 3/4/15 05:16, Chen Gang wrote:
+> bcma also needs PCI, just like IOMEM and DMA, so let it depend on PCI,
+> or will cause building break for allmodconfig under c6x:
 > 
-> Well currently iwlmvm requires the NSS to be set before
-> IEEE80211_STA_ASSOC (earlier), so this doesn't help directly.
-> I could change mvm a bit to make it work, but I don't really see a
-> good reason for it :)
+>     CC [M]  drivers/bcma/driver_pcie2.o
+>   drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
+>   drivers/bcma/driver_pcie2.c:196:8: error: implicit declaration of function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
+>     err = pcie_set_readrq(dev, pcie2->reqsize);
+>           ^
 > 
-> The patch looks good. Shouldn't introduce new issues (at least for iwlwifi).
+> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
+> ---
+>  drivers/bcma/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+> index 0ee48be..8be284e 100644
+> --- a/drivers/bcma/Kconfig
+> +++ b/drivers/bcma/Kconfig
+> @@ -1,6 +1,6 @@
+>  config BCMA_POSSIBLE
+>  	bool
+> -	depends on HAS_IOMEM && HAS_DMA
+> +	depends on HAS_IOMEM && HAS_DMA && PCI
+>  	default y
+>  
+>  menu "Broadcom specific AMBA"
+> 
 
-Ok, thanks. Do you think it would be possible to move all of this before
-ASSOC?
+-- 
+Chen Gang
 
-(if not, why not, and how is it that we have valid NSS if we don't have
-the remaining data valid?)
-
-johannes
-
+Open, share, and attitude like air, water, and life which God blessed
