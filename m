@@ -1,104 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51123 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:37049 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753412AbbCJOFd convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1750965AbbCELka convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 10:05:33 -0400
+	Thu, 5 Mar 2015 06:40:30 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2015-03-10
-Date: Tue, 10 Mar 2015 16:05:26 +0200
-Message-ID: <87y4n5x80p.fsf@kamboji.qca.qualcomm.com> (sfid-20150310_150614_297789_2688E2E1)
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Chen Gang <xili_gchen_5257@hotmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Arnd Bergmann <arnd@arndb.de>, Jim Davis <jim.epost@gmail.com>,
+	Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
+Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
+References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
+	<CACna6rw03OfforxrV5nWLYTUW64BQ-vvH9TuZqK2q9__2Y0edA@mail.gmail.com>
+Date: Thu, 05 Mar 2015 13:40:23 +0200
+In-Reply-To: <CACna6rw03OfforxrV5nWLYTUW64BQ-vvH9TuZqK2q9__2Y0edA@mail.gmail.com>
+	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Wed, 4 Mar 2015
+ 23:23:32 +0100")
+Message-ID: <87r3t365aw.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_124048_704728_C5EC91E8)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-here is wireless-drivers pull request for 4.0, changelog below. Please
-let me know if there are any problems.
+> Kalle, I guess the recent discussion and work on this problem could be
+> confusing, so let me try to sum it up it a bit.
+>
+> First of all, please note there are 3 awaiting bcma patches that
+> should be applied independently of what we decide to do with this
+> patch. They are of course inspired by the recent building problems.
+> List of these patches:
+> [PATCH next] bcma: make bcma_host_pci_(up|down) calls safe for every config
+> [PATCH next] bcma: move internal function declarations to private header
+> [PATCH next] bcma: prepare Kconfig symbol for PCI driver
+>
+> Now, the building problem is obviously caused by me, my work on
+> driver_pcie2.c and using pcie_set_readrq there without making sure
+> that is PCI available. I'm sorry for that.
+>
+> All 3 above patches are moving us toward the the most optimal solution
+> of this problem. Depending on PCI only when it's really required.
+> There is still one more change missing that I'm working on. It'll take
+> me about 2 more days to get the last patch.
+> On the other way, patch proposed by Chen fixes building problem right
+> now. It's much simpler but bumps bcma requirements a bit too high.
+> bcma doesn't really have to depend on PCI.
 
-Kalle
+Thanks for the good summary, it clarified things for me.
 
+> So you have 2 options there and I'll be happy with whatever you choose to do:
+> 1) Pick Chen patch now and in ~2 days apply my final fix + revert Chen
+> patch.
 
-The following changes since commit acf8dd0a9d0b9e4cdb597c2f74802f79c699e802:
-
-  udp: only allow UFO for packets from SOCK_DGRAM sockets (2015-03-02 22:19:29 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-03-10
-
-for you to fetch changes up to 3f1615340acea54e21f4b9d4d65921540dca84b2:
-
-  brcmfmac: Perform bound checking on vendor command buffer (2015-03-07 10:52:30 +0200)
-
-----------------------------------------------------------------
-iwlwifi:
-
-* fix ROC removal - avoids a firmware crash
-* fix throughput regression on iwldvm devices
-* fix panic in BT Coex
-* fixes in rate control
-* fixes in scan
-
-b43:
-
-* fix support for 5 GHz only BCM43228 model
-
-rtlwifi:
-
-* improve handling of IPv6 packets
-
-brcmfmac:
-
-* perform bound checking on vendor command buffer
-
-----------------------------------------------------------------
-Andrei Otcheretianski (1):
-      iwlwifi: mvm: Fix ROC removal
-
-Emmanuel Grumbach (2):
-      iwlwifi: fix max_ht_ampdu_exponent for older devices
-      iwlwifi: mvm: BT Coex - fix a NULL pointer exception
-
-Eyal Shapira (2):
-      iwlwifi: mvm: rs: fix BT Coex check to look at the correct ant
-      iwlwifi: mvm: disable beamformer unless FW supports it
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2015-03-05' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Larry Finger (1):
-      rtlwifi: Improve handling of IPv6 packets
-
-Luciano Coelho (2):
-      iwlwifi: mvm: call ieee80211_scan_completed() even if scan abort fails
-      iwlwifi: mvm: don't try to stop scans that are not running anymore
-
-Pontus Fuchs (1):
-      brcmfmac: Perform bound checking on vendor command buffer
-
-Rafał Miłecki (1):
-      b43: fix support for 5 GHz only BCM43228 model
-
- drivers/net/wireless/b43/main.c                  |    1 +
- drivers/net/wireless/brcm80211/brcmfmac/vendor.c |   15 +++++++--
- drivers/net/wireless/iwlwifi/iwl-1000.c          |    6 ++--
- drivers/net/wireless/iwlwifi/iwl-2000.c          |   13 +++++---
- drivers/net/wireless/iwlwifi/iwl-5000.c          |    6 ++--
- drivers/net/wireless/iwlwifi/iwl-6000.c          |   18 ++++++----
- drivers/net/wireless/iwlwifi/mvm/coex.c          |    3 +-
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c   |    3 +-
- drivers/net/wireless/iwlwifi/mvm/mac80211.c      |   38 ++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/mvm/rs.c            |   21 ++++++++----
- drivers/net/wireless/iwlwifi/mvm/scan.c          |   13 ++++----
- drivers/net/wireless/iwlwifi/mvm/time-event.c    |    9 ++---
- drivers/net/wireless/rtlwifi/base.c              |    7 ++--
- 13 files changed, 109 insertions(+), 44 deletions(-)
+I'll prefer this option so that we can quickly solve the build problem.
+Also once your final fix is ready, please remember that you need to
+revert Chen's patch within the same patch.
 
 -- 
 Kalle Valo
