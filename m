@@ -1,184 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:57319 "EHLO aibo.runbox.com"
+Received: from mga03.intel.com ([134.134.136.65]:54805 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752054AbbC1MxT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:53:19 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
-	m.v.b@runbox.com
-Subject: [PATCH v4 01/15] staging: rtl8723au: Reformat whitespace to increase readability
-Date: Sat, 28 Mar 2015 08:52:34 -0400
-Message-Id: <1427547168-12078-2-git-send-email-m.v.b@runbox.com> (sfid-20150328_135336_685146_CDB06DAC)
-In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
-References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+	id S1751205AbbCEMuD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2015 07:50:03 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>, <stable@vger.kernel.org>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/7] iwlwifi: mvm: rs: fix BT Coex check to look at the correct ant
+Date: Thu,  5 Mar 2015 14:49:48 +0200
+Message-Id: <1425559793-25131-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150305_135012_808152_D878526D)
+In-Reply-To: <1425558068.22928.3.camel@egrumbacBox>
+References: <1425558068.22928.3.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adjust the whitespace in the signature, local variable declaration and
-initialization parts of a number of functions to increase readability
-in rtl8723au's rtw_security.c.
+From: Eyal Shapira <eyal@wizery.com>
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+The check to avoid the shared antenna was passed the wrong
+antenna parameter. It should have checked whether the antenna of
+the next column we're considering is allowed and instead it was
+passed the current antenna.
+This could lead to a wrong choice of the next column in the rs
+algorithm and non optimal performance.
 
+Fixes: commit 219fb66b49fac64bb ("iwlwifi: mvm: rs - don't use the shared antenna when BT load is high")
+CC: <stable@vger.kernel.org> [3.19]
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/mvm/rs.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-v2: Make sure that the arcfour_encrypt function's argument list is split
-    according to the kernel code style.
----
- drivers/staging/rtl8723au/core/rtw_security.c | 79 +++++++++++++--------------
- 1 file changed, 38 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 045a24c81b..088533c5b1 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -31,11 +31,11 @@ struct arc4context {
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 194bd1f..efa9688 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -134,9 +134,12 @@ enum rs_column_mode {
+ #define MAX_NEXT_COLUMNS 7
+ #define MAX_COLUMN_CHECKS 3
  
- static void arcfour_init(struct arc4context *parc4ctx, u8 *key, u32 key_len)
- {
--	u32	t, u;
--	u32	keyindex;
--	u32	stateindex;
-+	u32 t, u;
-+	u32 keyindex;
-+	u32 stateindex;
- 	u8 *state;
--	u32	counter;
-+	u32 counter;
- 
- 	state = parc4ctx->state;
- 	parc4ctx->x = 0;
-@@ -55,7 +55,8 @@ static void arcfour_init(struct arc4context *parc4ctx, u8 *key, u32 key_len)
- 	}
- 
- }
--static u32 arcfour_byte(	struct arc4context	*parc4ctx)
++struct rs_tx_column;
 +
-+static u32 arcfour_byte(struct arc4context *parc4ctx)
+ typedef bool (*allow_column_func_t) (struct iwl_mvm *mvm,
+ 				     struct ieee80211_sta *sta,
+-				     struct iwl_scale_tbl_info *tbl);
++				     struct iwl_scale_tbl_info *tbl,
++				     const struct rs_tx_column *next_col);
+ 
+ struct rs_tx_column {
+ 	enum rs_column_mode mode;
+@@ -147,13 +150,15 @@ struct rs_tx_column {
+ };
+ 
+ static bool rs_ant_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			 struct iwl_scale_tbl_info *tbl)
++			 struct iwl_scale_tbl_info *tbl,
++			 const struct rs_tx_column *next_col)
  {
- 	u32 x;
- 	u32 y;
-@@ -75,16 +76,13 @@ static u32 arcfour_byte(	struct arc4context	*parc4ctx)
- 	return state[(sx + sy) & 0xff];
+-	return iwl_mvm_bt_coex_is_ant_avail(mvm, tbl->rate.ant);
++	return iwl_mvm_bt_coex_is_ant_avail(mvm, next_col->ant);
  }
  
--static void arcfour_encrypt(	struct arc4context	*parc4ctx,
--	u8 *dest,
--	u8 *src,
--	u32 len)
-+static void arcfour_encrypt(struct arc4context *parc4ctx, u8 *dest,
-+			    u8 *src, u32 len)
+ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			  struct iwl_scale_tbl_info *tbl)
++			  struct iwl_scale_tbl_info *tbl,
++			  const struct rs_tx_column *next_col)
  {
--	u32	i;
-+	u32 i;
- 
- 	for (i = 0; i < len; i++)
- 		dest[i] = src[i] ^ (unsigned char)arcfour_byte(parc4ctx);
--
+ 	if (!sta->ht_cap.ht_supported)
+ 		return false;
+@@ -171,7 +176,8 @@ static bool rs_mimo_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
  }
  
- static int bcrc32initialized;
-@@ -368,7 +366,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
- 			   u8 *mic_code, u8 pri)
+ static bool rs_siso_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			  struct iwl_scale_tbl_info *tbl)
++			  struct iwl_scale_tbl_info *tbl,
++			  const struct rs_tx_column *next_col)
  {
- 
--	struct mic_data	micdata;
-+	struct mic_data micdata;
- 	u8 priority[4]={0x0, 0x0, 0x0, 0x0};
- 
- 	rtw_secmicsetkey23a(&micdata, key);
-@@ -604,21 +602,21 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
- int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 			struct xmit_frame *pxmitframe)
- {
--	u16	pnl;
--	u32	pnh;
--	u8	rc4key[16];
--	u8   ttkey[16];
--	u8	crc[4];
--	u8   hw_hdr_offset = 0;
-+	u16 pnl;
-+	u32 pnh;
-+	u8 rc4key[16];
-+	u8 ttkey[16];
-+	u8 crc[4];
-+	u8 hw_hdr_offset = 0;
- 	struct arc4context mycontext;
--	int			curfragnum, length;
--	u32	prwskeylen;
--	u8	*pframe, *payload, *iv, *prwskey;
-+	int curfragnum, length;
-+	u32 prwskeylen;
-+	u8 *pframe, *payload, *iv, *prwskey;
- 	union pn48 dot11txpn;
--	struct	sta_info		*stainfo;
--	struct	pkt_attrib	 *pattrib = &pxmitframe->attrib;
--	struct	security_priv	*psecuritypriv = &padapter->securitypriv;
--	struct	xmit_priv		*pxmitpriv = &padapter->xmitpriv;
-+	struct sta_info *stainfo;
-+	struct pkt_attrib *pattrib = &pxmitframe->attrib;
-+	struct security_priv *psecuritypriv = &padapter->securitypriv;
-+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
- 	int res = _SUCCESS;
- 
- 	if (!pxmitframe->buf_addr)
-@@ -706,17 +704,17 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- {
- 	u16 pnl;
- 	u32 pnh;
--	u8   rc4key[16];
--	u8   ttkey[16];
--	u8	crc[4];
-+	u8 rc4key[16];
-+	u8 ttkey[16];
-+	u8 crc[4];
- 	struct arc4context mycontext;
--	int	length;
--	u32	prwskeylen;
--	u8	*pframe, *payload, *iv, *prwskey;
-+	int length;
-+	u32 prwskeylen;
-+	u8 *pframe, *payload, *iv, *prwskey;
- 	union pn48 dot11txpn;
--	struct	sta_info		*stainfo;
--	struct	rx_pkt_attrib *prxattrib = &precvframe->attrib;
--	struct	security_priv *psecuritypriv = &padapter->securitypriv;
-+	struct sta_info *stainfo;
-+	struct rx_pkt_attrib *prxattrib = &precvframe->attrib;
-+	struct security_priv *psecuritypriv = &padapter->securitypriv;
- 	struct sk_buff *skb = precvframe->pkt;
- 	int res = _SUCCESS;
- 
-@@ -1128,8 +1126,8 @@ static void bitwise_xor(u8 *ina, u8 *inb, u8 *out)
- 
- static int aes_cipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- {
--	uint	qc_exists, a4_exists, i, j, payload_remainder,
--		num_blocks, payload_index;
-+	uint qc_exists, a4_exists, i, j, payload_remainder,
-+	     num_blocks, payload_index;
- 	u8 pn_vector[6];
- 	u8 mic_iv[16];
- 	u8 mic_header1[16];
-@@ -1345,12 +1343,11 @@ out:
- 	return res;
+ 	if (!sta->ht_cap.ht_supported)
+ 		return false;
+@@ -180,7 +186,8 @@ static bool rs_siso_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
  }
  
--static int aes_decipher(u8 *key, uint	hdrlen,
--			u8 *pframe, uint plen)
-+static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ static bool rs_sgi_allow(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+-			 struct iwl_scale_tbl_info *tbl)
++			 struct iwl_scale_tbl_info *tbl,
++			 const struct rs_tx_column *next_col)
  {
--	static u8	message[MAX_MSG_SIZE];
--	uint	qc_exists, a4_exists, i, j, payload_remainder,
--			num_blocks, payload_index;
-+	static u8 message[MAX_MSG_SIZE];
-+	uint qc_exists, a4_exists, i, j, payload_remainder,
-+	     num_blocks, payload_index;
- 	int res = _SUCCESS;
- 	u8 pn_vector[6];
- 	u8 mic_iv[16];
+ 	struct rs_rate *rate = &tbl->rate;
+ 	struct ieee80211_sta_ht_cap *ht_cap = &sta->ht_cap;
+@@ -1590,7 +1597,7 @@ static enum rs_column rs_get_next_column(struct iwl_mvm *mvm,
+ 
+ 		for (j = 0; j < MAX_COLUMN_CHECKS; j++) {
+ 			allow_func = next_col->checks[j];
+-			if (allow_func && !allow_func(mvm, sta, tbl))
++			if (allow_func && !allow_func(mvm, sta, tbl, next_col))
+ 				break;
+ 		}
+ 
 -- 
-2.1.4
+1.9.1
 
