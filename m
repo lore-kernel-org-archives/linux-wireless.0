@@ -1,83 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:64236 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751780AbbCKNOd (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39351 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933036AbbCEMMv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 09:14:33 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Javier Martinez Canillas <javier@dowhile0.org>,
-	Tony Lindgren <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-Date: Wed, 11 Mar 2015 14:13:59 +0100
-Message-ID: <2233058.m8xh0sUU5j@wuerfel> (sfid-20150311_141439_229949_726D3FDB)
-In-Reply-To: <CAB3XZEfnZbZqH95suJ9n39aZRr8kxPdj2HZuWKMvQtYmXe3QEQ@mail.gmail.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <CABxcv=nE_Qd7do+dRyp=fw3wYmWFb+0eEjXYOtdjqE55Cp0zmQ@mail.gmail.com> <CAB3XZEfnZbZqH95suJ9n39aZRr8kxPdj2HZuWKMvQtYmXe3QEQ@mail.gmail.com>
+	Thu, 5 Mar 2015 07:12:51 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH next] bcma: make bcma_host_pci_(up|down) calls safe for every config
+References: <1425467681-15988-1-git-send-email-zajec5@gmail.com>
+Date: Thu, 05 Mar 2015 14:12:44 +0200
+In-Reply-To: <1425467681-15988-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 4 Mar 2015
+ 12:14:41 +0100")
+Message-ID: <87egp363sz.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_131258_490771_33EAEE16)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 March 2015 14:12:54 Eliad Peller wrote:
-> On Wed, Mar 11, 2015 at 1:34 PM, Javier Martinez Canillas
-> <javier@dowhile0.org> wrote:
-> > I think that patch [0] should not be needed since for external clocks,
-> > the IP providing the clocks should have its own clock driver and for
-> > internal clocks, a property should be used instead as you said.
-> >
-> >> If there is no external clock provider for this chip and the clocks
-> >> are provided by the device itself, then all we need is a clock-frequency
-> >> property in the device node.
-> >>
-> >
-> > Agreed, IIUC Luciano wanted to expose the internal clocks by
-> > registering in the common clock framework but if those clocks are not
-> > really accessible from outside the wlan chip, then I also think that a
-> > device node property should be used instead.
-> >
-> how should i describe multiple clock-frequency properties (there are 2
-> relevant clocks) in this case?
-> 
-> does something like the following makes sense?
-> 
-> wlcore: wlcore@2 {
->     ...
->     refclock: refclock {
->         compatible = "fixed-clock";
->         #clock-cells = <0>;
->         clock-frequency = <38400000>;
->     };
-> }
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-I would put that clock node on the top level of the DT, as you are
-describing an external clock input here, but other than that, it looks
-good.
+> We were providing declarations but actual code was compiled only with
+> CONFIG_BCMA_HOST_PCI set. This could result in:
+> ERROR: "bcma_host_pci_down" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
+> ERROR: "bcma_host_pci_up" [drivers/net/wireless/brcm80211/brcmsmac/brcmsmac.ko] undefined!
+> ERROR: "bcma_host_pci_down" [drivers/net/wireless/b43/b43.ko] undefined!
+> ERROR: "bcma_host_pci_up" [drivers/net/wireless/b43/b43.ko] undefined!
+>
+> Reported-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-I would do the binding in a way that mandates either a "clocks"
-reference to an external clock provider in case of a XTAL or
-a "clock-frequency" property. In the first case, you can use
-the "clock-names" property to identify the "ref" and "txco"
-clock inputs, in the second case we could either decide
-to have a single property with two cells, or have named
-properties like
+Thanks, applied to wireless-drivers-next.git.
 
-	wlcore@2 {
-		interrupts = < ... >;
-		tcxo-clock-frequency = <38400000>;
-		ref-clock-frequency = <19200000>;
-	}
-
-I don't know which combinations are possible here. I did notice
-that most of the references in the board hacks use '0' as the
-tcxo clock value, which happens to be the same as
-WL12XX_TCXOCLOCK_19_2, but could also meant that no tcxo clock
-is used.
-
-	Arnd 
+-- 
+Kalle Valo
