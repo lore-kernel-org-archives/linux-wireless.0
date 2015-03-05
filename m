@@ -1,245 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:1397 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:54805 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751248AbbCRGqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 02:46:14 -0400
+	id S1754176AbbCEMuM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2015 07:50:12 -0500
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] cfg/mac80211: add regulatory classes IE during TDLS setup
-Date: Wed, 18 Mar 2015 08:46:08 +0200
-Message-Id: <1426661168-11610-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150318_074617_001545_C0F2DCB3)
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 6/7] iwlwifi: fix max_ht_ampdu_exponent for older devices
+Date: Thu,  5 Mar 2015 14:49:52 +0200
+Message-Id: <1425559793-25131-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150305_135021_724806_611C6A08)
+In-Reply-To: <1425558068.22928.3.camel@egrumbacBox>
+References: <1425558068.22928.3.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+The commit below didn't update the max_ht_ampdu_exponent
+for the devices listed in iwl-[1-6]000.c which, in result,
+became 0 instead of 8K. This reduced the size of the Rx
+AMPDU from 64K to 8K which had an impact in the Rx
+throughput. One user reported that because of this, his
+downstream throughput droppped by a half.
 
-Seems Broadcom TDLS peers (Nexus 5, Xperia Z3) refuse to allow TDLS
-connection when channel-switching is supported but the regulatory
-classes IE is missing from the setup request.
-Add a chandef to reg-class translation function to cfg80211 and use it
-to add the required IE during setup. For now add only the current
-regulatory class as supported - it is enough to resolve the
-compatibility issue.
-
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+CC: <stable@vger.kernel.org> [3.19]
+Fixes: c064ddf318aa ("iwlwifi: change max HT and VHT A-MPDU exponent")
+Reported-and-tested-by: Valentin Manea <linux-wireless@mrs.ro>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/net/cfg80211.h |  11 +++++
- net/mac80211/tdls.c    |  21 ++++++++
- net/wireless/util.c    | 129 +++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 161 insertions(+)
+ drivers/net/wireless/iwlwifi/iwl-1000.c |  6 ++++--
+ drivers/net/wireless/iwlwifi/iwl-2000.c | 13 +++++++++----
+ drivers/net/wireless/iwlwifi/iwl-5000.c |  6 ++++--
+ drivers/net/wireless/iwlwifi/iwl-6000.c | 18 ++++++++++++------
+ 4 files changed, 29 insertions(+), 14 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 12a6121..c4d873b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4903,6 +4903,17 @@ void cfg80211_ch_switch_started_notify(struct net_device *dev,
- bool ieee80211_operating_class_to_band(u8 operating_class,
- 				       enum ieee80211_band *band);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index c3817fa..06f6cc0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -95,7 +95,8 @@ static const struct iwl_eeprom_params iwl1000_eeprom_params = {
+ 	.nvm_calib_ver = EEPROM_1000_TX_POWER_VERSION,	\
+ 	.base_params = &iwl1000_base_params,			\
+ 	.eeprom_params = &iwl1000_eeprom_params,		\
+-	.led_mode = IWL_LED_BLINK
++	.led_mode = IWL_LED_BLINK,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
-+/**
-+ * ieee80211_chandef_to_operating_class - convert chandef to operation class
-+ *
-+ * @chandef: the chandef to convert
-+ * @op_class: a pointer to the resulting operating class
-+ *
-+ * Returns %true if the conversion was successful, %false otherwise.
-+ */
-+bool ieee80211_chandef_to_operating_class(struct cfg80211_chan_def *chandef,
-+					  u8 *op_class);
-+
- /*
-  * cfg80211_tdls_oper_request - request userspace to perform TDLS operation
-  * @dev: the device on which the operation is requested
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index bc7e404..79ed59a 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -136,6 +136,24 @@ ieee80211_tdls_add_supp_channels(struct ieee80211_sub_if_data *sdata,
- 	*pos = 2 * subband_cnt;
- }
+ const struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 1000 BGN",
+@@ -121,7 +122,8 @@ const struct iwl_cfg iwl1000_bg_cfg = {
+ 	.base_params = &iwl1000_base_params,			\
+ 	.eeprom_params = &iwl1000_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.rx_with_siso_diversity = true
++	.rx_with_siso_diversity = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
-+static void ieee80211_tdls_add_oper_classes(struct ieee80211_sub_if_data *sdata,
-+					    struct sk_buff *skb)
-+{
-+	u8 *pos;
-+	u8 op_class;
+ const struct iwl_cfg iwl100_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 100 BGN",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 21e5d08..890b95f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -123,7 +123,9 @@ static const struct iwl_eeprom_params iwl20x0_eeprom_params = {
+ 	.nvm_calib_ver = EEPROM_2000_TX_POWER_VERSION,		\
+ 	.base_params = &iwl2000_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
 +
-+	if (!ieee80211_chandef_to_operating_class(&sdata->vif.bss_conf.chandef,
-+						  &op_class))
-+		return;
-+
-+	pos = skb_put(skb, 4);
-+	*pos++ = WLAN_EID_SUPPORTED_REGULATORY_CLASSES;
-+	*pos++ = 2; /* len */
-+
-+	*pos++ = op_class;
-+	*pos++ = op_class; /* give current operating class as alternate too */
-+}
-+
- static void ieee80211_tdls_add_bss_coex_ie(struct sk_buff *skb)
- {
- 	u8 *pos = (void *)skb_put(skb, 3);
-@@ -350,6 +368,8 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
  
-+	ieee80211_tdls_add_oper_classes(sdata, skb);
-+
- 	/*
- 	 * with TDLS we can switch channels, and HT-caps are not necessarily
- 	 * the same on all bands. The specification limits the setup to a
-@@ -786,6 +806,7 @@ ieee80211_tdls_build_mgmt_packet_data(struct ieee80211_sub_if_data *sdata,
- 			       50 + /* supported channels */
- 			       3 + /* 40/20 BSS coex */
- 			       4 + /* AID */
-+			       4 + /* oper classes */
- 			       extra_ies_len +
- 			       sizeof(struct ieee80211_tdls_lnkie));
- 	if (!skb)
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index f7b3598..f218b15 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1314,6 +1314,135 @@ bool ieee80211_operating_class_to_band(u8 operating_class,
- }
- EXPORT_SYMBOL(ieee80211_operating_class_to_band);
+ const struct iwl_cfg iwl2000_2bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 2200 BGN",
+@@ -149,7 +151,8 @@ const struct iwl_cfg iwl2000_2bgn_d_cfg = {
+ 	.nvm_calib_ver = EEPROM_2000_TX_POWER_VERSION,	\
+ 	.base_params = &iwl2030_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
-+bool ieee80211_chandef_to_operating_class(struct cfg80211_chan_def *chandef,
-+					  u8 *op_class)
-+{
-+	u8 vht_opclass;
-+	u16 freq = chandef->center_freq1;
-+
-+	if (freq >= 2412 && freq <= 2472) {
-+		if (chandef->width > NL80211_CHAN_WIDTH_40)
-+			return false;
-+
-+		/* 2.407 GHz, channels 1..13 */
-+		if (chandef->width == NL80211_CHAN_WIDTH_40) {
-+			if (freq > chandef->chan->center_freq)
-+				*op_class = 83; /* HT40+ */
-+			else
-+				*op_class = 84; /* HT40- */
-+		} else {
-+			*op_class = 81;
-+		}
-+
-+		return true;
-+	}
-+
-+	if (freq == 2484) {
-+		if (chandef->width > NL80211_CHAN_WIDTH_40)
-+			return false;
-+
-+		*op_class = 82; /* channel 14 */
-+		return true;
-+	}
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_80:
-+		vht_opclass = 128;
-+		break;
-+	case NL80211_CHAN_WIDTH_160:
-+		vht_opclass = 129;
-+		break;
-+	case NL80211_CHAN_WIDTH_80P80:
-+		vht_opclass = 130;
-+		break;
-+	case NL80211_CHAN_WIDTH_10:
-+	case NL80211_CHAN_WIDTH_5:
-+		return false; /* unsupported for now */
-+	default:
-+		vht_opclass = 0;
-+		break;
-+	}
-+
-+	/* 5 GHz, channels 36..48 */
-+	if (freq >= 5180 && freq <= 5240) {
-+		if (vht_opclass) {
-+			*op_class = vht_opclass;
-+		} else if (chandef->width == NL80211_CHAN_WIDTH_40) {
-+			if (freq > chandef->chan->center_freq)
-+				*op_class = 116;
-+			else
-+				*op_class = 117;
-+		} else {
-+			*op_class = 115;
-+		}
-+
-+		return true;
-+	}
-+
-+	/* 5 GHz, channels 52..64 */
-+	if (freq >= 5260 && freq <= 5320) {
-+		if (vht_opclass) {
-+			*op_class = vht_opclass;
-+		} else if (chandef->width == NL80211_CHAN_WIDTH_40) {
-+			if (freq > chandef->chan->center_freq)
-+				*op_class = 119;
-+			else
-+				*op_class = 120;
-+		} else {
-+			*op_class = 118;
-+		}
-+
-+		return true;
-+	}
-+
-+	/* 5 GHz, channels 100..144 */
-+	if (freq >= 5500 && freq <= 5720) {
-+		if (vht_opclass) {
-+			*op_class = vht_opclass;
-+		} else if (chandef->width == NL80211_CHAN_WIDTH_40) {
-+			if (freq > chandef->chan->center_freq)
-+				*op_class = 122;
-+			else
-+				*op_class = 123;
-+		} else {
-+			*op_class = 121;
-+		}
-+
-+		return true;
-+	}
-+
-+	/* 5 GHz, channels 149..169 */
-+	if (freq >= 5745 && freq <= 5845) {
-+		if (vht_opclass) {
-+			*op_class = vht_opclass;
-+		} else if (chandef->width == NL80211_CHAN_WIDTH_40) {
-+			if (freq > chandef->chan->center_freq)
-+				*op_class = 126;
-+			else
-+				*op_class = 127;
-+		} else if (freq <= 5805) {
-+			*op_class = 124;
-+		} else {
-+			*op_class = 125;
-+		}
-+
-+		return true;
-+	}
-+
-+	/* 56.16 GHz, channel 1..4 */
-+	if (freq >= 56160 + 2160 * 1 && freq <= 56160 + 2160 * 4) {
-+		if (chandef->width >= NL80211_CHAN_WIDTH_40)
-+			return false;
-+
-+		*op_class = 180;
-+		return true;
-+	}
-+
-+	/* not supported yet */
-+	return false;
-+}
-+EXPORT_SYMBOL(ieee80211_chandef_to_operating_class);
-+
- int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 				 u32 beacon_int)
- {
+ const struct iwl_cfg iwl2030_2bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 2230 BGN",
+@@ -170,7 +173,8 @@ const struct iwl_cfg iwl2030_2bgn_cfg = {
+ 	.base_params = &iwl2000_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.rx_with_siso_diversity = true
++	.rx_with_siso_diversity = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl105_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 105 BGN",
+@@ -197,7 +201,8 @@ const struct iwl_cfg iwl105_bgn_d_cfg = {
+ 	.base_params = &iwl2030_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.rx_with_siso_diversity = true
++	.rx_with_siso_diversity = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl135_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 135 BGN",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 332bbede..724194e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -93,7 +93,8 @@ static const struct iwl_eeprom_params iwl5000_eeprom_params = {
+ 	.nvm_calib_ver = EEPROM_5000_TX_POWER_VERSION,	\
+ 	.base_params = &iwl5000_base_params,			\
+ 	.eeprom_params = &iwl5000_eeprom_params,		\
+-	.led_mode = IWL_LED_BLINK
++	.led_mode = IWL_LED_BLINK,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl5300_agn_cfg = {
+ 	.name = "Intel(R) Ultimate N WiFi Link 5300 AGN",
+@@ -158,7 +159,8 @@ const struct iwl_cfg iwl5350_agn_cfg = {
+ 	.base_params = &iwl5000_base_params,			\
+ 	.eeprom_params = &iwl5000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.internal_wimax_coex = true
++	.internal_wimax_coex = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl5150_agn_cfg = {
+ 	.name = "Intel(R) WiMAX/WiFi Link 5150 AGN",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 8f2c3c8..21b2630 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -145,7 +145,8 @@ static const struct iwl_eeprom_params iwl6000_eeprom_params = {
+ 	.nvm_calib_ver = EEPROM_6005_TX_POWER_VERSION,	\
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6005_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6205 AGN",
+@@ -199,7 +200,8 @@ const struct iwl_cfg iwl6005_2agn_mow2_cfg = {
+ 	.nvm_calib_ver = EEPROM_6030_TX_POWER_VERSION,	\
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6030_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
+@@ -235,7 +237,8 @@ const struct iwl_cfg iwl6030_2bg_cfg = {
+ 	.nvm_calib_ver = EEPROM_6030_TX_POWER_VERSION,	\
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6035_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6235 AGN",
+@@ -290,7 +293,8 @@ const struct iwl_cfg iwl130_bg_cfg = {
+ 	.nvm_calib_ver = EEPROM_6000_TX_POWER_VERSION,	\
+ 	.base_params = &iwl6000_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+-	.led_mode = IWL_LED_BLINK
++	.led_mode = IWL_LED_BLINK,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6200 AGN",
+@@ -322,7 +326,8 @@ const struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.base_params = &iwl6050_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.internal_wimax_coex = true
++	.internal_wimax_coex = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 AGN",
+@@ -347,7 +352,8 @@ const struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.base_params = &iwl6050_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.internal_wimax_coex = true
++	.internal_wimax_coex = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6150_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N + WiMAX 6150 BGN",
 -- 
 1.9.1
 
