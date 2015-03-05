@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39295 "EHLO mx2.suse.de"
+Received: from mga03.intel.com ([134.134.136.65]:54805 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752184AbbCEWz1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 17:55:27 -0500
-Date: Thu, 5 Mar 2015 23:55:26 +0100
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v10 3/3] cfg80211: Schedule timeout for all CRDA calls
-Message-ID: <20150305225526.GC25035@wotan.suse.de> (sfid-20150305_235530_475137_C30BAA08)
-References: <1425447127-22958-1-git-send-email-ilan.peer@intel.com>
- <1425447127-22958-3-git-send-email-ilan.peer@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1425447127-22958-3-git-send-email-ilan.peer@intel.com>
+	id S1753340AbbCEMuK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2015 07:50:10 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 5/7] iwlwifi: mvm: disable beamformer unless FW supports it
+Date: Thu,  5 Mar 2015 14:49:51 +0200
+Message-Id: <1425559793-25131-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150305_135014_992971_9C0A8AB7)
+In-Reply-To: <1425558068.22928.3.camel@egrumbacBox>
+References: <1425558068.22928.3.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 04, 2015 at 12:32:07AM -0500, Ilan Peer wrote:
-> Timeout was scheduled only in case CRDA was called due to user hints,
-> but was not scheduled for other cases. This can result in regulatory
-> hint processing getting stuck in case that there is no CRDA configured.
-> 
-> Change this by scheduling a timeout every time CRDA is called. In
-> addition, in restore_regulatory_settings() all pending requests are
-> restored (and not only the user ones).
-> 
-> Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+From: Eyal Shapira <eyal@wizery.com>
 
-Acked-by: Luis R. Rodriguez <mcgrof@suse.com>
+Current FW is declaring support for BFER in ucode_capa.capa
+but it doesn't really support it unless the new LQ_SS_PARAMS API
+is supported as well. Avoid publishing BFER in our VHT caps
+if FW doesn't support.
 
-For all of these.
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
- Luis
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 35feebf..09654e7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -405,7 +405,10 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 		hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&mvm->nvm_data->bands[IEEE80211_BAND_5GHZ];
+ 
+-		if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_BEAMFORMER)
++		if ((mvm->fw->ucode_capa.capa[0] &
++		     IWL_UCODE_TLV_CAPA_BEAMFORMER) &&
++		    (mvm->fw->ucode_capa.api[0] &
++		     IWL_UCODE_TLV_API_LQ_SS_PARAMS))
+ 			hw->wiphy->bands[IEEE80211_BAND_5GHZ]->vht_cap.cap |=
+ 				IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE;
+ 	}
+-- 
+1.9.1
+
