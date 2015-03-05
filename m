@@ -1,101 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34777 "EHLO
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15367 "EHLO
 	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750906AbbCXGaF (ORCPT
+	with ESMTP id S1750819AbbCEMl0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 02:30:05 -0400
+	Thu, 5 Mar 2015 07:41:26 -0500
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: David Miller <davem@davemloft.net>
-CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: pull-request: wireless-drivers 2015-03-24
-Date: Tue, 24 Mar 2015 08:29:54 +0200
-Message-ID: <87h9tadi1p.fsf@kamboji.qca.qualcomm.com> (sfid-20150324_073032_964092_0EB0FCA6)
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] ath10k: Bypass PLL setting on target init for QCA9888
+References: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Thu, 5 Mar 2015 14:41:16 +0200
+In-Reply-To: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Mon, 9 Feb 2015 11:16:53 +0530")
+Message-ID: <87wq2v4nwz.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_134129_687525_8E1936C2)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-here are few more fixes I would like to still get to 4.0 if possible,
-detailed info in the tag below. Please let me know if there are any
-problems.
+> Some of of qca988x solutions are having global reset issue
+> during target initialization. Bypassing PLL setting before
+> downloading firmware and letting the SoC run on REF_CLK is fixing
+> the problem. Corresponding firmware change is also needed to set
+> the clock source once the target is initialized. Since 10.2.4
+> firmware is having this ROM patch, applying skip_clock_init only
+> for 10.2.4 firmware versions.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 310e12b..cd20805 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -797,6 +797,16 @@ static int ath10k_download_cal_data(struct ath10k *ar)
+>  	ar->cal_mode = ATH10K_CAL_MODE_OTP;
+>  
+>  done:
+> +	if ((ar->hw_rev == ATH10K_HW_QCA988X) &&
+> +	    (ar->wmi.op_version == ATH10K_FW_WMI_OP_VERSION_10_2_4)) {
+> +		ret = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
+> +		if (ret) {
+> +			ath10k_err(ar, "could not write skip_clock_init (%d)\n",
+> +				   ret);
+> +			return ret;
+> +		}
+> +	}
 
-Kalle
+Didn't Michal mention that this should be a firmware feature flag?
+Checking for firmware versions can easily get too complicated, that's
+why we have tried to use feature flags for things like this.
 
-The following changes since commit 3f1615340acea54e21f4b9d4d65921540dca84b2:
+Also I think this should not be hidden inside
+ath10k_download_cal_data(). Maybe ath10k_core_start() is a better place
+to do this?
 
-  brcmfmac: Perform bound checking on vendor command buffer (2015-03-07 10:52:30 +0200)
+I can send v3 for this patch.
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-03-24
-
-for you to fetch changes up to 6ae4ccfee09efe5baa3951d1c1d27050a46a1469:
-
-  Merge tag 'iwlwifi-for-kalle-2014-03-22' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-03-23 06:43:43 +0200)
-
-----------------------------------------------------------------
-
-iwlwifi:
-
-* avoid panic with lots of IBSS stations
-* Fix dvm's behavior after suspend resume
-* Allow to keep connection after CSA failure
-* Remove a noisy by harmless WARN_ON
-* New device IDs
-
-rtlwifi:
-
-* fix IOMMU mapping leak in AP mode
-
-brcmfmac:
-
-* disable MBSS feature for BCM43362 to get AP mode working again
-
-ath9k:
-
-* disable Transmit Power Control (TPC) again due to regressions
-
-* fix beaconing issue with AP+STA setup
-
-----------------------------------------------------------------
-Arend van Spriel (1):
-      brcmfmac: disable MBSS feature for BCM43362
-
-Emmanuel Grumbach (2):
-      iwlwifi: dvm: drop VO packets when mac80211 tells us to
-      iwlwifi: dvm: run INIT firmware again upon .start()
-
-Felix Fietkau (2):
-      ath9k: fix tracking of enabled AP beacons
-      ath9k: disable TPC support again (for now)
-
-Johannes Berg (3):
-      iwlwifi: mvm: disconnect if CSA time event fails scheduling
-      iwlwifi: mvm: protect rate scaling against non-mvm IBSS stations
-      iwlwifi: mvm: remove WARN_ON for invalid BA notification
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2014-03-22' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Larry Finger (1):
-      rtlwifi: Fix IOMMU mapping leak in AP mode
-
-Oren Givon (1):
-      iwlwifi: add new 3165 series PCI IDs
-
- drivers/net/wireless/ath/ath9k/beacon.c           |   20 ++++++++++-------
- drivers/net/wireless/ath/ath9k/common.h           |    2 +-
- drivers/net/wireless/ath/ath9k/hw.c               |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/feature.c |    3 ++-
- drivers/net/wireless/iwlwifi/dvm/dev.h            |    1 -
- drivers/net/wireless/iwlwifi/dvm/mac80211.c       |   17 ++++++++-------
- drivers/net/wireless/iwlwifi/dvm/ucode.c          |    5 -----
- drivers/net/wireless/iwlwifi/mvm/rs.c             |   24 +++++++++++++++++++--
- drivers/net/wireless/iwlwifi/mvm/time-event.c     |    2 ++
- drivers/net/wireless/iwlwifi/mvm/tx.c             |    6 ++++--
- drivers/net/wireless/iwlwifi/pcie/drv.c           |    6 ++++--
- drivers/net/wireless/rtlwifi/pci.c                |   12 ++++++++++-
- 12 files changed, 68 insertions(+), 32 deletions(-)
+-- 
+Kalle Valo
