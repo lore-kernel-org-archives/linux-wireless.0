@@ -1,91 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46312 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:38374 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752347AbbCXBZG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 21:25:06 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
-References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
-	<1427151108.16851.57.camel@perches.com>
-Date: Mon, 23 Mar 2015 21:25:00 -0400
-In-Reply-To: <1427151108.16851.57.camel@perches.com> (Joe Perches's message of
-	"Mon, 23 Mar 2015 15:51:48 -0700")
-Message-ID: <wrfjbnjjnq4z.fsf@redhat.com> (sfid-20150324_022511_082144_57C61B86)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S964825AbbCEPxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2015 10:53:52 -0500
+Message-ID: <1425570829.2493.28.camel@sipsolutions.net> (sfid-20150305_165355_483055_FBBC5B87)
+Subject: Re: [RFC] mac80211: lock rate control
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Eckelmann <sven@open-mesh.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
+	Marek Lindner <marek@open-mesh.com>
+Date: Thu, 05 Mar 2015 16:53:49 +0100
+In-Reply-To: <4955461.tuO2xra8Dr@bentobox> (sfid-20150305_165241_332301_188B5342)
+References: <1425569832-22373-1-git-send-email-johannes@sipsolutions.net>
+	 <4955461.tuO2xra8Dr@bentobox> (sfid-20150305_165241_332301_188B5342)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-> On Mon, 2015-03-23 at 16:25 -0400, Jes.Sorensen@redhat.com wrote:
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->> 
->> This is an alternate driver for the Realtek 8723AU (rtl8723au) written
->> from scratch utilizing the mac80211 stack.
->
-> trivia:
->
->> diff --git a/drivers/net/wireless/rtl8xxxu.c b/drivers/net/wireless/rtl8xxxu.c
-> [
->> +#define USB_VENDER_ID_REALTEK		0x0BDA
->
-> realtek can't spell.  VENDOR
+On Thu, 2015-03-05 at 16:52 +0100, Sven Eckelmann wrote:
 
-Rather minor, but sure, I'll fix that up.
+> > I've manipulated hostapd to test this, by having it change its
+> > advertised bandwidth roughly ever 150ms. At the same time, I'm
+> > running a flood ping between the client and the AP, which causes
+> > this race of update vs. get_rate/status to easily happen on the
+> > client. With this change, the system survives this test.
 
->> +/* Minimum IEEE80211_MAX_FRAME_LEN */
->> +#define RTL_RX_BUFFER_SIZE		IEEE80211_MAX_FRAME_LEN
->> +
->> +static struct usb_device_id dev_table[] = {
->
-> const
->
->> +	{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDER_ID_REALTEK, 0x8724,
->> +				       0xff, 0xff, 0xff)},
->> +	{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDER_ID_REALTEK, 0x1724,
->> +				       0xff, 0xff, 0xff)},
->> +	{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDER_ID_REALTEK, 0x0724,
->> +				       0xff, 0xff, 0xff)},
->> +	{ }
->> +};
->
->> +static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
->> +{
->
-> []
->
->> +	while (efuse_addr < EFUSE_REAL_CONTENT_LEN_8723A) {
->> +		ret = rtl8xxxu_read_efuse8(priv, efuse_addr++, &header);
->> +		if (ret || header == 0xff)
->> +			goto exit;
->
-> break and no exit label would be more common
->
-> []
->
->> +exit:
->> +	rtl8723au_write8(priv, REG_EFUSE_ACCESS, EFUSE_ACCESS_DISABLE);
->> +
->> +	if (priv->efuse_wifi.efuse.rtl_id != cpu_to_le16(0x8129))
->> +		ret = EINVAL;
->
-> -EINVAL
+> I will ask if it is possible to test this patch in an affected network. But I 
+> am quite sure that this will not be possible before next week. And your test 
+> already sounds quite nice.
 
-This needs to be fixed, however the return code isn't actually checked
-at present, which is a bigger issue. It's a highly unlikely error
-condition, so it can easily be fixed in a follow-on patch.
+Note that I tested with iwlwifi, not with minstrel. However, I'm pretty
+sure it's the same problem.
 
->> +static bool rtl8xxxu_simularity_compare(struct rtl8xxxu_priv *priv,
->> +					int result[][8], int c1, int c2)
->
-> Looking through git history, simularity seems to be used
-> because realtek can't spell.
+johannes
 
-It might be the case, but until I see some actual evidence of this, I am
-not going to spend cycles on it. It's hardly something justifying the
-patch noise in the first place.
-
-Jes
