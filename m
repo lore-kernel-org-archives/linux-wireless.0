@@ -1,58 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:46525 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932276AbbCFIij (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 03:38:39 -0500
-Received: by wevm14 with SMTP id m14so57949984wev.13
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2015 00:38:38 -0800 (PST)
+Received: from cantor2.suse.de ([195.135.220.15]:38389 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751047AbbCEWob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2015 17:44:31 -0500
+Date: Thu, 5 Mar 2015 23:44:29 +0100
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
+To: "Peer, Ilan" <ilan.peer@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ArikX Nemtsov <arik@wizery.com>
+Subject: Re: [PATCH v9 2/3] cfg80211: Add API to change the indoor regulatory
+ setting
+Message-ID: <20150305224429.GA25035@wotan.suse.de> (sfid-20150305_234437_202177_BAC0B154)
+References: <1425189749-15271-1-git-send-email-ilan.peer@intel.com>
+ <1425189749-15271-2-git-send-email-ilan.peer@intel.com>
+ <20150302212232.GW8749@wotan.suse.de>
+ <CB3B3D4774441E42AA3EA0E1BA8230A04D02863A@HASMSX106.ger.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAGnRvurPGf1fvYs6fyrc7kttT8g3+ST_3mO5P6+mwdbU4Ay7yA@mail.gmail.com>
-References: <CAGnRvurPGf1fvYs6fyrc7kttT8g3+ST_3mO5P6+mwdbU4Ay7yA@mail.gmail.com>
-Date: Fri, 6 Mar 2015 09:38:37 +0100
-Message-ID: <CALhHN=ofus+Uop7i8Cv7SVhmDSjA9O56xSokTr=PtmddCqczEA@mail.gmail.com> (sfid-20150306_093849_309569_4D79EAE6)
-Subject: Re: State of DFS with Mac80211/ath9k
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CB3B3D4774441E42AA3EA0E1BA8230A04D02863A@HASMSX106.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 March 2015 at 09:04, Henning Rogge <hrogge@gmail.com> wrote:
-> Hi,
->
-> I am working with a co-worker on DFS-support for the 802.11s
-> implementation of the mac80211 stack.
->
-> As a test we just removed the test for "DFS not supported" from
-> net/mac80211/mesh.c, but we are still facing two problems.
->
-> First, we cannot open a Mesh interface on a DFS channel unless we open
-> an AP interface first (and closing the AP interface before activating
-> the mesh). Are we missing some special initialization?
->
-I think this works beacause we didn't integrate patch:
-[PATCH v5] cfg80211: fix dfs channel state after stopping AP
-and discussion here:
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/117095
+On Wed, Mar 04, 2015 at 10:37:35AM +0000, Peer, Ilan wrote:
+> 
+> > -----Original Message-----
+> > From: Luis R. Rodriguez [mailto:mcgrof@suse.com]
+> > Sent: Monday, March 02, 2015 23:23
+> > To: Peer, Ilan
+> > Cc: linux-wireless@vger.kernel.org; ArikX Nemtsov
+> > Subject: Re: [PATCH v9 2/3] cfg80211: Add API to change the indoor
+> > regulatory setting
+> > 
+> > On Sun, Mar 01, 2015 at 01:02:28AM -0500, Ilan Peer wrote:
+> > > diff --git a/net/wireless/reg.c b/net/wireless/reg.c index
+> > > c24c8bf..f88d512 100644
+> > > --- a/net/wireless/reg.c
+> > > +++ b/net/wireless/reg.c
+> > > @@ -128,9 +128,12 @@ static int reg_num_devs_support_basehint;
+> > >   * State variable indicating if the platform on which the devices
+> > >   * are attached is operating in an indoor environment. The state variable
+> > >   * is relevant for all registered devices.
+> > > - * (protected by RTNL)
+> > >   */
+> > >  static bool reg_is_indoor;
+> > > +static spinlock_t reg_indoor_lock;
+> > > +
+> > > +/* Used to track the userspace process controlling the indoor setting
+> > > +*/ static u32 reg_is_indoor_portid;
+> > >
+> > >  static const struct ieee80211_regdomain *get_cfg80211_regdom(void)  {
+> > > @@ -2288,15 +2291,52 @@ int regulatory_hint_user(const char *alpha2,
+> > >  	return 0;
+> > >  }
+> > >
+> > > -int regulatory_hint_indoor_user(void)
+> > > +int regulatory_hint_indoor(bool is_indoor, u32 portid)
+> > >  {
+> > > +	spin_lock(&reg_indoor_lock);
+> > > +
+> > > +	/* Other user space processes cannot override the current owner */
+> > > +	if (reg_is_indoor_portid && reg_is_indoor_portid != portid) {
+> > > +		spin_unlock(&reg_indoor_lock);
+> > > +		return -EPERM;
+> > > +	}
+> > 
+> > I am not satisfied with this solution to conflict. I don't want to think about the
+> > solution to this for you -- please address the conflicts with sensible solutions.
+> > 
+> 
+> We could always allow the any user space process to set indoor=0, i.e.,
+> indoor=1 is allowed iff all user space process agree on it.
 
-Anyway I think this is a BUG while for example:
-1) we can run AP (CAC) on chanel 36
-2) next shut down AP
-3) wait few days with loaded cfg80211 and in the same time for example
-move to other location (AP in bus/train)
-4) we don't need run CAC again - for me this is a cfg80211 bug :)
+That makes sense if for indoor we tend to have a more liberal
+regulatory settings. Do we know this for sure? That is, are
+we more restrictive outdoors? Does that vary by country?
 
-Anyway, before you can beaconing you should perform CAC, so this
-should be added to wpa_supplicant - currently this is not implemented.
+> > > +
+> > > +	if (reg_is_indoor == is_indoor) {
+> > > +		spin_unlock(&reg_indoor_lock);
+> > > +		return 0;
+> > > +	}
+> > 
+> > For instance this is a solution to agreement, but yet the above only allows for
+> > one wiphy to set this setting and limiting the wireless core. That's rather silly.
+> > We've addressed bigger conflicts than this for regulatory -- I have confidence
+> > you can address this well.
+> 
+> This should not really be wiphy specific.
 
-> Second, we are seeing a huge amount of radar events on some nodes, but
-> not on a node on the same channel in the next room. What is the status
-> of the DFS detector in ath9k, is it reliable or is it still
-> "experimental".
->
-We tested/using ath10k hw, so I don't know ath9k status :)
+Sorry I meant supplicant specific.
 
-BR
-Janusz
+ Luis
