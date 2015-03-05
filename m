@@ -1,161 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:38778 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754192AbbCLRFM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 13:05:12 -0400
-Received: by labhs14 with SMTP id hs14so16730125lab.5
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 10:05:10 -0700 (PDT)
-Date: Thu, 12 Mar 2015 13:04:54 -0400
-From: German <gentgerman@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iw dev wlp1s0 scan hangs
-Message-Id: <20150312130454.b381cef3b58e855598febc84@gmail.com> (sfid-20150312_180518_469966_85B827AB)
-In-Reply-To: <550173CE.8000708@broadcom.com>
-References: <20150311161757.dac357e24509141a4c98e84b@gmail.com>
-	<5500A4B6.4050702@broadcom.com>
-	<20150311163353.74922db84fc618b3b9039515@gmail.com>
-	<5500A93C.7060309@broadcom.com>
-	<20150311170018.c2581ec2ddfb4589f5c8b154@gmail.com>
-	<5500B0F2.3010804@broadcom.com>
-	<20150311182146.bde39b79fad1e8cc61d6f4a0@gmail.com>
-	<55014E36.5040707@broadcom.com>
-	<20150312045001.654f6b4706acdd9e9367caab@gmail.com>
-	<550173CE.8000708@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from s3.sipsolutions.net ([5.9.151.49]:38624 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751057AbbCERHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2015 12:07:24 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Sven Eckelmann <sven@open-mesh.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v2] [RFC] mac80211: lock rate control
+Date: Thu,  5 Mar 2015 18:07:17 +0100
+Message-Id: <1425575237-5556-1-git-send-email-johannes@sipsolutions.net> (sfid-20150305_180727_777641_0F98BD69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 12 Mar 2015 12:09:02 +0100
-Arend van Spriel <arend@broadcom.com> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On 03/12/15 09:50, German wrote:
-> > On Thu, 12 Mar 2015 09:28:38 +0100
-> > Arend van Spriel<arend@broadcom.com>  wrote:
-> >
-> >> On 03/11/15 23:21, German wrote:
-> >>> On Wed, 11 Mar 2015 22:17:38 +0100
-> >>> Arend van Spriel<arend@broadcom.com>   wrote:
-> >>>
-> >>>> On 03/11/15 22:00, German wrote:
-> >>>>> On Wed, 11 Mar 2015 21:44:44 +0100
-> >>>>> Arend van Spriel<arend@broadcom.com>    wrote:
-> >>>>>
-> >>>>>> On 03/11/15 21:33, German wrote:
-> >>>>>>> On Wed, 11 Mar 2015 21:25:26 +0100
-> >>>>>>> Arend van Spriel<arend@broadcom.com>     wrote:
-> >>>>>>>
-> >>>>>>>> On 03/11/15 21:17, German wrote:
-> >>>>>>>>> Hi. When I try to run aformentioned command it hangs for about 20 secs and no output is returned. What's the problem might be? Thanks
-> >>>>>>>>
-> >>>>>>>> any more details you can share? What kernel version, what specific
-> >>>>>>>> device is wlp1s0, do you have any kernel logging.
-> >>>>>>>>
-> >>>>>>
-> >>>>>> When I wrote down the questions I was wondering how specifc I should be.
-> >>>>>>> Kernel 3.18.7-gentoo.
-> >>>>>>
-> >>>>>> ok
-> >>>>>>
-> >>>>>>> wlp1s0 is my network card.
-> >>>>>>
-> >>>>>> Sure. I meant what brand and model.
-> >>>>>>
-> >>>>>> Can you run following commands:
-> >>>>>> $ lspci
-> >>>>>> $ lsusb
-> >>>>>>
-> >>>>> realtek RTL8723BE PCIe Wireless Network Adapter
-> >>>>>
-> >>>>>>> As for kernel logging, I simply don't know if I have it. Thanks
-> >>>>>>
-> >>>>>> Ok. Can you run following command after aborting the hanging iw scan
-> >>>>>> command:
-> >>>>>>
-> >>>>>> $ dmesg
-> >>>>>
-> >>>>> Polling FW ready fail! Firmware is not ready to run.
-> >>>>>
-> >>>>> Ok, so I need some sort of firmware? That's what I thought. What is this and where can I find it in kernel when I compile it? Thanks
-> >>>>
-> >>>> Not familiar with Realtek equipment but it might be provided by the
-> >>>> linux-firmware package so:
-> >>>>
-> >>>> $ sudo emerge --ask linux-firmware
-> >>>>
-> >>>
-> >>> Thanks Arend. This did the trick. I can now scan networks and I found mine. But how I actually connect to my network? I guess it is encrypted, but I have wpa_supplicant installed.
-> >>
-> >> Gentoo does not seem to provide NetworkManager as a solution. I found
-> >> this page [1]. Maybe it helps.
-> >
-> > Thanks Arend for pointing me to this link. NetworkManager was proposed to me on gentoo mailing list as a way to control both wireless and wired interfaces. It pulled a bunch of dependencies, though I used -X flag in USE variable not to use X server. the compile took about an hour and after all this, my system became unstable. It doesn't at all feels right, it is clunky. For now I am building gentoo laptop in pure console mode, so from all my research, iw is the only CLI tool for wireless and I like the fact it doesn't need bunch of dependences. I already installed it and I like it, so would you be so kind to get me through a set up? Documentation seems confusing. Thanks
-> 
-> Well. iw is really for testing/debugging. Especially with WPA/RSN 
-> networks that do periodic rekeying you need wpa_supplicant. It will do 
-> the scanning on its own and establish connection and such.
-> 
-> You could also opt for using nmcli, but that might be what you tried 
-> already.
-> 
-> I am no gentoo expert, but let's try to get this working. I am following 
-> the wpa_supplicant section of the link I send earlier.
+Both minstrel (reported by Sven Eckelmann) and the iwlwifi rate
+control aren't properly taking concurrency into account. It's
+likely that the same is true for other rate control algorithms.
 
-Are you advising not to use iw and go the wireless-tools package?
+In the case of minstrel this manifests itself in crashes when an
+update and other data access are run concurrently, for example
+when the stations change bandwidth or similar. In iwlwifi, this
+can cause firmware crashes.
 
-> 
-> 1. modify /etc/conf.d/net
-> 
-> Not sure if you only use wireless on the machine. Otherwise, you can 
-> copy the attach conf.net file:
-> 
-> $ sudo cp conf.net /etc/conf.d/net
-> 
-> 2. install wpa_supplicant configuration
-> 
-> Edit attached wpa_supplicant.conf with your ssid and psk and copy it:
-> 
-> $ sudo cp wpa_supplicant.conf /etc/wpa_supplicant
-> 
-> 3. restart networking
-> 
-> $ sudo /etc/init.d/net restart
-> 
-> Not sure if step 3. is entirely correct regarding the script name. I 
-> don't use Gentoo.
-> 
-> Regards,
-> Arend
-> >> Regards,
-> >> Arend
-> >>
-> >> [1]
-> >> http://wiki.gentoo.org/wiki/Handbook:Parts/Networking/Wireless#Wireless_tools
-> >>
-> >>>> Regards,
-> >>>> Arend
-> >>>>
-> >>>>>>
-> >>>>>> Regards,
-> >>>>>> Arend
-> >>>>>>
-> >>>>>>>> Regards,
-> >>>>>>>> Arend
-> >>>>>>>
-> >>>>>>>
-> >>>>>>
-> >>>>>
-> >>>>>
-> >>>>
-> >>>
-> >>>
-> >>
-> >
-> >
-> 
+Since fixing all rate control algorithms will be very difficult,
+just provide locking for invocations. This protects the internal
+data structures the algorithms maintain.
 
+I've manipulated hostapd to test this, by having it change its
+advertised bandwidth roughly ever 150ms. At the same time, I'm
+running a flood ping between the client and the AP, which causes
+this race of update vs. get_rate/status to easily happen on the
+client. With this change, the system survives this test.
 
+Change-Id: I77383401a67a1ec380cec65b34802ab879357e80
+Reported-by: Sven Eckelmann <sven@open-mesh.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rate.c     |  8 +++++++-
+ net/mac80211/rate.h     | 12 +++++++++---
+ net/mac80211/sta_info.c |  2 +-
+ net/mac80211/sta_info.h |  1 +
+ 4 files changed, 18 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index bc5270ed26bd..68bed2cad6f3 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -683,7 +683,13 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+ 		return;
+ 
+-	ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
++	if (ista) {
++		spin_lock_bh(&sta->rate_ctrl_lock);
++		ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
++		spin_unlock_bh(&sta->rate_ctrl_lock);
++	} else {
++		ref->ops->get_rate(ref->priv, NULL, NULL, txrc);
++	}
+ 
+ 	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_RC_TABLE)
+ 		return;
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index a7d5439322d7..d0ecc8952fa0 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -42,10 +42,12 @@ static inline void rate_control_tx_status(struct ieee80211_local *local,
+ 	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+ 		return;
+ 
++	spin_lock_bh(&sta->rate_ctrl_lock);
+ 	if (ref->ops->tx_status)
+ 		ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
+ 	else
+ 		ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
++	spin_unlock_bh(&sta->rate_ctrl_lock);
+ }
+ 
+ static inline void
+@@ -64,7 +66,9 @@ rate_control_tx_status_noskb(struct ieee80211_local *local,
+ 	if (WARN_ON_ONCE(!ref->ops->tx_status_noskb))
+ 		return;
+ 
++	spin_lock_bh(&sta->rate_ctrl_lock);
+ 	ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
++	spin_unlock_bh(&sta->rate_ctrl_lock);
+ }
+ 
+ static inline void rate_control_rate_init(struct sta_info *sta)
+@@ -115,18 +119,20 @@ static inline void rate_control_rate_update(struct ieee80211_local *local,
+ 			return;
+ 		}
+ 
++		spin_lock_bh(&sta->rate_ctrl_lock);
+ 		ref->ops->rate_update(ref->priv, sband, &chanctx_conf->def,
+ 				      ista, priv_sta, changed);
++		spin_unlock_bh(&sta->rate_ctrl_lock);
+ 		rcu_read_unlock();
+ 	}
+ 	drv_sta_rc_update(local, sta->sdata, &sta->sta, changed);
+ }
+ 
+ static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
+-					   struct ieee80211_sta *sta,
+-					   gfp_t gfp)
++					   struct sta_info *sta, gfp_t gfp)
+ {
+-	return ref->ops->alloc_sta(ref->priv, sta, gfp);
++	spin_lock_init(&sta->rate_ctrl_lock);
++	return ref->ops->alloc_sta(ref->priv, &sta->sta, gfp);
+ }
+ 
+ static inline void rate_control_free_sta(struct sta_info *sta)
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 11c1e71c833d..eab8d8afab13 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -292,7 +292,7 @@ static int sta_prepare_rate_control(struct ieee80211_local *local,
+ 
+ 	sta->rate_ctrl = local->rate_ctrl;
+ 	sta->rate_ctrl_priv = rate_control_alloc_sta(sta->rate_ctrl,
+-						     &sta->sta, gfp);
++						     sta, gfp);
+ 	if (!sta->rate_ctrl_priv)
+ 		return -ENOMEM;
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 36a14a0be6dd..b53c6ca3179a 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -396,6 +396,7 @@ struct sta_info {
+ 	u8 ptk_idx;
+ 	struct rate_control_ref *rate_ctrl;
+ 	void *rate_ctrl_priv;
++	spinlock_t rate_ctrl_lock;
+ 	spinlock_t lock;
+ 
+ 	struct work_struct drv_deliver_wk;
 -- 
-German <gentgerman@gmail.com>
+2.1.4
+
