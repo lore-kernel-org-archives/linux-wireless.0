@@ -1,137 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55564 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbbCGIDf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49764 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360AbbCENpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2015 03:03:35 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/4] ath10k: configure thermal throttle while powering up
-Date: Sat, 7 Mar 2015 13:32:58 +0530
-Message-ID: <1425715380-11200-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150307_090337_778110_11F9C8A1)
-In-Reply-To: <1425715380-11200-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1425715380-11200-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Thu, 5 Mar 2015 08:45:07 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Jim Davis <jim.epost@gmail.com>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, zajec5@gmail.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: randconfig build error with next-20150303, in drivers/bcma/driver_pcie2.c
+References: <CA+r1Zhio+Kp30y4DHS0SW20PjZrAY3PZLXjskykpa8CY0tcrMA@mail.gmail.com>
+	<87d24o7s2j.fsf@kamboji.qca.qualcomm.com>
+	<20150305080130.41b132ee@canb.auug.org.au>
+Date: Thu, 05 Mar 2015 15:44:56 +0200
+In-Reply-To: <20150305080130.41b132ee@canb.auug.org.au> (Stephen Rothwell's
+	message of "Thu, 5 Mar 2015 08:01:30 +1100")
+Message-ID: <87sidj4kyv.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_144535_497342_84FD4EF3)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thermal throttling is not handled in software restart and device
-bootup. Also it needs to be configured whenever quiet period got
-updated. Fix that.
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-Reported-by: Matthias Kaehlcke <mka@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c     |  1 +
- drivers/net/wireless/ath/ath10k/thermal.c | 35 +++++++++++++++++++------------
- drivers/net/wireless/ath/ath10k/thermal.h |  5 +++++
- 3 files changed, 28 insertions(+), 13 deletions(-)
+> Hi Kalle,
+>
+> On Wed, 04 Mar 2015 16:31:00 +0200 Kalle Valo <kvalo@codeaurora.org> wrote:
+>>
+>> Jim Davis <jim.epost@gmail.com> writes:
+>> 
+>> > Building with the attached random configuration file,
+>> >
+>> > drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
+>> > drivers/bcma/driver_pcie2.c:196:2: error: implicit declaration of
+>> > function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
+>> >   err = pcie_set_readrq(dev, pcie2->reqsize);
+>> >   ^
+>> 
+>> This should fix it:
+>> 
+>> bcma: add missing includes
+>> 
+>> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=2264fc857decd45798368f46861d9aecac23546f
+>
+> However, that commit is in next-20150304 and we still get the error
+> (see, for example,
+> http://kisskb.ellerman.id.au/kisskb/buildresult/12376688/).
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 561d848..0fef865 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2940,6 +2940,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	ath10k_regd_update(ar);
- 
- 	ath10k_spectral_start(ar);
-+	ath10k_thermal_set_throttling(ar);
- 
- 	mutex_unlock(&ar->conf_mutex);
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index 246387c..61acdf0 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -73,7 +73,6 @@ ath10k_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 				      unsigned long throttle_state)
- {
- 	struct ath10k *ar = cdev->devdata;
--	u32 period, duration, enabled;
- 	int num_bss, ret = 0;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -99,19 +98,8 @@ ath10k_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 		ret = -ENETDOWN;
- 		goto out;
- 	}
--	period = ar->thermal.quiet_period;
--	duration = (period * throttle_state) / 100;
--	enabled = duration ? 1 : 0;
--
--	ret = ath10k_wmi_pdev_set_quiet_mode(ar, period, duration,
--					     ATH10K_QUIET_START_OFFSET,
--					     enabled);
--	if (ret) {
--		ath10k_warn(ar, "failed to set quiet mode period %u duarion %u enabled %u ret %d\n",
--			    period, duration, enabled, ret);
--		goto out;
--	}
- 	ar->thermal.throttle_state = throttle_state;
-+	ath10k_thermal_set_throttling(ar);
- out:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
-@@ -219,6 +207,7 @@ static ssize_t ath10k_thermal_store_quiet_period(struct device *dev,
- 	}
- 	mutex_lock(&ar->conf_mutex);
- 	ar->thermal.quiet_period = period;
-+	ath10k_thermal_set_throttling(ar);
- 	mutex_unlock(&ar->conf_mutex);
- 
- 	return count;
-@@ -228,6 +217,26 @@ static DEVICE_ATTR(quiet_period, S_IRUGO | S_IWUSR,
- 		   ath10k_thermal_show_quiet_period,
- 		   ath10k_thermal_store_quiet_period);
- 
-+void ath10k_thermal_set_throttling(struct ath10k *ar)
-+{
-+	u32 period, duration, enabled;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	period = ar->thermal.quiet_period;
-+	duration = (period * ar->thermal.throttle_state) / 100;
-+	enabled = duration ? 1 : 0;
-+
-+	ret = ath10k_wmi_pdev_set_quiet_mode(ar, period, duration,
-+					     ATH10K_QUIET_START_OFFSET,
-+					     enabled);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set quiet mode period %u duarion %u enabled %u ret %d\n",
-+			    period, duration, enabled, ret);
-+	}
-+}
-+
- int ath10k_thermal_register(struct ath10k *ar)
- {
- 	struct thermal_cooling_device *cdev;
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
-index 5728010..b610ea5 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.h
-+++ b/drivers/net/wireless/ath/ath10k/thermal.h
-@@ -40,6 +40,7 @@ struct ath10k_thermal {
- int ath10k_thermal_register(struct ath10k *ar);
- void ath10k_thermal_unregister(struct ath10k *ar);
- void ath10k_thermal_event_temperature(struct ath10k *ar, int temperature);
-+void ath10k_thermal_set_throttling(struct ath10k *ar);
- #else
- static inline int ath10k_thermal_register(struct ath10k *ar)
- {
-@@ -55,5 +56,9 @@ static inline void ath10k_thermal_event_temperature(struct ath10k *ar,
- {
- }
- 
-+static inline void ath10k_thermal_set_throttling(struct ath10k *ar)
-+{
-+}
-+
- #endif
- #endif /* _THERMAL_ */
+I applied few fixes from Rafal and Chen:
+
+1ca2760fb2c1 bcma: prepare Kconfig symbol for PCI driver
+0a4e699a41f7 bcma: move internal function declarations to private header
+c32ec2a11321 bcma: make bcma_host_pci_(up|down) calls safe for every config
+b09f5ec18b16 bcma: Kconfig: Let it depend on PCI
+
+It would be great if someone could report if the build errors are gone
+now.
+
 -- 
-2.3.1
-
+Kalle Valo
