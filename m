@@ -1,92 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45682 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752908AbbC3I5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:57:12 -0400
-Message-ID: <1427705830.26117.18.camel@sipsolutions.net> (sfid-20150330_105722_865644_081700AC)
-Subject: Re: [PATCH] mac80211: filter multicast data packets on AP_VLAN
- interfaces w/o sta
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Mon, 30 Mar 2015 10:57:10 +0200
-In-Reply-To: <1426620635-868-1-git-send-email-michael-dev@fami-braun.de>
-References: <1426620635-868-1-git-send-email-michael-dev@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:36377 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755287AbbCELdd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2015 06:33:33 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Avinash Patil <patila@marvell.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Zhaoyang Liu <liuzy@marvell.com>,
+	Shengzhen Li <szli@marvell.com>
+Subject: Re: [PATCH 1/4] mwifiex: avoid queue_work while work is ongoing
+References: <1424883057-12102-1-git-send-email-patila@marvell.com>
+	<1424883057-12102-2-git-send-email-patila@marvell.com>
+	<87a8zu9rz5.fsf@kamboji.qca.qualcomm.com>
+	<CBACCFA0AEB13A41977475BCF3E896FC66746954D8@SC-VEXCH2.marvell.com>
+Date: Thu, 05 Mar 2015 13:33:25 +0200
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC66746954D8@SC-VEXCH2.marvell.com>
+	(Avinash Patil's message of "Wed, 4 Mar 2015 22:38:52 -0800")
+Message-ID: <87vbif65mi.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_123337_595697_6BF504E0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-03-17 at 20:30 +0100, Michael Braun wrote:
-> Currently, multicast data packets are dropped on AP interfaces if
-> there are no authorized stations connected. This avoids superflous
+Avinash Patil <patila@marvell.com> writes:
 
-typo: superfluous
+>> > From: Marc Yang <yangyang@marvell.com>
+>> >
+>> > Current code does not check whether main_work_queue or rx_work_queue
+>> > is running when preparing to do queue_work, this code fix add check
+>> > before calling queue_work, reducing unnecessary queue_work switch.
+>> >
+>> > This change instead sets more_task flag to ensure we run main_process
+>> > superloop once again.
+>> >
+>> > Signed-off-by: Marc Yang <yangyang@marvell.com>
+>> > Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+>> > Signed-off-by: Shengzhen Li <szli@marvell.com>
+>> > Signed-off-by: Cathy Luo <cluo@marvell.com>
+>> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>> > Signed-off-by: Avinash Patil <patila@marvell.com>
+>> 
+>> Really, it took six persons to write this patch? Or do you just dump the same
+>> names to each patch?
+>
+> This should have been "Reviewed-by". Apologies.
 
-> data packets to be transmitted on air.
-> 
-> But when using AP_VLAN, this does not happen, as the current check does
-> not apply to AP_VLAN interfaces. Though, there can easily be more AP_VLAN
-> interfaces on an AP resulting in more multicast data frames. This is
-> especially true since hostapd does not remove no-longer-used AP_VLAN
-> interfaces and bridges.
-> 
-> In order to filter on AP_VLAN interfaces, a per AP_VLAN interface
-> counter is required (in constrast to the counter on the AP interface
+Ok, Reviewed-by would make more sense here. Please use that in the
+future (no need to change anything for these patches).
 
-typo: contrast
+>> > +void mwifiex_queue_main_work(struct mwifiex_adapter *adapter) {
+>> > +	unsigned long flags;
+>> > +
+>> > +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+>> > +	if (adapter->mwifiex_processing) {
+>> > +		adapter->more_task_flag = true;
+>> > +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+>> > +	} else {
+>> > +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+>> > +		queue_work(adapter->workqueue, &adapter->main_work);
+>> > +	}
+>> > +}
+>> > +EXPORT_SYMBOL_GPL(mwifiex_queue_main_work);
+>> > +
+>> > +static void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter) {
+>> > +	unsigned long flags;
+>> > +
+>> > +	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
+>> > +	if (adapter->rx_processing) {
+>> > +		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+>> > +	} else {
+>> > +		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
+>> > +		queue_work(adapter->rx_workqueue, &adapter->rx_work);
+>> > +	}
+>> > +}
+>> 
+>> I can apply this patch, but to me this looks like a horrible hack.
+>
+> We are here trying to avoid requeueing another work when work item is
+> being executed. We set more_task flag to true if work item is being
+> executed and mwifiex_main_process would execute superloop once again
+> if more_task it set. work_pending() cannot be of much help here since
+> we want to avoid queing only when work item is being executed. Could
+> you please let us know if you think of any better way to handle this?
 
-> +		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
-> +		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-> +		    !sta->sdata->u.vlan.sta &&
-> +		    sta->sdata != vlansdata)
-> +			atomic_dec(&sta->sdata->u.vlan.num_mcast_sta);
-> +
-> +		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
-> +		    vlansdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+It would be best to modify workqueue code to support this instead of
+doing this in the driver. But this was just an observation I made while
+reviewing your patches, I'll apply these anyway.
 
-Hmm. Can this ever be false?
-
-> +++ b/net/mac80211/sta_info.c
-> @@ -143,6 +143,17 @@ static void __cleanup_single_sta(struct sta_info *sta)
->  		ieee80211_purge_tx_queue(&local->hw, &tid_tx->pending);
->  		kfree(tid_tx);
->  	}
-> +
-> +	if (test_sta_flag(sta, WLAN_STA_AUTHORIZED)) {
-> +		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
-> +		    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-> +		     !sta->sdata->u.vlan.sta))
-> +			atomic_dec(&sta->sdata->bss->num_mcast_sta);
-> +		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-> +		     !sta->sdata->u.vlan.sta)
-> +			atomic_dec(&sta->sdata->u.vlan.num_mcast_sta);
-> +		clear_sta_flag(sta, WLAN_STA_AUTHORIZED);
-> +	}
->  }
-
-The new clear_sta_flag() here seems rather wrong to me?
-
-> @@ -1694,6 +1705,9 @@ int sta_info_move_state(struct sta_info *sta,
->  			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
->  			     !sta->sdata->u.vlan.sta))
->  				atomic_dec(&sta->sdata->bss->num_mcast_sta);
-> +			if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-> +			     !sta->sdata->u.vlan.sta)
-> +				atomic_dec(&sta->sdata->u.vlan.num_mcast_sta);
->  			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
-
-> @@ -1703,6 +1717,9 @@ int sta_info_move_state(struct sta_info *sta,
->  			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
->  			     !sta->sdata->u.vlan.sta))
->  				atomic_inc(&sta->sdata->bss->num_mcast_sta);
-> +			if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-> +			     !sta->sdata->u.vlan.sta)
-> +				atomic_inc(&sta->sdata->u.vlan.num_mcast_sta);
-
-It seems to me that perhaps we should split this into two new
-subfunctions or so to be able to refactor this code? After all, you have
-exactly the same conditions here ...
-
-johannes
-
+-- 
+Kalle Valo
