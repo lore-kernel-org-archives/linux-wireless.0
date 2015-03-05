@@ -1,41 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:47401 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756131AbbCRRYN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39421 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932996AbbCEMNT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 13:24:13 -0400
-Date: Wed, 18 Mar 2015 13:24:09 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Kyle McMartin <kyle@infradead.org>, linux-firmware@kernel.org,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH] ath10k: add firmware 10.2.4.45 as firmware-4.bin
-Message-ID: <20150318172409.GC30928@merlin.infradead.org> (sfid-20150318_182417_479120_076D40E8)
-References: <1426160112-4261-1-git-send-email-kvalo@qca.qualcomm.com>
- <20150313204730.GA30928@merlin.infradead.org>
- <87lhiuofx7.fsf@kamboji.qca.qualcomm.com>
+	Thu, 5 Mar 2015 07:13:19 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH next] bcma: move internal function declarations to private header
+References: <1425475492-16259-1-git-send-email-zajec5@gmail.com>
+Date: Thu, 05 Mar 2015 14:13:13 +0200
+In-Reply-To: <1425475492-16259-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 4 Mar 2015
+ 14:24:52 +0100")
+Message-ID: <87a8zr63s6.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_131328_631752_7EB3AB35)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87lhiuofx7.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 18, 2015 at 10:42:12AM +0200, Kalle Valo wrote:
-> Kyle McMartin <kyle@infradead.org> writes:
-> 
-> > On Thu, Mar 12, 2015 at 01:35:12PM +0200, Kalle Valo wrote:
-> >> This is the latest firmware from 10.2.4 firmware branch.
-> >> 
-> >> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> >
-> > Pardon my ignorance... It looks like your driver needs more than just
-> > firmware-4.bin... How are distros supposed to use this? Symlink it into
-> > firmware.bin which it seems the driver looks for?
-> 
-> The current version of ath10k uses firmware-4.bin. Distros should not
-> create symlinks or anything like that.
-> 
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-Ah, groovy, ok, applied.
+> These functions are not exported nor used anywhere, so there is no
+> reason to put them in public headers.
+> Also drop unused bcma_chipco_(suspend|resume).
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Thanks, Kyle
+Thanks, applied to wireless-drivers-next.git.
+
+-- 
+Kalle Valo
