@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50827 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751612AbbCKSXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 14:23:38 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Marcus Folkesson <marcus.folkesson@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix sparse warning cast to restricted __le16
-References: <1426094490-17065-1-git-send-email-marcus.folkesson@gmail.com>
-Date: Wed, 11 Mar 2015 14:23:29 -0400
-In-Reply-To: <1426094490-17065-1-git-send-email-marcus.folkesson@gmail.com>
-	(Marcus Folkesson's message of "Wed, 11 Mar 2015 18:21:30 +0100")
-Message-ID: <wrfjsidb1jha.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150311_192354_176754_55E3C15A)
+Received: from mail-we0-f179.google.com ([74.125.82.179]:43360 "EHLO
+	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757477AbbCER2Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Mar 2015 12:28:25 -0500
+Received: by wesu56 with SMTP id u56so54393065wes.10
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2015 09:28:24 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, Arnd Bergmann <arnd@arndb.de>,
+	Chen Gang <xili_gchen_5257@hotmail.com>,
+	Jim Davis <jim.epost@gmail.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] Revert "bcma: Kconfig: Let it depend on PCI"
+Date: Thu,  5 Mar 2015 18:25:12 +0100
+Message-Id: <1425576312-2779-3-git-send-email-zajec5@gmail.com> (sfid-20150305_182835_112430_236A660A)
+In-Reply-To: <1425576312-2779-1-git-send-email-zajec5@gmail.com>
+References: <1425576312-2779-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marcus Folkesson <marcus.folkesson@gmail.com> writes:
-> This patch fixes the following sparse warnings:
->
->   CHECK   drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
->   drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:265:37: warning:
->   cast to restricted __le16
->   drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:267:39: warning:
->   cast to restricted __le16
->
-> Signed-off-by: Marcus Folkesson <marcus.folkesson@gmail.com>
-> ---
->  drivers/staging/rtl8723au/include/rtl8723a_hal.h | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/staging/rtl8723au/include/rtl8723a_hal.h b/drivers/staging/rtl8723au/include/rtl8723a_hal.h
-> index e146336..f642b11 100644
-> --- a/drivers/staging/rtl8723au/include/rtl8723a_hal.h
-> +++ b/drivers/staging/rtl8723au/include/rtl8723a_hal.h
-> @@ -255,10 +255,10 @@ struct hal_data_8723a {
->  	struct hal_version		VersionID;
->  	enum rt_customer_id CustomerID;
->  
-> -	u16	FirmwareVersion;
-> -	u16	FirmwareVersionRev;
-> -	u16	FirmwareSubVersion;
-> -	u16	FirmwareSignature;
-> +	__le16	FirmwareVersion;
-> +	__le16	FirmwareVersionRev;
-> +	__le16	FirmwareSubVersion;
-> +	__le16	FirmwareSignature;
+This reverts commit b09f5ec18b16b82f4db8a735e453332db7514275.
 
-Ehm I am pretty sure it doesn't:
+Now that we have fully working BCMA_DRIVER_PCI symbol (in can be safely
+disabled), there is no risk bcma will try to use PCI code without PCI
+available.
 
-rtl8723au_hal_init.c:265
-        pHalData->FirmwareVersion = le16_to_cpu(pFwHdr->Version);
-	pHalData->FirmwareSubVersion = pFwHdr->Subversion;
-	pHalData->FirmwareSignature = le16_to_cpu(pFwHdr->Signature);
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-If anything, the second assignment there should be changed to use
-le16_to_cpu(), but your conversion is definitely wrong.
+diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
+index 1500b71..fc6ffcf 100644
+--- a/drivers/bcma/Kconfig
++++ b/drivers/bcma/Kconfig
+@@ -1,6 +1,6 @@
+ config BCMA_POSSIBLE
+ 	bool
+-	depends on HAS_IOMEM && HAS_DMA && PCI
++	depends on HAS_IOMEM && HAS_DMA
+ 	default y
+ 
+ menu "Broadcom specific AMBA"
+-- 
+1.8.4.5
 
-NACK
-
-Jes
