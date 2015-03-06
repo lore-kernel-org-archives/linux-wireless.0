@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47848 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750950AbbCPIIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 04:08:49 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: add comment for rx_path_lock
-Date: Mon, 16 Mar 2015 09:08:47 +0100
-Message-Id: <1426493327-5331-1-git-send-email-johannes@sipsolutions.net> (sfid-20150316_090853_037664_8E49DE67)
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:33415 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754220AbbCFPrf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2015 10:47:35 -0500
+Received: by pdev10 with SMTP id v10so29504849pde.0
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2015 07:47:35 -0800 (PST)
+From: Taehee Yoo <ap420073@gmail.com>
+To: Larry.Finger@lwfinger.net, ap420073@gmail.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: Remove duplicated prototype
+Date: Sat,  7 Mar 2015 00:47:17 +0900
+Message-Id: <1425656837-13879-1-git-send-email-ap420073@gmail.com> (sfid-20150306_164739_095644_A8819ACC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Remove duplicated prototype in base.h
 
-Add a comment explaining how the RX path lock is used.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Taehee Yoo <ap420073@gmail.com>
 ---
- net/mac80211/rx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/rtlwifi/base.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index bdabf349c6ee..6accd61ee54b 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3123,6 +3123,12 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx,
- 			goto rxh_next;  \
- 	} while (0);
+diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
+index dee4ac2..ff9a4bf 100644
+--- a/drivers/net/wireless/rtlwifi/base.h
++++ b/drivers/net/wireless/rtlwifi/base.h
+@@ -123,7 +123,6 @@ bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb);
+ u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx);
  
-+	/* Lock here to avoid hitting all of the data used in the RX
-+	 * path (e.g. key data, station data, ...) concurrently when
-+	 * a frame is released from the reorder buffer due to timeout
-+	 * from the timer, potentially concurrently with RX from the
-+	 * driver.
-+	 */
- 	spin_lock_bh(&rx->local->rx_path_lock);
- 
- 	while ((skb = __skb_dequeue(frames))) {
+ void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb);
+-void rtl_watch_dog_timer_callback(unsigned long data);
+ int rtl_tx_agg_start(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	struct ieee80211_sta *sta, u16 tid, u16 *ssn);
+ int rtl_tx_agg_stop(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
 -- 
-2.1.4
+1.9.1
 
