@@ -1,108 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:57341 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752054AbbC1Mxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:53:37 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
-	m.v.b@runbox.com
-Subject: [PATCH v4 08/15] staging: rtl8723au: trailing statements should be on next line
-Date: Sat, 28 Mar 2015 08:52:41 -0400
-Message-Id: <1427547168-12078-9-git-send-email-m.v.b@runbox.com> (sfid-20150328_135738_283701_F478A54E)
-In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
-References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:57603 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751418AbbCFPU1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2015 10:20:27 -0500
+Message-ID: <54F9C5B8.9080004@broadcom.com> (sfid-20150306_162029_498763_1D9FE04C)
+Date: Fri, 6 Mar 2015 16:20:24 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Pontus Fuchs <pontusf@broadcom.com>
+Subject: Re: [PATCH] brcmfmac: Perform bound checking on vendor command buffer
+References: <1425655123-18916-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1425655123-18916-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a number of checkpatch.pl errors in rtl8723au's rtw_security.c
-related to trailing statements:
-	ERROR: trailing statements should be on next line
+On 03/06/15 16:18, Arend van Spriel wrote:
+> From: Pontus Fuchs<pontusf@broadcom.com>
+>
+> A short or malformed vendor command buffer could cause reads outside
+> the command buffer.
+>
+> Cc: stable@vger.kernel.org # v3.19
+> Signed-off-by: Pontus Fuchs<pontusf@broadcom.com>
+> [arend@broadcom.com: slightly modified debug trace output]
+> Signed-off-by: Arend van Spriel<arend@broadcom.com>
+> ---
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+Hi Kalle,
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index b4327aaf71..803f8965a4 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -132,7 +132,8 @@ static u32 getcrc32(u8 *buf, int len)
- 	u8 *p;
- 	u32 crc;
- 
--	if (bcrc32initialized == 0) crc32_init();
-+	if (bcrc32initialized == 0)
-+		crc32_init();
- 
- 	crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
- 
-@@ -559,8 +560,10 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
- 	u16 PPK[6];                          /* temporary key for mixing    */
- 
- 	/* Note: all adds in the PPK[] equations below are mod 2**16         */
--	for (i = 0; i < 5; i++) PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
--		PPK[5] = p1k[4] + iv16;             /* next,  add in IV16          */
-+	for (i = 0; i < 5; i++)
-+		PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
-+
-+	PPK[5] = p1k[4] + iv16;     /* next,  add in IV16          */
- 
- 	/* Bijective non-linear mixing of the 96 bits of PPK[0..5]           */
- 	PPK[0] +=    _S_(PPK[5] ^ TK16(0));   /* Mix key in each "round"     */
-@@ -960,7 +963,8 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
- 	u8 intermediateb[16];
- 	u8 round_key[16];
- 
--	for (i = 0; i < 16; i++) round_key[i] = key[i];
-+	for (i = 0; i < 16; i++)
-+		round_key[i] = key[i];
- 
- 	for (round = 0; round < 11; round++) {
- 		if (round == 0) {
-@@ -1044,7 +1048,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- {
- 	int i;
- 
--	for (i = 0; i < 16; i++) mic_header2[i] = 0x00;
-+	for (i = 0; i < 16; i++)
-+		mic_header2[i] = 0x00;
- 
- 	mic_header2[0] = mpdu[16];    /* A3 */
- 	mic_header2[1] = mpdu[17];
-@@ -1057,7 +1062,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- 	mic_header2[7] = 0x00; /* mpdu[23]; */
- 
- 	if (!qc_exists && a4_exists) {
--		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
-+		for (i = 0; i < 6; i++)
-+			mic_header2[8+i] = mpdu[24+i];   /* A4 */
- 	}
- 
- 	if (qc_exists && !a4_exists) {
-@@ -1066,7 +1072,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- 	}
- 
- 	if (qc_exists && a4_exists) {
--		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
-+		for (i = 0; i < 6; i++)
-+			mic_header2[8+i] = mpdu[24+i];   /* A4 */
- 
- 		mic_header2[14] = mpdu[30] & 0x0f;
- 		mic_header2[15] = mpdu[31] & 0x00;
-@@ -1084,7 +1091,9 @@ static void construct_ctr_preload(u8 *ctr_preload, int a4_exists, int qc_exists,
- {
- 	int i = 0;
- 
--	for (i = 0; i < 16; i++) ctr_preload[i] = 0x00;
-+	for (i = 0; i < 16; i++)
-+		ctr_preload[i] = 0x00;
-+
- 	i = 0;
- 
- 	ctr_preload[0] = 0x01;                                  /* flag */
--- 
-2.1.4
+Forgot to mention this is for v4.0 kernel.
+
+Regards,
+Arend
+
+>   drivers/net/wireless/brcm80211/brcmfmac/vendor.c | 15 ++++++++++++---
+>   1 file changed, 12 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+> index 50cdf70..8eff275 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+> @@ -39,13 +39,22 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
+>   	void *dcmd_buf = NULL, *wr_pointer;
+>   	u16 msglen, maxmsglen = PAGE_SIZE - 0x100;
+>
+> -	brcmf_dbg(TRACE, "cmd %x set %d len %d\n", cmdhdr->cmd, cmdhdr->set,
+> -		  cmdhdr->len);
+> +	if (len<  sizeof(*cmdhdr)) {
+> +		brcmf_err("vendor command too short: %d\n", len);
+> +		return -EINVAL;
+> +	}
+>
+>   	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
+>   	ifp = vif->ifp;
+>
+> -	len -= sizeof(struct brcmf_vndr_dcmd_hdr);
+> +	brcmf_dbg(TRACE, "ifidx=%d, cmd=%d\n", ifp->ifidx, cmdhdr->cmd);
+> +
+> +	if (cmdhdr->offset>  len) {
+> +		brcmf_err("bad buffer offset %d>  %d\n", cmdhdr->offset, len);
+> +		return -EINVAL;
+> +	}
+> +
+> +	len -= cmdhdr->offset;
+>   	ret_len = cmdhdr->len;
+>   	if (ret_len>  0 || len>  0) {
+>   		if (len>  BRCMF_DCMD_MAXLEN) {
 
