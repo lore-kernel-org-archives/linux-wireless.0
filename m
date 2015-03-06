@@ -1,156 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57392 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752579AbbCOOBA (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:12856 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755235AbbCFPSq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 10:01:00 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 7/7] wil6210: fall back to pseudo-DMS mcast for secure link and PBSS
-Date: Sun, 15 Mar 2015 16:00:24 +0200
-Message-Id: <1426428024-4538-11-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150315_150417_381835_2CD2C6F8)
-In-Reply-To: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Fri, 6 Mar 2015 10:18:46 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Pontus Fuchs <pontusf@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH] brcmfmac: Perform bound checking on vendor command buffer
+Date: Fri, 6 Mar 2015 16:18:41 +0100
+Message-ID: <1425655123-18916-1-git-send-email-arend@broadcom.com> (sfid-20150306_161850_149589_5E03D9AE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Multicast is not yet properly supported for all connection types;
-actually, only non-secure AP is supported. For all other cases,
-fall back to old "pseudo-DMS" approach. Namely, for:
-- PBSS
-- secure connection
+From: Pontus Fuchs <pontusf@broadcom.com>
 
-When re-routing MCAST Rx->Tx on the AP, do not Tx back to the origin
-of the frame
+A short or malformed vendor command buffer could cause reads outside
+the command buffer.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: stable@vger.kernel.org # v3.19
+Signed-off-by: Pontus Fuchs <pontusf@broadcom.com>
+[arend@broadcom.com: slightly modified debug trace output]
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/wil6210/txrx.c | 103 +++++++++++++++++++++++++++++++-
- 1 file changed, 101 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/vendor.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 1fe390f..e8bd512 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -908,8 +908,20 @@ static struct vring *wil_find_tx_vring_sta(struct wil6210_priv *wil,
- 	return NULL;
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+index 50cdf70..8eff275 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/vendor.c
+@@ -39,13 +39,22 @@ static int brcmf_cfg80211_vndr_cmds_dcmd_handler(struct wiphy *wiphy,
+ 	void *dcmd_buf = NULL, *wr_pointer;
+ 	u16 msglen, maxmsglen = PAGE_SIZE - 0x100;
  
--static struct vring *wil_find_tx_bcast(struct wil6210_priv *wil,
--				       struct sk_buff *skb)
-+/* Use one of 2 strategies:
-+ *
-+ * 1. New (real broadcast):
-+ *    use dedicated broadcast vring
-+ * 2. Old (pseudo-DMS):
-+ *    Find 1-st vring and return it;
-+ *    duplicate skb and send it to other active vrings;
-+ *    in all cases override dest address to unicast peer's address
-+ * Use old strategy when new is not supported yet:
-+ *  - for PBSS
-+ *  - for secure link
-+ */
-+static struct vring *wil_find_tx_bcast_1(struct wil6210_priv *wil,
-+					 struct sk_buff *skb)
- {
- 	struct vring *v;
- 	int i = wil->bcast_vring;
-@@ -923,6 +935,93 @@ static struct vring *wil_find_tx_bcast(struct wil6210_priv *wil,
- 	return v;
- }
+-	brcmf_dbg(TRACE, "cmd %x set %d len %d\n", cmdhdr->cmd, cmdhdr->set,
+-		  cmdhdr->len);
++	if (len < sizeof(*cmdhdr)) {
++		brcmf_err("vendor command too short: %d\n", len);
++		return -EINVAL;
++	}
  
-+static void wil_set_da_for_vring(struct wil6210_priv *wil,
-+				 struct sk_buff *skb, int vring_index)
-+{
-+	struct ethhdr *eth = (void *)skb->data;
-+	int cid = wil->vring2cid_tid[vring_index][0];
+ 	vif = container_of(wdev, struct brcmf_cfg80211_vif, wdev);
+ 	ifp = vif->ifp;
+ 
+-	len -= sizeof(struct brcmf_vndr_dcmd_hdr);
++	brcmf_dbg(TRACE, "ifidx=%d, cmd=%d\n", ifp->ifidx, cmdhdr->cmd);
 +
-+	ether_addr_copy(eth->h_dest, wil->sta[cid].addr);
-+}
-+
-+static struct vring *wil_find_tx_bcast_2(struct wil6210_priv *wil,
-+					 struct sk_buff *skb)
-+{
-+	struct vring *v, *v2;
-+	struct sk_buff *skb2;
-+	int i;
-+	u8 cid;
-+	struct ethhdr *eth = (void *)skb->data;
-+	char *src = eth->h_source;
-+
-+	/* find 1-st vring eligible for data */
-+	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
-+		v = &wil->vring_tx[i];
-+		if (!v->va)
-+			continue;
-+
-+		cid = wil->vring2cid_tid[i][0];
-+		if (cid >= WIL6210_MAX_CID) /* skip BCAST */
-+			continue;
-+		if (!wil->sta[cid].data_port_open)
-+			continue;
-+
-+		/* don't Tx back to source when re-routing Rx->Tx at the AP */
-+		if (0 == memcmp(wil->sta[cid].addr, src, ETH_ALEN))
-+			continue;
-+
-+		goto found;
++	if (cmdhdr->offset > len) {
++		brcmf_err("bad buffer offset %d > %d\n", cmdhdr->offset, len);
++		return -EINVAL;
 +	}
 +
-+	wil_dbg_txrx(wil, "Tx while no vrings active?\n");
-+
-+	return NULL;
-+
-+found:
-+	wil_dbg_txrx(wil, "BCAST -> ring %d\n", i);
-+	wil_set_da_for_vring(wil, skb, i);
-+
-+	/* find other active vrings and duplicate skb for each */
-+	for (i++; i < WIL6210_MAX_TX_RINGS; i++) {
-+		v2 = &wil->vring_tx[i];
-+		if (!v2->va)
-+			continue;
-+		cid = wil->vring2cid_tid[i][0];
-+		if (cid >= WIL6210_MAX_CID) /* skip BCAST */
-+			continue;
-+		if (!wil->sta[cid].data_port_open)
-+			continue;
-+
-+		if (0 == memcmp(wil->sta[cid].addr, src, ETH_ALEN))
-+			continue;
-+
-+		skb2 = skb_copy(skb, GFP_ATOMIC);
-+		if (skb2) {
-+			wil_dbg_txrx(wil, "BCAST DUP -> ring %d\n", i);
-+			wil_set_da_for_vring(wil, skb2, i);
-+			wil_tx_vring(wil, v2, skb2);
-+		} else {
-+			wil_err(wil, "skb_copy failed\n");
-+		}
-+	}
-+
-+	return v;
-+}
-+
-+static struct vring *wil_find_tx_bcast(struct wil6210_priv *wil,
-+				       struct sk_buff *skb)
-+{
-+	struct wireless_dev *wdev = wil->wdev;
-+
-+	if (wdev->iftype != NL80211_IFTYPE_AP)
-+		return wil_find_tx_bcast_2(wil, skb);
-+
-+	if (wil->privacy)
-+		return wil_find_tx_bcast_2(wil, skb);
-+
-+	return wil_find_tx_bcast_1(wil, skb);
-+}
-+
- static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len,
- 			   int vring_index)
- {
++	len -= cmdhdr->offset;
+ 	ret_len = cmdhdr->len;
+ 	if (ret_len > 0 || len > 0) {
+ 		if (len > BRCMF_DCMD_MAXLEN) {
 -- 
-2.1.0
+1.9.1
 
