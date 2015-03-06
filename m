@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:48048 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750976AbbCIWMI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 18:12:08 -0400
-Received: from localhost.localdomain (localhost [127.0.0.1])
-	by smtp.gentoo.org (Postfix) with ESMTP id 67752340712
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2015 22:12:07 +0000 (UTC)
-From: Mike Frysinger <vapier@gentoo.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH crda v2] libreg: link against crypto libs
-Date: Mon,  9 Mar 2015 18:12:06 -0400
-Message-Id: <1425939126-12478-1-git-send-email-vapier@gentoo.org> (sfid-20150309_231213_159027_6E34E5CB)
-In-Reply-To: <1425785565-26601-1-git-send-email-vapier@gentoo.org>
-References: <1425785565-26601-1-git-send-email-vapier@gentoo.org>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:42055 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751240AbbCFM3I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2015 07:29:08 -0500
+Received: by wggz12 with SMTP id z12so22621315wgg.9
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2015 04:29:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGnRvupZGXfaf-PH2aoNYzUziFBwMw2m-Ftvx0VVysmx9NNdvQ@mail.gmail.com>
+References: <CAGnRvurPGf1fvYs6fyrc7kttT8g3+ST_3mO5P6+mwdbU4Ay7yA@mail.gmail.com>
+	<CALhHN=ofus+Uop7i8Cv7SVhmDSjA9O56xSokTr=PtmddCqczEA@mail.gmail.com>
+	<CAGnRvupZGXfaf-PH2aoNYzUziFBwMw2m-Ftvx0VVysmx9NNdvQ@mail.gmail.com>
+Date: Fri, 6 Mar 2015 13:29:06 +0100
+Message-ID: <CALhHN=oQ99+tp2zAPmM2Tzu3WWrgtH=xnc0iqTUPVJTjyWV+Yg@mail.gmail.com> (sfid-20150306_132913_349221_A217560A)
+Subject: Re: State of DFS with Mac80211/ath9k
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since libreg uses funcs from the crypto lib, make sure we link them.
+On 6 March 2015 at 10:26, Henning Rogge <hrogge@gmail.com> wrote:
+> On Fri, Mar 6, 2015 at 9:38 AM, Janusz Dziedzic
+> <janusz.dziedzic@tieto.com> wrote:
+>> On 6 March 2015 at 09:04, Henning Rogge <hrogge@gmail.com> wrote:
+>>> First, we cannot open a Mesh interface on a DFS channel unless we open
+>>> an AP interface first (and closing the AP interface before activating
+>>> the mesh). Are we missing some special initialization?
+>>>
+>> I think this works beacause we didn't integrate patch:
+>> [PATCH v5] cfg80211: fix dfs channel state after stopping AP
+>> and discussion here:
+>> http://comments.gmane.org/gmane.linux.kernel.wireless.general/117095
+>>
+>> Anyway I think this is a BUG while for example:
+>> 1) we can run AP (CAC) on chanel 36
+>> 2) next shut down AP
+>> 3) wait few days with loaded cfg80211 and in the same time for example
+>> move to other location (AP in bus/train)
+>> 4) we don't need run CAC again - for me this is a cfg80211 bug :)
+>
+> Yes, this sounds like a bug... when wpa_supplicant "disconnects" from
+> the mac80211 stack the flag should revert to "dfs not available". But
+> I am not sure if you can easily detect that wpa_supplicant is not
+> there anymore.
+>
+This was implemented for hostapd (AP, multi APs) in patch [PATCH v5]
+cfg80211: fix dfs channel state after stopping AP.
+In case of STA (wpa_supplicant) we don't change channels DFS flags -
+we trust AP here.
 
-Signed-off-by: Mike Frysinger <vapier@gentoo.org>
----
-v2
-	- the current LDLIBS mess includes -lreg in there which we have to strip
+So, in case of ibss/mesh you could make wpa_supplicant dfs.c common
+and use it (perform CAC and other operations).
 
- Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> Anyway, before you can beaconing you should perform CAC, so this
+>> should be added to wpa_supplicant - currently this is not implemented.
+>
+> Has the "802.11s support" ever been merged to wpa_supplicant?
+>
+> At the moment we are using neither wpa_supplicant nor hostapd... when
+> we use encryption, we use the authsae tool from the open802.11s page.
+>
+I am not sure, adding Jouni here.
 
-diff --git a/Makefile b/Makefile
-index 8e345a1..5ba1664 100644
---- a/Makefile
-+++ b/Makefile
-@@ -117,7 +117,7 @@ keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
- 
- $(LIBREG): regdb.h reglib.h reglib.c
- 	$(NQ) '  CC  ' $@
--	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -shared -Wl,-soname,$(LIBREG) $^
-+	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -shared -Wl,-soname,$(LIBREG) $^ $(filter-out -lreg,$(LDLIBS))
- 
- install-libreg-headers:
- 	$(NQ) '  INSTALL  libreg-headers'
--- 
-2.3.1
-
+>>> Second, we are seeing a huge amount of radar events on some nodes, but
+>>> not on a node on the same channel in the next room. What is the status
+>>> of the DFS detector in ath9k, is it reliable or is it still
+>>> "experimental".
+>>>
+>> We tested/using ath10k hw, so I don't know ath9k status :)
+>
+> Thank you for the information.
+>
+BR
+Janusz
