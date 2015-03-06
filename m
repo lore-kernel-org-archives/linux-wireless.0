@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51792 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753635AbbCBSxr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 13:53:47 -0500
-Message-ID: <1425322425.1906.4.camel@sipsolutions.net> (sfid-20150302_195354_759126_A9E6657C)
-Subject: Re: [PATCH RFC 08/14] net: wireless: mac80211: shrink
- ieee80211_tx_info
+Received: from s3.sipsolutions.net ([5.9.151.49]:42065 "EHLO sipsolutions.net"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S932515AbbCFIkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2015 03:40:04 -0500
+Message-ID: <1425631172.3339.1.camel@sipsolutions.net> (sfid-20150306_094011_728646_500444FE)
+Subject: Re: [PATCH v10 3/3] cfg80211: Schedule timeout for all CRDA calls
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Florian Westphal <fw@strlen.de>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Mon, 02 Mar 2015 19:53:45 +0100
-In-Reply-To: <1425318028-26531-9-git-send-email-fw@strlen.de> (sfid-20150302_184059_463522_70F2B3E8)
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
-	 <1425318028-26531-9-git-send-email-fw@strlen.de>
-	 (sfid-20150302_184059_463522_70F2B3E8)
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+Cc: Ilan Peer <ilan.peer@intel.com>, linux-wireless@vger.kernel.org
+Date: Fri, 06 Mar 2015 09:39:32 +0100
+In-Reply-To: <20150305225526.GC25035@wotan.suse.de> (sfid-20150305_235530_475137_C30BAA08)
+References: <1425447127-22958-1-git-send-email-ilan.peer@intel.com>
+	 <1425447127-22958-3-git-send-email-ilan.peer@intel.com>
+	 <20150305225526.GC25035@wotan.suse.de>
+	 (sfid-20150305_235530_475137_C30BAA08)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-02 at 18:40 +0100, Florian Westphal wrote:
-> to make it fit into (future) 44-byte sized skb->cb[].
+On Thu, 2015-03-05 at 23:55 +0100, Luis R. Rodriguez wrote:
+> On Wed, Mar 04, 2015 at 12:32:07AM -0500, Ilan Peer wrote:
+> > Timeout was scheduled only in case CRDA was called due to user hints,
+> > but was not scheduled for other cases. This can result in regulatory
+> > hint processing getting stuck in case that there is no CRDA configured.
+> > 
+> > Change this by scheduling a timeout every time CRDA is called. In
+> > addition, in restore_regulatory_settings() all pending requests are
+> > restored (and not only the user ones).
+> > 
+> > Signed-off-by: Ilan Peer <ilan.peer@intel.com>
 > 
-> This works, since flags is only used to store values
-> from mac80211_tx_control_flags enum, and these are just 2 bits.
-> We can thus move this to the padding hole inside the union.
+> Acked-by: Luis R. Rodriguez <mcgrof@suse.com>
 > 
-> Also add BUILD_BUG_ON magic to make sure that the new flags
-> field doesn't share storage w. other members of the union.
+> For all of these.
 
-This is really ugly - what's the point of this?
-
-Mind you - we are actually acutely out of space and would rather have
-*more*, not less.
+Great, all three applied, thanks guys.
 
 johannes
 
