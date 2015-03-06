@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f53.google.com ([209.85.215.53]:35280 "EHLO
-	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752347AbbCTN4z (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41715 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752766AbbCFQYP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 09:56:55 -0400
-Received: by labjg1 with SMTP id jg1so87651202lab.2
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 06:56:53 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 5/9] ath10k: use hw rate definitions for fixed rate
-Date: Fri, 20 Mar 2015 13:54:11 +0000
-Message-Id: <1426859655-11797-6-git-send-email-michal.kazior@tieto.com> (sfid-20150320_145711_013109_D33AEEBE)
-In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
-References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
+	Fri, 6 Mar 2015 11:24:15 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jim Davis <jim.epost@gmail.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next <linux-next@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>, zajec5@gmail.com,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: randconfig build error with next-20150303, in drivers/bcma/driver_pcie2.c
+References: <CA+r1Zhio+Kp30y4DHS0SW20PjZrAY3PZLXjskykpa8CY0tcrMA@mail.gmail.com>
+	<87d24o7s2j.fsf@kamboji.qca.qualcomm.com>
+	<20150305080130.41b132ee@canb.auug.org.au>
+	<87sidj4kyv.fsf@kamboji.qca.qualcomm.com>
+	<CA+r1Zhj+OnSsPzHy6mLRBU5QDYVeVFCwaKtvHWkfSy2hoL6=0w@mail.gmail.com>
+Date: Fri, 06 Mar 2015 18:24:07 +0200
+In-Reply-To: <CA+r1Zhj+OnSsPzHy6mLRBU5QDYVeVFCwaKtvHWkfSy2hoL6=0w@mail.gmail.com>
+	(Jim Davis's message of "Thu, 5 Mar 2015 10:06:16 -0700")
+Message-ID: <87d24m2ixk.fsf@kamboji.qca.qualcomm.com> (sfid-20150306_172432_486811_43846A71)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using raw values is discouraged. Having
-defines/enums is preferred.
+Jim Davis <jim.epost@gmail.com> writes:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 26 ++++++++++++--------------
- 1 file changed, 12 insertions(+), 14 deletions(-)
+>>> However, that commit is in next-20150304 and we still get the error
+>>> (see, for example,
+>>> http://kisskb.ellerman.id.au/kisskb/buildresult/12376688/).
+>>
+>> I applied few fixes from Rafal and Chen:
+>>
+>> 1ca2760fb2c1 bcma: prepare Kconfig symbol for PCI driver
+>> 0a4e699a41f7 bcma: move internal function declarations to private header
+>> c32ec2a11321 bcma: make bcma_host_pci_(up|down) calls safe for every config
+>> b09f5ec18b16 bcma: Kconfig: Let it depend on PCI
+>>
+>> It would be great if someone could report if the build errors are gone
+>> now.
+>
+> I reran that configuration file on
+> wireless-drivers-next-for-davem-2015-02-07-9274-g1ca2760fb2c13, with
+> no build errors.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index f4e76e7..72fbdc2 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4972,20 +4972,18 @@ exit:
- 
- /* Helper table for legacy fixed_rate/bitrate_mask */
- static const u8 cck_ofdm_rate[] = {
--	/* CCK */
--	3, /* 1Mbps */
--	2, /* 2Mbps */
--	1, /* 5.5Mbps */
--	0, /* 11Mbps */
--	/* OFDM */
--	3, /* 6Mbps */
--	7, /* 9Mbps */
--	2, /* 12Mbps */
--	6, /* 18Mbps */
--	1, /* 24Mbps */
--	5, /* 36Mbps */
--	0, /* 48Mbps */
--	4, /* 54Mbps */
-+	ATH10K_HW_RATE_CCK_LP_1M,
-+	ATH10K_HW_RATE_CCK_LP_2M,
-+	ATH10K_HW_RATE_CCK_LP_5_5M,
-+	ATH10K_HW_RATE_CCK_LP_11M,
-+	ATH10K_HW_RATE_OFDM_6M,
-+	ATH10K_HW_RATE_OFDM_9M,
-+	ATH10K_HW_RATE_OFDM_12M,
-+	ATH10K_HW_RATE_OFDM_18M,
-+	ATH10K_HW_RATE_OFDM_24M,
-+	ATH10K_HW_RATE_OFDM_36M,
-+	ATH10K_HW_RATE_OFDM_48M,
-+	ATH10K_HW_RATE_OFDM_54M,
- };
- 
- /* Check if only one bit set */
+Good, thanks for checking.
+
 -- 
-2.1.4
-
+Kalle Valo
