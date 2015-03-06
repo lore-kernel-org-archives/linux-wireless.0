@@ -1,99 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:58751 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752730AbbCMSmy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 14:42:54 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath10k: mac: match wait_for_completion_timeout return type
-Date: Fri, 13 Mar 2015 14:38:06 -0400
-Message-Id: <1426271886-20562-1-git-send-email-hofrat@osadl.org> (sfid-20150313_194338_374532_0996FC11)
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:41186 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752207AbbCFMyn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2015 07:54:43 -0500
+Received: by wghl2 with SMTP id l2so16061527wgh.8
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2015 04:54:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20150306125047.GB26204@w1.fi>
+References: <CAGnRvurPGf1fvYs6fyrc7kttT8g3+ST_3mO5P6+mwdbU4Ay7yA@mail.gmail.com>
+ <CALhHN=ofus+Uop7i8Cv7SVhmDSjA9O56xSokTr=PtmddCqczEA@mail.gmail.com>
+ <CAGnRvupZGXfaf-PH2aoNYzUziFBwMw2m-Ftvx0VVysmx9NNdvQ@mail.gmail.com>
+ <CALhHN=oQ99+tp2zAPmM2Tzu3WWrgtH=xnc0iqTUPVJTjyWV+Yg@mail.gmail.com> <20150306125047.GB26204@w1.fi>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Fri, 6 Mar 2015 13:54:22 +0100
+Message-ID: <CAGnRvuqjpWLvqjcdU3zF4iJ=C0CdvdFeDU8h00YKi10VuY8TPQ@mail.gmail.com> (sfid-20150306_135446_882239_B84B2DEC)
+Subject: Re: State of DFS with Mac80211/ath9k
+To: Jouni Malinen <j@w1.fi>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-An appropriately named unsigned long is added, respectively 'ret'
-renamed, and the assignments fixed up.
+On Fri, Mar 6, 2015 at 1:50 PM, Jouni Malinen <j@w1.fi> wrote:
+> On Fri, Mar 06, 2015 at 01:29:06PM +0100, Janusz Dziedzic wrote:
+>> So, in case of ibss/mesh you could make wpa_supplicant dfs.c common
+>> and use it (perform CAC and other operations).
+>
+> I actually pushed out changes yesterday to allow dfs.c/CAC to be used
+> from wpa_supplicant in case of AP mode operations. I have not tried what
+> would happen with mesh in similar case, but that may need changes and
+> IBSS certainly would require more work for DFS.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+We are using 802.11s (without multihop forwarding) instead of IBSS.
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
+>> > Has the "802.11s support" ever been merged to wpa_supplicant?
+>> >
+>> > At the moment we are using neither wpa_supplicant nor hostapd... when
+>> > we use encryption, we use the authsae tool from the open802.11s page.
+>> >
+>> I am not sure, adding Jouni here.
+>
+> Yes, wpa_supplicant has support for mesh BSS since November.
 
-Patch is against 4.0-rc3 (localversion-next is -next-20150313)
+Do you mean IBSS or 802.11s?
 
- drivers/net/wireless/ath/ath10k/mac.c |   20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e8cc19f..3fa11d8 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -99,6 +99,7 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
- {
- 	struct ath10k *ar = arvif->ar;
- 	int ret;
-+	unsigned long time_left;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -108,8 +109,8 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
- 	if (ret)
- 		return ret;
- 
--	ret = wait_for_completion_timeout(&ar->install_key_done, 3*HZ);
--	if (ret == 0)
-+	time_left = wait_for_completion_timeout(&ar->install_key_done, 3 * HZ);
-+	if (time_left == 0)
- 		return -ETIMEDOUT;
- 
- 	return 0;
-@@ -561,16 +562,16 @@ static void ath10k_mac_vif_beacon_cleanup(struct ath10k_vif *arvif)
- 
- static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
- {
--	int ret;
-+	unsigned long time_left;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	if (test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags))
- 		return -ESHUTDOWN;
- 
--	ret = wait_for_completion_timeout(&ar->vdev_setup_done,
--					  ATH10K_VDEV_SETUP_TIMEOUT_HZ);
--	if (ret == 0)
-+	time_left = wait_for_completion_timeout(&ar->vdev_setup_done,
-+						ATH10K_VDEV_SETUP_TIMEOUT_HZ);
-+	if (time_left == 0)
- 		return -ETIMEDOUT;
- 
- 	return 0;
-@@ -2432,6 +2433,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 	const u8 *peer_addr;
- 	int vdev_id;
- 	int ret;
-+	unsigned long time_left;
- 
- 	/* FW requirement: We must create a peer before FW will send out
- 	 * an offchannel frame. Otherwise the frame will be stuck and
-@@ -2477,9 +2479,9 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 
- 		ath10k_tx_htt(ar, skb);
- 
--		ret = wait_for_completion_timeout(&ar->offchan_tx_completed,
--						  3 * HZ);
--		if (ret == 0)
-+		time_left =
-+		wait_for_completion_timeout(&ar->offchan_tx_completed, 3 * HZ);
-+		if (time_left == 0)
- 			ath10k_warn(ar, "timed out waiting for offchannel skb %p\n",
- 				    skb);
- 
--- 
-1.7.10.4
-
+Henning Rogge
