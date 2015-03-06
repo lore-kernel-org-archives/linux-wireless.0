@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f172.google.com ([209.85.212.172]:37495 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbbCBJXy convert rfc822-to-8bit (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:24792 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754002AbbCFRkt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 04:23:54 -0500
-Received: by wivr20 with SMTP id r20so13225552wiv.2
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 01:23:53 -0800 (PST)
+	Fri, 6 Mar 2015 12:40:49 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 4/5] brcmfmac: Fix race condition in msgbuf ioctl processing.
+Date: Fri, 6 Mar 2015 18:40:41 +0100
+Message-ID: <1425663642-19725-5-git-send-email-arend@broadcom.com> (sfid-20150306_184057_478916_C8710D2E)
+In-Reply-To: <1425663642-19725-1-git-send-email-arend@broadcom.com>
+References: <1425663642-19725-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1425287785.1906.0.camel@sipsolutions.net>
-References: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
-	<1425287344-30594-2-git-send-email-michal.kazior@tieto.com>
-	<1425287785.1906.0.camel@sipsolutions.net>
-Date: Mon, 2 Mar 2015 10:23:53 +0100
-Message-ID: <CA+BoTQnrS74yx=V_sPvTgzkoZeWbOBFawqXZMAv6oEhUypmoQA@mail.gmail.com> (sfid-20150302_102359_087675_0642F7A9)
-Subject: Re: [PATCH 2/3] ath10k: always save/restore pci config space
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 March 2015 at 10:16, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2015-03-02 at 10:09 +0100, Michal Kazior wrote:
->> The check isn't really necessary and couldn't even
->> work because becase pci_restore_state() restores
->> only first 64 bytes of PCI configuration space.
->>
->> This is necessary for future WoWLAN support.
->
->> +     pci_save_state(pdev);
->> +     pci_disable_device(pdev);
->
-> I believe the whole thing isn't necessary at all since the kernel's PCIe
-> layer will take care of it.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-You mean only the pci_save_state() and pci_disable_device() or, the
-resume counterpart as well? Hmm.
+Msgbuf is using a wait_event_timeout to wait for the response on
+an ioctl. The wakeup routine uses waitqueue_active to see if
+wait_event_timeout has been called. There is a chance that the
+response arrives before wait_event_timeout is called, this
+will result in situation that wait_event_timeout never gets
+woken again and assumed result will be a timeout. This patch
+removes that errornous situation by always setting the
+ctl_completed var before checking for queue active.
 
-Earlier the resume counterpart didn't do any restore stuff and the
-device ended up pretty confused..
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+index 6262612..4ec9811 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c
+@@ -481,10 +481,9 @@ static int brcmf_msgbuf_ioctl_resp_wait(struct brcmf_msgbuf *msgbuf)
+ 
+ static void brcmf_msgbuf_ioctl_resp_wake(struct brcmf_msgbuf *msgbuf)
+ {
+-	if (waitqueue_active(&msgbuf->ioctl_resp_wait)) {
+-		msgbuf->ctl_completed = true;
++	msgbuf->ctl_completed = true;
++	if (waitqueue_active(&msgbuf->ioctl_resp_wait))
+ 		wake_up(&msgbuf->ioctl_resp_wait);
+-	}
+ }
+ 
+ 
+-- 
+1.9.1
 
-Michał
