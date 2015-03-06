@@ -1,120 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:44160 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751515AbbCKSMb convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:38295 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754628AbbCFXwB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 14:12:31 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Nicholas Mc Guire <hofrat@osadl.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, Valdis.Kletnieks@vt.edu,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2 RFC] ath10k: move code out of the parameter list
-References: <1426094369-10213-1-git-send-email-hofrat@osadl.org>
-Date: Wed, 11 Mar 2015 19:09:39 +0100
-In-Reply-To: <1426094369-10213-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
-	Guire's message of "Wed, 11 Mar 2015 13:19:29 -0400")
-Message-ID: <87h9tr4d98.fsf@nemi.mork.no> (sfid-20150311_191250_381200_6F3B6E03)
+	Fri, 6 Mar 2015 18:52:01 -0500
+Received: by obcwo20 with SMTP id wo20so23875957obc.5
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2015 15:52:01 -0800 (PST)
+Message-ID: <54FA3D9E.40107@lwfinger.net> (sfid-20150307_005206_655784_41BD262E)
+Date: Fri, 06 Mar 2015 17:51:58 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/1] New driver: rtl8723au (mac80211)
+References: <1425680126-25928-1-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <1425680126-25928-1-git-send-email-Jes.Sorensen@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicholas Mc Guire <hofrat@osadl.org> writes:
-
-> Putting code into the parameter list of wait_event_timeout() might be 
-> legal C-code but not really readable - the "inline" code is simply
-> moved into a function and that passed to wait_event_timeout() as the
-> condition.
+On 03/06/2015 04:15 PM, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
 >
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> ---
+> This is a new driver for the rtl8723au which was written from scratch,
+> to utilize the Linux mac80211 stack.
 >
-> Thanks to Bjorn Mork <bjorn@mork.no> for clarifying my initial confusion !
+> This has been a pet project for me for some time I finally feel it
+> is stable enough to submit. I have used it for a while without any
+> serious issues.
 >
-> Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-> CONFIG_ATH10K=m
+> I started working on cleaning up the vendor provided driver in
+> staging/rtl8723au over a year ago. After spending 6 months on it, it
+> became obvious to me that it was a rather hopeless task, and I started
+> writing this driver from scratch. I do not have any specs for the
+> chip, so everything is based on knowledge I obtained from dissecting
+> the vendor driver.
 >
-> Patch is against 4.0-rc3 (localversion-next is -next-20150311)
+> Special thanks to Larry Finger for help with the original rtl8723au
+> driver, and Johannes Berg for answering all my silly questions about
+> 802.11 innards and the mac80211 stack. Had I known then what I know
+> today about 802.11, I probably would never have so mad as to start
+> this project in the first place!
 >
->  drivers/net/wireless/ath/ath10k/mac.c |   32 ++++++++++++++++++--------------
->  1 file changed, 18 insertions(+), 14 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index e8cc19f..7b27d99 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -4463,11 +4463,25 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
->  	return ret;
->  }
->  
-> +static bool check_htt_state(struct ath10k *ar, bool skip)
-> +{
-> +	bool empty;
-> +
-> +	spin_lock_bh(&ar->htt.tx_lock);
-> +	empty = (ar->htt.num_pending_tx == 0);
-> +	spin_unlock_bh(&ar->htt.tx_lock);
-> +
-> +	skip = (ar->state == ATH10K_STATE_WEDGED) ||
-> +		test_bit(ATH10K_FLAG_CRASH_FLUSH,
-> +			 &ar->dev_flags);
-> +	return (empty || skip);
-> +}
+> Cheers,
+> Jes
 
+Jes,
 
-There is no value in the "skip" input argument here.  It could just as
-well be a local variable.
+Congratulations. You did something that I have wanted to do for some time, but I 
+have never found the time. I hope a roadmap will help.
 
+I do have some suggestions:
 
->  static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->  			 u32 queues, bool drop)
->  {
->  	struct ath10k *ar = hw->priv;
-> -	bool skip;
-> +	bool skip = false;
->  	int ret;
->  
->  	/* mac80211 doesn't care if we really xmit queued frames or not
-> @@ -4480,19 +4494,9 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->  	if (ar->state == ATH10K_STATE_WEDGED)
->  		goto skip;
->  
-> -	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
-> -			bool empty;
-> -
-> -			spin_lock_bh(&ar->htt.tx_lock);
-> -			empty = (ar->htt.num_pending_tx == 0);
-> -			spin_unlock_bh(&ar->htt.tx_lock);
-> -
-> -			skip = (ar->state == ATH10K_STATE_WEDGED) ||
-> -			       test_bit(ATH10K_FLAG_CRASH_FLUSH,
-> -					&ar->dev_flags);
-> -
-> -			(empty || skip);
-> -		}), ATH10K_FLUSH_TIMEOUT_HZ);
-> +	ret = wait_event_timeout(ar->htt.empty_tx_wq,
-> +				 check_htt_state(ar, skip),
-> +				 ATH10K_FLUSH_TIMEOUT_HZ);
->  
->  	if (ret <= 0 || skip)
->  		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %i\n",
+The name of your driver should be rtl8723au, rather than rtl8xxxu. When 
+introducing any Realtek drivers into staging, I was careful to use only r8xxxyy 
+so that the full rtl name would not conflict. This naming scheme also allows the 
+possibility of adding more drivers such as RTL8723BU, RTL8188EU, RTL8192DU, etc. 
+I also think that this code should be placed in a separate sub directory under 
+drivers/net/wireless. If you want a separate directory, the name rtl8xxxu would 
+be appropriate. I think it would also work to put these drivers in rtlwifi. Any 
+of these other drivers should be able to share routines with this one, probably 
+in the form of mini drivers such as rtlwifi for the PCI devices.
 
+I will do a review of the code, and I will have some suggestions there.
 
-Which is why this won't work.  The check_htt_state() function won't
-update the "skip" variable, so it is always false here. The test now
-fails to detect any of the two "skip conditions".  Not really a big
-problem of course, as it only masks a warning.  But still: Your attempt
-to clean up has changed the behaviour in an unintentional way.
+Thanks,
 
-I'd suggest to leave this alone as it is.  The existing code is really
-fine. And testing these odd corner cases is probably difficult, even for
-someone with the actual hardware.  I have no idea what will trigger the
-ATH10K_FLAG_CRASH_FLUSH flag for example..
+Larry
 
-It's better to look into some real bug, where you are able to verify a
-fix.
-
-
-
-Bjørn
