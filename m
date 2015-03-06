@@ -1,189 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58932 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932739AbbCPVXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 17:23:52 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 4/4] mac80211: notify the driver about deauth
-Date: Mon, 16 Mar 2015 23:23:37 +0200
-Message-Id: <1426541017-10516-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150316_222357_642798_E5865B5A)
-In-Reply-To: <1426541017-10516-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1426541017-10516-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-la0-f51.google.com ([209.85.215.51]:34873 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754087AbbCFISe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2015 03:18:34 -0500
+MIME-Version: 1.0
+In-Reply-To: <54F8E9A1.3040408@infradead.org>
+References: <20150305143417.0c301f17@canb.auug.org.au>
+	<54F8E9A1.3040408@infradead.org>
+Date: Fri, 6 Mar 2015 10:18:32 +0200
+Message-ID: <CANUX_P1_Zb1TEBtOkKbyFjJLGO6fJcE3Z7dSCRo9Q9NHMvn2Fw@mail.gmail.com> (sfid-20150306_091910_448837_70FE03F6)
+Subject: Re: linux-next: Tree for Mar 5 (iwlwifi/mvm)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can allow the driver to take action based on the reason
-of the deauth.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- include/net/mac80211.h |  4 ++++
- net/mac80211/mlme.c    | 60 +++++++++++++++++++++++++++++++++++---------------
- 2 files changed, 46 insertions(+), 18 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index dcddc4a..94c8c62 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -332,10 +332,14 @@ struct ieee80211_rssi_event {
-  * enum ieee80211_mlme_event_data - relevant when event type is %MLME_EVENT
-  * @AUTH_EVENT: the MLME operation is authentication
-  * @ASSOC_EVENT: the MLME operation is association
-+ * @DEAUTH_RX_EVENT: deauth received..
-+ * @DEAUTH_TX_EVENT: deauth sent.
-  */
- enum ieee80211_mlme_event_data {
- 	AUTH_EVENT,
- 	ASSOC_EVENT,
-+	DEAUTH_RX_EVENT,
-+	DEAUTH_TX_EVENT,
- };
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b6817c4..22b1259 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2345,6 +2345,24 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_ap_probereq_get);
- 
-+static void ieee80211_report_disconnect(struct ieee80211_sub_if_data *sdata,
-+					const u8 *buf, size_t len, bool tx,
-+					u16 reason)
-+{
-+	struct ieee80211_event event = {
-+		.type = MLME_EVENT,
-+		.u.mlme.data = tx ? DEAUTH_TX_EVENT : DEAUTH_RX_EVENT,
-+		.u.mlme.reason = reason,
-+	};
-+
-+	if (tx)
-+		cfg80211_tx_mlme_mgmt(sdata->dev, buf, len);
-+	else
-+		cfg80211_rx_mlme_mgmt(sdata->dev, buf, len);
-+
-+	drv_event_callback(sdata->local, sdata, &event);
-+}
-+
- static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
-@@ -2370,8 +2388,9 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 	}
- 	mutex_unlock(&local->mtx);
- 
--	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
--			      IEEE80211_DEAUTH_FRAME_LEN);
-+	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
-+				    WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
-+
- 	sdata_unlock(sdata);
- }
- 
-@@ -2676,7 +2695,7 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
- 
--	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
-+	ieee80211_report_disconnect(sdata, (u8 *)mgmt, len, false, reason_code);
- }
- 
- 
-@@ -2702,7 +2721,7 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
- 
--	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
-+	ieee80211_report_disconnect(sdata, (u8 *)mgmt, len, false, reason_code);
- }
- 
- static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
-@@ -3509,8 +3528,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       WLAN_REASON_DEAUTH_LEAVING,
- 				       true, deauth_buf);
--		cfg80211_tx_mlme_mgmt(sdata->dev, deauth_buf,
--				      sizeof(deauth_buf));
-+		ieee80211_report_disconnect(sdata, deauth_buf,
-+					    sizeof(deauth_buf), true,
-+					    WLAN_REASON_DEAUTH_LEAVING);
- 		return;
- 	}
- 
-@@ -3628,8 +3648,8 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
- 			       tx, frame_buf);
- 
--	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
--			      IEEE80211_DEAUTH_FRAME_LEN);
-+	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
-+				    reason);
- }
- 
- static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
-@@ -4507,8 +4527,9 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 				       WLAN_REASON_UNSPECIFIED,
- 				       false, frame_buf);
- 
--		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
--				      sizeof(frame_buf));
-+		ieee80211_report_disconnect(sdata, frame_buf,
-+					    sizeof(frame_buf), true,
-+					    WLAN_REASON_UNSPECIFIED);
- 	}
- 
- 	sdata_info(sdata, "authenticate with %pM\n", req->bss->bssid);
-@@ -4608,8 +4629,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 				       WLAN_REASON_UNSPECIFIED,
- 				       false, frame_buf);
- 
--		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
--				      sizeof(frame_buf));
-+		ieee80211_report_disconnect(sdata, frame_buf,
-+					    sizeof(frame_buf), true,
-+					    WLAN_REASON_UNSPECIFIED);
- 	}
- 
- 	if (ifmgd->auth_data && !ifmgd->auth_data->done) {
-@@ -4899,8 +4921,9 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 					       req->reason_code, tx,
- 					       frame_buf);
- 		ieee80211_destroy_auth_data(sdata, false);
--		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
--				      IEEE80211_DEAUTH_FRAME_LEN);
-+		ieee80211_report_disconnect(sdata, frame_buf,
-+					    sizeof(frame_buf), true,
-+					    req->reason_code);
- 
- 		return 0;
- 	}
-@@ -4914,8 +4937,9 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 
- 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 				       req->reason_code, tx, frame_buf);
--		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
--				      IEEE80211_DEAUTH_FRAME_LEN);
-+		ieee80211_report_disconnect(sdata, frame_buf,
-+					    sizeof(frame_buf), true,
-+					    req->reason_code);
- 		return 0;
- 	}
- 
-@@ -4947,8 +4971,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- 			       req->reason_code, !req->local_state_change,
- 			       frame_buf);
- 
--	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
--			      IEEE80211_DEAUTH_FRAME_LEN);
-+	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
-+				    req->reason_code);
- 
- 	return 0;
- }
--- 
-1.9.1
-
+On Fri, Mar 6, 2015 at 1:41 AM, Randy Dunlap <rdunlap@infradead.org> wrote:
+> On 03/04/15 19:34, Stephen Rothwell wrote:
+>> Hi all,
+>>
+>> Changes since 20150304:
+>>
+>
+> on i386, when IWLWIFI_DEBUGFS is not enabled:
+>
+>
+> ../drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c:179:38: error: 'struct iwl_mvm' has no member named 'dbgfs_rx_phyinfo'
+> ../drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c:1378:30: error: 'struct iwl_mvm_vif' has no member named 'mvm'
+>
+>
+Yes - I am sorry about that. I'll fix it on Sunday.
