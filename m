@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f172.google.com ([74.125.82.172]:45856 "EHLO
-	mail-we0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172AbbCMIBK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 04:01:10 -0400
-Received: by wesu56 with SMTP id u56so21446148wes.12
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2015 01:01:09 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:53030 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751633AbbCGFXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Mar 2015 00:23:54 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/1] New driver: rtl8723au (mac80211)
+References: <1425680126-25928-1-git-send-email-Jes.Sorensen@redhat.com>
+	<54FA3D9E.40107@lwfinger.net>
+Date: Sat, 07 Mar 2015 00:23:49 -0500
+In-Reply-To: <54FA3D9E.40107@lwfinger.net> (Larry Finger's message of "Fri, 06
+	Mar 2015 17:51:58 -0600")
+Message-ID: <wrfj385hwfbu.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150307_062357_833863_4D4CA18C)
 MIME-Version: 1.0
-In-Reply-To: <1426162154-8716-6-git-send-email-eliad@wizery.com>
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
-	<1426162154-8716-6-git-send-email-eliad@wizery.com>
-Date: Fri, 13 Mar 2015 09:01:08 +0100
-Message-ID: <CABxcv=mETO9ESVa04YjRO1d-h5ksEwvwGKb1G-jxVk6ttr9JYg@mail.gmail.com> (sfid-20150313_090130_471783_DE3B8A1F)
-Subject: Re: [PATCH v6 5/6] ARM: dts: add wl12xx/wl18xx bindings
-From: Javier Martinez Canillas <javier@dowhile0.org>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	=?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>, paupa13@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Eliad,
-
-On Thu, Mar 12, 2015 at 1:09 PM, Eliad Peller <eliad@wizery.com> wrote:
-> Replace all the pdata-quirks for setting wl12xx/wl18xx
-> platform data with proper DT definitions.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+> On 03/06/2015 04:15 PM, Jes.Sorensen@redhat.com wrote:
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> This is a new driver for the rtl8723au which was written from scratch,
+>> to utilize the Linux mac80211 stack.
+>>
+>> This has been a pet project for me for some time I finally feel it
+>> is stable enough to submit. I have used it for a while without any
+>> serious issues.
+>>
+>> I started working on cleaning up the vendor provided driver in
+>> staging/rtl8723au over a year ago. After spending 6 months on it, it
+>> became obvious to me that it was a rather hopeless task, and I started
+>> writing this driver from scratch. I do not have any specs for the
+>> chip, so everything is based on knowledge I obtained from dissecting
+>> the vendor driver.
+>>
+>> Special thanks to Larry Finger for help with the original rtl8723au
+>> driver, and Johannes Berg for answering all my silly questions about
+>> 802.11 innards and the mac80211 stack. Had I known then what I know
+>> today about 802.11, I probably would never have so mad as to start
+>> this project in the first place!
+>>
+>> Cheers,
+>> Jes
 >
-> The patch was compile-tested only.
+> Jes,
 >
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> Congratulations. You did something that I have wanted to do for some
+> time, but I have never found the time. I hope a roadmap will help.
+>
+> I do have some suggestions:
+>
+> The name of your driver should be rtl8723au, rather than
+> rtl8xxxu. When introducing any Realtek drivers into staging, I was
+> careful to use only r8xxxyy so that the full rtl name would not
+> conflict. This naming scheme also allows the possibility of adding
+> more drivers such as RTL8723BU, RTL8188EU, RTL8192DU, etc. I also
+> think that this code should be placed in a separate sub directory
+> under drivers/net/wireless. If you want a separate directory, the name
+> rtl8xxxu would be appropriate. I think it would also work to put these
+> drivers in rtlwifi. Any of these other drivers should be able to share
+> routines with this one, probably in the form of mini drivers such as
+> rtlwifi for the PCI devices.
+>
+> I will do a review of the code, and I will have some suggestions there.
+>
+> Thanks,
+>
+> Larry
 
-I wanted to test your series but I realized that the IGEPv2 I've
-access is the old revision that has another SDIO wlan module instead
-of a Wilink8.
+Hi Larry,
 
-Maybe Enric have the new revision? I also added to Pau Pajuel as cc
-who still works in the company manufacturing these boards so he should
-be able to test it.
+Actually the name 8xxxu was deliberate, it is not meant to be 8723au
+only long term. I'd like to add support for some of the other recent USB
+chips down the line. The difference between the 8xxxU devices is
+relatively minor, so I don't think introducing full mini-drivers like in
+rtlwifi is really ideal here. If the code grows substantially, we can
+move it into a sub directory, but for now I think it's fine to keep it
+as is.
 
-But in any case, your patch looks good to me so for the
-arch/arm/boot/dts/omap3-igep00* changes:
+This one is still a work in progress project, but I have been using it
+as my primary driver for several months without issues. Plenty of work
+to do, but it's getting there :)
 
-Acked-by: Javier Martinez Canillas <javier@dowhile0.org>
-
-Best regards,
-Javier
+Cheers,
+Jes
