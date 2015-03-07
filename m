@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29657 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933767AbbCDGvc (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:46985 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756841AbbCGHqN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 01:51:32 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 1/2] ath10k: fix rts profile for second rate series
-Date: Wed, 4 Mar 2015 12:20:46 +0530
-Message-ID: <1425451847-14505-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150304_075205_210953_50920E21)
+	Sat, 7 Mar 2015 02:46:13 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: fix AP/IBSS CSA with template based fw
+References: <1423749198-11346-1-git-send-email-michal.kazior@tieto.com>
+	<1424090094-28164-1-git-send-email-michal.kazior@tieto.com>
+Date: Sat, 7 Mar 2015 09:46:03 +0200
+In-Reply-To: <1424090094-28164-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 16 Feb 2015 13:34:54 +0100")
+Message-ID: <87mw3p1c90.fsf@kamboji.qca.qualcomm.com> (sfid-20150307_084617_962415_790058BB)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By default rts protection is enabled in firmware for the second
-rateset. Currently ath10k selects RTS profile (only for software
-retries), when legacy stations are associated or asked by mac80211.
-On congested environment, when AP is running in HT/VHT mode and
-there are no legacy clients associated, this will impact the
-robustness. Also enabling RTS protection only for second rateset will
-not impact performance on clear environment. Fix that.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> qca6174 with wmi-tlv firmware uses offloaded
+> beaconing scheme (i.e. templates). This requires a
+> little different approach when implementing CSA.
+>
+> Add missing code to update CS count and report CSA
+> completion to mac80211. Without it channel switch
+> was never finished.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 84a243e..37141b3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -798,12 +798,14 @@ static int ath10k_recalc_rtscts_prot(struct ath10k_vif *arvif)
- 
- 	vdev_param = ar->wmi.vdev_param->enable_rtscts;
- 
--	if (arvif->use_cts_prot || arvif->num_legacy_stations > 0)
--		rts_cts |= SM(WMI_RTSCTS_ENABLED, WMI_RTSCTS_SET);
-+	rts_cts |= SM(WMI_RTSCTS_ENABLED, WMI_RTSCTS_SET);
- 
- 	if (arvif->num_legacy_stations > 0)
- 		rts_cts |= SM(WMI_RTSCTS_ACROSS_SW_RETRIES,
- 			      WMI_RTSCTS_PROFILE);
-+	else
-+		rts_cts |= SM(WMI_RTSCTS_FOR_SECOND_RATESERIES,
-+			      WMI_RTSCTS_PROFILE);
- 
- 	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 					 rts_cts);
+Thanks, applied.
+
 -- 
-2.3.1
-
+Kalle Valo
