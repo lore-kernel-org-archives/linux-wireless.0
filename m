@@ -1,83 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f171.google.com ([209.85.223.171]:33516 "EHLO
-	mail-ie0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752642AbbCDWXd convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:38534 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424AbbCGVaj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 17:23:33 -0500
+	Sat, 7 Mar 2015 16:30:39 -0500
+Received: by obcuz6 with SMTP id uz6so637045obc.5
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Mar 2015 13:30:39 -0800 (PST)
+Message-ID: <54FB6DFC.3040509@lwfinger.net> (sfid-20150307_223045_227059_D18081CE)
+Date: Sat, 07 Mar 2015 15:30:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
-References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
-Date: Wed, 4 Mar 2015 23:23:32 +0100
-Message-ID: <CACna6rw03OfforxrV5nWLYTUW64BQ-vvH9TuZqK2q9__2Y0edA@mail.gmail.com> (sfid-20150304_232350_199915_64F5DDA8)
-Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chen Gang <xili_gchen_5257@hotmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>, Jim Davis <jim.epost@gmail.com>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Content-Type: text/plain; charset=UTF-8
+To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
+References: <1425680126-25928-1-git-send-email-Jes.Sorensen@redhat.com> <1425680126-25928-2-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <1425680126-25928-2-git-send-email-Jes.Sorensen@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 March 2015 at 22:16, Chen Gang <xili_gchen_5257@hotmail.com> wrote:
-> bcma also needs PCI, just like IOMEM and DMA, so let it depend on PCI,
-> or will cause building break for allmodconfig under c6x:
+On 03/06/2015 04:15 PM, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
 >
->     CC [M]  drivers/bcma/driver_pcie2.o
->   drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
->   drivers/bcma/driver_pcie2.c:196:8: error: implicit declaration of function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
->     err = pcie_set_readrq(dev, pcie2->reqsize);
->           ^
+> This is an alternate driver for the Realtek 8723AU (rtl8723au) written
+> from scratch utilizing the mac80211 stack.
 >
-> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
-> ---
->  drivers/bcma/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> After spending months cleaning up the vendor provided rtl8723au
+> driver, which comes with it's own 802.11 stack included, I decided to
+> rewrite this driver from the bottom up.
 >
-> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-> index 0ee48be..8be284e 100644
-> --- a/drivers/bcma/Kconfig
-> +++ b/drivers/bcma/Kconfig
-> @@ -1,6 +1,6 @@
->  config BCMA_POSSIBLE
->         bool
-> -       depends on HAS_IOMEM && HAS_DMA
-> +       depends on HAS_IOMEM && HAS_DMA && PCI
->         default y
+> Many thanks to Johannes Berg for 802.11 insights and help and Larry
+> Finger for help with the vendor driver.
 >
->  menu "Broadcom specific AMBA"
-> --
-> 1.9.3
+> The full git log for the development of this driver can be found here:
+> git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
+>      branch rtl8723au-mac80211
+>
+> This driver is still experimental, but has proven to be rather stable
+> for me. It lacks some features found in the staging driver, such as
+> power management, AMPDU, and 40MHz channel support. In addition there
+> is no AP and monitor support at this point.
+>
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Kalle, I guess the recent discussion and work on this problem could be
-confusing, so let me try to sum it up it a bit.
+Quilt reports the following when this patch is refreshed:
 
-First of all, please note there are 3 awaiting bcma patches that
-should be applied independently of what we decide to do with this
-patch. They are of course inspired by the recent building problems.
-List of these patches:
-[PATCH next] bcma: make bcma_host_pci_(up|down) calls safe for every config
-[PATCH next] bcma: move internal function declarations to private header
-[PATCH next] bcma: prepare Kconfig symbol for PCI driver
+Warning: trailing whitespace in lines 2862,3273,3492,3521 of 
+drivers/net/wireless/rtl8xxxu.c
 
-Now, the building problem is obviously caused by me, my work on
-driver_pcie2.c and using pcie_set_readrq there without making sure
-that is PCI available. I'm sorry for that.
+I have not analyzed all the temporary manipulations of rtl8xxxu_debug to see 
+what you are doing; however, I suggest that you add a module parameter so that 
+debugging can be enabled without rebuilding the module. That way a user who is 
+using a distro binary can enable debugging without the hassle of a full kernel 
+rebuild.
 
-All 3 above patches are moving us toward the the most optimal solution
-of this problem. Depending on PCI only when it's really required.
-There is still one more change missing that I'm working on. It'll take
-me about 2 more days to get the last patch.
-On the other way, patch proposed by Chen fixes building problem right
-now. It's much simpler but bumps bcma requirements a bit too high.
-bcma doesn't really have to depend on PCI.
+Because this driver is under drivers/net, checkpatch.pl adds additional tests 
+that may not be used in other trees. For instance, it complains when it finds a 
+block comment that starts with a bare "/*". What is usually done is to use "/**" 
+instead.
 
-So you have 2 options there and I'll be happy with whatever you choose to do:
-1) Pick Chen patch now and in ~2 days apply my final fix + revert Chen patch.
-2) Wait 2 days for the final fix from me.
+I think I understand why some of the "#if 0" blocks are present, but others are 
+not clear. For example, I see no value of keeping code that is labelled "only 
+for PCIe". Is it your intention to add the RTL8723AE to this driver?
 
--- 
-Rafał
+Running checkpatch.pl on this patch results in total of 24 errors, 99 warnings, 
+and 105 checks. From your mail exchange with Joe Perches, I understand that you 
+will not wish to fix all of these; however, the errors should be handled. The 
+fewer of the warnings or checks that are left, the better, if only to prevent 
+interference from the script kiddies.
+
+I like the clean look of the code. That is particularly impressive given the 
+look of the original. I wish I had the hardware on which to test it. Perhaps I 
+can wedge it into a kernel version that builds and runs on my Radxa Rock,
+
+Larry
+
