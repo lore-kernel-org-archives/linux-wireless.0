@@ -1,101 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33081 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752634AbbC2Nmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2015 09:42:50 -0400
-Date: Sun, 29 Mar 2015 15:41:44 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	"Daniel (Deognyoun) Kim" <dekim@broadcom.com>,
-	=?us-ascii?B?PT9VVEYtOD9xP1JhZmE9QzU9ODI9MjBNaT1DNT04MmVja2k/PQ==?=
-	<zajec5@gmail.com>, Julia Lawall <Julia.Lawall@lip6.fr>,
-	Brian Norris <computersforpeace@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Subject: [PATCH 57/86] brcm80211: use uapi/linux/pci_ids.h directly
-Message-ID: <1427635734-24786-58-git-send-email-mst@redhat.com> (sfid-20150329_154812_409724_514454D7)
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+Received: from mail-we0-f173.google.com ([74.125.82.173]:35226 "EHLO
+	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751187AbbCGSqN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Mar 2015 13:46:13 -0500
+From: =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
+	<giedrius.statkevicius@gmail.com>
+To: sgruszka@redhat.com
+Cc: helmut.schaa@googlemail.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
+	<giedrius.statkevicius@gmail.com>
+Subject: [PATCH] rt2x00: use rt2x00queue_flush_queues() instead of implementing the same action
+Date: Sat,  7 Mar 2015 20:45:50 +0200
+Message-Id: <1425753950-15624-1-git-send-email-giedrius.statkevicius@gmail.com> (sfid-20150307_194637_009357_84509D68)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427635734-24786-1-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Header moved from linux/pci_ids.h to uapi/linux/pci_ids.h,
-use the new header directly so we can drop
-the wrapper in include/linux/pci_ids.h.
+Use rt2x00queue_flush_queues() in rt2x00mac_flush() instead of
+reimplementing the same actions the second time. Also, now it flushes
+the rx queue aswell which it didn't before and that makes it completely
+do what it's supposed to do according to struct iee80211_ops: flush()
+must flush all queues.
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
 ---
- drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c     | 2 +-
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c       | 2 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c       | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00mac.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 2124a17..bd1370e 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -17,7 +17,7 @@
- #ifndef	_BRCM_HW_IDS_H_
- #define	_BRCM_HW_IDS_H_
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index 300876d..5bc48c3 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -756,13 +756,11 @@ void rt2x00mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		     u32 queues, bool drop)
+ {
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+-	struct data_queue *queue;
  
--#include <linux/pci_ids.h>
-+#include <uapi/linux/pci_ids.h>
- #include <linux/mmc/sdio_ids.h>
+ 	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+ 		return;
  
- #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 7944224..227cb33 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -18,7 +18,7 @@
- #include <linux/types.h>
- #include <linux/netdevice.h>
- #include <linux/pci.h>
--#include <linux/pci_ids.h>
-+#include <uapi/linux/pci_ids.h>
- #include <linux/sched.h>
- #include <linux/completion.h>
- #include <linux/scatterlist.h>
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index faec35c..5c4755d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -18,7 +18,7 @@
- #include <linux/kernel.h>
- #include <linux/kthread.h>
- #include <linux/printk.h>
--#include <linux/pci_ids.h>
-+#include <uapi/linux/pci_ids.h>
- #include <linux/netdevice.h>
- #include <linux/interrupt.h>
- #include <linux/sched.h>
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index eb8584a..de0ef7bb 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -17,7 +17,7 @@
+-	tx_queue_for_each(rt2x00dev, queue)
+-		rt2x00queue_flush_queue(queue, drop);
++	rt2x00queue_flush_queues(rt2x00dev, drop);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00mac_flush);
  
- #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
- 
--#include <linux/pci_ids.h>
-+#include <uapi/linux/pci_ids.h>
- #include <linux/if_ether.h>
- #include <net/cfg80211.h>
- #include <net/mac80211.h>
 -- 
-MST
+2.3.1
 
