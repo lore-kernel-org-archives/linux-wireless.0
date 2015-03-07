@@ -1,38 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37450 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935230AbbCPP6N (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26795 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755698AbbCGHwB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 11:58:13 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 7 Mar 2015 02:52:01 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: fix broken traffic for 802.1x in client mode
+References: <1424264547-2932-1-git-send-email-michal.kazior@tieto.com>
+Date: Sat, 7 Mar 2015 09:51:52 +0200
+In-Reply-To: <1424264547-2932-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 18 Feb 2015 14:02:26 +0100")
+Message-ID: <87egp11bzb.fsf@kamboji.qca.qualcomm.com> (sfid-20150307_085205_479927_CF05F089)
 MIME-Version: 1.0
-Subject: Re: [2/6] rtlwifi: Clean rtl_evm_db_to_percentage a bit
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1426104209-6913-3-git-send-email-plaes@plaes.org>
-To: Priit Laes <plaes@plaes.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Priit Laes <plaes@plaes.org>
-Message-Id: <20150316155812.CFB66141BB1@smtp.codeaurora.org> (sfid-20150316_165823_069159_D1F3E463)
-Date: Mon, 16 Mar 2015 15:58:12 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Signed-off-by: Priit Laes <plaes@plaes.org>
+> When running 802.1x WEP keys must be installed
+> without pairwise-groupwise swap (which is
+> necessary for static WEP).
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+Thanks, both patches applied.
 
-54fb66d6fe98 rtlwifi: Clean rtl_evm_db_to_percentage a bit
-52f119ddea41 rtlwifi: No need to export rtl_evm_dbm_jaguar anymore
-
-3 patches skipped because of conflicts:
-
-[3/6] rtlwifi: Use common rtl_evm_db_to_percentage
-[5/6] rtlwifi: Use common rtl_signal_scale_mapping
-[6/6] rtlwifi: Rename rtl_translate_todbm to rtl_signalpower_todbm
-
-And patch 1 dropped due to comments.
-
+-- 
 Kalle Valo
