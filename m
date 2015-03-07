@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:52815 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753715AbbCFRkt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 12:40:49 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/5] brcmfmac: new device and some fixes
-Date: Fri, 6 Mar 2015 18:40:37 +0100
-Message-ID: <1425663642-19725-1-git-send-email-arend@broadcom.com> (sfid-20150306_184053_442732_0BE5DEA0)
+Received: from mx1.redhat.com ([209.132.183.28]:58765 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750744AbbCGFdu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Mar 2015 00:33:50 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
+References: <1425680126-25928-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1425680126-25928-2-git-send-email-Jes.Sorensen@redhat.com>
+	<1425682797.12017.58.camel@perches.com>
+	<wrfj7futwfl5.fsf@ultrasam.lan.trained-monkey.org>
+	<1425705814.12017.68.camel@perches.com>
+Date: Sat, 07 Mar 2015 00:33:41 -0500
+In-Reply-To: <1425705814.12017.68.camel@perches.com> (Joe Perches's message of
+	"Fri, 06 Mar 2015 21:23:34 -0800")
+Message-ID: <wrfjioedv0ay.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150307_063353_976162_0895A3AE)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds new BCM4345 SDIO device support to brcmfmac and
-address a number of potential issues either found by testing or code
-inspection.
+Joe Perches <joe@perches.com> writes:
+> On Sat, 2015-03-07 at 00:18 -0500, Jes Sorensen wrote:
+>> The long strings are an outright nack.
+>
+> Pity.  There's a specific exclusion in CodingStyle.
+>
+> 	Chapter 2: Breaking long lines and strings
+>
+> never break user-visible strings such as
+> printk messages, because that breaks the ability to grep for them.
 
-The series is intended for the v4.1 kernel and applies to the master
-branch of the wireless-drivers-next repository.
+I know some people like this, and I disagree with this rule! I wrote
+this driver, and I am the one maintaining it.
 
-Hante Meuleman (4):
-  brcmfmac: Fix oops when SDIO device is removed.
-  brcmfmac: Simplify watchdog sleep.
-  brcmfmac: Fix possible race-condition.
-  brcmfmac: Fix race condition in msgbuf ioctl processing.
+I love receiving fixes for bugs, but this is not a bug!
 
-Syed Asifful Dayyan (1):
-  brcmfmac: Add support for BCM4345 SDIO chipset.
+If you wrote a piece of code, I wouldn't question how you prefer to
+maintain it.
 
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |   3 +-
- drivers/net/wireless/brcm80211/brcmfmac/chip.c     |   4 +
- drivers/net/wireless/brcm80211/brcmfmac/msgbuf.c   |   5 +-
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c     | 101 +++++++++++----------
- .../net/wireless/brcm80211/include/brcm_hw_ids.h   |   1 +
- include/linux/mmc/sdio_ids.h                       |   1 +
- 6 files changed, 62 insertions(+), 53 deletions(-)
-
---
-1.9.1
-
+Jes
