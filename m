@@ -1,79 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54115 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754648AbbCBRkr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 12:40:47 -0500
-From: Florian Westphal <fw@strlen.de>
-To: <netdev@vger.kernel.org>
-Cc: Florian Westphal <fw@strlen.de>, linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 08/14] net: wireless: mac80211: shrink ieee80211_tx_info
-Date: Mon,  2 Mar 2015 18:40:22 +0100
-Message-Id: <1425318028-26531-9-git-send-email-fw@strlen.de> (sfid-20150302_184059_463522_70F2B3E8)
-In-Reply-To: <1425318028-26531-1-git-send-email-fw@strlen.de>
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+Received: from mga02.intel.com ([134.134.136.20]:22511 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750722AbbCGRr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Mar 2015 12:47:59 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi-next 2015-03-07
+Date: Sat, 7 Mar 2015 17:47:55 +0000
+Message-ID: <1425750475.20750.1.camel@egrumbacBox> (sfid-20150307_184805_329641_352138D7)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-to make it fit into (future) 44-byte sized skb->cb[].
-
-This works, since flags is only used to store values
-from mac80211_tx_control_flags enum, and these are just 2 bits.
-We can thus move this to the padding hole inside the union.
-
-Also add BUILD_BUG_ON magic to make sure that the new flags
-field doesn't share storage w. other members of the union.
-
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Florian Westphal <fw@strlen.de>
----
- include/net/mac80211.h | 11 ++++++++---
- net/mac80211/main.c    |  3 +++
- 2 files changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 63c3708..36c2599 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -737,16 +737,21 @@ struct ieee80211_tx_info {
- 					u8 use_cts_prot:1;
- 					u8 short_preamble:1;
- 					u8 skip_table:1;
--					/* 2 bytes free */
-+					enum mac80211_tx_control_flags flags:2;
-+					/* used for BUILD_BUG_ON validation that ->flags won't
-+					 * overlap with jiffies below */
-+					char flags_end[0];
- 				};
- 				/* only needed before rate control */
- 				unsigned long jiffies;
-+
-+				/* used for BUILD_BUG_ON validation that ->flags won't
-+				 * overlap with other members of this union. */
-+				char union_end[0];
- 			};
- 			/* NB: vif can be NULL for injected frames */
- 			struct ieee80211_vif *vif;
- 			struct ieee80211_key_conf *hw_key;
--			u32 flags;
--			/* 4 bytes free */
- 		} control;
- 		struct {
- 			struct ieee80211_tx_rate rates[IEEE80211_TX_MAX_RATES];
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 5e09d35..9e8c807 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -1218,6 +1218,9 @@ static int __init ieee80211_init(void)
- 	BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, driver_data) +
- 		     IEEE80211_TX_INFO_DRIVER_DATA_SIZE > sizeof(skb->cb));
- 
-+	BUILD_BUG_ON(offsetof(struct ieee80211_tx_info, control.flags_end) <
-+		     offsetof(struct ieee80211_tx_info, control.union_end));
-+
- 	ret = rc80211_minstrel_init();
- 	if (ret)
- 		return ret;
--- 
-2.0.5
-
+SGkgS2FsbGUsDQoNClRoaXMgaXMgdGhlIGZpeCBmb3IgdGhlIHVuZm9ydHVuYXRlIGNvbXBpbGF0
+aW9uIHByb2JsZW0gSSBjYXVzZWQgaW4NCml3bHdpZmktbmV4dC4NCg0KUGxlYXNlIHB1bGwuDQoN
+ClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQNCjE5MGYxMDI5NzU3MzQ2YjcyZjI5
+NzcyOWNmOGU1YzU2MmYyZTlkOGM6DQoNCiAgaXdsd2lmaTogbXZtOiBkb24ndCBvdmVycmlkZSBw
+YXNzaXZlIGR3ZWxsIGluIGNhc2Ugb2YgZnJhZ21lbnRlZCBzY2FuDQooMjAxNS0wMy0wMiAwODoy
+MDozMiArMDIwMCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6DQoN
+Cg0KaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvaXdsd2lm
+aS9pd2x3aWZpLW5leHQuZ2l0DQp0YWdzL2l3bHdpZmktbmV4dC1mb3Ita2FsbGUtMjAxNS0wMy0w
+Nw0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5nZXMgdXAgdG8gYWE1ZTE4MzIwNzg4NzI4NDc2ZTg0
+ZTIxNDBhYTczNmJjNTUyNWM4NzoNCg0KICBpd2x3aWZpOiBtdm06IGZpeCBjb21waWxhdGlvbiB3
+aXRoIElXTFdJRklfREVCVUdGUyBub3Qgc2V0ICgyMDE1LTAzLTA3DQoxOTo0MDowMiArMDIwMCkN
+Cg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLQ0KZml4IGNvbXBpbGF0aW9uIHdoZW4gREVCVUdGUyBpc24ndCBzZXQNCg0KLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLQ0KRW1tYW51ZWwgR3J1bWJhY2ggKDEpOg0KICAgICAgaXdsd2lmaTogbXZtOiBmaXggY29t
+cGlsYXRpb24gd2l0aCBJV0xXSUZJX0RFQlVHRlMgbm90IHNldA0KDQogZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvaXdsd2lmaS9tdm0vZGVidWdmcy12aWYuYyB8IDEgLQ0KIGRyaXZlcnMvbmV0L3dpcmVs
+ZXNzL2l3bHdpZmkvbXZtL21hYzgwMjExLmMgICAgfCAyICsrDQogZHJpdmVycy9uZXQvd2lyZWxl
+c3MvaXdsd2lmaS9tdm0vbXZtLmggICAgICAgICB8IDIgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVz
+cy9pd2x3aWZpL212bS9waHktY3R4dC5jICAgIHwgMiArKw0KIDQgZmlsZXMgY2hhbmdlZCwgNSBp
+bnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KDQo=
