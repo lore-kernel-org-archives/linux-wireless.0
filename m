@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:60887 "EHLO aibo.runbox.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59123 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752577AbbC2BIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 21:08:21 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, gregkh@linuxfoundation.org,
-	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v5 04/15] staging: rtl8723au: Fix the indentation of two lines
-Date: Sat, 28 Mar 2015 21:07:47 -0400
-Message-Id: <1427591278-982-5-git-send-email-m.v.b@runbox.com> (sfid-20150329_031159_084069_30EE19E6)
-In-Reply-To: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
-References: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
+	id S1752673AbbCGFhc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Mar 2015 00:37:32 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/1] New driver: rtl8723au (mac80211)
+References: <1425680126-25928-1-git-send-email-Jes.Sorensen@redhat.com>
+	<54FA3D9E.40107@lwfinger.net>
+	<wrfj385hwfbu.fsf@ultrasam.lan.trained-monkey.org>
+	<1425706383.16721.2.camel@perches.com>
+Date: Sat, 07 Mar 2015 00:37:22 -0500
+In-Reply-To: <1425706383.16721.2.camel@perches.com> (Joe Perches's message of
+	"Fri, 06 Mar 2015 21:33:03 -0800")
+Message-ID: <wrfja8zpv04t.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150307_063735_545398_815631F6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct the indentation of two lines in rtw_tkip_encrypt23a function in
-rtl8723au's rtw_security.c.
+Joe Perches <joe@perches.com> writes:
+> On Sat, 2015-03-07 at 00:23 -0500, Jes Sorensen wrote:
+>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>> > I also
+>> > think that this code should be placed in a separate sub directory
+>> > under drivers/net/wireless. 
+> []
+>> If the code grows substantially, we can
+>> move it into a sub directory, but for now I think it's fine to keep it
+>> as is.
+>
+> Please use a separate directory instead.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+As long as the driver consists of 3 files, there is zero reason to move
+it into a separate directory.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 9faf78bf23d8..3e79b66d0897 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -688,8 +688,8 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 					arcfour_encrypt(&mycontext, payload, payload, length);
- 					arcfour_encrypt(&mycontext, payload + length, crc, 4);
- 
--				pframe += pxmitpriv->frag_len;
--				pframe  = PTR_ALIGN(pframe, 4);
-+					pframe += pxmitpriv->frag_len;
-+					pframe  = PTR_ALIGN(pframe, 4);
- 				}
- 			}
- 
--- 
-2.1.4
-
+Jes
