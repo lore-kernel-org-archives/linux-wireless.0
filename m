@@ -1,65 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45434 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752577AbbC3Ht0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 03:49:26 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: agg-tx: avoid sending DelBA with sta->lock held
-Date: Mon, 30 Mar 2015 09:49:22 +0200
-Message-Id: <1427701762-27090-1-git-send-email-johannes@sipsolutions.net> (sfid-20150330_094930_012557_1A56AE25)
+Received: from out03.mta.xmission.com ([166.70.13.233]:55939 "EHLO
+	out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753594AbbCGCkL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Mar 2015 21:40:11 -0500
+From: ebiederm@xmission.com (Eric W. Biederman)
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+References: <874mpy2gw5.fsf@kamboji.qca.qualcomm.com>
+	<87fv9h7cwl.fsf@x220.int.ebiederm.org>
+Date: Fri, 06 Mar 2015 20:36:34 -0600
+In-Reply-To: <87fv9h7cwl.fsf@x220.int.ebiederm.org> (Eric W. Biederman's
+	message of "Fri, 06 Mar 2015 20:35:22 -0600")
+Message-ID: <87bnk57cul.fsf_-_@x220.int.ebiederm.org> (sfid-20150307_034021_884086_17C2A473)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Subject: [PATCH 1/2] iwlwifi: mvm: Fix the build of mvm/mac-ctxt.c with debugfs disabled
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-The rate control locking caused a potential deadlock here due to the
-locks being acquired in different orders, so that change cannot yet
-be applied. However, there's no fundamental reason for this code to
-hold the sta->lock while transmitting frames.
+When attempting to build my kernel I get:
+  CC      drivers/net/wireless/iwlwifi/mvm/mac-ctxt.o
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c: In function ‘iwl_mvm_beacon_loss_iterator’:
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c:1378:30: error: ‘struct iwl_mvm_vif’ has no member named ‘mvm’
 
-Clearly it's better not to hold the lock for longer periods of time,
-which can happen here since we call all the way down to the driver.
-Change the code a bit to not hold it while doing that.
+Fix that by making the new code depend on IWLWIFI_DEBUGFS as the
+definition of mvm in struct iwl_mvm_if does.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fixes: 9d761fd8a58360e iwlwifi: mvm: add trigger for firmware dump upon missed beacons
+Signed-off-by: "Eric W. Biederman" <ebiederm@xmission.com>
 ---
- net/mac80211/agg-tx.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index a360c15cc978..668524aeb0b2 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -793,6 +793,7 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 	struct tid_ampdu_tx *tid_tx;
-+	bool send_delba = false;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+index 581b3b8f29f9..7ad736ff90ff 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c
+@@ -1375,18 +1375,21 @@ static void iwl_mvm_beacon_loss_iterator(void *_data, u8 *mac,
+ {
+ 	struct iwl_missed_beacons_notif *missed_beacons = _data;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++#ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	struct iwl_mvm *mvm = mvmvif->mvm;
+ 	struct iwl_fw_dbg_trigger_missed_bcon *bcon_trig;
+ 	struct iwl_fw_dbg_trigger_tlv *trigger;
+ 	u32 stop_trig_missed_bcon, stop_trig_missed_bcon_since_rx;
+ 	u32 rx_missed_bcon, rx_missed_bcon_since_rx;
++#endif
  
- 	trace_api_stop_tx_ba_cb(sdata, ra, tid);
+ 	if (mvmvif->id != (u16)le32_to_cpu(missed_beacons->mac_id))
+ 		return;
+-
++#ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	rx_missed_bcon = le32_to_cpu(missed_beacons->consec_missed_beacons);
+ 	rx_missed_bcon_since_rx =
+ 		le32_to_cpu(missed_beacons->consec_missed_beacons_since_last_rx);
++#endif
+ 	/*
+ 	 * TODO: the threshold should be adjusted based on latency conditions,
+ 	 * and/or in case of a CS flow on one of the other AP vifs.
+@@ -1395,6 +1398,7 @@ static void iwl_mvm_beacon_loss_iterator(void *_data, u8 *mac,
+ 	     IWL_MVM_MISSED_BEACONS_THRESHOLD)
+ 		ieee80211_beacon_loss(vif);
  
-@@ -824,13 +825,17 @@ void ieee80211_stop_tx_ba_cb(struct ieee80211_vif *vif, u8 *ra, u8 tid)
- 	}
++#ifdef CONFIG_IWLWIFI_DEBUGFS
+ 	if (!iwl_fw_dbg_trigger_enabled(mvm->fw,
+ 					FW_DBG_TRIGGER_MISSED_BEACONS))
+ 		return;
+@@ -1414,6 +1418,7 @@ static void iwl_mvm_beacon_loss_iterator(void *_data, u8 *mac,
+ 	if (rx_missed_bcon_since_rx >= stop_trig_missed_bcon_since_rx ||
+ 	    rx_missed_bcon >= stop_trig_missed_bcon)
+ 		iwl_mvm_fw_dbg_collect_trig(mvm, trigger, NULL, 0);
++#endif /* CONFIG_IWLWIFI_DEBUGFS */
+ }
  
- 	if (tid_tx->stop_initiator == WLAN_BACK_INITIATOR && tid_tx->tx_stop)
--		ieee80211_send_delba(sta->sdata, ra, tid,
--			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
-+		send_delba = true;
- 
- 	ieee80211_remove_tid_tx(sta, tid);
- 
-  unlock_sta:
- 	spin_unlock_bh(&sta->lock);
-+
-+	if (send_delba)
-+		ieee80211_send_delba(sdata, ra, tid,
-+			WLAN_BACK_INITIATOR, WLAN_REASON_QSTA_NOT_USE);
-+
- 	mutex_unlock(&sta->ampdu_mlme.mtx);
-  unlock:
- 	mutex_unlock(&local->sta_mtx);
+ int iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
 -- 
-2.1.4
+2.2.1
 
