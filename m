@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:38478 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751018AbbCYJIA convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:35354 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756612AbbCGH7K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 05:08:00 -0400
-Received: by igbqf9 with SMTP id qf9so19782991igb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2015 02:07:59 -0700 (PDT)
+	Sat, 7 Mar 2015 02:59:10 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: refactor p2p noa code
+References: <1424953398-18809-1-git-send-email-michal.kazior@tieto.com>
+Date: Sat, 7 Mar 2015 09:59:00 +0200
+In-Reply-To: <1424953398-18809-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 26 Feb 2015 13:23:17 +0100")
+Message-ID: <87wq2tz1a3.fsf@kamboji.qca.qualcomm.com> (sfid-20150307_085913_591418_7F80BA16)
 MIME-Version: 1.0
-In-Reply-To: <1427245230396.59674@mail.polimi.it>
-References: <1427048376242.67051@mail.polimi.it>
-	<CAMowtuMgAPsgAKuwSibjAzhDbqEdZGatikCiKks6f3w=4oth+Q@mail.gmail.com>
-	<1427059313289.43792@mail.polimi.it>
-	<550FE50F.10303@broadcom.com>
-	<1427245230396.59674@mail.polimi.it>
-Date: Wed, 25 Mar 2015 10:07:59 +0100
-Message-ID: <CACna6ryn2byWm+aAd6JykQRid08QjGJ-JXYRAudcCxHgoFr36g@mail.gmail.com> (sfid-20150325_100954_843268_EB8C63F5)
-Subject: Re: informations about Linux wifi driver's architecture today
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Stefano Cappa <stefano.cappa@mail.polimi.it>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 March 2015 at 02:00, Stefano Cappa <stefano.cappa@mail.polimi.it> wrote:
-> Thank you very much Arend, in particular for the documentation.
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> Some files are getting bloated and it makes sense
+> to split some of the code into separate files. Do
+> so with the P2P NoA code and prepare it for reuse.
 >
-> If i understand correctly, the levels are:
-> userspace
-> nl802111
-> cfg80211
-> firmware
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-There's also brcmfmac internal code translating cfg80211 into firmware
-messages, but you probably know that.
-
-
-> No mac80211 because is a fullmac.
-> Correct?
-
-Yes.
+Thanks, both patches applied.
 
 -- 
-Rafał
+Kalle Valo
