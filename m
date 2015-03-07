@@ -1,27 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45204 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751138AbbCITjF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 15:39:05 -0400
-Date: Mon, 09 Mar 2015 15:39:02 -0400 (EDT)
-Message-Id: <20150309.153902.1532807848101589625.davem@redhat.com> (sfid-20150309_203908_992370_39974285)
-To: kvalo@codeaurora.org
-Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org
-Subject: Re: pull request: iwlwifi-next 2015-03-07
-From: David Miller <davem@redhat.com>
-In-Reply-To: <87bnk4ylxr.fsf@kamboji.qca.qualcomm.com>
-References: <1425750475.20750.1.camel@egrumbacBox>
-	<87bnk4ylxr.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:63140 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756195AbbCGHzV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Mar 2015 02:55:21 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix ap u-apsd cmd on qca6174 w/ wmi-tlv
+References: <1424860776-11668-1-git-send-email-michal.kazior@tieto.com>
+Date: Sat, 7 Mar 2015 09:55:13 +0200
+In-Reply-To: <1424860776-11668-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 25 Feb 2015 11:39:36 +0100")
+Message-ID: <8761ad1btq.fsf@kamboji.qca.qualcomm.com> (sfid-20150307_085524_429617_C8F28247)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Sun, 08 Mar 2015 09:42:40 +0200
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> can you pull this directly? I don't think there's any point for me to
-> pull this to my tree as I don't have anything else queued up for -next
-> at the moment. I can fast forward my tree once you have pulled this.
+> The command was truncated so the parameter value
+> was seen in fw as 0. This caused U-APSD enabled
+> stations to be misconfigured and mistreated by AP.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Done.
+Thanks, applied.
+
+-- 
+Kalle Valo
