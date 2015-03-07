@@ -1,83 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61697 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753989AbbCaSRq (ORCPT
+Received: from mail-wg0-f43.google.com ([74.125.82.43]:44812 "EHLO
+	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbbCGQhQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 14:17:46 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] ath: define JP DFS patterns separated from FCC
-Date: Tue, 31 Mar 2015 11:16:24 -0700
-Message-ID: <1427825785-21389-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150331_201752_627963_60AF1AE1)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 7 Mar 2015 11:37:16 -0500
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] staging: vt6656: vnt_rf_setpower: fix missing rate RATE_12M
+Date: Sat,  7 Mar 2015 16:36:37 +0000
+Message-Id: <1425746197-6614-1-git-send-email-tvboxspy@gmail.com> (sfid-20150307_173722_972179_CE891972)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Separate Japan's DFS pattern from FCC to control PPB threshold.
+When the driver sets this rate a power of zero value is set causing
+data flow stoppage until another rate is tried.
 
-Currently all the radar detectors use the same threshold rate at
-50%, but it's not able to achieve if data traffic rate is higher
-than 40% because WLAN baseband used by ath9k and ath10k often fails
-detecting radar pulses, so that SW cannot get enough radar reports
-to achieve the rate.
-
-Since Japan's W53 band requires 50% data traffic during its DFS
-test we need to apply different threshold rate than others on it.
-Hence define its own pattern to give flexibility to threshold rate.
-
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v3.17+
 ---
- drivers/net/wireless/ath/dfs_pattern_detector.c | 27 ++++++++++++++++---------
- 1 file changed, 17 insertions(+), 10 deletions(-)
+ drivers/staging/vt6656/rf.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
-index b1de8c6..8d1e082 100644
---- a/drivers/net/wireless/ath/dfs_pattern_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
-@@ -42,6 +42,7 @@ struct radar_types {
- /* percentage on ppb threshold to trigger detection */
- #define MIN_PPB_THRESH	50
- #define PPB_THRESH(PPB) ((PPB * MIN_PPB_THRESH + 50) / 100)
-+#define PPB_THRESH_JP(PPB, RATE) ((PPB * RATE + 100 - RATE) / 100)
- #define PRF2PRI(PRF) ((1000000 + PRF / 2) / PRF)
- /* percentage of pulse width tolerance */
- #define WIDTH_TOLERANCE 5
-@@ -96,17 +97,23 @@ static const struct radar_types fcc_radar_types = {
- 	.radar_types		= fcc_radar_ref_types,
- };
- 
--#define JP_PATTERN FCC_PATTERN
-+#define JP_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB, RATE, CHIRP)	\
-+{								\
-+	ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),		\
-+	PMIN - PRI_TOLERANCE,					\
-+	PMAX * PRF + PRI_TOLERANCE, PRF, PPB * PRF,		\
-+	PPB_THRESH_JP(PPB, RATE), PRI_TOLERANCE, CHIRP	\
-+}
- static const struct radar_detector_specs jp_radar_ref_types[] = {
--	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
--	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, false),
--	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, false),
--	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, false),
--	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, false),
--	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, false),
--	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, false),
--	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, false),
--	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, false),
-+	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 50, false),
-+	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 50, false),
-+	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
-+	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
-+	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
-+	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, 50, false),
-+	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, 50, false),
-+	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, 50, false),
-+	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, 50, false),
- };
- 
- static const struct radar_types jp_radar_types = {
+diff --git a/drivers/staging/vt6656/rf.c b/drivers/staging/vt6656/rf.c
+index c42cde5..c4286cc 100644
+--- a/drivers/staging/vt6656/rf.c
++++ b/drivers/staging/vt6656/rf.c
+@@ -640,6 +640,7 @@ int vnt_rf_setpower(struct vnt_private *priv, u32 rate, u32 channel)
+ 		break;
+ 	case RATE_6M:
+ 	case RATE_9M:
++	case RATE_12M:
+ 	case RATE_18M:
+ 	case RATE_24M:
+ 	case RATE_36M:
 -- 
-1.9.1
+2.1.4
 
