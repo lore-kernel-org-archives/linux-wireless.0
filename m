@@ -1,91 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:60882 "EHLO aibo.runbox.com"
+Received: from smtp.gentoo.org ([140.211.166.183]:43069 "EHLO smtp.gentoo.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752546AbbC2BIU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 21:08:20 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, gregkh@linuxfoundation.org,
-	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v5 06/15] staging: rtl8723au: else is not generally useful after a return
-Date: Sat, 28 Mar 2015 21:07:49 -0400
-Message-Id: <1427591278-982-7-git-send-email-m.v.b@runbox.com> (sfid-20150329_031202_771737_6353FE67)
-In-Reply-To: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
-References: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
+	id S1750930AbbCHDcr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Mar 2015 22:32:47 -0500
+Received: from localhost.localdomain (localhost [127.0.0.1])
+	by smtp.gentoo.org (Postfix) with ESMTP id 35F2C340894
+	for <linux-wireless@vger.kernel.org>; Sun,  8 Mar 2015 03:32:47 +0000 (UTC)
+From: Mike Frysinger <vapier@gentoo.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH crda] libreg: link against crypto libs
+Date: Sat,  7 Mar 2015 22:32:45 -0500
+Message-Id: <1425785565-26601-1-git-send-email-vapier@gentoo.org> (sfid-20150308_043251_063289_04B360A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a checkpatch.pl warning regarding rtl8723au's
-rtw_security.c::crc32_init pointing out that having an else statement
-after a break or a return is not useful.
+Since libreg uses funcs from the crypto lib, make sure we link them.
 
-drivers/staging/rtl8723au/core/rtw_security.c:105:
-	WARNING: else is not generally useful after a break or return
-
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 42 ++++++++++++++-------------
- 1 file changed, 22 insertions(+), 20 deletions(-)
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index df7261c045fe..b85e5de5f136 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -99,31 +99,33 @@ static u8 crc32_reverseBit(u8 data)
+diff --git a/Makefile b/Makefile
+index 8e345a1..77708e6 100644
+--- a/Makefile
++++ b/Makefile
+@@ -117,7 +117,7 @@ keys-%.c: utils/key2pub.py $(wildcard $(PUBKEY_DIR)/*.pem)
  
- static void crc32_init(void)
- {
-+	int i, j;
-+	u32 c;
-+	u8 *p, *p1;
-+	u8 k;
+ $(LIBREG): regdb.h reglib.h reglib.c
+ 	$(NQ) '  CC  ' $@
+-	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -shared -Wl,-soname,$(LIBREG) $^
++	$(Q)$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -shared -Wl,-soname,$(LIBREG) $^ $(LDLIBS)
  
- 	if (bcrc32initialized == 1)
- 		return;
--	else{
--		int i, j;
--		u32 c;
--		u8 *p = (u8 *)&c, *p1;
--		u8 k;
--
--		c = 0x12340000;
--
--		for (i = 0; i < 256; ++i) {
--			k = crc32_reverseBit((u8)i);
--			for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
--				c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
--			}
--			p1 = (u8 *)&crc32_table[i];
--
--			p1[0] = crc32_reverseBit(p[3]);
--			p1[1] = crc32_reverseBit(p[2]);
--			p1[2] = crc32_reverseBit(p[1]);
--			p1[3] = crc32_reverseBit(p[0]);
-+
-+	p = (u8 *) &c;
-+	c = 0x12340000;
-+
-+	for (i = 0; i < 256; ++i) {
-+		k = crc32_reverseBit((u8)i);
-+
-+		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
-+			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
- 		}
--		bcrc32initialized = 1;
-+
-+		p1 = (u8 *)&crc32_table[i];
-+
-+		p1[0] = crc32_reverseBit(p[3]);
-+		p1[1] = crc32_reverseBit(p[2]);
-+		p1[2] = crc32_reverseBit(p[1]);
-+		p1[3] = crc32_reverseBit(p[0]);
- 	}
-+
-+	bcrc32initialized = 1;
- }
- 
- static u32 getcrc32(u8 *buf, int len)
+ install-libreg-headers:
+ 	$(NQ) '  INSTALL  libreg-headers'
 -- 
-2.1.4
+2.3.1
 
