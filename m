@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45657 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:42588 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752647AbbC3Ip7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:45:59 -0400
-Message-ID: <1427705156.26117.12.camel@sipsolutions.net> (sfid-20150330_104602_176991_A085734D)
-Subject: Re: [PATCH 4/5] wil6210: stop_ap to leave interface closed
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	wil6210@qca.qualcomm.com
-Date: Mon, 30 Mar 2015 10:45:56 +0200
-In-Reply-To: <1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150330_102927_412153_35AF5F44)
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 <1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	 (sfid-20150330_102927_412153_35AF5F44)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751179AbbCHHej convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Mar 2015 03:34:39 -0400
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: "Luis R. Rodriguez" <mcgrof@suse.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH v10 3/3] cfg80211: Schedule timeout for all CRDA calls
+Date: Sun, 8 Mar 2015 07:34:35 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04D040F1C@HASMSX106.ger.corp.intel.com> (sfid-20150308_083445_350153_A37C33B8)
+References: <1425447127-22958-1-git-send-email-ilan.peer@intel.com>
+ <1425447127-22958-3-git-send-email-ilan.peer@intel.com>
+ <20150305225526.GC25035@wotan.suse.de>
+In-Reply-To: <20150305225526.GC25035@wotan.suse.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-30 at 11:28 +0300, Vladimir Kondratiev wrote:
-> cfg80211_ops.stop_ap supposed to have interface closed
-> as post condition. Fulfill this requirement.
+Thanks :)
 
-"closed" is rather misleading, since you most certainly should *not* do
-dev_close() [and don't, but how should I know reading the commit log?]
+Ilan.
 
-johannes
-
+> -----Original Message-----
+> From: Luis R. Rodriguez [mailto:mcgrof@suse.com]
+> Sent: Friday, March 06, 2015 00:55
+> To: Peer, Ilan
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH v10 3/3] cfg80211: Schedule timeout for all CRDA calls
+> 
+> On Wed, Mar 04, 2015 at 12:32:07AM -0500, Ilan Peer wrote:
+> > Timeout was scheduled only in case CRDA was called due to user hints,
+> > but was not scheduled for other cases. This can result in regulatory
+> > hint processing getting stuck in case that there is no CRDA configured.
+> >
+> > Change this by scheduling a timeout every time CRDA is called. In
+> > addition, in restore_regulatory_settings() all pending requests are
+> > restored (and not only the user ones).
+> >
+> > Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+> 
+> Acked-by: Luis R. Rodriguez <mcgrof@suse.com>
+> 
+> For all of these.
+> 
+>  Luis
