@@ -1,84 +1,286 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:33166 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753411AbbCWWQc (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:42821 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752185AbbCINjD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 18:16:32 -0400
-Received: by wgbcc7 with SMTP id cc7so157061186wgb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 15:16:31 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1427133818-21480-1-git-send-email-greearb@candelatech.com>
-References: <1427133818-21480-1-git-send-email-greearb@candelatech.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 24 Mar 2015 09:16:10 +1100
-Message-ID: <CAGRGNgV4vTofdxq5G-DwDHMACyd13QT74wSnAbwqxA=1SJkU_Q@mail.gmail.com> (sfid-20150323_231635_707878_8B8E8998)
-Subject: Re: [PATCH 1/2] hs20-ca: Update key generation scripts and files.
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 Mar 2015 09:39:03 -0400
+Received: by lbjb6 with SMTP id b6so35765312lbj.9
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 06:39:01 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 1/2] ath10k: implement wmi roam event
+Date: Mon,  9 Mar 2015 14:36:36 +0100
+Message-Id: <1425908197-16118-1-git-send-email-michal.kazior@tieto.com> (sfid-20150309_143908_947788_3577FC9B)
+In-Reply-To: <87fv9hyz2r.fsf@kamboji.qca.qualcomm.com>
+References: <87fv9hyz2r.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+This can be used to implement offloaded rssi
+threshold, beacon miss or even automatic
+in-firmware BSS roaming in the future.
 
-On Tue, Mar 24, 2015 at 5:03 AM,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> This lets us properly over-ride the default w1.fi
-> related strings in order to properly generate keys
-> that can be used by the OCSP process.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  hs20/server/ca/openssl.cnf | 12 ++++++------
->  hs20/server/ca/setup.sh    | 42 ++++++++++++++++++++++++++++++------------
->  2 files changed, 36 insertions(+), 18 deletions(-)
->
-> diff --git a/hs20/server/ca/openssl.cnf b/hs20/server/ca/openssl.cnf
-> index e29e737..c614479 100644
-> --- a/hs20/server/ca/openssl.cnf
-> +++ b/hs20/server/ca/openssl.cnf
-> @@ -117,10 +117,10 @@ subjectKeyIdentifier=hash
->  authorityKeyIdentifier=keyid:always,issuer
->  basicConstraints = critical, CA:true, pathlen:0
->  keyUsage = critical, cRLSign, keyCertSign
-> -authorityInfoAccess = OCSP;URI:http://osu.w1.fi:8888/
-> +authorityInfoAccess = OCSP;URI:@OCSP_URI@
->  # For SP intermediate CA
->  #subjectAltName=critical,otherName:1.3.6.1.4.1.40808.1.1.1;UTF8String:engExample OSU
-> -#nameConstraints=permitted;DNS:.w1.fi
-> +#nameConstraints=permitted;DNS:.@DOMAIN@
->  #1.3.6.1.5.5.7.1.12=ASN1:SEQUENCE:LogotypeExtn
->
->  [ v3_osu_server ]
-> @@ -184,7 +184,7 @@ extendedKeyUsage = OCSPSigning
->  basicConstraints=CA:FALSE
->  subjectKeyIdentifier=hash
->  authorityKeyIdentifier=keyid,issuer
-> -authorityInfoAccess = OCSP;URI:http://osu.w1.fi:8888/
-> +authorityInfoAccess = OCSP;@OCSP_URI@
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
-Are you sure this change is correct? You drop the "URI:" part here but
-not above or below.
+Notes:
+    v2:
+     * rebased
 
->  #@ALTNAME@
->  extendedKeyUsage = clientAuth
->
-> @@ -194,7 +194,7 @@ extendedKeyUsage = clientAuth
->  basicConstraints=critical, CA:FALSE
->  subjectKeyIdentifier=hash
->  authorityKeyIdentifier=keyid,issuer
-> -authorityInfoAccess = OCSP;URI:http://osu.w1.fi:8888/
-> +authorityInfoAccess = OCSP;URI:@OCSP_URI@
->  #@ALTNAME@
->  extendedKeyUsage = critical, serverAuth
->  keyUsage = critical, keyEncipherment
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 12 +++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 32 ++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  6 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 55 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h     | 22 +++++++++++++
+ 5 files changed, 126 insertions(+), 1 deletion(-)
 
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index c8b64e7..f0a8b8d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -45,6 +45,8 @@ struct wmi_ops {
+ 			struct wmi_rdy_ev_arg *arg);
+ 	int (*pull_fw_stats)(struct ath10k *ar, struct sk_buff *skb,
+ 			     struct ath10k_fw_stats *stats);
++	int (*pull_roam_ev)(struct ath10k *ar, struct sk_buff *skb,
++			    struct wmi_roam_ev_arg *arg);
+ 
+ 	struct sk_buff *(*gen_pdev_suspend)(struct ath10k *ar, u32 suspend_opt);
+ 	struct sk_buff *(*gen_pdev_resume)(struct ath10k *ar);
+@@ -274,6 +276,16 @@ ath10k_wmi_pull_fw_stats(struct ath10k *ar, struct sk_buff *skb,
+ }
+ 
+ static inline int
++ath10k_wmi_pull_roam_ev(struct ath10k *ar, struct sk_buff *skb,
++			struct wmi_roam_ev_arg *arg)
++{
++	if (!ar->wmi.ops->pull_roam_ev)
++		return -EOPNOTSUPP;
++
++	return ar->wmi.ops->pull_roam_ev(ar, skb, arg);
++}
++
++static inline int
+ ath10k_wmi_mgmt_tx(struct ath10k *ar, struct sk_buff *msdu)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(msdu);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 939d86b..531d87b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -66,6 +66,8 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
+ 		= { .min_len = sizeof(struct wmi_tlv_diag_data_ev) },
+ 	[WMI_TLV_TAG_STRUCT_P2P_NOA_EVENT]
+ 		= { .min_len = sizeof(struct wmi_tlv_p2p_noa_ev) },
++	[WMI_TLV_TAG_STRUCT_ROAM_EVENT]
++		= { .min_len = sizeof(struct wmi_tlv_roam_ev) },
+ };
+ 
+ static int
+@@ -1061,6 +1063,35 @@ static int ath10k_wmi_tlv_op_pull_fw_stats(struct ath10k *ar,
+ 	return 0;
+ }
+ 
++static int ath10k_wmi_tlv_op_pull_roam_ev(struct ath10k *ar,
++					  struct sk_buff *skb,
++					  struct wmi_roam_ev_arg *arg)
++{
++	const void **tb;
++	const struct wmi_tlv_roam_ev *ev;
++	int ret;
++
++	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
++	if (IS_ERR(tb)) {
++		ret = PTR_ERR(tb);
++		ath10k_warn(ar, "failed to parse tlv: %d\n", ret);
++		return ret;
++	}
++
++	ev = tb[WMI_TLV_TAG_STRUCT_ROAM_EVENT];
++	if (!ev) {
++		kfree(tb);
++		return -EPROTO;
++	}
++
++	arg->vdev_id = ev->vdev_id;
++	arg->reason = ev->reason;
++	arg->rssi = ev->rssi;
++
++	kfree(tb);
++	return 0;
++}
++
+ static struct sk_buff *
+ ath10k_wmi_tlv_op_gen_pdev_suspend(struct ath10k *ar, u32 opt)
+ {
+@@ -2785,6 +2816,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	.pull_svc_rdy = ath10k_wmi_tlv_op_pull_svc_rdy_ev,
+ 	.pull_rdy = ath10k_wmi_tlv_op_pull_rdy_ev,
+ 	.pull_fw_stats = ath10k_wmi_tlv_op_pull_fw_stats,
++	.pull_roam_ev = ath10k_wmi_tlv_op_pull_roam_ev,
+ 
+ 	.gen_pdev_suspend = ath10k_wmi_tlv_op_gen_pdev_suspend,
+ 	.gen_pdev_resume = ath10k_wmi_tlv_op_gen_pdev_resume,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index f4a626fd..06b37b2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1458,6 +1458,12 @@ struct wmi_tlv_p2p_noa_ev {
+ 	__le32 vdev_id;
+ } __packed;
+ 
++struct wmi_tlv_roam_ev {
++	__le32 vdev_id;
++	__le32 reason;
++	__le32 rssi;
++} __packed;
++
+ void ath10k_wmi_tlv_attach(struct ath10k *ar);
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 29aef7e..58719d8 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2789,7 +2789,41 @@ void ath10k_wmi_event_phyerr(struct ath10k *ar, struct sk_buff *skb)
+ 
+ void ath10k_wmi_event_roam(struct ath10k *ar, struct sk_buff *skb)
+ {
+-	ath10k_dbg(ar, ATH10K_DBG_WMI, "WMI_ROAM_EVENTID\n");
++	struct wmi_roam_ev_arg arg = {};
++	int ret;
++	u32 vdev_id;
++	u32 reason;
++	s32 rssi;
++
++	ret = ath10k_wmi_pull_roam_ev(ar, skb, &arg);
++	if (ret) {
++		ath10k_warn(ar, "failed to parse roam event: %d\n", ret);
++		return;
++	}
++
++	vdev_id = __le32_to_cpu(arg.vdev_id);
++	reason = __le32_to_cpu(arg.reason);
++	rssi = __le32_to_cpu(arg.rssi);
++	rssi += WMI_SPECTRAL_NOISE_FLOOR_REF_DEFAULT;
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi roam event vdev %u reason 0x%08x rssi %d\n",
++		   vdev_id, reason, rssi);
++
++	if (reason >= WMI_ROAM_REASON_MAX)
++		ath10k_warn(ar, "ignoring unknown roam event reason %d on vdev %i\n",
++			    reason, vdev_id);
++
++	switch (reason) {
++	case WMI_ROAM_REASON_BETTER_AP:
++	case WMI_ROAM_REASON_BEACON_MISS:
++	case WMI_ROAM_REASON_LOW_RSSI:
++	case WMI_ROAM_REASON_SUITABLE_AP_FOUND:
++	case WMI_ROAM_REASON_HO_FAILED:
++		ath10k_warn(ar, "ignoring not implemented roam event reason %d on vdev %i\n",
++			    reason, vdev_id);
++		break;
++	}
+ }
+ 
+ void ath10k_wmi_event_profile_match(struct ath10k *ar, struct sk_buff *skb)
+@@ -3148,6 +3182,21 @@ static int ath10k_wmi_op_pull_rdy_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	return 0;
+ }
+ 
++static int ath10k_wmi_op_pull_roam_ev(struct ath10k *ar, struct sk_buff *skb,
++				      struct wmi_roam_ev_arg *arg)
++{
++	struct wmi_roam_ev *ev = (void *)skb->data;
++
++	if (skb->len < sizeof(*ev))
++		return -EPROTO;
++
++	skb_pull(skb, sizeof(*ev));
++	arg->vdev_id = ev->vdev_id;
++	arg->reason = ev->reason;
++
++	return 0;
++}
++
+ int ath10k_wmi_event_ready(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_rdy_ev_arg arg = {};
+@@ -5140,6 +5189,7 @@ static const struct wmi_ops wmi_ops = {
+ 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
+ 	.pull_fw_stats = ath10k_wmi_main_op_pull_fw_stats,
++	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
+ 
+ 	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
+ 	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
+@@ -5207,6 +5257,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	.pull_swba = ath10k_wmi_op_pull_swba_ev,
+ 	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
++	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
+ 
+ 	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
+ 	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
+@@ -5270,6 +5321,7 @@ static const struct wmi_ops wmi_10_2_ops = {
+ 	.pull_swba = ath10k_wmi_op_pull_swba_ev,
+ 	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
++	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
+ 
+ 	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
+ 	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
+@@ -5330,6 +5382,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	.pull_swba = ath10k_wmi_op_pull_swba_ev,
+ 	.pull_phyerr = ath10k_wmi_op_pull_phyerr_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
++	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
+ 
+ 	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
+ 	.gen_pdev_resume = ath10k_wmi_op_gen_pdev_resume,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index adf935b..938e652 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4769,6 +4769,22 @@ struct wmi_dbglog_cfg_cmd {
+ 	__le32 config_valid;
+ } __packed;
+ 
++enum wmi_roam_reason {
++	WMI_ROAM_REASON_BETTER_AP = 1,
++	WMI_ROAM_REASON_BEACON_MISS = 2,
++	WMI_ROAM_REASON_LOW_RSSI = 3,
++	WMI_ROAM_REASON_SUITABLE_AP_FOUND = 4,
++	WMI_ROAM_REASON_HO_FAILED = 5,
++
++	/* keep last */
++	WMI_ROAM_REASON_MAX,
++};
++
++struct wmi_roam_ev {
++	__le32 vdev_id;
++	__le32 reason;
++} __packed;
++
+ #define ATH10K_FRAGMT_THRESHOLD_MIN	540
+ #define ATH10K_FRAGMT_THRESHOLD_MAX	2346
+ 
+@@ -4857,6 +4873,12 @@ struct wmi_rdy_ev_arg {
+ 	const u8 *mac_addr;
+ };
+ 
++struct wmi_roam_ev_arg {
++	__le32 vdev_id;
++	__le32 reason;
++	__le32 rssi;
++};
++
+ struct wmi_pdev_temperature_event {
+ 	/* temperature value in Celcius degree */
+ 	__le32 temperature;
 -- 
-Julian Calaby
+1.8.5.3
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
