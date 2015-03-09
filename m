@@ -1,104 +1,559 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:36163 "EHLO muru.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751446AbbCJOdO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 10:33:14 -0400
-Date: Tue, 10 Mar 2015 07:28:05 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-Message-ID: <20150310142805.GN5264@atomide.com> (sfid-20150310_153318_314192_484DA815)
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
- <20150309224929.GL5264@atomide.com>
- <CAB3XZEdS+mK1MiB7OWiehFGRBnUzJ84s3rFrCy3-YFYhL-BNWw@mail.gmail.com>
- <2223973.a64rBcZvaA@wuerfel>
+Received: from 16.mo6.mail-out.ovh.net ([87.98.139.208]:42494 "EHLO
+	16.mo6.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753994AbbCIKej (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2015 06:34:39 -0400
+Received: from mail187.ha.ovh.net (b9.ovh.net [213.186.33.59])
+	by mo6.mail-out.ovh.net (Postfix) with SMTP id 7BEA6FFA2D6
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2015 11:25:54 +0100 (CET)
+From: clement.perrochaud@effinnov.com
+To: linux-nfc@lists.01.org
+Cc: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= <clement.perrochaud@nxp.com>,
+	sunil.jogi@nxp.com, jerome.pele@nxp.com,
+	Charles.Gorand-Effinnov@nxp.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	davem@davemloft.net, grant.likely@linaro.org, lefrique@marvell.com,
+	christophe.ricard@gmail.com, cuissard@marvell.com,
+	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	anda-maria.nicolae@intel.com,
+	=?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
+	<clement.perrochaud@effinnov.com>
+Subject: [PATCH v2 3/3] NFC: nxp-nci_i2c: Add I2C support to NXP NCI driver
+Date: Mon,  9 Mar 2015 11:12:05 +0100
+Message-Id: <1425895925-20593-4-git-send-email-clement.perrochaud@effinnov.com> (sfid-20150309_113505_928840_285E781E)
+In-Reply-To: <1425895925-20593-1-git-send-email-clement.perrochaud@effinnov.com>
+References: <1425895925-20593-1-git-send-email-clement.perrochaud@effinnov.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2223973.a64rBcZvaA@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Arnd Bergmann <arnd@arndb.de> [150310 07:11]:
-> On Tuesday 10 March 2015 13:00:19 Eliad Peller wrote:
-> > On Tue, Mar 10, 2015 at 12:49 AM, Tony Lindgren <tony@atomide.com> wrote:
-> > > * Eliad Peller <eliad@wizery.com> [150309 14:03]:
-> > >> On Mon, Mar 9, 2015 at 9:50 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > >> > On Monday 09 March 2015 17:36:42 Eliad Peller wrote:
-> > >> >> --- a/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
-> > >> >> +++ b/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
-> > >> >> @@ -64,4 +64,13 @@
-> > >> >>         vmmc-supply = <&lbep5clwmc_wlen>;
-> > >> >>         bus-width = <4>;
-> > >> >>         non-removable;
-> > >> >> +
-> > >> >> +       #address-cells = <1>;
-> > >> >> +       #size-cells = <0>;
-> > >> >> +       wlcore: wlcore@2 {
-> > >> >> +               compatible = "ti,wl1835";
-> > >> >> +               reg = <2>;
-> > >> >> +               interrupt-parent = <&gpio5>;
-> > >> >> +               interrupts = <8 IRQ_TYPE_NONE>;
-> > >> >> +       };
-> > >> >>
-> > >> >
-> > >> > Why IRQ_TYPE_NONE?
-> > >> >
-> > >> i simply mirrored the current board file (which only sets the irq number).
-> > >>
-> > >> > I was expecting you to remove all calls to legacy_init_wl12xx from this file,
-> > >> > including the ones for wl12xx aside from the wl18xx ones you removed, but
-> > >> > if that's enough to clean out the platform_data handling from the wlcore
-> > >> > driver, it's good enough as a start.
-> > >> not sure i'm following - can you elaborate?
-> > >>
-> > >> i'll summarize the way i see it. please correct me if i'm wrong.
-> > >>
-> > >> both wl18xx and wl12xx use the platform data to get the irq number.
-> > >> wl12xx (only) also needs some additional clock definitions to be
-> > >> passed. there's currently some issue with specifying some the of clock
-> > >> sources, so i preferred starting only with (the simpler) wl18xx
-> > >> bindings.
-> > >>
-> > >> for platforms with wl18xx, we can remove the pdata-quirk, as all the
-> > >> data (i.e. irq) can be passed by the new DT bindings.
-> > >> however, for platforms with wl12xx, we still need to pass the clock
-> > >> definitions (along with the irq), so we have to keep
-> > >> legacy_init_wl12xx for the time being (and that's also why we have to
-> > >> currently keep the platform_data handling in the wlcore driver)
-> > >>
-> > >> do you have something else in mind?
-> > >
-> > > I think what Arnd is saying is we've now removed all the wl12xx using
-> > > legacy platforms, so all of them can boot with just data from dts.
-> 
-> Right, that was my idea.
-> 
-> > I don't think that's the case (unless i'm missing something).
-> > e.g. there's still pdata-quirk for "compulab,omap3-sbc-t3730" which
-> > initializes wl12xx device.
-> 
-> This one is just like the igep0030, as Tony was saying: the board
-> boots from device tree already, so now that we have a binding for
-> it, we can remove the wl12xx_set_platform_data() for it.
-> 
-> Unfortunately, there is still one machine that uses a board file
-> in combination with this wl12xx: da850-evm calls
-> wl12xx_set_platform_data() from a legacy board file without DT.
-> 
-> We have DT support for this file as well, but if I remember correctly,
-> it is somewhat incomplete and we don't want to remove the file
-> yet. Adding Sekhar and Kevin to Cc here for confirmation.
+From: Clément Perrochaud <clement.perrochaud@nxp.com>
 
-Oops I forgot about the omap3-sbc-t3730, so yes we have to keep the
-platform data a little bit longer. But nothing stopping us moving
-all the other ones to use a proper device tree based configuration.
+Add a module to the NXP-NCI driver to support NFC controllers with an
+I2C control interface, such as the NPC100.
 
-Regards,
+Signed-off-by: Clément Perrochaud <clement.perrochaud@effinnov.com>
+---
+ .../devicetree/bindings/net/nfc/nxp-nci.txt        |  35 ++
+ drivers/nfc/nxp-nci/Kconfig                        |  12 +
+ drivers/nfc/nxp-nci/Makefile                       |   2 +
+ drivers/nfc/nxp-nci/i2c.c                          | 415 +++++++++++++++++++++
+ 4 files changed, 464 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/nfc/nxp-nci.txt
+ create mode 100644 drivers/nfc/nxp-nci/i2c.c
 
-Tony
+diff --git a/Documentation/devicetree/bindings/net/nfc/nxp-nci.txt b/Documentation/devicetree/bindings/net/nfc/nxp-nci.txt
+new file mode 100644
+index 0000000..5b6cd9b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/nfc/nxp-nci.txt
+@@ -0,0 +1,35 @@
++* NXP Semiconductors NXP NCI NFC Controllers
++
++Required properties:
++- compatible: Should be "nxp,nxp-nci-i2c".
++- clock-frequency: I²C work frequency.
++- reg: address on the bus
++- interrupt-parent: phandle for the interrupt gpio controller
++- interrupts: GPIO interrupt to which the chip is connected
++- enable-gpios: Output GPIO pin used for enabling/disabling the chip
++- firmware-gpios: Output GPIO pin used to enter firmware download mode
++
++Optional SoC Specific Properties:
++- pinctrl-names: Contains only one value - "default".
++- pintctrl-0: Specifies the pin control groups used for this controller.
++
++Example (for ARM-based BeagleBone with NPC100 NFC controller on I2C2):
++
++&i2c2 {
++
++	status = "okay";
++
++	npc100: npc100@29 {
++
++		compatible = "nxp,nxp-nci-i2c";
++
++		reg = <0x29>;
++		clock-frequency = <100000>;
++
++		interrupt-parent = <&gpio1>;
++		interrupts = <29 GPIO_ACTIVE_HIGH>;
++
++		enable-gpios = <&gpio0 30 GPIO_ACTIVE_HIGH>;
++		firmware-gpios = <&gpio0 31 GPIO_ACTIVE_HIGH>;
++	};
++};
+diff --git a/drivers/nfc/nxp-nci/Kconfig b/drivers/nfc/nxp-nci/Kconfig
+index 5f60c7c..37b4061 100644
+--- a/drivers/nfc/nxp-nci/Kconfig
++++ b/drivers/nfc/nxp-nci/Kconfig
+@@ -11,3 +11,15 @@ config NFC_NXP_NCI
+ 	  To compile this driver as a module, choose m here. The module will
+ 	  be called nxp_nci.
+ 	  Say N if unsure.
++
++config NFC_NXP_NCI_I2C
++	tristate "NXP-NCI I2C support"
++	depends on NFC_NXP_NCI && I2C
++	---help---
++	  This module adds support for an I2C interface to the NXP NCI
++	  chips.
++	  Select this if your platform is using the I2C bus.
++
++	  To compile this driver as a module, choose m here. The module will
++	  be called nxp_nci_i2c.
++	  Say Y if unsure.
+diff --git a/drivers/nfc/nxp-nci/Makefile b/drivers/nfc/nxp-nci/Makefile
+index 8f1e328..c008be3 100644
+--- a/drivers/nfc/nxp-nci/Makefile
++++ b/drivers/nfc/nxp-nci/Makefile
+@@ -3,7 +3,9 @@
+ #
+ 
+ nxp-nci-objs = core.o firmware.o
++nxp-nci_i2c-objs = i2c.o
+ 
+ obj-$(CONFIG_NFC_NXP_NCI) += nxp-nci.o
++obj-$(CONFIG_NFC_NXP_NCI_I2C) += nxp-nci_i2c.o
+ 
+ ccflags-$(CONFIG_NFC_DEBUG) := -DDEBUG
+diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
+new file mode 100644
+index 0000000..541e7bc
+--- /dev/null
++++ b/drivers/nfc/nxp-nci/i2c.c
+@@ -0,0 +1,415 @@
++/*
++ * I2C link layer for the NXP NCI driver
++ *
++ * Copyright (C) 2014  NXP Semiconductors  All rights reserved.
++ *
++ * Authors: Clément Perrochaud <clement.perrochaud@nxp.com>
++ *
++ * Derived from PN544 device driver:
++ * Copyright (C) 2012  Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, see <http://www.gnu.org/licenses/>.
++ */
++
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
++#include <linux/delay.h>
++#include <linux/i2c.h>
++#include <linux/interrupt.h>
++#include <linux/miscdevice.h>
++#include <linux/module.h>
++#include <linux/nfc.h>
++#include <linux/of_gpio.h>
++#include <linux/of_irq.h>
++#include <linux/platform_data/nxp-nci.h>
++#include <linux/unaligned/access_ok.h>
++
++#include <net/nfc/nfc.h>
++
++#include "nxp-nci.h"
++
++#define NXP_NCI_I2C_DRIVER_NAME	"nxp-nci_i2c"
++
++#define NXP_NCI_I2C_MAX_PAYLOAD	32
++
++struct nxp_nci_i2c_phy {
++	struct i2c_client *i2c_dev;
++	struct nci_dev *ndev;
++
++	unsigned int gpio_en;
++	unsigned int gpio_fw;
++
++	int hard_fault; /*
++			 * < 0 if hardware error occurred (e.g. i2c err)
++			 * and prevents normal operation.
++			 */
++};
++
++static int nxp_nci_i2c_set_mode(void *phy_id,
++				    enum nxp_nci_mode mode)
++{
++	struct nxp_nci_i2c_phy *phy = (struct nxp_nci_i2c_phy *) phy_id;
++
++	gpio_set_value(phy->gpio_fw, (mode == NXP_NCI_MODE_FW) ? 1 : 0);
++	gpio_set_value(phy->gpio_en, (mode != NXP_NCI_MODE_COLD) ? 1 : 0);
++	usleep_range(10000, 15000);
++
++	if (mode == NXP_NCI_MODE_COLD)
++		phy->hard_fault = 0;
++
++	return 0;
++}
++
++static int nxp_nci_i2c_write(void *phy_id, struct sk_buff *skb)
++{
++	int r;
++	struct nxp_nci_i2c_phy *phy = phy_id;
++	struct i2c_client *client = phy->i2c_dev;
++
++	if (phy->hard_fault != 0)
++		return phy->hard_fault;
++
++	r = i2c_master_send(client, skb->data, skb->len);
++	if (r == -EREMOTEIO) {
++		/* Retry, chip was in standby */
++		usleep_range(110000, 120000);
++		r = i2c_master_send(client, skb->data, skb->len);
++	}
++
++	if (r < 0) {
++		nfc_err(&client->dev, "Error %d on I2C send\n", r);
++	} else if (r != skb->len) {
++		nfc_err(&client->dev,
++			"Invalid length sent: %u (expected %u)\n",
++			r, skb->len);
++		r = -EREMOTEIO;
++	} else {
++		/* Success but return 0 and not number of bytes */
++		r = 0;
++	}
++
++	return r;
++}
++
++static struct nxp_nci_phy_ops i2c_phy_ops = {
++	.set_mode = nxp_nci_i2c_set_mode,
++	.write = nxp_nci_i2c_write,
++};
++
++static int nxp_nci_i2c_fw_read(struct nxp_nci_i2c_phy *phy,
++			       struct sk_buff **skb)
++{
++	struct i2c_client *client = phy->i2c_dev;
++	u16 header;
++	size_t frame_len;
++	int r;
++
++	r = i2c_master_recv(client, (u8 *) &header, NXP_NCI_FW_HDR_LEN);
++	if (r < 0) {
++		goto fw_read_exit;
++	} else if (r != NXP_NCI_FW_HDR_LEN) {
++		nfc_err(&client->dev, "Incorrect header length: %u\n", r);
++		r = -EBADMSG;
++		goto fw_read_exit;
++	}
++
++	frame_len = (get_unaligned_be16(&header) & NXP_NCI_FW_FRAME_LEN_MASK) +
++		    NXP_NCI_FW_CRC_LEN;
++
++	*skb = alloc_skb(NXP_NCI_FW_HDR_LEN + frame_len, GFP_KERNEL);
++	if (*skb == NULL) {
++		r = -ENOMEM;
++		goto fw_read_exit;
++	}
++
++	memcpy(skb_put(*skb, NXP_NCI_FW_HDR_LEN), &header, NXP_NCI_FW_HDR_LEN);
++
++	r = i2c_master_recv(client, skb_put(*skb, frame_len), frame_len);
++	if (r != frame_len) {
++		nfc_err(&client->dev,
++			"Invalid frame length: %u (expected %u)\n",
++			r, frame_len);
++		r = -EBADMSG;
++		goto fw_read_exit_free_skb;
++	}
++
++	return 0;
++
++fw_read_exit_free_skb:
++	kfree_skb(*skb);
++fw_read_exit:
++	return r;
++}
++
++static int nxp_nci_i2c_nci_read(struct nxp_nci_i2c_phy *phy,
++				struct sk_buff **skb)
++{
++	struct nci_ctrl_hdr header; /* May actually be a data header */
++	struct i2c_client *client = phy->i2c_dev;
++	int r;
++
++	r = i2c_master_recv(client, (u8 *) &header, NCI_CTRL_HDR_SIZE);
++	if (r < 0) {
++		goto nci_read_exit;
++	} else if (r != NCI_CTRL_HDR_SIZE) {
++		nfc_err(&client->dev, "Incorrect header length: %u\n", r);
++		r = -EBADMSG;
++		goto nci_read_exit;
++	}
++
++	*skb = alloc_skb(NCI_CTRL_HDR_SIZE + header.plen, GFP_KERNEL);
++	if (*skb == NULL) {
++		r = -ENOMEM;
++		goto nci_read_exit;
++	}
++
++	memcpy(skb_put(*skb, NCI_CTRL_HDR_SIZE), (void *) &header,
++	       NCI_CTRL_HDR_SIZE);
++
++	r = i2c_master_recv(client, skb_put(*skb, header.plen), header.plen);
++	if (r != header.plen) {
++		nfc_err(&client->dev,
++			"Invalid frame payload length: %u (expected %u)\n",
++			r, header.plen);
++		r = -EBADMSG;
++		goto nci_read_exit_free_skb;
++	}
++
++	return 0;
++
++nci_read_exit_free_skb:
++	kfree_skb(*skb);
++nci_read_exit:
++	return r;
++}
++
++static irqreturn_t nxp_nci_i2c_irq_thread_fn(int irq, void *phy_id)
++{
++	struct nxp_nci_i2c_phy *phy = phy_id;
++	struct i2c_client *client;
++	struct nxp_nci_info *info;
++
++	struct sk_buff *skb = NULL;
++	int r = 0;
++
++	if (!phy || !phy->ndev)
++		goto exit_irq_none;
++
++	client = phy->i2c_dev;
++
++	if (!client || irq != client->irq)
++		goto exit_irq_none;
++
++	info = nci_get_drvdata(phy->ndev);
++
++	if (!info)
++		goto exit_irq_none;
++
++	mutex_lock(&info->info_lock);
++
++	if (phy->hard_fault != 0)
++		goto exit_irq_handled;
++
++	switch (info->mode) {
++	case NXP_NCI_MODE_NCI:
++		r = nxp_nci_i2c_nci_read(phy, &skb);
++		break;
++	case NXP_NCI_MODE_FW:
++		r = nxp_nci_i2c_fw_read(phy, &skb);
++		break;
++	case NXP_NCI_MODE_COLD:
++		r = -EREMOTEIO;
++		break;
++	}
++
++	if (r == -EREMOTEIO) {
++		phy->hard_fault = r;
++		skb = NULL;
++	} else if (r < 0) {
++		nfc_err(&client->dev, "Read failed with error %d\n", r);
++		goto exit_irq_handled;
++	}
++
++	switch (info->mode) {
++	case NXP_NCI_MODE_NCI:
++		nci_recv_frame(phy->ndev, skb);
++		break;
++	case NXP_NCI_MODE_FW:
++		nxp_nci_fw_recv_frame(phy->ndev, skb);
++		break;
++	case NXP_NCI_MODE_COLD:
++		break;
++	}
++
++exit_irq_handled:
++	mutex_unlock(&info->info_lock);
++	return IRQ_HANDLED;
++exit_irq_none:
++	WARN_ON_ONCE(1);
++	return IRQ_NONE;
++}
++
++#ifdef CONFIG_OF
++
++static int nxp_nci_i2c_parse_devtree(struct i2c_client *client)
++{
++	struct nxp_nci_i2c_phy *phy = i2c_get_clientdata(client);
++	struct device_node *pp;
++	int r;
++
++	pp = client->dev.of_node;
++	if (!pp)
++		return -ENODEV;
++
++	r = of_get_named_gpio(pp, "enable-gpios", 0);
++	if (r == -EPROBE_DEFER)
++		r = of_get_named_gpio(pp, "enable-gpios", 0);
++	if (r < 0) {
++		nfc_err(&client->dev, "Failed to get EN gpio, error: %d\n", r);
++		return r;
++	}
++	phy->gpio_en = r;
++
++	r = of_get_named_gpio(pp, "firmware-gpios", 0);
++	if (r == -EPROBE_DEFER)
++		r = of_get_named_gpio(pp, "firmware-gpios", 0);
++	if (r < 0) {
++		nfc_err(&client->dev, "Failed to get FW gpio, error: %d\n", r);
++		return r;
++	}
++	phy->gpio_fw = r;
++
++	r = irq_of_parse_and_map(pp, 0);
++	if (r < 0) {
++		nfc_err(&client->dev, "Unable to get irq, error: %d\n", r);
++		return r;
++	}
++	client->irq = r;
++
++	return 0;
++}
++
++#else
++
++static int nxp_nci_i2c_parse_devtree(struct i2c_client *client)
++{
++	return -ENODEV;
++}
++
++#endif
++
++static int nxp_nci_i2c_probe(struct i2c_client *client,
++			    const struct i2c_device_id *id)
++{
++	struct nxp_nci_i2c_phy *phy;
++	struct nxp_nci_nfc_platform_data *pdata;
++	int r;
++
++	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
++		nfc_err(&client->dev, "Need I2C_FUNC_I2C\n");
++		r = -ENODEV;
++		goto probe_exit;
++	}
++
++	phy = devm_kzalloc(&client->dev, sizeof(struct nxp_nci_i2c_phy),
++			   GFP_KERNEL);
++	if (!phy) {
++		r = -ENOMEM;
++		goto probe_exit;
++	}
++
++	phy->i2c_dev = client;
++	i2c_set_clientdata(client, phy);
++
++	pdata = client->dev.platform_data;
++
++	if (!pdata && client->dev.of_node) {
++		r = nxp_nci_i2c_parse_devtree(client);
++		if (r < 0) {
++			nfc_err(&client->dev, "Failed to get DT data\n");
++			goto probe_exit;
++		}
++	} else if (pdata) {
++		phy->gpio_en = pdata->gpio_en;
++		phy->gpio_fw = pdata->gpio_fw;
++		client->irq = pdata->irq;
++	} else {
++		nfc_err(&client->dev, "No platform data\n");
++		r = -EINVAL;
++		goto probe_exit;
++	}
++
++	r = devm_gpio_request_one(&phy->i2c_dev->dev, phy->gpio_en,
++				  GPIOF_OUT_INIT_LOW, "nxp_nci_en");
++	if (r < 0)
++		goto probe_exit;
++
++	r = devm_gpio_request_one(&phy->i2c_dev->dev, phy->gpio_fw,
++				  GPIOF_OUT_INIT_LOW, "nxp_nci_fw");
++	if (r < 0)
++		goto probe_exit;
++
++	r = nxp_nci_probe(phy, &client->dev, &i2c_phy_ops,
++			  NXP_NCI_I2C_MAX_PAYLOAD, &phy->ndev);
++	if (r < 0)
++		goto probe_exit;
++
++	r = request_threaded_irq(client->irq, NULL,
++				 nxp_nci_i2c_irq_thread_fn,
++				 IRQF_TRIGGER_RISING | IRQF_ONESHOT,
++				 NXP_NCI_I2C_DRIVER_NAME, phy);
++	if (r < 0)
++		nfc_err(&client->dev, "Unable to register IRQ handler\n");
++
++probe_exit:
++	return r;
++}
++
++static int nxp_nci_i2c_remove(struct i2c_client *client)
++{
++	struct nxp_nci_i2c_phy *phy = i2c_get_clientdata(client);
++
++	nxp_nci_remove(phy->ndev);
++	free_irq(client->irq, phy);
++
++	return 0;
++}
++
++static struct i2c_device_id nxp_nci_i2c_id_table[] = {
++	{"nxp-nci_i2c", 0},
++	{}
++};
++MODULE_DEVICE_TABLE(i2c, nxp_nci_i2c_id_table);
++
++static const struct of_device_id of_nxp_nci_i2c_match[] = {
++	{ .compatible = "nxp,nxp-nci-i2c", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, of_nxp_nci_i2c_match);
++
++static struct i2c_driver nxp_nci_i2c_driver = {
++	.driver = {
++		   .name = NXP_NCI_I2C_DRIVER_NAME,
++		   .owner  = THIS_MODULE,
++		   .of_match_table = of_match_ptr(of_nxp_nci_i2c_match),
++		  },
++	.probe = nxp_nci_i2c_probe,
++	.id_table = nxp_nci_i2c_id_table,
++	.remove = nxp_nci_i2c_remove,
++};
++
++module_i2c_driver(nxp_nci_i2c_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("I2C driver for NXP NCI NFC controllers");
++MODULE_AUTHOR("Clément Perrochaud <clement.perrochaud@nxp.com>");
+-- 
+Clément Perrochaud
+
+Eff'Innov Technologies
+Caen, Aix-En-Provence, Grenoble
+
+Eff'Innov Technologies
+Campus EffiScience
+2, Esplanade Anton Philips
+14460 Colombelles, FRANCE
+
+http://www.effinnov.com
+
