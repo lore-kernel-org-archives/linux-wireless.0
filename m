@@ -1,35 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40120 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58830 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752337AbbCJRdE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 13:33:04 -0400
-Message-ID: <1426008781.1926.7.camel@sipsolutions.net> (sfid-20150310_183308_539424_55BBDD28)
-Subject: Re: [PATCH v2] mac80211: Get IV len from key conf and not cipher
- scheme
+	id S1751438AbbCIMwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2015 08:52:51 -0400
+Message-ID: <1425905568.1928.7.camel@sipsolutions.net> (sfid-20150309_135255_585816_51683525)
+Subject: Re: [PATCH] mac80211: handle hw roc cancel vs. expiration race
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Max Stepanov <Max.Stepanov@intel.com>
-Date: Tue, 10 Mar 2015 18:33:01 +0100
-In-Reply-To: <5842EA9CC042B141995329508713AD672105AA3E@ILMAIL1.corp.local>
-References: <5842EA9CC042B141995329508713AD672105A9B0@ILMAIL1.corp.local>
-	 <1426003477.1926.5.camel@sipsolutions.net>
-	 <5842EA9CC042B141995329508713AD672105A9FB@ILMAIL1.corp.local>
-	 <1426006121.1926.6.camel@sipsolutions.net>
-	 <5842EA9CC042B141995329508713AD672105AA3E@ILMAIL1.corp.local>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 09 Mar 2015 13:52:48 +0100
+In-Reply-To: <1425902001-3163-1-git-send-email-eliad@wizery.com> (sfid-20150309_125330_250339_ED541C0C)
+References: <1425902001-3163-1-git-send-email-eliad@wizery.com>
+	 (sfid-20150309_125330_250339_ED541C0C)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-03-10 at 17:28 +0000, Cedric Izoard wrote:
+On Mon, 2015-03-09 at 13:53 +0200, Eliad Peller wrote:
 
-> The other option I see, would be to add a pointer to the cipher scheme 
-> in struct ieee80211_key. So that in TX cipher_scheme would be 
-> test/accessed using key ptr. sta->cipher_scheme would still be used for RX.
-> Do you consider this as a better option ?
+> Fix it by cancelling hw_roc_done on roc cancel.
+> Since hw_roc_done takes local->mtx, temporarily
+> release it (before re-acquiring it and starting
+> the next roc if needed).
 
-A whole pointer seems a bit pointless, maybe a key flag would be better?
+I can't say I like this, and I'm not even sure it doesn't leave a race?
+After all, the work will not take the RTNL.
+
+Also, I think the whole concept is racy because you acquire "found"
+before the unlock, but use it after the unlock, so if the work actually
+ran (_sync, perhaps it already started) it may have freed the "found"
+pointer.
+
+I think the only way to really fix that is to make the driver return the
+roc pointer or so and then we can either queue a work struct per roc
+struct, or at least mark the roc struct as driver-destroyed and
+double-check that in the work function?
+
+Or perhaps we could flush the work before we even take the lock, but
+then it might still race with the driver trying to cancel just after we
+flushed I guess.
 
 johannes
+
 
