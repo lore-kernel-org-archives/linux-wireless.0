@@ -1,59 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0093.hostedemail.com ([216.40.44.93]:33203 "EHLO
+Received: from smtprelay0070.hostedemail.com ([216.40.44.70]:35085 "EHLO
 	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754832AbbCCK3h (ORCPT
+	by vger.kernel.org with ESMTP id S1751981AbbCISvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 05:29:37 -0500
-Message-ID: <1425378573.17273.9.camel@perches.com> (sfid-20150303_113008_000368_2CA67B03)
-Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
- memset
+	Mon, 9 Mar 2015 14:51:37 -0400
+Message-ID: <1425927092.5428.49.camel@perches.com> (sfid-20150309_195142_355174_1B663994)
+Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
 From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 03 Mar 2015 02:29:33 -0800
-In-Reply-To: <1425373219.2450.13.camel@sipsolutions.net>
-References: <cover.1425354527.git.joe@perches.com>
-	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
-	 <1425370617.2450.3.camel@sipsolutions.net>
-	 <1425371858.17273.3.camel@perches.com>
-	 <1425372295.2450.9.camel@sipsolutions.net>
-	 <1425372748.17273.6.camel@perches.com>
-	 <1425373219.2450.13.camel@sipsolutions.net>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Date: Mon, 09 Mar 2015 11:51:32 -0700
+In-Reply-To: <wrfj385eqafd.fsf@ultrasam.lan.trained-monkey.org>
+References: <1425920453-25099-1-git-send-email-Jes.Sorensen@redhat.com>
+	 <1425920453-25099-2-git-send-email-Jes.Sorensen@redhat.com>
+	 <1425925248.5428.39.camel@perches.com>
+	 <wrfj385eqafd.fsf@ultrasam.lan.trained-monkey.org>
 Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-03-03 at 10:00 +0100, Johannes Berg wrote:
-> On Tue, 2015-03-03 at 00:52 -0800, Joe Perches wrote:
+On Mon, 2015-03-09 at 14:43 -0400, Jes Sorensen wrote:
+> Joe Perches <joe@perches.com> writes:
+> > On Mon, 2015-03-09 at 13:00 -0400, Jes.Sorensen@redhat.com wrote:
+> >> This is an alternate driver for the Realtek 8723AU (rtl8723au) written
+> >> from scratch utilizing the mac80211 stack.
+> >
+> > Mostly trivial comments:
+> >
+> >> diff --git a/MAINTAINERS b/MAINTAINERS
+> > []
+> >> +RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
+> >> +M:	Jes Sorensen <Jes.Sorensen@redhat.com>
+> >> +L:	linux-wireless@vger.kernel.org
+> >> +W:	http://intellinuxwireless.org
+> >> +T:	git git://git.Mkernel.org/pub/scm/linux/kernel/git/jes/linux.git
+> >> +	git branch rtl8723au-mac80211
+> >
+> > please keep this on one line
 > 
-> > > > My guess is the eth_zero_addr and eth_broadcast functions
-> > > > are always taking aligned(2) arguments, just like all the
-> > > > is_<foo>_ether_addr functions.
-> > > 
-> > > Err, are you serious???
-> > 
-> > Yes.
-> > 
-> > > That *clearly* isn't true, and if it was then
-> > > this patch wouldn't be safe at all.
-> > 
-> > And why is that?
-> > 
-> > Until patch 1 of this series, eth_zero_addr and
-> > eth_broadcast_addr was just an inline for a memset.
-> > 
-> > Even after patch 1, it's effectively still memset.
+> Lines are 80 characters, and it won't fit.
+
+For code yes, for MAINTAINERS no.
+There are many lines > 80 chars there.
+Please keep:
+<TYPE>:	entry
+on single lines.
+
+> >> +static void rtl8xxxu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
+> >> +				     int result[][8], int t, bool is_2t)
+> >> +{
+> >> +	struct device *dev = &priv->udev->dev;
+> >> +	u32 i, val32;
+> >> +	int path_a_ok /*, path_b_ok */;
+> >> +	int retry = 2;
+> >> +
+> >> +	u32 ADDA_REG[RTL8XXXU_ADDA_REGS] = {
+> >> +		REG_FPGA0_XCD_SWITCH_CTRL, REG_BLUETOOTH,
+> >> +		REG_RX_WAIT_CCA, REG_TX_CCK_RFON,
+> >> +		REG_TX_CCK_BBON, REG_TX_OFDM_RFON,
+> >> +		REG_TX_OFDM_BBON, REG_TX_TO_RX,
+> >> +		REG_TX_TO_TX, REG_RX_CCK,
+> >> +		REG_RX_OFDM, REG_RX_WAIT_RIFS,
+> >> +		REG_RX_TO_RX, REG_STANDBY,
+> >> +		REG_SLEEP, REG_PMPD_ANAEN
+> >> +	};
+> >
+> > static const is generally better.
 > 
-> Exactly. It therefore *doesn't* require an aligned(2) argument, unlike
-> what you stated above, hence my question if you're serious (and perhaps
-> looking at some other code that I don't have).
+> It's irrelevant
 
-Nope, you simply misunderstood what I did write.
+Not really, it requires an initialization on entry
+and would make the object code smaller to use const.
 
-What I said was that the arguments were likely
-already aligned(2), not that the alignment was
-a requirement.
+> >> +struct rtl8xxxu_priv {
+> > []
+> >> +	u32 has_wifi:1;
+> >> +	u32 has_bluetooth:1;
+> >> +	u32 enable_bluetooth:1;
+> >> +	u32 has_gps:1;
+> >> +	u32 vendor_umc:1;
+> >> +	u32 has_polarity_ctrl:1;
+> >> +	u32 has_eeprom:1;
+> >> +	u32 boot_eeprom:1;
+> >> +	u32 ep_tx_high_queue:1;
+> >> +	u32 ep_tx_normal_queue:1;
+> >> +	u32 ep_tx_low_queue:1;
+> >> +	u32 path_a_hi_power:1;
+> >
+> > These might be better as bool instead of packed bitfields.
+> 
+> bool wastes 4 bytes in the struct, so no that would be worse.
 
+It's a used-once struct.  4 bytes, wow.
+
+> If you have any *bugs* to report, I welcome those comments very much.
+> However if you are just looking to nag, please do that somewhere else.
+
+Imperious much?
 
