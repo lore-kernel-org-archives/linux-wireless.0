@@ -1,56 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:60665 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbbCKKcW (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:60920 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753407AbbCIIqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 06:32:22 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Javier Martinez Canillas <javier@dowhile0.org>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Eliad Peller <eliad@wizery.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>
-Subject: Re: [PATCH v5 2/3] wl18xx: add basic device-tree support
-Date: Wed, 11 Mar 2015 11:32:14 +0100
-Message-ID: <2158874.BdVTdz3Bds@wuerfel> (sfid-20150311_113230_568452_0D5CDC75)
-In-Reply-To: <CABxcv=nn9-1a-3809Y1JgC5ExkwHqQmCXRT3tX=h7Z6C7c+m2A@mail.gmail.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <2121942.zIG9BfPsTV@wuerfel> <CABxcv=nn9-1a-3809Y1JgC5ExkwHqQmCXRT3tX=h7Z6C7c+m2A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 9 Mar 2015 04:46:30 -0400
+Received: from [117.207.78.0] (port=10150 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YUtKX-0033Ry-5u
+	for linux-wireless@vger.kernel.org; Mon, 09 Mar 2015 04:46:29 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/5] ath9k: Initialize pll_pwrsave for AR9462/AR9565
+Date: Mon,  9 Mar 2015 14:20:08 +0530
+Message-Id: <1425891010-21522-4-git-send-email-sujith@msujith.org> (sfid-20150309_094640_310217_24755857)
+In-Reply-To: <1425891010-21522-1-git-send-email-sujith@msujith.org>
+References: <1425891010-21522-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 March 2015 11:05:47 Javier Martinez Canillas wrote:
-> 
-> On Wed, Mar 11, 2015 at 10:51 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Wednesday 11 March 2015 01:34:19 Javier Martinez Canillas wrote:
-> >> > +
-> >> > +static struct wl12xx_platform_data *
-> >> > +wlcore_get_platform_data(struct device *dev)
-> >> > +{
-> >> > +       struct wl12xx_platform_data *pdata;
-> >> > +
-> >> > +       /* first, look for DT data */
-> >>
-> >> I thought it was the opposite, that platform data should over-rule DT.
-> >> That way you can still use the data filled in
-> >> arch/arm/mach-omap2/pdata-quirks.c even after the driver supports your
-> >> new DT binding.
-> >
-> > No, the pdata-quirks stuff for this driver must die, it was a hack
-> > that only exists because we previously could not attach data to an
-> > sdio function.
-> >
-> 
-> Ok sorry, I misunderstood and thought that the output from the
-> discussion in patch 3/3 was that the pdata could not still be removed
-> due not having a way to configure the clocks for wl12xx.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-I think that is still the case, but we should never have both pdata
-and DT, and if we ever did, I think the DT should take precedence
-so we can be sure that the pdata is not used and can be removed.
+Cards based on AR9462/AR9565 support more PCIE
+power save mechanisms, so register them correctly.
 
-	Arnd
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c   | 3 +++
+ drivers/net/wireless/ath/ath9k/hw.h   | 2 +-
+ drivers/net/wireless/ath/ath9k/init.c | 1 +
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 60aa8d7..cc8bea8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -366,6 +366,9 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
+ 		ah->config.rimt_first = 700;
+ 	}
+ 
++	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
++		ah->config.pll_pwrsave = 7;
++
+ 	/*
+ 	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
+ 	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index e124ee2..2067cb5 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -341,7 +341,7 @@ struct ath9k_ops_config {
+ 	u32 ant_ctrl_comm2g_switch_enable;
+ 	bool xatten_margin_cfg;
+ 	bool alt_mingainidx;
+-	bool pll_pwrsave;
++	u8 pll_pwrsave;
+ 	bool tx_gain_buffalo;
+ 	bool led_active_high;
+ };
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index ca66fab..de862ad 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -440,6 +440,7 @@ static void ath9k_init_pcoem_platform(struct ath_softc *sc)
+ 	/*
+ 	 * The default value of pll_pwrsave is 1.
+ 	 * For certain AR9485 cards, it is set to 0.
++	 * For AR9462, AR9565 it's set to 7.
+ 	 */
+ 	ah->config.pll_pwrsave = 1;
+ 
+-- 
+2.3.1
+
