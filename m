@@ -1,43 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:59400 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751153AbbCNRzf (ORCPT
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:40525 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526AbbCIVDb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 13:55:35 -0400
-Date: Sat, 14 Mar 2015 18:55:32 +0100
-From: Florian Westphal <fw@strlen.de>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Florian Westphal <fw@strlen.de>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH next] drivers: wireless: carl9170: shrink carl9170_tx_info
-Message-ID: <20150314175532.GH14761@breakpoint.cc> (sfid-20150314_185542_856026_C022EDBE)
-References: <1426261045-22373-1-git-send-email-fw@strlen.de>
- <1689955.Ikz24aORLX@debian64>
+	Mon, 9 Mar 2015 17:03:31 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1689955.Ikz24aORLX@debian64>
+In-Reply-To: <9217056.Z3urqp19oZ@wuerfel>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+	<1425915402-10012-3-git-send-email-eliad@wizery.com>
+	<9217056.Z3urqp19oZ@wuerfel>
+Date: Mon, 9 Mar 2015 23:03:30 +0200
+Message-ID: <CAB3XZEc_sjpA8kgfYCsO8FjGEc6O0xhE9aKO3VtgVbd+Meaakg@mail.gmail.com> (sfid-20150309_220336_599529_E04313DB)
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+From: Eliad Peller <eliad@wizery.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> wrote:
-> On Friday, March 13, 2015 04:37:25 PM Florian Westphal wrote:
-> > its embededded inside rate_driver_data of the ieee80211_tx_info struct,
-> > which in turn is stored in skb->cb[].
-> > 
-> > In order to shrink cb, we need to shrink ieee80211_tx_info which means
-> > to downsize all users first.
-> > 
-> > Alternatively, one might be able to remove kref but
-> > its less intrusive/simpler to use u32 for timeout handling.
-> > 
-> > Signed-off-by: Florian Westphal <fw@strlen.de>
-> > ---
-> u32 jiffies... that's a lot of pointing (well not so much) and really 
-> ugly casting (a lot). I guess it would be easier to just use a "per-queue"
-> timeout watchdog like almost everybody else. This way, the driver will
-> be ready for the next skb->cb shrink as well.
-> 
-> carl9170_tx_ampdu_timeout can be completely removed.
+On Mon, Mar 9, 2015 at 9:50 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday 09 March 2015 17:36:42 Eliad Peller wrote:
+>> --- a/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
+>> +++ b/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
+>> @@ -64,4 +64,13 @@
+>>         vmmc-supply = <&lbep5clwmc_wlen>;
+>>         bus-width = <4>;
+>>         non-removable;
+>> +
+>> +       #address-cells = <1>;
+>> +       #size-cells = <0>;
+>> +       wlcore: wlcore@2 {
+>> +               compatible = "ti,wl1835";
+>> +               reg = <2>;
+>> +               interrupt-parent = <&gpio5>;
+>> +               interrupts = <8 IRQ_TYPE_NONE>;
+>> +       };
+>>
+>
+> Why IRQ_TYPE_NONE?
+>
+i simply mirrored the current board file (which only sets the irq number).
 
-Maybe, but there is only so much I am willing to do with "compile
-tested only" patches...
+> I was expecting you to remove all calls to legacy_init_wl12xx from this file,
+> including the ones for wl12xx aside from the wl18xx ones you removed, but
+> if that's enough to clean out the platform_data handling from the wlcore
+> driver, it's good enough as a start.
+not sure i'm following - can you elaborate?
+
+i'll summarize the way i see it. please correct me if i'm wrong.
+
+both wl18xx and wl12xx use the platform data to get the irq number.
+wl12xx (only) also needs some additional clock definitions to be
+passed. there's currently some issue with specifying some the of clock
+sources, so i preferred starting only with (the simpler) wl18xx
+bindings.
+
+for platforms with wl18xx, we can remove the pdata-quirk, as all the
+data (i.e. irq) can be passed by the new DT bindings.
+however, for platforms with wl12xx, we still need to pass the clock
+definitions (along with the irq), so we have to keep
+legacy_init_wl12xx for the time being (and that's also why we have to
+currently keep the platform_data handling in the wlcore driver)
+
+do you have something else in mind?
+
+Eliad.
