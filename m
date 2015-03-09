@@ -1,40 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54803 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752068AbbCCJhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 04:37:00 -0500
-Message-ID: <1425375418.2450.27.camel@sipsolutions.net> (sfid-20150303_103705_801558_6A0CD887)
-Subject: Re: [PATCH] mac80211: disable u-APSD queues by default
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 03 Mar 2015 10:36:58 +0100
-In-Reply-To: <CABPxzY+hcmAHCzn+JvYRurDYO3yZ=_bRkDFODrbRMJ0L75yZ9A@mail.gmail.com> (sfid-20150303_103352_166684_105D9687)
-References: <1423568924-11895-1-git-send-email-michal.kazior@tieto.com>
-	 <1425374168.2450.17.camel@sipsolutions.net>
-	 <CABPxzY+hcmAHCzn+JvYRurDYO3yZ=_bRkDFODrbRMJ0L75yZ9A@mail.gmail.com>
-	 (sfid-20150303_103352_166684_105D9687)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from 18.mo6.mail-out.ovh.net ([46.105.73.110]:40806 "EHLO
+	18.mo6.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754268AbbCIKen (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2015 06:34:43 -0400
+Received: from mail187.ha.ovh.net (b9.ovh.net [213.186.33.59])
+	by mo6.mail-out.ovh.net (Postfix) with SMTP id 18C6BFFA3D3
+	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2015 11:19:12 +0100 (CET)
+From: clement.perrochaud@effinnov.com
+To: linux-nfc@lists.01.org
+Cc: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= <clement.perrochaud@nxp.com>,
+	sunil.jogi@nxp.com, jerome.pele@nxp.com,
+	Charles.Gorand-Effinnov@nxp.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	davem@davemloft.net, grant.likely@linaro.org, lefrique@marvell.com,
+	christophe.ricard@gmail.com, cuissard@marvell.com,
+	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
+	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	anda-maria.nicolae@intel.com,
+	=?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
+	<clement.perrochaud@effinnov.com>
+Subject: [PATCH v2 1/3] NFC: nci: Add firmware download support
+Date: Mon,  9 Mar 2015 11:12:03 +0100
+Message-Id: <1425895925-20593-2-git-send-email-clement.perrochaud@effinnov.com> (sfid-20150309_113510_609358_769238F4)
+In-Reply-To: <1425895925-20593-1-git-send-email-clement.perrochaud@effinnov.com>
+References: <1425895925-20593-1-git-send-email-clement.perrochaud@effinnov.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Clément Perrochaud <clement.perrochaud@nxp.com>
 
-> >> Cisco 4410N originally forced us to enable VO by
-> >> default only because it treated non-VO ACs as
-> >> legacy.
+A simple forward for firmware download (i.e. sending a new firmware
+to the NFC adapter) from the NFC subsystem to the drivers.
 
-> Mixed mode (uapsd + legacy) is not really the optimal
-> configuration, where we expect STA to send trigger frames periodically
-> to retrieve the DL packets (especially very first packet).
-> 
-> But still if we want power save, i suggest going for
-> All u-apsd (0xF), so that AP will inform us by setting the TIM bit
-> and we can retrieve the first frame.
-> (We have this patch internally and it works well).
+This feature is required to update the firmware of NXP-NCI NFC
+controllers but can be used by any NCI driver.
 
-Except where it doesn't work, like on the Cisco 4410N - see above.
+This feature has been present in the HCI subsystem since 9a695d.
 
-johannes
+Signed-off-by: Clément Perrochaud <clement.perrochaud@effinnov.com>
+---
+ include/net/nfc/nci_core.h |  1 +
+ net/nfc/nci/core.c         | 11 +++++++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index ff87f86..34a6e09 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -71,6 +71,7 @@ struct nci_ops {
+ 	int   (*close)(struct nci_dev *ndev);
+ 	int   (*send)(struct nci_dev *ndev, struct sk_buff *skb);
+ 	int   (*setup)(struct nci_dev *ndev);
++	int   (*fw_download)(struct nci_dev *ndev, const char *firmware_name);
+ 	__u32 (*get_rfprotocol)(struct nci_dev *ndev, __u8 rf_protocol);
+ 	int   (*discover_se)(struct nci_dev *ndev);
+ 	int   (*disable_se)(struct nci_dev *ndev, u32 se_idx);
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 9575a18..49ff321 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -907,6 +907,16 @@ static int nci_se_io(struct nfc_dev *nfc_dev, u32 se_idx,
+ 	return 0;
+ }
+ 
++static int nci_fw_download(struct nfc_dev *nfc_dev, const char *firmware_name)
++{
++	struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
++
++	if (!ndev->ops->fw_download)
++		return -ENOTSUPP;
++
++	return ndev->ops->fw_download(ndev, firmware_name);
++}
++
+ static struct nfc_ops nci_nfc_ops = {
+ 	.dev_up = nci_dev_up,
+ 	.dev_down = nci_dev_down,
+@@ -922,6 +932,7 @@ static struct nfc_ops nci_nfc_ops = {
+ 	.disable_se = nci_disable_se,
+ 	.discover_se = nci_discover_se,
+ 	.se_io = nci_se_io,
++	.fw_download = nci_fw_download,
+ };
+ 
+ /* ---- Interface to NCI drivers ---- */
+-- 
+Clément Perrochaud
+
+Eff'Innov Technologies
+Caen, Aix-En-Provence, Grenoble
+
+Eff'Innov Technologies
+Campus EffiScience
+2, Esplanade Anton Philips
+14460 Colombelles, FRANCE
+
+http://www.effinnov.com
 
