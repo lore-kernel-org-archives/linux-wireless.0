@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37763 "EHLO mx1.redhat.com"
+Received: from mout.gmx.net ([212.227.15.19]:53064 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755717AbbCRNPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 09:15:10 -0400
-Date: Wed, 18 Mar 2015 14:11:25 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [1/3] rt2x00usb: initialize the read value in case of failure
-Message-ID: <20150318131124.GA11724@redhat.com> (sfid-20150318_141516_235339_4B423290)
-References: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
- <20150316160652.789B313FBE6@smtp.codeaurora.org>
- <20150316164100.GA6208@linutronix.de>
- <20150317083414.GA1276@linutronix.de>
+	id S1753046AbbCIUyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2015 16:54:43 -0400
+Received: from minime.bse ([77.20.123.72]) by mail.gmx.com (mrgmx002) with
+ ESMTPSA (Nemesis) id 0MNq4h-1YODCl1uwt-007SKN for
+ <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 21:54:40 +0100
+Date: Mon, 9 Mar 2015 21:54:51 +0100
+From: Daniel =?iso-8859-1?Q?Gl=F6ckner?= <daniel-gl@gmx.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Maximilian Engelhardt <maxi@daemonizer.de>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+Message-ID: <20150309205451.GA13884@minime.bse> (sfid-20150309_215451_757737_56C28350)
+References: <53FDACD1.8090805@msgid.tls.msk.ru>
+ <9234001.YBqfvtcJFx@fuchs>
+ <5496E135.1@broadcom.com>
+ <9062978.Vq0rTjKd5z@fuchs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20150317083414.GA1276@linutronix.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9062978.Vq0rTjKd5z@fuchs>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 17, 2015 at 09:34:14AM +0100, Sebastian Andrzej Siewior wrote:
-> I have no idea what AutoRun mode is (it seems that the stick already
-> has a firmware and is happy with it) and I have no clue why the firmware
-> decides to lie about it. I looked at the vendor driver I found at github
-> (which seems to be from 2012-10-22, DPO_RT5572_LinuxSTA_2.6.1.3) and
-> well, I look again if someone says it is worth looking… They seem to do
-> some kind "firmware is comming" magic which might be already done in the
-> current driver at a different spot but I think the main question is why
-> request is answered wrong. I *think* the vendor driver sends the
-> USB_MODE_AUTORUN request only once but it is hard to tell…
+Hi Arend,
 
-Does the below patch solve the issue ?
+On Sun, Dec 21, 2014 at 06:34:24PM +0100, Maximilian Engelhardt wrote:
+> On Sunday 21 December 2014 16:03:17 Arend van Spriel wrote:
+> > On 12/21/14 15:24, Maximilian Engelhardt wrote:
+> > > On Sunday 21 December 2014 15:13:50 Arend van Spriel wrote:
+> > >> Thanks. It shows you have have the same bt-coex version as Michael. I am
+> > >> not familiar with bluetooth side of things. Are you both using bluetooth
+> > >> on 4313?
+> > >> 
+> > >> Regards,
+> > >> Arend
+> > > 
+> > > I don't know. I think I have Bluetooth somehow enabled but I'm not really
+> > > using it. I definitely don't have any Bluetooth devices connected. I could
+> > > try to unload/disable Bluetooth it to see if it makes any difference.
+> > 
+> > That would be useful to know.
+> > 
+> 
+> I did a test with all Bluetooth modules unloaded that I could find but 
+> throughput was still very low (about 4 Mbit/s with brcmsmac, my atheros USB 
+> stick archived about 110 Mbit/s).
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 9a2f44a..3a6cae8 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -293,6 +293,7 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	if (retval) {
- 		rt2x00_info(rt2x00dev,
- 			    "Firmware loading not required - NIC in AutoRun mode\n");
-+		__clear_bit(REQUIRE_FIRMWARE, &rt2x00dev->cap_flags);
- 	} else {
- 		rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
- 					      data + offset, length);
+any update on this issue?
+One of my relatives would like to get rid of that Ralink wifi stick she
+has been carrying around for 1.5 years now since the internal wifi in her
+Thinkpad E130 suffers from this problem.
 
+Best regards,
+
+  Daniel
