@@ -1,126 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23662 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754579AbbCLNGM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:06:12 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from s72.web-hosting.com ([198.187.29.22]:45422 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753387AbbCIIq2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2015 04:46:28 -0400
+Received: from [117.207.78.0] (port=10150 helo=sujith-pixel.qualcomm.com)
+	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
+	(Exim 4.82)
+	(envelope-from <sujith@msujith.org>)
+	id 1YUtKV-0033Ry-U1
+	for linux-wireless@vger.kernel.org; Mon, 09 Mar 2015 04:46:28 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 36/49] iwlwifi: trans: Take ownership on secure machine before FW load
-Date: Thu, 12 Mar 2015 15:04:21 +0200
-Message-Id: <1426165474-25586-36-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143417_557886_CE30C975)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+Subject: [PATCH 2/5] ath9k: Fix PLL powersave for AR9485
+Date: Mon,  9 Mar 2015 14:20:07 +0530
+Message-Id: <1425891010-21522-3-git-send-email-sujith@msujith.org> (sfid-20150309_094638_784155_5ED603BF)
+In-Reply-To: <1425891010-21522-1-git-send-email-sujith@msujith.org>
+References: <1425891010-21522-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-When we load the firmware for the 8000 B step device, it'll
-verify its signature. In the current version of the
-hardware, there can be a race between the WiFi firmware
-being loaded and the Bluetooth firmware being loaded.
+Use the value in ah->config.pll_pwrsave to determine
+which array needs to be loaded. Also, initialize
+pll_pwrsave to 1 by default.
 
-Check that WiFi is authenticated, if not, take ownership
-on the authentication machine to make sure that the WiFi
-firmware will be authenticated.
-
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-prph.h   | 10 ++++++++
- drivers/net/wireless/iwlwifi/pcie/trans.c | 42 +++++++++++++++++++++++++++++++
- 2 files changed, 52 insertions(+)
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/hw.h        |  2 +-
+ drivers/net/wireless/ath/ath9k/init.c      |  8 +++++++-
+ 3 files changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index aa6fb584..bc96288 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -381,6 +381,7 @@ enum secure_load_status_reg {
- #define WFPM_CTRL_REG			0xA03030
- enum {
- 	ENABLE_WFPM = BIT(31),
-+	WFPM_AUX_CTL_AUX_IF_MAC_OWNER_MSK	= 0x80000000,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index 4335ccb..ea33f8d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -195,16 +195,16 @@ static void ar9003_hw_init_mode_regs(struct ath_hw *ah)
+ 		INIT_INI_ARRAY(&ah->iniCckfirJapan2484,
+ 			       ar9485_1_1_baseband_core_txfir_coeff_japan_2484);
+ 
+-		if (ah->config.no_pll_pwrsave) {
++		if (ah->config.pll_pwrsave & AR_PCIE_PLL_PWRSAVE_CONTROL) {
+ 			INIT_INI_ARRAY(&ah->iniPcieSerdes,
+-				       ar9485_1_1_pcie_phy_clkreq_disable_L1);
++				       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
+ 			INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
+-				       ar9485_1_1_pcie_phy_clkreq_disable_L1);
++				       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
+ 		} else {
+ 			INIT_INI_ARRAY(&ah->iniPcieSerdes,
+-				       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
++				       ar9485_1_1_pcie_phy_clkreq_disable_L1);
+ 			INIT_INI_ARRAY(&ah->iniPcieSerdesLowPower,
+-				       ar9485_1_1_pll_on_cdr_on_clkreq_disable_L1);
++				       ar9485_1_1_pcie_phy_clkreq_disable_L1);
+ 		}
+ 	} else if (AR_SREV_9462_21(ah)) {
+ 		INIT_INI_ARRAY(&ah->iniMac[ATH_INI_CORE],
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 2bb3b33..e124ee2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -341,7 +341,7 @@ struct ath9k_ops_config {
+ 	u32 ant_ctrl_comm2g_switch_enable;
+ 	bool xatten_margin_cfg;
+ 	bool alt_mingainidx;
+-	bool no_pll_pwrsave;
++	bool pll_pwrsave;
+ 	bool tx_gain_buffalo;
+ 	bool led_active_high;
  };
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 6c6e884..ca66fab 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -437,8 +437,14 @@ static void ath9k_init_pcoem_platform(struct ath_softc *sc)
+ 		ath_info(common, "Enable WAR for ASPM D3/L1\n");
+ 	}
  
- #define AUX_MISC_REG			0xA200B0
-@@ -388,6 +389,15 @@ enum {
- 	HW_STEP_LOCATION_BITS = 24,
- };
++	/*
++	 * The default value of pll_pwrsave is 1.
++	 * For certain AR9485 cards, it is set to 0.
++	 */
++	ah->config.pll_pwrsave = 1;
++
+ 	if (sc->driver_data & ATH9K_PCI_NO_PLL_PWRSAVE) {
+-		ah->config.no_pll_pwrsave = true;
++		ah->config.pll_pwrsave = 0;
+ 		ath_info(common, "Disable PLL PowerSave\n");
+ 	}
  
-+#define AUX_MISC_MASTER1_EN		0xA20818
-+enum aux_misc_master1_en {
-+	AUX_MISC_MASTER1_EN_SBE_MSK	= 0x1,
-+};
-+
-+#define AUX_MISC_MASTER1_SMPHR_STATUS	0xA20800
-+#define RSA_ENABLE			0xA24B08
-+#define PREG_AUX_BUS_WPROT_0		0xA04CC0
-+
- /* FW chicken bits */
- #define LMPM_CHICK			0xA01FF8
- enum {
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index 421ef6b..9ce5e61 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -682,6 +682,43 @@ static int iwl_pcie_load_section(struct iwl_trans *trans, u8 section_num,
- 	return ret;
- }
- 
-+/*
-+ * Driver Takes the ownership on secure machine before FW load
-+ * and prevent race with the BT load.
-+ * W/A for ROM bug. (should be remove in the next Si step)
-+ */
-+static int iwl_pcie_rsa_race_bug_wa(struct iwl_trans *trans)
-+{
-+	u32 val, loop = 1000;
-+
-+	/* Check the RSA semaphore is accessible - if not, we are in trouble */
-+	val = iwl_read_prph(trans, PREG_AUX_BUS_WPROT_0);
-+	if (val & (BIT(1) | BIT(17))) {
-+		IWL_ERR(trans,
-+			"can't access the RSA semaphore it is write protected\n");
-+		return 0;
-+	}
-+
-+	/* take ownership on the AUX IF */
-+	iwl_write_prph(trans, WFPM_CTRL_REG, WFPM_AUX_CTL_AUX_IF_MAC_OWNER_MSK);
-+	iwl_write_prph(trans, AUX_MISC_MASTER1_EN, AUX_MISC_MASTER1_EN_SBE_MSK);
-+
-+	do {
-+		iwl_write_prph(trans, AUX_MISC_MASTER1_SMPHR_STATUS, 0x1);
-+		val = iwl_read_prph(trans, AUX_MISC_MASTER1_SMPHR_STATUS);
-+		if (val == 0x1) {
-+			iwl_write_prph(trans, RSA_ENABLE, 0);
-+			return 0;
-+		}
-+
-+		udelay(10);
-+		loop--;
-+	} while (loop > 0);
-+
-+	IWL_ERR(trans, "Failed to take ownership on secure machine\n");
-+	return -EIO;
-+}
-+
- static int iwl_pcie_load_cpu_sections_8000b(struct iwl_trans *trans,
- 					    const struct fw_img *image,
- 					    int cpu,
-@@ -901,6 +938,11 @@ static int iwl_pcie_load_given_ucode_8000b(struct iwl_trans *trans,
- 	if (trans->dbg_dest_tlv)
- 		iwl_pcie_apply_destination(trans);
- 
-+	/* TODO: remove in the next Si step */
-+	ret = iwl_pcie_rsa_race_bug_wa(trans);
-+	if (ret)
-+		return ret;
-+
- 	/* configure the ucode to be ready to get the secured image */
- 	/* release CPU reset */
- 	iwl_write_prph(trans, RELEASE_CPU_RESET, RELEASE_CPU_RESET_BIT);
 -- 
-1.9.1
+2.3.1
 
