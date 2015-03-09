@@ -1,40 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:34291 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbbCNLwH (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:37691 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752432AbbCIH4e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 07:52:07 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Florian Westphal <fw@strlen.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH next] drivers: wireless: carl9170: shrink carl9170_tx_info
-Date: Sat, 14 Mar 2015 12:51:57 +0100
-Message-ID: <1689955.Ikz24aORLX@debian64> (sfid-20150314_125220_977433_94E40D24)
-In-Reply-To: <1426261045-22373-1-git-send-email-fw@strlen.de>
-References: <1426261045-22373-1-git-send-email-fw@strlen.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 9 Mar 2015 03:56:34 -0400
+Received: by lbdu10 with SMTP id u10so22228474lbd.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 00:56:33 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 4/4] ath10k: add WOW patterns support
+Date: Mon,  9 Mar 2015 08:55:20 +0100
+Message-Id: <1425887720-11466-4-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150309_085640_697470_FF787DA3)
+In-Reply-To: <1425887720-11466-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1425887720-11466-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, March 13, 2015 04:37:25 PM Florian Westphal wrote:
-> its embededded inside rate_driver_data of the ieee80211_tx_info struct,
-> which in turn is stored in skb->cb[].
-> 
-> In order to shrink cb, we need to shrink ieee80211_tx_info which means
-> to downsize all users first.
-> 
-> Alternatively, one might be able to remove kref but
-> its less intrusive/simpler to use u32 for timeout handling.
-> 
-> Signed-off-by: Florian Westphal <fw@strlen.de>
-> ---
-u32 jiffies... that's a lot of pointing (well not so much) and really 
-ugly casting (a lot). I guess it would be easier to just use a "per-queue"
-timeout watchdog like almost everybody else. This way, the driver will
-be ready for the next skb->cb shrink as well.
+Add patterns support for WOW.
 
-carl9170_tx_ampdu_timeout can be completely removed.
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c    |  1 +
+ drivers/net/wireless/ath/ath10k/hw.h      |  1 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  2 +-
+ drivers/net/wireless/ath/ath10k/wmi.h     |  4 +++
+ drivers/net/wireless/ath/ath10k/wow.c     | 47 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wow.h     |  2 ++
+ 6 files changed, 55 insertions(+), 2 deletions(-)
 
-Regards,
-  Christian
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e7fc531..02da72e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -972,6 +972,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
+ 		ar->htt.max_num_pending_tx = TARGET_TLV_NUM_MSDU_DESC;
++		ar->wow.max_num_patterns = TARGET_TLV_NUM_WOW_PATTERNS;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 7f04645..22c993d 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -263,6 +263,7 @@ struct ath10k_pktlog_hdr {
+ 						 2)
+ #define TARGET_TLV_NUM_TIDS			((TARGET_TLV_NUM_PEERS) * 2)
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
++#define TARGET_TLV_NUM_WOW_PATTERNS		22
+ 
+ /* Number of Copy Engines supported */
+ #define CE_COUNT 8
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 0c38b5e..f90747e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1278,7 +1278,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cfg->num_tdls_conn_table_entries = __cpu_to_le32(0x20);
+ 	cfg->beacon_tx_offload_max_vdev = __cpu_to_le32(2);
+ 	cfg->num_multicast_filter_entries = __cpu_to_le32(5);
+-	cfg->num_wow_filters = __cpu_to_le32(0x16);
++	cfg->num_wow_filters = __cpu_to_le32(ar->wow.max_num_patterns);
+ 	cfg->num_keep_alive_pattern = __cpu_to_le32(6);
+ 	cfg->keep_alive_pattern_size = __cpu_to_le32(0);
+ 	cfg->max_tdls_concurrent_sleep_sta = __cpu_to_le32(1);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 9ea8e09..3b6f39d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -5006,6 +5006,10 @@ struct wmi_wow_ev_arg {
+ 	u32 data_len;
+ };
+ 
++#define WOW_MIN_PATTERN_SIZE	1
++#define WOW_MAX_PATTERN_SIZE	148
++#define WOW_MAX_PKT_OFFSET	128
++
+ struct ath10k;
+ struct ath10k_vif;
+ struct ath10k_fw_stats_pdev;
+diff --git a/drivers/net/wireless/ath/ath10k/wow.c b/drivers/net/wireless/ath/ath10k/wow.c
+index c566881..c9746c1 100644
+--- a/drivers/net/wireless/ath/ath10k/wow.c
++++ b/drivers/net/wireless/ath/ath10k/wow.c
+@@ -26,6 +26,9 @@
+ static const struct wiphy_wowlan_support ath10k_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_DISCONNECT |
+ 		 WIPHY_WOWLAN_MAGIC_PKT,
++	.pattern_min_len = WOW_MIN_PATTERN_SIZE,
++	.pattern_max_len = WOW_MAX_PATTERN_SIZE,
++	.max_pkt_offset = WOW_MAX_PKT_OFFSET,
+ };
+ 
+ static int ath10k_wow_vif_cleanup(struct ath10k_vif *arvif)
+@@ -42,6 +45,15 @@ static int ath10k_wow_vif_cleanup(struct ath10k_vif *arvif)
+ 		}
+ 	}
+ 
++	for (i = 0; i < ar->wow.max_num_patterns; i++) {
++		ret = ath10k_wmi_wow_del_pattern(ar, arvif->vdev_id, i);
++		if (ret) {
++			ath10k_warn(ar, "failed to delete wow pattern %d for vdev %i: %d\n",
++				    i, arvif->vdev_id, ret);
++			return ret;
++		}
++	}
++
+ 	return 0;
+ }
+ 
+@@ -70,6 +82,8 @@ static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
+ 	int ret, i;
+ 	unsigned long wow_mask = 0;
+ 	struct ath10k *ar = arvif->ar;
++	const struct cfg80211_pkt_pattern *patterns = wowlan->patterns;
++	int pattern_id = 0;
+ 
+ 	/* Setup requested WOW features */
+ 	switch (arvif->vdev_type) {
+@@ -100,6 +114,35 @@ static int ath10k_vif_wow_set_wakeups(struct ath10k_vif *arvif,
+ 		break;
+ 	}
+ 
++	for (i = 0; i < wowlan->n_patterns; i++) {
++		u8 bitmask[WOW_MAX_PATTERN_SIZE] = {};
++		int j;
++
++		if (patterns[i].pattern_len > WOW_MAX_PATTERN_SIZE)
++			continue;
++
++		/* convert bytemask to bitmask */
++		for (j = 0; j < patterns[i].pattern_len; j++)
++			if (patterns[i].mask[j / 8] & BIT(j % 8))
++				bitmask[j] = 0xff;
++
++		ret = ath10k_wmi_wow_add_pattern(ar, arvif->vdev_id,
++						 pattern_id,
++						 patterns[i].pattern,
++						 bitmask,
++						 patterns[i].pattern_len,
++						 patterns[i].pkt_offset);
++		if (ret) {
++			ath10k_warn(ar, "failed to add pattern %i to vdev %i: %d\n",
++				    pattern_id,
++				    arvif->vdev_id, ret);
++			return ret;
++		}
++
++		pattern_id++;
++		__set_bit(WOW_PATTERN_MATCH_EVENT, &wow_mask);
++	}
++
+ 	for (i = 0; i < WOW_EVENT_MAX; i++) {
+ 		if (!test_bit(i, &wow_mask))
+ 			continue;
+@@ -272,7 +315,9 @@ int ath10k_wow_init(struct ieee80211_hw *hw)
+ 	if (WARN_ON(!test_bit(WMI_SERVICE_WOW, ar->wmi.svc_map)))
+ 		return -EINVAL;
+ 
+-	ar->hw->wiphy->wowlan = &ath10k_wowlan_support;
++	ar->wow.wowlan_support = ath10k_wowlan_support;
++	ar->wow.wowlan_support.n_patterns = ar->wow.max_num_patterns;
++	ar->hw->wiphy->wowlan = &ar->wow.wowlan_support;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wow.h b/drivers/net/wireless/ath/ath10k/wow.h
+index 32b724a..a051f1b 100644
+--- a/drivers/net/wireless/ath/ath10k/wow.h
++++ b/drivers/net/wireless/ath/ath10k/wow.h
+@@ -17,7 +17,9 @@
+ #define _WOW_H_
+ 
+ struct ath10k_wow {
++	u32 max_num_patterns;
+ 	struct completion wakeup_completed;
++	struct wiphy_wowlan_support wowlan_support;
+ };
+ 
+ #ifdef CONFIG_PM
+-- 
+1.9.1
+
