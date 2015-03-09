@@ -1,33 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:33626 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981AbbCJPf4 (ORCPT
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:39678 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751560AbbCILxa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 11:35:56 -0400
-Received: by iecvj10 with SMTP id vj10so19306879iec.0
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 08:35:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87385dz2yx.fsf@kamboji.qca.qualcomm.com>
-References: <1425929918-860-1-git-send-email-linux@rempel-privat.de>
-	<87385dz2yx.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 10 Mar 2015 08:35:55 -0700
-Message-ID: <CAJ-Vmon6j71Eurbe7Sg2ZB06hbOymVYSge_-LeUKCXRDmLE5mw@mail.gmail.com> (sfid-20150310_163601_278152_2EE43620)
-Subject: Re: [PATCH] ath9k_htc: force FW v1.4.0
-From: Adrian Chadd <adrian@freebsd.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Oleksij Rempel <linux@rempel-privat.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 Mar 2015 07:53:30 -0400
+Received: by wiwl15 with SMTP id l15so19400906wiw.4
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 04:53:28 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mac80211: handle hw roc cancel vs. expiration race
+Date: Mon,  9 Mar 2015 13:53:21 +0200
+Message-Id: <1425902001-3163-1-git-send-email-eliad@wizery.com> (sfid-20150309_125334_121378_870B2BF5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeah, let's have it warn for a month or two.
+mac80211 handles roc expirations (indicated by
+ieee80211_remain_on_channel_expired()) with a separate
+work (hw_roc_done).
 
-There's some pending work that will break the API with 1.3 firmware,
-so it has to happen sooner rather than later. But yeah, maybe warn for
-about a month would be good. the older firmware is still in the git
-tree in case people want it.
+If userspace asks to cancel the ongoing roc before
+hw_roc_done was scheduled, mac80211 will cancel
+the ongoing roc, while leaving the hw_roc_done work
+pending.
 
+This might end up in the next roc being cancelled
+by the stale work, causing mac80211 and the low-level
+driver to go out of sync.
 
--adrian
+Fix it by cancelling hw_roc_done on roc cancel.
+Since hw_roc_done takes local->mtx, temporarily
+release it (before re-acquiring it and starting
+the next roc if needed).
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/cfg.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index dd4ff36..a80f7b3 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2782,7 +2782,22 @@ static int ieee80211_cancel_roc(struct ieee80211_local *local,
+ 		}
+ 
+ 		list_del(&found->list);
++		mutex_unlock(&local->mtx);
++
++		/*
++		 * The driver might have already expired the ROC (by
++		 * calling ieee80211_remain_on_channel_expired()), so
++		 * cancel the pending roc_done work (otherwise, it might
++		 * cancel the upcoming roc).
++		 */
++		cancel_work_sync(&local->hw_roc_done);
+ 
++		mutex_lock(&local->mtx);
++		/*
++		 * We hold rtnl, so nothing should have been able to
++		 * manipulate the roc_list during the temporary
++		 * lock release.
++		 */
+ 		if (found->started)
+ 			ieee80211_start_next_roc(local);
+ 		mutex_unlock(&local->mtx);
+-- 
+1.8.5.2.229.g4448466.dirty
+
