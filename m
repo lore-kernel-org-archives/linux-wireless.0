@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:17203 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933767AbbCDGvY (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:59725 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741AbbCITsO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 01:51:24 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 2/2] ath10k: increase station kickout threshold
-Date: Wed, 4 Mar 2015 12:20:47 +0530
-Message-ID: <1425451847-14505-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150304_075204_587361_8A0D593C)
-In-Reply-To: <1425451847-14505-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1425451847-14505-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Mon, 9 Mar 2015 15:48:14 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Ido Yariv <ido@wizery.com>
+Subject: Re: [PATCH v5 2/3] wl18xx: add basic device-tree support
+Date: Mon, 09 Mar 2015 20:47:46 +0100
+Message-ID: <10327320.45ToCM2gnq@wuerfel> (sfid-20150309_204819_109355_1BFA8FB5)
+In-Reply-To: <1425915402-10012-2-git-send-email-eliad@wizery.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <1425915402-10012-2-git-send-email-eliad@wizery.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the station kickout threshold is also counting software
-reries (Default sw count in firmware is 16), increasing the threshold
-to try with atleast 20 data frames before kicking out the station.
+On Monday 09 March 2015 17:36:41 Eliad Peller wrote:
+> @@ -323,11 +388,14 @@ out:
+>  static void wl1271_remove(struct sdio_func *func)
+>  {
+>         struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
+> +       struct wlcore_platdev_data *pdev_data = glue->core->dev.platform_data;
+> +       struct wl12xx_platform_data *pdata = pdev_data->pdata;
+>  
+>         /* Undo decrement done above in wl1271_probe */
+>         pm_runtime_get_noresume(&func->dev);
+>  
+>         platform_device_unregister(glue->core);
+> +       wlcore_del_platform_data(pdata);
+>         kfree(glue);
+>  }
+>  
+> 
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The third patch looks ok, but now you should remove the wl12xx_platform_data
+from the wlcore code, since it's not used any more, it was broken to start
+with (as it supports only one instance) and we want to prevent others from
+adding new users of that. Since the only thing you need is the irq number,
+you can directly add the irq number to struct wlcore_platdev_data and
+remove the pdata pointer there.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7cba781..e43c453 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -50,8 +50,8 @@
- 
- #define ATH10K_MAX_NUM_MGMT_PENDING 128
- 
--/* number of failed packets */
--#define ATH10K_KICKOUT_THRESHOLD 50
-+/* number of failed packets (20 packets with 16 sw reties each) */
-+#define ATH10K_KICKOUT_THRESHOLD (20 * 16)
- 
- /*
-  * Use insanely high numbers to make sure that the firmware implementation
--- 
-2.3.1
-
+	Arnd
