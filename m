@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:33563 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752099AbbCWItj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 04:49:39 -0400
-Message-ID: <550FD369.90902@ti.com> (sfid-20150323_094944_229936_FBBAF9DA)
-Date: Mon, 23 Mar 2015 14:18:41 +0530
-From: Sekhar Nori <nsekhar@ti.com>
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:46095 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752458AbbCIJJh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Mar 2015 05:09:37 -0400
+Received: by obcva2 with SMTP id va2so13575655obc.13
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 02:09:37 -0700 (PDT)
 MIME-Version: 1.0
-To: Eliad Peller <eliad@wizery.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	=?UTF-8?B?QmVub8OudCBDb3Vzc29u?= <bcousson@baylibre.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Luciano Coelho <luca@coelho.fi>, Ido Yariv <ido@wizery.com>
-Subject: Re: [PATCH v7 6/6] wlcore: remove wl12xx_platform_data
-References: <1426696710-6891-1-git-send-email-eliad@wizery.com>	<1426696710-6891-7-git-send-email-eliad@wizery.com>	<550FC60F.4050206@ti.com>	<CAB3XZEdyQGtHzY-61baafBQuJ3hNHv1MSkBD+1EmjYzgoSG58g@mail.gmail.com>	<550FCD16.6030809@ti.com> <CAB3XZEeKUwDE9NJzX-W1fKc9gP4kG+EjKN+XJbdaaADc1vi-BQ@mail.gmail.com>
-In-Reply-To: <CAB3XZEeKUwDE9NJzX-W1fKc9gP4kG+EjKN+XJbdaaADc1vi-BQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+From: Avery Pennarun <apenwarr@gmail.com>
+Date: Mon, 9 Mar 2015 05:09:17 -0400
+Message-ID: <CAHqTa-0U9vP_wMFxDjRu+CSmdTRe2B+Npi3FMEZmzAAQAXAf8g@mail.gmail.com> (sfid-20150309_100941_303116_519CCE24)
+Subject: Capturing hardware-decrypted packets in monitor mode on ath9k/ath10k
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 23 March 2015 01:57 PM, Eliad Peller wrote:
->> I was applying the whole series, but over v4.0-rc1 :) Its best to
->> mention the baseline in cover-letter itself.
->>
-> check out again the cover-letter. you probably overlooked it :)
+Hi,
 
-I see it now :)
+On a station or AP device, I'd like to capture packets in monitor mode
+(ie. with radiotap headers).  Normally this captures the encrypted
+packets as they appear on the air.  In my case, I'd like to capture
+the *decrypted* packets where possible (ie. packets communicating with
+this node, where the local machine already knows the session key and
+is presumably decrypting the packets anyway so that it can carry on
+the session).
+
+I know wireshark (etc) can decrypt packets for a given session if you
+capture the EAPOL frames.  The advantages of having the driver do it
+in hardware are a) hopefully less performance impact, and b) you can
+easily start capturing at any time, even post EAPOL, because the
+driver already has a cached copy of the keys.
+
+Is there a flag somewhere I can set to make this happen?  Is this even
+a feature supported by most hardware?
 
 Thanks,
-Sekhar
+
+Avery
