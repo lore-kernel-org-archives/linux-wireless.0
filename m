@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6010 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753210AbbC3I3U (ORCPT
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:38528 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752967AbbCJN3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:29:20 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 4/5] wil6210: stop_ap to leave interface closed
-Date: Mon, 30 Mar 2015 11:28:53 +0300
-Message-Id: <1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150330_102927_412153_35AF5F44)
-In-Reply-To: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 10 Mar 2015 09:29:16 -0400
+Received: by lbiz12 with SMTP id z12so1688623lbi.5
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 06:29:14 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH] ath10k: fix PMG by using AES-CMAC/IGTK software crypto
+Date: Tue, 10 Mar 2015 14:29:05 +0100
+Message-Id: <1425994145-15574-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20150310_142929_982633_63023FC6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211_ops.stop_ap supposed to have interface closed
-as post condition. Fulfill this requirement.
+While testing with older supplicant, .drv_set_key() was failing due to
+higher than ath10k firmware could handle key_index (WMI_MAX_KEY_INDEX == 3).
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+--
+wpa_driver_nl80211_set_key: ifindex=15 alg=4 addr=0x7f02b129fbe3 key_idx=4 set_tx=0 seq_len=6 key_len=16
+    broadcast key
+nl80211: set_key failed; err=-22 Invalid argument)
+wlan0: WPA: Failed to configure IGTK to the driver
+wlan0: RSN: Failed to configure IGTK
+--
+
+In order to fix this case (PMF: AES-CMAC/IGTK) force the AES_CMAC cipher to
+be handled by software.
+
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index ec46a94..b51ac10 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -822,13 +822,9 @@ static int wil_cfg80211_stop_ap(struct wiphy *wiphy,
- 	wmi_pcp_stop(wil);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1138f4f8923f..2264c06361b1 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -66,8 +66,8 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+ 		arg.key_cipher = WMI_CIPHER_WEP;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+-		/* this one needs to be done in software */
+-		return 1;
++		WARN_ON(1)
++		return -EINVAL;
+ 	default:
+ 		ath10k_warn(ar, "cipher %d is not supported\n", key->cipher);
+ 		return -EOPNOTSUPP;
+@@ -3995,6 +3995,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	int ret = 0;
+ 	u32 flags = 0;
  
- 	__wil_down(wil);
--	__wil_up(wil);
- 
- 	mutex_unlock(&wil->mutex);
- 
--	/* some functions above might fail (e.g. __wil_up). Nevertheless, we
--	 * return success because AP has stopped
--	 */
- 	return 0;
- }
++	/* this one needs to be done in software */
++	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
++		return 1;
++
+ 	if (key->keyidx > WMI_MAX_KEY_INDEX)
+ 		return -ENOSPC;
  
 -- 
-2.1.0
+2.1.2
 
