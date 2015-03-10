@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:46259 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750749AbbCSVAs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 17:00:48 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1YYhYZ-0000ti-Dv
-	for linux-wireless@vger.kernel.org; Thu, 19 Mar 2015 22:00:43 +0100
-Received: from p508A7FCB.dip0.t-ipconnect.de ([80.138.127.203])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2015 22:00:43 +0100
-Received: from Juergen.Bausa by p508A7FCB.dip0.t-ipconnect.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2015 22:00:43 +0100
-To: linux-wireless@vger.kernel.org
-From: =?utf-8?b?SsO8cmdlbg==?= Bausa <Juergen.Bausa@online.de>
-Subject: Re: Broadcom 43340
-Date: Thu, 19 Mar 2015 21:00:36 +0000 (UTC)
-Message-ID: <loom.20150319T215852-35@post.gmane.org> (sfid-20150319_220054_421246_7120AF5C)
-References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	 	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	 	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir>	  <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com>	  <loom.20150315T213441-211@post.gmane.org> <5505F651.3060607@broadcom.com>	  <loom.20150317T214603-379@post.gmane.org>	 <1426634407.11120.50.camel@redhat.com>	 <loom.20150318T222315-999@post.gmane.org> <1426714179.26901.37.camel@redhat.com> <5509F0B5.7030601@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29114 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209AbbCJP2m (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2015 11:28:42 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] ath10k: add hw connection monitor support
+References: <87fv9hyz2r.fsf@kamboji.qca.qualcomm.com>
+	<1425908197-16118-1-git-send-email-michal.kazior@tieto.com>
+	<1425908197-16118-2-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 10 Mar 2015 17:28:32 +0200
+In-Reply-To: <1425908197-16118-2-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 9 Mar 2015 14:36:37 +0100")
+Message-ID: <87twxsyiqn.fsf@kamboji.qca.qualcomm.com> (sfid-20150310_162846_693562_A844DFD5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@...> writes:
-> 
-> Do you have brcmfmac driver built with CONFIG_BRCMDBG. If so you can 
-> enable debug output by:
-> 
-> sudo sh -c 'echo 0xd416 > /sys/module/brcmfmac/parameters/debug'
-> 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-No, it doesnt have dbg set. I will try to compile my own kernel and then come 
-back.
+> Some firmware revisions (e.g. qca6174 with fw73)
+> don't deliver beacons to host reliably. This
+> causes random disconnects even in perfect
+> conditions. This is most visible with
+> multi-channel operation.
+>
+> All available firmware revisions seem to support
+> beacon miss offloading so there shouldn't be any
+> problems.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Juergen
+[...]
 
+> @@ -2139,6 +2208,8 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
+>  	spin_lock_bh(&arvif->ar->data_lock);
+>  	arvif->is_up = false;
+>  	spin_unlock_bh(&arvif->ar->data_lock);
+> +
+> +	cancel_delayed_work_sync(&arvif->connection_loss_work);
+>  }
+
+There was a simple conflict here, please check the pending branch for my
+resolution.
+
+-- 
+Kalle Valo
