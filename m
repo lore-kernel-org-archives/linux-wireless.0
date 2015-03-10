@@ -1,33 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36239 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756422AbbCCS5m (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:64748 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390AbbCJV10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 13:57:42 -0500
-Date: Tue, 03 Mar 2015 13:57:37 -0500 (EST)
-Message-Id: <20150303.135737.630359651880852880.davem@davemloft.net> (sfid-20150303_195759_315716_D957E126)
-To: johannes@sipsolutions.net
-Cc: joe@perches.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
- memset
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1425370617.2450.3.camel@sipsolutions.net>
-References: <cover.1425354527.git.joe@perches.com>
-	<0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
-	<1425370617.2450.3.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 10 Mar 2015 17:27:26 -0400
+Message-ID: <54FF61B6.3050307@broadcom.com> (sfid-20150310_222734_677406_8823F0D7)
+Date: Tue, 10 Mar 2015 22:27:18 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Michael Tokarev <mjt@tls.msk.ru>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Network Development" <netdev@vger.kernel.org>,
+	Maximilian Engelhardt <maxi@daemonizer.de>
+Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
+References: <53FDACD1.8090805@msgid.tls.msk.ru> <9234001.YBqfvtcJFx@fuchs> <5496E135.1@broadcom.com> <9062978.Vq0rTjKd5z@fuchs> <20150309205451.GA13884@minime.bse>
+In-Reply-To: <20150309205451.GA13884@minime.bse>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 03 Mar 2015 09:16:57 +0100
+On 03/09/15 21:54, Daniel Glöckner wrote:
+> Hi Arend,
+>
+> On Sun, Dec 21, 2014 at 06:34:24PM +0100, Maximilian Engelhardt wrote:
+>> On Sunday 21 December 2014 16:03:17 Arend van Spriel wrote:
+>>> On 12/21/14 15:24, Maximilian Engelhardt wrote:
+>>>> On Sunday 21 December 2014 15:13:50 Arend van Spriel wrote:
+>>>>> Thanks. It shows you have have the same bt-coex version as Michael. I am
+>>>>> not familiar with bluetooth side of things. Are you both using bluetooth
+>>>>> on 4313?
+>>>>>
+>>>>> Regards,
+>>>>> Arend
+>>>>
+>>>> I don't know. I think I have Bluetooth somehow enabled but I'm not really
+>>>> using it. I definitely don't have any Bluetooth devices connected. I could
+>>>> try to unload/disable Bluetooth it to see if it makes any difference.
+>>>
+>>> That would be useful to know.
+>>>
+>>
+>> I did a test with all Bluetooth modules unloaded that I could find but
+>> throughput was still very low (about 4 Mbit/s with brcmsmac, my atheros USB
+>> stick archived about 110 Mbit/s).
+>
+> any update on this issue?
+> One of my relatives would like to get rid of that Ralink wifi stick she
+> has been carrying around for 1.5 years now since the internal wifi in her
+> Thinkpad E130 suffers from this problem.
 
-> Other than that, I guess I'll apply this, but I really wish there was a
-> way to distinguish more easily which of these require alignment and
-> which don't.
+I did get my hands on same device as Michael has/had and it now sits in 
+my developement laptop. Just need to find some time to give it a spin.
 
-You can't apply "this" without the dependency patch #1.
+Regards,
+Arend
 
-Therefore this should probably all go through my tree.
+> Best regards,
+>
+>    Daniel
+
