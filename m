@@ -1,49 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:48879 "EHLO
-	sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbbCJNtJ convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:37613 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751675AbbCJIcC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 09:49:09 -0400
-From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-To: "Stepanov, Max" <Max.Stepanov@intel.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Get IV len from key conf and not cipher scheme
-Date: Tue, 10 Mar 2015 13:49:01 +0000
-Message-ID: <5842EA9CC042B141995329508713AD672105A8F0@ILMAIL1.corp.local> (sfid-20150310_144913_462464_EECAD494)
-References: <3A934E7FDB083A4683727C7D377065954A23682A@hasmsx109.ger.corp.intel.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 10 Mar 2015 04:32:02 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [PATCH 7/7] ath9k: Disable AIC by default
+Date: Tue, 10 Mar 2015 14:05:34 +0530
+Message-Id: <1425976534-1194-8-git-send-email-sujith@msujith.org> (sfid-20150310_093213_376200_33168F9A)
+In-Reply-To: <1425976534-1194-1-git-send-email-sujith@msujith.org>
+References: <1425976534-1194-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/03/2015 12:58, Stepanov, Max wrote:
->> From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
->> To: linux-wireless@vger.kernel.org <linux-wireless@vger.kernel.org>
->> Cc: johannes@sipsolutions.net <johannes@sipsolutions.net>
->> Subject: [PATCH] mac80211: Get IV len from key conf and not cipher
->> scheme
->> Date: Tue, 10 Mar 2015 08:52:23 +0000
->>
->> Do not always dereference sta to get cipher scheme as it may be null
->> for broadcast messages.
->> Instead get IV length from key configuration which has been
->> initialized with cipher scheme.
->>
-> Cedric, in general a cipher scheme was about to be used with a station holding ucast and mcast/bcast keys, so, my question is about the following line:
->
->> +		res = ieee80211_crypto_cs_encrypt(tx, skb);
-> What is a point of calling this function when tx->key->sta or tx->key->sta->cipher_scheme is NULL? In which scenario?
->
-> Thanks,
-> Max
->
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Hi,
-We use cipher scheme to support WAPI in both STA and AP mode.
-The patch is for the AP use case when sending a broadcast message that 
-needs encryption. So we want to call ieee80211_crypto_cs_encrypt even if 
-sta is NULL.
+Since various MCI messages need to be
+handled, along with driver-level support
+in upper layers, disable AIC for now.
 
-rgds,
-cedric
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_aic.c | 6 ++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 3 ++-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+index 51ecc9b..7bdbc7a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+@@ -40,6 +40,12 @@ static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
+ {
+ 	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+ 
++	/*
++	 * Disable AIC for now, until we have all the
++	 * HW code and the driver-layer support ready.
++	 */
++	return false;
++
+ 	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_AIC)
+ 		return false;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 20bb5b9..6fa98e5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1364,7 +1364,8 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 		mci->need_flush_btinfo = false;
+ 		break;
+ 	case MCI_STATE_AIC_CAL_SINGLE:
+-		value = ar9003_aic_calibration_single(ah);
++		if (ath9k_hw_is_aic_enabled(ah))
++			value = ar9003_aic_calibration_single(ah);
+ 		break;
+ 	default:
+ 		break;
+-- 
+2.3.1
+
