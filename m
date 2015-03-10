@@ -1,26 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43156 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750801AbbCTPY2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 11:24:28 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_CBC_SHA256:128)
-	(Exim 4.84)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1YYymh-0003Np-0Z
-	for linux-wireless@vger.kernel.org; Fri, 20 Mar 2015 16:24:27 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] mac80211: TX station lookup improvements
-Date: Fri, 20 Mar 2015 16:24:20 +0100
-Message-Id: <1426865064-17707-1-git-send-email-johannes@sipsolutions.net> (sfid-20150320_162431_815553_A8F89A37)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44825 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752430AbbCJQmr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2015 12:42:47 -0400
+Date: Tue, 10 Mar 2015 22:12:26 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath10k: add symlink for hwmon device
+Message-ID: <20150310164223.GA11700@qca.qualcomm.com> (sfid-20150310_174250_828679_6884AD44)
+References: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <1424437452-28161-3-git-send-email-rmanohar@qti.qualcomm.com>
+ <87pp8gyi7x.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87pp8gyi7x.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While thinking about a "TX fastpath" for data frames, I realized that
-we have a number of inefficiencies when looking up stations, as we do
-this up to three times.
+On Tue, Mar 10, 2015 at 05:39:46PM +0200, Kalle Valo wrote:
+> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+> 
+> > Add symbloic link "thermal_sensors" for hwmon devices for better
+> > readability.
+> >
+> > /sys/class/ieee80211/phyX/device/thermal_sensors ->
+> > sys/class/ieee80211/phyX/device/hwmon/hwmonY
+> 
+> I don't get it, how does that improve readability? Also I don't see any
+> other driver doing this, so isn't this just some private hack and not a
+> proper generic interface?
+>
+The patch is providing same level access to monitoring device similar to
+cooling device.
 
-Remove this and just do the lookup once for each frame.
+cooling_device -> ../../../../../virtual/thermal/cooling_deviceX
+thermal_sensors -> hwmon/hwmonX
 
-johannes
-
+-Rajkumar
