@@ -1,119 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:42414 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755373AbbCMDj1 (ORCPT
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:39579 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752746AbbCJNc1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 23:39:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH 3/4] ath9k: Handle MCI_STATE_AIC_CAL
-Date: Fri, 13 Mar 2015 09:13:09 +0530
-Message-Id: <1426218190-19888-4-git-send-email-sujith@msujith.org> (sfid-20150313_043940_902036_00AA7DEA)
-In-Reply-To: <1426218190-19888-1-git-send-email-sujith@msujith.org>
-References: <1426218190-19888-1-git-send-email-sujith@msujith.org>
+	Tue, 10 Mar 2015 09:32:27 -0400
+Received: by lbiw7 with SMTP id w7so1705067lbi.6
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 06:32:25 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH v2] ath10k: fix PMG by using AES-CMAC/IGTK software crypto
+Date: Tue, 10 Mar 2015 14:32:19 +0100
+Message-Id: <1425994339-15864-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20150310_143231_958643_9BF25C06)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+While testing with older supplicant, .drv_set_key() was failing due to
+higher than ath10k firmware could handle key_index (WMI_MAX_KEY_INDEX == 3).
 
-Add the main AIC calibration function to
-handle MCI_STATE_AIC_CAL.
+--
+wpa_driver_nl80211_set_key: ifindex=15 alg=4 addr=0x7f02b129fbe3 key_idx=4 set_tx=0 seq_len=6 key_len=16
+    broadcast key
+nl80211: set_key failed; err=-22 Invalid argument)
+wlan0: WPA: Failed to configure IGTK to the driver
+wlan0: RSN: Failed to configure IGTK
+--
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+In order to fix this case (PMF: AES-CMAC/IGTK) force the AES_CMAC cipher to
+be handled by software.
+
+Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_aic.c | 28 ++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/ar9003_aic.h |  1 +
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |  4 ++++
- 3 files changed, 31 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-index 5b4f818..1db119d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-@@ -162,7 +162,7 @@ static void ar9003_aic_gain_table(struct ath_hw *ah)
- 	}
- }
- 
--static void ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
-+static u8 ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
- {
- 	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
- 	int i;
-@@ -257,6 +257,8 @@ static void ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
- 
- 	aic->aic_caled_chan = 0;
- 	aic->aic_cal_state = AIC_CAL_STATE_STARTED;
-+
-+	return aic->aic_cal_state;
- }
- 
- static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
-@@ -513,6 +515,28 @@ exit:
- 
- }
- 
-+u8 ar9003_aic_calibration(struct ath_hw *ah)
-+{
-+	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
-+	u8 cal_ret = AIC_CAL_STATE_ERROR;
-+
-+	switch (aic->aic_cal_state) {
-+	case AIC_CAL_STATE_IDLE:
-+		cal_ret = ar9003_aic_cal_start(ah, 1);
-+		break;
-+	case AIC_CAL_STATE_STARTED:
-+		cal_ret = ar9003_aic_cal_continue(ah, false);
-+		break;
-+	case AIC_CAL_STATE_DONE:
-+		cal_ret = AIC_CAL_STATE_DONE;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return cal_ret;
-+}
-+
- u8 ar9003_aic_start_normal(struct ath_hw *ah)
- {
- 	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
-@@ -561,7 +585,7 @@ u8 ar9003_aic_calibration_single(struct ath_hw *ah)
- 
- 	num_chan = MS(mci_hw->config, ATH_MCI_CONFIG_AIC_CAL_NUM_CHAN);
- 
--	ar9003_aic_cal_start(ah, num_chan);
-+	(void) ar9003_aic_cal_start(ah, num_chan);
- 	cal_ret = ar9003_aic_cal_continue(ah, true);
- 
- 	return cal_ret;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.h b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-index 1ee5a8c..509d1f5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-@@ -53,6 +53,7 @@ struct ath_aic_out_info {
- 	struct ath_aic_sram_info sram;
- };
- 
-+u8 ar9003_aic_calibration(struct ath_hw *ah);
- u8 ar9003_aic_start_normal(struct ath_hw *ah);
- u8 ar9003_aic_cal_reset(struct ath_hw *ah);
- u8 ar9003_aic_calibration_single(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index b559d75..cdd83d4 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1363,6 +1363,10 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
- 		value = (!mci->unhalt_bt_gpm && mci->need_flush_btinfo) ? 1 : 0;
- 		mci->need_flush_btinfo = false;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1138f4f8923f..5a3129010951 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -66,8 +66,8 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
+ 		arg.key_cipher = WMI_CIPHER_WEP;
  		break;
-+	case MCI_STATE_AIC_CAL:
-+		if (ath9k_hw_is_aic_enabled(ah))
-+			value = ar9003_aic_calibration(ah);
-+		break;
- 	case MCI_STATE_AIC_START:
- 		if (ath9k_hw_is_aic_enabled(ah))
- 			ar9003_aic_start_normal(ah);
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+-		/* this one needs to be done in software */
+-		return 1;
++		WARN_ON(1);
++		return -EINVAL;
+ 	default:
+ 		ath10k_warn(ar, "cipher %d is not supported\n", key->cipher);
+ 		return -EOPNOTSUPP;
+@@ -3995,6 +3995,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	int ret = 0;
+ 	u32 flags = 0;
+ 
++	/* this one needs to be done in software */
++	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
++		return 1;
++
+ 	if (key->keyidx > WMI_MAX_KEY_INDEX)
+ 		return -ENOSPC;
+ 
 -- 
-2.3.1
+2.1.2
 
