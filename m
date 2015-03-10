@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:61651 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbbCKNRv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 09:17:51 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Javier Martinez Canillas <javier@dowhile0.org>
-Cc: Tony Lindgren <tony@atomide.com>, Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-Date: Wed, 11 Mar 2015 14:17:42 +0100
-Message-ID: <2353601.si5uCETVn2@wuerfel> (sfid-20150311_141756_520593_EC1E0CC9)
-In-Reply-To: <CABxcv=mPVxW=BqL2PUL=AtS74kcqMG1yxC1WqMpxGiNOqGAnyQ@mail.gmail.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <6286151.8rcX893TN6@wuerfel> <CABxcv=mPVxW=BqL2PUL=AtS74kcqMG1yxC1WqMpxGiNOqGAnyQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39201 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751525AbbCJQso (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2015 12:48:44 -0400
+Message-ID: <1426006121.1926.6.camel@sipsolutions.net> (sfid-20150310_174847_487190_25280D68)
+Subject: Re: [PATCH v2] mac80211: Get IV len from key conf and not cipher
+ scheme
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Max Stepanov <Max.Stepanov@intel.com>
+Date: Tue, 10 Mar 2015 17:48:41 +0100
+In-Reply-To: <5842EA9CC042B141995329508713AD672105A9FB@ILMAIL1.corp.local>
+References: <5842EA9CC042B141995329508713AD672105A9B0@ILMAIL1.corp.local>
+	 <1426003477.1926.5.camel@sipsolutions.net>
+	 <5842EA9CC042B141995329508713AD672105A9FB@ILMAIL1.corp.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 March 2015 14:07:11 Javier Martinez Canillas wrote:
+On Tue, 2015-03-10 at 16:46 +0000, Cedric Izoard wrote:
+> > How can this be correct? You have a cipher scheme, so you want to
+> > encrypt, but now you're not doing that? Perhaps you should drop the
+> > frame instead?
+> >
+> On Tx, cipher scheme is "only" available trough sta pointer and is only 
+> used in ieee80211_crypto_cs_encrypt to get security header len.
+> Since sta pointer is NULL for bcast messages, the proposed patch get the 
+> security header length using the key->conf.iv_len instead.
 > 
-> Right now it seems that all boards in mainline with a WiLink6 part are
-> using internal clocks. So as a first step I think that adding an
-> optional refclock-frequency and tcxoclock-frequency properties should
-> be enough.
+> If the key is installed with a cs, then key->conf.iv_len is initialized 
+> with cs->hdr_len.
 > 
-> It would be good if the driver supports getting the refclock and
-> tcxoclock from an external provider in case a board gets these from
-> external clocks but that can be done as a followup if there are boards
-> in the future using that design.
-> 
-> But please bear in mind that I'm not familiar with the clock handling
-> in WiLink6 since the WiLink8 part used in the IGEP boards does not
-> need these clocks and I only looked at Luciano's previous patches and
-> the WiLink today driver today. So it would be good if Eliad can double
-> check my assumptions to see if those are correct.
+> If the key is installed without a cs, then  key->conf.iv_len is 0 (hence 
+> the early exit in ieee80211_crypto_cs_encrypt)
 
-Sounds good. I'd also be fine with not implementing the case for
-external clocks in the code until we need (and can test) it, but
-I think it should be specified in the binding from the start.
+So in reality, you're checking "is this a CS key"? Perhaps there's a
+better way to do that?
 
-	Arnd
+johannes
+
