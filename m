@@ -1,88 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f171.google.com ([74.125.82.171]:34098 "EHLO
-	mail-we0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752479AbbCDWHq (ORCPT
+Received: from mail-ie0-f172.google.com ([209.85.223.172]:32920 "EHLO
+	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920AbbCJRBk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 17:07:46 -0500
-Received: by wesq59 with SMTP id q59so49283496wes.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2015 14:07:45 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, Arnd Bergmann <arnd@arndb.de>,
-	Chen Gang <xili_gchen_5257@hotmail.com>,
-	Jim Davis <jim.epost@gmail.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH next] bcma: prepare Kconfig symbol for PCI driver
-Date: Wed,  4 Mar 2015 23:07:05 +0100
-Message-Id: <1425506825-31844-1-git-send-email-zajec5@gmail.com> (sfid-20150304_230750_287966_29FF7646)
+	Tue, 10 Mar 2015 13:01:40 -0400
 MIME-Version: 1.0
+In-Reply-To: <20150310161801.GR5264@atomide.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+	<2223973.a64rBcZvaA@wuerfel>
+	<CAB3XZEftjwUGS_Kj2dCxYY1m82C+a1_=akbnG3_hLETCr+Dddg@mail.gmail.com>
+	<5683860.JYkc24rKim@wuerfel>
+	<CAB3XZEfEQnb7qsxuAAr6pUehm1nw6Eu4ZsV1+E477yF5K1hczA@mail.gmail.com>
+	<20150310161801.GR5264@atomide.com>
+Date: Tue, 10 Mar 2015 19:01:39 +0200
+Message-ID: <CAB3XZEdK2O7tSSTchvRQtaefzCECjjQ-biQmOBHGdzJaBknSFQ@mail.gmail.com> (sfid-20150310_180145_971078_6944D41E)
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+From: Eliad Peller <eliad@wizery.com>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver for PCIe core requires PCI to be enabled, however we shouldn't
-require it for the whole bus. Someone may be not interested in extra
-PCI devices and what's more there are SoCs without any PCI at all (like
-BCM5356C0, BCM5357*, BCM47186B0). For more details see Kconfig "help".
-Please note this patch doesn't allow disabling PCI drivers yet, as it
-requires more work on calls to bcma_core_pci_* functions.
+On Tue, Mar 10, 2015 at 6:18 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Eliad Peller <eliad@wizery.com> [150310 09:11]:
+>> On Tue, Mar 10, 2015 at 5:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > On Tuesday 10 March 2015 16:31:33 Eliad Peller wrote:
+>> >> On Tue, Mar 10, 2015 at 4:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> >> > On Tuesday 10 March 2015 13:00:19 Eliad Peller wrote:
+>> >> >> On Tue, Mar 10, 2015 at 12:49 AM, Tony Lindgren <tony@atomide.com> wrote:
+>> >> >> >> > I was expecting you to remove all calls to legacy_init_wl12xx from this file,
+>> >> >> >> > including the ones for wl12xx aside from the wl18xx ones you removed, but
+>> >> >> >> > if that's enough to clean out the platform_data handling from the wlcore
+>> >> >> >> > driver, it's good enough as a start.
+>> >> >> >> not sure i'm following - can you elaborate?
+>> >> >> >>
+>> >> >> >> i'll summarize the way i see it. please correct me if i'm wrong.
+>> >> >> >>
+>> >> >> >> both wl18xx and wl12xx use the platform data to get the irq number.
+>> >> >> >> wl12xx (only) also needs some additional clock definitions to be
+>> >> >> >> passed. there's currently some issue with specifying some the of clock
+>> >> >> >> sources, so i preferred starting only with (the simpler) wl18xx
+>> >> >> >> bindings.
+>> >> >> >>
+>> >> >> >> for platforms with wl18xx, we can remove the pdata-quirk, as all the
+>> >> >> >> data (i.e. irq) can be passed by the new DT bindings.
+>> >> >> >> however, for platforms with wl12xx, we still need to pass the clock
+>> >> >> >> definitions (along with the irq), so we have to keep
+>> >> >> >> legacy_init_wl12xx for the time being (and that's also why we have to
+>> >> >> >> currently keep the platform_data handling in the wlcore driver)
+>> >> >> >>
+>> >> >> >> do you have something else in mind?
+>> >> >> >
+>> >> >> > I think what Arnd is saying is we've now removed all the wl12xx using
+>> >> >> > legacy platforms, so all of them can boot with just data from dts.
+>> >> >
+>> >> > Right, that was my idea.
+>> >> >
+>> >> >> I don't think that's the case (unless i'm missing something).
+>> >> >> e.g. there's still pdata-quirk for "compulab,omap3-sbc-t3730" which
+>> >> >> initializes wl12xx device.
+>> >> >
+>> >> > This one is just like the igep0030, as Tony was saying: the board
+>> >> > boots from device tree already, so now that we have a binding for
+>> >> > it, we can remove the wl12xx_set_platform_data() for it.
+>> >> >
+>> >> i think the wl12xx_set_platform_data() name created some confusion -
+>> >> it is used to pass platform data for both wl12xx and wl18xx devices.
+>> >> (this confusion is all around the wlcore driver as well, due to the
+>> >> code evolution)
+>> >>
+>> >> the binding i added is for wl18xx only (there is no wl12xx binding yet).
+>> >> the remaining boards, AFAICT, have wl12xx (rather than wl18xx) cards.
+>> >> so i don't see how we can remove these wl12xx_set_platform_data()
+>> >> calls before we have wl12xx bindings in-place as well.
+>> >
+>> > What is missing for that binding then? I keep getting confused here,
+>> > but I thought that they share the implementation that looks at the
+>> > platform data.
+>> >
+>> they both get the same wl12xx_platform_data struct, but only wl12xx
+>> cares about the clocks-related fields.
+>> the bindings i added parses only the irq.
+>>
+>> (Luca tried previously to upstream wl12xx DT support along with the
+>> required clock DT changes, but got some rejections, mainly wrt. clock
+>> stuff.
+>> e.g. http://thread.gmane.org/gmane.linux.kernel/1520752
+>> that's why i preferred starting with "easier" wl18xx bindings only)
+>
+> I believe we did not have clock bindings back then, now it's simple
+> to get the clock. If it's some internal clock to the wl12xx, then
+> that's a different story, it should be just hidden behind a compatible
+> flag then.
+>
+i'm really not familiar with the common clock framework, but there
+still doesn't seem to be a way to determine whether a clock is XTAL or
+not (which is what Luca's patch was about). should we use compatible
+flag in such case? i'm not sure it sounds right.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/Kconfig  | 17 +++++++++++++++++
- drivers/bcma/Makefile |  4 ++--
- 2 files changed, 19 insertions(+), 2 deletions(-)
+anyway, i'd really prefer, if possible, starting with the wl18xx
+bindings, and defer the wl12xx complications to later on.
+(i also need to find some wl12xx card in order to actually test the
+patches once i'll have them...)
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 0ee48be..fee8d72 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -26,6 +26,7 @@ config BCMA_HOST_PCI_POSSIBLE
- config BCMA_HOST_PCI
- 	bool "Support for BCMA on PCI-host bus"
- 	depends on BCMA_HOST_PCI_POSSIBLE
-+	select BCMA_DRIVER_PCI
- 	default y
- 
- config BCMA_DRIVER_PCI_HOSTMODE
-@@ -44,6 +45,22 @@ config BCMA_HOST_SOC
- 
- 	  If unsure, say N
- 
-+# TODO: make it depend on PCI when ready
-+config BCMA_DRIVER_PCI
-+	bool
-+	default y
-+	help
-+	  BCMA bus may have many versions of PCIe core. This driver
-+	  supports:
-+	  1) PCIe core working in clientmode
-+	  2) PCIe Gen 2 clientmode core
-+
-+	  In general PCIe (Gen 2) clientmode core is required on PCIe
-+	  hosted buses. It's responsible for initialization and basic
-+	  hardware management.
-+	  This driver is also prerequisite for a hostmode PCIe core
-+	  support.
-+
- config BCMA_DRIVER_MIPS
- 	bool "BCMA Broadcom MIPS core driver"
- 	depends on BCMA && MIPS
-diff --git a/drivers/bcma/Makefile b/drivers/bcma/Makefile
-index 838b4b9..f32af9b 100644
---- a/drivers/bcma/Makefile
-+++ b/drivers/bcma/Makefile
-@@ -3,8 +3,8 @@ bcma-y					+= driver_chipcommon.o driver_chipcommon_pmu.o
- bcma-y					+= driver_chipcommon_b.o
- bcma-$(CONFIG_BCMA_SFLASH)		+= driver_chipcommon_sflash.o
- bcma-$(CONFIG_BCMA_NFLASH)		+= driver_chipcommon_nflash.o
--bcma-y					+= driver_pci.o
--bcma-y					+= driver_pcie2.o
-+bcma-$(CONFIG_BCMA_DRIVER_PCI)		+= driver_pci.o
-+bcma-$(CONFIG_BCMA_DRIVER_PCI)		+= driver_pcie2.o
- bcma-$(CONFIG_BCMA_DRIVER_PCI_HOSTMODE)	+= driver_pci_host.o
- bcma-$(CONFIG_BCMA_DRIVER_MIPS)		+= driver_mips.o
- bcma-$(CONFIG_BCMA_DRIVER_GMAC_CMN)	+= driver_gmac_cmn.o
--- 
-1.8.4.5
+we do have to make sure these wl18xx bindings are future-compatible
+with the wl12xx ones, but i think the current bindings are pretty much
+standard (and are actually a subset of the bindings needed by wl12xx),
+so it should be fine.
 
+Eliad.
