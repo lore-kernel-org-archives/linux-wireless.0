@@ -1,72 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:35157 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbbCSIkl convert rfc822-to-8bit (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:35422 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751616AbbCJLAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 04:40:41 -0400
-Received: by wgdm6 with SMTP id m6so56002892wgd.2
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2015 01:40:40 -0700 (PDT)
+	Tue, 10 Mar 2015 07:00:21 -0400
 MIME-Version: 1.0
-In-Reply-To: <878uetl7cn.fsf@kamboji.qca.qualcomm.com>
-References: <1426066382-481-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<878uetl7cn.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 19 Mar 2015 09:40:39 +0100
-Message-ID: <CA+BoTQmcdiy3u8cvYYRueSoQxGzYf9Suf4dy8HpLG6UaQzJzZQ@mail.gmail.com> (sfid-20150319_094047_467117_1C4B2033)
-Subject: Re: [PATCH] ath10k: fix htt t2h message conflicts among firmware revisions
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20150309224929.GL5264@atomide.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+	<1425915402-10012-3-git-send-email-eliad@wizery.com>
+	<9217056.Z3urqp19oZ@wuerfel>
+	<CAB3XZEc_sjpA8kgfYCsO8FjGEc6O0xhE9aKO3VtgVbd+Meaakg@mail.gmail.com>
+	<20150309224929.GL5264@atomide.com>
+Date: Tue, 10 Mar 2015 13:00:19 +0200
+Message-ID: <CAB3XZEdS+mK1MiB7OWiehFGRBnUzJ84s3rFrCy3-YFYhL-BNWw@mail.gmail.com> (sfid-20150310_120038_130119_6BC72396)
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+From: Eliad Peller <eliad@wizery.com>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 March 2015 at 09:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
->
->> Target to host HTT messages are conflicting between 10.x and other
->> firmware revisions. By maintaining separate HTT T2H tables for each
->> firmware revisions (main, 10x and tlv) similar to WMI abstraction,
->> solves the conflicts.
+On Tue, Mar 10, 2015 at 12:49 AM, Tony Lindgren <tony@atomide.com> wrote:
+> * Eliad Peller <eliad@wizery.com> [150309 14:03]:
+>> On Mon, Mar 9, 2015 at 9:50 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > On Monday 09 March 2015 17:36:42 Eliad Peller wrote:
+>> >> --- a/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
+>> >> +++ b/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
+>> >> @@ -64,4 +64,13 @@
+>> >>         vmmc-supply = <&lbep5clwmc_wlen>;
+>> >>         bus-width = <4>;
+>> >>         non-removable;
+>> >> +
+>> >> +       #address-cells = <1>;
+>> >> +       #size-cells = <0>;
+>> >> +       wlcore: wlcore@2 {
+>> >> +               compatible = "ti,wl1835";
+>> >> +               reg = <2>;
+>> >> +               interrupt-parent = <&gpio5>;
+>> >> +               interrupts = <8 IRQ_TYPE_NONE>;
+>> >> +       };
+>> >>
+>> >
+>> > Why IRQ_TYPE_NONE?
+>> >
+>> i simply mirrored the current board file (which only sets the irq number).
 >>
->> Cc: Michal Kazior <michal.kazior@tieto.com>
->> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>> > I was expecting you to remove all calls to legacy_init_wl12xx from this file,
+>> > including the ones for wl12xx aside from the wl18xx ones you removed, but
+>> > if that's enough to clean out the platform_data handling from the wlcore
+>> > driver, it's good enough as a start.
+>> not sure i'm following - can you elaborate?
+>>
+>> i'll summarize the way i see it. please correct me if i'm wrong.
+>>
+>> both wl18xx and wl12xx use the platform data to get the irq number.
+>> wl12xx (only) also needs some additional clock definitions to be
+>> passed. there's currently some issue with specifying some the of clock
+>> sources, so i preferred starting only with (the simpler) wl18xx
+>> bindings.
+>>
+>> for platforms with wl18xx, we can remove the pdata-quirk, as all the
+>> data (i.e. irq) can be passed by the new DT bindings.
+>> however, for platforms with wl12xx, we still need to pass the clock
+>> definitions (along with the irq), so we have to keep
+>> legacy_init_wl12xx for the time being (and that's also why we have to
+>> currently keep the platform_data handling in the wlcore driver)
+>>
+>> do you have something else in mind?
 >
-> So this is needed to get managements frames over HTT working, right?
-> It's good to mention that in the commit log, does this look ok:
+> I think what Arnd is saying is we've now removed all the wl12xx using
+> legacy platforms, so all of them can boot with just data from dts.
 >
-> Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> Date:   Wed Mar 11 15:03:02 2015 +0530
->
->     ath10k: fix htt t2h message conflicts among firmware revisions
->
->     Target to host HTT messages are conflicting between 10.x and other
->     firmware revisions. By maintaining separate HTT T2H tables for each
->     firmware revisions (main, 10x and tlv) similar to WMI abstraction,
->     solves the conflicts.
->
->     This fix is needed to get management frames over HTT (ie.
->     ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX disabled) working with 10.2.4.48-2 firmware.
->     Otherwise there will be unknown htt events and nothing works:
->
->     [30087.438343] ath10k_pci 0000:02:00.0: htt event (19) not handled
->     [30087.448691] ath10k_pci 0000:02:00.0: htt event (19) not handled
->     [30149.032974] ath10k_pci 0000:02:00.0: htt event (19) not handled
-[...]
->
-> When I was adding WMI_OP_VERSION, my idea was that we will add similar
-> version for HTT as well once we need it. But I guess this is good enough
-> for now, we can add HTT_OP_VERSION later if more changes are needed.
+I don't think that's the case (unless i'm missing something).
+e.g. there's still pdata-quirk for "compulab,omap3-sbc-t3730" which
+initializes wl12xx device.
 
-Maybe it should be renamed to OP_VERSION (drop the WMI_) or BRANCH_ID
-or something else?
-
-It's not like HTT wasn't diverging. It was. However only WMI ABI was
-seeing major breakage that needed taking care of. HTT changes were
-small enough and could be ignored until now.
-
-Perhaps the rename could be accompanied by FW API bump to 5?
-
-
-Michał
+Eliad.
