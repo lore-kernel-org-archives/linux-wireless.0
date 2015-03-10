@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:34289 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933838AbbCPU6y (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:32777 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751327AbbCJInk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 16:58:54 -0400
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Tony Lindgren <tony@atomide.com>
-Subject: Re: [PATCH v6 6/6] wlcore: remove wl12xx_platform_data
-Date: Mon, 16 Mar 2015 21:58:50 +0100
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Eliad Peller <eliad@wizery.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Sekhar Nori <nsekhar@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	=?utf-8?q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Luciano Coelho <luca@coelho.fi>
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com> <2070859.WcMooC33YH@wuerfel> <20150316152939.GP5264@atomide.com>
-In-Reply-To: <20150316152939.GP5264@atomide.com>
+	Tue, 10 Mar 2015 04:43:40 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2394951.4rG3PKCz3q";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201503162158.50587@pali> (sfid-20150316_215859_788018_566CC797)
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21758.44950.886418.51899@gargle.gargle.HOWL> (sfid-20150310_094346_316485_3B89F2F2)
+Date: Tue, 10 Mar 2015 14:17:18 +0530
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH 0/7] ath9k patches
+In-Reply-To: <1425976534-1194-1-git-send-email-sujith@msujith.org>
+References: <1425976534-1194-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2394951.4rG3PKCz3q
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Hi Kalle,
 
-On Monday 16 March 2015 16:29:39 Tony Lindgren wrote:
-> I believe the last pending issues is the support for
-> ATAG_REVISION in device tree mode as posted by Pali.
->=20
+Sorry, I forgot to mention that this is intended for -next.
 
-No. In DT boot there is missing /proc/atags file (readable by=20
-userspace processes). And also broken AES/SHA/MD5 support. Fix=20
-for crypto DT stuff I already sent.
+Sujith
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart2394951.4rG3PKCz3q
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlUHRAoACgkQi/DJPQPkQ1L/dwCfRCUG0IYxQIYaZfCmkq2uNjTz
-WhIAoJqZnxe8b6bSnrw1AQHyDYVifALf
-=du7Z
------END PGP SIGNATURE-----
-
---nextPart2394951.4rG3PKCz3q--
+Sujith Manoharan wrote:
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> This series adds initial support for AIC.
+> 
+> Active Interference Cancellation is a method
+> implemented in the HW to counter WLAN RX
+> sensitivity degradation when BT is transmitting
+> at the same time. This feature is supported by
+> cards like WB222 based on AR9462.
+> 
+> Sujith Manoharan (7):
+>   ath9k: Add initial structures for AIC
+>   ath9k: Register private AIC ops
+>   ath9k: Add register definitions for AIC
+>   ath9k: Handle MCI_STATE_AIC_CAL_SINGLE
+>   ath9k: Finish AIC calibration
+>   ath9k: Process the AIC calibration results
+>   ath9k: Disable AIC by default
+> 
+>  drivers/net/wireless/ath/ath9k/Makefile     |   3 +-
+>  drivers/net/wireless/ath/ath9k/ar9003_aic.c | 534 ++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/ar9003_aic.h |  58 +++
+>  drivers/net/wireless/ath/ath9k/ar9003_hw.c  |   1 +
+>  drivers/net/wireless/ath/ath9k/ar9003_mci.c |   5 +
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.h |  25 --
+>  drivers/net/wireless/ath/ath9k/btcoex.h     |  12 +
+>  drivers/net/wireless/ath/ath9k/hw-ops.h     |   8 +
+>  drivers/net/wireless/ath/ath9k/hw.h         |   6 +
+>  drivers/net/wireless/ath/ath9k/reg_aic.h    | 168 +++++++++
+>  10 files changed, 794 insertions(+), 26 deletions(-)
+>  create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.c
+>  create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.h
+>  create mode 100644 drivers/net/wireless/ath/ath9k/reg_aic.h
+> 
+> -- 
+> 2.3.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
