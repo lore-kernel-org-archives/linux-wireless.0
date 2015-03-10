@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:24125 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750969AbbCTMhp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 08:37:45 -0400
-Message-ID: <550C148D.6080000@broadcom.com> (sfid-20150320_133748_438577_D67688A8)
-Date: Fri, 20 Mar 2015 13:37:33 +0100
-From: Arend van Spriel <arend@broadcom.com>
+Received: from muru.com ([72.249.23.125]:36190 "EHLO muru.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751435AbbCJQAi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2015 12:00:38 -0400
+Date: Tue, 10 Mar 2015 08:55:30 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+Message-ID: <20150310155529.GP5264@atomide.com> (sfid-20150310_170043_922248_9AC92526)
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+ <2223973.a64rBcZvaA@wuerfel>
+ <20150310142805.GN5264@atomide.com>
+ <2300824.dcEMS7aYJa@wuerfel>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Ben Hutchings <ben@decadent.org.uk>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] brcm: firmware drop for brcmfmac driver
-References: <1426854911-30796-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1426854911-30796-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2300824.dcEMS7aYJa@wuerfel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/15 13:35, Arend van Spriel wrote:
-> This series adds firmware files for a number of "new" devices.
-> Admittedly there was bit of backlog. For BCM4354 SDIO this
-> series has firmware upgrade.
->
-> This series does apply to the master branch of the linux-firmware
-> repo on top of commit f10b97abdab2 ("radeon: Update Kaveri MEC
-> firmware to #396").
+* Arnd Bergmann <arnd@arndb.de> [150310 08:48]:
+> On Tuesday 10 March 2015 07:28:05 Tony Lindgren wrote:
+> > 
+> > Oops I forgot about the omap3-sbc-t3730, so yes we have to keep the
+> > platform data a little bit longer. But nothing stopping us moving
+> > all the other ones to use a proper device tree based configuration.
+> > 
+> 
+> For all I can tell, the t3730 board file does not support wl12xx
+> at the moment, only the dts file does.
 
-Aborted this series during git-sendemail realizing something is missing.
+Hmm strange, it seems to configure the wlan_rst pin. Maybe there
+are variants with different WLAN module. But yeah, seems to be
+unused.
 
-Sorry for the noise.
+That still leaves configuring all the dts users of the
+pdata-quirks.c legacy_init_wl12xx() with proper dts before
+removing it:
+
+$ git grep legacy_init_wl12xx pdata-quirks.c
+pdata-quirks.c:static void __init __used legacy_init_wl12xx(unsigned ref_clock,
+pdata-quirks.c:static inline void legacy_init_wl12xx(unsigned ref_clock,
+pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 136);
+pdata-quirks.c: legacy_init_wl12xx(0, 0, 177);
+pdata-quirks.c: legacy_init_wl12xx(0, 0, 136);
+pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 149);
+pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_26, 0, 162);
+pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 145);
+pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_26,
+pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 53);
+pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 41);
+pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 31);
+
+> If we do what Sekhar suggested and drop wl12xx support from
+> the DA850 EVM board file, we can fix all wlcore users.
+
+I guess Sekhar knows the da850 evm status the best. So up to
+you guys if wl12xx is not being used on legacy da850.
 
 Regards,
-Arend
 
-> Arend van Spriel (7):
->    brcm: add firmware for BCM43242 USB device
->    brcm: add firmware for BCM4356 PCIe device
->    brcm: add firmware files for BCM43602 PCIe device
->    brcm: add firmware for BCM43455 SDIO device
->    brcm: add firmware for BCM4339 SDIO device
->    brcm: add firmware for BCM43340/1 SDIO devices
->    brcm: upgrade firmware for BCM4354 SDIO device
->
->   WHENCE                         |   7 +++++++
->   brcm/brcmfmac43242a.bin        | Bin 0 ->  479232 bytes
->   brcm/brcmfmac43340-sdio.bin    | Bin 0 ->  397378 bytes
->   brcm/brcmfmac4339-sdio.bin     | Bin 0 ->  569291 bytes
->   brcm/brcmfmac43455-sdio.bin    | Bin 0 ->  488193 bytes
->   brcm/brcmfmac4354-sdio.bin     | Bin 507752 ->  591837 bytes
->   brcm/brcmfmac4356-pcie.bin     | Bin 0 ->  593956 bytes
->   brcm/brcmfmac43602-pcie.ap.bin | Bin 0 ->  588940 bytes
->   brcm/brcmfmac43602-pcie.bin    | Bin 0 ->  590544 bytes
->   9 files changed, 7 insertions(+)
->   create mode 100644 brcm/brcmfmac43242a.bin
->   create mode 100644 brcm/brcmfmac43340-sdio.bin
->   create mode 100644 brcm/brcmfmac4339-sdio.bin
->   create mode 100644 brcm/brcmfmac43455-sdio.bin
->   rewrite brcm/brcmfmac4354-sdio.bin (81%)
->   create mode 100644 brcm/brcmfmac4356-pcie.bin
->   create mode 100644 brcm/brcmfmac43602-pcie.ap.bin
->   create mode 100644 brcm/brcmfmac43602-pcie.bin
->
-
+Tony
