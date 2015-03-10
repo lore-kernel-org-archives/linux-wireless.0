@@ -1,55 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.polytechnique.org ([129.104.30.34]:42318 "EHLO
-	mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbbCCFHo (ORCPT
+Received: from mga03.intel.com ([134.134.136.65]:62652 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753448AbbCJPDA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 00:07:44 -0500
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-To: christophe.ricard@gmail.com, sameo@linux.intel.com,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] NFC: st21nfca: fix st21nfca_get_iso14443_3_uid data copy
-Date: Tue,  3 Mar 2015 12:58:52 +0800
-Message-Id: <1425358732-31752-1-git-send-email-nicolas.iooss_linux@m4x.org> (sfid-20150303_060800_819768_D730A6C9)
-In-Reply-To: <54F17F43.7060605@m4x.org>
-References: <54F17F43.7060605@m4x.org>
+	Tue, 10 Mar 2015 11:03:00 -0400
+From: "Stepanov, Max" <Max.Stepanov@intel.com>
+To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: Get IV len from key conf and not cipher scheme
+Date: Tue, 10 Mar 2015 15:02:33 +0000
+Message-ID: <3A934E7FDB083A4683727C7D377065954A2369B7@hasmsx109.ger.corp.intel.com> (sfid-20150310_160312_581186_2600CB63)
+References: <3A934E7FDB083A4683727C7D377065954A23682A@hasmsx109.ger.corp.intel.com>
+ <5842EA9CC042B141995329508713AD672105A8F0@ILMAIL1.corp.local>
+In-Reply-To: <5842EA9CC042B141995329508713AD672105A8F0@ILMAIL1.corp.local>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-st21nfca_get_iso14443_3_uid() does not correctly copy the uid from
-uid_skb->data to its gate parameter.  "gate = uid_skb->data;" only puts
-a pointer to uid_skb->data to the local variable gate.  This means that
-in st21nfca_hci_target_from_gate() the content of "u8
-uid[NFC_NFCID1_MAXSIZE]" local variable is never initialized before
-being used in memcpy(target->nfcid1, uid, len).
+>We use cipher scheme to support WAPI in both STA and AP mode.
+>The patch is for the AP use case when sending a broadcast message that needs encryption. So we want to call 
+>ieee80211_crypto_cs_encrypt even if sta is NULL.
 
-Fix this by replacing the local variable assignment with a memcpy.
+So, on ieee80211_add_key() function call we fetch a cipher scheme and if it's present ieee80211_key_alloc() updates key->conf.iv_len setting it to cs->hdr_len. If sta is present cs is also stored in sta->cipher_scheme.
 
-This was found by compiling Linux with "gcc -Wunused-but-set-parameter".
+On Tx...
+If a cipher scheme was found and sta is present, the ieee80211_crypto_cs_encrypt() supposes to behave the same as before the change. That's looks fine.
 
-Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
----
+If sta is not present your patch changes the flow allowing to use key->conf.iv_len instead of cs->hdr_len associated with sta. In this case you don't need Rx handling without sta because bcast/mcast Rx is handled in STA mode only and in this case sta is present. That's looks fine too.
 
-As I did not get any reply from https://lkml.org/lkml/2015/2/28/25 and
-got confirmation by other people that this may be a real bug, I am now
-sending a patch to fix it.
+If key is installed without cipher scheme and the cipher is not in explicitly implemented ciphers setting non zero key->conf.iv_len, the ieee80211_key_alloc() function will set key->conf.iv_len to 0.  Perhaps it makes sense to add key->conf.iv_len == 0 verification to ieee80211_crypto_cs_encrypt() before extending skb head. Does it make sense?
 
- drivers/nfc/st21nfca/st21nfca.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Max
 
-diff --git a/drivers/nfc/st21nfca/st21nfca.c b/drivers/nfc/st21nfca/st21nfca.c
-index 24d3d240d5f4..ff70d2838b29 100644
---- a/drivers/nfc/st21nfca/st21nfca.c
-+++ b/drivers/nfc/st21nfca/st21nfca.c
-@@ -588,7 +588,7 @@ static int st21nfca_get_iso14443_3_uid(struct nfc_hci_dev *hdev, u8 *gate,
- 		goto exit;
- 	}
- 
--	gate = uid_skb->data;
-+	memcpy(gate, uid_skb->data, uid_skb->len);
- 	*len = uid_skb->len;
- exit:
- 	kfree_skb(uid_skb);
--- 
-2.3.1
+
 
