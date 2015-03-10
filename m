@@ -1,42 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48815 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752163AbbC3UCG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 16:02:06 -0400
-Message-ID: <1427745718.26117.46.camel@sipsolutions.net> (sfid-20150330_220231_501209_1C2DF058)
-Subject: Re: [PATCH -next] mac80211: Use #define IEEE80211_CCMP_PN_LEN and
- bool
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 30 Mar 2015 22:01:58 +0200
-In-Reply-To: <1427733474.14276.11.camel@perches.com>
-References: <1427733474.14276.11.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:49871 "EHLO
+	sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751173AbbCJQCN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2015 12:02:13 -0400
+From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v2] mac80211: Get IV len from key conf and not cipher scheme
+Date: Tue, 10 Mar 2015 16:02:08 +0000
+Message-ID: <5842EA9CC042B141995329508713AD672105A9B0@ILMAIL1.corp.local> (sfid-20150310_170216_778980_FA95EE0E)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-30 at 09:37 -0700, Joe Perches wrote:
+Do not always dereference sta to get cipher scheme as
+it may be null for broadcast messages.
+Instead get IV length from key configuration which has been
+initialized with cipher scheme.
 
-> @@ -89,11 +90,11 @@ struct ieee80211_fragment_entry {
->  	unsigned int last_frag;
->  	unsigned int extra_len;
->  	struct sk_buff_head skb_list;
-> -	int ccmp; /* Whether fragments were encrypted with CCMP */
-> -	u8 last_pn[6]; /* PN of the last fragment if CCMP was used */
-> +	/* for CCMP fragments */
-> +	bool ccmp;				/* encrypted with CCMP */
-> +	u8 last_pn[IEEE80211_CCMP_PN_LEN];	/* PN of the last fragment */
+Signed-off-by: Cedric Izoard <cedric.izoard@ceva-dsp.com>
+---
+  net/mac80211/wpa.c | 22 +++++++++++-----------
+  1 file changed, 11 insertions(+), 11 deletions(-)
 
-I took your patch as an opportunity to check into this, and it turns out
-all of this logic is also going to be needed for GCMP. As a result, I'm
-not going to take this patch but instead we'll fix it up for GCMP (where
-using CCMP_PN_LEN would not be appropriate anyway - perhaps we need a
-union or just keep '8' which is the right size for both anyway, or we'll
-go to a u64 value or something)
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 75de6fa..e5d7bfa 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -780,9 +780,8 @@ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data 
+*tx,
+  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+  	struct ieee80211_key *key = tx->key;
+  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	const struct ieee80211_cipher_scheme *cs = key->sta->cipher_scheme;
+  	int hdrlen;
+-	u8 *pos;
++	u8 *pos, iv_len = key->conf.iv_len;
 
-johannes
+  	if (info->control.hw_key &&
+  	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
+@@ -790,14 +789,17 @@ ieee80211_crypto_cs_encrypt(struct 
+ieee80211_tx_data *tx,
+  		return TX_CONTINUE;
+  	}
 
+-	if (unlikely(skb_headroom(skb) < cs->hdr_len &&
+-		     pskb_expand_head(skb, cs->hdr_len, 0, GFP_ATOMIC)))
++	if (iv_len == 0)
++		return TX_CONTINUE;
++
++	if (unlikely(skb_headroom(skb) < iv_len &&
++		     pskb_expand_head(skb, iv_len, 0, GFP_ATOMIC)))
+  		return TX_DROP;
+
+  	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+
+-	pos = skb_push(skb, cs->hdr_len);
+-	memmove(pos, pos + cs->hdr_len, hdrlen);
++	pos = skb_push(skb, iv_len);
++	memmove(pos, pos + iv_len, hdrlen);
+
+  	return TX_CONTINUE;
+  }
+@@ -1217,11 +1219,9 @@ ieee80211_crypto_hw_encrypt(struct 
+ieee80211_tx_data *tx)
+  		if (!info->control.hw_key)
+  			return TX_DROP;
+
+-		if (tx->key->sta->cipher_scheme) {
+-			res = ieee80211_crypto_cs_encrypt(tx, skb);
+-			if (res != TX_CONTINUE)
+-				return res;
+-		}
++		res = ieee80211_crypto_cs_encrypt(tx, skb);
++		if (res != TX_CONTINUE)
++			return res;
+  	}
+
+  	ieee80211_tx_set_protected(tx);
+-- 
+1.9.1
