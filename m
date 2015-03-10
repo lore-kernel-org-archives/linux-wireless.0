@@ -1,62 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:34625 "EHLO mail.hofr.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750925AbbCNI7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 04:59:40 -0400
-Date: Sat, 14 Mar 2015 09:59:38 +0100
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/3 RFC] ath10k: wmi: match wait_for_completion_timeout
-	return type
-Message-ID: <20150314085938.GA13323@opentech.at> (sfid-20150314_100059_446746_262B6B74)
-References: <1426175362-8640-1-git-send-email-hofrat@osadl.org> <CA+BoTQ=VYkOcKBjBuLsJcDjPNevTD2UFxVfB1uimRr=9uBO4Fw@mail.gmail.com>
+Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:46900 "EHLO
+	sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751173AbbCJJH3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2015 05:07:29 -0400
+From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+Subject: [PATCH] mac80211: Get IV len from key conf and not cipher scheme
+Date: Tue, 10 Mar 2015 08:52:23 +0000
+Message-ID: <5842EA9CC042B141995329508713AD672105A821@ILMAIL1.corp.local> (sfid-20150310_100735_628578_9618E0C0)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+BoTQ=VYkOcKBjBuLsJcDjPNevTD2UFxVfB1uimRr=9uBO4Fw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 13 Mar 2015, Michal Kazior wrote:
 
-> On 12 March 2015 at 16:49, Nicholas Mc Guire <hofrat@osadl.org> wrote:
-> > Return type of wait_for_completion_timeout is unsigned long not int.
-> > An appropriately named unsigned long is added and the assignments fixed up.
-> > Rather than returning 0 (timeout) or a more or less random remaining time
-> > (completion success) this return 0 or 1 which also resolves the type of the
-> > functions being int.
-> >
-> > Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> > ---
-> >
-> > Checking the call-sites of ath10k_wmi_wait_for_unified_ready and
-> > ath10k_wmi_wait_for_service_ready the positive return value (remaining
-> > time in jiffies) is never passed up the call-chain nor used so it is
-> > cleaner to treat this like a boolean success/fail only (actually the two
-> > functions should probably be of type bool - but that does not seem to be
-> > common practice in the ath10k code base)
-> 
-> It'd make sense to have these functions return 0 or -ETIMEDOUT. In
-> that case both call sites would need to be adjusted to treat "< 0" or
-> "!x" as an error (instead of the current "<= 0") condition and not set
-> -ETIMEDOUT themselves.
->
-looking at the call sites in ath10k_core_start more or less 
-all other initialization calls will treate 0 as success and
-!=0 as failure so this is the cleaner solution. as its all
-now
+Do not always dereference sta to get cipher scheme as
+it may be null for broadcast messages.
+Instead get IV length from key configuration which has been
+initialized with cipher scheme.
 
-status = call()
-if(status)
- 	error
+Signed-off-by: Cedric Izoard <cedric.izoard@ceva-dsp.com>
+---
+  net/mac80211/wpa.c | 19 ++++++++-----------
+  1 file changed, 8 insertions(+), 11 deletions(-)
 
-patch just posted.
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 75de6fa..ccf7997 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -780,9 +780,8 @@ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data 
+*tx,
+  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+  	struct ieee80211_key *key = tx->key;
+  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	const struct ieee80211_cipher_scheme *cs = key->sta->cipher_scheme;
+  	int hdrlen;
+-	u8 *pos;
++	u8 *pos, iv_len = key->conf.iv_len;
 
-thx!
-hofrat
+  	if (info->control.hw_key &&
+  	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
+@@ -790,14 +789,14 @@ ieee80211_crypto_cs_encrypt(struct 
+ieee80211_tx_data *tx,
+  		return TX_CONTINUE;
+  	}
 
+-	if (unlikely(skb_headroom(skb) < cs->hdr_len &&
+-		     pskb_expand_head(skb, cs->hdr_len, 0, GFP_ATOMIC)))
++	if (unlikely(skb_headroom(skb) < iv_len &&
++		     pskb_expand_head(skb, iv_len, 0, GFP_ATOMIC)))
+  		return TX_DROP;
+
+  	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+
+-	pos = skb_push(skb, cs->hdr_len);
+-	memmove(pos, pos + cs->hdr_len, hdrlen);
++	pos = skb_push(skb, iv_len);
++	memmove(pos, pos + iv_len, hdrlen);
+
+  	return TX_CONTINUE;
+  }
+@@ -1217,11 +1216,9 @@ ieee80211_crypto_hw_encrypt(struct 
+ieee80211_tx_data *tx)
+  		if (!info->control.hw_key)
+  			return TX_DROP;
+
+-		if (tx->key->sta->cipher_scheme) {
+-			res = ieee80211_crypto_cs_encrypt(tx, skb);
+-			if (res != TX_CONTINUE)
+-				return res;
+-		}
++		res = ieee80211_crypto_cs_encrypt(tx, skb);
++		if (res != TX_CONTINUE)
++			return res;
+  	}
+
+  	ieee80211_tx_set_protected(tx);
+-- 
+1.9.1
