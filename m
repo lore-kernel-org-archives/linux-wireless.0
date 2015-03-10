@@ -1,96 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:32871 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756046AbbCRQiq (ORCPT
+Received: from mail-ie0-f177.google.com ([209.85.223.177]:33309 "EHLO
+	mail-ie0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446AbbCJObe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 12:38:46 -0400
-Received: by weop45 with SMTP id p45so36859756weo.0
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2015 09:38:45 -0700 (PDT)
+	Tue, 10 Mar 2015 10:31:34 -0400
+MIME-Version: 1.0
+In-Reply-To: <2223973.a64rBcZvaA@wuerfel>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+	<20150309224929.GL5264@atomide.com>
+	<CAB3XZEdS+mK1MiB7OWiehFGRBnUzJ84s3rFrCy3-YFYhL-BNWw@mail.gmail.com>
+	<2223973.a64rBcZvaA@wuerfel>
+Date: Tue, 10 Mar 2015 16:31:33 +0200
+Message-ID: <CAB3XZEftjwUGS_Kj2dCxYY1m82C+a1_=akbnG3_hLETCr+Dddg@mail.gmail.com> (sfid-20150310_153139_588341_5C3BE515)
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
 From: Eliad Peller <eliad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	=?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tony Lindgren <tony@atomide.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	Sekhar Nori <nsekhar@ti.com>,
 	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: [PATCH v7 3/6] dt: bindings: add TI's wilink wireless device
-Date: Wed, 18 Mar 2015 18:38:27 +0200
-Message-Id: <1426696710-6891-4-git-send-email-eliad@wizery.com> (sfid-20150318_173856_885891_C300B719)
-In-Reply-To: <1426696710-6891-1-git-send-email-eliad@wizery.com>
-References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree binding documentation for TI's wilink
-(wl12xx and wl18xx) wlan chip.
+On Tue, Mar 10, 2015 at 4:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Tuesday 10 March 2015 13:00:19 Eliad Peller wrote:
+>> On Tue, Mar 10, 2015 at 12:49 AM, Tony Lindgren <tony@atomide.com> wrote:
+>> >> > I was expecting you to remove all calls to legacy_init_wl12xx from this file,
+>> >> > including the ones for wl12xx aside from the wl18xx ones you removed, but
+>> >> > if that's enough to clean out the platform_data handling from the wlcore
+>> >> > driver, it's good enough as a start.
+>> >> not sure i'm following - can you elaborate?
+>> >>
+>> >> i'll summarize the way i see it. please correct me if i'm wrong.
+>> >>
+>> >> both wl18xx and wl12xx use the platform data to get the irq number.
+>> >> wl12xx (only) also needs some additional clock definitions to be
+>> >> passed. there's currently some issue with specifying some the of clock
+>> >> sources, so i preferred starting only with (the simpler) wl18xx
+>> >> bindings.
+>> >>
+>> >> for platforms with wl18xx, we can remove the pdata-quirk, as all the
+>> >> data (i.e. irq) can be passed by the new DT bindings.
+>> >> however, for platforms with wl12xx, we still need to pass the clock
+>> >> definitions (along with the irq), so we have to keep
+>> >> legacy_init_wl12xx for the time being (and that's also why we have to
+>> >> currently keep the platform_data handling in the wlcore driver)
+>> >>
+>> >> do you have something else in mind?
+>> >
+>> > I think what Arnd is saying is we've now removed all the wl12xx using
+>> > legacy platforms, so all of them can boot with just data from dts.
+>
+> Right, that was my idea.
+>
+>> I don't think that's the case (unless i'm missing something).
+>> e.g. there's still pdata-quirk for "compulab,omap3-sbc-t3730" which
+>> initializes wl12xx device.
+>
+> This one is just like the igep0030, as Tony was saying: the board
+> boots from device tree already, so now that we have a binding for
+> it, we can remove the wl12xx_set_platform_data() for it.
+>
+i think the wl12xx_set_platform_data() name created some confusion -
+it is used to pass platform data for both wl12xx and wl18xx devices.
+(this confusion is all around the wlcore driver as well, due to the
+code evolution)
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- .../devicetree/bindings/net/wireless/ti,wlcore.txt | 47 ++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+the binding i added is for wl18xx only (there is no wl12xx binding yet).
+the remaining boards, AFAICT, have wl12xx (rather than wl18xx) cards.
+so i don't see how we can remove these wl12xx_set_platform_data()
+calls before we have wl12xx bindings in-place as well.
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-new file mode 100644
-index 0000000..2a3d90d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-@@ -0,0 +1,47 @@
-+TI Wilink 6/7/8 (wl12xx/wl18xx) SDIO devices
-+
-+This node provides properties for controlling the wilink wireless device. The
-+node is expected to be specified as a child node to the SDIO controller that
-+connects the device to the system.
-+
-+Required properties:
-+ - compatible: should be one of the following:
-+    * "ti,wl1271"
-+    * "ti,wl1273"
-+    * "ti,wl1281"
-+    * "ti,wl1283"
-+    * "ti,wl1801"
-+    * "ti,wl1805"
-+    * "ti,wl1807"
-+    * "ti,wl1831"
-+    * "ti,wl1835"
-+    * "ti,wl1837"
-+ - interrupts : specifies attributes for the out-of-band interrupt.
-+
-+Optional properties:
-+ - interrupt-parent : the phandle for the interrupt controller to which the
-+	device interrupts are connected.
-+ - ref-clock-frequency : ref clock frequency in Hz
-+ - tcxo-clock-frequency : tcxo clock frequency in Hz
-+
-+Note: the *-clock-frequency properties assume internal clocks. In case of external
-+clock, new bindings (for parsing the clock nodes) have to be added.
-+
-+Example:
-+
-+&mmc3 {
-+	status = "okay";
-+	vmmc-supply = <&wlan_en_reg>;
-+	bus-width = <4>;
-+	cap-power-off-card;
-+	keep-power-in-suspend;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	wlcore: wlcore@2 {
-+		compatible = "ti,wl1835";
-+		reg = <2>;
-+		interrupt-parent = <&gpio0>;
-+		interrupts = <19 IRQ_TYPE_LEVEL_HIGH>;
-+	};
-+};
--- 
-1.8.5.2.229.g4448466.dirty
+> Unfortunately, there is still one machine that uses a board file
+> in combination with this wl12xx: da850-evm calls
+> wl12xx_set_platform_data() from a legacy board file without DT.
+>
+ditto.
 
+Eliad.
