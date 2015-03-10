@@ -1,35 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:36487 "EHLO
-	out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753027AbbCGCi7 (ORCPT
+Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:48879 "EHLO
+	sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848AbbCJNtJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 21:38:59 -0500
-From: ebiederm@xmission.com (Eric W. Biederman)
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-References: <874mpy2gw5.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 06 Mar 2015 20:35:22 -0600
-In-Reply-To: <874mpy2gw5.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Fri, 06 Mar 2015 19:08:10 +0200")
-Message-ID: <87fv9h7cwl.fsf@x220.int.ebiederm.org> (sfid-20150307_033927_795204_AA4638FB)
+	Tue, 10 Mar 2015 09:49:09 -0400
+From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+To: "Stepanov, Max" <Max.Stepanov@intel.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Get IV len from key conf and not cipher scheme
+Date: Tue, 10 Mar 2015 13:49:01 +0000
+Message-ID: <5842EA9CC042B141995329508713AD672105A8F0@ILMAIL1.corp.local> (sfid-20150310_144913_462464_EECAD494)
+References: <3A934E7FDB083A4683727C7D377065954A23682A@hasmsx109.ger.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Subject: [PATCH net-next 0/2] build fixes for iwlwifi
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/03/2015 12:58, Stepanov, Max wrote:
+>> From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+>> To: linux-wireless@vger.kernel.org <linux-wireless@vger.kernel.org>
+>> Cc: johannes@sipsolutions.net <johannes@sipsolutions.net>
+>> Subject: [PATCH] mac80211: Get IV len from key conf and not cipher
+>> scheme
+>> Date: Tue, 10 Mar 2015 08:52:23 +0000
+>>
+>> Do not always dereference sta to get cipher scheme as it may be null
+>> for broadcast messages.
+>> Instead get IV length from key configuration which has been
+>> initialized with cipher scheme.
+>>
+> Cedric, in general a cipher scheme was about to be used with a station holding ucast and mcast/bcast keys, so, my question is about the following line:
+>
+>> +		res = ieee80211_crypto_cs_encrypt(tx, skb);
+> What is a point of calling this function when tx->key->sta or tx->key->sta->cipher_scheme is NULL? In which scenario?
+>
+> Thanks,
+> Max
+>
 
-drivers/net/wireles/iwlwifi/mvm fails to build for me on
-net-next.
+Hi,
+We use cipher scheme to support WAPI in both STA and AP mode.
+The patch is for the AP use case when sending a broadcast message that 
+needs encryption. So we want to call ieee80211_crypto_cs_encrypt even if 
+sta is NULL.
 
-Eric W. Biederman (2):
-      iwlwifi: mvm: Fix the build of mvm/mac-ctxt.c with debugfs disabled
-      iwlwifi: mvm: Fix the build of mvm/phy-ctxt.c with debugfs disabled
-
- drivers/net/wireless/iwlwifi/mvm/mac-ctxt.c | 7 ++++++-
- drivers/net/wireless/iwlwifi/mvm/phy-ctxt.c | 2 ++
- 2 files changed, 8 insertions(+), 1 deletion(-)
-
-
+rgds,
+cedric
