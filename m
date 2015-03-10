@@ -1,103 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58324 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:49942 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756624AbbCMQ3k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 12:29:40 -0400
-Message-ID: <1426264174.19064.19.camel@redhat.com> (sfid-20150313_172947_037071_2C2D50C2)
-Subject: Re: ARP dropped during WPA handshake
-From: Dan Williams <dcbw@redhat.com>
-To: voncken <cedric.voncken@acksys.fr>
-Cc: "'wim torfs'" <wtorfs@gmail.com>, linux-wireless@vger.kernel.org
-Date: Fri, 13 Mar 2015 11:29:34 -0500
-In-Reply-To: <034401d05da5$d5c0be30$81423a90$@acksys.fr>
-References: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>
-		 <5502D558.90306@gmail.com> <033201d05d93$5aa1c030$0fe54090$@acksys.fr>
-	 <1426255583.19064.6.camel@redhat.com>
-	 <034401d05da5$d5c0be30$81423a90$@acksys.fr>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751844AbbCJL6r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2015 07:58:47 -0400
+From: "Stepanov, Max" <Max.Stepanov@intel.com>
+To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: Get IV len from key conf and not cipher scheme
+Date: Tue, 10 Mar 2015 11:58:43 +0000
+Message-ID: <3A934E7FDB083A4683727C7D377065954A23682A@hasmsx109.ger.corp.intel.com> (sfid-20150310_125850_800570_97A88D39)
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-03-13 at 16:53 +0100, voncken wrote:
-> > > Below, a tcpdump capture from sta.
-> > > 17:43:12.964096 EAPOL key (3) v2, len 95
-> > > 17:43:12.998439 EAPOL key (3) v1, len 117
-> > > 17:43:13.062409 ARP, Request who-has 10.32.61.100 tell 10.32.0.1,
-> > > length 28
-> > > 17:43:13.079989 EAPOL key (3) v2, len 151
-> > > 17:43:13.082764 EAPOL key (3) v1, len 95
-> > > 17:43:14.062381 ARP, Request who-has 10.32.61.100 tell 10.32.0.1,
-> > > length 28
-> > > 17:43:14.127101 ARP, Reply 10.32.61.100 is-at b8:88:e3:45:1d:c6 (oui
-> > > Unknown), length 46
-> > > 17:43:14.127123 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length
-> > > 1470
-> > > 17:43:14.127136 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length
-> > > 1470
-> > >
-> > > You can see the ARP request during the WPA Handshake.
-> > 
-> > During the initial WPA handshake the connection is not fully set up, and so
-> > no general traffic can (nor should) pass between the STA and AP.
-> > That includes ARP and any L2/L3+ protocols, except for EAP and wifi
-> > management packets.
-> > 
-> > The interface itself must be IFF_UP before it can pass traffic, including the
-> > WPA handshake traffic.  IFF_UP only means that the interface can be
-> > configured at the L2 level and the hardware is active, it does *not* mean the
-> > interface can pass traffic.
-> > 
-> > Whatever is causing the ARPs shouldn't be doing that yet, and should be fixed
-> > to use the interface's "operstate" or IFF_LOWER_UP instead of IFF_UP.  Only
-> > when the supplicant changes the interface's operstate to IF_OPER_UP is the
-> > interface *actually* ready to pass traffic.  IFF_UP is not sufficient.
-> > 
-> 
-> Thanks for your reply. 
-> 
-> It seems wpa_supplicant set the operstate to IF_OPER_DORMANT when he received the ASSOCIATED Event from the driver (through netlink). And set the operstate to IF_OPER_UP in case of wpa handshake success.
-> 
-> Is it normal the local ip stack send arp when netdev it is on IF_OPER_DORMANT state?
-
-I'm not sure the kernel stack cares much as long as the device is up.
-It is requesting the ARP because some application is attempting to
-communicate with that IP address.  That application should probably be
-waiting until the interface is actually ready to communicate, which
-means IF_OPER_UP.
-
-But if this is the first WPA handshake with the AP during the initial
-connection, the wifi device shouldn't even have an IP address yet, so
-nothing should be doing ARP on the interface yet.  Perhaps whatever is
-assigning the IP address to the interface is doing it too early, before
-the interface is IF_OPER_UP?
-
-Dan
-	
-> 
-> > 
-> > 
-> > > 	Any suggestion will be appreciate.
-> > >
-> > > Cedric.
-> > > >
-> > > > > Thanks for your help.
-> > > > >
-> > > > > Cedric Voncken
-> > > > >
-> > > > >
-> > > > > --
-> > > > > To unsubscribe from this list: send the line "unsubscribe
-> > > > > linux-wireless" in the body of a message to
-> > > > > majordomo@vger.kernel.org More majordomo info at
-> > > > > http://vger.kernel.org/majordomo-info.html
-> > >
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe
-> > > linux-wireless" in the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> 
-
-
+PiBGcm9tOiBDZWRyaWMgSXpvYXJkIDxDZWRyaWMuSXpvYXJkQGNldmEtZHNwLmNvbT4NCj4gVG86
+IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZyA8bGludXgtd2lyZWxlc3NAdmdlci5rZXJu
+ZWwub3JnPg0KPiBDYzogam9oYW5uZXNAc2lwc29sdXRpb25zLm5ldCA8am9oYW5uZXNAc2lwc29s
+dXRpb25zLm5ldD4NCj4gU3ViamVjdDogW1BBVENIXSBtYWM4MDIxMTogR2V0IElWIGxlbiBmcm9t
+IGtleSBjb25mIGFuZCBub3QgY2lwaGVyIA0KPiBzY2hlbWUNCj4gRGF0ZTogVHVlLCAxMCBNYXIg
+MjAxNSAwODo1MjoyMyArMDAwMA0KPiANCj4gRG8gbm90IGFsd2F5cyBkZXJlZmVyZW5jZSBzdGEg
+dG8gZ2V0IGNpcGhlciBzY2hlbWUgYXMgaXQgbWF5IGJlIG51bGwgDQo+IGZvciBicm9hZGNhc3Qg
+bWVzc2FnZXMuDQo+IEluc3RlYWQgZ2V0IElWIGxlbmd0aCBmcm9tIGtleSBjb25maWd1cmF0aW9u
+IHdoaWNoIGhhcyBiZWVuIA0KPiBpbml0aWFsaXplZCB3aXRoIGNpcGhlciBzY2hlbWUuDQo+IA0K
+Q2VkcmljLCBpbiBnZW5lcmFsIGEgY2lwaGVyIHNjaGVtZSB3YXMgYWJvdXQgdG8gYmUgdXNlZCB3
+aXRoIGEgc3RhdGlvbiBob2xkaW5nIHVjYXN0IGFuZCBtY2FzdC9iY2FzdCBrZXlzLCBzbywgbXkg
+cXVlc3Rpb24gaXMgYWJvdXQgdGhlIGZvbGxvd2luZyBsaW5lOg0KDQo+ICsJCXJlcyA9IGllZWU4
+MDIxMV9jcnlwdG9fY3NfZW5jcnlwdCh0eCwgc2tiKTsNCldoYXQgaXMgYSBwb2ludCBvZiBjYWxs
+aW5nIHRoaXMgZnVuY3Rpb24gd2hlbiB0eC0+a2V5LT5zdGEgb3IgdHgtPmtleS0+c3RhLT5jaXBo
+ZXJfc2NoZW1lIGlzIE5VTEw/IEluIHdoaWNoIHNjZW5hcmlvPw0KDQpUaGFua3MsDQpNYXgNCg==
