@@ -1,43 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54708 "EHLO sipsolutions.net"
+Received: from muru.com ([72.249.23.125]:36289 "EHLO muru.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752609AbbCCJN3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 04:13:29 -0500
-Message-ID: <1425374007.2450.16.camel@sipsolutions.net> (sfid-20150303_101334_257158_8C30DE3D)
-Subject: Re: [PATCH v2 2/2] cfg80211: add support for connecting to PBSS
- network type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dedy Lansky <dlansky@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-	Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Date: Tue, 03 Mar 2015 10:13:27 +0100
-In-Reply-To: <1423403524-22540-3-git-send-email-dlansky@codeaurora.org>
-References: <1423403524-22540-1-git-send-email-dlansky@codeaurora.org>
-	 <1423403524-22540-3-git-send-email-dlansky@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751000AbbCJRk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Mar 2015 13:40:58 -0400
+Date: Tue, 10 Mar 2015 10:35:50 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+Message-ID: <20150310173550.GT5264@atomide.com> (sfid-20150310_184105_179543_40645514)
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+ <2223973.a64rBcZvaA@wuerfel>
+ <CAB3XZEftjwUGS_Kj2dCxYY1m82C+a1_=akbnG3_hLETCr+Dddg@mail.gmail.com>
+ <5683860.JYkc24rKim@wuerfel>
+ <CAB3XZEfEQnb7qsxuAAr6pUehm1nw6Eu4ZsV1+E477yF5K1hczA@mail.gmail.com>
+ <20150310161801.GR5264@atomide.com>
+ <CAB3XZEdK2O7tSSTchvRQtaefzCECjjQ-biQmOBHGdzJaBknSFQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB3XZEdK2O7tSSTchvRQtaefzCECjjQ-biQmOBHGdzJaBknSFQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-02-08 at 15:52 +0200, Dedy Lansky wrote:
+* Eliad Peller <eliad@wizery.com> [150310 10:01]:
+> On Tue, Mar 10, 2015 at 6:18 PM, Tony Lindgren <tony@atomide.com> wrote:
+> > * Eliad Peller <eliad@wizery.com> [150310 09:11]:
+> >> On Tue, Mar 10, 2015 at 5:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >> > On Tuesday 10 March 2015 16:31:33 Eliad Peller wrote:
+> >> >> On Tue, Mar 10, 2015 at 4:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >> >> > On Tuesday 10 March 2015 13:00:19 Eliad Peller wrote:
+> >> >> >> On Tue, Mar 10, 2015 at 12:49 AM, Tony Lindgren <tony@atomide.com> wrote:
+> >> >> >> >> > I was expecting you to remove all calls to legacy_init_wl12xx from this file,
+> >> >> >> >> > including the ones for wl12xx aside from the wl18xx ones you removed, but
+> >> >> >> >> > if that's enough to clean out the platform_data handling from the wlcore
+> >> >> >> >> > driver, it's good enough as a start.
+> >> >> >> >> not sure i'm following - can you elaborate?
+> >> >> >> >>
+> >> >> >> >> i'll summarize the way i see it. please correct me if i'm wrong.
+> >> >> >> >>
+> >> >> >> >> both wl18xx and wl12xx use the platform data to get the irq number.
+> >> >> >> >> wl12xx (only) also needs some additional clock definitions to be
+> >> >> >> >> passed. there's currently some issue with specifying some the of clock
+> >> >> >> >> sources, so i preferred starting only with (the simpler) wl18xx
+> >> >> >> >> bindings.
+> >> >> >> >>
+> >> >> >> >> for platforms with wl18xx, we can remove the pdata-quirk, as all the
+> >> >> >> >> data (i.e. irq) can be passed by the new DT bindings.
+> >> >> >> >> however, for platforms with wl12xx, we still need to pass the clock
+> >> >> >> >> definitions (along with the irq), so we have to keep
+> >> >> >> >> legacy_init_wl12xx for the time being (and that's also why we have to
+> >> >> >> >> currently keep the platform_data handling in the wlcore driver)
+> >> >> >> >>
+> >> >> >> >> do you have something else in mind?
+> >> >> >> >
+> >> >> >> > I think what Arnd is saying is we've now removed all the wl12xx using
+> >> >> >> > legacy platforms, so all of them can boot with just data from dts.
+> >> >> >
+> >> >> > Right, that was my idea.
+> >> >> >
+> >> >> >> I don't think that's the case (unless i'm missing something).
+> >> >> >> e.g. there's still pdata-quirk for "compulab,omap3-sbc-t3730" which
+> >> >> >> initializes wl12xx device.
+> >> >> >
+> >> >> > This one is just like the igep0030, as Tony was saying: the board
+> >> >> > boots from device tree already, so now that we have a binding for
+> >> >> > it, we can remove the wl12xx_set_platform_data() for it.
+> >> >> >
+> >> >> i think the wl12xx_set_platform_data() name created some confusion -
+> >> >> it is used to pass platform data for both wl12xx and wl18xx devices.
+> >> >> (this confusion is all around the wlcore driver as well, due to the
+> >> >> code evolution)
+> >> >>
+> >> >> the binding i added is for wl18xx only (there is no wl12xx binding yet).
+> >> >> the remaining boards, AFAICT, have wl12xx (rather than wl18xx) cards.
+> >> >> so i don't see how we can remove these wl12xx_set_platform_data()
+> >> >> calls before we have wl12xx bindings in-place as well.
+> >> >
+> >> > What is missing for that binding then? I keep getting confused here,
+> >> > but I thought that they share the implementation that looks at the
+> >> > platform data.
+> >> >
+> >> they both get the same wl12xx_platform_data struct, but only wl12xx
+> >> cares about the clocks-related fields.
+> >> the bindings i added parses only the irq.
+> >>
+> >> (Luca tried previously to upstream wl12xx DT support along with the
+> >> required clock DT changes, but got some rejections, mainly wrt. clock
+> >> stuff.
+> >> e.g. http://thread.gmane.org/gmane.linux.kernel/1520752
+> >> that's why i preferred starting with "easier" wl18xx bindings only)
+> >
+> > I believe we did not have clock bindings back then, now it's simple
+> > to get the clock. If it's some internal clock to the wl12xx, then
+> > that's a different story, it should be just hidden behind a compatible
+> > flag then.
+> >
+> i'm really not familiar with the common clock framework, but there
+> still doesn't seem to be a way to determine whether a clock is XTAL or
+> not (which is what Luca's patch was about). should we use compatible
+> flag in such case? i'm not sure it sounds right.
+> 
+> anyway, i'd really prefer, if possible, starting with the wl18xx
+> bindings, and defer the wl12xx complications to later on.
+> (i also need to find some wl12xx card in order to actually test the
+> patches once i'll have them...)
+> 
+> we do have to make sure these wl18xx bindings are future-compatible
+> with the wl12xx ones, but i think the current bindings are pretty much
+> standard (and are actually a subset of the bindings needed by wl12xx),
+> so it should be fine.
 
-> @@ -961,6 +961,12 @@ int cfg80211_connect(struct cfg80211_registered_device *rdev,
->  	memcpy(wdev->ssid, connect->ssid, connect->ssid_len);
->  	wdev->ssid_len = connect->ssid_len;
->  
-> +	wdev->conn_bss_type = IEEE80211_BSS_TYPE_ESS;
-> +	if (connect->channel &&
-> +	    connect->channel->band == IEEE80211_BAND_60GHZ &&
-> +	    wdev->iftype == NL80211_IFTYPE_P2P_CLIENT)
-> +		wdev->conn_bss_type = IEEE80211_BSS_TYPE_PBSS;
+Well how about add just the parsing of the clock and assume it's always
+WL12XX_REFCLOCK_38 for now as that's the only thing we're currently
+using. Then we can add a property or compatible value if using something
+else as needed.
 
-This looks wrong, what if the driver did channel selection? Then all of
-this breaks.
+Regards,
 
-Perhaps it'd be better to punt this to drivers by introducing
-cfg80211_connect_result_bss() along with the existing
-cfg80211_roamed_bss(), so drivers can just look up and pass the correct
-BSS entry.
-
-johannes
-
+Tony
