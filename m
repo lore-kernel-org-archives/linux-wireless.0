@@ -1,111 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from elasmtp-dupuy.atl.sa.earthlink.net ([209.86.89.62]:42722 "EHLO
-	elasmtp-dupuy.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754368AbbCFQNA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51123 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753412AbbCJOFd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 11:13:00 -0500
-Date: Fri, 6 Mar 2015 11:12:57 -0500
-From: marco <marco@tampabay.rr.com>
-To: wim torfs <wtorfs@gmail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: carl1970: monitor mode only displaying beacons/probs from APs?
-Message-ID: <20150306161257.GA720@192.168.1.10> (sfid-20150306_171304_441504_FCC57873)
-References: <20150304230225.J5EHX.13935.root@cdptpa-web27>
- <3859987.D1VAPy8h72@debian64>
- <54F93907.6020408@tampabay.rr.com>
- <54F974B2.5050604@gmail.com>
+	Tue, 10 Mar 2015 10:05:33 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2015-03-10
+Date: Tue, 10 Mar 2015 16:05:26 +0200
+Message-ID: <87y4n5x80p.fsf@kamboji.qca.qualcomm.com> (sfid-20150310_150614_297789_2688E2E1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54F974B2.5050604@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 06, 2015 at 10:34:42AM +0100, wim torfs wrote:
-> Hi,
-> 
-> Perhaps a silly question, and I'm sure you already covered this, but I need
-> to ask, just to be sure. Did you enable promiscuous mode to capture the data
-> packets?
-> 
-> Could you elaborate on the employed method for capturing the data, it is
-> difficult to make any suggestions without having knowledge about the used
-> procedure.
-> 
-> Best Regards,
-> Wim.
-> 
->
-Hello Wim,
+Hi Dave,
 
-Honestly, I've never seen promiscuous mode get me anything when doing
-wireless sniffing; probably because I'm not associated with an AP.
-That being said, I have tried that without any noticeable difference.
+here is wireless-drivers pull request for 4.0, changelog below. Please
+let me know if there are any problems.
 
-I use both wireshark and tcpdump for my testing.  I'm just looking for
-wireless packets that one normally sees when doing wireless sniffing
-(there is a lot of sta's / AP's around me) acks, CTS/RTS, various
-management frames, etc.  The missing traffic is pretty obvious when
-comparing to another working wifi stick (in my case 9khtc).
-
-I guess if this is not an obvious problem, I can go bisect until I
-find where the problem was introduced.  This was working fine in the
-past.
+Kalle
 
 
-Example:  carl9170
-It seem like all the traffic I see is from AP's, no STA.  The three
-types are all I ever see (1 data frame, and two mgmt frames, no
-ctrl).
+The following changes since commit acf8dd0a9d0b9e4cdb597c2f74802f79c699e802:
 
-... -82dB signal antenna 5 Beacon (...) [1.0* 2.0* 2.0* 5...
-... -81dB signal antenna 5 Beacon (...) [11.0* 11.0* 6....
-... -57dB signal antenna 5 Beacon (...) [1.0* 2.0* 5.5* 11.0* ...
-... -76dB signal antenna 5 Beacon (...) [1.0* 2.0* 5...
-... -82dB signal antenna 5 Beacon (...) [1.0* 2.0* 2.0* 5...
-... -82dB signal antenna 5 Probe Request () [1.0* 2.0* 5.5* 11.0...
-... -57dB signal antenna 5 Beacon (...) [1.0* 2.0* 5.5* 11.0* ...
-... -76dB signal antenna 5 Beacon (...) [1.0* 2.0* 5...
-... -82dB signal antenna 5 Beacon (...) [1.0* 2.0* 2.0* 5...
-... -83dB signal antenna 5 Beacon (...) [11.0* 11.0* 6....
-... -82dB signal antenna 5 Beacon (...) [1.0* 2.0* 2.0* 5....
-... -57dB signal antenna 5 Beacon (...) [1.0* 2.0* 5.5* 11.0* ...
-... -76dB signal antenna 5 Beacon (...) [1.0* 2.0* 5...
-... -83dB signal antenna 5 Beacon (...) [11.0* 11.0* 6....
-... -74dB signal antenna 5 Data IV: c0 Pad 20 KeyID 1
-... -74dB signal antenna 5 Beacon (...) [1.0* 2.0* 5.5* 11.0* ...
-... -77dB signal antenna 5 Beacon (...) [1.0* 2.0* 5...
-... -83dB signal antenna 5 Beacon (...) [1.0* 2.0* 2.0* 5...
-... -82dB signal antenna 5 Beacon (...) [1.0* 2.0* 2.0* 5....
+  udp: only allow UFO for packets from SOCK_DGRAM sockets (2015-03-02 22:19:29 -0500)
 
+are available in the git repository at:
 
-Example:  9k-htc
-I see plenty of other frames (lots more in a larger sample)
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-03-10
 
-... -75dB signal antenna 0 Unknown Ctrl Subtype 
-... -74dB signal antenna 0 Beacon (...) [1.0* 2.0* 5
-... -74dB signal antenna 0 Beacon (...) [11.0* 11.
-... -74dB signal antenna 0 Beacon (...) [1.0* 2.0* 
-... -76dB signal antenna 0 Beacon (...) [1.0* 2.0* 5.5* 
-... -76dB signal antenna 0 Beacon (...) [1.0* 2.0* 2
-... -77dB signal antenna 0 Beacon (...) [1.0*
-... -72dB signal antenna 0 Beacon (...) [1.0* 2.
-... -73dB signal antenna 0 [|802.11]
-... -73dB signal antenna 0 Unknown Ctrl Subtype
-... -73dB signal antenna 0 Power Save-Poll AID
-... -72dB signal antenna 0 Beacon (...) [1.0* 2.0* 5
-... -72dB signal antenna 0 Beacon (...) [1.0* 2.
-... -73dB signal antenna 0 Beacon (...) [1.0* 2.0* 
-... -75dB signal antenna 0 Beacon (...) ESS[|802.11]
-... -76dB signal antenna 0 Beacon (...) [1.0* 2.0* 2
-... -77dB signal antenna 0 CF Ack/Poll+QoS 
-... -78dB signal antenna 0 Data IV:363bbb Pad 20 KeyID 2
-... -78dB signal antenna 0 Beacon (...) [1.0*
-... -73dB signal antenna 0 Beacon (...) [1.0* 2.
-... -74dB signal antenna 0 Beacon (...) [1.0* 2.0* 2.
-... -75dB signal antenna 0 Unknown Ctrl Subtype
-... -75dB signal antenna 0 Unknown Ctrl Subtype
+for you to fetch changes up to 3f1615340acea54e21f4b9d4d65921540dca84b2:
 
+  brcmfmac: Perform bound checking on vendor command buffer (2015-03-07 10:52:30 +0200)
 
-Regards,
-Marco
+----------------------------------------------------------------
+iwlwifi:
+
+* fix ROC removal - avoids a firmware crash
+* fix throughput regression on iwldvm devices
+* fix panic in BT Coex
+* fixes in rate control
+* fixes in scan
+
+b43:
+
+* fix support for 5 GHz only BCM43228 model
+
+rtlwifi:
+
+* improve handling of IPv6 packets
+
+brcmfmac:
+
+* perform bound checking on vendor command buffer
+
+----------------------------------------------------------------
+Andrei Otcheretianski (1):
+      iwlwifi: mvm: Fix ROC removal
+
+Emmanuel Grumbach (2):
+      iwlwifi: fix max_ht_ampdu_exponent for older devices
+      iwlwifi: mvm: BT Coex - fix a NULL pointer exception
+
+Eyal Shapira (2):
+      iwlwifi: mvm: rs: fix BT Coex check to look at the correct ant
+      iwlwifi: mvm: disable beamformer unless FW supports it
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2015-03-05' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Larry Finger (1):
+      rtlwifi: Improve handling of IPv6 packets
+
+Luciano Coelho (2):
+      iwlwifi: mvm: call ieee80211_scan_completed() even if scan abort fails
+      iwlwifi: mvm: don't try to stop scans that are not running anymore
+
+Pontus Fuchs (1):
+      brcmfmac: Perform bound checking on vendor command buffer
+
+Rafał Miłecki (1):
+      b43: fix support for 5 GHz only BCM43228 model
+
+ drivers/net/wireless/b43/main.c                  |    1 +
+ drivers/net/wireless/brcm80211/brcmfmac/vendor.c |   15 +++++++--
+ drivers/net/wireless/iwlwifi/iwl-1000.c          |    6 ++--
+ drivers/net/wireless/iwlwifi/iwl-2000.c          |   13 +++++---
+ drivers/net/wireless/iwlwifi/iwl-5000.c          |    6 ++--
+ drivers/net/wireless/iwlwifi/iwl-6000.c          |   18 ++++++----
+ drivers/net/wireless/iwlwifi/mvm/coex.c          |    3 +-
+ drivers/net/wireless/iwlwifi/mvm/coex_legacy.c   |    3 +-
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c      |   38 ++++++++++++++++++++--
+ drivers/net/wireless/iwlwifi/mvm/rs.c            |   21 ++++++++----
+ drivers/net/wireless/iwlwifi/mvm/scan.c          |   13 ++++----
+ drivers/net/wireless/iwlwifi/mvm/time-event.c    |    9 ++---
+ drivers/net/wireless/rtlwifi/base.c              |    7 ++--
+ 13 files changed, 109 insertions(+), 44 deletions(-)
+
+-- 
+Kalle Valo
