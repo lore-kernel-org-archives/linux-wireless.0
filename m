@@ -1,113 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49636 "EHLO mga14.intel.com"
+Received: from erley.org ([97.107.129.9]:58031 "EHLO remote.erley.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750951AbbCAHK1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 02:10:27 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Alexander Bondar <alexander.bondar@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/16] mac80211: Update beacon's timing and DTIM count on every beacon
-Date: Sun,  1 Mar 2015 09:10:00 +0200
-Message-Id: <1425193815-17785-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_081039_784267_24193765)
-In-Reply-To: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1751349AbbCKRlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 13:41:14 -0400
+Message-ID: <55007E35.4010804@erley.org> (sfid-20150311_184139_186801_BD6D33EB)
+Date: Wed, 11 Mar 2015 12:41:09 -0500
+From: Pat Erley <pat-lkml@erley.org>
+MIME-Version: 1.0
+To: Nicholas Mc Guire <hofrat@osadl.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Valdis.Kletnieks@vt.edu, Bj??rn Mork <bjorn@mork.no>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2 RFC] ath10k: move code out of the parameter list
+References: <1426094369-10213-1-git-send-email-hofrat@osadl.org>
+In-Reply-To: <1426094369-10213-1-git-send-email-hofrat@osadl.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexander Bondar <alexander.bondar@intel.com>
+On 03/11/2015 12:19 PM, Nicholas Mc Guire wrote:
+> Putting code into the parameter list of wait_event_timeout() might be
+> legal C-code but not really readable - the "inline" code is simply
+> moved into a function and that passed to wait_event_timeout() as the
+> condition.
+>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
+>
+> Thanks to Bjorn Mork <bjorn@mork.no> for clarifying my initial confusion !
+>
+> Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+> CONFIG_ATH10K=m
+>
+> Patch is against 4.0-rc3 (localversion-next is -next-20150311)
+>
+>   drivers/net/wireless/ath/ath10k/mac.c |   32 ++++++++++++++++++--------------
+>   1 file changed, 18 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index e8cc19f..7b27d99 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -4463,11 +4463,25 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+>   	return ret;
+>   }
+>
+> +static bool check_htt_state(struct ath10k *ar, bool skip)
+> +{
+> +	bool empty;
+> +
+> +	spin_lock_bh(&ar->htt.tx_lock);
+> +	empty = (ar->htt.num_pending_tx == 0);
+> +	spin_unlock_bh(&ar->htt.tx_lock);
+> +
+> +	skip = (ar->state == ATH10K_STATE_WEDGED) ||
+> +		test_bit(ATH10K_FLAG_CRASH_FLUSH,
+> +			 &ar->dev_flags);
+> +	return (empty || skip);
+> +}
+> +
+>   static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>   			 u32 queues, bool drop)
+>   {
+>   	struct ath10k *ar = hw->priv;
+> -	bool skip;
+> +	bool skip = false;
+>   	int ret;
+>
+>   	/* mac80211 doesn't care if we really xmit queued frames or not
+> @@ -4480,19 +4494,9 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>   	if (ar->state == ATH10K_STATE_WEDGED)
+>   		goto skip;
+>
+> -	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
+> -			bool empty;
+> -
+> -			spin_lock_bh(&ar->htt.tx_lock);
+> -			empty = (ar->htt.num_pending_tx == 0);
+> -			spin_unlock_bh(&ar->htt.tx_lock);
+> -
+> -			skip = (ar->state == ATH10K_STATE_WEDGED) ||
+> -			       test_bit(ATH10K_FLAG_CRASH_FLUSH,
+> -					&ar->dev_flags);
+> -
+> -			(empty || skip);
+> -		}), ATH10K_FLUSH_TIMEOUT_HZ);
+> +	ret = wait_event_timeout(ar->htt.empty_tx_wq,
+> +				 check_htt_state(ar, skip),
+> +				 ATH10K_FLUSH_TIMEOUT_HZ);
+>
+>   	if (ret <= 0 || skip)
+>   		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %i\n",
+>
 
-Beacon's timestamp, device system time associated with this beacon and
-DTIM count parameters are not updated in the associated vif context
-if the latest beacon's content is identical to the previously received.
-It make sense to update these changing parameters on every beacon so the
-driver can get most updated values. This may be necessary, for example,
-to avoid either beacons' drift effect or device time stamp overrun.
-IMPORTANT: Three sync_* parameters - sync_ts, sync_device_ts and
-sync_dtim_count would possibly be out of sync by the time the driver will
-use them. The synchronized view is currently guaranteed only in certain
-callbacks.
+Doesn't this change not assign to 'skip' in the calling function?  So 
+you'd want to make it:
 
-Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- include/net/mac80211.h |  7 +++++--
- net/mac80211/mlme.c    | 32 ++++++++++++++++++++------------
- 2 files changed, 25 insertions(+), 14 deletions(-)
+static bool check_htt_state(struct ath10k *ar, bool *skip)
+{
+	bool empty;
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d52914b..3a029f0 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -337,12 +337,15 @@ enum ieee80211_rssi_event {
-  *	HW flag %IEEE80211_HW_TIMING_BEACON_ONLY is set, then this can
-  *	only come from a beacon, but might not become valid until after
-  *	association when a beacon is received (which is notified with the
-- *	%BSS_CHANGED_DTIM flag.)
-+ *	%BSS_CHANGED_DTIM flag.). See also sync_dtim_count important notice.
-  * @sync_device_ts: the device timestamp corresponding to the sync_tsf,
-  *	the driver/device can use this to calculate synchronisation
-- *	(see @sync_tsf)
-+ *	(see @sync_tsf). See also sync_dtim_count important notice.
-  * @sync_dtim_count: Only valid when %IEEE80211_HW_TIMING_BEACON_ONLY
-  *	is requested, see @sync_tsf/@sync_device_ts.
-+ *	IMPORTANT: These three sync_* parameters would possibly be out of sync
-+ *	by the time the driver will use them. The synchronized view is currently
-+ *	guaranteed only in certain callbacks.
-  * @beacon_int: beacon interval
-  * @assoc_capability: capabilities taken from assoc resp
-  * @basic_rates: bitmap of basic rates, each bit stands for an
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 10ac632..cf3ae93 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3419,6 +3419,26 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 	if (ifmgd->csa_waiting_bcn)
- 		ieee80211_chswitch_post_beacon(sdata);
- 
-+	/*
-+	 * Update beacon timing and dtim count on every beacon appearance. This
-+	 * will allow the driver to use the most updated values. Do it before
-+	 * comparing this one with last received beacon.
-+	 * IMPORTANT: These parameters would possibly be out of sync by the time
-+	 * the driver will use them. The synchronized view is currently
-+	 * guaranteed only in certain callbacks.
-+	 */
-+	if (local->hw.flags & IEEE80211_HW_TIMING_BEACON_ONLY) {
-+		sdata->vif.bss_conf.sync_tsf =
-+			le64_to_cpu(mgmt->u.beacon.timestamp);
-+		sdata->vif.bss_conf.sync_device_ts =
-+			rx_status->device_timestamp;
-+		if (elems.tim)
-+			sdata->vif.bss_conf.sync_dtim_count =
-+				elems.tim->dtim_count;
-+		else
-+			sdata->vif.bss_conf.sync_dtim_count = 0;
-+	}
-+
- 	if (ncrc == ifmgd->beacon_crc && ifmgd->beacon_crc_valid)
- 		return;
- 	ifmgd->beacon_crc = ncrc;
-@@ -3446,18 +3466,6 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 		else
- 			bss_conf->dtim_period = 1;
- 
--		if (local->hw.flags & IEEE80211_HW_TIMING_BEACON_ONLY) {
--			sdata->vif.bss_conf.sync_tsf =
--				le64_to_cpu(mgmt->u.beacon.timestamp);
--			sdata->vif.bss_conf.sync_device_ts =
--				rx_status->device_timestamp;
--			if (elems.tim)
--				sdata->vif.bss_conf.sync_dtim_count =
--					elems.tim->dtim_count;
--			else
--				sdata->vif.bss_conf.sync_dtim_count = 0;
--		}
--
- 		changed |= BSS_CHANGED_BEACON_INFO;
- 		ifmgd->have_beacon = true;
- 
--- 
-1.9.1
+	spin_lock_bh(&ar->htt.tx_lock);
+	empty = (ar->htt.num_pending_tx == 0);
+	spin_unlock_bh(&ar->htt.tx_lock);
 
+	*skip = (ar->state == ATH10K_STATE_WEDGED) ||
+		test_bit(ATH10K_FLAG_CRASH_FLUSH,
+			 &ar->dev_flags);
+	return (empty || *skip);
+}
+
+ret = wait_event_timeout(ar->htt.empty_tx_wq,
+				 check_htt_state(ar, &skip),
+				 ATH10K_FLUSH_TIMEOUT_HZ);
+
+To preserve the previous behavior?
