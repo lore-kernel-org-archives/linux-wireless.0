@@ -1,57 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:39137 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385AbbCTMpX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 08:45:23 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/7] brcm: firmware drop for brcmfmac driver
-Date: Fri, 20 Mar 2015 13:43:58 +0100
-Message-ID: <1426855445-31121-1-git-send-email-arend@broadcom.com> (sfid-20150320_134527_644460_A9868842)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from plaes.org ([188.166.43.21]:51911 "EHLO plaes.org"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752332AbbCKUDt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 16:03:49 -0400
+From: Priit Laes <plaes@plaes.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Priit Laes <plaes@plaes.org>
+Subject: [PATCH 3/6] rtlwifi: Use common rtl_evm_db_to_percentage
+Date: Wed, 11 Mar 2015 22:03:26 +0200
+Message-Id: <1426104209-6913-4-git-send-email-plaes@plaes.org> (sfid-20150311_210422_288289_092D8B13)
+In-Reply-To: <1426104209-6913-1-git-send-email-plaes@plaes.org>
+References: <1426104209-6913-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds firmware files for a number of "new" devices.
-Admittedly there was bit of backlog. For BCM4354 SDIO this
-series has firmware upgrade.
+Signed-off-by: Priit Laes <plaes@plaes.org>
+---
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 22 +---------------------
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c | 18 +-----------------
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c | 17 +----------------
+ 3 files changed, 3 insertions(+), 54 deletions(-)
 
-This series does apply to the master branch of the linux-firmware
-repo on top of commit f10b97abdab2 ("radeon: Update Kaveri MEC
-firmware to #396").
-
-Arend van Spriel (7):
-  brcm: add firmware for BCM43242 USB device
-  brcm: add firmware for BCM4356 PCIe device
-  brcm: add firmware files for BCM43602 PCIe device
-  brcm: add firmware for BCM43455 SDIO device
-  brcm: add firmware for BCM4339 SDIO device
-  brcm: add firmware for BCM43340/1 SDIO devices
-  brcm: upgrade firmware for BCM4354 SDIO device
-
- WHENCE                         |   7 +++++++
- brcm/brcmfmac43242a.bin        | Bin 0 -> 479232 bytes
- brcm/brcmfmac43340-sdio.bin    | Bin 0 -> 397378 bytes
- brcm/brcmfmac4339-sdio.bin     | Bin 0 -> 569291 bytes
- brcm/brcmfmac43455-sdio.bin    | Bin 0 -> 488193 bytes
- brcm/brcmfmac4354-sdio.bin     | Bin 507752 -> 591837 bytes
- brcm/brcmfmac4356-pcie.bin     | Bin 0 -> 593956 bytes
- brcm/brcmfmac43602-pcie.ap.bin | Bin 0 -> 588940 bytes
- brcm/brcmfmac43602-pcie.bin    | Bin 0 -> 590544 bytes
- 9 files changed, 7 insertions(+)
- create mode 100644 brcm/brcmfmac43242a.bin
- create mode 100644 brcm/brcmfmac43340-sdio.bin
- create mode 100644 brcm/brcmfmac4339-sdio.bin
- create mode 100644 brcm/brcmfmac43455-sdio.bin
- rewrite brcm/brcmfmac4354-sdio.bin (81%)
- create mode 100644 brcm/brcmfmac4356-pcie.bin
- create mode 100644 brcm/brcmfmac43602-pcie.ap.bin
- create mode 100644 brcm/brcmfmac43602-pcie.bin
-
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+index 4eedf39..4c7e804 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -49,26 +49,6 @@ static u8 _rtl92ce_map_hwqueue_to_fwqueue(struct sk_buff *skb, u8 hw_queue)
+ 	return skb->priority;
+ }
+ 
+-static u8 _rtl92c_evm_db_to_percentage(char value)
+-{
+-	char ret_val;
+-	ret_val = value;
+-
+-	if (ret_val >= 0)
+-		ret_val = 0;
+-
+-	if (ret_val <= -33)
+-		ret_val = -33;
+-
+-	ret_val = 0 - ret_val;
+-	ret_val *= 3;
+-
+-	if (ret_val == 99)
+-		ret_val = 100;
+-
+-	return ret_val;
+-}
+-
+ static long _rtl92ce_signal_scale_mapping(struct ieee80211_hw *hw,
+ 		long currsig)
+ {
+@@ -254,7 +234,7 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
+ 			max_spatial_stream = 1;
+ 
+ 		for (i = 0; i < max_spatial_stream; i++) {
+-			evm = _rtl92c_evm_db_to_percentage(p_drvinfo->rxevm[i]);
++			evm = rtl_evm_db_to_percentage(p_drvinfo->rxevm[i]);
+ 
+ 			if (packet_match_bssid) {
+ 				/* Fill value in RFD, Get the first
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+index f55b35c..60f2001 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+@@ -714,22 +714,6 @@ void rtl92c_set_data_filter(struct ieee80211_hw *hw, u16 filter)
+ }
+ /*==============================================================*/
+ 
+-static u8 _rtl92c_evm_db_to_percentage(char value)
+-{
+-	char ret_val;
+-
+-	ret_val = value;
+-	if (ret_val >= 0)
+-		ret_val = 0;
+-	if (ret_val <= -33)
+-		ret_val = -33;
+-	ret_val = 0 - ret_val;
+-	ret_val *= 3;
+-	if (ret_val == 99)
+-		ret_val = 100;
+-	return ret_val;
+-}
+-
+ static long _rtl92c_signal_scale_mapping(struct ieee80211_hw *hw,
+ 		long currsig)
+ {
+@@ -876,7 +860,7 @@ static void _rtl92c_query_rxphystatus(struct ieee80211_hw *hw,
+ 		else
+ 			max_spatial_stream = 1;
+ 		for (i = 0; i < max_spatial_stream; i++) {
+-			evm = _rtl92c_evm_db_to_percentage(p_drvinfo->rxevm[i]);
++			evm = rtl_evm_db_to_percentage(p_drvinfo->rxevm[i]);
+ 			if (packet_match_bssid) {
+ 				if (i == 0)
+ 					pstats->signalquality =
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+index 54736dd..369edd4 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+@@ -48,21 +48,6 @@ static u8 _rtl92de_map_hwqueue_to_fwqueue(struct sk_buff *skb, u8 hw_queue)
+ 	return skb->priority;
+ }
+ 
+-static u8 _rtl92d_evm_db_to_percentage(char value)
+-{
+-	char ret_val = value;
+-
+-	if (ret_val >= 0)
+-		ret_val = 0;
+-	if (ret_val <= -33)
+-		ret_val = -33;
+-	ret_val = 0 - ret_val;
+-	ret_val *= 3;
+-	if (ret_val == 99)
+-		ret_val = 100;
+-	return ret_val;
+-}
+-
+ static long _rtl92de_translate_todbm(struct ieee80211_hw *hw,
+ 				     u8 signal_strength_index)
+ {
+@@ -231,7 +216,7 @@ static void _rtl92de_query_rxphystatus(struct ieee80211_hw *hw,
+ 		else
+ 			max_spatial_stream = 1;
+ 		for (i = 0; i < max_spatial_stream; i++) {
+-			evm = _rtl92d_evm_db_to_percentage(p_drvinfo->rxevm[i]);
++			evm = rtl_evm_db_to_percentage(p_drvinfo->rxevm[i]);
+ 			if (packet_match_bssid) {
+ 				if (i == 0)
+ 					pstats->signalquality =
 -- 
-1.9.1
+2.3.1
 
