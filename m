@@ -1,63 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:35180 "EHLO mail.hofr.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933155AbbCPOWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 10:22:23 -0400
-Date: Mon, 16 Mar 2015 15:22:20 +0100
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: Re: [PATCH] ath10k: match wait_for_completion_timeout return type
-Message-ID: <20150316142220.GA30229@opentech.at> (sfid-20150316_160241_028956_96A2B81C)
-References: <1426094076-10134-1-git-send-email-hofrat@osadl.org> <87y4n0q1rq.fsf@kamboji.qca.qualcomm.com> <20150313173405.GB9934@opentech.at> <87a8zdowyo.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87a8zdowyo.fsf@kamboji.qca.qualcomm.com>
+Received: from plaes.org ([188.166.43.21]:51905 "EHLO plaes.org"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752324AbbCKUDs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 16:03:48 -0400
+From: Priit Laes <plaes@plaes.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Priit Laes <plaes@plaes.org>
+Subject: [PATCH 2/6] rtlwifi: Clean rtl_evm_db_to_percentage a bit
+Date: Wed, 11 Mar 2015 22:03:25 +0200
+Message-Id: <1426104209-6913-3-git-send-email-plaes@plaes.org> (sfid-20150311_210407_585177_AF05DB78)
+In-Reply-To: <1426104209-6913-1-git-send-email-plaes@plaes.org>
+References: <1426104209-6913-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 16 Mar 2015, Kalle Valo wrote:
+Signed-off-by: Priit Laes <plaes@plaes.org>
+---
+ drivers/net/wireless/rtlwifi/stats.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-> Nicholas Mc Guire <der.herr@hofr.at> writes:
-> 
-> > On Fri, 13 Mar 2015, Kalle Valo wrote:
-> >
-> >> Nicholas Mc Guire <hofrat@osadl.org> writes:
-> >> 
-> >> > Return type of wait_for_completion_timeout is unsigned long not int.
-> >> > An appropriately named unsigned long is added and the assignments fixed up.
-> >> >
-> >> > Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> >> 
-> >> Doesn't apply:
-> >> 
-> >> Applying: ath10k: match wait_for_completion_timeout return type
-> >> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
-> >> Repository lacks necessary blobs to fall back on 3-way merge.
-> >> Cannot fall back to three-way merge.
-> >> Patch failed at 0001 ath10k: match wait_for_completion_timeout return type
-> >>
-> > sorry - no idea how I managed that - checking it.
-> >
-> > Will fix it up and repost.
-> 
-> Did you use master branch from ath.git repository? ath10k is in quite
-> active development so if you use something else there's a substantial
-> risk that the patch will not apply.
-> 
-> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/sources
->
-no I was using linux-next - will switch to that branch for the
-ath10k related cleanups (although the one I posted today was the
-last from the completion fixup in ath10k - a few more in ath9k
-left).
+diff --git a/drivers/net/wireless/rtlwifi/stats.c b/drivers/net/wireless/rtlwifi/stats.c
+index 874e7d1..2021223 100644
+--- a/drivers/net/wireless/rtlwifi/stats.c
++++ b/drivers/net/wireless/rtlwifi/stats.c
+@@ -39,15 +39,8 @@ EXPORT_SYMBOL(rtl_query_rxpwrpercentage);
+ 
+ u8 rtl_evm_db_to_percentage(char value)
+ {
+-	char ret_val;
+-	ret_val = value;
+-
+-	if (ret_val >= 0)
+-		ret_val = 0;
+-	if (ret_val <= -33)
+-		ret_val = -33;
+-	ret_val = 0 - ret_val;
+-	ret_val *= 3;
++	char ret_val = clamp(-value, 0, 33) * 3;
++
+ 	if (ret_val == 99)
+ 		ret_val = 100;
+ 
+-- 
+2.3.1
 
-The failure of this patch was though due to a bad fix of a 
-checkpatch warning - I alligned the original code rather than 
-the replacement - updated my procedure so that re-applying the
-patch is the final check before sending out.
-
-thx!
-hofrat
