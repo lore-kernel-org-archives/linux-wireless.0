@@ -1,69 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.msg.oleane.net ([62.161.4.1]:52696 "EHLO
-	smtp01.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753459AbbCQPDA convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:33292 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752349AbbCKN1s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 11:03:00 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Dan Williams'" <dcbw@redhat.com>
-Cc: "'wim torfs'" <wtorfs@gmail.com>, <linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>		 <5502D558.90306@gmail.com> <033201d05d93$5aa1c030$0fe54090$@acksys.fr>	 <1426255583.19064.6.camel@redhat.com>	 <034401d05da5$d5c0be30$81423a90$@acksys.fr> <1426264174.19064.19.camel@redhat.com>
-In-Reply-To: <1426264174.19064.19.camel@redhat.com>
-Subject: RE: ARP dropped during WPA handshake
-Date: Tue, 17 Mar 2015 16:02:49 +0100
-Message-ID: <03e401d060c3$6fcd9e60$4f68db20$@acksys.fr> (sfid-20150317_160310_271720_0547C07D)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
+	Wed, 11 Mar 2015 09:27:48 -0400
+Received: by lbdu14 with SMTP id u14so8871917lbd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 06:27:46 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: strip qos data bit always
+Date: Wed, 11 Mar 2015 14:25:26 +0100
+Message-Id: <1426080326-14764-1-git-send-email-michal.kazior@tieto.com> (sfid-20150311_142751_625852_7560ADDB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+NativeWifi tx mode expects QoS Data frames to be
+delivered as Data frames with QoS part (e.g. tid)
+being delievered out-of-band in fw tx command.
 
+The QoS bit wasn't stripped before submitting to
+firmware.
 
-> > > During the initial WPA handshake the connection is not fully set up,
-> > > and so no general traffic can (nor should) pass between the STA and AP.
-> > > That includes ARP and any L2/L3+ protocols, except for EAP and wifi
-> > > management packets.
-> > >
-> > > The interface itself must be IFF_UP before it can pass traffic,
-> > > including the WPA handshake traffic.  IFF_UP only means that the
-> > > interface can be configured at the L2 level and the hardware is
-> > > active, it does *not* mean the interface can pass traffic.
-> > >
-> > > Whatever is causing the ARPs shouldn't be doing that yet, and should
-> > > be fixed to use the interface's "operstate" or IFF_LOWER_UP instead
-> > > of IFF_UP.  Only when the supplicant changes the interface's
-> > > operstate to IF_OPER_UP is the interface *actually* ready to pass
-> traffic.  IFF_UP is not sufficient.
-> > >
-> >
-> > Thanks for your reply.
-> >
-> > It seems wpa_supplicant set the operstate to IF_OPER_DORMANT when he
-> received the ASSOCIATED Event from the driver (through netlink). And set the
-> operstate to IF_OPER_UP in case of wpa handshake success.
-> >
-> > Is it normal the local ip stack send arp when netdev it is on
-> IF_OPER_DORMANT state?
-> 
-> I'm not sure the kernel stack cares much as long as the device is up.
-> It is requesting the ARP because some application is attempting to
-> communicate with that IP address.  That application should probably be
-> waiting until the interface is actually ready to communicate, which means
-> IF_OPER_UP.
-> 
-> But if this is the first WPA handshake with the AP during the initial
-> connection, the wifi device shouldn't even have an IP address yet, so nothing
-> should be doing ARP on the interface yet.  Perhaps whatever is assigning the
-> IP address to the interface is doing it too early, before the interface is
-> IF_OPER_UP?
-> 
-It is not the initial connection. My sta is connected on AP1 and the communication is established (in my test the communication it is iperf from STA to computer behind the APs). 
+Stripping fixes two known problems:
 
-I looking for a solution to enable the communication for wpa_supplicant, but block the L3 communication while the WPA handshake is not finished.
+ * qca6174 IOT with some APs, e.g.
+   Cisco AIR-AP 1252 (which would crash after
+   ath10k association). Some ath9k APs would
+   crash as well.
 
-Have you any idea?
+ * sniffing own tx frames via radiotap because,
+   e.g. wireshark was seeing QoS bit set but
+   since QoS Control was stripped in ath10k it
+   would parse beginning of LLC/SNAP
 
-Cedric.
+>From debugability point of view this removes the
+ability to distinguish QoS from non-QoS frames
+when sniffing own tx via radiotap. On the other
+hand frames can be now parsed correctly without
+special software modification.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1138f4f..625e2cb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2463,16 +2463,15 @@ static void ath10k_tx_h_nwifi(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		skb->data, (void *)qos_ctl - (void *)skb->data);
+ 	skb_pull(skb, IEEE80211_QOS_CTL_LEN);
+ 
+-	/* Fw/Hw generates a corrupted QoS Control Field for QoS NullFunc
+-	 * frames. Powersave is handled by the fw/hw so QoS NyllFunc frames are
+-	 * used only for CQM purposes (e.g. hostapd station keepalive ping) so
+-	 * it is safe to downgrade to NullFunc.
++	/* Some firmware revisions don't handle sending QoS NullFunc well.
++	 * These frames are mainly used for CQM purposes so it doesn't really
++	 * matter whether QoS NullFunc or NullFunc are sent.
+ 	 */
+ 	hdr = (void *)skb->data;
+-	if (ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+-		hdr->frame_control &= ~__cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
++	if (ieee80211_is_qos_nullfunc(hdr->frame_control))
+ 		cb->htt.tid = HTT_DATA_TX_EXT_TID_NON_QOS_MCAST_BCAST;
+-	}
++
++	hdr->frame_control &= ~__cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+ }
+ 
+ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
+-- 
+1.8.5.3
 
