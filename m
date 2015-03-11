@@ -1,32 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:35795 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751446AbbCLTRi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 15:17:38 -0400
-Received: by wggy19 with SMTP id y19so18581095wgg.2
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 12:17:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1426160112-4261-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1426160112-4261-1-git-send-email-kvalo@qca.qualcomm.com>
-From: Pushpal Sidhu <psidhu@gateworks.com>
-Date: Thu, 12 Mar 2015 12:17:06 -0700
-Message-ID: <CAD1M062n2RAo8QmSOJRQ08aa148O1vximO+foyv-w6TokTWVQQ@mail.gmail.com> (sfid-20150312_201743_852640_DEDE29C2)
-Subject: Re: [PATCH] ath10k: add firmware 10.2.4.45 as firmware-4.bin
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:49095 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750957AbbCKTK0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 15:10:26 -0400
+Message-ID: <1426101010.1904.9.camel@sipsolutions.net> (sfid-20150311_201031_450921_C73324F0)
+Subject: Re: [PATCH RFC v2] ath10k: move code from parameter list into a
+ function
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, Valdis.Kletnieks@vt.edu,
+	Bj??rn Mork <bjorn@mork.no>,
+	Jeff Haran <Jeff.Haran@citrix.com>,
+	Pat Erley <pat-lkml@erley.org>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Wed, 11 Mar 2015 20:10:10 +0100
+In-Reply-To: <1426100519-20636-1-git-send-email-hofrat@osadl.org> (sfid-20150311_200723_379167_2BC79246)
+References: <1426100519-20636-1-git-send-email-hofrat@osadl.org>
+	 (sfid-20150311_200723_379167_2BC79246)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 12, 2015 at 4:35 AM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->
-> This is the latest firmware from 10.2.4 firmware branch.
->
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+On Wed, 2015-03-11 at 15:01 -0400, Nicholas Mc Guire wrote:
+> Putting code into the parameter list of wait_event_timeout() might be
+> legal C-code but not really readable - the "inline" code is simply
+> moved into a function and that passed to wait_event_timeout() as the
+> condition.
 
-What new features are added, bugs fixed etc? I don't necessarily see a
-release notes page.
+Arguably, that's even more unreadable since if you don't know this macro
+well you might assume the function is called only once, which is clearly
+not true...
 
-- Pushpal
+Don't get me wrong, I'm not opposed to this change, but if you ask me
+it's not completely clear that this makes it more readable.
+
+johannes
+
