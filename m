@@ -1,108 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:44598 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751630AbbCOAQB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 20:16:01 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	m.v.b@runbox.com
-Subject: [PATCH v2 13/16] staging: rtl8723au: suspect code indent for conditional statements
-Date: Sat, 14 Mar 2015 20:10:38 -0400
-Message-Id: <1426378241-32469-14-git-send-email-m.v.b@runbox.com> (sfid-20150315_011641_830150_B1CD07D2)
-In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+Received: from plaes.org ([188.166.43.21]:51902 "EHLO plaes.org"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752297AbbCKUDr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 16:03:47 -0400
+From: Priit Laes <plaes@plaes.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Priit Laes <plaes@plaes.org>
+Subject: [PATCH 1/6] rtlwifi: Use common rtl_query_rxpwrpercentage function
+Date: Wed, 11 Mar 2015 22:03:24 +0200
+Message-Id: <1426104209-6913-2-git-send-email-plaes@plaes.org> (sfid-20150311_210431_859678_4C97274A)
+In-Reply-To: <1426104209-6913-1-git-send-email-plaes@plaes.org>
+References: <1426104209-6913-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a number of indentation-with-spaces-and-tabs issues in
-rtl8723au's rtw_security.c, according to checkpatch.pl:
-	WARNING: suspect code indent for conditional statements
-
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Signed-off-by: Priit Laes <plaes@plaes.org>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 36 +++++++++++++--------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c | 14 ++------------
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c | 16 +++-------------
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c | 16 +++-------------
+ drivers/net/wireless/rtlwifi/stats.c         |  4 ++--
+ 4 files changed, 10 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 9d6e7d6a17..a9657e1425 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -760,7 +760,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+index 84ddd4d..4eedf39 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
+@@ -49,16 +49,6 @@ static u8 _rtl92ce_map_hwqueue_to_fwqueue(struct sk_buff *skb, u8 hw_queue)
+ 	return skb->priority;
+ }
  
- 	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
--	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
- 				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
- 		res = _FAIL;
- 	}
-@@ -908,9 +908,9 @@ static void mix_column(u8 *in, u8 *out)
+-static u8 _rtl92c_query_rxpwrpercentage(char antpower)
+-{
+-	if ((antpower <= -100) || (antpower >= 20))
+-		return 0;
+-	else if (antpower >= 0)
+-		return 100;
+-	else
+-		return 100 + antpower;
+-}
+-
+ static u8 _rtl92c_evm_db_to_percentage(char value)
+ {
+ 	char ret_val;
+@@ -236,7 +226,7 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
+ 			rx_pwr[i] =
+ 			    ((p_drvinfo->gain_trsw[i] & 0x3f) * 2) - 110;
+ 			/* Translate DBM to percentage. */
+-			rssi = _rtl92c_query_rxpwrpercentage(rx_pwr[i]);
++			rssi = rtl_query_rxpwrpercentage(rx_pwr[i]);
+ 			total_rssi += rssi;
+ 			/* Get Rx snr value in DB */
+ 			rtlpriv->stats.rx_snr_db[i] =
+@@ -251,7 +241,7 @@ static void _rtl92ce_query_rxphystatus(struct ieee80211_hw *hw,
+ 		 * hardware (for rate adaptive)
+ 		 */
+ 		rx_pwr_all = ((p_drvinfo->pwdb_all >> 1) & 0x7f) - 110;
+-		pwdb_all = _rtl92c_query_rxpwrpercentage(rx_pwr_all);
++		pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
+ 		pstats->rx_pwdb_all = pwdb_all;
+ 		pstats->rxpower = rx_pwr_all;
+ 		pstats->recvsignalpower = rx_pwr_all;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+index 133e395..f55b35c 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+@@ -714,16 +714,6 @@ void rtl92c_set_data_filter(struct ieee80211_hw *hw, u16 filter)
+ }
+ /*==============================================================*/
  
- 	for (i = 0; i < 4; i++) {
- 		if ((in[i] & 0x80) == 0x80)
--		    add1b[i] = 0x1b;
-+			add1b[i] = 0x1b;
- 		else
--		    add1b[i] = 0x00;
-+			add1b[i] = 0x00;
- 	}
- 
- 	swap_halfs[0] = in[2]; /* Swap halfs */
-@@ -965,21 +965,21 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
- 
- 	for (round = 0; round < 11; round++) {
- 		if (round == 0) {
--		    xor_128(round_key, data, ciphertext);
--		    next_key(round_key, round);
-+			xor_128(round_key, data, ciphertext);
-+			next_key(round_key, round);
- 		} else if (round == 10) {
--		    byte_sub(ciphertext, intermediatea);
--		    shift_row(intermediatea, intermediateb);
--		    xor_128(intermediateb, round_key, ciphertext);
-+			byte_sub(ciphertext, intermediatea);
-+			shift_row(intermediatea, intermediateb);
-+			xor_128(intermediateb, round_key, ciphertext);
- 		} else { /* 1 - 9 */
--		    byte_sub(ciphertext, intermediatea);
--		    shift_row(intermediatea, intermediateb);
--		    mix_column(&intermediateb[0], &intermediatea[0]);
--		    mix_column(&intermediateb[4], &intermediatea[4]);
--		    mix_column(&intermediateb[8], &intermediatea[8]);
--		    mix_column(&intermediateb[12], &intermediatea[12]);
--		    xor_128(intermediatea, round_key, ciphertext);
--		    next_key(round_key, round);
-+			byte_sub(ciphertext, intermediatea);
-+			shift_row(intermediatea, intermediateb);
-+			mix_column(&intermediateb[0], &intermediatea[0]);
-+			mix_column(&intermediateb[4], &intermediatea[4]);
-+			mix_column(&intermediateb[8], &intermediatea[8]);
-+			mix_column(&intermediateb[12], &intermediatea[12]);
-+			xor_128(intermediatea, round_key, ciphertext);
-+			next_key(round_key, round);
+-static u8 _rtl92c_query_rxpwrpercentage(char antpower)
+-{
+-	if ((antpower <= -100) || (antpower >= 20))
+-		return 0;
+-	else if (antpower >= 0)
+-		return 100;
+-	else
+-		return 100 + antpower;
+-}
+-
+ static u8 _rtl92c_evm_db_to_percentage(char value)
+ {
+ 	char ret_val;
+@@ -838,7 +828,7 @@ static void _rtl92c_query_rxphystatus(struct ieee80211_hw *hw,
+ 				break;
+ 			}
  		}
- 	}
+-		pwdb_all = _rtl92c_query_rxpwrpercentage(rx_pwr_all);
++		pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
+ 		pstats->rx_pwdb_all = pwdb_all;
+ 		pstats->recvsignalpower = rx_pwr_all;
+ 		if (packet_match_bssid) {
+@@ -866,7 +856,7 @@ static void _rtl92c_query_rxphystatus(struct ieee80211_hw *hw,
+ 				rf_rx_num++;
+ 			rx_pwr[i] =
+ 			    ((p_drvinfo->gain_trsw[i] & 0x3f) * 2) - 110;
+-			rssi = _rtl92c_query_rxpwrpercentage(rx_pwr[i]);
++			rssi = rtl_query_rxpwrpercentage(rx_pwr[i]);
+ 			total_rssi += rssi;
+ 			rtlpriv->stats.rx_snr_db[i] =
+ 			    (long)(p_drvinfo->rxsnr[i] / 2);
+@@ -875,7 +865,7 @@ static void _rtl92c_query_rxphystatus(struct ieee80211_hw *hw,
+ 				pstats->rx_mimo_signalstrength[i] = (u8) rssi;
+ 		}
+ 		rx_pwr_all = ((p_drvinfo->pwdb_all >> 1) & 0x7f) - 110;
+-		pwdb_all = _rtl92c_query_rxpwrpercentage(rx_pwr_all);
++		pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
+ 		pstats->rx_pwdb_all = pwdb_all;
+ 		pstats->rxpower = rx_pwr_all;
+ 		pstats->recvsignalpower = rx_pwr_all;
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+index 1feaa62..54736dd 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
+@@ -48,16 +48,6 @@ static u8 _rtl92de_map_hwqueue_to_fwqueue(struct sk_buff *skb, u8 hw_queue)
+ 	return skb->priority;
+ }
  
-@@ -1480,7 +1480,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 		for (j = 0; j < 16; j++)
- 			padded_buffer[j] = 0x00;
- 		for (j = 0; j < payload_remainder; j++)
--		    padded_buffer[j] = message[payload_index++];
-+			padded_buffer[j] = message[payload_index++];
- 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
- 		aes128k128d(key, chain_buffer, aes_out);
- 	}
-@@ -1510,7 +1510,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 				      message, pn_vector, num_blocks+1);
+-static u8 _rtl92d_query_rxpwrpercentage(char antpower)
+-{
+-	if ((antpower <= -100) || (antpower >= 20))
+-		return 0;
+-	else if (antpower >= 0)
+-		return 100;
+-	else
+-		return 100 + antpower;
+-}
+-
+ static u8 _rtl92d_evm_db_to_percentage(char value)
+ {
+ 	char ret_val = value;
+@@ -181,7 +171,7 @@ static void _rtl92de_query_rxphystatus(struct ieee80211_hw *hw,
+ 				break;
+ 			}
+ 		}
+-		pwdb_all = _rtl92d_query_rxpwrpercentage(rx_pwr_all);
++		pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
+ 		/* CCK gain is smaller than OFDM/MCS gain,  */
+ 		/* so we add gain diff by experiences, the val is 6 */
+ 		pwdb_all += 6;
+@@ -223,7 +213,7 @@ static void _rtl92de_query_rxphystatus(struct ieee80211_hw *hw,
+ 				rf_rx_num++;
+ 			rx_pwr[i] = ((p_drvinfo->gain_trsw[i] & 0x3f) * 2)
+ 				    - 110;
+-			rssi = _rtl92d_query_rxpwrpercentage(rx_pwr[i]);
++			rssi = rtl_query_rxpwrpercentage(rx_pwr[i]);
+ 			total_rssi += rssi;
+ 			rtlpriv->stats.rx_snr_db[i] =
+ 					 (long)(p_drvinfo->rxsnr[i] / 2);
+@@ -231,7 +221,7 @@ static void _rtl92de_query_rxphystatus(struct ieee80211_hw *hw,
+ 				pstats->rx_mimo_signalstrength[i] = (u8) rssi;
+ 		}
+ 		rx_pwr_all = ((p_drvinfo->pwdb_all >> 1) & 0x7f) - 106;
+-		pwdb_all = _rtl92d_query_rxpwrpercentage(rx_pwr_all);
++		pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
+ 		pstats->rx_pwdb_all = pwdb_all;
+ 		pstats->rxpower = rx_pwr_all;
+ 		pstats->recvsignalpower = rx_pwr_all;
+diff --git a/drivers/net/wireless/rtlwifi/stats.c b/drivers/net/wireless/rtlwifi/stats.c
+index 2d0736a..874e7d1 100644
+--- a/drivers/net/wireless/rtlwifi/stats.c
++++ b/drivers/net/wireless/rtlwifi/stats.c
+@@ -26,14 +26,14 @@
+ #include "stats.h"
+ #include <linux/export.h>
  
- 		for (j = 0; j < 16; j++)
--			 padded_buffer[j] = 0x00;
-+			padded_buffer[j] = 0x00;
- 		for (j = 0; j < payload_remainder; j++)
- 			padded_buffer[j] = message[payload_index + j];
- 		aes128k128d(key, ctr_preload, aes_out);
++/* TODO: Figure out a better name */
+ u8 rtl_query_rxpwrpercentage(char antpower)
+ {
+ 	if ((antpower <= -100) || (antpower >= 20))
+ 		return 0;
+ 	else if (antpower >= 0)
+ 		return 100;
+-	else
+-		return 100 + antpower;
++	return 100 + antpower;
+ }
+ EXPORT_SYMBOL(rtl_query_rxpwrpercentage);
+ 
 -- 
-2.1.4
+2.3.1
 
