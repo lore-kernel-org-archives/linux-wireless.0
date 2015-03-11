@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:63909 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751896AbbCVSbv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 14:31:51 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v3 13/18] ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-Date: Sun, 22 Mar 2015 19:29:58 +0100
-Message-Id: <1427049003-8443-14-git-send-email-linux@rempel-privat.de> (sfid-20150322_193417_876187_FB6D9F5C)
-In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
-References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+Received: from cpsmtpb-ews06.kpnxchange.com ([213.75.39.9]:52579 "EHLO
+	cpsmtpb-ews06.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750779AbbCKL2C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 07:28:02 -0400
+Message-ID: <1426073279.4244.104.camel@x220> (sfid-20150311_122824_838349_4F127A8E)
+Subject: Re: [PATCH v2 2/3] NFC: nxp-nci: Add support for NXP NCI chips
+From: Paul Bolle <pebolle@tiscali.nl>
+To: clement.perrochaud@effinnov.com
+Cc: Rusty Russell <rusty@rustcorp.com.au>,
+	Dave Jones <davej@codemonkey.org.uk>, linux-nfc@lists.01.org,
+	=?ISO-8859-1?Q?Cl=E9ment?= Perrochaud
+	<clement.perrochaud@nxp.com>, sunil.jogi@nxp.com,
+	jerome.pele@nxp.com, Charles.Gorand-Effinnov@nxp.com,
+	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, robh+dt@kernel.org, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, davem@davemloft.net, grant.likely@linaro.org,
+	lefrique@marvell.com, christophe.ricard@gmail.com,
+	cuissard@marvell.com, bzhao@marvell.com, hirent@marvell.com,
+	akarwar@marvell.com, linux-wireless@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, anda-maria.nicolae@intel.com
+Date: Wed, 11 Mar 2015 12:27:59 +0100
+In-Reply-To: <1425895925-20593-3-git-send-email-clement.perrochaud@effinnov.com>
+References: <1425895925-20593-1-git-send-email-clement.perrochaud@effinnov.com>
+	 <1425895925-20593-3-git-send-email-clement.perrochaud@effinnov.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/eeprom_4k.c | 2 ++
- 1 file changed, 2 insertions(+)
+On Mon, 2015-03-09 at 11:12 +0100, clement.perrochaud@effinnov.com
+wrote:
+> --- /dev/null
+> +++ b/drivers/nfc/nxp-nci/core.c
+> @@ -0,0 +1,186 @@
+> +/*
+> + * Generic driver for NXP NCI NFC chips
+> + *
+> + * Copyright (C) 2014  NXP Semiconductors  All rights reserved.
+> + *
+> + * Authors: Clément Perrochaud <clement.perrochaud@nxp.com>
+> + *
+> + * Derived from PN544 device driver:
+> + * Copyright (C) 2012  Intel Corporation. All rights reserved.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, see <http://www.gnu.org/licenses/>.
+> + */
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index fc54fc7..0600562 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1082,6 +1082,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 		mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
- 		pwrctrl = mask * bb_desired_scale;
- 		clr = mask * 0x1f;
-+		ENABLE_REG_RMW_BUFFER(ah);
- 		REG_RMW(ah, AR_PHY_TX_PWRCTRL8, pwrctrl, clr);
- 		REG_RMW(ah, AR_PHY_TX_PWRCTRL10, pwrctrl, clr);
- 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL12, pwrctrl, clr);
-@@ -1096,6 +1097,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 		clr = mask * 0x1f;
- 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL11, pwrctrl, clr);
- 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL13, pwrctrl, clr);
-+		REG_RMW_BUFFER_FLUSH(ah);
- 	}
- }
- 
--- 
-1.9.1
+This states the license is GPL v2.
+
+> +MODULE_LICENSE("GPL");
+
+So you probably want 
+    MODULE_LICENSE("GPL v2");
+
+here.
+
+
+Paul Bolle
 
