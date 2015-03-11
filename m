@@ -1,117 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:32920 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920AbbCJRBk (ORCPT
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:34324 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750820AbbCKL7L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 13:01:40 -0400
+	Wed, 11 Mar 2015 07:59:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <20150310161801.GR5264@atomide.com>
+In-Reply-To: <CABxcv=kUwU2KVw5jYryh62v5us2-CiJFMnYN2nyWLRMWnEkU3w@mail.gmail.com>
 References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
-	<2223973.a64rBcZvaA@wuerfel>
-	<CAB3XZEftjwUGS_Kj2dCxYY1m82C+a1_=akbnG3_hLETCr+Dddg@mail.gmail.com>
-	<5683860.JYkc24rKim@wuerfel>
-	<CAB3XZEfEQnb7qsxuAAr6pUehm1nw6Eu4ZsV1+E477yF5K1hczA@mail.gmail.com>
-	<20150310161801.GR5264@atomide.com>
-Date: Tue, 10 Mar 2015 19:01:39 +0200
-Message-ID: <CAB3XZEdK2O7tSSTchvRQtaefzCECjjQ-biQmOBHGdzJaBknSFQ@mail.gmail.com> (sfid-20150310_180145_971078_6944D41E)
+	<1425915402-10012-3-git-send-email-eliad@wizery.com>
+	<CABxcv=kL3Hw43VVxAsZ=DnY4Z+5431PO2YehcK2zTkFGBG0cNA@mail.gmail.com>
+	<CABxcv=kUwU2KVw5jYryh62v5us2-CiJFMnYN2nyWLRMWnEkU3w@mail.gmail.com>
+Date: Wed, 11 Mar 2015 13:59:10 +0200
+Message-ID: <CAB3XZEdbVgOGH_uz4BX+8NXEu_vZzd=JF_1qvSPbyvvc0-O9iA@mail.gmail.com> (sfid-20150311_125917_138488_CAEAF417)
 Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
 From: Eliad Peller <eliad@wizery.com>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
+To: Javier Martinez Canillas <javier@dowhile0.org>
+Cc: Enric Balletbo Serra <eballetbo@gmail.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 10, 2015 at 6:18 PM, Tony Lindgren <tony@atomide.com> wrote:
-> * Eliad Peller <eliad@wizery.com> [150310 09:11]:
->> On Tue, Mar 10, 2015 at 5:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> > On Tuesday 10 March 2015 16:31:33 Eliad Peller wrote:
->> >> On Tue, Mar 10, 2015 at 4:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> >> > On Tuesday 10 March 2015 13:00:19 Eliad Peller wrote:
->> >> >> On Tue, Mar 10, 2015 at 12:49 AM, Tony Lindgren <tony@atomide.com> wrote:
->> >> >> >> > I was expecting you to remove all calls to legacy_init_wl12xx from this file,
->> >> >> >> > including the ones for wl12xx aside from the wl18xx ones you removed, but
->> >> >> >> > if that's enough to clean out the platform_data handling from the wlcore
->> >> >> >> > driver, it's good enough as a start.
->> >> >> >> not sure i'm following - can you elaborate?
->> >> >> >>
->> >> >> >> i'll summarize the way i see it. please correct me if i'm wrong.
->> >> >> >>
->> >> >> >> both wl18xx and wl12xx use the platform data to get the irq number.
->> >> >> >> wl12xx (only) also needs some additional clock definitions to be
->> >> >> >> passed. there's currently some issue with specifying some the of clock
->> >> >> >> sources, so i preferred starting only with (the simpler) wl18xx
->> >> >> >> bindings.
->> >> >> >>
->> >> >> >> for platforms with wl18xx, we can remove the pdata-quirk, as all the
->> >> >> >> data (i.e. irq) can be passed by the new DT bindings.
->> >> >> >> however, for platforms with wl12xx, we still need to pass the clock
->> >> >> >> definitions (along with the irq), so we have to keep
->> >> >> >> legacy_init_wl12xx for the time being (and that's also why we have to
->> >> >> >> currently keep the platform_data handling in the wlcore driver)
->> >> >> >>
->> >> >> >> do you have something else in mind?
->> >> >> >
->> >> >> > I think what Arnd is saying is we've now removed all the wl12xx using
->> >> >> > legacy platforms, so all of them can boot with just data from dts.
->> >> >
->> >> > Right, that was my idea.
->> >> >
->> >> >> I don't think that's the case (unless i'm missing something).
->> >> >> e.g. there's still pdata-quirk for "compulab,omap3-sbc-t3730" which
->> >> >> initializes wl12xx device.
->> >> >
->> >> > This one is just like the igep0030, as Tony was saying: the board
->> >> > boots from device tree already, so now that we have a binding for
->> >> > it, we can remove the wl12xx_set_platform_data() for it.
->> >> >
->> >> i think the wl12xx_set_platform_data() name created some confusion -
->> >> it is used to pass platform data for both wl12xx and wl18xx devices.
->> >> (this confusion is all around the wlcore driver as well, due to the
->> >> code evolution)
->> >>
->> >> the binding i added is for wl18xx only (there is no wl12xx binding yet).
->> >> the remaining boards, AFAICT, have wl12xx (rather than wl18xx) cards.
->> >> so i don't see how we can remove these wl12xx_set_platform_data()
->> >> calls before we have wl12xx bindings in-place as well.
->> >
->> > What is missing for that binding then? I keep getting confused here,
->> > but I thought that they share the implementation that looks at the
->> > platform data.
->> >
->> they both get the same wl12xx_platform_data struct, but only wl12xx
->> cares about the clocks-related fields.
->> the bindings i added parses only the irq.
->>
->> (Luca tried previously to upstream wl12xx DT support along with the
->> required clock DT changes, but got some rejections, mainly wrt. clock
->> stuff.
->> e.g. http://thread.gmane.org/gmane.linux.kernel/1520752
->> that's why i preferred starting with "easier" wl18xx bindings only)
+hi Javier,
+
+On Wed, Mar 11, 2015 at 3:19 AM, Javier Martinez Canillas
+<javier@dowhile0.org> wrote:
+> Hello Eliad,
 >
-> I believe we did not have clock bindings back then, now it's simple
-> to get the clock. If it's some internal clock to the wl12xx, then
-> that's a different story, it should be just hidden behind a compatible
-> flag then.
+> On Wed, Mar 11, 2015 at 1:28 AM, Javier Martinez Canillas
+> <javier@dowhile0.org> wrote:
+>> On Mon, Mar 9, 2015 at 4:36 PM, Eliad Peller <eliad@wizery.com> wrote:
+>>> --- a/arch/arm/boot/dts/omap3-igep0020-rev-f.dts
+>>> +++ b/arch/arm/boot/dts/omap3-igep0020-rev-f.dts
+>>> @@ -42,4 +42,13 @@
+>>>         vmmc-supply = <&lbep5clwmc_wlen>;
 >
-i'm really not familiar with the common clock framework, but there
-still doesn't seem to be a way to determine whether a clock is XTAL or
-not (which is what Luca's patch was about). should we use compatible
-flag in such case? i'm not sure it sounds right.
+> Something I forgot to mention is that this vmmc-supply is a DT hack
+> since the WLAN SDIO chip needs a WL_EN signal to be asserted as a part
+> of the chip power sequencing.
+>
+> But there wasn't a DT binding to describe that so most boards use the
+> same hack which is to define a fake fixed-regulator with an enable
+> GPIO just to toggle that pin.
+>
+> But now the MMC subsystem has support for power sequence providers and
+> the pwrseq-simple driver
+> (Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt) has
+> support for reset GPIOs so you may want to change that as well.
+>
+interesting. i wasn't aware of it.
+but that's for a different time i guess :)
 
-anyway, i'd really prefer, if possible, starting with the wl18xx
-bindings, and defer the wl12xx complications to later on.
-(i also need to find some wl12xx card in order to actually test the
-patches once i'll have them...)
-
-we do have to make sure these wl18xx bindings are future-compatible
-with the wl12xx ones, but i think the current bindings are pretty much
-standard (and are actually a subset of the bindings needed by wl12xx),
-so it should be fine.
-
+thanks,
 Eliad.
