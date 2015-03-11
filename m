@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:52115 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752138AbbCITjO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 15:39:14 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH] ath9k_htc: force FW v1.4.0
-Date: Mon,  9 Mar 2015 20:38:38 +0100
-Message-Id: <1425929918-860-1-git-send-email-linux@rempel-privat.de> (sfid-20150309_203919_115567_562DB197)
+Received: from mout.kundenserver.de ([212.227.17.13]:60665 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbbCKKcW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 06:32:22 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Javier Martinez Canillas <javier@dowhile0.org>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Eliad Peller <eliad@wizery.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>
+Subject: Re: [PATCH v5 2/3] wl18xx: add basic device-tree support
+Date: Wed, 11 Mar 2015 11:32:14 +0100
+Message-ID: <2158874.BdVTdz3Bds@wuerfel> (sfid-20150311_113230_568452_0D5CDC75)
+In-Reply-To: <CABxcv=nn9-1a-3809Y1JgC5ExkwHqQmCXRT3tX=h7Z6C7c+m2A@mail.gmail.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <2121942.zIG9BfPsTV@wuerfel> <CABxcv=nn9-1a-3809Y1JgC5ExkwHqQmCXRT3tX=h7Z6C7c+m2A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now we have offically FW v1.4. Force users to update it and prevent reporting of old bugs.
+On Wednesday 11 March 2015 11:05:47 Javier Martinez Canillas wrote:
+> 
+> On Wed, Mar 11, 2015 at 10:51 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Wednesday 11 March 2015 01:34:19 Javier Martinez Canillas wrote:
+> >> > +
+> >> > +static struct wl12xx_platform_data *
+> >> > +wlcore_get_platform_data(struct device *dev)
+> >> > +{
+> >> > +       struct wl12xx_platform_data *pdata;
+> >> > +
+> >> > +       /* first, look for DT data */
+> >>
+> >> I thought it was the opposite, that platform data should over-rule DT.
+> >> That way you can still use the data filled in
+> >> arch/arm/mach-omap2/pdata-quirks.c even after the driver supports your
+> >> new DT binding.
+> >
+> > No, the pdata-quirks stuff for this driver must die, it was a hack
+> > that only exists because we previously could not attach data to an
+> > sdio function.
+> >
+> 
+> Ok sorry, I misunderstood and thought that the output from the
+> discussion in patch 3/3 was that the pdata could not still be removed
+> due not having a way to configure the clocks for wl12xx.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/hif_usb.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I think that is still the case, but we should never have both pdata
+and DT, and if we ever did, I think the DT should take precedence
+so we can be sure that the pdata is not used and can be removed.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index 51496e7..0248b67 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -18,7 +18,7 @@
- #define HTC_USB_H
- 
- #define MAJOR_VERSION_REQ 1
--#define MINOR_VERSION_REQ 3
-+#define MINOR_VERSION_REQ 4
- 
- #define IS_AR7010_DEVICE(_v) (((_v) == AR9280_USB) || ((_v) == AR9287_USB))
- 
--- 
-1.9.1
-
+	Arnd
