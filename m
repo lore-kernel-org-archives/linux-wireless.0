@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45619 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48201 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751482AbbC3ImP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:42:15 -0400
+	id S1751186AbbCKQXA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 12:23:00 -0400
+Message-ID: <1426090976.1904.7.camel@sipsolutions.net> (sfid-20150311_172305_318231_2BEF2ACD)
+Subject: Re: [PATCH] ath10k: strip qos data bit always
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80111: aes_gcm: clean up ieee80211_aes_gcm_key_setup_encrypt()
-Date: Mon, 30 Mar 2015 10:42:12 +0200
-Message-Id: <1427704932-10179-1-git-send-email-johannes@sipsolutions.net> (sfid-20150330_104218_302895_5501B405)
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Date: Wed, 11 Mar 2015 17:22:56 +0100
+In-Reply-To: <1426080326-14764-1-git-send-email-michal.kazior@tieto.com> (sfid-20150311_142751_625852_7560ADDB)
+References: <1426080326-14764-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20150311_142751_625852_7560ADDB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2015-03-11 at 14:25 +0100, Michal Kazior wrote:
+> NativeWifi tx mode expects QoS Data frames to be
+> delivered as Data frames with QoS part (e.g. tid)
+> being delievered out-of-band in fw tx command.
+> 
+> The QoS bit wasn't stripped before submitting to
+> firmware.
+> 
+> Stripping fixes two known problems:
+> 
+>  * qca6174 IOT with some APs, e.g.
+>    Cisco AIR-AP 1252 (which would crash after
+>    ath10k association). Some ath9k APs would
+>    crash as well.
 
-This code is written using an anti-pattern called "success handling"
-which makes it hard to read, especially if you are used to normal kernel
-style.  It should instead be written as a list of directives in a row
-with branches for error handling.
+It would probably be interesting to figure out why and fix that - this
+is clearly a major issue.
 
-(Basically copied from Dan's previous patch for CCM)
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/aes_gcm.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/net/mac80211/aes_gcm.c b/net/mac80211/aes_gcm.c
-index c2bf6698d738..fd278bbe1b0d 100644
---- a/net/mac80211/aes_gcm.c
-+++ b/net/mac80211/aes_gcm.c
-@@ -80,11 +80,15 @@ struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
- 		return tfm;
- 
- 	err = crypto_aead_setkey(tfm, key, key_len);
--	if (!err)
--		err = crypto_aead_setauthsize(tfm, IEEE80211_GCMP_MIC_LEN);
--	if (!err)
--		return tfm;
-+	if (err)
-+		goto free_aead;
-+	err = crypto_aead_setauthsize(tfm, IEEE80211_GCMP_MIC_LEN);
-+	if (err)
-+		goto free_aead;
-+
-+	return tfm;
- 
-+free_aead:
- 	crypto_free_aead(tfm);
- 	return ERR_PTR(err);
- }
--- 
-2.1.4
+johannes
 
