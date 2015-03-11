@@ -1,124 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f50.google.com ([209.85.215.50]:46805 "EHLO
-	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752274AbbCBJKY (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:44160 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751515AbbCKSMb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 04:10:24 -0500
-Received: by lams18 with SMTP id s18so28869658lam.13
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 01:10:22 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/3] ath10k: fix some pci wake/sleep issues
-Date: Mon,  2 Mar 2015 10:09:02 +0100
-Message-Id: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com> (sfid-20150302_101033_581899_10E54E02)
+	Wed, 11 Mar 2015 14:12:31 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, Valdis.Kletnieks@vt.edu,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2 RFC] ath10k: move code out of the parameter list
+References: <1426094369-10213-1-git-send-email-hofrat@osadl.org>
+Date: Wed, 11 Mar 2015 19:09:39 +0100
+In-Reply-To: <1426094369-10213-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
+	Guire's message of "Wed, 11 Mar 2015 13:19:29 -0400")
+Message-ID: <87h9tr4d98.fsf@nemi.mork.no> (sfid-20150311_191250_381200_6F3B6E03)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases the device ends up sleeping while
-ath10k didn't expect it to leading to reading
-garbage from registers, e.g. when shared irqs are
-used and the driver is in powered down state.
+Nicholas Mc Guire <hofrat@osadl.org> writes:
 
-This effectively makes the device remain awake all
-the time even when all interfaces are down.
+> Putting code into the parameter list of wait_event_timeout() might be 
+> legal C-code but not really readable - the "inline" code is simply
+> moved into a function and that passed to wait_event_timeout() as the
+> condition.
+>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
+>
+> Thanks to Bjorn Mork <bjorn@mork.no> for clarifying my initial confusion !
+>
+> Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+> CONFIG_ATH10K=m
+>
+> Patch is against 4.0-rc3 (localversion-next is -next-20150311)
+>
+>  drivers/net/wireless/ath/ath10k/mac.c |   32 ++++++++++++++++++--------------
+>  1 file changed, 18 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index e8cc19f..7b27d99 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -4463,11 +4463,25 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+>  	return ret;
+>  }
+>  
+> +static bool check_htt_state(struct ath10k *ar, bool skip)
+> +{
+> +	bool empty;
+> +
+> +	spin_lock_bh(&ar->htt.tx_lock);
+> +	empty = (ar->htt.num_pending_tx == 0);
+> +	spin_unlock_bh(&ar->htt.tx_lock);
+> +
+> +	skip = (ar->state == ATH10K_STATE_WEDGED) ||
+> +		test_bit(ATH10K_FLAG_CRASH_FLUSH,
+> +			 &ar->dev_flags);
+> +	return (empty || skip);
+> +}
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 37 ++++++++++++++++++++++++++++++-----
- 1 file changed, 32 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e6972b0..cbf82ff 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -819,6 +819,21 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
- 	return -ETIMEDOUT;
- }
- 
-+/* The rule is host is forbidden from accessing device registers while it's
-+ * asleep. Currently ath10k_pci_wake() and ath10k_pci_sleep() calls aren't
-+ * balanced and the device is kept awake all the time. This is intended for a
-+ * simpler solution for the following problems:
-+ *
-+ *   * device can enter sleep during s2ram without the host knowing,
-+ *
-+ *   * irq handlers access registers which is a problem if other device asserts
-+ *     a shared irq line when ath10k is between hif_power_down() and
-+ *     hif_power_up().
-+ *
-+ * FIXME: If power consumption is a concern (and there are *real* gains) then a
-+ * refcounted wake/sleep needs to be implemented.
-+ */
-+
- static int ath10k_pci_wake(struct ath10k *ar)
- {
- 	ath10k_pci_reg_write32(ar, PCIE_SOC_WAKE_ADDRESS,
-@@ -2034,8 +2049,6 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
- 	/* Currently hif_power_up performs effectively a reset and hif_stop
- 	 * resets the chip as well so there's no point in resetting here.
- 	 */
--
--	ath10k_pci_sleep(ar);
- }
- 
- #ifdef CONFIG_PM
-@@ -2048,6 +2061,8 @@ static int ath10k_pci_hif_suspend(struct ath10k *ar)
- 	struct pci_dev *pdev = ar_pci->pdev;
- 	u32 val;
- 
-+	ath10k_pci_sleep(ar);
-+
- 	pci_read_config_dword(pdev, ATH10K_PCI_PM_CONTROL, &val);
- 
- 	if ((val & 0x000000ff) != 0x3) {
-@@ -2065,6 +2080,13 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct pci_dev *pdev = ar_pci->pdev;
- 	u32 val;
-+	int ret;
-+
-+	ret = ath10k_pci_wake(ar);
-+	if (ret) {
-+		ath10k_err(ar, "failed to wake device up on resume: %d\n", ret);
-+		return ret;
-+	}
- 
- 	pci_read_config_dword(pdev, ATH10K_PCI_PM_CONTROL, &val);
- 
-@@ -2083,7 +2105,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
- 			pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
- 	}
- 
--	return 0;
-+	return ret;
- }
- #endif
- 
-@@ -2177,6 +2199,13 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
- {
- 	struct ath10k *ar = arg;
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	int ret;
-+
-+	ret = ath10k_pci_wake(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to wake device up on irq: %d\n", ret);
-+		return IRQ_NONE;
-+	}
- 
- 	if (ar_pci->num_msi_intrs == 0) {
- 		if (!ath10k_pci_irq_pending(ar))
-@@ -2681,8 +2710,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 		goto err_sleep;
- 	}
- 
--	ath10k_pci_sleep(ar);
--
- 	ret = ath10k_core_register(ar, chip_id);
- 	if (ret) {
- 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
--- 
-1.8.5.3
+There is no value in the "skip" input argument here.  It could just as
+well be a local variable.
 
+
+>  static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>  			 u32 queues, bool drop)
+>  {
+>  	struct ath10k *ar = hw->priv;
+> -	bool skip;
+> +	bool skip = false;
+>  	int ret;
+>  
+>  	/* mac80211 doesn't care if we really xmit queued frames or not
+> @@ -4480,19 +4494,9 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>  	if (ar->state == ATH10K_STATE_WEDGED)
+>  		goto skip;
+>  
+> -	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
+> -			bool empty;
+> -
+> -			spin_lock_bh(&ar->htt.tx_lock);
+> -			empty = (ar->htt.num_pending_tx == 0);
+> -			spin_unlock_bh(&ar->htt.tx_lock);
+> -
+> -			skip = (ar->state == ATH10K_STATE_WEDGED) ||
+> -			       test_bit(ATH10K_FLAG_CRASH_FLUSH,
+> -					&ar->dev_flags);
+> -
+> -			(empty || skip);
+> -		}), ATH10K_FLUSH_TIMEOUT_HZ);
+> +	ret = wait_event_timeout(ar->htt.empty_tx_wq,
+> +				 check_htt_state(ar, skip),
+> +				 ATH10K_FLUSH_TIMEOUT_HZ);
+>  
+>  	if (ret <= 0 || skip)
+>  		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %i\n",
+
+
+Which is why this won't work.  The check_htt_state() function won't
+update the "skip" variable, so it is always false here. The test now
+fails to detect any of the two "skip conditions".  Not really a big
+problem of course, as it only masks a warning.  But still: Your attempt
+to clean up has changed the behaviour in an unintentional way.
+
+I'd suggest to leave this alone as it is.  The existing code is really
+fine. And testing these odd corner cases is probably difficult, even for
+someone with the actual hardware.  I have no idea what will trigger the
+ATH10K_FLAG_CRASH_FLUSH flag for example..
+
+It's better to look into some real bug, where you are able to verify a
+fix.
+
+
+
+Bjørn
