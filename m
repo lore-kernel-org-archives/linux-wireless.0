@@ -1,86 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28085 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753766AbbCBIAy (ORCPT
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:34699 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752313AbbCKNVb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 03:00:54 -0500
-From: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-Subject: [PATCH v2] mac80211: send station PMF configuration to driver
-Date: Mon, 2 Mar 2015 13:29:40 +0530
-Message-ID: <1425283180-3848-1-git-send-email-sjegadee@qti.qualcomm.com> (sfid-20150302_090103_462038_6EC087B3)
+	Wed, 11 Mar 2015 09:21:31 -0400
+Received: by wgha1 with SMTP id a1so9251827wgh.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 06:21:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2353601.si5uCETVn2@wuerfel>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+	<6286151.8rcX893TN6@wuerfel>
+	<CABxcv=mPVxW=BqL2PUL=AtS74kcqMG1yxC1WqMpxGiNOqGAnyQ@mail.gmail.com>
+	<2353601.si5uCETVn2@wuerfel>
+Date: Wed, 11 Mar 2015 14:21:29 +0100
+Message-ID: <CABxcv==yx3dy-beEF9cf1mKo1vjCh_LU6iLuvn1z-SKz9xG0qA@mail.gmail.com> (sfid-20150311_142136_765576_5C5E591A)
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+From: Javier Martinez Canillas <javier@dowhile0.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tony Lindgren <tony@atomide.com>, Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to provide station PMF configuration to driver.
+On Wed, Mar 11, 2015 at 2:17 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Wednesday 11 March 2015 14:07:11 Javier Martinez Canillas wrote:
+>>
+>> Right now it seems that all boards in mainline with a WiLink6 part are
+>> using internal clocks. So as a first step I think that adding an
+>> optional refclock-frequency and tcxoclock-frequency properties should
+>> be enough.
+>>
+>> It would be good if the driver supports getting the refclock and
+>> tcxoclock from an external provider in case a board gets these from
+>> external clocks but that can be done as a followup if there are boards
+>> in the future using that design.
+>>
+>> But please bear in mind that I'm not familiar with the clock handling
+>> in WiLink6 since the WiLink8 part used in the IGEP boards does not
+>> need these clocks and I only looked at Luciano's previous patches and
+>> the WiLink today driver today. So it would be good if Eliad can double
+>> check my assumptions to see if those are correct.
+>
+> Sounds good. I'd also be fine with not implementing the case for
+> external clocks in the code until we need (and can test) it, but
+> I think it should be specified in the binding from the start.
+>
 
-Some device drivers, offload part of aggregation including ADDBa/DELBa
-negotiations to low layers. In such scenario, PMF configuration of
-station needs to be provided to driver to enable encryption of
-ADDBa/DELBa action frames.
+Agreed.
 
-Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
----
- include/net/mac80211.h | 3 +++
- net/mac80211/cfg.c     | 1 +
- net/mac80211/mlme.c    | 6 +++++-
- 3 files changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d52914b..1502086 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1488,6 +1488,8 @@ struct ieee80211_sta_rates {
-  * @tdls: indicates whether the STA is a TDLS peer
-  * @tdls_initiator: indicates the STA is an initiator of the TDLS link. Only
-  *	valid if the STA is a TDLS peer in the first place.
-+ * @mfp: indicates whether the STA supports management frame
-+ *	protection.
-  */
- struct ieee80211_sta {
- 	u32 supp_rates[IEEE80211_NUM_BANDS];
-@@ -1504,6 +1506,7 @@ struct ieee80211_sta {
- 	struct ieee80211_sta_rates __rcu *rates;
- 	bool tdls;
- 	bool tdls_initiator;
-+	bool mfp;
-
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index dd4ff36..c124626 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1068,6 +1068,7 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 		sta->sta.wme = set & BIT(NL80211_STA_FLAG_WME);
-
- 	if (mask & BIT(NL80211_STA_FLAG_MFP)) {
-+		sta->sta.mfp = !!(set & BIT(NL80211_STA_FLAG_MFP));
- 		if (set & BIT(NL80211_STA_FLAG_MFP))
- 			set_sta_flag(sta, WLAN_STA_MFP);
- 		else
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 10ac632..52c34cd 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2969,8 +2969,12 @@ static bool ieee80211_assoc_success(struct ieee80211_sub_if_data *sdata,
-
- 	rate_control_rate_init(sta);
-
--	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED)
-+	if (ifmgd->flags & IEEE80211_STA_MFP_ENABLED) {
- 		set_sta_flag(sta, WLAN_STA_MFP);
-+		sta->sta.mfp = true;
-+	} else {
-+		sta->sta.mfp = false;
-+	}
-
- 	sta->sta.wme = elems.wmm_param;
-
---
-1.9.1
-
+Best regards,
+Javier
