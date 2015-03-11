@@ -1,43 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:44509 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751562AbbCOAPV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 20:15:21 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	m.v.b@runbox.com
-Subject: [PATCH v2 06/16] staging: rtl8723au: Do not initialize a static to 0
-Date: Sat, 14 Mar 2015 20:10:31 -0400
-Message-Id: <1426378241-32469-7-git-send-email-m.v.b@runbox.com> (sfid-20150315_011938_007252_E0E610C9)
-In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:61651 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752553AbbCKNRv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 09:17:51 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Javier Martinez Canillas <javier@dowhile0.org>
+Cc: Tony Lindgren <tony@atomide.com>, Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+Date: Wed, 11 Mar 2015 14:17:42 +0100
+Message-ID: <2353601.si5uCETVn2@wuerfel> (sfid-20150311_141756_520593_EC1E0CC9)
+In-Reply-To: <CABxcv=mPVxW=BqL2PUL=AtS74kcqMG1yxC1WqMpxGiNOqGAnyQ@mail.gmail.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <6286151.8rcX893TN6@wuerfel> <CABxcv=mPVxW=BqL2PUL=AtS74kcqMG1yxC1WqMpxGiNOqGAnyQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prior to this commit, a static integer named bcrc32initialized in
-rtl8723au's rtw_security.c was explicitly initialized to zero, even
-though this is not necessary. Remove the unneeded initialization.
+On Wednesday 11 March 2015 14:07:11 Javier Martinez Canillas wrote:
+> 
+> Right now it seems that all boards in mainline with a WiLink6 part are
+> using internal clocks. So as a first step I think that adding an
+> optional refclock-frequency and tcxoclock-frequency properties should
+> be enough.
+> 
+> It would be good if the driver supports getting the refclock and
+> tcxoclock from an external provider in case a board gets these from
+> external clocks but that can be done as a followup if there are boards
+> in the future using that design.
+> 
+> But please bear in mind that I'm not familiar with the clock handling
+> in WiLink6 since the WiLink8 part used in the IGEP boards does not
+> need these clocks and I only looked at Luciano's previous patches and
+> the WiLink today driver today. So it would be good if Eliad can double
+> check my assumptions to see if those are correct.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Sounds good. I'd also be fine with not implementing the case for
+external clocks in the code until we need (and can test) it, but
+I think it should be specified in the binding from the start.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 392b5acc7f..f7b1d45981 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -85,7 +85,7 @@ static void arcfour_encrypt(struct arc4context *parc4ctx, u8 *dest,
- 		dest[i] = src[i] ^ (unsigned char)arcfour_byte(parc4ctx);
- }
- 
--static int bcrc32initialized = 0;
-+static int bcrc32initialized;
- static u32 crc32_table[256];
- 
- static u8 crc32_reverseBit(u8 data)
--- 
-2.1.4
-
+	Arnd
