@@ -1,62 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23662 "EHLO mga02.intel.com"
+Received: from ns2.inescn.pt ([192.35.246.20]:37102 "EHLO trubo.inescn.pt"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754563AbbCLNGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:06:04 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 32/49] iwlwifi: mvm: reflect TDLS pm state in mvmvif->pm_enabled
-Date: Thu, 12 Mar 2015 15:04:17 +0200
-Message-Id: <1426165474-25586-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_140747_494393_15EC791D)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+	id S1751725AbbCKJ4M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 05:56:12 -0400
+Message-ID: <20150311105604.42081tsuhqw9inn8@horde.inescporto.pt> (sfid-20150311_105616_136861_D12D4020)
+Date: Wed, 11 Mar 2015 10:56:04 +0100
+From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inescporto.pt>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Why can we not set the mcast rate for AP/STA interfaces?
+References: <54FF7095.9010800@candelatech.com>
+In-Reply-To: <54FF7095.9010800@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On which 802.11 amendment (a/b/g/n/ac) and driver allows you setting  
+mcast rate for mesh and IBSS interfaces?
+Far as I know, some vendors send multicast traffic as unicast in order  
+to reduce airtime.
 
-When entering D0i3, the MVM mutex cannot be grabbed. This interferes
-with the calculation of the number of connected TDLS stations during
-the setup of the power cmd.
-The goal is to disable power saving for all vifs while any TDLS station
-is connected. For this purpose it is enough to keep the pm_enabled
-member of all mvmvifs as false. An update of the power state already
-occurs when a TDLS station is added/removed, so the values are correctly
-updated.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/power.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Quoting Ben Greear <greearb@candelatech.com>:
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/power.c b/drivers/net/wireless/iwlwifi/mvm/power.c
-index 2620dd0..9c6fce1 100644
---- a/drivers/net/wireless/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/power.c
-@@ -357,7 +357,7 @@ static void iwl_mvm_power_build_cmd(struct iwl_mvm *mvm,
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_SAVE_ENA_MSK);
- 
- 	if (!vif->bss_conf.ps || iwl_mvm_vif_low_latency(mvmvif) ||
--	    !mvmvif->pm_enabled || iwl_mvm_tdls_sta_count(mvm, vif))
-+	    !mvmvif->pm_enabled)
- 		return;
- 
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_POWER_MANAGEMENT_ENA_MSK);
-@@ -638,6 +638,10 @@ static void iwl_mvm_power_set_pm(struct iwl_mvm *mvm,
- 	if (vifs->ap_vif)
- 		ap_mvmvif = iwl_mvm_vif_from_mac80211(vifs->ap_vif);
- 
-+	/* don't allow PM if any TDLS stations exist */
-+	if (iwl_mvm_tdls_sta_count(mvm, NULL))
-+		return;
-+
- 	/* enable PM on bss if bss stand alone */
- 	if (vifs->bss_active && !vifs->p2p_active && !vifs->ap_active) {
- 		bss_mvmvif->pm_enabled = true;
--- 
-1.9.1
+>> From looking at 3.17 code, it appears we are only supposed to set the
+> mcast rate for mesh and IBSS interfaces?
+>
+> What if I want to tell an AP or station to send broadcast/multicast
+> at a higher than default rate?
+>
+> Should this just be controlled by the normal 'iw setbitrates' logic?
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
+
+
+----------------------------------------------------------------
+This message was sent using IMP, the Internet Messaging Program.
