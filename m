@@ -1,123 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f46.google.com ([209.85.215.46]:45662 "EHLO
-	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754869AbbCDCMV (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:22631 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752457AbbCKI4d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 21:12:21 -0500
-Received: by labge10 with SMTP id ge10so41483182lab.12
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 18:12:19 -0800 (PST)
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Subject: [PATCH 2/2] ath5k: fix reset race
-Date: Wed,  4 Mar 2015 05:12:11 +0300
-Message-Id: <1425435131-12701-3-git-send-email-ryazanov.s.a@gmail.com> (sfid-20150304_031224_967965_02D74C1A)
-In-Reply-To: <1425435131-12701-1-git-send-email-ryazanov.s.a@gmail.com>
-References: <1425435131-12701-1-git-send-email-ryazanov.s.a@gmail.com>
+	Wed, 11 Mar 2015 04:56:33 -0400
+Message-ID: <5500033E.5040706@broadcom.com> (sfid-20150311_095640_674804_C02C56CA)
+Date: Wed, 11 Mar 2015 09:56:30 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Jonas Gorski <jogo@openwrt.org>
+CC: Pat Erley <pat-lkml@erley.org>, Huseyin <revanthedarth@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Developing a new Driver
+References: <8BC2636B-D1F0-431C-90F4-1290A4158DC2@gmail.com> <54FF7970.10402@erley.org> <CAOiHx=kRLW6Bvrnht=pn7=9zT6Vg2QAcE2JMXrZstOixsL0CmA@mail.gmail.com>
+In-Reply-To: <CAOiHx=kRLW6Bvrnht=pn7=9zT6Vg2QAcE2JMXrZstOixsL0CmA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To prepare for reset ath5k should finish all asynchronous tasks. At
-first, it disables the interrupt generation, then it waits for the
-interrupt handler and tasklets completion, and then proceeds to the HW
-configuration update. But it does not consider that the interrupt
-handler or tasklet re-enables the interrupt generation. And we fall in a
-situation when ath5k assumes that interrupts are disabled, but it is
-not.
+On 03/11/15 00:15, Jonas Gorski wrote:
+> On Wed, Mar 11, 2015 at 12:08 AM, Pat Erley<pat-lkml@erley.org>  wrote:
+>> On 03/10/2015 04:42 PM, Huseyin wrote:
+>>>
+>>> Hello everyone,
+>>>
+>>> I want to develop a driver for my usb wireless adapter. The device name is
+>>> AirTies Air 2410, codes are 0x1eda 0x2410. The company’s other usb wireless
+>>> adapters (for example, AirTies Air 2310, 0x1eda 0x2310) were using ralink
+>>> rt2800 driver, but this one doesn’t work with it.
+>>>
+>>> I opened up the device’s case, I could only find out that the board was
+>>> plotech e169497, 6 94v-0. I googled but these seem to be too vague and I
+>>> cannot go any further with it. I couldn’t find any other text on the board.
+>>>
+>>> I also contacted the company (AirTies) but they didn’t bother to reply.
+>>> They provide drivers for windows only.
+>>>
+>>> What should be the next step? Reverse-engineering the windows driver (I
+>>> have no expertise on the subject, and little expertise on windows
+>>> altogether) or trying to write a new driver using ralink or any other
+>>> existing driver code? Is it a good idea to guess that the driver I’m going
+>>> to develop will be similar to rt2800? This way I can make rt2800 recognize
+>>> my device and try to find out what goes wrong (which, seems to me, would be
+>>> meaningless if device is using a chipset not related to ralink), and change
+>>> those parts.
+>>>
+>>> I asked a little about the subject in the #kernelnewbies channel, people
+>>> redirected me to this mail list.
+>>>
+>>> When I make rt2800 driver recognize my device, this is what I get:
+>>>
+>>> ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07
+>>> failed for offset 0x1000 with error -110
+>>> ieee80211 phy0: rt2800_probe_rt: Error - Invalid RT chipset 0xffff, rev
+>>> 8800 detected
+>>> ieee80211 phy0: rt2x00lib_probe_dev: Error - Failed to allocate device
+>>> usbcore: registered new interface driver rt2800usb
+>>>
+>>
+>> Based on their driver, it's a broadcom chip in there:
+>>
+>>
+>>    inflating:
+>> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmh43xx.cat
+>>    inflating:
+>> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmihvsrv.dll
+>>    inflating:
+>> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmihvui.dll
+>>    inflating:
+>> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlcoi.dll
+>>    inflating:
+>> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlhigh6.inf
+>>    inflating:
+>> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlhigh6.sys
+>>    inflating:
+>> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/WdfCoInstaller01005.dll
+>>
+>> I don't know what the status of broadcom and usb drivers is though.
+>
+> According to wikidevi[1], it uses BCM4323, which is SSB based, quite
+> old, and will never be supported by brcmfmac, and probably never by
+> b43 (one would need to reverse engineer the usb protocol used by
+> broadcom).
 
-This can lead to different consequences, such as reception of the frame,
-when we do not expect it. Under certain circumstances, this can lead to
-the following warning:
+and this device uses a different driver model (bmac) which is not 
+supported by brcmfmac nor brcmsmac. You can tell because it says 
+"bcmwlhigh6.sys".
 
-  WARNING: at ath5k/base.c:589 ath5k_tasklet_rx+0x318/0x6ec [ath5k]()
-  invalid hw_rix: 1a
-  [..]
-  Call Trace:
-  [<802656a8>] show_stack+0x48/0x70
-  [<802dd92c>] warn_slowpath_common+0x88/0xbc
-  [<802dd98c>] warn_slowpath_fmt+0x2c/0x38
-  [<81b51be8>] ath5k_tasklet_rx+0x318/0x6ec [ath5k]
-  [<8028ac64>] tasklet_action+0x8c/0xf0
-  [<80075804>] __do_softirq+0x180/0x32c
-  [<80196ce8>] irq_exit+0x54/0x70
-  [<80041848>] ret_from_irq+0x0/0x4
-  [<80182fdc>] ioread32+0x4/0xc
-  [<81b4c42c>] ath5k_hw_set_sleep_clock+0x2ec/0x474 [ath5k]
-  [<81b4cf28>] ath5k_hw_reset+0x50/0xeb8 [ath5k]
-  [<81b50900>] ath5k_reset+0xd4/0x310 [ath5k]
-  [<81b557e8>] ath5k_config+0x4c/0x104 [ath5k]
-  [<80d01770>] ieee80211_hw_config+0x2f4/0x35c [mac80211]
-  [<80d09aa8>] ieee80211_scan_work+0x2e4/0x414 [mac80211]
-  [<8022c3f4>] process_one_work+0x28c/0x400
-  [<802df8f8>] worker_thread+0x258/0x3c0
-  [<801b5710>] kthread+0xe0/0xec
-  [<800418a8>] ret_from_kernel_thread+0x14/0x1c
+Regards,
+Arend
 
-Fix this issue by adding a new status flag, which forbids to re-enable
-the interrupt generation until the HW configuration is completed.
-
-Note: previous patch, which reorders the Rx disable code helps to avoid
-the above warning, but not fixes the root cause of unexpected frame
-receiving.
-
-CC: Jiri Slaby <jirislaby@gmail.com>
-CC: Nick Kossifidis <mickflemm@gmail.com>
-CC: Luis R. Rodriguez <mcgrof@do-not-panic.com>
-Reported-by: Christophe Prevotaux <cprevotaux@nltinc.com>
-Tested-by: Christophe Prevotaux <cprevotaux@nltinc.com>
-Tested-by: Eric Bree <ebree@nltinc.com>
-Signed-off-by: Sergey Ryazanov <ryazanov.s.a@gmail.com>
----
- drivers/net/wireless/ath/ath5k/ath5k.h | 1 +
- drivers/net/wireless/ath/ath5k/base.c  | 7 +++++++
- 2 files changed, 8 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath5k/ath5k.h b/drivers/net/wireless/ath/ath5k/ath5k.h
-index 1ed7a88..7ca0d6f 100644
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1283,6 +1283,7 @@ struct ath5k_hw {
- #define ATH_STAT_PROMISC	1
- #define ATH_STAT_LEDSOFT	2		/* enable LED gpio status */
- #define ATH_STAT_STARTED	3		/* opened & irqs enabled */
-+#define ATH_STAT_RESET		4		/* hw reset */
- 
- 	unsigned int		filter_flags;	/* HW flags, AR5K_RX_FILTER_* */
- 	unsigned int		fif_filter_flags; /* Current FIF_* filter flags */
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 34b2f15..41848e1 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -1523,6 +1523,9 @@ ath5k_set_current_imask(struct ath5k_hw *ah)
- 	enum ath5k_int imask;
- 	unsigned long flags;
- 
-+	if (test_bit(ATH_STAT_RESET, ah->status))
-+		return;
-+
- 	spin_lock_irqsave(&ah->irqlock, flags);
- 	imask = ah->imask;
- 	if (ah->rx_pending)
-@@ -2862,6 +2865,8 @@ ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
- 
- 	ATH5K_DBG(ah, ATH5K_DEBUG_RESET, "resetting\n");
- 
-+	__set_bit(ATH_STAT_RESET, ah->status);
-+
- 	ath5k_hw_set_imr(ah, 0);
- 	synchronize_irq(ah->irq);
- 	ath5k_stop_tasklets(ah);
-@@ -2952,6 +2957,8 @@ ath5k_reset(struct ath5k_hw *ah, struct ieee80211_channel *chan,
- 	 */
- /*	ath5k_chan_change(ah, c); */
- 
-+	__clear_bit(ATH_STAT_RESET, ah->status);
-+
- 	ath5k_beacon_config(ah);
- 	/* intrs are enabled by ath5k_beacon_config */
- 
--- 
-2.0.4
+> Jonas
+>
+> [1] https://wikidevi.com/wiki/AirTies_Air_2410
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
