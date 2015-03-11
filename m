@@ -1,91 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:36030 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbbCaKdM (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:12285 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941AbbCKPLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 06:33:12 -0400
-Received: by lbbug6 with SMTP id ug6so9023439lbb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 03:33:11 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v6 7/7] ath10k: allocate fw resources for iface combinations
-Date: Tue, 31 Mar 2015 10:26:26 +0000
-Message-Id: <1427797586-5132-8-git-send-email-michal.kazior@tieto.com> (sfid-20150331_123321_624172_8276CAA3)
-In-Reply-To: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com>
-References: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 11 Mar 2015 11:11:40 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 6/7] brcmfmac: take save&restore memory into account for SDIO shared info
+Date: Wed, 11 Mar 2015 16:11:32 +0100
+Message-ID: <1426086693-13876-7-git-send-email-arend@broadcom.com> (sfid-20150311_161153_421260_98D11E8E)
+In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
+References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The number of 3 vdevs wasn't enough to handle the
-worst case for interface combinations in practice.
+The firmware provides pointer to SDIO shared information at end of
+RAM during firmware initialization. End of RAM is obviously determined
+by the actual ram size, but part of that may be used for save&restore
+memory. In that case another location in RAM will hold the pointer.
 
-wpa_supplicant may need up to 4 vifs to have 2
-vifs actually connected, i.e. p2pdev + client + 2x
-p2p (either p2p client or p2p go).
-
-This fixes worst case warning:
-
-  Free vdev map is empty, no more interfaces allowed.
-
-This keeps the ability to associate 32 stations in
-AP mode at the cost of not being able to guarantee
-that under all circumstances, i.e. some
-combinations may consume additional fw peer
-entries for internal purposes leaving less
-resource for stations in AP mode.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/hw.h      | 6 ++----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 8 ++++----
- 2 files changed, 6 insertions(+), 8 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 40 +++++++++++++++-----------
+ 1 file changed, 24 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 254215973637..89e09cbeac19 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -299,11 +299,9 @@ enum ath10k_hw_rate_cck {
- #define TARGET_10_2_DMA_BURST_SIZE		1
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index c783c25..5202e76 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -1067,44 +1067,47 @@ static inline bool brcmf_sdio_valid_shared_address(u32 addr)
+ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
+ 				 struct sdpcm_shared *sh)
+ {
+-	u32 addr;
++	u32 addr = 0;
+ 	int rv;
+ 	u32 shaddr = 0;
+ 	struct sdpcm_shared_le sh_le;
+ 	__le32 addr_le;
  
- /* Target specific defines for WMI-TLV firmware */
--#define TARGET_TLV_NUM_VDEVS			3
-+#define TARGET_TLV_NUM_VDEVS			4
- #define TARGET_TLV_NUM_STATIONS			32
--#define TARGET_TLV_NUM_PEERS			((TARGET_TLV_NUM_STATIONS) + \
--						 (TARGET_TLV_NUM_VDEVS) + \
--						 2)
-+#define TARGET_TLV_NUM_PEERS			35
- #define TARGET_TLV_NUM_TDLS_VDEVS		1
- #define TARGET_TLV_NUM_TIDS			((TARGET_TLV_NUM_PEERS) * 2)
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 03e34c351576..ae120782e737 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1318,8 +1318,8 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
+-	shaddr = bus->ci->rambase + bus->ci->ramsize - 4;
++	sdio_claim_host(bus->sdiodev->func[1]);
++	brcmf_sdio_bus_sleep(bus, false, false);
  
- 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
--		cfg->num_offload_peers = __cpu_to_le32(3);
--		cfg->num_offload_reorder_bufs = __cpu_to_le32(3);
-+		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-+		cfg->num_offload_reorder_bufs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
- 	} else {
- 		cfg->num_offload_peers = __cpu_to_le32(0);
- 		cfg->num_offload_reorder_bufs = __cpu_to_le32(0);
-@@ -1336,8 +1336,8 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cfg->rx_timeout_pri[3] = __cpu_to_le32(0x28);
- 	cfg->rx_decap_mode = __cpu_to_le32(1);
- 	cfg->scan_max_pending_reqs = __cpu_to_le32(4);
--	cfg->bmiss_offload_max_vdev = __cpu_to_le32(3);
--	cfg->roam_offload_max_vdev = __cpu_to_le32(3);
-+	cfg->bmiss_offload_max_vdev = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-+	cfg->roam_offload_max_vdev = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
- 	cfg->roam_offload_max_ap_profiles = __cpu_to_le32(8);
- 	cfg->num_mcast_groups = __cpu_to_le32(0);
- 	cfg->num_mcast_table_elems = __cpu_to_le32(0);
+ 	/*
+ 	 * Read last word in socram to determine
+ 	 * address of sdpcm_shared structure
+ 	 */
+-	sdio_claim_host(bus->sdiodev->func[1]);
+-	brcmf_sdio_bus_sleep(bus, false, false);
+-	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, shaddr, (u8 *)&addr_le, 4);
+-	sdio_release_host(bus->sdiodev->func[1]);
++	shaddr = bus->ci->rambase + bus->ci->ramsize - 4;
++	if (!bus->ci->rambase && brcmf_chip_sr_capable(bus->ci))
++		shaddr -= bus->ci->srsize;
++	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, shaddr,
++			       (u8 *)&addr_le, 4);
+ 	if (rv < 0)
+-		return rv;
+-
+-	addr = le32_to_cpu(addr_le);
+-
+-	brcmf_dbg(SDIO, "sdpcm_shared address 0x%08X\n", addr);
++		goto fail;
+ 
+ 	/*
+ 	 * Check if addr is valid.
+ 	 * NVRAM length at the end of memory should have been overwritten.
+ 	 */
++	addr = le32_to_cpu(addr_le);
+ 	if (!brcmf_sdio_valid_shared_address(addr)) {
+-			brcmf_err("invalid sdpcm_shared address 0x%08X\n",
+-				  addr);
+-			return -EINVAL;
++		brcmf_err("invalid sdpcm_shared address 0x%08X\n", addr);
++		rv = -EINVAL;
++		goto fail;
+ 	}
+ 
++	brcmf_dbg(INFO, "sdpcm_shared address 0x%08X\n", addr);
++
+ 	/* Read hndrte_shared structure */
+ 	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, addr, (u8 *)&sh_le,
+ 			       sizeof(struct sdpcm_shared_le));
+ 	if (rv < 0)
+-		return rv;
++		goto fail;
++
++	sdio_release_host(bus->sdiodev->func[1]);
+ 
+ 	/* Endianness */
+ 	sh->flags = le32_to_cpu(sh_le.flags);
+@@ -1121,8 +1124,13 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
+ 			  sh->flags & SDPCM_SHARED_VERSION_MASK);
+ 		return -EPROTO;
+ 	}
+-
+ 	return 0;
++
++fail:
++	brcmf_err("unable to obtain sdpcm_shared info: rv=%d (addr=0x%x)\n",
++		  rv, addr);
++	sdio_release_host(bus->sdiodev->func[1]);
++	return rv;
+ }
+ 
+ static void brcmf_sdio_get_console_addr(struct brcmf_sdio *bus)
 -- 
-2.1.4
+1.9.1
 
