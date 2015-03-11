@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:34543 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752283AbbCZT1n (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51504 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076AbbCKPxy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2015 15:27:43 -0400
-Received: by iedfl3 with SMTP id fl3so61453304ied.1
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 12:27:43 -0700 (PDT)
-Message-ID: <55145DAC.6090204@mojatatu.com> (sfid-20150326_202756_554504_96ED9346)
-Date: Thu, 26 Mar 2015 15:27:40 -0400
-From: Jamal Hadi Salim <jhs@mojatatu.com>
+	Wed, 11 Mar 2015 11:53:54 -0400
+Message-ID: <55006511.6020101@candelatech.com> (sfid-20150311_165357_712243_FCECFBE9)
+Date: Wed, 11 Mar 2015 08:53:53 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: linux-wireless@vger.kernel.org, netfilter@vger.kernel.org,
-	netfilter-devel@vger.kernel.org, lwn@lwn.net,
-	netdev01@lists.netfilter.org, lartc@vger.kernel.org,
-	attendees@netdev01.org, Harout Hedeshian <harouth@codeaurora.org>,
-	Brenda Butler <bjb@mojatatu.com>,
-	Richard Guy Briggs <rgb@tricolour.ca>,
-	Miranda Gray <mirgray@gmail.com>,
-	Stephen Jaworski <jaws@mojatatu.com>,
-	David Miller <davem@davemloft.net>
-Subject: ANNOUNCEMENT: Netdev 01 materials posted
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+CC: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] iw: Allow configuring empty legacy and ht ratesets.
+References: <1426028412-17438-1-git-send-email-greearb@candelatech.com> <CALhHN=q0C0KWzTrjCztxcjLUjHKN8CXfBJG7o7AyU4gZgBfGRg@mail.gmail.com>
+In-Reply-To: <CALhHN=q0C0KWzTrjCztxcjLUjHKN8CXfBJG7o7AyU4gZgBfGRg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 03/10/2015 11:10 PM, Janusz Dziedzic wrote:
+> On 11 March 2015 at 00:00,  <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> This allows one to configure exactly one rate for drivers
+>> such as ath10k that will only allow a single rate to be
+>> configured.
+>>
+> 
+> Hello,
+> 
+> But iw already support setting single rate with ath10k.
+> This is example from ath10k commit log:
 
-Folks,
+Ahh, I see.  I was confused about what syntax to use for 'iw', must have
+typo'd something early on and then though the limitation was in the parser.
 
-We are pleased to announce that _most_ papers are now available
-off the netdev website. A few are missing but we are working to get the
-authors to submit them.
-Most if not all slides are available.
-A few videos are also up.
-Harout is vigilantly working on getting the videos for most sessions
-uploaded as soon as they are transformed and as soon as we get
-permission from the authors.
+Thanks,
+Ben
 
-And without further ado, here is the url:
+> 
+>     Example:
+>     iw wlanX set bitrates legacy-5 ht-mcs-5 vht-mcs-5 2:9
+>     will setup VHT, nss=2, mcs=9
+> 
+>     iw wlanX set bitrates legacy-5 18 ht-mcs-5 vht-mcs-5
+>     will setup legacy, 18Mbps
+> 
+>     iw wlanX set bitrates legacy-5 ht-mcs-5 3 vht-mcs-5
+>     will setup HT, nss=1, mcs=3
+> 
+>     iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9
+>     will setup nss=1
+> 
+>     iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9 2:0-9
+>     will setup nss=2
+> 
+> BR
+> Janusz
+> 
 
-https://www.netdev01.org/sessions
 
-Enjoy!
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-cheers,
-jamal
