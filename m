@@ -1,46 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27874 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751961AbbC3Lqo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 07:46:44 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix HTT op backwards compatibility for QCA6174
-References: <20150330111428.22198.36611.stgit@potku.adurom.net>
-	<CA+BoTQ=s4M9jt46ta1OKp0vAG6wZvZmbBjPU_kmJYr3F6zuB1A@mail.gmail.com>
-Date: Mon, 30 Mar 2015 14:46:35 +0300
-In-Reply-To: <CA+BoTQ=s4M9jt46ta1OKp0vAG6wZvZmbBjPU_kmJYr3F6zuB1A@mail.gmail.com>
-	(Michal Kazior's message of "Mon, 30 Mar 2015 13:25:56 +0200")
-Message-ID: <87lhie6738.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_134647_407641_F8FEC15C)
+Received: from mx1.redhat.com ([209.132.183.28]:43494 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752045AbbCKTPs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 15:15:48 -0400
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com (int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id t2BJFmE5023959
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 15:15:48 -0400
+Received: from ultrasam.trained-monkey.org (dhcp-10-15-49-233.lga.redhat.com [10.15.49.233])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id t2BJFlGG020619
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 15:15:48 -0400
+Received: from ultrasam.lan.trained-monkey.org.redhat.com (localhost [IPv6:::1])
+	by ultrasam.trained-monkey.org (Postfix) with ESMTP id 33D198197563
+	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 15:15:47 -0400 (EDT)
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: linux-wireless@vger.kernel.org
+Subject: Looking for Orinoco USB dongles
+Date: Wed, 11 Mar 2015 15:15:47 -0400
+Message-ID: <wrfj1tkv1h24.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150311_201551_701110_B5251F54)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi,
 
-> On 30 March 2015 at 13:14, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
->> Commit 8348db298496 ("ath10k: add ATH10K_FW_IE_HTT_OP_VERSION") broke QCA6174
->> receive side as the HTT ids from ATH10K_FW_HTT_OP_VERSION_MAIN don't have
->> HTT_TLV_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND set. Fix this by adding a backwards
->> compatibility code which sets HTT op version if it's not set by the firmare
->
-> s/firmare/firmware/
+For the Outreachy project I am trying to track down 1-2 Orinoco USB
+dongles. If anyone has one sitting in a drawer and would be interested
+in reclaiming their drawer space, please shoot me an email off-list.
 
-Fixed.
+I'm happy to pay for shipping.
 
->> image.
->>
->> Fixes: 8348db298496 ("ath10k: add ATH10K_FW_IE_HTT_OP_VERSION")
->> Reported-by: Michal Kazior <michal.kazior@tieto.com>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->
-> Tested-by: Michal Kazior <michal.kazior@tieto.com>
+Sorry for the spam!
 
-Thanks! And sorry for this.
-
--- 
-Kalle Valo
+Jes
