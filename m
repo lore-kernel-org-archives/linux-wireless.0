@@ -1,88 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:2362 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbbCKPLi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 11:11:38 -0400
-From: Arend van Spriel <arend@broadcom.com>
+Received: from plaes.org ([188.166.43.21]:51920 "EHLO plaes.org"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752663AbbCKUDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 16:03:51 -0400
+From: Priit Laes <plaes@plaes.org>
 To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 4/7] brcmfmac: assure device is ready for download after brcmf_chip_attach()
-Date: Wed, 11 Mar 2015 16:11:30 +0100
-Message-ID: <1426086693-13876-5-git-send-email-arend@broadcom.com> (sfid-20150311_161146_798361_B017B893)
-In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
-References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Priit Laes <plaes@plaes.org>
+Subject: [PATCH 6/6] rtlwifi: Rename rtl_translate_todbm to rtl_signalpower_todbm
+Date: Wed, 11 Mar 2015 22:03:29 +0200
+Message-Id: <1426104209-6913-7-git-send-email-plaes@plaes.org> (sfid-20150311_210406_009634_9694BE27)
+In-Reply-To: <1426104209-6913-1-git-send-email-plaes@plaes.org>
+References: <1426104209-6913-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the brcmf_chip_attach() function responsible for putting the
-device in a state where it is accessible for firmware download.
-
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Priit Laes <plaes@plaes.org>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/chip.c | 8 ++------
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 2 --
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 3 ---
- 3 files changed, 2 insertions(+), 11 deletions(-)
+ drivers/net/wireless/rtlwifi/stats.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index d68e37d..c11137e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -786,12 +786,6 @@ static int brcmf_chip_setup(struct brcmf_chip_priv *chip)
- 	if (chip->ops->setup)
- 		ret = chip->ops->setup(chip->ctx, pub);
+diff --git a/drivers/net/wireless/rtlwifi/stats.c b/drivers/net/wireless/rtlwifi/stats.c
+index c702d01..4739324 100644
+--- a/drivers/net/wireless/rtlwifi/stats.c
++++ b/drivers/net/wireless/rtlwifi/stats.c
+@@ -48,14 +48,9 @@ u8 rtl_evm_db_to_percentage(char value)
+ }
+ EXPORT_SYMBOL(rtl_evm_db_to_percentage);
  
--	/*
--	 * Make sure any on-chip ARM is off (in case strapping is wrong),
--	 * or downloaded code was already running.
--	 */
--	brcmf_chip_disable_arm(chip, BCMA_CORE_ARM_CM3);
--	brcmf_chip_disable_arm(chip, BCMA_CORE_ARM_CR4);
- 	return ret;
+-static long rtl_translate_todbm(struct ieee80211_hw *hw,
+-			 u8 signal_strength_index)
++static long rtl_signalpower_todbm(u8 signal_strength_index)
+ {
+-	long signal_power;
+-
+-	signal_power = (long)((signal_strength_index + 1) >> 1);
+-	signal_power -= 95;
+-	return signal_power;
++	return (long)((signal_strength_index + 1) >> 1) - 95;
  }
  
-@@ -833,6 +827,8 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 	if (err < 0)
- 		goto fail;
+ long rtl_signal_scale_mapping(long currsig)
+@@ -93,7 +88,7 @@ static void rtl_process_ui_rssi(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	u8 rfpath;
+-	u32 last_rssi, tmpval;
++	u32 last_rssi;
  
-+	/* assure chip is passive for download */
-+	brcmf_chip_set_passive(&chip->pub);
- 	return &chip->pub;
+ 	if (!pstatus->packet_toself && !pstatus->packet_beacon)
+ 		return;
+@@ -112,10 +107,9 @@ static void rtl_process_ui_rssi(struct ieee80211_hw *hw,
+ 	    pstatus->signalstrength;
+ 	if (rtlpriv->stats.ui_rssi.index >= PHY_RSSI_SLID_WIN_MAX)
+ 		rtlpriv->stats.ui_rssi.index = 0;
+-	tmpval = rtlpriv->stats.ui_rssi.total_val /
+-		rtlpriv->stats.ui_rssi.total_num;
+-	rtlpriv->stats.signal_strength = rtl_translate_todbm(hw,
+-		(u8) tmpval);
++	rtlpriv->stats.signal_strength = rtl_signalpower_todbm(
++		(u8)rtlpriv->stats.ui_rssi.total_val /
++			rtlpriv->stats.ui_rssi.total_num);
+ 	pstatus->rssi = rtlpriv->stats.signal_strength;
  
- fail:
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 81e544f..aa7a4df 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -509,8 +509,6 @@ static void brcmf_pcie_attach(struct brcmf_pciedev_info *devinfo)
- 
- static int brcmf_pcie_enter_download_state(struct brcmf_pciedev_info *devinfo)
- {
--	brcmf_chip_set_passive(devinfo->ci);
--
- 	if (devinfo->ci->chip == BRCM_CC_43602_CHIP_ID) {
- 		brcmf_pcie_select_core(devinfo, BCMA_CORE_ARM_CR4);
- 		brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_ARMCR4REG_BANKIDX,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index fff3b26..c783c25 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -3356,9 +3356,6 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
- 	sdio_claim_host(bus->sdiodev->func[1]);
- 	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
- 
--	/* Keep arm in reset */
--	brcmf_chip_set_passive(bus->ci);
--
- 	rstvec = get_unaligned_le32(fw->data);
- 	brcmf_dbg(SDIO, "firmware rstvec: %x\n", rstvec);
- 
+ 	if (pstatus->is_cck)
 -- 
-1.9.1
+2.3.1
 
