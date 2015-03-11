@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:60870 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751140AbbCUIEf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:04:35 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org, nbd@openwrt.org, adrian@freebsd.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 18/18 v2] ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
-Date: Sat, 21 Mar 2015 09:04:10 +0100
-Message-Id: <1426925050-15034-1-git-send-email-linux@rempel-privat.de> (sfid-20150321_090459_336131_C2A72068)
-In-Reply-To: <550C1A3F.5090101@openwrt.org>
-References: <550C1A3F.5090101@openwrt.org>
+Received: from mail-la0-f48.google.com ([209.85.215.48]:45310 "EHLO
+	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751555AbbCKRVw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 13:21:52 -0400
+From: Marcus Folkesson <marcus.folkesson@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Marcus Folkesson <marcus.folkesson@gmail.com>
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: Fix sparse warning cast to restricted __le16
+Date: Wed, 11 Mar 2015 18:21:30 +0100
+Message-Id: <1426094490-17065-1-git-send-email-marcus.folkesson@gmail.com> (sfid-20150311_182209_541251_A9FD63B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/eeprom_def.c | 34 ++++++++++++-----------------
- 1 file changed, 14 insertions(+), 20 deletions(-)
+This patch fixes the following sparse warnings:
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 0980590..056f516 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -466,6 +466,7 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 				  struct ar5416_eeprom_def *eep,
- 				  u8 txRxAttenLocal, int regChainOffset, int i)
- {
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_3) {
- 		txRxAttenLocal = pModal->txRxAttenCh[i];
+  CHECK   drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
+  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:265:37: warning:
+  cast to restricted __le16
+  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:267:39: warning:
+  cast to restricted __le16
+
+Signed-off-by: Marcus Folkesson <marcus.folkesson@gmail.com>
+---
+ drivers/staging/rtl8723au/include/rtl8723a_hal.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/include/rtl8723a_hal.h b/drivers/staging/rtl8723au/include/rtl8723a_hal.h
+index e146336..f642b11 100644
+--- a/drivers/staging/rtl8723au/include/rtl8723a_hal.h
++++ b/drivers/staging/rtl8723au/include/rtl8723a_hal.h
+@@ -255,10 +255,10 @@ struct hal_data_8723a {
+ 	struct hal_version		VersionID;
+ 	enum rt_customer_id CustomerID;
  
-@@ -483,16 +484,12 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 			      AR_PHY_GAIN_2GHZ_XATTEN2_DB,
- 			      pModal->xatten2Db[i]);
- 		} else {
--			REG_WRITE(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
--			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
--			   ~AR_PHY_GAIN_2GHZ_BSW_MARGIN)
--			  | SM(pModal-> bswMargin[i],
--			       AR_PHY_GAIN_2GHZ_BSW_MARGIN));
--			REG_WRITE(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
--			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
--			   ~AR_PHY_GAIN_2GHZ_BSW_ATTEN)
--			  | SM(pModal->bswAtten[i],
--			       AR_PHY_GAIN_2GHZ_BSW_ATTEN));
-+			REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+				SM(pModal-> bswMargin[i], AR_PHY_GAIN_2GHZ_BSW_MARGIN),
-+				AR_PHY_GAIN_2GHZ_BSW_MARGIN);
-+			REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+				SM(pModal->bswAtten[i], AR_PHY_GAIN_2GHZ_BSW_ATTEN),
-+				AR_PHY_GAIN_2GHZ_BSW_ATTEN);
- 		}
- 	}
+-	u16	FirmwareVersion;
+-	u16	FirmwareVersionRev;
+-	u16	FirmwareSubVersion;
+-	u16	FirmwareSignature;
++	__le16	FirmwareVersion;
++	__le16	FirmwareVersionRev;
++	__le16	FirmwareSubVersion;
++	__le16	FirmwareSignature;
  
-@@ -504,17 +501,14 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 		      AR_PHY_RXGAIN + regChainOffset,
- 		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[i]);
- 	} else {
--		REG_WRITE(ah,
--			  AR_PHY_RXGAIN + regChainOffset,
--			  (REG_READ(ah, AR_PHY_RXGAIN + regChainOffset) &
--			   ~AR_PHY_RXGAIN_TXRX_ATTEN)
--			  | SM(txRxAttenLocal, AR_PHY_RXGAIN_TXRX_ATTEN));
--		REG_WRITE(ah,
--			  AR_PHY_GAIN_2GHZ + regChainOffset,
--			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
--			   ~AR_PHY_GAIN_2GHZ_RXTX_MARGIN) |
--			  SM(pModal->rxTxMarginCh[i], AR_PHY_GAIN_2GHZ_RXTX_MARGIN));
-+		REG_RMW(ah, AR_PHY_RXGAIN + regChainOffset,
-+			SM(txRxAttenLocal, AR_PHY_RXGAIN_TXRX_ATTEN),
-+			AR_PHY_RXGAIN_TXRX_ATTEN);
-+		REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+			SM(pModal->rxTxMarginCh[i], AR_PHY_GAIN_2GHZ_RXTX_MARGIN),
-+			AR_PHY_GAIN_2GHZ_RXTX_MARGIN);
- 	}
-+	REG_RMW_BUFFER_FLUSH(ah);
- }
- 
- static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 	/* current WIFI_PHY values */
+ 	u32	ReceiveConfig;
 -- 
 1.9.1
 
