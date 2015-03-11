@@ -1,49 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:62338 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087AbbCOMJJ (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45419 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751210AbbCKPLi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 08:09:09 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Eliad Peller <eliad@wizery.com>, Tony Lindgren <tony@atomide.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Sekhar Nori <nsekhar@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	=?ISO-8859-1?Q?Beno=EEt?= Cousson <bcousson@baylibre.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Luciano Coelho <luca@coelho.fi>
-Subject: Re: [PATCH v6 2/6] wl12xx: use frequency instead of enumerations for pdata clocks
-Date: Sun, 15 Mar 2015 13:08:54 +0100
-Message-ID: <3103538.jZ037SODdT@wuerfel> (sfid-20150315_130915_508235_5ACCCA62)
-In-Reply-To: <CAB3XZEcOytqpJ4pWoemLS3d+DCeA8C75MencDfGn_vhfEYrduw@mail.gmail.com>
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com> <20150313150047.GI5264@atomide.com> <CAB3XZEcOytqpJ4pWoemLS3d+DCeA8C75MencDfGn_vhfEYrduw@mail.gmail.com>
+	Wed, 11 Mar 2015 11:11:38 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/7] brcmfmac: remove duplication of ramsize info
+Date: Wed, 11 Mar 2015 16:11:27 +0100
+Message-ID: <1426086693-13876-2-git-send-email-arend@broadcom.com> (sfid-20150311_161144_502391_36FB0FF9)
+In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
+References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 15 March 2015 10:43:35 Eliad Peller wrote:
-> 
-> > The other option would be to have the whole series in a immutable
-> > branch against v3.0-rc1 that can be merged into both wirelss tree
-> > and omap tree.
-> >
-> i think that could be easier.
-> 
-> or maybe you can just take them all through the omap tree? the wlcore
-> tree is not under active development, so i don't expect conflicts
-> there.
+Removing the ramsize from the brcmf_sdio structure to avoid
+duplication. The information is available in brcmf_chip
+structure.
 
-I'm fine with both these approaches.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-	Arnd
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 973fa2a..9df16c1 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -432,8 +432,6 @@ struct brcmf_sdio {
+ 	struct brcmf_sdio_dev *sdiodev;	/* sdio device handler */
+ 	struct brcmf_chip *ci;	/* Chip info struct */
+ 
+-	u32 ramsize;		/* Size of RAM in SOCRAM (bytes) */
+-
+ 	u32 hostintmask;	/* Copy of Host Interrupt Mask */
+ 	atomic_t intstatus;	/* Intstatus bits (events) pending */
+ 	atomic_t fcstate;	/* State of dongle flow-control */
+@@ -1075,7 +1073,7 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
+ 	struct sdpcm_shared_le sh_le;
+ 	__le32 addr_le;
+ 
+-	shaddr = bus->ci->rambase + bus->ramsize - 4;
++	shaddr = bus->ci->rambase + bus->ci->ramsize - 4;
+ 
+ 	/*
+ 	 * Read last word in socram to determine
+@@ -3871,13 +3869,6 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
+ 		drivestrength = DEFAULT_SDIO_DRIVE_STRENGTH;
+ 	brcmf_sdio_drivestrengthinit(bus->sdiodev, bus->ci, drivestrength);
+ 
+-	/* Get info on the SOCRAM cores... */
+-	bus->ramsize = bus->ci->ramsize;
+-	if (!(bus->ramsize)) {
+-		brcmf_err("failed to find SOCRAM memory!\n");
+-		goto fail;
+-	}
+-
+ 	/* Set card control so an SDIO card reset does a WLAN backplane reset */
+ 	reg_val = brcmf_sdiod_regrb(bus->sdiodev,
+ 				    SDIO_CCCR_BRCM_CARDCTRL, &err);
+-- 
+1.9.1
+
