@@ -1,69 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49636 "EHLO mga14.intel.com"
+Received: from www.osadl.org ([62.245.132.105]:58816 "EHLO www.osadl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751234AbbCAHKi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 02:10:38 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 07/16] mac80211: don't do driver suspend with auth/assoc in progress
-Date: Sun,  1 Mar 2015 09:10:06 +0200
-Message-Id: <1425193815-17785-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_081047_161231_904042B0)
-In-Reply-To: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1752424AbbCKTG6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 15:06:58 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Valdis.Kletnieks@vt.edu, Bj??rn Mork <bjorn@mork.no>,
+	Jeff Haran <Jeff.Haran@citrix.com>,
+	Pat Erley <pat-lkml@erley.org>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH RFC v2] ath10k: move code from parameter list into a function
+Date: Wed, 11 Mar 2015 15:01:59 -0400
+Message-Id: <1426100519-20636-1-git-send-email-hofrat@osadl.org> (sfid-20150311_200723_379167_2BC79246)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Putting code into the parameter list of wait_event_timeout() might be
+legal C-code but not really readable - the "inline" code is simply
+moved into a function and that passed to wait_event_timeout() as the
+condition. As wait_event_timeout will always return >= 0 the following
+timeout check is fixed up to  ret == 0 .
 
-Drivers can't really be expected to suspend properly while auth
-or assoc is in progress since then they don't have any state
-they could keep with WoWLAN, nor can they actually finish the
-authentication or association. In fact, keeping this can cause
-subtle issues with drivers like iwlwifi that refuse WoWLAN if
-not associated, but have trouble figuring out what's going on
-in the middle of association.
-
-In any case, regardless of possible driver issues in this area,
-it doesn't make sense for mac80211 to try to WoWLAN-suspend in
-the middle of such operations, so stop them before.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
- net/mac80211/pm.c | 19 ++++++++++++++++++-
- 1 file changed, 18 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index ca405b6..bd185f3 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -61,7 +61,24 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+Thanks to Bjorn Mork <bjorn@mork.no> for clarifying my initial confusion !
+
+v2: Thanks to Pat Erley <pat-lkml@erley.org> for catching the botched skip
+    parameter - should have been call by reference not value - fixed here.
+
+As Bjorn Mork <bjorn@mork.no> pointed out, a patch like this is hard to
+verify by testing - but I do think that the code readability is much
+better (if the patch is correct with respect to code behavior) and helps
+simplify/automate API usage checking so its worth the effort.
+
+Comments on if this is functionally equivalent to the original code as well
+as if the helper func name is suitable would be appreciated.
+
+Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+CONFIG_ATH10K=m and the generated mac.i file code reviewed.
+
+Patch is against 4.0-rc3 (localversion-next is -next-20150311)
+
+ drivers/net/wireless/ath/ath10k/mac.c |   34 ++++++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index e8cc19f..a7a12cc 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4463,11 +4463,25 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 	return ret;
+ }
  
- 	local->wowlan = wowlan && local->open_count;
- 	if (local->wowlan) {
--		int err = drv_suspend(local, wowlan);
-+		int err;
++static bool check_htt_state(struct ath10k *ar, bool *skip)
++{
++	bool empty;
 +
-+		/* Drivers don't expect to suspend while some operations like
-+		 * authenticating or associating are in progress. It doesn't
-+		 * make sense anyway to accept that, since the authentication
-+		 * or association would never finish since the driver can't do
-+		 * that on its own.
-+		 * Thus, clean up in-progress auth/assoc first.
-+		 */
-+		list_for_each_entry(sdata, &local->interfaces, list) {
-+			if (!ieee80211_sdata_running(sdata))
-+				continue;
-+			if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+				continue;
-+			ieee80211_mgd_quiesce(sdata);
-+		}
++	spin_lock_bh(&ar->htt.tx_lock);
++	empty = (ar->htt.num_pending_tx == 0);
++	spin_unlock_bh(&ar->htt.tx_lock);
 +
-+		err = drv_suspend(local, wowlan);
- 		if (err < 0) {
- 			local->quiescing = false;
- 			local->wowlan = false;
++	*skip = (ar->state == ATH10K_STATE_WEDGED) ||
++		test_bit(ATH10K_FLAG_CRASH_FLUSH,
++			 &ar->dev_flags);
++	return (empty || *skip);
++}
++
+ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			 u32 queues, bool drop)
+ {
+ 	struct ath10k *ar = hw->priv;
+-	bool skip;
++	bool skip = false;
+ 	int ret;
+ 
+ 	/* mac80211 doesn't care if we really xmit queued frames or not
+@@ -4480,21 +4494,11 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	if (ar->state == ATH10K_STATE_WEDGED)
+ 		goto skip;
+ 
+-	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
+-			bool empty;
+-
+-			spin_lock_bh(&ar->htt.tx_lock);
+-			empty = (ar->htt.num_pending_tx == 0);
+-			spin_unlock_bh(&ar->htt.tx_lock);
+-
+-			skip = (ar->state == ATH10K_STATE_WEDGED) ||
+-			       test_bit(ATH10K_FLAG_CRASH_FLUSH,
+-					&ar->dev_flags);
+-
+-			(empty || skip);
+-		}), ATH10K_FLUSH_TIMEOUT_HZ);
++	ret = wait_event_timeout(ar->htt.empty_tx_wq,
++				 check_htt_state(ar, &skip),
++				 ATH10K_FLUSH_TIMEOUT_HZ);
+ 
+-	if (ret <= 0 || skip)
++	if (ret == 0 || skip)
+ 		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %i\n",
+ 			    skip, ar->state, ret);
+ 
 -- 
-1.9.1
+1.7.10.4
 
