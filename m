@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:50636 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753672AbbCaUjw (ORCPT
+Received: from mail-wg0-f54.google.com ([74.125.82.54]:38667 "EHLO
+	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbbCKBT0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 16:39:52 -0400
-Date: Tue, 31 Mar 2015 16:39:50 -0400 (EDT)
-Message-Id: <20150331.163950.1089472355884006468.davem@davemloft.net> (sfid-20150331_224016_449782_65A3CB2D)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2015-03-30
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1427728996.26117.39.camel@sipsolutions.net>
-References: <1427728996.26117.39.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 10 Mar 2015 21:19:26 -0400
+Received: by wghl18 with SMTP id l18so5738648wgh.5
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 18:19:25 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CABxcv=kL3Hw43VVxAsZ=DnY4Z+5431PO2YehcK2zTkFGBG0cNA@mail.gmail.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+	<1425915402-10012-3-git-send-email-eliad@wizery.com>
+	<CABxcv=kL3Hw43VVxAsZ=DnY4Z+5431PO2YehcK2zTkFGBG0cNA@mail.gmail.com>
+Date: Wed, 11 Mar 2015 02:19:25 +0100
+Message-ID: <CABxcv=kUwU2KVw5jYryh62v5us2-CiJFMnYN2nyWLRMWnEkU3w@mail.gmail.com> (sfid-20150311_021931_839155_3AF558F3)
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+From: Javier Martinez Canillas <javier@dowhile0.org>
+To: Eliad Peller <eliad@wizery.com>,
+	Enric Balletbo Serra <eballetbo@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 30 Mar 2015 17:23:16 +0200
+Hello Eliad,
 
-> Sorry for the late pull request, I had intended to send this earlier but
-> due to travel and various other things always got delayed.
+On Wed, Mar 11, 2015 at 1:28 AM, Javier Martinez Canillas
+<javier@dowhile0.org> wrote:
+> On Mon, Mar 9, 2015 at 4:36 PM, Eliad Peller <eliad@wizery.com> wrote:
+>> --- a/arch/arm/boot/dts/omap3-igep0020-rev-f.dts
+>> +++ b/arch/arm/boot/dts/omap3-igep0020-rev-f.dts
+>> @@ -42,4 +42,13 @@
+>>         vmmc-supply = <&lbep5clwmc_wlen>;
 
-No need to apologize, I've been travelling too :-)
+Something I forgot to mention is that this vmmc-supply is a DT hack
+since the WLAN SDIO chip needs a WL_EN signal to be asserted as a part
+of the chip power sequencing.
 
-> The diffstat has all those drivers due to the name_assign_type change
-> that changes API in all of them, which of course couldn't go through
-> Kalle's tree.
-> 
-> Please pull, and let me know if there are any problems.
+But there wasn't a DT binding to describe that so most boards use the
+same hack which is to define a fake fixed-regulator with an enable
+GPIO just to toggle that pin.
 
-Pulled into net-next, thanks.
+But now the MMC subsystem has support for power sequence providers and
+the pwrseq-simple driver
+(Documentation/devicetree/bindings/mmc/mmc-pwrseq-simple.txt) has
+support for reset GPIOs so you may want to change that as well.
+
+In fact, the pwrseq-simple also has support for an external clock (and
+can be extended to support more than one) so if the clocks are not
+internal to the wl12xx, maybe these should be defined in the
+pwrseq-simple dev node assuming that there is a clock driver for them.
+
+Best regards,
+Javier
