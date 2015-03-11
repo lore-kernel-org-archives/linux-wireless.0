@@ -1,30 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45187 "EHLO mx1.redhat.com"
+Received: from hofr.at ([212.69.189.236]:58709 "EHLO mail.hofr.at"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752789AbbCQTAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 15:00:49 -0400
-Date: Tue, 17 Mar 2015 15:00:45 -0400 (EDT)
-Message-Id: <20150317.150045.2177571124929326883.davem@redhat.com> (sfid-20150317_200153_551881_E6ABFFB2)
-To: fabf@skynet.be
-Cc: linux-kernel@vger.kernel.org, soren.brinkmann@xilinx.com,
-	linux-can@vger.kernel.org, netdev@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	nios2-dev@lists.rocketboards.org, linuxppc-dev@lists.ozlabs.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/16 linux-next] drivers/net: constify of_device_id
- array
-From: David Miller <davem@redhat.com>
-In-Reply-To: <1426617469-781-1-git-send-email-fabf@skynet.be>
-References: <1426617469-781-1-git-send-email-fabf@skynet.be>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	id S1751561AbbCKSNQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 14:13:16 -0400
+Date: Wed, 11 Mar 2015 19:13:12 +0100
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>, Valdis.Kletnieks@vt.edu,
+	Bj??rn Mork <bjorn@mork.no>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2 RFC] ath10k: move code out of the parameter list
+Message-ID: <20150311181312.GA15885@opentech.at> (sfid-20150311_191334_887753_F9214504)
+References: <1426094369-10213-1-git-send-email-hofrat@osadl.org> <55007E35.4010804@erley.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <55007E35.4010804@erley.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fabian Frederick <fabf@skynet.be>
-Date: Tue, 17 Mar 2015 19:37:31 +0100
+On Wed, 11 Mar 2015, Pat Erley wrote:
 
-> This small patchset adds const to of_device_id arrays in
-> drivers/net branch.
+> On 03/11/2015 12:19 PM, Nicholas Mc Guire wrote:
+>> Putting code into the parameter list of wait_event_timeout() might be
+>> legal C-code but not really readable - the "inline" code is simply
+>> moved into a function and that passed to wait_event_timeout() as the
+>> condition.
+>>
+>> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+>> ---
+>>
+>> Thanks to Bjorn Mork <bjorn@mork.no> for clarifying my initial confusion !
+>>
+>> Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+>> CONFIG_ATH10K=m
+>>
+>> Patch is against 4.0-rc3 (localversion-next is -next-20150311)
+>>
+>>   drivers/net/wireless/ath/ath10k/mac.c |   32 ++++++++++++++++++--------------
+>>   1 file changed, 18 insertions(+), 14 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index e8cc19f..7b27d99 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -4463,11 +4463,25 @@ static int ath10k_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+>>   	return ret;
+>>   }
+>>
+>> +static bool check_htt_state(struct ath10k *ar, bool skip)
+>> +{
+>> +	bool empty;
+>> +
+>> +	spin_lock_bh(&ar->htt.tx_lock);
+>> +	empty = (ar->htt.num_pending_tx == 0);
+>> +	spin_unlock_bh(&ar->htt.tx_lock);
+>> +
+>> +	skip = (ar->state == ATH10K_STATE_WEDGED) ||
+>> +		test_bit(ATH10K_FLAG_CRASH_FLUSH,
+>> +			 &ar->dev_flags);
+>> +	return (empty || skip);
+>> +}
+>> +
+>>   static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>>   			 u32 queues, bool drop)
+>>   {
+>>   	struct ath10k *ar = hw->priv;
+>> -	bool skip;
+>> +	bool skip = false;
+>>   	int ret;
+>>
+>>   	/* mac80211 doesn't care if we really xmit queued frames or not
+>> @@ -4480,19 +4494,9 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>>   	if (ar->state == ATH10K_STATE_WEDGED)
+>>   		goto skip;
+>>
+>> -	ret = wait_event_timeout(ar->htt.empty_tx_wq, ({
+>> -			bool empty;
+>> -
+>> -			spin_lock_bh(&ar->htt.tx_lock);
+>> -			empty = (ar->htt.num_pending_tx == 0);
+>> -			spin_unlock_bh(&ar->htt.tx_lock);
+>> -
+>> -			skip = (ar->state == ATH10K_STATE_WEDGED) ||
+>> -			       test_bit(ATH10K_FLAG_CRASH_FLUSH,
+>> -					&ar->dev_flags);
+>> -
+>> -			(empty || skip);
+>> -		}), ATH10K_FLUSH_TIMEOUT_HZ);
+>> +	ret = wait_event_timeout(ar->htt.empty_tx_wq,
+>> +				 check_htt_state(ar, skip),
+>> +				 ATH10K_FLUSH_TIMEOUT_HZ);
+>>
+>>   	if (ret <= 0 || skip)
+>>   		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %i\n",
+>>
+>
+> Doesn't this change not assign to 'skip' in the calling function?  So  
+> you'd want to make it:
+>
+> static bool check_htt_state(struct ath10k *ar, bool *skip)
+> {
+> 	bool empty;
+>
+> 	spin_lock_bh(&ar->htt.tx_lock);
+> 	empty = (ar->htt.num_pending_tx == 0);
+> 	spin_unlock_bh(&ar->htt.tx_lock);
+>
+> 	*skip = (ar->state == ATH10K_STATE_WEDGED) ||
+> 		test_bit(ATH10K_FLAG_CRASH_FLUSH,
+> 			 &ar->dev_flags);
+> 	return (empty || *skip);
+> }
+>
+> ret = wait_event_timeout(ar->htt.empty_tx_wq,
+> 				 check_htt_state(ar, &skip),
+> 				 ATH10K_FLUSH_TIMEOUT_HZ);
+>
+> To preserve the previous behavior?
 
-Series applied, thanks.
+yup - thats a bit braindead on my side - as skip is used later to evaluate 
+the status call by value is buggy here. Will fix that up once I know if
+the principle approach to this cleanup is ok.
+
+thx!
+hofrat
