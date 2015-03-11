@@ -1,70 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f182.google.com ([209.85.223.182]:40525 "EHLO
-	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526AbbCIVDb (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:2362 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751390AbbCKPLi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 17:03:31 -0400
+	Wed, 11 Mar 2015 11:11:38 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 4/7] brcmfmac: assure device is ready for download after brcmf_chip_attach()
+Date: Wed, 11 Mar 2015 16:11:30 +0100
+Message-ID: <1426086693-13876-5-git-send-email-arend@broadcom.com> (sfid-20150311_161146_798361_B017B893)
+In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
+References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <9217056.Z3urqp19oZ@wuerfel>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
-	<1425915402-10012-3-git-send-email-eliad@wizery.com>
-	<9217056.Z3urqp19oZ@wuerfel>
-Date: Mon, 9 Mar 2015 23:03:30 +0200
-Message-ID: <CAB3XZEc_sjpA8kgfYCsO8FjGEc6O0xhE9aKO3VtgVbd+Meaakg@mail.gmail.com> (sfid-20150309_220336_599529_E04313DB)
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-From: Eliad Peller <eliad@wizery.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 9, 2015 at 9:50 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 09 March 2015 17:36:42 Eliad Peller wrote:
->> --- a/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
->> +++ b/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
->> @@ -64,4 +64,13 @@
->>         vmmc-supply = <&lbep5clwmc_wlen>;
->>         bus-width = <4>;
->>         non-removable;
->> +
->> +       #address-cells = <1>;
->> +       #size-cells = <0>;
->> +       wlcore: wlcore@2 {
->> +               compatible = "ti,wl1835";
->> +               reg = <2>;
->> +               interrupt-parent = <&gpio5>;
->> +               interrupts = <8 IRQ_TYPE_NONE>;
->> +       };
->>
->
-> Why IRQ_TYPE_NONE?
->
-i simply mirrored the current board file (which only sets the irq number).
+Make the brcmf_chip_attach() function responsible for putting the
+device in a state where it is accessible for firmware download.
 
-> I was expecting you to remove all calls to legacy_init_wl12xx from this file,
-> including the ones for wl12xx aside from the wl18xx ones you removed, but
-> if that's enough to clean out the platform_data handling from the wlcore
-> driver, it's good enough as a start.
-not sure i'm following - can you elaborate?
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c | 8 ++------
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 2 --
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 3 ---
+ 3 files changed, 2 insertions(+), 11 deletions(-)
 
-i'll summarize the way i see it. please correct me if i'm wrong.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+index d68e37d..c11137e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+@@ -786,12 +786,6 @@ static int brcmf_chip_setup(struct brcmf_chip_priv *chip)
+ 	if (chip->ops->setup)
+ 		ret = chip->ops->setup(chip->ctx, pub);
+ 
+-	/*
+-	 * Make sure any on-chip ARM is off (in case strapping is wrong),
+-	 * or downloaded code was already running.
+-	 */
+-	brcmf_chip_disable_arm(chip, BCMA_CORE_ARM_CM3);
+-	brcmf_chip_disable_arm(chip, BCMA_CORE_ARM_CR4);
+ 	return ret;
+ }
+ 
+@@ -833,6 +827,8 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+ 	if (err < 0)
+ 		goto fail;
+ 
++	/* assure chip is passive for download */
++	brcmf_chip_set_passive(&chip->pub);
+ 	return &chip->pub;
+ 
+ fail:
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 81e544f..aa7a4df 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -509,8 +509,6 @@ static void brcmf_pcie_attach(struct brcmf_pciedev_info *devinfo)
+ 
+ static int brcmf_pcie_enter_download_state(struct brcmf_pciedev_info *devinfo)
+ {
+-	brcmf_chip_set_passive(devinfo->ci);
+-
+ 	if (devinfo->ci->chip == BRCM_CC_43602_CHIP_ID) {
+ 		brcmf_pcie_select_core(devinfo, BCMA_CORE_ARM_CR4);
+ 		brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_ARMCR4REG_BANKIDX,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index fff3b26..c783c25 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -3356,9 +3356,6 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
+ 	sdio_claim_host(bus->sdiodev->func[1]);
+ 	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+ 
+-	/* Keep arm in reset */
+-	brcmf_chip_set_passive(bus->ci);
+-
+ 	rstvec = get_unaligned_le32(fw->data);
+ 	brcmf_dbg(SDIO, "firmware rstvec: %x\n", rstvec);
+ 
+-- 
+1.9.1
 
-both wl18xx and wl12xx use the platform data to get the irq number.
-wl12xx (only) also needs some additional clock definitions to be
-passed. there's currently some issue with specifying some the of clock
-sources, so i preferred starting only with (the simpler) wl18xx
-bindings.
-
-for platforms with wl18xx, we can remove the pdata-quirk, as all the
-data (i.e. irq) can be passed by the new DT bindings.
-however, for platforms with wl12xx, we still need to pass the clock
-definitions (along with the irq), so we have to keep
-legacy_init_wl12xx for the time being (and that's also why we have to
-currently keep the platform_data handling in the wlcore driver)
-
-do you have something else in mind?
-
-Eliad.
