@@ -1,78 +1,271 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f182.google.com ([209.85.213.182]:34640 "EHLO
-	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750892AbbCJNeV (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45419 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495AbbCKPLj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 09:34:21 -0400
-Received: by igal13 with SMTP id l13so28373029iga.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 06:34:21 -0700 (PDT)
+	Wed, 11 Mar 2015 11:11:39 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 3/7] brcmfmac: rename chip download functions
+Date: Wed, 11 Mar 2015 16:11:29 +0100
+Message-ID: <1426086693-13876-4-git-send-email-arend@broadcom.com> (sfid-20150311_161152_301730_1ED53CD9)
+In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
+References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1425994145-15574-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1425994145-15574-1-git-send-email-bartosz.markowski@tieto.com>
-Date: Tue, 10 Mar 2015 14:34:21 +0100
-Message-ID: <CACKGw+EwoQ+moMosjVXWCvxvnUo3kK3gz3HCJ8-ruRcjT7JUmQ@mail.gmail.com> (sfid-20150310_143424_829450_B5D6F9C7)
-Subject: Re: [PATCH] ath10k: fix PMG by using AES-CMAC/IGTK software crypto
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k <ath10k@lists.infradead.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 March 2015 at 14:29, Bartosz Markowski
-<bartosz.markowski@tieto.com> wrote:
-> While testing with older supplicant, .drv_set_key() was failing due to
-> higher than ath10k firmware could handle key_index (WMI_MAX_KEY_INDEX == 3).
+The functions brcmf_chip_[enter/exit]_download() are not exclusively
+used for firmware download so rename these more appropriate.
 
-I've sent a v2 (I forgot the ammend the missing semicolon).
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c | 26 +++++++++++++-------------
+ drivers/net/wireless/brcm80211/brcmfmac/chip.h |  8 ++++----
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 10 +++++-----
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 17 ++++++++---------
+ 4 files changed, 30 insertions(+), 31 deletions(-)
 
-> --
-> wpa_driver_nl80211_set_key: ifindex=15 alg=4 addr=0x7f02b129fbe3 key_idx=4 set_tx=0 seq_len=6 key_len=16
->     broadcast key
-> nl80211: set_key failed; err=-22 Invalid argument)
-> wlan0: WPA: Failed to configure IGTK to the driver
-> wlan0: RSN: Failed to configure IGTK
-> --
->
-> In order to fix this case (PMF: AES-CMAC/IGTK) force the AES_CMAC cipher to
-> be handled by software.
->
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 1138f4f8923f..2264c06361b1 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -66,8 +66,8 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
->                 arg.key_cipher = WMI_CIPHER_WEP;
->                 break;
->         case WLAN_CIPHER_SUITE_AES_CMAC:
-> -               /* this one needs to be done in software */
-> -               return 1;
-> +               WARN_ON(1)
-> +               return -EINVAL;
->         default:
->                 ath10k_warn(ar, "cipher %d is not supported\n", key->cipher);
->                 return -EOPNOTSUPP;
-> @@ -3995,6 +3995,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->         int ret = 0;
->         u32 flags = 0;
->
-> +       /* this one needs to be done in software */
-> +       if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
-> +               return 1;
-> +
->         if (key->keyidx > WMI_MAX_KEY_INDEX)
->                 return -ENOSPC;
->
-> --
-> 2.1.2
->
-
-
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+index cb08f4e..d68e37d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+@@ -807,7 +807,7 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+ 		err = -EINVAL;
+ 	if (WARN_ON(!ops->prepare))
+ 		err = -EINVAL;
+-	if (WARN_ON(!ops->exit_dl))
++	if (WARN_ON(!ops->activate))
+ 		err = -EINVAL;
+ 	if (err < 0)
+ 		return ERR_PTR(-EINVAL);
+@@ -905,7 +905,7 @@ void brcmf_chip_resetcore(struct brcmf_core *pub, u32 prereset, u32 reset,
+ }
+ 
+ static void
+-brcmf_chip_cm3_enterdl(struct brcmf_chip_priv *chip)
++brcmf_chip_cm3_set_passive(struct brcmf_chip_priv *chip)
+ {
+ 	struct brcmf_core *core;
+ 
+@@ -919,7 +919,7 @@ brcmf_chip_cm3_enterdl(struct brcmf_chip_priv *chip)
+ 	brcmf_chip_resetcore(core, 0, 0, 0);
+ }
+ 
+-static bool brcmf_chip_cm3_exitdl(struct brcmf_chip_priv *chip)
++static bool brcmf_chip_cm3_set_active(struct brcmf_chip_priv *chip)
+ {
+ 	struct brcmf_core *core;
+ 
+@@ -929,7 +929,7 @@ static bool brcmf_chip_cm3_exitdl(struct brcmf_chip_priv *chip)
+ 		return false;
+ 	}
+ 
+-	chip->ops->exit_dl(chip->ctx, &chip->pub, 0);
++	chip->ops->activate(chip->ctx, &chip->pub, 0);
+ 
+ 	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_ARM_CM3);
+ 	brcmf_chip_resetcore(core, 0, 0, 0);
+@@ -938,7 +938,7 @@ static bool brcmf_chip_cm3_exitdl(struct brcmf_chip_priv *chip)
+ }
+ 
+ static inline void
+-brcmf_chip_cr4_enterdl(struct brcmf_chip_priv *chip)
++brcmf_chip_cr4_set_passive(struct brcmf_chip_priv *chip)
+ {
+ 	struct brcmf_core *core;
+ 
+@@ -951,11 +951,11 @@ brcmf_chip_cr4_enterdl(struct brcmf_chip_priv *chip)
+ 			     D11_BCMA_IOCTL_PHYCLOCKEN);
+ }
+ 
+-static bool brcmf_chip_cr4_exitdl(struct brcmf_chip_priv *chip, u32 rstvec)
++static bool brcmf_chip_cr4_set_active(struct brcmf_chip_priv *chip, u32 rstvec)
+ {
+ 	struct brcmf_core *core;
+ 
+-	chip->ops->exit_dl(chip->ctx, &chip->pub, rstvec);
++	chip->ops->activate(chip->ctx, &chip->pub, rstvec);
+ 
+ 	/* restore ARM */
+ 	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_ARM_CR4);
+@@ -964,7 +964,7 @@ static bool brcmf_chip_cr4_exitdl(struct brcmf_chip_priv *chip, u32 rstvec)
+ 	return true;
+ }
+ 
+-void brcmf_chip_enter_download(struct brcmf_chip *pub)
++void brcmf_chip_set_passive(struct brcmf_chip *pub)
+ {
+ 	struct brcmf_chip_priv *chip;
+ 	struct brcmf_core *arm;
+@@ -974,14 +974,14 @@ void brcmf_chip_enter_download(struct brcmf_chip *pub)
+ 	chip = container_of(pub, struct brcmf_chip_priv, pub);
+ 	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CR4);
+ 	if (arm) {
+-		brcmf_chip_cr4_enterdl(chip);
++		brcmf_chip_cr4_set_passive(chip);
+ 		return;
+ 	}
+ 
+-	brcmf_chip_cm3_enterdl(chip);
++	brcmf_chip_cm3_set_passive(chip);
+ }
+ 
+-bool brcmf_chip_exit_download(struct brcmf_chip *pub, u32 rstvec)
++bool brcmf_chip_set_active(struct brcmf_chip *pub, u32 rstvec)
+ {
+ 	struct brcmf_chip_priv *chip;
+ 	struct brcmf_core *arm;
+@@ -991,9 +991,9 @@ bool brcmf_chip_exit_download(struct brcmf_chip *pub, u32 rstvec)
+ 	chip = container_of(pub, struct brcmf_chip_priv, pub);
+ 	arm = brcmf_chip_get_core(pub, BCMA_CORE_ARM_CR4);
+ 	if (arm)
+-		return brcmf_chip_cr4_exitdl(chip, rstvec);
++		return brcmf_chip_cr4_set_active(chip, rstvec);
+ 
+-	return brcmf_chip_cm3_exitdl(chip);
++	return brcmf_chip_cm3_set_active(chip);
+ }
+ 
+ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.h b/drivers/net/wireless/brcm80211/brcmfmac/chip.h
+index c32908d..7b7b629 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/chip.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.h
+@@ -64,7 +64,7 @@ struct brcmf_core {
+  * @write32: write 32-bit value over bus.
+  * @prepare: prepare bus for core configuration.
+  * @setup: bus-specific core setup.
+- * @exit_dl: exit download state.
++ * @active: chip becomes active.
+  *	The callback should use the provided @rstvec when non-zero.
+  */
+ struct brcmf_buscore_ops {
+@@ -72,7 +72,7 @@ struct brcmf_buscore_ops {
+ 	void (*write32)(void *ctx, u32 addr, u32 value);
+ 	int (*prepare)(void *ctx);
+ 	int (*setup)(void *ctx, struct brcmf_chip *chip);
+-	void (*exit_dl)(void *ctx, struct brcmf_chip *chip, u32 rstvec);
++	void (*activate)(void *ctx, struct brcmf_chip *chip, u32 rstvec);
+ };
+ 
+ struct brcmf_chip *brcmf_chip_attach(void *ctx,
+@@ -84,8 +84,8 @@ bool brcmf_chip_iscoreup(struct brcmf_core *core);
+ void brcmf_chip_coredisable(struct brcmf_core *core, u32 prereset, u32 reset);
+ void brcmf_chip_resetcore(struct brcmf_core *core, u32 prereset, u32 reset,
+ 			  u32 postreset);
+-void brcmf_chip_enter_download(struct brcmf_chip *ci);
+-bool brcmf_chip_exit_download(struct brcmf_chip *ci, u32 rstvec);
++void brcmf_chip_set_passive(struct brcmf_chip *ci);
++bool brcmf_chip_set_active(struct brcmf_chip *ci, u32 rstvec);
+ bool brcmf_chip_sr_capable(struct brcmf_chip *pub);
+ 
+ #endif /* BRCMF_AXIDMP_H */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index 61c053a..81e544f 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -509,7 +509,7 @@ static void brcmf_pcie_attach(struct brcmf_pciedev_info *devinfo)
+ 
+ static int brcmf_pcie_enter_download_state(struct brcmf_pciedev_info *devinfo)
+ {
+-	brcmf_chip_enter_download(devinfo->ci);
++	brcmf_chip_set_passive(devinfo->ci);
+ 
+ 	if (devinfo->ci->chip == BRCM_CC_43602_CHIP_ID) {
+ 		brcmf_pcie_select_core(devinfo, BCMA_CORE_ARM_CR4);
+@@ -536,7 +536,7 @@ static int brcmf_pcie_exit_download_state(struct brcmf_pciedev_info *devinfo,
+ 		brcmf_chip_resetcore(core, 0, 0, 0);
+ 	}
+ 
+-	return !brcmf_chip_exit_download(devinfo->ci, resetintr);
++	return !brcmf_chip_set_active(devinfo->ci, resetintr);
+ }
+ 
+ 
+@@ -1566,8 +1566,8 @@ static int brcmf_pcie_buscoreprep(void *ctx)
+ }
+ 
+ 
+-static void brcmf_pcie_buscore_exitdl(void *ctx, struct brcmf_chip *chip,
+-				      u32 rstvec)
++static void brcmf_pcie_buscore_activate(void *ctx, struct brcmf_chip *chip,
++					u32 rstvec)
+ {
+ 	struct brcmf_pciedev_info *devinfo = (struct brcmf_pciedev_info *)ctx;
+ 
+@@ -1577,7 +1577,7 @@ static void brcmf_pcie_buscore_exitdl(void *ctx, struct brcmf_chip *chip,
+ 
+ static const struct brcmf_buscore_ops brcmf_pcie_buscore_ops = {
+ 	.prepare = brcmf_pcie_buscoreprep,
+-	.exit_dl = brcmf_pcie_buscore_exitdl,
++	.activate = brcmf_pcie_buscore_activate,
+ 	.read32 = brcmf_pcie_buscore_read32,
+ 	.write32 = brcmf_pcie_buscore_write32,
+ };
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 9df16c1..fff3b26 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -3357,7 +3357,7 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
+ 	brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+ 
+ 	/* Keep arm in reset */
+-	brcmf_chip_enter_download(bus->ci);
++	brcmf_chip_set_passive(bus->ci);
+ 
+ 	rstvec = get_unaligned_le32(fw->data);
+ 	brcmf_dbg(SDIO, "firmware rstvec: %x\n", rstvec);
+@@ -3378,7 +3378,7 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
+ 	}
+ 
+ 	/* Take arm out of reset */
+-	if (!brcmf_chip_exit_download(bus->ci, rstvec)) {
++	if (!brcmf_chip_set_active(bus->ci, rstvec)) {
+ 		brcmf_err("error getting out of ARM core reset\n");
+ 		goto err;
+ 	}
+@@ -3771,8 +3771,8 @@ static int brcmf_sdio_buscoreprep(void *ctx)
+ 	return 0;
+ }
+ 
+-static void brcmf_sdio_buscore_exitdl(void *ctx, struct brcmf_chip *chip,
+-				      u32 rstvec)
++static void brcmf_sdio_buscore_activate(void *ctx, struct brcmf_chip *chip,
++					u32 rstvec)
+ {
+ 	struct brcmf_sdio_dev *sdiodev = ctx;
+ 	struct brcmf_core *core;
+@@ -3815,7 +3815,7 @@ static void brcmf_sdio_buscore_write32(void *ctx, u32 addr, u32 val)
+ 
+ static const struct brcmf_buscore_ops brcmf_sdio_buscore_ops = {
+ 	.prepare = brcmf_sdio_buscoreprep,
+-	.exit_dl = brcmf_sdio_buscore_exitdl,
++	.activate = brcmf_sdio_buscore_activate,
+ 	.read32 = brcmf_sdio_buscore_read32,
+ 	.write32 = brcmf_sdio_buscore_write32,
+ };
+@@ -4239,12 +4239,11 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 				sdio_claim_host(bus->sdiodev->func[1]);
+ 				brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+ 				/* Leave the device in state where it is
+-				 * 'quiet'. This is done by putting it in
+-				 * download_state which essentially resets
+-				 * all necessary cores.
++				 * 'passive'. This is done by resetting all
++				 * necessary cores.
+ 				 */
+ 				msleep(20);
+-				brcmf_chip_enter_download(bus->ci);
++				brcmf_chip_set_passive(bus->ci);
+ 				brcmf_sdio_clkctl(bus, CLK_NONE, false);
+ 				sdio_release_host(bus->sdiodev->func[1]);
+ 			}
 -- 
-Bartosz
+1.9.1
+
