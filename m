@@ -1,96 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:33008 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752807AbbCIN0e (ORCPT
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:37567 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750783AbbCKJR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 09:26:34 -0400
-Received: by labmn12 with SMTP id mn12so8871079lab.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 06:26:33 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix WPA crypto
-Date: Mon,  9 Mar 2015 14:24:17 +0100
-Message-Id: <1425907457-15118-1-git-send-email-michal.kazior@tieto.com> (sfid-20150309_142638_420654_E7B5DAD3)
+	Wed, 11 Mar 2015 05:17:57 -0400
+Received: by igbhn18 with SMTP id hn18so37897353igb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 02:17:56 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <54FF157C.7090208@candelatech.com>
+References: <1425994339-15864-1-git-send-email-bartosz.markowski@tieto.com>
+	<54FF157C.7090208@candelatech.com>
+Date: Wed, 11 Mar 2015 10:17:56 +0100
+Message-ID: <CACKGw+FhOsfLX1ZLw0Y17xrrVPEXgQkaUQzjJqA-CHwpD72v-Q@mail.gmail.com> (sfid-20150311_101802_799225_AEB82288)
+Subject: Re: [PATCH v2] ath10k: fix PMG by using AES-CMAC/IGTK software crypto
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My recent patch `ath10k: fix broken traffic for
-802.1x in client mode` introduced a regression on
-WPA crypto. All keys were treated as if they were
-WEP which resulted in WPA being incorrectly
-installed to fw/hw and subsequently no traffic.
+On 10 March 2015 at 17:02, Ben Greear <greearb@candelatech.com> wrote:
+> On 03/10/2015 06:32 AM, Bartosz Markowski wrote:
+>> While testing with older supplicant, .drv_set_key() was failing due to
+>> higher than ath10k firmware could handle key_index (WMI_MAX_KEY_INDEX == 3).
+>>
+>> --
+>> wpa_driver_nl80211_set_key: ifindex=15 alg=4 addr=0x7f02b129fbe3 key_idx=4 set_tx=0 seq_len=6 key_len=16
+>>     broadcast key
+>> nl80211: set_key failed; err=-22 Invalid argument)
+>> wlan0: WPA: Failed to configure IGTK to the driver
+>> wlan0: RSN: Failed to configure IGTK
+>> --
+>>
+>> In order to fix this case (PMF: AES-CMAC/IGTK) force the AES_CMAC cipher to
+>> be handled by software.
+>
+> How did you get firmware to allow the host to do the encryption?
+:
+> Every time I've tried such a thing I end up with either nothing or garbage on
+> the air.
+>
+> Or this this particular type of encryption treated differently by the
+> firmware?
 
-Reported-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 44 +++++++++++++++++------------------
- 1 file changed, 22 insertions(+), 22 deletions(-)
+I would suspect so, but it's just my gut feeling. I did not check this
+on a firmware level, as the PMF (AES_CMAC) encryption was done this
+way from the very beggining in ath10k.
+This patch only address the key_idx exceeded case, where
+ath10k_set_key() was returning -ENOSPC, so we could inform mac80211
+explicitly (by returning '1') it shall do the encryption in software.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1138f4f..d65a146 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4028,6 +4028,11 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		}
- 	}
- 
-+	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE)
-+		flags |= WMI_KEY_PAIRWISE;
-+	else
-+		flags |= WMI_KEY_GROUP;
-+
- 	if (is_wep) {
- 		if (cmd == SET_KEY)
- 			arvif->wep_keys[key->keyidx] = key;
-@@ -4053,29 +4058,24 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		 */
- 		if (cmd == SET_KEY && arvif->def_wep_key_idx == -1)
- 			flags |= WMI_KEY_TX_USAGE;
--	}
- 
--	if (key->flags & IEEE80211_KEY_FLAG_PAIRWISE)
--		flags |= WMI_KEY_PAIRWISE;
--	else
--		flags |= WMI_KEY_GROUP;
--
--	/* mac80211 uploads static WEP keys as groupwise while fw/hw requires
--	 * pairwise keys for non-self peers, i.e. BSSID in STA mode and
--	 * associated stations in AP/IBSS.
--	 *
--	 * Static WEP keys for peer_addr=vif->addr and 802.1X WEP keys work
--	 * fine when mapped directly from mac80211.
--	 *
--	 * Note: When installing first static WEP groupwise key (which should
--	 * be pairwise) def_wep_key_idx isn't known yet (it's equal to -1).
--	 * Since .set_default_unicast_key is called only for static WEP it's
--	 * used to re-upload the key as pairwise.
--	 */
--	if (arvif->def_wep_key_idx >= 0 &&
--	    memcmp(peer_addr, arvif->vif->addr, ETH_ALEN)) {
--		flags &= ~WMI_KEY_GROUP;
--		flags |= WMI_KEY_PAIRWISE;
-+		/* mac80211 uploads static WEP keys as groupwise while fw/hw
-+		 * requires pairwise keys for non-self peers, i.e. BSSID in STA
-+		 * mode and associated stations in AP/IBSS.
-+		 *
-+		 * Static WEP keys for peer_addr=vif->addr and 802.1X WEP keys
-+		 * work fine when mapped directly from mac80211.
-+		 *
-+		 * Note: When installing first static WEP groupwise key (which
-+		 * should be pairwise) def_wep_key_idx isn't known yet (it's
-+		 * equal to -1).  Since .set_default_unicast_key is called only
-+		 * for static WEP it's used to re-upload the key as pairwise.
-+		 */
-+		if (arvif->def_wep_key_idx >= 0 &&
-+		    memcmp(peer_addr, arvif->vif->addr, ETH_ALEN)) {
-+			flags &= ~WMI_KEY_GROUP;
-+			flags |= WMI_KEY_PAIRWISE;
-+		}
- 	}
- 
- 	ret = ath10k_install_key(arvif, key, cmd, peer_addr, flags);
--- 
-1.8.5.3
-
+-Bartosz
