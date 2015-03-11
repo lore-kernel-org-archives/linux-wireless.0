@@ -1,84 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:49871 "EHLO
-	sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751173AbbCJQCN convert rfc822-to-8bit (ORCPT
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:35188 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750853AbbCKGK5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 12:02:13 -0400
-From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2] mac80211: Get IV len from key conf and not cipher scheme
-Date: Tue, 10 Mar 2015 16:02:08 +0000
-Message-ID: <5842EA9CC042B141995329508713AD672105A9B0@ILMAIL1.corp.local> (sfid-20150310_170216_778980_FA95EE0E)
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 11 Mar 2015 02:10:57 -0400
+Received: by wggy19 with SMTP id y19so6791187wgg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 23:10:56 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1426028412-17438-1-git-send-email-greearb@candelatech.com>
+References: <1426028412-17438-1-git-send-email-greearb@candelatech.com>
+Date: Wed, 11 Mar 2015 07:10:55 +0100
+Message-ID: <CALhHN=q0C0KWzTrjCztxcjLUjHKN8CXfBJG7o7AyU4gZgBfGRg@mail.gmail.com> (sfid-20150311_071100_691815_038B715A)
+Subject: Re: [PATCH] iw: Allow configuring empty legacy and ht ratesets.
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not always dereference sta to get cipher scheme as
-it may be null for broadcast messages.
-Instead get IV length from key configuration which has been
-initialized with cipher scheme.
+On 11 March 2015 at 00:00,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> This allows one to configure exactly one rate for drivers
+> such as ath10k that will only allow a single rate to be
+> configured.
+>
 
-Signed-off-by: Cedric Izoard <cedric.izoard@ceva-dsp.com>
----
-  net/mac80211/wpa.c | 22 +++++++++++-----------
-  1 file changed, 11 insertions(+), 11 deletions(-)
+Hello,
 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 75de6fa..e5d7bfa 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -780,9 +780,8 @@ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data 
-*tx,
-  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
-  	struct ieee80211_key *key = tx->key;
-  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	const struct ieee80211_cipher_scheme *cs = key->sta->cipher_scheme;
-  	int hdrlen;
--	u8 *pos;
-+	u8 *pos, iv_len = key->conf.iv_len;
+But iw already support setting single rate with ath10k.
+This is example from ath10k commit log:
 
-  	if (info->control.hw_key &&
-  	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
-@@ -790,14 +789,17 @@ ieee80211_crypto_cs_encrypt(struct 
-ieee80211_tx_data *tx,
-  		return TX_CONTINUE;
-  	}
+    Example:
+    iw wlanX set bitrates legacy-5 ht-mcs-5 vht-mcs-5 2:9
+    will setup VHT, nss=2, mcs=9
 
--	if (unlikely(skb_headroom(skb) < cs->hdr_len &&
--		     pskb_expand_head(skb, cs->hdr_len, 0, GFP_ATOMIC)))
-+	if (iv_len == 0)
-+		return TX_CONTINUE;
-+
-+	if (unlikely(skb_headroom(skb) < iv_len &&
-+		     pskb_expand_head(skb, iv_len, 0, GFP_ATOMIC)))
-  		return TX_DROP;
+    iw wlanX set bitrates legacy-5 18 ht-mcs-5 vht-mcs-5
+    will setup legacy, 18Mbps
 
-  	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+    iw wlanX set bitrates legacy-5 ht-mcs-5 3 vht-mcs-5
+    will setup HT, nss=1, mcs=3
 
--	pos = skb_push(skb, cs->hdr_len);
--	memmove(pos, pos + cs->hdr_len, hdrlen);
-+	pos = skb_push(skb, iv_len);
-+	memmove(pos, pos + iv_len, hdrlen);
+    iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9
+    will setup nss=1
 
-  	return TX_CONTINUE;
-  }
-@@ -1217,11 +1219,9 @@ ieee80211_crypto_hw_encrypt(struct 
-ieee80211_tx_data *tx)
-  		if (!info->control.hw_key)
-  			return TX_DROP;
+    iw wlanX set bitrate legacy-5 ht-mcs-5 vht-mcs-5 1:0-9 2:0-9
+    will setup nss=2
 
--		if (tx->key->sta->cipher_scheme) {
--			res = ieee80211_crypto_cs_encrypt(tx, skb);
--			if (res != TX_CONTINUE)
--				return res;
--		}
-+		res = ieee80211_crypto_cs_encrypt(tx, skb);
-+		if (res != TX_CONTINUE)
-+			return res;
-  	}
-
-  	ieee80211_tx_set_protected(tx);
--- 
-1.9.1
+BR
+Janusz
