@@ -1,58 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:60990 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750966AbbCTMk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 08:40:58 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@codeaurora.org, adrian@freebsd.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 08/18] ath9k: use one shot read in ath9k_hw_update_mibstats
-Date: Fri, 20 Mar 2015 13:38:48 +0100
-Message-Id: <1426855138-6121-9-git-send-email-linux@rempel-privat.de> (sfid-20150320_134101_308926_B4F6A94E)
-In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
-References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13207 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751565AbbCKUZn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 16:25:43 -0400
+Message-ID: <5500A4B6.4050702@broadcom.com> (sfid-20150311_212546_747817_68561FD4)
+Date: Wed, 11 Mar 2015 21:25:26 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: German <gentgerman@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: iw dev wlp1s0 scan hangs
+References: <20150311161757.dac357e24509141a4c98e84b@gmail.com>
+In-Reply-To: <20150311161757.dac357e24509141a4c98e84b@gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-this will reduce some overhead on usb bus.
+On 03/11/15 21:17, German wrote:
+> Hi. When I try to run aformentioned command it hangs for about 20 secs and no output is returned. What's the problem might be? Thanks
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ani.c | 20 +++++++++++++++-----
- 1 file changed, 15 insertions(+), 5 deletions(-)
+any more details you can share? What kernel version, what specific 
+device is wlp1s0, do you have any kernel logging.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index ca01d17..25e45e4 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -107,11 +107,21 @@ static const struct ani_cck_level_entry cck_level_table[] = {
- static void ath9k_hw_update_mibstats(struct ath_hw *ah,
- 				     struct ath9k_mib_stats *stats)
- {
--	stats->ackrcv_bad += REG_READ(ah, AR_ACK_FAIL);
--	stats->rts_bad += REG_READ(ah, AR_RTS_FAIL);
--	stats->fcs_bad += REG_READ(ah, AR_FCS_FAIL);
--	stats->rts_good += REG_READ(ah, AR_RTS_OK);
--	stats->beacons += REG_READ(ah, AR_BEACON_CNT);
-+	u32 addr[5] = {AR_RTS_OK, AR_RTS_FAIL, AR_ACK_FAIL,
-+		       AR_FCS_FAIL, AR_BEACON_CNT};
-+	u32 data[5];
-+
-+	REG_READ_MULTI(ah, &addr[0], &data[0], 5);
-+	/* AR_RTS_OK */
-+	stats->rts_good += data[0];
-+	/* AR_RTS_FAIL */
-+	stats->rts_bad += data[1];
-+	/* AR_ACK_FAIL */
-+	stats->ackrcv_bad += data[2];
-+	/* AR_FCS_FAIL */
-+	stats->fcs_bad += data[3];
-+	/* AR_BEACON_CNT */
-+	stats->beacons += data[4];
- }
- 
- static void ath9k_ani_restart(struct ath_hw *ah)
--- 
-1.9.1
-
+Regards,
+Arend
