@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:56537 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754577AbbCCEFg (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57536 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858AbbCKWGT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 23:05:36 -0500
-Date: Mon, 02 Mar 2015 23:05:34 -0500 (EST)
-Message-Id: <20150302.230534.2012113468290945834.davem@davemloft.net> (sfid-20150303_050544_059522_6D727CC8)
-To: eric.dumazet@gmail.com
-Cc: fw@strlen.de, netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1425355325.5130.157.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
-	<20150302.171747.1423128180512348489.davem@davemloft.net>
-	<1425355325.5130.157.camel@edumazet-glaptop2.roam.corp.google.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 11 Mar 2015 18:06:19 -0400
+Message-ID: <5500BC5A.9040809@candelatech.com> (sfid-20150311_230622_086449_4F7FFDFA)
+Date: Wed, 11 Mar 2015 15:06:18 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: mac80211-hwsim and tx-rates.
+References: <5500AEAB.8010605@candelatech.com> <5500B417.9070307@broadcom.com>
+In-Reply-To: <5500B417.9070307@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eric Dumazet <eric.dumazet@gmail.com>
-Date: Mon, 02 Mar 2015 20:02:05 -0800
-
-> About the GRO layout change, reason why 'struct sk_buff *last;' is at
-> the end of struct napi_gro_cb is that this field is not used in fast
-> path.
-
-Understood.
-
-While reviewing this I noticed that the jiffies timestamp in GRO cb
-could really be u32 if we want instead of full "unsigned long".
-
-> Note : We could try to use one bit in skb to advertise zero shinfo(skb).
+On 03/11/2015 02:31 PM, Arend van Spriel wrote:
+> On 03/11/15 22:07, Ben Greear wrote:
+>> When using the user-space transport, the netlink frame sent to user-space
+>> has a rate index and retry count, and nothing else.  Is there a
+>> reliable way to know in user-space what index maps to what actual rate?
 > 
-> Many skbs have a zeroed shinfo() (but shinfo->dataref == 1) , and
-> dereferencing skb_shinfo adds a cache line miss. 
-> 
-> -> We could avoid memset(shinfo, 0, offsetof(struct skb_shared_info,
-> dataref)) & atomic_set(&shinfo->dataref, 1); 
-> 
->  in alloc_skb() and friends completely.
-> 
-> Unfortunately this kind of change would be quite invasive...
+> Not sure what you are exactly looking for, but maybe the function cfg80211_calculate_bitrate() in net/wireless/util.c may provide you some answers.
 
-Right, all these kinds of things touch everything.
+Well, that would be useful in the kernel, but in user-space w/hardware sim,
+as far as I can tell we only have this rate info:
+
+/**
+ * struct hwsim_tx_rate - rate selection/status
+ *
+ * @idx: rate index to attempt to send with
+ * @count: number of tries in this rate before going to the next rate
+ *
+ * A value of -1 for @idx indicates an invalid rate and, if used
+ * in an array of retry rates, that no more rates should be tried.
+ *
+ * When used for transmit status reporting, the driver should
+ * always report the rate and number of retries used.
+ *
+ */
+struct hwsim_tx_rate {
+	s8 idx;
+	u8 count;
+} __packed;
+
+
+I don't see a good way to tie that idx to an actual rate (which involves
+flags, nss, mcs values, etc).
+
+Maybe I should also just send the info I care about, which is a 'bps' rate,
+channel-width indication, SGI, etc as separate netlink attributes....
+
+
+Thanks,
+Ben
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
