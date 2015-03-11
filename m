@@ -1,51 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:34075 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752434AbbBYLQH (ORCPT
+Received: from mail-we0-f181.google.com ([74.125.82.181]:39497 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750755AbbCKQPa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Feb 2015 06:16:07 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t1PBG6jn016672
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 03:16:06 -0800
-Received: from sc-owa.marvell.com ([199.233.58.135])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1srpgjbfxw-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 25 Feb 2015 03:16:06 -0800
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH] mwifiex: do not initialize ext_scan in mwifiex_init_adapter
-Date: Wed, 25 Feb 2015 22:15:41 +0530
-Message-ID: <1424882741-11937-1-git-send-email-patila@marvell.com> (sfid-20150225_121612_203197_5BB86A91)
+	Wed, 11 Mar 2015 12:15:30 -0400
+Received: by wevl61 with SMTP id l61so10377950wev.6
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 09:15:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1424851368.2050.8.camel@sipsolutions.net>
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+ <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
+ <1424772587.2192.14.camel@sipsolutions.net> <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com>
+ <1424774105.2192.29.camel@sipsolutions.net> <CABPxzYJkoCWud=yfNHL5m2FUCPOc854i_L+VB4sN+o8Skb-Pnw@mail.gmail.com>
+ <CABPxzYL4Fz+y7dpp650RyqXVWtL5WC4YkvsQ1_=znOmrmUZF5A@mail.gmail.com>
+ <1424810867.2192.60.camel@sipsolutions.net> <CABPxzY+Z97Q4JSSaR2GfGnxbbR721qJ-v_AjG4Kc1TGetHF4ng@mail.gmail.com>
+ <1424851368.2050.8.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 11 Mar 2015 21:45:08 +0530
+Message-ID: <CABPxzYKa5eR+UrinkqY99jxOpVR4mTYcW_3xZ5f2kf9hXHCznA@mail.gmail.com> (sfid-20150311_171533_736066_652F2A19)
+Subject: Re: Connection issues with BW Tracking in mac80211
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Features which are device specific are already updated in
-interface specific initialization e.g. register_dev.
-We should not initialize them in mwifiex_init_adapter();
-else this would overwrite earlier settings.
+On Wed, Feb 25, 2015 at 1:32 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+> On Wed, 2015-02-25 at 02:41 +0530, Krishna Chaitanya wrote:
+> > On Wed, Feb 25, 2015 at 2:17 AM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> > > On Wed, 2015-02-25 at 02:03 +0530, Krishna Chaitanya wrote:
+> > >
+> > >> Use case2: When changing from HT40-VHT80, the connection goes through
+> > >> but it still connected as HT40 (vht_ie from cfg80211 is returned
+> > >> null).
+> > >>
+> > >> Can you think of any reason why the bss_list is not updated cfg80211?
+> > >> Note: iwconfig and wpa_supplicant both show same behavior.
+> > >
+> > > Well, there's no flushing, only overwriting by new results - but if you
+> > > previuosly got both beacons and probe responses each one will stick
+> > > around until you get them again.
+> > We do have the scan results expiry time of 30secs, that will flush the
+> > results from bss_list right? Even the get_bss checks for aging?
+>
+> Yes but if you scan in the meantime the scan result is marked as recent
+> again, even if some old data might be kept. Perhaps we should split that
+> into timestamps for probe and beacons separately, but that'd certainly
+> complicate the code significantly for little gain.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/mwifiex/init.c | 1 -
- 1 file changed, 1 deletion(-)
+I did some experiments on this and found the root cause.
 
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index b77ba74..2e1df02 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -296,7 +296,6 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	memset(&adapter->arp_filter, 0, sizeof(adapter->arp_filter));
- 	adapter->arp_filter_size = 0;
- 	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
--	adapter->ext_scan = false;
- 	adapter->key_api_major_ver = 0;
- 	adapter->key_api_minor_ver = 0;
- 	memset(adapter->perm_addr, 0xff, ETH_ALEN);
--- 
-1.8.1.4
+We are using 5GHz in WORLD Mode, so only passive scan is allowed.
+So when connecting the very first time, the mac80211 MLME sees that
+there are no probe_resp ies (only beacon_ies are present) and it sends
+a directed probe and updates the probe_resp ies. (and also the "ies").
 
+But when config is changed and we get disconnected, beacon_ies are updated
+with the new config, but the probe_resp ies are not.
+cfg80211_bss_update assigns
+probe_resp ies to "ies' and mac80211 updates its bss info based on the
+probe_resp
+ies which have old config causing the issue.
+
+Solution:
+
+1) Make the directed probe mandatory.
+2) As you suggested maintain timestamps for probe_resp_ies and beacon_ies
+and use the latest.
+
+Any takes?
+
+Regards,
+Chaitanya T K.
