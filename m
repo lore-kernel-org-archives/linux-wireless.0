@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:38065 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750968AbbCFJ1B (ORCPT
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:34066 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176AbbCKMiu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 04:27:01 -0500
-Received: by widex7 with SMTP id ex7so1337874wid.3
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2015 01:27:00 -0800 (PST)
+	Wed, 11 Mar 2015 08:38:50 -0400
+Received: by iecsl2 with SMTP id sl2so26919462iec.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 05:38:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CALhHN=ofus+Uop7i8Cv7SVhmDSjA9O56xSokTr=PtmddCqczEA@mail.gmail.com>
-References: <CAGnRvurPGf1fvYs6fyrc7kttT8g3+ST_3mO5P6+mwdbU4Ay7yA@mail.gmail.com>
- <CALhHN=ofus+Uop7i8Cv7SVhmDSjA9O56xSokTr=PtmddCqczEA@mail.gmail.com>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Fri, 6 Mar 2015 10:26:39 +0100
-Message-ID: <CAGnRvupZGXfaf-PH2aoNYzUziFBwMw2m-Ftvx0VVysmx9NNdvQ@mail.gmail.com> (sfid-20150306_102708_837389_7DDBBD84)
-Subject: Re: State of DFS with Mac80211/ath9k
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1425905138-9966-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1425905138-9966-1-git-send-email-marek.puzyniak@tieto.com>
+Date: Wed, 11 Mar 2015 13:38:49 +0100
+Message-ID: <CADnKcVi-we6TSPMNgboS5B9ead7Xiv+tukNZhEiboN+Eb_x6Vg@mail.gmail.com> (sfid-20150311_133857_170582_F7FBDF23)
+Subject: Re: [PATCH v3 0/3] ath10k: add basic tdls support
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Marek Puzyniak <marek.puzyniak@tieto.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 6, 2015 at 9:38 AM, Janusz Dziedzic
-<janusz.dziedzic@tieto.com> wrote:
-> On 6 March 2015 at 09:04, Henning Rogge <hrogge@gmail.com> wrote:
->> First, we cannot open a Mesh interface on a DFS channel unless we open
->> an AP interface first (and closing the AP interface before activating
->> the mesh). Are we missing some special initialization?
->>
-> I think this works beacause we didn't integrate patch:
-> [PATCH v5] cfg80211: fix dfs channel state after stopping AP
-> and discussion here:
-> http://comments.gmane.org/gmane.linux.kernel.wireless.general/117095
+On 9 March 2015 at 13:45, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
+> This patchset introduces tdls funtionality without tdls peer uapsd
+> and tdls channel switching. Tdls is supported by qca6174 hardware
+> what is indicated by firmware through supported services.
+[...]
+> Marek Puzyniak (2):
+>   ath10k: make peer type configurable
+>   ath10k: introduce basic tdls functionality
 >
-> Anyway I think this is a BUG while for example:
-> 1) we can run AP (CAC) on chanel 36
-> 2) next shut down AP
-> 3) wait few days with loaded cfg80211 and in the same time for example
-> move to other location (AP in bus/train)
-> 4) we don't need run CAC again - for me this is a cfg80211 bug :)
+> Michal Kazior (1):
+>   ath10k: unify tx mode and dispatch
+[...]
 
-Yes, this sounds like a bug... when wpa_supplicant "disconnects" from
-the mac80211 stack the flag should revert to "dfs not available". But
-I am not sure if you can easily detect that wpa_supplicant is not
-there anymore.
+Kalle, please drop this patchset. I will send new version.
 
-> Anyway, before you can beaconing you should perform CAC, so this
-> should be added to wpa_supplicant - currently this is not implemented.
-
-Has the "802.11s support" ever been merged to wpa_supplicant?
-
-At the moment we are using neither wpa_supplicant nor hostapd... when
-we use encryption, we use the authsae tool from the open802.11s page.
-
->> Second, we are seeing a huge amount of radar events on some nodes, but
->> not on a node on the same channel in the next room. What is the status
->> of the DFS detector in ath9k, is it reliable or is it still
->> "experimental".
->>
-> We tested/using ath10k hw, so I don't know ath9k status :)
-
-Thank you for the information.
-
-Henning Rogge
+Thanks,
+Marek
