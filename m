@@ -1,63 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu004-omc1s14.hotmail.com ([65.55.116.25]:55412 "EHLO
-	BLU004-OMC1S14.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933401AbbCDHeG (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.130]:59296 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751672AbbCKMkV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 02:34:06 -0500
-Message-ID: <BLU436-SMTP37961E670B2BEAB516F79CB91E0@phx.gbl> (sfid-20150304_083428_707352_62FF6EB9)
-Date: Wed, 4 Mar 2015 15:41:55 +0800
-From: Chen Gang <xili_gchen_5257@hotmail.com>
+	Wed, 11 Mar 2015 08:40:21 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Javier Martinez Canillas <javier@dowhile0.org>
+Cc: Tony Lindgren <tony@atomide.com>, Eliad Peller <eliad@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+Date: Wed, 11 Mar 2015 13:40:12 +0100
+Message-ID: <6286151.8rcX893TN6@wuerfel> (sfid-20150311_134026_812224_93D8215C)
+In-Reply-To: <CABxcv=nE_Qd7do+dRyp=fw3wYmWFb+0eEjXYOtdjqE55Cp0zmQ@mail.gmail.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <3439869.6umCuOq6SV@wuerfel> <CABxcv=nE_Qd7do+dRyp=fw3wYmWFb+0eEjXYOtdjqE55Cp0zmQ@mail.gmail.com>
 MIME-Version: 1.0
-To: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
-References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
-In-Reply-To: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-Sorry for my carelessness, I deleted the original reply mail to me (may
-also deleted another mails to me, too).
-
-The hotmail is not stable, I am just struggling with it (it can not work
-well with linux-kernel@vger.kernel.org).
-
-Could you forward your original reply to me again?
-
-Thanks.
-
-On 3/4/15 05:16, Chen Gang wrote:
-> bcma also needs PCI, just like IOMEM and DMA, so let it depend on PCI,
-> or will cause building break for allmodconfig under c6x:
+On Wednesday 11 March 2015 12:34:03 Javier Martinez Canillas wrote:
+> Hello Arnd,
 > 
->     CC [M]  drivers/bcma/driver_pcie2.o
->   drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
->   drivers/bcma/driver_pcie2.c:196:8: error: implicit declaration of function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
->     err = pcie_set_readrq(dev, pcie2->reqsize);
->           ^
+> On Wed, Mar 11, 2015 at 10:53 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Wednesday 11 March 2015 02:00:59 Javier Martinez Canillas wrote:
+> >>
+> >> What do you mean by parsing here? IIUC there isn't a clock driver for
+> >> these clocks and are setup directly in the
+> >> drivers/net/wireless/ti/wl12xx/main.c driver.
+> >>
+> >> So you can't make the WLAN chip dev node a consumer of these clocks by
+> >> adding a phandle to a clock provider and clock specifiers since there
+> >> isn't a provider to be referenced in the DT. Or did I misunderstand?
+> >
+> > As I understand it, the clock signal is provided by an external oscillator,
 > 
-> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
-> ---
->  drivers/bcma/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-> index 0ee48be..8be284e 100644
-> --- a/drivers/bcma/Kconfig
-> +++ b/drivers/bcma/Kconfig
-> @@ -1,6 +1,6 @@
->  config BCMA_POSSIBLE
->  	bool
-> -	depends on HAS_IOMEM && HAS_DMA
-> +	depends on HAS_IOMEM && HAS_DMA && PCI
->  	default y
->  
->  menu "Broadcom specific AMBA"
-> 
+> According to [0], it seems the chip can be connected to both external
+> oscillators or internal clocks provided by the chip itself.
 
--- 
-Chen Gang
+I see, that part wasn't clear to me.
 
-Open, share, and attitude like air, water, and life which God blessed
+> > which we can easily model in DT, and then you call clk_get_rate on that.
+> >
+> 
+> Right, my point wast that this can be done only if the external
+> oscillator have a proper clock driver / provider which I don't think
+> is the case here. Most of this stuff predates the common clock
+> framework.
+> 
+> Or at least Luciano Coelho had a patch on his series to make the
+> wilink driver a clock provider itself by registering the refclock and
+> tcxoclock clocks [0].
+
+I guess we should only do this if the clocks from the wilink device
+might be used by some other device.
+
+> Luciano also had patches for:
+> 
+> * Adding the clock provider dev node in the DTS [1]
+> * Have a table to map the clock rate with the FW configuration values [2]
+> * Getting the clock from DT and the rate as you said to configure the
+> firmware accordingly [3]
+> 
+> I think that patch [0] should not be needed since for external clocks,
+> the IP providing the clocks should have its own clock driver and for
+> internal clocks, a property should be used instead as you said.
+
+Right.
+
+> > If there is no external clock provider for this chip and the clocks
+> > are provided by the device itself, then all we need is a clock-frequency
+> > property in the device node.
+> >
+> 
+> Agreed, IIUC Luciano wanted to expose the internal clocks by
+> registering in the common clock framework but if those clocks are not
+> really accessible from outside the wlan chip, then I also think that a
+> device node property should be used instead.
+
+If I understand this right, that measn we can easily distinguish between
+an external XTAL clock and the internal clock by they way they are
+described in the DT: for the internal clock, we just provide a clock-frequency
+property, while the external clock would be referenced through a clocks
+property.
+
+	Arnd
