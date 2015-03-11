@@ -1,44 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:39705 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756775AbbCRVSC (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:32833 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662AbbCKUSD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 17:18:02 -0400
-Message-ID: <5509EB89.9080803@candelatech.com> (sfid-20150318_221807_080238_F1A5B660)
-Date: Wed, 18 Mar 2015 14:18:01 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Orozco <felipe.orozco32@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: fast wireless restart on raspberry pi
-References: <5162B74B-89E1-4A6D-AB76-8C5D55D15A99@gmail.com>
-In-Reply-To: <5162B74B-89E1-4A6D-AB76-8C5D55D15A99@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 Mar 2015 16:18:03 -0400
+Received: by lbdu14 with SMTP id u14so11538118lbd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 13:18:01 -0700 (PDT)
+Received: from digger ([178.70.71.200])
+        by mx.google.com with ESMTPSA id dk7sm913938lbc.28.2015.03.11.13.17.59
+        for <linux-wireless@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 11 Mar 2015 13:18:00 -0700 (PDT)
+Date: Wed, 11 Mar 2015 16:17:57 -0400
+From: German <gentgerman@gmail.com>
+To: linux-wireless@vger.kernel.org
+Subject: iw dev wlp1s0 scan hangs
+Message-Id: <20150311161757.dac357e24509141a4c98e84b@gmail.com> (sfid-20150311_211806_446153_470F21EC)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/18/2015 02:15 PM, Orozco wrote:
-> Hello,
-> 
-> I am working on a project where I need to be able to modify a wireless 
-> adapter's firmware. I'm trying to use the TP-LINK TL-WN821N with the 
-> 8192cu driver and firmware on a Raspberry Pi 2. I am trying to be able to 
-> quickly stop the transmission of packets then and just as quickly be able 
-> to restart the transmission. Ideally, I would be able to do a single 
-> stop/start in less time than it takes to transmit a packet.
-> 
-> I would be very thankful if someone could tell me where would be a good 
-> place to start, and share any knowledge they have.
-
-The only firmware I am aware of that is open-source is 'ath9k_htc'.
-
-Not a simple piece of software, but at least you have the source...
-
-Thanks,
-Ben
-
+Hi. When I try to run aformentioned command it hangs for about 20 secs and no output is returned. What's the problem might be? Thanks
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+German <gentgerman@gmail.com>
