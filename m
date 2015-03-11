@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:55271 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751147AbbCTMjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 08:39:42 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@codeaurora.org, adrian@freebsd.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 00/18] reduce some of ath9k_htc performance problems
-Date: Fri, 20 Mar 2015 13:38:40 +0100
-Message-Id: <1426855138-6121-1-git-send-email-linux@rempel-privat.de> (sfid-20150320_133952_042221_00F42549)
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:41107 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751943AbbCKNj2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 09:39:28 -0400
+Received: by lbvp9 with SMTP id p9so8873622lbv.8
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 06:39:27 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: protect driver from unsolicited htc ep0 events
+Date: Wed, 11 Mar 2015 14:37:11 +0100
+Message-Id: <1426081031-15296-1-git-send-email-michal.kazior@tieto.com> (sfid-20150311_143932_194398_2819BC8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds new WMI_RMW handler to reduce some of usb related
-performance problems.
+Some firmware revisions (tested with qca6174
+rm2.0-00088) deliver unsolicited unknown (kind of
+garbled) HTC ep0 event to host in some cases.
 
-Oleksij Rempel (18):
-  ath9k_htc: add new WMI_REG_RMW_CMDID command
-  ath9k: ar9271_hw_pa_cal - use defs instead of magin numbers
-  ath9k: ar9271_hw_pa_cal: use proper makroses.
-  ath9k: ar9271_hw_pa_cal: use RMW buffer
-  ath9k: add multi_read to be compatible with ath9k_htc
-  ath9k: add new function ath9k_hw_read_array
-  ath9k: ar9271_hw_pa_cal: use REG_READ_ARRAY
-  ath9k: use one shot read in ath9k_hw_update_mibstats
-  ath9k: ath9k_hw_loadnf: use REG_RMW
-  ath9k: write buffer related optimisation in ar5008_hw_set_channel_regs
-  ath9k: ath9k_hw_set_4k_power_cal_tabl: use rmw buffer
-  ath9k: use rmw buffer in ath9k_hw_set_operating_mode and
-    ath9k_hw_reset
-  ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-  ath9k: ath9k_hw_analog_shift_rmw: use REG_RMW
-  ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-  ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
-  ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
-  ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
+This issue was mainly observed with both qca988x
+and qca6174 being installed on a single host
+system. During driver probing if qca6174 booting
+sequences were somehow deferred (e.g. by qca988x
+implicitly making some resources busy presumably)
+the unsolicited event would came around 1s after
+ATH10K_HTC_MSG_READY_ID was delivered to host for
+qca6174.
 
- drivers/net/wireless/ath/ath.h                |   3 +
- drivers/net/wireless/ath/ath9k/ani.c          |  20 +++-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c   |   5 +-
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |  77 +++++++-------
- drivers/net/wireless/ath/ath9k/calib.c        |  19 ++--
- drivers/net/wireless/ath/ath9k/eeprom.c       |   7 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c    |  38 ++++---
- drivers/net/wireless/ath/ath9k/eeprom_def.c   |  19 ++--
- drivers/net/wireless/ath/ath9k/htc.h          |   5 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 142 ++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/hw.c           |  24 +++++
- drivers/net/wireless/ath/ath9k/hw.h           |  15 +++
- drivers/net/wireless/ath/ath9k/init.c         |  11 ++
- drivers/net/wireless/ath/ath9k/wmi.c          |   3 +
- drivers/net/wireless/ath/ath9k/wmi.h          |  16 +++
- 15 files changed, 313 insertions(+), 91 deletions(-)
+The unsolicited event would confuse driver and
+cause HTT initialization (and subsequently
+driver probing) to fail.
 
+Make the ep0 event processing more robust. The
+event will still be caught but instead will
+only generate a warning now.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 2fd9e18..d33d5c4 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -414,7 +414,8 @@ static int ath10k_htc_rx_completion_handler(struct ath10k *ar,
+ 		struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
+ 
+ 		switch (__le16_to_cpu(msg->hdr.message_id)) {
+-		default:
++		case ATH10K_HTC_MSG_READY_ID:
++		case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
+ 			/* handle HTC control message */
+ 			if (completion_done(&htc->ctl_resp)) {
+ 				/*
+@@ -438,6 +439,10 @@ static int ath10k_htc_rx_completion_handler(struct ath10k *ar,
+ 			break;
+ 		case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
+ 			htc->htc_ops.target_send_suspend_complete(ar);
++			break;
++		default:
++			ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
++			break;
+ 		}
+ 		goto out;
+ 	}
 -- 
-1.9.1
+1.8.5.3
 
