@@ -1,29 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:37547 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653AbbCPUSU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 16:18:20 -0400
-Date: Mon, 16 Mar 2015 16:18:18 -0400 (EDT)
-Message-Id: <20150316.161818.1286819112010302982.davem@davemloft.net> (sfid-20150316_211828_399285_AA1BEAAD)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2015-03-16
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1426495437.1935.4.camel@sipsolutions.net>
-References: <1426495437.1935.4.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from narfation.org ([79.140.41.39]:59343 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750964AbbCKIOy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 04:14:54 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	Sven Eckelmann <sven@open-mesh.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [RFC v3] mac80211: lock rate control
+Date: Wed, 11 Mar 2015 09:14:15 +0100
+Message-Id: <1426061656-17546-1-git-send-email-sven@narfation.org> (sfid-20150311_091501_300586_8F374DB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Mon, 16 Mar 2015 09:43:57 +0100
+From: Johannes Berg <johannes.berg@intel.com>
 
-> I meant to send you a pull request last week but then somehow that
-> slipped through the cracks. However, I've since gotten a number of CSA
-> (channel switch) related fixes that I've also included - see below.
-> 
-> Let me know if there are any problems.
+Both minstrel (reported by Sven Eckelmann) and the iwlwifi rate
+control aren't properly taking concurrency into account. It's
+likely that the same is true for other rate control algorithms.
 
-Pulled, thank you.
+In the case of minstrel this manifests itself in crashes when an
+update and other data access are run concurrently, for example
+when the stations change bandwidth or similar. In iwlwifi, this
+can cause firmware crashes.
+
+Since fixing all rate control algorithms will be very difficult,
+just provide locking for invocations. This protects the internal
+data structures the algorithms maintain.
+
+I've manipulated hostapd to test this, by having it change its
+advertised bandwidth roughly ever 150ms. At the same time, I'm
+running a flood ping between the client and the AP, which causes
+this race of update vs. get_rate/status to easily happen on the
+client. With this change, the system survives this test.
+
+Reported-by: Sven Eckelmann <sven@open-mesh.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+This is a modified version of RFCv2 with an addition from
+mid.gmane.org/8006741.C7YlhOg3U7@bentobox
+
+I've just post this modification to show which was necessary to get it working
+when using IBSS. I leave the actual PATCH submission to Johannes Berg
+
+ net/mac80211/rate.c     |  8 +++++++-
+ net/mac80211/rate.h     | 14 +++++++++++---
+ net/mac80211/sta_info.c |  2 +-
+ net/mac80211/sta_info.h |  1 +
+ 4 files changed, 20 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index d53355b..de69adf 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -683,7 +683,13 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+ 		return;
+ 
+-	ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
++	if (ista) {
++		spin_lock_bh(&sta->rate_ctrl_lock);
++		ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
++		spin_unlock_bh(&sta->rate_ctrl_lock);
++	} else {
++		ref->ops->get_rate(ref->priv, NULL, NULL, txrc);
++	}
+ 
+ 	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_RC_TABLE)
+ 		return;
+diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+index 38652f0..25c9be5 100644
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -42,10 +42,12 @@ static inline void rate_control_tx_status(struct ieee80211_local *local,
+ 	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+ 		return;
+ 
++	spin_lock_bh(&sta->rate_ctrl_lock);
+ 	if (ref->ops->tx_status)
+ 		ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
+ 	else
+ 		ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
++	spin_unlock_bh(&sta->rate_ctrl_lock);
+ }
+ 
+ static inline void
+@@ -64,7 +66,9 @@ rate_control_tx_status_noskb(struct ieee80211_local *local,
+ 	if (WARN_ON_ONCE(!ref->ops->tx_status_noskb))
+ 		return;
+ 
++	spin_lock_bh(&sta->rate_ctrl_lock);
+ 	ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
++	spin_unlock_bh(&sta->rate_ctrl_lock);
+ }
+ 
+ static inline void rate_control_rate_init(struct sta_info *sta)
+@@ -91,8 +95,10 @@ static inline void rate_control_rate_init(struct sta_info *sta)
+ 
+ 	sband = local->hw.wiphy->bands[chanctx_conf->def.chan->band];
+ 
++	spin_lock_bh(&sta->rate_ctrl_lock);
+ 	ref->ops->rate_init(ref->priv, sband, &chanctx_conf->def, ista,
+ 			    priv_sta);
++	spin_unlock_bh(&sta->rate_ctrl_lock);
+ 	rcu_read_unlock();
+ 	set_sta_flag(sta, WLAN_STA_RATE_CONTROL);
+ }
+@@ -115,18 +121,20 @@ static inline void rate_control_rate_update(struct ieee80211_local *local,
+ 			return;
+ 		}
+ 
++		spin_lock_bh(&sta->rate_ctrl_lock);
+ 		ref->ops->rate_update(ref->priv, sband, &chanctx_conf->def,
+ 				      ista, priv_sta, changed);
++		spin_unlock_bh(&sta->rate_ctrl_lock);
+ 		rcu_read_unlock();
+ 	}
+ 	drv_sta_rc_update(local, sta->sdata, &sta->sta, changed);
+ }
+ 
+ static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
+-					   struct ieee80211_sta *sta,
+-					   gfp_t gfp)
++					   struct sta_info *sta, gfp_t gfp)
+ {
+-	return ref->ops->alloc_sta(ref->priv, sta, gfp);
++	spin_lock_init(&sta->rate_ctrl_lock);
++	return ref->ops->alloc_sta(ref->priv, &sta->sta, gfp);
+ }
+ 
+ static inline void rate_control_free_sta(struct sta_info *sta)
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 00ca8dc..8e8f4c2 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -282,7 +282,7 @@ static int sta_prepare_rate_control(struct ieee80211_local *local,
+ 
+ 	sta->rate_ctrl = local->rate_ctrl;
+ 	sta->rate_ctrl_priv = rate_control_alloc_sta(sta->rate_ctrl,
+-						     &sta->sta, gfp);
++						     sta, gfp);
+ 	if (!sta->rate_ctrl_priv)
+ 		return -ENOMEM;
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 925e68f..a8f037f 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -368,6 +368,7 @@ struct sta_info {
+ 	u8 ptk_idx;
+ 	struct rate_control_ref *rate_ctrl;
+ 	void *rate_ctrl_priv;
++	spinlock_t rate_ctrl_lock;
+ 	spinlock_t lock;
+ 
+ 	struct work_struct drv_deliver_wk;
+-- 
+2.1.4
+
