@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f173.google.com ([209.85.192.173]:41211 "EHLO
-	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753222AbbCIPHT (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:60698
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752928AbbCKREh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 11:07:19 -0400
-Received: by pdjy10 with SMTP id y10so25745792pdj.8
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 08:07:19 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net, ap420073@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192cu: Remove unnecessary parameter
-Date: Tue, 10 Mar 2015 00:07:08 +0900
-Message-Id: <1425913628-6415-1-git-send-email-ap420073@gmail.com> (sfid-20150309_160724_047995_1A8B648C)
+	Wed, 11 Mar 2015 13:04:37 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	daniel@iogearbox.net
+Subject: [PATCH 8/15] libertas_tf: if_usb.c: don't export static symbol
+Date: Wed, 11 Mar 2015 17:56:30 +0100
+Message-Id: <1426092997-30605-9-git-send-email-Julia.Lawall@lip6.fr> (sfid-20150311_180843_335690_64464684)
+In-Reply-To: <1426092997-30605-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1426092997-30605-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unnecessary parameter in rtl8192cu/hw.c
+From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+The semantic patch that fixes this problem is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@r@
+type T;
+identifier f;
+@@
+
+static T f (...) { ... }
+
+@@
+identifier r.f;
+declarer name EXPORT_SYMBOL_GPL;
+@@
+
+-EXPORT_SYMBOL_GPL(f);
+// </smpl>
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/libertas_tf/if_usb.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 0c20dd7..43b2b20 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -1471,8 +1471,7 @@ static void _InitBeaconParameters(struct ieee80211_hw *hw)
- 		rtl_write_word(rtlpriv, REG_BCNTCFG, 0x66FF);
+diff -u -p a/drivers/net/wireless/libertas_tf/if_usb.c b/drivers/net/wireless/libertas_tf/if_usb.c
+--- a/drivers/net/wireless/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/libertas_tf/if_usb.c
+@@ -365,7 +365,6 @@ static int if_usb_reset_device(struct if
+ 
+ 	return ret;
  }
+-EXPORT_SYMBOL_GPL(if_usb_reset_device);
  
--static void _beacon_function_enable(struct ieee80211_hw *hw, bool Enable,
--				    bool Linked)
-+static void _beacon_function_enable(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
-@@ -1517,7 +1516,7 @@ void rtl92cu_set_beacon_related_registers(struct ieee80211_hw *hw)
- 		rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_CCK, 0x50);
- 		rtl_write_byte(rtlpriv, REG_RXTSF_OFFSET_OFDM, 0x50);
- 	}
--	_beacon_function_enable(hw, true, true);
-+	_beacon_function_enable(hw);
+ /**
+  *  usb_tx_block - transfer data to the device
+@@ -907,7 +906,6 @@ restart:
+ 	lbtf_deb_leave_args(LBTF_DEB_USB, "ret %d", ret);
+ 	return ret;
  }
+-EXPORT_SYMBOL_GPL(if_usb_prog_firmware);
  
- void rtl92cu_set_beacon_interval(struct ieee80211_hw *hw)
--- 
-1.9.1
+ 
+ #define if_usb_suspend NULL
 
