@@ -1,59 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59477 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751074AbbCRJq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 05:46:29 -0400
-Message-ID: <1426671981.3001.12.camel@sipsolutions.net> (sfid-20150318_104633_085719_81467C4E)
-Subject: Re: [PATCH] mac80211: stop scan before connection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Received: from mout.kundenserver.de ([212.227.126.187]:62981 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750981AbbCKJyM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 05:54:12 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Javier Martinez Canillas <javier@dowhile0.org>
+Cc: Tony Lindgren <tony@atomide.com>, Eliad Peller <eliad@wizery.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Spinadel <david.spinadel@intel.com>
-Date: Wed, 18 Mar 2015 10:46:21 +0100
-In-Reply-To: <CAB3XZEd7cQwKm_yLztzeTB0S_-uEp4FwzDUV1O8cG6mNtkiY_A@mail.gmail.com> (sfid-20150318_103655_610322_AA890276)
-References: <1426615118-17516-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <CAB3XZEd7cQwKm_yLztzeTB0S_-uEp4FwzDUV1O8cG6mNtkiY_A@mail.gmail.com>
-	 (sfid-20150318_103655_610322_AA890276)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
+Date: Wed, 11 Mar 2015 10:53:39 +0100
+Message-ID: <3439869.6umCuOq6SV@wuerfel> (sfid-20150311_105417_104345_141FADA8)
+In-Reply-To: <CABxcv=ndnNj4MhoXeW=GHXT4aEWQYHdbu-Mg4R2Zhf9CJTrJCA@mail.gmail.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <20150310173550.GT5264@atomide.com> <CABxcv=ndnNj4MhoXeW=GHXT4aEWQYHdbu-Mg4R2Zhf9CJTrJCA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-03-18 at 11:36 +0200, Eliad Peller wrote:
-> On Tue, Mar 17, 2015 at 7:58 PM, Emmanuel Grumbach
-> <emmanuel.grumbach@intel.com> wrote:
-> > From: David Spinadel <david.spinadel@intel.com>
-> >
-> > Stop scan before authentication or association to make sure
-> > that nothing interferes with connection flow.
-> >
-> this makes sense
+On Wednesday 11 March 2015 02:00:59 Javier Martinez Canillas wrote:
+> Hello Tony,
 > 
-> > Currently mac80211 defers RX auth and assoc packets (among other ones)
-> > until after the scan is complete, so auth during scan is likely to fail
-> > if scan took too much time.
+> On Tue, Mar 10, 2015 at 6:35 PM, Tony Lindgren <tony@atomide.com> wrote:
+> >>
+> >> we do have to make sure these wl18xx bindings are future-compatible
+> >> with the wl12xx ones, but i think the current bindings are pretty much
+> >> standard (and are actually a subset of the bindings needed by wl12xx),
+> >> so it should be fine.
 > >
-> but i don't think deferring the frame handling makes sense in case of
-> hw_scan (there was a similar case with BA request handling).
-> i should have such (one-liner) patch pending somewhere...
+> > Well how about add just the parsing of the clock and assume it's always
+> > WL12XX_REFCLOCK_38 for now as that's the only thing we're currently
+> > using. Then we can add a property or compatible value if using something
+> > else as needed.
+> >
+> 
+> What do you mean by parsing here? IIUC there isn't a clock driver for
+> these clocks and are setup directly in the
+> drivers/net/wireless/ti/wl12xx/main.c driver.
+> 
+> So you can't make the WLAN chip dev node a consumer of these clocks by
+> adding a phandle to a clock provider and clock specifiers since there
+> isn't a provider to be referenced in the DT. Or did I misunderstand?
 
-We did consider that, but ultimately I think it's not desirable.
+As I understand it, the clock signal is provided by an external oscillator,
+which we can easily model in DT, and then you call clk_get_rate on that.
 
-The aggregation case is different, but during auth/assoc the relevant
-frames cannot be buffered by the AP. So unless you have a hardware
-mechanism that makes the device not continue the scan for say 30-50ms
-after the auth/assoc req frame went out, the connection process will be
-very unreliable.
+If there is no external clock provider for this chip and the clocks
+are provided by the device itself, then all we need is a clock-frequency
+property in the device node.
 
-So in a sense you could say deferring the handling doesn't make sense,
-but I'd still argue you shouldn't start this process while you're in the
-middle of scanning, hence this patch.
-
-We may have to do more exclusions (e.g. don't start a scan while
-authenticating or associating) here though, and ultimately not
-*processing* the frames will be irrelevant as they shouldn't be coming
-in anyway.
-
-johannes
-
+	Arnd
