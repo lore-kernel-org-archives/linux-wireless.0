@@ -1,134 +1,358 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2355 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564AbbCOPHC (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:53011 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750949AbbCKJdW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 11:07:02 -0400
+	Wed, 11 Mar 2015 05:33:22 -0400
 From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 To: <ath10k@lists.infradead.org>
 CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 1/6] ath10k: add debugfs entry to configure quiet period
-Date: Sun, 15 Mar 2015 20:36:20 +0530
-Message-ID: <1426431985-16332-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150315_160707_864216_10C4DA76)
-In-Reply-To: <1426431985-16332-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1426431985-16332-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: fix htt t2h message conflicts among firmware revisions
+Date: Wed, 11 Mar 2015 15:03:02 +0530
+Message-ID: <1426066382-481-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150311_103326_567041_E432EF11)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support to configure quiet period (in milliseconds) via debugfs.
-This is useful to experiment different quiet period values along with
-different throttle ratio.
+Target to host HTT messages are conflicting between 10.x and other
+firmware revisions. By maintaining separate HTT T2H tables for each
+firmware revisions (main, 10x and tlv) similar to WMI abstraction,
+solves the conflicts.
 
-echo 100 > /sys/kernel/debug/ieee80211/phyX/ath10k/quiet_period
-
+Cc: Michal Kazior <michal.kazior@tieto.com>
 Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c   | 46 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/thermal.c |  4 +--
- drivers/net/wireless/ath/ath10k/thermal.h |  1 +
- 3 files changed, 49 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.c    | 100 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/htt.h    | 129 ++++++++++++++++++++++++-------
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  20 +++--
+ 3 files changed, 215 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 301081d..812365c 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1991,6 +1991,49 @@ static const struct file_operations fops_pktlog_filter = {
- 	.open = simple_open
- };
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 4f59ab9..7afca0c 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -22,6 +22,86 @@
+ #include "core.h"
+ #include "debug.h"
  
-+static ssize_t ath10k_write_quiet_period(struct file *file,
-+					 const char __user *ubuf,
-+					 size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	u32 period;
-+
-+	if (kstrtouint_from_user(ubuf, count, 0, &period))
-+		return -EINVAL;
-+
-+	if (period < ATH10K_QUIET_PERIOD_MIN) {
-+		ath10k_warn(ar, "Quiet period %u can not be lesser than 25ms\n",
-+			    period);
-+		return -EINVAL;
-+	}
-+	mutex_lock(&ar->conf_mutex);
-+	ar->thermal.quiet_period = period;
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return count;
-+}
-+
-+static ssize_t ath10k_read_quiet_period(struct file *file, char __user *ubuf,
-+					size_t count, loff_t *ppos)
-+{
-+	char buf[32];
-+	struct ath10k *ar = file->private_data;
-+	int len = 0;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
-+			ar->thermal.quiet_period);
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
-+}
-+
-+static const struct file_operations fops_quiet_period = {
-+	.read = ath10k_read_quiet_period,
-+	.write = ath10k_write_quiet_period,
-+	.open = simple_open
++static const enum htt_t2h_msg_type htt_main_t2h_msg_types[] = {
++	[HTT_MAIN_T2H_MSG_TYPE_VERSION_CONF] = HTT_T2H_MSG_TYPE_VERSION_CONF,
++	[HTT_MAIN_T2H_MSG_TYPE_RX_IND] = HTT_T2H_MSG_TYPE_RX_IND,
++	[HTT_MAIN_T2H_MSG_TYPE_RX_FLUSH] = HTT_T2H_MSG_TYPE_RX_FLUSH,
++	[HTT_MAIN_T2H_MSG_TYPE_PEER_MAP] = HTT_T2H_MSG_TYPE_PEER_MAP,
++	[HTT_MAIN_T2H_MSG_TYPE_PEER_UNMAP] = HTT_T2H_MSG_TYPE_PEER_UNMAP,
++	[HTT_MAIN_T2H_MSG_TYPE_RX_ADDBA] = HTT_T2H_MSG_TYPE_RX_ADDBA,
++	[HTT_MAIN_T2H_MSG_TYPE_RX_DELBA] = HTT_T2H_MSG_TYPE_RX_DELBA,
++	[HTT_MAIN_T2H_MSG_TYPE_TX_COMPL_IND] = HTT_T2H_MSG_TYPE_TX_COMPL_IND,
++	[HTT_MAIN_T2H_MSG_TYPE_PKTLOG] = HTT_T2H_MSG_TYPE_PKTLOG,
++	[HTT_MAIN_T2H_MSG_TYPE_STATS_CONF] = HTT_T2H_MSG_TYPE_STATS_CONF,
++	[HTT_MAIN_T2H_MSG_TYPE_RX_FRAG_IND] = HTT_T2H_MSG_TYPE_RX_FRAG_IND,
++	[HTT_MAIN_T2H_MSG_TYPE_SEC_IND] = HTT_T2H_MSG_TYPE_SEC_IND,
++	[HTT_MAIN_T2H_MSG_TYPE_TX_INSPECT_IND] =
++		HTT_T2H_MSG_TYPE_TX_INSPECT_IND,
++	[HTT_MAIN_T2H_MSG_TYPE_MGMT_TX_COMPL_IND] =
++		HTT_T2H_MSG_TYPE_MGMT_TX_COMPLETION,
++	[HTT_MAIN_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND] =
++		HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND,
++	[HTT_MAIN_T2H_MSG_TYPE_RX_PN_IND] = HTT_T2H_MSG_TYPE_RX_PN_IND,
++	[HTT_MAIN_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND] =
++		HTT_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND,
++	[HTT_MAIN_T2H_MSG_TYPE_TEST] = HTT_T2H_MSG_TYPE_TEST,
 +};
 +
- int ath10k_debug_create(struct ath10k *ar)
- {
- 	ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
-@@ -2088,6 +2131,9 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("pktlog_filter", S_IRUGO | S_IWUSR,
- 			    ar->debug.debugfs_phy, ar, &fops_pktlog_filter);
- 
-+	debugfs_create_file("quiet_period", S_IRUGO | S_IWUSR,
-+			    ar->debug.debugfs_phy, ar, &fops_quiet_period);
++static const enum htt_t2h_msg_type htt_10x_t2h_msg_types[] = {
++	[HTT_10X_T2H_MSG_TYPE_VERSION_CONF] = HTT_T2H_MSG_TYPE_VERSION_CONF,
++	[HTT_10X_T2H_MSG_TYPE_RX_IND] = HTT_T2H_MSG_TYPE_RX_IND,
++	[HTT_10X_T2H_MSG_TYPE_RX_FLUSH] = HTT_T2H_MSG_TYPE_RX_FLUSH,
++	[HTT_10X_T2H_MSG_TYPE_PEER_MAP] = HTT_T2H_MSG_TYPE_PEER_MAP,
++	[HTT_10X_T2H_MSG_TYPE_PEER_UNMAP] = HTT_T2H_MSG_TYPE_PEER_UNMAP,
++	[HTT_10X_T2H_MSG_TYPE_RX_ADDBA] = HTT_T2H_MSG_TYPE_RX_ADDBA,
++	[HTT_10X_T2H_MSG_TYPE_RX_DELBA] = HTT_T2H_MSG_TYPE_RX_DELBA,
++	[HTT_10X_T2H_MSG_TYPE_TX_COMPL_IND] = HTT_T2H_MSG_TYPE_TX_COMPL_IND,
++	[HTT_10X_T2H_MSG_TYPE_PKTLOG] = HTT_T2H_MSG_TYPE_PKTLOG,
++	[HTT_10X_T2H_MSG_TYPE_STATS_CONF] = HTT_T2H_MSG_TYPE_STATS_CONF,
++	[HTT_10X_T2H_MSG_TYPE_RX_FRAG_IND] = HTT_T2H_MSG_TYPE_RX_FRAG_IND,
++	[HTT_10X_T2H_MSG_TYPE_SEC_IND] = HTT_T2H_MSG_TYPE_SEC_IND,
++	[HTT_10X_T2H_MSG_TYPE_RC_UPDATE_IND] = HTT_T2H_MSG_TYPE_RC_UPDATE_IND,
++	[HTT_10X_T2H_MSG_TYPE_TX_INSPECT_IND] = HTT_T2H_MSG_TYPE_TX_INSPECT_IND,
++	[HTT_10X_T2H_MSG_TYPE_TEST] = HTT_T2H_MSG_TYPE_TEST,
++	[HTT_10X_T2H_MSG_TYPE_CHAN_CHANGE] = HTT_T2H_MSG_TYPE_CHAN_CHANGE,
++	[HTT_10X_T2H_MSG_TYPE_AGGR_CONF] = HTT_T2H_MSG_TYPE_AGGR_CONF,
++	[HTT_10X_T2H_MSG_TYPE_STATS_NOUPLOAD] = HTT_T2H_MSG_TYPE_STATS_NOUPLOAD,
++	[HTT_10X_T2H_MSG_TYPE_MGMT_TX_COMPL_IND] =
++		HTT_T2H_MSG_TYPE_MGMT_TX_COMPLETION,
++};
 +
++static const enum htt_t2h_msg_type htt_tlv_t2h_msg_types[] = {
++	[HTT_TLV_T2H_MSG_TYPE_VERSION_CONF] = HTT_T2H_MSG_TYPE_VERSION_CONF,
++	[HTT_TLV_T2H_MSG_TYPE_RX_IND] = HTT_T2H_MSG_TYPE_RX_IND,
++	[HTT_TLV_T2H_MSG_TYPE_RX_FLUSH] = HTT_T2H_MSG_TYPE_RX_FLUSH,
++	[HTT_TLV_T2H_MSG_TYPE_PEER_MAP] = HTT_T2H_MSG_TYPE_PEER_MAP,
++	[HTT_TLV_T2H_MSG_TYPE_PEER_UNMAP] = HTT_T2H_MSG_TYPE_PEER_UNMAP,
++	[HTT_TLV_T2H_MSG_TYPE_RX_ADDBA] = HTT_T2H_MSG_TYPE_RX_ADDBA,
++	[HTT_TLV_T2H_MSG_TYPE_RX_DELBA] = HTT_T2H_MSG_TYPE_RX_DELBA,
++	[HTT_TLV_T2H_MSG_TYPE_TX_COMPL_IND] = HTT_T2H_MSG_TYPE_TX_COMPL_IND,
++	[HTT_TLV_T2H_MSG_TYPE_PKTLOG] = HTT_T2H_MSG_TYPE_PKTLOG,
++	[HTT_TLV_T2H_MSG_TYPE_STATS_CONF] = HTT_T2H_MSG_TYPE_STATS_CONF,
++	[HTT_TLV_T2H_MSG_TYPE_RX_FRAG_IND] = HTT_T2H_MSG_TYPE_RX_FRAG_IND,
++	[HTT_TLV_T2H_MSG_TYPE_SEC_IND] = HTT_T2H_MSG_TYPE_SEC_IND,
++	[HTT_TLV_T2H_MSG_TYPE_RC_UPDATE_IND] = HTT_T2H_MSG_TYPE_RC_UPDATE_IND,
++	[HTT_TLV_T2H_MSG_TYPE_TX_INSPECT_IND] = HTT_T2H_MSG_TYPE_TX_INSPECT_IND,
++	[HTT_TLV_T2H_MSG_TYPE_MGMT_TX_COMPL_IND] =
++		HTT_T2H_MSG_TYPE_MGMT_TX_COMPLETION,
++	[HTT_TLV_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND] =
++		HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND,
++	[HTT_TLV_T2H_MSG_TYPE_RX_PN_IND] = HTT_T2H_MSG_TYPE_RX_PN_IND,
++	[HTT_TLV_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND] =
++		HTT_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND,
++	[HTT_TLV_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND] =
++		HTT_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND,
++	[HTT_TLV_T2H_MSG_TYPE_WDI_IPA_OP_RESPONSE] =
++		HTT_T2H_MSG_TYPE_WDI_IPA_OP_RESPONSE,
++	[HTT_TLV_T2H_MSG_TYPE_CHAN_CHANGE] = HTT_T2H_MSG_TYPE_CHAN_CHANGE,
++	[HTT_TLV_T2H_MSG_TYPE_RX_OFLD_PKT_ERR] =
++		HTT_T2H_MSG_TYPE_RX_OFLD_PKT_ERR,
++	[HTT_TLV_T2H_MSG_TYPE_TEST] = HTT_T2H_MSG_TYPE_TEST,
++};
++
+ int ath10k_htt_connect(struct ath10k_htt *htt)
+ {
+ 	struct ath10k_htc_svc_conn_req conn_req;
+@@ -66,6 +146,26 @@ int ath10k_htt_init(struct ath10k *ar)
+ 		8 + /* llc snap */
+ 		2; /* ip4 dscp or ip6 priority */
+ 
++	switch (ar->wmi.op_version) {
++	case ATH10K_FW_WMI_OP_VERSION_MAIN:
++		ar->htt.t2h_msg_types = htt_main_t2h_msg_types;
++		ar->htt.t2h_msg_types_max = HTT_MAIN_T2H_NUM_MSGS;
++		break;
++	case ATH10K_FW_WMI_OP_VERSION_10_1:
++	case ATH10K_FW_WMI_OP_VERSION_10_2:
++	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
++		ar->htt.t2h_msg_types = htt_10x_t2h_msg_types;
++		ar->htt.t2h_msg_types_max = HTT_10X_T2H_NUM_MSGS;
++		break;
++	case ATH10K_FW_WMI_OP_VERSION_TLV:
++		ar->htt.t2h_msg_types = htt_tlv_t2h_msg_types;
++		ar->htt.t2h_msg_types_max = HTT_TLV_T2H_NUM_MSGS;
++		break;
++	case ATH10K_FW_WMI_OP_VERSION_UNSET:
++	case ATH10K_FW_WMI_OP_VERSION_MAX:
++		WARN_ON(1);
++		return -EINVAL;
++	}
  	return 0;
  }
  
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index 747fea7..d3fd2ab 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -96,8 +96,7 @@ static int ath10k_thermal_set_cur_dutycycle(struct thermal_cooling_device *cdev,
- 		ret = -ENETDOWN;
- 		goto out;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 874bf44..87a1f25 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -271,39 +271,111 @@ enum htt_mgmt_tx_status {
+ 
+ /*=== target -> host messages ===============================================*/
+ 
+-enum htt_t2h_msg_type {
+-	HTT_T2H_MSG_TYPE_VERSION_CONF		= 0x0,
+-	HTT_T2H_MSG_TYPE_RX_IND			= 0x1,
+-	HTT_T2H_MSG_TYPE_RX_FLUSH		= 0x2,
+-	HTT_T2H_MSG_TYPE_PEER_MAP		= 0x3,
+-	HTT_T2H_MSG_TYPE_PEER_UNMAP		= 0x4,
+-	HTT_T2H_MSG_TYPE_RX_ADDBA		= 0x5,
+-	HTT_T2H_MSG_TYPE_RX_DELBA		= 0x6,
+-	HTT_T2H_MSG_TYPE_TX_COMPL_IND		= 0x7,
+-	HTT_T2H_MSG_TYPE_PKTLOG			= 0x8,
+-	HTT_T2H_MSG_TYPE_STATS_CONF		= 0x9,
+-	HTT_T2H_MSG_TYPE_RX_FRAG_IND		= 0xa,
+-	HTT_T2H_MSG_TYPE_SEC_IND		= 0xb,
+-	HTT_T2H_MSG_TYPE_RC_UPDATE_IND		= 0xc,
+-	HTT_T2H_MSG_TYPE_TX_INSPECT_IND		= 0xd,
+-	HTT_T2H_MSG_TYPE_MGMT_TX_COMPLETION	= 0xe,
+-	HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND	= 0xf,
+-	HTT_T2H_MSG_TYPE_RX_PN_IND		= 0x10,
+-	HTT_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND = 0x11,
+-	HTT_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND	= 0x12,
++enum htt_main_t2h_msg_type {
++	HTT_MAIN_T2H_MSG_TYPE_VERSION_CONF             = 0x0,
++	HTT_MAIN_T2H_MSG_TYPE_RX_IND                   = 0x1,
++	HTT_MAIN_T2H_MSG_TYPE_RX_FLUSH                 = 0x2,
++	HTT_MAIN_T2H_MSG_TYPE_PEER_MAP                 = 0x3,
++	HTT_MAIN_T2H_MSG_TYPE_PEER_UNMAP               = 0x4,
++	HTT_MAIN_T2H_MSG_TYPE_RX_ADDBA                 = 0x5,
++	HTT_MAIN_T2H_MSG_TYPE_RX_DELBA                 = 0x6,
++	HTT_MAIN_T2H_MSG_TYPE_TX_COMPL_IND             = 0x7,
++	HTT_MAIN_T2H_MSG_TYPE_PKTLOG                   = 0x8,
++	HTT_MAIN_T2H_MSG_TYPE_STATS_CONF               = 0x9,
++	HTT_MAIN_T2H_MSG_TYPE_RX_FRAG_IND              = 0xa,
++	HTT_MAIN_T2H_MSG_TYPE_SEC_IND                  = 0xb,
++	HTT_MAIN_T2H_MSG_TYPE_TX_INSPECT_IND           = 0xd,
++	HTT_MAIN_T2H_MSG_TYPE_MGMT_TX_COMPL_IND        = 0xe,
++	HTT_MAIN_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND     = 0xf,
++	HTT_MAIN_T2H_MSG_TYPE_RX_PN_IND                = 0x10,
++	HTT_MAIN_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND   = 0x11,
++	HTT_MAIN_T2H_MSG_TYPE_TEST,
++	/* keep this last */
++	HTT_MAIN_T2H_NUM_MSGS
++};
++
++enum htt_10x_t2h_msg_type {
++	HTT_10X_T2H_MSG_TYPE_VERSION_CONF              = 0x0,
++	HTT_10X_T2H_MSG_TYPE_RX_IND                    = 0x1,
++	HTT_10X_T2H_MSG_TYPE_RX_FLUSH                  = 0x2,
++	HTT_10X_T2H_MSG_TYPE_PEER_MAP                  = 0x3,
++	HTT_10X_T2H_MSG_TYPE_PEER_UNMAP                = 0x4,
++	HTT_10X_T2H_MSG_TYPE_RX_ADDBA                  = 0x5,
++	HTT_10X_T2H_MSG_TYPE_RX_DELBA                  = 0x6,
++	HTT_10X_T2H_MSG_TYPE_TX_COMPL_IND              = 0x7,
++	HTT_10X_T2H_MSG_TYPE_PKTLOG                    = 0x8,
++	HTT_10X_T2H_MSG_TYPE_STATS_CONF                = 0x9,
++	HTT_10X_T2H_MSG_TYPE_RX_FRAG_IND               = 0xa,
++	HTT_10X_T2H_MSG_TYPE_SEC_IND                   = 0xb,
++	HTT_10X_T2H_MSG_TYPE_RC_UPDATE_IND             = 0xc,
++	HTT_10X_T2H_MSG_TYPE_TX_INSPECT_IND            = 0xd,
++	HTT_10X_T2H_MSG_TYPE_TEST                      = 0xe,
++	HTT_10X_T2H_MSG_TYPE_CHAN_CHANGE               = 0xf,
++	HTT_10X_T2H_MSG_TYPE_AGGR_CONF                 = 0x11,
++	HTT_10X_T2H_MSG_TYPE_STATS_NOUPLOAD            = 0x12,
++	HTT_10X_T2H_MSG_TYPE_MGMT_TX_COMPL_IND         = 0x13,
++	/* keep this last */
++	HTT_10X_T2H_NUM_MSGS
++};
++
++enum htt_tlv_t2h_msg_type {
++	HTT_TLV_T2H_MSG_TYPE_VERSION_CONF              = 0x0,
++	HTT_TLV_T2H_MSG_TYPE_RX_IND                    = 0x1,
++	HTT_TLV_T2H_MSG_TYPE_RX_FLUSH                  = 0x2,
++	HTT_TLV_T2H_MSG_TYPE_PEER_MAP                  = 0x3,
++	HTT_TLV_T2H_MSG_TYPE_PEER_UNMAP                = 0x4,
++	HTT_TLV_T2H_MSG_TYPE_RX_ADDBA                  = 0x5,
++	HTT_TLV_T2H_MSG_TYPE_RX_DELBA                  = 0x6,
++	HTT_TLV_T2H_MSG_TYPE_TX_COMPL_IND              = 0x7,
++	HTT_TLV_T2H_MSG_TYPE_PKTLOG                    = 0x8,
++	HTT_TLV_T2H_MSG_TYPE_STATS_CONF                = 0x9,
++	HTT_TLV_T2H_MSG_TYPE_RX_FRAG_IND               = 0xa,
++	HTT_TLV_T2H_MSG_TYPE_SEC_IND                   = 0xb,
++	HTT_TLV_T2H_MSG_TYPE_RC_UPDATE_IND             = 0xc, /* deprecated */
++	HTT_TLV_T2H_MSG_TYPE_TX_INSPECT_IND            = 0xd,
++	HTT_TLV_T2H_MSG_TYPE_MGMT_TX_COMPL_IND         = 0xe,
++	HTT_TLV_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND      = 0xf,
++	HTT_TLV_T2H_MSG_TYPE_RX_PN_IND                 = 0x10,
++	HTT_TLV_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND    = 0x11,
++	HTT_TLV_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND       = 0x12,
+ 	/* 0x13 reservd */
+-	HTT_T2H_MSG_TYPE_WDI_IPA_OP_RESPONSE	= 0x14,
++	HTT_TLV_T2H_MSG_TYPE_WDI_IPA_OP_RESPONSE       = 0x14,
++	HTT_TLV_T2H_MSG_TYPE_CHAN_CHANGE               = 0x15,
++	HTT_TLV_T2H_MSG_TYPE_RX_OFLD_PKT_ERR           = 0x16,
++	HTT_TLV_T2H_MSG_TYPE_TEST,
++	/* keep this last */
++	HTT_TLV_T2H_NUM_MSGS
++};
+ 
+-	/* FIXME: Do not depend on this event id. Numbering of this event id is
+-	 * broken across different firmware revisions and HTT version fails to
+-	 * indicate this.
+-	 */
++enum htt_t2h_msg_type {
++	HTT_T2H_MSG_TYPE_VERSION_CONF,
++	HTT_T2H_MSG_TYPE_RX_IND,
++	HTT_T2H_MSG_TYPE_RX_FLUSH,
++	HTT_T2H_MSG_TYPE_PEER_MAP,
++	HTT_T2H_MSG_TYPE_PEER_UNMAP,
++	HTT_T2H_MSG_TYPE_RX_ADDBA,
++	HTT_T2H_MSG_TYPE_RX_DELBA,
++	HTT_T2H_MSG_TYPE_TX_COMPL_IND,
++	HTT_T2H_MSG_TYPE_PKTLOG,
++	HTT_T2H_MSG_TYPE_STATS_CONF,
++	HTT_T2H_MSG_TYPE_RX_FRAG_IND,
++	HTT_T2H_MSG_TYPE_SEC_IND,
++	HTT_T2H_MSG_TYPE_RC_UPDATE_IND,
++	HTT_T2H_MSG_TYPE_TX_INSPECT_IND,
++	HTT_T2H_MSG_TYPE_MGMT_TX_COMPLETION,
++	HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND,
++	HTT_T2H_MSG_TYPE_RX_PN_IND,
++	HTT_T2H_MSG_TYPE_RX_OFFLOAD_DELIVER_IND,
++	HTT_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND,
++	HTT_T2H_MSG_TYPE_WDI_IPA_OP_RESPONSE,
++	HTT_T2H_MSG_TYPE_CHAN_CHANGE,
++	HTT_T2H_MSG_TYPE_RX_OFLD_PKT_ERR,
++	HTT_T2H_MSG_TYPE_AGGR_CONF,
++	HTT_T2H_MSG_TYPE_STATS_NOUPLOAD,
+ 	HTT_T2H_MSG_TYPE_TEST,
+-
+ 	/* keep this last */
+ 	HTT_T2H_NUM_MSGS
+ };
+-
+ /*
+  * htt_resp_hdr - header for target-to-host messages
+  *
+@@ -1249,6 +1321,9 @@ struct ath10k_htt {
+ 	u8 target_version_minor;
+ 	struct completion target_version_received;
+ 
++	const enum htt_t2h_msg_type *t2h_msg_types;
++	u32 t2h_msg_types_max;
++
+ 	struct {
+ 		/*
+ 		 * Ring of network buffer objects - This ring is
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 01a2b38..21e9253 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1892,6 +1892,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+ 	struct htt_resp *resp = (struct htt_resp *)skb->data;
++	enum htt_t2h_msg_type type;
+ 
+ 	/* confirm alignment */
+ 	if (!IS_ALIGNED((unsigned long)skb->data, 4))
+@@ -1899,7 +1900,16 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx, msg_type: 0x%0X\n",
+ 		   resp->hdr.msg_type);
+-	switch (resp->hdr.msg_type) {
++
++	if (resp->hdr.msg_type >= ar->htt.t2h_msg_types_max) {
++		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx, unsupported msg_type: 0x%0X\n max: 0x%0X",
++			   resp->hdr.msg_type, ar->htt.t2h_msg_types_max);
++		dev_kfree_skb_any(skb);
++		return;
++	}
++	type = ar->htt.t2h_msg_types[resp->hdr.msg_type];
++
++	switch (type) {
+ 	case HTT_T2H_MSG_TYPE_VERSION_CONF: {
+ 		htt->target_version_major = resp->ver_resp.major;
+ 		htt->target_version_minor = resp->ver_resp.minor;
+@@ -1976,7 +1986,6 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
  	}
--	period = max(ATH10K_QUIET_PERIOD_MIN,
--		     (ATH10K_QUIET_PERIOD_DEFAULT / num_bss));
-+	period = ar->thermal.quiet_period;
- 	duration = (period * duty_cycle) / 100;
- 	enabled = duration ? 1 : 0;
- 
-@@ -207,6 +206,7 @@ int ath10k_thermal_register(struct ath10k *ar)
+ 	case HTT_T2H_MSG_TYPE_TEST:
+-		/* FIX THIS */
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_STATS_CONF:
+ 		trace_ath10k_htt_stats(ar, skb->data, skb->len);
+@@ -2018,11 +2027,8 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		return;
  	}
- 
- 	ar->thermal.cdev = cdev;
-+	ar->thermal.quiet_period = ATH10K_QUIET_PERIOD_DEFAULT;
- 
- 	/* Do not register hwmon device when temperature reading is not
- 	 * supported by firmware
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
-index 5e87d9a..050f41d 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.h
-+++ b/drivers/net/wireless/ath/ath10k/thermal.h
-@@ -29,6 +29,7 @@ struct ath10k_thermal {
- 
- 	/* protected by conf_mutex */
- 	u32 duty_cycle;
-+	u32 quiet_period;
- 	/* temperature value in Celcius degree
- 	 * protected by data_lock
- 	 */
+ 	case HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND:
+-		/* FIXME: This WMI-TLV event is overlapping with 10.2
+-		 * CHAN_CHANGE - both being 0xF. Neither is being used in
+-		 * practice so no immediate action is necessary. Nevertheless
+-		 * HTT may need an abstraction layer like WMI has one day.
+-		 */
++		break;
++	case HTT_T2H_MSG_TYPE_CHAN_CHANGE:
+ 		break;
+ 	default:
+ 		ath10k_warn(ar, "htt event (%d) not handled\n",
 -- 
 2.3.2
 
