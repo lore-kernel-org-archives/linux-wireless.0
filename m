@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:36679 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751468AbbCCK2v convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:65197 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562AbbCKJvb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 05:28:51 -0500
-Received: by wghk14 with SMTP id k14so39068176wgh.3
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 02:28:50 -0800 (PST)
+	Wed, 11 Mar 2015 05:51:31 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Javier Martinez Canillas <javier@dowhile0.org>,
+	Eliad Peller <eliad@wizery.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Ido Yariv <ido@wizery.com>
+Subject: Re: [PATCH v5 2/3] wl18xx: add basic device-tree support
+Date: Wed, 11 Mar 2015 10:51:21 +0100
+Message-ID: <2121942.zIG9BfPsTV@wuerfel> (sfid-20150311_105136_094849_4F7F0B4C)
+In-Reply-To: <CABxcv=mygdT2Q+ByVKPx4+o_Oj9KSy=zVX9ng9yN25ivkfSn1A@mail.gmail.com>
+References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <1425915402-10012-2-git-send-email-eliad@wizery.com> <CABxcv=mygdT2Q+ByVKPx4+o_Oj9KSy=zVX9ng9yN25ivkfSn1A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYLbF-b5DKBBNo2PK5iDn64HuSo9N63mfT2fNfvgLhEFrQ@mail.gmail.com>
-References: <1423568924-11895-1-git-send-email-michal.kazior@tieto.com>
-	<1425374168.2450.17.camel@sipsolutions.net>
-	<CABPxzY+hcmAHCzn+JvYRurDYO3yZ=_bRkDFODrbRMJ0L75yZ9A@mail.gmail.com>
-	<1425375418.2450.27.camel@sipsolutions.net>
-	<CABPxzYLbF-b5DKBBNo2PK5iDn64HuSo9N63mfT2fNfvgLhEFrQ@mail.gmail.com>
-Date: Tue, 3 Mar 2015 11:28:50 +0100
-Message-ID: <CA+BoTQnTvqYB6VS=bzk8bcV1xHPAZtyq0oJa0C2oe0Gd0wj+NQ@mail.gmail.com> (sfid-20150303_112857_548278_B13570F8)
-Subject: Re: [PATCH] mac80211: disable u-APSD queues by default
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 March 2015 at 11:15, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
-> On Tue, Mar 3, 2015 at 3:06 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->>
->>> >> Cisco 4410N originally forced us to enable VO by
->>> >> default only because it treated non-VO ACs as
->>> >> legacy.
->>
->>> Mixed mode (uapsd + legacy) is not really the optimal
->>> configuration, where we expect STA to send trigger frames periodically
->>> to retrieve the DL packets (especially very first packet).
->>>
->>> But still if we want power save, i suggest going for
->>> All u-apsd (0xF), so that AP will inform us by setting the TIM bit
->>> and we can retrieve the first frame.
->>> (We have this patch internally and it works well).
->>
->> Except where it doesn't work, like on the Cisco 4410N - see above.
-> But for that single AP, we are forced to lose efficient power savings
-> unless user configured explicitly.
+On Wednesday 11 March 2015 01:34:19 Javier Martinez Canillas wrote:
+> > +
+> > +static struct wl12xx_platform_data *
+> > +wlcore_get_platform_data(struct device *dev)
+> > +{
+> > +       struct wl12xx_platform_data *pdata;
+> > +
+> > +       /* first, look for DT data */
+> 
+> I thought it was the opposite, that platform data should over-rule DT.
+> That way you can still use the data filled in
+> arch/arm/mach-omap2/pdata-quirks.c even after the driver supports your
+> new DT binding.
 
-Correct me if I'm wrong, but u-APSD makes sense only if you have
-userspace apps aware of it. I don't know any. VoIP traffic uses and it
-works just because it generate bi-directional traffic in most cases so
-you have implicit trigger frames generated when you Tx, but that's
-probably as far as the practical use-case goes, no? You'd still need
-netfilter rules to reclassify your traffic anyway, wouldn't you? If
-you mainly wait for data you need to send trigger frames periodically
-and only userspace app knows what Rx latency is tolerated (that's why
-relying on driver/firmware auto-trigger generation doesn't cut it).
+No, the pdata-quirks stuff for this driver must die, it was a hack
+that only exists because we previously could not attach data to an
+sdio function.
 
-Anyway I don't think you can ask users to do the opposite (i.e.
-disable u-APSD if they experience problems with APs). Wi-Fi should
-Just Work. Joys of IOT..
+> > +       pdata = wlcore_probe_of(dev);
+> > +       if (pdata)
+> > +               return pdata;
+> > +
+> > +       /* if not found - fallback to static platform data */
+> > +       pdata = wl12xx_get_platform_data();
+> > +       if (!IS_ERR(pdata))
+> > +               return kmemdup(pdata, sizeof(*pdata), GFP_KERNEL);
+> > +
+> > +       dev_err(dev, "No platform data set\n");
+> > +       return NULL;
+> > +}
+> > +
+> > +static void wlcore_del_platform_data(struct wl12xx_platform_data *pdata)
+> > +{
+> > +       kfree(pdata);
+> > +}
+> > +
+> 
+> This function seems to be an unnecessary, why not just call kfree() directly?
+> 
+> Or better, maybe the resource-managed devm_*() functions can be used
+> so the data doesn't have to be explicitly freed?
 
+As I said earlier, I think it would be best not to dynamically allocate anything
+here at all. As Eliad explained, the data is used by two different drivers:
+wl12xx and wl18xx, and only the latter is converted for now, but after the
+conversion, it should not need the platform data structure any more, only
+the irq number that gets passed in from DT.
 
-Michał
+	Arnd
