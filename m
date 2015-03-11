@@ -1,65 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:44492 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751343AbbCOAPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 20:15:19 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	m.v.b@runbox.com
-Subject: [PATCH v2 03/16] staging: rtl8723au: else should follow close brace
-Date: Sat, 14 Mar 2015 20:10:28 -0400
-Message-Id: <1426378241-32469-4-git-send-email-m.v.b@runbox.com> (sfid-20150315_011544_507741_3AF0662C)
-In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:40184 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549AbbCKPLj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Mar 2015 11:11:39 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 7/7] brcmfmac: fix watchdog timer regression
+Date: Wed, 11 Mar 2015 16:11:33 +0100
+Message-ID: <1426086693-13876-8-git-send-email-arend@broadcom.com> (sfid-20150311_161149_610461_D40D9E30)
+In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
+References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct checkpatch.pl errors in rtl8723au's rtw_security.c indicating
-that an else statement should follow the closing brace of the previous
-if/else if code block:
-	ERROR: else should follow close brace '}'
+The watchdog timer is used to put the device in a low-power mode when
+it is idle for some time. This timer is stopped during that mode and
+should be restarted upon activity. This has been broken by commit
+d4150fced0365 ("brcmfmac: Simplify watchdog sleep."). This patch
+restores the behaviour as it was before that commit.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Reported-by: Pontus Fuchs <pontusf@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 0306c3896a..d04a1cf6d7 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -379,8 +379,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
- 			rtw_secmicappend23a(&micdata, &header[24], 6);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 5202e76..17a7212 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -972,7 +972,6 @@ static int brcmf_sdio_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
+ 			brcmf_sdio_sdclk(bus, true);
+ 		/* Now request HT Avail on the backplane */
+ 		brcmf_sdio_htclk(bus, true, pendok);
+-		brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
+ 		break;
+ 
+ 	case CLK_SDONLY:
+@@ -984,7 +983,6 @@ static int brcmf_sdio_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
  		else
- 			rtw_secmicappend23a(&micdata, &header[10], 6);
--	}
--	else{	/* ToDS == 0 */
-+	} else {	/* ToDS == 0 */
- 		rtw_secmicappend23a(&micdata, &header[4], 6);   /* DA */
- 		if (header[1]&2)  /* From Ds == 1 */
- 			rtw_secmicappend23a(&micdata, &header[16], 6);
-@@ -673,8 +672,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 					arcfour_encrypt(&mycontext, payload, payload, length);
- 					arcfour_encrypt(&mycontext, payload+length, crc, 4);
+ 			brcmf_err("request for %d -> %d\n",
+ 				  bus->clkstate, target);
+-		brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
+ 		break;
  
--				}
--				else {
-+				} else {
- 					length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
- 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
- 					arcfour_init(&mycontext, rc4key, 16);
-@@ -686,8 +684,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 				}
- 			}
- 
--		}
--		else {
-+		} else {
- 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo == NULL!!!\n"));
- 			DBG_8723A("%s, psta == NUL\n", __func__);
- 			res = _FAIL;
+ 	case CLK_NONE:
+@@ -993,7 +991,6 @@ static int brcmf_sdio_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
+ 			brcmf_sdio_htclk(bus, false, false);
+ 		/* Now remove the SD clock */
+ 		brcmf_sdio_sdclk(bus, false);
+-		brcmf_sdio_wd_timer(bus, 0);
+ 		break;
+ 	}
+ #ifdef DEBUG
+@@ -1048,6 +1045,7 @@ end:
+ 			brcmf_sdio_clkctl(bus, CLK_NONE, pendok);
+ 	} else {
+ 		brcmf_sdio_clkctl(bus, CLK_AVAIL, pendok);
++		brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
+ 	}
+ 	bus->sleeping = sleep;
+ 	brcmf_dbg(SDIO, "new state %s\n",
+@@ -4242,6 +4240,7 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 		if (bus->ci) {
+ 			if (bus->sdiodev->state != BRCMF_SDIOD_NOMEDIUM) {
+ 				sdio_claim_host(bus->sdiodev->func[1]);
++				brcmf_sdio_wd_timer(bus, 0);
+ 				brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+ 				/* Leave the device in state where it is
+ 				 * 'passive'. This is done by resetting all
 -- 
-2.1.4
+1.9.1
 
