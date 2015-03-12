@@ -1,44 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62904 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752167AbbCWPmI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 11:42:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 0/7] ath10k: add multi-channel support
-References: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 23 Mar 2015 17:41:59 +0200
-In-Reply-To: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 17 Mar 2015 12:30:41 +0000")
-Message-ID: <87twxbd8l4.fsf@kamboji.qca.qualcomm.com> (sfid-20150323_164212_243516_A65DCADB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga01.intel.com ([192.55.52.88]:19662 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752539AbbCLGxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 02:53:46 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 6/7] mac80211: ask for ECSA IE to be considered for beacon parse CRC
+Date: Thu, 12 Mar 2015 08:53:29 +0200
+Message-Id: <1426143210-25635-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_075352_227010_4D5D1405)
+In-Reply-To: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> New qca6174 with wmi-tlv firmware supports
-> multi-channel operation. To make use of it
-> ath10k needs a few changes: implement mac80211's
-> chanctx API and rework tx queue control a bit.
+When a beacon from the AP contains only the ECSA IE, and not a CSA IE
+as well, this ECSA IE is not considered for calculating the CRC and
+the beacon might be dropped as not being interesting. This is clearly
+wrong, it should be handled and the channel switch should be executed.
 
-3-way merge fails:
+Fix this by including the ECSA IE ID in the bitmap of interesting IEs.
 
-Applying: ath10k: allow empty ssid vdev config
-Applying: ath10k: implement chanctx API
-error: short SHA1 7b3e6ca is ambiguous.
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/wmi.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0002 ath10k: implement chanctx API
+Reported-by: Gil Tribush <gil.tribush@intel.com>
+Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-And no wonder, 7 chars is just too short SHA1 abbreviation. Is there any
-way to make that longer?
-
-Anyway, can you please rebase?
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6205206..ff03961 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3207,7 +3207,8 @@ static const u64 care_about_ies =
+ 	(1ULL << WLAN_EID_CHANNEL_SWITCH) |
+ 	(1ULL << WLAN_EID_PWR_CONSTRAINT) |
+ 	(1ULL << WLAN_EID_HT_CAPABILITY) |
+-	(1ULL << WLAN_EID_HT_OPERATION);
++	(1ULL << WLAN_EID_HT_OPERATION) |
++	(1ULL << WLAN_EID_EXT_CHANSWITCH_ANN);
+ 
+ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 				     struct ieee80211_mgmt *mgmt, size_t len,
 -- 
-Kalle Valo
+1.9.1
+
