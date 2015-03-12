@@ -1,97 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:38154 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752805AbbCDNgL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 08:36:11 -0500
-MIME-Version: 1.0
-In-Reply-To: <CACna6ryi4ACAfkYRDGTWkwGh9PQrj9zxcnaWjO56m1dyhmiFGA@mail.gmail.com>
-References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
-	<CACna6rxJ_uQHmpQS9NPs9JW=zNS4oc2-_cH6nXG0Z9CWu7iW7A@mail.gmail.com>
-	<CACna6ryi4ACAfkYRDGTWkwGh9PQrj9zxcnaWjO56m1dyhmiFGA@mail.gmail.com>
-Date: Wed, 4 Mar 2015 14:36:10 +0100
-Message-ID: <CACna6rxtvwQxrsRuRt0XLAyQg5rKFf2VqNm6Vrzic5gMCbJDcg@mail.gmail.com> (sfid-20150304_143631_192159_6833A0C9)
-Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chen Gang <xili_gchen_5257@hotmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:31091 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754547AbbCLNF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:05:58 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/49] iwlwifi: pcie: include more registers in the prph dump
+Date: Thu, 12 Mar 2015 15:04:12 +0200
+Message-Id: <1426165474-25586-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143419_443407_53D1DFC5)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 March 2015 at 13:08, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 4 March 2015 at 07:19, Rafał Miłecki <zajec5@gmail.com> wrote:
->> On 3 March 2015 at 22:16, Chen Gang <xili_gchen_5257@hotmail.com> wrote:
->>> bcma also needs PCI, just like IOMEM and DMA, so let it depend on PCI,
->>> or will cause building break for allmodconfig under c6x:
->>>
->>>     CC [M]  drivers/bcma/driver_pcie2.o
->>>   drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
->>>   drivers/bcma/driver_pcie2.c:196:8: error: implicit declaration of function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
->>>     err = pcie_set_readrq(dev, pcie2->reqsize);
->>>           ^
->>>
->>> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
->>> ---
->>>  drivers/bcma/Kconfig | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->>> index 0ee48be..8be284e 100644
->>> --- a/drivers/bcma/Kconfig
->>> +++ b/drivers/bcma/Kconfig
->>> @@ -1,6 +1,6 @@
->>>  config BCMA_POSSIBLE
->>>         bool
->>> -       depends on HAS_IOMEM && HAS_DMA
->>> +       depends on HAS_IOMEM && HAS_DMA && PCI
->>>         default y
->>>
->>>  menu "Broadcom specific AMBA"
->>> --
->>> 1.9.3
->>
->> Hm, I'm not sure how to ideally handle this. Cc-ing few ppl, maybe
->> they have something to add.
->>
->> In fact there are SoCs (not using PCI host code obviously) with
->> everything embedded (without any PCI host mode cores). So note
->> following info about driver_pci.c and driver_pcie2.c:
->> 1) For BCMA_HOST_PCI
->> They are required, because of needed host-related PCI(e) core initialization.
->> 2) For BCMA_HOST_SOC
->> They are needed only if your SoC has PCI(e) host cores and you want to use them.
->>
->> So I guess in theory we could have BCMA_DRIVER_PCI and *require* it
->> for BCMA_HOST_PCI only.
->
-> After thinking about this.
-> We already have Kconfig entries for other internal drivers, so I guess
-> it makes sense to do the same for PCIe.
+This adds BT Coex data to the prph register list.
 
-I've just realized that implementing my idea (optional PCIe core
-drivers) will require reworking following functions:
-bcma_core_pci_irq_ctl
-bcma_core_pci_power_save
-bcma_core_pci_irq_ctl
-bcma_core_pci_init
-bcma_core_pcie2_init
-bcma_core_pci_early_init
-to make them safe to call ever without BCMA_DRIVER_PCI(E).
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-To do that we should clean headers first, which is what I started doing in
-[PATCH next] bcma: move internal function declarations to private header
-
-So I think that for now we could just accept Chen's patch and then
-improve PCIe handling in bcma dropping this dependency at some point.
-
-Any other opinions?
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 4c16333..421ef6b 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -1961,24 +1961,25 @@ static const struct {
+ 	{ .start = 0x00a01c7c, .end = 0x00a01c7c },
+ 	{ .start = 0x00a01c28, .end = 0x00a01c54 },
+ 	{ .start = 0x00a01c5c, .end = 0x00a01c5c },
+-	{ .start = 0x00a01c84, .end = 0x00a01c84 },
++	{ .start = 0x00a01c60, .end = 0x00a01cdc },
+ 	{ .start = 0x00a01ce0, .end = 0x00a01d0c },
+ 	{ .start = 0x00a01d18, .end = 0x00a01d20 },
+ 	{ .start = 0x00a01d2c, .end = 0x00a01d30 },
+ 	{ .start = 0x00a01d40, .end = 0x00a01d5c },
+ 	{ .start = 0x00a01d80, .end = 0x00a01d80 },
+-	{ .start = 0x00a01d98, .end = 0x00a01d98 },
++	{ .start = 0x00a01d98, .end = 0x00a01d9c },
++	{ .start = 0x00a01da8, .end = 0x00a01da8 },
++	{ .start = 0x00a01db8, .end = 0x00a01df4 },
+ 	{ .start = 0x00a01dc0, .end = 0x00a01dfc },
+ 	{ .start = 0x00a01e00, .end = 0x00a01e2c },
+ 	{ .start = 0x00a01e40, .end = 0x00a01e60 },
++	{ .start = 0x00a01e68, .end = 0x00a01e6c },
++	{ .start = 0x00a01e74, .end = 0x00a01e74 },
+ 	{ .start = 0x00a01e84, .end = 0x00a01e90 },
+ 	{ .start = 0x00a01e9c, .end = 0x00a01ec4 },
+-	{ .start = 0x00a01ed0, .end = 0x00a01ed0 },
+-	{ .start = 0x00a01f00, .end = 0x00a01f14 },
+-	{ .start = 0x00a01f44, .end = 0x00a01f58 },
+-	{ .start = 0x00a01f80, .end = 0x00a01fa8 },
+-	{ .start = 0x00a01fb0, .end = 0x00a01fbc },
+-	{ .start = 0x00a01ff8, .end = 0x00a01ffc },
++	{ .start = 0x00a01ed0, .end = 0x00a01ee0 },
++	{ .start = 0x00a01f00, .end = 0x00a01f1c },
++	{ .start = 0x00a01f44, .end = 0x00a01ffc },
+ 	{ .start = 0x00a02000, .end = 0x00a02048 },
+ 	{ .start = 0x00a02068, .end = 0x00a020f0 },
+ 	{ .start = 0x00a02100, .end = 0x00a02118 },
 -- 
-Rafał
+1.9.1
+
