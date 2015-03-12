@@ -1,68 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33399 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879AbbCCECI (ORCPT
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:34030 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898AbbCLJSM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 23:02:08 -0500
-Message-ID: <1425355325.5130.157.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150303_050218_228596_0E5164C7)
-Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: fw@strlen.de, netdev@vger.kernel.org, johannes@sipsolutions.net,
-	linux-wireless@vger.kernel.org
-Date: Mon, 02 Mar 2015 20:02:05 -0800
-In-Reply-To: <20150302.171747.1423128180512348489.davem@davemloft.net>
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
-	 <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <20150302.171747.1423128180512348489.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 12 Mar 2015 05:18:12 -0400
+Received: by wiwl15 with SMTP id l15so2183657wiw.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 02:18:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CABPxzYK-DGLe+kCWnRroErfOMDb+hUHYyNdBiYvqhBmx2QJxUg@mail.gmail.com>
+References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
+ <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
+ <1424772587.2192.14.camel@sipsolutions.net> <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com>
+ <1424774105.2192.29.camel@sipsolutions.net> <CABPxzYJkoCWud=yfNHL5m2FUCPOc854i_L+VB4sN+o8Skb-Pnw@mail.gmail.com>
+ <CABPxzYL4Fz+y7dpp650RyqXVWtL5WC4YkvsQ1_=znOmrmUZF5A@mail.gmail.com>
+ <1424810867.2192.60.camel@sipsolutions.net> <CABPxzY+Z97Q4JSSaR2GfGnxbbR721qJ-v_AjG4Kc1TGetHF4ng@mail.gmail.com>
+ <1424851368.2050.8.camel@sipsolutions.net> <CABPxzYKa5eR+UrinkqY99jxOpVR4mTYcW_3xZ5f2kf9hXHCznA@mail.gmail.com>
+ <1426090817.1904.6.camel@sipsolutions.net> <CABPxzYK-DGLe+kCWnRroErfOMDb+hUHYyNdBiYvqhBmx2QJxUg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 12 Mar 2015 14:47:50 +0530
+Message-ID: <CABPxzYL1uvHG-MsXMiqrnyA8HuJ47AyuJG-fAM2Ok6GQjC_dtg@mail.gmail.com> (sfid-20150312_101822_083080_64B7D1AE)
+Subject: Re: Connection issues with BW Tracking in mac80211
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-02 at 17:17 -0500, David Miller wrote:
-> From: Eric Dumazet <eric.dumazet@gmail.com>
-> Date: Mon, 02 Mar 2015 11:49:23 -0800
-> 
-> > Size of skb->cb[] is not the major factor. Trying to gain 4 or 8 bytes
-> > is not going to improve performance a lot.
-> > 
-> > The real problem is that we clear it in skb_alloc()/build_skb(), instead
-> > of each layer doing so at demand, and only the part that matters for
-> > this layer.
-> > 
-> > Basically, skb->cb[] could be 80 or 160 bytes instead of 48, and we
-> > should not care, as long as no layer does a stupid/lazy 
-> > 
-> > memset(skb->cb, 0, sizeof(skb->cb))
-> > 
-> > Presumably skb_clone() could be extended to receive the length of
-> > skb->cb[] that current layer cares about.
-> 
-> Regardless, I think Florian's work has value.
+On Wed, Mar 11, 2015 at 10:05 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Wed, Mar 11, 2015 at 9:50 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Wed, 2015-03-11 at 21:45 +0530, Krishna Chaitanya wrote:
+>>
+>>> I did some experiments on this and found the root cause.
+>>>
+>>> We are using 5GHz in WORLD Mode, so only passive scan is allowed.
+>>> So when connecting the very first time, the mac80211 MLME sees that
+>>> there are no probe_resp ies (only beacon_ies are present) and it sends
+>>> a directed probe and updates the probe_resp ies. (and also the "ies").
+>>>
+>>> But when config is changed and we get disconnected, beacon_ies are updated
+>>> with the new config, but the probe_resp ies are not.
+>>> cfg80211_bss_update assigns
+>>> probe_resp ies to "ies' and mac80211 updates its bss info based on the
+>>> probe_resp
+>>> ies which have old config causing the issue.
+>>>
+>>> Solution:
+>>>
+>>> 1) Make the directed probe mandatory.
+>>> 2) As you suggested maintain timestamps for probe_resp_ies and beacon_ies
+>>> and use the latest.
+>>>
+>>> Any takes?
+>>
+>> What's the operational problem here? I don't really see it. Are you
+>> afraid users will reconfigure their APs often enough for this to be an
+>> issue?
+> Use case point of view, i understand that this doesn't happen often.
+> But from functional point of view, it can still happen and even
+> after disconnect mac80211 will not allow connection.
+>
+> Also solution: would be to flush scan results up on disconnection.
+Johannes,
 
-Of course. I hope my answer was not implying the contrary !
+Assuming that this problem needs to be solved in spite of
+low probability of the occurrence. What do you think is the
+best way, which has low impact on other features out of these?
 
-48 -> 44 cb change, with the 8 bytes alignment and various __packed
-tricks that might confuse compilers on some arches, will be hard to
-quantify in term of performances on all arches.
+1.  Make the directed probe mandatory:
+         a. Check for successful probe resp without depending on proberesp_ies.
+         b. remove the proberesp_ies from the auth_data to trigger
+directed probe.
 
-About the GRO layout change, reason why 'struct sk_buff *last;' is at
-the end of struct napi_gro_cb is that this field is not used in fast
-path.
+2. Timestamps for proberesp and beacons and update the latest one to "ies".
 
-Note : We could try to use one bit in skb to advertise zero shinfo(skb).
+3. while update "ies" check only for beacon as its supposed to have latest
+information (This will trigger #1 automatically).
 
-Many skbs have a zeroed shinfo() (but shinfo->dataref == 1) , and
-dereferencing skb_shinfo adds a cache line miss. 
+As a quick and minimal impact solution i am thinking 1-b.
 
--> We could avoid memset(shinfo, 0, offsetof(struct skb_shared_info,
-dataref)) & atomic_set(&shinfo->dataref, 1); 
-
- in alloc_skb() and friends completely.
-
-Unfortunately this kind of change would be quite invasive...
-
-
-
-
+Regards,
+Chaitanya T K.
