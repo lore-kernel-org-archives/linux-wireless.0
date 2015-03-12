@@ -1,72 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:35109 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755752AbbCCOlA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 09:41:00 -0500
-Message-ID: <54F5C813.4030505@gmail.com> (sfid-20150303_154128_013572_0AB8C45C)
-Date: Tue, 03 Mar 2015 22:41:23 +0800
-From: Fred Chou <fred.chou.nd@gmail.com>
-MIME-Version: 1.0
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: avoid memcpy when downloading firmware
-References: <1425356643-2707-1-git-send-email-fred.chou.nd@gmail.com> <1425362407.5130.161.camel@edumazet-glaptop2.roam.corp.google.com>
-In-Reply-To: <1425362407.5130.161.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:19662 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751492AbbCLGxi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 02:53:38 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/7] mac80211: ignore CSA to same channel
+Date: Thu, 12 Mar 2015 08:53:26 +0200
+Message-Id: <1426143210-25635-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_075347_999236_B85EA5C7)
+In-Reply-To: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+If the AP is confused and starts doing a CSA to the same channel,
+just ignore that request instead of trying to act it out since it
+was likely sent in error anyway.
 
-On 3/3/2015 2:00 PM, Eric Dumazet wrote:
-> On Tue, 2015-03-03 at 12:24 +0800, Fred Chou wrote:
->> From: Fred Chou <fred.chou.nd@gmail.com>
->>
->> The temporary buffer to hold firmware data is not really needed,
->> and memcpy can be avoided by using data pointer instead.
->>
->> Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/hif_usb.c | 12 ++----------
->>  1 file changed, 2 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
->> index 10c02f5..0bc35a8 100644
->> --- a/drivers/net/wireless/ath/ath9k/hif_usb.c
->> +++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
->> @@ -986,30 +986,22 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
->>  	const void *data = hif_dev->fw_data;
-> 
-> Here data can be vmalloc() backed.
-> 
->>  	size_t len = hif_dev->fw_size;
->>  	u32 addr = AR9271_FIRMWARE;
->> -	u8 *buf = kzalloc(4096, GFP_KERNEL);
-> 
-> Here buf is kmalloc() backed.
-> 
->>  	u32 firm_offset;
->>  
->> -	if (!buf)
->> -		return -ENOMEM;
->> -
->>  	while (len) {
->>  		transfer = min_t(size_t, len, 4096);
->> -		memcpy(buf, data, transfer);
->>  
->>  		err = usb_control_msg(hif_dev->udev,
->>  				      usb_sndctrlpipe(hif_dev->udev, 0),
->>  				      FIRMWARE_DOWNLOAD, 0x40 | USB_DIR_OUT,
->> -				      addr >> 8, 0, buf, transfer, HZ);
-> 
-> 
-> Are you sure usb_control_msg() accepts vmalloc()ed buffers ?
-> 
-> My guess is the answer is no.
-> 
-> 
+In the case of the bug I was investigating the GO was misbehaving
+and sending out a beacon with CSA IEs still included after having
+actually done the channel switch.
 
-I agree, and I would like to drop the patch. Thanks.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/mlme.c        | 13 +++++++++++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 0266c57..994d1b3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -453,6 +453,7 @@ struct ieee80211_if_managed {
+ 	unsigned int flags;
+ 
+ 	bool csa_waiting_bcn;
++	bool csa_ignored_same_chan;
+ 
+ 	bool beacon_crc_valid;
+ 	u32 beacon_crc;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 1999bc0..6205206 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1150,6 +1150,17 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 		return;
+ 	}
+ 
++	if (cfg80211_chandef_identical(&csa_ie.chandef,
++				       &sdata->vif.bss_conf.chandef)) {
++		if (ifmgd->csa_ignored_same_chan)
++			return;
++		sdata_info(sdata,
++			   "AP %pM tries to chanswitch to same channel, ignore\n",
++			   ifmgd->associated->bssid);
++		ifmgd->csa_ignored_same_chan = true;
++		return;
++	}
++
+ 	mutex_lock(&local->mtx);
+ 	mutex_lock(&local->chanctx_mtx);
+ 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+@@ -1194,6 +1205,7 @@ ieee80211_sta_process_chanswitch(struct ieee80211_sub_if_data *sdata,
+ 	sdata->vif.csa_active = true;
+ 	sdata->csa_chandef = csa_ie.chandef;
+ 	sdata->csa_block_tx = csa_ie.mode;
++	ifmgd->csa_ignored_same_chan = false;
+ 
+ 	if (sdata->csa_block_tx)
+ 		ieee80211_stop_vif_queues(local, sdata,
+@@ -2076,6 +2088,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	sdata->vif.csa_active = false;
+ 	ifmgd->csa_waiting_bcn = false;
++	ifmgd->csa_ignored_same_chan = false;
+ 	if (sdata->csa_block_tx) {
+ 		ieee80211_wake_vif_queues(local, sdata,
+ 					  IEEE80211_QUEUE_STOP_REASON_CSA);
+-- 
+1.9.1
+
