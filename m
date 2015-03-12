@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:33172 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbbCTNA1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 09:00:27 -0400
-Message-ID: <550C19E1.1020305@openwrt.org> (sfid-20150320_140030_496486_B5D384CB)
-Date: Fri, 20 Mar 2015 14:00:17 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:33009 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932198AbbCLQDE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 12:03:04 -0400
+Message-ID: <5501B8B5.2010801@lwfinger.net> (sfid-20150312_170330_418145_014D67A6)
+Date: Thu, 12 Mar 2015 11:03:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Oleksij Rempel <linux@rempel-privat.de>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@codeaurora.org, adrian@freebsd.org
-Subject: Re: [PATCH 16/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
-References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de> <1426855138-6121-17-git-send-email-linux@rempel-privat.de>
-In-Reply-To: <1426855138-6121-17-git-send-email-linux@rempel-privat.de>
-Content-Type: text/plain; charset=windows-1252
+To: Yang Bai <hamo.by@gmail.com>, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: get buffer_desc before trying to alloc new skb
+References: <1426160036-1542-1-git-send-email-hamo.by@gmail.com>
+In-Reply-To: <1426160036-1542-1-git-send-email-hamo.by@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-03-20 13:38, Oleksij Rempel wrote:
-> it is possible to reduce time needed for this function
-> by rplacing REG_WRITE with REG_RMW (plus dummy 0) and putt all commands
-> in same buffer.
-> 
-> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+On 03/12/2015 06:33 AM, Yang Bai wrote:
+> if rtlpriv->use_new_trx_flow == true and we run out of memory
+> to alloc a new skb, we will directly jump to no_new tag with
+> buffer_desc == NULL. Then we will dereference this NULL pointer
+> in function _rtl_pci_init_one_rxdesc.
+>
+> Signed-off-by: Yang Bai <hamo.by@gmail.com>
+
+Good catch. The only problem that I have is this fix adds even more branching to 
+this interrupt routine. At first glance, I should be able to set buffer_desc in 
+the earlier code where the code has already branched. For testing, an RTL8192EE 
+card will be needed. Do you have such a card?
+
+Larry
+
 > ---
->  drivers/net/wireless/ath/ath9k/eeprom_4k.c | 18 ++++++++++--------
->  1 file changed, 10 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> index 291c1d1..56621be 100644
-> --- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> +++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-> @@ -772,15 +772,16 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
->  				 struct ar5416_eeprom_4k *eep,
->  				 u8 txRxAttenLocal)
->  {
-> -	REG_WRITE(ah, AR_PHY_SWITCH_CHAIN_0,
-> -		  pModal->antCtrlChain[0]);
-> +	ENABLE_REG_RMW_BUFFER(ah);
-> +	REG_RMW(ah, AR_PHY_SWITCH_CHAIN_0,
-> +		pModal->antCtrlChain[0], 0);
-How about combining the WRITE/RMW buffering in ath9k_htc (automatically
-deciding whether to use RMW or WRITE for the whole transaction), instead
-of quirky looking REG_WRITE to REG_RMW conversions?
+>   drivers/net/wireless/rtlwifi/pci.c | 12 +++++++-----
+>   1 file changed, 7 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index a62170e..7fe04d1 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -820,17 +820,19 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>   		pci_unmap_single(rtlpci->pdev, *((dma_addr_t *)skb->cb),
+>   				 rtlpci->rxbuffersize, PCI_DMA_FROMDEVICE);
+>
+> +		if (rtlpriv->use_new_trx_flow)
+> +			buffer_desc =
+> +			  &rtlpci->rx_ring[rxring_idx].buffer_desc
+> +				[rtlpci->rx_ring[rxring_idx].idx];
+> +
+>   		/* get a new skb - if fail, old one will be reused */
+>   		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
+>   		if (unlikely(!new_skb))
+>   			goto no_new;
+> -		if (rtlpriv->use_new_trx_flow) {
+> -			buffer_desc =
+> -			  &rtlpci->rx_ring[rxring_idx].buffer_desc
+> -				[rtlpci->rx_ring[rxring_idx].idx];
+> +		if (rtlpriv->use_new_trx_flow)
+>   			/*means rx wifi info*/
+>   			pdesc = (struct rtl_rx_desc *)skb->data;
+> -		}
+> +
+>   		memset(&rx_status , 0 , sizeof(rx_status));
+>   		rtlpriv->cfg->ops->query_rx_desc(hw, &stats,
+>   						 &rx_status, (u8 *)pdesc, skb);
+>
 
-> -	REG_WRITE(ah, AR_PHY_TIMING_CTRL4(0),
-> -		  (REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
-> -		   ~(AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF |
-> -		     AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF)) |
-> -		  SM(pModal->iqCalICh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF) |
-> -		  SM(pModal->iqCalQCh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF));
-> +	REG_RMW(ah, AR_PHY_TIMING_CTRL4(0),
-> +		(REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
-> +		 ~(AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF |
-> +		   AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF)) |
-> +		SM(pModal->iqCalICh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF) |
-> +		SM(pModal->iqCalQCh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF), 0);
-If you translate it to REG_RMW, you should get rid of the REG_READ part.
-
-- Felix
