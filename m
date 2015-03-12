@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:33956 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757750AbbCDPBj (ORCPT
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:39471 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbbCLMj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 10:01:39 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Marek Puzyniak <marek.puzyniak@tieto.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 3/4] mac80211: initialize rate control earlier for tdls station
-References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
-	<1424850911-21017-4-git-send-email-marek.puzyniak@tieto.com>
-	<1425041427.1960.1.camel@sipsolutions.net>
-Date: Wed, 4 Mar 2015 17:01:29 +0200
-In-Reply-To: <1425041427.1960.1.camel@sipsolutions.net> (Johannes Berg's
-	message of "Fri, 27 Feb 2015 13:50:27 +0100")
-Message-ID: <878ufc7qnq.fsf@kamboji.qca.qualcomm.com> (sfid-20150304_160144_027411_B7D70FD3)
+	Thu, 12 Mar 2015 08:39:58 -0400
+Message-ID: <55018919.3050902@m4x.org> (sfid-20150312_134014_069993_A72FF84D)
+Date: Thu, 12 Mar 2015 20:39:53 +0800
+From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+CC: netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: wl18xx: Bad format for rx_frames_per_rates in debugfs?
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hello,
 
-> +Arik.
->
-> It'd be nice (for me anyway) if you didn't send this in a series of
-> other patches I don't care about - I only ever saw this due to
-> patchwork.
+While adding __printf attributes to several functions in the kernel, I
+got a surprising gcc warning in drivers/net/wireless/ti/wl18xx/debugfs.c
+about "format '%u' expects argument of type 'unsigned int', but argument
+5 has type 'u32 *'".
 
-Yes, mac80211 and driver patches need to be sent in separate series. I
-will drop this series for now, please resend ath10k patches separetely.
+Indeed it seems that commit c5d94169e818 ("wl18xx: use new fw stats
+structures") [1] introduced an array field "u32 rx_frames_per_rates[50]"
+in struct wl18xx_acx_rx_rate_stat but is using
+WL18XX_DEBUGFS_FWSTATS_FILE(rx_rate, rx_frames_per_rates, "%u"); instead
+of something like WL18XX_DEBUGFS_FWSTATS_FILE_ARRAY(rx_rate,
+rx_frames_per_rates, 50); for displaying this value.  So I believe that
+currently the rx_rate entry in debugfs contains a kernel pointer instead
+of the actual data.  As I don't have the hardware to test I can't be
+sure of it.
 
-AND please clearly document what mac80211 patches the ath10k patches
-depend on.
+Is this a real bug which needs to be fixed or something weird I haven't
+understood yet?
 
--- 
-Kalle Valo
+Thanks
+
+--
+Nicolas
+
+[1]
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=c5d94169e8189d02dfbd6143411908357865d777
+
+PS: I got this gcc warning by adding __printf(4, 5) to
+wl1271_format_buffer() prototype in
+drivers/net/wireless/ti/wlcore/debugfs.h:
+
+In file included from
+/usr/src/linux/drivers/net/wireless/ti/wl18xx/debugfs.c:23:0:
+    /usr/src/linux/drivers/net/wireless/ti/wl18xx/debugfs.c: In function
+'rx_rate_rx_frames_per_rates_read':
+    /usr/src/linux/drivers/net/wireless/ti/wl18xx/debugfs.c:34:32:
+error: format '%u' expects argument of type 'unsigned int', but argument
+5 has type 'u32 *' [-Werror=format=]
+      DEBUGFS_FWSTATS_FILE(a, b, c, wl18xx_acx_statistics)
+                                    ^
+
+/usr/src/linux/drivers/net/wireless/ti/wl18xx/../wlcore/debugfs.h:77:9:
+note: in definition of macro 'DEBUGFS_FWSTATS_FILE'
+      struct struct_type *stats = wl->stats.fw_stats;   \
+             ^
+    /usr/src/linux/drivers/net/wireless/ti/wl18xx/debugfs.c:142:1: note:
+in expansion of macro 'WL18XX_DEBUGFS_FWSTATS_FILE'
+     WL18XX_DEBUGFS_FWSTATS_FILE(rx_rate, rx_frames_per_rates, "%u");
+     ^
