@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:41594 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752580AbbCSEj7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 00:39:59 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, joe@perches.com,
-	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v3 15/15] staging: rtl8723au: Remove unneeded comments
-Date: Thu, 19 Mar 2015 00:39:18 -0400
-Message-Id: <1426739958-18949-16-git-send-email-m.v.b@runbox.com> (sfid-20150319_054222_096595_88BA3A96)
-In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
-References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10603 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754125AbbCLNUm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:20:42 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/3] ath10k: add symlink for hwmon device
+References: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<1424437452-28161-3-git-send-email-rmanohar@qti.qualcomm.com>
+	<87pp8gyi7x.fsf@kamboji.qca.qualcomm.com>
+	<20150310164223.GA11700@qca.qualcomm.com>
+Date: Thu, 12 Mar 2015 15:20:33 +0200
+In-Reply-To: <20150310164223.GA11700@qca.qualcomm.com> (Rajkumar Manoharan's
+	message of "Tue, 10 Mar 2015 22:12:26 +0530")
+Message-ID: <878uf2uzby.fsf@kamboji.qca.qualcomm.com> (sfid-20150312_142045_421569_1031753E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit removes a number of unneeded comments. Two of the
-aforementioned comments were most likely meant to aid with version
-control, whereas the remaining two comments relate to (now unused)
-local variable names.
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> On Tue, Mar 10, 2015 at 05:39:46PM +0200, Kalle Valo wrote:
+>> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+>> 
+>> > Add symbloic link "thermal_sensors" for hwmon devices for better
+>> > readability.
+>> >
+>> > /sys/class/ieee80211/phyX/device/thermal_sensors ->
+>> > sys/class/ieee80211/phyX/device/hwmon/hwmonY
+>> 
+>> I don't get it, how does that improve readability? Also I don't see any
+>> other driver doing this, so isn't this just some private hack and not a
+>> proper generic interface?
+>
+> The patch is providing same level access to monitoring device similar to
+> cooling device.
+>
+> cooling_device -> ../../../../../virtual/thermal/cooling_deviceX
+> thermal_sensors -> hwmon/hwmonX
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index cdb3707fb2..309f3d969e 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -671,14 +671,14 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 		if ((curfragnum+1) == pattrib->nr_frags) { /* 4 the last fragment */
- 			length = pattrib->last_txcmdsz-pattrib->hdrlen-pattrib->iv_len - pattrib->icv_len;
- 			RT_TRACE(_module_rtl871x_security_c_, _drv_info_, ("pattrib->iv_len =%x, pattrib->icv_len =%x\n", pattrib->iv_len, pattrib->icv_len));
--			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
-+			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
- 
- 			arcfour_init(&mycontext, rc4key, 16);
- 			arcfour_encrypt(&mycontext, payload, payload, length);
- 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
- 		} else {
- 			length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
--			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
-+			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
- 			arcfour_init(&mycontext, rc4key, 16);
- 			arcfour_encrypt(&mycontext, payload, payload, length);
- 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
-@@ -1272,7 +1272,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
- 	/* Intermediate Buffers */
- 	int curfragnum, length;
- 	u32 prwskeylen;
--	u8 *pframe, *prwskey; /* *payload, *iv */
-+	u8 *pframe, *prwskey;
- 	u8 hw_hdr_offset = 0;
- 	struct sta_info *stainfo;
- 	struct pkt_attrib *pattrib = &pxmitframe->attrib;
-@@ -1563,7 +1563,7 @@ int rtw_aes_decrypt23a(struct rtw_adapter *padapter,
- 	struct security_priv *psecuritypriv = &padapter->securitypriv;
- 	struct sk_buff *skb = precvframe->pkt;
- 	int length;
--	u8 *pframe, *prwskey; /* *payload, *iv */
-+	u8 *pframe, *prwskey;
- 	int res = _SUCCESS;
- 
- 	pframe = skb->data;
+Is this documented somewhere? We cannot just start inventing sysfs
+interfaces on our own.
+
 -- 
-2.1.4
-
+Kalle Valo
