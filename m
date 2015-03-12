@@ -1,50 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:32926 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751562AbbCORSN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 13:18:13 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Florian Westphal <fw@strlen.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH next] drivers: wireless: carl9170: shrink carl9170_tx_info
-Date: Sun, 15 Mar 2015 18:17:56 +0100
-Message-ID: <2002983.Zu6fLi5xz6@debian64> (sfid-20150315_181818_584510_ECF0ACD0)
-In-Reply-To: <20150314175532.GH14761@breakpoint.cc>
-References: <1426261045-22373-1-git-send-email-fw@strlen.de> <1689955.Ikz24aORLX@debian64> <20150314175532.GH14761@breakpoint.cc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga02.intel.com ([134.134.136.20]:23662 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754512AbbCLNGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:06:00 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 28/49] iwlwifi: fix smatch warning:  warn: inconsistent indenting
+Date: Thu, 12 Mar 2015 15:04:13 +0200
+Message-Id: <1426165474-25586-28-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_140748_087360_1A0924F5)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, March 14, 2015 06:55:32 PM Florian Westphal wrote:
-> Christian Lamparter <chunkeey@googlemail.com> wrote:
-> > On Friday, March 13, 2015 04:37:25 PM Florian Westphal wrote:
-> > > its embededded inside rate_driver_data of the ieee80211_tx_info struct,
-> > > which in turn is stored in skb->cb[].
-> > > 
-> > > In order to shrink cb, we need to shrink ieee80211_tx_info which means
-> > > to downsize all users first.
-> > > 
-> > > Alternatively, one might be able to remove kref but
-> > > its less intrusive/simpler to use u32 for timeout handling.
-> > > 
-> > > Signed-off-by: Florian Westphal <fw@strlen.de>
-> > > ---
-> > u32 jiffies... that's a lot of pointing (well not so much) and really 
-> > ugly casting (a lot). I guess it would be easier to just use a "per-queue"
-> > timeout watchdog like almost everybody else. This way, the driver will
-> > be ready for the next skb->cb shrink as well.
-> > 
-> > carl9170_tx_ampdu_timeout can be completely removed.
-> 
-> Maybe, but there is only so much I am willing to do with "compile
-> tested only" patches...
-well, reinventing jiffies_32 is just a ugly hack and not "intrusive/simpler"
-than removing kref here.
+While at it, fix a few checkpatch issues.
 
-Please try again. Don't worry about testing, I'm sure this is not a problem
-and someone will test the patches with the hw on 32-bit and 64-bit platforms.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/dvm/rs.c  |  7 ++++---
+ drivers/net/wireless/iwlwifi/dvm/tx.c  |  6 +++---
+ drivers/net/wireless/iwlwifi/iwl-drv.c | 18 +++++++++---------
+ drivers/net/wireless/iwlwifi/mvm/rs.c  | 18 +++++++++---------
+ 4 files changed, 25 insertions(+), 24 deletions(-)
 
-Regards,
-  Christian
+diff --git a/drivers/net/wireless/iwlwifi/dvm/rs.c b/drivers/net/wireless/iwlwifi/dvm/rs.c
+index 32b78a6..3bd7c86 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/dvm/rs.c
+@@ -3153,12 +3153,13 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	desc += sprintf(buff+desc, "lq type %s\n",
+ 	   (is_legacy(tbl->lq_type)) ? "legacy" : "HT");
+ 	if (is_Ht(tbl->lq_type)) {
+-		desc += sprintf(buff+desc, " %s",
++		desc += sprintf(buff + desc, " %s",
+ 		   (is_siso(tbl->lq_type)) ? "SISO" :
+ 		   ((is_mimo2(tbl->lq_type)) ? "MIMO2" : "MIMO3"));
+-		   desc += sprintf(buff+desc, " %s",
++		desc += sprintf(buff + desc, " %s",
+ 		   (tbl->is_ht40) ? "40MHz" : "20MHz");
+-		   desc += sprintf(buff+desc, " %s %s %s\n", (tbl->is_SGI) ? "SGI" : "",
++		desc += sprintf(buff + desc, " %s %s %s\n",
++		   (tbl->is_SGI) ? "SGI" : "",
+ 		   (lq_sta->is_green) ? "GF enabled" : "",
+ 		   (lq_sta->is_agg) ? "AGG on" : "");
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/dvm/tx.c b/drivers/net/wireless/iwlwifi/dvm/tx.c
+index 1e40a12..275df12 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/tx.c
++++ b/drivers/net/wireless/iwlwifi/dvm/tx.c
+@@ -189,9 +189,9 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 		rate_flags |= RATE_MCS_CCK_MSK;
+ 
+ 	/* Set up antennas */
+-	 if (priv->lib->bt_params &&
+-	     priv->lib->bt_params->advanced_bt_coexist &&
+-	     priv->bt_full_concurrent) {
++	if (priv->lib->bt_params &&
++	    priv->lib->bt_params->advanced_bt_coexist &&
++	    priv->bt_full_concurrent) {
+ 		/* operated as 1x1 in full concurrency mode */
+ 		priv->mgmt_tx_ant = iwl_toggle_tx_ant(priv, priv->mgmt_tx_ant,
+ 				first_antenna(priv->nvm_data->valid_tx_ant));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index f1d73d5..66ca000 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -1014,34 +1014,34 @@ static int validate_sec_sizes(struct iwl_drv *drv,
+ 
+ 	/* Verify that uCode images will fit in card's SRAM. */
+ 	if (get_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_INST) >
+-							cfg->max_inst_size) {
++	    cfg->max_inst_size) {
+ 		IWL_ERR(drv, "uCode instr len %Zd too large to fit in\n",
+ 			get_sec_size(pieces, IWL_UCODE_REGULAR,
+-						IWL_UCODE_SECTION_INST));
++				     IWL_UCODE_SECTION_INST));
+ 		return -1;
+ 	}
+ 
+ 	if (get_sec_size(pieces, IWL_UCODE_REGULAR, IWL_UCODE_SECTION_DATA) >
+-							cfg->max_data_size) {
++	    cfg->max_data_size) {
+ 		IWL_ERR(drv, "uCode data len %Zd too large to fit in\n",
+ 			get_sec_size(pieces, IWL_UCODE_REGULAR,
+-						IWL_UCODE_SECTION_DATA));
++				     IWL_UCODE_SECTION_DATA));
+ 		return -1;
+ 	}
+ 
+-	 if (get_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST) >
+-							cfg->max_inst_size) {
++	if (get_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_INST) >
++	     cfg->max_inst_size) {
+ 		IWL_ERR(drv, "uCode init instr len %Zd too large to fit in\n",
+ 			get_sec_size(pieces, IWL_UCODE_INIT,
+-						IWL_UCODE_SECTION_INST));
++				     IWL_UCODE_SECTION_INST));
+ 		return -1;
+ 	}
+ 
+ 	if (get_sec_size(pieces, IWL_UCODE_INIT, IWL_UCODE_SECTION_DATA) >
+-							cfg->max_data_size) {
++	    cfg->max_data_size) {
+ 		IWL_ERR(drv, "uCode init data len %Zd too large to fit in\n",
+ 			get_sec_size(pieces, IWL_UCODE_REGULAR,
+-						IWL_UCODE_SECTION_DATA));
++				     IWL_UCODE_SECTION_DATA));
+ 		return -1;
+ 	}
+ 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
+index 6578498..d8dacb3 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
+@@ -3343,16 +3343,16 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 			(is_legacy(rate)) ? "legacy" :
+ 			is_vht(rate) ? "VHT" : "HT");
+ 	if (!is_legacy(rate)) {
+-		desc += sprintf(buff+desc, " %s",
++		desc += sprintf(buff + desc, " %s",
+ 		   (is_siso(rate)) ? "SISO" : "MIMO2");
+-		   desc += sprintf(buff+desc, " %s",
+-				   (is_ht20(rate)) ? "20MHz" :
+-				   (is_ht40(rate)) ? "40MHz" :
+-				   (is_ht80(rate)) ? "80Mhz" : "BAD BW");
+-		   desc += sprintf(buff+desc, " %s %s %s\n",
+-				   (rate->sgi) ? "SGI" : "NGI",
+-				   (rate->ldpc) ? "LDPC" : "BCC",
+-				   (lq_sta->is_agg) ? "AGG on" : "");
++		desc += sprintf(buff + desc, " %s",
++				(is_ht20(rate)) ? "20MHz" :
++				(is_ht40(rate)) ? "40MHz" :
++				(is_ht80(rate)) ? "80Mhz" : "BAD BW");
++		desc += sprintf(buff + desc, " %s %s %s\n",
++				(rate->sgi) ? "SGI" : "NGI",
++				(rate->ldpc) ? "LDPC" : "BCC",
++				(lq_sta->is_agg) ? "AGG on" : "");
+ 	}
+ 	desc += sprintf(buff+desc, "last tx rate=0x%X\n",
+ 			lq_sta->last_rate_n_flags);
+-- 
+1.9.1
+
