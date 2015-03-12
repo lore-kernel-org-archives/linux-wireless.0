@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43479 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756127AbbCCNsf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 08:48:35 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: wil6210: increase cmd buffer size to avoid sscanf buffer overflow
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1425232113-5010-1-git-send-email-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20150303134834.AA167140CD2@smtp.codeaurora.org> (sfid-20150303_144856_431451_DE108F20)
-Date: Tue,  3 Mar 2015 13:48:34 +0000 (UTC)
+Received: from mga01.intel.com ([192.55.52.88]:19662 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752342AbbCLGxl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 02:53:41 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/7] nl80211: ignore HT/VHT capabilities without QoS/WMM
+Date: Thu, 12 Mar 2015 08:53:27 +0200
+Message-Id: <1426143210-25635-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_075348_649395_8A3D53E8)
+In-Reply-To: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> cppcheck detected a buffer overflow:
-> 
-> [drivers/net/wireless/ath/wil6210/debugfs.c:634]: (error) Width 8
->   given in format string (no. 1) is larger than destination buffer
->   'cmd[8]', use %7s to prevent overflowing it.
-> 
-> For the current %8s sscanf we require cmd to be 9 chars long
-> so increase it by 1 byte to prevent the sscan overflow (rather
-> than reduce the %8s specifier to %7s as cppcheck recommends).
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Acked-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+As HT/VHT depend heavily on QoS/WMM, it's not a good idea to
+let userspace add clients that have HT/VHT but not QoS/WMM.
+Since it does so in certain cases we've observed (client is
+using HT IEs but not QoS/WMM) just ignore the HT/VHT info at
+this point and don't pass it down to the drivers which might
+unconditionally use it.
 
-Thanks, applied to wireless-drivers-next.git.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Kalle Valo
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b020853..593513d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4401,6 +4401,16 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 	if (parse_station_flags(info, dev->ieee80211_ptr->iftype, &params))
+ 		return -EINVAL;
+ 
++	/* HT/VHT requires QoS, but if we don't have that just ignore HT/VHT
++	 * as userspace might just pass through the capabilities from the IEs
++	 * directly, rather than enforcing this restriction and returning an
++	 * error in this case.
++	 */
++	if (!(params.sta_flags_set & BIT(NL80211_STA_FLAG_WME))) {
++		params.ht_capa = NULL;
++		params.vht_capa = NULL;
++	}
++
+ 	/* When you run into this, adjust the code below for the new flag */
+ 	BUILD_BUG_ON(NL80211_STA_FLAG_MAX != 7);
+ 
+-- 
+1.9.1
+
