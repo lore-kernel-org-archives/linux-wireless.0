@@ -1,83 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:34599 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbbCaKdD (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:16549 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751113AbbCLIcP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 06:33:03 -0400
-Received: by lboc7 with SMTP id c7so9036965lbo.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 03:33:02 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v6 0/7] ath10k: add multi-channel support
-Date: Tue, 31 Mar 2015 10:26:19 +0000
-Message-Id: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com> (sfid-20150331_123309_614925_554A2AE8)
+	Thu, 12 Mar 2015 04:32:15 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2C8U4DG007468
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 01:32:14 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1t20qjehyg-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 01:32:14 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/3] mwifiex: fix a bug in Rx multiport aggregation logic
+Date: Thu, 12 Mar 2015 01:29:31 -0700
+Message-ID: <1426148971-6103-1-git-send-email-akarwar@marvell.com> (sfid-20150312_093222_392290_6B9A80FF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New qca6174 with wmi-tlv firmware supports
-multi-channel operation. To make use of it
-ath10k needs a few changes: implement mac80211's
-chanctx API and rework tx queue control a bit.
+From: Cathy Luo <cluo@marvell.com>
 
+It's been observed Rx aggregated packets are always followed
+by a single Rx packet. This patch improves our logic to add
+that extra packet in next aggregation.
 
-Changes since RFC:
- * I've sent `ath10k: defer AP self-peer removal
-   wait` separately now because it's not really
-   required for multi-channel per se
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/mwifiex/sdio.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-v2:
- * fix null deref after rebasing
- * fix commit log typo
-
-v3:
- * remove some duplication wrt mac80211 [Johannes]
- * small fixes
-
-v4:
- * rebased
- * fix STA CSA
- * drop ar->arvifs data_lock protection patch
- * drop ar->arvifs for vif iteration in favour of
-   ieee80211_iterate_active_interfaces()
- * small refactor in monitor recalc
- * add a patch to fix fw resource allocation for
-   multi-vif/chan
-
-v5:
- * rebased on top of pending branch
- * 12 char commit ids
- * increase vif limit to 3 in ifcombs
-
-v6:
- * fix rcu locking
- * rebased on master branch
-   (mind the cfg80211_get_bss conflict when
-    applying to pending branch)
-
-Michal Kazior (7):
-  ath10k: allow empty ssid vdev config
-  ath10k: implement chanctx API
-  ath10k: implement adaptive qcs command
-  ath10k: rework tx queue locking
-  ath10k: implement tx pause wmi event
-  ath10k: enable multi-channel on supported devices
-  ath10k: allocate fw resources for iface combinations
-
- drivers/net/wireless/ath/ath10k/core.h    |  18 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  | 100 +++-
- drivers/net/wireless/ath/ath10k/htt_tx.c  |   4 +-
- drivers/net/wireless/ath/ath10k/hw.h      |   6 +-
- drivers/net/wireless/ath/ath10k/mac.c     | 956 ++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/mac.h     |  14 +
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  16 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  88 ++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  46 ++
- drivers/net/wireless/ath/ath10k/wmi.c     |  18 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |   1 +
- 11 files changed, 1126 insertions(+), 141 deletions(-)
-
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 57d85ab..9ef010b 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1133,6 +1133,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 	s32 f_do_rx_aggr = 0;
+ 	s32 f_do_rx_cur = 0;
+ 	s32 f_aggr_cur = 0;
++	s32 f_post_aggr_cur = 0;
+ 	struct sk_buff *skb_deaggr;
+ 	u32 pind;
+ 	u32 pkt_len, pkt_type, mport;
+@@ -1169,7 +1170,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 			} else {
+ 				/* No room in Aggr buf, do rx aggr now */
+ 				f_do_rx_aggr = 1;
+-				f_do_rx_cur = 1;
++				f_post_aggr_cur = 1;
+ 			}
+ 		} else {
+ 			/* Rx aggr not in progress */
+@@ -1280,9 +1281,13 @@ rx_curr_single:
+ 
+ 		mwifiex_decode_rx_packet(adapter, skb, pkt_type);
+ 	}
++	if (f_post_aggr_cur) {
++		dev_dbg(adapter->dev, "info: current packet aggregation\n");
++		/* Curr pkt can be aggregated */
++		mp_rx_aggr_setup(card, skb, port);
++	}
+ 
+ 	return 0;
+-
+ error:
+ 	if (MP_RX_AGGR_IN_PROGRESS(card)) {
+ 		/* Multiport-aggregation transfer failed - cleanup */
 -- 
-2.1.4
+1.8.1.4
 
