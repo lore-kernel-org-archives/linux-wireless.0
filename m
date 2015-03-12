@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52062 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbbCMOSj (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:51231 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752813AbbCLOf4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 10:18:39 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [8/15] libertas_tf: if_usb.c: don't export static symbol
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1426092997-30605-9-git-send-email-Julia.Lawall@lip6.fr>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	daniel@iogearbox.net
-Message-Id: <20150313141838.B883D1416F4@smtp.codeaurora.org> (sfid-20150313_151900_207649_B7F81465)
-Date: Fri, 13 Mar 2015 14:18:38 +0000 (UTC)
+	Thu, 12 Mar 2015 10:35:56 -0400
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH 1/3] rt2x00usb: initialize the read value in case of failure
+Date: Thu, 12 Mar 2015 15:35:44 +0100
+Message-Id: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de> (sfid-20150312_153600_304688_C38A1595)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+My understanding ist that rt2x00usb_register_read() is void and so the
+reader is unaware of read errors and assumes that whatever was on the
+stack as it was about to read.
 
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> The semantic patch that fixes this problem is as follows:
-> (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @r@
-> type T;
-> identifier f;
-> @@
-> 
-> static T f (...) { ... }
-> 
-> @@
-> identifier r.f;
-> declarer name EXPORT_SYMBOL_GPL;
-> @@
-> 
-> -EXPORT_SYMBOL_GPL(f);
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ drivers/net/wireless/rt2x00/rt2x00usb.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Thanks, applied to wireless-drivers-next.git.
+diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.h b/drivers/net/wireless/rt2x00/rt2x00usb.h
+index 8f85fbd5f237..569363da00a2 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00usb.h
++++ b/drivers/net/wireless/rt2x00/rt2x00usb.h
+@@ -199,7 +199,7 @@ static inline void rt2x00usb_register_read(struct rt2x00_dev *rt2x00dev,
+ 					   const unsigned int offset,
+ 					   u32 *value)
+ {
+-	__le32 reg;
++	__le32 reg = 0;
+ 	rt2x00usb_vendor_request_buff(rt2x00dev, USB_MULTI_READ,
+ 				      USB_VENDOR_REQUEST_IN, offset,
+ 				      &reg, sizeof(reg));
+@@ -219,7 +219,7 @@ static inline void rt2x00usb_register_read_lock(struct rt2x00_dev *rt2x00dev,
+ 						const unsigned int offset,
+ 						u32 *value)
+ {
+-	__le32 reg;
++	__le32 reg = 0;
+ 	rt2x00usb_vendor_req_buff_lock(rt2x00dev, USB_MULTI_READ,
+ 				       USB_VENDOR_REQUEST_IN, offset,
+ 				       &reg, sizeof(reg), REGISTER_TIMEOUT);
+-- 
+2.1.4
 
-Kalle Valo
