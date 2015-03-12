@@ -1,81 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60860 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:19662 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933754AbbCPQCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 12:02:01 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: "M. Vefa Bicakci" <m.v.b@runbox.com>
-Cc: Matthias Beyer <mail@beyermatthias.de>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org
-Subject: Re: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's rtw_security.c
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-	<20150315093142.GY24643@lucy.3gs> <10669062.ZZNVxH5Tl9@lenny>
-Date: Mon, 16 Mar 2015 12:01:33 -0400
-In-Reply-To: <10669062.ZZNVxH5Tl9@lenny> (M. Vefa Bicakci's message of "Sun,
-	15 Mar 2015 09:51 -0400")
-Message-ID: <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150316_170227_838480_832E4B14)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752591AbbCLGxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 02:53:49 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 7/7] mac80211: Count correctly interface types
+Date: Thu, 12 Mar 2015 08:53:30 +0200
+Message-Id: <1426143210-25635-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_075407_840352_246E6BC4)
+In-Reply-To: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"M. Vefa Bicakci" <m.v.b@runbox.com> writes:
-> Hello Matthias,
->
-> Thank you for reviewing the patches!
->
-> I have based and tested these commits on Stephen Rothwell's
-> linux-next.git/master branch. It is possible that I made a mistake
-> by doing this.
->
-> Nevertheless, I have just verified that these patches cleanly apply to the
-> current version of Greg Kroah-Hartman's staging.git/staging-next branch, [1]
-> as well as Stephen Rothwell's linux-next.git/master branch. [2]
->
-> In my local repo, here are my remotes:
->
-> $ git remote -v | grep -E "staging|next" | grep "(fetch)$"
-> next
-> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
-> (fetch)
-> staging
-> https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
-> (fetch)
->
->
-> I have just fetched both of these remotes.
->
-> $ git log -1 --oneline next/master
-> a68b04c773 Add linux-next specific files for 20150313
->
-> $ git log -1 --oneline staging/staging-next 
-> 7aa5d5097d Staging: rtl8192u: Use __packed instead of __attribute__((packed))
->
->
-> And here are my two local branches with my commits applied:
->
-> # Output slightly edited to reduce line length.
-> $ git branch -vv | grep -E "staging|next"
-> * linux-next c8ab62fb9c [next/master: ahead 16] staging: rtl8723au:
-> Remove unneeded comments
->   staging-next 63f451681e [staging/staging-next: ahead 16] staging:
-> rtl8723au: Remove unneeded comments
->
->
-> I hope this clarifies my set-up. Is there something I am doing incorrectly?
-> If there is anything I can assist with, please let me know.
->
-> Thank you,
->
-> Vefa
->
-> [1]
-> https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/log/?h=staging-next
-> [2] https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-For staging patches, you should always post patches against the
-staging-next tree. Please rebase them and repost them.
+Previously, interface combination check in mac80211 considered only
+interfaces that have channel context. This wouldn't take P2P device interfaces
+into account at all. Also for managed interfaces the channel context is bound
+upon association and the combination check is performed when the iface is
+brought up.
+Fix this by counting the numbers of running interfaces instead of number of
+interfaces that have channel context.
 
-Jes
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index e664b28..36d8cb2 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3245,7 +3245,7 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 		wdev_iter = &sdata_iter->wdev;
+ 
+ 		if (sdata_iter == sdata ||
+-		    rcu_access_pointer(sdata_iter->vif.chanctx_conf) == NULL ||
++		    !ieee80211_sdata_running(sdata_iter) ||
+ 		    local->hw.wiphy->software_iftypes & BIT(wdev_iter->iftype))
+ 			continue;
+ 
+-- 
+1.9.1
+
