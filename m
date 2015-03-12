@@ -1,66 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:39579 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752746AbbCJNc1 (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:44032 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754501AbbCLMMg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 09:32:27 -0400
-Received: by lbiw7 with SMTP id w7so1705067lbi.6
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 06:32:25 -0700 (PDT)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
+	Thu, 12 Mar 2015 08:12:36 -0400
+Received: by lbvn10 with SMTP id n10so15403211lbv.11
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 05:12:35 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 To: ath10k@lists.infradead.org
 Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH v2] ath10k: fix PMG by using AES-CMAC/IGTK software crypto
-Date: Tue, 10 Mar 2015 14:32:19 +0100
-Message-Id: <1425994339-15864-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20150310_143231_958643_9BF25C06)
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] ath10k: setup maximum number of supported stations
+Date: Thu, 12 Mar 2015 13:11:41 +0100
+Message-Id: <1426162301-27066-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150312_131247_444410_001CC312)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While testing with older supplicant, .drv_set_key() was failing due to
-higher than ath10k firmware could handle key_index (WMI_MAX_KEY_INDEX == 3).
+Setup maximum number of associated stations supported in
+AP/P2P_GO mode.
 
---
-wpa_driver_nl80211_set_key: ifindex=15 alg=4 addr=0x7f02b129fbe3 key_idx=4 set_tx=0 seq_len=6 key_len=16
-    broadcast key
-nl80211: set_key failed; err=-22 Invalid argument)
-wlan0: WPA: Failed to configure IGTK to the driver
-wlan0: RSN: Failed to configure IGTK
---
+This allow hostapd/wpa_supplicant to play with that limit
+and set more information (eg. P2P group limit bit for P2P_GO).
 
-In order to fix this case (PMF: AES-CMAC/IGTK) force the AES_CMAC cipher to
-be handled by software.
-
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1138f4f8923f..5a3129010951 100644
+index 1138f4f..80f19fc 100644
 --- a/drivers/net/wireless/ath/ath10k/mac.c
 +++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -66,8 +66,8 @@ static int ath10k_send_key(struct ath10k_vif *arvif,
- 		arg.key_cipher = WMI_CIPHER_WEP;
- 		break;
- 	case WLAN_CIPHER_SUITE_AES_CMAC:
--		/* this one needs to be done in software */
--		return 1;
-+		WARN_ON(1);
-+		return -EINVAL;
- 	default:
- 		ath10k_warn(ar, "cipher %d is not supported\n", key->cipher);
- 		return -EOPNOTSUPP;
-@@ -3995,6 +3995,10 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	int ret = 0;
- 	u32 flags = 0;
+@@ -5766,6 +5766,8 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	ar->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
+ 	ar->hw->wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE;
  
-+	/* this one needs to be done in software */
-+	if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
-+		return 1;
++	ar->hw->wiphy->max_ap_assoc_sta = ar->max_num_stations;
 +
- 	if (key->keyidx > WMI_MAX_KEY_INDEX)
- 		return -ENOSPC;
- 
+ 	/*
+ 	 * on LL hardware queues are managed entirely by the FW
+ 	 * so we only advertise to mac we can do the queues thing
 -- 
-2.1.2
+1.9.1
 
