@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10809 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754396AbbCLMTg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 08:19:36 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix patching mistake for AP/IBSS CSA
-References: <877fuqz7b6.fsf@kamboji.qca.qualcomm.com>
-	<1425907164-13935-1-git-send-email-michal.kazior@tieto.com>
-Date: Thu, 12 Mar 2015 14:19:27 +0200
-In-Reply-To: <1425907164-13935-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 9 Mar 2015 14:19:24 +0100")
-Message-ID: <87385awgq8.fsf@kamboji.qca.qualcomm.com> (sfid-20150312_131941_921928_7E2FC2D2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga02.intel.com ([134.134.136.20]:37930 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754603AbbCLNGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:06:30 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 45/49] iwlwifi: update copyright to include 2015
+Date: Thu, 12 Mar 2015 15:04:30 +0200
+Message-Id: <1426165474-25586-45-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_140736_273824_780FFCC2)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-drv.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Mistakenly v1 of `ath10k: fix AP/IBSS CSA with
-> template based fw`
-> (81a9a17db5d766d2872c4ab8a77b8666d22031ec) was
-> applied.
->
-> This patch applies the missing bits from v2:
->  * remove unnecessary locking
->  * add some (sanity) checks
->
-> There are no practical functionality differences
-> between v1 and v2.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-Thanks, applied. Sorry for my mistake and kudos for catching it so fast!
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.h b/drivers/net/wireless/iwlwifi/iwl-drv.h
+index adf522c..67a3a24 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.h
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.h
+@@ -68,7 +68,7 @@
+ 
+ /* for all modules */
+ #define DRV_NAME        "iwlwifi"
+-#define DRV_COPYRIGHT	"Copyright(c) 2003- 2014 Intel Corporation"
++#define DRV_COPYRIGHT	"Copyright(c) 2003- 2015 Intel Corporation"
+ #define DRV_AUTHOR     "<ilw@linux.intel.com>"
+ 
+ /* radio config bits (actual values from NVM definition) */
 -- 
-Kalle Valo
+1.9.1
+
