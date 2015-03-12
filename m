@@ -1,24 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45711 "EHLO
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43739 "EHLO
 	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752813AbbCLLwn (ORCPT
+	by vger.kernel.org with ESMTP id S1754006AbbCLLxB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 07:52:43 -0400
+	Thu, 12 Mar 2015 07:53:01 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2CBoJ8p014905
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:52:43 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1t20qjf1qm-1
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2CBoLVZ014929
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:53:00 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1t20qjf1mr-13
 	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:52:43 -0700
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:53:00 -0700
 From: Avinash Patil <patila@marvell.com>
 To: <linux-wireless@vger.kernel.org>
 CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
 	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
 	<nishants@marvell.com>
-Subject: [PATCH 4/9] mwifiex: avoid queue_work while work is ongoing
-Date: Thu, 12 Mar 2015 22:51:55 +0530
-Message-ID: <1426180920-10567-5-git-send-email-patila@marvell.com> (sfid-20150312_125246_478503_15AEBDAA)
+Subject: [PATCH 5/9] mwifiex: get rid of BA setup helper functions
+Date: Thu, 12 Mar 2015 22:51:56 +0530
+Message-ID: <1426180920-10567-6-git-send-email-patila@marvell.com> (sfid-20150312_125309_757648_727B9B61)
 In-Reply-To: <1426180920-10567-1-git-send-email-patila@marvell.com>
 References: <1426180920-10567-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
@@ -26,152 +26,251 @@ Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+From: Zhaoyang Liu <liuzy@marvell.com>
 
-Current code does not check whether main_work_queue or
-rx_work_queue is running when preparing to do queue_work,
-this code fix add check before calling queue_work, reducing
-unnecessary queue_work switch.
+This patch removes BA setup helper routines
+mwifiex_is_bastream_setup and  mwifiex_is_amsdu_in_ampdu_allowed.
 
-This change instead sets more_task flag to ensure we run main_process
-superloop once again.
+Current code will use two functions to check bastream setup and
+amsdu in ampdu. This patch change these functions to flags, thus
+avoiding redundant spin_lock check while dequeuing TX packets.
 
-Signed-off-by: Shengzhen Li <szli@marvell.com>
 Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
 Reviewed-by: Cathy Luo <cluo@marvell.com>
-Reviewed-by: Amitkumar Karwar <akarwar@marvell.com>
 Reviewed-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/mwifiex/main.c | 38 +++++++++++++++++++++++++++++++------
- drivers/net/wireless/mwifiex/main.h |  1 +
- drivers/net/wireless/mwifiex/pcie.c |  2 +-
- drivers/net/wireless/mwifiex/usb.c  |  4 ++--
- 4 files changed, 36 insertions(+), 9 deletions(-)
+ drivers/net/wireless/mwifiex/11n.c           | 18 +++++++++++++++-
+ drivers/net/wireless/mwifiex/11n.h           | 32 ----------------------------
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |  7 +++++-
+ drivers/net/wireless/mwifiex/main.h          | 13 ++++++-----
+ drivers/net/wireless/mwifiex/wmm.c           | 16 ++++++++------
+ drivers/net/wireless/mwifiex/wmm.h           |  2 ++
+ 6 files changed, 42 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 9c11eb8..d96d60a 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -131,6 +131,34 @@ static int mwifiex_unregister(struct mwifiex_adapter *adapter)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/mwifiex/11n.c b/drivers/net/wireless/mwifiex/11n.c
+index 543148d..433bd68 100644
+--- a/drivers/net/wireless/mwifiex/11n.c
++++ b/drivers/net/wireless/mwifiex/11n.c
+@@ -159,6 +159,7 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 	int tid;
+ 	struct host_cmd_ds_11n_addba_rsp *add_ba_rsp = &resp->params.add_ba_rsp;
+ 	struct mwifiex_tx_ba_stream_tbl *tx_ba_tbl;
++	struct mwifiex_ra_list_tbl *ra_list;
+ 	u16 block_ack_param_set = le16_to_cpu(add_ba_rsp->block_ack_param_set);
  
-+void mwifiex_queue_main_work(struct mwifiex_adapter *adapter)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&adapter->main_proc_lock, flags);
-+	if (adapter->mwifiex_processing) {
-+		adapter->more_task_flag = true;
-+		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-+	} else {
-+		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-+		queue_work(adapter->workqueue, &adapter->main_work);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(mwifiex_queue_main_work);
-+
-+static void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
-+	if (adapter->rx_processing) {
-+		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-+	} else {
-+		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-+		queue_work(adapter->rx_workqueue, &adapter->rx_work);
-+	}
-+}
-+
- static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
- {
- 	unsigned long flags;
-@@ -154,7 +182,7 @@ static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
- 			if (adapter->if_ops.submit_rem_rx_urbs)
- 				adapter->if_ops.submit_rem_rx_urbs(adapter);
- 			adapter->delay_main_work = false;
--			queue_work(adapter->workqueue, &adapter->main_work);
-+			mwifiex_queue_main_work(adapter);
- 		}
- 		mwifiex_handle_rx_packet(adapter, skb);
+ 	add_ba_rsp->ssn = cpu_to_le16((le16_to_cpu(add_ba_rsp->ssn))
+@@ -166,7 +167,13 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 
+ 	tid = (block_ack_param_set & IEEE80211_ADDBA_PARAM_TID_MASK)
+ 	       >> BLOCKACKPARAM_TID_POS;
++	ra_list = mwifiex_wmm_get_ralist_node(priv, tid, add_ba_rsp->
++		peer_mac_addr);
+ 	if (le16_to_cpu(add_ba_rsp->status_code) != BA_RESULT_SUCCESS) {
++		if (ra_list) {
++			ra_list->ba_status = BA_SETUP_NONE;
++			ra_list->amsdu_in_ampdu = false;
++		}
+ 		mwifiex_del_ba_tbl(priv, tid, add_ba_rsp->peer_mac_addr,
+ 				   TYPE_DELBA_SENT, true);
+ 		if (add_ba_rsp->add_rsp_result != BA_RESULT_TIMEOUT)
+@@ -185,6 +192,10 @@ int mwifiex_ret_11n_addba_req(struct mwifiex_private *priv,
+ 			tx_ba_tbl->amsdu = true;
+ 		else
+ 			tx_ba_tbl->amsdu = false;
++		if (ra_list) {
++			ra_list->amsdu_in_ampdu = tx_ba_tbl->amsdu;
++			ra_list->ba_status = BA_SETUP_COMPLETE;
++		}
+ 	} else {
+ 		dev_err(priv->adapter->dev, "BA stream not created\n");
  	}
-@@ -214,9 +242,7 @@ process_start:
- 		if (atomic_read(&adapter->rx_pending) >= HIGH_RX_PENDING &&
- 		    adapter->iface_type != MWIFIEX_USB) {
- 			adapter->delay_main_work = true;
--			if (!adapter->rx_processing)
--				queue_work(adapter->rx_workqueue,
--					   &adapter->rx_work);
-+			mwifiex_queue_rx_work(adapter);
- 			break;
- 		}
+@@ -515,6 +526,7 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
+ 			   enum mwifiex_ba_status ba_status)
+ {
+ 	struct mwifiex_tx_ba_stream_tbl *new_node;
++	struct mwifiex_ra_list_tbl *ra_list;
+ 	unsigned long flags;
  
-@@ -229,7 +255,7 @@ process_start:
- 		}
+ 	if (!mwifiex_get_ba_tbl(priv, tid, ra)) {
+@@ -522,7 +534,11 @@ void mwifiex_create_ba_tbl(struct mwifiex_private *priv, u8 *ra, int tid,
+ 				   GFP_ATOMIC);
+ 		if (!new_node)
+ 			return;
+-
++		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, ra);
++		if (ra_list) {
++			ra_list->ba_status = ba_status;
++			ra_list->amsdu_in_ampdu = false;
++		}
+ 		INIT_LIST_HEAD(&new_node->list);
  
- 		if (adapter->rx_work_enabled && adapter->data_received)
--			queue_work(adapter->rx_workqueue, &adapter->rx_work);
-+			mwifiex_queue_rx_work(adapter);
- 
- 		/* Need to wake up the card ? */
- 		if ((adapter->ps_state == PS_STATE_SLEEP) &&
-@@ -606,7 +632,7 @@ int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb)
- 	atomic_inc(&priv->adapter->tx_pending);
- 	mwifiex_wmm_add_buf_txqueue(priv, skb);
- 
--	queue_work(priv->adapter->workqueue, &priv->adapter->main_work);
-+	mwifiex_queue_main_work(priv->adapter);
- 
- 	return 0;
+ 		new_node->tid = tid;
+diff --git a/drivers/net/wireless/mwifiex/11n.h b/drivers/net/wireless/mwifiex/11n.h
+index 8e2e394..afdd58a 100644
+--- a/drivers/net/wireless/mwifiex/11n.h
++++ b/drivers/net/wireless/mwifiex/11n.h
+@@ -77,22 +77,6 @@ mwifiex_is_station_ampdu_allowed(struct mwifiex_private *priv,
+ 	return (node->ampdu_sta[tid] != BA_STREAM_NOT_ALLOWED) ? true : false;
  }
+ 
+-/* This function checks whether AMSDU is allowed for BA stream. */
+-static inline u8
+-mwifiex_is_amsdu_in_ampdu_allowed(struct mwifiex_private *priv,
+-				  struct mwifiex_ra_list_tbl *ptr, int tid)
+-{
+-	struct mwifiex_tx_ba_stream_tbl *tx_tbl;
+-
+-	if (is_broadcast_ether_addr(ptr->ra))
+-		return false;
+-	tx_tbl = mwifiex_get_ba_tbl(priv, tid, ptr->ra);
+-	if (tx_tbl)
+-		return tx_tbl->amsdu;
+-
+-	return false;
+-}
+-
+ /* This function checks whether AMPDU is allowed or not for a particular TID. */
+ static inline u8
+ mwifiex_is_ampdu_allowed(struct mwifiex_private *priv,
+@@ -182,22 +166,6 @@ mwifiex_find_stream_to_delete(struct mwifiex_private *priv, int ptr_tid,
+ }
+ 
+ /*
+- * This function checks whether BA stream is set up or not.
+- */
+-static inline int
+-mwifiex_is_ba_stream_setup(struct mwifiex_private *priv,
+-			   struct mwifiex_ra_list_tbl *ptr, int tid)
+-{
+-	struct mwifiex_tx_ba_stream_tbl *tx_tbl;
+-
+-	tx_tbl = mwifiex_get_ba_tbl(priv, tid, ptr->ra);
+-	if (tx_tbl && IS_BASTREAM_SETUP(tx_tbl))
+-		return true;
+-
+-	return false;
+-}
+-
+-/*
+  * This function checks whether associated station is 11n enabled
+  */
+ static inline int mwifiex_is_sta_11n_enabled(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+index a2e8817..f75f8ac 100644
+--- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
+@@ -659,6 +659,7 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ {
+ 	struct mwifiex_rx_reorder_tbl *tbl;
+ 	struct mwifiex_tx_ba_stream_tbl *ptx_tbl;
++	struct mwifiex_ra_list_tbl *ra_list;
+ 	u8 cleanup_rx_reorder_tbl;
+ 	unsigned long flags;
+ 
+@@ -686,7 +687,11 @@ mwifiex_del_ba_tbl(struct mwifiex_private *priv, int tid, u8 *peer_mac,
+ 				"event: TID, RA not found in table\n");
+ 			return;
+ 		}
+-
++		ra_list = mwifiex_wmm_get_ralist_node(priv, tid, peer_mac);
++		if (ra_list) {
++			ra_list->amsdu_in_ampdu = false;
++			ra_list->ba_status = BA_SETUP_NONE;
++		}
+ 		spin_lock_irqsave(&priv->tx_ba_stream_tbl_lock, flags);
+ 		mwifiex_11n_delete_tx_ba_stream_tbl_entry(priv, ptx_tbl);
+ 		spin_unlock_irqrestore(&priv->tx_ba_stream_tbl_lock, flags);
 diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index d609d16..a319abe 100644
+index a319abe..439db17 100644
 --- a/drivers/net/wireless/mwifiex/main.h
 +++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1424,6 +1424,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
+@@ -211,6 +211,12 @@ struct mwifiex_tx_aggr {
+ 	u8 amsdu;
+ };
  
- void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter);
- void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
-+void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
++enum mwifiex_ba_status {
++	BA_SETUP_NONE = 0,
++	BA_SETUP_INPROGRESS,
++	BA_SETUP_COMPLETE
++};
++
+ struct mwifiex_ra_list_tbl {
+ 	struct list_head list;
+ 	struct sk_buff_head skb_head;
+@@ -219,6 +225,8 @@ struct mwifiex_ra_list_tbl {
+ 	u16 max_amsdu;
+ 	u16 ba_pkt_count;
+ 	u8 ba_packet_thr;
++	enum mwifiex_ba_status ba_status;
++	u8 amsdu_in_ampdu;
+ 	u16 total_pkt_count;
+ 	bool tdls_link;
+ };
+@@ -602,11 +610,6 @@ struct mwifiex_private {
+ 	struct mwifiex_11h_intf_state state_11h;
+ };
  
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index fc59c1d..b31c9a7 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -2101,7 +2101,7 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- 		goto exit;
+-enum mwifiex_ba_status {
+-	BA_SETUP_NONE = 0,
+-	BA_SETUP_INPROGRESS,
+-	BA_SETUP_COMPLETE
+-};
  
- 	mwifiex_interrupt_status(adapter);
--	queue_work(adapter->workqueue, &adapter->main_work);
-+	mwifiex_queue_main_work(adapter);
+ struct mwifiex_tx_ba_stream_tbl {
+ 	struct list_head list;
+diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
+index 0cd4f6b..2d14dd5 100644
+--- a/drivers/net/wireless/mwifiex/wmm.c
++++ b/drivers/net/wireless/mwifiex/wmm.c
+@@ -157,6 +157,8 @@ void mwifiex_ralist_add(struct mwifiex_private *priv, const u8 *ra)
  
- exit:
- 	return IRQ_HANDLED;
-diff --git a/drivers/net/wireless/mwifiex/usb.c b/drivers/net/wireless/mwifiex/usb.c
-index 8beb38c..fd8027f 100644
---- a/drivers/net/wireless/mwifiex/usb.c
-+++ b/drivers/net/wireless/mwifiex/usb.c
-@@ -193,7 +193,7 @@ static void mwifiex_usb_rx_complete(struct urb *urb)
- 		dev_dbg(adapter->dev, "info: recv_length=%d, status=%d\n",
- 			recv_length, status);
- 		if (status == -EINPROGRESS) {
--			queue_work(adapter->workqueue, &adapter->main_work);
-+			mwifiex_queue_main_work(adapter);
- 
- 			/* urb for data_ep is re-submitted now;
- 			 * urb for cmd_ep will be re-submitted in callback
-@@ -262,7 +262,7 @@ static void mwifiex_usb_tx_complete(struct urb *urb)
- 					    urb->status ? -1 : 0);
+ 		ra_list->is_11n_enabled = 0;
+ 		ra_list->tdls_link = false;
++		ra_list->ba_status = BA_SETUP_NONE;
++		ra_list->amsdu_in_ampdu = false;
+ 		if (!mwifiex_queuing_ra_based(priv)) {
+ 			if (mwifiex_get_tdls_link_status(priv, ra) ==
+ 			    TDLS_SETUP_COMPLETE) {
+@@ -574,7 +576,7 @@ mwifiex_clean_txrx(struct mwifiex_private *priv)
+  * This function retrieves a particular RA list node, matching with the
+  * given TID and RA address.
+  */
+-static struct mwifiex_ra_list_tbl *
++struct mwifiex_ra_list_tbl *
+ mwifiex_wmm_get_ralist_node(struct mwifiex_private *priv, u8 tid,
+ 			    const u8 *ra_addr)
+ {
+@@ -1276,13 +1278,13 @@ mwifiex_dequeue_tx_packet(struct mwifiex_adapter *adapter)
  	}
  
--	queue_work(adapter->workqueue, &adapter->main_work);
-+	mwifiex_queue_main_work(adapter);
+ 	if (!ptr->is_11n_enabled ||
+-	    mwifiex_is_ba_stream_setup(priv, ptr, tid) ||
+-	    priv->wps.session_enable) {
++		ptr->ba_status ||
++		priv->wps.session_enable) {
+ 		if (ptr->is_11n_enabled &&
+-		    mwifiex_is_ba_stream_setup(priv, ptr, tid) &&
+-		    mwifiex_is_amsdu_in_ampdu_allowed(priv, ptr, tid) &&
+-		    mwifiex_is_amsdu_allowed(priv, tid) &&
+-		    mwifiex_is_11n_aggragation_possible(priv, ptr,
++			ptr->ba_status &&
++			ptr->amsdu_in_ampdu &&
++			mwifiex_is_amsdu_allowed(priv, tid) &&
++			mwifiex_is_11n_aggragation_possible(priv, ptr,
+ 							adapter->tx_buf_size))
+ 			mwifiex_11n_aggregate_pkt(priv, ptr, ptr_index, flags);
+ 			/* ra_list_spinlock has been freed in
+diff --git a/drivers/net/wireless/mwifiex/wmm.h b/drivers/net/wireless/mwifiex/wmm.h
+index 569bd73..48ece0b 100644
+--- a/drivers/net/wireless/mwifiex/wmm.h
++++ b/drivers/net/wireless/mwifiex/wmm.h
+@@ -127,4 +127,6 @@ mwifiex_wmm_get_queue_raptr(struct mwifiex_private *priv, u8 tid,
+ 			    const u8 *ra_addr);
+ u8 mwifiex_wmm_downgrade_tid(struct mwifiex_private *priv, u32 tid);
  
- 	return;
- }
++struct mwifiex_ra_list_tbl *mwifiex_wmm_get_ralist_node(struct mwifiex_private
++					*priv, u8 tid, const u8 *ra_addr);
+ #endif /* !_MWIFIEX_WMM_H_ */
 -- 
 1.8.1.4
 
