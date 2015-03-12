@@ -1,31 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54887 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755147AbbCCJwV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 04:52:21 -0500
-Message-ID: <1425376339.2450.29.camel@sipsolutions.net> (sfid-20150303_105230_334830_9BBC2EAC)
-Subject: Re: [PATCH v2] mac80211: send station PMF configuration to driver
-From: Johannes Berg <johannes@sipsolutions.net>
-To: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 03 Mar 2015 10:52:19 +0100
-In-Reply-To: <1425283180-3848-1-git-send-email-sjegadee@qti.qualcomm.com>
-References: <1425283180-3848-1-git-send-email-sjegadee@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30276 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754087AbbCLMca (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 08:32:30 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix CAC regression
+References: <1425907255-14083-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 12 Mar 2015 14:32:20 +0200
+In-Reply-To: <1425907255-14083-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 9 Mar 2015 14:20:55 +0100")
+Message-ID: <87y4n2v1kb.fsf@kamboji.qca.qualcomm.com> (sfid-20150312_133234_631101_81B5253C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-02 at 13:29 +0530, SenthilKumar Jegadeesan wrote:
-> Add support to provide station PMF configuration to driver.
-> 
-> Some device drivers, offload part of aggregation including ADDBa/DELBa
-> negotiations to low layers. In such scenario, PMF configuration of
-> station needs to be provided to driver to enable encryption of
-> ADDBa/DELBa action frames.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Applied, with some small changes. Why did you write ADDBa rather than
-AddBA? :)
+> Patch `ath10k: fix interrupt storm` introduced a
+> regression. The condition responsible for bringing
+> up monitor vdev was broken and it was never
+> started for CAC so effectivelly CAC would not
+> detect radar pulses.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-johannes
+Thanks, applied. I just added the commit id to the commit log.
 
+-- 
+Kalle Valo
