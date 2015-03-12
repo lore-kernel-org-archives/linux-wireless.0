@@ -1,71 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:19186 "EHLO mga02.intel.com"
+Received: from www.osadl.org ([62.245.132.105]:45119 "EHLO www.osadl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754603AbbCLNGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:06:33 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 47/49] iwlwifi: mvm: clarify time event end handling
-Date: Thu, 12 Mar 2015 15:04:32 +0200
-Message-Id: <1426165474-25586-47-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143418_315169_0DB7C1E1)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+	id S932097AbbCLPxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 11:53:55 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH 1/3] ath10k: htc: match wait_for_completion_timeout return type
+Date: Thu, 12 Mar 2015 11:49:11 -0400
+Message-Id: <1426175351-8606-1-git-send-email-hofrat@osadl.org> (sfid-20150312_165401_094910_D1494622)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Return type of wait_for_completion_timeout is unsigned long not int.
+An appropriately named unsigned long is added and the assignments fixed up.
 
-The code here is a little confusing, the iwl_mvm_te_check_disconnect()
-will check that the interface is a station, but going into it after
-already having processed the time even end for P2P seems strange at
-first look.
-
-Put a switch statement there to distinguish the interface types and
-make this more readable.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
- drivers/net/wireless/iwlwifi/mvm/time-event.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-index 54fafbf..1dbfcc4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-@@ -261,17 +261,23 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
- 			     "TE ended - current time %lu, estimated end %lu\n",
- 			     jiffies, te_data->end_jiffies);
+Note: this patch generates a checkpatch CHECK
+CHECK: Alignment should match open parenthesis
+#53: FILE: drivers/net/wireless/ath/ath10k/htc.c:574:
+but the alternative is to go over 80 char so this should be ok ?
+
+Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+CONFIG_ATH10K=m
+
+Patch is against 4.0-rc3 (localversion-next is -next-20150312)
+
+ drivers/net/wireless/ath/ath10k/htc.c |   22 ++++++++++++----------
+ 1 file changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 2fd9e18..c15edc1 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -548,6 +548,7 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ {
+ 	struct ath10k *ar = htc->ar;
+ 	int i, status = 0;
++	unsigned long time_left;
+ 	struct ath10k_htc_svc_conn_req conn_req;
+ 	struct ath10k_htc_svc_conn_resp conn_resp;
+ 	struct ath10k_htc_msg *msg;
+@@ -555,9 +556,9 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ 	u16 credit_count;
+ 	u16 credit_size;
  
--		if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE) {
-+		switch (te_data->vif->type) {
-+		case NL80211_IFTYPE_P2P_DEVICE:
- 			ieee80211_remain_on_channel_expired(mvm->hw);
- 			iwl_mvm_roc_finished(mvm);
-+			break;
-+		case NL80211_IFTYPE_STATION:
-+			/*
-+			 * By now, we should have finished association
-+			 * and know the dtim period.
-+			 */
-+			iwl_mvm_te_check_disconnect(mvm, te_data->vif,
-+				"No association and the time event is over already...");
-+			break;
-+		default:
-+			break;
- 		}
+-	status = wait_for_completion_timeout(&htc->ctl_resp,
+-					     ATH10K_HTC_WAIT_TIMEOUT_HZ);
+-	if (status == 0) {
++	time_left = wait_for_completion_timeout(&htc->ctl_resp,
++						ATH10K_HTC_WAIT_TIMEOUT_HZ);
++	if (!time_left) {
+ 		/* Workaround: In some cases the PCI HIF doesn't
+ 		 * receive interrupt for the control response message
+ 		 * even if the buffer was completed. It is suspected
+@@ -569,10 +570,10 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ 		for (i = 0; i < CE_COUNT; i++)
+ 			ath10k_hif_send_complete_check(htc->ar, i, 1);
  
--		/*
--		 * By now, we should have finished association
--		 * and know the dtim period.
--		 */
--		iwl_mvm_te_check_disconnect(mvm, te_data->vif,
--			"No association and the time event is over already...");
- 		iwl_mvm_te_clear_data(mvm, te_data);
- 	} else if (le32_to_cpu(notif->action) & TE_V2_NOTIF_HOST_EVENT_START) {
- 		te_data->running = true;
+-		status = wait_for_completion_timeout(&htc->ctl_resp,
+-						     ATH10K_HTC_WAIT_TIMEOUT_HZ);
++		time_left = wait_for_completion_timeout(&htc->ctl_resp,
++						ATH10K_HTC_WAIT_TIMEOUT_HZ);
+ 
+-		if (status == 0)
++		if (!time_left)
+ 			status = -ETIMEDOUT;
+ 	}
+ 
+@@ -646,6 +647,7 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 	struct sk_buff *skb;
+ 	unsigned int max_msg_size = 0;
+ 	int length, status;
++	unsigned long time_left;
+ 	bool disable_credit_flow_ctrl = false;
+ 	u16 message_id, service_id, flags = 0;
+ 	u8 tx_alloc = 0;
+@@ -701,10 +703,10 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 	}
+ 
+ 	/* wait for response */
+-	status = wait_for_completion_timeout(&htc->ctl_resp,
+-					     ATH10K_HTC_CONN_SVC_TIMEOUT_HZ);
+-	if (status == 0) {
+-		ath10k_err(ar, "Service connect timeout: %d\n", status);
++	time_left = wait_for_completion_timeout(&htc->ctl_resp,
++						ATH10K_HTC_CONN_SVC_TIMEOUT_HZ);
++	if (!time_left) {
++		ath10k_err(ar, "Service connect timeout\n");
+ 		return -ETIMEDOUT;
+ 	}
+ 
 -- 
-1.9.1
+1.7.10.4
 
