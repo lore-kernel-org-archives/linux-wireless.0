@@ -1,30 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:37540 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054AbbCOCfi (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35569 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752813AbbCLLwc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 22:35:38 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+	Thu, 12 Mar 2015 07:52:32 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2CBoJ8m014905
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:52:32 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1t20qjf1q8-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:52:32 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
+	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/9] mwifiex: lock main process till reinitialization of vif is over
+Date: Thu, 12 Mar 2015 22:51:52 +0530
+Message-ID: <1426180920-10567-2-git-send-email-patila@marvell.com> (sfid-20150312_125235_832579_9242D87C)
+In-Reply-To: <1426180920-10567-1-git-send-email-patila@marvell.com>
+References: <1426180920-10567-1-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <21764.61660.411242.223378@gargle.gargle.HOWL> (sfid-20150315_033556_171366_33C9EE44)
-Date: Sun, 15 Mar 2015 08:09:24 +0530
-To: Saurabh Pal <saurabh6321@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, ath9k-devel@qca.qualcomm.com
-Subject: Re: [ath9k-devel] ath9k channel switch
-In-Reply-To: <CAGrUaU24vCH6+GpAtBCNiGwdT4_-FNNLDq=_s5zhSPBOp8bbmg@mail.gmail.com>
-References: <CAGrUaU24vCH6+GpAtBCNiGwdT4_-FNNLDq=_s5zhSPBOp8bbmg@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Saurabh Pal wrote:
-> Just wanted to know whether it is possible to switch the channel without
-> resetting the chip. Also if possible can anybody tell me how much time it
-> takes to switch the channel by resetting the chip?
+A crash was detected while changing virtual interface type is in
+progress. This was tracked to race condition in accessing bss_priority
+table while change is in progress. This patch ensures that main_process
+and rx_process works are locked while we change virtual interface.
 
-Fast Channel Change is used to switch channels without a full chip reset.
-The time taken to switch channels is not exported, but you can measure it
-in the driver.
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 33 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mwifiex/main.c     |  2 +-
+ drivers/net/wireless/mwifiex/main.h     |  1 +
+ 3 files changed, 35 insertions(+), 1 deletion(-)
 
-Sujith
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index b0778a6..fc3bbe7 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -717,6 +717,9 @@ mwifiex_cfg80211_init_p2p_go(struct mwifiex_private *priv)
+ 
+ static int mwifiex_deinit_priv_params(struct mwifiex_private *priv)
+ {
++	struct mwifiex_adapter *adapter = priv->adapter;
++	unsigned long flags;
++
+ 	priv->mgmt_frame_mask = 0;
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_MGMT_FRAME_REG,
+ 			     HostCmd_ACT_GEN_SET, 0,
+@@ -727,6 +730,25 @@ static int mwifiex_deinit_priv_params(struct mwifiex_private *priv)
+ 	}
+ 
+ 	mwifiex_deauthenticate(priv, NULL);
++
++	spin_lock_irqsave(&adapter->main_proc_lock, flags);
++	adapter->main_locked = true;
++	if (adapter->mwifiex_processing) {
++		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
++		flush_workqueue(adapter->workqueue);
++	} else {
++		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
++	}
++
++	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
++	adapter->rx_locked = true;
++	if (adapter->rx_processing) {
++		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
++		flush_workqueue(adapter->rx_workqueue);
++	} else {
++	spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
++	}
++
+ 	mwifiex_free_priv(priv);
+ 	priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
+ 	priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+@@ -740,6 +762,9 @@ mwifiex_init_new_priv_params(struct mwifiex_private *priv,
+ 			     struct net_device *dev,
+ 			     enum nl80211_iftype type)
+ {
++	struct mwifiex_adapter *adapter = priv->adapter;
++	unsigned long flags;
++
+ 	mwifiex_init_priv(priv);
+ 
+ 	priv->bss_mode = type;
+@@ -770,6 +795,14 @@ mwifiex_init_new_priv_params(struct mwifiex_private *priv,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
++	spin_lock_irqsave(&adapter->main_proc_lock, flags);
++	adapter->main_locked = false;
++	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
++
++	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
++	adapter->rx_locked = false;
++	spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 42bf884..9c11eb8 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -189,7 +189,7 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 
+ 	/* Check if already processing */
+-	if (adapter->mwifiex_processing) {
++	if (adapter->mwifiex_processing || adapter->main_locked) {
+ 		adapter->more_task_flag = true;
+ 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		goto exit_main_proc;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index a0908c6..04ef618 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -772,6 +772,7 @@ struct mwifiex_adapter {
+ 	bool rx_processing;
+ 	bool delay_main_work;
+ 	bool rx_locked;
++	bool main_locked;
+ 	struct mwifiex_bss_prio_tbl bss_prio_tbl[MWIFIEX_MAX_BSS_NUM];
+ 	/* spin lock for init/shutdown */
+ 	spinlock_t mwifiex_lock;
+-- 
+1.8.1.4
+
