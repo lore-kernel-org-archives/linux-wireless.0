@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37983 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([192.55.52.115]:41061 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751475AbbCSOg3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 10:36:29 -0400
-Date: Thu, 19 Mar 2015 15:32:49 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] rt2800usb: check Autorun mode on FW load only once
-Message-ID: <20150319143249.GB2516@redhat.com> (sfid-20150319_153637_902616_57691AB5)
-References: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
- <20150316160652.789B313FBE6@smtp.codeaurora.org>
- <20150316164100.GA6208@linutronix.de>
- <20150317083414.GA1276@linutronix.de>
- <20150318131124.GA11724@redhat.com>
- <550ACDF2.30507@linutronix.de>
+	id S1751470AbbCLHsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 03:48:11 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2013-03-12
+Date: Thu, 12 Mar 2015 07:48:07 +0000
+Message-ID: <1426146488.8748.16.camel@egrumbacBox> (sfid-20150312_084818_307268_6D296CE1)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <550ACDF2.30507@linutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seems H/W report correctly firmware Autorun value only at initialization
-stage. When we close interface and open it again, Autorun value is 0 and
-we try to load firmware what kills the device. To fix clear
-REQUIRE_FIRMWARE firmware flag, to do not load firmware again, once we
-discover Autorun mode.
-
-Reported-and-tested-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 9a2f44a..3a6cae8 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -293,6 +293,7 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
- 	if (retval) {
- 		rt2x00_info(rt2x00dev,
- 			    "Firmware loading not required - NIC in AutoRun mode\n");
-+		__clear_bit(REQUIRE_FIRMWARE, &rt2x00dev->cap_flags);
- 	} else {
- 		rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
- 					      data + offset, length);
--- 
-1.8.3.1
+SGkgS2FsbGUsDQoNCjIgbW9yZSBmaXhlcyBmb3IgNC4wLiBEZXRhaWxzIGluIHRoZSB0YWcuDQpQ
+bGVhc2UgcHVsbCAtIHRoYW5rcyENCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1p
+dCA0Y2Q0YjUwY2MyNDI5Mjk0YzIzYTE5OThjMzNmZGZkODA0ZGIwZjM3Og0KDQogIGl3bHdpZmk6
+IG12bTogQlQgQ29leCAtIGZpeCBhIE5VTEwgcG9pbnRlciBleGNlcHRpb24gKDIwMTUtMDMtMDUg
+MTQ6MTM6MjAgKzAyMDApDQoNCmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0
+Og0KDQogIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3
+bHdpZmkvaXdsd2lmaS1maXhlcy5naXQgdGFncy9pd2x3aWZpLWZvci1rYWxsZS0yMDEzLTAzLTEy
+DQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byAwNjBiNDQ2MGM0NzE0MzQ0MGU3N2U2
+NzIxZjY4ZWY3NTY2NzRkMjA3Og0KDQogIGl3bHdpZmk6IG12bTogZGlzY29ubmVjdCBpZiBDU0Eg
+dGltZSBldmVudCBmYWlscyBzY2hlZHVsaW5nICgyMDE1LTAzLTEyIDA5OjA1OjQ5ICswMjAwKQ0K
+DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tDQoqIGRyb3AgcGVuZGluZyBWTyBwYWNrZXRzIGJlZm9yZSBkaXNjb25uZWN0aW9u
+DQoqIGRpc2Nvbm5lY3Qgd2hlbiBjaGFubmVsIHN3aXRjaCBmYWlscyBiZWZvcmUgb2YgdGltZSBl
+dmVudHMNCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLQ0KRW1tYW51ZWwgR3J1bWJhY2ggKDEpOg0KICAgICAgaXdsd2lmaTog
+ZHZtOiBkcm9wIFZPIHBhY2tldHMgd2hlbiBtYWM4MDIxMSB0ZWxscyB1cyB0bw0KDQpKb2hhbm5l
+cyBCZXJnICgxKToNCiAgICAgIGl3bHdpZmk6IG12bTogZGlzY29ubmVjdCBpZiBDU0EgdGltZSBl
+dmVudCBmYWlscyBzY2hlZHVsaW5nDQoNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2R2
+bS9tYWM4MDIxMS5jICAgfCAxNyArKysrKysrKystLS0tLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVs
+ZXNzL2l3bHdpZmkvbXZtL3RpbWUtZXZlbnQuYyB8ICAyICsrDQogMiBmaWxlcyBjaGFuZ2VkLCAx
+MSBpbnNlcnRpb25zKCspLCA4IGRlbGV0aW9ucygtKQ0KDQo=
