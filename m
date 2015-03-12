@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:52546 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423AbbCJPzO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 11:55:14 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Eliad Peller <eliad@wizery.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-Date: Tue, 10 Mar 2015 16:54:40 +0100
-Message-ID: <2231165.khxX6WSbaL@wuerfel> (sfid-20150310_165520_738131_080BB0B9)
-In-Reply-To: <CAB3XZEc_sjpA8kgfYCsO8FjGEc6O0xhE9aKO3VtgVbd+Meaakg@mail.gmail.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <9217056.Z3urqp19oZ@wuerfel> <CAB3XZEc_sjpA8kgfYCsO8FjGEc6O0xhE9aKO3VtgVbd+Meaakg@mail.gmail.com>
-MIME-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20442 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754002AbbCLOHv convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 10:07:51 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2CE4Oet008640
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 07:07:50 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1t2q5a3h6e-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 07:07:50 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>, Avinash Patil <patila@marvell.com>
+Date: Thu, 12 Mar 2015 07:07:49 -0700
+Subject: RE: [PATCH] mwifiex: fix a bug in Rx multiport aggregation logic
+Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B16A0745C@SC-VEXCH1.marvell.com> (sfid-20150312_150754_142367_93B07332)
+References: <1426145920-5288-1-git-send-email-akarwar@marvell.com>
+In-Reply-To: <1426145920-5288-1-git-send-email-akarwar@marvell.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 09 March 2015 23:03:30 Eliad Peller wrote:
-> On Mon, Mar 9, 2015 at 9:50 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Monday 09 March 2015 17:36:42 Eliad Peller wrote:
-> >> --- a/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
-> >> +++ b/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
-> >> @@ -64,4 +64,13 @@
-> >>         vmmc-supply = <&lbep5clwmc_wlen>;
-> >>         bus-width = <4>;
-> >>         non-removable;
-> >> +
-> >> +       #address-cells = <1>;
-> >> +       #size-cells = <0>;
-> >> +       wlcore: wlcore@2 {
-> >> +               compatible = "ti,wl1835";
-> >> +               reg = <2>;
-> >> +               interrupt-parent = <&gpio5>;
-> >> +               interrupts = <8 IRQ_TYPE_NONE>;
-> >> +       };
-> >>
-> >
-> > Why IRQ_TYPE_NONE?
-> >
-> i simply mirrored the current board file (which only sets the irq number).
+> -----Original Message-----
+> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
+> Sent: Thursday, March 12, 2015 1:09 PM
+> To: linux-wireless@vger.kernel.org
+> Cc: Cathy Luo; Avinash Patil; Amitkumar Karwar
+> Subject: [PATCH] mwifiex: fix a bug in Rx multiport aggregation logic
+> 
+> From: Cathy Luo <cluo@marvell.com>
+> 
+> It's been observed Rx aggregated packets are always followed by a
+> single Rx packet. This patch improves our logic to add that extra
+> packet in next aggregation.
+> 
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
 
-The irq type is set in this chunk of code from wlcore_nvs_cb:
+Please ignore this patch. This is same as "[PATCH 1/3] mwifiex: fix 
+a bug..." sent separately.
 
-        if (wl->platform_quirks & WL12XX_PLATFORM_QUIRK_EDGE_IRQ) {
-                irqflags = IRQF_TRIGGER_RISING;
-                hardirq_fn = wlcore_hardirq;
-        } else {
-                irqflags = IRQF_TRIGGER_HIGH | IRQF_ONESHOT;
-        }
-
-This means you would replace the platform_quirks with setting the
-correct irq type.
-
-	Arnd
+Regards,
+Amit
