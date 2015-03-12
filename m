@@ -1,130 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64564 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44982 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753370AbbCBMUB (ORCPT
+	with ESMTP id S1753602AbbCLNAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 07:20:01 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V5 1/2] ath10k: Move ath10k_vdev_stop() up before ath10k_vdev_start_restart()
-Date: Mon, 2 Mar 2015 17:45:27 +0530
-Message-ID: <1425298528-3067-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150302_132007_091017_68736CCD)
+	Thu, 12 Mar 2015 09:00:42 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] ath10k: fix wrong symlink name on error path
+References: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<1424437452-28161-2-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Thu, 12 Mar 2015 15:00:32 +0200
+In-Reply-To: <1424437452-28161-2-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Fri, 20 Feb 2015 18:34:11 +0530")
+Message-ID: <87h9tqv09b.fsf@kamboji.qca.qualcomm.com> (sfid-20150312_140050_939241_B4700CDA)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches does not modify any functionality. Just a code move
-so that ath10k_vdev_stop() can be used in ath10k_vdev_start_restart()
-for any failure cases which involves vdev_stop().
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
-V2:
-     - Call ath10k_vdev_stop() when ath10k_monitor_recalc() failed.
-       This results in code move done in patch 1.
+> Wrong symlink name is used on error path of thermal registration
+> and also correcting the error message.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-V3:
-     - Make change specific to AP mode and update the commit log.
+Thanks, patch 2 applied. Not sure yet what to do with patch 1 and 3.
 
-V4:
-     - Rename the helper which is used to check is promisc mode is
-       to be disbled.
-     - Add warn when ath10k_monitor_recalc() and ath10k_vdev_stop()
-       fails.
-
-V5:
-    - Do not clear FIF_PROMISC_IN_BSS in ath10k_mac_should_disable_promisc().
-     
- drivers/net/wireless/ath/ath10k/mac.c |   66 ++++++++++++++++-----------------
- 1 file changed, 33 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0f39af7..3b5aaa3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -872,6 +872,39 @@ static void ath10k_recalc_radar_detection(struct ath10k *ar)
- 	}
- }
- 
-+static int ath10k_vdev_stop(struct ath10k_vif *arvif)
-+{
-+	struct ath10k *ar = arvif->ar;
-+	int ret;
-+
-+	lockdep_assert_held(&ar->conf_mutex);
-+
-+	reinit_completion(&ar->vdev_setup_done);
-+
-+	ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_vdev_setup_sync(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to syncronise setup for vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	WARN_ON(ar->num_started_vdevs == 0);
-+
-+	if (ar->num_started_vdevs != 0) {
-+		ar->num_started_vdevs--;
-+		ath10k_recalc_radar_detection(ar);
-+	}
-+
-+	return ret;
-+}
-+
- static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
- {
- 	struct ath10k *ar = arvif->ar;
-@@ -949,39 +982,6 @@ static int ath10k_vdev_restart(struct ath10k_vif *arvif)
- 	return ath10k_vdev_start_restart(arvif, true);
- }
- 
--static int ath10k_vdev_stop(struct ath10k_vif *arvif)
--{
--	struct ath10k *ar = arvif->ar;
--	int ret;
--
--	lockdep_assert_held(&ar->conf_mutex);
--
--	reinit_completion(&ar->vdev_setup_done);
--
--	ret = ath10k_wmi_vdev_stop(ar, arvif->vdev_id);
--	if (ret) {
--		ath10k_warn(ar, "failed to stop WMI vdev %i: %d\n",
--			    arvif->vdev_id, ret);
--		return ret;
--	}
--
--	ret = ath10k_vdev_setup_sync(ar);
--	if (ret) {
--		ath10k_warn(ar, "failed to synchronize setup for vdev %i stop: %d\n",
--			    arvif->vdev_id, ret);
--		return ret;
--	}
--
--	WARN_ON(ar->num_started_vdevs == 0);
--
--	if (ar->num_started_vdevs != 0) {
--		ar->num_started_vdevs--;
--		ath10k_recalc_radar_detection(ar);
--	}
--
--	return ret;
--}
--
- static int ath10k_mac_setup_bcn_p2p_ie(struct ath10k_vif *arvif,
- 				       struct sk_buff *bcn)
- {
 -- 
-1.7.9.5
-
+Kalle Valo
