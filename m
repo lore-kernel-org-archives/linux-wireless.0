@@ -1,96 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:58754 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756486AbbCMSm5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 14:42:57 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath10k: htc: match wait_for_completion_timeout return type
-Date: Fri, 13 Mar 2015 14:38:21 -0400
-Message-Id: <1426271901-20596-1-git-send-email-hofrat@osadl.org> (sfid-20150313_194326_542421_C02C83A3)
+Received: from mail-we0-f181.google.com ([74.125.82.181]:39791 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754203AbbCLMJh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 08:09:37 -0400
+Received: by wevl61 with SMTP id l61so15885027wev.6
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 05:09:36 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: [PATCH v6 3/6] dt: bindings: add TI's wilink wireless device
+Date: Thu, 12 Mar 2015 14:09:11 +0200
+Message-Id: <1426162154-8716-4-git-send-email-eliad@wizery.com> (sfid-20150312_131005_883928_9A4072A4)
+In-Reply-To: <1426162154-8716-1-git-send-email-eliad@wizery.com>
+References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-An appropriately named unsigned long is added and the assignments fixed up.
+Add device tree binding documentation for TI's wilink
+(wl12xx and wl18xx) wlan chip.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
+v6: add wl12xx, use IRQ_TYPE_LEVEL_HIGH
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
+ .../devicetree/bindings/net/wireless/ti,wlcore.txt | 47 ++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
 
-Patch is against 4.0-rc3 (localversion-next is -next-20150313)
-
- drivers/net/wireless/ath/ath10k/htc.c |   23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 2fd9e18..690a2f5 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -548,6 +548,7 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- {
- 	struct ath10k *ar = htc->ar;
- 	int i, status = 0;
-+	unsigned long time_left;
- 	struct ath10k_htc_svc_conn_req conn_req;
- 	struct ath10k_htc_svc_conn_resp conn_resp;
- 	struct ath10k_htc_msg *msg;
-@@ -555,9 +556,9 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 	u16 credit_count;
- 	u16 credit_size;
- 
--	status = wait_for_completion_timeout(&htc->ctl_resp,
--					     ATH10K_HTC_WAIT_TIMEOUT_HZ);
--	if (status == 0) {
-+	time_left = wait_for_completion_timeout(&htc->ctl_resp,
-+						ATH10K_HTC_WAIT_TIMEOUT_HZ);
-+	if (!time_left) {
- 		/* Workaround: In some cases the PCI HIF doesn't
- 		 * receive interrupt for the control response message
- 		 * even if the buffer was completed. It is suspected
-@@ -569,10 +570,11 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 		for (i = 0; i < CE_COUNT; i++)
- 			ath10k_hif_send_complete_check(htc->ar, i, 1);
- 
--		status = wait_for_completion_timeout(&htc->ctl_resp,
--						     ATH10K_HTC_WAIT_TIMEOUT_HZ);
-+		time_left =
-+		wait_for_completion_timeout(&htc->ctl_resp,
-+					    ATH10K_HTC_WAIT_TIMEOUT_HZ);
- 
--		if (status == 0)
-+		if (!time_left)
- 			status = -ETIMEDOUT;
- 	}
- 
-@@ -646,6 +648,7 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- 	struct sk_buff *skb;
- 	unsigned int max_msg_size = 0;
- 	int length, status;
-+	unsigned long time_left;
- 	bool disable_credit_flow_ctrl = false;
- 	u16 message_id, service_id, flags = 0;
- 	u8 tx_alloc = 0;
-@@ -701,10 +704,10 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
- 	}
- 
- 	/* wait for response */
--	status = wait_for_completion_timeout(&htc->ctl_resp,
--					     ATH10K_HTC_CONN_SVC_TIMEOUT_HZ);
--	if (status == 0) {
--		ath10k_err(ar, "Service connect timeout: %d\n", status);
-+	time_left = wait_for_completion_timeout(&htc->ctl_resp,
-+						ATH10K_HTC_CONN_SVC_TIMEOUT_HZ);
-+	if (!time_left) {
-+		ath10k_err(ar, "Service connect timeout\n");
- 		return -ETIMEDOUT;
- 	}
- 
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+new file mode 100644
+index 0000000..2a3d90d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+@@ -0,0 +1,47 @@
++TI Wilink 6/7/8 (wl12xx/wl18xx) SDIO devices
++
++This node provides properties for controlling the wilink wireless device. The
++node is expected to be specified as a child node to the SDIO controller that
++connects the device to the system.
++
++Required properties:
++ - compatible: should be one of the following:
++    * "ti,wl1271"
++    * "ti,wl1273"
++    * "ti,wl1281"
++    * "ti,wl1283"
++    * "ti,wl1801"
++    * "ti,wl1805"
++    * "ti,wl1807"
++    * "ti,wl1831"
++    * "ti,wl1835"
++    * "ti,wl1837"
++ - interrupts : specifies attributes for the out-of-band interrupt.
++
++Optional properties:
++ - interrupt-parent : the phandle for the interrupt controller to which the
++	device interrupts are connected.
++ - ref-clock-frequency : ref clock frequency in Hz
++ - tcxo-clock-frequency : tcxo clock frequency in Hz
++
++Note: the *-clock-frequency properties assume internal clocks. In case of external
++clock, new bindings (for parsing the clock nodes) have to be added.
++
++Example:
++
++&mmc3 {
++	status = "okay";
++	vmmc-supply = <&wlan_en_reg>;
++	bus-width = <4>;
++	cap-power-off-card;
++	keep-power-in-suspend;
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlcore: wlcore@2 {
++		compatible = "ti,wl1835";
++		reg = <2>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <19 IRQ_TYPE_LEVEL_HIGH>;
++	};
++};
 -- 
-1.7.10.4
+1.8.5.2.229.g4448466.dirty
 
