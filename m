@@ -1,33 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53479 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750977AbbCUGhb (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:51236 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753211AbbCLOgB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 02:37:31 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [for-4.0] brcmfmac: disable MBSS feature for BCM43362
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1426886313-2936-1-git-send-email-arend@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Message-Id: <20150321063730.43D601413C1@smtp.codeaurora.org> (sfid-20150321_073735_292819_94757276)
-Date: Sat, 21 Mar 2015 06:37:30 +0000 (UTC)
+	Thu, 12 Mar 2015 10:36:01 -0400
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH 2/3] rt2x00usb: check USB's request error code in rt2800usb_autorun_detect()
+Date: Thu, 12 Mar 2015 15:35:45 +0100
+Message-Id: <1426170946-13918-2-git-send-email-bigeasy@linutronix.de> (sfid-20150312_153606_371625_A42B680F)
+In-Reply-To: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
+References: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+rt2800usb_autorun_detect() blindly assumes assumes that it worked while
+it could have failed. Check the error code here.
 
-> The BCM43362 firmware falsely reports it is capable of providing
-> MBSS. As a result AP mode no longer works for this device. Therefor
-> disable MBSS in the driver for this chipset.
-> 
-> Cc: stable@vger.kernel.org # 3.19.y
-> Reported-by: Jorg Krause <jkrause@posteo.de>
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-Thanks, applied to wireless-drivers.git.
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 8444313eabe2..e692e5fe4e01 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -233,6 +233,7 @@ static int rt2800usb_autorun_detect(struct rt2x00_dev *rt2x00dev)
+ {
+ 	__le32 *reg;
+ 	u32 fw_mode;
++	int ret;
+ 
+ 	reg = kmalloc(sizeof(*reg), GFP_KERNEL);
+ 	if (reg == NULL)
+@@ -242,11 +243,14 @@ static int rt2800usb_autorun_detect(struct rt2x00_dev *rt2x00dev)
+ 	 * magic value USB_MODE_AUTORUN (0x11) to the device, thus the
+ 	 * returned value would be invalid.
+ 	 */
+-	rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
+-				 USB_VENDOR_REQUEST_IN, 0, USB_MODE_AUTORUN,
+-				 reg, sizeof(*reg), REGISTER_TIMEOUT_FIRMWARE);
++	ret = rt2x00usb_vendor_request(rt2x00dev, USB_DEVICE_MODE,
++				       USB_VENDOR_REQUEST_IN, 0,
++				       USB_MODE_AUTORUN, reg, sizeof(*reg),
++				       REGISTER_TIMEOUT_FIRMWARE);
+ 	fw_mode = le32_to_cpu(*reg);
+ 	kfree(reg);
++	if (ret < 0)
++		return ret;
+ 
+ 	if ((fw_mode & 0x00000003) == 2)
+ 		return 1;
+-- 
+2.1.4
 
-Kalle Valo
