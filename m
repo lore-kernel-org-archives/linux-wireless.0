@@ -1,42 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:32927 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300AbbCNRsS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 13:48:18 -0400
-Received: by ignm3 with SMTP id m3so8659871ign.0
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2015 10:48:18 -0700 (PDT)
-Date: Sat, 14 Mar 2015 13:48:13 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211-hwsim and tx-rates.
-Message-ID: <20150314174813.GA6772@localhost> (sfid-20150314_184839_850405_950BD802)
-References: <5500AEAB.8010605@candelatech.com>
- <5500B417.9070307@broadcom.com>
- <5500BC5A.9040809@candelatech.com>
- <20150314104742.GA13495@localhost>
- <55045E56.1050904@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <55045E56.1050904@candelatech.com>
+Received: from mga02.intel.com ([134.134.136.20]:37930 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754603AbbCLNG0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:06:26 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 44/49] iwlwifi: add more new 8260 series PCI IDs
+Date: Thu, 12 Mar 2015 15:04:29 +0200
+Message-Id: <1426165474-25586-44-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143418_904058_C487427D)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 14, 2015 at 09:14:14AM -0700, Ben Greear wrote:
-> It can change with every packet based on rate-control logic, right?
+From: Oren Givon <oren.givon@intel.com>
 
-You said you wanted to go from index to bitrate -- the index changes,
-but not the rate<->index mapping.
+More sub system IDs were introduced for the 8260 series.
+Add the new sub system IDs so the cards can be recognized.
 
-> And, it seems unlikely to me that an extra 16 bytes or so would make a
-> great deal of difference.  Using hash tables instead of linear walks
-> and other things would likely improve performance more?
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/drv.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Last time I tested with perf, memcpy dominated everything -- I've been
-thinking about having a mode where just headers are sent to userspace
-to avoid some of that.
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index 3f9289d..2794cd2 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -414,9 +414,14 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* 8000 Series */
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x1010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0110, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x1110, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0250, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x1050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0150, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x0030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F4, 0x1130, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x1030, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0xC010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0xD010, iwl8260_2ac_cfg)},
+@@ -434,6 +439,9 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F5, 0x0010, iwl4165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F6, 0x0030, iwl4165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0810, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0910, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0850, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0950, iwl8260_2ac_cfg)},
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.9.1
+
