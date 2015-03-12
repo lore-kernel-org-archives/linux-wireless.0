@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:26937 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751730AbbCKUQ5 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:42819 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751337AbbCLS3L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 16:16:57 -0400
-Message-ID: <5500A2B5.1000905@broadcom.com> (sfid-20150311_211700_734631_480BB9C9)
-Date: Wed, 11 Mar 2015 21:16:53 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 12 Mar 2015 14:29:11 -0400
+Message-ID: <5501DAF7.1000800@candelatech.com> (sfid-20150312_192915_225991_2709A10F)
+Date: Thu, 12 Mar 2015 11:29:11 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: Looking for Orinoco USB dongles
-References: <wrfj1tkv1h24.fsf@ultrasam.lan.trained-monkey.org>
-In-Reply-To: <wrfj1tkv1h24.fsf@ultrasam.lan.trained-monkey.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Specific tx rates with ath10k
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/15 20:15, Jes Sorensen wrote:
-> Hi,
->
-> For the Outreachy project I am trying to track down 1-2 Orinoco USB
-> dongles. If anyone has one sitting in a drawer and would be interested
-> in reclaiming their drawer space, please shoot me an email off-list.
->
-> I'm happy to pay for shipping.
->
-> Sorry for the spam!
+Ath10k firmware gives ability to set specific fixed rate-control rates
+for beacons/mgt, multicast, broadcast, and regular traffic.
 
-I can ask my colleagues at work (former Lucent/Agere) whether they have 
-stuff they can miss. Not sure how nostalgic they are ;-)
+The ath10k driver only sets regular traffic currently.
 
-Regards,
-Arend
+I had previously hacked my firmware to just set all rate types when
+ath10k driver requested to set the rate.
 
-> Jes
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But, that is not what my customer needs.
+
+So, I am now planning to add some debugfs entries to allow users to set
+beacon/mgt, multicast and broadcast rates individually (I don't have time or interest
+right now to try patching things top to bottom to try to get this feature
+into mac80211 stack or 'iw').
+
+My question is, for when user just runs a command like this:
+
+./local/sbin/iw dev vap1 set bitrates legacy-2.4 6 ht-mcs-2.4
+
+What is the desired behaviour?
+
+Set all rates (beacons/mgt, bcast, multicast, regular) to the same
+fixed speed, or just a certain subset of these traffic types?
+
+I can make my firmware do whatever combination is required, and then
+users can over-ride the values by using debugfs.....
+
+As a note, ath10k firmware will NOT send beacons at HT speeds, so
+if you fix an HT rate, then firmware will ignore that for the beacons/mgt
+ratecontrol type.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
