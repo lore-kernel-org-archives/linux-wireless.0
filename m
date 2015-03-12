@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:34819 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626AbbCVQ1y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 12:27:54 -0400
-Message-ID: <550EED87.8010008@lwfinger.net> (sfid-20150322_173210_045852_CCB6D78A)
-Date: Sun, 22 Mar 2015 11:27:51 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Priit Laes <plaes@plaes.org>, Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v2 0/4] rtlwifi: Use common functions for driver stats
-References: <1427031320-10913-1-git-send-email-plaes@plaes.org>
-In-Reply-To: <1427031320-10913-1-git-send-email-plaes@plaes.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:26343 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754489AbbCLNFd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:05:33 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/49] iwlwifi: use IWL_DEFAULT_MAX_TX_POWER for max_eirp
+Date: Thu, 12 Mar 2015 15:03:57 +0200
+Message-Id: <1426165474-25586-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_140537_452671_87A0C55E)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/22/2015 08:35 AM, Priit Laes wrote:
-> Hi all,
->
-> This is a small fixup to unify make the drivers use common helper
-> functions for driver statistics.
->
-> There are no functional changes since the first posting, except dropping
-> patches already applied and addressing the comments by Joe Perches.
+From: Eliad Peller <eliad@wizery.com>
 
-Are there patches that are required before these work? Applying these four 
-results in the following build errors:
+max_eirp affects the txpower configured to the power,
+so use the max tx power (22) instead of some other
+value.
 
-drivers/net/wireless/rtlwifi/rtl8192de/trx.c: In function 
-‘_rtl92de_query_rxphystatus’:
-drivers/net/wireless/rtlwifi/rtl8192de/trx.c:132:3: error: implicit declaration 
-of function ‘rtl_query_rxpwrpercentage’ [-Werror=implicit-function-declaration]
-    pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
-    ^
-drivers/net/wireless/rtlwifi/rtl8192de/trx.c:192:4: error: implicit declaration 
-of function ‘rtl_evm_db_to_percentage’ [-Werror=implicit-function-declaration]
-     evm = rtl_evm_db_to_percentage(p_drvinfo->rxevm[i]);
-     ^
-drivers/net/wireless/rtlwifi/rtl8192de/trx.c:204:4: error: implicit declaration 
-of function ‘rtl_signal_scale_mapping’ [-Werror=implicit-function-declaration]
-     (u8)(rtl_signal_scale_mapping(pwdb_all));
-     ^
-cc1: some warnings being treated as errors
-scripts/Makefile.build:258: recipe for target 
-'drivers/net/wireless/rtlwifi/rtl8192de/trx.o' failed
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-nvm-parse.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I cannot find any patches that created common routines in rtlwifi.
-
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+index 727e8a4..83ba307f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/iwlwifi/iwl-nvm-parse.c
+@@ -784,7 +784,8 @@ iwl_parse_nvm_mcc_info(struct device *dev, const struct iwl_cfg *cfg,
+ 
+ 		/* this doesn't matter - not used by FW */
+ 		rule->power_rule.max_antenna_gain = DBI_TO_MBI(6);
+-		rule->power_rule.max_eirp = DBM_TO_MBM(20);
++		rule->power_rule.max_eirp =
++			DBM_TO_MBM(IWL_DEFAULT_MAX_TX_POWER);
+ 
+ 		rule->flags = iwl_nvm_get_regdom_bw_flags(nvm_chan, ch_idx,
+ 							  ch_flags, cfg);
+-- 
+1.9.1
 
