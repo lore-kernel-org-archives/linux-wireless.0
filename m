@@ -1,146 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:58857 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751279AbbCNFyO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 01:54:14 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from mga03.intel.com ([134.134.136.65]:6667 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754152AbbCLNEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:04:44 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH v2 02/11] ath9k: Register private AIC ops
-Date: Sat, 14 Mar 2015 11:27:48 +0530
-Message-Id: <1426312677-2064-3-git-send-email-sujith@msujith.org> (sfid-20150314_065421_824695_9C2E90AB)
-In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
-References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 02/49] iwlwifi: fix max_ht_ampdu_exponent for older devices
+Date: Thu, 12 Mar 2015 15:03:47 +0200
+Message-Id: <1426165474-25586-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_140448_949643_450999C7)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The commit below didn't update the max_ht_ampdu_exponent
+for the devices listed in iwl-[1-6]000.c which, in result,
+became 0 instead of 8K. This reduced the size of the Rx
+AMPDU from 64K to 8K which had an impact in the Rx
+throughput. One user reported that because of this, his
+downstream throughput droppped by a half.
 
-AIC can be disabled or enabled on a per-card
-basis using MCI configuration, so register a function
-to check its status.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: <stable@vger.kernel.org> [3.19]
+Fixes: c064ddf318aa ("iwlwifi: change max HT and VHT A-MPDU exponent")
+Reported-and-tested-by: Valentin Manea <linux-wireless@mrs.ro>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/Makefile     |  3 ++-
- drivers/net/wireless/ath/ath9k/ar9003_aic.c | 37 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/ar9003_hw.c  |  1 +
- drivers/net/wireless/ath/ath9k/hw-ops.h     |  8 +++++++
- drivers/net/wireless/ath/ath9k/hw.h         |  6 +++++
- 5 files changed, 54 insertions(+), 1 deletion(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.c
+ drivers/net/wireless/iwlwifi/iwl-1000.c |  6 ++++--
+ drivers/net/wireless/iwlwifi/iwl-2000.c | 13 +++++++++----
+ drivers/net/wireless/iwlwifi/iwl-5000.c |  6 ++++--
+ drivers/net/wireless/iwlwifi/iwl-6000.c | 18 ++++++++++++------
+ 4 files changed, 29 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index 4739722..ecda613 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -46,7 +46,8 @@ ath9k_hw-y:=	\
- ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index c3817fa..06f6cc0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -95,7 +95,8 @@ static const struct iwl_eeprom_params iwl1000_eeprom_params = {
+ 	.nvm_calib_ver = EEPROM_1000_TX_POWER_VERSION,	\
+ 	.base_params = &iwl1000_base_params,			\
+ 	.eeprom_params = &iwl1000_eeprom_params,		\
+-	.led_mode = IWL_LED_BLINK
++	.led_mode = IWL_LED_BLINK,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
- ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
--					   ar9003_mci.o
-+					   ar9003_mci.o \
-+					   ar9003_aic.o
+ const struct iwl_cfg iwl1000_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 1000 BGN",
+@@ -121,7 +122,8 @@ const struct iwl_cfg iwl1000_bg_cfg = {
+ 	.base_params = &iwl1000_base_params,			\
+ 	.eeprom_params = &iwl1000_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.rx_with_siso_diversity = true
++	.rx_with_siso_diversity = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
- ath9k_hw-$(CONFIG_ATH9K_PCOEM) += ar9003_rtt.o
+ const struct iwl_cfg iwl100_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 100 BGN",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 21e5d08..890b95f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -123,7 +123,9 @@ static const struct iwl_eeprom_params iwl20x0_eeprom_params = {
+ 	.nvm_calib_ver = EEPROM_2000_TX_POWER_VERSION,		\
+ 	.base_params = &iwl2000_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
++
  
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-new file mode 100644
-index 0000000..0cd159d
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-@@ -0,0 +1,37 @@
-+/*
-+ * Copyright (c) 2015 Qualcomm Atheros Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#include "hw.h"
-+#include "hw-ops.h"
-+#include "ar9003_mci.h"
-+#include "ar9003_aic.h"
-+
-+static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
-+{
-+	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
-+
-+	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_AIC)
-+		return false;
-+
-+	return true;
-+}
-+
-+void ar9003_hw_attach_aic_ops(struct ath_hw *ah)
-+{
-+	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
-+
-+	priv_ops->is_aic_enabled = ar9003_hw_is_aic_enabled;
-+}
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-index df176e6..79fd3b2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
-@@ -1180,4 +1180,5 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
- 	ar9003_hw_attach_phy_ops(ah);
- 	ar9003_hw_attach_calib_ops(ah);
- 	ar9003_hw_attach_mac_ops(ah);
-+	ar9003_hw_attach_aic_ops(ah);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
-index 88769b6..232339b 100644
---- a/drivers/net/wireless/ath/ath9k/hw-ops.h
-+++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
-@@ -108,6 +108,14 @@ static inline void ath9k_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
- 		ath9k_hw_ops(ah)->set_bt_ant_diversity(ah, enable);
- }
+ const struct iwl_cfg iwl2000_2bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 2200 BGN",
+@@ -149,7 +151,8 @@ const struct iwl_cfg iwl2000_2bgn_d_cfg = {
+ 	.nvm_calib_ver = EEPROM_2000_TX_POWER_VERSION,	\
+ 	.base_params = &iwl2030_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
-+static inline bool ath9k_hw_is_aic_enabled(struct ath_hw *ah)
-+{
-+	if (ath9k_hw_private_ops(ah)->is_aic_enabled)
-+		return ath9k_hw_private_ops(ah)->is_aic_enabled(ah);
-+
-+	return false;
-+}
-+
- #endif
+ const struct iwl_cfg iwl2030_2bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 2230 BGN",
+@@ -170,7 +173,8 @@ const struct iwl_cfg iwl2030_2bgn_cfg = {
+ 	.base_params = &iwl2000_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.rx_with_siso_diversity = true
++	.rx_with_siso_diversity = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
- /* Private hardware call ops */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 2067cb5..c22edd3 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -653,6 +653,10 @@ struct ath_hw_private_ops {
+ const struct iwl_cfg iwl105_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 105 BGN",
+@@ -197,7 +201,8 @@ const struct iwl_cfg iwl105_bgn_d_cfg = {
+ 	.base_params = &iwl2030_base_params,			\
+ 	.eeprom_params = &iwl20x0_eeprom_params,		\
+ 	.led_mode = IWL_LED_RF_STATE,				\
+-	.rx_with_siso_diversity = true
++	.rx_with_siso_diversity = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
- 	/* ANI */
- 	void (*ani_cache_ini_regs)(struct ath_hw *ah);
-+
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+	bool (*is_aic_enabled)(struct ath_hw *ah);
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
- };
+ const struct iwl_cfg iwl135_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N 135 BGN",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 332bbede..724194e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -93,7 +93,8 @@ static const struct iwl_eeprom_params iwl5000_eeprom_params = {
+ 	.nvm_calib_ver = EEPROM_5000_TX_POWER_VERSION,	\
+ 	.base_params = &iwl5000_base_params,			\
+ 	.eeprom_params = &iwl5000_eeprom_params,		\
+-	.led_mode = IWL_LED_BLINK
++	.led_mode = IWL_LED_BLINK,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
- /**
-@@ -1113,6 +1117,8 @@ void ar9003_hw_attach_calib_ops(struct ath_hw *ah);
- int ar9002_hw_attach_ops(struct ath_hw *ah);
- void ar9003_hw_attach_ops(struct ath_hw *ah);
+ const struct iwl_cfg iwl5300_agn_cfg = {
+ 	.name = "Intel(R) Ultimate N WiFi Link 5300 AGN",
+@@ -158,7 +159,8 @@ const struct iwl_cfg iwl5350_agn_cfg = {
+ 	.base_params = &iwl5000_base_params,			\
+ 	.eeprom_params = &iwl5000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.internal_wimax_coex = true
++	.internal_wimax_coex = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
-+void ar9003_hw_attach_aic_ops(struct ath_hw *ah);
-+
- void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan);
+ const struct iwl_cfg iwl5150_agn_cfg = {
+ 	.name = "Intel(R) WiMAX/WiFi Link 5150 AGN",
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 8f2c3c8..21b2630 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -145,7 +145,8 @@ static const struct iwl_eeprom_params iwl6000_eeprom_params = {
+ 	.nvm_calib_ver = EEPROM_6005_TX_POWER_VERSION,	\
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
  
- void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
+ const struct iwl_cfg iwl6005_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6205 AGN",
+@@ -199,7 +200,8 @@ const struct iwl_cfg iwl6005_2agn_mow2_cfg = {
+ 	.nvm_calib_ver = EEPROM_6030_TX_POWER_VERSION,	\
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6030_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6230 AGN",
+@@ -235,7 +237,8 @@ const struct iwl_cfg iwl6030_2bg_cfg = {
+ 	.nvm_calib_ver = EEPROM_6030_TX_POWER_VERSION,	\
+ 	.base_params = &iwl6000_g2_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+-	.led_mode = IWL_LED_RF_STATE
++	.led_mode = IWL_LED_RF_STATE,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6035_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6235 AGN",
+@@ -290,7 +293,8 @@ const struct iwl_cfg iwl130_bg_cfg = {
+ 	.nvm_calib_ver = EEPROM_6000_TX_POWER_VERSION,	\
+ 	.base_params = &iwl6000_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+-	.led_mode = IWL_LED_BLINK
++	.led_mode = IWL_LED_BLINK,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6000i_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N 6200 AGN",
+@@ -322,7 +326,8 @@ const struct iwl_cfg iwl6000i_2bg_cfg = {
+ 	.base_params = &iwl6050_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.internal_wimax_coex = true
++	.internal_wimax_coex = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6050_2agn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Advanced-N + WiMAX 6250 AGN",
+@@ -347,7 +352,8 @@ const struct iwl_cfg iwl6050_2abg_cfg = {
+ 	.base_params = &iwl6050_base_params,			\
+ 	.eeprom_params = &iwl6000_eeprom_params,		\
+ 	.led_mode = IWL_LED_BLINK,				\
+-	.internal_wimax_coex = true
++	.internal_wimax_coex = true,				\
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K
+ 
+ const struct iwl_cfg iwl6150_bgn_cfg = {
+ 	.name = "Intel(R) Centrino(R) Wireless-N + WiMAX 6150 BGN",
 -- 
-2.3.1
+1.9.1
 
