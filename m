@@ -1,120 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:35191 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752126AbbCTN4t (ORCPT
+Received: from mail-la0-f42.google.com ([209.85.215.42]:38778 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754192AbbCLRFM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 09:56:49 -0400
-Received: by labjg1 with SMTP id jg1so87648890lab.2
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 06:56:48 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/9] ath10k: move rate definitions to file start
-Date: Fri, 20 Mar 2015 13:54:07 +0000
-Message-Id: <1426859655-11797-2-git-send-email-michal.kazior@tieto.com> (sfid-20150320_145754_956348_DAFE7E70)
-In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
-References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
+	Thu, 12 Mar 2015 13:05:12 -0400
+Received: by labhs14 with SMTP id hs14so16730125lab.5
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 10:05:10 -0700 (PDT)
+Date: Thu, 12 Mar 2015 13:04:54 -0400
+From: German <gentgerman@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iw dev wlp1s0 scan hangs
+Message-Id: <20150312130454.b381cef3b58e855598febc84@gmail.com> (sfid-20150312_180518_469966_85B827AB)
+In-Reply-To: <550173CE.8000708@broadcom.com>
+References: <20150311161757.dac357e24509141a4c98e84b@gmail.com>
+	<5500A4B6.4050702@broadcom.com>
+	<20150311163353.74922db84fc618b3b9039515@gmail.com>
+	<5500A93C.7060309@broadcom.com>
+	<20150311170018.c2581ec2ddfb4589f5c8b154@gmail.com>
+	<5500B0F2.3010804@broadcom.com>
+	<20150311182146.bde39b79fad1e8cc61d6f4a0@gmail.com>
+	<55014E36.5040707@broadcom.com>
+	<20150312045001.654f6b4706acdd9e9367caab@gmail.com>
+	<550173CE.8000708@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prepare the code for future changes so that new
-code can refer to rate-related stuff without
-forward declarations.
+On Thu, 12 Mar 2015 12:09:02 +0100
+Arend van Spriel <arend@broadcom.com> wrote:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 63 ++++++++++++++++++-----------------
- 1 file changed, 32 insertions(+), 31 deletions(-)
+> On 03/12/15 09:50, German wrote:
+> > On Thu, 12 Mar 2015 09:28:38 +0100
+> > Arend van Spriel<arend@broadcom.com>  wrote:
+> >
+> >> On 03/11/15 23:21, German wrote:
+> >>> On Wed, 11 Mar 2015 22:17:38 +0100
+> >>> Arend van Spriel<arend@broadcom.com>   wrote:
+> >>>
+> >>>> On 03/11/15 22:00, German wrote:
+> >>>>> On Wed, 11 Mar 2015 21:44:44 +0100
+> >>>>> Arend van Spriel<arend@broadcom.com>    wrote:
+> >>>>>
+> >>>>>> On 03/11/15 21:33, German wrote:
+> >>>>>>> On Wed, 11 Mar 2015 21:25:26 +0100
+> >>>>>>> Arend van Spriel<arend@broadcom.com>     wrote:
+> >>>>>>>
+> >>>>>>>> On 03/11/15 21:17, German wrote:
+> >>>>>>>>> Hi. When I try to run aformentioned command it hangs for about 20 secs and no output is returned. What's the problem might be? Thanks
+> >>>>>>>>
+> >>>>>>>> any more details you can share? What kernel version, what specific
+> >>>>>>>> device is wlp1s0, do you have any kernel logging.
+> >>>>>>>>
+> >>>>>>
+> >>>>>> When I wrote down the questions I was wondering how specifc I should be.
+> >>>>>>> Kernel 3.18.7-gentoo.
+> >>>>>>
+> >>>>>> ok
+> >>>>>>
+> >>>>>>> wlp1s0 is my network card.
+> >>>>>>
+> >>>>>> Sure. I meant what brand and model.
+> >>>>>>
+> >>>>>> Can you run following commands:
+> >>>>>> $ lspci
+> >>>>>> $ lsusb
+> >>>>>>
+> >>>>> realtek RTL8723BE PCIe Wireless Network Adapter
+> >>>>>
+> >>>>>>> As for kernel logging, I simply don't know if I have it. Thanks
+> >>>>>>
+> >>>>>> Ok. Can you run following command after aborting the hanging iw scan
+> >>>>>> command:
+> >>>>>>
+> >>>>>> $ dmesg
+> >>>>>
+> >>>>> Polling FW ready fail! Firmware is not ready to run.
+> >>>>>
+> >>>>> Ok, so I need some sort of firmware? That's what I thought. What is this and where can I find it in kernel when I compile it? Thanks
+> >>>>
+> >>>> Not familiar with Realtek equipment but it might be provided by the
+> >>>> linux-firmware package so:
+> >>>>
+> >>>> $ sudo emerge --ask linux-firmware
+> >>>>
+> >>>
+> >>> Thanks Arend. This did the trick. I can now scan networks and I found mine. But how I actually connect to my network? I guess it is encrypted, but I have wpa_supplicant installed.
+> >>
+> >> Gentoo does not seem to provide NetworkManager as a solution. I found
+> >> this page [1]. Maybe it helps.
+> >
+> > Thanks Arend for pointing me to this link. NetworkManager was proposed to me on gentoo mailing list as a way to control both wireless and wired interfaces. It pulled a bunch of dependencies, though I used -X flag in USE variable not to use X server. the compile took about an hour and after all this, my system became unstable. It doesn't at all feels right, it is clunky. For now I am building gentoo laptop in pure console mode, so from all my research, iw is the only CLI tool for wireless and I like the fact it doesn't need bunch of dependences. I already installed it and I like it, so would you be so kind to get me through a set up? Documentation seems confusing. Thanks
+> 
+> Well. iw is really for testing/debugging. Especially with WPA/RSN 
+> networks that do periodic rekeying you need wpa_supplicant. It will do 
+> the scanning on its own and establish connection and such.
+> 
+> You could also opt for using nmcli, but that might be what you tried 
+> already.
+> 
+> I am no gentoo expert, but let's try to get this working. I am following 
+> the wpa_supplicant section of the link I send earlier.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1214a3b..456d671 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -30,6 +30,38 @@
- #include "wmi.h"
- #include "wmi-ops.h"
- 
-+/*********/
-+/* Rates */
-+/*********/
-+
-+#define RATETAB_ENT(_rate, _rateid, _flags) { \
-+	.bitrate		= (_rate), \
-+	.flags			= (_flags), \
-+	.hw_value		= (_rateid), \
-+}
-+
-+static struct ieee80211_rate ath10k_rates[] = {
-+	/* CCK */
-+	RATETAB_ENT(10,  0x82, 0),
-+	RATETAB_ENT(20,  0x84, 0),
-+	RATETAB_ENT(55,  0x8b, 0),
-+	RATETAB_ENT(110, 0x96, 0),
-+	/* OFDM */
-+	RATETAB_ENT(60,  0x0c, 0),
-+	RATETAB_ENT(90,  0x12, 0),
-+	RATETAB_ENT(120, 0x18, 0),
-+	RATETAB_ENT(180, 0x24, 0),
-+	RATETAB_ENT(240, 0x30, 0),
-+	RATETAB_ENT(360, 0x48, 0),
-+	RATETAB_ENT(480, 0x60, 0),
-+	RATETAB_ENT(540, 0x6c, 0),
-+};
-+
-+#define ath10k_a_rates (ath10k_rates + 4)
-+#define ath10k_a_rates_size (ARRAY_SIZE(ath10k_rates) - 4)
-+#define ath10k_g_rates (ath10k_rates + 0)
-+#define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
-+
- /**********/
- /* Crypto */
- /**********/
-@@ -5420,12 +5452,6 @@ static const struct ieee80211_ops ath10k_ops = {
- #endif
- };
- 
--#define RATETAB_ENT(_rate, _rateid, _flags) { \
--	.bitrate		= (_rate), \
--	.flags			= (_flags), \
--	.hw_value		= (_rateid), \
--}
--
- #define CHAN2G(_channel, _freq, _flags) { \
- 	.band			= IEEE80211_BAND_2GHZ, \
- 	.hw_value		= (_channel), \
-@@ -5488,31 +5514,6 @@ static const struct ieee80211_channel ath10k_5ghz_channels[] = {
- 	CHAN5G(165, 5825, 0),
- };
- 
--/* Note: Be careful if you re-order these. There is code which depends on this
-- * ordering.
-- */
--static struct ieee80211_rate ath10k_rates[] = {
--	/* CCK */
--	RATETAB_ENT(10,  0x82, 0),
--	RATETAB_ENT(20,  0x84, 0),
--	RATETAB_ENT(55,  0x8b, 0),
--	RATETAB_ENT(110, 0x96, 0),
--	/* OFDM */
--	RATETAB_ENT(60,  0x0c, 0),
--	RATETAB_ENT(90,  0x12, 0),
--	RATETAB_ENT(120, 0x18, 0),
--	RATETAB_ENT(180, 0x24, 0),
--	RATETAB_ENT(240, 0x30, 0),
--	RATETAB_ENT(360, 0x48, 0),
--	RATETAB_ENT(480, 0x60, 0),
--	RATETAB_ENT(540, 0x6c, 0),
--};
--
--#define ath10k_a_rates (ath10k_rates + 4)
--#define ath10k_a_rates_size (ARRAY_SIZE(ath10k_rates) - 4)
--#define ath10k_g_rates (ath10k_rates + 0)
--#define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
--
- struct ath10k *ath10k_mac_create(size_t priv_size)
- {
- 	struct ieee80211_hw *hw;
+Are you advising not to use iw and go the wireless-tools package?
+
+> 
+> 1. modify /etc/conf.d/net
+> 
+> Not sure if you only use wireless on the machine. Otherwise, you can 
+> copy the attach conf.net file:
+> 
+> $ sudo cp conf.net /etc/conf.d/net
+> 
+> 2. install wpa_supplicant configuration
+> 
+> Edit attached wpa_supplicant.conf with your ssid and psk and copy it:
+> 
+> $ sudo cp wpa_supplicant.conf /etc/wpa_supplicant
+> 
+> 3. restart networking
+> 
+> $ sudo /etc/init.d/net restart
+> 
+> Not sure if step 3. is entirely correct regarding the script name. I 
+> don't use Gentoo.
+> 
+> Regards,
+> Arend
+> >> Regards,
+> >> Arend
+> >>
+> >> [1]
+> >> http://wiki.gentoo.org/wiki/Handbook:Parts/Networking/Wireless#Wireless_tools
+> >>
+> >>>> Regards,
+> >>>> Arend
+> >>>>
+> >>>>>>
+> >>>>>> Regards,
+> >>>>>> Arend
+> >>>>>>
+> >>>>>>>> Regards,
+> >>>>>>>> Arend
+> >>>>>>>
+> >>>>>>>
+> >>>>>>
+> >>>>>
+> >>>>>
+> >>>>
+> >>>
+> >>>
+> >>
+> >
+> >
+> 
+
+
 -- 
-2.1.4
-
+German <gentgerman@gmail.com>
