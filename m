@@ -1,62 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:38619 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751622AbbCKQgI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 12:36:08 -0400
-Received: by widex7 with SMTP id ex7so39867408wid.3
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 09:36:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1426090817.1904.6.camel@sipsolutions.net>
-References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
- <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
- <1424772587.2192.14.camel@sipsolutions.net> <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com>
- <1424774105.2192.29.camel@sipsolutions.net> <CABPxzYJkoCWud=yfNHL5m2FUCPOc854i_L+VB4sN+o8Skb-Pnw@mail.gmail.com>
- <CABPxzYL4Fz+y7dpp650RyqXVWtL5WC4YkvsQ1_=znOmrmUZF5A@mail.gmail.com>
- <1424810867.2192.60.camel@sipsolutions.net> <CABPxzY+Z97Q4JSSaR2GfGnxbbR721qJ-v_AjG4Kc1TGetHF4ng@mail.gmail.com>
- <1424851368.2050.8.camel@sipsolutions.net> <CABPxzYKa5eR+UrinkqY99jxOpVR4mTYcW_3xZ5f2kf9hXHCznA@mail.gmail.com>
- <1426090817.1904.6.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 11 Mar 2015 22:05:47 +0530
-Message-ID: <CABPxzYK-DGLe+kCWnRroErfOMDb+hUHYyNdBiYvqhBmx2QJxUg@mail.gmail.com> (sfid-20150311_173613_814992_5BACAE45)
-Subject: Re: Connection issues with BW Tracking in mac80211
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:23662 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754579AbbCLNGM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:06:12 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eran Harary <eran.harary@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 36/49] iwlwifi: trans: Take ownership on secure machine before FW load
+Date: Thu, 12 Mar 2015 15:04:21 +0200
+Message-Id: <1426165474-25586-36-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143417_557886_CE30C975)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 9:50 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2015-03-11 at 21:45 +0530, Krishna Chaitanya wrote:
->
->> I did some experiments on this and found the root cause.
->>
->> We are using 5GHz in WORLD Mode, so only passive scan is allowed.
->> So when connecting the very first time, the mac80211 MLME sees that
->> there are no probe_resp ies (only beacon_ies are present) and it sends
->> a directed probe and updates the probe_resp ies. (and also the "ies").
->>
->> But when config is changed and we get disconnected, beacon_ies are updated
->> with the new config, but the probe_resp ies are not.
->> cfg80211_bss_update assigns
->> probe_resp ies to "ies' and mac80211 updates its bss info based on the
->> probe_resp
->> ies which have old config causing the issue.
->>
->> Solution:
->>
->> 1) Make the directed probe mandatory.
->> 2) As you suggested maintain timestamps for probe_resp_ies and beacon_ies
->> and use the latest.
->>
->> Any takes?
->
-> What's the operational problem here? I don't really see it. Are you
-> afraid users will reconfigure their APs often enough for this to be an
-> issue?
-Use case point of view, i understand that this doesn't happen often.
-But from functional point of view, it can still happen and even
-after disconnect mac80211 will not allow connection.
+From: Eran Harary <eran.harary@intel.com>
 
-Also solution: would be to flush scan results up on disconnection.
+When we load the firmware for the 8000 B step device, it'll
+verify its signature. In the current version of the
+hardware, there can be a race between the WiFi firmware
+being loaded and the Bluetooth firmware being loaded.
+
+Check that WiFi is authenticated, if not, take ownership
+on the authentication machine to make sure that the WiFi
+firmware will be authenticated.
+
+Signed-off-by: Eran Harary <eran.harary@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-prph.h   | 10 ++++++++
+ drivers/net/wireless/iwlwifi/pcie/trans.c | 42 +++++++++++++++++++++++++++++++
+ 2 files changed, 52 insertions(+)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
+index aa6fb584..bc96288 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
+@@ -381,6 +381,7 @@ enum secure_load_status_reg {
+ #define WFPM_CTRL_REG			0xA03030
+ enum {
+ 	ENABLE_WFPM = BIT(31),
++	WFPM_AUX_CTL_AUX_IF_MAC_OWNER_MSK	= 0x80000000,
+ };
+ 
+ #define AUX_MISC_REG			0xA200B0
+@@ -388,6 +389,15 @@ enum {
+ 	HW_STEP_LOCATION_BITS = 24,
+ };
+ 
++#define AUX_MISC_MASTER1_EN		0xA20818
++enum aux_misc_master1_en {
++	AUX_MISC_MASTER1_EN_SBE_MSK	= 0x1,
++};
++
++#define AUX_MISC_MASTER1_SMPHR_STATUS	0xA20800
++#define RSA_ENABLE			0xA24B08
++#define PREG_AUX_BUS_WPROT_0		0xA04CC0
++
+ /* FW chicken bits */
+ #define LMPM_CHICK			0xA01FF8
+ enum {
+diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
+index 421ef6b..9ce5e61 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
+@@ -682,6 +682,43 @@ static int iwl_pcie_load_section(struct iwl_trans *trans, u8 section_num,
+ 	return ret;
+ }
+ 
++/*
++ * Driver Takes the ownership on secure machine before FW load
++ * and prevent race with the BT load.
++ * W/A for ROM bug. (should be remove in the next Si step)
++ */
++static int iwl_pcie_rsa_race_bug_wa(struct iwl_trans *trans)
++{
++	u32 val, loop = 1000;
++
++	/* Check the RSA semaphore is accessible - if not, we are in trouble */
++	val = iwl_read_prph(trans, PREG_AUX_BUS_WPROT_0);
++	if (val & (BIT(1) | BIT(17))) {
++		IWL_ERR(trans,
++			"can't access the RSA semaphore it is write protected\n");
++		return 0;
++	}
++
++	/* take ownership on the AUX IF */
++	iwl_write_prph(trans, WFPM_CTRL_REG, WFPM_AUX_CTL_AUX_IF_MAC_OWNER_MSK);
++	iwl_write_prph(trans, AUX_MISC_MASTER1_EN, AUX_MISC_MASTER1_EN_SBE_MSK);
++
++	do {
++		iwl_write_prph(trans, AUX_MISC_MASTER1_SMPHR_STATUS, 0x1);
++		val = iwl_read_prph(trans, AUX_MISC_MASTER1_SMPHR_STATUS);
++		if (val == 0x1) {
++			iwl_write_prph(trans, RSA_ENABLE, 0);
++			return 0;
++		}
++
++		udelay(10);
++		loop--;
++	} while (loop > 0);
++
++	IWL_ERR(trans, "Failed to take ownership on secure machine\n");
++	return -EIO;
++}
++
+ static int iwl_pcie_load_cpu_sections_8000b(struct iwl_trans *trans,
+ 					    const struct fw_img *image,
+ 					    int cpu,
+@@ -901,6 +938,11 @@ static int iwl_pcie_load_given_ucode_8000b(struct iwl_trans *trans,
+ 	if (trans->dbg_dest_tlv)
+ 		iwl_pcie_apply_destination(trans);
+ 
++	/* TODO: remove in the next Si step */
++	ret = iwl_pcie_rsa_race_bug_wa(trans);
++	if (ret)
++		return ret;
++
+ 	/* configure the ucode to be ready to get the secured image */
+ 	/* release CPU reset */
+ 	iwl_write_prph(trans, RELEASE_CPU_RESET, RELEASE_CPU_RESET_BIT);
+-- 
+1.9.1
+
