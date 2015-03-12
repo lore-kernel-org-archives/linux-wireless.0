@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailsrv5-bkp2.dondominio.net ([37.152.88.47]:33554 "EHLO
-	mailsrv5.dondominio.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753311AbbCYPd2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 11:33:28 -0400
-Message-ID: <5512D58B.6030204@aoifes.com> (sfid-20150325_163331_181496_06C73F5E)
-Date: Wed, 25 Mar 2015 16:34:35 +0100
-From: Jose Antonio Delgado Alfonso <jose.delgado@aoifes.com>
-MIME-Version: 1.0
-To: kvalo@qca.qualcomm.com
-CC: linux-wireless@vger.kernel.org,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: Dynamic channel Access
-References: <CADxDmp50X2XnBjfk5qJKRH-n=1Cwagmjb_XyD+RJ4AgpPh-kjQ@mail.gmail.com> <CAEFj985wmiPwnF7rM1qCcO2K3X2yC_onO0AAMfm=9ytwpChzgg@mail.gmail.com> <etPan.542e8df5.6b8b4567.117@Okhwanui-Mac-mini.local> <55128DF0.6010109@aoifes.com>
-In-Reply-To: <55128DF0.6010109@aoifes.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mga02.intel.com ([134.134.136.20]:23662 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754559AbbCLNGJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:06:09 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 35/49] iwlwifi: add new 8260 series PCI IDs
+Date: Thu, 12 Mar 2015 15:04:20 +0200
+Message-Id: <1426165474-25586-35-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143417_194062_D40052C2)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Oren Givon <oren.givon@intel.com>
 
-I would like to ask Qualcomm's collaborators about this topic.
+New sub system IDs were introduced for the 8260 series.
+This patch adds them so new 8260 cards can be recognized.
 
-We are trying to certify a AP product which uses QCA988x radio module.
-We are using the ath10k driver (kernel v3.17.8) and firmware from Ben
-Greear. We are trying to pass the Dynamic Channel test, which consists
-in setting the radio at 80MHz and, at the same time, setting other
-signal in the secondary channel. So far, the radio module does not
-reduce the bandwidth and remains transmitting at 80MHz.
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/drv.c | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
 
-Please, Does someone know if Dynamic Channel Access is really supported
-by ath10k driver in newest kernel versions?
-Or, does it also depends on the firmware version?
-
-Thanks in advance.
-
-Regards,
-Jose Delgado
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index dbd6bcf..3f9289d 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -413,10 +413,27 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 
+ /* 8000 Series */
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x24F3, 0x0004, iwl8260_2n_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x1010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x1050, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F4, 0x0030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F4, 0x1030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0xC010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0xD010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F4, 0xC030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F4, 0xD030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0xC050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0xD050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x8010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x9010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F4, 0x8030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F4, 0x9030, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x8050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x9050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0004, iwl8260_2n_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F5, 0x0010, iwl4165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F6, 0x0030, iwl4165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x0810, iwl8260_2ac_cfg)},
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
+-- 
+1.9.1
 
