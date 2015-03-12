@@ -1,142 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60391 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752481AbbCOPHa (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:39954 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753693AbbCLLbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 11:07:30 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 3/6] ath10k: configure thermal throttle while powering up
-Date: Sun, 15 Mar 2015 20:36:22 +0530
-Message-ID: <1426431985-16332-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150315_160732_693351_4C1A437B)
-In-Reply-To: <1426431985-16332-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1426431985-16332-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 12 Mar 2015 07:31:33 -0400
+From: Yang Bai <hamo.by@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hamo.by@gmail.com
+Subject: [PATCH] rtlwifi: get buffer_desc before trying to alloc new skb
+Date: Thu, 12 Mar 2015 19:33:56 +0800
+Message-Id: <1426160036-1542-1-git-send-email-hamo.by@gmail.com> (sfid-20150312_123155_000360_C3DD5A56)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thermal throttling is not handled in software restart and device
-bootup. Also it needs to be configured whenever quiet period got
-updated. Fix that.
+if rtlpriv->use_new_trx_flow == true and we run out of memory
+to alloc a new skb, we will directly jump to no_new tag with
+buffer_desc == NULL. Then we will dereference this NULL pointer
+in function _rtl_pci_init_one_rxdesc.
 
-Reported-by: Matthias Kaehlcke <mka@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Yang Bai <hamo.by@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c   |  1 +
- drivers/net/wireless/ath/ath10k/mac.c     |  1 +
- drivers/net/wireless/ath/ath10k/thermal.c | 34 +++++++++++++++++++------------
- drivers/net/wireless/ath/ath10k/thermal.h |  5 +++++
- 4 files changed, 28 insertions(+), 13 deletions(-)
+ drivers/net/wireless/rtlwifi/pci.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 812365c..d684edf 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2008,6 +2008,7 @@ static ssize_t ath10k_write_quiet_period(struct file *file,
- 	}
- 	mutex_lock(&ar->conf_mutex);
- 	ar->thermal.quiet_period = period;
-+	ath10k_thermal_set_throttling(ar);
- 	mutex_unlock(&ar->conf_mutex);
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index a62170e..7fe04d1 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -820,17 +820,19 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 		pci_unmap_single(rtlpci->pdev, *((dma_addr_t *)skb->cb),
+ 				 rtlpci->rxbuffersize, PCI_DMA_FROMDEVICE);
  
- 	return count;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a2302bf..5cb0cb6 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3159,6 +3159,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	ath10k_regd_update(ar);
- 
- 	ath10k_spectral_start(ar);
-+	ath10k_thermal_set_throttling(ar);
- 
- 	mutex_unlock(&ar->conf_mutex);
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index dc0ebf3..8640f41 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -73,7 +73,6 @@ ath10k_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 				      unsigned long throttle_state)
- {
- 	struct ath10k *ar = cdev->devdata;
--	u32 period, duration, enabled;
- 	int num_bss, ret = 0;
- 
- 	mutex_lock(&ar->conf_mutex);
-@@ -99,19 +98,8 @@ ath10k_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 		ret = -ENETDOWN;
- 		goto out;
- 	}
--	period = ar->thermal.quiet_period;
--	duration = (period * throttle_state) / 100;
--	enabled = duration ? 1 : 0;
--
--	ret = ath10k_wmi_pdev_set_quiet_mode(ar, period, duration,
--					     ATH10K_QUIET_START_OFFSET,
--					     enabled);
--	if (ret) {
--		ath10k_warn(ar, "failed to set quiet mode period %u duarion %u enabled %u ret %d\n",
--			    period, duration, enabled, ret);
--		goto out;
--	}
- 	ar->thermal.throttle_state = throttle_state;
-+	ath10k_thermal_set_throttling(ar);
- out:
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
-@@ -186,6 +174,26 @@ static struct attribute *ath10k_hwmon_attrs[] = {
- };
- ATTRIBUTE_GROUPS(ath10k_hwmon);
- 
-+void ath10k_thermal_set_throttling(struct ath10k *ar)
-+{
-+	u32 period, duration, enabled;
-+	int ret;
++		if (rtlpriv->use_new_trx_flow)
++			buffer_desc =
++			  &rtlpci->rx_ring[rxring_idx].buffer_desc
++				[rtlpci->rx_ring[rxring_idx].idx];
 +
-+	lockdep_assert_held(&ar->conf_mutex);
+ 		/* get a new skb - if fail, old one will be reused */
+ 		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
+ 		if (unlikely(!new_skb))
+ 			goto no_new;
+-		if (rtlpriv->use_new_trx_flow) {
+-			buffer_desc =
+-			  &rtlpci->rx_ring[rxring_idx].buffer_desc
+-				[rtlpci->rx_ring[rxring_idx].idx];
++		if (rtlpriv->use_new_trx_flow)
+ 			/*means rx wifi info*/
+ 			pdesc = (struct rtl_rx_desc *)skb->data;
+-		}
 +
-+	period = ar->thermal.quiet_period;
-+	duration = (period * ar->thermal.throttle_state) / 100;
-+	enabled = duration ? 1 : 0;
-+
-+	ret = ath10k_wmi_pdev_set_quiet_mode(ar, period, duration,
-+					     ATH10K_QUIET_START_OFFSET,
-+					     enabled);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set quiet mode period %u duarion %u enabled %u ret %d\n",
-+			    period, duration, enabled, ret);
-+	}
-+}
-+
- int ath10k_thermal_register(struct ath10k *ar)
- {
- 	struct thermal_cooling_device *cdev;
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.h b/drivers/net/wireless/ath/ath10k/thermal.h
-index 5728010..b610ea5 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.h
-+++ b/drivers/net/wireless/ath/ath10k/thermal.h
-@@ -40,6 +40,7 @@ struct ath10k_thermal {
- int ath10k_thermal_register(struct ath10k *ar);
- void ath10k_thermal_unregister(struct ath10k *ar);
- void ath10k_thermal_event_temperature(struct ath10k *ar, int temperature);
-+void ath10k_thermal_set_throttling(struct ath10k *ar);
- #else
- static inline int ath10k_thermal_register(struct ath10k *ar)
- {
-@@ -55,5 +56,9 @@ static inline void ath10k_thermal_event_temperature(struct ath10k *ar,
- {
- }
- 
-+static inline void ath10k_thermal_set_throttling(struct ath10k *ar)
-+{
-+}
-+
- #endif
- #endif /* _THERMAL_ */
+ 		memset(&rx_status , 0 , sizeof(rx_status));
+ 		rtlpriv->cfg->ops->query_rx_desc(hw, &stats,
+ 						 &rx_status, (u8 *)pdesc, skb);
 -- 
-2.3.2
+2.3.1
 
