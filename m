@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:62813 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751337AbbCUIrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:37 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 15/18] ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-Date: Sat, 21 Mar 2015 09:47:18 +0100
-Message-Id: <1426927641-18474-16-git-send-email-linux@rempel-privat.de> (sfid-20150321_094749_524858_1F70E152)
-In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
-References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:62345 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754001AbbCLLxA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 07:53:00 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2CBoLVY014929
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:53:00 -0700
+Received: from sc-owa03.marvell.com ([199.233.58.149])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1t20qjf1mr-12
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:53:00 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
+	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/9] mwifiex: enhance SD8897 MP aggregation limits
+Date: Thu, 12 Mar 2015 22:51:54 +0530
+Message-ID: <1426180920-10567-4-git-send-email-patila@marvell.com> (sfid-20150312_125307_400870_818DC512)
+In-Reply-To: <1426180920-10567-1-git-send-email-patila@marvell.com>
+References: <1426180920-10567-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-it will reduce exution time from 14ms to 2ms on ar9271
+SD8897 support buffers of 4K and 16 such ports can be accomodated.
+So basically 64K buffer size in single aggregation is supported.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/eeprom_4k.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/mwifiex/sdio.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 0600562..291c1d1 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -930,6 +930,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 		}
- 	}
+diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+index c636944..5a23bd0 100644
+--- a/drivers/net/wireless/mwifiex/sdio.h
++++ b/drivers/net/wireless/mwifiex/sdio.h
+@@ -67,6 +67,7 @@
  
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	if (AR_SREV_9271(ah)) {
- 		ath9k_hw_analog_shift_rmw(ah,
- 					  AR9285_AN_RF2G3,
-@@ -1034,6 +1035,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 					  AR9285_AN_RF2G4_DB2_4_S,
- 					  db2[4]);
- 	}
-+	REG_RMW_BUFFER_FLUSH(ah);
+ #define MWIFIEX_MP_AGGR_BUF_SIZE_16K	(16384)
+ #define MWIFIEX_MP_AGGR_BUF_SIZE_32K	(32768)
++#define MWIFIEX_MP_AGGR_BUF_SIZE_64K    (65280)
  
- 
- 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
+ /* Misc. Config Register : Auto Re-enable interrupts */
+ #define AUTO_RE_ENABLE_INT              BIT(4)
+@@ -458,8 +459,8 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
+ 	.max_ports = 32,
+ 	.mp_agg_pkt_limit = 16,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
+-	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
+-	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
++	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_64K,
++	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_64K,
+ 	.supports_sdio_new_mode = true,
+ 	.has_control_mask = false,
+ 	.can_dump_fw = true,
 -- 
-1.9.1
+1.8.1.4
 
