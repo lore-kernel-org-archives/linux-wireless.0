@@ -1,82 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:62488 "EHLO mout.gmx.net"
+Received: from mga02.intel.com ([134.134.136.20]:19186 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751928AbbCTMlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 08:41:11 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@codeaurora.org, adrian@freebsd.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 18/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
-Date: Fri, 20 Mar 2015 13:38:58 +0100
-Message-Id: <1426855138-6121-19-git-send-email-linux@rempel-privat.de> (sfid-20150320_140418_810346_C127323C)
-In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
-References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+	id S1754603AbbCLNGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:06:33 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 47/49] iwlwifi: mvm: clarify time event end handling
+Date: Thu, 12 Mar 2015 15:04:32 +0200
+Message-Id: <1426165474-25586-47-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143418_315169_0DB7C1E1)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/eeprom_def.c | 19 +++++++++++--------
- 1 file changed, 11 insertions(+), 8 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 0980590..4b43539 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -466,6 +466,7 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 				  struct ar5416_eeprom_def *eep,
- 				  u8 txRxAttenLocal, int regChainOffset, int i)
- {
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_3) {
- 		txRxAttenLocal = pModal->txRxAttenCh[i];
+The code here is a little confusing, the iwl_mvm_te_check_disconnect()
+will check that the interface is a station, but going into it after
+already having processed the time even end for P2P seems strange at
+first look.
+
+Put a switch statement there to distinguish the interface types and
+make this more readable.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/time-event.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+index 54fafbf..1dbfcc4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
++++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
+@@ -261,17 +261,23 @@ static void iwl_mvm_te_handle_notif(struct iwl_mvm *mvm,
+ 			     "TE ended - current time %lu, estimated end %lu\n",
+ 			     jiffies, te_data->end_jiffies);
  
-@@ -483,16 +484,16 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 			      AR_PHY_GAIN_2GHZ_XATTEN2_DB,
- 			      pModal->xatten2Db[i]);
- 		} else {
--			REG_WRITE(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+			REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
- 			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
- 			   ~AR_PHY_GAIN_2GHZ_BSW_MARGIN)
- 			  | SM(pModal-> bswMargin[i],
--			       AR_PHY_GAIN_2GHZ_BSW_MARGIN));
--			REG_WRITE(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+			       AR_PHY_GAIN_2GHZ_BSW_MARGIN), 0);
-+			REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
- 			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
- 			   ~AR_PHY_GAIN_2GHZ_BSW_ATTEN)
- 			  | SM(pModal->bswAtten[i],
--			       AR_PHY_GAIN_2GHZ_BSW_ATTEN));
-+			       AR_PHY_GAIN_2GHZ_BSW_ATTEN), 0);
+-		if (te_data->vif->type == NL80211_IFTYPE_P2P_DEVICE) {
++		switch (te_data->vif->type) {
++		case NL80211_IFTYPE_P2P_DEVICE:
+ 			ieee80211_remain_on_channel_expired(mvm->hw);
+ 			iwl_mvm_roc_finished(mvm);
++			break;
++		case NL80211_IFTYPE_STATION:
++			/*
++			 * By now, we should have finished association
++			 * and know the dtim period.
++			 */
++			iwl_mvm_te_check_disconnect(mvm, te_data->vif,
++				"No association and the time event is over already...");
++			break;
++		default:
++			break;
  		}
- 	}
  
-@@ -504,17 +505,19 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 		      AR_PHY_RXGAIN + regChainOffset,
- 		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[i]);
- 	} else {
--		REG_WRITE(ah,
-+		REG_RMW(ah,
- 			  AR_PHY_RXGAIN + regChainOffset,
- 			  (REG_READ(ah, AR_PHY_RXGAIN + regChainOffset) &
- 			   ~AR_PHY_RXGAIN_TXRX_ATTEN)
--			  | SM(txRxAttenLocal, AR_PHY_RXGAIN_TXRX_ATTEN));
--		REG_WRITE(ah,
-+			  | SM(txRxAttenLocal, AR_PHY_RXGAIN_TXRX_ATTEN), 0);
-+		REG_RMW(ah,
- 			  AR_PHY_GAIN_2GHZ + regChainOffset,
- 			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
- 			   ~AR_PHY_GAIN_2GHZ_RXTX_MARGIN) |
--			  SM(pModal->rxTxMarginCh[i], AR_PHY_GAIN_2GHZ_RXTX_MARGIN));
-+			  SM(pModal->rxTxMarginCh[i],
-+			  AR_PHY_GAIN_2GHZ_RXTX_MARGIN), 0);
- 	}
-+	REG_RMW_BUFFER_FLUSH(ah);
- }
- 
- static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+-		/*
+-		 * By now, we should have finished association
+-		 * and know the dtim period.
+-		 */
+-		iwl_mvm_te_check_disconnect(mvm, te_data->vif,
+-			"No association and the time event is over already...");
+ 		iwl_mvm_te_clear_data(mvm, te_data);
+ 	} else if (le32_to_cpu(notif->action) & TE_V2_NOTIF_HOST_EVENT_START) {
+ 		te_data->running = true;
 -- 
 1.9.1
 
