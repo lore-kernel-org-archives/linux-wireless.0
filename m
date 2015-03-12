@@ -1,37 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38374 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964825AbbCEPxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 10:53:52 -0500
-Message-ID: <1425570829.2493.28.camel@sipsolutions.net> (sfid-20150305_165355_483055_FBBC5B87)
-Subject: Re: [RFC] mac80211: lock rate control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Eckelmann <sven@open-mesh.com>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	Marek Lindner <marek@open-mesh.com>
-Date: Thu, 05 Mar 2015 16:53:49 +0100
-In-Reply-To: <4955461.tuO2xra8Dr@bentobox> (sfid-20150305_165241_332301_188B5342)
-References: <1425569832-22373-1-git-send-email-johannes@sipsolutions.net>
-	 <4955461.tuO2xra8Dr@bentobox> (sfid-20150305_165241_332301_188B5342)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14491 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753267AbbCLLw1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 07:52:27 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2CBodur015013
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:52:26 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1t20qjf1q5-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 04:52:26 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
+	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCH 0/9] mwifiex throughput enhancements 
+Date: Thu, 12 Mar 2015 22:51:51 +0530
+Message-ID: <1426180920-10567-1-git-send-email-patila@marvell.com> (sfid-20150312_125231_443944_91874DD1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-03-05 at 16:52 +0100, Sven Eckelmann wrote:
+This patch series is culmination of two month long activity for
+throughput enhancment which involved collecting multiple data points
+including multiple driver idle times, study of FW<->SDIO bus<->driver
+interaction and profiling and different approaches to overcoming current
+shortcomings in driver.
 
-> > I've manipulated hostapd to test this, by having it change its
-> > advertised bandwidth roughly ever 150ms. At the same time, I'm
-> > running a flood ping between the client and the AP, which causes
-> > this race of update vs. get_rate/status to easily happen on the
-> > client. With this change, the system survives this test.
+For TX, we have tried to optimize data path and reduce delays incurred during
+scheduling of work items and idle timeout between TX write to FW and TX DONE
+from FW.
 
-> I will ask if it is possible to test this patch in an affected network. But I 
-> am quite sure that this will not be possible before next week. And your test 
-> already sounds quite nice.
+For RX, this patch series adds a new type of aggregation- single port
+aggregation for SDIO. SP aggregation needs FW support and it would be
+enabled only when FW advertises support for SP aggregation.
 
-Note that I tested with iwlwifi, not with minstrel. However, I'm pretty
-sure it's the same problem.
+Our experiments show improvement of almost 30% in TX and 40% in RX on
+both X86 based and ARM based platforms.
 
-johannes
+Avinash Patil (3):
+  mwifiex: lock main process till reinitialization of vif is over
+  mwifiex: rename alloc_rx_buf to alloc_dma_aligned_buf
+  mwifiex: enhance SD8897 MP aggregation limits
+
+Shengzhen Li (1):
+  mwifiex: avoid queue_work while work is ongoing
+
+Zhaoyang Liu (5):
+  mwifiex: get rid of BA setup helper functions
+  mwifiex: remove_bss_prio_lock
+  mwifiex: preprocess packets from TX queue
+  mwifiex: add SDIO rx single port aggregation
+  mwifiex: delay skb allocation for RX until cmd53 over
+
+ drivers/net/wireless/mwifiex/11n.c           |  18 ++-
+ drivers/net/wireless/mwifiex/11n.h           |  32 ------
+ drivers/net/wireless/mwifiex/11n_aggr.c      |  16 ++-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   7 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      |  33 ++++++
+ drivers/net/wireless/mwifiex/decl.h          |  10 +-
+ drivers/net/wireless/mwifiex/fw.h            |   9 ++
+ drivers/net/wireless/mwifiex/init.c          |   5 +
+ drivers/net/wireless/mwifiex/main.c          |  71 ++++++++++--
+ drivers/net/wireless/mwifiex/main.h          |  27 ++++-
+ drivers/net/wireless/mwifiex/pcie.c          |  10 +-
+ drivers/net/wireless/mwifiex/sdio.c          | 164 ++++++++++++++++++++-------
+ drivers/net/wireless/mwifiex/sdio.h          |  13 ++-
+ drivers/net/wireless/mwifiex/sta_cmd.c       |  40 +++++++
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |  21 ++++
+ drivers/net/wireless/mwifiex/txrx.c          | 125 ++++++++++++++++++++
+ drivers/net/wireless/mwifiex/usb.c           |   4 +-
+ drivers/net/wireless/mwifiex/util.c          |   4 +-
+ drivers/net/wireless/mwifiex/wmm.c           |  48 ++++----
+ drivers/net/wireless/mwifiex/wmm.h           |   2 +
+ 20 files changed, 529 insertions(+), 130 deletions(-)
+
+-- 
+1.8.1.4
 
