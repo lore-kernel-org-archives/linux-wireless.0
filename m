@@ -1,169 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:39760 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750984AbbCAGUT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 01:20:19 -0500
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from mga02.intel.com ([134.134.136.20]:54156 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754536AbbCLNFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:05:53 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 3/6] ath9k: Fix MCI scheme initialization
-Date: Sun,  1 Mar 2015 11:53:46 +0530
-Message-Id: <1425191029-13667-4-git-send-email-sujith@msujith.org> (sfid-20150301_072030_255532_84218FDC)
-In-Reply-To: <1425191029-13667-1-git-send-email-sujith@msujith.org>
-References: <1425191029-13667-1-git-send-email-sujith@msujith.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 24/49] iwlwifi: mvm: always update the quota after association
+Date: Thu, 12 Mar 2015 15:04:09 +0200
+Message-Id: <1426165474-25586-24-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143419_021767_94BAB384)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+When we associate we always need to update the quotas. This
+fixes a bug for cases in which quotas weren't udapted after
+association.
 
-Commit "ath9k_hw: remove ATH_BTCOEX_CFG_MCI" removed
-MCI as a separate coex scheme, but we need it to
-avoid fiddling with GPIO registers during
-ath9k_init_btcoex() that are meant only for 3-wire
-cards.
-
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reviewed-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/btcoex.c | 40 ++++++++++++++++++++++-----------
- drivers/net/wireless/ath/ath9k/btcoex.h |  1 +
- drivers/net/wireless/ath/ath9k/gpio.c   | 23 ++++++++++---------
- 3 files changed, 40 insertions(+), 24 deletions(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 20 ++++++++++----------
+ drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +-
+ drivers/net/wireless/iwlwifi/mvm/quota.c    |  3 ++-
+ drivers/net/wireless/iwlwifi/mvm/utils.c    |  2 +-
+ 4 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 3dfc2c7..78e892e 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -103,7 +103,9 @@ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah)
- 		return;
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 7484724..7eab892 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1298,7 +1298,7 @@ static void iwl_mvm_restart_complete(struct iwl_mvm *mvm)
+ 
+ 	clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
+ 	iwl_mvm_d0i3_enable_tx(mvm, NULL);
+-	ret = iwl_mvm_update_quotas(mvm, NULL);
++	ret = iwl_mvm_update_quotas(mvm, false, NULL);
+ 	if (ret)
+ 		IWL_ERR(mvm, "Failed to update quotas after restart (%d)\n",
+ 			ret);
+@@ -1977,7 +1977,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 			       sizeof(mvmvif->beacon_stats));
+ 
+ 			/* add quota for this interface */
+-			ret = iwl_mvm_update_quotas(mvm, NULL);
++			ret = iwl_mvm_update_quotas(mvm, true, NULL);
+ 			if (ret) {
+ 				IWL_ERR(mvm, "failed to update quotas\n");
+ 				return;
+@@ -2029,7 +2029,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 				mvm->d0i3_ap_sta_id = IWL_MVM_STATION_COUNT;
+ 			mvmvif->ap_sta_id = IWL_MVM_STATION_COUNT;
+ 			/* remove quota for this interface */
+-			ret = iwl_mvm_update_quotas(mvm, NULL);
++			ret = iwl_mvm_update_quotas(mvm, false, NULL);
+ 			if (ret)
+ 				IWL_ERR(mvm, "failed to update quotas\n");
+ 
+@@ -2148,7 +2148,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 	/* power updated needs to be done before quotas */
+ 	iwl_mvm_power_update_mac(mvm);
+ 
+-	ret = iwl_mvm_update_quotas(mvm, NULL);
++	ret = iwl_mvm_update_quotas(mvm, false, NULL);
+ 	if (ret)
+ 		goto out_quota_failed;
+ 
+@@ -2214,7 +2214,7 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
+ 	if (vif->p2p && mvm->p2p_device_vif)
+ 		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif, false, NULL);
+ 
+-	iwl_mvm_update_quotas(mvm, NULL);
++	iwl_mvm_update_quotas(mvm, false, NULL);
+ 	iwl_mvm_send_rm_bcast_sta(mvm, vif);
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
+ 
+@@ -3247,14 +3247,14 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
+ 	 */
+ 	if (vif->type == NL80211_IFTYPE_MONITOR) {
+ 		mvmvif->monitor_active = true;
+-		ret = iwl_mvm_update_quotas(mvm, NULL);
++		ret = iwl_mvm_update_quotas(mvm, false, NULL);
+ 		if (ret)
+ 			goto out_remove_binding;
  	}
  
--	if (AR_SREV_9300_20_OR_LATER(ah)) {
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
-+		btcoex_hw->scheme = ATH_BTCOEX_CFG_MCI;
-+	} else if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
- 		btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9300;
- 		btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9300;
-@@ -307,6 +309,18 @@ static void ath9k_hw_btcoex_enable_mci(struct ath_hw *ah)
- 	btcoex->enabled = true;
+ 	/* Handle binding during CSA */
+ 	if (vif->type == NL80211_IFTYPE_AP) {
+-		iwl_mvm_update_quotas(mvm, NULL);
++		iwl_mvm_update_quotas(mvm, false, NULL);
+ 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
+ 	}
+ 
+@@ -3278,7 +3278,7 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
+ 
+ 		iwl_mvm_unref(mvm, IWL_MVM_REF_PROTECT_CSA);
+ 
+-		iwl_mvm_update_quotas(mvm, NULL);
++		iwl_mvm_update_quotas(mvm, false, NULL);
+ 	}
+ 
+ 	goto out;
+@@ -3351,7 +3351,7 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
+ 		break;
+ 	}
+ 
+-	iwl_mvm_update_quotas(mvm, disabled_vif);
++	iwl_mvm_update_quotas(mvm, false, disabled_vif);
+ 	iwl_mvm_binding_remove_vif(mvm, vif);
+ 
+ out:
+@@ -3543,7 +3543,7 @@ static int __iwl_mvm_mac_testmode_cmd(struct iwl_mvm *mvm,
+ 		mvm->noa_duration = noa_duration;
+ 		mvm->noa_vif = vif;
+ 
+-		return iwl_mvm_update_quotas(mvm, NULL);
++		return iwl_mvm_update_quotas(mvm, false, NULL);
+ 	case IWL_MVM_TM_CMD_SET_BEACON_FILTER:
+ 		/* must be associated client vif - ignore authorized */
+ 		if (!vif || vif->type != NL80211_IFTYPE_STATION ||
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+index 4d44cf0..52135a4 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
+@@ -1139,7 +1139,7 @@ int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ int iwl_mvm_binding_remove_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ 
+ /* Quota management */
+-int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
++int iwl_mvm_update_quotas(struct iwl_mvm *mvm, bool force_upload,
+ 			  struct ieee80211_vif *disabled_vif);
+ 
+ /* Scanning */
+diff --git a/drivers/net/wireless/iwlwifi/mvm/quota.c b/drivers/net/wireless/iwlwifi/mvm/quota.c
+index dbb2594..509a66d 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/quota.c
++++ b/drivers/net/wireless/iwlwifi/mvm/quota.c
+@@ -172,6 +172,7 @@ static void iwl_mvm_adjust_quota_for_noa(struct iwl_mvm *mvm,
  }
  
-+static void ath9k_hw_btcoex_disable_mci(struct ath_hw *ah)
-+{
-+	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-+	int i;
-+
-+	ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
-+
-+	for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
-+		REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
-+			  btcoex_hw->wlan_weight[i]);
-+}
-+
- void ath9k_hw_btcoex_enable(struct ath_hw *ah)
+ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
++			  bool force_update,
+ 			  struct ieee80211_vif *disabled_vif)
  {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-@@ -318,17 +332,18 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- 		ath9k_hw_btcoex_enable_2wire(ah);
- 		break;
- 	case ATH_BTCOEX_CFG_3WIRE:
--		if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
--			ath9k_hw_btcoex_enable_mci(ah);
--			return;
--		}
- 		ath9k_hw_btcoex_enable_3wire(ah);
- 		break;
-+	case ATH_BTCOEX_CFG_MCI:
-+		ath9k_hw_btcoex_enable_mci(ah);
-+		break;
+ 	struct iwl_time_quota_cmd cmd = {};
+@@ -309,7 +310,7 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
+ 			  "zero quota on binding %d\n", i);
  	}
  
--	REG_RMW(ah, AR_GPIO_PDPU,
--		(0x2 << (btcoex_hw->btactive_gpio * 2)),
--		(0x3 << (btcoex_hw->btactive_gpio * 2)));
-+	if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_MCI) {
-+		REG_RMW(ah, AR_GPIO_PDPU,
-+			(0x2 << (btcoex_hw->btactive_gpio * 2)),
-+			(0x3 << (btcoex_hw->btactive_gpio * 2)));
-+	}
+-	if (!send) {
++	if (!send && !force_update) {
+ 		/* don't send a practically unchanged command, the firmware has
+ 		 * to re-initialize a lot of state and that can have an adverse
+ 		 * impact on it
+diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
+index 2b9de63..435faee 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
+@@ -857,7 +857,7 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
  
- 	ah->btcoex_hw.enabled = true;
- }
-@@ -340,13 +355,12 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
- 	int i;
+ 	mvmvif->low_latency = value;
  
- 	btcoex_hw->enabled = false;
--	if (AR_SREV_9462(ah) || AR_SREV_9565(ah)) {
--		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
--		for (i = 0; i < AR9300_NUM_BT_WEIGHTS; i++)
--			REG_WRITE(ah, AR_MCI_COEX_WL_WEIGHTS(i),
--				  btcoex_hw->wlan_weight[i]);
-+
-+	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_MCI) {
-+		ath9k_hw_btcoex_disable_mci(ah);
- 		return;
- 	}
-+
- 	ath9k_hw_set_gpio(ah, btcoex_hw->wlanactive_gpio, 0);
+-	res = iwl_mvm_update_quotas(mvm, NULL);
++	res = iwl_mvm_update_quotas(mvm, false, NULL);
+ 	if (res)
+ 		return res;
  
- 	ath9k_hw_cfg_output(ah, btcoex_hw->wlanactive_gpio,
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 6de26ea..5fe62ff 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -58,6 +58,7 @@ enum ath_btcoex_scheme {
- 	ATH_BTCOEX_CFG_NONE,
- 	ATH_BTCOEX_CFG_2WIRE,
- 	ATH_BTCOEX_CFG_3WIRE,
-+	ATH_BTCOEX_CFG_MCI,
- };
- 
- struct ath9k_hw_mci {
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 257ffce..b4a0612 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -280,6 +280,7 @@ static void ath_init_btcoex_timer(struct ath_softc *sc)
- 		btcoex->btcoex_period / 100;
- 	btcoex->btscan_no_stomp = (100 - ATH_BTCOEX_BTSCAN_DUTY_CYCLE) *
- 				   btcoex->btcoex_period / 100;
-+	btcoex->bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
- 
- 	setup_timer(&btcoex->period_timer, ath_btcoex_period_timer,
- 			(unsigned long) sc);
-@@ -408,19 +409,19 @@ int ath9k_init_btcoex(struct ath_softc *sc)
- 	case ATH_BTCOEX_CFG_3WIRE:
- 		ath9k_hw_btcoex_init_3wire(sc->sc_ah);
- 		ath_init_btcoex_timer(sc);
--
- 		txq = sc->tx.txq_map[IEEE80211_AC_BE];
- 		ath9k_hw_init_btcoex_hw(sc->sc_ah, txq->axq_qnum);
--		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
--		if (ath9k_hw_mci_is_enabled(ah)) {
--			sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
--			INIT_LIST_HEAD(&sc->btcoex.mci.info);
--			ath9k_hw_btcoex_init_mci(ah);
--
--			r = ath_mci_setup(sc);
--			if (r)
--				return r;
--		}
-+		break;
-+	case ATH_BTCOEX_CFG_MCI:
-+		ath_init_btcoex_timer(sc);
-+
-+		sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
-+		INIT_LIST_HEAD(&sc->btcoex.mci.info);
-+		ath9k_hw_btcoex_init_mci(ah);
-+
-+		r = ath_mci_setup(sc);
-+		if (r)
-+			return r;
- 
- 		break;
- 	default:
 -- 
-2.3.0
+1.9.1
 
