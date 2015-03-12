@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45682 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750903AbbCMEP6 (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:51640 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753034AbbCLM7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 00:15:58 -0400
-From: Avinash Patil <patila@marvell.com>
-To: =?utf-8?B?QmrDuHJuIE1vcms=?= <bjorn@mork.no>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Zhaoyang Liu <liuzy@marvell.com>,
-	Chin-Ran Lo <crlo@marvell.com>, Plus Chen <pchen@marvell.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Date: Thu, 12 Mar 2015 21:15:44 -0700
-Subject: RE: [PATCH 3/9] mwifiex: enhance SD8897 MP aggregation limits
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC667477813D@SC-VEXCH2.marvell.com> (sfid-20150313_051601_149152_7349B4D9)
-References: <1426180920-10567-1-git-send-email-patila@marvell.com>
-	<1426180920-10567-4-git-send-email-patila@marvell.com>
- <87bnjy2wkm.fsf@nemi.mork.no>
-In-Reply-To: <87bnjy2wkm.fsf@nemi.mork.no>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 12 Mar 2015 08:59:42 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: fix PMG by using AES-CMAC/IGTK software crypto
+References: <1425994339-15864-1-git-send-email-bartosz.markowski@tieto.com>
+Date: Thu, 12 Mar 2015 14:59:32 +0200
+In-Reply-To: <1425994339-15864-1-git-send-email-bartosz.markowski@tieto.com>
+	(Bartosz Markowski's message of "Tue, 10 Mar 2015 14:32:19 +0100")
+Message-ID: <87lhj2v0az.fsf@kamboji.qca.qualcomm.com> (sfid-20150312_135945_475027_1D57A555)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmrDuHJuIE1vcmsg
-W21haWx0bzpiam9ybkBtb3JrLm5vXQ0KPiBTZW50OiBUaHVyc2RheSwgTWFyY2ggMTIsIDIwMTUg
-NjozOCBQTQ0KPiBUbzogQXZpbmFzaCBQYXRpbA0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5r
-ZXJuZWwub3JnOyBBbWl0a3VtYXIgS2Fyd2FyOyBDYXRoeSBMdW87IFpoYW95YW5nIExpdTsNCj4g
-Q2hpbi1SYW4gTG87IFBsdXMgQ2hlbjsgU2hlbmd6aGVuIExpOyBOaXNoYW50IFNhcm11a2FkYW0N
-Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAzLzldIG13aWZpZXg6IGVuaGFuY2UgU0Q4ODk3IE1QIGFn
-Z3JlZ2F0aW9uIGxpbWl0cw0KPiANCj4gQXZpbmFzaCBQYXRpbCA8cGF0aWxhQG1hcnZlbGwuY29t
-PiB3cml0ZXM6DQo+IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9td2lm
-aWV4L3NkaW8uaA0KPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmlleC9zZGlvLmgNCj4g
-PiBpbmRleCBjNjM2OTQ0Li41YTIzYmQwIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL213aWZpZXgvc2Rpby5oDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdp
-ZmlleC9zZGlvLmgNCj4gPiBAQCAtNjcsNiArNjcsNyBAQA0KPiA+DQo+ID4gICNkZWZpbmUgTVdJ
-RklFWF9NUF9BR0dSX0JVRl9TSVpFXzE2SwkoMTYzODQpDQo+ID4gICNkZWZpbmUgTVdJRklFWF9N
-UF9BR0dSX0JVRl9TSVpFXzMySwkoMzI3NjgpDQo+ID4gKyNkZWZpbmUgTVdJRklFWF9NUF9BR0dS
-X0JVRl9TSVpFXzY0SyAgICAoNjUyODApDQo+IA0KPiBUaGUgZmlyc3QgdHdvIG1hY3JvcyBhcmUg
-Y2xlYXJseSBtYXRjaGluZyB0aGVpciAxNksgYW5kIDMySyBuYW1lcywgYnV0IHRoZSA2NEsNCj4g
-b25lIGlzIG5vdC4gIENhcmUgdG8gYWRkIGEgY29tbWVudCBleHBsYWluaW5nIHdoZXJlIHRoZSBt
-aXNzaW5nDQo+IDI1NiBieXRlcyB3ZW50Pw0KDQpXZSByZXNlcnZlIGZpcnN0IGJsb2NrIG9mIDI1
-NiBieXRlcyBmb3IgRE1BIGFsaWdubWVudC4NCkkgd2lsbCBhZGQgYSBjb21tZW50IHRvIGRlZmlu
-aXRpb247IGFsc28gcmVuYW1lIGRlZmluZSBzaW5jZSBpdCBpcyBub3QgZXhhY3RseSA2NEsuDQog
-DQo+IEJqw7hybiAoYWx3YXlzIGN1cmlvdXMgYWJvdXQgc3VycHJpc2luZyBudW1iZXJzIDotKQ0K
-DQotQXZpbmFzaA0K
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+
+> While testing with older supplicant, .drv_set_key() was failing due to
+> higher than ath10k firmware could handle key_index (WMI_MAX_KEY_INDEX == 3).
+>
+> --
+> wpa_driver_nl80211_set_key: ifindex=15 alg=4 addr=0x7f02b129fbe3 key_idx=4 set_tx=0 seq_len=6 key_len=16
+>     broadcast key
+> nl80211: set_key failed; err=-22 Invalid argument)
+> wlan0: WPA: Failed to configure IGTK to the driver
+> wlan0: RSN: Failed to configure IGTK
+> --
+>
+> In order to fix this case (PMF: AES-CMAC/IGTK) force the AES_CMAC cipher to
+> be handled by software.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+
+Thanks, applied. I just did s/PMG/PMF/.
+
+-- 
+Kalle Valo
