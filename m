@@ -1,108 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:41624 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752854AbbCSEkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 00:40:04 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, joe@perches.com,
-	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v3 08/15] staging: rtl8723au: trailing statements should be on next line
-Date: Thu, 19 Mar 2015 00:39:11 -0400
-Message-Id: <1426739958-18949-9-git-send-email-m.v.b@runbox.com> (sfid-20150319_054106_058074_5D80E1B8)
-In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
-References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:42467 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009AbbCLSGY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 14:06:24 -0400
+From: greearb@candelatech.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [RFC] mac80211-hwsim:  Pass rate-ctrl flags and tx-power to user-space
+Date: Thu, 12 Mar 2015 11:06:19 -0700
+Message-Id: <1426183579-6539-1-git-send-email-greearb@candelatech.com> (sfid-20150312_190627_361605_15CFFA19)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a number of checkpatch.pl errors in rtl8723au's rtw_security.c
-related to trailing statements:
-	ERROR: trailing statements should be on next line
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+The flags field allows user-space to properly decode what the
+rate->idx really means.  The tx-power field is useful as well,
+in case user-space is interested in doing something clever with
+path-loss calculations.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 21 ++++++++++++++++++++-
+ drivers/net/wireless/mac80211_hwsim.h |  8 ++++++++
+ 2 files changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index b4327aaf71..803f8965a4 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -132,7 +132,8 @@ static u32 getcrc32(u8 *buf, int len)
- 	u8 *p;
- 	u32 crc;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 6603d08..300826e 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -504,6 +504,9 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
+ 	[HWSIM_ATTR_REG_CUSTOM_REG] = { .type = NLA_U32 },
+ 	[HWSIM_ATTR_REG_STRICT_REG] = { .type = NLA_FLAG },
+ 	[HWSIM_ATTR_SUPPORT_P2P_DEVICE] = { .type = NLA_FLAG },
++	[HWSIM_ATTR_TX_INFO2] = { .type = NLA_UNSPEC,
++				  .len = IEEE80211_TX_MAX_RATES *
++				         sizeof(struct hwsim_tx_rate2)},
+ };
  
--	if (bcrc32initialized == 0) crc32_init();
-+	if (bcrc32initialized == 0)
-+		crc32_init();
- 
- 	crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
- 
-@@ -559,8 +560,10 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
- 	u16 PPK[6];                          /* temporary key for mixing    */
- 
- 	/* Note: all adds in the PPK[] equations below are mod 2**16         */
--	for (i = 0; i < 5; i++) PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
--		PPK[5] = p1k[4] + iv16;             /* next,  add in IV16          */
-+	for (i = 0; i < 5; i++)
-+		PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
-+
-+	PPK[5] = p1k[4] + iv16;     /* next,  add in IV16          */
- 
- 	/* Bijective non-linear mixing of the 96 bits of PPK[0..5]           */
- 	PPK[0] +=    _S_(PPK[5] ^ TK16(0));   /* Mix key in each "round"     */
-@@ -960,7 +963,8 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
- 	u8 intermediateb[16];
- 	u8 round_key[16];
- 
--	for (i = 0; i < 16; i++) round_key[i] = key[i];
-+	for (i = 0; i < 16; i++)
-+		round_key[i] = key[i];
- 
- 	for (round = 0; round < 11; round++) {
- 		if (round == 0) {
-@@ -1044,7 +1048,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- {
+ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+@@ -909,6 +912,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 	unsigned int hwsim_flags = 0;
  	int i;
+ 	struct hwsim_tx_rate tx_attempts[IEEE80211_TX_MAX_RATES];
++	struct hwsim_tx_rate2 tx_attempts2[IEEE80211_TX_MAX_RATES];
  
--	for (i = 0; i < 16; i++) mic_header2[i] = 0x00;
-+	for (i = 0; i < 16; i++)
-+		mic_header2[i] = 0x00;
- 
- 	mic_header2[0] = mpdu[16];    /* A3 */
- 	mic_header2[1] = mpdu[17];
-@@ -1057,7 +1062,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- 	mic_header2[7] = 0x00; /* mpdu[23]; */
- 
- 	if (!qc_exists && a4_exists) {
--		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
-+		for (i = 0; i < 6; i++)
-+			mic_header2[8+i] = mpdu[24+i];   /* A4 */
+ 	if (data->ps != PS_DISABLED)
+ 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
+@@ -960,6 +964,8 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+ 		tx_attempts[i].idx = info->status.rates[i].idx;
+ 		tx_attempts[i].count = info->status.rates[i].count;
++		tx_attempts2[i].rc_flags = info->status.rates[i].flags;
++		tx_attempts2[i].power_level = data->power_level;
  	}
  
- 	if (qc_exists && !a4_exists) {
-@@ -1066,7 +1072,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- 	}
+ 	if (nla_put(skb, HWSIM_ATTR_TX_INFO,
+@@ -967,6 +973,11 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 		    tx_attempts))
+ 		goto nla_put_failure;
  
- 	if (qc_exists && a4_exists) {
--		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
-+		for (i = 0; i < 6; i++)
-+			mic_header2[8+i] = mpdu[24+i];   /* A4 */
- 
- 		mic_header2[14] = mpdu[30] & 0x0f;
- 		mic_header2[15] = mpdu[31] & 0x00;
-@@ -1084,7 +1091,9 @@ static void construct_ctr_preload(u8 *ctr_preload, int a4_exists, int qc_exists,
- {
- 	int i = 0;
- 
--	for (i = 0; i < 16; i++) ctr_preload[i] = 0x00;
-+	for (i = 0; i < 16; i++)
-+		ctr_preload[i] = 0x00;
++	if (nla_put(skb, HWSIM_ATTR_TX_INFO2,
++		    sizeof(struct hwsim_tx_rate2)*IEEE80211_TX_MAX_RATES,
++		    tx_attempts2))
++		goto nla_put_failure;
 +
- 	i = 0;
+ 	/* We create a cookie to identify this skb */
+ 	if (nla_put_u64(skb, HWSIM_ATTR_COOKIE, (unsigned long) my_skb))
+ 		goto nla_put_failure;
+@@ -2395,6 +2406,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	struct mac80211_hwsim_data *data2;
+ 	struct ieee80211_tx_info *txi;
+ 	struct hwsim_tx_rate *tx_attempts;
++	struct hwsim_tx_rate2 *tx_attempts2;
+ 	unsigned long ret_skb_ptr;
+ 	struct sk_buff *skb, *tmp;
+ 	const u8 *src;
+@@ -2438,6 +2450,12 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	tx_attempts = (struct hwsim_tx_rate *)nla_data(
+ 		       info->attrs[HWSIM_ATTR_TX_INFO]);
  
- 	ctr_preload[0] = 0x01;                                  /* flag */
++	if (info->attrs[HWSIM_ATTR_TX_INFO2])
++		tx_attempts2 = (struct hwsim_tx_rate2 *)nla_data(
++		       info->attrs[HWSIM_ATTR_TX_INFO2]);
++	else
++		tx_attempts2 = NULL;
++
+ 	/* now send back TX status */
+ 	txi = IEEE80211_SKB_CB(skb);
+ 
+@@ -2446,7 +2464,8 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+ 		txi->status.rates[i].idx = tx_attempts[i].idx;
+ 		txi->status.rates[i].count = tx_attempts[i].count;
+-		/*txi->status.rates[i].flags = 0;*/
++		if (tx_attempts2)
++			txi->status.rates[i].flags = tx_attempts2[i].rc_flags;
+ 	}
+ 
+ 	txi->status.ack_signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index 6ca9fd5..d0fee89 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -121,6 +121,7 @@ enum {
+  * @HWSIM_ATTR_RADIO_NAME: Name of radio, e.g. phy666
+  * @HWSIM_ATTR_NO_VIF:  Do not create vif (wlanX) when creating radio.
+  * @HWSIM_ATTR_FREQ: Frequency at which packet is transmitted or received.
++ * @HWSIM_ATTR_TX_INFO2: hwsim_tx_rate2 array
+  * @__HWSIM_ATTR_MAX: enum limit
+  */
+ 
+@@ -146,6 +147,7 @@ enum {
+ 	HWSIM_ATTR_RADIO_NAME,
+ 	HWSIM_ATTR_NO_VIF,
+ 	HWSIM_ATTR_FREQ,
++	HWSIM_ATTR_TX_INFO2,
+ 	__HWSIM_ATTR_MAX,
+ };
+ #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+@@ -168,4 +170,10 @@ struct hwsim_tx_rate {
+ 	u8 count;
+ } __packed;
+ 
++/* Auxilary info to allow user-space to better understand the rate */
++struct hwsim_tx_rate2 {
++	u16 rc_flags; /* rate-ctrl flags (see mac80211_rate_control_flags) */
++	s16 power_level;
++} __packed;
++
+ #endif /* __MAC80211_HWSIM_H */
 -- 
-2.1.4
+1.7.11.7
 
