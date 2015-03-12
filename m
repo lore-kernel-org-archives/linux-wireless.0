@@ -1,106 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16906 "EHLO mga01.intel.com"
+Received: from www.osadl.org ([62.245.132.105]:45121 "EHLO www.osadl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751858AbbCVRVm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 13:21:42 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 4/6] iwlwifi: mvm: protect rate scaling against non-mvm IBSS stations
-Date: Sun, 22 Mar 2015 19:21:30 +0200
-Message-Id: <1427044892-13907-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150322_182146_266683_A6609C80)
-In-Reply-To: <1427044767.8611.4.camel@egrumbacBox>
-References: <1427044767.8611.4.camel@egrumbacBox>
+	id S932601AbbCLPyC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 11:54:02 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH 2/3 RFC] ath10k: wmi: match wait_for_completion_timeout return type
+Date: Thu, 12 Mar 2015 11:49:22 -0400
+Message-Id: <1426175362-8640-1-git-send-email-hofrat@osadl.org> (sfid-20150312_165752_802802_FEF2033C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Return type of wait_for_completion_timeout is unsigned long not int.
+An appropriately named unsigned long is added and the assignments fixed up.
+Rather than returning 0 (timeout) or a more or less random remaining time
+(completion success) this return 0 or 1 which also resolves the type of the
+functions being int.
 
-When the driver callback returns that it's out of space for new
-stations, the mac80211 IBSS code still keeps the station so it
-doesn't try to add it over and over again.
-
-Since the rate scaling algorithm is separate in mac80211, it also
-invokes the rate scaling algorithm for such stations. It doesn't
-know that our rate scaling algorithm is tightly integrated with
-the MVM code and relies on those data structures, and it cannot
-as the abstraction doesn't allow for it.
-
-This leads to crashes when the rate scaling algorithm tries to
-use uninitialized data, notably the mvmsta->vif pointer.
-
-Protect against this in the rate scaling algorithm. We cannot get
-good rates with such peers anyway since the firmware cannot do
-anything with them.
-
-This should fix https://bugzilla.kernel.org/show_bug.cgi?id=93461
-
-CC: <stable@vger.kernel.org>
-Reported-by: Richard Taylor <rjt-kernel@thegrindstone.me.uk>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
- drivers/net/wireless/iwlwifi/mvm/rs.c | 24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index efa9688..078f24c 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -1278,6 +1278,9 @@ static void rs_mac80211_tx_status(void *mvm_r,
- 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+Checking the call-sites of ath10k_wmi_wait_for_unified_ready and 
+ath10k_wmi_wait_for_service_ready the positive return value (remaining
+time in jiffies) is never passed up the call-chain nor used so it is 
+cleaner to treat this like a boolean success/fail only (actually the two
+functions should probably be of type bool - but that does not seem to be
+common practice in the ath10k code base)
+
+Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+CONFIG_ATH10K=m
+
+Patch is against 4.0-rc3 (localversion-next is -next-20150312)
+:
+ drivers/net/wireless/ath/ath10k/wmi.c |   20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index c7ea77e..a1cdcba 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -884,20 +884,24 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
  
-+	if (!iwl_mvm_sta_from_mac80211(sta)->vif)
-+		return;
-+
- 	if (!ieee80211_is_data(hdr->frame_control) ||
- 	    info->flags & IEEE80211_TX_CTL_NO_ACK)
- 		return;
-@@ -2511,6 +2514,14 @@ static void rs_get_rate(void *mvm_r, struct ieee80211_sta *sta, void *mvm_sta,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct iwl_lq_sta *lq_sta = mvm_sta;
- 
-+	if (sta && !iwl_mvm_sta_from_mac80211(sta)->vif) {
-+		/* if vif isn't initialized mvm doesn't know about
-+		 * this station, so don't do anything with the it
-+		 */
-+		sta = NULL;
-+		mvm_sta = NULL;
-+	}
-+
- 	/* TODO: handle rate_idx_mask and rate_idx_mcs_mask */
- 
- 	/* Treat uninitialized rate scaling data same as non-existing. */
-@@ -2827,6 +2838,9 @@ static void rs_rate_update(void *mvm_r,
- 			(struct iwl_op_mode *)mvm_r;
- 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
- 
-+	if (!iwl_mvm_sta_from_mac80211(sta)->vif)
-+		return;
-+
- 	/* Stop any ongoing aggregations as rs starts off assuming no agg */
- 	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++)
- 		ieee80211_stop_tx_ba_session(sta, tid);
-@@ -3587,9 +3601,15 @@ static ssize_t iwl_dbgfs_ss_force_write(struct iwl_lq_sta *lq_sta, char *buf,
- 
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(ss_force, 32);
- 
--static void rs_add_debugfs(void *mvm, void *mvm_sta, struct dentry *dir)
-+static void rs_add_debugfs(void *mvm, void *priv_sta, struct dentry *dir)
+ int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
  {
--	struct iwl_lq_sta *lq_sta = mvm_sta;
-+	struct iwl_lq_sta *lq_sta = priv_sta;
-+	struct iwl_mvm_sta *mvmsta;
-+
-+	mvmsta = container_of(lq_sta, struct iwl_mvm_sta, lq_sta);
-+
-+	if (!mvmsta->vif)
-+		return;
+-	int ret;
++	unsigned long time_left;
  
- 	debugfs_create_file("rate_scale_table", S_IRUSR | S_IWUSR, dir,
- 			    lq_sta, &rs_sta_dbgfs_scale_table_ops);
+-	ret = wait_for_completion_timeout(&ar->wmi.service_ready,
+-					  WMI_SERVICE_READY_TIMEOUT_HZ);
+-	return ret;
++	time_left = wait_for_completion_timeout(&ar->wmi.service_ready,
++						WMI_SERVICE_READY_TIMEOUT_HZ);
++	if(!time_left)
++		return 0;
++	return 1;
+ }
+ 
+ int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar)
+ {
+-	int ret;
++	unsigned long time_left;
+ 
+-	ret = wait_for_completion_timeout(&ar->wmi.unified_ready,
+-					  WMI_UNIFIED_READY_TIMEOUT_HZ);
+-	return ret;
++	time_left = wait_for_completion_timeout(&ar->wmi.unified_ready,
++						WMI_UNIFIED_READY_TIMEOUT_HZ);
++	if(!time_left)
++		return 0;
++	return 1;
+ }
+ 
+ struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len)
 -- 
-1.9.1
+1.7.10.4
 
