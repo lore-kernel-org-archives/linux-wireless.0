@@ -1,68 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:32833 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751042AbbCZKF6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2015 06:05:58 -0400
-Received: by lbcmq2 with SMTP id mq2so37151338lbc.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 03:05:57 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix insufficient tracing buffer size
-Date: Thu, 26 Mar 2015 10:03:22 +0000
-Message-Id: <1427364202-25235-1-git-send-email-michal.kazior@tieto.com> (sfid-20150326_110602_679971_25DB224C)
+Received: from mga02.intel.com ([134.134.136.20]:10481 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754580AbbCLNGS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:06:18 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 41/49] iwlwifi: mvm: freeze the non-shared queues when a station goes to sleep
+Date: Thu, 12 Mar 2015 15:04:26 +0200
+Message-Id: <1426165474-25586-41-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143418_206552_81D72628)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some trace messages were truncated and a kernel
-splat could be seen in the log:
+When a station goes to sleep, we can't transmit any frame
+to it. This means that until that station will wake up, a
+queue that is dedicated to this station won't progress at
+all. Take this into account when monitoring stuck queues
+and don't account for the time the station was asleep.
+This allows to mask false positives where the queues are
+stuck not because of a bug, but because of the station
+being asleep.
 
-  WARNING: CPU: 3 PID: 0 at /devel/src/linux/drivers/net/wireless/ath/ath10k/./trace.h:114 ftrace_raw_event_ath10k_log_dbg+0x20e/0x220 [ath10k_core]()
-  Modules linked in: ath10k_pci(O) ath10k_core(O) ath iwldvm iwlwifi [last unloaded: iwlwifi]
-  CPU: 3 PID: 0 Comm: swapper/3 Tainted: G        W  O    4.0.0-rc3-wl-ath+ #703
-  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.7.5-20140531_083030-gandalf 04/01/2014
-   ffffffffa01d4cb0 ffff88001fd83998 ffffffff8191b86c ffffffff81e3b718
-   0000000000000000 ffff88001fd839d8 ffffffff8105573a ffff88001c0a5528
-   ffff88001bea9ae0 ffff88001c3dd940 00000000000d0018 ffff88001fd83a80
-  Call Trace:
-   <IRQ>  [<ffffffff8191b86c>] dump_stack+0x45/0x57
-   [<ffffffff8105573a>] warn_slowpath_common+0x8a/0xc0
-   [<ffffffff8105582a>] warn_slowpath_null+0x1a/0x20
-   [<ffffffffa01c61fe>] ftrace_raw_event_ath10k_log_dbg+0x20e/0x220 [ath10k_core]
-   [<ffffffffa01aaa6b>] ath10k_dbg+0xbb/0xd0 [ath10k_core]
-   [<ffffffff810eed89>] ? trace_clock_local+0x9/0x10
-   [<ffffffffa01bd069>] ath10k_wmi_event_service_ready+0x479/0x520 [ath10k_core]
-   [<ffffffff810fdf90>] ? trace_buffer_unlock_commit+0x50/0x60
-   [<ffffffffa01c2113>] ath10k_wmi_tlv_op_rx+0x6b3/0x8b0 [ath10k_core]
-
-This could be reproduced with:
-
-  trace-cmd record -e ath10k
-  ifconfig wlan0 down
-  ifconfig wlan0 up
-
-Fixes: 5c01aa3de918 ("ath10k: deduplicate wmi service ready logic")
-Fixes: ca996ec56608 ("ath10k: implement wmi-tlv backend")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/trace.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 36 ++++++++++++++++++++---------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/trace.h b/drivers/net/wireless/ath/ath10k/trace.h
-index 5407887380ab..71dfcd96354b 100644
---- a/drivers/net/wireless/ath/ath10k/trace.h
-+++ b/drivers/net/wireless/ath/ath10k/trace.h
-@@ -46,7 +46,7 @@ static inline void trace_ ## name(proto) {}
- #undef TRACE_SYSTEM
- #define TRACE_SYSTEM ath10k
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 7eab892..6b3f4d0 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2427,25 +2427,35 @@ static void iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
++	unsigned long txqs = 0, tids = 0;
+ 	int tid;
  
--#define ATH10K_MSG_MAX 200
-+#define ATH10K_MSG_MAX 400
++	spin_lock_bh(&mvmsta->lock);
++	for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++) {
++		struct iwl_mvm_tid_data *tid_data = &mvmsta->tid_data[tid];
++
++		if (tid_data->state != IWL_AGG_ON &&
++		    tid_data->state != IWL_EMPTYING_HW_QUEUE_DELBA)
++			continue;
++
++		__set_bit(tid_data->txq_id, &txqs);
++
++		if (iwl_mvm_tid_queued(tid_data) == 0)
++			continue;
++
++		__set_bit(tid, &tids);
++	}
++
+ 	switch (cmd) {
+ 	case STA_NOTIFY_SLEEP:
+ 		if (atomic_read(&mvm->pending_frames[mvmsta->sta_id]) > 0)
+ 			ieee80211_sta_block_awake(hw, sta, true);
+-		spin_lock_bh(&mvmsta->lock);
+-		for (tid = 0; tid < IWL_MAX_TID_COUNT; tid++) {
+-			struct iwl_mvm_tid_data *tid_data;
  
- DECLARE_EVENT_CLASS(ath10k_log_event,
- 	TP_PROTO(struct ath10k *ar, struct va_format *vaf),
+-			tid_data = &mvmsta->tid_data[tid];
+-			if (tid_data->state != IWL_AGG_ON &&
+-			    tid_data->state != IWL_EMPTYING_HW_QUEUE_DELBA)
+-				continue;
+-			if (iwl_mvm_tid_queued(tid_data) == 0)
+-				continue;
++		for_each_set_bit(tid, &tids, IWL_MAX_TID_COUNT)
+ 			ieee80211_sta_set_buffered(sta, tid, true);
+-		}
+-		spin_unlock_bh(&mvmsta->lock);
++
++		if (txqs)
++			iwl_trans_freeze_txq_timer(mvm->trans, txqs, true);
+ 		/*
+ 		 * The fw updates the STA to be asleep. Tx packets on the Tx
+ 		 * queues to this station will not be transmitted. The fw will
+@@ -2455,11 +2465,15 @@ static void iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
+ 	case STA_NOTIFY_AWAKE:
+ 		if (WARN_ON(mvmsta->sta_id == IWL_MVM_STATION_COUNT))
+ 			break;
++
++		if (txqs)
++			iwl_trans_freeze_txq_timer(mvm->trans, txqs, false);
+ 		iwl_mvm_sta_modify_ps_wake(mvm, sta);
+ 		break;
+ 	default:
+ 		break;
+ 	}
++	spin_unlock_bh(&mvmsta->lock);
+ }
+ 
+ static void iwl_mvm_sta_pre_rcu_remove(struct ieee80211_hw *hw,
 -- 
-2.1.4
+1.9.1
 
