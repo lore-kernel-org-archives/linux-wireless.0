@@ -1,92 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:44520 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753603AbbCLUnB (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:39084 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754201AbbCLMJ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 16:43:01 -0400
-Received: by wghl18 with SMTP id l18so18966138wgh.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 13:43:00 -0700 (PDT)
-Date: Thu, 12 Mar 2015 22:42:55 +0200
-From: Huseyin Olgac <revanthedarth@gmail.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Jonas Gorski <jogo@openwrt.org>, Pat Erley <pat-lkml@erley.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Subject: Re: Developing a new Driver
-Message-ID: <20150312204255.GA4192@rev-desktop> (sfid-20150312_214306_458138_0C395E97)
-References: <8BC2636B-D1F0-431C-90F4-1290A4158DC2@gmail.com>
- <54FF7970.10402@erley.org>
- <CAOiHx=kRLW6Bvrnht=pn7=9zT6Vg2QAcE2JMXrZstOixsL0CmA@mail.gmail.com>
- <CACna6rzcQ30VCvbqK_A5h4R8toUgAruygVcDoGHQsriN7BdGFg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rzcQ30VCvbqK_A5h4R8toUgAruygVcDoGHQsriN7BdGFg@mail.gmail.com>
+	Thu, 12 Mar 2015 08:09:28 -0400
+Received: by wiwl15 with SMTP id l15so47088832wiw.4
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 05:09:27 -0700 (PDT)
+From: Eliad Peller <eliad@wizery.com>
+To: <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: [PATCH v6 0/6] wlcore: add device-tree support
+Date: Thu, 12 Mar 2015 14:09:08 +0200
+Message-Id: <1426162154-8716-1-git-send-email-eliad@wizery.com> (sfid-20150312_130940_057839_FFB9ACF8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06:55 Wed 11 Mar , Rafał Miłecki wrote:
-> On 11 March 2015 at 00:15, Jonas Gorski <jogo@openwrt.org> wrote:
-> > On Wed, Mar 11, 2015 at 12:08 AM, Pat Erley <pat-lkml@erley.org> wrote:
-> >> On 03/10/2015 04:42 PM, Huseyin wrote:
-> >>> I want to develop a driver for my usb wireless adapter. The device name is
-> >>> AirTies Air 2410, codes are 0x1eda 0x2410. The company’s other usb wireless
-> >>> adapters (for example, AirTies Air 2310, 0x1eda 0x2310) were using ralink
-> >>> rt2800 driver, but this one doesn’t work with it.
-> >>>
-> >>> I opened up the device’s case, I could only find out that the board was
-> >>> plotech e169497, 6 94v-0. I googled but these seem to be too vague and I
-> >>> cannot go any further with it. I couldn’t find any other text on the board.
-> >>
-> >> Based on their driver, it's a broadcom chip in there:
-> >>
-> >>
-> >>   inflating:
-> >> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmh43xx.cat
-> >>   inflating:
-> >> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmihvsrv.dll
-> >>   inflating:
-> >> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmihvui.dll
-> >>   inflating:
-> >> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlcoi.dll
-> >>   inflating:
-> >> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlhigh6.inf
-> >>   inflating:
-> >> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlhigh6.sys
-> >>   inflating:
-> >> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/WdfCoInstaller01005.dll
-> >>
-> >> I don't know what the status of broadcom and usb drivers is though.
-> >
-> > According to wikidevi[1], it uses BCM4323, which is SSB based, quite
-> > old, and will never be supported by brcmfmac, and probably never by
-> > b43 (one would need to reverse engineer the usb protocol used by
-> > broadcom).
-> >
-> >
-> > Jonas
-> >
-> > [1] https://wikidevi.com/wiki/AirTies_Air_2410
-> 
-> This is for sure some kind of FullMAC device, it's just not clear if:
-> 1) It's a standard nice FullMAC device
-> 2) Device using another architecture requiring much more code on host
-> 
-> I guess it's the second case, you can see info about it on wiki page:
-> https://wireless.wiki.kernel.org/en/users/drivers/brcm80211#unsupported_chips
-> 
-> If you think it's fun, you may use my tiny libusb app to read hardware info:
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/117924
-> (if you do, let us know what you got, please)
-> 
-> -- 
-> Rafał
+Add device-tree support to the wlcore (wl12xx/wl18xx)
+driver.
 
+Update the current users to use the bindings instead
+of pdata-quirks.
 
-Hi,
+Finally, remove the deprecated wl12xx_platform_data
+struct (along with the da850 board file code that
+still uses it)
 
-Here's what I got using your app:
+NOTE: all the platform patches were compile-tested
+only. I'm looking for some wl12xx card (that i should
+have somewhere) to test the wl12xx changes (wrt. clocks),
+but haven't found it yet.
 
-[id]      chip: 4322
-[id]   chiprev: 0001
+v6:
+* Add Luca's patches to pass irq_trigger/freq
+* Support wl12xx as well
+* Update all relevant platforms
 
-Huseyin Olgac
+Eliad Peller (4):
+  dt: bindings: add TI's wilink wireless device
+  wlcore: add device-tree support
+  ARM: dts: add wl12xx/wl18xx bindings
+  wlcore: remove wl12xx_platform_data
+
+Luciano Coelho (2):
+  wlcore: set irq_trigger in board files instead of hiding behind a
+    quirk
+  wl12xx: use frequency instead of enumerations for pdata clocks
+
+ .../devicetree/bindings/net/wireless/ti,wlcore.txt |  47 +++++++++
+ arch/arm/boot/dts/am335x-evmsk.dts                 |  11 ++
+ arch/arm/boot/dts/omap3-cm-t3517.dts               |  10 ++
+ arch/arm/boot/dts/omap3-cm-t3730.dts               |  10 ++
+ arch/arm/boot/dts/omap3-evm-common.dtsi            |  10 ++
+ arch/arm/boot/dts/omap3-igep0020-rev-f.dts         |   9 ++
+ arch/arm/boot/dts/omap3-igep0030-rev-g.dts         |   9 ++
+ arch/arm/boot/dts/omap3-zoom3.dts                  |  10 ++
+ arch/arm/boot/dts/omap4-panda-common.dtsi          |  10 ++
+ arch/arm/boot/dts/omap4-sdp.dts                    |  11 ++
+ arch/arm/boot/dts/omap4-var-som-om44-wlan.dtsi     |  10 ++
+ arch/arm/mach-davinci/Kconfig                      |  11 --
+ arch/arm/mach-davinci/board-da850-evm.c            | 112 ---------------------
+ arch/arm/mach-omap2/pdata-quirks.c                 |  79 ---------------
+ drivers/net/wireless/ti/wilink_platform_data.c     |  25 -----
+ drivers/net/wireless/ti/wl12xx/main.c              |  63 ++++++++++--
+ drivers/net/wireless/ti/wl12xx/wl12xx.h            |  28 ++++++
+ drivers/net/wireless/ti/wlcore/boot.c              |   1 -
+ drivers/net/wireless/ti/wlcore/debugfs.c           |   2 +-
+ drivers/net/wireless/ti/wlcore/main.c              |  31 +++---
+ drivers/net/wireless/ti/wlcore/sdio.c              |  64 ++++++++++--
+ drivers/net/wireless/ti/wlcore/wlcore.h            |   5 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h          |   8 +-
+ include/linux/wl12xx.h                             |  49 ---------
+ 24 files changed, 313 insertions(+), 312 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
+
+-- 
+1.8.5.2.229.g4448466.dirty
+
