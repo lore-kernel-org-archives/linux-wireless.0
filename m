@@ -1,83 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57746 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:55782 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751617AbbCCVcp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 16:32:45 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	id S1753980AbbCLHth (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 03:49:37 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: fix beacon timers
-Date: Tue,  3 Mar 2015 22:32:41 +0100
-Message-Id: <1425418361-4116-1-git-send-email-johannes@sipsolutions.net> (sfid-20150303_223248_772820_65081709)
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/2] iwlwifi: dvm: drop VO packets when mac80211 tells us to
+Date: Thu, 12 Mar 2015 09:49:32 +0200
+Message-Id: <1426146573-8068-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_084942_887264_0EDC8C65)
+In-Reply-To: <1426146488.8748.16.camel@egrumbacBox>
+References: <1426146488.8748.16.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+mac80211 now informs the driver when to drop the packets
+upon flush(). This will happen before disconnecting, or
+before we shut down the interface. We can now rely on this
+to drop all the packets including the VO queues.
+When mac80211 sets drop to false, wait for all the queues
+to be empty.
 
-Jouni reported that certain combinations of hwsim test cases failed,
-and we found that beaconing was erroneously enabled too early on any
-channel switch, which lead to the BI of 2000 TU from the first test
-case to leak into the second one, which then didn't beacon properly.
-
-To fix this, set data->beacon_int to zero when all stop beaconing so
-that beaconing cannot be started (which was intended as 'restarted')
-elsewhere.
-
-Additionally, Jouni found that due to this 'restart' and the beacon
-interval handling station interfaces would also have a needlessly
-running beacon timer all the time, of course not doing anything.
-
-To also fix the latter case only use the beacon interval when it's
-actually needed, i.e. when beaconing gets enabled.
-
-Reported-by: Jouni Malinen <j@w1.fi>
-Tested-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 32bd2f02c164..941925991476 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1595,21 +1595,16 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 		vp->aid = info->aid;
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+index 47e64e8..cceb026 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/dvm/mac80211.c
+@@ -1114,16 +1114,17 @@ static void iwlagn_mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	scd_queues &= ~(BIT(IWL_IPAN_CMD_QUEUE_NUM) |
+ 			BIT(IWL_DEFAULT_CMD_QUEUE_NUM));
  
--	if (changed & BSS_CHANGED_BEACON_INT) {
--		wiphy_debug(hw->wiphy, "  BCNINT: %d\n", info->beacon_int);
--		data->beacon_int = info->beacon_int * 1024;
--	}
+-	if (vif)
+-		scd_queues &= ~BIT(vif->hw_queue[IEEE80211_AC_VO]);
 -
- 	if (changed & BSS_CHANGED_BEACON_ENABLED) {
--		wiphy_debug(hw->wiphy, "  BCN EN: %d\n", info->enable_beacon);
-+		wiphy_debug(hw->wiphy, "  BCN EN: %d (BI=%u)\n",
-+			    info->enable_beacon, info->beacon_int);
- 		vp->bcn_en = info->enable_beacon;
- 		if (data->started &&
- 		    !hrtimer_is_queued(&data->beacon_timer.timer) &&
- 		    info->enable_beacon) {
- 			u64 tsf, until_tbtt;
- 			u32 bcn_int;
--			if (WARN_ON(!data->beacon_int))
--				data->beacon_int = 1000 * 1024;
-+			data->beacon_int = info->beacon_int * 1024;
- 			tsf = mac80211_hwsim_get_tsf(hw, vif);
- 			bcn_int = data->beacon_int;
- 			until_tbtt = bcn_int - do_div(tsf, bcn_int);
-@@ -1623,8 +1618,10 @@ static void mac80211_hwsim_bss_info_changed(struct ieee80211_hw *hw,
- 				mac80211_hwsim_bcn_en_iter, &count);
- 			wiphy_debug(hw->wiphy, "  beaconing vifs remaining: %u",
- 				    count);
--			if (count == 0)
-+			if (count == 0) {
- 				tasklet_hrtimer_cancel(&data->beacon_timer);
-+				data->beacon_int = 0;
-+			}
- 		}
+-	IWL_DEBUG_TX_QUEUES(priv, "Flushing SCD queues: 0x%x\n", scd_queues);
+-	if (iwlagn_txfifo_flush(priv, scd_queues)) {
+-		IWL_ERR(priv, "flush request fail\n");
+-		goto done;
++	if (drop) {
++		IWL_DEBUG_TX_QUEUES(priv, "Flushing SCD queues: 0x%x\n",
++				    scd_queues);
++		if (iwlagn_txfifo_flush(priv, scd_queues)) {
++			IWL_ERR(priv, "flush request fail\n");
++			goto done;
++		}
  	}
- 
++
+ 	IWL_DEBUG_TX_QUEUES(priv, "wait transmit/flush all frames\n");
+-	iwl_trans_wait_tx_queue_empty(priv->trans, 0xffffffff);
++	iwl_trans_wait_tx_queue_empty(priv->trans, scd_queues);
+ done:
+ 	mutex_unlock(&priv->mutex);
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
 -- 
-2.1.4
+1.9.1
 
