@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:43041 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690AbbCBMHa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 07:07:30 -0500
-Received: by wesu56 with SMTP id u56so32839665wes.10
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 04:07:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1425295680-2269-2-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1425295680-2269-1-git-send-email-vthiagar@qti.qualcomm.com>
-	<1425295680-2269-2-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Mon, 2 Mar 2015 13:07:29 +0100
-Message-ID: <CA+BoTQkJbshivUL304juyS6JdwGu0n_NPeMNa=qDtsdRjVvd6Q@mail.gmail.com> (sfid-20150302_130734_194612_805B8713)
-Subject: Re: [PATCH V4 2/2] ath10k: Fix interrupt storm
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:59641 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754580AbbCLNGN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:06:13 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 37/49] iwlwifi: mvm: remove warning on station exhaustion
+Date: Thu, 12 Mar 2015 15:04:22 +0200
+Message-Id: <1426165474-25586-37-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143419_233925_BD3D918B)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 March 2015 at 12:28, Vasanthakumar Thiagarajan
-<vthiagar@qti.qualcomm.com> wrote:
-[...]
-> +static bool ath10k_mac_should_disable_promisc(struct ath10k *ar)
-> +{
-> +       struct ath10k_vif *arvif;
-> +
-> +       if (!(ar->filter_flags & FIF_PROMISC_IN_BSS))
-> +               return true;
-> +
-> +       if (!ar->num_started_vdevs)
-> +               return false;
-> +
-> +       list_for_each_entry(arvif, &ar->arvifs, list)
-> +               if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
-> +                       return false;
-> +
-> +       ath10k_dbg(ar, ATH10K_DBG_MAC,
-> +                  "mac disabling promiscuous mode because vdev is started\n");
-> +       ar->filter_flags &= ~FIF_PROMISC_IN_BSS;
+From: Johannes Berg <johannes.berg@intel.com>
 
-ar->filter_flags shouldn't be changed. Especially in a function which
-shouldn't have side-effects.
+When using IBSS, it's easily possible to exhaust the number
+of available stations in the driver, so don't warn on it.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/sta.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Michał
+diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
+index 325cbbb..50f9288 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
+@@ -273,7 +273,7 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 	else
+ 		sta_id = mvm_sta->sta_id;
+ 
+-	if (WARN_ON_ONCE(sta_id == IWL_MVM_STATION_COUNT))
++	if (sta_id == IWL_MVM_STATION_COUNT)
+ 		return -ENOSPC;
+ 
+ 	spin_lock_init(&mvm_sta->lock);
+-- 
+1.9.1
+
