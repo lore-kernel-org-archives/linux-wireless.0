@@ -1,63 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41018 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751609AbbCMGig (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:60387 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754152AbbCLNHs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 02:38:36 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2D6ZAUx006745
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:36 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1t3pmg8hwh-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:36 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
-	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
-	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 3/9] mwifiex: enhance SD8897 MP aggregation limits
-Date: Fri, 13 Mar 2015 17:37:53 +0530
-Message-ID: <1426248479-28451-4-git-send-email-patila@marvell.com> (sfid-20150313_073839_462400_C9B2973B)
-In-Reply-To: <1426248479-28451-1-git-send-email-patila@marvell.com>
-References: <1426248479-28451-1-git-send-email-patila@marvell.com>
+	Thu, 12 Mar 2015 09:07:48 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <liuzy@marvell.com>, <crlo@marvell.com>,
+	<pchen@marvell.com>, <szli@marvell.com>, <nishants@marvell.com>
+Subject: Re: [PATCH 3/9] mwifiex: enhance SD8897 MP aggregation limits
+References: <1426180920-10567-1-git-send-email-patila@marvell.com>
+	<1426180920-10567-4-git-send-email-patila@marvell.com>
+Date: Thu, 12 Mar 2015 14:07:37 +0100
+In-Reply-To: <1426180920-10567-4-git-send-email-patila@marvell.com> (Avinash
+	Patil's message of "Thu, 12 Mar 2015 22:51:54 +0530")
+Message-ID: <87bnjy2wkm.fsf@nemi.mork.no> (sfid-20150312_140753_631660_62E7F635)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SD8897 support buffers of 4K and 16 such ports can be accomodated.
-So basically 64K buffer size in single aggregation is supported.
+Avinash Patil <patila@marvell.com> writes:
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/sdio.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
+> index c636944..5a23bd0 100644
+> --- a/drivers/net/wireless/mwifiex/sdio.h
+> +++ b/drivers/net/wireless/mwifiex/sdio.h
+> @@ -67,6 +67,7 @@
+>  
+>  #define MWIFIEX_MP_AGGR_BUF_SIZE_16K	(16384)
+>  #define MWIFIEX_MP_AGGR_BUF_SIZE_32K	(32768)
+> +#define MWIFIEX_MP_AGGR_BUF_SIZE_64K    (65280)
 
-diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-index c636944..264bc9b 100644
---- a/drivers/net/wireless/mwifiex/sdio.h
-+++ b/drivers/net/wireless/mwifiex/sdio.h
-@@ -67,6 +67,8 @@
- 
- #define MWIFIEX_MP_AGGR_BUF_SIZE_16K	(16384)
- #define MWIFIEX_MP_AGGR_BUF_SIZE_32K	(32768)
-+/* we leave one block of 256 bytes for DMA alignment*/
-+#define MWIFIEX_MP_AGGR_BUF_SIZE_MAX    (65280)
- 
- /* Misc. Config Register : Auto Re-enable interrupts */
- #define AUTO_RE_ENABLE_INT              BIT(4)
-@@ -458,8 +460,8 @@ static const struct mwifiex_sdio_device mwifiex_sdio_sd8897 = {
- 	.max_ports = 32,
- 	.mp_agg_pkt_limit = 16,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
--	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
--	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_32K,
-+	.mp_tx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_MAX,
-+	.mp_rx_agg_buf_size = MWIFIEX_MP_AGGR_BUF_SIZE_MAX,
- 	.supports_sdio_new_mode = true,
- 	.has_control_mask = false,
- 	.can_dump_fw = true,
--- 
-1.8.1.4
+The first two macros are clearly matching their 16K and 32K names, but
+the 64K one is not.  Care to add a comment explaining where the missing
+256 bytes went?
 
+
+Bjørn (always curious about surprising numbers :-)
