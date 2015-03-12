@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53151 "EHLO sipsolutions.net"
+Received: from mga02.intel.com ([134.134.136.20]:14617 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751289AbbCaO1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 10:27:54 -0400
-Message-ID: <1427812067.2057.27.camel@sipsolutions.net> (sfid-20150331_162758_327425_7F26E55C)
-Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 31 Mar 2015 16:27:47 +0200
-In-Reply-To: <5500AE12.6040103@candelatech.com>
-References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>
-	 	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>
-	 	 <54EB66CC.1030800@candelatech.com>
-	  <1424772714.2192.16.camel@sipsolutions.net>
-	  <54EC8C5D.5090400@candelatech.com>
-	 <1424788834.2192.34.camel@sipsolutions.net>
-	 <5500AE12.6040103@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754525AbbCLNFt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 09:05:49 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/49] iwlwifi: bump API to 13 for devices that use iwlmvm
+Date: Thu, 12 Mar 2015 15:04:05 +0200
+Message-Id: <1426165474-25586-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_140755_135316_BD4AD587)
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
+References: <1426164431.19690.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-03-11 at 14:05 -0700, Ben Greear wrote:
+This new firmware will come out soon.
 
-> I took a look at the hw-scan code a bit...I guess we might could do additional
-> info calls to user-space as we iterate through the channels while scanning?
-> 
-> A real driver would be causing the NIC to change channels at these junctures,
-> either by directly setting registers or sending some message off to the
-> target NIC's cpu, right?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-7000.c | 8 ++++----
+ drivers/net/wireless/iwlwifi/iwl-8000.c | 4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Well, depends. Our driver just asks the firmware to do the scan, and it
-will do all the scheduling by itself, i.e. it'll go through the channels
-at convenient times etc.
-
-> I would assume that off-channel work could do similar logic.
-
-Yeah.
-
-> Is that the sort of thing you had in mind?
-
-To be honest, I'm not really sure myself. It seems to really do this
-you'd also need powersave handling (tell the AP you're going to sleep
-when scanning) and potentially P2P-GO NoA handling (tell the clients
-you're going to sleep).
-
-The thing with hwsim right now is that it totally makes use of its
-ability to be on as many channels at the same time as it wants, so it
-doesn't have to worry about that, but if you want to actually have the
-channel "changed" then we need to handle a lot more details.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
+index 0597a9c..36e786f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
+@@ -69,12 +69,12 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL7260_UCODE_API_MAX	12
+-#define IWL3160_UCODE_API_MAX	12
++#define IWL7260_UCODE_API_MAX	13
++#define IWL3160_UCODE_API_MAX	13
+ 
+ /* Oldest version we won't warn about */
+-#define IWL7260_UCODE_API_OK	10
+-#define IWL3160_UCODE_API_OK	10
++#define IWL7260_UCODE_API_OK	12
++#define IWL3160_UCODE_API_OK	12
+ 
+ /* Lowest firmware API version supported */
+ #define IWL7260_UCODE_API_MIN	10
+diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
+index d8dfa6d..9c396a4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
+@@ -69,10 +69,10 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	12
++#define IWL8000_UCODE_API_MAX	13
+ 
+ /* Oldest version we won't warn about */
+-#define IWL8000_UCODE_API_OK	10
++#define IWL8000_UCODE_API_OK	12
+ 
+ /* Lowest firmware API version supported */
+ #define IWL8000_UCODE_API_MIN	10
+-- 
+1.9.1
 
