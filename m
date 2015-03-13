@@ -1,43 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailrelay119.isp.belgacom.be ([195.238.20.146]:47558 "EHLO
-	mailrelay119.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932328AbbCQSkf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51290 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214AbbCMOHu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 14:40:35 -0400
-From: Fabian Frederick <fabf@skynet.be>
-To: linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, Fabian Frederick <fabf@skynet.be>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 10/16 linux-next] orinoco: constify of_device_id array
-Date: Tue, 17 Mar 2015 19:40:22 +0100
-Message-Id: <1426617628-937-1-git-send-email-fabf@skynet.be> (sfid-20150317_194314_231845_0F2041B2)
-In-Reply-To: <1426617469-781-1-git-send-email-fabf@skynet.be>
-References: <1426617469-781-1-git-send-email-fabf@skynet.be>
+	Fri, 13 Mar 2015 10:07:50 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [next] ar5523: use container_of
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1425997539-25206-1-git-send-email-fw@strlen.de>
+To: Florian Westphal <fw@strlen.de>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Florian Westphal <fw@strlen.de>
+Message-Id: <20150313140749.B266A1415F0@smtp.codeaurora.org> (sfid-20150313_150759_413325_97BD9641)
+Date: Fri, 13 Mar 2015 14:07:49 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-of_device_id is always used as const.
-(See driver.of_match_table and open firmware functions)
 
-Signed-off-by: Fabian Frederick <fabf@skynet.be>
----
- drivers/net/wireless/orinoco/airport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> If we want to shrink skb->cb then we'd have to see about
+> reducing struct ieee80211_tx_info, which gets embedded inside
+> skb->cb[].
+> 
+> It provides a scratch space to be used by wireless drivers.
+> ar5523 uses the maximum space available today (40 bytes), but it seems
+> we don't need this -- data->skb pointer seems to always point back to the
+> skb whose cb buffer the data structure resides, iow, given a pointer to the
+> embedded control buffer we can infer the skb address.
+> 
+> Tested-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+> Signed-off-by: Florian Westphal <fw@strlen.de>
 
-diff --git a/drivers/net/wireless/orinoco/airport.c b/drivers/net/wireless/orinoco/airport.c
-index 0ca8b14..77e6c53 100644
---- a/drivers/net/wireless/orinoco/airport.c
-+++ b/drivers/net/wireless/orinoco/airport.c
-@@ -228,7 +228,7 @@ MODULE_AUTHOR("Benjamin Herrenschmidt <benh@kernel.crashing.org>");
- MODULE_DESCRIPTION("Driver for the Apple Airport wireless card.");
- MODULE_LICENSE("Dual MPL/GPL");
- 
--static struct of_device_id airport_match[] = {
-+static const struct of_device_id airport_match[] = {
- 	{
- 	.name		= "radio",
- 	},
--- 
-2.1.0
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
