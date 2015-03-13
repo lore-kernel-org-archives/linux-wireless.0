@@ -1,124 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f171.google.com ([209.85.212.171]:37884 "EHLO
-	mail-wi0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbbCaSo6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 14:44:58 -0400
-Received: by wiaa2 with SMTP id a2so37523509wia.0
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 11:44:57 -0700 (PDT)
-Received: from [192.168.254.106] ([147.83.206.82])
-        by mx.google.com with ESMTPSA id ei8sm22086838wib.10.2015.03.31.11.44.55
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 31 Mar 2015 11:44:56 -0700 (PDT)
-Message-ID: <551AEB27.1020003@gmail.com> (sfid-20150331_204501_869239_54A5A434)
-Date: Tue, 31 Mar 2015 20:44:55 +0200
-From: ferran <ranker72@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Fwd: Unable to operate a rt2770 device at 5GHz in mesh mode
-References: <551AE9AD.4050102@gmail.com>
-In-Reply-To: <551AE9AD.4050102@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from aibo.runbox.com ([91.220.196.211]:36405 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756274AbbCMDg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 23:36:58 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: m.v.b@runbox.com
+Subject: [PATCH 13/16] staging: rtl8723au: suspect code indent for conditional statements
+Date: Thu, 12 Mar 2015 23:15:29 -0400
+Message-Id: <1426216532-24058-14-git-send-email-m.v.b@runbox.com> (sfid-20150313_043720_920457_A87C8C13)
+In-Reply-To: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
+References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Correct a number of indentation-with-spaces-and-tabs issues in
+rtl8723au's rtw_security.c, according to checkpatch.pl:
+	WARNING: suspect code indent for conditional statements
 
-Hello everyone,
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 36 +++++++++++++--------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
 
-I want to build a mesh network at 5GHz with raspberry-pi's connected
-each to one rt2770 device.
-Following this tutorial [1] I succeed to create a virtual mesh
-interface(1), set the channel(2) (let's say 11 by now) and then join a
-mesh network(3). I can see the probes with Wireshark, and when more than
-one has joined the mesh, I can also see the stats of the peers(4), and
-then leave the network (5).
-
-    # 1
-    iw dev wlan0 interface add mesh0 type mp
-
-    # 2
-    iw dev mesh0 set channel 11
-
-    # 3
-    iw dev mesh0 mesh join my_mesh_id
-
-    # 4
-    iw dev mesh0 station dump
-
-    # 5
-    iw dev mesh0 mesh leave
-
-As I say, everything works at 2.4 channels. However, when setting the
-channel to one of the 5GHz band, I receive an error when trying to join
-a mesh network. I tested all the channels that the driver claims to
-support, and indeed, no 5GHz channel works.
-
-The results of executing the commands above as set(2), join(3), leave(5)
-were these:
-Channels 1,2,3,…,11 --> regular 2.4 GHz channels
-
-    ## Testing channel 11 ##
-       setting channel...
-       joining mesh...
-       leaving mesh...
-
-Channels 12,13,14 and 36,38,40,44,…,165 --> rare 2.4GHz channels and
-regular 5GHz's
-
-    ## Testing channel 165 ##
-       setting channel...
-       joining mesh...
-    command failed: Invalid argument (-22)
-       leaving mesh...
-    command failed: Transport endpoint is not connected (-107)
-
-Channels 167, 169, 171, 208, 212, 216 --> disabled 5GHz channels or
-inexistent channel number
-
-    ## Testing channel 212 ##
-       setting channel...
-    command failed: Invalid argument (-22)
-       joining mesh...
-    command failed: Invalid argument (-22)
-       leaving mesh...
-    command failed: Transport endpoint is not connected (-107)
-
-The output of "iw list" outputs something equivalent to:
-
-  * Channels from 1 to 11
-
-    24ff MHz [c] (20.0 dBm)
-    # where "24ff" is the frequency and "c" is the channel
-
-  * Channels 12,13,14 and 36 to 48 and 149 to 165
-
-    ffff MHz [cc] (20.0 dBm) (passive scanning, no IBSS)
-    # where "ffff" is the frequency and "cc" is the channel
-
-  * Channels 52 to 165
-
-    5fff MHz [ccc] (20.0 dBm) (passive scanning, no IBSS, radar detection)
-    # where "5fff" is the frequency and "ccc" is the channel
-
-  * Channels from 167 to 216
-
-    ffff MHz [ccc] (disabled)
-    # where "5fff" is the frequency and "ccc" is the channel
-
-Which matches the three groups of the output of testing the channels
-(same results from 12 to 165, radar detection does not affect the output).
-
-Now, my target is to operate this WiFi devices in the 5 GHz band, so I
-want to know why I can set the channel to 38, but not join a mesh on
-this channel, that is, start to probing and listening the channel. Does
-it have anything to do with regulation restrictions? I have succeeded at
-connecting to an AP at 5 GHz in managed mode.
-
-I will thank any light you can shed to this.
-Thank you very much,
-
-Ferran
-
-
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index fd5c4da2c4..dbbe7b348d 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -760,7 +760,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length-4));
+ 
+ 	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
+-	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+ 				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
+ 		res = _FAIL;
+ 	}
+@@ -908,9 +908,9 @@ static void mix_column(u8 *in, u8 *out)
+ 
+ 	for (i = 0; i < 4; i++) {
+ 		if ((in[i] & 0x80) == 0x80)
+-		    add1b[i] = 0x1b;
++			add1b[i] = 0x1b;
+ 		else
+-		    add1b[i] = 0x00;
++			add1b[i] = 0x00;
+ 	}
+ 
+ 	swap_halfs[0] = in[2]; /* Swap halfs */
+@@ -965,21 +965,21 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
+ 
+ 	for (round = 0; round < 11; round++) {
+ 		if (round == 0) {
+-		    xor_128(round_key, data, ciphertext);
+-		    next_key(round_key, round);
++			xor_128(round_key, data, ciphertext);
++			next_key(round_key, round);
+ 		} else if (round == 10) {
+-		    byte_sub(ciphertext, intermediatea);
+-		    shift_row(intermediatea, intermediateb);
+-		    xor_128(intermediateb, round_key, ciphertext);
++			byte_sub(ciphertext, intermediatea);
++			shift_row(intermediatea, intermediateb);
++			xor_128(intermediateb, round_key, ciphertext);
+ 		} else { /* 1 - 9 */
+-		    byte_sub(ciphertext, intermediatea);
+-		    shift_row(intermediatea, intermediateb);
+-		    mix_column(&intermediateb[0], &intermediatea[0]);
+-		    mix_column(&intermediateb[4], &intermediatea[4]);
+-		    mix_column(&intermediateb[8], &intermediatea[8]);
+-		    mix_column(&intermediateb[12], &intermediatea[12]);
+-		    xor_128(intermediatea, round_key, ciphertext);
+-		    next_key(round_key, round);
++			byte_sub(ciphertext, intermediatea);
++			shift_row(intermediatea, intermediateb);
++			mix_column(&intermediateb[0], &intermediatea[0]);
++			mix_column(&intermediateb[4], &intermediatea[4]);
++			mix_column(&intermediateb[8], &intermediatea[8]);
++			mix_column(&intermediateb[12], &intermediatea[12]);
++			xor_128(intermediatea, round_key, ciphertext);
++			next_key(round_key, round);
+ 		}
+ 	}
+ 
+@@ -1480,7 +1480,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 		for (j = 0; j < 16; j++)
+ 			padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+-		    padded_buffer[j] = message[payload_index++];
++			padded_buffer[j] = message[payload_index++];
+ 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
+ 		aes128k128d(key, chain_buffer, aes_out);
+ 	}
+@@ -1510,7 +1510,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 				      message, pn_vector, num_blocks+1);
+ 
+ 		for (j = 0; j < 16; j++)
+-			 padded_buffer[j] = 0x00;
++			padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+ 			padded_buffer[j] = message[payload_index + j];
+ 		aes128k128d(key, ctr_preload, aes_out);
+-- 
+2.1.4
 
