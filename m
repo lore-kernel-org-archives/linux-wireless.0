@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:32090 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296AbbCNTyE (ORCPT
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:33907 "EHLO
+	smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750769AbbCMN25 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 15:54:04 -0400
-Message-ID: <550491DA.6030105@broadcom.com> (sfid-20150314_205408_534931_D8C2A452)
-Date: Sat, 14 Mar 2015 20:54:02 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 13 Mar 2015 09:28:57 -0400
+Received: from smtp04.msg.oleane.net (smtp04.mail.priv [172.17.20.113])
+	by smtp-out06.msg.oleane.net with ESMTP id t2D9oAk1027546
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2015 10:50:10 +0100
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp04.msg.oleane.net (MTA) with ESMTP id t2D9Th0S025395
+	for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2015 10:29:44 +0100
+Subject: ARP dropped during WPA handshake
+Date: Fri, 13 Mar 2015 10:29:42 +0100
+Message-ID: <773DB8A82AB6A046AE0195C68612A319019FEC90@sbs2003.acksys.local> (sfid-20150313_142900_198333_525C0355)
 MIME-Version: 1.0
-To: Ochal Christophe <christophe.ochal@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Broadcom 43340
-References: <550482A2.3080803@gmail.com> <55048833.90408@broadcom.com> <55048BB1.9080906@gmail.com>
-In-Reply-To: <55048BB1.9080906@gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ linux-wireless
+My test plateforme is very simple, One sta (with openwrt), one AP and a
+computer connected to the AP.
+I launch iperf on the sta and power up the AP.
 
-On 03/14/15 20:27, Ochal Christophe wrote:
-> Dear Sir,
->
-> On 03/14/2015 08:12 PM, Arend van Spriel wrote:
->> The nvram file is board specific and so Asus should be able to provide
->> that. What OS does Asus provide on this eee book? The firmware file
->> will be submitted to linux-firmware soon, but in the mean time you can
->> also find it in Android repository [1]. Just rename the file
->> fw_43341.bin to brcmfmac43340-sdio.bin.
->>
->> Regards,
->> Arend
->>
->> [1]
->> https://android.googlesource.com/platform/hardware/broadcom/wlan/+/master/bcmdhd/firmware/bcm43341/
->>
->
-> Thank you for the link, the Asus eebook x205ta comes with Windows 8.1,
-> no idea how I'm going to get Asus to deliver that nvram, but at least
-> I'm halfway there now, the firmware loads correctly.
+With wireshark I can observe 1 s delay between the frame EAPOL 4/4 and
+the arp request sent by the sta. I can observe the delay only if my sta
+uses architecture with more 1 cpu.
 
-For Windows 8.1 the nvram file is stored in EFI variable space. This is 
-accessible in Linux as well. If I recall correctly it should be in 
-/sys/firmware/efi/efivars. There should be a file named nvram-*. Copy 
-that to /lib/firmware/brcm/brcmfmac43340-sdio.txt.
+When the sta received the Authentication response, mac80211 sets the
+iface on UP state. This state allows wpa_supplicant to send the EAPOL
+frame for WPA handshake but other frames are dropped.
 
-Regards,
-Arend
+If an arp request is sent by the local ip stack during the WPA handshake
+this arp will be dropped and we need to wait the end of arp timeout (1
+s).
+
+Have you any suggestion / pointer to fix this issue?
+
+Thanks for your help.
+
+Cedric Voncken
 
