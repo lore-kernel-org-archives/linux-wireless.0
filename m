@@ -1,99 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50389 "EHLO mga09.intel.com"
+Received: from aibo.runbox.com ([91.220.196.211]:36388 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752188AbbCATcs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 14:32:48 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 30/31] iwlwifi: mvm: add trigger for firmware dump upon low RSSI
-Date: Sun,  1 Mar 2015 21:31:43 +0200
-Message-Id: <1425238304-498-30-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203418_822508_187047B6)
-In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
-References: <1425238186.30202.5.camel@egrumbacBox>
+	id S1755195AbbCMDgp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 23:36:45 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: m.v.b@runbox.com
+Subject: [PATCH 09/16] staging: rtl8723au: trailing statements should be on next line
+Date: Thu, 12 Mar 2015 23:15:25 -0400
+Message-Id: <1426216532-24058-10-git-send-email-m.v.b@runbox.com> (sfid-20150313_044146_678798_3A9668B3)
+In-Reply-To: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
+References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lots of issues can be caught when the RSSI drops. Add the
-ability to collect the firmware data at that point.
+Correct a number of checkpatch.pl errors in rtl8723au's rtw_security.c
+related to trailing statements:
+	ERROR: trailing statements should be on next line
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  3 +++
- drivers/net/wireless/iwlwifi/iwl-fw-file.h       |  8 ++++++++
- drivers/net/wireless/iwlwifi/mvm/rx.c            | 19 +++++++++++++++++++
- 3 files changed, 30 insertions(+)
+ drivers/staging/rtl8723au/core/rtw_security.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-index 95bef17..37b38a5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
-@@ -248,6 +248,8 @@ iwl_fw_error_next_data(struct iwl_fw_error_dump_data *data)
-  *	command response or a notification.
-  * @FW_DB_TRIGGER_RESERVED: reserved
-  * @FW_DBG_TRIGGER_STATS: trigger log collection upon statistics threshold.
-+ * @FW_DBG_TRIGGER_RSSI: trigger log collection when the rssi of the beacon
-+ *	goes below a threshold.
-  */
- enum iwl_fw_dbg_trigger {
- 	FW_DBG_TRIGGER_INVALID = 0,
-@@ -258,6 +260,7 @@ enum iwl_fw_dbg_trigger {
- 	FW_DBG_TRIGGER_FW_NOTIF,
- 	FW_DB_TRIGGER_RESERVED,
- 	FW_DBG_TRIGGER_STATS,
-+	FW_DBG_TRIGGER_RSSI,
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 61f6c2896f..66ab3c4fdd 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -132,7 +132,8 @@ static u32 getcrc32(u8 *buf, int len)
+ 	u8 *p;
+ 	u32 crc;
  
- 	/* must be last */
- 	FW_DBG_TRIGGER_MAX,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index de0e96d..5ea3818 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -566,6 +566,14 @@ struct iwl_fw_dbg_trigger_stats {
- } __packed;
+-	if (bcrc32initialized == 0) crc32_init();
++	if (bcrc32initialized == 0)
++		crc32_init();
  
- /**
-+ * struct iwl_fw_dbg_trigger_low_rssi - trigger for low beacon RSSI
-+ * @rssi: RSSI value to trigger at
-+ */
-+struct iwl_fw_dbg_trigger_low_rssi {
-+	__le32 rssi;
-+} __packed;
+ 	crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
+ 
+@@ -559,8 +560,10 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
+ 	u16 PPK[6];                          /* temporary key for mixing    */
+ 
+ 	/* Note: all adds in the PPK[] equations below are mod 2**16         */
+-	for (i = 0; i < 5; i++) PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
+-		PPK[5] = p1k[4] + iv16;             /* next,  add in IV16          */
++	for (i = 0; i < 5; i++)
++		PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
 +
-+/**
-  * struct iwl_fw_dbg_conf_tlv - a TLV that describes a debug configuration.
-  * @id: conf id
-  * @usniffer: should the uSniffer image be used
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rx.c b/drivers/net/wireless/iwlwifi/mvm/rx.c
-index 9b2c537..6177e24 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rx.c
-@@ -345,6 +345,25 @@ int iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 		struct iwl_mvm_sta *mvmsta;
- 		mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 		rs_update_last_rssi(mvm, &mvmsta->lq_sta, rx_status);
-+
-+		if (iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_RSSI) &&
-+		    ieee80211_is_beacon(hdr->frame_control)) {
-+			struct iwl_fw_dbg_trigger_tlv *trig;
-+			struct iwl_fw_dbg_trigger_low_rssi *rssi_trig;
-+			bool trig_check;
-+			s32 rssi;
-+
-+			trig = iwl_fw_dbg_get_trigger(mvm->fw,
-+						      FW_DBG_TRIGGER_RSSI);
-+			rssi_trig = (void *)trig->data;
-+			rssi = le32_to_cpu(rssi_trig->rssi);
-+
-+			trig_check =
-+				iwl_fw_dbg_trigger_check_stop(mvm, mvmsta->vif,
-+							      trig);
-+			if (trig_check && rx_status->signal < rssi)
-+				iwl_mvm_fw_dbg_collect_trig(mvm, trig, NULL, 0);
-+		}
++	PPK[5] = p1k[4] + iv16;     /* next,  add in IV16          */
+ 
+ 	/* Bijective non-linear mixing of the 96 bits of PPK[0..5]           */
+ 	PPK[0] +=    _S_(PPK[5] ^ TK16(0));   /* Mix key in each "round"     */
+@@ -960,7 +963,8 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
+ 	u8 intermediateb[16];
+ 	u8 round_key[16];
+ 
+-	for (i = 0; i < 16; i++) round_key[i] = key[i];
++	for (i = 0; i < 16; i++)
++		round_key[i] = key[i];
+ 
+ 	for (round = 0; round < 11; round++) {
+ 		if (round == 0) {
+@@ -1044,7 +1048,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ {
+ 	int i;
+ 
+-	for (i = 0; i < 16; i++) mic_header2[i] = 0x00;
++	for (i = 0; i < 16; i++)
++		mic_header2[i] = 0x00;
+ 
+ 	mic_header2[0] = mpdu[16];    /* A3 */
+ 	mic_header2[1] = mpdu[17];
+@@ -1057,7 +1062,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ 	mic_header2[7] = 0x00; /* mpdu[23]; */
+ 
+ 	if (!qc_exists && a4_exists) {
+-		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
++		for (i = 0; i < 6; i++)
++			mic_header2[8+i] = mpdu[24+i];   /* A4 */
  	}
  
- 	rcu_read_unlock();
+ 	if (qc_exists && !a4_exists) {
+@@ -1066,7 +1072,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ 	}
+ 
+ 	if (qc_exists && a4_exists) {
+-		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
++		for (i = 0; i < 6; i++)
++			mic_header2[8+i] = mpdu[24+i];   /* A4 */
+ 
+ 		mic_header2[14] = mpdu[30] & 0x0f;
+ 		mic_header2[15] = mpdu[31] & 0x00;
+@@ -1084,7 +1091,9 @@ static void construct_ctr_preload(u8 *ctr_preload, int a4_exists, int qc_exists,
+ {
+ 	int i = 0;
+ 
+-	for (i = 0; i < 16; i++) ctr_preload[i] = 0x00;
++	for (i = 0; i < 16; i++)
++		ctr_preload[i] = 0x00;
++
+ 	i = 0;
+ 
+ 	ctr_preload[0] = 0x01;                                  /* flag */
 -- 
-1.9.1
+2.1.4
 
