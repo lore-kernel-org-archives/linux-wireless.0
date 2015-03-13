@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0245.hostedemail.com ([216.40.44.245]:59837 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753748AbbCPQzb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44119 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbbCMNLA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 12:55:31 -0400
-Message-ID: <1426524927.23897.9.camel@perches.com> (sfid-20150316_175547_187455_23B2F9F8)
-Subject: Re: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's
- rtw_security.c
-From: Joe Perches <joe@perches.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: "M. Vefa Bicakci" <m.v.b@runbox.com>,
-	Matthias Beyer <mail@beyermatthias.de>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org
-Date: Mon, 16 Mar 2015 09:55:27 -0700
-In-Reply-To: <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org>
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-	 <20150315093142.GY24643@lucy.3gs> <10669062.ZZNVxH5Tl9@lenny>
-	 <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 13 Mar 2015 09:11:00 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2013-03-12
+References: <1426164431.19690.4.camel@egrumbacBox>
+Date: Fri, 13 Mar 2015 15:10:54 +0200
+In-Reply-To: <1426164431.19690.4.camel@egrumbacBox> (Emmanuel Grumbach's
+	message of "Thu, 12 Mar 2015 12:47:11 +0000")
+Message-ID: <871tktrqjl.fsf@kamboji.qca.qualcomm.com> (sfid-20150313_141104_116962_22886175)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-16 at 12:01 -0400, Jes Sorensen wrote:
-> For staging patches, you should always post patches against the
-> staging-next tree. Please rebase them and repost them.
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Greg is now preferring patches against his
-staging-testing branch
+> Hi Kalle,
+>
+> Here is a pull request for 4.1. Details in the tag.
+> Note that this includes the patches that were pulled by davem.
+> You may want to FF your tree before you pull my bits.
+>
+> The following changes since commit 190f1029757346b72f297729cf8e5c562f2e9d8c:
+>
+>   iwlwifi: mvm: don't override passive dwell in case of fragmented scan (2015-03-02 08:20:32 +0200)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2015-03-12
 
+Thanks, pulled.
 
+-- 
+Kalle Valo
