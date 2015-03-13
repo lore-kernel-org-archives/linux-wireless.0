@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out-061.synserver.de ([212.40.185.61]:1035 "EHLO
-	smtp-out-061.synserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752115AbbCONdS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 09:33:18 -0400
-From: Lars-Peter Clausen <lars@metafoo.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Solomon Peachy <pizza@shaftnet.org>,
-	linux-wireless@vger.kernel.org,
-	Lars-Peter Clausen <lars@metafoo.de>
-Subject: [PATCH] wireless: cw1200: Fix suspend
-Date: Sun, 15 Mar 2015 14:26:20 +0100
-Message-Id: <1426425980-21743-1-git-send-email-lars@metafoo.de> (sfid-20150315_143323_560394_6CABB443)
+Received: from mail.us.es ([193.147.175.20]:55430 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753462AbbCMMLx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 08:11:53 -0400
+Date: Fri, 13 Mar 2015 13:15:39 +0100
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: Richard Weinberger <richard@nod.at>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
+Subject: Re: [PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc
+ file
+Message-ID: <20150313121539.GA14488@salvia> (sfid-20150313_131209_187667_6AD56CB5)
+References: <1426246276-15839-1-git-send-email-richard@nod.at>
+ <1426246276-15839-5-git-send-email-richard@nod.at>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426246276-15839-5-git-send-email-richard@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cw1200 driver implements suspend and resume callbacks and assigns them
-to the suspend and resume fields of the device_driver struct. These
-callbacks are never actually called by anything though.
+On Fri, Mar 13, 2015 at 12:31:16PM +0100, Richard Weinberger wrote:
+> The printed values are all of type unsigned integer, therefore use
+> %u instead of %d. Otherwise an user can face negative values.
+> 
+> Fixes:
+> $ cat /proc/net/netfilter/nfnetlink_queue
+>     0  29508   278 2 65531     0 2004213241 -2129885586  1
+>     1 -27747     0 2 65531     0     0        0  1
+>     2 -27748     0 2 65531     0     0        0  1
 
-Modify the driver to properly use dev_pm_ops so that the suspend function
-is actually executed upon suspend and drop the empty resume function.
+I guess you want to access stats on dropped packets.
 
-Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
----
- drivers/net/wireless/cw1200/cw1200_spi.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+I prefer if you extend nfnetlink_queue to provide statistics through
+nfnetlink_queue, so you don't have to manually parse this text-based
+/proc entry and we can deprecate this interface. That shouldn't have
+been there in first place.
 
-diff --git a/drivers/net/wireless/cw1200/cw1200_spi.c b/drivers/net/wireless/cw1200/cw1200_spi.c
-index 964b64a..7603546 100644
---- a/drivers/net/wireless/cw1200/cw1200_spi.c
-+++ b/drivers/net/wireless/cw1200/cw1200_spi.c
-@@ -447,7 +447,7 @@ static int cw1200_spi_disconnect(struct spi_device *func)
- }
- 
- #ifdef CONFIG_PM
--static int cw1200_spi_suspend(struct device *dev, pm_message_t state)
-+static int cw1200_spi_suspend(struct device *dev)
- {
- 	struct hwbus_priv *self = spi_get_drvdata(to_spi_device(dev));
- 
-@@ -458,10 +458,8 @@ static int cw1200_spi_suspend(struct device *dev, pm_message_t state)
- 	return 0;
- }
- 
--static int cw1200_spi_resume(struct device *dev)
--{
--	return 0;
--}
-+static SIMPLE_DEV_PM_OPS(cw1200_pm_ops, cw1200_spi_suspend, NULL);
-+
- #endif
- 
- static struct spi_driver spi_driver = {
-@@ -472,8 +470,7 @@ static struct spi_driver spi_driver = {
- 		.bus            = &spi_bus_type,
- 		.owner          = THIS_MODULE,
- #ifdef CONFIG_PM
--		.suspend        = cw1200_spi_suspend,
--		.resume         = cw1200_spi_resume,
-+		.pm		= &cw1200_pm_ops,
- #endif
- 	},
- };
--- 
-1.8.0
+Thanks.
 
+> Signed-off-by: Richard Weinberger <richard@nod.at>
+> ---
+>  net/netfilter/nfnetlink_queue_core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/netfilter/nfnetlink_queue_core.c b/net/netfilter/nfnetlink_queue_core.c
+> index 1b7f7b8..2121ab5 100644
+> --- a/net/netfilter/nfnetlink_queue_core.c
+> +++ b/net/netfilter/nfnetlink_queue_core.c
+> @@ -1243,7 +1243,7 @@ static int seq_show(struct seq_file *s, void *v)
+>  {
+>  	const struct nfqnl_instance *inst = v;
+>  
+> -	seq_printf(s, "%5d %6d %5d %1d %5d %5d %5d %8d %2d\n",
+> +	seq_printf(s, "%5u %6u %5u %1u %5u %5u %5u %8u %2d\n",
+>  		   inst->queue_num,
+>  		   inst->peer_portid, inst->queue_total,
+>  		   inst->copy_mode, inst->copy_range,
+> -- 
+> 1.8.4.5
+> 
