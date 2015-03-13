@@ -1,27 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13207 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751565AbbCKUZn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44721 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750774AbbCMNSV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 16:25:43 -0400
-Message-ID: <5500A4B6.4050702@broadcom.com> (sfid-20150311_212546_747817_68561FD4)
-Date: Wed, 11 Mar 2015 21:25:26 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 13 Mar 2015 09:18:21 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: German <gentgerman@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: iw dev wlp1s0 scan hangs
-References: <20150311161757.dac357e24509141a4c98e84b@gmail.com>
-In-Reply-To: <20150311161757.dac357e24509141a4c98e84b@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Subject: Re: [1/3] wil6210: NAPI completion refactor
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1425822123-24668-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+To: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Message-Id: <20150313131820.E066E140CF8@smtp.codeaurora.org> (sfid-20150313_141823_989844_933F2AF6)
+Date: Fri, 13 Mar 2015 13:18:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/15 21:17, German wrote:
-> Hi. When I try to run aformentioned command it hangs for about 20 secs and no output is returned. What's the problem might be? Thanks
 
-any more details you can share? What kernel version, what specific 
-device is wlp1s0, do you have any kernel logging.
+> It is expected that driver completes NAPI when less than
+> full budget is consumed.
+> 
+> Fulfill this requirement.
+> 
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
 
-Regards,
-Arend
+Thanks, 3 patches applied to wireless-drivers-next.git:
+
+7308a20e7579 wil6210: NAPI completion refactor
+c42da9993a4c wil6210: re-submit Rx frames to the wireless media if appropriate
+02beaf1a5b8f wil6210: support AP isolation
+
+Kalle Valo
