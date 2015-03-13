@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:12285 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751793AbbCKPLj (ORCPT
+Received: from smtprelay0059.hostedemail.com ([216.40.44.59]:60267 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751038AbbCMHfR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 11:11:39 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/7] brcmfmac: memory size queury and cleanup
-Date: Wed, 11 Mar 2015 16:11:26 +0100
-Message-ID: <1426086693-13876-1-git-send-email-arend@broadcom.com> (sfid-20150311_161154_042991_EAF09889)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 13 Mar 2015 03:35:17 -0400
+Message-ID: <1426232111.11459.5.camel@perches.com> (sfid-20150313_083547_740982_74624BF9)
+Subject: Re: [PATCH] nfc: logging neatening
+From: Joe Perches <joe@perches.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 13 Mar 2015 00:35:11 -0700
+In-Reply-To: <1423771820.15343.36.camel@perches.com>
+References: <1423771820.15343.36.camel@perches.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds code to brcmfmac for querying the device about
-the RAM size. The driver needs that info to determine whether the firmware
-is up and running. All but one patch are related to this change. The last
-patch in this series fixes the fact that devices did not go to low-power
-mode anymore.
+On Thu, 2015-02-12 at 12:10 -0800, Joe Perches wrote:
+> Add missing terminating newlines to nfc_info and nfc_err
+> to avoid possible interleaving from other messages.
 
-The series is intended for v4.1 kernel and applies to the wireless-drivers-next
-repository after the patches from the series posted on March 6th with
-Message-ID: 1425663642-19725-1-git-send-email-arend@broadcom.com
+ping?
 
-Arend van Spriel (7):
-  brcmfmac: remove duplication of ramsize info
-  brcmfmac: always perform cores checks
-  brcmfmac: rename chip download functions
-  brcmfmac: assure device is ready for download after
-    brcmf_chip_attach()
-  brcmfmac: extract ram size info from internal memory registers
-  brcmfmac: take save&restore memory into account for SDIO shared info
-  brcmfmac: fix watchdog timer regression
+> Miscellanea:
+> 
+> o typo fix of "unknonwn" in message
+> o remove unnecessary OOM messages as there's a generic dump_stack()
+> o realign arguments
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/nfc/microread/i2c.c |  2 +-
+>  drivers/nfc/nfcmrvl/main.c  |  4 ++--
+>  drivers/nfc/nfcmrvl/usb.c   | 18 +++++++++---------
+>  drivers/nfc/pn533.c         |  2 +-
+>  drivers/nfc/pn544/i2c.c     |  7 ++-----
+>  drivers/nfc/port100.c       | 36 ++++++++++++++++++------------------
+>  drivers/nfc/st21nfcb/i2c.c  |  5 +----
+>  drivers/nfc/st21nfcb/ndlc.c |  5 ++---
+>  8 files changed, 36 insertions(+), 43 deletions(-)
 
- drivers/net/wireless/brcm80211/brcmfmac/chip.c | 296 +++++++++++++++++++------
- drivers/net/wireless/brcm80211/brcmfmac/chip.h |  12 +-
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c |  10 +-
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c |  72 +++---
- 4 files changed, 276 insertions(+), 114 deletions(-)
-
---
-1.9.1
 
