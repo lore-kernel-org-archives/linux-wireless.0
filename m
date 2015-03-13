@@ -1,63 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47636 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751381AbbCSMxb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 08:53:31 -0400
-Date: Thu, 19 Mar 2015 15:53:14 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: jouni@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org
-Subject: re: mac80111: Add BIP-GMAC-128 and BIP-GMAC-256 ciphers
-Message-ID: <20150319125314.GA15250@mwanda> (sfid-20150319_135342_744584_EF124565)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from aibo.runbox.com ([91.220.196.211]:36397 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755772AbbCMDgx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 23:36:53 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: m.v.b@runbox.com
+Subject: [PATCH 10/16] staging: rtl8723au: that open brace should be on the previous line
+Date: Thu, 12 Mar 2015 23:15:26 -0400
+Message-Id: <1426216532-24058-11-git-send-email-m.v.b@runbox.com> (sfid-20150313_043658_614791_D99120C2)
+In-Reply-To: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
+References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jouni Malinen,
+Correct two instances of the checkpatch.pl error indicating that the
+opening curly braces should not be on new lines:
+	ERROR: that open brace { should be on the previous line
 
-The patch 8ade538bf39b: "mac80111: Add BIP-GMAC-128 and BIP-GMAC-256
-ciphers" from Jan 24, 2015, leads to the following static checker
-warning:
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-	net/mac80211/aes_gmac.c:74 ieee80211_aes_gmac_key_setup()
-	warn: we tested 'err' before and it was 'true'
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 66ab3c4fdd..e6b2f44c13 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -760,8 +760,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 
+ 	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length-4));
+ 
+-	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
+-	{
++	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
+ 	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+ 				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
+ 		res = _FAIL;
+@@ -845,8 +844,7 @@ static void next_key(u8 *key, int round)
+ {
+ 	u8 rcon;
+ 	u8 sbox_key[4];
+-	u8 rcon_table[12] =
+-	{
++	u8 rcon_table[12] = {
+ 		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
+ 		0x1b, 0x36, 0x36, 0x36
+ 	};
+-- 
+2.1.4
 
-net/mac80211/aes_gmac.c
-    61  struct crypto_aead *ieee80211_aes_gmac_key_setup(const u8 key[],
-    62                                                   size_t key_len)
-    63  {
-    64          struct crypto_aead *tfm;
-    65          int err;
-    66  
-    67          tfm = crypto_alloc_aead("gcm(aes)", 0, CRYPTO_ALG_ASYNC);
-    68          if (IS_ERR(tfm))
-    69                  return tfm;
-    70  
-    71          err = crypto_aead_setkey(tfm, key, key_len);
-    72          if (!err)
-                    ^^^^
-This is success handling.  In the kernel, everyone expects error
-hanlding like "if (err) " so this makes the code hard to read if you
-have a job and need to read code quickly.  At first I missed the "!"
-character, and then I thought,  "What??  Is err a pointer?"
-
-    73                  return tfm;
-    74          if (!err)
-    75                  err = crypto_aead_setauthsize(tfm, GMAC_MIC_LEN);
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is dead code.
-
-    76  
-    77          crypto_free_aead(tfm);
-    78          return ERR_PTR(err);
-
-This function should be a list of commands in a row with tiny detours
-for exceptions and error handling.  It messes everyone up if the success
-path is hidden somewhere in the middle and it leads to bugs like this.
-
-    79  }
-
-regards,
-dan carpenter
