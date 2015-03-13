@@ -1,108 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:53733 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725AbbCSIwT (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:24949 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751609AbbCMGic (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 04:52:19 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/2] ath10k: allow user to toggle ani_enable via debugfs
-References: <1426701700-21974-1-git-send-email-arnagara@qti.qualcomm.com>
-	<1426701700-21974-2-git-send-email-arnagara@qti.qualcomm.com>
-Date: Thu, 19 Mar 2015 10:52:09 +0200
-In-Reply-To: <1426701700-21974-2-git-send-email-arnagara@qti.qualcomm.com>
-	(Ashok Raj Nagarajan's message of "Wed, 18 Mar 2015 23:31:40 +0530")
-Message-ID: <87vbhxjrnq.fsf@kamboji.qca.qualcomm.com> (sfid-20150319_095241_184791_2D16F7AF)
+	Fri, 13 Mar 2015 02:38:32 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2D6ZVwV007167
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:31 -0700
+Received: from sc-owa.marvell.com ([199.233.58.135])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1t3pmg8hw8-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:31 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
+	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 0/9] mwifiex throughput enhancements 
+Date: Fri, 13 Mar 2015 17:37:50 +0530
+Message-ID: <1426248479-28451-1-git-send-email-patila@marvell.com> (sfid-20150313_073835_203392_33EA5E96)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding also ath10k list.
+This patch series is culmination of two month long activity for
+throughput enhancment which involved collecting multiple data points
+including multiple driver idle times, study of FW<->SDIO bus<->driver
+interaction and profiling and different approaches to overcoming current
+shortcomings in driver.
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> writes:
+For TX, we have tried to optimize data path and reduce delays incurred during
+scheduling of work items and idle timeout between TX write to FW and TX DONE
+from FW.
 
-> Now that ANI is enabled by default, allow user to disable or enable ANI feature
-> from debugfs
->
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.h  |  1 +
->  drivers/net/wireless/ath/ath10k/debug.c | 58 +++++++++++++++++++++++++++++++++
->  drivers/net/wireless/ath/ath10k/mac.c   |  1 +
->  3 files changed, 60 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index 7cba781..1359d2c 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -510,6 +510,7 @@ struct ath10k {
->  	u32 ht_cap_info;
->  	u32 vht_cap_info;
->  	u32 num_rf_chains;
-> +	bool ani_enabled;
+For RX, this patch series adds a new type of aggregation- single port
+aggregation for SDIO. SP aggregation needs FW support and it would be
+enabled only when FW advertises support for SP aggregation.
 
-Please document the locking, "/* protected by conf_mutex */" or
-something like that.
+Our experiments show improvement of almost 30% in TX and 40% in RX on
+both X86 based and ARM based platforms.
 
->  
->  	DECLARE_BITMAP(fw_features, ATH10K_FW_FEATURE_COUNT);
->  
-> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-> index 301081d..95f2a29 100644
-> --- a/drivers/net/wireless/ath/ath10k/debug.c
-> +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> @@ -1708,6 +1708,61 @@ static int ath10k_debug_cal_data_release(struct inode *inode,
->  	return 0;
->  }
->  
-> +static ssize_t ath10k_write_ani_enable(struct file *file,
-> +				       const char __user *user_buf,
-> +				       size_t count, loff_t *ppos)
-> +{
-> +	struct ath10k *ar = file->private_data;
-> +	int ret;
-> +	u8 enable;
-> +
-> +	if (kstrtou8_from_user(user_buf, count, 0, &enable))
-> +		return -EINVAL;
-> +
-> +	if (ar->ani_enabled == enable)
-> +		return count;
-> +
-> +	mutex_lock(&ar->conf_mutex);
+Avinash Patil (3):
+  mwifiex: lock main process till reinitialization of vif is over
+  mwifiex: rename alloc_rx_buf to alloc_dma_aligned_buf
+  mwifiex: enhance SD8897 MP aggregation limits
 
-Hmm, you don't protect ar->ani_enabled? Isn't that racy?
-> +
-> +	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->ani_enable,
-> +					enable);
-> +	if (ret) {
-> +		ath10k_warn(ar, "ani_enable failed from debugfs: %d\n", ret);
-> +		goto exit;
-> +	}
-> +	ar->ani_enabled = enable;
-> +
-> +	ret = count;
-> +
-> +	ath10k_dbg(ar, ATH10K_DBG_WMI, "ANI is %s\n",
-> +		   enable ? "enabled" : "disabled");
+Shengzhen Li (1):
+  mwifiex: avoid queue_work while work is ongoing
 
-WMI debug level should not be used here. Is this debug really needed? I
-would assume there's a debug print in ath10k_wmi_pdev_set_param().
+Zhaoyang Liu (5):
+  mwifiex: get rid of BA setup helper functions
+  mwifiex: remove_bss_prio_lock
+  mwifiex: preprocess packets from TX queue
+  mwifiex: add SDIO rx single port aggregation
+  mwifiex: delay skb allocation for RX until cmd53 over
 
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -2903,6 +2903,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
->  			    ret);
->  		goto err_core_stop;
->  	}
-
-Empty line here.
-
-> +	ar->ani_enabled = 1;
-
-ar->ani_enabled = true;
+ drivers/net/wireless/mwifiex/11n.c           |  18 ++-
+ drivers/net/wireless/mwifiex/11n.h           |  32 ------
+ drivers/net/wireless/mwifiex/11n_aggr.c      |  16 ++-
+ drivers/net/wireless/mwifiex/11n_rxreorder.c |   7 +-
+ drivers/net/wireless/mwifiex/cfg80211.c      |  33 ++++++
+ drivers/net/wireless/mwifiex/decl.h          |  10 +-
+ drivers/net/wireless/mwifiex/fw.h            |   9 ++
+ drivers/net/wireless/mwifiex/init.c          |   5 +
+ drivers/net/wireless/mwifiex/main.c          |  71 ++++++++++--
+ drivers/net/wireless/mwifiex/main.h          |  27 ++++-
+ drivers/net/wireless/mwifiex/pcie.c          |  10 +-
+ drivers/net/wireless/mwifiex/sdio.c          | 163 ++++++++++++++++++++-------
+ drivers/net/wireless/mwifiex/sdio.h          |  14 ++-
+ drivers/net/wireless/mwifiex/sta_cmd.c       |  40 +++++++
+ drivers/net/wireless/mwifiex/sta_cmdresp.c   |  21 ++++
+ drivers/net/wireless/mwifiex/txrx.c          | 125 ++++++++++++++++++++
+ drivers/net/wireless/mwifiex/usb.c           |   4 +-
+ drivers/net/wireless/mwifiex/util.c          |   4 +-
+ drivers/net/wireless/mwifiex/wmm.c           |  48 ++++----
+ drivers/net/wireless/mwifiex/wmm.h           |   2 +
+ 20 files changed, 529 insertions(+), 130 deletions(-)
 
 -- 
-Kalle Valo
+1.8.1.4
+
