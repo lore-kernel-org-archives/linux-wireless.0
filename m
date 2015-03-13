@@ -1,109 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:33640 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbbCTLAu (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56562 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751942AbbCMP4J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 07:00:50 -0400
-Received: by lbbrr9 with SMTP id rr9so8039352lbb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 04:00:49 -0700 (PDT)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH v4 4/6] ath10k: update station counting
-Date: Fri, 20 Mar 2015 12:02:57 +0100
-Message-Id: <1426849379-7562-5-git-send-email-marek.puzyniak@tieto.com> (sfid-20150320_120053_672371_415DE5D0)
-In-Reply-To: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com>
-References: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com>
+	Fri, 13 Mar 2015 11:56:09 -0400
+Message-ID: <55030897.4050606@candelatech.com> (sfid-20150313_165613_233558_CFDC7CC6)
+Date: Fri, 13 Mar 2015 08:56:07 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?M=E1rio_Lopes?= <mjlopes@inescporto.pt>
+CC: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Specific tx rates with ath10k
+References: <5501DAF7.1000800@candelatech.com> <20150313103721.13586092dzqt9w41@horde.inescporto.pt>
+In-Reply-To: <20150313103721.13586092dzqt9w41@horde.inescporto.pt>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently station counting functions
-(inc_num_stations/dec_num_stations) does not handle
-tdls type of stations. Tdls station should be counted
-because it consumes peer in firmware. Only not tdls
-stations are excluded from this counting.
+On 03/13/2015 02:37 AM, Mário Lopes wrote:
+> Hi.
+> 
+> You can change to fixed bitrate for all types of traffic for 802.11g/a modes, even on ath10k:
+> for 2.4 GHz @ 54 Mbit/s - iw dev wiface set bitrates legacy-2.4 54
+> for 5 GHz @ 54 Mbit/s - iw dev wiface set bitrates legacy-5 54
 
-Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+Have you actually tried this with an ath10k AP and seen that beacons
+and broadcast go out at 54Mbps?
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 866c948..3c25507 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4386,14 +4386,14 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
--static int ath10k_mac_inc_num_stations(struct ath10k_vif *arvif)
-+static int ath10k_mac_inc_num_stations(struct ath10k_vif *arvif,
-+				       struct ieee80211_sta *sta)
- {
- 	struct ath10k *ar = arvif->ar;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	if (arvif->vdev_type != WMI_VDEV_TYPE_AP &&
--	    arvif->vdev_type != WMI_VDEV_TYPE_IBSS)
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_STA && !sta->tdls)
- 		return 0;
- 
- 	if (ar->num_stations >= ar->max_num_stations)
-@@ -4404,14 +4404,14 @@ static int ath10k_mac_inc_num_stations(struct ath10k_vif *arvif)
- 	return 0;
- }
- 
--static void ath10k_mac_dec_num_stations(struct ath10k_vif *arvif)
-+static void ath10k_mac_dec_num_stations(struct ath10k_vif *arvif,
-+					struct ieee80211_sta *sta)
- {
- 	struct ath10k *ar = arvif->ar;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	if (arvif->vdev_type != WMI_VDEV_TYPE_AP &&
--	    arvif->vdev_type != WMI_VDEV_TYPE_IBSS)
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_STA && !sta->tdls)
- 		return;
- 
- 	ar->num_stations--;
-@@ -4453,7 +4453,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   ar->num_stations + 1, ar->max_num_stations,
- 			   ar->num_peers + 1, ar->max_num_peers);
- 
--		ret = ath10k_mac_inc_num_stations(arvif);
-+		ret = ath10k_mac_inc_num_stations(arvif, sta);
- 		if (ret) {
- 			ath10k_warn(ar, "refusing to associate station: too many connected already (%d)\n",
- 				    ar->max_num_stations);
-@@ -4465,7 +4465,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 		if (ret) {
- 			ath10k_warn(ar, "failed to add peer %pM for vdev %d when adding a new sta: %i\n",
- 				    sta->addr, arvif->vdev_id, ret);
--			ath10k_mac_dec_num_stations(arvif);
-+			ath10k_mac_dec_num_stations(arvif, sta);
- 			goto exit;
- 		}
- 
-@@ -4478,7 +4478,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 					    arvif->vdev_id, ret);
- 				WARN_ON(ath10k_peer_delete(ar, arvif->vdev_id,
- 							   sta->addr));
--				ath10k_mac_dec_num_stations(arvif);
-+				ath10k_mac_dec_num_stations(arvif, sta);
- 				goto exit;
- 			}
- 
-@@ -4509,7 +4509,7 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			ath10k_warn(ar, "failed to delete peer %pM for vdev %d: %i\n",
- 				    sta->addr, arvif->vdev_id, ret);
- 
--		ath10k_mac_dec_num_stations(arvif);
-+		ath10k_mac_dec_num_stations(arvif, sta);
- 	} else if (old_state == IEEE80211_STA_AUTH &&
- 		   new_state == IEEE80211_STA_ASSOC &&
- 		   (vif->type == NL80211_IFTYPE_AP ||
+If so, please let me know what firmware version you are using.
+
+> Setting fixed speed for HT and VHT modes currently only takes effect on unicast traffic, I would like that this could be applied to other types of traffic in a
+> future ath9k/ath10k driver.
+
+I know beacons won't go out at HT speeds, at least not with the
+logic that I tried in the firmware...but I have not checked to
+see if my patch allows setting broadcast to HT speeds....
+
+Thanks,
+Ben
+
+> 
+> 
+> Quoting Ben Greear <greearb@candelatech.com>:
+> 
+>> Ath10k firmware gives ability to set specific fixed rate-control rates
+>> for beacons/mgt, multicast, broadcast, and regular traffic.
+>>
+>> The ath10k driver only sets regular traffic currently.
+>>
+>> I had previously hacked my firmware to just set all rate types when
+>> ath10k driver requested to set the rate.
+>>
+>> But, that is not what my customer needs.
+>>
+>> So, I am now planning to add some debugfs entries to allow users to set
+>> beacon/mgt, multicast and broadcast rates individually (I don't have time or interest
+>> right now to try patching things top to bottom to try to get this feature
+>> into mac80211 stack or 'iw').
+>>
+>> My question is, for when user just runs a command like this:
+>>
+>> ./local/sbin/iw dev vap1 set bitrates legacy-2.4 6 ht-mcs-2.4
+>>
+>> What is the desired behaviour?
+>>
+>> Set all rates (beacons/mgt, bcast, multicast, regular) to the same
+>> fixed speed, or just a certain subset of these traffic types?
+>>
+>> I can make my firmware do whatever combination is required, and then
+>> users can over-ride the values by using debugfs.....
+>>
+>> As a note, ath10k firmware will NOT send beacons at HT speeds, so
+>> if you fix an HT rate, then firmware will ignore that for the beacons/mgt
+>> ratecontrol type.
+>>
+>> Thanks,
+>> Ben
+>>
+>> -- 
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+>>
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> 
+> 
+> ----------------------------------------------------------------
+> This message was sent using IMP, the Internet Messaging Program.
+> 
+
+
 -- 
-2.1.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
