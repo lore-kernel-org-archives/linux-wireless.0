@@ -1,33 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:13621 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbbCGIEi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44966 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752816AbbCMNUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2015 03:04:38 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V5 1/2] ath10k: Move ath10k_vdev_stop() up before ath10k_vdev_start_restart()
-References: <1425298528-3067-1-git-send-email-vthiagar@qti.qualcomm.com>
-Date: Sat, 7 Mar 2015 10:04:29 +0200
-In-Reply-To: <1425298528-3067-1-git-send-email-vthiagar@qti.qualcomm.com>
-	(Vasanthakumar Thiagarajan's message of "Mon, 2 Mar 2015 17:45:27
-	+0530")
-Message-ID: <87oao5z10y.fsf@kamboji.qca.qualcomm.com> (sfid-20150307_093416_973534_F35B12A3)
-MIME-Version: 1.0
+	Fri, 13 Mar 2015 09:20:31 -0400
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/5] ath9k: Add PCIE powersave macros
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1425891010-21522-2-git-send-email-sujith@msujith.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20150313132030.D4512140D62@smtp.codeaurora.org> (sfid-20150313_142038_522719_41777A2B)
+Date: Fri, 13 Mar 2015 13:20:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
 
-> This patches does not modify any functionality. Just a code move
-> so that ath10k_vdev_stop() can be used in ath10k_vdev_start_restart()
-> for any failure cases which involves vdev_stop().
->
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> These will be used to handle chip-specific
+> power save configuration.
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Thanks, both patches applied.
+Thanks, 5 patches applied to wireless-drivers-next.git:
 
--- 
+e519f78f1191 ath9k: Add PCIE powersave macros
+afa7e6dbd91d ath9k: Fix PLL powersave for AR9485
+656cd75c3873 ath9k: Initialize pll_pwrsave for AR9462/AR9565
+93f7d6f3d5aa ath9k: Check allowed PCIE powersave configuration
+dd2951124838 ath9k: Fix RTT chainmask usage
+
 Kalle Valo
