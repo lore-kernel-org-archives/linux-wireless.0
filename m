@@ -1,43 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36389 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbbCNKrq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51364 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754579AbbCMOJV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 06:47:46 -0400
-Received: by igbue6 with SMTP id ue6so5910444igb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2015 03:47:46 -0700 (PDT)
-Date: Sat, 14 Mar 2015 06:47:42 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mac80211-hwsim and tx-rates.
-Message-ID: <20150314104742.GA13495@localhost> (sfid-20150314_114934_861735_8751E543)
-References: <5500AEAB.8010605@candelatech.com>
- <5500B417.9070307@broadcom.com>
- <5500BC5A.9040809@candelatech.com>
+	Fri, 13 Mar 2015 10:09:21 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5500BC5A.9040809@candelatech.com>
+Subject: Re: [next] ath9k: make ath_frame_info fit into
+ reduced-sizerate_driver_data
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1425998662-28401-1-git-send-email-fw@strlen.de>
+To: Florian Westphal <fw@strlen.de>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+	Florian Westphal <fw@strlen.de>
+Message-Id: <20150313140920.50074141606@smtp.codeaurora.org> (sfid-20150313_150931_064145_72B9EFC9)
+Date: Fri, 13 Mar 2015 14:09:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 03:06:18PM -0700, Ben Greear wrote:
-> I don't see a good way to tie that idx to an actual rate (which involves
-> flags, nss, mcs values, etc).
+
+> pre-requisite to shrink size of ieee80211_tx_info which in turn is
+> needed to shrink skb->cb to 40 bytes again.
 > 
-> Maybe I should also just send the info I care about, which is a 'bps' rate,
-> channel-width indication, SGI, etc as separate netlink attributes....
+> Signed-off-by: Florian Westphal <fw@strlen.de>
 
-My wmediumd fork (https://github.com/bcopeland/wmediumd) could benefit from
-this as well -- right now it assumes you use OFDM rates only.
+Thanks, applied to wireless-drivers-next.git.
 
-It probably makes sense to send the driver rate array as a separate
-netlink message though instead of in-band with CMD_FRAME, since it doesn't
-change per frame and amount of data sent over netlink in the datapath already
-imposes a performance limit.
-
-Is your simulator available somewhere?
-
--- 
-Bob Copeland %% http://bobcopeland.com/
+Kalle Valo
