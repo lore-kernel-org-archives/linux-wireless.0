@@ -1,49 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24060 "EHLO mga09.intel.com"
+Received: from a.ns.miles-group.at ([95.130.255.143]:65275 "EHLO radon.swed.at"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752173AbbCATcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 14:32:08 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/31] iwlwifi: mvm: fix BT coex shared antenna activity check
-Date: Sun,  1 Mar 2015 21:31:22 +0200
-Message-Id: <1425238304-498-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203213_792781_133E117E)
-In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
-References: <1425238186.30202.5.camel@egrumbacBox>
+	id S1751780AbbCMOWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 10:22:13 -0400
+Message-ID: <5502F28F.9050601@nod.at> (sfid-20150313_152235_901801_18BED940)
+Date: Fri, 13 Mar 2015 15:22:07 +0100
+From: Richard Weinberger <richard@nod.at>
+MIME-Version: 1.0
+To: Pablo Neira Ayuso <pablo@netfilter.org>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
+Subject: Re: [PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc
+ file
+References: <1426246276-15839-1-git-send-email-richard@nod.at> <1426246276-15839-5-git-send-email-richard@nod.at> <20150313121539.GA14488@salvia> <5502E99A.2060901@nod.at> <20150313135329.GA6054@salvia>
+In-Reply-To: <20150313135329.GA6054@salvia>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Am 13.03.2015 um 14:53 schrieb Pablo Neira Ayuso:
+> On Fri, Mar 13, 2015 at 02:43:54PM +0100, Richard Weinberger wrote:
+>> Am 13.03.2015 um 13:15 schrieb Pablo Neira Ayuso:
+>>> On Fri, Mar 13, 2015 at 12:31:16PM +0100, Richard Weinberger wrote:
+>>>> The printed values are all of type unsigned integer, therefore use
+>>>> %u instead of %d. Otherwise an user can face negative values.
+>>>>
+>>>> Fixes:
+>>>> $ cat /proc/net/netfilter/nfnetlink_queue
+>>>>     0  29508   278 2 65531     0 2004213241 -2129885586  1
+>>>>     1 -27747     0 2 65531     0     0        0  1
+>>>>     2 -27748     0 2 65531     0     0        0  1
+>>>
+>>> I guess you want to access stats on dropped packets.
+>>
+>> Correct. :)
+>>
+>>> I prefer if you extend nfnetlink_queue to provide statistics through
+>>> nfnetlink_queue, so you don't have to manually parse this text-based
+>>> /proc entry and we can deprecate this interface. That shouldn't have
+>>> been there in first place.
+>>
+>> You mean statistics via netlink attributes? I can add that!
+> 
+> Add a new NFQNL_CFG_CMD_STATS command to request the statistics. If
+> NLM_F_DUMP is set, then we'll basically provide the full list of
+> instances. Otherwise, in case you want to retrieve stats for a
+> specific netlink socket, you can use the netlink portID as index.
+> And you'll have to add attributes for this new command, yes.
 
-The shared antenna should be forbidden to use only if there's
-high BT activity. Comparing to BT_OFF was effectively causing
-us to always forbid using the shared antenna for SISO. This
-leads to degraded performance in scenarios where the shared
-antenna would have better performance.
+This was my plan. Thanks for the pointer!
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> But I think we should also fix the format string of the proc file
+>> as the fix is easy and non-intrusive.
+> 
+> Unfortunately we don't know how many people are relying on that
+> output, I prefer to remain conservative and provide a proper netlink
+> interface for this.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-index d530ef3..85144d5 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-@@ -1176,7 +1176,7 @@ bool iwl_mvm_bt_coex_is_ant_avail_old(struct iwl_mvm *mvm, u8 ant)
- bool iwl_mvm_bt_coex_is_shared_ant_avail_old(struct iwl_mvm *mvm)
- {
- 	u32 ag = le32_to_cpu(mvm->last_bt_notif_old.bt_activity_grading);
--	return ag == BT_OFF;
-+	return ag < BT_HIGH_TRAFFIC;
- }
- 
- bool iwl_mvm_bt_coex_is_tpc_allowed_old(struct iwl_mvm *mvm,
--- 
-1.9.1
+I understand your concerns but an application which is able to parse positive
+and negative numbers can also parse pure positives.
+Just made a small test application, glibc's %d in sscanf() can also deal with UINT_MAX.
+And I don't expect that applications to check whether the returned values from
+/proc/net/netfilter/nfnetlink_queue are between INT_MIN and INT_MAX.
 
+That said, I'd have assumed that an user would report negative values as plain kernel bug.
+
+Thanks,
+//richard
