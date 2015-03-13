@@ -1,44 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:39958 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751113AbbCMLQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 07:16:46 -0400
-Message-ID: <5502C713.4090402@runbox.com> (sfid-20150313_121710_978141_372FDB06)
-Date: Fri, 13 Mar 2015 07:16:35 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+Received: from zimbra.real-time.com ([63.170.91.9]:40130 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753359AbbCMSeW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 14:34:22 -0400
+Date: Sat, 14 Mar 2015 05:34:09 +1100
+From: James Cameron <quozl@laptop.org>
+To: Dan Williams <dcbw@redhat.com>
+Cc: voncken <cedric.voncken@acksys.fr>, 'wim torfs' <wtorfs@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: ARP dropped during WPA handshake
+Message-ID: <20150313183409.GF18964@us.netrek.org> (sfid-20150313_193426_181946_1040B4A7)
+References: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>
+ <5502D558.90306@gmail.com>
+ <033201d05d93$5aa1c030$0fe54090$@acksys.fr>
+ <1426255583.19064.6.camel@redhat.com>
+ <034401d05da5$d5c0be30$81423a90$@acksys.fr>
+ <1426264174.19064.19.camel@redhat.com>
 MIME-Version: 1.0
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/16] staging: rtl8723au: Reformat whitespace to increase
- readability
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com> <1426216532-24058-2-git-send-email-m.v.b@runbox.com> <20150313045313.GA3687@sudip-PC>
-In-Reply-To: <20150313045313.GA3687@sudip-PC>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426264174.19064.19.camel@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13/03/15 12:53 AM, Sudip Mukherjee wrote:
-> you have not added the maintainers in your To list, and usually
-> initials are discouraged in the Signed-off-by. The name here should
-> be the name the way you use it to sign legal documents.
+On Fri, Mar 13, 2015 at 11:29:34AM -0500, Dan Williams wrote:
+> On Fri, 2015-03-13 at 16:53 +0100, voncken wrote:
+> > > > Below, a tcpdump capture from sta.
+> > > > 17:43:12.964096 EAPOL key (3) v2, len 95
+> > > > 17:43:12.998439 EAPOL key (3) v1, len 117
+> > > > 17:43:13.062409 ARP, Request who-has 10.32.61.100 tell 10.32.0.1,
+> > > > length 28
+> > > > 17:43:13.079989 EAPOL key (3) v2, len 151
+> > > > 17:43:13.082764 EAPOL key (3) v1, len 95
+> > > > 17:43:14.062381 ARP, Request who-has 10.32.61.100 tell 10.32.0.1,
+> > > > length 28
+> > > > 17:43:14.127101 ARP, Reply 10.32.61.100 is-at b8:88:e3:45:1d:c6 (oui
+> > > > Unknown), length 46
+> > > > 17:43:14.127123 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length
+> > > > 1470
+> > > > 17:43:14.127136 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length
+> > > > 1470
+> > > >
+> > > > You can see the ARP request during the WPA Handshake.
+> > > 
+> > > During the initial WPA handshake the connection is not fully set up, and so
+> > > no general traffic can (nor should) pass between the STA and AP.
+> > > That includes ARP and any L2/L3+ protocols, except for EAP and wifi
+> > > management packets.
+> > > 
+> > > The interface itself must be IFF_UP before it can pass traffic, including the
+> > > WPA handshake traffic.  IFF_UP only means that the interface can be
+> > > configured at the L2 level and the hardware is active, it does *not* mean the
+> > > interface can pass traffic.
+> > > 
+> > > Whatever is causing the ARPs shouldn't be doing that yet, and should be fixed
+> > > to use the interface's "operstate" or IFF_LOWER_UP instead of IFF_UP.  Only
+> > > when the supplicant changes the interface's operstate to IF_OPER_UP is the
+> > > interface *actually* ready to pass traffic.  IFF_UP is not sufficient.
+> > > 
+> > 
+> > Thanks for your reply. 
+> > 
+> > It seems wpa_supplicant set the operstate to IF_OPER_DORMANT when he received the ASSOCIATED Event from the driver (through netlink). And set the operstate to IF_OPER_UP in case of wpa handshake success.
+> > 
+> > Is it normal the local ip stack send arp when netdev it is on IF_OPER_DORMANT state?
+> 
+> I'm not sure the kernel stack cares much as long as the device is up.
+> It is requesting the ARP because some application is attempting to
+> communicate with that IP address.  That application should probably be
+> waiting until the interface is actually ready to communicate, which
+> means IF_OPER_UP.
+> 
+> But if this is the first WPA handshake with the AP during the initial
+> connection, the wifi device shouldn't even have an IP address yet, so
+> nothing should be doing ARP on the interface yet.
 
-Hello Sudip,
+I thought that ARP was a means to get an IP address before an
+interface had an IP address, so the interface spends some time without
+an IP address yet generating ARP.
 
-This is a first for me, so thank you for the comments!
+> Perhaps whatever is assigning the IP address to the interface is
+> doing it too early, before the interface is IF_OPER_UP?
+> 
+> Dan
+> 	
+> > 
+> > > 
+> > > 
+> > > > 	Any suggestion will be appreciate.
+> > > >
+> > > > Cedric.
+> > > > >
+> > > > > > Thanks for your help.
+> > > > > >
+> > > > > > Cedric Voncken
+> > > > > >
+> > > > > >
+> > > > > > --
+> > > > > > To unsubscribe from this list: send the line "unsubscribe
+> > > > > > linux-wireless" in the body of a message to
+> > > > > > majordomo@vger.kernel.org More majordomo info at
+> > > > > > http://vger.kernel.org/majordomo-info.html
+> > > >
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe
+> > > > linux-wireless" in the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > 
+> > 
+> > 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Regarding not including the maintainers in the To: list of the e-mail, good
-point! In this case should I resend the patches after making sure that I include
-Greg Kroah-Hartman, Larry Finger and Jes Sorensen's e-mail addresses in the To:
-list? (get_maintainers.pl reports their names as the maintainers, and based on
-the commit history, they are the major contributors and/or gate-keepers to this
-staging driver.)
-
-Actually, my first name is Vefa, and the "M" is for my middle name, for which I
-only use an initial, as otherwise everyone ends up addressing me with my middle
-name. Now, the question would be: Why is my middle name placed before my first
-name? I realize this is quickly becoming off-topic for the mailing lists. If you
-would like to learn more, I can explain the reasons in a private discussion.
-
-Thanks again,
-
-Vefa
+-- 
+James Cameron
+http://quozl.linux.org.au/
