@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:33415 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220AbbCFPrf (ORCPT
+Received: from mail.sigma-star.at ([95.130.255.111]:14385 "EHLO
+	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753137AbbCMLhN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 10:47:35 -0500
-Received: by pdev10 with SMTP id v10so29504849pde.0
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Mar 2015 07:47:35 -0800 (PST)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net, ap420073@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Remove duplicated prototype
-Date: Sat,  7 Mar 2015 00:47:17 +0900
-Message-Id: <1425656837-13879-1-git-send-email-ap420073@gmail.com> (sfid-20150306_164739_095644_A8819ACC)
+	Fri, 13 Mar 2015 07:37:13 -0400
+From: Richard Weinberger <richard@nod.at>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
+	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, davem@davemloft.net,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
+	Richard Weinberger <richard@nod.at>
+Subject: [PATCH 2/4] nfc: Fix portid type in urelease_work
+Date: Fri, 13 Mar 2015 12:31:14 +0100
+Message-Id: <1426246276-15839-3-git-send-email-richard@nod.at> (sfid-20150313_123944_713262_0C157E60)
+In-Reply-To: <1426246276-15839-1-git-send-email-richard@nod.at>
+References: <1426246276-15839-1-git-send-email-richard@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove duplicated prototype in base.h
+portid is an unsigned integer. Fix urelease_work to
+match all other portid user in the kernel.
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+Signed-off-by: Richard Weinberger <richard@nod.at>
 ---
- drivers/net/wireless/rtlwifi/base.h | 1 -
- 1 file changed, 1 deletion(-)
+ net/nfc/netlink.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/base.h b/drivers/net/wireless/rtlwifi/base.h
-index dee4ac2..ff9a4bf 100644
---- a/drivers/net/wireless/rtlwifi/base.h
-+++ b/drivers/net/wireless/rtlwifi/base.h
-@@ -123,7 +123,6 @@ bool rtl_tx_mgmt_proc(struct ieee80211_hw *hw, struct sk_buff *skb);
- u8 rtl_is_special_data(struct ieee80211_hw *hw, struct sk_buff *skb, u8 is_tx);
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index 14a2d11..1f12c4c 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -1583,8 +1583,8 @@ static const struct genl_ops nfc_genl_ops[] = {
  
- void rtl_beacon_statistic(struct ieee80211_hw *hw, struct sk_buff *skb);
--void rtl_watch_dog_timer_callback(unsigned long data);
- int rtl_tx_agg_start(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	struct ieee80211_sta *sta, u16 tid, u16 *ssn);
- int rtl_tx_agg_stop(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ struct urelease_work {
+-	struct	work_struct w;
+-	int	portid;
++	struct		work_struct w;
++	unsigned int	portid;
+ };
+ 
+ static void nfc_urelease_event_work(struct work_struct *work)
 -- 
-1.9.1
+1.8.4.5
 
