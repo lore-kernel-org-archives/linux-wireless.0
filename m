@@ -1,51 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29114 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209AbbCJP2m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 11:28:42 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] ath10k: add hw connection monitor support
-References: <87fv9hyz2r.fsf@kamboji.qca.qualcomm.com>
-	<1425908197-16118-1-git-send-email-michal.kazior@tieto.com>
-	<1425908197-16118-2-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 10 Mar 2015 17:28:32 +0200
-In-Reply-To: <1425908197-16118-2-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 9 Mar 2015 14:36:37 +0100")
-Message-ID: <87twxsyiqn.fsf@kamboji.qca.qualcomm.com> (sfid-20150310_162846_693562_A844DFD5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from aibo.runbox.com ([91.220.196.211]:36409 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756297AbbCMDhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 23:37:00 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: m.v.b@runbox.com
+Subject: [PATCH 00/16] checkpatch clean-up of rtl8723au's rtw_security.c
+Date: Thu, 12 Mar 2015 23:15:16 -0400
+Message-Id: <1426216532-24058-1-git-send-email-m.v.b@runbox.com> (sfid-20150313_044013_716934_B9307991)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+These commits address a number of checkpatch.pl warnings and errors
+in rtl8723au's rtw_security.c.
 
-> Some firmware revisions (e.g. qca6174 with fw73)
-> don't deliver beacons to host reliably. This
-> causes random disconnects even in perfect
-> conditions. This is most visible with
-> multi-channel operation.
->
-> All available firmware revisions seem to support
-> beacon miss offloading so there shouldn't be any
-> problems.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Prior to this set of commits, checkpatch.pl reported the following:
+	total: 77 errors, 138 warnings, 1621 lines checked
 
-[...]
+After applying this set of commits, checkpatch.pl reports the following:
+	total: 0 errors, 39 warnings, 1627 lines checked
+where the only remaining warnings relate to lines longer than 80
+characters and quoted strings split across multiple lines.
 
-> @@ -2139,6 +2208,8 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
->  	spin_lock_bh(&arvif->ar->data_lock);
->  	arvif->is_up = false;
->  	spin_unlock_bh(&arvif->ar->data_lock);
-> +
-> +	cancel_delayed_work_sync(&arvif->connection_loss_work);
->  }
+There are also a number of commits which improve the code in other ways.
+The commit titled "Reorganize a few functions to remove indentation"
+reworks two functions to make them more readable.
 
-There was a simple conflict here, please check the pending branch for my
-resolution.
+All of the individual commits have been verified to compile successfully
+individually via the use of the interactive rebase feature of git.
+
+M. Vefa Bicakci (16):
+  staging: rtl8723au: Reformat whitespace to increase readability
+  staging: rtl8723au: Fix "before/around/after" whitespace issues
+  staging: rtl8723au: else should follow close brace
+  staging: rtl8723au: Fix the indentation of two lines
+  staging: rtl8723au: Reorganize a few functions to remove indentation
+  staging: rtl8723au: Do not initialize a static to 0
+  staging: rtl8723au: else is not generally useful after a return
+  staging: rtl8723au: Remove unneeded curly braces
+  staging: rtl8723au: trailing statements should be on next line
+  staging: rtl8723au: that open brace should be on the previous line
+  staging: rtl8723au: No spaces at the start of a line
+  staging: rtl8723au: Adjust whitespace in and around comments
+  staging: rtl8723au: suspect code indent for conditional statements
+  staging: rtl8723au: Improve readability of two very long lines
+  staging: rtl8723au: Correct a typo in a trace log line
+  staging: rtl8723au: Remove unneeded comments
+
+ drivers/staging/rtl8723au/core/rtw_security.c | 762 +++++++++++++-------------
+ 1 file changed, 384 insertions(+), 378 deletions(-)
 
 -- 
-Kalle Valo
+2.1.4
+
