@@ -1,107 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:53456 "EHLO mout.gmx.net"
+Received: from mx1.redhat.com ([209.132.183.28]:54385 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751809AbbCVSbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 14:31:34 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v3 02/18] ath9k: ar9271_hw_pa_cal - use defs instead of magin numbers
-Date: Sun, 22 Mar 2015 19:29:47 +0100
-Message-Id: <1427049003-8443-3-git-send-email-linux@rempel-privat.de> (sfid-20150322_193137_046193_E4C48944)
-In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
-References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+	id S1751056AbbCMOG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 10:06:28 -0400
+Message-ID: <1426255583.19064.6.camel@redhat.com> (sfid-20150313_150631_762476_BF138485)
+Subject: Re: ARP dropped during WPA handshake
+From: Dan Williams <dcbw@redhat.com>
+To: voncken <cedric.voncken@acksys.fr>
+Cc: "'wim torfs'" <wtorfs@gmail.com>, linux-wireless@vger.kernel.org
+Date: Fri, 13 Mar 2015 09:06:23 -0500
+In-Reply-To: <033201d05d93$5aa1c030$0fe54090$@acksys.fr>
+References: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>
+	 <5502D558.90306@gmail.com> <033201d05d93$5aa1c030$0fe54090$@acksys.fr>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function uses mixed styles for register names/numbers which
-is make harder reading and optimisation.
+On Fri, 2015-03-13 at 14:41 +0100, voncken wrote:
+> > 
+> > 
+> > On 03/13/2015 12:36 PM, Cedric VONCKEN wrote:
+> > > My test plateforme is very simple, One sta (with openwrt), one AP and
+> > > a computer connected to the AP.
+> > > I launch iperf on the sta and power up the AP.
+> > >
+> > > With wireshark I can observe 1 s delay between the frame EAPOL 4/4 and
+> > > the arp request sent by the sta. I can observe the delay only if my
+> > > sta uses architecture with more 1 cpu.
+> > >
+> > > When the sta received the Authentication response, mac80211 sets the
+> > > iface on UP state. This state allows wpa_supplicant to send the EAPOL
+> > > frame for WPA handshake but other frames are dropped.
+> > >
+> > > If an arp request is sent by the local ip stack during the WPA
+> > > handshake this arp will be dropped and we need to wait the end of arp
+> > > timeout (1 s).
+> > >
+> > > Have you any suggestion / pointer to fix this issue?
+> > >
+> > 
+> > I had a situation where ARP requests were sent and responses were replied,
+> > but the requester did not accept the responses and therefore was
+> continuously
+> > sending request. However, this was in an IBSS and WPA encryption, which is
+> > not really supported if I understand well. RSN worked like a charm,
+> though.
+> > The issue was related to the type of encryption. This could also be an
+> issue
+> > in your case, however, AP is well supported, so hard to tell. I'm not
+> really
+> > a security expert.
+> > 
+> > My point being, you will get better and faster support if you could
+> specify
+> > which encryption protocol you use, the specific parameters, etc.
+> > 
+> > br,
+> > Wim.
+> > 
+> 
+> My platform is very simple. I use 2 equipment. Both equipment are based on
+> mips64 processor, use ATH9K driver and openwrt.
+> One equipment is configured in AP mode with WPA2-PSK, another equipment is
+> configured in station mode. 
+> I can access to the sta through ssh. 
+> 
+> Below, a tcpdump capture from sta.
+> 17:43:12.964096 EAPOL key (3) v2, len 95
+> 17:43:12.998439 EAPOL key (3) v1, len 117
+> 17:43:13.062409 ARP, Request who-has 10.32.61.100 tell 10.32.0.1, length 28
+> 17:43:13.079989 EAPOL key (3) v2, len 151
+> 17:43:13.082764 EAPOL key (3) v1, len 95
+> 17:43:14.062381 ARP, Request who-has 10.32.61.100 tell 10.32.0.1, length 28
+> 17:43:14.127101 ARP, Reply 10.32.61.100 is-at b8:88:e3:45:1d:c6 (oui
+> Unknown), length 46
+> 17:43:14.127123 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length 1470
+> 17:43:14.127136 IP 10.69.1.201.41690 > 10.32.61.100.5001: UDP, length 1470
+> 
+> You can see the ARP request during the WPA Handshake.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 35 ++++++++++++++-------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
+During the initial WPA handshake the connection is not fully set up, and
+so no general traffic can (nor should) pass between the STA and AP.
+That includes ARP and any L2/L3+ protocols, except for EAP and wifi
+management packets.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 42190b6..4576b99 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -430,22 +430,22 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 	u32 regVal;
- 	unsigned int i;
- 	u32 regList[][2] = {
--		{ 0x786c, 0 },
--		{ 0x7854, 0 },
--		{ 0x7820, 0 },
--		{ 0x7824, 0 },
--		{ 0x7868, 0 },
--		{ 0x783c, 0 },
--		{ 0x7838, 0 } ,
--		{ 0x7828, 0 } ,
-+		{ AR9285_AN_TOP3, 0 },
-+		{ AR9285_AN_RXTXBB1, 0 },
-+		{ AR9285_AN_RF2G1, 0 },
-+		{ AR9285_AN_RF2G2, 0 },
-+		{ AR9285_AN_TOP2, 0 },
-+		{ AR9285_AN_RF2G8, 0 },
-+		{ AR9285_AN_RF2G7, 0 } ,
-+		{ AR9285_AN_RF2G3, 0 } ,
- 	};
- 
- 	for (i = 0; i < ARRAY_SIZE(regList); i++)
- 		regList[i][1] = REG_READ(ah, regList[i][0]);
- 
--	regVal = REG_READ(ah, 0x7834);
-+	regVal = REG_READ(ah, AR9285_AN_RF2G6);
- 	regVal &= (~(0x1));
--	REG_WRITE(ah, 0x7834, regVal);
-+	REG_WRITE(ah, AR9285_AN_RF2G6, regVal);
- 	regVal = REG_READ(ah, 0x9808);
- 	regVal |= (0x1 << 27);
- 	REG_WRITE(ah, 0x9808, regVal);
-@@ -477,7 +477,7 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 	 * does not matter since we turn it off
- 	 */
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
--
-+	/* 7828, b0-11, ccom=fff */
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9271_AN_RF2G3_CCOMP, 0xfff);
- 
- 	/* Set:
-@@ -490,15 +490,16 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 
- 	/* find off_6_1; */
- 	for (i = 6; i > 0; i--) {
--		regVal = REG_READ(ah, 0x7834);
-+		regVal = REG_READ(ah, AR9285_AN_RF2G6);
- 		regVal |= (1 << (20 + i));
--		REG_WRITE(ah, 0x7834, regVal);
-+		REG_WRITE(ah, AR9285_AN_RF2G6, regVal);
- 		udelay(1);
- 		/* regVal = REG_READ(ah, 0x7834); */
- 		regVal &= (~(0x1 << (20 + i)));
--		regVal |= (MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9)
-+		regVal |= (MS(REG_READ(ah, AR9285_AN_RF2G9),
-+			      AR9285_AN_RXTXBB1_SPARE9)
- 			    << (20 + i));
--		REG_WRITE(ah, 0x7834, regVal);
-+		REG_WRITE(ah, AR9285_AN_RF2G6, regVal);
- 	}
- 
- 	regVal = (regVal >> 20) & 0x7f;
-@@ -517,9 +518,9 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
--	regVal = REG_READ(ah, 0x7834);
-+	regVal = REG_READ(ah, AR_AN_RF2G1_CH1);
- 	regVal |= 0x1;
--	REG_WRITE(ah, 0x7834, regVal);
-+	REG_WRITE(ah, AR_AN_RF2G1_CH1, regVal);
- 	regVal = REG_READ(ah, 0x9808);
- 	regVal &= (~(0x1 << 27));
- 	REG_WRITE(ah, 0x9808, regVal);
--- 
-1.9.1
+The interface itself must be IFF_UP before it can pass traffic,
+including the WPA handshake traffic.  IFF_UP only means that the
+interface can be configured at the L2 level and the hardware is active,
+it does *not* mean the interface can pass traffic.
+
+Whatever is causing the ARPs shouldn't be doing that yet, and should be
+fixed to use the interface's "operstate" or IFF_LOWER_UP instead of
+IFF_UP.  Only when the supplicant changes the interface's operstate to
+IF_OPER_UP is the interface *actually* ready to pass traffic.  IFF_UP is
+not sufficient.
+
+Dan
+
+
+> 	Any suggestion will be appreciate.
+> 
+> Cedric.
+> > 
+> > > Thanks for your help.
+> > >
+> > > Cedric Voncken
+> > >
+> > >
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe
+> > > linux-wireless" in the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
