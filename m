@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f179.google.com ([74.125.82.179]:43360 "EHLO
-	mail-we0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757477AbbCER2Z (ORCPT
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:35215 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753406AbbCMTRO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 12:28:25 -0500
-Received: by wesu56 with SMTP id u56so54393065wes.10
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2015 09:28:24 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, Arnd Bergmann <arnd@arndb.de>,
-	Chen Gang <xili_gchen_5257@hotmail.com>,
-	Jim Davis <jim.epost@gmail.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 3/3] Revert "bcma: Kconfig: Let it depend on PCI"
-Date: Thu,  5 Mar 2015 18:25:12 +0100
-Message-Id: <1425576312-2779-3-git-send-email-zajec5@gmail.com> (sfid-20150305_182835_112430_236A660A)
-In-Reply-To: <1425576312-2779-1-git-send-email-zajec5@gmail.com>
-References: <1425576312-2779-1-git-send-email-zajec5@gmail.com>
+	Fri, 13 Mar 2015 15:17:14 -0400
+Received: by wibbs8 with SMTP id bs8so8808237wib.0
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2015 12:17:12 -0700 (PDT)
+Date: Fri, 13 Mar 2015 14:16:45 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [ANN] wireless-regdb: master-2015-03-13
+Message-ID: <20150313191645.GB141043@ubuntu-hedt> (sfid-20150313_201717_868139_8665D684)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit b09f5ec18b16b82f4db8a735e453332db7514275.
+A new release of wireless-regdb (master-2015-03-13) is available at:
 
-Now that we have fully working BCMA_DRIVER_PCI symbol (in can be safely
-disabled), there is no risk bcma will try to use PCI code without PCI
-available.
+http://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2015.03.13.tar.gz
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+The short log of changes since the 2015-01-30 release is below.
+
+Thanks,
+Seth
+
 ---
- drivers/bcma/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 1500b71..fc6ffcf 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -1,6 +1,6 @@
- config BCMA_POSSIBLE
- 	bool
--	depends on HAS_IOMEM && HAS_DMA && PCI
-+	depends on HAS_IOMEM && HAS_DMA
- 	default y
- 
- menu "Broadcom specific AMBA"
--- 
-1.8.4.5
+Guy Mishol (1):
+      wireless-regdb: Update 5GHz rules for US
 
+Seth Forshee (1):
+      wireless-regdb: update regulatory.bin based on preceding changes
