@@ -1,42 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:34494 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249AbbC1BfA (ORCPT
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:46600 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752441AbbCMI30 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2015 21:35:00 -0400
-Received: by wibg7 with SMTP id g7so50658028wib.1
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2015 18:34:59 -0700 (PDT)
-MIME-Version: 1.0
-Date: Sat, 28 Mar 2015 01:34:59 +0000
-Message-ID: <CAJMB+NgPB9PwLPt1OdqRb7G-vRQ5u=uYjV8pk7OAHaJD9cUQPg@mail.gmail.com> (sfid-20150328_023513_169134_86B89A1D)
-Subject: where to report linux-firmware needs newer Atheros bluetooth addition issues?
-From: Hin-Tak Leung <hintak.leung@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 13 Mar 2015 04:29:26 -0400
+From: Fred Chou <fred.chou.nd@gmail.com>
+To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Fred Chou <fred.chou.nd@gmail.com>
+Subject: [PATCH] ath9k_htc: check seq number instead of cmd id for timeout
+Date: Fri, 13 Mar 2015 16:32:38 +0800
+Message-Id: <1426235558-13787-1-git-send-email-fred.chou.nd@gmail.com> (sfid-20150313_092947_562091_3B5DFB6F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Fred Chou <fred.chou.nd@gmail.com>
 
-I have a newish laptop (about 6 months old) - I started to need the bluetooth
-hardware to work and noticed in 3.19.x dmesg, that
+As the driver may send multiple wmi commands with identical cmd id,
+it is more robust to check seq number for timeout instead.
 
-[   25.180483] usb 3-1.3: Direct firmware load for
-ar3k/AthrBT_0x31010100.dfu failed with error -2
-[   25.180501] Bluetooth: Patch file not found ar3k/AthrBT_0x31010100.dfu
-[   25.180511] Bluetooth: Loading patch file failed
-[   25.180534] ath3k: probe of 3-1.3:1.0 failed with error -2
+Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/wmi.c | 12 ++++++------
+ drivers/net/wireless/ath/ath9k/wmi.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-It looks like linux-firmware only have AthrBT_0x31010000.dfu, and
-haven't been updated for a while.
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 65c8894..aba909f 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -224,7 +224,7 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
+ 
+ 	/* Check if there has been a timeout. */
+ 	spin_lock(&wmi->wmi_lock);
+-	if (cmd_id != wmi->last_cmd_id) {
++	if (be16_to_cpu(hdr->seq_no) != wmi->last_seq_id) {
+ 		spin_unlock(&wmi->wmi_lock);
+ 		goto free_skb;
+ 	}
+@@ -272,11 +272,16 @@ static int ath9k_wmi_cmd_issue(struct wmi *wmi,
+ 			       enum wmi_cmd_id cmd, u16 len)
+ {
+ 	struct wmi_cmd_hdr *hdr;
++	unsigned long flags;
+ 
+ 	hdr = (struct wmi_cmd_hdr *) skb_push(skb, sizeof(struct wmi_cmd_hdr));
+ 	hdr->command_id = cpu_to_be16(cmd);
+ 	hdr->seq_no = cpu_to_be16(++wmi->tx_seq_id);
+ 
++	spin_lock_irqsave(&wmi->wmi_lock, flags);
++	wmi->last_seq_id = wmi->tx_seq_id;
++	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
++
+ 	return htc_send_epid(wmi->htc, skb, wmi->ctrl_epid);
+ }
+ 
+@@ -292,7 +297,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	struct sk_buff *skb;
+ 	u8 *data;
+ 	int time_left, ret = 0;
+-	unsigned long flags;
+ 
+ 	if (ah->ah_flags & AH_UNPLUGGED)
+ 		return 0;
+@@ -320,10 +324,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
+ 	wmi->cmd_rsp_buf = rsp_buf;
+ 	wmi->cmd_rsp_len = rsp_len;
+ 
+-	spin_lock_irqsave(&wmi->wmi_lock, flags);
+-	wmi->last_cmd_id = cmd_id;
+-	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+-
+ 	ret = ath9k_wmi_cmd_issue(wmi, skb, cmd_id, cmd_len);
+ 	if (ret)
+ 		goto out;
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 0db37f2..2aad6dc 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -143,7 +143,7 @@ struct wmi {
+ 	enum htc_endpoint_id ctrl_epid;
+ 	struct mutex op_mutex;
+ 	struct completion cmd_wait;
+-	enum wmi_cmd_id last_cmd_id;
++	u16 last_seq_id;
+ 	struct sk_buff_head wmi_event_queue;
+ 	struct tasklet_struct wmi_event_tasklet;
+ 	u16 tx_seq_id;
+-- 
+1.9.1
 
-I searched a bit online and apparently the newer firmware can be have
-from the Vista driver download from Microsoft. In fact two files are
-needed, AthrBT_0x31010100.dfu
-ramps_0x31010100_40.dfu . I extracted those, put them in /usr/lib/firmware/ar3k/
-and the bluetooth hardware is then operational.
-
-So where to report this to, and also, it would be nice if the Atheros
-people can submit the newer firmwares to linux-firmware properly?
-
-Hin-Tak
