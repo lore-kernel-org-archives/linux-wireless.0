@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39476 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53188 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932457AbbCEMNv convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1751415AbbCMO3V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 07:13:51 -0500
+	Fri, 13 Mar 2015 10:29:21 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Chen Gang <xili_gchen_5257@hotmail.com>,
-	Jim Davis <jim.epost@gmail.com>
-Subject: Re: [PATCH next] bcma: prepare Kconfig symbol for PCI driver
-References: <1425506825-31844-1-git-send-email-zajec5@gmail.com>
-Date: Thu, 05 Mar 2015 14:13:45 +0200
-In-Reply-To: <1425506825-31844-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 4 Mar 2015
- 23:07:05 +0100")
-Message-ID: <8761af63ra.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_131401_728812_B5B88FF5)
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: Re: [PATCH] mwifiex: fix a bug in Rx multiport aggregation logic
+References: <1426145920-5288-1-git-send-email-akarwar@marvell.com>
+	<5FF020A1CFFEEC49BD1E09530C4FF5951B16A0745C@SC-VEXCH1.marvell.com>
+Date: Fri, 13 Mar 2015 16:29:14 +0200
+In-Reply-To: <5FF020A1CFFEEC49BD1E09530C4FF5951B16A0745C@SC-VEXCH1.marvell.com>
+	(Amitkumar Karwar's message of "Thu, 12 Mar 2015 07:07:49 -0700")
+Message-ID: <87k2ylq8cl.fsf@kamboji.qca.qualcomm.com> (sfid-20150313_152929_739558_C90D3222)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-> Driver for PCIe core requires PCI to be enabled, however we shouldn't
-> require it for the whole bus. Someone may be not interested in extra
-> PCI devices and what's more there are SoCs without any PCI at all (like
-> BCM5356C0, BCM5357*, BCM47186B0). For more details see Kconfig "help".
-> Please note this patch doesn't allow disabling PCI drivers yet, as it
-> requires more work on calls to bcma_core_pci_* functions.
+>> -----Original Message-----
+>> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
+>> Sent: Thursday, March 12, 2015 1:09 PM
+>> To: linux-wireless@vger.kernel.org
+>> Cc: Cathy Luo; Avinash Patil; Amitkumar Karwar
+>> Subject: [PATCH] mwifiex: fix a bug in Rx multiport aggregation logic
+>> 
+>> From: Cathy Luo <cluo@marvell.com>
+>> 
+>> It's been observed Rx aggregated packets are always followed by a
+>> single Rx packet. This patch improves our logic to add that extra
+>> packet in next aggregation.
+>> 
+>> Signed-off-by: Cathy Luo <cluo@marvell.com>
+>> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>> ---
 >
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> Please ignore this patch. This is same as "[PATCH 1/3] mwifiex: fix 
+> a bug..." sent separately.
 
-Thanks, applied to wireless-drivers-next.git.
+Ok, I dropped this patch.
 
 -- 
 Kalle Valo
