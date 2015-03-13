@@ -1,136 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43602 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683AbbCHNmM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Mar 2015 09:42:12 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 2/3] wil6210: re-submit Rx frames to the wireless media if appropriate
-Date: Sun,  8 Mar 2015 15:42:02 +0200
-Message-Id: <1425822123-24668-3-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150308_144218_026202_7EDF3FE6)
-In-Reply-To: <1425822123-24668-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1425822123-24668-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Received: from a.ns.miles-group.at ([95.130.255.143]:65278 "EHLO radon.swed.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752906AbbCMNUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 09:20:09 -0400
+Message-ID: <5502E3FD.50803@nod.at> (sfid-20150313_142031_677896_61AD1F05)
+Date: Fri, 13 Mar 2015 14:19:57 +0100
+From: Richard Weinberger <richard@nod.at>
+MIME-Version: 1.0
+To: Pablo Neira Ayuso <pablo@netfilter.org>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
+Subject: Re: [PATCH 3/4] netfilter: Fix portid types
+References: <1426246276-15839-1-git-send-email-richard@nod.at> <1426246276-15839-4-git-send-email-richard@nod.at> <20150313130155.GA1044@salvia>
+In-Reply-To: <20150313130155.GA1044@salvia>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is for AP only. If Rx data frame targeted to one of associated clients,
-transmit it back to the wireless media and don't deliver to the host.
-For the multicast frames, deliver to both host and wireless media.
+Am 13.03.2015 um 14:01 schrieb Pablo Neira Ayuso:
+> On Fri, Mar 13, 2015 at 12:31:15PM +0100, Richard Weinberger wrote:
+>> The netlink portid is an unsigned integer, use this type
+>> also in netfilter.
+> 
+> This small cleanup I can still take it but...
+> 
+>> Signed-off-by: Richard Weinberger <richard@nod.at>
+>> ---
+>>  net/netfilter/nfnetlink_log.c        | 4 ++--
+>>  net/netfilter/nfnetlink_queue_core.c | 7 ++++---
+>>  2 files changed, 6 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
+>> index 11d85b3..7f00846 100644
+>> --- a/net/netfilter/nfnetlink_log.c
+>> +++ b/net/netfilter/nfnetlink_log.c
+>> @@ -62,7 +62,7 @@ struct nfulnl_instance {
+>>  	struct timer_list timer;
+>>  	struct net *net;
+>>  	struct user_namespace *peer_user_ns;	/* User namespace of the peer process */
+>> -	int peer_portid;			/* PORTID of the peer process */
+>> +	unsigned int peer_portid;		/* PORTID of the peer process */
+> 
+> I think you have to use u32 for consistency. Other spots use the
+> datatype for the netlink portid.
+> 
+> I think same thing applies to other patches.
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 72 ++++++++++++++++++++++++++-------
- 1 file changed, 58 insertions(+), 14 deletions(-)
+Of course! Will re-spin with u32.
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 7f2f560..08d3cac 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -492,17 +492,71 @@ static int wil_rx_refill(struct wil6210_priv *wil, int count)
-  */
- void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
- {
--	gro_result_t rc;
-+	gro_result_t rc = GRO_NORMAL;
- 	struct wil6210_priv *wil = ndev_to_wil(ndev);
-+	struct wireless_dev *wdev = wil_to_wdev(wil);
- 	unsigned int len = skb->len;
- 	struct vring_rx_desc *d = wil_skb_rxdesc(skb);
- 	int cid = wil_rxdesc_cid(d);
-+	struct ethhdr *eth = (void *)skb->data;
-+	/* here looking for DA, not A1, thus Rxdesc's 'mcast' indication
-+	 * is not suitable, need to look at data
-+	 */
-+	int mcast = is_multicast_ether_addr(eth->h_dest);
- 	struct wil_net_stats *stats = &wil->sta[cid].stats;
-+	struct sk_buff *xmit_skb = NULL;
-+	static const char * const gro_res_str[] = {
-+		[GRO_MERGED]		= "GRO_MERGED",
-+		[GRO_MERGED_FREE]	= "GRO_MERGED_FREE",
-+		[GRO_HELD]		= "GRO_HELD",
-+		[GRO_NORMAL]		= "GRO_NORMAL",
-+		[GRO_DROP]		= "GRO_DROP",
-+	};
- 
- 	skb_orphan(skb);
- 
--	rc = napi_gro_receive(&wil->napi_rx, skb);
-+	if (wdev->iftype == NL80211_IFTYPE_AP) {
-+		if (mcast) {
-+			/* send multicast frames both to higher layers in
-+			 * local net stack and back to the wireless medium
-+			 */
-+			xmit_skb = skb_copy(skb, GFP_ATOMIC);
-+		} else {
-+			int xmit_cid = wil_find_cid(wil, eth->h_dest);
-+
-+			if (xmit_cid >= 0) {
-+				/* The destination station is associated to
-+				 * this AP (in this VLAN), so send the frame
-+				 * directly to it and do not pass it to local
-+				 * net stack.
-+				 */
-+				xmit_skb = skb;
-+				skb = NULL;
-+			}
-+		}
-+	}
-+	if (xmit_skb) {
-+		/* Send to wireless media and increase priority by 256 to
-+		 * keep the received priority instead of reclassifying
-+		 * the frame (see cfg80211_classify8021d).
-+		 */
-+		xmit_skb->dev = ndev;
-+		xmit_skb->priority += 256;
-+		xmit_skb->protocol = htons(ETH_P_802_3);
-+		skb_reset_network_header(xmit_skb);
-+		skb_reset_mac_header(xmit_skb);
-+		wil_dbg_txrx(wil, "Rx -> Tx %d bytes\n", len);
-+		dev_queue_xmit(xmit_skb);
-+	}
-+
-+	if (skb) { /* deliver to local stack */
- 
-+		skb->protocol = eth_type_trans(skb, ndev);
-+		rc = napi_gro_receive(&wil->napi_rx, skb);
-+		wil_dbg_txrx(wil, "Rx complete %d bytes => %s\n",
-+			     len, gro_res_str[rc]);
-+	}
-+	/* statistics. rc set to GRO_NORMAL for AP bridging */
- 	if (unlikely(rc == GRO_DROP)) {
- 		ndev->stats.rx_dropped++;
- 		stats->rx_dropped++;
-@@ -512,17 +566,8 @@ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
- 		stats->rx_packets++;
- 		ndev->stats.rx_bytes += len;
- 		stats->rx_bytes += len;
--	}
--	{
--		static const char * const gro_res_str[] = {
--			[GRO_MERGED]		= "GRO_MERGED",
--			[GRO_MERGED_FREE]	= "GRO_MERGED_FREE",
--			[GRO_HELD]		= "GRO_HELD",
--			[GRO_NORMAL]		= "GRO_NORMAL",
--			[GRO_DROP]		= "GRO_DROP",
--		};
--		wil_dbg_txrx(wil, "Rx complete %d bytes => %s\n",
--			     len, gro_res_str[rc]);
-+		if (mcast)
-+			ndev->stats.multicast++;
- 	}
- }
- 
-@@ -553,7 +598,6 @@ void wil_rx_handle(struct wil6210_priv *wil, int *quota)
- 			skb->protocol = htons(ETH_P_802_2);
- 			wil_netif_rx_any(skb, ndev);
- 		} else {
--			skb->protocol = eth_type_trans(skb, ndev);
- 			wil_rx_reorder(wil, skb);
- 		}
- 	}
--- 
-2.1.0
-
+Thanks,
+//richard
