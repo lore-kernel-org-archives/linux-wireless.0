@@ -1,35 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25399 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753691AbbCLIIT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 04:08:19 -0400
-From: "Stepanov, Max" <Max.Stepanov@intel.com>
-To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-CC: johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v3] mac80211: Get IV len from key conf and not cipher
- scheme
-Date: Thu, 12 Mar 2015 08:08:15 +0000
-Message-ID: <3A934E7FDB083A4683727C7D377065954A237A1A@hasmsx109.ger.corp.intel.com> (sfid-20150312_090833_376533_39B30395)
-References: <5842EA9CC042B141995329508713AD672105AD37@ILMAIL1.corp.local>
-In-Reply-To: <5842EA9CC042B141995329508713AD672105AD37@ILMAIL1.corp.local>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from dedo.coelho.fi ([88.198.205.34]:41877 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753299AbbCMU1d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 16:27:33 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 13 Mar 2015 22:27:19 +0200
+Message-Id: <1426278441-10304-3-git-send-email-luca@coelho.fi> (sfid-20150313_212739_339568_6E207A1C)
+In-Reply-To: <1426278441-10304-1-git-send-email-luca@coelho.fi>
+References: <1426278441-10304-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH iw 2/4] iw: implement scheduled scan
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-03-11 at 18:29+0000, Cedric Izoard wrote:
->When a key is installed using a cipher scheme, a new flag
->IEE80211_KEY_FLAG_CIPHER_SCHEME is set.
->This flag is used on TX path to test for "cipher scheme"
->key, instead of testing for sta->cipher_scheme as sta is NULL for bcast/mcast
->messages.
->For cipher scheme key, security header length is then read from key-
->>conf.iv_len initialized with cs->hdr_len.
->
->Signed-off-by: Cedric Izoard <cedric.izoard@ceva-dsp.com>
+From: Luciano Coelho <luciano.coelho@nokia.com>
 
-The patch looks fine to me.
+Add sched_start, sched_stop and events parsing for scheduled scan.
+For now, only passive scans are supported.
 
-Max
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ event.c |  9 +++++++++
+ info.c  |  6 ++++++
+ scan.c  | 29 +++++++++++++++++++++++++++++
+ 3 files changed, 44 insertions(+)
+
+diff --git a/event.c b/event.c
+index 71ab7f7..929854b 100644
+--- a/event.c
++++ b/event.c
+@@ -359,6 +359,15 @@ static int print_event(struct nl_msg *msg, void *arg)
+ 		}
+ 		printf("\n");
+ 		break;
++	case NL80211_CMD_START_SCHED_SCAN:
++		printf("scheduled scan started\n");
++		break;
++	case NL80211_CMD_SCHED_SCAN_STOPPED:
++		printf("sched scan stopped\n");
++		break;
++	case NL80211_CMD_SCHED_SCAN_RESULTS:
++		printf("got scheduled scan results\n");
++		break;
+ 	case NL80211_CMD_REG_CHANGE:
+ 		printf("regulatory domain change: ");
+ 
+diff --git a/info.c b/info.c
+index 1df503f..66887e3 100644
+--- a/info.c
++++ b/info.c
+@@ -232,6 +232,12 @@ next:
+ 	if (tb_msg[NL80211_ATTR_MAX_SCAN_IE_LEN])
+ 		printf("\tmax scan IEs length: %d bytes\n",
+ 		       nla_get_u16(tb_msg[NL80211_ATTR_MAX_SCAN_IE_LEN]));
++	if (tb_msg[NL80211_ATTR_MAX_NUM_SCHED_SCAN_SSIDS])
++		printf("\tmax # sched scan SSIDs: %d\n",
++		       nla_get_u8(tb_msg[NL80211_ATTR_MAX_NUM_SCHED_SCAN_SSIDS]));
++	if (tb_msg[NL80211_ATTR_MAX_MATCH_SETS])
++		printf("\tmax # match sets: %d\n",
++		       nla_get_u8(tb_msg[NL80211_ATTR_MAX_MATCH_SETS]));
+ 
+ 	if (tb_msg[NL80211_ATTR_WIPHY_FRAG_THRESHOLD]) {
+ 		unsigned int frag;
+diff --git a/scan.c b/scan.c
+index d1c3bf2..e534fd4 100644
+--- a/scan.c
++++ b/scan.c
+@@ -1980,3 +1980,32 @@ COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [meshid <meshid>]
+ 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
+ 	 "Trigger a scan on the given frequencies with probing for the given\n"
+ 	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
++
++
++static int handle_start_sched_scan(struct nl80211_state *state,
++				   struct nl_cb *cb, struct nl_msg *msg,
++				   int argc, char **argv, enum id_input id)
++{
++	return parse_sched_scan(msg, &argc, &argv);
++}
++
++static int handle_stop_sched_scan(struct nl80211_state *state, struct nl_cb *cb,
++				  struct nl_msg *msg, int argc, char **argv,
++				  enum id_input id)
++{
++	if (argc != 0)
++		return 1;
++
++	return 0;
++}
++
++COMMAND(scan, sched_start,
++	SCHED_SCAN_OPTIONS,
++	NL80211_CMD_START_SCHED_SCAN, 0, CIB_NETDEV, handle_start_sched_scan,
++	"Start a scheduled scan at the specified interval on the given frequencies\n"
++	"with probing for the given SSIDs (or wildcard if not given) unless passive\n"
++	"scanning is requested.  If matches are specified, only matching results\n"
++	"will be returned.");
++COMMAND(scan, sched_stop, "",
++	NL80211_CMD_STOP_SCHED_SCAN, 0, CIB_NETDEV, handle_stop_sched_scan,
++	"Stop an ongoing scheduled scan.");
+-- 
+2.1.4
+
