@@ -1,60 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57256 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754763AbbCaOdq (ORCPT
+Received: from mail.sigma-star.at ([95.130.255.111]:14387 "EHLO
+	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754388AbbCMLhO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 10:33:46 -0400
-From: Avinash Patil <patila@marvell.com>
-To: Avinash Patil <patila@marvell.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Li Long <longli@marvell.com>
-Date: Tue, 31 Mar 2015 07:33:39 -0700
-Subject: RE: [PATCH 1/3] mwifiex: add cfg80211 set_default_mgmt_key handler
-Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC689F4C7E9B@SC-VEXCH2.marvell.com> (sfid-20150331_163350_208941_59EE7071)
-References: <1423764954-30412-1-git-send-email-patila@marvell.com>
-	 (sfid-20150212_134627_640778_2A1810BC)
- <1423850815.2936.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Fri, 13 Mar 2015 07:37:14 -0400
+From: Richard Weinberger <richard@nod.at>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
+	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
+	lauro.venancio@openbossa.org, davem@davemloft.net,
+	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
+	Richard Weinberger <richard@nod.at>
+Subject: [PATCH 3/4] netfilter: Fix portid types
+Date: Fri, 13 Mar 2015 12:31:15 +0100
+Message-Id: <1426246276-15839-4-git-send-email-richard@nod.at> (sfid-20150313_123818_926062_9E436F8D)
+In-Reply-To: <1426246276-15839-1-git-send-email-richard@nod.at>
+References: <1426246276-15839-1-git-send-email-richard@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCkNvdWxkIHlvdSBwbGVhc2UgY2hlY2sgb3VyIHJlc3BvbnNlPw0KV2Ug
-ZmVlbCBzZXRfZGVmYXVsdF9rZXlfbWdtdCBoYW5kbGVyIGlzIHJlcXVpcmVkIGZvciBkZXZpY2Vz
-IHdoaWNoIHN1cHBvcnRzIDIgcGFpciBvZiBHVEtzLg0KSG93IGRvIHdlIHdvcmsgYXJvdW5kIHRo
-aXM/DQoNClRoYW5rcywNCkF2aW5hc2gNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
-PiBGcm9tOiBBdmluYXNoIFBhdGlsDQo+IFNlbnQ6IFR1ZXNkYXksIE1hcmNoIDE3LCAyMDE1IDQ6
-NTUgUE0NCj4gVG86ICdKb2hhbm5lcyBCZXJnJw0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5r
-ZXJuZWwub3JnOyBBbWl0a3VtYXIgS2Fyd2FyOyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7DQo+IExp
-IExvbmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSCAxLzNdIG13aWZpZXg6IGFkZCBjZmc4MDIxMSBz
-ZXRfZGVmYXVsdF9tZ210X2tleSBoYW5kbGVyDQo+IA0KPiANCj4gDQo+ID4gLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCj4gPiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNA
-c2lwc29sdXRpb25zLm5ldF0NCj4gPiBTZW50OiBGcmlkYXksIEZlYnJ1YXJ5IDEzLCAyMDE1IDEx
-OjM3IFBNDQo+ID4gVG86IEF2aW5hc2ggUGF0aWwNCj4gPiBDYzogbGludXgtd2lyZWxlc3NAdmdl
-ci5rZXJuZWwub3JnOyBBbWl0a3VtYXIgS2Fyd2FyOyBDYXRoeSBMdW87DQo+ID4gWGlubWluZyBI
-dTsgTGkgTG9uZw0KPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8zXSBtd2lmaWV4OiBhZGQgY2Zn
-ODAyMTEgc2V0X2RlZmF1bHRfbWdtdF9rZXkNCj4gPiBoYW5kbGVyDQo+ID4NCj4gPiBPbiBUaHUs
-IDIwMTUtMDItMTIgYXQgMjM6NDUgKzA1MzAsIEF2aW5hc2ggUGF0aWwgd3JvdGU6DQo+ID4gPiBG
-cm9tOiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+ID4NCj4gPiA+IEl0IGlzIG9i
-c2VydmVkIHRoYXQgaG9zdGFwZCBmYWlsZWQgdG8gc2V0dXAgd2l0aCBtYW5hZ2VtZW50IGZyYW1l
-DQo+ID4gPiBwcm90ZWN0aW9uIG1vZGUgZW5hYmxlZCB3aGVuIHVzaW5nIG13aWZpZXguDQo+ID4g
-Pg0KPiA+ID4gVGhpcyBpcyBiZWNhdXNlIGhvc3RhcGQgd2lsbCB0cnkgdG8gaW5zdGFsbCBJR1RL
-IHVzaW5nDQo+ID4gPiBjZmc4MDIxMSBzZXRfZGVmYXVsdF9tZ210X2tleSBoYW5kbGVyLg0KPiA+
-ID4NCj4gPiA+IHdlIGhhdmUgYWxyZWFkeSBzdXBwb3J0IElHVEsgaW5zdGFsbCBpbiBzZXRfa2V5
-IGhhbmRsZXIsIHNvIGp1c3QNCj4gPiA+IHdvcmsgYXJvdW5kIHRoaXMgaXNzdWUgYnkgYWRkIGFu
-IGVtcHR5IGNmZzgwMjExX3NldF9kZWZhdWx0X21nbXRfa2V5DQo+IGhhbmRsZXIuDQo+ID4NCj4g
-PiBJIGJlbGlldmUgdGhhdCB0aGlzIGlzIGluY29ycmVjdCBzaW5jZSB0aGUga2V5IHNob3VsZCBv
-bmx5IGJlDQo+ID4gaW5zdGFsbGVkIGZvciBUWCBhZnRlciB0aGlzIGhhbmRsZXIsIG5vdCBpbiB0
-aGUgc2V0X2tleSBoYW5kbGVyLiBUaGlzDQo+ID4gc2hvdWxkIG1ha2UgYSBkaWZmZXJlbmNlIGlu
-IHRoZSBjYXNlIG9mIHJla2V5aW5nPyBQZXJoYXBzIGhvc3RhcGQNCj4gPiBkb2Vzbid0IGFjdHVh
-bGx5IHByb2dyYW0gdGhlIGtleSB1bnRpbCByZWtleWluZyB3aXRoIGFsbCBzdGF0aW9ucyBmaW5p
-c2hlcw0KPiB0aG91Z2guDQo+IA0KPiBJIGJlbGlldmUgdGhhdCBzZXRfZGVmdWFsdF9tZ210X2tl
-eSBhbmQgY29ycmVzcG9uZGluZyBjaGFuZ2VzIGluIGhvc3RhcGQgJg0KPiBjZmc4MDIxMSBhcmUg
-ZGVzaWduZWQgd2l0aCBmb2N1cyBvbiBtYWM4MDIxMS4NCj4gT3VyIGRlc2lnbiBpcyBhIGJpdCBk
-aWZmZXJlbnQgaW4gYSB3YXkgYWxsIFBNRiBpcyBoYW5kbGVkIGluIEZXOyBhbHNvIHdlIGRvbid0
-DQo+IHN1cHBvcnQgdHdvIHBhaXIgb2YgR1RLL0lHVEtzLg0KPiBXZSBhbHJlYWR5IGhhdmUgaW5z
-dGFsbGVkIElHVEsgdG8gRlcgaW4gYWRkX2tleSBoYW5kbGVyLg0KPiANCj4gPiBqb2hhbm5lcw0K
-DQo=
+The netlink portid is an unsigned integer, use this type
+also in netfilter.
+
+Signed-off-by: Richard Weinberger <richard@nod.at>
+---
+ net/netfilter/nfnetlink_log.c        | 4 ++--
+ net/netfilter/nfnetlink_queue_core.c | 7 ++++---
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
+index 11d85b3..7f00846 100644
+--- a/net/netfilter/nfnetlink_log.c
++++ b/net/netfilter/nfnetlink_log.c
+@@ -62,7 +62,7 @@ struct nfulnl_instance {
+ 	struct timer_list timer;
+ 	struct net *net;
+ 	struct user_namespace *peer_user_ns;	/* User namespace of the peer process */
+-	int peer_portid;			/* PORTID of the peer process */
++	unsigned int peer_portid;		/* PORTID of the peer process */
+ 
+ 	/* configurable parameters */
+ 	unsigned int flushtimeout;	/* timeout until queue flush */
+@@ -151,7 +151,7 @@ static void nfulnl_timer(unsigned long data);
+ 
+ static struct nfulnl_instance *
+ instance_create(struct net *net, u_int16_t group_num,
+-		int portid, struct user_namespace *user_ns)
++		unsigned int portid, struct user_namespace *user_ns)
+ {
+ 	struct nfulnl_instance *inst;
+ 	struct nfnl_log_net *log = nfnl_log_pernet(net);
+diff --git a/net/netfilter/nfnetlink_queue_core.c b/net/netfilter/nfnetlink_queue_core.c
+index 0db8515..1b7f7b8 100644
+--- a/net/netfilter/nfnetlink_queue_core.c
++++ b/net/netfilter/nfnetlink_queue_core.c
+@@ -54,7 +54,7 @@ struct nfqnl_instance {
+ 	struct hlist_node hlist;		/* global list of queues */
+ 	struct rcu_head rcu;
+ 
+-	int peer_portid;
++	unsigned int peer_portid;
+ 	unsigned int queue_maxlen;
+ 	unsigned int copy_range;
+ 	unsigned int queue_dropped;
+@@ -110,7 +110,7 @@ instance_lookup(struct nfnl_queue_net *q, u_int16_t queue_num)
+ 
+ static struct nfqnl_instance *
+ instance_create(struct nfnl_queue_net *q, u_int16_t queue_num,
+-		int portid)
++		unsigned int portid)
+ {
+ 	struct nfqnl_instance *inst;
+ 	unsigned int h;
+@@ -860,7 +860,8 @@ static const struct nla_policy nfqa_verdict_batch_policy[NFQA_MAX+1] = {
+ };
+ 
+ static struct nfqnl_instance *
+-verdict_instance_lookup(struct nfnl_queue_net *q, u16 queue_num, int nlportid)
++verdict_instance_lookup(struct nfnl_queue_net *q, u16 queue_num,
++			unsigned int nlportid)
+ {
+ 	struct nfqnl_instance *queue;
+ 
+-- 
+1.8.4.5
+
