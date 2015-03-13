@@ -1,45 +1,425 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:60741 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751934AbbCTMlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 08:41:03 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@codeaurora.org, adrian@freebsd.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 13/18] ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-Date: Fri, 20 Mar 2015 13:38:53 +0100
-Message-Id: <1426855138-6121-14-git-send-email-linux@rempel-privat.de> (sfid-20150320_140418_296164_8A191279)
-In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
-References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+Received: from dedo.coelho.fi ([88.198.205.34]:41874 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752205AbbCMU1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 16:27:32 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 13 Mar 2015 22:27:18 +0200
+Message-Id: <1426278441-10304-2-git-send-email-luca@coelho.fi> (sfid-20150313_212738_711015_3AB90021)
+In-Reply-To: <1426278441-10304-1-git-send-email-luca@coelho.fi>
+References: <1426278441-10304-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH iw 1/4] iw: move generic sched scan parsing code out of net detect
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/eeprom_4k.c | 2 ++
- 1 file changed, 2 insertions(+)
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index fc54fc7..0600562 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1082,6 +1082,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 		mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
- 		pwrctrl = mask * bb_desired_scale;
- 		clr = mask * 0x1f;
-+		ENABLE_REG_RMW_BUFFER(ah);
- 		REG_RMW(ah, AR_PHY_TX_PWRCTRL8, pwrctrl, clr);
- 		REG_RMW(ah, AR_PHY_TX_PWRCTRL10, pwrctrl, clr);
- 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL12, pwrctrl, clr);
-@@ -1096,6 +1097,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 		clr = mask * 0x1f;
- 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL11, pwrctrl, clr);
- 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL13, pwrctrl, clr);
-+		REG_RMW_BUFFER_FLUSH(ah);
- 	}
+The scheduled scan structure is pretty much the same as the net-detect
+WoWLAN trigger's.  Move the bulk of the command line parsing code to
+a generic function so we can reuse it for sched_scan.
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ iw.h     |   4 ++
+ scan.c   | 170 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ wowlan.c | 174 +++------------------------------------------------------------
+ 3 files changed, 181 insertions(+), 167 deletions(-)
+
+diff --git a/iw.h b/iw.h
+index db88a86..21e2229 100644
+--- a/iw.h
++++ b/iw.h
+@@ -173,6 +173,10 @@ void print_ies(unsigned char *ie, int ielen, bool unknown,
+ void parse_bitrate(struct nlattr *bitrate_attr, char *buf, int buflen);
+ void iw_hexdump(const char *prefix, const __u8 *data, size_t len);
+ 
++#define SCHED_SCAN_OPTIONS "interval <in_msecs> [delay <in_secs> " \
++	"[freqs <freq>+] [matches [ssid <ssid>]+]]"
++int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv);
++
+ DECLARE_SECTION(set);
+ DECLARE_SECTION(get);
+ 
+diff --git a/scan.c b/scan.c
+index 538b30e..d1c3bf2 100644
+--- a/scan.c
++++ b/scan.c
+@@ -99,6 +99,176 @@ static int parse_random_mac_addr(struct nl_msg *msg, char *arg)
+ 	return -ENOBUFS;
  }
  
++int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv)
++{
++	struct nl_msg *matchset = NULL, *freqs = NULL;
++	struct nlattr *match = NULL;
++	enum {
++		ND_TOPLEVEL,
++		ND_MATCH,
++		ND_FREQS,
++	} parse_state = ND_TOPLEVEL;
++	int c  = *argc;
++	char *end, **v = *argv;
++	int err = 0, i = 0;
++	unsigned int freq, interval = 0, delay = 0;
++	bool have_matchset = false, have_freqs = false;
++
++	matchset = nlmsg_alloc();
++	if (!matchset) {
++		err = -ENOBUFS;
++		goto out;
++	}
++
++	freqs = nlmsg_alloc();
++	if (!freqs) {
++		err = -ENOBUFS;
++		goto out;
++	}
++
++	while (c) {
++		switch (parse_state) {
++		case ND_TOPLEVEL:
++			if (!strcmp(v[0], "interval")) {
++				c--; v++;
++				if (c == 0) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++
++				if (interval) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++				interval = strtoul(v[0], &end, 10);
++				if (*end || !interval) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++				NLA_PUT_U32(msg,
++					    NL80211_ATTR_SCHED_SCAN_INTERVAL,
++					    interval);
++			} else if (!strcmp(v[0], "delay")) {
++				c--; v++;
++				if (c == 0) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++
++				if (delay) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++				delay = strtoul(v[0], &end, 10);
++				if (*end) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++				NLA_PUT_U32(msg,
++					    NL80211_ATTR_SCHED_SCAN_DELAY,
++					    delay);
++			} else if (!strcmp(v[0], "matches")) {
++				parse_state = ND_MATCH;
++				if (have_matchset) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++
++				i = 0;
++			} else if (!strcmp(v[0], "freqs")) {
++				parse_state = ND_FREQS;
++				if (have_freqs) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++
++				have_freqs = true;
++				i = 0;
++			} else {
++				/* this element is not for us, so
++				 * return to continue parsing.
++				 */
++				goto nla_put_failure;
++			}
++			c--; v++;
++
++			break;
++		case ND_MATCH:
++			if (!strcmp(v[0], "ssid")) {
++				c--; v++;
++				if (c == 0) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++
++				/* TODO: for now we can only have an
++				 * SSID in the match, so we can start
++				 * the match nest here.
++				 */
++				match = nla_nest_start(matchset, i);
++				if (!match) {
++					err = -ENOBUFS;
++					goto nla_put_failure;
++				}
++
++				NLA_PUT(matchset,
++					NL80211_SCHED_SCAN_MATCH_ATTR_SSID,
++					strlen(v[0]), v[0]);
++				nla_nest_end(matchset, match);
++				match = NULL;
++
++				have_matchset = true;
++				i++;
++				c--; v++;
++			} else {
++				/* other element that cannot be part
++				 * of a match indicates the end of the
++				 * match. */
++				/* need at least one match in the matchset */
++				if (i == 0) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++
++				parse_state = ND_TOPLEVEL;
++			}
++
++			break;
++		case ND_FREQS:
++			freq = strtoul(v[0], &end, 10);
++			if (*end) {
++				if (i == 0) {
++					err = -EINVAL;
++					goto nla_put_failure;
++				}
++
++				parse_state = ND_TOPLEVEL;
++			} else {
++				NLA_PUT_U32(freqs, i, freq);
++				i++;
++				c--; v++;
++			}
++			break;
++		}
++	}
++
++	if (have_freqs)
++		nla_put_nested(msg, NL80211_ATTR_SCAN_FREQUENCIES, freqs);
++	if (have_matchset)
++		nla_put_nested(msg, NL80211_ATTR_SCHED_SCAN_MATCH, matchset);
++
++nla_put_failure:
++	if (match)
++		nla_nest_end(msg, match);
++	nlmsg_free(freqs);
++	nlmsg_free(matchset);
++
++out:
++	*argc = c;
++	*argv = v;
++	return err;
++}
++
+ static int handle_scan(struct nl80211_state *state,
+ 		       struct nl_cb *cb,
+ 		       struct nl_msg *msg,
+diff --git a/wowlan.c b/wowlan.c
+index 12abc76..3a87665 100644
+--- a/wowlan.c
++++ b/wowlan.c
+@@ -183,177 +183,17 @@ static int wowlan_parse_tcp_file(struct nl_msg *msg, const char *fn)
+ 
+ static int wowlan_parse_net_detect(struct nl_msg *msg, int *argc, char ***argv)
+ {
+-	struct nl_msg *matchset = NULL, *freqs = NULL;
+-	struct nlattr *nd, *match = NULL;
+-	enum {
+-		ND_TOPLEVEL,
+-		ND_MATCH,
+-		ND_FREQS,
+-	} parse_state = ND_TOPLEVEL;
+-	int c  = *argc;
+-	char *end, **v = *argv;
+-	int err = 0, i = 0;
+-	unsigned int freq, interval = 0, delay = 0;
+-	bool have_matchset = false, have_freqs = false;
++	struct nlattr *nd;
++	int err = 0;
+ 
+ 	nd = nla_nest_start(msg, NL80211_WOWLAN_TRIG_NET_DETECT);
+-	if (!nd) {
+-		err = -ENOBUFS;
+-		goto out;
+-	}
+-
+-	matchset = nlmsg_alloc();
+-	if (!matchset) {
+-		err = -ENOBUFS;
+-		goto out;
+-	}
+-
+-	freqs = nlmsg_alloc();
+-	if (!freqs) {
+-		err = -ENOBUFS;
+-		goto out;
+-	}
+-
+-	while (c) {
+-		switch (parse_state) {
+-		case ND_TOPLEVEL:
+-			if (!strcmp(v[0], "interval")) {
+-				c--; v++;
+-				if (c == 0) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-
+-				if (interval) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-				interval = strtoul(v[0], &end, 10);
+-				if (*end || !interval) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-				NLA_PUT_U32(msg,
+-					    NL80211_ATTR_SCHED_SCAN_INTERVAL,
+-					    interval);
+-			} else if (!strcmp(v[0], "delay")) {
+-				c--; v++;
+-				if (c == 0) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-
+-				if (delay) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-				delay = strtoul(v[0], &end, 10);
+-				if (*end) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-				NLA_PUT_U32(msg,
+-					    NL80211_ATTR_SCHED_SCAN_DELAY,
+-					    delay);
+-			} else if (!strcmp(v[0], "matches")) {
+-				parse_state = ND_MATCH;
+-				if (have_matchset) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-
+-				i = 0;
+-			} else if (!strcmp(v[0], "freqs")) {
+-				parse_state = ND_FREQS;
+-				if (have_freqs) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-
+-				have_freqs = true;
+-				i = 0;
+-			} else {
+-				/* this element is not for us, so
+-				 * return to continue parsing.
+-				 */
+-				goto nla_put_failure;
+-			}
+-			c--; v++;
+-
+-			break;
+-		case ND_MATCH:
+-			if (!strcmp(v[0], "ssid")) {
+-				c--; v++;
+-				if (c == 0) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-
+-				/* TODO: for now we can only have an
+-				 * SSID in the match, so we can start
+-				 * the match nest here.
+-				 */
+-				match = nla_nest_start(matchset, i);
+-				if (!match) {
+-					err = -ENOBUFS;
+-					goto nla_put_failure;
+-				}
+-
+-				NLA_PUT(matchset,
+-					NL80211_SCHED_SCAN_MATCH_ATTR_SSID,
+-					strlen(v[0]), v[0]);
+-				nla_nest_end(matchset, match);
+-				match = NULL;
+-
+-				have_matchset = true;
+-				i++;
+-				c--; v++;
+-			} else {
+-				/* other element that cannot be part
+-				 * of a match indicates the end of the
+-				 * match. */
+-				/* need at least one match in the matchset */
+-				if (i == 0) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-
+-				parse_state = ND_TOPLEVEL;
+-			}
+-
+-			break;
+-		case ND_FREQS:
+-			freq = strtoul(v[0], &end, 10);
+-			if (*end) {
+-				if (i == 0) {
+-					err = -EINVAL;
+-					goto nla_put_failure;
+-				}
+-
+-				parse_state = ND_TOPLEVEL;
+-			} else {
+-				NLA_PUT_U32(freqs, i, freq);
+-				i++;
+-				c--; v++;
+-			}
+-			break;
+-		}
+-	}
++	if (!nd)
++		return -ENOBUFS;
+ 
+-	if (have_freqs)
+-		nla_put_nested(msg, NL80211_ATTR_SCAN_FREQUENCIES, freqs);
+-	if (have_matchset)
+-		nla_put_nested(msg, NL80211_ATTR_SCHED_SCAN_MATCH, matchset);
++	err = parse_sched_scan(msg, argc, argv);
+ 
+-nla_put_failure:
+-	if (match)
+-		nla_nest_end(msg, match);
+-	nlmsg_free(freqs);
+-	nlmsg_free(matchset);
+ 	nla_nest_end(msg, nd);
+-out:
+-	*argc = c;
+-	*argv = v;
++
+ 	return err;
+ }
+ 
+@@ -473,7 +313,7 @@ static int handle_wowlan_enable(struct nl80211_state *state, struct nl_cb *cb,
+ 	return err;
+ }
+ COMMAND(wowlan, enable, "[any] [disconnect] [magic-packet] [gtk-rekey-failure] [eap-identity-request]"
+-	" [4way-handshake] [rfkill-release] [net-detect interval <in_msecs> [delay <in_secs> [freqs <freq>+] [matches [ssid <ssid>]+]]"
++	" [4way-handshake] [rfkill-release] [net-detect " SCHED_SCAN_OPTIONS "]"
+ 	" [tcp <config-file>] [patterns [offset1+]<pattern1> ...]",
+ 	NL80211_CMD_SET_WOWLAN, 0, CIB_PHY, handle_wowlan_enable,
+ 	"Enable WoWLAN with the given triggers.\n"
 -- 
-1.9.1
+2.1.4
 
