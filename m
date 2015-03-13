@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from elasmtp-masked.atl.sa.earthlink.net ([209.86.89.68]:39334 "EHLO
-	elasmtp-masked.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753030AbbCFF07 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 00:26:59 -0500
-Message-ID: <54F93907.6020408@tampabay.rr.com> (sfid-20150306_062702_092229_F7039236)
-Date: Fri, 06 Mar 2015 00:20:07 -0500
-From: Marco <marco@tampabay.rr.com>
+Received: from mail.us.es ([193.147.175.20]:38654 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751353AbbCMNtk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 09:49:40 -0400
+Date: Fri, 13 Mar 2015 14:53:29 +0100
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: Richard Weinberger <richard@nod.at>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
+Subject: Re: [PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc
+ file
+Message-ID: <20150313135329.GA6054@salvia> (sfid-20150313_144949_339991_69AD4FF5)
+References: <1426246276-15839-1-git-send-email-richard@nod.at>
+ <1426246276-15839-5-git-send-email-richard@nod.at>
+ <20150313121539.GA14488@salvia>
+ <5502E99A.2060901@nod.at>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: carl1970: monitor mode only displaying beacons/probs from APs?
-References: <20150304230225.J5EHX.13935.root@cdptpa-web27> <3859987.D1VAPy8h72@debian64>
-In-Reply-To: <3859987.D1VAPy8h72@debian64>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5502E99A.2060901@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/05/15 06:10, Christian Lamparter wrote:
-> Hello,
+On Fri, Mar 13, 2015 at 02:43:54PM +0100, Richard Weinberger wrote:
+> Am 13.03.2015 um 13:15 schrieb Pablo Neira Ayuso:
+> > On Fri, Mar 13, 2015 at 12:31:16PM +0100, Richard Weinberger wrote:
+> >> The printed values are all of type unsigned integer, therefore use
+> >> %u instead of %d. Otherwise an user can face negative values.
+> >>
+> >> Fixes:
+> >> $ cat /proc/net/netfilter/nfnetlink_queue
+> >>     0  29508   278 2 65531     0 2004213241 -2129885586  1
+> >>     1 -27747     0 2 65531     0     0        0  1
+> >>     2 -27748     0 2 65531     0     0        0  1
+> > 
+> > I guess you want to access stats on dropped packets.
 > 
-> On Wednesday, March 04, 2015 11:02:25 PM marco@tampabay.rr.com wrote:
->> Quite a while back after doing an upgrade to the latest (back then)
->> compat-wireless, I noticed that I was only seeing beacon,prob requests, and
->> the occasional data packet when in monitor mode; which at the time I wrote
->> off.  After switching to backports-3.18.1-1 recently, I still see the same
->> behavior(on x86 and arm).  I'm sure I'm missing something, but I couldn't
->> find any references to this behavior in my search.  I also tried "iw wlanX
->> set monitor control otherbss" to no avail.  Switching to a different chipset
->> using ath9k-htc showed expected traffic.
->>
->> Can anyone point me in the right direction?
-> maybe. Could it be that you are looking for 802.11n(MCS) data frames?
+> Correct. :)
+> 
+> > I prefer if you extend nfnetlink_queue to provide statistics through
+> > nfnetlink_queue, so you don't have to manually parse this text-based
+> > /proc entry and we can deprecate this interface. That shouldn't have
+> > been there in first place.
+> 
+> You mean statistics via netlink attributes? I can add that!
 
-I'm trying to see any and all frames (ctrl/mgmt/data).  I'm currently
-doing my testing on 2.4ghz band, channel 11.  Playing with HT didn't
-seem to make a difference.
+Add a new NFQNL_CFG_CMD_STATS command to request the statistics. If
+NLM_F_DUMP is set, then we'll basically provide the full list of
+instances. Otherwise, in case you want to retrieve stats for a
+specific netlink socket, you can use the netlink portID as index.
+And you'll have to add attributes for this new command, yes.
 
+> But I think we should also fix the format string of the proc file
+> as the fix is easy and non-intrusive.
 
-> Because by default, carl9170's monitor mode only catches the legacy 
-> 802.11a/b/g frames. If this is the case, then try setting the right
-> channel mode (HT20/HT40+/HT40-) when selecting the channel. i.e.:  
-> 
-> # iw dev wlanX set channel Y HT20
-> # iw dev wlanX set channel Y HT40+
-> 
-> I hope this helps. Otherwise, you could try: 
-> 
-> # iw dev wlanX set monitor [...] fcsfail
-> 
-> and see if you are picking up frames this way. This should work, but you
-> will be picking up mostly damaged stuff, so some extra frame processing
-> will be needed to filter out the noise. 
-> 
-> Regards,
->   Christian
-> 
-
-I've previously (and once again for good measure) tried fcsfail to no
-avail as well.
-
-I'm surprised no one else is seeing this/reported this, I've tried on
-3 separate linux boxes now with no luck.
-
-Regards,
-Marco
+Unfortunately we don't know how many people are relying on that
+output, I prefer to remain conservative and provide a proper netlink
+interface for this.
