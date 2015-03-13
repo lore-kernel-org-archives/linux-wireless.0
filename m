@@ -1,306 +1,486 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:37841 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753039AbbCJIcA (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:26511 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752043AbbCMGi6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 04:32:00 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH 6/7] ath9k: Process the AIC calibration results
-Date: Tue, 10 Mar 2015 14:05:33 +0530
-Message-Id: <1425976534-1194-7-git-send-email-sujith@msujith.org> (sfid-20150310_093218_563516_D188A048)
-In-Reply-To: <1425976534-1194-1-git-send-email-sujith@msujith.org>
-References: <1425976534-1194-1-git-send-email-sujith@msujith.org>
+	Fri, 13 Mar 2015 02:38:58 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2D6clC4030297
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:58 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0a-0016f401.pphosted.com with ESMTP id 1t3m0fryat-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:57 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
+	<nishants@marvell.com>, Marc Yang <yangyang@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCHv2 8/9] mwifiex: add SDIO rx single port aggregation
+Date: Fri, 13 Mar 2015 17:37:58 +0530
+Message-ID: <1426248479-28451-9-git-send-email-patila@marvell.com> (sfid-20150313_073901_330387_8B271045)
+In-Reply-To: <1426248479-28451-1-git-send-email-patila@marvell.com>
+References: <1426248479-28451-1-git-send-email-patila@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Zhaoyang Liu <liuzy@marvell.com>
 
-This patch adds support for post-processing
-the AIC calibration results.
+This patch brings in support for SDIO single port rx aggregation
+to mwifiex.
+Maximum read size support by SDIO cmd53 is 64K.
+Based on multi port aggregation which is already part of mwifiex, idea here
+is multiple packets received in FW can be aggregated into single buffer.
+A separate upload type is defined for such packet aggregated to single port.
+Packets from this single buffer are later deaggregated into individual packets.
+This way, driver can receive more packets each time through single SDIO cmd53;
+thereby reducing no of times MMC bus is accessed.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+SDIO SP aggregation support is advertised by FW during load time and driver
+would get FW block size in command response of HostCmd_CMD_SDIO_SP_RX_AGGR_CFG.
+
+Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+Signed-off-by: Marc Yang <yangyang@marvell.com>
+Reviewed-by: Amitkumar Karwar <akarwar@marvell.com>
+Reviewed-by: Cathy Luo <cluo@marvell.com>
+Reviewed-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Avinash Patil <patila@marvell.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_aic.c | 245 ++++++++++++++++++++++++++++
- 1 file changed, 245 insertions(+)
+ drivers/net/wireless/mwifiex/decl.h        |   8 ++-
+ drivers/net/wireless/mwifiex/fw.h          |   9 +++
+ drivers/net/wireless/mwifiex/main.c        |  10 ++-
+ drivers/net/wireless/mwifiex/main.h        |   4 ++
+ drivers/net/wireless/mwifiex/sdio.c        | 103 ++++++++++++++++++++++++++---
+ drivers/net/wireless/mwifiex/sta_cmd.c     |  40 +++++++++++
+ drivers/net/wireless/mwifiex/sta_cmdresp.c |  21 ++++++
+ 7 files changed, 184 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-index 00aaf4d..51ecc9b 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-@@ -20,6 +20,22 @@
- #include "ar9003_aic.h"
- #include "reg_aic.h"
+diff --git a/drivers/net/wireless/mwifiex/decl.h b/drivers/net/wireless/mwifiex/decl.h
+index 6ce19be..38f24e0 100644
+--- a/drivers/net/wireless/mwifiex/decl.h
++++ b/drivers/net/wireless/mwifiex/decl.h
+@@ -112,6 +112,11 @@
  
-+static const u8 com_att_db_table[ATH_AIC_MAX_COM_ATT_DB_TABLE] = {
-+	0, 3, 9, 15, 21, 27
-+};
+ #define MWIFIEX_A_BAND_START_FREQ	5000
+ 
++/* SDIO Aggr data packet special info */
++#define SDIO_MAX_AGGR_BUF_SIZE		(256 * 255)
++#define BLOCK_NUMBER_OFFSET		15
++#define SDIO_HEADER_OFFSET		28
 +
-+static const u16 aic_lin_table[ATH_AIC_MAX_AIC_LIN_TABLE] = {
-+	8191, 7300, 6506, 5799, 5168, 4606, 4105, 3659,
-+	3261, 2906, 2590, 2309, 2057, 1834, 1634, 1457,
-+	1298, 1157, 1031, 919,	819,  730,  651,  580,
-+	517,  461,  411,  366,	326,  291,  259,  231,
-+	206,  183,  163,  146,	130,  116,  103,  92,
-+	82,   73,   65,	  58,	52,   46,   41,	  37,
-+	33,   29,   26,	  23,	21,   18,   16,	  15,
-+	13,   12,   10,	  9,	8,    7,    7,	  6,
-+	5,    5,    4,	  4,	3
-+};
+ enum mwifiex_bss_type {
+ 	MWIFIEX_BSS_TYPE_STA = 0,
+ 	MWIFIEX_BSS_TYPE_UAP = 1,
+@@ -169,10 +174,11 @@ struct mwifiex_wait_queue {
+ };
+ 
+ struct mwifiex_rxinfo {
++	struct sk_buff *parent;
+ 	u8 bss_num;
+ 	u8 bss_type;
+-	struct sk_buff *parent;
+ 	u8 use_count;
++	u8 buf_type;
+ };
+ 
+ struct mwifiex_txinfo {
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index 21a942fd2..59d8964 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -197,6 +197,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ 
+ #define ISSUPP_11NENABLED(FwCapInfo) (FwCapInfo & BIT(11))
+ #define ISSUPP_TDLS_ENABLED(FwCapInfo) (FwCapInfo & BIT(14))
++#define ISSUPP_SDIO_SPA_ENABLED(FwCapInfo) (FwCapInfo & BIT(16))
+ 
+ #define MWIFIEX_DEF_HT_CAP	(IEEE80211_HT_CAP_DSSSCCK40 | \
+ 				 (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT) | \
+@@ -353,6 +354,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_REMAIN_ON_CHAN                    0x010d
+ #define HostCmd_CMD_11AC_CFG			      0x0112
+ #define HostCmd_CMD_TDLS_OPER                         0x0122
++#define HostCmd_CMD_SDIO_SP_RX_AGGR_CFG               0x0223
+ 
+ #define PROTOCOL_NO_SECURITY        0x01
+ #define PROTOCOL_STATIC_WEP         0x02
+@@ -1242,6 +1244,12 @@ struct host_cmd_ds_chan_rpt_event {
+ 	u8 tlvbuf[0];
+ } __packed;
+ 
++struct host_cmd_sdio_sp_rx_aggr_cfg {
++	u8 action;
++	u8 enable;
++	__le16 block_size;
++} __packed;
 +
- static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
+ struct mwifiex_fixed_bcn_param {
+ 	__le64 timestamp;
+ 	__le16 beacon_period;
+@@ -1964,6 +1972,7 @@ struct host_cmd_ds_command {
+ 		struct host_cmd_ds_coalesce_cfg coalesce_cfg;
+ 		struct host_cmd_ds_tdls_oper tdls_oper;
+ 		struct host_cmd_ds_chan_rpt_req chan_rpt_req;
++		struct host_cmd_sdio_sp_rx_aggr_cfg sdio_rx_aggr_cfg;
+ 	} params;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index b242c3e..eaaacec 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -163,6 +163,7 @@ static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
  {
- 	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
-@@ -30,6 +46,56 @@ static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
- 	return true;
+ 	unsigned long flags;
+ 	struct sk_buff *skb;
++	struct mwifiex_rxinfo *rx_info;
+ 
+ 	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
+ 	if (adapter->rx_processing || adapter->rx_locked) {
+@@ -184,7 +185,14 @@ static int mwifiex_process_rx(struct mwifiex_adapter *adapter)
+ 			adapter->delay_main_work = false;
+ 			mwifiex_queue_main_work(adapter);
+ 		}
+-		mwifiex_handle_rx_packet(adapter, skb);
++		rx_info = MWIFIEX_SKB_RXCB(skb);
++		if (rx_info->buf_type == MWIFIEX_TYPE_AGGR_DATA) {
++			if (adapter->if_ops.deaggr_pkt)
++				adapter->if_ops.deaggr_pkt(adapter, skb);
++			dev_kfree_skb_any(skb);
++		} else {
++			mwifiex_handle_rx_packet(adapter, skb);
++		}
+ 	}
+ 	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
+ 	adapter->rx_processing = false;
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 11db09c..842fa0b 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -121,6 +121,7 @@ enum {
+ 
+ #define MWIFIEX_TYPE_CMD				1
+ #define MWIFIEX_TYPE_DATA				0
++#define MWIFIEX_TYPE_AGGR_DATA				10
+ #define MWIFIEX_TYPE_EVENT				3
+ 
+ #define MAX_BITMAP_RATES_SIZE			18
+@@ -744,6 +745,7 @@ struct mwifiex_if_ops {
+ 	int (*clean_pcie_ring) (struct mwifiex_adapter *adapter);
+ 	void (*iface_work)(struct work_struct *work);
+ 	void (*submit_rem_rx_urbs)(struct mwifiex_adapter *adapter);
++	void (*deaggr_pkt)(struct mwifiex_adapter *, struct sk_buff *);
+ };
+ 
+ struct mwifiex_adapter {
+@@ -787,6 +789,8 @@ struct mwifiex_adapter {
+ 	u8 more_task_flag;
+ 	u16 tx_buf_size;
+ 	u16 curr_tx_buf_size;
++	bool sdio_rx_aggr_enable;
++	u16 sdio_rx_block_size;
+ 	u32 ioport;
+ 	enum MWIFIEX_HARDWARE_STATUS hw_status;
+ 	u16 number_of_antenna;
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 509204f..fdeeb67 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -1043,6 +1043,59 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
  }
  
-+static int16_t ar9003_aic_find_valid(struct ath_aic_sram_info *cal_sram,
-+				     bool dir, u8 index)
+ /*
++ * This function decode sdio aggreation pkt.
++ *
++ * Based on the the data block size and pkt_len,
++ * skb data will be decoded to few packets.
++ */
++static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
++				    struct sk_buff *skb)
 +{
-+	int16_t i;
++	u32 total_pkt_len, pkt_len;
++	struct sk_buff *skb_deaggr;
++	u32 pkt_type;
++	u16 blk_size;
++	u8 blk_num;
++	u8 *data;
 +
-+	if (dir) {
-+		for (i = index + 1; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
-+			if (cal_sram[i].valid)
-+				break;
++	data = skb->data;
++	total_pkt_len = skb->len;
++
++	while (total_pkt_len >= (SDIO_HEADER_OFFSET + INTF_HEADER_LEN)) {
++		if (total_pkt_len < adapter->sdio_rx_block_size)
++			break;
++		blk_num = *(data + BLOCK_NUMBER_OFFSET);
++		blk_size = adapter->sdio_rx_block_size * blk_num;
++		if (blk_size > total_pkt_len) {
++			dev_err(adapter->dev, "%s: error in pkt,\t"
++				"blk_num=%d, blk_size=%d, total_pkt_len=%d\n",
++				__func__, blk_num, blk_size, total_pkt_len);
++			break;
 +		}
-+	} else {
-+		for (i = index - 1; i >= 0; i--) {
-+			if (cal_sram[i].valid)
-+				break;
++		pkt_len = le16_to_cpu(*(__le16 *)(data + SDIO_HEADER_OFFSET));
++		pkt_type = le16_to_cpu(*(__le16 *)(data + SDIO_HEADER_OFFSET +
++					 2));
++		if ((pkt_len + SDIO_HEADER_OFFSET) > blk_size) {
++			dev_err(adapter->dev, "%s: error in pkt,\t"
++				"pkt_len=%d, blk_size=%d\n",
++				__func__, pkt_len, blk_size);
++			break;
 +		}
++		skb_deaggr = mwifiex_alloc_dma_align_buf(pkt_len,
++							 GFP_KERNEL | GFP_DMA);
++		if (!skb_deaggr)
++			break;
++		skb_put(skb_deaggr, pkt_len);
++		memcpy(skb_deaggr->data, data + SDIO_HEADER_OFFSET, pkt_len);
++		skb_pull(skb_deaggr, INTF_HEADER_LEN);
++
++		mwifiex_handle_rx_packet(adapter, skb_deaggr);
++		data += blk_size;
++		total_pkt_len -= blk_size;
 +	}
-+
-+	if ((i >= ATH_AIC_MAX_BT_CHANNEL) || (i < 0))
-+		i = -1;
-+
-+	return i;
 +}
 +
 +/*
-+ * type 0: aic_lin_table, 1: com_att_db_table
-+ */
-+static int16_t ar9003_aic_find_index(u8 type, int16_t value)
-+{
-+	int16_t i = -1;
-+
-+	if (type == 0) {
-+		for (i = ATH_AIC_MAX_AIC_LIN_TABLE - 1; i >= 0; i--) {
-+			if (aic_lin_table[i] >= value)
-+				break;
-+		}
-+	} else if (type == 1) {
-+		for (i = 0; i < ATH_AIC_MAX_COM_ATT_DB_TABLE; i++) {
-+			if (com_att_db_table[i] > value) {
-+				i--;
-+				break;
-+			}
-+		}
-+
-+		if (i >= ATH_AIC_MAX_COM_ATT_DB_TABLE)
-+			i = -1;
+  * This function decodes a received packet.
+  *
+  * Based on the type, the packet is treated as either a data, or
+@@ -1055,11 +1108,28 @@ static int mwifiex_decode_rx_packet(struct mwifiex_adapter *adapter,
+ 	u8 *cmd_buf;
+ 	__le16 *curr_ptr = (__le16 *)skb->data;
+ 	u16 pkt_len = le16_to_cpu(*curr_ptr);
++	struct mwifiex_rxinfo *rx_info;
+ 
+-	skb_trim(skb, pkt_len);
+-	skb_pull(skb, INTF_HEADER_LEN);
++	if (upld_typ != MWIFIEX_TYPE_AGGR_DATA) {
++		skb_trim(skb, pkt_len);
++		skb_pull(skb, INTF_HEADER_LEN);
 +	}
+ 
+ 	switch (upld_typ) {
++	case MWIFIEX_TYPE_AGGR_DATA:
++		dev_dbg(adapter->dev, "info: --- Rx: Aggr Data packet ---\n");
++		rx_info = MWIFIEX_SKB_RXCB(skb);
++		rx_info->buf_type = MWIFIEX_TYPE_AGGR_DATA;
++		if (adapter->rx_work_enabled) {
++			skb_queue_tail(&adapter->rx_data_q, skb);
++			atomic_inc(&adapter->rx_pending);
++			adapter->data_received = true;
++		} else {
++			mwifiex_deaggr_sdio_pkt(adapter, skb);
++			dev_kfree_skb_any(skb);
++		}
++		break;
 +
-+	return i;
+ 	case MWIFIEX_TYPE_DATA:
+ 		dev_dbg(adapter->dev, "info: --- Rx: Data packet ---\n");
+ 		if (adapter->rx_work_enabled) {
+@@ -1247,8 +1317,10 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 			/* copy pkt to deaggr buf */
+ 			skb_deaggr = card->mpa_rx.skb_arr[pind];
+ 
+-			if ((pkt_type == MWIFIEX_TYPE_DATA) && (pkt_len <=
+-					 card->mpa_rx.len_arr[pind])) {
++			if ((pkt_type == MWIFIEX_TYPE_DATA ||
++			     (pkt_type == MWIFIEX_TYPE_AGGR_DATA &&
++			      adapter->sdio_rx_aggr_enable)) &&
++			    (pkt_len <= card->mpa_rx.len_arr[pind])) {
+ 
+ 				memcpy(skb_deaggr->data, curr_ptr, pkt_len);
+ 
+@@ -1258,8 +1330,10 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 				mwifiex_decode_rx_packet(adapter, skb_deaggr,
+ 							 pkt_type);
+ 			} else {
+-				dev_err(adapter->dev, "wrong aggr pkt:"
+-					" type=%d len=%d max_len=%d\n",
++				dev_err(adapter->dev, "wrong aggr pkt:\t"
++					"sdio_single_port_rx_aggr=%d\t"
++					"type=%d len=%d max_len=%d\n",
++					adapter->sdio_rx_aggr_enable,
+ 					pkt_type, pkt_len,
+ 					card->mpa_rx.len_arr[pind]);
+ 				dev_kfree_skb_any(skb_deaggr);
+@@ -1278,6 +1352,13 @@ rx_curr_single:
+ 					      skb->data, skb->len,
+ 					      adapter->ioport + port))
+ 			goto error;
++		if (!adapter->sdio_rx_aggr_enable &&
++		    pkt_type == MWIFIEX_TYPE_AGGR_DATA) {
++			dev_err(adapter->dev, "Wrong pkt type %d\t"
++				"Current SDIO RX Aggr not enabled\n",
++				pkt_type);
++			goto error;
++		}
+ 
+ 		mwifiex_decode_rx_packet(adapter, skb, pkt_type);
+ 	}
+@@ -1452,7 +1533,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 				 1) / MWIFIEX_SDIO_BLOCK_SIZE;
+ 			if (rx_len <= INTF_HEADER_LEN ||
+ 			    (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE) >
+-			     MWIFIEX_RX_DATA_BUF_SIZE) {
++			     card->mpa_rx.buf_size) {
+ 				dev_err(adapter->dev, "invalid rx_len=%d\n",
+ 					rx_len);
+ 				return -1;
+@@ -1742,6 +1823,7 @@ static int mwifiex_alloc_sdio_mpa_buffers(struct mwifiex_adapter *adapter,
+ 				   u32 mpa_tx_buf_size, u32 mpa_rx_buf_size)
+ {
+ 	struct sdio_mmc_card *card = adapter->card;
++	u32 rx_buf_size;
+ 	int ret = 0;
+ 
+ 	card->mpa_tx.buf = kzalloc(mpa_tx_buf_size, GFP_KERNEL);
+@@ -1752,13 +1834,15 @@ static int mwifiex_alloc_sdio_mpa_buffers(struct mwifiex_adapter *adapter,
+ 
+ 	card->mpa_tx.buf_size = mpa_tx_buf_size;
+ 
+-	card->mpa_rx.buf = kzalloc(mpa_rx_buf_size, GFP_KERNEL);
++	rx_buf_size = max_t(u32, mpa_rx_buf_size,
++			    (u32)SDIO_MAX_AGGR_BUF_SIZE);
++	card->mpa_rx.buf = kzalloc(rx_buf_size, GFP_KERNEL);
+ 	if (!card->mpa_rx.buf) {
+ 		ret = -1;
+ 		goto error;
+ 	}
+ 
+-	card->mpa_rx.buf_size = mpa_rx_buf_size;
++	card->mpa_rx.buf_size = rx_buf_size;
+ 
+ error:
+ 	if (ret) {
+@@ -2298,6 +2382,7 @@ static struct mwifiex_if_ops sdio_ops = {
+ 	.iface_work = mwifiex_sdio_work,
+ 	.fw_dump = mwifiex_sdio_fw_dump,
+ 	.reg_dump = mwifiex_sdio_reg_dump,
++	.deaggr_pkt = mwifiex_deaggr_sdio_pkt,
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/sta_cmd.c b/drivers/net/wireless/mwifiex/sta_cmd.c
+index b23eaed..49422f2 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/mwifiex/sta_cmd.c
+@@ -1671,6 +1671,25 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
+ 
+ 	return 0;
+ }
++
++/* This function prepares command of sdio rx aggr info. */
++static int mwifiex_cmd_sdio_rx_aggr_cfg(struct host_cmd_ds_command *cmd,
++					u16 cmd_action, void *data_buf)
++{
++	struct host_cmd_sdio_sp_rx_aggr_cfg *cfg =
++					&cmd->params.sdio_rx_aggr_cfg;
++
++	cmd->command = cpu_to_le16(HostCmd_CMD_SDIO_SP_RX_AGGR_CFG);
++	cmd->size =
++		cpu_to_le16(sizeof(struct host_cmd_sdio_sp_rx_aggr_cfg) +
++			    S_DS_GEN);
++	cfg->action = cmd_action;
++	if (cmd_action == HostCmd_ACT_GEN_SET)
++		cfg->enable = *(u8 *)data_buf;
++
++	return 0;
 +}
 +
- static void ar9003_aic_gain_table(struct ath_hw *ah)
- {
- 	u32 aic_atten_word[19], i;
-@@ -186,12 +252,191 @@ static void ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
- 	aic->aic_cal_state = AIC_CAL_STATE_STARTED;
+ /*
+  * This function prepares the commands before sending them to the firmware.
+  *
+@@ -1908,6 +1927,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 		ret = mwifiex_cmd_issue_chan_report_request(priv, cmd_ptr,
+ 							    data_buf);
+ 		break;
++	case HostCmd_CMD_SDIO_SP_RX_AGGR_CFG:
++		ret = mwifiex_cmd_sdio_rx_aggr_cfg(cmd_ptr, cmd_action,
++						   data_buf);
++		break;
+ 	default:
+ 		dev_err(priv->adapter->dev,
+ 			"PREP_CMD: unknown cmd- %#x\n", cmd_no);
+@@ -1947,6 +1970,7 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
+ 	struct mwifiex_ds_auto_ds auto_ds;
+ 	enum state_11d_t state_11d;
+ 	struct mwifiex_ds_11n_tx_cfg tx_cfg;
++	u8 sdio_sp_rx_aggr_enable;
+ 
+ 	if (first_sta) {
+ 		if (priv->adapter->iface_type == MWIFIEX_PCIE) {
+@@ -1990,6 +2014,22 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
+ 		if (ret)
+ 			return -1;
+ 
++		/** Set SDIO Single Port RX Aggr Info */
++		if (priv->adapter->iface_type == MWIFIEX_SDIO &&
++		    ISSUPP_SDIO_SPA_ENABLED(priv->adapter->fw_cap_info)) {
++			sdio_sp_rx_aggr_enable = true;
++			ret = mwifiex_send_cmd(priv,
++					       HostCmd_CMD_SDIO_SP_RX_AGGR_CFG,
++					       HostCmd_ACT_GEN_SET, 0,
++					       &sdio_sp_rx_aggr_enable,
++					       true);
++			if (ret) {
++				dev_err(priv->adapter->dev,
++					"error while enabling SP aggregation..disable it");
++				adapter->sdio_rx_aggr_enable = false;
++			}
++		}
++
+ 		/* Reconfigure tx buf size */
+ 		ret = mwifiex_send_cmd(priv, HostCmd_CMD_RECONFIGURE_TX_BUFF,
+ 				       HostCmd_ACT_GEN_SET, 0,
+diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+index 5f8da59..88dc6b6 100644
+--- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
+@@ -90,6 +90,10 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
+ 	case HostCmd_CMD_MAC_CONTROL:
+ 		break;
+ 
++	case HostCmd_CMD_SDIO_SP_RX_AGGR_CFG:
++		dev_err(priv->adapter->dev, "SDIO RX single-port aggregation Not support\n");
++		break;
++
+ 	default:
+ 		break;
+ 	}
+@@ -943,6 +947,20 @@ static int mwifiex_ret_cfg_data(struct mwifiex_private *priv,
+ 	return 0;
  }
  
-+static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
++/** This Function handles the command response of sdio rx aggr */
++static int mwifiex_ret_sdio_rx_aggr_cfg(struct mwifiex_private *priv,
++					struct host_cmd_ds_command *resp)
 +{
-+	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
-+	struct ath_aic_sram_info cal_sram[ATH_AIC_MAX_BT_CHANNEL];
-+	struct ath_aic_out_info aic_sram[ATH_AIC_MAX_BT_CHANNEL];
-+	u32 dir_path_gain_idx, quad_path_gain_idx, value;
-+	u32 fixed_com_att_db;
-+	int8_t dir_path_sign, quad_path_sign;
-+	int16_t i;
-+	bool ret = true;
++	struct mwifiex_adapter *adapter = priv->adapter;
++	struct host_cmd_sdio_sp_rx_aggr_cfg *cfg =
++				&resp->params.sdio_rx_aggr_cfg;
 +
-+	memset(&cal_sram, 0, sizeof(cal_sram));
-+	memset(&aic_sram, 0, sizeof(aic_sram));
++	adapter->sdio_rx_aggr_enable = cfg->enable;
++	adapter->sdio_rx_block_size = le16_to_cpu(cfg->block_size);
 +
-+	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
-+		value = aic->aic_sram[i];
-+
-+		cal_sram[i].valid =
-+			MS(value, AR_PHY_AIC_SRAM_VALID);
-+		cal_sram[i].rot_quad_att_db =
-+			MS(value, AR_PHY_AIC_SRAM_ROT_QUAD_ATT_DB);
-+		cal_sram[i].vga_quad_sign =
-+			MS(value, AR_PHY_AIC_SRAM_VGA_QUAD_SIGN);
-+		cal_sram[i].rot_dir_att_db =
-+			MS(value, AR_PHY_AIC_SRAM_ROT_DIR_ATT_DB);
-+		cal_sram[i].vga_dir_sign =
-+			MS(value, AR_PHY_AIC_SRAM_VGA_DIR_SIGN);
-+		cal_sram[i].com_att_6db =
-+			MS(value, AR_PHY_AIC_SRAM_COM_ATT_6DB);
-+
-+		if (cal_sram[i].valid) {
-+			dir_path_gain_idx = cal_sram[i].rot_dir_att_db +
-+				com_att_db_table[cal_sram[i].com_att_6db];
-+			quad_path_gain_idx = cal_sram[i].rot_quad_att_db +
-+				com_att_db_table[cal_sram[i].com_att_6db];
-+
-+			dir_path_sign = (cal_sram[i].vga_dir_sign) ? 1 : -1;
-+			quad_path_sign = (cal_sram[i].vga_quad_sign) ? 1 : -1;
-+
-+			aic_sram[i].dir_path_gain_lin = dir_path_sign *
-+				aic_lin_table[dir_path_gain_idx];
-+			aic_sram[i].quad_path_gain_lin = quad_path_sign *
-+				aic_lin_table[quad_path_gain_idx];
-+		}
-+	}
-+
-+	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
-+		int16_t start_idx, end_idx;
-+
-+		if (cal_sram[i].valid)
-+			continue;
-+
-+		start_idx = ar9003_aic_find_valid(cal_sram, 0, i);
-+		end_idx = ar9003_aic_find_valid(cal_sram, 1, i);
-+
-+		if (start_idx < 0) {
-+			/* extrapolation */
-+			start_idx = end_idx;
-+			end_idx = ar9003_aic_find_valid(cal_sram, 1, start_idx);
-+
-+			if (end_idx < 0) {
-+				ret = false;
-+				break;
-+			}
-+
-+			aic_sram[i].dir_path_gain_lin =
-+				((aic_sram[start_idx].dir_path_gain_lin -
-+				  aic_sram[end_idx].dir_path_gain_lin) *
-+				 (start_idx - i) + ((end_idx - i) >> 1)) /
-+				(end_idx - i) +
-+				aic_sram[start_idx].dir_path_gain_lin;
-+			aic_sram[i].quad_path_gain_lin =
-+				((aic_sram[start_idx].quad_path_gain_lin -
-+				  aic_sram[end_idx].quad_path_gain_lin) *
-+				 (start_idx - i) + ((end_idx - i) >> 1)) /
-+				(end_idx - i) +
-+				aic_sram[start_idx].quad_path_gain_lin;
-+		}
-+
-+		if (end_idx < 0) {
-+			/* extrapolation */
-+			end_idx = ar9003_aic_find_valid(cal_sram, 0, start_idx);
-+
-+			if (end_idx < 0) {
-+				ret = false;
-+				break;
-+			}
-+
-+			aic_sram[i].dir_path_gain_lin =
-+				((aic_sram[start_idx].dir_path_gain_lin -
-+				  aic_sram[end_idx].dir_path_gain_lin) *
-+				 (i - start_idx) + ((start_idx - end_idx) >> 1)) /
-+				(start_idx - end_idx) +
-+				aic_sram[start_idx].dir_path_gain_lin;
-+			aic_sram[i].quad_path_gain_lin =
-+				((aic_sram[start_idx].quad_path_gain_lin -
-+				  aic_sram[end_idx].quad_path_gain_lin) *
-+				 (i - start_idx) + ((start_idx - end_idx) >> 1)) /
-+				(start_idx - end_idx) +
-+				aic_sram[start_idx].quad_path_gain_lin;
-+
-+		} else if (start_idx >= 0){
-+			/* interpolation */
-+			aic_sram[i].dir_path_gain_lin =
-+				(((end_idx - i) * aic_sram[start_idx].dir_path_gain_lin) +
-+				 ((i - start_idx) * aic_sram[end_idx].dir_path_gain_lin) +
-+				 ((end_idx - start_idx) >> 1)) /
-+				(end_idx - start_idx);
-+			aic_sram[i].quad_path_gain_lin =
-+				(((end_idx - i) * aic_sram[start_idx].quad_path_gain_lin) +
-+				 ((i - start_idx) * aic_sram[end_idx].quad_path_gain_lin) +
-+				 ((end_idx - start_idx) >> 1))/
-+				(end_idx - start_idx);
-+		}
-+	}
-+
-+	/* From dir/quad_path_gain_lin to sram. */
-+	i = ar9003_aic_find_valid(cal_sram, 1, 0);
-+	if (i < 0) {
-+		i = 0;
-+		ret = false;
-+	}
-+	fixed_com_att_db = com_att_db_table[cal_sram[i].com_att_6db];
-+
-+	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
-+		int16_t rot_dir_path_att_db, rot_quad_path_att_db;
-+
-+		aic_sram[i].sram.vga_dir_sign =
-+			(aic_sram[i].dir_path_gain_lin >= 0) ? 1 : 0;
-+		aic_sram[i].sram.vga_quad_sign=
-+			(aic_sram[i].quad_path_gain_lin >= 0) ? 1 : 0;
-+
-+		rot_dir_path_att_db =
-+			ar9003_aic_find_index(0, abs(aic_sram[i].dir_path_gain_lin)) -
-+			fixed_com_att_db;
-+		rot_quad_path_att_db =
-+			ar9003_aic_find_index(0, abs(aic_sram[i].quad_path_gain_lin)) -
-+			fixed_com_att_db;
-+
-+		aic_sram[i].sram.com_att_6db =
-+			ar9003_aic_find_index(1, fixed_com_att_db);
-+
-+		aic_sram[i].sram.valid = 1;
-+
-+		aic_sram[i].sram.rot_dir_att_db =
-+			min(max(rot_dir_path_att_db,
-+				(int16_t)ATH_AIC_MIN_ROT_DIR_ATT_DB),
-+			    ATH_AIC_MAX_ROT_DIR_ATT_DB);
-+		aic_sram[i].sram.rot_quad_att_db =
-+			min(max(rot_quad_path_att_db,
-+				(int16_t)ATH_AIC_MIN_ROT_QUAD_ATT_DB),
-+			    ATH_AIC_MAX_ROT_QUAD_ATT_DB);
-+	}
-+
-+	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
-+		aic->aic_sram[i] = (SM(aic_sram[i].sram.vga_dir_sign,
-+				       AR_PHY_AIC_SRAM_VGA_DIR_SIGN) |
-+				    SM(aic_sram[i].sram.vga_quad_sign,
-+				       AR_PHY_AIC_SRAM_VGA_QUAD_SIGN) |
-+				    SM(aic_sram[i].sram.com_att_6db,
-+				       AR_PHY_AIC_SRAM_COM_ATT_6DB) |
-+				    SM(aic_sram[i].sram.valid,
-+				       AR_PHY_AIC_SRAM_VALID) |
-+				    SM(aic_sram[i].sram.rot_dir_att_db,
-+				       AR_PHY_AIC_SRAM_ROT_DIR_ATT_DB) |
-+				    SM(aic_sram[i].sram.rot_quad_att_db,
-+				       AR_PHY_AIC_SRAM_ROT_QUAD_ATT_DB));
-+	}
-+
-+	return ret;
++	return 0;
 +}
 +
- static void ar9003_aic_cal_done(struct ath_hw *ah)
- {
-+	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
-+
- 	/* Disable AIC reference signal in BT modem. */
- 	REG_WRITE(ah, ATH_AIC_BT_JUPITER_CTRL,
- 		  (REG_READ(ah, ATH_AIC_BT_JUPITER_CTRL) &
- 		   ~ATH_AIC_BT_AIC_ENABLE));
-+
-+	if (ar9003_aic_cal_post_process(ah))
-+		aic->aic_cal_state = AIC_CAL_STATE_DONE;
-+	else
-+		aic->aic_cal_state = AIC_CAL_STATE_ERROR;
- }
- 
- static u8 ar9003_aic_cal_continue(struct ath_hw *ah, bool cal_once)
+ /*
+  * This function handles the command responses.
+  *
+@@ -1124,6 +1142,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 		break;
+ 	case HostCmd_CMD_CHAN_REPORT_REQUEST:
+ 		break;
++	case HostCmd_CMD_SDIO_SP_RX_AGGR_CFG:
++		ret = mwifiex_ret_sdio_rx_aggr_cfg(priv, resp);
++		break;
+ 	default:
+ 		dev_err(adapter->dev, "CMD_RESP: unknown cmd response %#x\n",
+ 			resp->command);
 -- 
-2.3.1
+1.8.1.4
 
