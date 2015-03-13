@@ -1,92 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:46087 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbbCKLeF (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:46465 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750830AbbCMH3e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 07:34:05 -0400
-Received: by wiwh11 with SMTP id h11so10828120wiw.5
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 04:34:04 -0700 (PDT)
+	Fri, 13 Mar 2015 03:29:34 -0400
+Date: Fri, 13 Mar 2015 18:20:10 +1100
+From: James Cameron <quozl@laptop.org>
+To: Avinash Patil <patila@marvell.com>
+Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
+	cluo@marvell.com, liuzy@marvell.com, crlo@marvell.com,
+	pchen@marvell.com, szli@marvell.com, nishants@marvell.com
+Subject: Re: [PATCHv2 9/9] mwifiex: delay skb allocation for RX until cmd53
+ over
+Message-ID: <20150313072010.GU17299@us.netrek.org> (sfid-20150313_083038_087623_A0333706)
+References: <1426248479-28451-1-git-send-email-patila@marvell.com>
+ <1426248479-28451-10-git-send-email-patila@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <3439869.6umCuOq6SV@wuerfel>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
-	<20150310173550.GT5264@atomide.com>
-	<CABxcv=ndnNj4MhoXeW=GHXT4aEWQYHdbu-Mg4R2Zhf9CJTrJCA@mail.gmail.com>
-	<3439869.6umCuOq6SV@wuerfel>
-Date: Wed, 11 Mar 2015 12:34:03 +0100
-Message-ID: <CABxcv=nE_Qd7do+dRyp=fw3wYmWFb+0eEjXYOtdjqE55Cp0zmQ@mail.gmail.com> (sfid-20150311_123410_424632_1A9996BC)
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-From: Javier Martinez Canillas <javier@dowhile0.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tony Lindgren <tony@atomide.com>, Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426248479-28451-10-git-send-email-patila@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Arnd,
+On Fri, Mar 13, 2015 at 05:37:59PM +0530, Avinash Patil wrote:
+> From: Zhaoyang Liu <liuzy@marvell.com>
+> 
+> This patch moves SKB allocation for RX packets from current
+> place i.e. after reading MP regs to place where we already
+> have read data from SDIO bus ie after cmd53.
+> 
+> mp_rx_aggr_setup has been modified accordingly to set
+> skb_arr to NULL.
+> 
+> Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Reviewed-by: Amitkumar Karwar <akarwar@marvell.com>
+> Reviewed-by: Cathy Luo <cluo@marvell.com>
+> Reviewed-by: Avinash Patil <patila@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/sdio.c | 59 ++++++++++++++++++-------------------
+>  drivers/net/wireless/mwifiex/sdio.h |  8 ++---
+>  2 files changed, 33 insertions(+), 34 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+> index fdeeb67..330e9d0 100644
+> --- a/drivers/net/wireless/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/mwifiex/sdio.c
 
-On Wed, Mar 11, 2015 at 10:53 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 11 March 2015 02:00:59 Javier Martinez Canillas wrote:
->>
->> What do you mean by parsing here? IIUC there isn't a clock driver for
->> these clocks and are setup directly in the
->> drivers/net/wireless/ti/wl12xx/main.c driver.
->>
->> So you can't make the WLAN chip dev node a consumer of these clocks by
->> adding a phandle to a clock provider and clock specifiers since there
->> isn't a provider to be referenced in the DT. Or did I misunderstand?
->
-> As I understand it, the clock signal is provided by an external oscillator,
+[snip]
 
-According to [0], it seems the chip can be connected to both external
-oscillators or internal clocks provided by the chip itself.
+> @@ -1538,24 +1550,11 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+>  					rx_len);
+>  				return -1;
+>  			}
+> -			rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
+>  
+> -			skb = mwifiex_alloc_dma_align_buf(rx_len,
+> -							  GFP_KERNEL |
+> -							  GFP_DMA);
+> -
+> -			if (!skb) {
+> -				dev_err(adapter->dev, "%s: failed to alloc skb",
+> -					__func__);
+> -				return -1;
+> -			}
 
-> which we can easily model in DT, and then you call clk_get_rate on that.
->
+I like it.
 
-Right, my point wast that this can be done only if the external
-oscillator have a proper clock driver / provider which I don't think
-is the case here. Most of this stuff predates the common clock
-framework.
+Because I continue to have problems with dev_alloc_skb failing, and
+the "return -1;" that you are removing doesn't seem to leave the card
+and driver in a useful state.
 
-Or at least Luciano Coelho had a patch on his series to make the
-wilink driver a clock provider itself by registering the refclock and
-tcxoclock clocks [0].
+Your patch is hopefully an improvement.
 
-Luciano also had patches for:
+Have you done any testing of response after skb allocation failure
+before and after your patch?
 
-* Adding the clock provider dev node in the DTS [1]
-* Have a table to map the clock rate with the FW configuration values [2]
-* Getting the clock from DT and the rate as you said to configure the
-firmware accordingly [3]
-
-I think that patch [0] should not be needed since for external clocks,
-the IP providing the clocks should have its own clock driver and for
-internal clocks, a property should be used instead as you said.
-
-> If there is no external clock provider for this chip and the clocks
-> are provided by the device itself, then all we need is a clock-frequency
-> property in the device node.
->
-
-Agreed, IIUC Luciano wanted to expose the internal clocks by
-registering in the common clock framework but if those clocks are not
-really accessible from outside the wlan chip, then I also think that a
-device node property should be used instead.
-
->         Arnd
-> --
-
-Best regards,
-Javier
-
-[0]: https://lists.ozlabs.org/pipermail/devicetree-discuss/2013-July/037139.html
-[1]: http://lists.infradead.org/pipermail/linux-arm-kernel/2013-July/187794.html
-[2]: http://lists.infradead.org/pipermail/linux-arm-kernel/2013-July/181594.html
-[3]: http://lists.infradead.org/pipermail/linux-arm-kernel/2013-July/181591.html
+-- 
+James Cameron
+http://quozl.linux.org.au/
