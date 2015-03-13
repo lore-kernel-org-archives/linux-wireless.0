@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu004-omc1s28.hotmail.com ([65.55.116.39]:52140 "EHLO
-	BLU004-OMC1S28.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754408AbbCETy0 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 14:54:26 -0500
-Message-ID: <BLU436-SMTP255C4EA2EC2AD5F4A757276B91F0@phx.gbl> (sfid-20150305_205442_432096_A3779CD5)
-Date: Fri, 6 Mar 2015 04:02:16 +0800
-From: Chen Gang <xili_gchen_5257@hotmail.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>, Jim Davis <jim.epost@gmail.com>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>
-Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
-References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>	<CACna6rw03OfforxrV5nWLYTUW64BQ-vvH9TuZqK2q9__2Y0edA@mail.gmail.com> <87r3t365aw.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87r3t365aw.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from dedo.coelho.fi ([88.198.205.34]:41883 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751308AbbCMU1e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 16:27:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 13 Mar 2015 22:27:21 +0200
+Message-Id: <1426278441-10304-5-git-send-email-luca@coelho.fi> (sfid-20150313_212742_748090_F931EEDC)
+In-Reply-To: <1426278441-10304-1-git-send-email-luca@coelho.fi>
+References: <1426278441-10304-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH iw 4/4] iw: add randomise option for sched_scan
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3/5/15 19:40, Kalle Valo wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
-> 
->> Kalle, I guess the recent discussion and work on this problem could be
->> confusing, so let me try to sum it up it a bit.
->>
->> First of all, please note there are 3 awaiting bcma patches that
->> should be applied independently of what we decide to do with this
->> patch. They are of course inspired by the recent building problems.
->> List of these patches:
->> [PATCH next] bcma: make bcma_host_pci_(up|down) calls safe for every config
->> [PATCH next] bcma: move internal function declarations to private header
->> [PATCH next] bcma: prepare Kconfig symbol for PCI driver
->>
->> Now, the building problem is obviously caused by me, my work on
->> driver_pcie2.c and using pcie_set_readrq there without making sure
->> that is PCI available. I'm sorry for that.
->>
->> All 3 above patches are moving us toward the the most optimal solution
->> of this problem. Depending on PCI only when it's really required.
->> There is still one more change missing that I'm working on. It'll take
->> me about 2 more days to get the last patch.
->> On the other way, patch proposed by Chen fixes building problem right
->> now. It's much simpler but bumps bcma requirements a bit too high.
->> bcma doesn't really have to depend on PCI.
-> 
-> Thanks for the good summary, it clarified things for me.
-> 
->> So you have 2 options there and I'll be happy with whatever you choose to do:
->> 1) Pick Chen patch now and in ~2 days apply my final fix + revert Chen
->> patch.
-> 
-> I'll prefer this option so that we can quickly solve the build problem.
-> Also once your final fix is ready, please remember that you need to
-> revert Chen's patch within the same patch.
-> 
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Thank you for all of your work. In honest, I am not quite familiar with
-the details, my patch is applied only says that "I am lucky enough".
+Like with normal scans, we can randomise the MAC address sent out in
+active scheduled scans.  Add the randomise option to sched_scan (and
+net-detect) parsing code.
 
-Thanks.
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ iw.h   |  2 +-
+ scan.c | 11 +++++++++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/iw.h b/iw.h
+index d6b51cf..193825f 100644
+--- a/iw.h
++++ b/iw.h
+@@ -174,7 +174,7 @@ void parse_bitrate(struct nlattr *bitrate_attr, char *buf, int buflen);
+ void iw_hexdump(const char *prefix, const __u8 *data, size_t len);
+ 
+ #define SCHED_SCAN_OPTIONS "interval <in_msecs> [delay <in_secs> " \
+-	"[freqs <freq>+] [matches [ssid <ssid>]+]] [active [ssid <ssid>]+|passive] "
++	"[freqs <freq>+] [matches [ssid <ssid>]+]] [active [ssid <ssid>]+|passive] [randomise[=<addr>/<mask>]]"
+ int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv);
+ 
+ DECLARE_SECTION(set);
+diff --git a/scan.c b/scan.c
+index 7ff04ec..e959c1b 100644
+--- a/scan.c
++++ b/scan.c
+@@ -115,6 +115,7 @@ int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv)
+ 	unsigned int freq, interval = 0, delay = 0;
+ 	bool have_matchset = false, have_freqs = false, have_ssids = false;
+ 	bool have_active = false, have_passive = false;
++	uint32_t flags = 0;
+ 
+ 	matchset = nlmsg_alloc();
+ 	if (!matchset) {
+@@ -208,6 +209,14 @@ int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv)
+ 				}
+ 
+ 				have_passive = true;
++			} else if (!strncmp(v[0], "randomise", 9) ||
++				   !strncmp(v[0], "randomize", 9)) {
++				flags |= NL80211_SCAN_FLAG_RANDOM_ADDR;
++				if (c > 0) {
++					err = parse_random_mac_addr(msg, v[0]);
++					if (err)
++						goto nla_put_failure;
++				}
+ 			} else {
+ 				/* this element is not for us, so
+ 				 * return to continue parsing.
+@@ -312,6 +321,8 @@ int parse_sched_scan(struct nl_msg *msg, int *argc, char ***argv)
+ 		nla_put_nested(msg, NL80211_ATTR_SCAN_FREQUENCIES, freqs);
+ 	if (have_matchset)
+ 		nla_put_nested(msg, NL80211_ATTR_SCHED_SCAN_MATCH, matchset);
++	if (flags)
++		NLA_PUT_U32(msg, NL80211_ATTR_SCAN_FLAGS, flags);
+ 
+ nla_put_failure:
+ 	if (match)
 -- 
-Chen Gang
+2.1.4
 
-Open, share, and attitude like air, water, and life which God blessed
