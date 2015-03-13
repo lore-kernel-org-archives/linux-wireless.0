@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:48830 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751064AbbCTNfV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51428 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755338AbbCMOLk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 09:35:21 -0400
-Date: Fri, 20 Mar 2015 09:35:17 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/7] brcm: firmware drop for brcmfmac driver
-Message-ID: <20150320133517.GA580@merlin.infradead.org> (sfid-20150320_143526_460496_B44E501D)
-References: <1426855445-31121-1-git-send-email-arend@broadcom.com>
+	Fri, 13 Mar 2015 10:11:40 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426855445-31121-1-git-send-email-arend@broadcom.com>
+Subject: Re: [1/7] brcmfmac: remove duplication of ramsize info
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1426086693-13876-2-git-send-email-arend@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20150313141140.1175414161A@smtp.codeaurora.org> (sfid-20150313_151144_178752_5573E404)
+Date: Fri, 13 Mar 2015 14:11:40 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 20, 2015 at 01:43:58PM +0100, Arend van Spriel wrote:
-> This series adds firmware files for a number of "new" devices.
-> Admittedly there was bit of backlog. For BCM4354 SDIO this
-> series has firmware upgrade.
-> 
-> This series does apply to the master branch of the linux-firmware
-> repo on top of commit f10b97abdab2 ("radeon: Update Kaveri MEC
-> firmware to #396").
-> 
-> Arend van Spriel (7):
->   brcm: add firmware for BCM43242 USB device
->   brcm: add firmware for BCM4356 PCIe device
->   brcm: add firmware files for BCM43602 PCIe device
->   brcm: add firmware for BCM43455 SDIO device
->   brcm: add firmware for BCM4339 SDIO device
->   brcm: add firmware for BCM43340/1 SDIO devices
->   brcm: upgrade firmware for BCM4354 SDIO device
-> 
 
-Cool, thanks, I've applied this series and pushed it out.
+> Removing the ramsize from the brcmf_sdio structure to avoid
+> duplication. The information is available in brcmf_chip
+> structure.
+> 
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-regards, Kyle
+Thanks, 7 patches applied to wireless-drivers-next.git:
 
+55b59fba0f0c brcmfmac: remove duplication of ramsize info
+5ded1c251f8e brcmfmac: always perform cores checks
+d380ebc9b6fb brcmfmac: rename chip download functions
+38f29e1f42b1 brcmfmac: assure device is ready for download after brcmf_chip_attach()
+0da32ba4ee66 brcmfmac: extract ram size info from internal memory registers
+9819a9024eab brcmfmac: take save&restore memory into account for SDIO shared info
+cf45932a74d4 brcmfmac: fix watchdog timer regression
+
+Kalle Valo
