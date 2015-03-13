@@ -1,78 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:36162 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752095AbbCYNpJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 09:45:09 -0400
-Received: by iedm5 with SMTP id m5so22140962ied.3
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2015 06:45:08 -0700 (PDT)
+Received: from aibo.runbox.com ([91.220.196.211]:39958 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751113AbbCMLQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Mar 2015 07:16:46 -0400
+Message-ID: <5502C713.4090402@runbox.com> (sfid-20150313_121710_978141_372FDB06)
+Date: Fri, 13 Mar 2015 07:16:35 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
 MIME-Version: 1.0
-In-Reply-To: <5512B6F2.8090407@pengutronix.de>
-References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
-	<1419834253-18331-6-git-send-email-eliad@wizery.com>
-	<5512A9BC.5010902@pengutronix.de>
-	<CAB3XZEfw5EurqA2jZypAj4LkQwwAiVeKd5wKKsxpOAh-RrCq0w@mail.gmail.com>
-	<5512B6F2.8090407@pengutronix.de>
-Date: Wed, 25 Mar 2015 15:45:08 +0200
-Message-ID: <CAB3XZEdyq6FJUTwXm40EUYemmLvuHfZ8JsUvHyCvS3twFhw=Dw@mail.gmail.com> (sfid-20150325_144514_647458_788778D4)
-Subject: Re: [PATCH 06/13] wlcore: enable sleep during AP mode operation
-From: Eliad Peller <eliad@wizery.com>
-To: Marc Kleine-Budde <mkl@pengutronix.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kobi Leibovitch <kobi.lev100@gmail.com>,
-	"kernel@pengutronix.de" <kernel@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 01/16] staging: rtl8723au: Reformat whitespace to increase
+ readability
+References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com> <1426216532-24058-2-git-send-email-m.v.b@runbox.com> <20150313045313.GA3687@sudip-PC>
+In-Reply-To: <20150313045313.GA3687@sudip-PC>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 25, 2015 at 3:24 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
-> On 03/25/2015 01:58 PM, Eliad Peller wrote:
->> hi Marc,
->>
->> On Wed, Mar 25, 2015 at 2:27 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
->>> On 12/29/2014 07:24 AM, Eliad Peller wrote:
->>>> From: Kobi L <kobi.lev100@gmail.com>
->>>>
->>>> Enable ELP authorization in AP mode and enable the use
->>>> of the wakeup bit in the ELP register.
->>>>
->>>> Introduce AP role sleep configuration which is disabled
->>>> by default. When configured, it allows the AP to sleep
->>>> when ELP is authorized for it.
->>>>
->>>> Signed-off-by: Kobi Leibovitch <kobi.lev100@gmail.com>
->>>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
->>>
->>> [...]
->>>
->>>
->>> This patch requires a new firmware, loading of "wl18xx-conf.bin" from
->>> [1] fails with:
->>>
->>>> wlcore: ERROR configuration binary file size is wrong, expected 1226 got 1221
->>>
->> thanks. seems you're right.
->>
->> anyway, note that this file is not actual fw, but only the default
->> configuration params.
->> you can just delete it, and the driver will load just fine.
->> you can then recreate it with something like:
->> cat /sys/kernel/debug/ieee80211/phy0/wlcore/wl18xx/conf >
->> /lib/firmware/ti-connectivity/wl18xx-conf.bin
->>
->> actually, i don't think it makes much sense to have this file in the
->> linux-firmware git at all.
->> i'll try handling it.
->
-> Thanks, there are more file with size of ~1k, are they optional, too?
-> What's the "error" message if these optional files are not present?
->
-AFAIK, the other nvs files are basically required for proper operation.
+On 13/03/15 12:53 AM, Sudip Mukherjee wrote:
+> you have not added the maintainers in your To list, and usually
+> initials are discouraged in the Signed-off-by. The name here should
+> be the name the way you use it to sign legal documents.
 
-> From working with $CUSTOMERS I gained the impression, messages like
-> "error failed to load...." for optional file don't shine the best light
-> on Linux, a neutral "using default values" is far better.
-i agree :)
+Hello Sudip,
 
-Eliad.
+This is a first for me, so thank you for the comments!
+
+Regarding not including the maintainers in the To: list of the e-mail, good
+point! In this case should I resend the patches after making sure that I include
+Greg Kroah-Hartman, Larry Finger and Jes Sorensen's e-mail addresses in the To:
+list? (get_maintainers.pl reports their names as the maintainers, and based on
+the commit history, they are the major contributors and/or gate-keepers to this
+staging driver.)
+
+Actually, my first name is Vefa, and the "M" is for my middle name, for which I
+only use an initial, as otherwise everyone ends up addressing me with my middle
+name. Now, the question would be: Why is my middle name placed before my first
+name? I realize this is quickly becoming off-topic for the mailing lists. If you
+would like to learn more, I can explain the reasons in a private discussion.
+
+Thanks again,
+
+Vefa
