@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46108 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754538AbbC0RAk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2015 13:00:40 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath: use PRI value given by spec for fixed PRI
-Date: Fri, 27 Mar 2015 09:59:50 -0700
-Message-ID: <1427475590-2198-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150327_180047_479629_491C0C1E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from aibo.runbox.com ([91.220.196.211]:36434 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756568AbbCMDhS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Mar 2015 23:37:18 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: m.v.b@runbox.com
+Subject: [PATCH 03/16] staging: rtl8723au: else should follow close brace
+Date: Thu, 12 Mar 2015 23:15:19 -0400
+Message-Id: <1426216532-24058-4-git-send-email-m.v.b@runbox.com> (sfid-20150313_043843_194818_A578125B)
+In-Reply-To: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
+References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PRI value is used as divider when DFS detector analyzes candidate
-radar pulses.
-If PRI deviation is big from its origin PRI, DFS detector could miss
-valid radar reports since HW often misses detecting radar pulses and
-causes long interval value of pulses.
+Correct checkpatch.pl errors in rtl8723au's rtw_security.c indicating
+that an else statement should follow the closing brace of the previous
+if/else if code block:
+	ERROR: else should follow close brace '}'
 
-For instance from practical results, if runtime PRI is calculated as
-1431 for fixed PRI value of 1428 and delta timestamp logs 15719,
-the modular remainder will be 1409 and the delta between the remainder
-and runtime PRI is 22 that is bigger than PRI tolerance which is 16.
-As a result this radar report will be ignored even though it's valid.
-
-By using spec defined PRI for fixed PRI, we can correct this error.
-
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 ---
- drivers/net/wireless/ath/dfs_pri_detector.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/staging/rtl8723au/core/rtw_security.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/dfs_pri_detector.c b/drivers/net/wireless/ath/dfs_pri_detector.c
-index 1b5ad19..fef459a 100644
---- a/drivers/net/wireless/ath/dfs_pri_detector.c
-+++ b/drivers/net/wireless/ath/dfs_pri_detector.c
-@@ -25,6 +25,8 @@ struct ath_dfs_pool_stats global_dfs_pool_stats = {};
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index c433c5b506..8f98b215d0 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -379,8 +379,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
+ 			rtw_secmicappend23a(&micdata, &header[24], 6);
+ 		else
+ 			rtw_secmicappend23a(&micdata, &header[10], 6);
+-	}
+-	else{	/* ToDS == 0 */
++	} else {	/* ToDS == 0 */
+ 		rtw_secmicappend23a(&micdata, &header[4], 6);   /* DA */
+ 		if (header[1]&2)  /* From Ds == 1 */
+ 			rtw_secmicappend23a(&micdata, &header[16], 6);
+@@ -673,8 +672,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 					arcfour_encrypt(&mycontext, payload, payload, length);
+ 					arcfour_encrypt(&mycontext, payload+length, crc, 4);
  
- #define DFS_POOL_STAT_INC(c) (global_dfs_pool_stats.c++)
- #define DFS_POOL_STAT_DEC(c) (global_dfs_pool_stats.c--)
-+#define GET_PRI_TO_USE(MIN, MAX, RUNTIME) \
-+	(MIN + 16 == MAX - 16 ? MIN + 16 : RUNTIME)
+-				}
+-				else {
++				} else {
+ 					length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
+ 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
+ 					arcfour_init(&mycontext, rc4key, 16);
+@@ -686,8 +684,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 				}
+ 			}
  
- /**
-  * struct pulse_elem - elements in pulse queue
-@@ -243,7 +245,8 @@ static bool pseq_handler_create_sequences(struct pri_detector *pde,
- 		ps.count_falses = 0;
- 		ps.first_ts = p->ts;
- 		ps.last_ts = ts;
--		ps.pri = ts - p->ts;
-+		ps.pri = GET_PRI_TO_USE(pde->rs->pri_min,
-+			pde->rs->pri_max, ts - p->ts);
- 		ps.dur = ps.pri * (pde->rs->ppb - 1)
- 				+ 2 * pde->rs->max_pri_tolerance;
- 
+-		}
+-		else {
++		} else {
+ 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo == NULL!!!\n"));
+ 			DBG_8723A("%s, psta == NUL\n", __func__);
+ 			res = _FAIL;
 -- 
-1.9.1
+2.1.4
 
