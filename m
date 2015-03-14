@@ -1,85 +1,306 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f45.google.com ([74.125.82.45]:33171 "EHLO
-	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751764AbbC1Q6S (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:39191 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379AbbCNFyU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 12:58:18 -0400
-Received: by wgbgs4 with SMTP id gs4so38137117wgb.0
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2015 09:58:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5516DB22.1030202@lwfinger.net>
-References: <1427544770-28523-1-git-send-email-ap420073@gmail.com>
-	<5516DB22.1030202@lwfinger.net>
-Date: Sun, 29 Mar 2015 01:58:17 +0900
-Message-ID: <CAMArcTX2Aootn-uCgBDG7-9RaVPYXHYybZALtbTHoQKAp+FT3Q@mail.gmail.com> (sfid-20150328_175824_868757_8246904A)
-Subject: Re: [PATCH] rtlwifi: rtl8192c: Change REG_C2HEVT_CLEAR and REG_USTIME_TSF
-From: "ap420073 ." <ap420073@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Sat, 14 Mar 2015 01:54:20 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2 06/11] ath9k: Process the AIC calibration results
+Date: Sat, 14 Mar 2015 11:27:52 +0530
+Message-Id: <1426312677-2064-7-git-send-email-sujith@msujith.org> (sfid-20150314_065438_017272_5370DBEA)
+In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I understand your plan,
-thanks a lot for your review.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
+This patch adds support for post-processing
+the AIC calibration results.
 
-2015-03-29 1:47 GMT+09:00 Larry Finger <Larry.Finger@lwfinger.net>:
-> On 03/28/2015 07:12 AM, Taehee Yoo wrote:
->>
->> in the rtl8192ce/reg.h, REG_C2HEVT_CLEAR register's address is 0x01BF
->> but, vendor driver's address is 0x01AF. so i change 0x01BF to 0x01AF.
->> also in the rtl8192ce/reg.h, 0x0551 is REG_USTIME_TSF, but vendor driver
->> define REG_BCN_CTRL_1. so i change the REG_USTIME_TSF to REG_BCN_CTRL_1.
->>
->> according to r8192c vendor driver, rtl8192c do not use REG_USTIME_TSF.
->>
->> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
->> ---
->>   drivers/net/wireless/rtlwifi/rtl8192ce/reg.h | 4 ++--
->>   1 file changed, 2 insertions(+), 2 deletions(-)
->
->
-> NACK
->
-> In the code, neither REG_C2HEVT_CLEAR nor REG_USTIME_TSF is used by either
-> rtl8192ce nor rtl8192cu, thus it does not matter whether the definition
-> matches the vendor driver or not. Making this kind of change is just
-> churning the source without making any real difference.
->
-> Because many of these register definitions are used by all the drivers, my
-> plan is to create a reg.h header in rtlwifi and eliminate most or all of the
-> headers now associated with each driver. When I do that, I will eliminate
-> those definitions that are not used by any driver, but until that part is
-> done, I prefer that they be left alone.
->
-> Larry
->
->
->>
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
->> b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
->> index dc8460c..21c0fc9 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
->> @@ -117,8 +117,8 @@
->>   #define REG_MBIST_DONE                                0x0178
->>   #define REG_MBIST_FAIL                                0x017C
->>   #define REG_C2HEVT_MSG_NORMAL                 0x01A0
->> +#define REG_C2HEVT_CLEAR                       0x01AF
->>   #define REG_C2HEVT_MSG_TEST                   0x01B8
->> -#define REG_C2HEVT_CLEAR                       0x01BF
->>   #define REG_MCUTST_1                          0x01c0
->>   #define REG_FMETHR                            0x01C8
->>   #define REG_HMETFR                            0x01CC
->> @@ -231,7 +231,7 @@
->>   #define REG_RD_NAV_NXT                                0x0544
->>   #define REG_NAV_PROT_LEN                      0x0546
->>   #define REG_BCN_CTRL                          0x0550
->> -#define REG_USTIME_TSF                         0x0551
->> +#define REG_BCN_CTRL_1                         0x0551
->>   #define REG_MBID_NUM                          0x0552
->>   #define REG_DUAL_TSF_RST                      0x0553
->>   #define REG_BCN_INTERVAL                      0x0554
->>
->
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_aic.c | 245 ++++++++++++++++++++++++++++
+ 1 file changed, 245 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+index 00aaf4d..51ecc9b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+@@ -20,6 +20,22 @@
+ #include "ar9003_aic.h"
+ #include "reg_aic.h"
+ 
++static const u8 com_att_db_table[ATH_AIC_MAX_COM_ATT_DB_TABLE] = {
++	0, 3, 9, 15, 21, 27
++};
++
++static const u16 aic_lin_table[ATH_AIC_MAX_AIC_LIN_TABLE] = {
++	8191, 7300, 6506, 5799, 5168, 4606, 4105, 3659,
++	3261, 2906, 2590, 2309, 2057, 1834, 1634, 1457,
++	1298, 1157, 1031, 919,	819,  730,  651,  580,
++	517,  461,  411,  366,	326,  291,  259,  231,
++	206,  183,  163,  146,	130,  116,  103,  92,
++	82,   73,   65,	  58,	52,   46,   41,	  37,
++	33,   29,   26,	  23,	21,   18,   16,	  15,
++	13,   12,   10,	  9,	8,    7,    7,	  6,
++	5,    5,    4,	  4,	3
++};
++
+ static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
+ {
+ 	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+@@ -30,6 +46,56 @@ static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
+ 	return true;
+ }
+ 
++static int16_t ar9003_aic_find_valid(struct ath_aic_sram_info *cal_sram,
++				     bool dir, u8 index)
++{
++	int16_t i;
++
++	if (dir) {
++		for (i = index + 1; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
++			if (cal_sram[i].valid)
++				break;
++		}
++	} else {
++		for (i = index - 1; i >= 0; i--) {
++			if (cal_sram[i].valid)
++				break;
++		}
++	}
++
++	if ((i >= ATH_AIC_MAX_BT_CHANNEL) || (i < 0))
++		i = -1;
++
++	return i;
++}
++
++/*
++ * type 0: aic_lin_table, 1: com_att_db_table
++ */
++static int16_t ar9003_aic_find_index(u8 type, int16_t value)
++{
++	int16_t i = -1;
++
++	if (type == 0) {
++		for (i = ATH_AIC_MAX_AIC_LIN_TABLE - 1; i >= 0; i--) {
++			if (aic_lin_table[i] >= value)
++				break;
++		}
++	} else if (type == 1) {
++		for (i = 0; i < ATH_AIC_MAX_COM_ATT_DB_TABLE; i++) {
++			if (com_att_db_table[i] > value) {
++				i--;
++				break;
++			}
++		}
++
++		if (i >= ATH_AIC_MAX_COM_ATT_DB_TABLE)
++			i = -1;
++	}
++
++	return i;
++}
++
+ static void ar9003_aic_gain_table(struct ath_hw *ah)
+ {
+ 	u32 aic_atten_word[19], i;
+@@ -186,12 +252,191 @@ static void ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
+ 	aic->aic_cal_state = AIC_CAL_STATE_STARTED;
+ }
+ 
++static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
++{
++	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
++	struct ath_aic_sram_info cal_sram[ATH_AIC_MAX_BT_CHANNEL];
++	struct ath_aic_out_info aic_sram[ATH_AIC_MAX_BT_CHANNEL];
++	u32 dir_path_gain_idx, quad_path_gain_idx, value;
++	u32 fixed_com_att_db;
++	int8_t dir_path_sign, quad_path_sign;
++	int16_t i;
++	bool ret = true;
++
++	memset(&cal_sram, 0, sizeof(cal_sram));
++	memset(&aic_sram, 0, sizeof(aic_sram));
++
++	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
++		value = aic->aic_sram[i];
++
++		cal_sram[i].valid =
++			MS(value, AR_PHY_AIC_SRAM_VALID);
++		cal_sram[i].rot_quad_att_db =
++			MS(value, AR_PHY_AIC_SRAM_ROT_QUAD_ATT_DB);
++		cal_sram[i].vga_quad_sign =
++			MS(value, AR_PHY_AIC_SRAM_VGA_QUAD_SIGN);
++		cal_sram[i].rot_dir_att_db =
++			MS(value, AR_PHY_AIC_SRAM_ROT_DIR_ATT_DB);
++		cal_sram[i].vga_dir_sign =
++			MS(value, AR_PHY_AIC_SRAM_VGA_DIR_SIGN);
++		cal_sram[i].com_att_6db =
++			MS(value, AR_PHY_AIC_SRAM_COM_ATT_6DB);
++
++		if (cal_sram[i].valid) {
++			dir_path_gain_idx = cal_sram[i].rot_dir_att_db +
++				com_att_db_table[cal_sram[i].com_att_6db];
++			quad_path_gain_idx = cal_sram[i].rot_quad_att_db +
++				com_att_db_table[cal_sram[i].com_att_6db];
++
++			dir_path_sign = (cal_sram[i].vga_dir_sign) ? 1 : -1;
++			quad_path_sign = (cal_sram[i].vga_quad_sign) ? 1 : -1;
++
++			aic_sram[i].dir_path_gain_lin = dir_path_sign *
++				aic_lin_table[dir_path_gain_idx];
++			aic_sram[i].quad_path_gain_lin = quad_path_sign *
++				aic_lin_table[quad_path_gain_idx];
++		}
++	}
++
++	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
++		int16_t start_idx, end_idx;
++
++		if (cal_sram[i].valid)
++			continue;
++
++		start_idx = ar9003_aic_find_valid(cal_sram, 0, i);
++		end_idx = ar9003_aic_find_valid(cal_sram, 1, i);
++
++		if (start_idx < 0) {
++			/* extrapolation */
++			start_idx = end_idx;
++			end_idx = ar9003_aic_find_valid(cal_sram, 1, start_idx);
++
++			if (end_idx < 0) {
++				ret = false;
++				break;
++			}
++
++			aic_sram[i].dir_path_gain_lin =
++				((aic_sram[start_idx].dir_path_gain_lin -
++				  aic_sram[end_idx].dir_path_gain_lin) *
++				 (start_idx - i) + ((end_idx - i) >> 1)) /
++				(end_idx - i) +
++				aic_sram[start_idx].dir_path_gain_lin;
++			aic_sram[i].quad_path_gain_lin =
++				((aic_sram[start_idx].quad_path_gain_lin -
++				  aic_sram[end_idx].quad_path_gain_lin) *
++				 (start_idx - i) + ((end_idx - i) >> 1)) /
++				(end_idx - i) +
++				aic_sram[start_idx].quad_path_gain_lin;
++		}
++
++		if (end_idx < 0) {
++			/* extrapolation */
++			end_idx = ar9003_aic_find_valid(cal_sram, 0, start_idx);
++
++			if (end_idx < 0) {
++				ret = false;
++				break;
++			}
++
++			aic_sram[i].dir_path_gain_lin =
++				((aic_sram[start_idx].dir_path_gain_lin -
++				  aic_sram[end_idx].dir_path_gain_lin) *
++				 (i - start_idx) + ((start_idx - end_idx) >> 1)) /
++				(start_idx - end_idx) +
++				aic_sram[start_idx].dir_path_gain_lin;
++			aic_sram[i].quad_path_gain_lin =
++				((aic_sram[start_idx].quad_path_gain_lin -
++				  aic_sram[end_idx].quad_path_gain_lin) *
++				 (i - start_idx) + ((start_idx - end_idx) >> 1)) /
++				(start_idx - end_idx) +
++				aic_sram[start_idx].quad_path_gain_lin;
++
++		} else if (start_idx >= 0){
++			/* interpolation */
++			aic_sram[i].dir_path_gain_lin =
++				(((end_idx - i) * aic_sram[start_idx].dir_path_gain_lin) +
++				 ((i - start_idx) * aic_sram[end_idx].dir_path_gain_lin) +
++				 ((end_idx - start_idx) >> 1)) /
++				(end_idx - start_idx);
++			aic_sram[i].quad_path_gain_lin =
++				(((end_idx - i) * aic_sram[start_idx].quad_path_gain_lin) +
++				 ((i - start_idx) * aic_sram[end_idx].quad_path_gain_lin) +
++				 ((end_idx - start_idx) >> 1))/
++				(end_idx - start_idx);
++		}
++	}
++
++	/* From dir/quad_path_gain_lin to sram. */
++	i = ar9003_aic_find_valid(cal_sram, 1, 0);
++	if (i < 0) {
++		i = 0;
++		ret = false;
++	}
++	fixed_com_att_db = com_att_db_table[cal_sram[i].com_att_6db];
++
++	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
++		int16_t rot_dir_path_att_db, rot_quad_path_att_db;
++
++		aic_sram[i].sram.vga_dir_sign =
++			(aic_sram[i].dir_path_gain_lin >= 0) ? 1 : 0;
++		aic_sram[i].sram.vga_quad_sign=
++			(aic_sram[i].quad_path_gain_lin >= 0) ? 1 : 0;
++
++		rot_dir_path_att_db =
++			ar9003_aic_find_index(0, abs(aic_sram[i].dir_path_gain_lin)) -
++			fixed_com_att_db;
++		rot_quad_path_att_db =
++			ar9003_aic_find_index(0, abs(aic_sram[i].quad_path_gain_lin)) -
++			fixed_com_att_db;
++
++		aic_sram[i].sram.com_att_6db =
++			ar9003_aic_find_index(1, fixed_com_att_db);
++
++		aic_sram[i].sram.valid = 1;
++
++		aic_sram[i].sram.rot_dir_att_db =
++			min(max(rot_dir_path_att_db,
++				(int16_t)ATH_AIC_MIN_ROT_DIR_ATT_DB),
++			    ATH_AIC_MAX_ROT_DIR_ATT_DB);
++		aic_sram[i].sram.rot_quad_att_db =
++			min(max(rot_quad_path_att_db,
++				(int16_t)ATH_AIC_MIN_ROT_QUAD_ATT_DB),
++			    ATH_AIC_MAX_ROT_QUAD_ATT_DB);
++	}
++
++	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
++		aic->aic_sram[i] = (SM(aic_sram[i].sram.vga_dir_sign,
++				       AR_PHY_AIC_SRAM_VGA_DIR_SIGN) |
++				    SM(aic_sram[i].sram.vga_quad_sign,
++				       AR_PHY_AIC_SRAM_VGA_QUAD_SIGN) |
++				    SM(aic_sram[i].sram.com_att_6db,
++				       AR_PHY_AIC_SRAM_COM_ATT_6DB) |
++				    SM(aic_sram[i].sram.valid,
++				       AR_PHY_AIC_SRAM_VALID) |
++				    SM(aic_sram[i].sram.rot_dir_att_db,
++				       AR_PHY_AIC_SRAM_ROT_DIR_ATT_DB) |
++				    SM(aic_sram[i].sram.rot_quad_att_db,
++				       AR_PHY_AIC_SRAM_ROT_QUAD_ATT_DB));
++	}
++
++	return ret;
++}
++
+ static void ar9003_aic_cal_done(struct ath_hw *ah)
+ {
++	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
++
+ 	/* Disable AIC reference signal in BT modem. */
+ 	REG_WRITE(ah, ATH_AIC_BT_JUPITER_CTRL,
+ 		  (REG_READ(ah, ATH_AIC_BT_JUPITER_CTRL) &
+ 		   ~ATH_AIC_BT_AIC_ENABLE));
++
++	if (ar9003_aic_cal_post_process(ah))
++		aic->aic_cal_state = AIC_CAL_STATE_DONE;
++	else
++		aic->aic_cal_state = AIC_CAL_STATE_ERROR;
+ }
+ 
+ static u8 ar9003_aic_cal_continue(struct ath_hw *ah, bool cal_once)
+-- 
+2.3.1
+
