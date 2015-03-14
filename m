@@ -1,91 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-am1on0072.outbound.protection.outlook.com ([157.56.112.72]:20825
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751876AbbCYBAd convert rfc822-to-8bit (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:40284 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149AbbCNFy3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 21:00:33 -0400
-From: Stefano Cappa <stefano.cappa@mail.polimi.it>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: informations about Linux wifi driver's architecture today
-Date: Wed, 25 Mar 2015 01:00:30 +0000
-Message-ID: <1427245230396.59674@mail.polimi.it> (sfid-20150325_020037_214635_A2DA5B31)
-References: <1427048376242.67051@mail.polimi.it>,<CAMowtuMgAPsgAKuwSibjAzhDbqEdZGatikCiKks6f3w=4oth+Q@mail.gmail.com>
- <1427059313289.43792@mail.polimi.it>,<550FE50F.10303@broadcom.com>
-In-Reply-To: <550FE50F.10303@broadcom.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+	Sat, 14 Mar 2015 01:54:29 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2 11/11] ath9k: Start AIC calibration during MCI reset
+Date: Sat, 14 Mar 2015 11:27:57 +0530
+Message-Id: <1426312677-2064-12-git-send-email-sujith@msujith.org> (sfid-20150314_070417_103377_C13CED9B)
+In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you very much Arend, in particular for the documentation.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-If i understand correctly, the levels are:
-userspace
-nl802111
-cfg80211
-firmware
+When a MCI reset is done, make sure that AIC
+is started.
 
-No mac80211 because is a fullmac.
-Correct?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Thank u, Stefano.
-
-________________________________________
-Da: Arend van Spriel <arend@broadcom.com>
-Inviato: lunedì 23 marzo 2015 11.03
-A: Stefano Cappa
-Cc: linux-wireless@vger.kernel.org
-Oggetto: Re: informations about Linux wifi driver's architecture today
-
-On 03/22/15 22:21, Stefano Cappa wrote:
-> Hi
-> I prefer a generic version, without specific things, like this one: h**p://postimg.org/image/hfkpjt3ux/ created by Johannes Berg.
->
-> And, if available something for the broadcom chip bcm4339.
-
-Hi Stefano,
-
-The bcm4339 is supported by the brcmfmac driver and is a cfg8211-based
-driver aka fullmac device where the 802.11 stack runs on the device. I
-did write up some stuff about the driver internally, but we can consider
-putting it on wireless.kernel.org under creative commons license.
-
-Regards,
-Arend
-
-> Thank you.
->
-> ________________________________________
-> Da: Kathy Giori<kathy.giori@gmail.com>
-> Inviato: domenica 22 marzo 2015 19.35
-> A: Stefano Cappa
-> Cc: linux-wireless@vger.kernel.org
-> Oggetto: Re: informations about Linux wifi driver's architecture today
->
-> On Sun, Mar 22, 2015 at 11:19 AM, Stefano Cappa
-> <stefano.cappa@mail.polimi.it>  wrote:
->> Hi!
->> some months ago, i saw the presentation of Johannes Berg in PDF, but now it isn't available, probably because it's very old.
->>
->> This slides will be updated to a new release?
->>
->> I have this slide and in page 5/35 (2009-02-26) there is the "Architecture - planned". This is the actual architecture or there are some differences in 2015? If yes, where i can find the new version of this page, with a little diagram?
->
-> Ciao Stefano,
->
-> Perhaps Johannes can post a current overview diagram on the Linux
-> wireless wiki (if you share with him which diagram you want to be
-> updated).
->
-> In terms of vendor-specific architecture, and how it fits in, Kalle
-> Valo posted a high-level diagram for ath10k:
-> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/architecture
->
-> Are you mainly interested in the architecture of vendor-agnostic upper
-> layers or a description of a specific vendor driver?
-> kg--
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index cdd83d4..af5ee41 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1017,6 +1017,9 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 	if (en_int)
+ 		ar9003_mci_enable_interrupt(ah);
+ 
++	if (ath9k_hw_is_aic_enabled(ah))
++		ar9003_aic_start_normal(ah);
++
+ 	return 0;
+ }
+ 
+-- 
+2.3.1
 
