@@ -1,58 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:64722 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545AbbCOOAr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 10:00:47 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Received: from www.osadl.org ([62.245.132.105]:34673 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750925AbbCNJlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 05:41:52 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
 To: Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 2/7] wil6210: fix check for FW responsiveness
-Date: Sun, 15 Mar 2015 16:00:17 +0200
-Message-Id: <1426428024-4538-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150315_150054_472181_7C440067)
-In-Reply-To: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] ath10k: debug: match wait_for_completion_timeout return type
+Date: Sat, 14 Mar 2015 05:37:10 -0400
+Message-Id: <1426325830-19740-1-git-send-email-hofrat@osadl.org> (sfid-20150314_104209_136833_B8F63A02)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"echo" used to be called when no firmware loaded to the NIC,
-this causes error output.
+Return type of wait_for_completion_timeout is unsigned long not int.
+An appropriately named unsigned long is added and the assignments fixed up.
+Missing spaces 1*HZ -> 1 * HZ were also added along the way.
 
-Probe firmware with "echo" only after it returned "ready" event.
-
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
- drivers/net/wireless/ath/wil6210/main.c     | 2 ++
- drivers/net/wireless/ath/wil6210/pcie_bus.c | 2 --
- 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index afff8d3..a5fd605 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -724,6 +724,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+CONFIG_ATH10K=m
+
+Patch is against 4.0-rc3 (localversion-next is -next-20150313)
+
+ drivers/net/wireless/ath/ath10k/debug.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 301081d..a252774 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -380,12 +380,12 @@ unlock:
  
- 		/* we just started MAC, wait for FW ready */
- 		rc = wil_wait_for_fw_ready(wil);
-+		if (rc == 0) /* check FW is responsive */
-+			rc = wmi_echo(wil);
- 	}
+ static int ath10k_debug_fw_stats_request(struct ath10k *ar)
+ {
+-	unsigned long timeout;
++	unsigned long timeout, time_left;
+ 	int ret;
  
- 	return rc;
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 25343cf..1099861 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -246,8 +246,6 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	lockdep_assert_held(&ar->conf_mutex);
  
- 	wil6210_debugfs_init(wil);
+-	timeout = jiffies + msecs_to_jiffies(1*HZ);
++	timeout = jiffies + msecs_to_jiffies(1 * HZ);
  
--	/* check FW is alive */
--	wmi_echo(wil);
+ 	ath10k_debug_fw_stats_reset(ar);
  
- 	return 0;
+@@ -404,9 +404,10 @@ static int ath10k_debug_fw_stats_request(struct ath10k *ar)
+ 			return ret;
+ 		}
  
+-		ret = wait_for_completion_timeout(&ar->debug.fw_stats_complete,
+-						  1*HZ);
+-		if (ret == 0)
++		time_left =
++		wait_for_completion_timeout(&ar->debug.fw_stats_complete,
++					    1 * HZ);
++		if (!time_left)
+ 			return -ETIMEDOUT;
+ 
+ 		spin_lock_bh(&ar->data_lock);
 -- 
-2.1.0
+1.7.10.4
 
