@@ -1,117 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:12285 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbbCKPLk (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:58857 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751279AbbCNFyO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 11:11:40 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 6/7] brcmfmac: take save&restore memory into account for SDIO shared info
-Date: Wed, 11 Mar 2015 16:11:32 +0100
-Message-ID: <1426086693-13876-7-git-send-email-arend@broadcom.com> (sfid-20150311_161153_421260_98D11E8E)
-In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
-References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 14 Mar 2015 01:54:14 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2 02/11] ath9k: Register private AIC ops
+Date: Sat, 14 Mar 2015 11:27:48 +0530
+Message-Id: <1426312677-2064-3-git-send-email-sujith@msujith.org> (sfid-20150314_065421_824695_9C2E90AB)
+In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware provides pointer to SDIO shared information at end of
-RAM during firmware initialization. End of RAM is obviously determined
-by the actual ram size, but part of that may be used for save&restore
-memory. In that case another location in RAM will hold the pointer.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+AIC can be disabled or enabled on a per-card
+basis using MCI configuration, so register a function
+to check its status.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 40 +++++++++++++++-----------
- 1 file changed, 24 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath9k/Makefile     |  3 ++-
+ drivers/net/wireless/ath/ath9k/ar9003_aic.c | 37 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c  |  1 +
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |  8 +++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |  6 +++++
+ 5 files changed, 54 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.c
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index c783c25..5202e76 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -1067,44 +1067,47 @@ static inline bool brcmf_sdio_valid_shared_address(u32 addr)
- static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
- 				 struct sdpcm_shared *sh)
- {
--	u32 addr;
-+	u32 addr = 0;
- 	int rv;
- 	u32 shaddr = 0;
- 	struct sdpcm_shared_le sh_le;
- 	__le32 addr_le;
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index 4739722..ecda613 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -46,7 +46,8 @@ ath9k_hw-y:=	\
+ ath9k_hw-$(CONFIG_ATH9K_WOW) += ar9003_wow.o
  
--	shaddr = bus->ci->rambase + bus->ci->ramsize - 4;
-+	sdio_claim_host(bus->sdiodev->func[1]);
-+	brcmf_sdio_bus_sleep(bus, false, false);
+ ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
+-					   ar9003_mci.o
++					   ar9003_mci.o \
++					   ar9003_aic.o
  
- 	/*
- 	 * Read last word in socram to determine
- 	 * address of sdpcm_shared structure
- 	 */
--	sdio_claim_host(bus->sdiodev->func[1]);
--	brcmf_sdio_bus_sleep(bus, false, false);
--	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, shaddr, (u8 *)&addr_le, 4);
--	sdio_release_host(bus->sdiodev->func[1]);
-+	shaddr = bus->ci->rambase + bus->ci->ramsize - 4;
-+	if (!bus->ci->rambase && brcmf_chip_sr_capable(bus->ci))
-+		shaddr -= bus->ci->srsize;
-+	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, shaddr,
-+			       (u8 *)&addr_le, 4);
- 	if (rv < 0)
--		return rv;
--
--	addr = le32_to_cpu(addr_le);
--
--	brcmf_dbg(SDIO, "sdpcm_shared address 0x%08X\n", addr);
-+		goto fail;
+ ath9k_hw-$(CONFIG_ATH9K_PCOEM) += ar9003_rtt.o
  
- 	/*
- 	 * Check if addr is valid.
- 	 * NVRAM length at the end of memory should have been overwritten.
- 	 */
-+	addr = le32_to_cpu(addr_le);
- 	if (!brcmf_sdio_valid_shared_address(addr)) {
--			brcmf_err("invalid sdpcm_shared address 0x%08X\n",
--				  addr);
--			return -EINVAL;
-+		brcmf_err("invalid sdpcm_shared address 0x%08X\n", addr);
-+		rv = -EINVAL;
-+		goto fail;
- 	}
- 
-+	brcmf_dbg(INFO, "sdpcm_shared address 0x%08X\n", addr);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+new file mode 100644
+index 0000000..0cd159d
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+@@ -0,0 +1,37 @@
++/*
++ * Copyright (c) 2015 Qualcomm Atheros Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
- 	/* Read hndrte_shared structure */
- 	rv = brcmf_sdiod_ramrw(bus->sdiodev, false, addr, (u8 *)&sh_le,
- 			       sizeof(struct sdpcm_shared_le));
- 	if (rv < 0)
--		return rv;
-+		goto fail;
++#include "hw.h"
++#include "hw-ops.h"
++#include "ar9003_mci.h"
++#include "ar9003_aic.h"
 +
-+	sdio_release_host(bus->sdiodev->func[1]);
- 
- 	/* Endianness */
- 	sh->flags = le32_to_cpu(sh_le.flags);
-@@ -1121,8 +1124,13 @@ static int brcmf_sdio_readshared(struct brcmf_sdio *bus,
- 			  sh->flags & SDPCM_SHARED_VERSION_MASK);
- 		return -EPROTO;
- 	}
--
- 	return 0;
++static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
++{
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
 +
-+fail:
-+	brcmf_err("unable to obtain sdpcm_shared info: rv=%d (addr=0x%x)\n",
-+		  rv, addr);
-+	sdio_release_host(bus->sdiodev->func[1]);
-+	return rv;
++	if (mci_hw->config & ATH_MCI_CONFIG_DISABLE_AIC)
++		return false;
++
++	return true;
++}
++
++void ar9003_hw_attach_aic_ops(struct ath_hw *ah)
++{
++	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
++
++	priv_ops->is_aic_enabled = ar9003_hw_is_aic_enabled;
++}
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_hw.c b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+index df176e6..79fd3b2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_hw.c
+@@ -1180,4 +1180,5 @@ void ar9003_hw_attach_ops(struct ath_hw *ah)
+ 	ar9003_hw_attach_phy_ops(ah);
+ 	ar9003_hw_attach_calib_ops(ah);
+ 	ar9003_hw_attach_mac_ops(ah);
++	ar9003_hw_attach_aic_ops(ah);
+ }
+diff --git a/drivers/net/wireless/ath/ath9k/hw-ops.h b/drivers/net/wireless/ath/ath9k/hw-ops.h
+index 88769b6..232339b 100644
+--- a/drivers/net/wireless/ath/ath9k/hw-ops.h
++++ b/drivers/net/wireless/ath/ath9k/hw-ops.h
+@@ -108,6 +108,14 @@ static inline void ath9k_hw_set_bt_ant_diversity(struct ath_hw *ah, bool enable)
+ 		ath9k_hw_ops(ah)->set_bt_ant_diversity(ah, enable);
  }
  
- static void brcmf_sdio_get_console_addr(struct brcmf_sdio *bus)
++static inline bool ath9k_hw_is_aic_enabled(struct ath_hw *ah)
++{
++	if (ath9k_hw_private_ops(ah)->is_aic_enabled)
++		return ath9k_hw_private_ops(ah)->is_aic_enabled(ah);
++
++	return false;
++}
++
+ #endif
+ 
+ /* Private hardware call ops */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 2067cb5..c22edd3 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -653,6 +653,10 @@ struct ath_hw_private_ops {
+ 
+ 	/* ANI */
+ 	void (*ani_cache_ini_regs)(struct ath_hw *ah);
++
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
++	bool (*is_aic_enabled)(struct ath_hw *ah);
++#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ };
+ 
+ /**
+@@ -1113,6 +1117,8 @@ void ar9003_hw_attach_calib_ops(struct ath_hw *ah);
+ int ar9002_hw_attach_ops(struct ath_hw *ah);
+ void ar9003_hw_attach_ops(struct ath_hw *ah);
+ 
++void ar9003_hw_attach_aic_ops(struct ath_hw *ah);
++
+ void ar9002_hw_load_ani_reg(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
+ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
 -- 
-1.9.1
+2.3.1
 
