@@ -1,62 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24060 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752173AbbCATcG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 14:32:06 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from s72.web-hosting.com ([198.187.29.22]:36609 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262AbbCNFyO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 01:54:14 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/31] iwlwifi: mvm: rs: print single stream params via debugfs
-Date: Sun,  1 Mar 2015 21:31:21 +0200
-Message-Id: <1425238304-498-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203210_370473_ACF2C2B6)
-In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
-References: <1425238186.30202.5.camel@egrumbacBox>
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2 00/11] ath9k patches
+Date: Sat, 14 Mar 2015 11:27:46 +0530
+Message-Id: <1426312677-2064-1-git-send-email-sujith@msujith.org> (sfid-20150314_065420_170981_10A2BAB0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Add this to the info printed when reading rate_scale_table.
-Useful for debugging.
+AIC support, for -next.
 
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+v2 : Address warning reported by Kalle:
+     ar9003_aic.c: In function 'ar9003_aic_cal_post_process':
+     ar9003_aic.c:431:1: warning: the frame size of 1312 bytes is larger than 1024 bytes [-Wframe-larger-than=]
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index 43f807f..6578498 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -3323,6 +3323,7 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
- 	struct iwl_mvm *mvm;
- 	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
- 	struct rs_rate *rate = &tbl->rate;
-+	u32 ss_params;
- 	mvm = lq_sta->pers.drv;
- 	buff = kmalloc(2048, GFP_KERNEL);
- 	if (!buff)
-@@ -3369,6 +3370,16 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
- 			lq_sta->lq.agg_frame_cnt_limit);
- 
- 	desc += sprintf(buff+desc, "reduced tpc=%d\n", lq_sta->lq.reduced_tpc);
-+	ss_params = le32_to_cpu(lq_sta->lq.ss_params);
-+	desc += sprintf(buff+desc, "single stream params: %s%s%s%s\n",
-+			(ss_params & LQ_SS_PARAMS_VALID) ?
-+			"VALID," : "INVALID",
-+			(ss_params & LQ_SS_BFER_ALLOWED) ?
-+			"BFER," : "",
-+			(ss_params & LQ_SS_STBC_1SS_ALLOWED) ?
-+			"STBC," : "",
-+			(ss_params & LQ_SS_FORCE) ?
-+			"FORCE" : "");
- 	desc += sprintf(buff+desc,
- 			"Start idx [0]=0x%x [1]=0x%x [2]=0x%x [3]=0x%x\n",
- 			lq_sta->lq.initial_rate_index[0],
+Sujith Manoharan (11):
+  ath9k: Add initial structures for AIC
+  ath9k: Register private AIC ops
+  ath9k: Add register definitions for AIC
+  ath9k: Handle MCI_STATE_AIC_CAL_SINGLE
+  ath9k: Finish AIC calibration
+  ath9k: Process the AIC calibration results
+  ath9k: Disable AIC by default
+  ath9k: Handle MCI_STATE_AIC_CAL_RESET
+  ath9k: Handle MCI_STATE_AIC_START
+  ath9k: Handle MCI_STATE_AIC_CAL
+  ath9k: Start AIC calibration during MCI reset
+
+ drivers/net/wireless/ath/ath9k/Makefile     |   3 +-
+ drivers/net/wireless/ath/ath9k/ar9003_aic.c | 599 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_aic.h |  61 +++
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c  |   1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  20 +
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |  25 --
+ drivers/net/wireless/ath/ath9k/btcoex.h     |  12 +
+ drivers/net/wireless/ath/ath9k/hw-ops.h     |   8 +
+ drivers/net/wireless/ath/ath9k/hw.h         |   6 +
+ drivers/net/wireless/ath/ath9k/reg_aic.h    | 168 ++++++++
+ 10 files changed, 877 insertions(+), 26 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.h
+ create mode 100644 drivers/net/wireless/ath/ath9k/reg_aic.h
+
 -- 
-1.9.1
+2.3.1
 
