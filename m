@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4162 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751491AbbCMQve (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35437 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333AbbCNWNz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 12:51:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Nicholas Mc Guire <hofrat@osadl.org>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: match wait_for_completion_timeout return type
-References: <1426094076-10134-1-git-send-email-hofrat@osadl.org>
-Date: Fri, 13 Mar 2015 18:51:21 +0200
-In-Reply-To: <1426094076-10134-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
-	Guire's message of "Wed, 11 Mar 2015 13:14:36 -0400")
-Message-ID: <87y4n0q1rq.fsf@kamboji.qca.qualcomm.com> (sfid-20150313_175156_940568_20DBF4F2)
+	Sat, 14 Mar 2015 18:13:55 -0400
+Received: by webcq43 with SMTP id cq43so14091045web.2
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2015 15:13:54 -0700 (PDT)
+Message-ID: <5504B29F.8000305@gmail.com> (sfid-20150314_231400_662091_C0950D39)
+Date: Sat, 14 Mar 2015 23:13:51 +0100
+From: Ochal Christophe <christophe.ochal@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+CC: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom 43340
+References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir>
+In-Reply-To: <20150314213907.3f1167bb@mir>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicholas Mc Guire <hofrat@osadl.org> writes:
+All,
 
-> Return type of wait_for_completion_timeout is unsigned long not int.
-> An appropriately named unsigned long is added and the assignments fixed up.
->
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+On 03/14/2015 09:39 PM, Stefan Lippers-Hollmann wrote:
+> You don't need to run windows for that, the nvram (calibration data, 
+> probably the MAC address and related device specific data) is stored 
+> in your mainboard's firmware - and exposed to userspace (under linux) 
+> via /sys/firmware/efi/efivars/. You just need to identify the correct 
+> file and copy it to a place where linux expects to find it 
+> (/lib/firmware/brcm/brcmfmac43340-sdio.txt). Regards Stefan 
+> Lippers-Hollmann 
 
-Doesn't apply:
+Thanks for the hint, that did it, I'm online!
 
-Applying: ath10k: match wait_for_completion_timeout return type
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/mac.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0001 ath10k: match wait_for_completion_timeout return type
-
--- 
-Kalle Valo
+With Kind Regards,
+Christophe Ochal
