@@ -1,119 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60240 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739AbbCNFy1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 01:54:27 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH v2 10/11] ath9k: Handle MCI_STATE_AIC_CAL
-Date: Sat, 14 Mar 2015 11:27:56 +0530
-Message-Id: <1426312677-2064-11-git-send-email-sujith@msujith.org> (sfid-20150314_065440_385598_7B7EFC6F)
-In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
-References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+Received: from www.osadl.org ([62.245.132.105]:34677 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753296AbbCNJmN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 05:42:13 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] ath10k: core: match wait_for_completion_timeout return type
+Date: Sat, 14 Mar 2015 05:37:37 -0400
+Message-Id: <1426325858-19808-1-git-send-email-hofrat@osadl.org> (sfid-20150314_104238_389155_75EA8C0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Return type of wait_for_completion_timeout is unsigned long not int.
+An appropriately named unsigned long is added and the assignments fixed up.
 
-Add the main AIC calibration function to
-handle MCI_STATE_AIC_CAL.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_aic.c | 28 ++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/ar9003_aic.h |  1 +
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |  4 ++++
- 3 files changed, 31 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-index 5b4f818..1db119d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-@@ -162,7 +162,7 @@ static void ar9003_aic_gain_table(struct ath_hw *ah)
+Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+CONFIG_ATH10K=m
+
+Patch is against 4.0-rc3 (localversion-next is -next-20150313)
+
+ drivers/net/wireless/ath/ath10k/core.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c0e454b..5fd833e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1151,6 +1151,7 @@ EXPORT_SYMBOL(ath10k_core_start);
+ int ath10k_wait_for_suspend(struct ath10k *ar, u32 suspend_opt)
+ {
+ 	int ret;
++	unsigned long time_left;
+ 
+ 	reinit_completion(&ar->target_suspend);
+ 
+@@ -1160,9 +1161,9 @@ int ath10k_wait_for_suspend(struct ath10k *ar, u32 suspend_opt)
+ 		return ret;
  	}
- }
  
--static void ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
-+static u8 ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
- {
- 	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
- 	int i;
-@@ -257,6 +257,8 @@ static void ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
+-	ret = wait_for_completion_timeout(&ar->target_suspend, 1 * HZ);
++	time_left = wait_for_completion_timeout(&ar->target_suspend, 1 * HZ);
  
- 	aic->aic_caled_chan = 0;
- 	aic->aic_cal_state = AIC_CAL_STATE_STARTED;
-+
-+	return aic->aic_cal_state;
- }
- 
- static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
-@@ -513,6 +515,28 @@ exit:
- 
- }
- 
-+u8 ar9003_aic_calibration(struct ath_hw *ah)
-+{
-+	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
-+	u8 cal_ret = AIC_CAL_STATE_ERROR;
-+
-+	switch (aic->aic_cal_state) {
-+	case AIC_CAL_STATE_IDLE:
-+		cal_ret = ar9003_aic_cal_start(ah, 1);
-+		break;
-+	case AIC_CAL_STATE_STARTED:
-+		cal_ret = ar9003_aic_cal_continue(ah, false);
-+		break;
-+	case AIC_CAL_STATE_DONE:
-+		cal_ret = AIC_CAL_STATE_DONE;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return cal_ret;
-+}
-+
- u8 ar9003_aic_start_normal(struct ath_hw *ah)
- {
- 	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
-@@ -561,7 +585,7 @@ u8 ar9003_aic_calibration_single(struct ath_hw *ah)
- 
- 	num_chan = MS(mci_hw->config, ATH_MCI_CONFIG_AIC_CAL_NUM_CHAN);
- 
--	ar9003_aic_cal_start(ah, num_chan);
-+	(void) ar9003_aic_cal_start(ah, num_chan);
- 	cal_ret = ar9003_aic_cal_continue(ah, true);
- 
- 	return cal_ret;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.h b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-index 4dbff96..86f4064 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-@@ -53,6 +53,7 @@ struct ath_aic_out_info {
- 	struct ath_aic_sram_info sram;
- };
- 
-+u8 ar9003_aic_calibration(struct ath_hw *ah);
- u8 ar9003_aic_start_normal(struct ath_hw *ah);
- u8 ar9003_aic_cal_reset(struct ath_hw *ah);
- u8 ar9003_aic_calibration_single(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index b559d75..cdd83d4 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1363,6 +1363,10 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
- 		value = (!mci->unhalt_bt_gpm && mci->need_flush_btinfo) ? 1 : 0;
- 		mci->need_flush_btinfo = false;
- 		break;
-+	case MCI_STATE_AIC_CAL:
-+		if (ath9k_hw_is_aic_enabled(ah))
-+			value = ar9003_aic_calibration(ah);
-+		break;
- 	case MCI_STATE_AIC_START:
- 		if (ath9k_hw_is_aic_enabled(ah))
- 			ar9003_aic_start_normal(ah);
+-	if (ret == 0) {
++	if (!time_left) {
+ 		ath10k_warn(ar, "suspend timed out - target pause event never came\n");
+ 		return -ETIMEDOUT;
+ 	}
 -- 
-2.3.1
+1.7.10.4
 
