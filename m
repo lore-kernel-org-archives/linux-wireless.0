@@ -1,67 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:33858 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909AbbCJOKH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 10:10:07 -0400
-Received: by labgq15 with SMTP id gq15so1990898lab.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 07:10:06 -0700 (PDT)
+Received: from aibo.runbox.com ([91.220.196.211]:35247 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751300AbbCNUQq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 16:16:46 -0400
+Message-ID: <55049722.9090702@runbox.com> (sfid-20150314_211649_947290_55616F81)
+Date: Sat, 14 Mar 2015 16:16:34 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
 MIME-Version: 1.0
-In-Reply-To: <54FDF901.8060808@student.ethz.ch>
-References: <C768C63E9A2F584FACC2A65D915E5A2830535956@MBX13.d.ethz.ch>
-	<C768C63E9A2F584FACC2A65D915E5A2830535975@MBX13.d.ethz.ch>
-	<1425921599.32409.4.camel@redhat.com>
-	<54FDF901.8060808@student.ethz.ch>
-Date: Tue, 10 Mar 2015 16:10:06 +0200
-Message-ID: <CANUX_P0mKrq_hgdkjsPVzCYfiYD6me6YTvcyRYNNYZPGtQHKeg@mail.gmail.com> (sfid-20150310_151013_304053_EAAC9965)
-Subject: Re: Virtual Interfaces with iwlwifi
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: kilian risse <krisse@student.ethz.ch>
-Cc: Dan Williams <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Joe Perches <joe@perches.com>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 14/16] staging: rtl8723au: Improve readability of two
+ very long lines
+References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>	 <1426216532-24058-15-git-send-email-m.v.b@runbox.com>	 <550305D5.9080209@lwfinger.net> <1426263881.11459.17.camel@perches.com>
+In-Reply-To: <1426263881.11459.17.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 9, 2015 at 9:48 PM, kilian risse <krisse@student.ethz.ch> wrote:
-> I think I figured it out - I tried to create two interfaces of the same type
-> station - which is not supported according to the "iw phy0 info".
->
-> I use a intel 7260 card with a 3.18.7 Kernel.
-> The command I used was "iw phy phy0 interface add wlan0 type station".
-> Is this a limitation in hardware or software?
->
-
-firmware which pretty much means hardware ;)
-You can have BSS and P2P client though.
-
-> Kilian
->
->
-> On 03/09/2015 06:19 PM, Dan Williams wrote:
->>
->> On Mon, 2015-03-09 at 16:53 +0000, Risse Kilian wrote:
+On 13/03/15 12:24 PM, Joe Perches wrote:
+> On Fri, 2015-03-13 at 10:44 -0500, Larry Finger wrote:
+>> On 03/12/2015 10:15 PM, M. Vefa Bicakci wrote:
+>>> Improve the readability of an if statement and its very long trace
+>>> output line in rtl8723au's rtw_security.c.
+> []
+>>> diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+> []
+>>> @@ -759,9 +759,21 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
 >>>
->>> Hi
+>>>   	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length-4));
 >>>
->>> I tried to create a second interface and connect to another AP. But I was
->>> unable to do so. As I tried to enable the second interface I got an error:
->>> Device or resource busy. So am I right assuming that this is not possible
->>> with the iwlwifi driver?
+>>> -	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
+>>> -		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+>>> -				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
+>>> +	if (crc[3] != payload[length - 1] ||
+>>> +			crc[2] != payload[length - 2] ||
+>>> +			crc[1] != payload[length - 3] ||
+>>> +			crc[0] != payload[length - 4]) {
 >>
+>> The continuation lines should be lined up with the opening paren. This should be
 >>
->> What specific hardware do you have?
->> What kernel version do you have?
->> What specific command were you using to create the second interface?
->> What are the "software interface modes" and "valid interface
->> combinations" sections output from "iw phy0 info"?
->>
->> It's certainly possible and supported with iwlwifi, but it depends on
->> specific hardware, the driver, etc.
->>
->> Dan
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 	if (crc[3] != payload[length - 1] ||
+>> 	    crc[2] != payload[length - 2] ||
+>> 	    crc[1] != payload[length - 3] ||
+>> 	    crc[0] != payload[length - 4]) {
+> 
+> Maybe:
+> 	if (memcmp(&crc, &payload[length - 4], 4)) {
+> 		RT_TRACE(etc, "%08x vs %4phN",
+> 			 crc, &payload[length - 4])
+
+Hello Larry and Joe,
+
+Thank you for the reviews!
+
+I have addressed your comments in my local repository, and I hope to send out
+the second version of the commits for review by tomorrow.
+
+Vefa
+
