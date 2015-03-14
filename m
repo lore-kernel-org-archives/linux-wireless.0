@@ -1,79 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45581 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753299AbbC3Id7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:33:59 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: reject aggregation sessions with non-HT peers
-Date: Mon, 30 Mar 2015 10:33:53 +0200
-Message-Id: <1427704433-7391-1-git-send-email-johannes@sipsolutions.net> (sfid-20150330_103406_380131_E5FA599C)
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:33545 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732AbbCNUSo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 16:18:44 -0400
+Received: by lbbzq9 with SMTP id zq9so9481599lbb.0
+        for <linux-wireless@vger.kernel.org>; Sat, 14 Mar 2015 13:18:43 -0700 (PDT)
+Message-ID: <550497A0.5040508@cogentembedded.com> (sfid-20150314_211848_479622_148F0941)
+Date: Sat, 14 Mar 2015 23:18:40 +0300
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+MIME-Version: 1.0
+To: Nicholas Mc Guire <hofrat@osadl.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: core: harmonize error case handling in ath10k_core_start
+References: <1426323313-1344-1-git-send-email-hofrat@osadl.org>
+In-Reply-To: <1426323313-1344-1-git-send-email-hofrat@osadl.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello.
 
-If a peer or some local agent (rate control, ...) decides to start
-an aggregation session but doesn't support HT (which also implies
-QoS), reject it.
+On 03/14/2015 11:55 AM, Nicholas Mc Guire wrote:
 
-This is mostly a corner case as such peers normally won't try to
-use block-ack sessions and rate control wouldn't start them, but
-technically QoS stations could request it according to the spec.
+> All of the bringup/init functions called in ath10k_core_start return 0 on
+> success and != 0 on failure - ath10k_wmi_wait_for_service_ready and
+> ath10k_wmi_wait_for_unified_ready were adjusted to fit this model and the
+> call sites here fixed up accordingly.
 
-However, since drivers don't really support such non-HT sessions
-it's better to reject them.
+    If you've changed the sense of these function's results, you need to 
+adjust the call sites in the same patch, because otherwise one wouldn't be 
+able to bisect this...
 
-Also, while at it, move the tracing for TX sessions earlier so it
-captures the error cases as well.
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
+>
+> Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+> CONFIG_ATH10K=m
+>
+> Patch is against 4.0-rc3 (localversion-next is -next-20150313)
+>
+>   drivers/net/wireless/ath/ath10k/core.c |    6 ++----
+>   1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index c0e454b..e97069f 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1080,9 +1080,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
+>
+>   	if (mode == ATH10K_FIRMWARE_MODE_NORMAL) {
+>   		status = ath10k_wmi_wait_for_service_ready(ar);
+> -		if (status <= 0) {
 
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c | 8 ++++++++
- net/mac80211/agg-tx.c | 5 ++++-
- 2 files changed, 12 insertions(+), 1 deletion(-)
+    With the changed result sense, this check would always succeed, right? 
+Then this gets check broken after the 1st patch.
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index a48bad468880..2c090c507391 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -234,6 +234,14 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	int i, ret = -EOPNOTSUPP;
- 	u16 status = WLAN_STATUS_REQUEST_DECLINED;
- 
-+	if (!sta->sta.ht_cap.ht_supported) {
-+		ht_dbg(sta->sdata,
-+		       "STA %pM erroneously requests BA session on tid %d w/o QoS\n",
-+		       sta->sta.addr, tid);
-+		/* send a response anyway, it's an error case if we get here */
-+		goto end_no_lock;
-+	}
-+
- 	if (test_sta_flag(sta, WLAN_STA_BLOCK_BA)) {
- 		ht_dbg(sta->sdata,
- 		       "Suspend in progress - Denying ADDBA request (%pM tid %d)\n",
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 668524aeb0b2..20522492d8cc 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -509,11 +509,14 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 	struct tid_ampdu_tx *tid_tx;
- 	int ret = 0;
- 
-+	trace_api_start_tx_ba_session(pubsta, tid);
-+
- 	if (WARN(sta->reserved_tid == tid,
- 		 "Requested to start BA session on reserved tid=%d", tid))
- 		return -EINVAL;
- 
--	trace_api_start_tx_ba_session(pubsta, tid);
-+	if (!pubsta->ht_cap.ht_supported)
-+		return -EINVAL;
- 
- 	if (WARN_ON_ONCE(!local->ops->ampdu_action))
- 		return -EINVAL;
--- 
-2.1.4
+> +		if (status) {
+>   			ath10k_warn(ar, "wmi service ready event not received");
+> -			status = -ETIMEDOUT;
+>   			goto err_hif_stop;
+>   		}
+>   	}
+> @@ -1098,9 +1097,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
+>   	}
+>
+>   	status = ath10k_wmi_wait_for_unified_ready(ar);
+> -	if (status <= 0) {
+
+    Likewise.
+
+> +	if (status) {
+>   		ath10k_err(ar, "wmi unified ready event not received\n");
+> -		status = -ETIMEDOUT;
+>   		goto err_hif_stop;
+>   	}
+
+WBR, Sergei
 
