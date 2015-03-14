@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:61112 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752309AbbCOOEL (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:32090 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751296AbbCNTyE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 10:04:11 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH 3/3] wil6210: support AP isolation
-Date: Sun, 15 Mar 2015 16:03:59 +0200
-Message-ID: <1634824.mi1EDKPegN@lx-wigig-72> (sfid-20150315_150417_491851_C8E56D5A)
-In-Reply-To: <1426428024-4538-7-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1426428024-4538-7-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Sat, 14 Mar 2015 15:54:04 -0400
+Message-ID: <550491DA.6030105@broadcom.com> (sfid-20150314_205408_534931_D8C2A452)
+Date: Sat, 14 Mar 2015 20:54:02 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Ochal Christophe <christophe.ochal@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom 43340
+References: <550482A2.3080803@gmail.com> <55048833.90408@broadcom.com> <55048BB1.9080906@gmail.com>
+In-Reply-To: <55048BB1.9080906@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, March 15, 2015 04:00:20 PM Vladimir Kondratiev wrote:
-> For the AP, configuration may say not to bridge traffic between
-> wireless clients. This is conveyed from user space (ex: hostapd has
-> ap_isolate parameter) with NL80211_CMD_SET_BSS, to the driver's
-> cfg80211 ops method change_bss
-> 
-> Add support for this setting.
-> 
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> 
-Please ignore, old patch, sent by mistake.
++ linux-wireless
+
+On 03/14/15 20:27, Ochal Christophe wrote:
+> Dear Sir,
+>
+> On 03/14/2015 08:12 PM, Arend van Spriel wrote:
+>> The nvram file is board specific and so Asus should be able to provide
+>> that. What OS does Asus provide on this eee book? The firmware file
+>> will be submitted to linux-firmware soon, but in the mean time you can
+>> also find it in Android repository [1]. Just rename the file
+>> fw_43341.bin to brcmfmac43340-sdio.bin.
+>>
+>> Regards,
+>> Arend
+>>
+>> [1]
+>> https://android.googlesource.com/platform/hardware/broadcom/wlan/+/master/bcmdhd/firmware/bcm43341/
+>>
+>
+> Thank you for the link, the Asus eebook x205ta comes with Windows 8.1,
+> no idea how I'm going to get Asus to deliver that nvram, but at least
+> I'm halfway there now, the firmware loads correctly.
+
+For Windows 8.1 the nvram file is stored in EFI variable space. This is 
+accessible in Linux as well. If I recall correctly it should be in 
+/sys/firmware/efi/efivars. There should be a file named nvram-*. Copy 
+that to /lib/firmware/brcm/brcmfmac43340-sdio.txt.
+
+Regards,
+Arend
+
