@@ -1,61 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14617 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754529AbbCLNFv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:05:51 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from s72.web-hosting.com ([198.187.29.22]:33976 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135AbbCNFyZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 01:54:25 -0400
+From: Sujith Manoharan <sujith@msujith.org>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/49] iwlwifi: mvm: remove IWL_UCODE_TLV_API_DISABLE_STA_TX
-Date: Thu, 12 Mar 2015 15:04:06 +0200
-Message-Id: <1426165474-25586-21-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143417_444450_5F7C8C52)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2 09/11] ath9k: Handle MCI_STATE_AIC_START
+Date: Sat, 14 Mar 2015 11:27:55 +0530
+Message-Id: <1426312677-2064-10-git-send-email-sujith@msujith.org> (sfid-20150314_070417_297594_2B12D077)
+In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All the supported firwmares have this new API.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This patch adds a function to handle the
+MCI message MCI_STATE_AIC_START.
+
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-fw-file.h | 2 --
- drivers/net/wireless/iwlwifi/mvm/sta.c     | 3 ---
- 2 files changed, 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_aic.c | 33 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_aic.h |  1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  4 ++++
+ 3 files changed, 38 insertions(+)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index 81c2f48..489bda4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -240,7 +240,6 @@ enum iwl_ucode_tlv_flag {
- /**
-  * enum iwl_ucode_tlv_api - ucode api
-  * @IWL_UCODE_TLV_API_BT_COEX_SPLIT: new API for BT Coex
-- * @IWL_UCODE_TLV_API_DISABLE_STA_TX: ucode supports tx_disable bit.
-  * @IWL_UCODE_TLV_API_SF_NO_DUMMY_NOTIF: ucode supports disabling dummy notif.
-  * @IWL_UCODE_TLV_API_FRAGMENTED_SCAN: This ucode supports active dwell time
-  *	longer than the passive one, which is essential for fragmented scan.
-@@ -259,7 +258,6 @@ enum iwl_ucode_tlv_flag {
-  */
- enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_BT_COEX_SPLIT         = BIT(3),
--	IWL_UCODE_TLV_API_DISABLE_STA_TX	= BIT(5),
- 	IWL_UCODE_TLV_API_SF_NO_DUMMY_NOTIF	= BIT(7),
- 	IWL_UCODE_TLV_API_FRAGMENTED_SCAN	= BIT(8),
- 	IWL_UCODE_TLV_API_WIFI_MCC_UPDATE	= BIT(9),
-diff --git a/drivers/net/wireless/iwlwifi/mvm/sta.c b/drivers/net/wireless/iwlwifi/mvm/sta.c
-index 5c23cdd..325cbbb 100644
---- a/drivers/net/wireless/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/sta.c
-@@ -1681,9 +1681,6 @@ void iwl_mvm_sta_modify_disable_tx(struct iwl_mvm *mvm,
- 	};
- 	int ret;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+index 4e8cf08..5b4f818 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+@@ -18,6 +18,7 @@
+ #include "hw-ops.h"
+ #include "ar9003_mci.h"
+ #include "ar9003_aic.h"
++#include "ar9003_phy.h"
+ #include "reg_aic.h"
  
--	if (!(mvm->fw->ucode_capa.api[0] & IWL_UCODE_TLV_API_DISABLE_STA_TX))
--		return;
--
- 	ret = iwl_mvm_send_cmd_pdu(mvm, ADD_STA, CMD_ASYNC, sizeof(cmd), &cmd);
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to send ADD_STA command (%d)\n", ret);
+ static const u8 com_att_db_table[ATH_AIC_MAX_COM_ATT_DB_TABLE] = {
+@@ -512,6 +513,38 @@ exit:
+ 
+ }
+ 
++u8 ar9003_aic_start_normal(struct ath_hw *ah)
++{
++	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
++	int16_t i;
++
++	if (aic->aic_cal_state != AIC_CAL_STATE_DONE)
++		return 1;
++
++	ar9003_aic_gain_table(ah);
++
++	REG_WRITE(ah, AR_PHY_AIC_SRAM_ADDR_B1, ATH_AIC_SRAM_AUTO_INCREMENT);
++
++	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
++		REG_WRITE(ah, AR_PHY_AIC_SRAM_DATA_B1, aic->aic_sram[i]);
++	}
++
++	/* FIXME: Replace these with proper register names */
++	REG_WRITE(ah, 0xa6b0, 0x80);
++	REG_WRITE(ah, 0xa6b4, 0x5b2df0);
++	REG_WRITE(ah, 0xa6b8, 0x10762cc8);
++	REG_WRITE(ah, 0xa6bc, 0x1219a4b);
++	REG_WRITE(ah, 0xa6c0, 0x1e01);
++	REG_WRITE(ah, 0xb6b4, 0xf0);
++	REG_WRITE(ah, 0xb6c0, 0x1e01);
++	REG_WRITE(ah, 0xb6b0, 0x81);
++	REG_WRITE(ah, AR_PHY_65NM_CH1_RXTX4, 0x40000000);
++
++	aic->aic_enabled = true;
++
++	return 0;
++}
++
+ u8 ar9003_aic_cal_reset(struct ath_hw *ah)
+ {
+ 	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.h b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
+index f7c9546..4dbff96 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_aic.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
+@@ -53,6 +53,7 @@ struct ath_aic_out_info {
+ 	struct ath_aic_sram_info sram;
+ };
+ 
++u8 ar9003_aic_start_normal(struct ath_hw *ah);
+ u8 ar9003_aic_cal_reset(struct ath_hw *ah);
+ u8 ar9003_aic_calibration_single(struct ath_hw *ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index d6ed628..b559d75 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1363,6 +1363,10 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 		value = (!mci->unhalt_bt_gpm && mci->need_flush_btinfo) ? 1 : 0;
+ 		mci->need_flush_btinfo = false;
+ 		break;
++	case MCI_STATE_AIC_START:
++		if (ath9k_hw_is_aic_enabled(ah))
++			ar9003_aic_start_normal(ah);
++		break;
+ 	case MCI_STATE_AIC_CAL_RESET:
+ 		if (ath9k_hw_is_aic_enabled(ah))
+ 			value = ar9003_aic_cal_reset(ah);
 -- 
-1.9.1
+2.3.1
 
