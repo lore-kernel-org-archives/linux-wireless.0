@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31062 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145AbbCRIWy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 04:22:54 -0400
-Date: Wed, 18 Mar 2015 11:22:35 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	Zhaoyang Liu <liuzy@marvell.com>
-Cc: Avinash Patil <patila@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] mwifiex: missing curly braces in
- mwifiex_write_data_complete()
-Message-ID: <20150318082235.GC10434@mwanda> (sfid-20150318_092259_450922_49370427)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from www.osadl.org ([62.245.132.105]:34675 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753296AbbCNJmB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 05:42:01 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] ath10k: thermal: match wait_for_completion_timeout return type
+Date: Sat, 14 Mar 2015 05:37:22 -0400
+Message-Id: <1426325842-19774-1-git-send-email-hofrat@osadl.org> (sfid-20150314_104253_784134_514432BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's clear from the indenting that curly braces were intended here.
+Return type of wait_for_completion_timeout is unsigned long not int.
+An appropriately named unsigned long is added and the assignments fixed up.
 
-Fixes: e35000ead491 ('mwifiex: preprocess packets from TX queue')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index 4d43371..a245f44 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -302,10 +302,11 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
- 		priv->stats.tx_errors++;
+Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
+CONFIG_ATH10K=m
+
+Patch is against 4.0-rc3 (localversion-next is -next-20150313)
+
+ drivers/net/wireless/ath/ath10k/thermal.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index aede750..dfa7c93 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -127,6 +127,7 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
+ {
+ 	struct ath10k *ar = dev_get_drvdata(dev);
+ 	int ret, temperature;
++	unsigned long time_left;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+@@ -148,9 +149,9 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
+ 		goto out;
  	}
  
--	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
-+	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT) {
- 		atomic_dec_return(&adapter->pending_bridged_pkts);
- 		if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
- 			goto done;
-+	}
- 
- 	if (aggr)
- 		/* For skb_aggr, do not wake up tx queue */
+-	ret = wait_for_completion_timeout(&ar->thermal.wmi_sync,
+-					  ATH10K_THERMAL_SYNC_TIMEOUT_HZ);
+-	if (ret == 0) {
++	time_left = wait_for_completion_timeout(&ar->thermal.wmi_sync,
++						ATH10K_THERMAL_SYNC_TIMEOUT_HZ);
++	if (!time_left) {
+ 		ath10k_warn(ar, "failed to synchronize thermal read\n");
+ 		ret = -ETIMEDOUT;
+ 		goto out;
+-- 
+1.7.10.4
+
