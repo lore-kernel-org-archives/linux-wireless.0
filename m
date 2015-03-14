@@ -1,92 +1,273 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:44271 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbbCIPgz (ORCPT
+Received: from s72.web-hosting.com ([198.187.29.22]:49390 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436AbbCNFyP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 11:36:55 -0400
-Received: by wivr20 with SMTP id r20so22059982wiv.3
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 08:36:53 -0700 (PDT)
-From: Eliad Peller <eliad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-Date: Mon,  9 Mar 2015 17:36:42 +0200
-Message-Id: <1425915402-10012-3-git-send-email-eliad@wizery.com> (sfid-20150309_163700_940926_55470F1E)
-In-Reply-To: <1425915402-10012-1-git-send-email-eliad@wizery.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
+	Sat, 14 Mar 2015 01:54:15 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2 04/11] ath9k: Handle MCI_STATE_AIC_CAL_SINGLE
+Date: Sat, 14 Mar 2015 11:27:50 +0530
+Message-Id: <1426312677-2064-5-git-send-email-sujith@msujith.org> (sfid-20150314_065439_814763_F50B7A4E)
+In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add wl18xx (wilink8) bindings to omap3-igep0030-rev-g and
-omap3-igep0020-rev-f dts files, instead of defining the
-platform data through the pdata-quirks.
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-The patch was compile-tested only.
+This patch adds routines to handle the MCI
+message AIC_CAL_SINGLE, starting the required
+HW calibration.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- arch/arm/boot/dts/omap3-igep0020-rev-f.dts | 9 +++++++++
- arch/arm/boot/dts/omap3-igep0030-rev-g.dts | 9 +++++++++
- arch/arm/mach-omap2/pdata-quirks.c         | 2 --
- 3 files changed, 18 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_aic.c | 169 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_aic.h |   9 ++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   4 +
+ drivers/net/wireless/ath/ath9k/btcoex.h     |   1 +
+ 4 files changed, 183 insertions(+)
 
-diff --git a/arch/arm/boot/dts/omap3-igep0020-rev-f.dts b/arch/arm/boot/dts/omap3-igep0020-rev-f.dts
-index cc8bd0c..8e5b44e 100644
---- a/arch/arm/boot/dts/omap3-igep0020-rev-f.dts
-+++ b/arch/arm/boot/dts/omap3-igep0020-rev-f.dts
-@@ -42,4 +42,13 @@
- 	vmmc-supply = <&lbep5clwmc_wlen>;
- 	bus-width = <4>;
- 	non-removable;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	wlcore: wlcore@2 {
-+		compatible = "ti,wl1835";
-+		reg = <2>;
-+		interrupt-parent = <&gpio6>;
-+		interrupts = <17 IRQ_TYPE_NONE>;
-+	};
- };
-diff --git a/arch/arm/boot/dts/omap3-igep0030-rev-g.dts b/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
-index 9326b28..02c4eec 100644
---- a/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
-+++ b/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
-@@ -64,4 +64,13 @@
- 	vmmc-supply = <&lbep5clwmc_wlen>;
- 	bus-width = <4>;
- 	non-removable;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	wlcore: wlcore@2 {
-+		compatible = "ti,wl1835";
-+		reg = <2>;
-+		interrupt-parent = <&gpio5>;
-+		interrupts = <8 IRQ_TYPE_NONE>;
-+	};
- };
-diff --git a/arch/arm/mach-omap2/pdata-quirks.c b/arch/arm/mach-omap2/pdata-quirks.c
-index 190fa43..abc8a20 100644
---- a/arch/arm/mach-omap2/pdata-quirks.c
-+++ b/arch/arm/mach-omap2/pdata-quirks.c
-@@ -159,14 +159,12 @@ static struct platform_device btwilink_device = {
- 
- static void __init omap3_igep0020_rev_f_legacy_init(void)
- {
--	legacy_init_wl12xx(0, 0, 177);
- 	platform_device_register(&wl18xx_device);
- 	platform_device_register(&btwilink_device);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+index cc1e97b..c2cfac3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
+@@ -30,6 +30,175 @@ static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
+ 	return true;
  }
  
- static void __init omap3_igep0030_rev_g_legacy_init(void)
++static void ar9003_aic_gain_table(struct ath_hw *ah)
++{
++	u32 aic_atten_word[19], i;
++
++	/* Config LNA gain difference */
++	REG_WRITE(ah, AR_PHY_BT_COEX_4, 0x2c200a00);
++	REG_WRITE(ah, AR_PHY_BT_COEX_5, 0x5c4e4438);
++
++	/* Program gain table */
++	aic_atten_word[0] = (0x1 & 0xf) << 14 | (0x1f & 0x1f) << 9 | (0x0 & 0xf) << 5 |
++		(0x1f & 0x1f); /* -01 dB: 4'd1, 5'd31,  00 dB: 4'd0, 5'd31 */
++	aic_atten_word[1] = (0x3 & 0xf) << 14 | (0x1f & 0x1f) << 9 | (0x2 & 0xf) << 5 |
++		(0x1f & 0x1f); /* -03 dB: 4'd3, 5'd31, -02 dB: 4'd2, 5'd31 */
++	aic_atten_word[2] = (0x5 & 0xf) << 14 | (0x1f & 0x1f) << 9 | (0x4 & 0xf) << 5 |
++		(0x1f & 0x1f); /* -05 dB: 4'd5, 5'd31, -04 dB: 4'd4, 5'd31 */
++	aic_atten_word[3] = (0x1 & 0xf) << 14 | (0x1e & 0x1f) << 9 | (0x0 & 0xf) << 5 |
++		(0x1e & 0x1f); /* -07 dB: 4'd1, 5'd30, -06 dB: 4'd0, 5'd30 */
++	aic_atten_word[4] = (0x3 & 0xf) << 14 | (0x1e & 0x1f) << 9 | (0x2 & 0xf) << 5 |
++		(0x1e & 0x1f); /* -09 dB: 4'd3, 5'd30, -08 dB: 4'd2, 5'd30 */
++	aic_atten_word[5] = (0x5 & 0xf) << 14 | (0x1e & 0x1f) << 9 | (0x4 & 0xf) << 5 |
++		(0x1e & 0x1f); /* -11 dB: 4'd5, 5'd30, -10 dB: 4'd4, 5'd30 */
++	aic_atten_word[6] = (0x1 & 0xf) << 14 | (0xf & 0x1f) << 9  | (0x0 & 0xf) << 5 |
++		(0xf & 0x1f);  /* -13 dB: 4'd1, 5'd15, -12 dB: 4'd0, 5'd15 */
++	aic_atten_word[7] = (0x3 & 0xf) << 14 | (0xf & 0x1f) << 9  | (0x2 & 0xf) << 5 |
++		(0xf & 0x1f);  /* -15 dB: 4'd3, 5'd15, -14 dB: 4'd2, 5'd15 */
++	aic_atten_word[8] = (0x5 & 0xf) << 14 | (0xf & 0x1f) << 9  | (0x4 & 0xf) << 5 |
++		(0xf & 0x1f);  /* -17 dB: 4'd5, 5'd15, -16 dB: 4'd4, 5'd15 */
++	aic_atten_word[9] = (0x1 & 0xf) << 14 | (0x7 & 0x1f) << 9  | (0x0 & 0xf) << 5 |
++		(0x7 & 0x1f);  /* -19 dB: 4'd1, 5'd07, -18 dB: 4'd0, 5'd07 */
++	aic_atten_word[10] = (0x3 & 0xf) << 14 | (0x7 & 0x1f) << 9  | (0x2 & 0xf) << 5 |
++		(0x7 & 0x1f);  /* -21 dB: 4'd3, 5'd07, -20 dB: 4'd2, 5'd07 */
++	aic_atten_word[11] = (0x5 & 0xf) << 14 | (0x7 & 0x1f) << 9  | (0x4 & 0xf) << 5 |
++		(0x7 & 0x1f);  /* -23 dB: 4'd5, 5'd07, -22 dB: 4'd4, 5'd07 */
++	aic_atten_word[12] = (0x7 & 0xf) << 14 | (0x7 & 0x1f) << 9  | (0x6 & 0xf) << 5 |
++		(0x7 & 0x1f);  /* -25 dB: 4'd7, 5'd07, -24 dB: 4'd6, 5'd07 */
++	aic_atten_word[13] = (0x3 & 0xf) << 14 | (0x3 & 0x1f) << 9  | (0x2 & 0xf) << 5 |
++		(0x3 & 0x1f);  /* -27 dB: 4'd3, 5'd03, -26 dB: 4'd2, 5'd03 */
++	aic_atten_word[14] = (0x5 & 0xf) << 14 | (0x3 & 0x1f) << 9  | (0x4 & 0xf) << 5 |
++		(0x3 & 0x1f);  /* -29 dB: 4'd5, 5'd03, -28 dB: 4'd4, 5'd03 */
++	aic_atten_word[15] = (0x1 & 0xf) << 14 | (0x1 & 0x1f) << 9  | (0x0 & 0xf) << 5 |
++		(0x1 & 0x1f);  /* -31 dB: 4'd1, 5'd01, -30 dB: 4'd0, 5'd01 */
++	aic_atten_word[16] = (0x3 & 0xf) << 14 | (0x1 & 0x1f) << 9  | (0x2 & 0xf) << 5 |
++		(0x1 & 0x1f);  /* -33 dB: 4'd3, 5'd01, -32 dB: 4'd2, 5'd01 */
++	aic_atten_word[17] = (0x5 & 0xf) << 14 | (0x1 & 0x1f) << 9  | (0x4 & 0xf) << 5 |
++		(0x1 & 0x1f);  /* -35 dB: 4'd5, 5'd01, -34 dB: 4'd4, 5'd01 */
++	aic_atten_word[18] = (0x7 & 0xf) << 14 | (0x1 & 0x1f) << 9  | (0x6 & 0xf) << 5 |
++		(0x1 & 0x1f);  /* -37 dB: 4'd7, 5'd01, -36 dB: 4'd6, 5'd01 */
++
++	/* Write to Gain table with auto increment enabled. */
++	REG_WRITE(ah, (AR_PHY_AIC_SRAM_ADDR_B0 + 0x3000),
++		  (ATH_AIC_SRAM_AUTO_INCREMENT |
++		   ATH_AIC_SRAM_GAIN_TABLE_OFFSET));
++
++	for (i = 0; i < 19; i++) {
++		REG_WRITE(ah, (AR_PHY_AIC_SRAM_DATA_B0 + 0x3000),
++			  aic_atten_word[i]);
++	}
++}
++
++static void ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
++{
++	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
++	int i;
++
++	/* Write to Gain table with auto increment enabled. */
++	REG_WRITE(ah, (AR_PHY_AIC_SRAM_ADDR_B0 + 0x3000),
++		  (ATH_AIC_SRAM_AUTO_INCREMENT |
++		   ATH_AIC_SRAM_CAL_OFFSET));
++
++	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
++		REG_WRITE(ah, (AR_PHY_AIC_SRAM_DATA_B0 + 0x3000), 0);
++		aic->aic_sram[i] = 0;
++	}
++
++	REG_WRITE(ah, AR_PHY_AIC_CTRL_0_B0,
++		  (SM(0, AR_PHY_AIC_MON_ENABLE) |
++		   SM(127, AR_PHY_AIC_CAL_MAX_HOP_COUNT) |
++		   SM(min_valid_count, AR_PHY_AIC_CAL_MIN_VALID_COUNT) |
++		   SM(37, AR_PHY_AIC_F_WLAN) |
++		   SM(1, AR_PHY_AIC_CAL_CH_VALID_RESET) |
++		   SM(0, AR_PHY_AIC_CAL_ENABLE) |
++		   SM(0x40, AR_PHY_AIC_BTTX_PWR_THR) |
++		   SM(0, AR_PHY_AIC_ENABLE)));
++
++	REG_WRITE(ah, AR_PHY_AIC_CTRL_0_B1,
++		  (SM(0, AR_PHY_AIC_MON_ENABLE) |
++		   SM(1, AR_PHY_AIC_CAL_CH_VALID_RESET) |
++		   SM(0, AR_PHY_AIC_CAL_ENABLE) |
++		   SM(0x40, AR_PHY_AIC_BTTX_PWR_THR) |
++		   SM(0, AR_PHY_AIC_ENABLE)));
++
++	REG_WRITE(ah, AR_PHY_AIC_CTRL_1_B0,
++		  (SM(8, AR_PHY_AIC_CAL_BT_REF_DELAY) |
++		   SM(0, AR_PHY_AIC_BT_IDLE_CFG) |
++		   SM(1, AR_PHY_AIC_STDBY_COND) |
++		   SM(37, AR_PHY_AIC_STDBY_ROT_ATT_DB) |
++		   SM(5, AR_PHY_AIC_STDBY_COM_ATT_DB) |
++		   SM(15, AR_PHY_AIC_RSSI_MAX) |
++		   SM(0, AR_PHY_AIC_RSSI_MIN)));
++
++	REG_WRITE(ah, AR_PHY_AIC_CTRL_1_B1,
++		  (SM(15, AR_PHY_AIC_RSSI_MAX) |
++		   SM(0, AR_PHY_AIC_RSSI_MIN)));
++
++	REG_WRITE(ah, AR_PHY_AIC_CTRL_2_B0,
++		  (SM(44, AR_PHY_AIC_RADIO_DELAY) |
++		   SM(8, AR_PHY_AIC_CAL_STEP_SIZE_CORR) |
++		   SM(12, AR_PHY_AIC_CAL_ROT_IDX_CORR) |
++		   SM(2, AR_PHY_AIC_CAL_CONV_CHECK_FACTOR) |
++		   SM(5, AR_PHY_AIC_ROT_IDX_COUNT_MAX) |
++		   SM(0, AR_PHY_AIC_CAL_SYNTH_TOGGLE) |
++		   SM(0, AR_PHY_AIC_CAL_SYNTH_AFTER_BTRX) |
++		   SM(200, AR_PHY_AIC_CAL_SYNTH_SETTLING)));
++
++	REG_WRITE(ah, AR_PHY_AIC_CTRL_3_B0,
++		  (SM(2, AR_PHY_AIC_MON_MAX_HOP_COUNT) |
++		   SM(1, AR_PHY_AIC_MON_MIN_STALE_COUNT) |
++		   SM(1, AR_PHY_AIC_MON_PWR_EST_LONG) |
++		   SM(2, AR_PHY_AIC_MON_PD_TALLY_SCALING) |
++		   SM(10, AR_PHY_AIC_MON_PERF_THR) |
++		   SM(2, AR_PHY_AIC_CAL_TARGET_MAG_SETTING) |
++		   SM(1, AR_PHY_AIC_CAL_PERF_CHECK_FACTOR) |
++		   SM(1, AR_PHY_AIC_CAL_PWR_EST_LONG)));
++
++	REG_WRITE(ah, AR_PHY_AIC_CTRL_4_B0,
++		  (SM(2, AR_PHY_AIC_CAL_ROT_ATT_DB_EST_ISO) |
++		   SM(3, AR_PHY_AIC_CAL_COM_ATT_DB_EST_ISO) |
++		   SM(0, AR_PHY_AIC_CAL_ISO_EST_INIT_SETTING) |
++		   SM(2, AR_PHY_AIC_CAL_COM_ATT_DB_BACKOFF) |
++		   SM(1, AR_PHY_AIC_CAL_COM_ATT_DB_FIXED)));
++
++	REG_WRITE(ah, AR_PHY_AIC_CTRL_4_B1,
++		  (SM(2, AR_PHY_AIC_CAL_ROT_ATT_DB_EST_ISO) |
++		   SM(3, AR_PHY_AIC_CAL_COM_ATT_DB_EST_ISO) |
++		   SM(0, AR_PHY_AIC_CAL_ISO_EST_INIT_SETTING) |
++		   SM(2, AR_PHY_AIC_CAL_COM_ATT_DB_BACKOFF) |
++		   SM(1, AR_PHY_AIC_CAL_COM_ATT_DB_FIXED)));
++
++	ar9003_aic_gain_table(ah);
++
++	/* Need to enable AIC reference signal in BT modem. */
++	REG_WRITE(ah, ATH_AIC_BT_JUPITER_CTRL,
++		  (REG_READ(ah, ATH_AIC_BT_JUPITER_CTRL) |
++		   ATH_AIC_BT_AIC_ENABLE));
++
++	aic->aic_cal_start_time = REG_READ(ah, AR_TSF_L32);
++
++	/* Start calibration */
++	REG_CLR_BIT(ah, AR_PHY_AIC_CTRL_0_B1, AR_PHY_AIC_CAL_ENABLE);
++	REG_SET_BIT(ah, AR_PHY_AIC_CTRL_0_B1, AR_PHY_AIC_CAL_CH_VALID_RESET);
++	REG_SET_BIT(ah, AR_PHY_AIC_CTRL_0_B1, AR_PHY_AIC_CAL_ENABLE);
++
++	aic->aic_caled_chan = 0;
++	aic->aic_cal_state = AIC_CAL_STATE_STARTED;
++}
++
++u8 ar9003_aic_calibration_single(struct ath_hw *ah)
++{
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
++	u8 cal_ret = 0;
++	int num_chan;
++
++	num_chan = MS(mci_hw->config, ATH_MCI_CONFIG_AIC_CAL_NUM_CHAN);
++
++	ar9003_aic_cal_start(ah, num_chan);
++
++	return cal_ret;
++}
++
+ void ar9003_hw_attach_aic_ops(struct ath_hw *ah)
  {
--	legacy_init_wl12xx(0, 0, 136);
- 	platform_device_register(&wl18xx_device);
- 	platform_device_register(&btwilink_device);
- }
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.h b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
+index b81d5d1..e31c44e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_aic.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
+@@ -31,6 +31,13 @@
+ #define ATH_AIC_BT_JUPITER_CTRL         0x66820
+ #define ATH_AIC_BT_AIC_ENABLE           0x02
+ 
++enum aic_cal_state {
++	AIC_CAL_STATE_IDLE = 0,
++	AIC_CAL_STATE_STARTED,
++	AIC_CAL_STATE_DONE,
++	AIC_CAL_STATE_ERROR
++};
++
+ struct ath_aic_sram_info {
+ 	bool valid:1;
+ 	bool vga_quad_sign:1;
+@@ -46,4 +53,6 @@ struct ath_aic_out_info {
+ 	struct ath_aic_sram_info sram;
+ };
+ 
++u8 ar9003_aic_calibration_single(struct ath_hw *ah);
++
+ #endif /* AR9003_AIC_H */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index bd169fa..20bb5b9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -19,6 +19,7 @@
+ #include "hw-ops.h"
+ #include "ar9003_phy.h"
+ #include "ar9003_mci.h"
++#include "ar9003_aic.h"
+ 
+ static void ar9003_mci_reset_req_wakeup(struct ath_hw *ah)
+ {
+@@ -1362,6 +1363,9 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
+ 		value = (!mci->unhalt_bt_gpm && mci->need_flush_btinfo) ? 1 : 0;
+ 		mci->need_flush_btinfo = false;
+ 		break;
++	case MCI_STATE_AIC_CAL_SINGLE:
++		value = ar9003_aic_calibration_single(ah);
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index b3ed738..cd2f0a2 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -107,6 +107,7 @@ struct ath9k_hw_aic {
+ struct ath_btcoex_hw {
+ 	enum ath_btcoex_scheme scheme;
+ 	struct ath9k_hw_mci mci;
++	struct ath9k_hw_aic aic;
+ 	bool enabled;
+ 	u8 wlanactive_gpio;
+ 	u8 btactive_gpio;
 -- 
-1.8.5.2.229.g4448466.dirty
+2.3.1
 
