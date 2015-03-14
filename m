@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42889 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752739AbbC3K7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 06:59:45 -0400
-Date: Mon, 30 Mar 2015 12:59:35 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:59400 "EHLO
+	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751153AbbCNRzf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 13:55:35 -0400
+Date: Sat, 14 Mar 2015 18:55:32 +0100
+From: Florian Westphal <fw@strlen.de>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Florian Westphal <fw@strlen.de>, linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org
-Subject: [PATCH v2 4/6] brcm80211: drop pci dependency
-Message-ID: <1427712964-16155-5-git-send-email-mst@redhat.com> (sfid-20150330_130030_407260_26FE53D4)
-References: <1427712964-16155-1-git-send-email-mst@redhat.com>
+Subject: Re: [PATCH next] drivers: wireless: carl9170: shrink carl9170_tx_info
+Message-ID: <20150314175532.GH14761@breakpoint.cc> (sfid-20150314_185542_856026_C022EDBE)
+References: <1426261045-22373-1-git-send-email-fw@strlen.de>
+ <1689955.Ikz24aORLX@debian64>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1427712964-16155-1-git-send-email-mst@redhat.com>
+In-Reply-To: <1689955.Ikz24aORLX@debian64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This file does not use any pci APIs, drop
-pci header includes.
+Christian Lamparter <chunkeey@googlemail.com> wrote:
+> On Friday, March 13, 2015 04:37:25 PM Florian Westphal wrote:
+> > its embededded inside rate_driver_data of the ieee80211_tx_info struct,
+> > which in turn is stored in skb->cb[].
+> > 
+> > In order to shrink cb, we need to shrink ieee80211_tx_info which means
+> > to downsize all users first.
+> > 
+> > Alternatively, one might be able to remove kref but
+> > its less intrusive/simpler to use u32 for timeout handling.
+> > 
+> > Signed-off-by: Florian Westphal <fw@strlen.de>
+> > ---
+> u32 jiffies... that's a lot of pointing (well not so much) and really 
+> ugly casting (a lot). I guess it would be easier to just use a "per-queue"
+> timeout watchdog like almost everybody else. This way, the driver will
+> be ready for the next skb->cb shrink as well.
+> 
+> carl9170_tx_ampdu_timeout can be completely removed.
 
-Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-Acked-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 7944224..9331486 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -17,8 +17,6 @@
- 
- #include <linux/types.h>
- #include <linux/netdevice.h>
--#include <linux/pci.h>
--#include <linux/pci_ids.h>
- #include <linux/sched.h>
- #include <linux/completion.h>
- #include <linux/scatterlist.h>
--- 
-MST
-
+Maybe, but there is only so much I am willing to do with "compile
+tested only" patches...
