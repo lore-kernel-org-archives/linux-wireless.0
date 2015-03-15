@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:62458 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751893AbbCVSbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 14:31:47 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v3 10/18] ath9k: write buffer related optimisation in ar5008_hw_set_channel_regs
-Date: Sun, 22 Mar 2015 19:29:55 +0100
-Message-Id: <1427049003-8443-11-git-send-email-linux@rempel-privat.de> (sfid-20150322_193417_213303_BF579229)
-In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
-References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+Received: from mout.kundenserver.de ([212.227.126.130]:59108 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbbCOMKm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 08:10:42 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Eliad Peller <eliad@wizery.com>, Tony Lindgren <tony@atomide.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Sekhar Nori <nsekhar@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	=?ISO-8859-1?Q?Beno=EEt?= Cousson <bcousson@baylibre.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Luciano Coelho <luca@coelho.fi>
+Subject: Re: [PATCH v6 6/6] wlcore: remove wl12xx_platform_data
+Date: Sun, 15 Mar 2015 13:08:19 +0100
+Message-ID: <2070859.WcMooC33YH@wuerfel> (sfid-20150315_131047_538517_5272D631)
+In-Reply-To: <CAB3XZEdFMQexA69JEuw=VnqsNOEkWAM0+oWWmt6DaN9+hZ+vdw@mail.gmail.com>
+References: <1426162154-8716-1-git-send-email-eliad@wizery.com> <20150313151301.GJ5264@atomide.com> <CAB3XZEdFMQexA69JEuw=VnqsNOEkWAM0+oWWmt6DaN9+hZ+vdw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ar5008_phy.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+On Sunday 15 March 2015 10:50:42 Eliad Peller wrote:
+> yeah, i missed it :/
+> 
+> looks like there's no platform that defines platform data for it.
+> i'll replace the dev_get_platdata() with a function that only parses
+> the clock-frequency properties (the irq is taken in this case from the
+> spi_device).
+> (or maybe i should just drop it, as no one actually uses it?)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index f273427..6c23d27 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -681,12 +681,13 @@ static void ar5008_hw_set_channel_regs(struct ath_hw *ah,
- 			phymode |= AR_PHY_FC_DYN2040_PRI_CH;
- 
- 	}
-+	ENABLE_REGWRITE_BUFFER(ah);
- 	REG_WRITE(ah, AR_PHY_TURBO, phymode);
- 
-+	/* This function do only REG_WRITE, so
-+	 * we can include it to REGWRITE_BUFFER. */
- 	ath9k_hw_set11nmac2040(ah, chan);
- 
--	ENABLE_REGWRITE_BUFFER(ah);
--
- 	REG_WRITE(ah, AR_GTXTO, 25 << AR_GTXTO_TIMEOUT_LIMIT_S);
- 	REG_WRITE(ah, AR_CST, 0xF << AR_CST_TIMEOUT_LIMIT_S);
- 
--- 
-1.9.1
+I don't think we should drop the driver, but dropping the platform_data
+support sounds reasonable. New users of this driver should all be using
+DT, and if there is a good reason to use platform_data, it's easily
+put back.
 
+	Arnd
