@@ -1,304 +1,465 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60333 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752688AbbCISnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 14:43:08 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
-References: <1425920453-25099-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1425920453-25099-2-git-send-email-Jes.Sorensen@redhat.com>
-	<1425925248.5428.39.camel@perches.com>
-Date: Mon, 09 Mar 2015 14:43:02 -0400
-In-Reply-To: <1425925248.5428.39.camel@perches.com> (Joe Perches's message of
-	"Mon, 09 Mar 2015 11:20:48 -0700")
-Message-ID: <wrfj385eqafd.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150309_194313_640532_DAED0BD5)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:57392 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752719AbbCOOA7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 10:00:59 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 6/7] wil6210: implement broadcast/multicast data
+Date: Sun, 15 Mar 2015 16:00:23 +0200
+Message-Id: <1426428024-4538-10-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150315_150105_479720_BE302BFE)
+In-Reply-To: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-> On Mon, 2015-03-09 at 13:00 -0400, Jes.Sorensen@redhat.com wrote:
->> This is an alternate driver for the Realtek 8723AU (rtl8723au) written
->> from scratch utilizing the mac80211 stack.
->
-> Mostly trivial comments:
->
->> diff --git a/MAINTAINERS b/MAINTAINERS
-> []
->> +RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
->> +M:	Jes Sorensen <Jes.Sorensen@redhat.com>
->> +L:	linux-wireless@vger.kernel.org
->> +W:	http://intellinuxwireless.org
->> +T:	git git://git.Mkernel.org/pub/scm/linux/kernel/git/jes/linux.git
->> +	git branch rtl8723au-mac80211
->
-> please keep this on one line
+Use dedicated vring for multicast frames; this vring allocated for
+AP and PBSS (both P2P GO and client) configurations
 
-Lines are 80 characters, and it won't fit.
+For short frames, use MCS0; for long - MCS1
 
-> T: git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
-> rtl8723au-mac80211
->
->> diff --git a/drivers/net/wireless/rtl8xxxu.c b/drivers/net/wireless/rtl8xxxu.c
->
-> []
->
->> +static struct usb_device_id dev_table[] = {
->
-> Please use const where appropriate.
->
->
->> +static struct ieee80211_rate rtl8xxxu_rates[] = {
-> []
->> +static struct ieee80211_channel rtl8xxxu_channels_2g[] = {
-> []
->> +static struct ieee80211_supported_band rtl8xxxu_supported_band = {
-> []
->> +static struct rtl8xxxu_reg8val rtl8723a_mac_init_table[] = {
-> []
->> +static struct rtl8xxxu_reg32val rtl8723a_phy_1t_init_table[] = {
-> []
->> +static struct rtl8xxxu_reg32val rtl8723a_agc_1t_init_table[] = {
-> []
->> +static struct rtl8xxxu_rfregval rtl8723au_radioa_rf6052_1t_init_table[] = {
->
->> +static u8 rtl8723au_read8(struct rtl8xxxu_priv *priv, u16 addr)
->
->> +	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_REG_READ)
->> +		dev_info(&udev->dev, "%s(%04x)   = 0x%02x, len %i\n",
->> +			 __func__, addr, data, len);
->
-> Probably better to use a local rtl_dbg which use
->  whatever flag you want (or no flag at all)
->
-> #define rtl_dbg(dev, flag, fmt, ...)
-> do {
-> 	if (rtl8xxxu_debug & RTL8XXX_DEBUG_##flag)
-> 		dev_dbg(dev, fmt, ##__VA_ARGS__);
-> } while (0)
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c |  11 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c  |  18 ++-
+ drivers/net/wireless/ath/wil6210/main.c     |  33 ++++++
+ drivers/net/wireless/ath/wil6210/txrx.c     | 175 +++++++++++++++++-----------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |   6 +
+ 5 files changed, 167 insertions(+), 76 deletions(-)
 
-Ewww, absolutely not! This is way worse than how I wrote it!
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index c9f362c..8f7596f 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -783,8 +783,17 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	rc = wmi_pcp_start(wil, info->beacon_interval, wmi_nettype,
+ 			   channel->hw_value);
+ 	if (rc)
+-		netif_carrier_off(ndev);
++		goto err_pcp_start;
+ 
++	rc = wil_bcast_init(wil);
++	if (rc)
++		goto err_bcast;
++
++	goto out; /* success */
++err_bcast:
++	wmi_pcp_stop(wil);
++err_pcp_start:
++	netif_carrier_off(ndev);
+ out:
+ 	mutex_unlock(&wil->mutex);
+ 	return rc;
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index a42cb89..bbc22d8 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -121,12 +121,18 @@ static int wil_vring_debugfs_show(struct seq_file *s, void *data)
+ 
+ 			snprintf(name, sizeof(name), "tx_%2d", i);
+ 
+-			seq_printf(s,
+-				"\n%pM CID %d TID %d BACK([%d] %d TU A%s) [%3d|%3d] idle %s\n",
+-				wil->sta[cid].addr, cid, tid,
+-				txdata->agg_wsize, txdata->agg_timeout,
+-				txdata->agg_amsdu ? "+" : "-",
+-				used, avail, sidle);
++			if (cid < WIL6210_MAX_CID)
++				seq_printf(s,
++					   "\n%pM CID %d TID %d BACK([%u] %u TU A%s) [%3d|%3d] idle %s\n",
++					   wil->sta[cid].addr, cid, tid,
++					   txdata->agg_wsize,
++					   txdata->agg_timeout,
++					   txdata->agg_amsdu ? "+" : "-",
++					   used, avail, sidle);
++			else
++				seq_printf(s,
++					   "\nBroadcast [%3d|%3d] idle %s\n",
++					   used, avail, sidle);
+ 
+ 			wil_print_vring(s, wil, name, vring, '_', 'H');
+ 		}
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index a5fd605..c2a2384 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -68,6 +68,7 @@ MODULE_PARM_DESC(mtu_max, " Max MTU value.");
+ 
+ static uint rx_ring_order = WIL_RX_RING_SIZE_ORDER_DEFAULT;
+ static uint tx_ring_order = WIL_TX_RING_SIZE_ORDER_DEFAULT;
++static uint bcast_ring_order = WIL_BCAST_RING_SIZE_ORDER_DEFAULT;
+ 
+ static int ring_order_set(const char *val, const struct kernel_param *kp)
+ {
+@@ -216,6 +217,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
++		wil_bcast_fini(wil);
+ 		netif_tx_stop_all_queues(ndev);
+ 		netif_carrier_off(ndev);
+ 
+@@ -360,6 +362,35 @@ static int wil_find_free_vring(struct wil6210_priv *wil)
+ 	return -EINVAL;
+ }
+ 
++int wil_bcast_init(struct wil6210_priv *wil)
++{
++	int ri = wil->bcast_vring, rc;
++
++	if ((ri >= 0) && wil->vring_tx[ri].va)
++		return 0;
++
++	ri = wil_find_free_vring(wil);
++	if (ri < 0)
++		return ri;
++
++	rc = wil_vring_init_bcast(wil, ri, 1 << bcast_ring_order);
++	if (rc == 0)
++		wil->bcast_vring = ri;
++
++	return rc;
++}
++
++void wil_bcast_fini(struct wil6210_priv *wil)
++{
++	int ri = wil->bcast_vring;
++
++	if (ri < 0)
++		return;
++
++	wil->bcast_vring = -1;
++	wil_vring_fini_tx(wil, ri);
++}
++
+ static void wil_connect_worker(struct work_struct *work)
+ {
+ 	int rc;
+@@ -407,6 +438,7 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	init_completion(&wil->wmi_call);
+ 
+ 	wil->pending_connect_cid = -1;
++	wil->bcast_vring = -1;
+ 	setup_timer(&wil->connect_timer, wil_connect_timer_fn, (ulong)wil);
+ 	setup_timer(&wil->scan_timer, wil_scan_timer_fn, (ulong)wil);
+ 
+@@ -656,6 +688,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 
+ 	cancel_work_sync(&wil->disconnect_worker);
+ 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
++	wil_bcast_fini(wil);
+ 
+ 	/* prevent NAPI from being scheduled */
+ 	bitmap_zero(wil->status, wil_status_last);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 2453470..1fe390f 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -523,7 +523,7 @@ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
+ 	struct wireless_dev *wdev = wil_to_wdev(wil);
+ 	unsigned int len = skb->len;
+ 	struct vring_rx_desc *d = wil_skb_rxdesc(skb);
+-	int cid = wil_rxdesc_cid(d);
++	int cid = wil_rxdesc_cid(d); /* always 0..7, no need to check */
+ 	struct ethhdr *eth = (void *)skb->data;
+ 	/* here looking for DA, not A1, thus Rxdesc's 'mcast' indication
+ 	 * is not suitable, need to look at data
+@@ -749,6 +749,72 @@ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
+ 	return rc;
+ }
+ 
++int wil_vring_init_bcast(struct wil6210_priv *wil, int id, int size)
++{
++	int rc;
++	struct wmi_bcast_vring_cfg_cmd cmd = {
++		.action = cpu_to_le32(WMI_VRING_CMD_ADD),
++		.vring_cfg = {
++			.tx_sw_ring = {
++				.max_mpdu_size =
++					cpu_to_le16(wil_mtu2macbuf(mtu_max)),
++				.ring_size = cpu_to_le16(size),
++			},
++			.ringid = id,
++			.encap_trans_type = WMI_VRING_ENC_TYPE_802_3,
++		},
++	};
++	struct {
++		struct wil6210_mbox_hdr_wmi wmi;
++		struct wmi_vring_cfg_done_event cmd;
++	} __packed reply;
++	struct vring *vring = &wil->vring_tx[id];
++	struct vring_tx_data *txdata = &wil->vring_tx_data[id];
++
++	wil_dbg_misc(wil, "%s() max_mpdu_size %d\n", __func__,
++		     cmd.vring_cfg.tx_sw_ring.max_mpdu_size);
++
++	if (vring->va) {
++		wil_err(wil, "Tx ring [%d] already allocated\n", id);
++		rc = -EINVAL;
++		goto out;
++	}
++
++	memset(txdata, 0, sizeof(*txdata));
++	spin_lock_init(&txdata->lock);
++	vring->size = size;
++	rc = wil_vring_alloc(wil, vring);
++	if (rc)
++		goto out;
++
++	wil->vring2cid_tid[id][0] = WIL6210_MAX_CID; /* CID */
++	wil->vring2cid_tid[id][1] = 0; /* TID */
++
++	cmd.vring_cfg.tx_sw_ring.ring_mem_base = cpu_to_le64(vring->pa);
++
++	rc = wmi_call(wil, WMI_BCAST_VRING_CFG_CMDID, &cmd, sizeof(cmd),
++		      WMI_VRING_CFG_DONE_EVENTID, &reply, sizeof(reply), 100);
++	if (rc)
++		goto out_free;
++
++	if (reply.cmd.status != WMI_FW_STATUS_SUCCESS) {
++		wil_err(wil, "Tx config failed, status 0x%02x\n",
++			reply.cmd.status);
++		rc = -EINVAL;
++		goto out_free;
++	}
++	vring->hwtail = le32_to_cpu(reply.cmd.tx_vring_tail_ptr);
++
++	txdata->enabled = 1;
++
++	return 0;
++ out_free:
++	wil_vring_free(wil, vring, 1);
++ out:
++
++	return rc;
++}
++
+ void wil_vring_fini_tx(struct wil6210_priv *wil, int id)
+ {
+ 	struct vring *vring = &wil->vring_tx[id];
+@@ -772,7 +838,7 @@ void wil_vring_fini_tx(struct wil6210_priv *wil, int id)
+ 	memset(txdata, 0, sizeof(*txdata));
+ }
+ 
+-static struct vring *wil_find_tx_vring(struct wil6210_priv *wil,
++static struct vring *wil_find_tx_ucast(struct wil6210_priv *wil,
+ 				       struct sk_buff *skb)
+ {
+ 	int i;
+@@ -805,15 +871,6 @@ static struct vring *wil_find_tx_vring(struct wil6210_priv *wil,
+ 	return NULL;
+ }
+ 
+-static void wil_set_da_for_vring(struct wil6210_priv *wil,
+-				 struct sk_buff *skb, int vring_index)
+-{
+-	struct ethhdr *eth = (void *)skb->data;
+-	int cid = wil->vring2cid_tid[vring_index][0];
+-
+-	memcpy(eth->h_dest, wil->sta[cid].addr, ETH_ALEN);
+-}
+-
+ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 			struct sk_buff *skb);
+ 
+@@ -834,6 +891,9 @@ static struct vring *wil_find_tx_vring_sta(struct wil6210_priv *wil,
+ 			continue;
+ 
+ 		cid = wil->vring2cid_tid[i][0];
++		if (cid >= WIL6210_MAX_CID) /* skip BCAST */
++			continue;
++
+ 		if (!wil->sta[cid].data_port_open &&
+ 		    (skb->protocol != cpu_to_be16(ETH_P_PAE)))
+ 			break;
+@@ -848,57 +908,17 @@ static struct vring *wil_find_tx_vring_sta(struct wil6210_priv *wil,
+ 	return NULL;
+ }
+ 
+-/*
+- * Find 1-st vring and return it; set dest address for this vring in skb
+- * duplicate skb and send it to other active vrings
+- */
+-static struct vring *wil_tx_bcast(struct wil6210_priv *wil,
+-				  struct sk_buff *skb)
++static struct vring *wil_find_tx_bcast(struct wil6210_priv *wil,
++				       struct sk_buff *skb)
+ {
+-	struct vring *v, *v2;
+-	struct sk_buff *skb2;
+-	int i;
+-	u8 cid;
+-
+-	/* find 1-st vring eligible for data */
+-	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
+-		v = &wil->vring_tx[i];
+-		if (!v->va)
+-			continue;
+-
+-		cid = wil->vring2cid_tid[i][0];
+-		if (!wil->sta[cid].data_port_open)
+-			continue;
+-
+-		goto found;
+-	}
+-
+-	wil_dbg_txrx(wil, "Tx while no vrings active?\n");
+-
+-	return NULL;
+-
+-found:
+-	wil_dbg_txrx(wil, "BCAST -> ring %d\n", i);
+-	wil_set_da_for_vring(wil, skb, i);
+-
+-	/* find other active vrings and duplicate skb for each */
+-	for (i++; i < WIL6210_MAX_TX_RINGS; i++) {
+-		v2 = &wil->vring_tx[i];
+-		if (!v2->va)
+-			continue;
+-		cid = wil->vring2cid_tid[i][0];
+-		if (!wil->sta[cid].data_port_open)
+-			continue;
++	struct vring *v;
++	int i = wil->bcast_vring;
+ 
+-		skb2 = skb_copy(skb, GFP_ATOMIC);
+-		if (skb2) {
+-			wil_dbg_txrx(wil, "BCAST DUP -> ring %d\n", i);
+-			wil_set_da_for_vring(wil, skb2, i);
+-			wil_tx_vring(wil, v2, skb2);
+-		} else {
+-			wil_err(wil, "skb_copy failed\n");
+-		}
+-	}
++	if (i < 0)
++		return NULL;
++	v = &wil->vring_tx[i];
++	if (!v->va)
++		return NULL;
+ 
+ 	return v;
+ }
+@@ -995,6 +1015,8 @@ static int __wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	uint i = swhead;
+ 	dma_addr_t pa;
+ 	int used;
++	bool mcast = (vring_index == wil->bcast_vring);
++	uint len = skb_headlen(skb);
+ 
+ 	wil_dbg_txrx(wil, "%s()\n", __func__);
+ 
+@@ -1020,7 +1042,17 @@ static int __wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 		return -EINVAL;
+ 	vring->ctx[i].mapped_as = wil_mapped_as_single;
+ 	/* 1-st segment */
+-	wil_tx_desc_map(d, pa, skb_headlen(skb), vring_index);
++	wil_tx_desc_map(d, pa, len, vring_index);
++	if (unlikely(mcast)) {
++		d->mac.d[0] |= BIT(MAC_CFG_DESC_TX_0_MCS_EN_POS); /* MCS 0 */
++		if (unlikely(len > WIL_BCAST_MCS0_LIMIT)) {
++			/* set MCS 1 */
++			d->mac.d[0] |= (1 << MAC_CFG_DESC_TX_0_MCS_INDEX_POS);
++			/* packet mode 2 */
++			d->mac.d[1] |= BIT(MAC_CFG_DESC_TX_1_PKT_MODE_EN_POS) |
++				       (2 << MAC_CFG_DESC_TX_1_PKT_MODE_POS);
++		}
++	}
+ 	/* Process TCP/UDP checksum offloading */
+ 	if (unlikely(wil_tx_desc_offload_cksum_set(wil, d, skb))) {
+ 		wil_err(wil, "Tx[%2d] Failed to set cksum, drop packet\n",
+@@ -1126,6 +1158,7 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ {
+ 	struct wil6210_priv *wil = ndev_to_wil(ndev);
+ 	struct ethhdr *eth = (void *)skb->data;
++	bool bcast = is_multicast_ether_addr(eth->h_dest);
+ 	struct vring *vring;
+ 	static bool pr_once_fw;
+ 	int rc;
+@@ -1153,10 +1186,8 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 		/* in STA mode (ESS), all to same VRING */
+ 		vring = wil_find_tx_vring_sta(wil, skb);
+ 	} else { /* direct communication, find matching VRING */
+-		if (is_unicast_ether_addr(eth->h_dest))
+-			vring = wil_find_tx_vring(wil, skb);
+-		else
+-			vring = wil_tx_bcast(wil, skb);
++		vring = bcast ? wil_find_tx_bcast(wil, skb) :
++				wil_find_tx_ucast(wil, skb);
+ 	}
+ 	if (unlikely(!vring)) {
+ 		wil_dbg_txrx(wil, "No Tx VRING found for %pM\n", eth->h_dest);
+@@ -1219,7 +1250,7 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 	struct vring_tx_data *txdata = &wil->vring_tx_data[ringid];
+ 	int done = 0;
+ 	int cid = wil->vring2cid_tid[ringid][0];
+-	struct wil_net_stats *stats = &wil->sta[cid].stats;
++	struct wil_net_stats *stats = NULL;
+ 	volatile struct vring_tx_desc *_d;
+ 	int used_before_complete;
+ 	int used_new;
+@@ -1238,6 +1269,9 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 
+ 	used_before_complete = wil_vring_used_tx(vring);
+ 
++	if (cid < WIL6210_MAX_CID)
++		stats = &wil->sta[cid].stats;
++
+ 	while (!wil_vring_is_empty(vring)) {
+ 		int new_swtail;
+ 		struct wil_ctx *ctx = &vring->ctx[vring->swtail];
+@@ -1279,12 +1313,15 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 			if (skb) {
+ 				if (likely(d->dma.error == 0)) {
+ 					ndev->stats.tx_packets++;
+-					stats->tx_packets++;
+ 					ndev->stats.tx_bytes += skb->len;
+-					stats->tx_bytes += skb->len;
++					if (stats) {
++						stats->tx_packets++;
++						stats->tx_bytes += skb->len;
++					}
+ 				} else {
+ 					ndev->stats.tx_errors++;
+-					stats->tx_errors++;
++					if (stats)
++						stats->tx_errors++;
+ 				}
+ 				wil_consume_skb(skb, d->dma.error == 0);
+ 			}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index a6b096e..4310972 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -50,6 +50,8 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+ #define WIL_TX_Q_LEN_DEFAULT		(4000)
+ #define WIL_RX_RING_SIZE_ORDER_DEFAULT	(10)
+ #define WIL_TX_RING_SIZE_ORDER_DEFAULT	(10)
++#define WIL_BCAST_RING_SIZE_ORDER_DEFAULT	(7)
++#define WIL_BCAST_MCS0_LIMIT		(1024) /* limit for MCS0 frame size */
+ /* limit ring size in range [32..32k] */
+ #define WIL_RING_SIZE_ORDER_MIN	(5)
+ #define WIL_RING_SIZE_ORDER_MAX	(15)
+@@ -595,6 +597,7 @@ struct wil6210_priv {
+ 	struct vring_tx_data vring_tx_data[WIL6210_MAX_TX_RINGS];
+ 	u8 vring2cid_tid[WIL6210_MAX_TX_RINGS][2]; /* [0] - CID, [1] - TID */
+ 	struct wil_sta_info sta[WIL6210_MAX_CID];
++	int bcast_vring;
+ 	/* scan */
+ 	struct cfg80211_scan_request *scan_request;
+ 
+@@ -757,6 +760,9 @@ void wil_rx_fini(struct wil6210_priv *wil);
+ int wil_vring_init_tx(struct wil6210_priv *wil, int id, int size,
+ 		      int cid, int tid);
+ void wil_vring_fini_tx(struct wil6210_priv *wil, int id);
++int wil_vring_init_bcast(struct wil6210_priv *wil, int id, int size);
++int wil_bcast_init(struct wil6210_priv *wil);
++void wil_bcast_fini(struct wil6210_priv *wil);
+ 
+ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev);
+ int wil_tx_complete(struct wil6210_priv *wil, int ringid);
+-- 
+2.1.0
 
-> so this becomes
->
-> 	rtl_dbg(&udev->dev, REG_REG, "%s(%04x)   = 0x%02x, len %i\n",
-> 		__func__, addr, data, len);
->
-> though you could remove the __func__ here as
-> dynamic_debug can add it for you.
->
->
->> +static bool rtl8xxxu_simularity_compare(struct rtl8xxxu_priv *priv,
->> +					int result[][8], int c1, int c2)
->
-> similarity ?
-
-Simularity came from the vendor driver, I assume it references comparing
-the radio signal quality. Unless you have evidence to the contrary, I am
-not changing it.
-
->> +{
-> []
->> +	if (simubitmap == 0) {
->> +		for (i = 0; i < (bound / 4); i++) {
->> +			if (candidate[i] >= 0) {
->> +				for (j = i * 4; j < (i + 1) * 4 - 2; j++)
->> +					result[3][j] = result[candidate[i]][j];
->> +				retval = false;
->> +			}
->> +		}
->> +		return retval;
->> +	} else if (!(simubitmap & 0x0f)) {
->
-> Maybe remove the else
->
->> +		/* path A OK */
->> +		for (i = 0; i < 4; i++)
->> +			result[3][i] = result[c1][i];
->> +	} else if (!(simubitmap & 0xf0) && is_2t) {
->> +		/* path B OK */
->> +		for (i = 4; i < 8; i++)
->> +			result[3][i] = result[c1][i];
->> +	}
->> +
->> +	return false;
->> +}
-
-These are part of the same comparison chain, removing the else would be
-inconsistent.
-
->> +static int rtl8xxxu_iqk_path_a(struct rtl8xxxu_priv *priv, bool configpathb)
->
-> It might be helpful to describe the return
-> flags here as it's not negative error
->
->> +	if (!(reg_eac & BIT(28)) &&
->> +	    ((reg_e94 & 0x03ff0000) != 0x01420000) &&
->> +	    ((reg_e9c & 0x03ff0000) != 0x00420000))
->> +		result |= 0x01;
->> +	else	/* If TX not OK, ignore RX */
->> +		goto out;
->> +
->> +	/* If TX is OK, check whether RX is OK */
->> +	if (!(reg_eac & BIT(27)) &&
->> +	    ((reg_ea4 & 0x03ff0000) != 0x01320000) &&
->> +	    ((reg_eac & 0x03ff0000) != 0x00360000))
->> +		result |= 0x02;
->> +	else
->> +		dev_warn(&priv->udev->dev, "%s: Path A RX IQK failed!\n",
->> +			 __func__);
->> +out:
->> +	return result;
->> +}
->> +
->> +static void rtl8xxxu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
->> +				     int result[][8], int t, bool is_2t)
->> +{
->> +	struct device *dev = &priv->udev->dev;
->> +	u32 i, val32;
->> +	int path_a_ok /*, path_b_ok */;
->> +	int retry = 2;
->> +
->> +	u32 ADDA_REG[RTL8XXXU_ADDA_REGS] = {
->> +		REG_FPGA0_XCD_SWITCH_CTRL, REG_BLUETOOTH,
->> +		REG_RX_WAIT_CCA, REG_TX_CCK_RFON,
->> +		REG_TX_CCK_BBON, REG_TX_OFDM_RFON,
->> +		REG_TX_OFDM_BBON, REG_TX_TO_RX,
->> +		REG_TX_TO_TX, REG_RX_CCK,
->> +		REG_RX_OFDM, REG_RX_WAIT_RIFS,
->> +		REG_RX_TO_RX, REG_STANDBY,
->> +		REG_SLEEP, REG_PMPD_ANAEN
->> +	};
->
-> static const is generally better.
-
-It's irrelevant
-
->> +
->> +	u32 IQK_MAC_REG[RTL8XXXU_MAC_REGS] = {
->> +		REG_TXPAUSE, REG_BEACON_CTRL,
->> +		REG_BEACON_CTRL_1, REG_GPIO_MUXCFG
->> +	};
->> +
->> +	u32 IQK_BB_REG_92C[RTL8XXXU_BB_REGS] = {
->> +		REG_OFDM0_TRX_PATH_ENABLE, REG_OFDM0_TR_MUX_PAR,
->> +		REG_FPGA0_XCD_RF_SW_CTRL, REG_CONFIG_ANT_A, REG_CONFIG_ANT_B,
->> +		REG_FPGA0_XAB_RF_SW_CTRL, REG_FPGA0_XA_RF_INT_OE,
->> +		REG_FPGA0_XB_RF_INT_OE, REG_FPGA0_RF_MODE
->> +	};
->
-> []
->
->> +static void rtl8723a_phy_iq_calibrate(struct rtl8xxxu_priv *priv,
->> bool recovery)
->> +{
-> []
->> +	u32 iqk_bb_reg_92c[RTL8XXXU_BB_REGS] = {
->> +		REG_OFDM0_XA_RX_IQ_IMBALANCE, REG_OFDM0_XB_RX_IQ_IMBALANCE,
->> +		REG_OFDM0_ENERGY_CCA_THRES, REG_OFDM0_AGCR_SSI_TABLE,
->> +		REG_OFDM0_XA_TX_IQ_IMBALANCE, REG_OFDM0_XB_TX_IQ_IMBALANCE,
->> +		REG_OFDM0_XC_TX_AFE, REG_OFDM0_XD_TX_AFE,
->> +		REG_OFDM0_RX_IQ_EXT_ANTA
->> +	};
->
-> More static const?
->
->> +static int rtl8xxxu_set_bssid(struct rtl8xxxu_priv *priv, const u8 *bssid)
->> +{
->> +	int i;
->> +	u16 reg;
->> +
->> +	dev_dbg(&priv->udev->dev,
->> +		"%s: (%02x:%02x:%02x:%02x:%02x:%02x)\n",
->
-> %pM
->
->>  __func__,
->> +		bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
->
-> []
->
->> +static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
->> +{
->
->> +	ret = rtl8xxxu_power_on(priv);
->> +	if (ret < 0) {
->> +		dev_warn(dev, "%s: Failed power on\n", __func__);
->
-> Do you want to use _func__ on every logging message?
-> If so, I suggest using custom macros to add them
-> instead of adding it at every use.  Something like:
-
-I use them when I find it appropriate, your suggestion for custom macros
-is ugly, and will not go in here!
-
-> #define rtl_err(dev, fmt, ...)	\
-> 	dev_err(dev, "%s: " fmt, __func__, ##__VA_ARGS__)
-> #define rtl_notice(dev, fmt, ...)	\
-> 	dev_notice(dev, "%s: " fmt, __func__, ##__VA_ARGS__)
-> #define rtl_warn(dev, fmt, ...)	\
-> 	dev_warn(dev, "%s: " fmt, __func__, ##__VA_ARGS__)
-> #define rtl_info(dev, fmt, ...)	\
-> 	dev_info(dev, "%s: " fmt, __func__, ##__VA_ARGS__)
->
->
->> +static void rtl8xxxu_int_complete(struct urb *urb)
->> +{
->> +	struct rtl8xxxu_priv *priv = (struct rtl8xxxu_priv *)urb->context;
->> +	struct device *dev = &priv->udev->dev;
->> +	int i, ret;
->> +
->> +	dev_dbg(dev, "%s: status %i\n", __func__, urb->status);
->> +	if (urb->status == 0) {
->> +		for (i = 0; i < USB_INTR_CONTENT_LENGTH; i++) {
->> +			printk("%02x ", priv->int_buf[i]);
->> +			if ((i & 0x0f) == 0x0f)
->> +				printk("\n");
->> +		}
->
-> 		print_hex_dump();
->
->
->
->> +static int rtl8xxxu_probe(struct usb_interface *interface,
->> +			  const struct usb_device_id *id)
->> +{
-> []
->> +	dev_info(&udev->dev, "RTL8723au MAC %02x:%02x:%02x:%02x:%02x:%02x\n",
->> +		 priv->efuse_wifi.efuse.mac_addr[0],
->> +		 priv->efuse_wifi.efuse.mac_addr[1],
->> +		 priv->efuse_wifi.efuse.mac_addr[2],
->> +		 priv->efuse_wifi.efuse.mac_addr[3],
->> +		 priv->efuse_wifi.efuse.mac_addr[4],
->> +		 priv->efuse_wifi.efuse.mac_addr[5]);
->
-> %pM
->
-> []
->
->> +struct rtl8xxxu_priv {
-> []
->> +	u32 has_wifi:1;
->> +	u32 has_bluetooth:1;
->> +	u32 enable_bluetooth:1;
->> +	u32 has_gps:1;
->> +	u32 vendor_umc:1;
->> +	u32 has_polarity_ctrl:1;
->> +	u32 has_eeprom:1;
->> +	u32 boot_eeprom:1;
->> +	u32 ep_tx_high_queue:1;
->> +	u32 ep_tx_normal_queue:1;
->> +	u32 ep_tx_low_queue:1;
->> +	u32 path_a_hi_power:1;
->
-> These might be better as bool instead of packed bitfields.
-
-bool wastes 4 bytes in the struct, so no that would be worse.
-
-If you have any *bugs* to report, I welcome those comments very much.
-However if you are just looking to nag, please do that somewhere else.
-
-Jes
