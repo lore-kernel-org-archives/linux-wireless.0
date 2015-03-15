@@ -1,98 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:39791 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754203AbbCLMJh (ORCPT
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:34912 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922AbbCOIun convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 08:09:37 -0400
-Received: by wevl61 with SMTP id l61so15885027wev.6
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 05:09:36 -0700 (PDT)
+	Sun, 15 Mar 2015 04:50:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <20150313151301.GJ5264@atomide.com>
+References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
+	<1426162154-8716-7-git-send-email-eliad@wizery.com>
+	<20150313151301.GJ5264@atomide.com>
+Date: Sun, 15 Mar 2015 10:50:42 +0200
+Message-ID: <CAB3XZEdFMQexA69JEuw=VnqsNOEkWAM0+oWWmt6DaN9+hZ+vdw@mail.gmail.com> (sfid-20150315_095052_234022_75116C96)
+Subject: Re: [PATCH v6 6/6] wlcore: remove wl12xx_platform_data
 From: Eliad Peller <eliad@wizery.com>
-To: <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+To: Tony Lindgren <tony@atomide.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
 	Pawel Moll <pawel.moll@arm.com>,
 	Mark Rutland <mark.rutland@arm.com>,
 	Ian Campbell <ijc+devicetree@hellion.org.uk>,
 	Kumar Gala <galak@codeaurora.org>,
-	=?UTF-8?q?Beno=C3=AEt=20Cousson?= <bcousson@baylibre.com>,
-	Tony Lindgren <tony@atomide.com>,
+	=?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
 	Enric Balletbo i Serra <eballetbo@gmail.com>,
 	Javier Martinez Canillas <javier@dowhile0.org>,
 	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: [PATCH v6 3/6] dt: bindings: add TI's wilink wireless device
-Date: Thu, 12 Mar 2015 14:09:11 +0200
-Message-Id: <1426162154-8716-4-git-send-email-eliad@wizery.com> (sfid-20150312_131005_883928_9A4072A4)
-In-Reply-To: <1426162154-8716-1-git-send-email-eliad@wizery.com>
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Luciano Coelho <luca@coelho.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree binding documentation for TI's wilink
-(wl12xx and wl18xx) wlan chip.
+On Fri, Mar 13, 2015 at 5:13 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Eliad Peller <eliad@wizery.com> [150312 05:10]:
+>> Now that we have wlcore device-tree bindings in place
+>> (for both wl12xx and wl18xx), remove the legacy
+>> wl12xx_platform_data struct, and move its members
+>> into the platform device data (that is passed to wlcore)
+>>
+>> Davinci 850 is the only platform that still set
+>> the platform data in the legacy way (and doesn't
+>> have DT bindings), so remove the relevant
+>> code/Kconfig option from the board file (as suggested
+>> by Sekhar Nori)
+>>
+>> Signed-off-by: Luciano Coelho <luca@coelho.fi>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
+>>  arch/arm/mach-davinci/Kconfig                  |  11 ---
+>>  arch/arm/mach-davinci/board-da850-evm.c        | 113 -------------------------
+>>  drivers/net/wireless/ti/wilink_platform_data.c |  25 ------
+>>  drivers/net/wireless/ti/wl12xx/main.c          |  19 ++---
+>>  drivers/net/wireless/ti/wlcore/boot.c          |   1 -
+>>  drivers/net/wireless/ti/wlcore/main.c          |   4 +-
+>>  drivers/net/wireless/ti/wlcore/sdio.c          |  75 +++++-----------
+>>  drivers/net/wireless/ti/wlcore/wlcore_i.h      |   8 +-
+>>  include/linux/wl12xx.h                         |  25 ------
+>>  9 files changed, 36 insertions(+), 245 deletions(-)
+>
+> I got a build error related to the SPI driver with this series, probably
+> need to update this patch:
+>
+> drivers/net/wireless/ti/wlcore/spi.c: In function ‘wl1271_probe’:
+> drivers/net/wireless/ti/wlcore/spi.c:334:11: error: ‘struct wlcore_platdev_data’ has no member named ‘pdata’
+>   pdev_data.pdata = dev_get_platdata(&spi->dev);
+>            ^
+> drivers/net/wireless/ti/wlcore/spi.c:335:16: error: ‘struct wlcore_platdev_data’ has no member named ‘pdata’
+>   if (!pdev_data.pdata) {
+>
+yeah, i missed it :/
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v6: add wl12xx, use IRQ_TYPE_LEVEL_HIGH
+looks like there's no platform that defines platform data for it.
+i'll replace the dev_get_platdata() with a function that only parses
+the clock-frequency properties (the irq is taken in this case from the
+spi_device).
+(or maybe i should just drop it, as no one actually uses it?)
 
- .../devicetree/bindings/net/wireless/ti,wlcore.txt | 47 ++++++++++++++++++++++
- 1 file changed, 47 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-new file mode 100644
-index 0000000..2a3d90d
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore.txt
-@@ -0,0 +1,47 @@
-+TI Wilink 6/7/8 (wl12xx/wl18xx) SDIO devices
-+
-+This node provides properties for controlling the wilink wireless device. The
-+node is expected to be specified as a child node to the SDIO controller that
-+connects the device to the system.
-+
-+Required properties:
-+ - compatible: should be one of the following:
-+    * "ti,wl1271"
-+    * "ti,wl1273"
-+    * "ti,wl1281"
-+    * "ti,wl1283"
-+    * "ti,wl1801"
-+    * "ti,wl1805"
-+    * "ti,wl1807"
-+    * "ti,wl1831"
-+    * "ti,wl1835"
-+    * "ti,wl1837"
-+ - interrupts : specifies attributes for the out-of-band interrupt.
-+
-+Optional properties:
-+ - interrupt-parent : the phandle for the interrupt controller to which the
-+	device interrupts are connected.
-+ - ref-clock-frequency : ref clock frequency in Hz
-+ - tcxo-clock-frequency : tcxo clock frequency in Hz
-+
-+Note: the *-clock-frequency properties assume internal clocks. In case of external
-+clock, new bindings (for parsing the clock nodes) have to be added.
-+
-+Example:
-+
-+&mmc3 {
-+	status = "okay";
-+	vmmc-supply = <&wlan_en_reg>;
-+	bus-width = <4>;
-+	cap-power-off-card;
-+	keep-power-in-suspend;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	wlcore: wlcore@2 {
-+		compatible = "ti,wl1835";
-+		reg = <2>;
-+		interrupt-parent = <&gpio0>;
-+		interrupts = <19 IRQ_TYPE_LEVEL_HIGH>;
-+	};
-+};
--- 
-1.8.5.2.229.g4448466.dirty
-
+thanks,
+Eliad.
