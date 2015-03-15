@@ -1,43 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24060 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752634AbbCATcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 14:32:01 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/31] iwlwifi: mvm: increase the number of PAPD channel groups to 9
-Date: Sun,  1 Mar 2015 21:31:19 +0200
-Message-Id: <1425238304-498-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203206_464031_31B9D90B)
-In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
-References: <1425238186.30202.5.camel@egrumbacBox>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:19949 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309AbbCOODf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 10:03:35 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH 1/3] wil6210: NAPI completion refactor
+Date: Sun, 15 Mar 2015 16:03:23 +0200
+Message-ID: <2054086.3egRf2SmyA@lx-wigig-72> (sfid-20150315_150417_279751_A76089E6)
+In-Reply-To: <1426428024-4538-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1426428024-4538-2-git-send-email-qca_vkondrat@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
-
-Newer devices have more PAPD channel groups.
-
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-phy-db.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-index d4fb5ca..e893c6e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-phy-db.c
-@@ -72,7 +72,7 @@
- #include "iwl-trans.h"
- 
- #define CHANNEL_NUM_SIZE	4	/* num of channels in calib_ch size */
--#define IWL_NUM_PAPD_CH_GROUPS	7
-+#define IWL_NUM_PAPD_CH_GROUPS	9
- #define IWL_NUM_TXP_CH_GROUPS	9
- 
- struct iwl_phy_db_entry {
--- 
-1.9.1
-
+On Sunday, March 15, 2015 04:00:15 PM Vladimir Kondratiev wrote:
+> t is expected that driver completes NAPI when less than
+> full budget is consumed.
+> 
+> Fulfill this requirement.
+> 
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> 
+Please ignore, old patch, sent by mistake.
