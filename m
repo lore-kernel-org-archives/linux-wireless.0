@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:39021 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947AbbCDVmi convert rfc822-to-8bit (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:18522 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297AbbCOI14 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 16:42:38 -0500
+	Sun, 15 Mar 2015 04:27:56 -0400
+Date: Sun, 15 Mar 2015 13:57:36 +0530
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: move driver state check before setting throttle
+Message-ID: <20150315082734.GD18213@qca.qualcomm.com> (sfid-20150315_092802_799583_7F2CECFF)
+References: <1426097094-6225-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <873858rgh6.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20150305080130.41b132ee@canb.auug.org.au>
-References: <CA+r1Zhio+Kp30y4DHS0SW20PjZrAY3PZLXjskykpa8CY0tcrMA@mail.gmail.com>
-	<87d24o7s2j.fsf@kamboji.qca.qualcomm.com>
-	<20150305080130.41b132ee@canb.auug.org.au>
-Date: Wed, 4 Mar 2015 22:42:37 +0100
-Message-ID: <CACna6rzDhYVhem=mNtjM=Wx0OHQGSZJCs6r969jBSGbQf6fsww@mail.gmail.com> (sfid-20150304_224254_877362_4FB62CCF)
-Subject: Re: randconfig build error with next-20150303, in drivers/bcma/driver_pcie2.c
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Jim Davis <jim.epost@gmail.com>,
-	linux-next <linux-next@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <873858rgh6.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 March 2015 at 22:01, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> Hi Kalle,
->
-> On Wed, 04 Mar 2015 16:31:00 +0200 Kalle Valo <kvalo@codeaurora.org> wrote:
->>
->> Jim Davis <jim.epost@gmail.com> writes:
->>
->> > Building with the attached random configuration file,
->> >
->> > drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
->> > drivers/bcma/driver_pcie2.c:196:2: error: implicit declaration of
->> > function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
->> >   err = pcie_set_readrq(dev, pcie2->reqsize);
->> >   ^
->>
->> This should fix it:
->>
->> bcma: add missing includes
->>
->> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=2264fc857decd45798368f46861d9aecac23546f
->
-> However, that commit is in next-20150304 and we still get the error
-> (see, for example,
-> http://kisskb.ellerman.id.au/kisskb/buildresult/12376688/).
+On Fri, Mar 13, 2015 at 06:48:21PM +0200, Kalle Valo wrote:
+> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+> 
+> > Since thermal daemon is unaware of the device state, it might
+> > try to adjust the throttle state when the device is powered down.
+> > So the driver caches the value and will configure it while
+> > powering up the target. The cached value will be programed later
+> > once the device is brought up. In such case, returning error
+> > status is confusing and misleading the user application. Hence
+> > moving the driver state check before sending wmi command to target.
+> >
+> > Reported-by: Matthias Kaehlcke <mka@google.com>
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> 
+> What tree do you use as the baseline? Three-way merge doesn't work as
+> sha1 ids are not found:
+> 
+Will send rebased version.
 
-We're working on this, see
-http://marc.info/?t=142541740600001&r=1&w=2
-
-Sorry for the problem.
-
--- 
-Rafał
+-Rajkumar
