@@ -1,75 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:34463 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753195AbbCNI7x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 04:59:53 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH 1/2] ath10k: wmi: match wait_for_completion_timeout return type
-Date: Sat, 14 Mar 2015 04:55:02 -0400
-Message-Id: <1426323302-1310-1-git-send-email-hofrat@osadl.org> (sfid-20150314_100035_076827_E4775D0E)
+Received: from mo4-p05-ob.smtp.rzone.de ([81.169.146.183]:13084 "EHLO
+	mo4-p05-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751300AbbCOVUy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 17:20:54 -0400
+Date: Sun, 15 Mar 2015 22:20:51 +0100
+From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+To: =?UTF-8?B?SsO8cmdlbg==?= Bausa <juergen.Bausa@online.de>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Broadcom 43340
+Message-ID: <20150315222051.7d614056@mir> (sfid-20150315_222058_032936_3CD12631)
+In-Reply-To: <loom.20150315T213441-211@post.gmane.org>
+References: <550482A2.3080803@gmail.com>
+	<55048833.90408@broadcom.com>
+	<55048BB1.9080906@gmail.com>
+	<550491DA.6030105@broadcom.com>
+	<55049507.6040209@gmail.com>
+	<20150314213907.3f1167bb@mir>
+	<5504B29F.8000305@gmail.com>
+	<55056EFB.9020100@broadcom.com>
+	<loom.20150315T213441-211@post.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-return type of wait_for_completion_timeout is unsigned long not int. This
-patch adjusts the type and name of the return variable and adjusts the 
-success/fail values to match those used at the call site in ath10k_core_start
+Hi
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+On 2015-03-15, Jürgen Bausa wrote:
+> Arend van Spriel <arend@...> writes:
+> > On 03/14/15 23:13, Ochal Christophe wrote:
+[...]
+> would be nice, if you could make it clear.
+> 
+> I am in the exact some position (asus x205 with linux 4.0 rc3) but my
+> /sys/firmware/efi/efivars/ is empty. I am running debian jessie with a
+> kernel taken from ubuntu. Am I missing something? Even loading efivars via
+> modprobe doesnt change a thing.
 
-Adjustment of return values was proposed by Michal Kazior
-<michal.kazior@tieto.com> - thanks!
+You need to have efivarfs mounted, which Debian/jessie and systemd 
+should do by default (it certainly does, at least when booted in UEFI
+mode - you probably won't have access to it in BIOS CSM mode):
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
+$ grep efivarfs /proc/mounts 
+efivarfs /sys/firmware/efi/efivars efivarfs rw,nosuid,nodev,noexec,relatime 0 0
 
-Patch is against 4.0-rc3 (localversion-next is -next-20150313)
+If it isn't for some weird reason, you'll have to mount it by hand.
 
- drivers/net/wireless/ath/ath10k/wmi.c |   20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
+# mount -t efivarfs -o rw,nosuid,nodev,noexec,relatime efivarfs /sys/firmware/efi/efivars
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c7ea77e..65e495d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -884,20 +884,24 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
- 
- int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
- {
--	int ret;
-+	unsigned long time_left;
- 
--	ret = wait_for_completion_timeout(&ar->wmi.service_ready,
--					  WMI_SERVICE_READY_TIMEOUT_HZ);
--	return ret;
-+	time_left = wait_for_completion_timeout(&ar->wmi.service_ready,
-+						WMI_SERVICE_READY_TIMEOUT_HZ);
-+	if (!time_left)
-+		return -ETIMEDOUT;
-+	return 0;
- }
- 
- int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar)
- {
--	int ret;
-+	unsigned long time_left;
- 
--	ret = wait_for_completion_timeout(&ar->wmi.unified_ready,
--					  WMI_UNIFIED_READY_TIMEOUT_HZ);
--	return ret;
-+	time_left = wait_for_completion_timeout(&ar->wmi.unified_ready,
-+						WMI_UNIFIED_READY_TIMEOUT_HZ);
-+	if (!time_left)
-+		return -ETIMEDOUT;
-+	return 0;
- }
- 
- struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len)
--- 
-1.7.10.4
-
+Regards
+	Stefan Lippers-Hollmann
