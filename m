@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:53064 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753046AbbCIUyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 16:54:43 -0400
-Received: from minime.bse ([77.20.123.72]) by mail.gmx.com (mrgmx002) with
- ESMTPSA (Nemesis) id 0MNq4h-1YODCl1uwt-007SKN for
- <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 21:54:40 +0100
-Date: Mon, 9 Mar 2015 21:54:51 +0100
-From: Daniel =?iso-8859-1?Q?Gl=F6ckner?= <daniel-gl@gmx.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Maximilian Engelhardt <maxi@daemonizer.de>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-Message-ID: <20150309205451.GA13884@minime.bse> (sfid-20150309_215451_757737_56C28350)
-References: <53FDACD1.8090805@msgid.tls.msk.ru>
- <9234001.YBqfvtcJFx@fuchs>
- <5496E135.1@broadcom.com>
- <9062978.Vq0rTjKd5z@fuchs>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62771 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564AbbCOPH7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 11:07:59 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 5/6] ath10k: cache throttle state when device is down
+Date: Sun, 15 Mar 2015 20:36:24 +0530
+Message-ID: <1426431985-16332-6-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150315_160801_931129_65E08A3A)
+In-Reply-To: <1426431985-16332-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1426431985-16332-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9062978.Vq0rTjKd5z@fuchs>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Allow driver to cache the throttle state when the devie is not
+yet started. Configure the cached throttle state while powering
+up the device. Since thermal daemon is unaware of the up/down cycle,
+it assumes that device is throttled.
 
-On Sun, Dec 21, 2014 at 06:34:24PM +0100, Maximilian Engelhardt wrote:
-> On Sunday 21 December 2014 16:03:17 Arend van Spriel wrote:
-> > On 12/21/14 15:24, Maximilian Engelhardt wrote:
-> > > On Sunday 21 December 2014 15:13:50 Arend van Spriel wrote:
-> > >> Thanks. It shows you have have the same bt-coex version as Michael. I am
-> > >> not familiar with bluetooth side of things. Are you both using bluetooth
-> > >> on 4313?
-> > >> 
-> > >> Regards,
-> > >> Arend
-> > > 
-> > > I don't know. I think I have Bluetooth somehow enabled but I'm not really
-> > > using it. I definitely don't have any Bluetooth devices connected. I could
-> > > try to unload/disable Bluetooth it to see if it makes any difference.
-> > 
-> > That would be useful to know.
-> > 
-> 
-> I did a test with all Bluetooth modules unloaded that I could find but 
-> throughput was still very low (about 4 Mbit/s with brcmsmac, my atheros USB 
-> stick archived about 110 Mbit/s).
+Reported-by: Matthias Kaehlcke <mka@google.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/thermal.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-any update on this issue?
-One of my relatives would like to get rid of that Ralink wifi stick she
-has been carrying around for 1.5 years now since the internal wifi in her
-Thinkpad E130 suffers from this problem.
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index 604ea00..0b4cd3f 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -52,19 +52,19 @@ ath10k_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
+ 	struct ath10k *ar = cdev->devdata;
+ 	int ret = 0;
+ 
++	if (throttle_state > ATH10K_THERMAL_THROTTLE_MAX) {
++		ath10k_warn(ar, "throttle state %ld is exceeding the limit %d\n",
++			    throttle_state, ATH10K_THERMAL_THROTTLE_MAX);
++		return -EINVAL;
++	}
+ 	mutex_lock(&ar->conf_mutex);
++	ar->thermal.throttle_state = throttle_state;
++
+ 	if (ar->state != ATH10K_STATE_ON) {
+ 		ret = -ENETDOWN;
+ 		goto out;
+ 	}
+ 
+-	if (throttle_state > ATH10K_THERMAL_THROTTLE_MAX) {
+-		ath10k_warn(ar, "throttle state %ld is exceeding the limit %d\n",
+-			    throttle_state, ATH10K_THERMAL_THROTTLE_MAX);
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-	ar->thermal.throttle_state = throttle_state;
+ 	ath10k_thermal_set_throttling(ar);
+ out:
+ 	mutex_unlock(&ar->conf_mutex);
+-- 
+2.3.2
 
-Best regards,
-
-  Daniel
