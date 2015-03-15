@@ -1,83 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:41538 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752493AbbCSEjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 00:39:48 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, joe@perches.com,
-	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v3 00/15] checkpatch clean-up of rtl8723au's rtw_security.c
-Date: Thu, 19 Mar 2015 00:39:03 -0400
-Message-Id: <1426739958-18949-1-git-send-email-m.v.b@runbox.com> (sfid-20150319_054412_402629_149D906A)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:37548 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579AbbCOOAz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 10:00:55 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 3/3] wil6210: support AP isolation
+Date: Sun, 15 Mar 2015 16:00:20 +0200
+Message-Id: <1426428024-4538-7-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150315_150100_962287_9A4DEBC1)
+In-Reply-To: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These commits address a number of checkpatch.pl warnings and errors
-in rtl8723au's rtw_security.c.
+For the AP, configuration may say not to bridge traffic between
+wireless clients. This is conveyed from user space (ex: hostapd has
+ap_isolate parameter) with NL80211_CMD_SET_BSS, to the driver's
+cfg80211 ops method change_bss
 
-Prior to this set of commits, checkpatch.pl reported the following:
-	total: 77 errors, 138 warnings, 1621 lines checked
+Add support for this setting.
 
-After applying this set of commits, checkpatch.pl reports the following:
-	total: 0 errors, 26 warnings, 1624 lines checked
-where the only remaining warnings relate to lines longer than 80
-characters and quoted strings split across multiple lines.
+Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 16 ++++++++++++++++
+ drivers/net/wireless/ath/wil6210/debugfs.c  |  1 +
+ drivers/net/wireless/ath/wil6210/main.c     |  1 +
+ drivers/net/wireless/ath/wil6210/txrx.c     |  2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ 5 files changed, 20 insertions(+), 1 deletion(-)
 
-There are also a number of commits which improve the code in other ways.
-For example, the commit titled "Reorganize a few functions to remove
-indentation" reworks two functions to make them more readable, whereas
-the commit titled "Rework two byte array comparisons" reworks two CRC
-verifications for the same reason, and "Use __func__ in trace logs"
-avoids hardcoding function names in trace logs to increase
-maintainability.
-
-All of the commits have been verified to compile successfully via the
-use of the interactive rebase feature of git.
-
-v3: Rebased onto Greg Kroah-Hartman's staging-next tree, on top of
-    the following commit
-      5ec293650827122df300581c17ca1d5de03bac3d.
-      Staging: dgnc: release the lock before testing for nullity
-
-    Please see the individual commit messages for the changes
-    since v2. In summary, the following commits have been updated:
-    - that open brace should be on the previous line
-    - suspect code indent for conditional statements
-
-    The following commit is new:
-    - Use __func__ in trace logs
-
-    Finally, the following commit has been removed:
-    - Do not initialize a static to 0
-
-v2: Please see the individual commit messages for the changes
-    since v1. In summary, the following commits have been updated:
-    - Reformat whitespace to increase readability
-    - Fix "before/around/after" whitespace issues
-    - Rework two byte array comparisons
-
-M. Vefa Bicakci (15):
-  staging: rtl8723au: Reformat whitespace to increase readability
-  staging: rtl8723au: Fix "before/around/after" whitespace issues
-  staging: rtl8723au: else should follow close brace
-  staging: rtl8723au: Fix the indentation of two lines
-  staging: rtl8723au: Reorganize a few functions to remove indentation
-  staging: rtl8723au: else is not generally useful after a return
-  staging: rtl8723au: Remove unneeded curly braces
-  staging: rtl8723au: trailing statements should be on next line
-  staging: rtl8723au: that open brace should be on the previous line
-  staging: rtl8723au: No spaces at the start of a line
-  staging: rtl8723au: Adjust whitespace in and around comments
-  staging: rtl8723au: suspect code indent for conditional statements
-  staging: rtl8723au: Rework two byte array comparisons
-  staging: rtl8723au: Use __func__ in trace logs
-  staging: rtl8723au: Remove unneeded comments
-
- drivers/staging/rtl8723au/core/rtw_security.c | 799 +++++++++++++-------------
- 1 file changed, 401 insertions(+), 398 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 4bd708c..5db6a6d 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -917,6 +917,21 @@ static int wil_cfg80211_probe_client(struct wiphy *wiphy,
+ 	return 0;
+ }
+ 
++static int wil_cfg80211_change_bss(struct wiphy *wiphy,
++				   struct net_device *dev,
++				   struct bss_parameters *params)
++{
++	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++
++	if (params->ap_isolate >= 0) {
++		wil_dbg_misc(wil, "%s(ap_isolate %d => %d)\n", __func__,
++			     wil->ap_isolate, params->ap_isolate);
++		wil->ap_isolate = params->ap_isolate;
++	}
++
++	return 0;
++}
++
+ static struct cfg80211_ops wil_cfg80211_ops = {
+ 	.scan = wil_cfg80211_scan,
+ 	.connect = wil_cfg80211_connect,
+@@ -937,6 +952,7 @@ static struct cfg80211_ops wil_cfg80211_ops = {
+ 	.stop_ap = wil_cfg80211_stop_ap,
+ 	.del_station = wil_cfg80211_del_station,
+ 	.probe_client = wil_cfg80211_probe_client,
++	.change_bss = wil_cfg80211_change_bss,
+ };
+ 
+ static void wil_wiphy_init(struct wiphy *wiphy)
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 3830cc2..a42cb89 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1405,6 +1405,7 @@ static const struct dbg_off dbg_wil_off[] = {
+ 	WIL_FIELD(fw_version,	S_IRUGO,		doff_u32),
+ 	WIL_FIELD(hw_version,	S_IRUGO,		doff_x32),
+ 	WIL_FIELD(recovery_count, S_IRUGO,		doff_u32),
++	WIL_FIELD(ap_isolate,	S_IRUGO,		doff_u32),
+ 	{},
+ };
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index db74e81..afff8d3 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -714,6 +714,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 
+ 	/* init after reset */
+ 	wil->pending_connect_cid = -1;
++	wil->ap_isolate = 0;
+ 	reinit_completion(&wil->wmi_ready);
+ 	reinit_completion(&wil->wmi_call);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 08d3cac..689081c 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -515,7 +515,7 @@ void wil_netif_rx_any(struct sk_buff *skb, struct net_device *ndev)
+ 
+ 	skb_orphan(skb);
+ 
+-	if (wdev->iftype == NL80211_IFTYPE_AP) {
++	if (wdev->iftype == NL80211_IFTYPE_AP && !wil->ap_isolate) {
+ 		if (mcast) {
+ 			/* send multicast frames both to higher layers in
+ 			 * local net stack and back to the wireless medium
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b6e65c3..c1a71ab 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -542,6 +542,7 @@ struct wil6210_priv {
+ 	u32 monitor_flags;
+ 	u32 privacy; /* secure connection? */
+ 	int sinfo_gen;
++	u32 ap_isolate; /* no intra-BSS communication */
+ 	/* interrupt moderation */
+ 	u32 tx_max_burst_duration;
+ 	u32 tx_interframe_timeout;
 -- 
-2.1.4
+2.1.0
 
