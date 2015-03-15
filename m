@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:59108 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524AbbCOMKm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 08:10:42 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Eliad Peller <eliad@wizery.com>, Tony Lindgren <tony@atomide.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Sekhar Nori <nsekhar@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	=?ISO-8859-1?Q?Beno=EEt?= Cousson <bcousson@baylibre.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Luciano Coelho <luca@coelho.fi>
-Subject: Re: [PATCH v6 6/6] wlcore: remove wl12xx_platform_data
-Date: Sun, 15 Mar 2015 13:08:19 +0100
-Message-ID: <2070859.WcMooC33YH@wuerfel> (sfid-20150315_131047_538517_5272D631)
-In-Reply-To: <CAB3XZEdFMQexA69JEuw=VnqsNOEkWAM0+oWWmt6DaN9+hZ+vdw@mail.gmail.com>
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com> <20150313151301.GJ5264@atomide.com> <CAB3XZEdFMQexA69JEuw=VnqsNOEkWAM0+oWWmt6DaN9+hZ+vdw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from plane.gmane.org ([80.91.229.3]:54532 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751296AbbCOUuL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 16:50:11 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1YXFU4-00059P-BI
+	for linux-wireless@vger.kernel.org; Sun, 15 Mar 2015 21:50:04 +0100
+Received: from p57938888.dip0.t-ipconnect.de ([87.147.136.136])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2015 21:50:04 +0100
+Received: from juergen.Bausa by p57938888.dip0.t-ipconnect.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2015 21:50:04 +0100
+To: linux-wireless@vger.kernel.org
+From: =?utf-8?b?SsO8cmdlbg==?= Bausa <juergen.Bausa@online.de>
+Subject: Re: Broadcom 43340
+Date: Sun, 15 Mar 2015 20:38:20 +0000 (UTC)
+Message-ID: <loom.20150315T213441-211@post.gmane.org> (sfid-20150315_215020_206029_5CBD9FF8)
+References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir> <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 15 March 2015 10:50:42 Eliad Peller wrote:
-> yeah, i missed it :/
+Arend van Spriel <arend@...> writes:
+
 > 
-> looks like there's no platform that defines platform data for it.
-> i'll replace the dev_get_platdata() with a function that only parses
-> the clock-frequency properties (the irq is taken in this case from the
-> spi_device).
-> (or maybe i should just drop it, as no one actually uses it?)
+> On 03/14/15 23:13, Ochal Christophe wrote:
+> > All,
+> >
+> > On 03/14/2015 09:39 PM, Stefan Lippers-Hollmann wrote:
+> >> You don't need to run windows for that, the nvram (calibration data,
+> >> probably the MAC address and related device specific data) is stored
+> >> in your mainboard's firmware - and exposed to userspace (under linux)
+> >> via /sys/firmware/efi/efivars/. You just need to identify the correct
+> >> file and copy it to a place where linux expects to find it
+> >> (/lib/firmware/brcm/brcmfmac43340-sdio.txt). Regards Stefan
+> >> Lippers-Hollmann
+> >
+> > Thanks for the hint, that did it, I'm online!
+> 
+> Apparently my hint was not clear enough. Good to hear it works for you.
+> 
 
-I don't think we should drop the driver, but dropping the platform_data
-support sounds reasonable. New users of this driver should all be using
-DT, and if there is a good reason to use platform_data, it's easily
-put back.
+Dear Arend,
 
-	Arnd
+would be nice, if you could make it clear.
+
+I am in the exact some position (asus x205 with linux 4.0 rc3) but my
+/sys/firmware/efi/efivars/ is empty. I am running debian jessie with a
+kernel taken from ubuntu. Am I missing something? Even loading efivars via
+modprobe doesnt change a thing.
+
+Juergen
+
