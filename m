@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:34972 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753228AbbCQMdX (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:5123 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166AbbCOVPB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 08:33:23 -0400
-Received: by lbcgn8 with SMTP id gn8so5771138lbc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2015 05:33:21 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 1/7] ath10k: allow empty ssid vdev config
-Date: Tue, 17 Mar 2015 12:30:42 +0000
-Message-Id: <1426595448-1630-2-git-send-email-michal.kazior@tieto.com> (sfid-20150317_133328_287908_43E89361)
-In-Reply-To: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
-References: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 15 Mar 2015 17:15:01 -0400
+Message-ID: <5505F651.3060607@broadcom.com> (sfid-20150315_221511_088462_96D4D362)
+Date: Sun, 15 Mar 2015 22:14:57 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?J=FCrgen_Bausa?= <juergen.Bausa@online.de>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom 43340
+References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir> <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com> <loom.20150315T213441-211@post.gmane.org>
+In-Reply-To: <loom.20150315T213441-211@post.gmane.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to reject a valid
-firmware configuration combination.
+On 03/15/15 21:38, Jürgen Bausa wrote:
+> Arend van Spriel<arend@...>  writes:
+>
+>>
+>> On 03/14/15 23:13, Ochal Christophe wrote:
+>>> All,
+>>>
+>>> On 03/14/2015 09:39 PM, Stefan Lippers-Hollmann wrote:
+>>>> You don't need to run windows for that, the nvram (calibration data,
+>>>> probably the MAC address and related device specific data) is stored
+>>>> in your mainboard's firmware - and exposed to userspace (under linux)
+>>>> via /sys/firmware/efi/efivars/. You just need to identify the correct
+>>>> file and copy it to a place where linux expects to find it
+>>>> (/lib/firmware/brcm/brcmfmac43340-sdio.txt). Regards Stefan
+>>>> Lippers-Hollmann
+>>>
+>>> Thanks for the hint, that did it, I'm online!
+>>
+>> Apparently my hint was not clear enough. Good to hear it works for you.
+>>
+>
+> Dear Arend,
+>
+> would be nice, if you could make it clear.
+>
+> I am in the exact some position (asus x205 with linux 4.0 rc3) but my
+> /sys/firmware/efi/efivars/ is empty. I am running debian jessie with a
+> kernel taken from ubuntu. Am I missing something? Even loading efivars via
+> modprobe doesnt change a thing.
 
-Since SSID isn't known early on it might make
-sense to allow driver to start vdev without SSID
-and restart it later.
+Maybe you need to mount it. This is what I found [1]:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
- 2 files changed, 4 deletions(-)
+$ sudo mount -t efivarfs none /sys/firmware/efi/efivars
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 3eec042..fa3eb1b 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1486,8 +1486,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- 	void *ptr;
- 	u32 flags = 0;
- 
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 54430a1..7b3e6ca 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4286,8 +4286,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
- 	const char *cmdname;
- 	u32 flags = 0;
- 
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
--- 
-2.1.4
+Regards,
+Arend
+
+[1] http://firmware.intel.com/blog/accessing-uefi-variables-linux
+
+> Juergen
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
