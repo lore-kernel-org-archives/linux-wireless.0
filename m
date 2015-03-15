@@ -1,40 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:46095 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752458AbbCIJJh (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58732 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309AbbCOODy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 05:09:37 -0400
-Received: by obcva2 with SMTP id va2so13575655obc.13
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 02:09:37 -0700 (PDT)
+	Sun, 15 Mar 2015 10:03:54 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH 2/3] wil6210: re-submit Rx frames to the wireless media if appropriate
+Date: Sun, 15 Mar 2015 16:03:42 +0200
+Message-ID: <2136800.KgVN8hkJaB@lx-wigig-72> (sfid-20150315_150417_095952_FDA1E16A)
+In-Reply-To: <1426428024-4538-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+References: <1426428024-4538-1-git-send-email-qca_vkondrat@qca.qualcomm.com> <1426428024-4538-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
 MIME-Version: 1.0
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Mon, 9 Mar 2015 05:09:17 -0400
-Message-ID: <CAHqTa-0U9vP_wMFxDjRu+CSmdTRe2B+Npi3FMEZmzAAQAXAf8g@mail.gmail.com> (sfid-20150309_100941_303116_519CCE24)
-Subject: Capturing hardware-decrypted packets in monitor mode on ath9k/ath10k
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On a station or AP device, I'd like to capture packets in monitor mode
-(ie. with radiotap headers).  Normally this captures the encrypted
-packets as they appear on the air.  In my case, I'd like to capture
-the *decrypted* packets where possible (ie. packets communicating with
-this node, where the local machine already knows the session key and
-is presumably decrypting the packets anyway so that it can carry on
-the session).
-
-I know wireshark (etc) can decrypt packets for a given session if you
-capture the EAPOL frames.  The advantages of having the driver do it
-in hardware are a) hopefully less performance impact, and b) you can
-easily start capturing at any time, even post EAPOL, because the
-driver already has a cached copy of the keys.
-
-Is there a flag somewhere I can set to make this happen?  Is this even
-a feature supported by most hardware?
-
-Thanks,
-
-Avery
+On Sunday, March 15, 2015 04:00:18 PM Vladimir Kondratiev wrote:
+> This is for AP only. If Rx data frame targeted to one of associated clients,
+> transmit it back to the wireless media and don't deliver to the host.
+> For the multicast frames, deliver to both host and wireless media.
+> 
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> 
+Please ignore, old patch, sent by mistake.
