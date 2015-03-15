@@ -1,119 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0037.hostedemail.com ([216.40.44.37]:39082 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755945AbbCCD4u (ORCPT
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:36629 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751351AbbCOIzf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 22:56:50 -0500
-From: Joe Perches <joe@perches.com>
-To: netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH net-next 12/14] mac80211: Use eth_<foo>_addr instead of memset
-Date: Mon,  2 Mar 2015 19:54:57 -0800
-Message-Id: <ed752a8f58f38dc7be7d38cda40b9c900677844c.1425354528.git.joe@perches.com> (sfid-20150303_045754_855783_B1E9067F)
-In-Reply-To: <cover.1425354527.git.joe@perches.com>
-References: <cover.1425354527.git.joe@perches.com>
+	Sun, 15 Mar 2015 04:55:35 -0400
+MIME-Version: 1.0
+In-Reply-To: <20150313152751.GK5264@atomide.com>
+References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
+	<1426162154-8716-6-git-send-email-eliad@wizery.com>
+	<20150313152751.GK5264@atomide.com>
+Date: Sun, 15 Mar 2015 10:55:34 +0200
+Message-ID: <CAB3XZEc5m0SFdZtJVj0AKu6YuDjTsd7pmNViNy3GDfj42mcdsg@mail.gmail.com> (sfid-20150315_095541_497637_FD28B6AB)
+Subject: Re: [PATCH v6 5/6] ARM: dts: add wl12xx/wl18xx bindings
+From: Eliad Peller <eliad@wizery.com>
+To: Tony Lindgren <tony@atomide.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the built-in function instead of memset.
+On Fri, Mar 13, 2015 at 5:27 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Eliad Peller <eliad@wizery.com> [150312 05:09]:
+>> --- a/arch/arm/mach-omap2/pdata-quirks.c
+>> +++ b/arch/arm/mach-omap2/pdata-quirks.c
+>>
+>> -static void __init omap3_evm_legacy_init(void)
+>> -{
+>> -     legacy_init_wl12xx(38400000, 0, 149);
+>> -}
+>
+> FYI, at least this part conflicts with the fixes in the arm-soc
+> tree for the v4.0-rc series as omap3 evm also needs the copy clock
+> quirk.
+>
+>> @@ -419,20 +351,9 @@ static struct pdata_init pdata_quirks[] __initdata = {
+>>       { "nokia,omap3-n950", hsmmc2_internal_input_clk, },
+>>       { "isee,omap3-igep0020-rev-f", omap3_igep0020_rev_f_legacy_init, },
+>>       { "isee,omap3-igep0030-rev-g", omap3_igep0030_rev_g_legacy_init, },
+>> -     { "ti,omap3-evm-37xx", omap3_evm_legacy_init, },
+>
+> So this function cannot be yet removed.
+>
+> With that fixed, I was able to iw dev wlan0 scan with series on
+> omap3 evm :)
+>
+thanks for testing it!
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- net/mac80211/cfg.c  |  2 +-
- net/mac80211/ibss.c |  2 +-
- net/mac80211/mesh.c |  2 +-
- net/mac80211/mlme.c | 10 +++++-----
- 4 files changed, 8 insertions(+), 8 deletions(-)
+let's continue the discussion in the other thread regarding the way to
+merge the patches, and i'll rebase the patches appropriately.
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index dd4ff36..74f509c 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1488,7 +1488,7 @@ static void mpath_set_pinfo(struct mesh_path *mpath, u8 *next_hop,
- 	if (next_hop_sta)
- 		memcpy(next_hop, next_hop_sta->sta.addr, ETH_ALEN);
- 	else
--		memset(next_hop, 0, ETH_ALEN);
-+		eth_zero_addr(next_hop);
- 
- 	memset(pinfo, 0, sizeof(*pinfo));
- 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index b606b53..f9b0758 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1742,7 +1742,7 @@ int ieee80211_ibss_leave(struct ieee80211_sub_if_data *sdata)
- 
- 	ieee80211_ibss_disconnect(sdata);
- 	ifibss->ssid_len = 0;
--	memset(ifibss->bssid, 0, ETH_ALEN);
-+	eth_zero_addr(ifibss->bssid);
- 
- 	/* remove beacon */
- 	kfree(sdata->u.ibss.ie);
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 0c8b2a7..49a44bc 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -520,7 +520,7 @@ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
- 	} else {
- 		*fc |= cpu_to_le16(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS);
- 		/* RA TA DA SA */
--		memset(hdr->addr1, 0, ETH_ALEN);   /* RA is resolved later */
-+		eth_zero_addr(hdr->addr1);   /* RA is resolved later */
- 		memcpy(hdr->addr2, meshsa, ETH_ALEN);
- 		memcpy(hdr->addr3, meshda, ETH_ALEN);
- 		memcpy(hdr->addr4, meshsa, ETH_ALEN);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 10ac632..9f6f356 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2033,7 +2033,7 @@ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_flush_queues(local, sdata, false);
- 
- 	/* clear bssid only after building the needed mgmt frames */
--	memset(ifmgd->bssid, 0, ETH_ALEN);
-+	eth_zero_addr(ifmgd->bssid);
- 
- 	/* remove AP and TDLS peers */
- 	sta_info_flush(sdata);
-@@ -2464,7 +2464,7 @@ static void ieee80211_destroy_auth_data(struct ieee80211_sub_if_data *sdata,
- 		del_timer_sync(&sdata->u.mgd.timer);
- 		sta_info_destroy_addr(sdata, auth_data->bss->bssid);
- 
--		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
-+		eth_zero_addr(sdata->u.mgd.bssid);
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
- 		sdata->u.mgd.flags = 0;
- 		mutex_lock(&sdata->local->mtx);
-@@ -2777,7 +2777,7 @@ static void ieee80211_destroy_assoc_data(struct ieee80211_sub_if_data *sdata,
- 		del_timer_sync(&sdata->u.mgd.timer);
- 		sta_info_destroy_addr(sdata, assoc_data->bss->bssid);
- 
--		memset(sdata->u.mgd.bssid, 0, ETH_ALEN);
-+		eth_zero_addr(sdata->u.mgd.bssid);
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
- 		sdata->u.mgd.flags = 0;
- 		mutex_lock(&sdata->local->mtx);
-@@ -4474,7 +4474,7 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- 
-  err_clear:
--	memset(ifmgd->bssid, 0, ETH_ALEN);
-+	eth_zero_addr(ifmgd->bssid);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
- 	ifmgd->auth_data = NULL;
-  err_free:
-@@ -4817,7 +4817,7 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 
- 	return 0;
-  err_clear:
--	memset(ifmgd->bssid, 0, ETH_ALEN);
-+	eth_zero_addr(ifmgd->bssid);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BSSID);
- 	ifmgd->assoc_data = NULL;
-  err_free:
--- 
-2.1.2
-
+Eliad.
