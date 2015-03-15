@@ -1,111 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:33706 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148AbbCER2X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 12:28:23 -0500
-Received: by wghb13 with SMTP id b13so54908364wgh.0
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Mar 2015 09:28:22 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, Arnd Bergmann <arnd@arndb.de>,
-	Chen Gang <xili_gchen_5257@hotmail.com>,
-	Jim Davis <jim.epost@gmail.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] bcma: allow disabling (not building) PCI driver
-Date: Thu,  5 Mar 2015 18:25:11 +0100
-Message-Id: <1425576312-2779-2-git-send-email-zajec5@gmail.com> (sfid-20150305_182850_812640_5A277AE3)
-In-Reply-To: <1425576312-2779-1-git-send-email-zajec5@gmail.com>
-References: <1425576312-2779-1-git-send-email-zajec5@gmail.com>
+Received: from aibo.runbox.com ([91.220.196.211]:49675 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752419AbbCONvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 09:51:14 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: Matthias Beyer <mail@beyermatthias.de>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com
+Subject: Re: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's rtw_security.c
+Date: Sun, 15 Mar 2015 09:51 -0400
+Message-ID: <10669062.ZZNVxH5Tl9@lenny> (sfid-20150315_145131_776795_7F5237F4)
+In-Reply-To: <20150315093142.GY24643@lucy.3gs>
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com> <20150315093142.GY24643@lucy.3gs>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It isn't required for bcma bus on SoCs, so provide some empty functions
-and allow disabling it.
+On Sun, March 15, 2015 10:31:42 Matthias Beyer wrote:
+> Hi,
+> 
+> On 14-03-2015 20:10:25, M. Vefa Bicakci wrote:
+> > These commits address a number of checkpatch.pl warnings and errors
+> > in rtl8723au's rtw_security.c.
+> 
+> Were these patches already applied? I cannot apply them on top of Greg
+> KHs latest staging-next!
+> 
+> I reviewed them and I want to add Reviewed-by: tags, but I would like
+> to apply them on my kernel source copy first, just to re-check them!
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/Kconfig                 |  4 ++--
- drivers/bcma/bcma_private.h          | 20 ++++++++++++++++++++
- include/linux/bcma/bcma_driver_pci.h |  6 ++++++
- 3 files changed, 28 insertions(+), 2 deletions(-)
+Hello Matthias,
 
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 9be17d3..1500b71 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -45,9 +45,9 @@ config BCMA_HOST_SOC
- 
- 	  If unsure, say N
- 
--# TODO: make it depend on PCI when ready
- config BCMA_DRIVER_PCI
--	bool
-+	bool "BCMA Broadcom PCI core driver"
-+	depends on BCMA && PCI
- 	default y
- 	help
- 	  BCMA bus may have many versions of PCIe core. This driver
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 5a1d224..15f2b2e 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -106,15 +106,35 @@ static inline void __exit bcma_host_soc_unregister_driver(void)
- #endif /* CONFIG_BCMA_HOST_SOC && CONFIG_OF */
- 
- /* driver_pci.c */
-+#ifdef CONFIG_BCMA_DRIVER_PCI
- u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
- void bcma_core_pci_early_init(struct bcma_drv_pci *pc);
- void bcma_core_pci_init(struct bcma_drv_pci *pc);
- void bcma_core_pci_up(struct bcma_drv_pci *pc);
- void bcma_core_pci_down(struct bcma_drv_pci *pc);
-+#else
-+static inline void bcma_core_pci_early_init(struct bcma_drv_pci *pc)
-+{
-+	WARN_ON(pc->core->bus->hosttype == BCMA_HOSTTYPE_PCI);
-+}
-+static inline void bcma_core_pci_init(struct bcma_drv_pci *pc)
-+{
-+	/* Initialization is required for PCI hosted bus */
-+	WARN_ON(pc->core->bus->hosttype == BCMA_HOSTTYPE_PCI);
-+}
-+#endif
- 
- /* driver_pcie2.c */
-+#ifdef CONFIG_BCMA_DRIVER_PCI
- void bcma_core_pcie2_init(struct bcma_drv_pcie2 *pcie2);
- void bcma_core_pcie2_up(struct bcma_drv_pcie2 *pcie2);
-+#else
-+static inline void bcma_core_pcie2_init(struct bcma_drv_pcie2 *pcie2)
-+{
-+	/* Initialization is required for PCI hosted bus */
-+	WARN_ON(pcie2->core->bus->hosttype == BCMA_HOSTTYPE_PCI);
-+}
-+#endif
- 
- extern int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc);
- 
-diff --git a/include/linux/bcma/bcma_driver_pci.h b/include/linux/bcma/bcma_driver_pci.h
-index 3a46868..5ba6918 100644
---- a/include/linux/bcma/bcma_driver_pci.h
-+++ b/include/linux/bcma/bcma_driver_pci.h
-@@ -238,7 +238,13 @@ struct bcma_drv_pci {
- #define pcicore_write16(pc, offset, val)	bcma_write16((pc)->core, offset, val)
- #define pcicore_write32(pc, offset, val)	bcma_write32((pc)->core, offset, val)
- 
-+#ifdef CONFIG_BCMA_DRIVER_PCI
- extern void bcma_core_pci_power_save(struct bcma_bus *bus, bool up);
-+#else
-+static inline void bcma_core_pci_power_save(struct bcma_bus *bus, bool up)
-+{
-+}
-+#endif
- 
- extern int bcma_core_pci_pcibios_map_irq(const struct pci_dev *dev);
- extern int bcma_core_pci_plat_dev_init(struct pci_dev *dev);
--- 
-1.8.4.5
+Thank you for reviewing the patches!
+
+I have based and tested these commits on Stephen Rothwell's
+linux-next.git/master branch. It is possible that I made a mistake
+by doing this.
+
+Nevertheless, I have just verified that these patches cleanly apply to the
+current version of Greg Kroah-Hartman's staging.git/staging-next branch, [1]
+as well as Stephen Rothwell's linux-next.git/master branch. [2]
+
+In my local repo, here are my remotes:
+
+$ git remote -v | grep -E "staging|next" | grep "(fetch)$"
+next    https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git (fetch)
+staging https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git (fetch)
+
+
+I have just fetched both of these remotes.
+
+$ git log -1 --oneline next/master
+a68b04c773 Add linux-next specific files for 20150313
+
+$ git log -1 --oneline staging/staging-next 
+7aa5d5097d Staging: rtl8192u: Use __packed instead of __attribute__((packed))
+
+
+And here are my two local branches with my commits applied:
+
+# Output slightly edited to reduce line length.
+$ git branch -vv | grep -E "staging|next"
+* linux-next    c8ab62fb9c [next/master: ahead 16] staging: rtl8723au: Remove unneeded comments
+  staging-next  63f451681e [staging/staging-next: ahead 16] staging: rtl8723au: Remove unneeded comments
+
+
+I hope this clarifies my set-up. Is there something I am doing incorrectly?
+If there is anything I can assist with, please let me know.
+
+Thank you,
+
+Vefa
+
+[1] https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/log/?h=staging-next
+[2] https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/
 
