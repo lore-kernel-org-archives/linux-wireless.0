@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.msg.oleane.net ([62.161.4.1]:34556 "EHLO
-	smtp01.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751665AbbCXImE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 04:42:04 -0400
-From: "voncken" <cedric.voncken@acksys.fr>
-To: "'Michal Kazior'" <michal.kazior@tieto.com>
-Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>
-References: <773DB8A82AB6A046AE0195C68612A319019FEF93@sbs2003.acksys.local> <CA+BoTQkJ2qYKMzWHaW2wTq1qhoDn=FYEU7Wgo+Jyevzi1bBDEA@mail.gmail.com>
-In-Reply-To: <CA+BoTQkJ2qYKMzWHaW2wTq1qhoDn=FYEU7Wgo+Jyevzi1bBDEA@mail.gmail.com>
-Subject: RE: ath10k: What will happens when radar is detected ?
-Date: Tue, 24 Mar 2015 09:41:59 +0100
-Message-ID: <01eb01d0660e$650becc0$2f23c640$@acksys.fr> (sfid-20150324_094210_304494_B88695E4)
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
+Received: from aibo.runbox.com ([91.220.196.211]:44492 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751343AbbCOAPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 20:15:19 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	m.v.b@runbox.com
+Subject: [PATCH v2 03/16] staging: rtl8723au: else should follow close brace
+Date: Sat, 14 Mar 2015 20:10:28 -0400
+Message-Id: <1426378241-32469-4-git-send-email-m.v.b@runbox.com> (sfid-20150315_011544_507741_3AF0662C)
+In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Correct checkpatch.pl errors in rtl8723au's rtw_security.c indicating
+that an else statement should follow the closing brace of the previous
+if/else if code block:
+	ERROR: else should follow close brace '}'
 
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-> -----Message d'origine-----
-> De : Michal Kazior [mailto:michal.kazior@tieto.com]
-> Envoyé : mardi 24 mars 2015 07:56
-> À : Cedric VONCKEN
-> Cc : linux-wireless
-> Objet : Re: ath10k: What will happens when radar is detected ?
-> 
-> On 23 March 2015 at 16:16, Cedric VONCKEN <cedric.voncken@acksys.fr>
-> wrote:
-> > In 802.11ac standard, it is possible to dynamically reduce the channel
-> > width used.
-> > My question is:
-> >         If I use a channel with 80 or 40 MHz width, what will happen
-> > if I detect radar?
-> >                 The ath10k card/driver reduces automatically the
-> > channel width.
-> 
-> Currently entire chandef occupied will be marked as unavailable and AP
-> will stop/switch to a different non-overlapping chandef via CSA.
-Thanks for your answer.
-> 
-> I guess it should be possible to implement what you suggest, i.e.
-> change only chandef width when radar is narrow and located at a suitable
-> part of the chandef. This would require hw to be capable of detecting
-> radar center freq and width accurately. I'm not sure if QCA988X is
-> capable of that although firmware interface seems to be able to carry
-> this kind of information already.
-> 
-> I wonder why would you want this behaviour in the first place?
-> Wouldn't this actually end up with having less bandwidth and lower
-> throughput (which is already penalized when radar detection is active)?
-In an industrial environment we prefer to reduce the throughput but keep the link without gap. I think it can be a parameter in AP software for example.
-
-Cédric
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 0306c3896a..d04a1cf6d7 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -379,8 +379,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
+ 			rtw_secmicappend23a(&micdata, &header[24], 6);
+ 		else
+ 			rtw_secmicappend23a(&micdata, &header[10], 6);
+-	}
+-	else{	/* ToDS == 0 */
++	} else {	/* ToDS == 0 */
+ 		rtw_secmicappend23a(&micdata, &header[4], 6);   /* DA */
+ 		if (header[1]&2)  /* From Ds == 1 */
+ 			rtw_secmicappend23a(&micdata, &header[16], 6);
+@@ -673,8 +672,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 					arcfour_encrypt(&mycontext, payload, payload, length);
+ 					arcfour_encrypt(&mycontext, payload+length, crc, 4);
+ 
+-				}
+-				else {
++				} else {
+ 					length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
+ 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
+ 					arcfour_init(&mycontext, rc4key, 16);
+@@ -686,8 +684,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 				}
+ 			}
+ 
+-		}
+-		else {
++		} else {
+ 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo == NULL!!!\n"));
+ 			DBG_8723A("%s, psta == NUL\n", __func__);
+ 			res = _FAIL;
+-- 
+2.1.4
 
