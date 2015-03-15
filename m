@@ -1,75 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:35711 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829AbbC1Qrd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 12:47:33 -0400
-Received: by oiag65 with SMTP id g65so98570390oia.2
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2015 09:47:33 -0700 (PDT)
-Message-ID: <5516DB22.1030202@lwfinger.net> (sfid-20150328_175538_358495_DF66652F)
-Date: Sat, 28 Mar 2015 11:47:30 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Taehee Yoo <ap420073@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192c: Change REG_C2HEVT_CLEAR and REG_USTIME_TSF
-References: <1427544770-28523-1-git-send-email-ap420073@gmail.com>
-In-Reply-To: <1427544770-28523-1-git-send-email-ap420073@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from aibo.runbox.com ([91.220.196.211]:44541 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752826AbbCOAPa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 20:15:30 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	m.v.b@runbox.com
+Subject: [PATCH v2 09/16] staging: rtl8723au: trailing statements should be on next line
+Date: Sat, 14 Mar 2015 20:10:34 -0400
+Message-Id: <1426378241-32469-10-git-send-email-m.v.b@runbox.com> (sfid-20150315_011559_093626_F9C7CF00)
+In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/28/2015 07:12 AM, Taehee Yoo wrote:
-> in the rtl8192ce/reg.h, REG_C2HEVT_CLEAR register's address is 0x01BF
-> but, vendor driver's address is 0x01AF. so i change 0x01BF to 0x01AF.
-> also in the rtl8192ce/reg.h, 0x0551 is REG_USTIME_TSF, but vendor driver
-> define REG_BCN_CTRL_1. so i change the REG_USTIME_TSF to REG_BCN_CTRL_1.
->
-> according to r8192c vendor driver, rtl8192c do not use REG_USTIME_TSF.
->
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192ce/reg.h | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+Correct a number of checkpatch.pl errors in rtl8723au's rtw_security.c
+related to trailing statements:
+	ERROR: trailing statements should be on next line
 
-NACK
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-In the code, neither REG_C2HEVT_CLEAR nor REG_USTIME_TSF is used by either 
-rtl8192ce nor rtl8192cu, thus it does not matter whether the definition matches 
-the vendor driver or not. Making this kind of change is just churning the source 
-without making any real difference.
-
-Because many of these register definitions are used by all the drivers, my plan 
-is to create a reg.h header in rtlwifi and eliminate most or all of the headers 
-now associated with each driver. When I do that, I will eliminate those 
-definitions that are not used by any driver, but until that part is done, I 
-prefer that they be left alone.
-
-Larry
-
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-> index dc8460c..21c0fc9 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-> @@ -117,8 +117,8 @@
->   #define REG_MBIST_DONE				0x0178
->   #define REG_MBIST_FAIL				0x017C
->   #define REG_C2HEVT_MSG_NORMAL			0x01A0
-> +#define REG_C2HEVT_CLEAR			0x01AF
->   #define REG_C2HEVT_MSG_TEST			0x01B8
-> -#define REG_C2HEVT_CLEAR			0x01BF
->   #define REG_MCUTST_1				0x01c0
->   #define REG_FMETHR				0x01C8
->   #define REG_HMETFR				0x01CC
-> @@ -231,7 +231,7 @@
->   #define REG_RD_NAV_NXT				0x0544
->   #define REG_NAV_PROT_LEN			0x0546
->   #define REG_BCN_CTRL				0x0550
-> -#define REG_USTIME_TSF				0x0551
-> +#define REG_BCN_CTRL_1				0x0551
->   #define REG_MBID_NUM				0x0552
->   #define REG_DUAL_TSF_RST			0x0553
->   #define REG_BCN_INTERVAL			0x0554
->
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index b4327aaf71..803f8965a4 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -132,7 +132,8 @@ static u32 getcrc32(u8 *buf, int len)
+ 	u8 *p;
+ 	u32 crc;
+ 
+-	if (bcrc32initialized == 0) crc32_init();
++	if (bcrc32initialized == 0)
++		crc32_init();
+ 
+ 	crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
+ 
+@@ -559,8 +560,10 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
+ 	u16 PPK[6];                          /* temporary key for mixing    */
+ 
+ 	/* Note: all adds in the PPK[] equations below are mod 2**16         */
+-	for (i = 0; i < 5; i++) PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
+-		PPK[5] = p1k[4] + iv16;             /* next,  add in IV16          */
++	for (i = 0; i < 5; i++)
++		PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
++
++	PPK[5] = p1k[4] + iv16;     /* next,  add in IV16          */
+ 
+ 	/* Bijective non-linear mixing of the 96 bits of PPK[0..5]           */
+ 	PPK[0] +=    _S_(PPK[5] ^ TK16(0));   /* Mix key in each "round"     */
+@@ -960,7 +963,8 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
+ 	u8 intermediateb[16];
+ 	u8 round_key[16];
+ 
+-	for (i = 0; i < 16; i++) round_key[i] = key[i];
++	for (i = 0; i < 16; i++)
++		round_key[i] = key[i];
+ 
+ 	for (round = 0; round < 11; round++) {
+ 		if (round == 0) {
+@@ -1044,7 +1048,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ {
+ 	int i;
+ 
+-	for (i = 0; i < 16; i++) mic_header2[i] = 0x00;
++	for (i = 0; i < 16; i++)
++		mic_header2[i] = 0x00;
+ 
+ 	mic_header2[0] = mpdu[16];    /* A3 */
+ 	mic_header2[1] = mpdu[17];
+@@ -1057,7 +1062,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ 	mic_header2[7] = 0x00; /* mpdu[23]; */
+ 
+ 	if (!qc_exists && a4_exists) {
+-		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
++		for (i = 0; i < 6; i++)
++			mic_header2[8+i] = mpdu[24+i];   /* A4 */
+ 	}
+ 
+ 	if (qc_exists && !a4_exists) {
+@@ -1066,7 +1072,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ 	}
+ 
+ 	if (qc_exists && a4_exists) {
+-		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
++		for (i = 0; i < 6; i++)
++			mic_header2[8+i] = mpdu[24+i];   /* A4 */
+ 
+ 		mic_header2[14] = mpdu[30] & 0x0f;
+ 		mic_header2[15] = mpdu[31] & 0x00;
+@@ -1084,7 +1091,9 @@ static void construct_ctr_preload(u8 *ctr_preload, int a4_exists, int qc_exists,
+ {
+ 	int i = 0;
+ 
+-	for (i = 0; i < 16; i++) ctr_preload[i] = 0x00;
++	for (i = 0; i < 16; i++)
++		ctr_preload[i] = 0x00;
++
+ 	i = 0;
+ 
+ 	ctr_preload[0] = 0x01;                                  /* flag */
+-- 
+2.1.4
 
