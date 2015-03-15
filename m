@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:58183 "EHLO mout.gmx.net"
+Received: from aibo.runbox.com ([91.220.196.211]:44495 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751339AbbCUIrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:37 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 17/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
-Date: Sat, 21 Mar 2015 09:47:20 +0100
-Message-Id: <1426927641-18474-18-git-send-email-linux@rempel-privat.de> (sfid-20150321_100417_583733_BD3C27EC)
-In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
-References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+	id S1751166AbbCOAPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 20:15:19 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	m.v.b@runbox.com
+Subject: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's rtw_security.c
+Date: Sat, 14 Mar 2015 20:10:25 -0400
+Message-Id: <1426378241-32469-1-git-send-email-m.v.b@runbox.com> (sfid-20150315_012008_176615_86042CFC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-replace REG_WRITE to REG_RMW and place every thing in one
-RMW buffer.
+These commits address a number of checkpatch.pl warnings and errors
+in rtl8723au's rtw_security.c.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/eeprom_4k.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+Prior to this set of commits, checkpatch.pl reported the following:
+	total: 77 errors, 138 warnings, 1621 lines checked
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 38dc965..4773da6 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1037,17 +1037,17 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 	}
- 	REG_RMW_BUFFER_FLUSH(ah);
- 
--
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
- 		      pModal->switchSettling);
- 	REG_RMW_FIELD(ah, AR_PHY_DESIRED_SZ, AR_PHY_DESIRED_SZ_ADC,
- 		      pModal->adcDesiredSize);
- 
--	REG_WRITE(ah, AR_PHY_RF_CTL4,
--		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
--		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
--		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
--		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON));
-+	REG_RMW(ah, AR_PHY_RF_CTL4,
-+		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
-+		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
-+		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
-+		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON), 0);
- 
- 	REG_RMW_FIELD(ah, AR_PHY_RF_CTL3, AR_PHY_TX_END_TO_A2_RX_ON,
- 		      pModal->txEndToRxOn);
-@@ -1076,6 +1076,8 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 				      pModal->swSettleHt40);
- 	}
- 
-+	REG_RMW_BUFFER_FLUSH(ah);
-+
- 	bb_desired_scale = (pModal->bb_scale_smrt_antenna &
- 			EEP_4K_BB_DESIRED_SCALE_MASK);
- 	if ((pBase->txGainType == 0) && (bb_desired_scale != 0)) {
+After applying this set of commits, checkpatch.pl reports the following:
+	total: 0 errors, 34 warnings, 1613 lines checked
+where the only remaining warnings relate to lines longer than 80
+characters and quoted strings split across multiple lines.
+
+There are also a number of commits which improve the code in other ways.
+For example, the commit titled "Reorganize a few functions to remove
+indentation" reworks two functions to make them more readable, whereas
+the commit titled "Rework two byte array comparisons" reworks two CRC
+verifications for the same reason.
+
+All of the individual commits have been verified to compile successfully
+individually via the use of the interactive rebase feature of git.
+
+v2: Please see the individual commit messages for the changes
+    since v1. In summary, the following commits have been updated:
+    - Reformat whitespace to increase readability
+    - Fix "before/around/after" whitespace issues
+    - Rework two byte array comparisons
+
+M. Vefa Bicakci (16):
+  staging: rtl8723au: Reformat whitespace to increase readability
+  staging: rtl8723au: Fix "before/around/after" whitespace issues
+  staging: rtl8723au: else should follow close brace
+  staging: rtl8723au: Fix the indentation of two lines
+  staging: rtl8723au: Reorganize a few functions to remove indentation
+  staging: rtl8723au: Do not initialize a static to 0
+  staging: rtl8723au: else is not generally useful after a return
+  staging: rtl8723au: Remove unneeded curly braces
+  staging: rtl8723au: trailing statements should be on next line
+  staging: rtl8723au: that open brace should be on the previous line
+  staging: rtl8723au: No spaces at the start of a line
+  staging: rtl8723au: Adjust whitespace in and around comments
+  staging: rtl8723au: suspect code indent for conditional statements
+  staging: rtl8723au: Rework two byte array comparisons
+  staging: rtl8723au: Correct a typo in a trace log line
+  staging: rtl8723au: Remove unneeded comments
+
+ drivers/staging/rtl8723au/core/rtw_security.c | 772 +++++++++++++-------------
+ 1 file changed, 382 insertions(+), 390 deletions(-)
+
 -- 
-1.9.1
+2.1.4
 
