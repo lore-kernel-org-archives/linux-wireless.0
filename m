@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:34892 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756711AbbCMDjc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 23:39:32 -0400
-From: Sujith Manoharan <sujith@msujith.org>
+Received: from plane.gmane.org ([80.91.229.3]:35636 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751158AbbCOCKI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 22:10:08 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1YWy0C-0000oL-FT
+	for linux-wireless@vger.kernel.org; Sun, 15 Mar 2015 03:10:04 +0100
+Received: from 177.52-243-81.adsl-dyn.isp.belgacom.be ([81.243.52.177])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2015 03:10:04 +0100
+Received: from koen.bulcke by 177.52-243-81.adsl-dyn.isp.belgacom.be with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2015 03:10:04 +0100
 To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH 4/4] ath9k: Start AIC calibration during MCI reset
-Date: Fri, 13 Mar 2015 09:13:10 +0530
-Message-Id: <1426218190-19888-5-git-send-email-sujith@msujith.org> (sfid-20150313_043939_017336_C046ACFA)
-In-Reply-To: <1426218190-19888-1-git-send-email-sujith@msujith.org>
-References: <1426218190-19888-1-git-send-email-sujith@msujith.org>
+From: Koen Bulcke <koen.bulcke@gmail.com>
+Subject: Re: Broadcom 43340
+Date: Sun, 15 Mar 2015 02:03:59 +0000 (UTC)
+Message-ID: <loom.20150315T024445-345@post.gmane.org> (sfid-20150315_031021_404495_E48E6039)
+References: <550482A2.3080803@gmail.com> <55048833.90408@broadcom.com> <55048BB1.9080906@gmail.com> <550491DA.6030105@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Hi,
 
-When a MCI reset is done, make sure that AIC
-is started.
+Finally I got some progress thanks to your comment, 
+I can now see the Wifi
+networks on my Asus X205TA (kernel 4.0RC3). 
+However, connecting to any
+network seems still to be an issue:
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 3 +++
- 1 file changed, 3 insertions(+)
+vempc:~$ sudo wpa_supplicant -Dwext -iwlan0 -cwpa.conf
+[sudo] password 
+Successfully initialized wpa_supplicant
+ioctl[SIOCSIWENCODEEXT]: Invalid argument
+ioctl[SIOCSIWENCODEEXT]: Invalid argument
+ioctl[SIOCGIWSCAN]: Resource temporarily unavailable
+ioctl[SIOCGIWSCAN]: Resource temporarily unavailable
+wlan0: Trying to associate with a1:b1:e9:da:fd:75 
+(SSID='WiFiD85' freq=2472 MHz)
+ioctl[SIOCSIWFREQ]: Operation not supported
+wlan0: Association request to the driver failed
+wlan0: Authentication with a1:b1:e9:da:fd:75 timed out.
+wlan0: CTRL-EVENT-DISCONNECTED 
+bssid=a1:b1:e9:da:fd:75 reason=3
+locally_generated=1
+ioctl[SIOCSIWSCAN]: Invalid exchange
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index cdd83d4..af5ee41 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1017,6 +1017,9 @@ int ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
- 	if (en_int)
- 		ar9003_mci_enable_interrupt(ah);
- 
-+	if (ath9k_hw_is_aic_enabled(ah))
-+		ar9003_aic_start_normal(ah);
-+
- 	return 0;
- }
- 
--- 
-2.3.1
+
+Thanks,
+Koen.
+
 
