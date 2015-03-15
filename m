@@ -1,44 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from edge10.ethz.ch ([82.130.75.186]:8182 "EHLO edge10.ethz.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752275AbbCITsT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 15:48:19 -0400
-Message-ID: <54FDF901.8060808@student.ethz.ch> (sfid-20150309_204822_665553_330BC8C3)
-Date: Mon, 9 Mar 2015 20:48:17 +0100
-From: kilian risse <krisse@student.ethz.ch>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Virtual Interfaces with iwlwifi
-References: <C768C63E9A2F584FACC2A65D915E5A2830535956@MBX13.d.ethz.ch>	 <C768C63E9A2F584FACC2A65D915E5A2830535975@MBX13.d.ethz.ch> <1425921599.32409.4.camel@redhat.com>
-In-Reply-To: <1425921599.32409.4.camel@redhat.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:43207
+	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751058AbbCOHHJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Mar 2015 03:07:09 -0400
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, lorenzo.bianconi83@gmail.com
+Subject: [PATCH 4.0] ath9k: disable TPC support again (for now)
+Date: Sun, 15 Mar 2015 08:07:04 +0100
+Message-Id: <1426403224-23795-1-git-send-email-nbd@openwrt.org> (sfid-20150315_080716_449547_F00AA0C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think I figured it out - I tried to create two interfaces of the same 
-type station - which is not supported according to the "iw phy0 info".
+TPC support has been observed to cause some tx power fluctuations on
+some devices with at least AR934x and AR938x chips.
+Disable it for now until the bugs have been found and fixed
 
-I use a intel 7260 card with a 3.18.7 Kernel.
-The command I used was "iw phy phy0 interface add wlan0 type station".
-Is this a limitation in hardware or software?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Kilian
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 60aa8d7..8529014 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -424,7 +424,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ 	ah->power_mode = ATH9K_PM_UNDEFINED;
+ 	ah->htc_reset_init = true;
+ 
+-	ah->tpc_enabled = true;
++	ah->tpc_enabled = false;
+ 
+ 	ah->ani_function = ATH9K_ANI_ALL;
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
+-- 
+2.2.2
 
-On 03/09/2015 06:19 PM, Dan Williams wrote:
-> On Mon, 2015-03-09 at 16:53 +0000, Risse Kilian wrote:
->> Hi
->>
->> I tried to create a second interface and connect to another AP. But I was unable to do so. As I tried to enable the second interface I got an error: Device or resource busy. So am I right assuming that this is not possible with the iwlwifi driver?
->
-> What specific hardware do you have?
-> What kernel version do you have?
-> What specific command were you using to create the second interface?
-> What are the "software interface modes" and "valid interface
-> combinations" sections output from "iw phy0 info"?
->
-> It's certainly possible and supported with iwlwifi, but it depends on
-> specific hardware, the driver, etc.
->
-> Dan
->
