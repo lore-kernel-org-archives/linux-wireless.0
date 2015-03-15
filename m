@@ -1,151 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:35957 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbbCXMp7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 08:45:59 -0400
-Received: by lbbug6 with SMTP id ug6so45499669lbb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 05:45:57 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v5 6/7] ath10k: enable multi-channel on supported devices
-Date: Tue, 24 Mar 2015 12:43:12 +0000
-Message-Id: <1427200993-7550-7-git-send-email-michal.kazior@tieto.com> (sfid-20150324_134605_899798_8692A6C0)
-In-Reply-To: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
-References: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
+Received: from aibo.runbox.com ([91.220.196.211]:44529 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752721AbbCOAP1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 20:15:27 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	m.v.b@runbox.com
+Subject: [PATCH v2 01/16] staging: rtl8723au: Reformat whitespace to increase readability
+Date: Sat, 14 Mar 2015 20:10:26 -0400
+Message-Id: <1426378241-32469-2-git-send-email-m.v.b@runbox.com> (sfid-20150315_011942_513347_07468986)
+In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This effectively enables multi-channel operation
-on qca6174 WLAN.RM.2.0-00073 (and possibly any
-newer firmware release for qca6174).
+Adjust the whitespace in the signature, local variable declaration and
+initialization parts of a number of functions to increase readability
+in rtl8723au's rtw_security.c.
 
-This adds appopriate interface combinations and
-initializes firmware channel scheduler.
+v2: Make sure that the arcfour_encrypt function's argument list is split
+    according to the kernel code style.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 ---
+ drivers/staging/rtl8723au/core/rtw_security.c | 79 +++++++++++++--------------
+ 1 file changed, 38 insertions(+), 41 deletions(-)
 
-Notes:
-    v5:
-     * fix combination definition: increase vif limit from 2 to 3
-
- drivers/net/wireless/ath/ath10k/mac.c | 81 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 80 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1d6191d89586..47f0c77b9271 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3721,6 +3721,15 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		goto err_core_stop;
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 0610d5f1bd..e68c8849ad 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -31,11 +31,11 @@ struct arc4context {
+ 
+ static void arcfour_init(struct arc4context *parc4ctx, u8 *key, u32 key_len)
+ {
+-	u32	t, u;
+-	u32	keyindex;
+-	u32	stateindex;
++	u32 t, u;
++	u32 keyindex;
++	u32 stateindex;
+ 	u8 *state;
+-	u32	counter;
++	u32 counter;
+ 
+ 	state = parc4ctx->state;
+ 	parc4ctx->x = 0;
+@@ -55,7 +55,8 @@ static void arcfour_init(struct arc4context *parc4ctx, u8 *key, u32 key_len)
  	}
  
-+	if (test_bit(WMI_SERVICE_ADAPTIVE_OCS, ar->wmi.svc_map)) {
-+		ret = ath10k_wmi_adaptive_qcs(ar, true);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to enable adaptive qcs: %d\n",
-+				    ret);
-+			goto err_core_stop;
-+		}
-+	}
+ }
+-static u32 arcfour_byte(	struct arc4context	*parc4ctx)
 +
- 	if (ar->cfg_tx_chainmask)
- 		__ath10k_set_antenna(ar, ar->cfg_tx_chainmask,
- 				     ar->cfg_rx_chainmask);
-@@ -6474,6 +6483,64 @@ static const struct ieee80211_iface_combination ath10k_10x_if_comb[] = {
- 	},
- };
- 
-+static const struct ieee80211_iface_limit ath10k_tlv_if_limit[] = {
-+	{
-+		.max = 2,
-+		.types = BIT(NL80211_IFTYPE_STATION) |
-+			 BIT(NL80211_IFTYPE_AP) |
-+			 BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+			 BIT(NL80211_IFTYPE_P2P_GO),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_P2P_DEVICE),
-+	},
-+};
-+
-+static const struct ieee80211_iface_limit ath10k_tlv_if_limit_ibss[] = {
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_ADHOC),
-+	},
-+};
-+
-+/* FIXME: This is not thouroughly tested. These combinations may over- or
-+ * underestimate hw/fw capabilities.
-+ */
-+static struct ieee80211_iface_combination ath10k_tlv_if_comb[] = {
-+	{
-+		.limits = ath10k_tlv_if_limit,
-+		.num_different_channels = 1,
-+		.max_interfaces = 3,
-+		.n_limits = ARRAY_SIZE(ath10k_tlv_if_limit),
-+	},
-+	{
-+		.limits = ath10k_tlv_if_limit_ibss,
-+		.num_different_channels = 1,
-+		.max_interfaces = 2,
-+		.n_limits = ARRAY_SIZE(ath10k_tlv_if_limit_ibss),
-+	},
-+};
-+
-+static struct ieee80211_iface_combination ath10k_tlv_qcs_if_comb[] = {
-+	{
-+		.limits = ath10k_tlv_if_limit,
-+		.num_different_channels = 2,
-+		.max_interfaces = 3,
-+		.n_limits = ARRAY_SIZE(ath10k_tlv_if_limit),
-+	},
-+	{
-+		.limits = ath10k_tlv_if_limit_ibss,
-+		.num_different_channels = 1,
-+		.max_interfaces = 2,
-+		.n_limits = ARRAY_SIZE(ath10k_tlv_if_limit_ibss),
-+	},
-+};
-+
- static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
++static u32 arcfour_byte(struct arc4context *parc4ctx)
  {
- 	struct ieee80211_sta_vht_cap vht_cap = {0};
-@@ -6766,12 +6833,24 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	u32 x;
+ 	u32 y;
+@@ -75,16 +76,13 @@ static u32 arcfour_byte(	struct arc4context	*parc4ctx)
+ 	return state[(sx + sy) & 0xff];
+ }
  
- 	switch (ar->wmi.op_version) {
- 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
--	case ATH10K_FW_WMI_OP_VERSION_TLV:
- 		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
- 		ar->hw->wiphy->n_iface_combinations =
- 			ARRAY_SIZE(ath10k_if_comb);
- 		ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
- 		break;
-+	case ATH10K_FW_WMI_OP_VERSION_TLV:
-+		if (test_bit(WMI_SERVICE_ADAPTIVE_OCS, ar->wmi.svc_map)) {
-+			ar->hw->wiphy->iface_combinations =
-+				ath10k_tlv_qcs_if_comb;
-+			ar->hw->wiphy->n_iface_combinations =
-+				ARRAY_SIZE(ath10k_tlv_qcs_if_comb);
-+		} else {
-+			ar->hw->wiphy->iface_combinations = ath10k_tlv_if_comb;
-+			ar->hw->wiphy->n_iface_combinations =
-+				ARRAY_SIZE(ath10k_tlv_if_comb);
-+		}
-+		ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
-+		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_1:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+-static void arcfour_encrypt(	struct arc4context	*parc4ctx,
+-	u8 *dest,
+-	u8 *src,
+-	u32 len)
++static void arcfour_encrypt(struct arc4context *parc4ctx, u8 *dest,
++			    u8 *src, u32 len)
+ {
+-	u32	i;
++	u32 i;
+ 
+ 	for (i = 0; i < len; i++)
+ 		dest[i] = src[i] ^ (unsigned char)arcfour_byte(parc4ctx);
+-
+ }
+ 
+ static int bcrc32initialized = 0;
+@@ -368,7 +366,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
+ 			   u8 *mic_code, u8 pri)
+ {
+ 
+-	struct mic_data	micdata;
++	struct mic_data micdata;
+ 	u8 priority[4]={0x0, 0x0, 0x0, 0x0};
+ 
+ 	rtw_secmicsetkey23a(&micdata, key);
+@@ -604,21 +602,21 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
+ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 			struct xmit_frame *pxmitframe)
+ {
+-	u16	pnl;
+-	u32	pnh;
+-	u8	rc4key[16];
+-	u8   ttkey[16];
+-	u8	crc[4];
+-	u8   hw_hdr_offset = 0;
++	u16 pnl;
++	u32 pnh;
++	u8 rc4key[16];
++	u8 ttkey[16];
++	u8 crc[4];
++	u8 hw_hdr_offset = 0;
+ 	struct arc4context mycontext;
+-	int			curfragnum, length;
+-	u32	prwskeylen;
+-	u8	*pframe, *payload, *iv, *prwskey;
++	int curfragnum, length;
++	u32 prwskeylen;
++	u8 *pframe, *payload, *iv, *prwskey;
+ 	union pn48 dot11txpn;
+-	struct	sta_info		*stainfo;
+-	struct	pkt_attrib	 *pattrib = &pxmitframe->attrib;
+-	struct	security_priv	*psecuritypriv = &padapter->securitypriv;
+-	struct	xmit_priv		*pxmitpriv = &padapter->xmitpriv;
++	struct sta_info *stainfo;
++	struct pkt_attrib *pattrib = &pxmitframe->attrib;
++	struct security_priv *psecuritypriv = &padapter->securitypriv;
++	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+ 	int res = _SUCCESS;
+ 
+ 	if (!pxmitframe->buf_addr)
+@@ -706,17 +704,17 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ {
+ 	u16 pnl;
+ 	u32 pnh;
+-	u8   rc4key[16];
+-	u8   ttkey[16];
+-	u8	crc[4];
++	u8 rc4key[16];
++	u8 ttkey[16];
++	u8 crc[4];
+ 	struct arc4context mycontext;
+-	int	length;
+-	u32	prwskeylen;
+-	u8	*pframe, *payload, *iv, *prwskey;
++	int length;
++	u32 prwskeylen;
++	u8 *pframe, *payload, *iv, *prwskey;
+ 	union pn48 dot11txpn;
+-	struct	sta_info		*stainfo;
+-	struct	rx_pkt_attrib *prxattrib = &precvframe->attrib;
+-	struct	security_priv *psecuritypriv = &padapter->securitypriv;
++	struct sta_info *stainfo;
++	struct rx_pkt_attrib *prxattrib = &precvframe->attrib;
++	struct security_priv *psecuritypriv = &padapter->securitypriv;
+ 	struct sk_buff *skb = precvframe->pkt;
+ 	int res = _SUCCESS;
+ 
+@@ -1128,8 +1126,8 @@ static void bitwise_xor(u8 *ina, u8 *inb, u8 *out)
+ 
+ static int aes_cipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ {
+-	uint	qc_exists, a4_exists, i, j, payload_remainder,
+-		num_blocks, payload_index;
++	uint qc_exists, a4_exists, i, j, payload_remainder,
++	     num_blocks, payload_index;
+ 	u8 pn_vector[6];
+ 	u8 mic_iv[16];
+ 	u8 mic_header1[16];
+@@ -1345,12 +1343,11 @@ out:
+ 	return res;
+ }
+ 
+-static int aes_decipher(u8 *key, uint	hdrlen,
+-			u8 *pframe, uint plen)
++static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ {
+-	static u8	message[MAX_MSG_SIZE];
+-	uint	qc_exists, a4_exists, i, j, payload_remainder,
+-			num_blocks, payload_index;
++	static u8 message[MAX_MSG_SIZE];
++	uint qc_exists, a4_exists, i, j, payload_remainder,
++	     num_blocks, payload_index;
+ 	int res = _SUCCESS;
+ 	u8 pn_vector[6];
+ 	u8 mic_iv[16];
 -- 
 2.1.4
 
