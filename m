@@ -1,75 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52284 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933317AbbCDHKF (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:35661 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730AbbCOIng (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 02:10:05 -0500
-From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@qti.qualcomm.com>,
-	<vthiagar@qti.qualcomm.com>,
-	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-Subject: [PATCH v2] iw: display allowable channel bandwidth information
-Date: Wed, 4 Mar 2015 12:34:46 +0530
-Message-ID: <1425452686-28196-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20150304_081014_990237_B13D235C)
+	Sun, 15 Mar 2015 04:43:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20150313150047.GI5264@atomide.com>
+References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
+	<1426162154-8716-3-git-send-email-eliad@wizery.com>
+	<20150313150047.GI5264@atomide.com>
+Date: Sun, 15 Mar 2015 10:43:35 +0200
+Message-ID: <CAB3XZEcOytqpJ4pWoemLS3d+DCeA8C75MencDfGn_vhfEYrduw@mail.gmail.com> (sfid-20150315_094346_397035_ABF79BDA)
+Subject: Re: [PATCH v6 2/6] wl12xx: use frequency instead of enumerations for
+ pdata clocks
+From: Eliad Peller <eliad@wizery.com>
+To: Tony Lindgren <tony@atomide.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Luciano Coelho <luca@coelho.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We already have allowable channel bandwidth information at userspace.
-Display this information with 'iw list'. Excerpt of iw list command
++Kalle
 
-Frequencies:
-	* 5180 MHz [36] (17.0 dBm)
-	  (10MHZ, 20MHZ, HT40+, VHT80, VHT160)
-	* 5200 MHz [40] (17.0 dBm)
-	  (10MHZ, 20MHZ, HT40-, HT40+, VHT80, VHT160)
+On Fri, Mar 13, 2015 at 5:00 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Eliad Peller <eliad@wizery.com> [150312 05:09]:
+>> From: Luciano Coelho <luca@coelho.fi>
+>>
+>> Instead of defining an enumeration with the FW specific values for the
+>> different clock rates, use the actual frequency instead.  Also add a
+>> boolean to specify whether the clock is XTAL or not.
+>
+> Thanks for doing this. Just one comment on how we're going to get this
+> all merged. Chances are this will cause merge conflicts between the
+> wireless tree and the omap tree for the platform data and dts changes.
+>
+> Can you please separate the wireless changes in this series so we can
+> do this in the following sets:
+>
+> 1. Add support for new things to wireless driver
+>
+> 2. Switch platform code to use the new support
+>
+> 3. Remove support for platform data with a follow-up patch
+>
+the series will still be dependent on each other (e.g. (3) must come
+only after (2) was applied), so i'm not sure that will be very
+helpful?
 
-Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
----
-v2:
-	Display channel bw information in separate line (Johannes)
-	Updated commit log to reflect above change.
- info.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+> The other option would be to have the whole series in a immutable
+> branch against v3.0-rc1 that can be merged into both wirelss tree
+> and omap tree.
+>
+i think that could be easier.
 
-diff --git a/info.c b/info.c
-index 1df503f..728cb87 100644
---- a/info.c
-+++ b/info.c
-@@ -189,6 +189,31 @@ next:
- 						printf(")");
- 					printf("\n");
- 
-+					if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED]) {
-+						open = 0;
-+						printf("\t\t\t ");
-+						if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_10MHZ])
-+							print_flag("10MHz", &open);
-+
-+						if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_20MHZ])
-+							print_flag("20MHz", &open);
-+
-+						if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40_MINUS])
-+							print_flag("HT40-", &open);
-+
-+						if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40_PLUS])
-+							print_flag("HT40+", &open);
-+
-+						if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_80MHZ])
-+							print_flag("VHT80", &open);
-+
-+						if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_160MHZ])
-+							print_flag("VHT160", &open);
-+						if (open)
-+							printf(")");
-+						printf("\n");
-+					}
-+
- 					if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED] && tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
- 						enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
- 						unsigned long time;
--- 
-1.9.1
+or maybe you can just take them all through the omap tree? the wlcore
+tree is not under active development, so i don't expect conflicts
+there.
 
+Eliad.
