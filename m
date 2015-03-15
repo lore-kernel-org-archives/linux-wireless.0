@@ -1,158 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:30857 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750AbbCBKWF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 05:22:05 -0500
-Message-ID: <54F438C5.802@qti.qualcomm.com> (sfid-20150302_112210_540302_C4B04103)
-Date: Mon, 2 Mar 2015 15:47:41 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re:  [PATCH V3 2/2] ath10k: Fix interrupt storm
-References: <1425030606-21933-1-git-send-email-vthiagar@qti.qualcomm.com>	<1425030606-21933-2-git-send-email-vthiagar@qti.qualcomm.com>,<CA+BoTQ=UFo=2Fa8FXw6JTGKkNLoG=m56py0a8AShyh3nTJ+TKQ@mail.gmail.com> <1425288686058.83668@qti.qualcomm.com>
-In-Reply-To: <1425288686058.83668@qti.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-2"; format=flowed
+Received: from aibo.runbox.com ([91.220.196.211]:44491 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188AbbCOAPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Mar 2015 20:15:19 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	m.v.b@runbox.com
+Subject: [PATCH v2 05/16] staging: rtl8723au: Reorganize a few functions to remove indentation
+Date: Sat, 14 Mar 2015 20:10:30 -0400
+Message-Id: <1426378241-32469-6-git-send-email-m.v.b@runbox.com> (sfid-20150315_011543_891339_33A85AA1)
+In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->
->> buffers because in monitor mode device receives everything seen
->> on the air. In noisy condition, disabling monitor mode helps assoc
->> go through without any issue.
->>
->> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->> ---
->>   drivers/net/wireless/ath/ath10k/mac.c |   35 +++++++++++++++++++++++++++++++++
->>   1 file changed, 35 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index 3b5aaa3..885e984 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -766,12 +766,36 @@ static int ath10k_monitor_stop(struct ath10k *ar)
->>          return 0;
->>   }
->>
->> +static bool ath10k_disable_promisc_mode(struct ath10k *ar)
->
-> The function name implies something that has a side-effect.
->
-> If anything, this should be named more like:
-> ath10k_mac_should_disable_promisc() or ath10k_mac_is_promisc() (with
-> the logic inverted).
+Prior to this commit, functions rtw_tkip_encrypt23a and rtw_tkip_decrypt23a had
+large if blocks which contained the majority of the logic in the functions.
 
-Ok.
+Rework these functions so that if the negated version of the aforementioned if
+blocks' conditions are true, we return from the function with _FAIL, as
+expected by the calling code.
 
->
->
->> +{
->> +       struct ath10k_vif *arvif;
->> +
->> +       if (!ar->num_started_vdevs)
->> +               return false;
->> +
->> +       list_for_each_entry(arvif, &ar->arvifs, list) {
->
-> This means function must be called while holding conf_mutex (my MCC
-> patch adds data_lock as an option, but current upstream tree uses
-> conf_mutex only).
+This lets us remove two levels of indentation from the functions in
+question, making them more readable.
 
-Ok. Sure, we can fix it when we have MCC change into the tree.
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 178 +++++++++++++-------------
+ 1 file changed, 88 insertions(+), 90 deletions(-)
 
->
->
->> +               /* Disabling promiscuous mode when STA/IBSS is running */
->> +               if (arvif->vdev_type == WMI_VDEV_TYPE_STA ||
->> +                   arvif->vdev_type == WMI_VDEV_TYPE_IBSS)
->
-> Wouldn't `if (arvif->vdev_type != WMI_VDEV_TYPE_AP) return false` be
-> safer? We only know this is safe for AP, right?
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 5bc3514629..392b5acc7f 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -618,6 +618,9 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+ 	int res = _SUCCESS;
+ 
++	if (pattrib->encrypt != WLAN_CIPHER_SUITE_TKIP)
++		return _FAIL;
++
+ 	if (!pxmitframe->buf_addr)
+ 		return _FAIL;
+ 
+@@ -625,71 +628,66 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 
+ 	pframe = pxmitframe->buf_addr + hw_hdr_offset;
+ 	/* 4 start to encrypt each fragment */
+-	if (pattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
+-		if (pattrib->psta)
+-			stainfo = pattrib->psta;
+-		else {
+-			DBG_8723A("%s, call rtw_get_stainfo()\n", __func__);
+-			stainfo = rtw_get_stainfo23a(&padapter->stapriv,
+-						     &pattrib->ra[0]);
+-		}
+-
+-		if (stainfo != NULL) {
+-
+-			if (!(stainfo->state & _FW_LINKED)) {
+-				DBG_8723A("%s, psta->state(0x%x) != _FW_LINKED\n", __func__, stainfo->state);
+-				return _FAIL;
+-			}
++	if (pattrib->psta)
++		stainfo = pattrib->psta;
++	else {
++		DBG_8723A("%s, call rtw_get_stainfo()\n", __func__);
++		stainfo = rtw_get_stainfo23a(&padapter->stapriv,
++					     &pattrib->ra[0]);
++	}
+ 
+-			RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo!= NULL!!!\n"));
++	if (stainfo == NULL) {
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo == NULL!!!\n"));
++		DBG_8723A("%s, psta == NUL\n", __func__);
++		return _FAIL;
++	}
+ 
+-			if (is_multicast_ether_addr(pattrib->ra))
+-				prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
+-			else
+-				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
++	if (!(stainfo->state & _FW_LINKED)) {
++		DBG_8723A("%s, psta->state(0x%x) != _FW_LINKED\n", __func__, stainfo->state);
++		return _FAIL;
++	}
+ 
+-			prwskeylen = 16;
++	RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo!= NULL!!!\n"));
+ 
+-			for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
+-				iv = pframe+pattrib->hdrlen;
+-				payload = pframe+pattrib->iv_len+pattrib->hdrlen;
++	if (is_multicast_ether_addr(pattrib->ra))
++		prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
++	else
++		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
+ 
+-				GET_TKIP_PN(iv, dot11txpn);
++	prwskeylen = 16;
+ 
+-				pnl = (u16)(dot11txpn.val);
+-				pnh = (u32)(dot11txpn.val>>16);
++	for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
++		iv = pframe+pattrib->hdrlen;
++		payload = pframe+pattrib->iv_len+pattrib->hdrlen;
+ 
+-				phase1((u16 *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
++		GET_TKIP_PN(iv, dot11txpn);
+ 
+-				phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
++		pnl = (u16)(dot11txpn.val);
++		pnh = (u32)(dot11txpn.val>>16);
+ 
+-				if ((curfragnum + 1) == pattrib->nr_frags) {	/* 4 the last fragment */
+-					length = pattrib->last_txcmdsz-pattrib->hdrlen-pattrib->iv_len - pattrib->icv_len;
+-					RT_TRACE(_module_rtl871x_security_c_, _drv_info_, ("pattrib->iv_len =%x, pattrib->icv_len =%x\n", pattrib->iv_len, pattrib->icv_len));
+-					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
++		phase1((u16 *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
+ 
+-					arcfour_init(&mycontext, rc4key, 16);
+-					arcfour_encrypt(&mycontext, payload, payload, length);
+-					arcfour_encrypt(&mycontext, payload+length, crc, 4);
++		phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
+ 
+-				} else {
+-					length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
+-					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
+-					arcfour_init(&mycontext, rc4key, 16);
+-					arcfour_encrypt(&mycontext, payload, payload, length);
+-					arcfour_encrypt(&mycontext, payload+length, crc, 4);
++		if ((curfragnum+1) == pattrib->nr_frags) {	/* 4 the last fragment */
++			length = pattrib->last_txcmdsz-pattrib->hdrlen-pattrib->iv_len - pattrib->icv_len;
++			RT_TRACE(_module_rtl871x_security_c_, _drv_info_, ("pattrib->iv_len =%x, pattrib->icv_len =%x\n", pattrib->iv_len, pattrib->icv_len));
++			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
+ 
+-					pframe += pxmitpriv->frag_len;
+-					pframe  = PTR_ALIGN(pframe, 4);
+-				}
+-			}
++			arcfour_init(&mycontext, rc4key, 16);
++			arcfour_encrypt(&mycontext, payload, payload, length);
++			arcfour_encrypt(&mycontext, payload+length, crc, 4);
+ 
+ 		} else {
+-			RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo == NULL!!!\n"));
+-			DBG_8723A("%s, psta == NUL\n", __func__);
+-			res = _FAIL;
+-		}
++			length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
++			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
++			arcfour_init(&mycontext, rc4key, 16);
++			arcfour_encrypt(&mycontext, payload, payload, length);
++			arcfour_encrypt(&mycontext, payload+length, crc, 4);
+ 
++			pframe += pxmitpriv->frag_len;
++			pframe  = PTR_ALIGN(pframe, 4);
++		}
+ 	}
+ 
+ 	return res;
+@@ -715,58 +713,58 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 	struct sk_buff *skb = precvframe->pkt;
+ 	int res = _SUCCESS;
+ 
++	if (prxattrib->encrypt != WLAN_CIPHER_SUITE_TKIP)
++		return _FAIL;
++
+ 	pframe = skb->data;
+ 
+ 	/* 4 start to decrypt recvframe */
+-	if (prxattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
++	stainfo = rtw_get_stainfo23a(&padapter->stapriv,
++				     &prxattrib->ta[0]);
++	if (stainfo == NULL) {
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt23a: stainfo == NULL!!!\n"));
++		return _FAIL;
++	}
+ 
+-		stainfo = rtw_get_stainfo23a(&padapter->stapriv,
+-					     &prxattrib->ta[0]);
+-		if (stainfo!= NULL) {
+-
+-			if (is_multicast_ether_addr(prxattrib->ra)) {
+-				if (psecuritypriv->binstallGrpkey == 0) {
+-					res = _FAIL;
+-					DBG_8723A("%s:rx bc/mc packets, but didn't install group key!!!!!!!!!!\n", __func__);
+-					goto exit;
+-				}
+-				prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
+-				prwskeylen = 16;
+-			} else {
+-			        RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt23a: stainfo!= NULL!!!\n"));
+-				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
+-				prwskeylen = 16;
+-			}
++	if (is_multicast_ether_addr(prxattrib->ra)) {
++		if (psecuritypriv->binstallGrpkey == 0) {
++			res = _FAIL;
++			DBG_8723A("%s:rx bc/mc packets, but didn't install group key!!!!!!!!!!\n", __func__);
++			goto exit;
++		}
++		prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
++		prwskeylen = 16;
++	} else {
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt23a: stainfo!= NULL!!!\n"));
++		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
++		prwskeylen = 16;
++	}
+ 
+-			iv = pframe+prxattrib->hdrlen;
+-			payload = pframe+prxattrib->iv_len+prxattrib->hdrlen;
+-			length = skb->len - prxattrib->hdrlen-prxattrib->iv_len;
++	iv = pframe+prxattrib->hdrlen;
++	payload = pframe+prxattrib->iv_len+prxattrib->hdrlen;
++	length = skb->len - prxattrib->hdrlen-prxattrib->iv_len;
+ 
+-			GET_TKIP_PN(iv, dot11txpn);
++	GET_TKIP_PN(iv, dot11txpn);
+ 
+-			pnl = (u16)(dot11txpn.val);
+-			pnh = (u32)(dot11txpn.val>>16);
++	pnl = (u16)(dot11txpn.val);
++	pnh = (u32)(dot11txpn.val>>16);
+ 
+-			phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
+-			phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
++	phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
++	phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
+ 
+-			/* 4 decrypt payload include icv */
+-			arcfour_init(&mycontext, rc4key, 16);
+-			arcfour_encrypt(&mycontext, payload, payload, length);
++	/* 4 decrypt payload include icv */
++	arcfour_init(&mycontext, rc4key, 16);
++	arcfour_encrypt(&mycontext, payload, payload, length);
+ 
+-			*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
++	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
+ 
+-			if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
+-			{
+-			    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+-						crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
+-				res = _FAIL;
+-			}
+-		} else {
+-			RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt23a: stainfo == NULL!!!\n"));
+-			res = _FAIL;
+-		}
++	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
++	{
++	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
++				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
++		res = _FAIL;
+ 	}
++
+ exit:
+ 	return res;
+ }
+-- 
+2.1.4
 
-Sure.
-
->
->
->> +                       return false;
->> +       }
->> +
->> +       return true;
->> +}
->> +
->>   static int ath10k_monitor_recalc(struct ath10k *ar)
->>   {
->>          bool should_start;
->>
->>          lockdep_assert_held(&ar->conf_mutex);
->>
->> +       if ((ar->filter_flags & FIF_PROMISC_IN_BSS) &&
->> +           ath10k_disable_promisc_mode(ar)) {
->> +               ar->filter_flags &= ~FIF_PROMISC_IN_BSS;
->> +               ath10k_dbg(ar, ATH10K_DBG_MAC,
->> +                          "mac disabling promiscuous mode because vdev is started\n");
->> +       }
->> +
->
-> I don't like this. You modify filter_flags. This shouldn't be
-> happening in the recalc function. The recalc function should have only
-> a side-effect of starting/stopping monitor vdev.
->
-> Instead:
->
->   should_start = ar->monitor || ath10k_mac_is_promisc() ||
-> test_bit(ATH10K_CAC_RUNNING);
->
-> And put the promisc skipping logic in ath10k_mac_is_promisc().
-
-Right, this is much better.
-
->
->
->>          should_start = ar->monitor ||
->>                         ar->filter_flags & FIF_PROMISC_IN_BSS ||
->>                         test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
->> @@ -969,6 +993,10 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
->>          ar->num_started_vdevs++;
->>          ath10k_recalc_radar_detection(ar);
->>
->> +       ret = ath10k_monitor_recalc(ar);
->> +       if (ret)
->> +               ath10k_vdev_stop(arvif);
->
-> You should warn here "failed to recalc monitor: %d\n". Also it'd be
-> nice if vdev_stop() was checked for error as well (but not with "ret"
-> as to not lose the original failure reason code; `ret2` is okay). A
-> warning for that is would also be desired.
-
-Sure.
-
->
->
->> +
->>          return ret;
->>   }
->>
->> @@ -3476,6 +3504,13 @@ static void ath10k_configure_filter(struct ieee80211_hw *hw,
->>
->>          changed_flags &= SUPPORTED_FILTERS;
->>          *total_flags &= SUPPORTED_FILTERS;
->> +       if (*total_flags & FIF_PROMISC_IN_BSS) {
->> +               if (ar->num_started_vdevs) {
->> +                       ath10k_dbg(ar, ATH10K_DBG_MAC,
->> +                                  "mac does not enable promiscuous mode when already a vdev is running\n");
->> +                       *total_flags &= ~FIF_PROMISC_IN_BSS;
->> +               }
->> +       }
->
-> There's no need for that, is there? The monitor_recalc() is supposed
-> to deal with this.
-
-Right, but we may not want to create any inconsistencies between *total_flags and actual
-filters enabled in the driver?.
-
-Thanks for the review.
-
-Vasanth
