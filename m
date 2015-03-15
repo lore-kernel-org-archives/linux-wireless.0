@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:36124 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751877AbbCAWWM (ORCPT
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:32926 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562AbbCORSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 17:22:12 -0500
-Received: by widem10 with SMTP id em10so10945399wid.1
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Mar 2015 14:22:11 -0800 (PST)
+	Sun, 15 Mar 2015 13:18:13 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Florian Westphal <fw@strlen.de>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH next] drivers: wireless: carl9170: shrink carl9170_tx_info
+Date: Sun, 15 Mar 2015 18:17:56 +0100
+Message-ID: <2002983.Zu6fLi5xz6@debian64> (sfid-20150315_181818_584510_ECF0ACD0)
+In-Reply-To: <20150314175532.GH14761@breakpoint.cc>
+References: <1426261045-22373-1-git-send-email-fw@strlen.de> <1689955.Ikz24aORLX@debian64> <20150314175532.GH14761@breakpoint.cc>
 MIME-Version: 1.0
-In-Reply-To: <1425238304-498-5-git-send-email-emmanuel.grumbach@intel.com>
-References: <1425238186.30202.5.camel@egrumbacBox> <1425238304-498-5-git-send-email-emmanuel.grumbach@intel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 2 Mar 2015 09:21:51 +1100
-Message-ID: <CAGRGNgWgZg83CJh-DH8MVMU9Pkagd5ZwbBKR7ooONVwBgg80Cg@mail.gmail.com> (sfid-20150301_232220_670518_DEA3BB3F)
-Subject: Re: [PATCH 05/31] iwlwifi: mvm: consider TDLS queues as used during drain
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
+On Saturday, March 14, 2015 06:55:32 PM Florian Westphal wrote:
+> Christian Lamparter <chunkeey@googlemail.com> wrote:
+> > On Friday, March 13, 2015 04:37:25 PM Florian Westphal wrote:
+> > > its embededded inside rate_driver_data of the ieee80211_tx_info struct,
+> > > which in turn is stored in skb->cb[].
+> > > 
+> > > In order to shrink cb, we need to shrink ieee80211_tx_info which means
+> > > to downsize all users first.
+> > > 
+> > > Alternatively, one might be able to remove kref but
+> > > its less intrusive/simpler to use u32 for timeout handling.
+> > > 
+> > > Signed-off-by: Florian Westphal <fw@strlen.de>
+> > > ---
+> > u32 jiffies... that's a lot of pointing (well not so much) and really 
+> > ugly casting (a lot). I guess it would be easier to just use a "per-queue"
+> > timeout watchdog like almost everybody else. This way, the driver will
+> > be ready for the next skb->cb shrink as well.
+> > 
+> > carl9170_tx_ampdu_timeout can be completely removed.
+> 
+> Maybe, but there is only so much I am willing to do with "compile
+> tested only" patches...
+well, reinventing jiffies_32 is just a ugly hack and not "intrusive/simpler"
+than removing kref here.
 
-On Mon, Mar 2, 2015 at 6:31 AM, Emmanuel Grumbach
-<emmanuel.grumbach@intel.com> wrote:
-> From: Arik Nemtsov <arik@wizery.com>
->
-> When a TDLS station is being drained its Tx queues are still in use. Don't
-> allocate them to a different station in the meantime.
->
-> Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-> Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Please try again. Don't worry about testing, I'm sure this is not a problem
+and someone will test the patches with the hw on 32-bit and 64-bit platforms.
 
-Same here.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Regards,
+  Christian
