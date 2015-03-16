@@ -1,111 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:35556 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160AbbCTN4v (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37886 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933786AbbCPQGx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 09:56:51 -0400
-Received: by lbcgn8 with SMTP id gn8so75782416lbc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 06:56:50 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Mon, 16 Mar 2015 12:06:53 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/3] rt2x00usb: initialize the read value in case of failure
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/9] ath10k: derive rate from bitrate
-Date: Fri, 20 Mar 2015 13:54:08 +0000
-Message-Id: <1426859655-11797-3-git-send-email-michal.kazior@tieto.com> (sfid-20150320_145705_564700_3B6A513B)
-In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
-References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Message-Id: <20150316160652.789B313FBE6@smtp.codeaurora.org> (sfid-20150316_170656_558354_25F9EB63)
+Date: Mon, 16 Mar 2015 16:06:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's no need to store rate values in hw_value.
-This frees up the hw_value for better future use.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 47 +++++++++++++++++++++++++----------
- 1 file changed, 34 insertions(+), 13 deletions(-)
+> My understanding ist that rt2x00usb_register_read() is void and so the
+> reader is unaware of read errors and assumes that whatever was on the
+> stack as it was about to read.
+> 
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 456d671..5721196 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -42,19 +42,19 @@
- 
- static struct ieee80211_rate ath10k_rates[] = {
- 	/* CCK */
--	RATETAB_ENT(10,  0x82, 0),
--	RATETAB_ENT(20,  0x84, 0),
--	RATETAB_ENT(55,  0x8b, 0),
--	RATETAB_ENT(110, 0x96, 0),
-+	RATETAB_ENT(10,  0, 0),
-+	RATETAB_ENT(20,  0, 0),
-+	RATETAB_ENT(55,  0, 0),
-+	RATETAB_ENT(110, 0, 0),
- 	/* OFDM */
--	RATETAB_ENT(60,  0x0c, 0),
--	RATETAB_ENT(90,  0x12, 0),
--	RATETAB_ENT(120, 0x18, 0),
--	RATETAB_ENT(180, 0x24, 0),
--	RATETAB_ENT(240, 0x30, 0),
--	RATETAB_ENT(360, 0x48, 0),
--	RATETAB_ENT(480, 0x60, 0),
--	RATETAB_ENT(540, 0x6c, 0),
-+	RATETAB_ENT(60,  0, 0),
-+	RATETAB_ENT(90,  0, 0),
-+	RATETAB_ENT(120, 0, 0),
-+	RATETAB_ENT(180, 0, 0),
-+	RATETAB_ENT(240, 0, 0),
-+	RATETAB_ENT(360, 0, 0),
-+	RATETAB_ENT(480, 0, 0),
-+	RATETAB_ENT(540, 0, 0),
- };
- 
- #define ath10k_a_rates (ath10k_rates + 4)
-@@ -62,6 +62,25 @@ static struct ieee80211_rate ath10k_rates[] = {
- #define ath10k_g_rates (ath10k_rates + 0)
- #define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
- 
-+static bool ath10k_mac_bitrate_is_cck(int bitrate)
-+{
-+	switch (bitrate) {
-+	case 10:
-+	case 20:
-+	case 55:
-+	case 110:
-+		return true;
-+	}
-+
-+	return false;
-+}
-+
-+static u8 ath10k_mac_bitrate_to_rate(int bitrate)
-+{
-+	return DIV_ROUND_UP(bitrate, 5) |
-+	       (ath10k_mac_bitrate_is_cck(bitrate) ? BIT(7) : 0);
-+}
-+
- /**********/
- /* Crypto */
- /**********/
-@@ -1699,6 +1718,7 @@ static void ath10k_peer_assoc_h_rates(struct ath10k *ar,
- 	const struct ieee80211_supported_band *sband;
- 	const struct ieee80211_rate *rates;
- 	u32 ratemask;
-+	u8 rate;
- 	int i;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
-@@ -1713,7 +1733,8 @@ static void ath10k_peer_assoc_h_rates(struct ath10k *ar,
- 		if (!(ratemask & 1))
- 			continue;
- 
--		rateset->rates[rateset->num_rates] = rates->hw_value;
-+		rate = ath10k_mac_bitrate_to_rate(rates->bitrate);
-+		rateset->rates[rateset->num_rates] = rate;
- 		rateset->num_rates++;
- 	}
- }
--- 
-2.1.4
+Thanks, 3 patches applied to wireless-drivers-next.git:
 
+e4fcfaf802bf rt2x00usb: initialize the read value in case of failure
+92d5e2456d39 rt2x00usb: check USB's request error code in rt2800usb_autorun_detect()
+7daa54b747dd rt2x00usb: drop rt2x00usb_disable_radio() from rt2800usb_disable_radio()
+
+Kalle Valo
