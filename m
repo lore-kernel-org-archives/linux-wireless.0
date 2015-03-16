@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3625 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753204AbbC3I3U (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:33120 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922AbbCPHZq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:29:20 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 3/5] wil6210: trace disconnect source
-Date: Mon, 30 Mar 2015 11:28:52 +0300
-Message-Id: <1427704134-30699-4-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150330_102928_537204_BE11FD40)
-In-Reply-To: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Mon, 16 Mar 2015 03:25:46 -0400
+Received: by ladw1 with SMTP id w1so32175910lad.0
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Mar 2015 00:25:44 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1426447133-28317-1-git-send-email-nbd@openwrt.org>
+References: <1426447133-28317-1-git-send-email-nbd@openwrt.org>
+Date: Mon, 16 Mar 2015 09:25:44 +0200
+Message-ID: <CANUX_P09MoMHS9sko+gxA7Ra-q+ppo1PXSSRXCsHpG19sTcFMA@mail.gmail.com> (sfid-20150316_082549_189754_C3B10FEC)
+Subject: Re: [PATCH v2] mac80211: add an intermediate software queue implementation
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Trace where wil6210_disconnect() is called from.
+Hi Felix,
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Sorry, but I saw one small typo :)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index d027a7f..ec46a94 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -507,6 +507,8 @@ static int wil_cfg80211_disconnect(struct wiphy *wiphy,
- 	int rc;
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 
-+	wil_dbg_misc(wil, "%s(reason=%d)\n", __func__, reason_code);
-+
- 	rc = wmi_send(wil, WMI_DISCONNECT_CMDID, NULL, 0);
- 
- 	return rc;
-@@ -836,6 +838,9 @@ static int wil_cfg80211_del_station(struct wiphy *wiphy,
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 
-+	wil_dbg_misc(wil, "%s(%pM, reason=%d)\n", __func__, params->mac,
-+		     params->reason_code);
-+
- 	mutex_lock(&wil->mutex);
- 	wil6210_disconnect(wil, params->mac, params->reason_code, false);
- 	mutex_unlock(&wil->mutex);
--- 
-2.1.0
+[snip]
 
+> +
+> +/**
+> + * ieee80211_tx_dequeue - dequeue a packet from a software tx queue
+> + *
+> + * @hw: pointer as obtained from ieee80211_alloc_hw()
+> + * @txq: pointer obtained from .add_tx_queue() call
+> + *
+> + * Returns the sjb if successful, ERR_PTR(-EAGAIN) if no frame was available.
+
+skb
+
+> + */
+> +struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+> +                                    struct ieee80211_txq *txq);
+> +
+> +
+>  #endif /* MAC80211_H */
