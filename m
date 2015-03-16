@@ -1,124 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:40697 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752714AbbCBMX1 (ORCPT
+Received: from www.linutronix.de ([62.245.132.108]:36502 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933349AbbCPQlD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 07:23:27 -0500
-Received: by labgd6 with SMTP id gd6so29886594lab.7
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 04:23:26 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+	Mon, 16 Mar 2015 12:41:03 -0400
+Date: Mon, 16 Mar 2015 17:41:00 +0100
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 1/2] ath10k: fix some pci wake/sleep issues
-Date: Mon,  2 Mar 2015 13:22:13 +0100
-Message-Id: <1425298934-12370-1-git-send-email-michal.kazior@tieto.com> (sfid-20150302_132332_564826_7935CD0D)
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [1/3] rt2x00usb: initialize the read value in case of failure
+Message-ID: <20150316164100.GA6208@linutronix.de> (sfid-20150316_174108_473823_B0FB858C)
+References: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
+ <20150316160652.789B313FBE6@smtp.codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150316160652.789B313FBE6@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some cases the device ends up sleeping while
-ath10k didn't expect it to leading to reading
-garbage from registers, e.g. when shared irqs are
-used and the driver is in powered down state.
+* Kalle Valo | 2015-03-16 16:06:52 [+0000]:
 
-This effectively makes the device remain awake all
-the time even when all interfaces are down.
+>Thanks, 3 patches applied to wireless-drivers-next.git:
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 37 ++++++++++++++++++++++++++++++-----
- 1 file changed, 32 insertions(+), 5 deletions(-)
+Thanks. Do you guys have any kind of further documentation? Where did 
+you get the firmware from? Is it the vendor driver in better shape and
+firmware excracted from header files?
+The reason I'm asking is that I have a small script that switches
+between AP & Managed mode and after a while the show ends with:
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e6972b0..cbf82ff 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -819,6 +819,21 @@ static int ath10k_pci_wake_wait(struct ath10k *ar)
- 	return -ETIMEDOUT;
- }
- 
-+/* The rule is host is forbidden from accessing device registers while it's
-+ * asleep. Currently ath10k_pci_wake() and ath10k_pci_sleep() calls aren't
-+ * balanced and the device is kept awake all the time. This is intended for a
-+ * simpler solution for the following problems:
-+ *
-+ *   * device can enter sleep during s2ram without the host knowing,
-+ *
-+ *   * irq handlers access registers which is a problem if other device asserts
-+ *     a shared irq line when ath10k is between hif_power_down() and
-+ *     hif_power_up().
-+ *
-+ * FIXME: If power consumption is a concern (and there are *real* gains) then a
-+ * refcounted wake/sleep needs to be implemented.
-+ */
-+
- static int ath10k_pci_wake(struct ath10k *ar)
- {
- 	ath10k_pci_reg_write32(ar, PCIE_SOC_WAKE_ADDRESS,
-@@ -2034,8 +2049,6 @@ static void ath10k_pci_hif_power_down(struct ath10k *ar)
- 	/* Currently hif_power_up performs effectively a reset and hif_stop
- 	 * resets the chip as well so there's no point in resetting here.
- 	 */
--
--	ath10k_pci_sleep(ar);
- }
- 
- #ifdef CONFIG_PM
-@@ -2048,6 +2061,8 @@ static int ath10k_pci_hif_suspend(struct ath10k *ar)
- 	struct pci_dev *pdev = ar_pci->pdev;
- 	u32 val;
- 
-+	ath10k_pci_sleep(ar);
-+
- 	pci_read_config_dword(pdev, ATH10K_PCI_PM_CONTROL, &val);
- 
- 	if ((val & 0x000000ff) != 0x3) {
-@@ -2065,6 +2080,13 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct pci_dev *pdev = ar_pci->pdev;
- 	u32 val;
-+	int ret;
-+
-+	ret = ath10k_pci_wake(ar);
-+	if (ret) {
-+		ath10k_err(ar, "failed to wake device up on resume: %d\n", ret);
-+		return ret;
-+	}
- 
- 	pci_read_config_dword(pdev, ATH10K_PCI_PM_CONTROL, &val);
- 
-@@ -2083,7 +2105,7 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
- 			pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
- 	}
- 
--	return 0;
-+	return ret;
- }
- #endif
- 
-@@ -2177,6 +2199,13 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
- {
- 	struct ath10k *ar = arg;
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+	int ret;
-+
-+	ret = ath10k_pci_wake(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to wake device up on irq: %d\n", ret);
-+		return IRQ_NONE;
-+	}
- 
- 	if (ar_pci->num_msi_intrs == 0) {
- 		if (!ath10k_pci_irq_pending(ar))
-@@ -2681,8 +2710,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 		goto err_sleep;
- 	}
- 
--	ath10k_pci_sleep(ar);
--
- 	ret = ath10k_core_register(ar, chip_id);
- 	if (ret) {
- 		ath10k_err(ar, "failed to register driver core: %d\n", ret);
--- 
-1.8.5.3
+|wlan0: authenticate with XX
+|wlan0: send auth to XX (try 1/3)
+|wlan0: authenticated
+|wlan0: associate with XX (try 1/3)
+|wlan0: RX AssocResp fromXX (capab=0x1411 status=0 aid=3)
+|IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+|wlan0: associated
+|wlan0: dropped frame to XX (unauthorized port)
+Managed mode complete.
 
+|wlan0: deauthenticating from XX by local choice (Reason: 3=DEAUTH_LEAVING)
+|cfg80211: Calling CRDA to update world regulatory domain
+|ieee80211 phy0: rt2800usb_write_firmware: Info - Firmware loading not required - NIC in AutoRun mode
+|IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+|IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+switch to AP mode done.
+
+And this should be where it switches back to managed mode
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x3200 with error -110 val: 0 type 40
+|ieee80211 phy0: rt2800usb_write_firmware: Info - Firmware is written.
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x7014 with error -110 val: 0 type 40
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x701c with error -110 val: 0 type 40
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x01 failed for offset 0x0000 with error -110 val: 8 type 40
+|ieee80211 phy0: rt2800usb_write_firmware: Error - Failed to write Firmware to device
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0400 with error -110 val: 0 type c0
+… mode of these…
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0400 with error -110 val: 0 type c0
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0400 with error -110 val: 0 type c0
+|ieee80211 phy0: rt2800_load_firmware: Error - PBF system register not ready
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x7010 with error -110 val: 0 type c0
+… mode of these…
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x7010 with error -110 val: 0 type 40
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x0404 with error -110 val: 0 type 40
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x1000 with error -110 val: 0 type c0
+|ieee80211 phy0: rt2800_wait_csr_ready: Error - Unstable hardware 
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x7010 with error -110 val: 0 type c0
+|ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x7010 with error -110 val: 0 type 40
+
+at this point the stick is dead. Dead as in I think I get -110 for every
+USB reqeust. The only thing that helps is to replug the USB stick since
+it does not even accept a new device number after a USB-reset.
+Since the error happens by the time the firmware is written could it be
+that the firmware was not yet ready to receive a new one? Since it does
+not answer at all I think it blue screened :)
+
+>
+>Kalle Valo
+
+Sebastian
