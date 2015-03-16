@@ -1,101 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56562 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751942AbbCMP4J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 11:56:09 -0400
-Message-ID: <55030897.4050606@candelatech.com> (sfid-20150313_165613_233558_CFDC7CC6)
-Date: Fri, 13 Mar 2015 08:56:07 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?M=E1rio_Lopes?= <mjlopes@inescporto.pt>
-CC: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Specific tx rates with ath10k
-References: <5501DAF7.1000800@candelatech.com> <20150313103721.13586092dzqt9w41@horde.inescporto.pt>
-In-Reply-To: <20150313103721.13586092dzqt9w41@horde.inescporto.pt>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:58932 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932739AbbCPVXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2015 17:23:52 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 4/4] mac80211: notify the driver about deauth
+Date: Mon, 16 Mar 2015 23:23:37 +0200
+Message-Id: <1426541017-10516-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150316_222357_642798_E5865B5A)
+In-Reply-To: <1426541017-10516-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1426541017-10516-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/13/2015 02:37 AM, Mário Lopes wrote:
-> Hi.
-> 
-> You can change to fixed bitrate for all types of traffic for 802.11g/a modes, even on ath10k:
-> for 2.4 GHz @ 54 Mbit/s - iw dev wiface set bitrates legacy-2.4 54
-> for 5 GHz @ 54 Mbit/s - iw dev wiface set bitrates legacy-5 54
+This can allow the driver to take action based on the reason
+of the deauth.
 
-Have you actually tried this with an ath10k AP and seen that beacons
-and broadcast go out at 54Mbps?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h |  4 ++++
+ net/mac80211/mlme.c    | 60 +++++++++++++++++++++++++++++++++++---------------
+ 2 files changed, 46 insertions(+), 18 deletions(-)
 
-If so, please let me know what firmware version you are using.
-
-> Setting fixed speed for HT and VHT modes currently only takes effect on unicast traffic, I would like that this could be applied to other types of traffic in a
-> future ath9k/ath10k driver.
-
-I know beacons won't go out at HT speeds, at least not with the
-logic that I tried in the firmware...but I have not checked to
-see if my patch allows setting broadcast to HT speeds....
-
-Thanks,
-Ben
-
-> 
-> 
-> Quoting Ben Greear <greearb@candelatech.com>:
-> 
->> Ath10k firmware gives ability to set specific fixed rate-control rates
->> for beacons/mgt, multicast, broadcast, and regular traffic.
->>
->> The ath10k driver only sets regular traffic currently.
->>
->> I had previously hacked my firmware to just set all rate types when
->> ath10k driver requested to set the rate.
->>
->> But, that is not what my customer needs.
->>
->> So, I am now planning to add some debugfs entries to allow users to set
->> beacon/mgt, multicast and broadcast rates individually (I don't have time or interest
->> right now to try patching things top to bottom to try to get this feature
->> into mac80211 stack or 'iw').
->>
->> My question is, for when user just runs a command like this:
->>
->> ./local/sbin/iw dev vap1 set bitrates legacy-2.4 6 ht-mcs-2.4
->>
->> What is the desired behaviour?
->>
->> Set all rates (beacons/mgt, bcast, multicast, regular) to the same
->> fixed speed, or just a certain subset of these traffic types?
->>
->> I can make my firmware do whatever combination is required, and then
->> users can over-ride the values by using debugfs.....
->>
->> As a note, ath10k firmware will NOT send beacons at HT speeds, so
->> if you fix an HT rate, then firmware will ignore that for the beacons/mgt
->> ratecontrol type.
->>
->> Thanks,
->> Ben
->>
->> -- 
->> Ben Greear <greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> 
-> 
-> 
-> ----------------------------------------------------------------
-> This message was sent using IMP, the Internet Messaging Program.
-> 
-
-
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index dcddc4a..94c8c62 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -332,10 +332,14 @@ struct ieee80211_rssi_event {
+  * enum ieee80211_mlme_event_data - relevant when event type is %MLME_EVENT
+  * @AUTH_EVENT: the MLME operation is authentication
+  * @ASSOC_EVENT: the MLME operation is association
++ * @DEAUTH_RX_EVENT: deauth received..
++ * @DEAUTH_TX_EVENT: deauth sent.
+  */
+ enum ieee80211_mlme_event_data {
+ 	AUTH_EVENT,
+ 	ASSOC_EVENT,
++	DEAUTH_RX_EVENT,
++	DEAUTH_TX_EVENT,
+ };
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index b6817c4..22b1259 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2345,6 +2345,24 @@ struct sk_buff *ieee80211_ap_probereq_get(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_ap_probereq_get);
+ 
++static void ieee80211_report_disconnect(struct ieee80211_sub_if_data *sdata,
++					const u8 *buf, size_t len, bool tx,
++					u16 reason)
++{
++	struct ieee80211_event event = {
++		.type = MLME_EVENT,
++		.u.mlme.data = tx ? DEAUTH_TX_EVENT : DEAUTH_RX_EVENT,
++		.u.mlme.reason = reason,
++	};
++
++	if (tx)
++		cfg80211_tx_mlme_mgmt(sdata->dev, buf, len);
++	else
++		cfg80211_rx_mlme_mgmt(sdata->dev, buf, len);
++
++	drv_event_callback(sdata->local, sdata, &event);
++}
++
+ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+@@ -2370,8 +2388,9 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 	}
+ 	mutex_unlock(&local->mtx);
+ 
+-	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+-			      IEEE80211_DEAUTH_FRAME_LEN);
++	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
++				    WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY);
++
+ 	sdata_unlock(sdata);
+ }
+ 
+@@ -2676,7 +2695,7 @@ static void ieee80211_rx_mgmt_deauth(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
+ 
+-	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
++	ieee80211_report_disconnect(sdata, (u8 *)mgmt, len, false, reason_code);
+ }
+ 
+ 
+@@ -2702,7 +2721,7 @@ static void ieee80211_rx_mgmt_disassoc(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
+ 
+-	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
++	ieee80211_report_disconnect(sdata, (u8 *)mgmt, len, false, reason_code);
+ }
+ 
+ static void ieee80211_get_rates(struct ieee80211_supported_band *sband,
+@@ -3509,8 +3528,9 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       WLAN_REASON_DEAUTH_LEAVING,
+ 				       true, deauth_buf);
+-		cfg80211_tx_mlme_mgmt(sdata->dev, deauth_buf,
+-				      sizeof(deauth_buf));
++		ieee80211_report_disconnect(sdata, deauth_buf,
++					    sizeof(deauth_buf), true,
++					    WLAN_REASON_DEAUTH_LEAVING);
+ 		return;
+ 	}
+ 
+@@ -3628,8 +3648,8 @@ static void ieee80211_sta_connection_lost(struct ieee80211_sub_if_data *sdata,
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
+ 			       tx, frame_buf);
+ 
+-	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+-			      IEEE80211_DEAUTH_FRAME_LEN);
++	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
++				    reason);
+ }
+ 
+ static int ieee80211_probe_auth(struct ieee80211_sub_if_data *sdata)
+@@ -4507,8 +4527,9 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
+ 				       WLAN_REASON_UNSPECIFIED,
+ 				       false, frame_buf);
+ 
+-		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+-				      sizeof(frame_buf));
++		ieee80211_report_disconnect(sdata, frame_buf,
++					    sizeof(frame_buf), true,
++					    WLAN_REASON_UNSPECIFIED);
+ 	}
+ 
+ 	sdata_info(sdata, "authenticate with %pM\n", req->bss->bssid);
+@@ -4608,8 +4629,9 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
+ 				       WLAN_REASON_UNSPECIFIED,
+ 				       false, frame_buf);
+ 
+-		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+-				      sizeof(frame_buf));
++		ieee80211_report_disconnect(sdata, frame_buf,
++					    sizeof(frame_buf), true,
++					    WLAN_REASON_UNSPECIFIED);
+ 	}
+ 
+ 	if (ifmgd->auth_data && !ifmgd->auth_data->done) {
+@@ -4899,8 +4921,9 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 					       req->reason_code, tx,
+ 					       frame_buf);
+ 		ieee80211_destroy_auth_data(sdata, false);
+-		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+-				      IEEE80211_DEAUTH_FRAME_LEN);
++		ieee80211_report_disconnect(sdata, frame_buf,
++					    sizeof(frame_buf), true,
++					    req->reason_code);
+ 
+ 		return 0;
+ 	}
+@@ -4914,8 +4937,9 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
+ 
+ 		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       req->reason_code, tx, frame_buf);
+-		cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+-				      IEEE80211_DEAUTH_FRAME_LEN);
++		ieee80211_report_disconnect(sdata, frame_buf,
++					    sizeof(frame_buf), true,
++					    req->reason_code);
+ 		return 0;
+ 	}
+ 
+@@ -4947,8 +4971,8 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 			       req->reason_code, !req->local_state_change,
+ 			       frame_buf);
+ 
+-	cfg80211_tx_mlme_mgmt(sdata->dev, frame_buf,
+-			      IEEE80211_DEAUTH_FRAME_LEN);
++	ieee80211_report_disconnect(sdata, frame_buf, sizeof(frame_buf), true,
++				    req->reason_code);
+ 
+ 	return 0;
+ }
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
