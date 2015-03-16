@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45575 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756731AbbCCOna (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60735 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964873AbbCPRHU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 09:43:30 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Fred Chou <fred.chou.nd@gmail.com>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: avoid memcpy when downloading firmware
-References: <1425356643-2707-1-git-send-email-fred.chou.nd@gmail.com>
-	<1425362407.5130.161.camel@edumazet-glaptop2.roam.corp.google.com>
-	<54F5C813.4030505@gmail.com>
-Date: Tue, 03 Mar 2015 16:43:20 +0200
-In-Reply-To: <54F5C813.4030505@gmail.com> (Fred Chou's message of "Tue, 03 Mar
-	2015 22:41:23 +0800")
-Message-ID: <87oaoa87lj.fsf@kamboji.qca.qualcomm.com> (sfid-20150303_154408_854581_42D66B02)
+	Mon, 16 Mar 2015 13:07:20 -0400
+Date: Mon, 16 Mar 2015 18:07:14 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Joe Perches <joe@perches.com>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	"M. Vefa Bicakci" <m.v.b@runbox.com>,
+	Matthias Beyer <mail@beyermatthias.de>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Larry.Finger@lwfinger.net
+Subject: Re: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's
+ rtw_security.c
+Message-ID: <20150316170714.GB20171@kroah.com> (sfid-20150316_180737_868213_466FEB8D)
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+ <20150315093142.GY24643@lucy.3gs>
+ <10669062.ZZNVxH5Tl9@lenny>
+ <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org>
+ <1426524927.23897.9.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426524927.23897.9.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fred Chou <fred.chou.nd@gmail.com> writes:
+On Mon, Mar 16, 2015 at 09:55:27AM -0700, Joe Perches wrote:
+> On Mon, 2015-03-16 at 12:01 -0400, Jes Sorensen wrote:
+> > For staging patches, you should always post patches against the
+> > staging-next tree. Please rebase them and repost them.
+> 
+> Greg is now preferring patches against his
+> staging-testing branch
+> 
 
->> Are you sure usb_control_msg() accepts vmalloc()ed buffers ?
->> 
->> My guess is the answer is no.
->> 
->> 
->
-> I agree, and I would like to drop the patch. Thanks.
+staging-testing only lasts a day or so before it turns into
+staging-next, so you are usually safe with using staging-next.
 
-I dropped it from my queue.
+thanks,
 
--- 
-Kalle Valo
+greg k-h
