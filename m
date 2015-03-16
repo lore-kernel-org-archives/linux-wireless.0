@@ -1,67 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:64828 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751737AbbCJTt2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 15:49:28 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-Date: Tue, 10 Mar 2015 20:49:18 +0100
-Message-ID: <3817307.UNCtDNMakZ@wuerfel> (sfid-20150310_204938_840855_112AABA8)
-In-Reply-To: <20150310173550.GT5264@atomide.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <CAB3XZEdK2O7tSSTchvRQtaefzCECjjQ-biQmOBHGdzJaBknSFQ@mail.gmail.com> <20150310173550.GT5264@atomide.com>
+Received: from mail.us.es ([193.147.175.20]:49089 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753062AbbCPNIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2015 09:08:07 -0400
+Date: Mon, 16 Mar 2015 14:11:13 +0100
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: Richard Weinberger <richard@nod.at>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
+	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
+Subject: Re: [PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc
+ file
+Message-ID: <20150316131113.GA5744@salvia> (sfid-20150316_140818_129629_0E15C66E)
+References: <1426246276-15839-1-git-send-email-richard@nod.at>
+ <1426246276-15839-5-git-send-email-richard@nod.at>
+ <20150313121539.GA14488@salvia>
+ <5502E99A.2060901@nod.at>
+ <20150313135329.GA6054@salvia>
+ <5502F28F.9050601@nod.at>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5502F28F.9050601@nod.at>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10 March 2015 10:35:50 Tony Lindgren wrote:
-> * Eliad Peller <eliad@wizery.com> [150310 10:01]:
-> > i'm really not familiar with the common clock framework, but there
-> > still doesn't seem to be a way to determine whether a clock is XTAL or
-> > not (which is what Luca's patch was about). should we use compatible
-> > flag in such case? i'm not sure it sounds right.
+On Fri, Mar 13, 2015 at 03:22:07PM +0100, Richard Weinberger wrote:
+> Am 13.03.2015 um 14:53 schrieb Pablo Neira Ayuso:
+> >> You mean statistics via netlink attributes? I can add that!
 > > 
-> > anyway, i'd really prefer, if possible, starting with the wl18xx
-> > bindings, and defer the wl12xx complications to later on.
-> > (i also need to find some wl12xx card in order to actually test the
-> > patches once i'll have them...)
+> > Add a new NFQNL_CFG_CMD_STATS command to request the statistics. If
+> > NLM_F_DUMP is set, then we'll basically provide the full list of
+> > instances. Otherwise, in case you want to retrieve stats for a
+> > specific netlink socket, you can use the netlink portID as index.
+> > And you'll have to add attributes for this new command, yes.
+> 
+> This was my plan. Thanks for the pointer!
+
+It would be great if you can contribute this new interface.
+
+> >> But I think we should also fix the format string of the proc file
+> >> as the fix is easy and non-intrusive.
 > > 
-> > we do have to make sure these wl18xx bindings are future-compatible
-> > with the wl12xx ones, but i think the current bindings are pretty much
-> > standard (and are actually a subset of the bindings needed by wl12xx),
-> > so it should be fine.
+> > Unfortunately we don't know how many people are relying on that
+> > output, I prefer to remain conservative and provide a proper netlink
+> > interface for this.
 > 
-> Well how about add just the parsing of the clock and assume it's always
-> WL12XX_REFCLOCK_38 for now as that's the only thing we're currently
-> using. Then we can add a property or compatible value if using something
-> else as needed.
+> I understand your concerns but an application which is able to parse positive
+> and negative numbers can also parse pure positives.
+> Just made a small test application, glibc's %d in sscanf() can also deal with UINT_MAX.
+> And I don't expect that applications to check whether the returned values from
+> /proc/net/netfilter/nfnetlink_queue are between INT_MIN and INT_MAX.
 > 
+> That said, I'd have assumed that an user would report negative values as plain kernel bug.
 
-We have two exceptions:
+Makes sense, please fix net/netfilter/nfnetlink_log.c too.
 
-static void __init omap3_zoom_legacy_init(void)
-{
-        legacy_init_wl12xx(WL12XX_REFCLOCK_26, 0, 162);
-}
-
-static void __init omap4_sdp_legacy_init(void)
-{
-        legacy_init_wl12xx(WL12XX_REFCLOCK_26,
-                           WL12XX_TCXOCLOCK_26, 53);
-}
-
-Where do those clocks come from? If these are always fixed-rate
-clocks coming from an external clock provider, using a separate
-compatible string in the clock provider would seem reasonable to
-me, but we can do that once we have to: none of the machines
-we support use an XTAL clock input.
-
-	Arnd
+Thanks.
