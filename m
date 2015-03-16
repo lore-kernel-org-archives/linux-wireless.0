@@ -1,56 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:36409 "EHLO aibo.runbox.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60860 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756297AbbCMDhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 23:37:00 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: m.v.b@runbox.com
-Subject: [PATCH 00/16] checkpatch clean-up of rtl8723au's rtw_security.c
-Date: Thu, 12 Mar 2015 23:15:16 -0400
-Message-Id: <1426216532-24058-1-git-send-email-m.v.b@runbox.com> (sfid-20150313_044013_716934_B9307991)
+	id S933754AbbCPQCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2015 12:02:01 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "M. Vefa Bicakci" <m.v.b@runbox.com>
+Cc: Matthias Beyer <mail@beyermatthias.de>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org
+Subject: Re: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's rtw_security.c
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+	<20150315093142.GY24643@lucy.3gs> <10669062.ZZNVxH5Tl9@lenny>
+Date: Mon, 16 Mar 2015 12:01:33 -0400
+In-Reply-To: <10669062.ZZNVxH5Tl9@lenny> (M. Vefa Bicakci's message of "Sun,
+	15 Mar 2015 09:51 -0400")
+Message-ID: <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150316_170227_838480_832E4B14)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These commits address a number of checkpatch.pl warnings and errors
-in rtl8723au's rtw_security.c.
+"M. Vefa Bicakci" <m.v.b@runbox.com> writes:
+> Hello Matthias,
+>
+> Thank you for reviewing the patches!
+>
+> I have based and tested these commits on Stephen Rothwell's
+> linux-next.git/master branch. It is possible that I made a mistake
+> by doing this.
+>
+> Nevertheless, I have just verified that these patches cleanly apply to the
+> current version of Greg Kroah-Hartman's staging.git/staging-next branch, [1]
+> as well as Stephen Rothwell's linux-next.git/master branch. [2]
+>
+> In my local repo, here are my remotes:
+>
+> $ git remote -v | grep -E "staging|next" | grep "(fetch)$"
+> next
+> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+> (fetch)
+> staging
+> https://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
+> (fetch)
+>
+>
+> I have just fetched both of these remotes.
+>
+> $ git log -1 --oneline next/master
+> a68b04c773 Add linux-next specific files for 20150313
+>
+> $ git log -1 --oneline staging/staging-next 
+> 7aa5d5097d Staging: rtl8192u: Use __packed instead of __attribute__((packed))
+>
+>
+> And here are my two local branches with my commits applied:
+>
+> # Output slightly edited to reduce line length.
+> $ git branch -vv | grep -E "staging|next"
+> * linux-next c8ab62fb9c [next/master: ahead 16] staging: rtl8723au:
+> Remove unneeded comments
+>   staging-next 63f451681e [staging/staging-next: ahead 16] staging:
+> rtl8723au: Remove unneeded comments
+>
+>
+> I hope this clarifies my set-up. Is there something I am doing incorrectly?
+> If there is anything I can assist with, please let me know.
+>
+> Thank you,
+>
+> Vefa
+>
+> [1]
+> https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/log/?h=staging-next
+> [2] https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/
 
-Prior to this set of commits, checkpatch.pl reported the following:
-	total: 77 errors, 138 warnings, 1621 lines checked
+For staging patches, you should always post patches against the
+staging-next tree. Please rebase them and repost them.
 
-After applying this set of commits, checkpatch.pl reports the following:
-	total: 0 errors, 39 warnings, 1627 lines checked
-where the only remaining warnings relate to lines longer than 80
-characters and quoted strings split across multiple lines.
-
-There are also a number of commits which improve the code in other ways.
-The commit titled "Reorganize a few functions to remove indentation"
-reworks two functions to make them more readable.
-
-All of the individual commits have been verified to compile successfully
-individually via the use of the interactive rebase feature of git.
-
-M. Vefa Bicakci (16):
-  staging: rtl8723au: Reformat whitespace to increase readability
-  staging: rtl8723au: Fix "before/around/after" whitespace issues
-  staging: rtl8723au: else should follow close brace
-  staging: rtl8723au: Fix the indentation of two lines
-  staging: rtl8723au: Reorganize a few functions to remove indentation
-  staging: rtl8723au: Do not initialize a static to 0
-  staging: rtl8723au: else is not generally useful after a return
-  staging: rtl8723au: Remove unneeded curly braces
-  staging: rtl8723au: trailing statements should be on next line
-  staging: rtl8723au: that open brace should be on the previous line
-  staging: rtl8723au: No spaces at the start of a line
-  staging: rtl8723au: Adjust whitespace in and around comments
-  staging: rtl8723au: suspect code indent for conditional statements
-  staging: rtl8723au: Improve readability of two very long lines
-  staging: rtl8723au: Correct a typo in a trace log line
-  staging: rtl8723au: Remove unneeded comments
-
- drivers/staging/rtl8723au/core/rtw_security.c | 762 +++++++++++++-------------
- 1 file changed, 384 insertions(+), 378 deletions(-)
-
--- 
-2.1.4
-
+Jes
