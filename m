@@ -1,46 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45719 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753151AbbC3JGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 05:06:31 -0400
-Message-ID: <1427706386.26117.21.camel@sipsolutions.net> (sfid-20150330_110634_690008_3021BBF0)
-Subject: Re: [RFC] mac80211: check A-MSDU inner frame source address on AP
- interfaces.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Mon, 30 Mar 2015 11:06:26 +0200
-In-Reply-To: <1427398823-30321-1-git-send-email-michael-dev@fami-braun.de> (sfid-20150326_204718_452345_B3C0C9FE)
-References: <1427398823-30321-1-git-send-email-michael-dev@fami-braun.de>
-	 (sfid-20150326_204718_452345_B3C0C9FE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:38547 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933138AbbCPQOW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2015 12:14:22 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [PATCHv2,
+ 1/9] mwifiex: lock main process till reinitialization of vif is over
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1426248479-28451-2-git-send-email-patila@marvell.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <liuzy@marvell.com>, <crlo@marvell.com>,
+	<pchen@marvell.com>, <szli@marvell.com>, <nishants@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Message-Id: <20150316161421.C29ED140007@smtp.codeaurora.org> (sfid-20150316_171425_971415_57F2D014)
+Date: Mon, 16 Mar 2015 16:14:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-03-26 at 20:40 +0100, Michael Braun wrote:
-> When using WPA security, the station and thus the required key is
-> identified by its mac address when packets are received. So a
-> station usually cannot spoof its source mac address.
+
+> A crash was detected while changing virtual interface type is in
+> progress. This was tracked to race condition in accessing bss_priority
+> table while change is in progress. This patch ensures that main_process
+> and rx_process works are locked while we change virtual interface.
 > 
-> But when a station sends an A-MSDU frame, port control and crypto
-> is done using the outer mac address, while the packets delivered
-> and forwarded use the inner mac address.
-> 
-> IEEE 802.11-2012 mandates that the outer source mac address should
-> match the inner source address (section 8.3.2.2). For the
-> destination mac address, matching is not required (section 10.23.15).
-> 
-> So I was wondering whether some checking would be useful?
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Avinash Patil <patila@marvell.com>
 
-Makes sense, but perhaps it should just be done in A-MSDU de-aggregation
-in ieee80211_amsdu_to_8023s() so we can simply not even allocate the skb
-for that frame if it's mismatched? It'd only be possible for those
-callers who set has_80211_header=true, but mac80211 would still be
-covered.
+Thanks, 9 patches applied to wireless-drivers-next.git:
 
-Alternatively, we could pass the TA into the function, and then check
-against that.
+a9adbcb3355c mwifiex: lock main process till reinitialization of vif is over
+621599446dae mwifiex: rename alloc_rx_buf to alloc_dma_aligned_buf
+ea44f4d04c93 mwifiex: enhance SD8897 MP aggregation limits
+b2713f67f7a4 mwifiex: avoid queue_work while work is ongoing
+39df5e8233bf mwifiex: get rid of BA setup helper functions
+690e792cb9d7 mwifiex: remove_bss_prio_lock
+e35000ead491 mwifiex: preprocess packets from TX queue
+92263a841b15 mwifiex: add SDIO rx single port aggregation
+960d6d08e395 mwifiex: delay skb allocation for RX until cmd53 over
 
-johannes
-
+Kalle Valo
