@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:35636 "EHLO plane.gmane.org"
+Received: from mx1.redhat.com ([209.132.183.28]:45670 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158AbbCOCKI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 22:10:08 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1YWy0C-0000oL-FT
-	for linux-wireless@vger.kernel.org; Sun, 15 Mar 2015 03:10:04 +0100
-Received: from 177.52-243-81.adsl-dyn.isp.belgacom.be ([81.243.52.177])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2015 03:10:04 +0100
-Received: from koen.bulcke by 177.52-243-81.adsl-dyn.isp.belgacom.be with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2015 03:10:04 +0100
-To: linux-wireless@vger.kernel.org
-From: Koen Bulcke <koen.bulcke@gmail.com>
-Subject: Re: Broadcom 43340
-Date: Sun, 15 Mar 2015 02:03:59 +0000 (UTC)
-Message-ID: <loom.20150315T024445-345@post.gmane.org> (sfid-20150315_031021_404495_E48E6039)
-References: <550482A2.3080803@gmail.com> <55048833.90408@broadcom.com> <55048BB1.9080906@gmail.com> <550491DA.6030105@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S932413AbbCPQgG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2015 12:36:06 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "M. Vefa Bicakci" <m.v.b@runbox.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org
+Subject: Re: [PATCH v2 10/16] staging: rtl8723au: that open brace should be on the previous line
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+	<1426378241-32469-11-git-send-email-m.v.b@runbox.com>
+Date: Mon, 16 Mar 2015 12:36:04 -0400
+In-Reply-To: <1426378241-32469-11-git-send-email-m.v.b@runbox.com> (M. Vefa
+	Bicakci's message of "Sat, 14 Mar 2015 20:10:35 -0400")
+Message-ID: <wrfj61a0sxvv.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150316_173625_249792_575D17C8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+"M. Vefa Bicakci" <m.v.b@runbox.com> writes:
+> Correct two instances of the checkpatch.pl error indicating that the
+> opening curly braces should not be on new lines:
+> 	ERROR: that open brace { should be on the previous line
+>
+> Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_security.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+> index 803f8965a4..2d762276d3 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_security.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_security.c
+> @@ -760,8 +760,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+>  
+>  	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
+>  
+> -	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
+> -	{
+> +	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
+>  	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+>  				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
+>  		res = _FAIL;
 
-Finally I got some progress thanks to your comment, 
-I can now see the Wifi
-networks on my Asus X205TA (kernel 4.0RC3). 
-However, connecting to any
-network seems still to be an issue:
+If you are mangling a line like this, don't just fix one ugliness, fix
+it up properly by breaking down the line to avoid the > 80 character
+mess.
 
-vempc:~$ sudo wpa_supplicant -Dwext -iwlan0 -cwpa.conf
-[sudo] password 
-Successfully initialized wpa_supplicant
-ioctl[SIOCSIWENCODEEXT]: Invalid argument
-ioctl[SIOCSIWENCODEEXT]: Invalid argument
-ioctl[SIOCGIWSCAN]: Resource temporarily unavailable
-ioctl[SIOCGIWSCAN]: Resource temporarily unavailable
-wlan0: Trying to associate with a1:b1:e9:da:fd:75 
-(SSID='WiFiD85' freq=2472 MHz)
-ioctl[SIOCSIWFREQ]: Operation not supported
-wlan0: Association request to the driver failed
-wlan0: Authentication with a1:b1:e9:da:fd:75 timed out.
-wlan0: CTRL-EVENT-DISCONNECTED 
-bssid=a1:b1:e9:da:fd:75 reason=3
-locally_generated=1
-ioctl[SIOCSIWSCAN]: Invalid exchange
-
-
-Thanks,
-Koen.
-
-
+Cheers,
+Jes
