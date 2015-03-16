@@ -1,33 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:17874 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728AbbCWPZ0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37810 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933806AbbCPQF1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 11:25:26 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] ath10k: enable Adaptive Noise Immunity (ANI) by default
-References: <1426763280-11284-1-git-send-email-arnagara@qti.qualcomm.com>
-Date: Mon, 23 Mar 2015 17:25:16 +0200
-In-Reply-To: <1426763280-11284-1-git-send-email-arnagara@qti.qualcomm.com>
-	(Ashok Raj Nagarajan's message of "Thu, 19 Mar 2015 16:37:59 +0530")
-Message-ID: <87y4mnd9cz.fsf@kamboji.qca.qualcomm.com> (sfid-20150323_162531_739727_3734105B)
-MIME-Version: 1.0
+	Mon, 16 Mar 2015 12:05:27 -0400
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [2/3] mwifiex: Add support for auto ARP in mwifiex.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1426145920-5288-2-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Maithili Hinge <maithili@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20150316160527.4993413FB6D@smtp.codeaurora.org> (sfid-20150316_170531_167331_0CA9B9F3)
+Date: Mon, 16 Mar 2015 16:05:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> writes:
 
-> ANI helps to improve connectvity and performance in a noisy environment.
-> Enabling this feature would help the user experience a better and stable
-> wireless connection in a noisy environmnet. This feature is currently not
-> enabled for ath10k. Enable this feature by default.
->
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+> From: Maithili Hinge <maithili@marvell.com>
+> 
+> This patch adds support for auto ARP feature in mwifiex.
+> The device will respond to ARP requests from the network
+> with ARP response in suspended state without waking up the host.
+> This feature is enabled in the driver by default.
+> 
+> Signed-off-by: Maithili Hinge <maithili@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Thanks, both patches applied.
+Thanks, 2 patches applied to wireless-drivers-next.git:
 
--- 
+b533be189732 mwifiex: Add support for auto ARP in mwifiex.
+6e9344fd8e90 mwifiex: use del_timer variant in interrupt context
+
 Kalle Valo
