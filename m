@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:34675 "EHLO www.osadl.org"
+Received: from mx1.redhat.com ([209.132.183.28]:44090 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753296AbbCNJmB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 05:42:01 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath10k: thermal: match wait_for_completion_timeout return type
-Date: Sat, 14 Mar 2015 05:37:22 -0400
-Message-Id: <1426325842-19774-1-git-send-email-hofrat@osadl.org> (sfid-20150314_104253_784134_514432BC)
+	id S932810AbbCPQi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Mar 2015 12:38:28 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "M. Vefa Bicakci" <m.v.b@runbox.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	joe@perches.com, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org
+Subject: Re: [PATCH v2 15/16] staging: rtl8723au: Correct a typo in a trace log line
+References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+	<1426378241-32469-16-git-send-email-m.v.b@runbox.com>
+Date: Mon, 16 Mar 2015 12:38:03 -0400
+In-Reply-To: <1426378241-32469-16-git-send-email-m.v.b@runbox.com> (M. Vefa
+	Bicakci's message of "Sat, 14 Mar 2015 20:10:40 -0400")
+Message-ID: <wrfj1tkosxsk.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150316_173844_823729_3157BE41)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-An appropriately named unsigned long is added and the assignments fixed up.
+"M. Vefa Bicakci" <m.v.b@runbox.com> writes:
+> Correct a typo in rtl8723au's rtw_security.c which was most likely
+> caused by a copy and paste mistake. Prior to this commit, the TKIP
+> decryption function referred to WEP in its trace log output.
+>
+> Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_security.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+> index eb3544866a..e8d3ce53bb 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_security.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_security.c
+> @@ -757,7 +757,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+>  
+>  	if (actual_crc != expected_crc) {
+>  		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+> -			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
+> +			 ("rtw_tkip_decrypt23a:icv CRC mismatch: "
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+If you made this ("%s:icv ....", __func__, ....
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
+you wouldn't have to worry about matching the function name to the debug
+text, in case the function later got renamed.
 
-Patch is against 4.0-rc3 (localversion-next is -next-20150313)
+Cheers,
+Jes
 
- drivers/net/wireless/ath/ath10k/thermal.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index aede750..dfa7c93 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -127,6 +127,7 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
- {
- 	struct ath10k *ar = dev_get_drvdata(dev);
- 	int ret, temperature;
-+	unsigned long time_left;
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -148,9 +149,9 @@ static ssize_t ath10k_thermal_show_temp(struct device *dev,
- 		goto out;
- 	}
- 
--	ret = wait_for_completion_timeout(&ar->thermal.wmi_sync,
--					  ATH10K_THERMAL_SYNC_TIMEOUT_HZ);
--	if (ret == 0) {
-+	time_left = wait_for_completion_timeout(&ar->thermal.wmi_sync,
-+						ATH10K_THERMAL_SYNC_TIMEOUT_HZ);
-+	if (!time_left) {
- 		ath10k_warn(ar, "failed to synchronize thermal read\n");
- 		ret = -ETIMEDOUT;
- 		goto out;
--- 
-1.7.10.4
-
+>  			  "actual: %08x, expected: %08x\n",
+>  			  actual_crc, expected_crc));
+>  		res = _FAIL;
