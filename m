@@ -1,41 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54743 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751535AbbCCJQK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 04:16:10 -0500
-Message-ID: <1425374168.2450.17.camel@sipsolutions.net> (sfid-20150303_101615_497789_9A9EB162)
-Subject: Re: [PATCH] mac80211: disable u-APSD queues by default
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:44727 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753791AbbCQOMJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 10:12:09 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org
-Date: Tue, 03 Mar 2015 10:16:08 +0100
-In-Reply-To: <1423568924-11895-1-git-send-email-michal.kazior@tieto.com> (sfid-20150210_125033_043617_6CA9D3E9)
-References: <1423568924-11895-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20150210_125033_043617_6CA9D3E9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Date: Tue, 17 Mar 2015 16:11:48 +0200
+Message-Id: <1426601510-8251-3-git-send-email-luca@coelho.fi> (sfid-20150317_151221_567042_FB4559D7)
+In-Reply-To: <1426601510-8251-1-git-send-email-luca@coelho.fi>
+References: <1426601510-8251-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH iw v2 2/4] iw: implement scheduled scan
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-02-10 at 12:48 +0100, Michal Kazior wrote:
-> Some APs experience problems when working with
-> U-APSD. Decreasing the probability of that
-> happening by using legacy mode for all ACs but VO
-> isn't enough.
-> 
-> Cisco 4410N originally forced us to enable VO by
-> default only because it treated non-VO ACs as
-> legacy.
-> 
-> However some APs (notably Netgear R7000) silently
-> reclassify packets to different ACs. Since u-APSD
-> ACs require trigger frames for frame retrieval
-> clients would never see some frames (e.g. ARP
-> responses) or would fetch them accidentally after
-> a long time.
+From: Luciano Coelho <luciano.coelho@nokia.com>
 
-This makes me a little sad, but I've applied this and even added a Cc
-stable tag due to the interoperability issues.
+Add sched_start, sched_stop and events parsing for scheduled scan.
+For now, only passive scans are supported.
 
-johannes
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+---
+ event.c |  9 +++++++++
+ info.c  |  6 ++++++
+ scan.c  | 29 +++++++++++++++++++++++++++++
+ 3 files changed, 44 insertions(+)
+
+diff --git a/event.c b/event.c
+index 71ab7f7..929854b 100644
+--- a/event.c
++++ b/event.c
+@@ -359,6 +359,15 @@ static int print_event(struct nl_msg *msg, void *arg)
+ 		}
+ 		printf("\n");
+ 		break;
++	case NL80211_CMD_START_SCHED_SCAN:
++		printf("scheduled scan started\n");
++		break;
++	case NL80211_CMD_SCHED_SCAN_STOPPED:
++		printf("sched scan stopped\n");
++		break;
++	case NL80211_CMD_SCHED_SCAN_RESULTS:
++		printf("got scheduled scan results\n");
++		break;
+ 	case NL80211_CMD_REG_CHANGE:
+ 		printf("regulatory domain change: ");
+ 
+diff --git a/info.c b/info.c
+index 1df503f..66887e3 100644
+--- a/info.c
++++ b/info.c
+@@ -232,6 +232,12 @@ next:
+ 	if (tb_msg[NL80211_ATTR_MAX_SCAN_IE_LEN])
+ 		printf("\tmax scan IEs length: %d bytes\n",
+ 		       nla_get_u16(tb_msg[NL80211_ATTR_MAX_SCAN_IE_LEN]));
++	if (tb_msg[NL80211_ATTR_MAX_NUM_SCHED_SCAN_SSIDS])
++		printf("\tmax # sched scan SSIDs: %d\n",
++		       nla_get_u8(tb_msg[NL80211_ATTR_MAX_NUM_SCHED_SCAN_SSIDS]));
++	if (tb_msg[NL80211_ATTR_MAX_MATCH_SETS])
++		printf("\tmax # match sets: %d\n",
++		       nla_get_u8(tb_msg[NL80211_ATTR_MAX_MATCH_SETS]));
+ 
+ 	if (tb_msg[NL80211_ATTR_WIPHY_FRAG_THRESHOLD]) {
+ 		unsigned int frag;
+diff --git a/scan.c b/scan.c
+index d1c3bf2..e534fd4 100644
+--- a/scan.c
++++ b/scan.c
+@@ -1980,3 +1980,32 @@ COMMAND(scan, trigger, "[freq <freq>*] [ies <hex as 00:11:..>] [meshid <meshid>]
+ 	NL80211_CMD_TRIGGER_SCAN, 0, CIB_NETDEV, handle_scan,
+ 	 "Trigger a scan on the given frequencies with probing for the given\n"
+ 	 "SSIDs (or wildcard if not given) unless passive scanning is requested.");
++
++
++static int handle_start_sched_scan(struct nl80211_state *state,
++				   struct nl_cb *cb, struct nl_msg *msg,
++				   int argc, char **argv, enum id_input id)
++{
++	return parse_sched_scan(msg, &argc, &argv);
++}
++
++static int handle_stop_sched_scan(struct nl80211_state *state, struct nl_cb *cb,
++				  struct nl_msg *msg, int argc, char **argv,
++				  enum id_input id)
++{
++	if (argc != 0)
++		return 1;
++
++	return 0;
++}
++
++COMMAND(scan, sched_start,
++	SCHED_SCAN_OPTIONS,
++	NL80211_CMD_START_SCHED_SCAN, 0, CIB_NETDEV, handle_start_sched_scan,
++	"Start a scheduled scan at the specified interval on the given frequencies\n"
++	"with probing for the given SSIDs (or wildcard if not given) unless passive\n"
++	"scanning is requested.  If matches are specified, only matching results\n"
++	"will be returned.");
++COMMAND(scan, sched_stop, "",
++	NL80211_CMD_STOP_SCHED_SCAN, 0, CIB_NETDEV, handle_stop_sched_scan,
++	"Stop an ongoing scheduled scan.");
+-- 
+2.1.4
 
