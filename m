@@ -1,86 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:36738 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751450AbbCOSnm (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:45835 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932848AbbCQR2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 14:43:42 -0400
-Received: by wgra20 with SMTP id a20so24001664wgr.3
-        for <linux-wireless@vger.kernel.org>; Sun, 15 Mar 2015 11:43:40 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: gpio: use predictable base for all BCM47XX buses
-Date: Sun, 15 Mar 2015 19:43:14 +0100
-Message-Id: <1426444994-21506-1-git-send-email-zajec5@gmail.com> (sfid-20150315_194348_357767_769EA588)
+	Tue, 17 Mar 2015 13:28:18 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v3 10/10] mac80211: add standard deviation to Minstrels throughput statistic
+Date: Tue, 17 Mar 2015 18:29:19 +0100
+Message-Id: <1426613359-31306-10-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150317_182904_332299_9BAA852F)
+In-Reply-To: <1426613359-31306-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1426613359-31306-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some BCM47XX SoC routers have LEDs connected to extra PCIe bcma buses.
-Handling them in arch code requires predictable GPIO numbers.
+This patch adds the statistical descriptor "standard deviation"
+to better describe the current properties of Minstrel and
+Minstrel-HTs success probability distribution. The standard
+deviation (SD) is calculated as exponential weighted moving
+standard deviation (EWMSD) and its current value is added as
+new column in all rc_stats (in debugfs).
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
 ---
- drivers/bcma/driver_gpio.c | 23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+ net/mac80211/rc80211_minstrel.c            | 19 ++++++++++++++-----
+ net/mac80211/rc80211_minstrel.h            | 22 +++++++++++++++++++++-
+ net/mac80211/rc80211_minstrel_debugfs.c    | 19 ++++++++++++-------
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 14 +++++++++-----
+ 4 files changed, 56 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/bcma/driver_gpio.c b/drivers/bcma/driver_gpio.c
-index dce34fb..74ccb02 100644
---- a/drivers/bcma/driver_gpio.c
-+++ b/drivers/bcma/driver_gpio.c
-@@ -17,6 +17,8 @@
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index c2afe51..30512d0 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -156,7 +156,7 @@ minstrel_update_rates(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ }
  
- #include "bcma_private.h"
- 
-+#define BCMA_GPIO_MAX_PINS	32
+ /*
+-* Recalculate success probabilities and counters for a given rate using EWMA
++* Recalculate statistics and counters of a given rate
+ */
+ void
+ minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
+@@ -164,11 +164,20 @@ minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
+ 	if (unlikely(mrs->attempts > 0)) {
+ 		mrs->sample_skipped = 0;
+ 		mrs->cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
+-		if (unlikely(!mrs->att_hist))
++		if (unlikely(!mrs->att_hist)) {
+ 			mrs->prob_ewma = mrs->cur_prob;
+-		else
++		} else {
++			/* update exponential weighted moving variance */
++			mrs->prob_ewmsd = minstrel_ewmsd(mrs->prob_ewmsd,
++							 mrs->cur_prob,
++							 mrs->prob_ewma,
++							 EWMA_LEVEL);
 +
- static inline struct bcma_drv_cc *bcma_gpio_get_cc(struct gpio_chip *chip)
- {
- 	return container_of(chip, struct bcma_drv_cc, gpio);
-@@ -204,6 +206,7 @@ static void bcma_gpio_irq_domain_exit(struct bcma_drv_cc *cc)
++			/*update exponential weighted moving avarage */
+ 			mrs->prob_ewma = minstrel_ewma(mrs->prob_ewma,
+-						     mrs->cur_prob, EWMA_LEVEL);
++						       mrs->cur_prob,
++						       EWMA_LEVEL);
++		}
+ 		mrs->att_hist += mrs->attempts;
+ 		mrs->succ_hist += mrs->success;
+ 	} else {
+@@ -195,7 +204,7 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
  
- int bcma_gpio_init(struct bcma_drv_cc *cc)
- {
-+	struct bcma_bus *bus = cc->core->bus;
- 	struct gpio_chip *chip = &cc->gpio;
- 	int err;
+-		/* Update success probabilities per rate */
++		/* Update statistics of success probability per rate */
+ 		minstrel_calc_rate_stats(mrs);
  
-@@ -222,7 +225,7 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- 	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
- 		chip->of_node	= cc->core->dev.of_node;
- #endif
--	switch (cc->core->bus->chipinfo.id) {
-+	switch (bus->chipinfo.id) {
- 	case BCMA_CHIP_ID_BCM5357:
- 	case BCMA_CHIP_ID_BCM53572:
- 		chip->ngpio	= 32;
-@@ -231,13 +234,17 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
- 		chip->ngpio	= 16;
- 	}
+ 		/* Sample less often below the 10% chance of success.
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 38158b0..713c81e 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -35,6 +35,24 @@ minstrel_ewma(int old, int new, int weight)
+ 	return old + incr;
+ }
  
--	/* There is just one SoC in one device and its GPIO addresses should be
--	 * deterministic to address them more easily. The other buses could get
--	 * a random base number. */
--	if (cc->core->bus->hosttype == BCMA_HOSTTYPE_SOC)
--		chip->base		= 0;
--	else
--		chip->base		= -1;
-+	/*
-+	 * On MIPS we register GPIO devices (LEDs, buttons) using absolute GPIO
-+	 * pin numbers. We don't have Device Tree there and we can't really use
-+	 * relative (per chip) numbers.
-+	 * So let's use predictable base for BCM47XX and "random" for all other.
-+	 */
-+#if IS_BUILTIN(CONFIG_BCM47XX)
-+	chip->base		= bus->num * BCMA_GPIO_MAX_PINS;
-+#else
-+	chip->base		= -1;
-+#endif
++/*
++ * Perform EWMSD (Exponentially Weighted Moving Standard Deviation) calculation
++ */
++static inline int
++minstrel_ewmsd(int old_ewmsd, int cur_prob, int prob_ewma, int weight)
++{
++	int diff, incr, tmp_var;
++
++	/* calculate exponential weighted moving variance */
++	diff = MINSTREL_TRUNC((cur_prob - prob_ewma) * 1000000);
++	incr = (EWMA_DIV - weight) * diff / EWMA_DIV;
++	tmp_var = old_ewmsd * old_ewmsd;
++	tmp_var = weight * (tmp_var + diff * incr / 1000000) / EWMA_DIV;
++
++	/* return standard deviation */
++	return (u16) int_sqrt(tmp_var);
++}
++
+ struct minstrel_rate_stats {
+ 	/* current / last sampling period attempts/success counters */
+ 	u16 attempts, last_attempts;
+@@ -45,9 +63,11 @@ struct minstrel_rate_stats {
  
- 	err = bcma_gpio_irq_domain_init(cc);
- 	if (err)
+ 	/* statistis of packet delivery probability
+ 	 *  cur_prob  - current prob within last update intervall
+-	 *  prob_ewma - exponential weighted moving average of prob */
++	 *  prob_ewma - exponential weighted moving average of prob
++	 *  prob_ewmsd - exp. weighted moving standard deviation of prob */
+ 	unsigned int cur_prob;
+ 	unsigned int prob_ewma;
++	u16 prob_ewmsd;
+ 
+ 	/* maximum retry counts */
+ 	u8 retry_count;
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index 3ed69ef..0a60bac 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -85,10 +85,12 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 	file->private_data = ms;
+ 	p = ms->buf;
+ 	p += sprintf(p, "\n");
+-	p += sprintf(p, "best   __________rate_________    __statistics__    "
+-			"________last_______    ______sum-of________\n");
+-	p += sprintf(p, "rate  [name idx airtime max_tp]  [ ø(tp) ø(prob)]  "
+-			"[prob.|retry|suc|att]  [#success | #attempts]\n");
++	p += sprintf(p, "best   __________rate_________    ______"
++			"statistics______    ________last_______    "
++			"______sum-of________\n");
++	p += sprintf(p, "rate  [name idx airtime max_tp]  [ ø(tp) ø(prob) "
++			"sd(prob)]  [prob.|retry|suc|att]  "
++			"[#success | #attempts]\n");
+ 
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+@@ -110,11 +112,13 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u     %3u.%1u %3u"
+-				"   %3u %-3u   %9llu   %-9llu\n",
++		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u    %3u.%1u"
++				"     %3u.%1u %3u   %3u %-3u   "
++				"%9llu   %-9llu\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
++				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+ 				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+@@ -180,11 +184,12 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
++		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
+ 				"%llu,%llu,%d,%d\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
++				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+ 				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index de034e4..e950059 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -86,11 +86,13 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%4u.%1u    %4u.%1u   %3u.%1u    %3u.%1u "
+-				"%3u   %3u %-3u   %9llu   %-9llu\n",
++		p += sprintf(p, "%4u.%1u   %4u.%1u   %3u.%1u    %3u.%1u"
++				"     %3u.%1u %3u   %3u %-3u   "
++				"%9llu   %-9llu\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
++				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+ 				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+@@ -128,10 +130,10 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 
+ 	p += sprintf(p, "\n");
+ 	p += sprintf(p, "              best   ____________rate__________    "
+-			"__statistics__    ________last_______    "
++			"______statistics______    ________last_______    "
+ 			"______sum-of________\n");
+ 	p += sprintf(p, "mode guard #  rate  [name   idx airtime  max_tp]  "
+-			"[ ø(tp) ø(prob)]  [prob.|retry|suc|att]  [#success | "
++			"[ ø(tp) ø(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | "
+ 			"#attempts]\n");
+ 
+ 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
+@@ -232,10 +234,12 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p,
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,%llu,%llu,",
++		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
++				"%u,%llu,%llu,",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
++				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+ 				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
 -- 
-1.8.4.5
+2.3.0
 
