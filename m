@@ -1,64 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:33358 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034AbbCSI57 (ORCPT
+Received: from mail-la0-f50.google.com ([209.85.215.50]:33952 "EHLO
+	mail-la0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753316AbbCQMd0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 04:57:59 -0400
-Received: by ladw1 with SMTP id w1so56520801lad.0
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2015 01:57:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5509D1F9.5000609@broadcom.com>
-References: <550952B4.4050400@broadcom.com> <1426706320.3001.21.camel@sipsolutions.net>
- <5509D1F9.5000609@broadcom.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Thu, 19 Mar 2015 10:57:42 +0200
-Message-ID: <CA+XVXff7ZHeEUqg0z1HsBCqSQGQRb+56xMsPJYkuzSU1GcVxOw@mail.gmail.com> (sfid-20150319_095804_612503_F71D4F78)
-Subject: Re: wiphy band information
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 17 Mar 2015 08:33:26 -0400
+Received: by lagg8 with SMTP id g8so7135844lag.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2015 05:33:24 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 3/7] ath10k: implement adaptive qcs command
+Date: Tue, 17 Mar 2015 12:30:44 +0000
+Message-Id: <1426595448-1630-4-git-send-email-michal.kazior@tieto.com> (sfid-20150317_133332_548601_934B534C)
+In-Reply-To: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
+References: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 18, 2015 at 9:28 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 03/18/15 20:18, Johannes Berg wrote:
->>
->> Hi Arend,
->>
->>> Is it ok to update the wiphy band information after registration.
->>
->>
->> I believe this will cause issues.
->>
->>> In
->>> brcmfmac the firmware is queried to obtain the supported channels.
->>> However, it returns the channels for the current country set in
->>> firmware. So after probe/registration iw shows:
->>
->>
->>> Looks fine apart from the power levels so it made me wonder if what I am
->>> doing is allowed. Any opinion on this?
->>
->>
->> I think the regulatory flags will also break, since some are
->> pre-processed during wiphy registration.
->>
->>> I assume the supported band info is intended to show what hardware can
->>> do regardless of the configured country, but I have no way to pull that
->>> info from the device.
->>
->>
->> I'd recommend finding (and hard-coding) a superset of all the channels
->> that the hardware could supported, and then dynamically setting the
->> disabled flag on those channels that the (current) regulatory
->> information cannot do.
->
->
-> Depending on your reply that was the plan.
+This command will be used to configure
+multi-channel scheduler in firmware.
 
-btw, this is what's done in iwlwifi (iwlmvm) - all supported channels
-are registered with regulatory flags=0. Later on when specific
-countries are set, some channels are disabled/limited.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 16 ++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 30 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  4 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |  3 +++
+ drivers/net/wireless/ath/ath10k/wmi.h     |  1 +
+ 5 files changed, 54 insertions(+)
 
-Arik
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index f0a8b8d..3c8325c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -150,6 +150,7 @@ struct wmi_ops {
+ 					      u32 num_ac);
+ 	struct sk_buff *(*gen_sta_keepalive)(struct ath10k *ar,
+ 					     const struct wmi_sta_keepalive_arg *arg);
++	struct sk_buff *(*gen_adaptive_qcs)(struct ath10k *ar, bool enable);
+ };
+ 
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -1072,4 +1073,19 @@ ath10k_wmi_sta_keepalive(struct ath10k *ar,
+ 	return ath10k_wmi_cmd_send(ar, skb, cmd_id);
+ }
+ 
++static inline int
++ath10k_wmi_adaptive_qcs(struct ath10k *ar, bool enable)
++{
++	struct sk_buff *skb;
++
++	if (!ar->wmi.ops->gen_adaptive_qcs)
++		return -EOPNOTSUPP;
++
++	skb = ar->wmi.ops->gen_adaptive_qcs(ar, enable);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb, ar->wmi.cmd->adaptive_qcs_cmdid);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index fa3eb1b..a359a7e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -2561,6 +2561,34 @@ ath10k_wmi_tlv_op_gen_p2p_go_bcn_ie(struct ath10k *ar, u32 vdev_id,
+ 	return skb;
+ }
+ 
++static struct sk_buff *
++ath10k_wmi_tlv_op_gen_adaptive_qcs(struct ath10k *ar, bool enable)
++{
++	struct wmi_tlv_adaptive_qcs *cmd;
++	struct wmi_tlv *tlv;
++	struct sk_buff *skb;
++	void *ptr;
++	size_t len;
++
++	len = sizeof(*tlv) + sizeof(*cmd);
++	skb = ath10k_wmi_alloc_skb(ar, len);
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	ptr = (void *)skb->data;
++	tlv = ptr;
++	tlv->tag = __cpu_to_le16(WMI_TLV_TAG_STRUCT_RESMGR_ADAPTIVE_OCS_CMD);
++	tlv->len = __cpu_to_le16(sizeof(*cmd));
++	cmd = (void *)tlv->value;
++	cmd->enable = __cpu_to_le32(enable ? 1 : 0);
++
++	ptr += sizeof(*tlv);
++	ptr += sizeof(*cmd);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv adaptive qcs %d\n", enable);
++	return skb;
++}
++
+ /****************/
+ /* TLV mappings */
+ /****************/
+@@ -2685,6 +2713,7 @@ static struct wmi_cmd_map wmi_tlv_cmd_map = {
+ 	.gpio_output_cmdid = WMI_TLV_GPIO_OUTPUT_CMDID,
+ 	.pdev_get_temperature_cmdid = WMI_TLV_CMD_UNSUPPORTED,
+ 	.vdev_set_wmm_params_cmdid = WMI_TLV_VDEV_SET_WMM_PARAMS_CMDID,
++	.adaptive_qcs_cmdid = WMI_TLV_RESMGR_ADAPTIVE_OCS_CMDID,
+ };
+ 
+ static struct wmi_pdev_param_map wmi_tlv_pdev_param_map = {
+@@ -2858,6 +2887,7 @@ static const struct wmi_ops wmi_tlv_ops = {
+ 	.gen_p2p_go_bcn_ie = ath10k_wmi_tlv_op_gen_p2p_go_bcn_ie,
+ 	.gen_vdev_sta_uapsd = ath10k_wmi_tlv_op_gen_vdev_sta_uapsd,
+ 	.gen_sta_keepalive = ath10k_wmi_tlv_op_gen_sta_keepalive,
++	.gen_adaptive_qcs = ath10k_wmi_tlv_op_gen_adaptive_qcs,
+ };
+ 
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 06b37b2..1b373f2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1464,6 +1464,10 @@ struct wmi_tlv_roam_ev {
+ 	__le32 rssi;
+ } __packed;
+ 
++struct wmi_tlv_adaptive_qcs {
++	__le32 enable;
++} __packed;
++
+ void ath10k_wmi_tlv_attach(struct ath10k *ar);
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index eb66fc4..34412ee 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5249,6 +5249,7 @@ static const struct wmi_ops wmi_ops = {
+ 	/* .gen_bcn_tmpl not implemented */
+ 	/* .gen_prb_tmpl not implemented */
+ 	/* .gen_p2p_go_bcn_ie not implemented */
++	/* .gen_adaptive_qcs not implemented */
+ };
+ 
+ static const struct wmi_ops wmi_10_1_ops = {
+@@ -5312,6 +5313,7 @@ static const struct wmi_ops wmi_10_1_ops = {
+ 	/* .gen_bcn_tmpl not implemented */
+ 	/* .gen_prb_tmpl not implemented */
+ 	/* .gen_p2p_go_bcn_ie not implemented */
++	/* .gen_adaptive_qcs not implemented */
+ };
+ 
+ static const struct wmi_ops wmi_10_2_ops = {
+@@ -5436,6 +5438,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	/* .gen_bcn_tmpl not implemented */
+ 	/* .gen_prb_tmpl not implemented */
+ 	/* .gen_p2p_go_bcn_ie not implemented */
++	/* .gen_adaptive_qcs not implemented */
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 938e652..714c211 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -552,6 +552,7 @@ struct wmi_cmd_map {
+ 	u32 gpio_output_cmdid;
+ 	u32 pdev_get_temperature_cmdid;
+ 	u32 vdev_set_wmm_params_cmdid;
++	u32 adaptive_qcs_cmdid;
+ };
+ 
+ /*
+-- 
+2.1.4
+
