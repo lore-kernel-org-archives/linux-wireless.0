@@ -1,80 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:45121 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932601AbbCLPyC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 11:54:02 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH 2/3 RFC] ath10k: wmi: match wait_for_completion_timeout return type
-Date: Thu, 12 Mar 2015 11:49:22 -0400
-Message-Id: <1426175362-8640-1-git-send-email-hofrat@osadl.org> (sfid-20150312_165752_802802_FEF2033C)
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:61444 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753294AbbCQWUf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 18:20:35 -0400
+Message-ID: <5508A8B1.9050604@broadcom.com> (sfid-20150317_232039_297696_93977778)
+Date: Tue, 17 Mar 2015 23:20:33 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?SsO8cmdlbiBCYXVzYQ==?= <juergen.Bausa@online.de>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom 43340
+References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir> <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com> <loom.20150315T213441-211@post.gmane.org> <5505F651.3060607@broadcom.com> <loom.20150317T214603-379@post.gmane.org>
+In-Reply-To: <loom.20150317T214603-379@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-An appropriately named unsigned long is added and the assignments fixed up.
-Rather than returning 0 (timeout) or a more or less random remaining time
-(completion success) this return 0 or 1 which also resolves the type of the
-functions being int.
+On 03/17/15 22:01, Jürgen Bausa wrote:
+> Arend van Spriel<arend@...>  writes:
+>
+>>
+>> On 03/15/15 21:38, Jürgen Bausa wrote:
+>>>
+>>> would be nice, if you could make it clear.
+>>>
+>>
+>> Maybe you need to mount it. This is what I found [1]:
+>>
+>> $ sudo mount -t efivarfs none /sys/firmware/efi/efivars
+>>
+>
+> Thanks, that worked. Now I have firmware and nvram-file and the driver seems
+> to load ok. At least I have an interface wlan0.
+>
+> However, I am not able to connect.Network-manager just says "interface is
+> being set up ..." forever. I have no idea howto debug this. In the other
+> post you said that the nl80211 driver should be used instead of wext. I
+> found that nl80211 is the default for network-manager. So, whats going wrong
+> here?
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+Could you provide output of these:
 
-Checking the call-sites of ath10k_wmi_wait_for_unified_ready and 
-ath10k_wmi_wait_for_service_ready the positive return value (remaining
-time in jiffies) is never passed up the call-chain nor used so it is 
-cleaner to treat this like a boolean success/fail only (actually the two
-functions should probably be of type bool - but that does not seem to be
-common practice in the ath10k code base)
+$ iw dev
+$ iw list
+$ ifconfig -a
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
-
-Patch is against 4.0-rc3 (localversion-next is -next-20150312)
-:
- drivers/net/wireless/ath/ath10k/wmi.c |   20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c7ea77e..a1cdcba 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -884,20 +884,24 @@ void ath10k_wmi_put_wmi_channel(struct wmi_channel *ch,
- 
- int ath10k_wmi_wait_for_service_ready(struct ath10k *ar)
- {
--	int ret;
-+	unsigned long time_left;
- 
--	ret = wait_for_completion_timeout(&ar->wmi.service_ready,
--					  WMI_SERVICE_READY_TIMEOUT_HZ);
--	return ret;
-+	time_left = wait_for_completion_timeout(&ar->wmi.service_ready,
-+						WMI_SERVICE_READY_TIMEOUT_HZ);
-+	if(!time_left)
-+		return 0;
-+	return 1;
- }
- 
- int ath10k_wmi_wait_for_unified_ready(struct ath10k *ar)
- {
--	int ret;
-+	unsigned long time_left;
- 
--	ret = wait_for_completion_timeout(&ar->wmi.unified_ready,
--					  WMI_UNIFIED_READY_TIMEOUT_HZ);
--	return ret;
-+	time_left = wait_for_completion_timeout(&ar->wmi.unified_ready,
-+						WMI_UNIFIED_READY_TIMEOUT_HZ);
-+	if(!time_left)
-+		return 0;
-+	return 1;
- }
- 
- struct sk_buff *ath10k_wmi_alloc_skb(struct ath10k *ar, u32 len)
--- 
-1.7.10.4
-
+Regards,
+Arend
