@@ -1,56 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14104 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933197AbbCDMGc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 07:06:32 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>,
-	<kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Delete unnecessary checks before the function call "release_firmware"
-References: <5307CAA2.8060406@users.sourceforge.net>
-	<alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
-	<530A086E.8010901@users.sourceforge.net>
-	<alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
-	<530A72AA.3000601@users.sourceforge.net>
-	<alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
-	<530B5FB6.6010207@users.sourceforge.net>
-	<alpine.DEB.2.10.1402241710370.2074@hadrien>
-	<530C5E18.1020800@users.sourceforge.net>
-	<alpine.DEB.2.10.1402251014170.2080@hadrien>
-	<530CD2C4.4050903@users.sourceforge.net>
-	<alpine.DEB.2.10.1402251840450.7035@hadrien>
-	<530CF8FF.8080600@users.sourceforge.net>
-	<alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
-	<530DD06F.4090703@users.sourceforge.net>
-	<alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
-	<5317A59D.4@users.sourceforge.net>
-	<54D26614.2080708@users.sourceforge.net>
-Date: Wed, 4 Mar 2015 14:06:21 +0200
-In-Reply-To: <54D26614.2080708@users.sourceforge.net> (SF Markus Elfring's
-	message of "Wed, 04 Feb 2015 19:33:56 +0100")
-Message-ID: <87twy16k76.fsf@kamboji.qca.qualcomm.com> (sfid-20150304_130654_459331_4BF40EF0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from www.osadl.org ([62.245.132.105]:48336 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751405AbbCQMLT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 08:11:19 -0400
+From: Nicholas Mc Guire <hofrat@osadl.org>
+To: Brett Rudley <brudley@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] brcmfmac: cfg80211: use msecs_to_jiffies for time conversion
+Date: Tue, 17 Mar 2015 08:06:12 -0400
+Message-Id: <1426593972-17652-1-git-send-email-hofrat@osadl.org> (sfid-20150317_131138_455970_95E07ACB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SF Markus Elfring <elfring@users.sourceforge.net> writes:
+Converting milliseconds to jiffies by "val * HZ / 1000" is technically
+OK but msecs_to_jiffies(val) is the cleaner solution and handles all
+corner cases correctly. This is a minor API consolidation only and
+should make things more readable.
 
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Wed, 4 Feb 2015 19:30:23 +0100
->
-> The release_firmware() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
->
-> This issue was detected by using the Coccinelle software.
->
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Patch was compile tested with x86_64_defconfig + CONFIG_BRCMFMAC=m
 
-Thanks, applied to ath.git.
+Patch is agianst 4.0-rc4 (localversion-next is -next-20150317)
 
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index 9b805c9..1996dc2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -1110,7 +1110,7 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+ 
+ 	/* Arm scan timeout timer */
+ 	mod_timer(&cfg->escan_timeout, jiffies +
+-			WL_ESCAN_TIMER_INTERVAL_MS * HZ / 1000);
++		  msecs_to_jiffies(WL_ESCAN_TIMER_INTERVAL_MS));
+ 
+ 	return 0;
+ 
 -- 
-Kalle Valo
+1.7.10.4
+
