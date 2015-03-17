@@ -1,112 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:32845 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752624AbbC0IYp (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:36755 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813AbbCQG6v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2015 04:24:45 -0400
-Received: by labto5 with SMTP id to5so64915163lab.0
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2015 01:24:43 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] ath10k: fix static wep with more than 1 key in client mode
-Date: Fri, 27 Mar 2015 08:21:56 +0000
-Message-Id: <1427444516-974-2-git-send-email-michal.kazior@tieto.com> (sfid-20150327_092449_787092_DEE57789)
-In-Reply-To: <1427444516-974-1-git-send-email-michal.kazior@tieto.com>
-References: <1427444516-974-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 17 Mar 2015 02:58:51 -0400
+MIME-Version: 1.0
+In-Reply-To: <20150316182426.GW5264@atomide.com>
+References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
+	<20150313151301.GJ5264@atomide.com>
+	<CAB3XZEdFMQexA69JEuw=VnqsNOEkWAM0+oWWmt6DaN9+hZ+vdw@mail.gmail.com>
+	<2070859.WcMooC33YH@wuerfel>
+	<20150316152939.GP5264@atomide.com>
+	<20150316182536.GA16829@earth>
+	<20150316182426.GW5264@atomide.com>
+Date: Tue, 17 Mar 2015 08:58:50 +0200
+Message-ID: <CAB3XZEdtmCDnHLW_JpmPXu2rgg8RNkOvPaUfoijmL_UsG93_Gg@mail.gmail.com> (sfid-20150317_075857_824584_226E0E4B)
+Subject: Re: [PATCH v6 6/6] wlcore: remove wl12xx_platform_data
+From: Eliad Peller <eliad@wizery.com>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Sebastian Reichel <sre@ring0.de>, Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Mark Rutland <mark.rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Sekhar Nori <nsekhar@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	=?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Luciano Coelho <luca@coelho.fi>,
+	=?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The default keyidx callback may be called after
-more than 1 key is installed. This led to only 1
-WEP key being reinstalled only. This caused Rxed
-traffic encrypted with other WEP keys to be
-dropped in client mode.
+On Mon, Mar 16, 2015 at 8:24 PM, Tony Lindgren <tony@atomide.com> wrote:
+> * Sebastian Reichel <sre@ring0.de> [150316 11:26]:
+>> Hi,
+>>
+>> On Mon, Mar 16, 2015 at 08:29:39AM -0700, Tony Lindgren wrote:
+>> > * Arnd Bergmann <arnd@arndb.de> [150315 05:10]:
+>> > > On Sunday 15 March 2015 10:50:42 Eliad Peller wrote:
+>> > > > yeah, i missed it :/
+>> > > >
+>> > > > looks like there's no platform that defines platform data for it.
+>> > > > i'll replace the dev_get_platdata() with a function that only parses
+>> > > > the clock-frequency properties (the irq is taken in this case from the
+>> > > > spi_device).
+>> > > > (or maybe i should just drop it, as no one actually uses it?)
+>> > >
+>> > > I don't think we should drop the driver, but dropping the platform_data
+>> > > support sounds reasonable. New users of this driver should all be using
+>> > > DT, and if there is a good reason to use platform_data, it's easily
+>> > > put back.
+>> >
+>> > Well we have n8x0 and n900 using the spi driver. For those, n8x0 boot
+>> > all in dts mode, but n900 still also boots in legacy mode. It seems the
+>> > board-rx51-peripherals.c only passes the power_gpio though, so that
+>> > should be easy to keep around.
+>> >
+>> > We should keep things still working for n900 in legacy mode until the
+>> > pending regressions with device tree based booting have been cleared
+>> > for at least one merge cycle. I believe the last pending issues is the
+>> > support for ATAG_REVISION in device tree mode as posted by Pali.
+>>
+>> mh by migrating to newer gpiod interface platform data is no longer
+>> needed (instead the boardfile would need a gpiod_lookup_table). That
+>> way all of the dirty code is in the board file and will be removed
+>> once the time comes. See for example rx51_fmtx_gpios_table.
+>>
+>> Note: This is independent of wl12xx changes, since N900 uses wl1251.
+>
+> Oh sorry yes sounds like that's different platform data then. In that
+> case I see no reasons to drop the platform data for wl12xx.
+>
+great.
+so i'll drop the relevant wlcore_spi platform data code, and rebase
+the patches on top of v4.0-rc4 (probably tomorrow).
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 45 +++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9d873900257d..3baea2b671dd 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -259,41 +259,44 @@ static int ath10k_clear_vdev_key(struct ath10k_vif *arvif,
- 	return first_errno;
- }
- 
--static int ath10k_mac_vif_sta_fix_wep_key(struct ath10k_vif *arvif)
-+static int ath10k_mac_vif_sta_fix_wep_key(struct ath10k_vif *arvif, int keyidx)
- {
- 	struct ath10k *ar = arvif->ar;
- 	enum nl80211_iftype iftype = arvif->vif->type;
- 	struct ieee80211_key_conf *key;
--	u32 flags = 0;
--	int num = 0;
--	int i;
-+	u32 flags;
- 	int ret;
-+	int i;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	if (iftype != NL80211_IFTYPE_STATION)
- 		return 0;
- 
-+	if (keyidx < 0)
-+		return 0;
-+
- 	for (i = 0; i < ARRAY_SIZE(arvif->wep_keys); i++) {
--		if (arvif->wep_keys[i]) {
--			key = arvif->wep_keys[i];
--			++num;
-+		if (!arvif->wep_keys[i])
-+			continue;
-+
-+		key = arvif->wep_keys[i];
-+
-+		flags = 0;
-+		flags |= WMI_KEY_PAIRWISE;
-+
-+		if (key->keyidx == keyidx)
-+			flags |= WMI_KEY_TX_USAGE;
-+
-+		ret = ath10k_install_key(arvif, key, SET_KEY, arvif->bssid,
-+					 flags);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to install key %i on vdev %i: %d\n",
-+				    key->keyidx, arvif->vdev_id, ret);
-+			return ret;
- 		}
- 	}
- 
--	if (num != 1)
--		return 0;
--
--	flags |= WMI_KEY_PAIRWISE;
--	flags |= WMI_KEY_TX_USAGE;
--
--	ret = ath10k_install_key(arvif, key, SET_KEY, arvif->bssid, flags);
--	if (ret) {
--		ath10k_warn(ar, "failed to install key %i on vdev %i: %d\n",
--			    key->keyidx, arvif->vdev_id, ret);
--		return ret;
--	}
--
- 	return 0;
- }
- 
-@@ -4227,7 +4230,7 @@ static void ath10k_set_default_unicast_key(struct ieee80211_hw *hw,
- 
- 	arvif->def_wep_key_idx = keyidx;
- 
--	ret = ath10k_mac_vif_sta_fix_wep_key(arvif);
-+	ret = ath10k_mac_vif_sta_fix_wep_key(arvif, keyidx);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to fix sta wep key on vdev %i: %d\n",
- 			    arvif->vdev_id, ret);
--- 
-2.1.4
-
+Eliad.
