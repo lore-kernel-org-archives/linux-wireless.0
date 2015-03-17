@@ -1,69 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:46880 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752013AbbCDVvh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 16:51:37 -0500
-Date: Wed, 4 Mar 2015 16:51:35 -0500
-From: Mike Frysinger <vapier@gentoo.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH crda 2/4] allow people to turn off -Werror
-Message-ID: <20150304215135.GD7320@vapier> (sfid-20150304_225140_282827_3FE839A5)
-References: <1425498714-8654-1-git-send-email-vapier@gentoo.org>
- <1425498714-8654-2-git-send-email-vapier@gentoo.org>
- <1425498807.1810.14.camel@sipsolutions.net>
- <20150304202235.GB7320@vapier>
- <1425501103.1810.15.camel@sipsolutions.net>
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:45808 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932684AbbCQR2Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 13:28:16 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v3 01/10] mac80211: enhance readability of Minstrels rc_stats output
+Date: Tue, 17 Mar 2015 18:29:10 +0100
+Message-Id: <1426613359-31306-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150317_182819_953535_ECAB3C45)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="P+33d92oIH25kiaB"
-In-Reply-To: <1425501103.1810.15.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch restructures the rc_stats debugfs table of Minstrel in
+order to achieve better human readability. A new layout of the
+statistics and a new header is added. In addition to the old layout
+there are two new columns of information added:
+idx	- representing the rate index of each rate in mac80211 which
+	  can be used to set specific rates as fixed rate via debugfs
+airtime - the tx-time in micro seconds that a 1200 Byte packet
+	  takes to be transmitted over the air at the given rate
 
---P+33d92oIH25kiaB
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The old layout of rc_stats:
 
-On 04 Mar 2015 21:31, Johannes Berg wrote:
-> On Wed, 2015-03-04 at 15:22 -0500, Mike Frysinger wrote:
-> > yes, if you wanted to support:
-> > 	WERROR=3D make
-> >=20
-> > but the expectation is that you'd do:
-> > 	make WERROR=3D
-> >=20
-> > in which case this code is working as i intended.
->=20
-> Oh, interesting, I wasn't even really aware of this difference :)
->=20
-> Heh. Goes to show why I shouldn't work with build systems ;-)
+    rate      tpt  eprob *prob ret  *ok(*cum)        ok(      cum)
+ DP 1          0.9  93.5 100.0   1    0(   0)         2(        2)
+    2          0.4  40.0 100.0   0    0(   0)         4(        10)
+    5.5        0.0   0.0   0.0   0    0(   0)         0(        0)
+...
 
-no worries ... most people shouldn't ;)
--mike
+is changed into this new layout:
 
---P+33d92oIH25kiaB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+best   _______rate_____    __statistics__    ________last_______    ______sum-of________
+rate  [name idx tx-time]  [ ø(tp) ø(prob)]  [prob.|retry|suc|att]  [#success | #attempts]
+ DP   1     0     9738      0.9    93.5     100.0   1     1 1             2   2
+      2     1     4922      0.4    40.0     100.0   1     0 0             4   10
+      5.5   2     1858      0.0     0.0       0.0   2     0 0             0   0
+...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Stefan Venz <ikstream86@gmail.com>
+---
+ net/mac80211/rc80211_minstrel_debugfs.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-iQIcBAEBCAAGBQJU935nAAoJEEFjO5/oN/WBGVYP/jhdJqFw0G82Zfa7N7GstJc+
-tFA9nIb9/cWd/l17VazXSv9/VPwDSpvYEBr8oIGYE5hDBH5j/TOiRXr/GW+XvuJD
-KxdQSum8uLjC8A8L2hi8fqrqc1z5ZgMwib5Yzyjbgykn3qA7Yyg+Z+IediC9rHz0
-dajbXSwI0k/VBfSPJui6O5IrKp9h7RIQd3xY1WzaM+vEHBj45D50R9NEcOZHk+Z3
-aturCqRlYxCabrTWjFiXQPI+THjyEFYeSbWBDZHsHOACjer9WIaKfthe2b3CLMu5
-44yFBw13G0F/d/rI+rq7qDJe70vbOUYVvNmx6lokjWpfNrpxQM6kTr/IPRGN0fWm
-sVOADaqc2WcX6KE2WjAoNLJjOb+707DL13y3gLEvjtqncw3HvrS3f9oBJgEiIBF5
-q605pf9C0/7g8IgR6y7qiVsq5+pR5vmHpD4kc6NyPtPnEedHZQqkkozjq+PdXI+4
-cS1y6wADEgJu5tB5/J8hjAKxZ/NpacPjoNqCeeij7YFg8xkt5H3FdOTS0aRgm/X9
-EI+bT+TTdBVMPf0JLbtcXxv5mmmUFEagdDmuAr3kvP9a4cfoGyTNEWdEM5VLrwnM
-JymnlBu13g/JLDEwUfC5zwKl54YVwIo/T+ZCRFTmOu0rYmSq0GR0o8SZ9RQwewrx
-/g+LQUVpeWwht4Pqi0iV
-=d3k0
------END PGP SIGNATURE-----
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index 2acab1b..2d70081 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -68,8 +68,12 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 
+ 	file->private_data = ms;
+ 	p = ms->buf;
+-	p += sprintf(p, "rate          tpt eprob *prob"
+-			"  *ok(*cum)        ok(      cum)\n");
++	p += sprintf(p, "\n");
++	p += sprintf(p, "best   _______rate_____    __statistics__    "
++			"________last_______    ______sum-of________\n");
++	p += sprintf(p, "rate  [name idx airtime]  [ ø(tp) ø(prob)]  "
++			"[prob.|retry|suc|att]  [#success | #attempts]\n");
++
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
+@@ -79,18 +83,22 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		*(p++) = (i == mi->max_tp_rate[2]) ? 'C' : ' ';
+ 		*(p++) = (i == mi->max_tp_rate[3]) ? 'D' : ' ';
+ 		*(p++) = (i == mi->max_prob_rate) ? 'P' : ' ';
+-		p += sprintf(p, "%3u%s", mr->bitrate / 2,
++
++		p += sprintf(p, " %3u%s ", mr->bitrate / 2,
+ 				(mr->bitrate & 1 ? ".5" : "  "));
++		p += sprintf(p, "%3u  ", i);
++		p += sprintf(p, "%6u  ", mr->perfect_tx_time);
+ 
+ 		tp = MINSTREL_TRUNC(mrs->cur_tp / 10);
+ 		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->probability * 1000);
+ 
+-		p += sprintf(p, " %4u.%1u %3u.%1u %3u.%1u"
+-				" %4u(%4u) %9llu(%9llu)\n",
++		p += sprintf(p, " %4u.%1u   %3u.%1u     %3u.%1u %3u"
++				"   %3u %-3u   %9llu   %-9llu\n",
+ 				tp / 10, tp % 10,
+ 				eprob / 10, eprob % 10,
+ 				prob / 10, prob % 10,
++				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+ 				(unsigned long long)mrs->succ_hist,
+-- 
+2.3.0
 
---P+33d92oIH25kiaB--
