@@ -1,42 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4406 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53204 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754579AbbCLNGU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:06:20 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 42/49] iwlwifi: mvm: fix force NMI for 8000
-Date: Thu, 12 Mar 2015 15:04:27 +0200
-Message-Id: <1426165474-25586-42-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143417_986107_4619EA73)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+	id S1753954AbbCQKGu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 06:06:50 -0400
+Message-ID: <1426586807.1985.8.camel@sipsolutions.net> (sfid-20150317_110654_497095_C2E48183)
+Subject: Re: [PATCHv2 2/3] mac80211: ibss refactor ieee80211_rx_bss_info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Mar 2015 11:06:47 +0100
+In-Reply-To: <1425884296-7074-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150309_075907_872041_4EDD53CD)
+References: <1425884296-7074-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1425884296-7074-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20150309_075907_872041_4EDD53CD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The newer devices will enable a new register for this
-(DEVICE_SET_NMI_8000B_REG), but the interrupt handler
-isn't wired yet.
-Keep the old register for now.
+On Mon, 2015-03-09 at 07:58 +0100, Janusz Dziedzic wrote:
+> Put station specific code in ieee80211_update_sta_info
+> function.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-io.c | 2 ++
- 1 file changed, 2 insertions(+)
+Applied.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
-index 03250a4..78cac43 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.c
-@@ -201,6 +201,8 @@ void iwl_force_nmi(struct iwl_trans *trans)
- 	} else {
- 		iwl_write_prph(trans, DEVICE_SET_NMI_8000B_REG,
- 			       DEVICE_SET_NMI_8000B_VAL);
-+		iwl_write_prph(trans, DEVICE_SET_NMI_REG,
-+			       DEVICE_SET_NMI_VAL_DRV);
- 	}
- }
- IWL_EXPORT_SYMBOL(iwl_force_nmi);
--- 
-1.9.1
+johannes
 
