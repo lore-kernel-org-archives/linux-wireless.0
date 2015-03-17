@@ -1,45 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:45078 "EHLO mail.hofr.at"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54531 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751682AbbCOKSA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 06:18:00 -0400
-Date: Sun, 15 Mar 2015 11:17:58 +0100
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath10k: core: harmonize error case handling in
-	ath10k_core_start
-Message-ID: <20150315101758.GA28477@opentech.at> (sfid-20150315_111828_961436_90E1A345)
-References: <1426323313-1344-1-git-send-email-hofrat@osadl.org> <550497A0.5040508@cogentembedded.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <550497A0.5040508@cogentembedded.com>
+	id S1753401AbbCQLep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 07:34:45 -0400
+Message-ID: <1426592082.1985.41.camel@sipsolutions.net> (sfid-20150317_123448_692912_EE1383DF)
+Subject: Re: [PATCH v4] mac80211: Get IV len from key conf and not cipher
+ scheme
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 17 Mar 2015 12:34:42 +0100
+In-Reply-To: <5842EA9CC042B141995329508713AD672105BFDA@ILMAIL1.corp.local>
+References: <5842EA9CC042B141995329508713AD672105BFDA@ILMAIL1.corp.local>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 14 Mar 2015, Sergei Shtylyov wrote:
+On Tue, 2015-03-17 at 10:47 +0000, Cedric Izoard wrote:
+> When a key is installed using a cipher scheme, a new internal
+> flag KEY_FLAG_CIPHER_SCHEME is set.
+> This flag is used on TX path to test for "cipher scheme"
+> key, instead of testing for sta->cipher_scheme as sta
+> is NULL for bcast/mcast messages.
+> For cipher scheme key, security header length is then
+> read from key->conf.iv_len initialized with cs->hdr_len.
 
-> Hello.
->
-> On 03/14/2015 11:55 AM, Nicholas Mc Guire wrote:
->
->> All of the bringup/init functions called in ath10k_core_start return 0 on
->> success and != 0 on failure - ath10k_wmi_wait_for_service_ready and
->> ath10k_wmi_wait_for_unified_ready were adjusted to fit this model and the
->> call sites here fixed up accordingly.
->
->    If you've changed the sense of these function's results, you need to  
-> adjust the call sites in the same patch, because otherwise one wouldn't 
-> be able to bisect this...
->
+Applied.
 
-yup both patches would mess up if individually applied or reverted.
-sorry my ignorance - did not think of that problem - will fix it 
-up as a single patch and repost. 
+johannes
 
-thx!
-hofrat
