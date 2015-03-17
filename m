@@ -1,107 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:50078 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751317AbbCUIrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:36 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 02/18] ath9k: ar9271_hw_pa_cal - use defs instead of magin numbers
-Date: Sat, 21 Mar 2015 09:47:05 +0100
-Message-Id: <1426927641-18474-3-git-send-email-linux@rempel-privat.de> (sfid-20150321_094746_583199_9CB4B3A0)
-In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
-References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+Received: from smtp01.msg.oleane.net ([62.161.4.1]:52696 "EHLO
+	smtp01.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753459AbbCQPDA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 11:03:00 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Dan Williams'" <dcbw@redhat.com>
+Cc: "'wim torfs'" <wtorfs@gmail.com>, <linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>		 <5502D558.90306@gmail.com> <033201d05d93$5aa1c030$0fe54090$@acksys.fr>	 <1426255583.19064.6.camel@redhat.com>	 <034401d05da5$d5c0be30$81423a90$@acksys.fr> <1426264174.19064.19.camel@redhat.com>
+In-Reply-To: <1426264174.19064.19.camel@redhat.com>
+Subject: RE: ARP dropped during WPA handshake
+Date: Tue, 17 Mar 2015 16:02:49 +0100
+Message-ID: <03e401d060c3$6fcd9e60$4f68db20$@acksys.fr> (sfid-20150317_160310_271720_0547C07D)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function uses mixed styles for register names/numbers which
-is make harder reading and optimisation.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 35 ++++++++++++++-------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 42190b6..4576b99 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -430,22 +430,22 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 	u32 regVal;
- 	unsigned int i;
- 	u32 regList[][2] = {
--		{ 0x786c, 0 },
--		{ 0x7854, 0 },
--		{ 0x7820, 0 },
--		{ 0x7824, 0 },
--		{ 0x7868, 0 },
--		{ 0x783c, 0 },
--		{ 0x7838, 0 } ,
--		{ 0x7828, 0 } ,
-+		{ AR9285_AN_TOP3, 0 },
-+		{ AR9285_AN_RXTXBB1, 0 },
-+		{ AR9285_AN_RF2G1, 0 },
-+		{ AR9285_AN_RF2G2, 0 },
-+		{ AR9285_AN_TOP2, 0 },
-+		{ AR9285_AN_RF2G8, 0 },
-+		{ AR9285_AN_RF2G7, 0 } ,
-+		{ AR9285_AN_RF2G3, 0 } ,
- 	};
- 
- 	for (i = 0; i < ARRAY_SIZE(regList); i++)
- 		regList[i][1] = REG_READ(ah, regList[i][0]);
- 
--	regVal = REG_READ(ah, 0x7834);
-+	regVal = REG_READ(ah, AR9285_AN_RF2G6);
- 	regVal &= (~(0x1));
--	REG_WRITE(ah, 0x7834, regVal);
-+	REG_WRITE(ah, AR9285_AN_RF2G6, regVal);
- 	regVal = REG_READ(ah, 0x9808);
- 	regVal |= (0x1 << 27);
- 	REG_WRITE(ah, 0x9808, regVal);
-@@ -477,7 +477,7 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 	 * does not matter since we turn it off
- 	 */
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
--
-+	/* 7828, b0-11, ccom=fff */
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9271_AN_RF2G3_CCOMP, 0xfff);
- 
- 	/* Set:
-@@ -490,15 +490,16 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 
- 	/* find off_6_1; */
- 	for (i = 6; i > 0; i--) {
--		regVal = REG_READ(ah, 0x7834);
-+		regVal = REG_READ(ah, AR9285_AN_RF2G6);
- 		regVal |= (1 << (20 + i));
--		REG_WRITE(ah, 0x7834, regVal);
-+		REG_WRITE(ah, AR9285_AN_RF2G6, regVal);
- 		udelay(1);
- 		/* regVal = REG_READ(ah, 0x7834); */
- 		regVal &= (~(0x1 << (20 + i)));
--		regVal |= (MS(REG_READ(ah, 0x7840), AR9285_AN_RXTXBB1_SPARE9)
-+		regVal |= (MS(REG_READ(ah, AR9285_AN_RF2G9),
-+			      AR9285_AN_RXTXBB1_SPARE9)
- 			    << (20 + i));
--		REG_WRITE(ah, 0x7834, regVal);
-+		REG_WRITE(ah, AR9285_AN_RF2G6, regVal);
- 	}
- 
- 	regVal = (regVal >> 20) & 0x7f;
-@@ -517,9 +518,9 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 
--	regVal = REG_READ(ah, 0x7834);
-+	regVal = REG_READ(ah, AR_AN_RF2G1_CH1);
- 	regVal |= 0x1;
--	REG_WRITE(ah, 0x7834, regVal);
-+	REG_WRITE(ah, AR_AN_RF2G1_CH1, regVal);
- 	regVal = REG_READ(ah, 0x9808);
- 	regVal &= (~(0x1 << 27));
- 	REG_WRITE(ah, 0x9808, regVal);
--- 
-1.9.1
+> > > During the initial WPA handshake the connection is not fully set up,
+> > > and so no general traffic can (nor should) pass between the STA and AP.
+> > > That includes ARP and any L2/L3+ protocols, except for EAP and wifi
+> > > management packets.
+> > >
+> > > The interface itself must be IFF_UP before it can pass traffic,
+> > > including the WPA handshake traffic.  IFF_UP only means that the
+> > > interface can be configured at the L2 level and the hardware is
+> > > active, it does *not* mean the interface can pass traffic.
+> > >
+> > > Whatever is causing the ARPs shouldn't be doing that yet, and should
+> > > be fixed to use the interface's "operstate" or IFF_LOWER_UP instead
+> > > of IFF_UP.  Only when the supplicant changes the interface's
+> > > operstate to IF_OPER_UP is the interface *actually* ready to pass
+> traffic.  IFF_UP is not sufficient.
+> > >
+> >
+> > Thanks for your reply.
+> >
+> > It seems wpa_supplicant set the operstate to IF_OPER_DORMANT when he
+> received the ASSOCIATED Event from the driver (through netlink). And set the
+> operstate to IF_OPER_UP in case of wpa handshake success.
+> >
+> > Is it normal the local ip stack send arp when netdev it is on
+> IF_OPER_DORMANT state?
+> 
+> I'm not sure the kernel stack cares much as long as the device is up.
+> It is requesting the ARP because some application is attempting to
+> communicate with that IP address.  That application should probably be
+> waiting until the interface is actually ready to communicate, which means
+> IF_OPER_UP.
+> 
+> But if this is the first WPA handshake with the AP during the initial
+> connection, the wifi device shouldn't even have an IP address yet, so nothing
+> should be doing ARP on the interface yet.  Perhaps whatever is assigning the
+> IP address to the interface is doing it too early, before the interface is
+> IF_OPER_UP?
+> 
+It is not the initial connection. My sta is connected on AP1 and the communication is established (in my test the communication it is iperf from STA to computer behind the APs). 
+
+I looking for a solution to enable the communication for wpa_supplicant, but block the L3 communication while the WPA handshake is not finished.
+
+Have you any idea?
+
+Cedric.
+
 
