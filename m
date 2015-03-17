@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14617 "EHLO mga02.intel.com"
+Received: from arrakis.dune.hu ([78.24.191.176]:54763 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754525AbbCLNFt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:05:49 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/49] iwlwifi: bump API to 13 for devices that use iwlmvm
-Date: Thu, 12 Mar 2015 15:04:05 +0200
-Message-Id: <1426165474-25586-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_140755_135316_BD4AD587)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+	id S1752310AbbCQISp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 04:18:45 -0400
+Message-ID: <5507E362.6000209@openwrt.org> (sfid-20150317_091849_802158_F647D55D)
+Date: Tue, 17 Mar 2015 09:18:42 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
+	linux-wireless@vger.kernel.org
+CC: johannes@sipsolutions.net
+Subject: Re: [PATCH v2 04/10] mac80211: add new Minstrel-HT statistic output
+ via csv
+References: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1423839472-15625-5-git-send-email-thomas@net.t-labs.tu-berlin.de>
+In-Reply-To: <1423839472-15625-5-git-send-email-thomas@net.t-labs.tu-berlin.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This new firmware will come out soon.
+On 2015-02-13 15:57, Thomas Huehn wrote:
+> This patch adds a new debugfs file "rc_stats_csv" to output
+> Minstrel-HTs statistics in a common csv format that is easy
+> to parse.
+> 
+> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+> Signed-off-by: Stefan Venz <ikstream86@gmail.com>
+> ---
+> --- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
+> +++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+> +static int
+> +minstrel_ht_stats_csv_open(struct inode *inode, struct file *file)
+> +{
+> +	struct minstrel_ht_sta_priv *msp = inode->i_private;
+> +	struct minstrel_ht_sta *mi = &msp->ht;
+> +	struct minstrel_debugfs_info *ms;
+> +	struct timeval tv;
+> +	unsigned int i;
+> +	int ret;
+> +	char *p;
+> +
+> +	do_gettimeofday(&tv);
+> +
+> +	if (!msp->is_ht) {
+> +		inode->i_private = &msp->legacy;
+> +		ret = minstrel_stats_open(inode, file);
+Should be minstrel_stats_csv_open here?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-7000.c | 8 ++++----
- drivers/net/wireless/iwlwifi/iwl-8000.c | 4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-7000.c b/drivers/net/wireless/iwlwifi/iwl-7000.c
-index 0597a9c..36e786f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-7000.c
-@@ -69,12 +69,12 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL7260_UCODE_API_MAX	12
--#define IWL3160_UCODE_API_MAX	12
-+#define IWL7260_UCODE_API_MAX	13
-+#define IWL3160_UCODE_API_MAX	13
- 
- /* Oldest version we won't warn about */
--#define IWL7260_UCODE_API_OK	10
--#define IWL3160_UCODE_API_OK	10
-+#define IWL7260_UCODE_API_OK	12
-+#define IWL3160_UCODE_API_OK	12
- 
- /* Lowest firmware API version supported */
- #define IWL7260_UCODE_API_MIN	10
-diff --git a/drivers/net/wireless/iwlwifi/iwl-8000.c b/drivers/net/wireless/iwlwifi/iwl-8000.c
-index d8dfa6d..9c396a4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-8000.c
-@@ -69,10 +69,10 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL8000_UCODE_API_MAX	12
-+#define IWL8000_UCODE_API_MAX	13
- 
- /* Oldest version we won't warn about */
--#define IWL8000_UCODE_API_OK	10
-+#define IWL8000_UCODE_API_OK	12
- 
- /* Lowest firmware API version supported */
- #define IWL8000_UCODE_API_MIN	10
--- 
-1.9.1
-
+- Felix
