@@ -1,33 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56106 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbbCPGev (ORCPT
+Received: from smtprelay0092.hostedemail.com ([216.40.44.92]:60014 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932268AbbCQW2R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 02:34:51 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [4.0] ath9k: fix tracking of enabled AP beacons
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1426177038-24164-1-git-send-email-nbd@openwrt.org>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20150316063451.3E01D140988@smtp.codeaurora.org> (sfid-20150316_073455_364161_B84CAC67)
-Date: Mon, 16 Mar 2015 06:34:51 +0000 (UTC)
+	Tue, 17 Mar 2015 18:28:17 -0400
+Message-ID: <1426596159.23897.61.camel@perches.com> (sfid-20150317_232838_224063_F2E52F77)
+Subject: Re: [PATCH] brcmfmac: cfg80211: use msecs_to_jiffies for time
+ conversion
+From: Joe Perches <joe@perches.com>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1426593972-17652-1-git-send-email-hofrat@osadl.org>
+References: <1426593972-17652-1-git-send-email-hofrat@osadl.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Date: Tue, 17 Mar 2015 05:42:39 -0700
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2015-03-17 at 08:06 -0400, Nicholas Mc Guire wrote:
+> Converting milliseconds to jiffies by "val * HZ / 1000" is technically
+> OK but msecs_to_jiffies(val) is the cleaner solution and handles all
+> corner cases correctly. This is a minor API consolidation only and
+> should make things more readable.
 
-> sc->nbcnvifs tracks assigned beacon slots, not enabled beacons.
-> Therefore, it cannot be used to decide if cur_conf->enable_beacon (bool)
-> should be updated, or if beacons have been enabled already.
-> With the current code (depending on the order of calls), beacons often
-> do not get enabled in an AP+STA setup.
-> To fix tracking of enabled beacons, convert cur_conf->enable_beacon to a
-> bitmask of enabled beacon slots.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Hi Nicholas
 
-Thanks, applied to wireless-drivers.git.
+These API consolidation changes now always have a function
+call when the compiler may have previously been able to
+optimize out the "constant * HZ / 1000" calculation.
 
-Kalle Valo
+Perhaps the [um]secs_to_jiffies calls should be indirected
+with yet another static inline with a __builtin_constant_p()
+test so that the function calls can again be avoided when
+possible.
+
+(and a trivial style note)
+
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+[]
+> @@ -1110,7 +1110,7 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+>  
+>  	/* Arm scan timeout timer */
+>  	mod_timer(&cfg->escan_timeout, jiffies +
+> -			WL_ESCAN_TIMER_INTERVAL_MS * HZ / 1000);
+> +		  msecs_to_jiffies(WL_ESCAN_TIMER_INTERVAL_MS));
+
+It may be nicer to keep the arithmetic on one line
+
+ 	mod_timer(&cfg->escan_timeout,
+		  jiffies + msecs_to_jiffies(WL_ESCAN_TIMER_INTERVAL_MS));
+
+
