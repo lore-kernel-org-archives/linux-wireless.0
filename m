@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54666 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754484AbbCCJAY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 04:00:24 -0500
-Message-ID: <1425373219.2450.13.camel@sipsolutions.net> (sfid-20150303_100028_843335_0F2CED36)
-Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
- memset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 03 Mar 2015 10:00:19 +0100
-In-Reply-To: <1425372748.17273.6.camel@perches.com>
-References: <cover.1425354527.git.joe@perches.com>
-	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
-	 <1425370617.2450.3.camel@sipsolutions.net>
-	 <1425371858.17273.3.camel@perches.com>
-	 <1425372295.2450.9.camel@sipsolutions.net>
-	 <1425372748.17273.6.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:34972 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbbCQMdX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 08:33:23 -0400
+Received: by lbcgn8 with SMTP id gn8so5771138lbc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2015 05:33:21 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 1/7] ath10k: allow empty ssid vdev config
+Date: Tue, 17 Mar 2015 12:30:42 +0000
+Message-Id: <1426595448-1630-2-git-send-email-michal.kazior@tieto.com> (sfid-20150317_133328_287908_43E89361)
+In-Reply-To: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
+References: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-03-03 at 00:52 -0800, Joe Perches wrote:
+It doesn't make much sense to reject a valid
+firmware configuration combination.
 
-> > > My guess is the eth_zero_addr and eth_broadcast functions
-> > > are always taking aligned(2) arguments, just like all the
-> > > is_<foo>_ether_addr functions.
-> > 
-> > Err, are you serious???
-> 
-> Yes.
-> 
-> > That *clearly* isn't true, and if it was then
-> > this patch wouldn't be safe at all.
-> 
-> And why is that?
-> 
-> Until patch 1 of this series, eth_zero_addr and
-> eth_broadcast_addr was just an inline for a memset.
-> 
-> Even after patch 1, it's effectively still memset.
+Since SSID isn't known early on it might make
+sense to allow driver to start vdev without SSID
+and restart it later.
 
-Exactly. It therefore *doesn't* require an aligned(2) argument, unlike
-what you stated above, hence my question if you're serious (and perhaps
-looking at some other code that I don't have).
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
+ drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
+ 2 files changed, 4 deletions(-)
 
-My argument/complaint is that it isn't obvious from these which ones do
-require aligned(2) argument. Therefore, it's not obvious without going
-back to the definitions where the conversion is safe and where it isn't.
-Clearly, for example, memcmp() cannot always be replaced with
-ether_addr_equal().
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 3eec042..fa3eb1b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1486,8 +1486,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
+ 	void *ptr;
+ 	u32 flags = 0;
+ 
+-	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
+-		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
+ 		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 54430a1..7b3e6ca 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4286,8 +4286,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
+ 	const char *cmdname;
+ 	u32 flags = 0;
+ 
+-	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
+-		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
+ 		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
+-- 
+2.1.4
 
