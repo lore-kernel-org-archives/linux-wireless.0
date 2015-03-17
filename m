@@ -1,345 +1,331 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:57420 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753035AbbC1Mxx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:53:53 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
-	m.v.b@runbox.com
-Subject: [PATCH v4 11/15] staging: rtl8723au: Adjust whitespace in and around comments
-Date: Sat, 28 Mar 2015 08:52:44 -0400
-Message-Id: <1427547168-12078-12-git-send-email-m.v.b@runbox.com> (sfid-20150328_135535_315310_FC5696F0)
-In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
-References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:35026 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753446AbbCQMd2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 08:33:28 -0400
+Received: by lbcgn8 with SMTP id gn8so5772740lbc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2015 05:33:26 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v4 5/7] ath10k: implement tx pause wmi event
+Date: Tue, 17 Mar 2015 12:30:46 +0000
+Message-Id: <1426595448-1630-6-git-send-email-michal.kazior@tieto.com> (sfid-20150317_133335_973866_4EE56505)
+In-Reply-To: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
+References: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the subject indicates, adjust whitespace in and around comments
-in rtl8723au's rtw_security.c.
+qca6174 wmi-tlv firmware defines a new wmi event
+for host tx pausing (i.e. stop/wake tx queues).
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Map these events to ath10k/mac80211 tx queue
+control.
+
+This is important for multi-channel throughput
+performance.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 114 +++++++++++++-------------
- 1 file changed, 57 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index f8d0c0a63f..8591b49664 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -135,12 +135,12 @@ static u32 getcrc32(u8 *buf, int len)
- 	if (bcrc32initialized == 0)
- 		crc32_init();
+Notes:
+    v2:
+     * s/thourghput/throughput/ in commit log
+    
+    v4:
+     * use ieee80211_iterate_active_interfaces_atomic() instead of ar->arvifs
+
+ drivers/net/wireless/ath/ath10k/mac.c     | 90 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.h     |  8 +++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 48 +++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h | 42 +++++++++++++++
+ 4 files changed, 188 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 185be19..e6b0746 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -28,6 +28,7 @@
+ #include "txrx.h"
+ #include "testmode.h"
+ #include "wmi.h"
++#include "wmi-tlv.h"
+ #include "wmi-ops.h"
  
--	crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
-+	crc = 0xffffffff; /* preload shift register, per CRC-32 spec */
- 
- 	for (p = buf; len > 0; ++p, --len)
- 		crc = crc32_table[(crc ^ *p) & 0xff] ^ (crc >> 8);
- 
--	return ~crc;    /* transmit complement, per CRC-32 spec */
-+	return ~crc; /* transmit complement, per CRC-32 spec */
+ /**********/
+@@ -2773,6 +2774,83 @@ void ath10k_mac_vif_tx_unlock(struct ath10k_vif *arvif, int reason)
+ 	ieee80211_wake_queue(ar->hw, arvif->vdev_id);
  }
  
- /* Need to consider the fragment  situation */
-@@ -152,7 +152,7 @@ void rtw_wep_encrypt23a(struct rtw_adapter *padapter,
- 	struct arc4context mycontext;
- 	int curfragnum, length, index;
- 	u32 keylength;
--	u8 *pframe, *payload, *iv;    /* wepkey */
-+	u8 *pframe, *payload, *iv; /* wepkey */
- 	u8 wepkey[16];
- 	u8 hw_hdr_offset = 0;
- 	struct pkt_attrib *pattrib = &pxmitframe->attrib;
-@@ -373,15 +373,15 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
- 	priority[0] = pri;
- 
- 	/* Michael MIC pseudo header: DA, SA, 3 x 0, Priority */
--	if (header[1]&1) {   /* ToDS == 1 */
--			rtw_secmicappend23a(&micdata, &header[16], 6);  /* DA */
--		if (header[1]&2)  /* From Ds == 1 */
-+	if (header[1]&1) { /* ToDS == 1 */
-+			rtw_secmicappend23a(&micdata, &header[16], 6); /* DA */
-+		if (header[1]&2) /* From Ds == 1 */
- 			rtw_secmicappend23a(&micdata, &header[24], 6);
- 		else
- 			rtw_secmicappend23a(&micdata, &header[10], 6);
--	} else {	/* ToDS == 0 */
--		rtw_secmicappend23a(&micdata, &header[4], 6);   /* DA */
--		if (header[1]&2)  /* From Ds == 1 */
-+	} else { /* ToDS == 0 */
-+		rtw_secmicappend23a(&micdata, &header[4], 6); /* DA */
-+		if (header[1]&2) /* From Ds == 1 */
- 			rtw_secmicappend23a(&micdata, &header[16], 6);
- 		else
- 			rtw_secmicappend23a(&micdata, &header[10], 6);
-@@ -403,7 +403,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
- #define  Hi16(v32)   ((u16)(((v32) >> 16) & 0xFFFF))
- #define  Mk16(hi, lo) ((lo) ^ (((u16)(hi)) << 8))
- 
--/* select the Nth 16-bit word of the temporal key unsigned char array TK[]   */
-+/* select the Nth 16-bit word of the temporal key unsigned char array TK[] */
- #define  TK16(N)     Mk16(tk[2*(N)+1], tk[2*(N)])
- 
- /* S-box lookup: 16 bits --> 16 bits */
-@@ -510,7 +510,7 @@ static void phase1(u16 *p1k, const u8 *tk, const u8 *ta, u32 iv32)
- {
- 	int  i;
- 
--	/* Initialize the 80 bits of P1K[] from IV32 and TA[0..5]     */
-+	/* Initialize the 80 bits of P1K[] from IV32 and TA[0..5] */
- 	p1k[0]      = Lo16(iv32);
- 	p1k[1]      = Hi16(iv32);
- 	p1k[2]      = Mk16(ta[1], ta[0]); /* use TA[] as little-endian */
-@@ -526,7 +526,7 @@ static void phase1(u16 *p1k, const u8 *tk, const u8 *ta, u32 iv32)
- 		p1k[2] += _S_(p1k[1] ^ TK16((i & 1) + 4));
- 		p1k[3] += _S_(p1k[2] ^ TK16((i & 1) + 6));
- 		p1k[4] += _S_(p1k[3] ^ TK16((i & 1) + 0));
--		p1k[4] +=  (unsigned short)i;                    /* avoid "slide attacks" */
-+		p1k[4] +=  (unsigned short) i; /* avoid "slide attacks" */
- 		}
- 
- }
-@@ -557,41 +557,41 @@ static void phase1(u16 *p1k, const u8 *tk, const u8 *ta, u32 iv32)
- static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
- {
- 	int  i;
--	u16 PPK[6];                          /* temporary key for mixing    */
-+	u16 PPK[6]; /* temporary key for mixing    */
- 
--	/* Note: all adds in the PPK[] equations below are mod 2**16         */
-+	/* Note: all adds in the PPK[] equations below are mod 2**16 */
- 	for (i = 0; i < 5; i++)
--		PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
-+		PPK[i] = p1k[i]; /* first, copy P1K to PPK */
- 
--	PPK[5] = p1k[4] + iv16;     /* next,  add in IV16          */
-+	PPK[5] = p1k[4] + iv16; /* next,  add in IV16 */
- 
--	/* Bijective non-linear mixing of the 96 bits of PPK[0..5]           */
--	PPK[0] +=    _S_(PPK[5] ^ TK16(0));   /* Mix key in each "round"     */
--	PPK[1] +=    _S_(PPK[0] ^ TK16(1));
--	PPK[2] +=    _S_(PPK[1] ^ TK16(2));
--	PPK[3] +=    _S_(PPK[2] ^ TK16(3));
--	PPK[4] +=    _S_(PPK[3] ^ TK16(4));
--	PPK[5] +=    _S_(PPK[4] ^ TK16(5));   /* Total # S-box lookups == 6  */
-+	/* Bijective non-linear mixing of the 96 bits of PPK[0..5] */
-+	PPK[0] += _S_(PPK[5] ^ TK16(0)); /* Mix key in each "round" */
-+	PPK[1] += _S_(PPK[0] ^ TK16(1));
-+	PPK[2] += _S_(PPK[1] ^ TK16(2));
-+	PPK[3] += _S_(PPK[2] ^ TK16(3));
-+	PPK[4] += _S_(PPK[3] ^ TK16(4));
-+	PPK[5] += _S_(PPK[4] ^ TK16(5)); /* Total # S-box lookups == 6 */
- 
--	/* Final sweep: bijective, "linear". Rotates kill LSB correlations   */
-+	/* Final sweep: bijective, "linear". Rotates kill LSB correlations */
- 	PPK[0] +=  RotR1(PPK[5] ^ TK16(6));
--	PPK[1] +=  RotR1(PPK[0] ^ TK16(7));   /* Use all of TK[] in Phase2   */
-+	PPK[1] +=  RotR1(PPK[0] ^ TK16(7)); /* Use all of TK[] in Phase2 */
- 	PPK[2] +=  RotR1(PPK[1]);
- 	PPK[3] +=  RotR1(PPK[2]);
- 	PPK[4] +=  RotR1(PPK[3]);
- 	PPK[5] +=  RotR1(PPK[4]);
- 	/* Note: At this point, for a given key TK[0..15], the 96-bit output */
- 	/*       value PPK[0..5] is guaranteed to be unique, as a function   */
--	/*       of the 96-bit "input" value   {TA, IV32, IV16}. That is, P1K  */
--	/*       is now a keyed permutation of {TA, IV32, IV16}.               */
-+	/*       of the 96-bit "input" value   {TA, IV32, IV16}. That is,    */
-+	/*       P1K is now a keyed permutation of {TA, IV32, IV16}.         */
- 
- 	/* Set RC4KEY[0..3], which includes "cleartext" portion of RC4 key   */
--	rc4key[0] = Hi8(iv16);                /* RC4KEY[0..2] is the WEP IV  */
--	rc4key[1] = (Hi8(iv16) | 0x20) & 0x7F; /* Help avoid weak (FMS) keys  */
-+	rc4key[0] = Hi8(iv16);                 /* RC4KEY[0..2] is the WEP IV */
-+	rc4key[1] = (Hi8(iv16) | 0x20) & 0x7F; /* Help avoid weak (FMS) keys */
- 	rc4key[2] = Lo8(iv16);
- 	rc4key[3] = Lo8((PPK[5] ^ TK16(0)) >> 1);
- 
--	/* Copy 96 bits of PPK[0..5] to RC4KEY[4..15]  (little-endian)       */
-+	/* Copy 96 bits of PPK[0..5] to RC4KEY[4..15]  (little-endian) */
- 	for (i = 0; i < 6; i++) {
- 		rc4key[4 + 2 * i] = Lo8(PPK[i]);
- 		rc4key[5 + 2 * i] = Hi8(PPK[i]);
-@@ -671,18 +671,17 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 
- 		phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
- 
--		if ((curfragnum+1) == pattrib->nr_frags) {	/* 4 the last fragment */
-+		if ((curfragnum+1) == pattrib->nr_frags) { /* 4 the last fragment */
- 			length = pattrib->last_txcmdsz-pattrib->hdrlen-pattrib->iv_len - pattrib->icv_len;
- 			RT_TRACE(_module_rtl871x_security_c_, _drv_info_, ("pattrib->iv_len =%x, pattrib->icv_len =%x\n", pattrib->iv_len, pattrib->icv_len));
--			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
-+			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
- 
- 			arcfour_init(&mycontext, rc4key, 16);
- 			arcfour_encrypt(&mycontext, payload, payload, length);
- 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
--
- 		} else {
- 			length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
--			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
-+			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
- 			arcfour_init(&mycontext, rc4key, 16);
- 			arcfour_encrypt(&mycontext, payload, payload, length);
- 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
-@@ -915,12 +914,12 @@ static void mix_column(u8 *in, u8 *out)
- 		    add1b[i] = 0x00;
- 	}
- 
--	swap_halfs[0] = in[2];    /* Swap halfs */
-+	swap_halfs[0] = in[2]; /* Swap halfs */
- 	swap_halfs[1] = in[3];
- 	swap_halfs[2] = in[0];
- 	swap_halfs[3] = in[1];
- 
--	rotl[0] = in[3];        /* Rotate left 8 bits */
-+	rotl[0] = in[3]; /* Rotate left 8 bits */
- 	rotl[1] = in[0];
- 	rotl[2] = in[1];
- 	rotl[3] = in[2];
-@@ -942,7 +941,7 @@ static void mix_column(u8 *in, u8 *out)
- 
- 	xor_32(in, add1bf7, rotr);
- 
--	temp[0] = rotr[0];         /* Rotate right 8 bits */
-+	temp[0] = rotr[0]; /* Rotate right 8 bits */
- 	rotr[0] = rotr[1];
- 	rotr[1] = rotr[2];
- 	rotr[2] = rotr[3];
-@@ -998,9 +997,9 @@ static void construct_mic_iv(u8 *mic_iv, int qc_exists, int a4_exists, u8 *mpdu,
- 
- 	mic_iv[0] = 0x59;
- 	if (qc_exists && a4_exists)
--		mic_iv[1] = mpdu[30] & 0x0f;    /* QoS_TC           */
-+		mic_iv[1] = mpdu[30] & 0x0f; /* QoS_TC        */
- 	if (qc_exists && !a4_exists)
--		mic_iv[1] = mpdu[24] & 0x0f;   /* mute bits 7-4    */
-+		mic_iv[1] = mpdu[24] & 0x0f; /* mute bits 7-4 */
- 	if (!qc_exists)
- 		mic_iv[1] = 0x00;
- 	for (i = 2; i < 8; i++)
-@@ -1020,15 +1019,15 @@ static void construct_mic_header1(u8 *mic_header1, int header_length, u8 *mpdu)
- {
- 	mic_header1[0] = (u8)((header_length - 2) / 256);
- 	mic_header1[1] = (u8)((header_length - 2) % 256);
--	mic_header1[2] = mpdu[0] & 0xcf;    /* Mute CF poll & CF ack bits */
--	mic_header1[3] = mpdu[1] & 0xc7;    /* Mute retry, more data and pwr mgt bits */
--	mic_header1[4] = mpdu[4];       /* A1 */
-+	mic_header1[2] = mpdu[0] & 0xcf; /* Mute CF poll & CF ack bits */
-+	mic_header1[3] = mpdu[1] & 0xc7; /* Mute retry, more data and pwr mgt bits */
-+	mic_header1[4] = mpdu[4]; /* A1 */
- 	mic_header1[5] = mpdu[5];
- 	mic_header1[6] = mpdu[6];
- 	mic_header1[7] = mpdu[7];
- 	mic_header1[8] = mpdu[8];
- 	mic_header1[9] = mpdu[9];
--	mic_header1[10] = mpdu[10];     /* A2 */
-+	mic_header1[10] = mpdu[10]; /* A2 */
- 	mic_header1[11] = mpdu[11];
- 	mic_header1[12] = mpdu[12];
- 	mic_header1[13] = mpdu[13];
-@@ -1038,7 +1037,7 @@ static void construct_mic_header1(u8 *mic_header1, int header_length, u8 *mpdu)
- }
- 
- /************************************************/
--	/* construct_mic_header2()                      */
-+/* construct_mic_header2()                      */
- /* Builds the last MIC header block from        */
- /* header fields.                               */
- /************************************************/
-@@ -1050,7 +1049,7 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- 	for (i = 0; i < 16; i++)
- 		mic_header2[i] = 0x00;
- 
--	mic_header2[0] = mpdu[16];    /* A3 */
-+	mic_header2[0] = mpdu[16]; /* A3 */
- 	mic_header2[1] = mpdu[17];
- 	mic_header2[2] = mpdu[18];
- 	mic_header2[3] = mpdu[19];
-@@ -1062,7 +1061,7 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- 
- 	if (!qc_exists && a4_exists) {
- 		for (i = 0; i < 6; i++)
--			mic_header2[8+i] = mpdu[24+i];   /* A4 */
-+			mic_header2[8+i] = mpdu[24+i]; /* A4 */
- 	}
- 
- 	if (qc_exists && !a4_exists) {
-@@ -1072,7 +1071,7 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
- 
- 	if (qc_exists && a4_exists) {
- 		for (i = 0; i < 6; i++)
--			mic_header2[8+i] = mpdu[24+i];   /* A4 */
-+			mic_header2[8+i] = mpdu[24+i]; /* A4 */
- 
- 		mic_header2[14] = mpdu[30] & 0x0f;
- 		mic_header2[15] = mpdu[31] & 0x00;
-@@ -1095,16 +1094,16 @@ static void construct_ctr_preload(u8 *ctr_preload, int a4_exists, int qc_exists,
- 
- 	i = 0;
- 
--	ctr_preload[0] = 0x01;                                  /* flag */
-+	ctr_preload[0] = 0x01; /* flag */
- 	if (qc_exists && a4_exists)
--		ctr_preload[1] = mpdu[30] & 0x0f;   /* QoC_Control */
-+		ctr_preload[1] = mpdu[30] & 0x0f; /* QoC_Control */
- 	if (qc_exists && !a4_exists)
- 		ctr_preload[1] = mpdu[24] & 0x0f;
- 
- 	for (i = 2; i < 8; i++)
--		ctr_preload[i] = mpdu[i + 8];                       /* ctr_preload[2:7] = A2[0:5] = mpdu[10:15] */
-+		ctr_preload[i] = mpdu[i + 8]; /* ctr_preload[2:7] = A2[0:5] = mpdu[10:15] */
- 	for (i = 8; i < 14; i++)
--		ctr_preload[i] =    pn_vector[13 - i];          /* ctr_preload[8:13] = PN[5:0] */
-+		ctr_preload[i] = pn_vector[13 - i]; /* ctr_preload[8:13] = PN[5:0] */
- 	ctr_preload[14] =  (unsigned char) (c / 256); /* Ctr */
- 	ctr_preload[15] =  (unsigned char) (c % 256);
- 
-@@ -1268,11 +1267,11 @@ static int aes_cipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 
- int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
- 		       struct xmit_frame *pxmitframe)
--{	/*  exclude ICV */
-+{	/* exclude ICV */
- 	/* Intermediate Buffers */
- 	int curfragnum, length;
- 	u32 prwskeylen;
--	u8 *pframe, *prwskey;	/*  *payload,*iv */
-+	u8 *pframe, *prwskey; /* *payload, *iv */
- 	u8 hw_hdr_offset = 0;
- 	struct sta_info *stainfo;
- 	struct pkt_attrib *pattrib = &pxmitframe->attrib;
-@@ -1408,7 +1407,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 		qc_exists = 0;
- 	}
- 
--	/*  now, decrypt pframe with hdrlen offset and plen long */
-+	/* now, decrypt pframe with hdrlen offset and plen long */
- 
- 	payload_index = hdrlen + 8; /*  8 is for extiv */
- 
-@@ -1557,7 +1556,7 @@ int rtw_aes_decrypt23a(struct rtw_adapter *padapter,
- 	struct security_priv *psecuritypriv = &padapter->securitypriv;
- 	struct sk_buff *skb = precvframe->pkt;
- 	int length;
--	u8 *pframe, *prwskey;	/*  *payload,*iv */
-+	u8 *pframe, *prwskey; /* *payload, *iv */
- 	int res = _SUCCESS;
- 
- 	pframe = skb->data;
-@@ -1577,8 +1576,9 @@ int rtw_aes_decrypt23a(struct rtw_adapter *padapter,
- 		 ("rtw_aes_decrypt23a: stainfo!= NULL!!!\n"));
- 
- 	if (is_multicast_ether_addr(prxattrib->ra)) {
--		/* in concurrent we should use sw decrypt in group key,
--		   so we remove this message */
-+		/* in concurrent we should use sw decrypt in
-+		 * group key, so we remove this message
++static void ath10k_mac_vif_handle_tx_pause(struct ath10k_vif *arvif,
++					   enum wmi_tlv_tx_pause_id pause_id,
++					   enum wmi_tlv_tx_pause_action action)
++{
++	struct ath10k *ar = arvif->ar;
++
++	lockdep_assert_held(&ar->htt.tx_lock);
++
++	switch (pause_id) {
++	case WMI_TLV_TX_PAUSE_ID_MCC:
++	case WMI_TLV_TX_PAUSE_ID_P2P_CLI_NOA:
++	case WMI_TLV_TX_PAUSE_ID_P2P_GO_PS:
++	case WMI_TLV_TX_PAUSE_ID_AP_PS:
++	case WMI_TLV_TX_PAUSE_ID_IBSS_PS:
++		switch (action) {
++		case WMI_TLV_TX_PAUSE_ACTION_STOP:
++			ath10k_mac_vif_tx_lock(arvif, pause_id);
++			break;
++		case WMI_TLV_TX_PAUSE_ACTION_WAKE:
++			ath10k_mac_vif_tx_unlock(arvif, pause_id);
++			break;
++		default:
++			ath10k_warn(ar, "received unknown tx pause action %d on vdev %i, ignoring\n",
++				    action, arvif->vdev_id);
++			break;
++		}
++		break;
++	case WMI_TLV_TX_PAUSE_ID_AP_PEER_PS:
++	case WMI_TLV_TX_PAUSE_ID_AP_PEER_UAPSD:
++	case WMI_TLV_TX_PAUSE_ID_STA_ADD_BA:
++	case WMI_TLV_TX_PAUSE_ID_HOST:
++	default:
++		/* FIXME: Some pause_ids aren't vdev specific. Instead they
++		 * target peer_id and tid. Implementing these could improve
++		 * traffic scheduling fairness across multiple connected
++		 * stations in AP/IBSS modes.
 +		 */
- 		if (!psecuritypriv->binstallGrpkey) {
- 			res = _FAIL;
- 			DBG_8723A("%s:rx bc/mc packets, but didn't install "
++		ath10k_dbg(ar, ATH10K_DBG_MAC,
++			   "mac ignoring unsupported tx pause vdev %i id %d\n",
++			   arvif->vdev_id, pause_id);
++		break;
++	}
++}
++
++struct ath10k_mac_tx_pause {
++	u32 vdev_id;
++	enum wmi_tlv_tx_pause_id pause_id;
++	enum wmi_tlv_tx_pause_action action;
++};
++
++static void ath10k_mac_handle_tx_pause_iter(void *data, u8 *mac,
++					    struct ieee80211_vif *vif)
++{
++	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
++	struct ath10k_mac_tx_pause *arg = data;
++
++	ath10k_mac_vif_handle_tx_pause(arvif, arg->pause_id, arg->action);
++}
++
++void ath10k_mac_handle_tx_pause(struct ath10k *ar, u32 vdev_id,
++				enum wmi_tlv_tx_pause_id pause_id,
++				enum wmi_tlv_tx_pause_action action)
++{
++	struct ath10k_mac_tx_pause arg = {
++		.vdev_id = vdev_id,
++		.pause_id = pause_id,
++		.action = action,
++	};
++
++	spin_lock_bh(&ar->htt.tx_lock);
++	ieee80211_iterate_active_interfaces_atomic(ar->hw,
++						   IEEE80211_IFACE_ITER_RESUME_ALL,
++						   ath10k_mac_handle_tx_pause_iter,
++						   &arg);
++	spin_unlock_bh(&ar->htt.tx_lock);
++}
++
+ static u8 ath10k_tx_h_get_tid(struct ieee80211_hdr *hdr)
+ {
+ 	if (ieee80211_is_mgmt(hdr->frame_control))
+@@ -3920,6 +3998,14 @@ err:
+ 	return ret;
+ }
+ 
++static void ath10k_mac_vif_tx_unlock_all(struct ath10k_vif *arvif)
++{
++	int i;
++
++	for (i = 0; i < BITS_PER_LONG; i++)
++		ath10k_mac_vif_tx_unlock(arvif, i);
++}
++
+ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 				    struct ieee80211_vif *vif)
+ {
+@@ -3986,6 +4072,10 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 			ath10k_warn(ar, "failed to recalc monitor: %d\n", ret);
+ 	}
+ 
++	spin_lock_bh(&ar->htt.tx_lock);
++	ath10k_mac_vif_tx_unlock_all(arvif);
++	spin_unlock_bh(&ar->htt.tx_lock);
++
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index 9d3d9e75..94928ea 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -23,6 +23,9 @@
+ 
+ #define WEP_KEYID_SHIFT 6
+ 
++enum wmi_tlv_tx_pause_id;
++enum wmi_tlv_tx_pause_action;
++
+ struct ath10k_generic_iter {
+ 	struct ath10k *ar;
+ 	int ret;
+@@ -45,8 +48,13 @@ void ath10k_mac_vif_beacon_free(struct ath10k_vif *arvif);
+ void ath10k_drain_tx(struct ath10k *ar);
+ bool ath10k_mac_is_peer_wep_key_set(struct ath10k *ar, const u8 *addr,
+ 				    u8 keyidx);
++
+ void ath10k_mac_handle_beacon(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_mac_handle_beacon_miss(struct ath10k *ar, u32 vdev_id);
++void ath10k_mac_handle_tx_pause(struct ath10k *ar, u32 vdev_id,
++				enum wmi_tlv_tx_pause_id pause_id,
++				enum wmi_tlv_tx_pause_action action);
++
+ 
+ void ath10k_mac_tx_lock(struct ath10k *ar, int reason);
+ void ath10k_mac_tx_unlock(struct ath10k *ar, int reason);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index a359a7e..45f8431 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -16,6 +16,7 @@
+  */
+ #include "core.h"
+ #include "debug.h"
++#include "mac.h"
+ #include "hw.h"
+ #include "mac.h"
+ #include "wmi.h"
+@@ -68,6 +69,8 @@ static const struct wmi_tlv_policy wmi_tlv_policies[] = {
+ 		= { .min_len = sizeof(struct wmi_tlv_p2p_noa_ev) },
+ 	[WMI_TLV_TAG_STRUCT_ROAM_EVENT]
+ 		= { .min_len = sizeof(struct wmi_tlv_roam_ev) },
++	[WMI_TLV_TAG_STRUCT_TX_PAUSE_EVENT]
++		= { .min_len = sizeof(struct wmi_tlv_tx_pause_ev) },
+ };
+ 
+ static int
+@@ -337,6 +340,48 @@ static int ath10k_wmi_tlv_event_p2p_noa(struct ath10k *ar,
+ 		   vdev_id, noa->num_descriptors);
+ 
+ 	ath10k_p2p_noa_update_by_vdev_id(ar, vdev_id, noa);
++	kfree(tb);
++	return 0;
++}
++
++static int ath10k_wmi_tlv_event_tx_pause(struct ath10k *ar,
++					 struct sk_buff *skb)
++{
++	const void **tb;
++	const struct wmi_tlv_tx_pause_ev *ev;
++	int ret, vdev_id;
++	u32 pause_id, action, vdev_map, peer_id, tid_map;
++
++	tb = ath10k_wmi_tlv_parse_alloc(ar, skb->data, skb->len, GFP_ATOMIC);
++	if (IS_ERR(tb)) {
++		ret = PTR_ERR(tb);
++		ath10k_warn(ar, "failed to parse tlv: %d\n", ret);
++		return ret;
++	}
++
++	ev = tb[WMI_TLV_TAG_STRUCT_TX_PAUSE_EVENT];
++	if (!ev) {
++		kfree(tb);
++		return -EPROTO;
++	}
++
++	pause_id = __le32_to_cpu(ev->pause_id);
++	action = __le32_to_cpu(ev->action);
++	vdev_map = __le32_to_cpu(ev->vdev_map);
++	peer_id = __le32_to_cpu(ev->peer_id);
++	tid_map = __le32_to_cpu(ev->tid_map);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi tlv tx pause pause_id %u action %u vdev_map 0x%08x peer_id %u tid_map 0x%08x\n",
++		   pause_id, action, vdev_map, peer_id, tid_map);
++
++	for (vdev_id = 0; vdev_map; vdev_id++) {
++		if (!(vdev_map & BIT(vdev_id)))
++			continue;
++
++		vdev_map &= ~BIT(vdev_id);
++		ath10k_mac_handle_tx_pause(ar, vdev_id, pause_id, action);
++	}
+ 
+ 	kfree(tb);
+ 	return 0;
+@@ -466,6 +511,9 @@ static void ath10k_wmi_tlv_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_TLV_P2P_NOA_EVENTID:
+ 		ath10k_wmi_tlv_event_p2p_noa(ar, skb);
+ 		break;
++	case WMI_TLV_TX_PAUSE_EVENTID:
++		ath10k_wmi_tlv_event_tx_pause(ar, skb);
++		break;
+ 	default:
+ 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.h b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+index 1b373f2..56f178a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.h
+@@ -1468,6 +1468,48 @@ struct wmi_tlv_adaptive_qcs {
+ 	__le32 enable;
+ } __packed;
+ 
++/**
++ * wmi_tlv_tx_pause_id - firmware tx queue pause reason types
++ *
++ * @WMI_TLV_TX_PAUSE_ID_MCC: used for by multi-channel firmware scheduler.
++ *		Only vdev_map is valid.
++ * @WMI_TLV_TX_PAUSE_ID_AP_PEER_PS: peer in AP mode is asleep.
++ *		Only peer_id is valid.
++ * @WMI_TLV_TX_PAUSE_ID_AP_PEER_UAPSD: Only peer_id and tid_map are valid.
++ * @WMI_TLV_TX_PAUSE_ID_P2P_CLI_NOA: Only vdev_map is valid.
++ * @WMI_TLV_TX_PAUSE_ID_P2P_GO_PS: Only vdev_map is valid.
++ * @WMI_TLV_TX_PAUSE_ID_STA_ADD_BA: Only peer_id and tid_map are valid.
++ * @WMI_TLV_TX_PAUSE_ID_AP_PS: When all peers are asleep in AP mode. Only
++ *		vdev_map is valid.
++ * @WMI_TLV_TX_PAUSE_ID_IBSS_PS: When all peers are asleep in IBSS mode. Only
++ *		vdev_map is valid.
++ * @WMI_TLV_TX_PAUSE_ID_HOST: Host itself requested tx pause.
++ */
++enum wmi_tlv_tx_pause_id {
++	WMI_TLV_TX_PAUSE_ID_MCC = 1,
++	WMI_TLV_TX_PAUSE_ID_AP_PEER_PS = 2,
++	WMI_TLV_TX_PAUSE_ID_AP_PEER_UAPSD = 3,
++	WMI_TLV_TX_PAUSE_ID_P2P_CLI_NOA = 4,
++	WMI_TLV_TX_PAUSE_ID_P2P_GO_PS = 5,
++	WMI_TLV_TX_PAUSE_ID_STA_ADD_BA = 6,
++	WMI_TLV_TX_PAUSE_ID_AP_PS = 7,
++	WMI_TLV_TX_PAUSE_ID_IBSS_PS = 8,
++	WMI_TLV_TX_PAUSE_ID_HOST = 21,
++};
++
++enum wmi_tlv_tx_pause_action {
++	WMI_TLV_TX_PAUSE_ACTION_STOP,
++	WMI_TLV_TX_PAUSE_ACTION_WAKE,
++};
++
++struct wmi_tlv_tx_pause_ev {
++	__le32 pause_id;
++	__le32 action;
++	__le32 vdev_map;
++	__le32 peer_id;
++	__le32 tid_map;
++} __packed;
++
+ void ath10k_wmi_tlv_attach(struct ath10k *ar);
+ 
+ #endif
 -- 
 2.1.4
 
