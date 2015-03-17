@@ -1,48 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:38244 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752540AbbCaKhQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 06:37:16 -0400
-Received: by wibgn9 with SMTP id gn9so20323561wib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 03:37:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87iodi318p.fsf@kamboji.qca.qualcomm.com>
-References: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
-	<1427200993-7550-3-git-send-email-michal.kazior@tieto.com>
-	<87iodi318p.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 31 Mar 2015 12:37:15 +0200
-Message-ID: <CA+BoTQkouPcREDVpKx=iKs05aeoAUv8Qj-keO3FPVdOyojyDnQ@mail.gmail.com> (sfid-20150331_123721_696350_DEAD3AE2)
-Subject: Re: [PATCH v5 2/7] ath10k: implement chanctx API
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:53182 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752979AbbCQKAy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Mar 2015 06:00:54 -0400
+Message-ID: <1426586451.1985.2.camel@sipsolutions.net> (sfid-20150317_110100_863661_087B3819)
+Subject: Re: [PATCH] mac80211: initialize rate control earlier for tdls
+ station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 17 Mar 2015 11:00:51 +0100
+In-Reply-To: <1425830662-24803-1-git-send-email-arik@wizery.com> (sfid-20150308_170427_486026_D613534C)
+References: <1425830662-24803-1-git-send-email-arik@wizery.com>
+	 (sfid-20150308_170427_486026_D613534C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 March 2015 at 18:21, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> The chanctx API will allow ath10k to support
->> multi-channel operation.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> kbuild reports:
->
-> sparse warnings: (new ones prefixed by >>)
->
->>> drivers/net/wireless/ath/ath10k/mac.h:72:57: sparse: incorrect type in initializer (different address spaces)
->    drivers/net/wireless/ath/ath10k/mac.h:72:57:    expected struct ieee80211_chanctx_conf *conf
->    drivers/net/wireless/ath/ath10k/mac.h:72:57:    got struct ieee80211_chanctx_conf [noderef] <asn:4>*chanctx_conf
->>> drivers/net/wireless/ath/ath10k/mac.h:72:57: sparse: incorrect type in initializer (different address spaces)
-[...]
+On Sun, 2015-03-08 at 18:04 +0200, Arik Nemtsov wrote:
+> From: Marek Puzyniak <marek.puzyniak@tieto.com>
+> 
+> Currently when TDLS station in driver goes from authorized
 
-Thanks for catching this! I've sent a v6.
+from authenticated
 
-Btw. I'm puzzled why my sparse isn't helpful like this. Ideas?
+> to associated state it can not use rate control parameters
+> because rate control is not initialized yet. Some drivers
+> require parameters already initialized by rate control when
+> entering associated state. It can be done by initializing
+> rate control after station transition to associated state
+> but before notifying driver about that.
 
+Applied, with the minor fix in the commit log above and the comment in
+the code.
 
-Michał
+johannes
+
