@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22720 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755823AbbCMQIe (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:21490 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932583AbbCQLZh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 12:08:34 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 0/3] ath10k: add basic tdls support
-References: <1425905138-9966-1-git-send-email-marek.puzyniak@tieto.com>
-	<CADnKcVi-we6TSPMNgboS5B9ead7Xiv+tukNZhEiboN+Eb_x6Vg@mail.gmail.com>
-Date: Fri, 13 Mar 2015 18:08:24 +0200
-In-Reply-To: <CADnKcVi-we6TSPMNgboS5B9ead7Xiv+tukNZhEiboN+Eb_x6Vg@mail.gmail.com>
-	(Marek Puzyniak's message of "Wed, 11 Mar 2015 13:38:49 +0100")
-Message-ID: <87fv98ribr.fsf@kamboji.qca.qualcomm.com> (sfid-20150313_170838_231327_26332B18)
+	Tue, 17 Mar 2015 07:25:37 -0400
+From: Avinash Patil <patila@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Li Long <longli@marvell.com>
+Date: Tue, 17 Mar 2015 04:25:29 -0700
+Subject: RE: [PATCH 1/3] mwifiex: add cfg80211 set_default_mgmt_key handler
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC667483FF70@SC-VEXCH2.marvell.com> (sfid-20150317_122555_061504_E55F5454)
+References: <1423764954-30412-1-git-send-email-patila@marvell.com>
+	 (sfid-20150212_134627_640778_2A1810BC)
+ <1423850815.2936.4.camel@sipsolutions.net>
+In-Reply-To: <1423850815.2936.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marek Puzyniak <marek.puzyniak@tieto.com> writes:
-
-> On 9 March 2015 at 13:45, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
->> This patchset introduces tdls funtionality without tdls peer uapsd
->> and tdls channel switching. Tdls is supported by qca6174 hardware
->> what is indicated by firmware through supported services.
-> [...]
->> Marek Puzyniak (2):
->>   ath10k: make peer type configurable
->>   ath10k: introduce basic tdls functionality
->>
->> Michal Kazior (1):
->>   ath10k: unify tx mode and dispatch
-> [...]
->
-> Kalle, please drop this patchset. I will send new version.
-
-Ok, dropped.
-
--- 
-Kalle Valo
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBb
+bWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IEZyaWRheSwgRmVicnVh
+cnkgMTMsIDIwMTUgMTE6MzcgUE0NCj4gVG86IEF2aW5hc2ggUGF0aWwNCj4gQ2M6IGxpbnV4LXdp
+cmVsZXNzQHZnZXIua2VybmVsLm9yZzsgQW1pdGt1bWFyIEthcndhcjsgQ2F0aHkgTHVvOyBYaW5t
+aW5nIEh1Ow0KPiBMaSBMb25nDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8zXSBtd2lmaWV4OiBh
+ZGQgY2ZnODAyMTEgc2V0X2RlZmF1bHRfbWdtdF9rZXkgaGFuZGxlcg0KPiANCj4gT24gVGh1LCAy
+MDE1LTAyLTEyIGF0IDIzOjQ1ICswNTMwLCBBdmluYXNoIFBhdGlsIHdyb3RlOg0KPiA+IEZyb206
+IFhpbm1pbmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4NCj4gPiBJdCBpcyBvYnNlcnZlZCB0
+aGF0IGhvc3RhcGQgZmFpbGVkIHRvIHNldHVwIHdpdGggbWFuYWdlbWVudCBmcmFtZQ0KPiA+IHBy
+b3RlY3Rpb24gbW9kZSBlbmFibGVkIHdoZW4gdXNpbmcgbXdpZmlleC4NCj4gPg0KPiA+IFRoaXMg
+aXMgYmVjYXVzZSBob3N0YXBkIHdpbGwgdHJ5IHRvIGluc3RhbGwgSUdUSyB1c2luZw0KPiA+IGNm
+ZzgwMjExIHNldF9kZWZhdWx0X21nbXRfa2V5IGhhbmRsZXIuDQo+ID4NCj4gPiB3ZSBoYXZlIGFs
+cmVhZHkgc3VwcG9ydCBJR1RLIGluc3RhbGwgaW4gc2V0X2tleSBoYW5kbGVyLCBzbyBqdXN0IHdv
+cmsNCj4gPiBhcm91bmQgdGhpcyBpc3N1ZSBieSBhZGQgYW4gZW1wdHkgY2ZnODAyMTFfc2V0X2Rl
+ZmF1bHRfbWdtdF9rZXkgaGFuZGxlci4NCj4gDQo+IEkgYmVsaWV2ZSB0aGF0IHRoaXMgaXMgaW5j
+b3JyZWN0IHNpbmNlIHRoZSBrZXkgc2hvdWxkIG9ubHkgYmUgaW5zdGFsbGVkIGZvciBUWA0KPiBh
+ZnRlciB0aGlzIGhhbmRsZXIsIG5vdCBpbiB0aGUgc2V0X2tleSBoYW5kbGVyLiBUaGlzIHNob3Vs
+ZCBtYWtlIGEgZGlmZmVyZW5jZQ0KPiBpbiB0aGUgY2FzZSBvZiByZWtleWluZz8gUGVyaGFwcyBo
+b3N0YXBkIGRvZXNuJ3QgYWN0dWFsbHkgcHJvZ3JhbSB0aGUga2V5DQo+IHVudGlsIHJla2V5aW5n
+IHdpdGggYWxsIHN0YXRpb25zIGZpbmlzaGVzIHRob3VnaC4NCiANCkkgYmVsaWV2ZSB0aGF0IHNl
+dF9kZWZ1YWx0X21nbXRfa2V5IGFuZCBjb3JyZXNwb25kaW5nIGNoYW5nZXMgaW4gaG9zdGFwZCAm
+IGNmZzgwMjExIGFyZSBkZXNpZ25lZCB3aXRoIGZvY3VzIG9uIG1hYzgwMjExLg0KT3VyIGRlc2ln
+biBpcyBhIGJpdCBkaWZmZXJlbnQgaW4gYSB3YXkgYWxsIFBNRiBpcyBoYW5kbGVkIGluIEZXOyBh
+bHNvIHdlIGRvbid0IHN1cHBvcnQgdHdvIHBhaXIgb2YgR1RLL0lHVEtzLg0KV2UgYWxyZWFkeSBo
+YXZlIGluc3RhbGxlZCBJR1RLIHRvIEZXIGluIGFkZF9rZXkgaGFuZGxlci4NCg0KPiBqb2hhbm5l
+cw0KDQo=
