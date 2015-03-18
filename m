@@ -1,116 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:41561 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750739AbbCNFyK (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:32931 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756339AbbCRMZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 01:54:10 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH v2 01/11] ath9k: Add initial structures for AIC
-Date: Sat, 14 Mar 2015 11:27:47 +0530
-Message-Id: <1426312677-2064-2-git-send-email-sujith@msujith.org> (sfid-20150314_065416_938021_4997F1DA)
-In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
-References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+	Wed, 18 Mar 2015 08:25:34 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 2/8] brcmfmac: Add necessary memory barriers for SDIO.
+Date: Wed, 18 Mar 2015 13:25:22 +0100
+Message-ID: <1426681528-15831-3-git-send-email-arend@broadcom.com> (sfid-20150318_132601_828169_E1984D2D)
+In-Reply-To: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+References: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-These are necessary for implementing AIC,
-supported by chips like WB222.
+SDIO uses a thread to handle all communication with the device,
+for this data is exchanged between threads. This data needs proper
+memory barriers to make sure that data "exchange" is going correct.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_aic.h | 49 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/btcoex.h     | 11 +++++++
- 2 files changed, 60 insertions(+)
- create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_aic.h
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 57 +++++++++++++++-----------
+ 1 file changed, 33 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.h b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-new file mode 100644
-index 0000000..b81d5d1
---- /dev/null
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-@@ -0,0 +1,49 @@
-+/*
-+ * Copyright (c) 2015 Qualcomm Atheros Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef AR9003_AIC_H
-+#define AR9003_AIC_H
-+
-+#define ATH_AIC_MAX_COM_ATT_DB_TABLE    6
-+#define ATH_AIC_MAX_AIC_LIN_TABLE       69
-+#define ATH_AIC_MIN_ROT_DIR_ATT_DB      0
-+#define ATH_AIC_MIN_ROT_QUAD_ATT_DB     0
-+#define ATH_AIC_MAX_ROT_DIR_ATT_DB      37
-+#define ATH_AIC_MAX_ROT_QUAD_ATT_DB     37
-+#define ATH_AIC_SRAM_AUTO_INCREMENT     0x80000000
-+#define ATH_AIC_SRAM_GAIN_TABLE_OFFSET  0x280
-+#define ATH_AIC_SRAM_CAL_OFFSET         0x140
-+#define ATH_AIC_SRAM_OFFSET             0x00
-+#define ATH_AIC_MEAS_MAG_THRESH         20
-+#define ATH_AIC_BT_JUPITER_CTRL         0x66820
-+#define ATH_AIC_BT_AIC_ENABLE           0x02
-+
-+struct ath_aic_sram_info {
-+	bool valid:1;
-+	bool vga_quad_sign:1;
-+	bool vga_dir_sign:1;
-+	u8 rot_quad_att_db;
-+	u8 rot_dir_att_db;
-+	u8 com_att_6db;
-+};
-+
-+struct ath_aic_out_info {
-+	int16_t dir_path_gain_lin;
-+	int16_t quad_path_gain_lin;
-+	struct ath_aic_sram_info sram;
-+};
-+
-+#endif /* AR9003_AIC_H */
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 5fe62ff..b3ed738 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -44,6 +44,9 @@
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 17a7212..38fa0e8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -507,8 +507,8 @@ struct brcmf_sdio {
  
- #define AR9300_NUM_BT_WEIGHTS   4
- #define AR9300_NUM_WLAN_WEIGHTS 4
-+
-+#define ATH_AIC_MAX_BT_CHANNEL  79
-+
- /* Defines the BT AR_BT_COEX_WGHT used */
- enum ath_stomp_type {
- 	ATH_BTCOEX_STOMP_ALL,
-@@ -93,6 +96,14 @@ struct ath9k_hw_mci {
- 	u32 last_recovery;
- };
+ 	struct workqueue_struct *brcmf_wq;
+ 	struct work_struct datawork;
+-	atomic_t dpc_tskcnt;
+-	atomic_t dpc_running;
++	bool dpc_triggered;
++	bool dpc_running;
  
-+struct ath9k_hw_aic {
-+	bool aic_enabled;
-+	u8 aic_cal_state;
-+	u8 aic_caled_chan;
-+	u32 aic_sram[ATH_AIC_MAX_BT_CHANNEL];
-+	u32 aic_cal_start_time;
-+};
-+
- struct ath_btcoex_hw {
- 	enum ath_btcoex_scheme scheme;
- 	struct ath9k_hw_mci mci;
+ 	bool txoff;		/* Transmit flow-controlled */
+ 	struct brcmf_sdio_count sdcnt;
+@@ -2713,6 +2713,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 			err = brcmf_sdio_tx_ctrlframe(bus,  bus->ctrl_frame_buf,
+ 						      bus->ctrl_frame_len);
+ 			bus->ctrl_frame_err = err;
++			wmb();
+ 			bus->ctrl_frame_stat = false;
+ 		}
+ 		sdio_release_host(bus->sdiodev->func[1]);
+@@ -2734,6 +2735,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 			sdio_claim_host(bus->sdiodev->func[1]);
+ 			if (bus->ctrl_frame_stat) {
+ 				bus->ctrl_frame_err = -ENODEV;
++				wmb();
+ 				bus->ctrl_frame_stat = false;
+ 				brcmf_sdio_wait_event_wakeup(bus);
+ 			}
+@@ -2744,7 +2746,7 @@ static void brcmf_sdio_dpc(struct brcmf_sdio *bus)
+ 		   (!atomic_read(&bus->fcstate) &&
+ 		    brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol) &&
+ 		    data_ok(bus))) {
+-		atomic_inc(&bus->dpc_tskcnt);
++		bus->dpc_triggered = true;
+ 	}
+ }
+ 
+@@ -2940,6 +2942,7 @@ brcmf_sdio_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
+ 	/* Send from dpc */
+ 	bus->ctrl_frame_buf = msg;
+ 	bus->ctrl_frame_len = msglen;
++	wmb();
+ 	bus->ctrl_frame_stat = true;
+ 
+ 	brcmf_sdio_trigger_dpc(bus);
+@@ -2958,6 +2961,7 @@ brcmf_sdio_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
+ 	if (!ret) {
+ 		brcmf_dbg(SDIO, "ctrl_frame complete, err=%d\n",
+ 			  bus->ctrl_frame_err);
++		rmb();
+ 		ret = bus->ctrl_frame_err;
+ 	}
+ 
+@@ -3526,8 +3530,8 @@ done:
+ 
+ void brcmf_sdio_trigger_dpc(struct brcmf_sdio *bus)
+ {
+-	if (atomic_read(&bus->dpc_tskcnt) == 0) {
+-		atomic_inc(&bus->dpc_tskcnt);
++	if (!bus->dpc_triggered) {
++		bus->dpc_triggered = true;
+ 		queue_work(bus->brcmf_wq, &bus->datawork);
+ 	}
+ }
+@@ -3558,7 +3562,7 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
+ 	if (!bus->intr)
+ 		brcmf_err("isr w/o interrupt configured!\n");
+ 
+-	atomic_inc(&bus->dpc_tskcnt);
++	bus->dpc_triggered = true;
+ 	queue_work(bus->brcmf_wq, &bus->datawork);
+ }
+ 
+@@ -3578,7 +3582,7 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 		if (!bus->intr ||
+ 		    (bus->sdcnt.intrcount == bus->sdcnt.lastintrs)) {
+ 
+-			if (atomic_read(&bus->dpc_tskcnt) == 0) {
++			if (!bus->dpc_triggered) {
+ 				u8 devpend;
+ 
+ 				sdio_claim_host(bus->sdiodev->func[1]);
+@@ -3596,7 +3600,7 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 				bus->sdcnt.pollcnt++;
+ 				atomic_set(&bus->ipend, 1);
+ 
+-				atomic_inc(&bus->dpc_tskcnt);
++				bus->dpc_triggered = true;
+ 				queue_work(bus->brcmf_wq, &bus->datawork);
+ 			}
+ 		}
+@@ -3623,17 +3627,21 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ #endif				/* DEBUG */
+ 
+ 	/* On idle timeout clear activity flag and/or turn off clock */
+-	if ((atomic_read(&bus->dpc_tskcnt) == 0) &&
+-	    (atomic_read(&bus->dpc_running) == 0) &&
+-	    (bus->idletime > 0) && (bus->clkstate == CLK_AVAIL)) {
+-		bus->idlecount++;
+-		if (bus->idlecount > bus->idletime) {
+-			brcmf_dbg(SDIO, "idle\n");
+-			sdio_claim_host(bus->sdiodev->func[1]);
+-			brcmf_sdio_wd_timer(bus, 0);
++	if (!bus->dpc_triggered) {
++		rmb();
++		if ((!bus->dpc_running) && (bus->idletime > 0) &&
++		    (bus->clkstate == CLK_AVAIL)) {
++			bus->idlecount++;
++			if (bus->idlecount > bus->idletime) {
++				brcmf_dbg(SDIO, "idle\n");
++				sdio_claim_host(bus->sdiodev->func[1]);
++				brcmf_sdio_wd_timer(bus, 0);
++				bus->idlecount = 0;
++				brcmf_sdio_bus_sleep(bus, true, false);
++				sdio_release_host(bus->sdiodev->func[1]);
++			}
++		} else {
+ 			bus->idlecount = 0;
+-			brcmf_sdio_bus_sleep(bus, true, false);
+-			sdio_release_host(bus->sdiodev->func[1]);
+ 		}
+ 	} else {
+ 		bus->idlecount = 0;
+@@ -3645,13 +3653,14 @@ static void brcmf_sdio_dataworker(struct work_struct *work)
+ 	struct brcmf_sdio *bus = container_of(work, struct brcmf_sdio,
+ 					      datawork);
+ 
+-	while (atomic_read(&bus->dpc_tskcnt)) {
+-		atomic_set(&bus->dpc_running, 1);
+-		atomic_set(&bus->dpc_tskcnt, 0);
++	bus->dpc_running = true;
++	wmb();
++	while (ACCESS_ONCE(bus->dpc_triggered)) {
++		bus->dpc_triggered = false;
+ 		brcmf_sdio_dpc(bus);
+ 		bus->idlecount = 0;
+-		atomic_set(&bus->dpc_running, 0);
+ 	}
++	bus->dpc_running = false;
+ 	if (brcmf_sdiod_freezing(bus->sdiodev)) {
+ 		brcmf_sdiod_change_state(bus->sdiodev, BRCMF_SDIOD_DOWN);
+ 		brcmf_sdiod_try_freeze(bus->sdiodev);
+@@ -4144,8 +4153,8 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 		bus->watchdog_tsk = NULL;
+ 	}
+ 	/* Initialize DPC thread */
+-	atomic_set(&bus->dpc_tskcnt, 0);
+-	atomic_set(&bus->dpc_running, 0);
++	bus->dpc_triggered = false;
++	bus->dpc_running = false;
+ 
+ 	/* Assign bus interface call back */
+ 	bus->sdiodev->bus_if->dev = bus->sdiodev->dev;
 -- 
-2.3.1
+1.9.1
 
