@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f179.google.com ([209.85.223.179]:34066 "EHLO
-	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbbCKMiu (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:32931 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756352AbbCRMZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 08:38:50 -0400
-Received: by iecsl2 with SMTP id sl2so26919462iec.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 05:38:49 -0700 (PDT)
+	Wed, 18 Mar 2015 08:25:36 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 0/8] brcmfmac: device support and some fixes
+Date: Wed, 18 Mar 2015 13:25:20 +0100
+Message-ID: <1426681528-15831-1-git-send-email-arend@broadcom.com> (sfid-20150318_132555_853354_6D484DF5)
 MIME-Version: 1.0
-In-Reply-To: <1425905138-9966-1-git-send-email-marek.puzyniak@tieto.com>
-References: <1425905138-9966-1-git-send-email-marek.puzyniak@tieto.com>
-Date: Wed, 11 Mar 2015 13:38:49 +0100
-Message-ID: <CADnKcVi-we6TSPMNgboS5B9ead7Xiv+tukNZhEiboN+Eb_x6Vg@mail.gmail.com> (sfid-20150311_133857_170582_F7FBDF23)
-Subject: Re: [PATCH v3 0/3] ath10k: add basic tdls support
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Marek Puzyniak <marek.puzyniak@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 March 2015 at 13:45, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
-> This patchset introduces tdls funtionality without tdls peer uapsd
-> and tdls channel switching. Tdls is supported by qca6174 hardware
-> what is indicated by firmware through supported services.
-[...]
-> Marek Puzyniak (2):
->   ath10k: make peer type configurable
->   ath10k: introduce basic tdls functionality
->
-> Michal Kazior (1):
->   ath10k: unify tx mode and dispatch
-[...]
+This series adds support for the BCM43430 SDIO chipset. Recent
+BCM4345 support is changed to support BCM43455 and BCM43457 as
+it has been verified on those. In SDIO driver part memory barriers
+have been added to assure data validity between driver threads.
 
-Kalle, please drop this patchset. I will send new version.
+This series is intended for v4.1 kernel and applies to the master
+branch of the wireless-drivers-next repository.
 
-Thanks,
-Marek
+Arend van Spriel (5):
+  brcmfmac: avoid runtime-pm for sdio host controller
+  brcmfmac: add MODULE_FIRMWARE() macros for bcm4356 PCIe device
+  brcmfmac: add support for BCM43430 SDIO chipset
+  brcmfmac: only support the BCM43455/7 device
+  brcmfmac: remove support for unreleased BCM4354 PCIe
+
+Hante Meuleman (3):
+  brcmfmac: Add necessary memory barriers for SDIO.
+  brcmfmac: Update msgbuf commonring size for improved throughput.
+  brcmfmac: Remove unnecessary new-line in pcie console logging.
+
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |  5 +-
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c     | 18 ++++++
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h   |  8 +--
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c     | 14 +----
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c     | 72 +++++++++++++---------
+ .../net/wireless/brcm80211/include/brcm_hw_ids.h   |  1 +
+ .../net/wireless/brcm80211/include/chipcommon.h    |  9 ++-
+ include/linux/mmc/sdio_ids.h                       |  1 +
+ 8 files changed, 82 insertions(+), 46 deletions(-)
+
+-- 
+1.9.1
+
