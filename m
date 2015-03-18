@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:36909 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755159AbbCBTtZ (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:16710 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756338AbbCRMZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 14:49:25 -0500
-Message-ID: <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150302_204937_206043_D772E0D6)
-Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Florian Westphal <fw@strlen.de>
-Cc: netdev@vger.kernel.org, Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Mon, 02 Mar 2015 11:49:23 -0800
-In-Reply-To: <1425318028-26531-1-git-send-email-fw@strlen.de>
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 18 Mar 2015 08:25:34 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 4/8] brcmfmac: Remove unnecessary new-line in pcie console logging.
+Date: Wed, 18 Mar 2015 13:25:24 +0100
+Message-ID: <1426681528-15831-5-git-send-email-arend@broadcom.com> (sfid-20150318_132544_304889_6C1D8E16)
+In-Reply-To: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+References: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-02 at 18:40 +0100, Florian Westphal wrote:
-> Following patches shrink all in-tree users of skb->cb[] so that kernel
-> still builds with skb->cb[] set to 44 bytes.
-> 
-> This would create a 4-byte hole, it would be easy to reorder skb
-> members so this hole is filled.
-> 
-> pahole dump for vmlinux with allyesconfig (+this patch series):
-> 
-> http://www.strlen.de/fw/pahole.txt.gz
-> 
-> remarks/known issues:
-> - adds __packet attribute to a few structures.
->   Its needed to not have padding at end of the structure, else
->   we get build assertion errors even if all members fit into cb[].
-> - checkpatch isn't happy yet.
-> - dccp changes are untested (its on my todo list)
-> - rxrpc change is untested (on todo list).
-> - wireless changes are untested, I don't own any of the affected hw.
-> 
-> The idea is to figure out what needs to be done to make build_skb() and
-> friends only touch the first 3 cachelines of the skb on all architectures.
-> 
-> We'd need to reduce skbuff by 40 bytes to achieve this for allyesconfig.
-> 
-> Other sk_buff reduction ideas being worked:
-> 
-> - move truesize to shinfo (which has 4 byte hole)
-> - turn ->data into offset on 64bit platforms (intrusive, > 1000 files
->   affected)
-> - move pointers that are ususally not needed (nf_bridge, secpath) to the end,
->   with flag field that tells us when pointer is valid (so we don't have
->   to memset() them unconditionally at allocation time).
-> - seems we could already to this for the inner header fields since the're only
->   valid once ->encapsulation / inner_protocol_type is set.
-> 
-> Comments and more ideas welcome.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Size of skb->cb[] is not the major factor. Trying to gain 4 or 8 bytes
-is not going to improve performance a lot.
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-The real problem is that we clear it in skb_alloc()/build_skb(), instead
-of each layer doing so at demand, and only the part that matters for
-this layer.
-
-Basically, skb->cb[] could be 80 or 160 bytes instead of 48, and we
-should not care, as long as no layer does a stupid/lazy 
-
-memset(skb->cb, 0, sizeof(skb->cb))
-
-Presumably skb_clone() could be extended to receive the length of
-skb->cb[] that current layer cares about.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+index aa7a4df..ec426f3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
+@@ -651,10 +651,9 @@ static void brcmf_pcie_bus_console_read(struct brcmf_pciedev_info *devinfo)
+ 			console->log_str[console->log_idx] = ch;
+ 			console->log_idx++;
+ 		}
+-
+ 		if (ch == '\n') {
+ 			console->log_str[console->log_idx] = 0;
+-			brcmf_dbg(PCIE, "CONSOLE: %s\n", console->log_str);
++			brcmf_dbg(PCIE, "CONSOLE: %s", console->log_str);
+ 			console->log_idx = 0;
+ 		}
+ 	}
+-- 
+1.9.1
 
