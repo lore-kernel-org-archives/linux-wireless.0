@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f178.google.com ([74.125.82.178]:34823 "EHLO
-	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753400AbbCMMRc (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:64774 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbbCRT3D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 08:17:32 -0400
-Received: by wesw55 with SMTP id w55so22872473wes.2
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Mar 2015 05:17:31 -0700 (PDT)
-Message-ID: <5502D558.90306@gmail.com> (sfid-20150313_131735_521922_8C8852F2)
-Date: Fri, 13 Mar 2015 13:17:28 +0100
-From: wim torfs <wtorfs@gmail.com>
+	Wed, 18 Mar 2015 15:29:03 -0400
+Message-ID: <5509D1F9.5000609@broadcom.com> (sfid-20150318_202907_644986_4B7D622E)
+Date: Wed, 18 Mar 2015 20:28:57 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Cedric VONCKEN <cedric.voncken@acksys.fr>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ARP dropped during WPA handshake
-References: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>
-In-Reply-To: <773DB8A82AB6A046AE0195C68612A319019FECAF@sbs2003.acksys.local>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: wiphy band information
+References: <550952B4.4050400@broadcom.com> <1426706320.3001.21.camel@sipsolutions.net>
+In-Reply-To: <1426706320.3001.21.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 03/18/15 20:18, Johannes Berg wrote:
+> Hi Arend,
+>
+>> Is it ok to update the wiphy band information after registration.
+>
+> I believe this will cause issues.
+>
+>> In
+>> brcmfmac the firmware is queried to obtain the supported channels.
+>> However, it returns the channels for the current country set in
+>> firmware. So after probe/registration iw shows:
+>
+>> Looks fine apart from the power levels so it made me wonder if what I am
+>> doing is allowed. Any opinion on this?
+>
+> I think the regulatory flags will also break, since some are
+> pre-processed during wiphy registration.
+>
+>> I assume the supported band info is intended to show what hardware can
+>> do regardless of the configured country, but I have no way to pull that
+>> info from the device.
+>
+> I'd recommend finding (and hard-coding) a superset of all the channels
+> that the hardware could supported, and then dynamically setting the
+> disabled flag on those channels that the (current) regulatory
+> information cannot do.
 
+Depending on your reply that was the plan.
 
-On 03/13/2015 12:36 PM, Cedric VONCKEN wrote:
-> My test plateforme is very simple, One sta (with openwrt), one AP and a
-> computer connected to the AP.
-> I launch iperf on the sta and power up the AP.
->
-> With wireshark I can observe 1 s delay between the frame EAPOL 4/4 and
-> the arp request sent by the sta. I can observe the delay only if my sta
-> uses architecture with more 1 cpu.
->
-> When the sta received the Authentication response, mac80211 sets the
-> iface on UP state. This state allows wpa_supplicant to send the EAPOL
-> frame for WPA handshake but other frames are dropped.
->
-> If an arp request is sent by the local ip stack during the WPA handshake
-> this arp will be dropped and we need to wait the end of arp timeout (1
-> s).
->
-> Have you any suggestion / pointer to fix this issue?
->
+> This is something that needs to be handled throughout the code since
+> regulatory information can already change, but adding/removing channels
+> is something I'd really recommend against.
 
-I had a situation where ARP requests were sent and responses were 
-replied, but the requester did not accept the responses and therefore 
-was continuously sending request. However, this was in an IBSS and WPA 
-encryption, which is not really supported if I understand well. RSN 
-worked like a charm, though. The issue was related to the type of 
-encryption. This could also be an issue in your case, however, AP is 
-well supported, so hard to tell. I'm not really a security expert.
+I had my suspicions. Thanks.
 
-My point being, you will get better and faster support if you could 
-specify which encryption protocol you use, the specific parameters, etc.
-
-br,
-Wim.
-
-
-> Thanks for your help.
->
-> Cedric Voncken
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Gr. AvS
