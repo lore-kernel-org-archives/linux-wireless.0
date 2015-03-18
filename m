@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:35705 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbbCTLAZ (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:53281 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756343AbbCRMZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 07:00:25 -0400
-Received: by labjg1 with SMTP id jg1so84056277lab.2
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 04:00:23 -0700 (PDT)
-From: Marek Puzyniak <marek.puzyniak@tieto.com>
-To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
-Subject: [PATCH v4 0/6] ath10k: add basic tdls support
-Date: Fri, 20 Mar 2015 12:02:53 +0100
-Message-Id: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20150320_120029_587818_ECC14161)
+	Wed, 18 Mar 2015 08:25:34 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 1/8] brcmfmac: avoid runtime-pm for sdio host controller
+Date: Wed, 18 Mar 2015 13:25:21 +0100
+Message-ID: <1426681528-15831-2-git-send-email-arend@broadcom.com> (sfid-20150318_132545_555596_F0DB0B9E)
+In-Reply-To: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+References: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset introduces tdls funtionality without tdls peer uapsd
-and tdls channel switching. Tdls is supported by qca6174 hardware 
-what is indicated by firmware through supported services.
-Tdls station when authorized requires some parameters that are filled in 
-by rate control initialization. Rate control for tdls is initialized
-at proper time in mac80211 patch:
-mac80211: initialize rate control earlier for tdls station
+Several host controllers supporting runtime-pm are causing issues
+with our sdio wireless cards because they disable the sdio interrupt
+upon going into runtime suspend. This patch avoids that by doing
+a pm_runtime_forbid() call during the probe. Tested with Sony Vaio
+Duo 13 which uses sdhci-acpi host controller.
 
-So tdls funtionality implemented by this patchset depends on 
-mac80211: initialize rate control earlier for tdls station
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-v2:
--introduce tdls peer counter
--minor changes after review
-
-v3:
--more minor changes after review
--replace tdls peer counter variable by iterate station function
-
-v4:
--provide functions for counting tdls station per vif and tdls vifs
--handle maximum number of tdls vifs
--split code into more patches
-
-Marek Puzyniak (5):
-  ath10k: make peer type configurable
-  ath10k: store max tdls vdevs that fw can handle
-  ath10k: update station counting
-  ath10k: add wmi support for tdls
-  ath10k: introduce basic tdls functionality
-
-Michal Kazior (1):
-  ath10k: unify tx mode and dispatch
-
- drivers/net/wireless/ath/ath10k/core.c    |   1 +
- drivers/net/wireless/ath/ath10k/core.h    |   3 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  |   8 -
- drivers/net/wireless/ath/ath10k/htt_tx.c  |  30 ++-
- drivers/net/wireless/ath/ath10k/hw.h      |   1 +
- drivers/net/wireless/ath/ath10k/mac.c     | 391 +++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/mac.h     |   8 +
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  50 +++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 160 +++++++++++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  53 ++++
- drivers/net/wireless/ath/ath10k/wmi.c     |   3 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |  43 ++++
- 12 files changed, 664 insertions(+), 87 deletions(-)
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 4399530..9667b6a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -29,6 +29,7 @@
+ #include <linux/mmc/host.h>
+ #include <linux/platform_device.h>
+ #include <linux/platform_data/brcmfmac-sdio.h>
++#include <linux/pm_runtime.h>
+ #include <linux/suspend.h>
+ #include <linux/errno.h>
+ #include <linux/module.h>
+@@ -1006,6 +1007,7 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
+ 	sg_free_table(&sdiodev->sgtable);
+ 	sdiodev->sbwad = 0;
+ 
++	pm_runtime_allow(sdiodev->func[1]->card->host->parent);
+ 	return 0;
+ }
+ 
+@@ -1074,7 +1076,7 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+-
++	pm_runtime_forbid(host->parent);
+ out:
+ 	if (ret)
+ 		brcmf_sdiod_remove(sdiodev);
 -- 
-2.1.4
+1.9.1
 
