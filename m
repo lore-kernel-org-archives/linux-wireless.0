@@ -1,161 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:57999 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750919AbbCKRTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 13:19:30 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] ath10k: match wait_for_completion_timeout return type
-Date: Wed, 11 Mar 2015 13:14:36 -0400
-Message-Id: <1426094076-10134-1-git-send-email-hofrat@osadl.org> (sfid-20150311_181949_571585_993DA409)
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:33823 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755215AbbCRKLX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 06:11:23 -0400
+Received: by igbue6 with SMTP id ue6so70222954igb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2015 03:11:22 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1426671981.3001.12.camel@sipsolutions.net>
+References: <1426615118-17516-1-git-send-email-emmanuel.grumbach@intel.com>
+	<CAB3XZEd7cQwKm_yLztzeTB0S_-uEp4FwzDUV1O8cG6mNtkiY_A@mail.gmail.com>
+	<1426671981.3001.12.camel@sipsolutions.net>
+Date: Wed, 18 Mar 2015 12:11:22 +0200
+Message-ID: <CAB3XZEdJTjRS9tek_KnR9t_HT5+AHjvcjKuBavY2KSrHj9jLkw@mail.gmail.com> (sfid-20150318_111126_666590_EAB7ACA4)
+Subject: Re: [PATCH] mac80211: stop scan before connection
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Spinadel <david.spinadel@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Return type of wait_for_completion_timeout is unsigned long not int.
-An appropriately named unsigned long is added and the assignments fixed up.
+On Wed, Mar 18, 2015 at 11:46 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2015-03-18 at 11:36 +0200, Eliad Peller wrote:
+>> On Tue, Mar 17, 2015 at 7:58 PM, Emmanuel Grumbach
+>> <emmanuel.grumbach@intel.com> wrote:
+>> > From: David Spinadel <david.spinadel@intel.com>
+>> >
+>> > Stop scan before authentication or association to make sure
+>> > that nothing interferes with connection flow.
+>> >
+>> this makes sense
+>>
+>> > Currently mac80211 defers RX auth and assoc packets (among other ones)
+>> > until after the scan is complete, so auth during scan is likely to fail
+>> > if scan took too much time.
+>> >
+>> but i don't think deferring the frame handling makes sense in case of
+>> hw_scan (there was a similar case with BA request handling).
+>> i should have such (one-liner) patch pending somewhere...
+>
+> We did consider that, but ultimately I think it's not desirable.
+>
+> The aggregation case is different, but during auth/assoc the relevant
+> frames cannot be buffered by the AP. So unless you have a hardware
+> mechanism that makes the device not continue the scan for say 30-50ms
+> after the auth/assoc req frame went out, the connection process will be
+> very unreliable.
+>
+i'm not sure. the AP will probably have some retransmissions, so the
+station should have good chances to get the frames (assuming the
+hardware will give this interface some airtime during the scan).
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+> So in a sense you could say deferring the handling doesn't make sense,
+> but I'd still argue you shouldn't start this process while you're in the
+> middle of scanning, hence this patch.
+>
+i agree the patch makes sense anyway, i just noted that mac80211
+behavior seems wrong.
+you should avoid scanning while connecting in first place, not defer
+the handling.
 
-While at it the missing spaces 3*HZ -> 3 * HZ were added as well (should
-this be in a separate patch ?)
+btw, note that both this patch and ieee80211_iface_work() don't count
+for the sched scan case, which is basically the same.
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
+> We may have to do more exclusions (e.g. don't start a scan while
+> authenticating or associating) here though, and ultimately not
+> *processing* the frames will be irrelevant as they shouldn't be coming
+> in anyway.
+that's true for auth/assoc frames. but some other frames (e.g. deauth)
+can come anytime, and i don't see why we should defer processing in
+this case.
 
-Patch is against 4.0-rc3 (localversion-next is -next-20150311)
-
- drivers/net/wireless/ath/ath10k/mac.c |   35 +++++++++++++++++++--------------
- 1 file changed, 20 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e8cc19f..7db8b81 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -98,6 +98,7 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
- 			      const u8 *macaddr, bool def_idx)
- {
- 	struct ath10k *ar = arvif->ar;
-+	unsigned long time_left;
- 	int ret;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
-@@ -108,8 +109,8 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
- 	if (ret)
- 		return ret;
- 
--	ret = wait_for_completion_timeout(&ar->install_key_done, 3*HZ);
--	if (ret == 0)
-+	time_left = wait_for_completion_timeout(&ar->install_key_done, 3 * HZ);
-+	if (!time_left)
- 		return -ETIMEDOUT;
- 
- 	return 0;
-@@ -561,16 +562,16 @@ static void ath10k_mac_vif_beacon_cleanup(struct ath10k_vif *arvif)
- 
- static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
- {
--	int ret;
-+	unsigned long time_left;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	if (test_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags))
- 		return -ESHUTDOWN;
- 
--	ret = wait_for_completion_timeout(&ar->vdev_setup_done,
-+	time_left = wait_for_completion_timeout(&ar->vdev_setup_done,
- 						ATH10K_VDEV_SETUP_TIMEOUT_HZ);
--	if (ret == 0)
-+	if (!time_left)
- 		return -ETIMEDOUT;
- 
- 	return 0;
-@@ -2432,6 +2433,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 	const u8 *peer_addr;
- 	int vdev_id;
- 	int ret;
-+	unsigned long time_left;
- 
- 	/* FW requirement: We must create a peer before FW will send out
- 	 * an offchannel frame. Otherwise the frame will be stuck and
-@@ -2477,9 +2479,9 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 
- 		ath10k_tx_htt(ar, skb);
- 
--		ret = wait_for_completion_timeout(&ar->offchan_tx_completed,
--						  3 * HZ);
--		if (ret == 0)
-+		time_left = wait_for_completion_timeout(
-+					&ar->offchan_tx_completed, 3 * HZ);
-+		if (!time_left)
- 			ath10k_warn(ar, "timed out waiting for offchannel skb %p\n",
- 				    skb);
- 
-@@ -2573,6 +2575,7 @@ static int ath10k_scan_stop(struct ath10k *ar)
- 		.u.scan_id = ATH10K_SCAN_ID,
- 	};
- 	int ret;
-+	unsigned long time_left;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -2582,11 +2585,11 @@ static int ath10k_scan_stop(struct ath10k *ar)
- 		goto out;
- 	}
- 
--	ret = wait_for_completion_timeout(&ar->scan.completed, 3*HZ);
--	if (ret == 0) {
-+	time_left = wait_for_completion_timeout(&ar->scan.completed, 3 * HZ);
-+	if (!time_left) {
- 		ath10k_warn(ar, "failed to receive scan abortion completion: timed out\n");
- 		ret = -ETIMEDOUT;
--	} else if (ret > 0) {
-+	} else if (time_left > 0) {
- 		ret = 0;
- 	}
- 
-@@ -2655,6 +2658,7 @@ static int ath10k_start_scan(struct ath10k *ar,
- 			     const struct wmi_start_scan_arg *arg)
- {
- 	int ret;
-+	unsigned long time_left;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -2662,8 +2666,8 @@ static int ath10k_start_scan(struct ath10k *ar,
- 	if (ret)
- 		return ret;
- 
--	ret = wait_for_completion_timeout(&ar->scan.started, 1*HZ);
--	if (ret == 0) {
-+	time_left = wait_for_completion_timeout(&ar->scan.started, 1 * HZ);
-+	if (!time_left) {
- 		ret = ath10k_scan_stop(ar);
- 		if (ret)
- 			ath10k_warn(ar, "failed to stop scan: %d\n", ret);
-@@ -4355,6 +4359,7 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
- 	struct wmi_start_scan_arg arg;
- 	int ret = 0;
-+	unsigned long time_left;
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -4404,8 +4409,8 @@ static int ath10k_remain_on_channel(struct ieee80211_hw *hw,
- 		goto exit;
- 	}
- 
--	ret = wait_for_completion_timeout(&ar->scan.on_channel, 3*HZ);
--	if (ret == 0) {
-+	time_left = wait_for_completion_timeout(&ar->scan.on_channel, 3 * HZ);
-+	if (!time_left) {
- 		ath10k_warn(ar, "failed to switch to channel for roc scan\n");
- 
- 		ret = ath10k_scan_stop(ar);
--- 
-1.7.10.4
-
+Eliad.
