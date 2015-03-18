@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58830 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751438AbbCIMwv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 08:52:51 -0400
-Message-ID: <1425905568.1928.7.camel@sipsolutions.net> (sfid-20150309_135255_585816_51683525)
-Subject: Re: [PATCH] mac80211: handle hw roc cancel vs. expiration race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Mar 2015 13:52:48 +0100
-In-Reply-To: <1425902001-3163-1-git-send-email-eliad@wizery.com> (sfid-20150309_125330_250339_ED541C0C)
-References: <1425902001-3163-1-git-send-email-eliad@wizery.com>
-	 (sfid-20150309_125330_250339_ED541C0C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:36502 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbbCRWUE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 18:20:04 -0400
+Received: by obdfc2 with SMTP id fc2so41662087obd.3
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2015 15:20:04 -0700 (PDT)
+Message-ID: <5509FA11.4060105@lwfinger.net> (sfid-20150318_232008_368425_916D3CB4)
+Date: Wed, 18 Mar 2015 17:20:01 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Orozco <felipe.orozco32@gmail.com>, linux-wireless@vger.kernel.org
+Subject: Re: fast wireless restart on raspberry pi
+References: <5162B74B-89E1-4A6D-AB76-8C5D55D15A99@gmail.com>
+In-Reply-To: <5162B74B-89E1-4A6D-AB76-8C5D55D15A99@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-09 at 13:53 +0200, Eliad Peller wrote:
+On 03/18/2015 04:15 PM, Orozco wrote:
+> Hello,
+>
+> I am working on a project where I need to be able to modify a wireless
+> adapter's firmware. I'm trying to use the TP-LINK TL-WN821N with the
+> 8192cu driver and firmware on a Raspberry Pi 2. I am trying to be able to
+> quickly stop the transmission of packets then and just as quickly be able
+> to restart the transmission. Ideally, I would be able to do a single
+> stop/start in less time than it takes to transmit a packet.
+>
+> I would be very thankful if someone could tell me where would be a good
+> place to start, and share any knowledge they have.
 
-> Fix it by cancelling hw_roc_done on roc cancel.
-> Since hw_roc_done takes local->mtx, temporarily
-> release it (before re-acquiring it and starting
-> the next roc if needed).
+The firmware for the RTL8192CU is definitely not open source, and there is no 
+documentation for the hardware. Modifying this firmware would be very difficult.
 
-I can't say I like this, and I'm not even sure it doesn't leave a race?
-After all, the work will not take the RTNL.
-
-Also, I think the whole concept is racy because you acquire "found"
-before the unlock, but use it after the unlock, so if the work actually
-ran (_sync, perhaps it already started) it may have freed the "found"
-pointer.
-
-I think the only way to really fix that is to make the driver return the
-roc pointer or so and then we can either queue a work struct per roc
-struct, or at least mark the roc struct as driver-destroyed and
-double-check that in the work function?
-
-Or perhaps we could flush the work before we even take the lock, but
-then it might still race with the driver trying to cancel just after we
-flushed I guess.
-
-johannes
+Larry
 
 
