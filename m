@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22718 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751730AbbCVRTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 13:19:32 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2015-03-22
-Date: Sun, 22 Mar 2015 17:19:28 +0000
-Message-ID: <1427044767.8611.4.camel@egrumbacBox> (sfid-20150322_181936_394316_F56E4EA1)
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:33511 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074AbbCRJgy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 05:36:54 -0400
+Received: by ignm3 with SMTP id m3so69768574ign.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Mar 2015 02:36:54 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1426615118-17516-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1426615118-17516-1-git-send-email-emmanuel.grumbach@intel.com>
+Date: Wed, 18 Mar 2015 11:36:54 +0200
+Message-ID: <CAB3XZEd7cQwKm_yLztzeTB0S_-uEp4FwzDUV1O8cG6mNtkiY_A@mail.gmail.com> (sfid-20150318_103658_074846_8352CF92)
+Subject: Re: [PATCH] mac80211: stop scan before connection
+From: Eliad Peller <eliad@wizery.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Spinadel <david.spinadel@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCkEgbmV3IHJvdW5kIG9mIGZpeGVzIGZvciA0LjAuIE1vc3Qgb2YgdGhlIHBh
-dGNoZXMgYXJlIGFsc28gQ0NlZCB0bw0Kc3RhYmxlLiBEZXRhaWxzIGluIHRoZSB0YWcuIFRoYW5r
-cyENCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA0Y2Q0YjUwY2MyNDI5Mjk0
-YzIzYTE5OThjMzNmZGZkODA0ZGIwZjM3Og0KDQogIGl3bHdpZmk6IG12bTogQlQgQ29leCAtIGZp
-eCBhIE5VTEwgcG9pbnRlciBleGNlcHRpb24gKDIwMTUtMDMtMDUgMTQ6MTM6MjAgKzAyMDApDQoN
-CmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KDQogIGh0dHBzOi8vZ2l0
-Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1maXhl
-cy5naXQgdGFncy9pd2x3aWZpLWZvci1rYWxsZS0yMDE1LTAzLTIyDQoNCmZvciB5b3UgdG8gZmV0
-Y2ggY2hhbmdlcyB1cCB0byAxZjE2ZWEyOTRkMmVmNjMwMTM3NDBmNGM4NTM5ZTQzMGI2YzEyZGZm
-Og0KDQogIGl3bHdpZmk6IG12bTogcmVtb3ZlIFdBUk5fT04gZm9yIGludmFsaWQgQkEgbm90aWZp
-Y2F0aW9uICgyMDE1LTAzLTE5IDE1OjQzOjExICswMjAwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoqIGF2b2lkIHBh
-bmljIHdpdGggbG90cyBvZiBJQlNTIHN0YXRpb25zDQoqIEZpeCBkdm0ncyBiZWhhdmlvciBhZnRl
-ciBzdXNwZW5kIHJlc3VtZQ0KKiBBbGxvdyB0byBrZWVwIGNvbm5lY3Rpb24gYWZ0ZXIgQ1NBIGZh
-aWx1cmUNCiogUmVtb3ZlIGEgbm9pc3kgYnkgaGFybWxlc3MgV0FSTl9PTg0KKiBOZXcgZGV2aWNl
-IElEcw0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tDQpFbW1hbnVlbCBHcnVtYmFjaCAoMik6DQogICAgICBpd2x3aWZpOiBk
-dm06IGRyb3AgVk8gcGFja2V0cyB3aGVuIG1hYzgwMjExIHRlbGxzIHVzIHRvDQogICAgICBpd2x3
-aWZpOiBkdm06IHJ1biBJTklUIGZpcm13YXJlIGFnYWluIHVwb24gLnN0YXJ0KCkNCg0KSm9oYW5u
-ZXMgQmVyZyAoMyk6DQogICAgICBpd2x3aWZpOiBtdm06IGRpc2Nvbm5lY3QgaWYgQ1NBIHRpbWUg
-ZXZlbnQgZmFpbHMgc2NoZWR1bGluZw0KICAgICAgaXdsd2lmaTogbXZtOiBwcm90ZWN0IHJhdGUg
-c2NhbGluZyBhZ2FpbnN0IG5vbi1tdm0gSUJTUyBzdGF0aW9ucw0KICAgICAgaXdsd2lmaTogbXZt
-OiByZW1vdmUgV0FSTl9PTiBmb3IgaW52YWxpZCBCQSBub3RpZmljYXRpb24NCg0KT3JlbiBHaXZv
-biAoMSk6DQogICAgICBpd2x3aWZpOiBhZGQgbmV3IDMxNjUgc2VyaWVzIFBDSSBJRHMNCg0KIGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvZHZtL2Rldi5oICAgICAgICB8ICAxIC0NCiBkcml2
-ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2R2bS9tYWM4MDIxMS5jICAgfCAxNyArKysrKysrKyst
-LS0tLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvZHZtL3Vjb2RlLmMgICAgICB8
-ICA1IC0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vcnMuYyAgICAgICAg
-IHwgMjQgKysrKysrKysrKysrKysrKysrKysrKy0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
-d2lmaS9tdm0vdGltZS1ldmVudC5jIHwgIDIgKysNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
-aWZpL212bS90eC5jICAgICAgICAgfCAgNiArKysrLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9p
-d2x3aWZpL3BjaWUvZHJ2LmMgICAgICAgfCAgNiArKysrLS0NCiA3IGZpbGVzIGNoYW5nZWQsIDQx
-IGluc2VydGlvbnMoKyksIDIwIGRlbGV0aW9ucygtKQ0KDQo=
+On Tue, Mar 17, 2015 at 7:58 PM, Emmanuel Grumbach
+<emmanuel.grumbach@intel.com> wrote:
+> From: David Spinadel <david.spinadel@intel.com>
+>
+> Stop scan before authentication or association to make sure
+> that nothing interferes with connection flow.
+>
+this makes sense
+
+> Currently mac80211 defers RX auth and assoc packets (among other ones)
+> until after the scan is complete, so auth during scan is likely to fail
+> if scan took too much time.
+>
+but i don't think deferring the frame handling makes sense in case of
+hw_scan (there was a similar case with BA request handling).
+i should have such (one-liner) patch pending somewhere...
+
+Eliad.
