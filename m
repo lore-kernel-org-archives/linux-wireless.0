@@ -1,125 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:35132 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752102AbbCXNQ4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 09:16:56 -0400
-Received: by lbcgn8 with SMTP id gn8so140373415lbc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 06:16:54 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix IBSS scanning on wmi-tlv and qca6174
-Date: Tue, 24 Mar 2015 13:14:03 +0000
-Message-Id: <1427202843-9172-1-git-send-email-michal.kazior@tieto.com> (sfid-20150324_141700_018637_81C5CF97)
+Received: from mga03.intel.com ([134.134.136.65]:1397 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751248AbbCRGqO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 02:46:14 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] cfg/mac80211: add regulatory classes IE during TDLS setup
+Date: Wed, 18 Mar 2015 08:46:08 +0200
+Message-Id: <1426661168-11610-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150318_074617_001545_C0F2DCB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WLAN.RM.2.0-00073 firmware requires self-peer to
-be created prior to issuing scan command. Without
-this wmi-tlv with qca6174 firmware crashes after
-submitting a scan request.
+From: Arik Nemtsov <arik@wizery.com>
 
-Creating the peer as soon as add_interface()
-shouldn't be a problem.
+Seems Broadcom TDLS peers (Nexus 5, Xperia Z3) refuse to allow TDLS
+connection when channel-switching is supported but the regulatory
+classes IE is missing from the setup request.
+Add a chandef to reg-class translation function to cfg80211 and use it
+to add the required IE during setup. For now add only the current
+regulatory class as supported - it is enough to resolve the
+compatibility issue.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ include/net/cfg80211.h |  11 +++++
+ net/mac80211/tdls.c    |  21 ++++++++
+ net/wireless/util.c    | 129 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 161 insertions(+)
 
-Notes:
-    (based on pending branch)
-
- drivers/net/wireless/ath/ath10k/mac.c | 31 ++++++++++++-------------------
- 1 file changed, 12 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5f9705deb430..4646837c7f8e 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1400,11 +1400,6 @@ static void ath10k_control_ibss(struct ath10k_vif *arvif,
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 12a6121..c4d873b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4903,6 +4903,17 @@ void cfg80211_ch_switch_started_notify(struct net_device *dev,
+ bool ieee80211_operating_class_to_band(u8 operating_class,
+ 				       enum ieee80211_band *band);
  
- 	if (!info->ibss_joined) {
--		ret = ath10k_peer_delete(arvif->ar, arvif->vdev_id, self_peer);
--		if (ret)
--			ath10k_warn(ar, "failed to delete IBSS self peer %pM for vdev %d: %d\n",
--				    self_peer, arvif->vdev_id, ret);
--
- 		if (is_zero_ether_addr(arvif->bssid))
- 			return;
++/**
++ * ieee80211_chandef_to_operating_class - convert chandef to operation class
++ *
++ * @chandef: the chandef to convert
++ * @op_class: a pointer to the resulting operating class
++ *
++ * Returns %true if the conversion was successful, %false otherwise.
++ */
++bool ieee80211_chandef_to_operating_class(struct cfg80211_chan_def *chandef,
++					  u8 *op_class);
++
+ /*
+  * cfg80211_tdls_oper_request - request userspace to perform TDLS operation
+  * @dev: the device on which the operation is requested
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index bc7e404..79ed59a 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -136,6 +136,24 @@ ieee80211_tdls_add_supp_channels(struct ieee80211_sub_if_data *sdata,
+ 	*pos = 2 * subband_cnt;
+ }
  
-@@ -1413,14 +1408,6 @@ static void ath10k_control_ibss(struct ath10k_vif *arvif,
- 		return;
- 	}
- 
--	ret = ath10k_peer_create(arvif->ar, arvif->vdev_id, self_peer,
--				 WMI_PEER_TYPE_DEFAULT);
--	if (ret) {
--		ath10k_warn(ar, "failed to create IBSS self peer %pM for vdev %d: %d\n",
--			    self_peer, arvif->vdev_id, ret);
--		return;
--	}
--
- 	vdev_param = arvif->ar->wmi.vdev_param->atim_window;
- 	ret = ath10k_wmi_vdev_set_param(arvif->ar, arvif->vdev_id, vdev_param,
- 					ATH10K_DEFAULT_ATIM);
-@@ -3815,15 +3802,18 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
++static void ieee80211_tdls_add_oper_classes(struct ieee80211_sub_if_data *sdata,
++					    struct sk_buff *skb)
++{
++	u8 *pos;
++	u8 op_class;
++
++	if (!ieee80211_chandef_to_operating_class(&sdata->vif.bss_conf.chandef,
++						  &op_class))
++		return;
++
++	pos = skb_put(skb, 4);
++	*pos++ = WLAN_EID_SUPPORTED_REGULATORY_CLASSES;
++	*pos++ = 2; /* len */
++
++	*pos++ = op_class;
++	*pos++ = op_class; /* give current operating class as alternate too */
++}
++
+ static void ieee80211_tdls_add_bss_coex_ie(struct sk_buff *skb)
+ {
+ 	u8 *pos = (void *)skb_put(skb, 3);
+@@ -350,6 +368,8 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
  		}
  	}
  
--	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP ||
-+	    arvif->vdev_type == WMI_VDEV_TYPE_IBSS) {
- 		ret = ath10k_peer_create(ar, arvif->vdev_id, vif->addr,
- 					 WMI_PEER_TYPE_DEFAULT);
- 		if (ret) {
--			ath10k_warn(ar, "failed to create vdev %i peer for AP: %d\n",
-+			ath10k_warn(ar, "failed to create vdev %i peer for AP/IBSS: %d\n",
- 				    arvif->vdev_id, ret);
- 			goto err_vdev_delete;
- 		}
++	ieee80211_tdls_add_oper_classes(sdata, skb);
++
+ 	/*
+ 	 * with TDLS we can switch channels, and HT-caps are not necessarily
+ 	 * the same on all bands. The specification limits the setup to a
+@@ -786,6 +806,7 @@ ieee80211_tdls_build_mgmt_packet_data(struct ieee80211_sub_if_data *sdata,
+ 			       50 + /* supported channels */
+ 			       3 + /* 40/20 BSS coex */
+ 			       4 + /* AID */
++			       4 + /* oper classes */
+ 			       extra_ies_len +
+ 			       sizeof(struct ieee80211_tdls_lnkie));
+ 	if (!skb)
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index f7b3598..f218b15 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1314,6 +1314,135 @@ bool ieee80211_operating_class_to_band(u8 operating_class,
+ }
+ EXPORT_SYMBOL(ieee80211_operating_class_to_band);
+ 
++bool ieee80211_chandef_to_operating_class(struct cfg80211_chan_def *chandef,
++					  u8 *op_class)
++{
++	u8 vht_opclass;
++	u16 freq = chandef->center_freq1;
++
++	if (freq >= 2412 && freq <= 2472) {
++		if (chandef->width > NL80211_CHAN_WIDTH_40)
++			return false;
++
++		/* 2.407 GHz, channels 1..13 */
++		if (chandef->width == NL80211_CHAN_WIDTH_40) {
++			if (freq > chandef->chan->center_freq)
++				*op_class = 83; /* HT40+ */
++			else
++				*op_class = 84; /* HT40- */
++		} else {
++			*op_class = 81;
++		}
++
++		return true;
 +	}
- 
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
- 		ret = ath10k_mac_set_kickout(arvif);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to set vdev %i kickout parameters: %d\n",
-@@ -3883,7 +3873,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	return 0;
- 
- err_peer_delete:
--	if (arvif->vdev_type == WMI_VDEV_TYPE_AP)
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP ||
-+	    arvif->vdev_type == WMI_VDEV_TYPE_IBSS)
- 		ath10k_wmi_peer_delete(ar, arvif->vdev_id, vif->addr);
- 
- err_vdev_delete:
-@@ -3927,11 +3918,12 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	ar->free_vdev_map |= 1LL << arvif->vdev_id;
- 	list_del(&arvif->list);
- 
--	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP ||
-+	    arvif->vdev_type == WMI_VDEV_TYPE_IBSS) {
- 		ret = ath10k_wmi_peer_delete(arvif->ar, arvif->vdev_id,
- 					     vif->addr);
- 		if (ret)
--			ath10k_warn(ar, "failed to submit AP self-peer removal on vdev %i: %d\n",
-+			ath10k_warn(ar, "failed to submit AP/IBSS self-peer removal on vdev %i: %d\n",
- 				    arvif->vdev_id, ret);
- 
- 		kfree(arvif->u.ap.noa_data);
-@@ -3948,7 +3940,8 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	/* Some firmware revisions don't notify host about self-peer removal
- 	 * until after associated vdev is deleted.
- 	 */
--	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
-+	if (arvif->vdev_type == WMI_VDEV_TYPE_AP ||
-+	    arvif->vdev_type == WMI_VDEV_TYPE_IBSS) {
- 		ret = ath10k_wait_for_peer_deleted(ar, arvif->vdev_id,
- 						   vif->addr);
- 		if (ret)
++
++	if (freq == 2484) {
++		if (chandef->width > NL80211_CHAN_WIDTH_40)
++			return false;
++
++		*op_class = 82; /* channel 14 */
++		return true;
++	}
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_80:
++		vht_opclass = 128;
++		break;
++	case NL80211_CHAN_WIDTH_160:
++		vht_opclass = 129;
++		break;
++	case NL80211_CHAN_WIDTH_80P80:
++		vht_opclass = 130;
++		break;
++	case NL80211_CHAN_WIDTH_10:
++	case NL80211_CHAN_WIDTH_5:
++		return false; /* unsupported for now */
++	default:
++		vht_opclass = 0;
++		break;
++	}
++
++	/* 5 GHz, channels 36..48 */
++	if (freq >= 5180 && freq <= 5240) {
++		if (vht_opclass) {
++			*op_class = vht_opclass;
++		} else if (chandef->width == NL80211_CHAN_WIDTH_40) {
++			if (freq > chandef->chan->center_freq)
++				*op_class = 116;
++			else
++				*op_class = 117;
++		} else {
++			*op_class = 115;
++		}
++
++		return true;
++	}
++
++	/* 5 GHz, channels 52..64 */
++	if (freq >= 5260 && freq <= 5320) {
++		if (vht_opclass) {
++			*op_class = vht_opclass;
++		} else if (chandef->width == NL80211_CHAN_WIDTH_40) {
++			if (freq > chandef->chan->center_freq)
++				*op_class = 119;
++			else
++				*op_class = 120;
++		} else {
++			*op_class = 118;
++		}
++
++		return true;
++	}
++
++	/* 5 GHz, channels 100..144 */
++	if (freq >= 5500 && freq <= 5720) {
++		if (vht_opclass) {
++			*op_class = vht_opclass;
++		} else if (chandef->width == NL80211_CHAN_WIDTH_40) {
++			if (freq > chandef->chan->center_freq)
++				*op_class = 122;
++			else
++				*op_class = 123;
++		} else {
++			*op_class = 121;
++		}
++
++		return true;
++	}
++
++	/* 5 GHz, channels 149..169 */
++	if (freq >= 5745 && freq <= 5845) {
++		if (vht_opclass) {
++			*op_class = vht_opclass;
++		} else if (chandef->width == NL80211_CHAN_WIDTH_40) {
++			if (freq > chandef->chan->center_freq)
++				*op_class = 126;
++			else
++				*op_class = 127;
++		} else if (freq <= 5805) {
++			*op_class = 124;
++		} else {
++			*op_class = 125;
++		}
++
++		return true;
++	}
++
++	/* 56.16 GHz, channel 1..4 */
++	if (freq >= 56160 + 2160 * 1 && freq <= 56160 + 2160 * 4) {
++		if (chandef->width >= NL80211_CHAN_WIDTH_40)
++			return false;
++
++		*op_class = 180;
++		return true;
++	}
++
++	/* not supported yet */
++	return false;
++}
++EXPORT_SYMBOL(ieee80211_chandef_to_operating_class);
++
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int)
+ {
 -- 
-2.1.4
+1.9.1
 
