@@ -1,172 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:54156 "EHLO mga02.intel.com"
+Received: from hofr.at ([212.69.189.236]:56513 "EHLO mail.hofr.at"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754536AbbCLNFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:05:53 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 24/49] iwlwifi: mvm: always update the quota after association
-Date: Thu, 12 Mar 2015 15:04:09 +0200
-Message-Id: <1426165474-25586-24-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143419_021767_94BAB384)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+	id S1750905AbbCRGow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 02:44:52 -0400
+Date: Wed, 18 Mar 2015 07:44:39 +0100
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Joe Perches <joe@perches.com>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: cfg80211: use msecs_to_jiffies for time
+	conversion
+Message-ID: <20150318064439.GA25924@opentech.at> (sfid-20150318_074529_588362_3F6B6561)
+References: <1426593972-17652-1-git-send-email-hofrat@osadl.org> <1426596159.23897.61.camel@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426596159.23897.61.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we associate we always need to update the quotas. This
-fixes a bug for cases in which quotas weren't udapted after
-association.
+On Tue, 17 Mar 2015, Joe Perches wrote:
 
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/mac80211.c | 20 ++++++++++----------
- drivers/net/wireless/iwlwifi/mvm/mvm.h      |  2 +-
- drivers/net/wireless/iwlwifi/mvm/quota.c    |  3 ++-
- drivers/net/wireless/iwlwifi/mvm/utils.c    |  2 +-
- 4 files changed, 14 insertions(+), 13 deletions(-)
+> On Tue, 2015-03-17 at 08:06 -0400, Nicholas Mc Guire wrote:
+> > Converting milliseconds to jiffies by "val * HZ / 1000" is technically
+> > OK but msecs_to_jiffies(val) is the cleaner solution and handles all
+> > corner cases correctly. This is a minor API consolidation only and
+> > should make things more readable.
+> 
+> Hi Nicholas
+> 
+> These API consolidation changes now always have a function
+> call when the compiler may have previously been able to
+> optimize out the "constant * HZ / 1000" calculation.
+>
+> Perhaps the [um]secs_to_jiffies calls should be indirected
+> with yet another static inline with a __builtin_constant_p()
+> test so that the function calls can again be avoided when
+> possible.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-index 7484724..7eab892 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
-@@ -1298,7 +1298,7 @@ static void iwl_mvm_restart_complete(struct iwl_mvm *mvm)
- 
- 	clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
- 	iwl_mvm_d0i3_enable_tx(mvm, NULL);
--	ret = iwl_mvm_update_quotas(mvm, NULL);
-+	ret = iwl_mvm_update_quotas(mvm, false, NULL);
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to update quotas after restart (%d)\n",
- 			ret);
-@@ -1977,7 +1977,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 			       sizeof(mvmvif->beacon_stats));
- 
- 			/* add quota for this interface */
--			ret = iwl_mvm_update_quotas(mvm, NULL);
-+			ret = iwl_mvm_update_quotas(mvm, true, NULL);
- 			if (ret) {
- 				IWL_ERR(mvm, "failed to update quotas\n");
- 				return;
-@@ -2029,7 +2029,7 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 				mvm->d0i3_ap_sta_id = IWL_MVM_STATION_COUNT;
- 			mvmvif->ap_sta_id = IWL_MVM_STATION_COUNT;
- 			/* remove quota for this interface */
--			ret = iwl_mvm_update_quotas(mvm, NULL);
-+			ret = iwl_mvm_update_quotas(mvm, false, NULL);
- 			if (ret)
- 				IWL_ERR(mvm, "failed to update quotas\n");
- 
-@@ -2148,7 +2148,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
- 	/* power updated needs to be done before quotas */
- 	iwl_mvm_power_update_mac(mvm);
- 
--	ret = iwl_mvm_update_quotas(mvm, NULL);
-+	ret = iwl_mvm_update_quotas(mvm, false, NULL);
- 	if (ret)
- 		goto out_quota_failed;
- 
-@@ -2214,7 +2214,7 @@ static void iwl_mvm_stop_ap_ibss(struct ieee80211_hw *hw,
- 	if (vif->p2p && mvm->p2p_device_vif)
- 		iwl_mvm_mac_ctxt_changed(mvm, mvm->p2p_device_vif, false, NULL);
- 
--	iwl_mvm_update_quotas(mvm, NULL);
-+	iwl_mvm_update_quotas(mvm, false, NULL);
- 	iwl_mvm_send_rm_bcast_sta(mvm, vif);
- 	iwl_mvm_binding_remove_vif(mvm, vif);
- 
-@@ -3247,14 +3247,14 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 	 */
- 	if (vif->type == NL80211_IFTYPE_MONITOR) {
- 		mvmvif->monitor_active = true;
--		ret = iwl_mvm_update_quotas(mvm, NULL);
-+		ret = iwl_mvm_update_quotas(mvm, false, NULL);
- 		if (ret)
- 			goto out_remove_binding;
- 	}
- 
- 	/* Handle binding during CSA */
- 	if (vif->type == NL80211_IFTYPE_AP) {
--		iwl_mvm_update_quotas(mvm, NULL);
-+		iwl_mvm_update_quotas(mvm, false, NULL);
- 		iwl_mvm_mac_ctxt_changed(mvm, vif, false, NULL);
- 	}
- 
-@@ -3278,7 +3278,7 @@ static int __iwl_mvm_assign_vif_chanctx(struct iwl_mvm *mvm,
- 
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_PROTECT_CSA);
- 
--		iwl_mvm_update_quotas(mvm, NULL);
-+		iwl_mvm_update_quotas(mvm, false, NULL);
- 	}
- 
- 	goto out;
-@@ -3351,7 +3351,7 @@ static void __iwl_mvm_unassign_vif_chanctx(struct iwl_mvm *mvm,
- 		break;
- 	}
- 
--	iwl_mvm_update_quotas(mvm, disabled_vif);
-+	iwl_mvm_update_quotas(mvm, false, disabled_vif);
- 	iwl_mvm_binding_remove_vif(mvm, vif);
- 
- out:
-@@ -3543,7 +3543,7 @@ static int __iwl_mvm_mac_testmode_cmd(struct iwl_mvm *mvm,
- 		mvm->noa_duration = noa_duration;
- 		mvm->noa_vif = vif;
- 
--		return iwl_mvm_update_quotas(mvm, NULL);
-+		return iwl_mvm_update_quotas(mvm, false, NULL);
- 	case IWL_MVM_TM_CMD_SET_BEACON_FILTER:
- 		/* must be associated client vif - ignore authorized */
- 		if (!vif || vif->type != NL80211_IFTYPE_STATION ||
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 4d44cf0..52135a4 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -1139,7 +1139,7 @@ int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- int iwl_mvm_binding_remove_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
- 
- /* Quota management */
--int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
-+int iwl_mvm_update_quotas(struct iwl_mvm *mvm, bool force_upload,
- 			  struct ieee80211_vif *disabled_vif);
- 
- /* Scanning */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/quota.c b/drivers/net/wireless/iwlwifi/mvm/quota.c
-index dbb2594..509a66d 100644
---- a/drivers/net/wireless/iwlwifi/mvm/quota.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/quota.c
-@@ -172,6 +172,7 @@ static void iwl_mvm_adjust_quota_for_noa(struct iwl_mvm *mvm,
- }
- 
- int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
-+			  bool force_update,
- 			  struct ieee80211_vif *disabled_vif)
- {
- 	struct iwl_time_quota_cmd cmd = {};
-@@ -309,7 +310,7 @@ int iwl_mvm_update_quotas(struct iwl_mvm *mvm,
- 			  "zero quota on binding %d\n", i);
- 	}
- 
--	if (!send) {
-+	if (!send && !force_update) {
- 		/* don't send a practically unchanged command, the firmware has
- 		 * to re-initialize a lot of state and that can have an adverse
- 		 * impact on it
-diff --git a/drivers/net/wireless/iwlwifi/mvm/utils.c b/drivers/net/wireless/iwlwifi/mvm/utils.c
-index 2b9de63..435faee 100644
---- a/drivers/net/wireless/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/utils.c
-@@ -857,7 +857,7 @@ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 
- 	mvmvif->low_latency = value;
- 
--	res = iwl_mvm_update_quotas(mvm, NULL);
-+	res = iwl_mvm_update_quotas(mvm, false, NULL);
- 	if (res)
- 		return res;
- 
--- 
-1.9.1
+will give it a try 
 
+> 
+> (and a trivial style note)
+> 
+> > diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+> []
+> > @@ -1110,7 +1110,7 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
+> >  
+> >  	/* Arm scan timeout timer */
+> >  	mod_timer(&cfg->escan_timeout, jiffies +
+> > -			WL_ESCAN_TIMER_INTERVAL_MS * HZ / 1000);
+> > +		  msecs_to_jiffies(WL_ESCAN_TIMER_INTERVAL_MS));
+> 
+> It may be nicer to keep the arithmetic on one line
+
+sorry that was plain carelessness afer it went over 80 char.
+
+> 
+>  	mod_timer(&cfg->escan_timeout,
+> 		  jiffies + msecs_to_jiffies(WL_ESCAN_TIMER_INTERVAL_MS));
+>
+
+thx!
+hofrat 
