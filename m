@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43616 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752632AbbCYA26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 20:28:58 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Joe Perches <joe@perches.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: rtl8723au: Update RT_TRACE macro and uses
-References: <1427220609.5642.39.camel@perches.com>
-	<1427238404.12126.17.camel@perches.com>
-Date: Tue, 24 Mar 2015 20:28:56 -0400
-In-Reply-To: <1427238404.12126.17.camel@perches.com> (Joe Perches's message of
-	"Tue, 24 Mar 2015 16:06:44 -0700")
-Message-ID: <wrfjegodj4xj.fsf@redhat.com> (sfid-20150325_012922_656580_924DEA6C)
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:16710 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756347AbbCRMZf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 08:25:35 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 7/8] brcmfmac: only support the BCM43455/7 device
+Date: Wed, 18 Mar 2015 13:25:27 +0100
+Message-ID: <1426681528-15831-8-git-send-email-arend@broadcom.com> (sfid-20150318_132557_574757_C5436643)
+In-Reply-To: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+References: <1426681528-15831-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-> Create an rt_trace function using %pV to reduce overall code size.
-> Update the macro uses to remove unnecessary and now harmful parentheses.
->
-> Miscellanea around these changes:
->
-> o Coalesce formats
-> o Realign arguments
-> o Remove commented-out RT_TRACE uses
-> o Spelling fixes in formats
-> o Add missing newlines to formats
-> o Remove multiple newlines from formats
-> o Neaten formats where noticed
-> o Use %pM in one instance
->
-> Reduces code size ~20KB
->
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
-> Mostly done by various scripts&emacs.
-> Compiled, untested, no hardware,
+Recently support was added for the BCM4345 SDIO chipset by
+commit 9c51026509d7 ("brcmfmac: Add support for BCM4345 SDIO chipset")
+however this was verified using a BCM43455 device, which is
+a more recent revision of the chip. This patch assure that
+older revisions are not probed as they would fail.
 
-This could be further improved by fixing up all the places where the
-function name is hard coded into the print statement, instead of using
-__func__. In particular as a lot of it is carried over from old code
-and has been renamed since.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Syed Asifful Dayyan <syedd@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-It's OK with me to do this in a follow-on patch though.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index e162860..ab0c898 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -617,8 +617,8 @@ static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
+ #define BCM4339_NVRAM_NAME		"brcm/brcmfmac4339-sdio.txt"
+ #define BCM43430_FIRMWARE_NAME		"brcm/brcmfmac43430-sdio.bin"
+ #define BCM43430_NVRAM_NAME		"brcm/brcmfmac43430-sdio.txt"
+-#define BCM4345_FIRMWARE_NAME		"brcm/brcmfmac4345-sdio.bin"
+-#define BCM4345_NVRAM_NAME		"brcm/brcmfmac4345-sdio.txt"
++#define BCM43455_FIRMWARE_NAME		"brcm/brcmfmac43455-sdio.bin"
++#define BCM43455_NVRAM_NAME		"brcm/brcmfmac43455-sdio.txt"
+ #define BCM4354_FIRMWARE_NAME		"brcm/brcmfmac4354-sdio.bin"
+ #define BCM4354_NVRAM_NAME		"brcm/brcmfmac4354-sdio.txt"
+ 
+@@ -644,8 +644,8 @@ MODULE_FIRMWARE(BCM4339_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM4339_NVRAM_NAME);
+ MODULE_FIRMWARE(BCM43430_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM43430_NVRAM_NAME);
+-MODULE_FIRMWARE(BCM4345_FIRMWARE_NAME);
+-MODULE_FIRMWARE(BCM4345_NVRAM_NAME);
++MODULE_FIRMWARE(BCM43455_FIRMWARE_NAME);
++MODULE_FIRMWARE(BCM43455_NVRAM_NAME);
+ MODULE_FIRMWARE(BCM4354_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM4354_NVRAM_NAME);
+ 
+@@ -676,7 +676,7 @@ static const struct brcmf_firmware_names brcmf_fwname_data[] = {
+ 	{ BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, BRCMF_FIRMWARE_NVRAM(BCM43362) },
+ 	{ BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4339) },
+ 	{ BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM43430) },
+-	{ BRCM_CC_4345_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4345) },
++	{ BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, BRCMF_FIRMWARE_NVRAM(BCM43455) },
+ 	{ BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4354) }
+ };
+ 
+-- 
+1.9.1
 
-Jes
