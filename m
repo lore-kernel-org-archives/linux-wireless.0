@@ -1,145 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38624 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59477 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751057AbbCERHY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 12:07:24 -0500
+	id S1751074AbbCRJq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 05:46:29 -0400
+Message-ID: <1426671981.3001.12.camel@sipsolutions.net> (sfid-20150318_104633_085719_81467C4E)
+Subject: Re: [PATCH] mac80211: stop scan before connection
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Sven Eckelmann <sven@open-mesh.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC v2] [RFC] mac80211: lock rate control
-Date: Thu,  5 Mar 2015 18:07:17 +0100
-Message-Id: <1425575237-5556-1-git-send-email-johannes@sipsolutions.net> (sfid-20150305_180727_777641_0F98BD69)
+To: Eliad Peller <eliad@wizery.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	David Spinadel <david.spinadel@intel.com>
+Date: Wed, 18 Mar 2015 10:46:21 +0100
+In-Reply-To: <CAB3XZEd7cQwKm_yLztzeTB0S_-uEp4FwzDUV1O8cG6mNtkiY_A@mail.gmail.com> (sfid-20150318_103655_610322_AA890276)
+References: <1426615118-17516-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <CAB3XZEd7cQwKm_yLztzeTB0S_-uEp4FwzDUV1O8cG6mNtkiY_A@mail.gmail.com>
+	 (sfid-20150318_103655_610322_AA890276)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2015-03-18 at 11:36 +0200, Eliad Peller wrote:
+> On Tue, Mar 17, 2015 at 7:58 PM, Emmanuel Grumbach
+> <emmanuel.grumbach@intel.com> wrote:
+> > From: David Spinadel <david.spinadel@intel.com>
+> >
+> > Stop scan before authentication or association to make sure
+> > that nothing interferes with connection flow.
+> >
+> this makes sense
+> 
+> > Currently mac80211 defers RX auth and assoc packets (among other ones)
+> > until after the scan is complete, so auth during scan is likely to fail
+> > if scan took too much time.
+> >
+> but i don't think deferring the frame handling makes sense in case of
+> hw_scan (there was a similar case with BA request handling).
+> i should have such (one-liner) patch pending somewhere...
 
-Both minstrel (reported by Sven Eckelmann) and the iwlwifi rate
-control aren't properly taking concurrency into account. It's
-likely that the same is true for other rate control algorithms.
+We did consider that, but ultimately I think it's not desirable.
 
-In the case of minstrel this manifests itself in crashes when an
-update and other data access are run concurrently, for example
-when the stations change bandwidth or similar. In iwlwifi, this
-can cause firmware crashes.
+The aggregation case is different, but during auth/assoc the relevant
+frames cannot be buffered by the AP. So unless you have a hardware
+mechanism that makes the device not continue the scan for say 30-50ms
+after the auth/assoc req frame went out, the connection process will be
+very unreliable.
 
-Since fixing all rate control algorithms will be very difficult,
-just provide locking for invocations. This protects the internal
-data structures the algorithms maintain.
+So in a sense you could say deferring the handling doesn't make sense,
+but I'd still argue you shouldn't start this process while you're in the
+middle of scanning, hence this patch.
 
-I've manipulated hostapd to test this, by having it change its
-advertised bandwidth roughly ever 150ms. At the same time, I'm
-running a flood ping between the client and the AP, which causes
-this race of update vs. get_rate/status to easily happen on the
-client. With this change, the system survives this test.
+We may have to do more exclusions (e.g. don't start a scan while
+authenticating or associating) here though, and ultimately not
+*processing* the frames will be irrelevant as they shouldn't be coming
+in anyway.
 
-Change-Id: I77383401a67a1ec380cec65b34802ab879357e80
-Reported-by: Sven Eckelmann <sven@open-mesh.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rate.c     |  8 +++++++-
- net/mac80211/rate.h     | 12 +++++++++---
- net/mac80211/sta_info.c |  2 +-
- net/mac80211/sta_info.h |  1 +
- 4 files changed, 18 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index bc5270ed26bd..68bed2cad6f3 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -683,7 +683,13 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
- 		return;
- 
--	ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
-+	if (ista) {
-+		spin_lock_bh(&sta->rate_ctrl_lock);
-+		ref->ops->get_rate(ref->priv, ista, priv_sta, txrc);
-+		spin_unlock_bh(&sta->rate_ctrl_lock);
-+	} else {
-+		ref->ops->get_rate(ref->priv, NULL, NULL, txrc);
-+	}
- 
- 	if (sdata->local->hw.flags & IEEE80211_HW_SUPPORTS_RC_TABLE)
- 		return;
-diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-index a7d5439322d7..d0ecc8952fa0 100644
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -42,10 +42,12 @@ static inline void rate_control_tx_status(struct ieee80211_local *local,
- 	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
- 		return;
- 
-+	spin_lock_bh(&sta->rate_ctrl_lock);
- 	if (ref->ops->tx_status)
- 		ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
- 	else
- 		ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
-+	spin_unlock_bh(&sta->rate_ctrl_lock);
- }
- 
- static inline void
-@@ -64,7 +66,9 @@ rate_control_tx_status_noskb(struct ieee80211_local *local,
- 	if (WARN_ON_ONCE(!ref->ops->tx_status_noskb))
- 		return;
- 
-+	spin_lock_bh(&sta->rate_ctrl_lock);
- 	ref->ops->tx_status_noskb(ref->priv, sband, ista, priv_sta, info);
-+	spin_unlock_bh(&sta->rate_ctrl_lock);
- }
- 
- static inline void rate_control_rate_init(struct sta_info *sta)
-@@ -115,18 +119,20 @@ static inline void rate_control_rate_update(struct ieee80211_local *local,
- 			return;
- 		}
- 
-+		spin_lock_bh(&sta->rate_ctrl_lock);
- 		ref->ops->rate_update(ref->priv, sband, &chanctx_conf->def,
- 				      ista, priv_sta, changed);
-+		spin_unlock_bh(&sta->rate_ctrl_lock);
- 		rcu_read_unlock();
- 	}
- 	drv_sta_rc_update(local, sta->sdata, &sta->sta, changed);
- }
- 
- static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
--					   struct ieee80211_sta *sta,
--					   gfp_t gfp)
-+					   struct sta_info *sta, gfp_t gfp)
- {
--	return ref->ops->alloc_sta(ref->priv, sta, gfp);
-+	spin_lock_init(&sta->rate_ctrl_lock);
-+	return ref->ops->alloc_sta(ref->priv, &sta->sta, gfp);
- }
- 
- static inline void rate_control_free_sta(struct sta_info *sta)
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 11c1e71c833d..eab8d8afab13 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -292,7 +292,7 @@ static int sta_prepare_rate_control(struct ieee80211_local *local,
- 
- 	sta->rate_ctrl = local->rate_ctrl;
- 	sta->rate_ctrl_priv = rate_control_alloc_sta(sta->rate_ctrl,
--						     &sta->sta, gfp);
-+						     sta, gfp);
- 	if (!sta->rate_ctrl_priv)
- 		return -ENOMEM;
- 
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 36a14a0be6dd..b53c6ca3179a 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -396,6 +396,7 @@ struct sta_info {
- 	u8 ptk_idx;
- 	struct rate_control_ref *rate_ctrl;
- 	void *rate_ctrl_priv;
-+	spinlock_t rate_ctrl_lock;
- 	spinlock_t lock;
- 
- 	struct work_struct drv_deliver_wk;
--- 
-2.1.4
+johannes
 
