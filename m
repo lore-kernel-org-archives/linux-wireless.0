@@ -1,40 +1,296 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db3on0067.outbound.protection.outlook.com ([157.55.234.67]:47891
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750764AbbCZCC4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 22:02:56 -0400
-From: Stefano Cappa <stefano.cappa@mail.polimi.it>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: informations about Linux wifi driver's architecture today
-Date: Thu, 26 Mar 2015 02:02:53 +0000
-Message-ID: <1427335373386.26688@mail.polimi.it> (sfid-20150326_030318_435411_D5BBFA34)
-References: <1427048376242.67051@mail.polimi.it>
- <CAMowtuMgAPsgAKuwSibjAzhDbqEdZGatikCiKks6f3w=4oth+Q@mail.gmail.com>
- <1427059313289.43792@mail.polimi.it>,<CABPxzY+h4dVMxc=__3wmPxfMt0Bgb7_agLexkBTQQ33xaWGM_A@mail.gmail.com>
-In-Reply-To: <CABPxzY+h4dVMxc=__3wmPxfMt0Bgb7_agLexkBTQQ33xaWGM_A@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:40433 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750905AbbCRV3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 17:29:55 -0400
+Message-ID: <1426714179.26901.37.camel@redhat.com> (sfid-20150318_222958_657061_39A74815)
+Subject: Re: Broadcom 43340
+From: Dan Williams <dcbw@redhat.com>
+To: =?ISO-8859-1?Q?J=FCrgen?= Bausa <Juergen.Bausa@online.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 18 Mar 2015 16:29:39 -0500
+In-Reply-To: <loom.20150318T222315-999@post.gmane.org>
+References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>
+	 	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>
+	 	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir>
+	  <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com>
+	  <loom.20150315T213441-211@post.gmane.org> <5505F651.3060607@broadcom.com>
+	  <loom.20150317T214603-379@post.gmane.org>
+	 <1426634407.11120.50.camel@redhat.com>
+	 <loom.20150318T222315-999@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good ;)
-thank  you for the support.
+On Wed, 2015-03-18 at 21:24 +0000, JÃ¼rgen Bausa wrote:
+> Dan Williams <dcbw@...> writes:
+> 
+> > 
+> > > 
+> > > Thanks, that worked. Now I have firmware and nvram-file and the driver 
+> seems
+> > > to load ok. At least I have an interface wlan0.
+> > > 
+> > > However, I am not able to connect.Network-manager just says "interface is
+> > > being set up ..." forever. I have no idea howto debug this. In the other
+> > > post you said that the nl80211 driver should be used instead of wext. I
+> > > found that nl80211 is the default for network-manager. So, whats going 
+> wrong
+> > > here?
+> > 
+> > Could you provide more NetworkManager logs?  They should look like this;
+> > where do your logs stop?
+> > 
+> 
+> 
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Activation (wlan0) starting 
+> connection 'tuxgang'
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) scheduled...
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) started...
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: disconnected -> prepare (reason 'none') [30 40 0]
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> NetworkManager state is now 
+> CONNECTING
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) scheduled...
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) complete.
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) starting...
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: prepare -> config (reason 'none') [40 50 0]
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Activation (wlan0/wireless): 
+> connection 'tuxgang' has security, and secrets exist.  No new secrets needed.
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Config: added 'ssid' value 
+> 'tuxgang'
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Config: added 'scan_ssid' 
+> value '1'
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Config: added 'key_mgmt' 
+> value 'WPA-PSK'
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Config: added 'auth_alg' 
+> value 'OPEN'
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Config: added 'psk' value 
+> '<omitted>'
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) complete.
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> Config: set interface 
+> ap_scan to 1
+> Mar 18 22:16:40 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: inactive -> scanning
+> Mar 18 22:16:50 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: scanning -> associating
+> Mar 18 22:17:00 lina NetworkManager[532]: <warn> Connection disconnected 
+> (reason -3)
 
-Stefano.
+Something is still wrong with the driver/device.  Here, even though a
+scan has already been done and the SSID found (otherwise NM wouldn't
+have started a connection in the first place) the supplicant is doing
+another scan (10s) and then attempting to associate, which takes 10s
+before NM kills the attempt.
 
-________________________________________
-Da: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Inviato: mercoledì 25 marzo 2015 10.20
-A: Stefano Cappa
-Cc: linux-wireless@vger.kernel.org
-Oggetto: Re: informations about Linux wifi driver's architecture today
+So ignoring the scan issues (eg, why is another 10s scan requires when
+the SSID is already in the supplicant's network list) it still has
+association problems.
 
-On Mon, Mar 23, 2015 at 2:51 AM, Stefano Cappa
-<stefano.cappa@mail.polimi.it> wrote:
-> Hi
-> I prefer a generic version, without specific things, like this one: h**p://postimg.org/image/hfkpjt3ux/ created by Johannes Berg.
-A while ago, i have written about the generic linux wireless
-architecture for my blog. It might be helpful.
-http://wire-less-comm.blogspot.in/2013/01/wireless-lan-and-linux-together.html
+NetworkManager allows up to 20s for an auth/assoc since that really,
+really should be enough.  If it's not enough, then something is
+seriously wrong with the hardware or the wifi network.
+
+Next steps:
+
+What does 'dmesg' say here?  Anything about association tries?
+
+After that we try getting supplicant debug logs and figuring out what's
+going on from its point of view.
+
+
+Dan
+
+> Mar 18 22:17:00 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: associating -> disconnected
+> Mar 18 22:17:00 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: disconnected -> scanning
+> Mar 18 22:17:05 lina NetworkManager[532]: <warn> Activation (wlan0/wireless): 
+> association took too long.
+> Mar 18 22:17:05 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: config -> need-auth (reason 'none') [50 60 0]
+> Mar 18 22:17:05 lina NetworkManager[532]: <warn> Activation (wlan0/wireless): 
+> asking for new secrets
+> Mar 18 22:17:05 lina NetworkManager[532]: <warn> Couldn't disconnect 
+> supplicant interface: This interface is not connected.
+> Mar 18 22:17:05 lina NetworkManager[532]: <warn> Couldn't disconnect 
+> supplicant interface: This interface is not connected.
+> Mar 18 22:17:29 lina NetworkManager[532]: (NetworkManager:532): libnm-util-
+> CRITICAL **: get_secret_flags: assertion 'is_secret_prop (setting, 
+> secret_name, error)' failed
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) scheduled...
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) started...
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: need-auth -> prepare (reason 'none') [60 40 0]
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) scheduled...
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) complete.
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) starting...
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: prepare -> config (reason 'none') [40 50 0]
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Activation (wlan0/wireless): 
+> connection 'tuxgang' has security, and secrets exist.  No new secrets needed.
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Config: added 'ssid' value 
+> 'tuxgang'
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Config: added 'scan_ssid' 
+> value '1'
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Config: added 'key_mgmt' 
+> value 'WPA-PSK'
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Config: added 'auth_alg' 
+> value 'OPEN'
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Config: added 'psk' value 
+> '<omitted>'
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) complete.
+> Mar 18 22:17:29 lina NetworkManager[532]: <warn> Couldn't disconnect 
+> supplicant interface: This interface is not connected.
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> Config: set interface 
+> ap_scan to 1
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: scanning -> associated
+> Mar 18 22:17:29 lina NetworkManager[532]: <warn> Connection disconnected 
+> (reason -3)
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: associated -> disconnected
+> Mar 18 22:17:29 lina NetworkManager[532]: <warn> Connection disconnected 
+> (reason 6)
+> Mar 18 22:17:29 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: disconnected -> scanning
+> Mar 18 22:17:39 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: scanning -> associating
+> Mar 18 22:17:49 lina NetworkManager[532]: <warn> Connection disconnected 
+> (reason -3)
+> Mar 18 22:17:49 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: associating -> disconnected
+> Mar 18 22:17:49 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: disconnected -> scanning
+> Mar 18 22:17:54 lina NetworkManager[532]: <warn> Activation (wlan0/wireless): 
+> association took too long.
+> Mar 18 22:17:54 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: config -> need-auth (reason 'none') [50 60 0]
+> Mar 18 22:17:54 lina NetworkManager[532]: <warn> Activation (wlan0/wireless): 
+> asking for new secrets
+> Mar 18 22:17:54 lina NetworkManager[532]: <warn> Couldn't disconnect 
+> supplicant interface: This interface is not connected.
+> Mar 18 22:17:54 lina NetworkManager[532]: <warn> Couldn't disconnect 
+> supplicant interface: This interface is not connected.
+> Mar 18 22:18:00 lina NetworkManager[532]: (NetworkManager:532): libnm-util-
+> CRITICAL **: get_secret_flags: assertion 'is_secret_prop (setting, 
+> secret_name, error)' failed
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) scheduled...
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) started...
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: need-auth -> prepare (reason 'none') [60 40 0]
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) scheduled...
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) complete.
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) starting...
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: prepare -> config (reason 'none') [40 50 0]
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Activation (wlan0/wireless): 
+> connection 'tuxgang' has security, and secrets exist.  No new secrets needed.
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Config: added 'ssid' value 
+> 'tuxgang'
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Config: added 'scan_ssid' 
+> value '1'
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Config: added 'key_mgmt' 
+> value 'WPA-PSK'
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Config: added 'auth_alg' 
+> value 'OPEN'
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Config: added 'psk' value 
+> '<omitted>'
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) complete.
+> Mar 18 22:18:00 lina NetworkManager[532]: <warn> Couldn't disconnect 
+> supplicant interface: This interface is not connected.
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Config: set interface 
+> ap_scan to 1
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: scanning -> 4-way handshake
+> Mar 18 22:18:00 lina NetworkManager[532]: <warn> Connection disconnected 
+> (reason 6)
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: 4-way handshake -> disconnected
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> Activation (wlan0/wireless): 
+> disconnected during association, asking for new key.
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: config -> need-auth (reason 'supplicant-disconnect') [50 60 8]
+> Mar 18 22:18:00 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: disconnected -> inactive
+> Mar 18 22:18:07 lina NetworkManager[532]: (NetworkManager:532): libnm-util-
+> CRITICAL **: get_secret_flags: assertion 'is_secret_prop (setting, 
+> secret_name, error)' failed
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) scheduled...
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) started...
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: need-auth -> prepare (reason 'none') [60 40 0]
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) scheduled...
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Activation (wlan0) Stage 1 
+> of 5 (Device Prepare) complete.
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) starting...
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: prepare -> config (reason 'none') [40 50 0]
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Activation (wlan0/wireless): 
+> connection 'tuxgang' has security, and secrets exist.  No new secrets needed.
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Config: added 'ssid' value 
+> 'tuxgang'
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Config: added 'scan_ssid' 
+> value '1'
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Config: added 'key_mgmt' 
+> value 'WPA-PSK'
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Config: added 'auth_alg' 
+> value 'OPEN'
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Config: added 'psk' value 
+> '<omitted>'
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Activation (wlan0) Stage 2 
+> of 5 (Device Configure) complete.
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> Config: set interface 
+> ap_scan to 1
+> Mar 18 22:18:07 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: inactive -> associating
+> Mar 18 22:18:17 lina NetworkManager[532]: <warn> Connection disconnected 
+> (reason -3)
+> Mar 18 22:18:17 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: associating -> disconnected
+> Mar 18 22:18:17 lina NetworkManager[532]: <info> (wlan0): supplicant 
+> interface state: disconnected -> scanning
+> Mar 18 22:18:32 lina NetworkManager[532]: <warn> Activation (wlan0/wireless): 
+> association took too long.
+> Mar 18 22:18:32 lina NetworkManager[532]: <info> (wlan0): device state 
+> change: config -> need-auth (reason 'none') [50 60 0]
+> Mar 18 22:18:32 lina NetworkManager[532]: <warn> Activation (wlan0/wireless): 
+> asking for new secrets
+> Mar 18 22:18:32 lina NetworkManager[532]: <warn> Couldn't disconnect 
+> supplicant interface: This interface is not connected.
+> Mar 18 22:18:32 lina NetworkManager[532]: <warn> Couldn't disconnect 
+> supplicant interface: This interface is not connected.
+> 
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
