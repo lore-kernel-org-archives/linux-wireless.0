@@ -1,91 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:57346 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753391AbbC1Mxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:53:39 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
-	m.v.b@runbox.com
-Subject: [PATCH v4 06/15] staging: rtl8723au: else is not generally useful after a return
-Date: Sat, 28 Mar 2015 08:52:39 -0400
-Message-Id: <1427547168-12078-7-git-send-email-m.v.b@runbox.com> (sfid-20150328_135752_756184_48D836BF)
-In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
-References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+Received: from merlin.infradead.org ([205.233.59.134]:47401 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756131AbbCRRYN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 13:24:13 -0400
+Date: Wed, 18 Mar 2015 13:24:09 -0400
+From: Kyle McMartin <kyle@infradead.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Kyle McMartin <kyle@infradead.org>, linux-firmware@kernel.org,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH] ath10k: add firmware 10.2.4.45 as firmware-4.bin
+Message-ID: <20150318172409.GC30928@merlin.infradead.org> (sfid-20150318_182417_479120_076D40E8)
+References: <1426160112-4261-1-git-send-email-kvalo@qca.qualcomm.com>
+ <20150313204730.GA30928@merlin.infradead.org>
+ <87lhiuofx7.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87lhiuofx7.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a checkpatch.pl warning regarding rtl8723au's
-rtw_security.c::crc32_init pointing out that having an else statement
-after a break or a return is not useful.
+On Wed, Mar 18, 2015 at 10:42:12AM +0200, Kalle Valo wrote:
+> Kyle McMartin <kyle@infradead.org> writes:
+> 
+> > On Thu, Mar 12, 2015 at 01:35:12PM +0200, Kalle Valo wrote:
+> >> This is the latest firmware from 10.2.4 firmware branch.
+> >> 
+> >> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> >
+> > Pardon my ignorance... It looks like your driver needs more than just
+> > firmware-4.bin... How are distros supposed to use this? Symlink it into
+> > firmware.bin which it seems the driver looks for?
+> 
+> The current version of ath10k uses firmware-4.bin. Distros should not
+> create symlinks or anything like that.
+> 
 
-drivers/staging/rtl8723au/core/rtw_security.c:105:
-	WARNING: else is not generally useful after a break or return
+Ah, groovy, ok, applied.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 42 ++++++++++++++-------------
- 1 file changed, 22 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index f7b1d45981..f7571cf091 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -99,31 +99,33 @@ static u8 crc32_reverseBit(u8 data)
- 
- static void crc32_init(void)
- {
-+	int i, j;
-+	u32 c;
-+	u8 *p, *p1;
-+	u8 k;
- 
- 	if (bcrc32initialized == 1)
- 		return;
--	else{
--		int i, j;
--		u32 c;
--		u8 *p = (u8 *)&c, *p1;
--		u8 k;
--
--		c = 0x12340000;
--
--		for (i = 0; i < 256; ++i) {
--			k = crc32_reverseBit((u8)i);
--			for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
--				c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
--			}
--			p1 = (u8 *)&crc32_table[i];
--
--			p1[0] = crc32_reverseBit(p[3]);
--			p1[1] = crc32_reverseBit(p[2]);
--			p1[2] = crc32_reverseBit(p[1]);
--			p1[3] = crc32_reverseBit(p[0]);
-+
-+	p = (u8 *) &c;
-+	c = 0x12340000;
-+
-+	for (i = 0; i < 256; ++i) {
-+		k = crc32_reverseBit((u8)i);
-+
-+		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
-+			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
- 		}
--		bcrc32initialized = 1;
-+
-+		p1 = (u8 *)&crc32_table[i];
-+
-+		p1[0] = crc32_reverseBit(p[3]);
-+		p1[1] = crc32_reverseBit(p[2]);
-+		p1[2] = crc32_reverseBit(p[1]);
-+		p1[3] = crc32_reverseBit(p[0]);
- 	}
-+
-+	bcrc32initialized = 1;
- }
- 
- static u32 getcrc32(u8 *buf, int len)
--- 
-2.1.4
-
+Thanks, Kyle
