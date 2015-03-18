@@ -1,76 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27385 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751296AbbCOIHA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 04:07:00 -0400
-Date: Sun, 15 Mar 2015 13:36:41 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] ath10k: Bypass PLL setting on target init for
- QCA9888
-Message-ID: <20150315080637.GA18213@qca.qualcomm.com> (sfid-20150315_090712_949646_D130A06F)
-References: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
- <87wq2v4nwz.fsf@kamboji.qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37763 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755717AbbCRNPK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 09:15:10 -0400
+Date: Wed, 18 Mar 2015 14:11:25 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [1/3] rt2x00usb: initialize the read value in case of failure
+Message-ID: <20150318131124.GA11724@redhat.com> (sfid-20150318_141516_235339_4B423290)
+References: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
+ <20150316160652.789B313FBE6@smtp.codeaurora.org>
+ <20150316164100.GA6208@linutronix.de>
+ <20150317083414.GA1276@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <87wq2v4nwz.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20150317083414.GA1276@linutronix.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 05, 2015 at 02:41:16PM +0200, Kalle Valo wrote:
-> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
-> 
-> > Some of of qca988x solutions are having global reset issue
-> > during target initialization. Bypassing PLL setting before
-> > downloading firmware and letting the SoC run on REF_CLK is fixing
-> > the problem. Corresponding firmware change is also needed to set
-> > the clock source once the target is initialized. Since 10.2.4
-> > firmware is having this ROM patch, applying skip_clock_init only
-> > for 10.2.4 firmware versions.
-> >
-> > Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> > ---
-> >  drivers/net/wireless/ath/ath10k/core.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> > index 310e12b..cd20805 100644
-> > --- a/drivers/net/wireless/ath/ath10k/core.c
-> > +++ b/drivers/net/wireless/ath/ath10k/core.c
-> > @@ -797,6 +797,16 @@ static int ath10k_download_cal_data(struct ath10k *ar)
-> >  	ar->cal_mode = ATH10K_CAL_MODE_OTP;
-> >  
-> >  done:
-> > +	if ((ar->hw_rev == ATH10K_HW_QCA988X) &&
-> > +	    (ar->wmi.op_version == ATH10K_FW_WMI_OP_VERSION_10_2_4)) {
-> > +		ret = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
-> > +		if (ret) {
-> > +			ath10k_err(ar, "could not write skip_clock_init (%d)\n",
-> > +				   ret);
-> > +			return ret;
-> > +		}
-> > +	}
-> 
-> Didn't Michal mention that this should be a firmware feature flag?
-> Checking for firmware versions can easily get too complicated, that's
-> why we have tried to use feature flags for things like this.
->
-Oops.. Sorry for the delay. I missed this mail. IIRC i replied to
-Michal's question for previous version. From the existing fw_feature
-flag, there is no clear way to identify 10.2.4 firmware version. Since
-this patch is needed only for 10.2.4, I used op_version. Otherwise
-fw_feature has to be extended for 10.2.4. Am i correct?
+On Tue, Mar 17, 2015 at 09:34:14AM +0100, Sebastian Andrzej Siewior wrote:
+> I have no idea what AutoRun mode is (it seems that the stick already
+> has a firmware and is happy with it) and I have no clue why the firmware
+> decides to lie about it. I looked at the vendor driver I found at github
+> (which seems to be from 2012-10-22, DPO_RT5572_LinuxSTA_2.6.1.3) and
+> well, I look again if someone says it is worth looking… They seem to do
+> some kind "firmware is comming" magic which might be already done in the
+> current driver at a different spot but I think the main question is why
+> request is answered wrong. I *think* the vendor driver sends the
+> USB_MODE_AUTORUN request only once but it is hard to tell…
 
-> Also I think this should not be hidden inside
-> ath10k_download_cal_data(). Maybe ath10k_core_start() is a better place
-> to do this?
->
-Hmm.. agree.
+Does the below patch solve the issue ?
 
-> I can send v3 for this patch.
-> 
-Thanks for taking care of this. Please let me know if you need help.
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index 9a2f44a..3a6cae8 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -293,6 +293,7 @@ static int rt2800usb_write_firmware(struct rt2x00_dev *rt2x00dev,
+ 	if (retval) {
+ 		rt2x00_info(rt2x00dev,
+ 			    "Firmware loading not required - NIC in AutoRun mode\n");
++		__clear_bit(REQUIRE_FIRMWARE, &rt2x00dev->cap_flags);
+ 	} else {
+ 		rt2x00usb_register_multiwrite(rt2x00dev, FIRMWARE_IMAGE_BASE,
+ 					      data + offset, length);
 
--Rajkumar
