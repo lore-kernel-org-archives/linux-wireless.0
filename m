@@ -1,227 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:41319 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753255AbbCINjF (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55701 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756354AbbCRMZg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 09:39:05 -0400
-Received: by lbvp9 with SMTP id p9so48059584lbv.8
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Mar 2015 06:39:03 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 2/2] ath10k: add hw connection monitor support
-Date: Mon,  9 Mar 2015 14:36:37 +0100
-Message-Id: <1425908197-16118-2-git-send-email-michal.kazior@tieto.com> (sfid-20150309_143909_578942_C5DF72BA)
-In-Reply-To: <1425908197-16118-1-git-send-email-michal.kazior@tieto.com>
-References: <87fv9hyz2r.fsf@kamboji.qca.qualcomm.com>
- <1425908197-16118-1-git-send-email-michal.kazior@tieto.com>
+	Wed, 18 Mar 2015 08:25:36 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 6/8] brcmfmac: add support for BCM43430 SDIO chipset
+Date: Wed, 18 Mar 2015 13:25:26 +0100
+Message-ID: <1426681528-15831-7-git-send-email-arend@broadcom.com> (sfid-20150318_132548_990233_8E0F400B)
+In-Reply-To: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+References: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some firmware revisions (e.g. qca6174 with fw73)
-don't deliver beacons to host reliably. This
-causes random disconnects even in perfect
-conditions. This is most visible with
-multi-channel operation.
+This patch added support for the BCM43430 802.11n SDIO chipset.
 
-All available firmware revisions seem to support
-beacon miss offloading so there shouldn't be any
-problems.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c     |  1 +
+ drivers/net/wireless/brcm80211/brcmfmac/chip.c       | 18 ++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c       |  5 +++++
+ drivers/net/wireless/brcm80211/include/brcm_hw_ids.h |  1 +
+ drivers/net/wireless/brcm80211/include/chipcommon.h  |  9 ++++++++-
+ include/linux/mmc/sdio_ids.h                         |  1 +
+ 6 files changed, 34 insertions(+), 1 deletion(-)
 
-Notes:
-    v2:
-     * conflict resolution hint: base of this patchset
-       (af695a659c69d347948ceab2c562e208ba48b26e) doesn't
-       include `ath10k: fix patching mistake for AP/IBSS CSA`
-       yet. Whichever you apply first you'll end up with a
-       conflict in ath10k_bss_disassoc(). Eventually the
-       data_lock goes away from there.
-
- drivers/net/wireless/ath/ath10k/core.h |  2 +
- drivers/net/wireless/ath/ath10k/mac.c  | 77 +++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/mac.h  |  2 +
- drivers/net/wireless/ath/ath10k/wmi.c  |  7 +++-
- 4 files changed, 86 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 9b8f486..c1f43b0 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -43,6 +43,7 @@
- #define ATH10K_SCAN_ID 0
- #define WMI_READY_TIMEOUT (5 * HZ)
- #define ATH10K_FLUSH_TIMEOUT_HZ (5*HZ)
-+#define ATH10K_CONNECTION_LOSS_HZ (3*HZ)
- #define ATH10K_NUM_CHANS 38
- 
- /* Antenna noise floor */
-@@ -342,6 +343,7 @@ struct ath10k_vif {
- 	int txpower;
- 	struct wmi_wmm_params_all_arg wmm_params;
- 	struct work_struct ap_csa_work;
-+	struct delayed_work connection_loss_work;
- };
- 
- struct ath10k_vif_iter {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1138f4f..d672e05 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1503,6 +1503,75 @@ static void ath10k_mac_vif_ap_csa_work(struct work_struct *work)
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
-+static void ath10k_mac_handle_beacon_iter(void *data, u8 *mac,
-+					  struct ieee80211_vif *vif)
-+{
-+	struct sk_buff *skb = data;
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+
-+	if (vif->type != NL80211_IFTYPE_STATION)
-+		return;
-+
-+	if (!ether_addr_equal(mgmt->bssid, vif->bss_conf.bssid))
-+		return;
-+
-+	cancel_delayed_work(&arvif->connection_loss_work);
-+}
-+
-+void ath10k_mac_handle_beacon(struct ath10k *ar, struct sk_buff *skb)
-+{
-+	ieee80211_iterate_active_interfaces_atomic(ar->hw,
-+						   IEEE80211_IFACE_ITER_NORMAL,
-+						   ath10k_mac_handle_beacon_iter,
-+						   skb);
-+}
-+
-+static void ath10k_mac_handle_beacon_miss_iter(void *data, u8 *mac,
-+					       struct ieee80211_vif *vif)
-+{
-+	u32 *vdev_id = data;
-+	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+	struct ath10k *ar = arvif->ar;
-+	struct ieee80211_hw *hw = ar->hw;
-+
-+	if (arvif->vdev_id != *vdev_id)
-+		return;
-+
-+	if (!arvif->is_up)
-+		return;
-+
-+	ieee80211_beacon_loss(vif);
-+
-+	/* Firmware doesn't report beacon loss events repeatedly. If AP probe
-+	 * (done by mac80211) succeeds but beacons do not resume then it
-+	 * doesn't make sense to continue operation. Queue connection loss work
-+	 * which can be cancelled when beacon is received.
-+	 */
-+	ieee80211_queue_delayed_work(hw, &arvif->connection_loss_work,
-+				     ATH10K_CONNECTION_LOSS_HZ);
-+}
-+
-+void ath10k_mac_handle_beacon_miss(struct ath10k *ar, u32 vdev_id)
-+{
-+	ieee80211_iterate_active_interfaces_atomic(ar->hw,
-+						   IEEE80211_IFACE_ITER_NORMAL,
-+						   ath10k_mac_handle_beacon_miss_iter,
-+						   &vdev_id);
-+}
-+
-+static void ath10k_mac_vif_sta_connection_loss_work(struct work_struct *work)
-+{
-+	struct ath10k_vif *arvif = container_of(work, struct ath10k_vif,
-+						connection_loss_work.work);
-+	struct ieee80211_vif *vif = arvif->vif;
-+
-+	if (!arvif->is_up)
-+		return;
-+
-+	ieee80211_connection_loss(vif);
-+}
-+
- /**********************/
- /* Station management */
- /**********************/
-@@ -2139,6 +2208,8 @@ static void ath10k_bss_disassoc(struct ieee80211_hw *hw,
- 	spin_lock_bh(&arvif->ar->data_lock);
- 	arvif->is_up = false;
- 	spin_unlock_bh(&arvif->ar->data_lock);
-+
-+	cancel_delayed_work_sync(&arvif->connection_loss_work);
- }
- 
- static int ath10k_station_assoc(struct ath10k *ar,
-@@ -3377,6 +3448,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 
- 	INIT_LIST_HEAD(&arvif->list);
- 	INIT_WORK(&arvif->ap_csa_work, ath10k_mac_vif_ap_csa_work);
-+	INIT_DELAYED_WORK(&arvif->connection_loss_work,
-+			  ath10k_mac_vif_sta_connection_loss_work);
- 
- 	if (ar->free_vdev_map == 0) {
- 		ath10k_warn(ar, "Free vdev map is empty, no more interfaces allowed.\n");
-@@ -3595,6 +3668,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	int ret;
- 
- 	cancel_work_sync(&arvif->ap_csa_work);
-+	cancel_delayed_work_sync(&arvif->connection_loss_work);
- 
- 	mutex_lock(&ar->conf_mutex);
- 
-@@ -5726,7 +5800,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 			IEEE80211_HW_HAS_RATE_CONTROL |
- 			IEEE80211_HW_AP_LINK_PS |
- 			IEEE80211_HW_SPECTRUM_MGMT |
--			IEEE80211_HW_SW_CRYPTO_CONTROL;
-+			IEEE80211_HW_SW_CRYPTO_CONTROL |
-+			IEEE80211_HW_CONNECTION_MONITOR;
- 
- 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-index 6829611..3b64d99 100644
---- a/drivers/net/wireless/ath/ath10k/mac.h
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -45,6 +45,8 @@ void ath10k_mac_vif_beacon_free(struct ath10k_vif *arvif);
- void ath10k_drain_tx(struct ath10k *ar);
- bool ath10k_mac_is_peer_wep_key_set(struct ath10k *ar, const u8 *addr,
- 				    u8 keyidx);
-+void ath10k_mac_handle_beacon(struct ath10k *ar, struct sk_buff *skb);
-+void ath10k_mac_handle_beacon_miss(struct ath10k *ar, u32 vdev_id);
- 
- static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 58719d8..54430a1 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1586,6 +1586,9 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 		}
- 	}
- 
-+	if (ieee80211_is_beacon(hdr->frame_control))
-+		ath10k_mac_handle_beacon(ar, skb);
-+
- 	ath10k_dbg(ar, ATH10K_DBG_MGMT,
- 		   "event mgmt rx skb %p len %d ftype %02x stype %02x\n",
- 		   skb, skb->len,
-@@ -2815,8 +2818,10 @@ void ath10k_wmi_event_roam(struct ath10k *ar, struct sk_buff *skb)
- 			    reason, vdev_id);
- 
- 	switch (reason) {
--	case WMI_ROAM_REASON_BETTER_AP:
- 	case WMI_ROAM_REASON_BEACON_MISS:
-+		ath10k_mac_handle_beacon_miss(ar, vdev_id);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 9667b6a..9b508bd 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -1098,6 +1098,7 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43341),
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43362),
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4335_4339),
++	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43430),
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4345),
+ 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
+ 	{ /* end: all zeroes */ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+index 7341725..ab2fac8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
+@@ -600,6 +600,12 @@ static void brcmf_chip_socram_ramsize(struct brcmf_core_priv *sr, u32 *ramsize,
+ 		if (sr->chip->pub.chiprev < 2)
+ 			*srsize = (32 * 1024);
+ 		break;
++	case BRCM_CC_43430_CHIP_ID:
++		/* assume sr for now as we can not check
++		 * firmware sr capability at this point.
++		 */
++		*srsize = (64 * 1024);
 +		break;
-+	case WMI_ROAM_REASON_BETTER_AP:
- 	case WMI_ROAM_REASON_LOW_RSSI:
- 	case WMI_ROAM_REASON_SUITABLE_AP_FOUND:
- 	case WMI_ROAM_REASON_HO_FAILED:
+ 	default:
+ 		break;
+ 	}
+@@ -1072,6 +1078,7 @@ static void
+ brcmf_chip_cm3_set_passive(struct brcmf_chip_priv *chip)
+ {
+ 	struct brcmf_core *core;
++	struct brcmf_core_priv *sr;
+ 
+ 	brcmf_chip_disable_arm(chip, BCMA_CORE_ARM_CM3);
+ 	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_80211);
+@@ -1081,6 +1088,13 @@ brcmf_chip_cm3_set_passive(struct brcmf_chip_priv *chip)
+ 			     D11_BCMA_IOCTL_PHYCLOCKEN);
+ 	core = brcmf_chip_get_core(&chip->pub, BCMA_CORE_INTERNAL_MEM);
+ 	brcmf_chip_resetcore(core, 0, 0, 0);
++
++	/* disable bank #3 remap for this device */
++	if (chip->pub.chip == BRCM_CC_43430_CHIP_ID) {
++		sr = container_of(core, struct brcmf_core_priv, pub);
++		brcmf_chip_core_write32(sr, SOCRAMREGOFFS(bankidx), 3);
++		brcmf_chip_core_write32(sr, SOCRAMREGOFFS(bankpda), 0);
++	}
+ }
+ 
+ static bool brcmf_chip_cm3_set_active(struct brcmf_chip_priv *chip)
+@@ -1188,6 +1202,10 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
+ 		addr = CORE_CC_REG(base, chipcontrol_data);
+ 		reg = chip->ops->read32(chip->ctx, addr);
+ 		return (reg & pmu_cc3_mask) != 0;
++	case BRCM_CC_43430_CHIP_ID:
++		addr = CORE_CC_REG(base, sr_control1);
++		reg = chip->ops->read32(chip->ctx, addr);
++		return reg != 0;
+ 	default:
+ 		addr = CORE_CC_REG(base, pmucapabilities_ext);
+ 		reg = chip->ops->read32(chip->ctx, addr);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index 38fa0e8..e162860 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -615,6 +615,8 @@ static const struct sdiod_drive_str sdiod_drvstr_tab2_3v3[] = {
+ #define BCM43362_NVRAM_NAME		"brcm/brcmfmac43362-sdio.txt"
+ #define BCM4339_FIRMWARE_NAME		"brcm/brcmfmac4339-sdio.bin"
+ #define BCM4339_NVRAM_NAME		"brcm/brcmfmac4339-sdio.txt"
++#define BCM43430_FIRMWARE_NAME		"brcm/brcmfmac43430-sdio.bin"
++#define BCM43430_NVRAM_NAME		"brcm/brcmfmac43430-sdio.txt"
+ #define BCM4345_FIRMWARE_NAME		"brcm/brcmfmac4345-sdio.bin"
+ #define BCM4345_NVRAM_NAME		"brcm/brcmfmac4345-sdio.txt"
+ #define BCM4354_FIRMWARE_NAME		"brcm/brcmfmac4354-sdio.bin"
+@@ -640,6 +642,8 @@ MODULE_FIRMWARE(BCM43362_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM43362_NVRAM_NAME);
+ MODULE_FIRMWARE(BCM4339_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM4339_NVRAM_NAME);
++MODULE_FIRMWARE(BCM43430_FIRMWARE_NAME);
++MODULE_FIRMWARE(BCM43430_NVRAM_NAME);
+ MODULE_FIRMWARE(BCM4345_FIRMWARE_NAME);
+ MODULE_FIRMWARE(BCM4345_NVRAM_NAME);
+ MODULE_FIRMWARE(BCM4354_FIRMWARE_NAME);
+@@ -671,6 +675,7 @@ static const struct brcmf_firmware_names brcmf_fwname_data[] = {
+ 	{ BRCM_CC_4335_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4335) },
+ 	{ BRCM_CC_43362_CHIP_ID, 0xFFFFFFFE, BRCMF_FIRMWARE_NVRAM(BCM43362) },
+ 	{ BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4339) },
++	{ BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM43430) },
+ 	{ BRCM_CC_4345_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4345) },
+ 	{ BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, BRCMF_FIRMWARE_NVRAM(BCM4354) }
+ };
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index b599e7e..4efdd51 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -37,6 +37,7 @@
+ #define BRCM_CC_43362_CHIP_ID		43362
+ #define BRCM_CC_4335_CHIP_ID		0x4335
+ #define BRCM_CC_4339_CHIP_ID		0x4339
++#define BRCM_CC_43430_CHIP_ID		43430
+ #define BRCM_CC_4345_CHIP_ID		0x4345
+ #define BRCM_CC_4354_CHIP_ID		0x4354
+ #define BRCM_CC_4356_CHIP_ID		0x4356
+diff --git a/drivers/net/wireless/brcm80211/include/chipcommon.h b/drivers/net/wireless/brcm80211/include/chipcommon.h
+index d242333..e1fd499 100644
+--- a/drivers/net/wireless/brcm80211/include/chipcommon.h
++++ b/drivers/net/wireless/brcm80211/include/chipcommon.h
+@@ -183,7 +183,14 @@ struct chipcregs {
+ 	u8 uart1lsr;
+ 	u8 uart1msr;
+ 	u8 uart1scratch;
+-	u32 PAD[126];
++	u32 PAD[62];
++
++	/* save/restore, corerev >= 48 */
++	u32 sr_capability;          /* 0x500 */
++	u32 sr_control0;            /* 0x504 */
++	u32 sr_control1;            /* 0x508 */
++	u32 gpio_control;           /* 0x50C */
++	u32 PAD[60];
+ 
+ 	/* PMU registers (corerev >= 20) */
+ 	u32 pmucontrol;	/* 0x600 */
+diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+index 9139785..83430f2 100644
+--- a/include/linux/mmc/sdio_ids.h
++++ b/include/linux/mmc/sdio_ids.h
+@@ -33,6 +33,7 @@
+ #define SDIO_DEVICE_ID_BROADCOM_43341		0xa94d
+ #define SDIO_DEVICE_ID_BROADCOM_4335_4339	0x4335
+ #define SDIO_DEVICE_ID_BROADCOM_43362		0xa962
++#define SDIO_DEVICE_ID_BROADCOM_43430		0xa9a6
+ #define SDIO_DEVICE_ID_BROADCOM_4345		0x4345
+ #define SDIO_DEVICE_ID_BROADCOM_4354		0x4354
+ 
 -- 
-1.8.5.3
+1.9.1
 
