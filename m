@@ -1,76 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:60920 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753407AbbCIIqa (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:55701 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756341AbbCRMZe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 04:46:30 -0400
-Received: from [117.207.78.0] (port=10150 helo=sujith-pixel.qualcomm.com)
-	by server72.web-hosting.com with esmtpsa (UNKNOWN:AES128-SHA256:128)
-	(Exim 4.82)
-	(envelope-from <sujith@msujith.org>)
-	id 1YUtKX-0033Ry-5u
-	for linux-wireless@vger.kernel.org; Mon, 09 Mar 2015 04:46:29 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/5] ath9k: Initialize pll_pwrsave for AR9462/AR9565
-Date: Mon,  9 Mar 2015 14:20:08 +0530
-Message-Id: <1425891010-21522-4-git-send-email-sujith@msujith.org> (sfid-20150309_094640_310217_24755857)
-In-Reply-To: <1425891010-21522-1-git-send-email-sujith@msujith.org>
-References: <1425891010-21522-1-git-send-email-sujith@msujith.org>
+	Wed, 18 Mar 2015 08:25:34 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 3/8] brcmfmac: Update msgbuf commonring size for improved throughput.
+Date: Wed, 18 Mar 2015 13:25:23 +0100
+Message-ID: <1426681528-15831-4-git-send-email-arend@broadcom.com> (sfid-20150318_132544_922098_B7DD658A)
+In-Reply-To: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+References: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Cards based on AR9462/AR9565 support more PCIE
-power save mechanisms, so register them correctly.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c   | 3 +++
- drivers/net/wireless/ath/ath9k/hw.h   | 2 +-
- drivers/net/wireless/ath/ath9k/init.c | 1 +
- 3 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 60aa8d7..cc8bea8 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -366,6 +366,9 @@ static void ath9k_hw_init_config(struct ath_hw *ah)
- 		ah->config.rimt_first = 700;
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
+index 77a51b8..3d513e4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/msgbuf.h
+@@ -17,11 +17,11 @@
  
-+	if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
-+		ah->config.pll_pwrsave = 7;
-+
- 	/*
- 	 * We need this for PCI devices only (Cardbus, PCI, miniPCI)
- 	 * _and_ if on non-uniprocessor systems (Multiprocessor/HT).
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index e124ee2..2067cb5 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -341,7 +341,7 @@ struct ath9k_ops_config {
- 	u32 ant_ctrl_comm2g_switch_enable;
- 	bool xatten_margin_cfg;
- 	bool alt_mingainidx;
--	bool pll_pwrsave;
-+	u8 pll_pwrsave;
- 	bool tx_gain_buffalo;
- 	bool led_active_high;
- };
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index ca66fab..de862ad 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -440,6 +440,7 @@ static void ath9k_init_pcoem_platform(struct ath_softc *sc)
- 	/*
- 	 * The default value of pll_pwrsave is 1.
- 	 * For certain AR9485 cards, it is set to 0.
-+	 * For AR9462, AR9565 it's set to 7.
- 	 */
- 	ah->config.pll_pwrsave = 1;
+ #ifdef CONFIG_BRCMFMAC_PROTO_MSGBUF
  
+-#define BRCMF_H2D_MSGRING_CONTROL_SUBMIT_MAX_ITEM	20
+-#define BRCMF_H2D_MSGRING_RXPOST_SUBMIT_MAX_ITEM	256
+-#define BRCMF_D2H_MSGRING_CONTROL_COMPLETE_MAX_ITEM	20
++#define BRCMF_H2D_MSGRING_CONTROL_SUBMIT_MAX_ITEM	64
++#define BRCMF_H2D_MSGRING_RXPOST_SUBMIT_MAX_ITEM	512
++#define BRCMF_D2H_MSGRING_CONTROL_COMPLETE_MAX_ITEM	64
+ #define BRCMF_D2H_MSGRING_TX_COMPLETE_MAX_ITEM		1024
+-#define BRCMF_D2H_MSGRING_RX_COMPLETE_MAX_ITEM		256
++#define BRCMF_D2H_MSGRING_RX_COMPLETE_MAX_ITEM		512
+ #define BRCMF_H2D_TXFLOWRING_MAX_ITEM			512
+ 
+ #define BRCMF_H2D_MSGRING_CONTROL_SUBMIT_ITEMSIZE	40
 -- 
-2.3.1
+1.9.1
 
