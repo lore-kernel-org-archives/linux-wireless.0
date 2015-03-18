@@ -1,74 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:56513 "EHLO mail.hofr.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750905AbbCRGow (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 02:44:52 -0400
-Date: Wed, 18 Mar 2015 07:44:39 +0100
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Joe Perches <joe@perches.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: cfg80211: use msecs_to_jiffies for time
-	conversion
-Message-ID: <20150318064439.GA25924@opentech.at> (sfid-20150318_074529_588362_3F6B6561)
-References: <1426593972-17652-1-git-send-email-hofrat@osadl.org> <1426596159.23897.61.camel@perches.com>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:50799 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755590AbbCRK0B (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Mar 2015 06:26:01 -0400
+Message-ID: <550952B4.4050400@broadcom.com> (sfid-20150318_112606_140206_DB1AC1D0)
+Date: Wed, 18 Mar 2015 11:25:56 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426596159.23897.61.camel@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: wiphy band information
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 17 Mar 2015, Joe Perches wrote:
+Hi Johannes,
 
-> On Tue, 2015-03-17 at 08:06 -0400, Nicholas Mc Guire wrote:
-> > Converting milliseconds to jiffies by "val * HZ / 1000" is technically
-> > OK but msecs_to_jiffies(val) is the cleaner solution and handles all
-> > corner cases correctly. This is a minor API consolidation only and
-> > should make things more readable.
-> 
-> Hi Nicholas
-> 
-> These API consolidation changes now always have a function
-> call when the compiler may have previously been able to
-> optimize out the "constant * HZ / 1000" calculation.
->
-> Perhaps the [um]secs_to_jiffies calls should be indirected
-> with yet another static inline with a __builtin_constant_p()
-> test so that the function calls can again be avoided when
-> possible.
+Is it ok to update the wiphy band information after registration. In 
+brcmfmac the firmware is queried to obtain the supported channels. 
+However, it returns the channels for the current country set in 
+firmware. So after probe/registration iw shows:
 
-will give it a try 
+		Frequencies:
+			* 2412 MHz [1] (20.0 dBm)
+			* 2417 MHz [2] (20.0 dBm)
+			* 2422 MHz [3] (20.0 dBm)
+			* 2427 MHz [4] (20.0 dBm)
+			* 2432 MHz [5] (20.0 dBm)
+			* 2437 MHz [6] (20.0 dBm)
+			* 2442 MHz [7] (20.0 dBm)
+			* 2447 MHz [8] (20.0 dBm)
+			* 2452 MHz [9] (20.0 dBm)
+			* 2457 MHz [10] (20.0 dBm)
+			* 2462 MHz [11] (20.0 dBm)
 
-> 
-> (and a trivial style note)
-> 
-> > diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-> []
-> > @@ -1110,7 +1110,7 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
-> >  
-> >  	/* Arm scan timeout timer */
-> >  	mod_timer(&cfg->escan_timeout, jiffies +
-> > -			WL_ESCAN_TIMER_INTERVAL_MS * HZ / 1000);
-> > +		  msecs_to_jiffies(WL_ESCAN_TIMER_INTERVAL_MS));
-> 
-> It may be nicer to keep the arithmetic on one line
+Recently, I added a .reg_notifier() callback to brcmfmac which will 
+propagate country setting to firmware. This gave a crash during scan 
+because ieee80211_get_channel() returned NULL for bss on freq 2472. I 
+added code to update the channel info upon changing country code, but 
+when I do that iw shows:
 
-sorry that was plain carelessness afer it went over 80 char.
+		Frequencies:
+			* 2412 MHz [1] (0.0 dBm)
+			* 2417 MHz [2] (0.0 dBm)
+			* 2422 MHz [3] (0.0 dBm)
+			* 2427 MHz [4] (0.0 dBm)
+			* 2432 MHz [5] (0.0 dBm)
+			* 2437 MHz [6] (0.0 dBm)
+			* 2442 MHz [7] (0.0 dBm)
+			* 2447 MHz [8] (0.0 dBm)
+			* 2452 MHz [9] (0.0 dBm)
+			* 2457 MHz [10] (0.0 dBm)
+			* 2462 MHz [11] (0.0 dBm)
+			* 2467 MHz [12] (0.0 dBm)
+			* 2472 MHz [13] (0.0 dBm)
 
-> 
->  	mod_timer(&cfg->escan_timeout,
-> 		  jiffies + msecs_to_jiffies(WL_ESCAN_TIMER_INTERVAL_MS));
->
+Looks fine apart from the power levels so it made me wonder if what I am 
+doing is allowed. Any opinion on this?
 
-thx!
-hofrat 
+I assume the supported band info is intended to show what hardware can 
+do regardless of the configured country, but I have no way to pull that 
+info from the device.
+
+Regards,
+Arend
