@@ -1,50 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60598 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752949AbbC3JiQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 05:38:16 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 5/5] wil6210: update FW file name
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1427704134-30699-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
-Date: Mon, 30 Mar 2015 12:38:08 +0300
-In-Reply-To: <1427704134-30699-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	(Vladimir Kondratiev's message of "Mon, 30 Mar 2015 11:28:54 +0300")
-Message-ID: <87wq1y6d1b.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_113819_296349_5256615F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from aibo.runbox.com ([91.220.196.211]:41576 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753289AbbCSEjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 00:39:55 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, joe@perches.com,
+	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v3 14/15] staging: rtl8723au: Use __func__ in trace logs
+Date: Thu, 19 Mar 2015 00:39:17 -0400
+Message-Id: <1426739958-18949-15-git-send-email-m.v.b@runbox.com> (sfid-20150319_054117_089588_D618A564)
+In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+Rework the trace log-related lines in rtl8723au's rtw_security.c
+to use the __func__ GCC magic variable instead of hardcoding the
+function names into the trace log strings. This also corrects a
+copy-paste-related typo in the function named rtw_tkip_decrypt23a.
 
-> Firmware "board" file name has changed from wil6210.board
-> to wil6210.brd by the FW generation tools.
->
-> Reflect this in the driver.
->
-> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-> index f4681e3..abb2080 100644
-> --- a/drivers/net/wireless/ath/wil6210/wil6210.h
-> +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-> @@ -33,7 +33,7 @@ extern bool debug_fw;
->  
->  #define WIL_NAME "wil6210"
->  #define WIL_FW_NAME "wil6210.fw" /* code */
-> -#define WIL_FW2_NAME "wil6210.board" /* board & radio parameters */
-> +#define WIL_FW2_NAME "wil6210.brd" /* board & radio parameters */
+Thanks to Jes Sorensen for the suggestion to use __func__.
 
-I consider the firmware file names as part of stable user space
-interface (older user space need to work with newer kernel etc) and this
-change breaks that.
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 49 ++++++++++++++++-----------
+ 1 file changed, 30 insertions(+), 19 deletions(-)
 
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index eb3544866a..cdb3707fb2 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -248,9 +248,9 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
+ 
+ 	if (actual_crc != expected_crc) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
++			 ("%s:icv CRC mismatch: "
+ 			  "actual: %08x, expected: %08x\n",
+-			  actual_crc, expected_crc));
++			  __func__, actual_crc, expected_crc));
+ 	}
+ }
+ 
+@@ -634,7 +634,8 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 	}
+ 
+ 	if (stainfo == NULL) {
+-		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo == NULL!!!\n"));
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 ("%s: stainfo == NULL!!!\n", __func__));
+ 		DBG_8723A("%s, psta == NUL\n", __func__);
+ 		return _FAIL;
+ 	}
+@@ -644,7 +645,8 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 		return _FAIL;
+ 	}
+ 
+-	RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo!= NULL!!!\n"));
++	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++		 ("%s: stainfo!= NULL!!!\n", __func__));
+ 
+ 	if (is_multicast_ether_addr(pattrib->ra))
+ 		prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
+@@ -718,7 +720,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 	stainfo = rtw_get_stainfo23a(&padapter->stapriv,
+ 				     &prxattrib->ta[0]);
+ 	if (stainfo == NULL) {
+-		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt23a: stainfo == NULL!!!\n"));
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 ("%s: stainfo == NULL!!!\n", __func__));
+ 		return _FAIL;
+ 	}
+ 
+@@ -731,7 +734,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 		prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
+ 		prwskeylen = 16;
+ 	} else {
+-		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt23a: stainfo!= NULL!!!\n"));
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 ("%s: stainfo!= NULL!!!\n", __func__));
+ 		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
+ 		prwskeylen = 16;
+ 	}
+@@ -757,9 +761,9 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 
+ 	if (actual_crc != expected_crc) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
++			 ("%s:icv CRC mismatch: "
+ 			  "actual: %08x, expected: %08x\n",
+-			  actual_crc, expected_crc));
++			  __func__, actual_crc, expected_crc));
+ 		res = _FAIL;
+ 	}
+ 
+@@ -1296,7 +1300,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
+ 
+ 	if (!stainfo) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-			 ("rtw_aes_encrypt23a: stainfo == NULL!!!\n"));
++			 ("%s: stainfo == NULL!!!\n", __func__));
+ 		DBG_8723A("%s, psta == NUL\n", __func__);
+ 		res = _FAIL;
+ 		goto out;
+@@ -1307,7 +1311,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
+ 		return _FAIL;
+ 	}
+ 	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-		 ("rtw_aes_encrypt23a: stainfo!= NULL!!!\n"));
++		 ("%s: stainfo!= NULL!!!\n", __func__));
+ 
+ 	if (is_multicast_ether_addr(pattrib->ra))
+ 		prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
+@@ -1535,10 +1539,16 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 	for (i = 0; i < 8; i++) {
+ 		if (pframe[hdrlen + 8 + plen - 8 + i] != message[hdrlen + 8 + plen - 8 + i]) {
+ 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-				 ("aes_decipher:mic check error mic[%d]: pframe(%x) != message(%x)\n",
+-				 i, pframe[hdrlen + 8 + plen - 8 + i], message[hdrlen + 8 + plen - 8 + i]));
+-			DBG_8723A("aes_decipher:mic check error mic[%d]: pframe(%x) != message(%x)\n",
+-				  i, pframe[hdrlen + 8 + plen - 8 + i], message[hdrlen + 8 + plen - 8 + i]);
++				 ("%s:mic check error mic[%d]: "
++				  "pframe(%x) != message(%x)\n",
++				  __func__, i,
++				  pframe[hdrlen + 8 + plen - 8 + i],
++				  message[hdrlen + 8 + plen - 8 + i]));
++			DBG_8723A("%s:mic check error mic[%d]: "
++				  "pframe(%x) != message(%x)\n",
++				  __func__, i,
++				  pframe[hdrlen + 8 + plen - 8 + i],
++				  message[hdrlen + 8 + plen - 8 + i]);
+ 			res = _FAIL;
+ 		}
+ 	}
+@@ -1564,13 +1574,13 @@ int rtw_aes_decrypt23a(struct rtw_adapter *padapter,
+ 	stainfo = rtw_get_stainfo23a(&padapter->stapriv, &prxattrib->ta[0]);
+ 	if (!stainfo) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-			 ("rtw_aes_encrypt23a: stainfo == NULL!!!\n"));
++			 ("%s: stainfo == NULL!!!\n", __func__));
+ 		res = _FAIL;
+ 		goto exit;
+ 	}
+ 
+ 	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-		 ("rtw_aes_decrypt23a: stainfo!= NULL!!!\n"));
++		 ("%s: stainfo!= NULL!!!\n", __func__));
+ 
+ 	if (is_multicast_ether_addr(prxattrib->ra)) {
+ 		/* in concurrent we should use sw decrypt in
+@@ -1605,9 +1615,10 @@ void rtw_use_tkipkey_handler23a(void *FunctionContext)
+ {
+ 	struct rtw_adapter *padapter = (struct rtw_adapter *)FunctionContext;
+ 
+-	RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("^^^rtw_use_tkipkey_handler23a ^^^\n"));
++	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++		 ("^^^%s^^^\n", __func__));
+ 	padapter->securitypriv.busetkipkey = 1;
+ 	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-		 ("^^^rtw_use_tkipkey_handler23a padapter->securitypriv.busetkipkey =%d^^^\n",
+-		 padapter->securitypriv.busetkipkey));
++		 ("^^^%s padapter->securitypriv.busetkipkey =%d^^^\n",
++		  __func__, padapter->securitypriv.busetkipkey));
+ }
 -- 
-Kalle Valo
+2.1.4
+
