@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:38912 "EHLO muru.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751064AbbCTO65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 10:58:57 -0400
-Date: Fri, 20 Mar 2015 07:54:18 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Eliad Peller <eliad@wizery.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Sekhar Nori <nsekhar@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Luciano Coelho <luca@coelho.fi>
-Subject: Re: [PATCH v6 2/6] wl12xx: use frequency instead of enumerations for
- pdata clocks
-Message-ID: <20150320145417.GR31346@atomide.com> (sfid-20150320_155902_782908_ABE173DB)
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
- <20150313150047.GI5264@atomide.com>
- <CAB3XZEcOytqpJ4pWoemLS3d+DCeA8C75MencDfGn_vhfEYrduw@mail.gmail.com>
- <3103538.jZ037SODdT@wuerfel>
- <87lhixphag.fsf@kamboji.qca.qualcomm.com>
- <20150316151554.GO5264@atomide.com>
- <87siczg44w.fsf@kamboji.qca.qualcomm.com>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:20263 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751394AbbCSNyA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 09:54:00 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: protect driver from unsolicited htc ep0 events
+References: <1426081031-15296-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 19 Mar 2015 15:53:50 +0200
+In-Reply-To: <1426081031-15296-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Wed, 11 Mar 2015 14:37:11 +0100")
+Message-ID: <87wq2dhz4h.fsf@kamboji.qca.qualcomm.com> (sfid-20150319_145403_335895_FD5CA485)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87siczg44w.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Kalle Valo <kvalo@codeaurora.org> [150320 07:01]:
-> Tony Lindgren <tony@atomide.com> writes:
-> 
-> >> I prefer these going through the omap tree. Like Eliad said,
-> >> drivers/net/wireless/ti does not get that many changes nowadays so the
-> >> chances of this patchset conflicting with something is very small.
-> >
-> > OK great. In that case no need to rearrange the patches, I can
-> > apply them into an immutable branch once the pending issues have
-> > been fixed if Kalle acks them.
-> >
-> > To avoid merge conflicts that branch is easiest done against
-> > v4.0-rc4. Kalle and Arnd, does that work for you guys?
-> >
-> > I can also base it on 5b7610f23562 ("ARM: OMAP2+: Fix wl12xx on
-> > dm3730-evm with mainline u-boot") that's on top of -rc2 plus few
-> > other fixes now merged to -rc4 mainline if we need a branch based
-> > on an earlier tag.
-> 
-> Sorry, it seems I forgot to answer this one:
-> 
-> Either baseline is good for me, I can't think of any problems with
-> either one. But please do remember that I'm a new maintainer, I might
-> very well miss something ;)
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-OK, I'll base it on -rc4 unless Arnd needs something earlier.
+> Some firmware revisions (tested with qca6174
+> rm2.0-00088) deliver unsolicited unknown (kind of
+> garbled) HTC ep0 event to host in some cases.
+>
+> This issue was mainly observed with both qca988x
+> and qca6174 being installed on a single host
+> system. During driver probing if qca6174 booting
+> sequences were somehow deferred (e.g. by qca988x
+> implicitly making some resources busy presumably)
+> the unsolicited event would came around 1s after
+> ATH10K_HTC_MSG_READY_ID was delivered to host for
+> qca6174.
+>
+> The unsolicited event would confuse driver and
+> cause HTT initialization (and subsequently
+> driver probing) to fail.
+>
+> Make the ep0 event processing more robust. The
+> event will still be caught but instead will
+> only generate a warning now.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Regards,
+Thanks, applied.
 
-Tony
+-- 
+Kalle Valo
