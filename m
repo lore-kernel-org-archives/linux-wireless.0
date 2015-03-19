@@ -1,36 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:47421 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314AbbCWPMI (ORCPT
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:32900 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753830AbbCSOF6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 11:12:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] ath10k: fix rts profile for second rate series
-References: <1425451847-14505-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Mon, 23 Mar 2015 17:11:52 +0200
-In-Reply-To: <1425451847-14505-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Wed, 4 Mar 2015 12:20:46 +0530")
-Message-ID: <87bnjjeojr.fsf@kamboji.qca.qualcomm.com> (sfid-20150323_161212_693475_52FF4642)
+	Thu, 19 Mar 2015 10:05:58 -0400
+Message-ID: <550AD7C1.2030405@gmail.com> (sfid-20150319_150604_656941_F581E65B)
+Date: Thu, 19 Mar 2015 15:05:53 +0100
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+CC: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?windows-1252?Q?Beno=EEt_Cousson?= <bcousson@baylibre.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v7 5/6] ARM: dts: add wl12xx/wl18xx bindings
+References: <1426696710-6891-1-git-send-email-eliad@wizery.com> <1426696710-6891-6-git-send-email-eliad@wizery.com>
+In-Reply-To: <1426696710-6891-6-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
-
-> By default rts protection is enabled in firmware for the second
-> rateset. Currently ath10k selects RTS profile (only for software
-> retries), when legacy stations are associated or asked by mac80211.
-> On congested environment, when AP is running in HT/VHT mode and
-> there are no legacy clients associated, this will impact the
-> robustness. Also enabling RTS protection only for second rateset will
-> not impact performance on clear environment. Fix that.
+On 2015-03-18 17:38, Eliad Peller wrote:
+> Replace all the pdata-quirks for setting wl12xx/wl18xx
+> platform data with proper DT definitions.
 >
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Acked-by: Javier Martinez Canillas <javier@dowhile0.org>
+> Acked-by: Enric Balletbo i Serra <eballetbo@gmail.com>
+> Tested-by: Tony Lindgren <tony@atomide.com>
+> ---
+> v7: rebase
+>
+>   arch/arm/boot/dts/am335x-evmsk.dts             | 11 ++++
+>   arch/arm/boot/dts/omap3-cm-t3517.dts           | 10 ++++
+>   arch/arm/boot/dts/omap3-cm-t3730.dts           | 10 ++++
+>   arch/arm/boot/dts/omap3-evm-common.dtsi        | 10 ++++
+>   arch/arm/boot/dts/omap3-igep0020-rev-f.dts     |  9 ++++
+>   arch/arm/boot/dts/omap3-igep0030-rev-g.dts     |  9 ++++
+>   arch/arm/boot/dts/omap3-zoom3.dts              | 10 ++++
+>   arch/arm/boot/dts/omap4-panda-common.dtsi      | 10 ++++
 
-Thanks, both patches applied.
+Hi Eliad,
 
--- 
-Kalle Valo
+Tested OK (boot, scan, join, ping) on Pandaboard ES.
+
+BR,
+
+Pontus
+
