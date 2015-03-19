@@ -1,53 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo4-p05-ob.smtp.rzone.de ([81.169.146.183]:13084 "EHLO
-	mo4-p05-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300AbbCOVUy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Mar 2015 17:20:54 -0400
-Date: Sun, 15 Mar 2015 22:20:51 +0100
-From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-To: =?UTF-8?B?SsO8cmdlbg==?= Bausa <juergen.Bausa@online.de>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Broadcom 43340
-Message-ID: <20150315222051.7d614056@mir> (sfid-20150315_222058_032936_3CD12631)
-In-Reply-To: <loom.20150315T213441-211@post.gmane.org>
-References: <550482A2.3080803@gmail.com>
-	<55048833.90408@broadcom.com>
-	<55048BB1.9080906@gmail.com>
-	<550491DA.6030105@broadcom.com>
-	<55049507.6040209@gmail.com>
-	<20150314213907.3f1167bb@mir>
-	<5504B29F.8000305@gmail.com>
-	<55056EFB.9020100@broadcom.com>
-	<loom.20150315T213441-211@post.gmane.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from aibo.runbox.com ([91.220.196.211]:41579 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753290AbbCSEjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 00:39:55 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, joe@perches.com,
+	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v3 12/15] staging: rtl8723au: suspect code indent for conditional statements
+Date: Thu, 19 Mar 2015 00:39:15 -0400
+Message-Id: <1426739958-18949-13-git-send-email-m.v.b@runbox.com> (sfid-20150319_054159_526348_16B4E9B7)
+In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Correct a number of indentation-with-spaces-and-tabs issues in
+rtl8723au's rtw_security.c, according to checkpatch.pl:
+	WARNING: suspect code indent for conditional statements
 
-On 2015-03-15, Jürgen Bausa wrote:
-> Arend van Spriel <arend@...> writes:
-> > On 03/14/15 23:13, Ochal Christophe wrote:
-[...]
-> would be nice, if you could make it clear.
-> 
-> I am in the exact some position (asus x205 with linux 4.0 rc3) but my
-> /sys/firmware/efi/efivars/ is empty. I am running debian jessie with a
-> kernel taken from ubuntu. Am I missing something? Even loading efivars via
-> modprobe doesnt change a thing.
+v3: Make sure that all edited lines are at most 80 characters wide.
 
-You need to have efivarfs mounted, which Debian/jessie and systemd 
-should do by default (it certainly does, at least when booted in UEFI
-mode - you probably won't have access to it in BIOS CSM mode):
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 46 ++++++++++++++++-----------
+ 1 file changed, 27 insertions(+), 19 deletions(-)
 
-$ grep efivarfs /proc/mounts 
-efivarfs /sys/firmware/efi/efivars efivarfs rw,nosuid,nodev,noexec,relatime 0 0
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 8591b49664..4330479ee0 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -761,8 +761,16 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 
+ 	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
+ 	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
+-	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+-				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 ("rtw_wep_decrypt23a:icv error "
++			  "crc[3](%x)!= payload[length-1](%x) || "
++			  "crc[2](%x)!= payload[length-2](%x) || "
++			  "crc[1](%x)!= payload[length-3](%x) || "
++			  "crc[0](%x)!= payload[length-4](%x)\n",
++			  crc[3], payload[length - 1],
++			  crc[2], payload[length - 2],
++			  crc[1], payload[length - 3],
++			  crc[0], payload[length - 4]));
+ 		res = _FAIL;
+ 	}
+ 
+@@ -909,9 +917,9 @@ static void mix_column(u8 *in, u8 *out)
+ 
+ 	for (i = 0; i < 4; i++) {
+ 		if ((in[i] & 0x80) == 0x80)
+-		    add1b[i] = 0x1b;
++			add1b[i] = 0x1b;
+ 		else
+-		    add1b[i] = 0x00;
++			add1b[i] = 0x00;
+ 	}
+ 
+ 	swap_halfs[0] = in[2]; /* Swap halfs */
+@@ -966,21 +974,21 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
+ 
+ 	for (round = 0; round < 11; round++) {
+ 		if (round == 0) {
+-		    xor_128(round_key, data, ciphertext);
+-		    next_key(round_key, round);
++			xor_128(round_key, data, ciphertext);
++			next_key(round_key, round);
+ 		} else if (round == 10) {
+-		    byte_sub(ciphertext, intermediatea);
+-		    shift_row(intermediatea, intermediateb);
+-		    xor_128(intermediateb, round_key, ciphertext);
++			byte_sub(ciphertext, intermediatea);
++			shift_row(intermediatea, intermediateb);
++			xor_128(intermediateb, round_key, ciphertext);
+ 		} else { /* 1 - 9 */
+-		    byte_sub(ciphertext, intermediatea);
+-		    shift_row(intermediatea, intermediateb);
+-		    mix_column(&intermediateb[0], &intermediatea[0]);
+-		    mix_column(&intermediateb[4], &intermediatea[4]);
+-		    mix_column(&intermediateb[8], &intermediatea[8]);
+-		    mix_column(&intermediateb[12], &intermediatea[12]);
+-		    xor_128(intermediatea, round_key, ciphertext);
+-		    next_key(round_key, round);
++			byte_sub(ciphertext, intermediatea);
++			shift_row(intermediatea, intermediateb);
++			mix_column(&intermediateb[0], &intermediatea[0]);
++			mix_column(&intermediateb[4], &intermediatea[4]);
++			mix_column(&intermediateb[8], &intermediatea[8]);
++			mix_column(&intermediateb[12], &intermediatea[12]);
++			xor_128(intermediatea, round_key, ciphertext);
++			next_key(round_key, round);
+ 		}
+ 	}
+ 
+@@ -1481,7 +1489,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 		for (j = 0; j < 16; j++)
+ 			padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+-		    padded_buffer[j] = message[payload_index++];
++			padded_buffer[j] = message[payload_index++];
+ 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
+ 		aes128k128d(key, chain_buffer, aes_out);
+ 	}
+@@ -1511,7 +1519,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 				      message, pn_vector, num_blocks+1);
+ 
+ 		for (j = 0; j < 16; j++)
+-			 padded_buffer[j] = 0x00;
++			padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+ 			padded_buffer[j] = message[payload_index + j];
+ 		aes128k128d(key, ctr_preload, aes_out);
+-- 
+2.1.4
 
-If it isn't for some weird reason, you'll have to mount it by hand.
-
-# mount -t efivarfs -o rw,nosuid,nodev,noexec,relatime efivarfs /sys/firmware/efi/efivars
-
-Regards
-	Stefan Lippers-Hollmann
