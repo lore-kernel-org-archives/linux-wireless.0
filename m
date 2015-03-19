@@ -1,31 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34058 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932467AbbCRUXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 16:23:38 -0400
-Message-ID: <1426710215.3001.43.camel@sipsolutions.net> (sfid-20150318_212343_042983_0C8F3D2D)
-Subject: Re: [PATCH v4] mac80211: add an intermediate software queue
- implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:47636 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751381AbbCSMxb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 08:53:31 -0400
+Date: Thu, 19 Mar 2015 15:53:14 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: jouni@qca.qualcomm.com
 Cc: linux-wireless@vger.kernel.org
-Date: Wed, 18 Mar 2015 21:23:35 +0100
-In-Reply-To: <5509DDAF.80706@openwrt.org>
-References: <1426609283-83954-1-git-send-email-nbd@openwrt.org>
-		 <1426707672.3001.39.camel@sipsolutions.net> <5509DA00.6030002@openwrt.org>
-	 <1426709222.3001.42.camel@sipsolutions.net> <5509DDAF.80706@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: re: mac80111: Add BIP-GMAC-128 and BIP-GMAC-256 ciphers
+Message-ID: <20150319125314.GA15250@mwanda> (sfid-20150319_135342_744584_EF124565)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-03-18 at 21:18 +0100, Felix Fietkau wrote:
+Hello Jouni Malinen,
 
-> > Anyway - not sure it needs to be in the callback?
-> I think it makes things simpler this way. What would you prefer?
+The patch 8ade538bf39b: "mac80111: Add BIP-GMAC-128 and BIP-GMAC-256
+ciphers" from Jan 24, 2015, leads to the following static checker
+warning:
 
-It might for the driver, but I'm not sure it should be required and
-described in the docs?
+	net/mac80211/aes_gmac.c:74 ieee80211_aes_gmac_key_setup()
+	warn: we tested 'err' before and it was 'true'
 
-johannes
+net/mac80211/aes_gmac.c
+    61  struct crypto_aead *ieee80211_aes_gmac_key_setup(const u8 key[],
+    62                                                   size_t key_len)
+    63  {
+    64          struct crypto_aead *tfm;
+    65          int err;
+    66  
+    67          tfm = crypto_alloc_aead("gcm(aes)", 0, CRYPTO_ALG_ASYNC);
+    68          if (IS_ERR(tfm))
+    69                  return tfm;
+    70  
+    71          err = crypto_aead_setkey(tfm, key, key_len);
+    72          if (!err)
+                    ^^^^
+This is success handling.  In the kernel, everyone expects error
+hanlding like "if (err) " so this makes the code hard to read if you
+have a job and need to read code quickly.  At first I missed the "!"
+character, and then I thought,  "What??  Is err a pointer?"
 
+    73                  return tfm;
+    74          if (!err)
+    75                  err = crypto_aead_setauthsize(tfm, GMAC_MIC_LEN);
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is dead code.
+
+    76  
+    77          crypto_free_aead(tfm);
+    78          return ERR_PTR(err);
+
+This function should be a list of commands in a row with tiny detours
+for exceptions and error handling.  It messes everyone up if the success
+path is hidden somewhere in the middle and it leads to bugs like this.
+
+    79  }
+
+regards,
+dan carpenter
