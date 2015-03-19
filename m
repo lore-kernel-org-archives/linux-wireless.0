@@ -1,70 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:57447 "EHLO aibo.runbox.com"
+Received: from aibo.runbox.com ([91.220.196.211]:41522 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753558AbbC1MyB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:54:01 -0400
+	id S1750860AbbCSEjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 00:39:42 -0400
 From: "M. Vefa Bicakci" <m.v.b@runbox.com>
 To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
-	m.v.b@runbox.com
-Subject: [PATCH v4 15/15] staging: rtl8723au: Remove unneeded comments
-Date: Sat, 28 Mar 2015 08:52:48 -0400
-Message-Id: <1427547168-12078-16-git-send-email-m.v.b@runbox.com> (sfid-20150328_135426_234802_3537DF57)
-In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
-References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+Cc: Jes.Sorensen@redhat.com, joe@perches.com,
+	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v3 01/15] staging: rtl8723au: Reformat whitespace to increase readability
+Date: Thu, 19 Mar 2015 00:39:04 -0400
+Message-Id: <1426739958-18949-2-git-send-email-m.v.b@runbox.com> (sfid-20150319_054419_602184_0356568F)
+In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit removes a number of unneeded comments. Two of the
-aforementioned comments were most likely meant to aid with version
-control, whereas the remaining two comments relate to (now unused)
-local variable names.
+Adjust the whitespace in the signature, local variable declaration and
+initialization parts of a number of functions to increase readability
+in rtl8723au's rtw_security.c.
+
+v2: Make sure that the arcfour_encrypt function's argument list is split
+    according to the kernel code style.
 
 Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_security.c | 79 +++++++++++++--------------
+ 1 file changed, 38 insertions(+), 41 deletions(-)
 
 diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index cdb3707fb2..309f3d969e 100644
+index 045a24c81b..088533c5b1 100644
 --- a/drivers/staging/rtl8723au/core/rtw_security.c
 +++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -671,14 +671,14 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 		if ((curfragnum+1) == pattrib->nr_frags) { /* 4 the last fragment */
- 			length = pattrib->last_txcmdsz-pattrib->hdrlen-pattrib->iv_len - pattrib->icv_len;
- 			RT_TRACE(_module_rtl871x_security_c_, _drv_info_, ("pattrib->iv_len =%x, pattrib->icv_len =%x\n", pattrib->iv_len, pattrib->icv_len));
--			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
-+			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
+@@ -31,11 +31,11 @@ struct arc4context {
  
- 			arcfour_init(&mycontext, rc4key, 16);
- 			arcfour_encrypt(&mycontext, payload, payload, length);
- 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
- 		} else {
- 			length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
--			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
-+			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
- 			arcfour_init(&mycontext, rc4key, 16);
- 			arcfour_encrypt(&mycontext, payload, payload, length);
- 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
-@@ -1272,7 +1272,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
- 	/* Intermediate Buffers */
- 	int curfragnum, length;
- 	u32 prwskeylen;
--	u8 *pframe, *prwskey; /* *payload, *iv */
-+	u8 *pframe, *prwskey;
- 	u8 hw_hdr_offset = 0;
- 	struct sta_info *stainfo;
- 	struct pkt_attrib *pattrib = &pxmitframe->attrib;
-@@ -1563,7 +1563,7 @@ int rtw_aes_decrypt23a(struct rtw_adapter *padapter,
- 	struct security_priv *psecuritypriv = &padapter->securitypriv;
- 	struct sk_buff *skb = precvframe->pkt;
- 	int length;
--	u8 *pframe, *prwskey; /* *payload, *iv */
-+	u8 *pframe, *prwskey;
+ static void arcfour_init(struct arc4context *parc4ctx, u8 *key, u32 key_len)
+ {
+-	u32	t, u;
+-	u32	keyindex;
+-	u32	stateindex;
++	u32 t, u;
++	u32 keyindex;
++	u32 stateindex;
+ 	u8 *state;
+-	u32	counter;
++	u32 counter;
+ 
+ 	state = parc4ctx->state;
+ 	parc4ctx->x = 0;
+@@ -55,7 +55,8 @@ static void arcfour_init(struct arc4context *parc4ctx, u8 *key, u32 key_len)
+ 	}
+ 
+ }
+-static u32 arcfour_byte(	struct arc4context	*parc4ctx)
++
++static u32 arcfour_byte(struct arc4context *parc4ctx)
+ {
+ 	u32 x;
+ 	u32 y;
+@@ -75,16 +76,13 @@ static u32 arcfour_byte(	struct arc4context	*parc4ctx)
+ 	return state[(sx + sy) & 0xff];
+ }
+ 
+-static void arcfour_encrypt(	struct arc4context	*parc4ctx,
+-	u8 *dest,
+-	u8 *src,
+-	u32 len)
++static void arcfour_encrypt(struct arc4context *parc4ctx, u8 *dest,
++			    u8 *src, u32 len)
+ {
+-	u32	i;
++	u32 i;
+ 
+ 	for (i = 0; i < len; i++)
+ 		dest[i] = src[i] ^ (unsigned char)arcfour_byte(parc4ctx);
+-
+ }
+ 
+ static int bcrc32initialized;
+@@ -368,7 +366,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
+ 			   u8 *mic_code, u8 pri)
+ {
+ 
+-	struct mic_data	micdata;
++	struct mic_data micdata;
+ 	u8 priority[4]={0x0, 0x0, 0x0, 0x0};
+ 
+ 	rtw_secmicsetkey23a(&micdata, key);
+@@ -604,21 +602,21 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
+ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 			struct xmit_frame *pxmitframe)
+ {
+-	u16	pnl;
+-	u32	pnh;
+-	u8	rc4key[16];
+-	u8   ttkey[16];
+-	u8	crc[4];
+-	u8   hw_hdr_offset = 0;
++	u16 pnl;
++	u32 pnh;
++	u8 rc4key[16];
++	u8 ttkey[16];
++	u8 crc[4];
++	u8 hw_hdr_offset = 0;
+ 	struct arc4context mycontext;
+-	int			curfragnum, length;
+-	u32	prwskeylen;
+-	u8	*pframe, *payload, *iv, *prwskey;
++	int curfragnum, length;
++	u32 prwskeylen;
++	u8 *pframe, *payload, *iv, *prwskey;
+ 	union pn48 dot11txpn;
+-	struct	sta_info		*stainfo;
+-	struct	pkt_attrib	 *pattrib = &pxmitframe->attrib;
+-	struct	security_priv	*psecuritypriv = &padapter->securitypriv;
+-	struct	xmit_priv		*pxmitpriv = &padapter->xmitpriv;
++	struct sta_info *stainfo;
++	struct pkt_attrib *pattrib = &pxmitframe->attrib;
++	struct security_priv *psecuritypriv = &padapter->securitypriv;
++	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
  	int res = _SUCCESS;
  
- 	pframe = skb->data;
+ 	if (!pxmitframe->buf_addr)
+@@ -706,17 +704,17 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ {
+ 	u16 pnl;
+ 	u32 pnh;
+-	u8   rc4key[16];
+-	u8   ttkey[16];
+-	u8	crc[4];
++	u8 rc4key[16];
++	u8 ttkey[16];
++	u8 crc[4];
+ 	struct arc4context mycontext;
+-	int	length;
+-	u32	prwskeylen;
+-	u8	*pframe, *payload, *iv, *prwskey;
++	int length;
++	u32 prwskeylen;
++	u8 *pframe, *payload, *iv, *prwskey;
+ 	union pn48 dot11txpn;
+-	struct	sta_info		*stainfo;
+-	struct	rx_pkt_attrib *prxattrib = &precvframe->attrib;
+-	struct	security_priv *psecuritypriv = &padapter->securitypriv;
++	struct sta_info *stainfo;
++	struct rx_pkt_attrib *prxattrib = &precvframe->attrib;
++	struct security_priv *psecuritypriv = &padapter->securitypriv;
+ 	struct sk_buff *skb = precvframe->pkt;
+ 	int res = _SUCCESS;
+ 
+@@ -1128,8 +1126,8 @@ static void bitwise_xor(u8 *ina, u8 *inb, u8 *out)
+ 
+ static int aes_cipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ {
+-	uint	qc_exists, a4_exists, i, j, payload_remainder,
+-		num_blocks, payload_index;
++	uint qc_exists, a4_exists, i, j, payload_remainder,
++	     num_blocks, payload_index;
+ 	u8 pn_vector[6];
+ 	u8 mic_iv[16];
+ 	u8 mic_header1[16];
+@@ -1345,12 +1343,11 @@ out:
+ 	return res;
+ }
+ 
+-static int aes_decipher(u8 *key, uint	hdrlen,
+-			u8 *pframe, uint plen)
++static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ {
+-	static u8	message[MAX_MSG_SIZE];
+-	uint	qc_exists, a4_exists, i, j, payload_remainder,
+-			num_blocks, payload_index;
++	static u8 message[MAX_MSG_SIZE];
++	uint qc_exists, a4_exists, i, j, payload_remainder,
++	     num_blocks, payload_index;
+ 	int res = _SUCCESS;
+ 	u8 pn_vector[6];
+ 	u8 mic_iv[16];
 -- 
 2.1.4
 
