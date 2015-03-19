@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:37869 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615AbbCGRFc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2015 12:05:32 -0500
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH resend 2/3] vt6655: Fix late setting of byRFType.
-Date: Sat,  7 Mar 2015 17:04:55 +0000
-Message-Id: <1425747896-8353-2-git-send-email-tvboxspy@gmail.com> (sfid-20150307_180542_520494_0E9469A8)
-In-Reply-To: <1425747896-8353-1-git-send-email-tvboxspy@gmail.com>
-References: <1425747896-8353-1-git-send-email-tvboxspy@gmail.com>
+Received: from aibo.runbox.com ([91.220.196.211]:41538 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752493AbbCSEjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 00:39:48 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, joe@perches.com,
+	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v3 00/15] checkpatch clean-up of rtl8723au's rtw_security.c
+Date: Thu, 19 Mar 2015 00:39:03 -0400
+Message-Id: <1426739958-18949-1-git-send-email-m.v.b@runbox.com> (sfid-20150319_054412_402629_149D906A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-byRFType is not set prior to registration of mac80211 causing
-unpredictable operation after channel scans.
+These commits address a number of checkpatch.pl warnings and errors
+in rtl8723au's rtw_security.c.
 
-With byRFType unset all channels are enabled this causes tx power
-to be set to values not present its eeprom.
+Prior to this set of commits, checkpatch.pl reported the following:
+	total: 77 errors, 138 warnings, 1621 lines checked
 
-Move setting of this variable to vt6655_probe.
+After applying this set of commits, checkpatch.pl reports the following:
+	total: 0 errors, 26 warnings, 1624 lines checked
+where the only remaining warnings relate to lines longer than 80
+characters and quoted strings split across multiple lines.
 
-byRFType must have a mask set. byRevId not used by driver and
-is removed.
+There are also a number of commits which improve the code in other ways.
+For example, the commit titled "Reorganize a few functions to remove
+indentation" reworks two functions to make them more readable, whereas
+the commit titled "Rework two byte array comparisons" reworks two CRC
+verifications for the same reason, and "Use __func__ in trace logs"
+avoids hardcoding function names in trace logs to increase
+maintainability.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
-Cc: <stable@vger.kernel.org> # v3.19+
----
- drivers/staging/vt6655/device_main.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
+All of the commits have been verified to compile successfully via the
+use of the interactive rebase feature of git.
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index 0204ea5..a512f83 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -330,16 +330,6 @@ static void device_init_registers(struct vnt_private *pDevice)
- 	/* zonetype initial */
- 	pDevice->byOriginalZonetype = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
- 
--	/* Get RFType */
--	pDevice->byRFType = SROMbyReadEmbedded(pDevice->PortOffset, EEP_OFS_RFTYPE);
--
--	/* force change RevID for VT3253 emu */
--	if ((pDevice->byRFType & RF_EMU) != 0)
--			pDevice->byRevId = 0x80;
--
--	pDevice->byRFType &= RF_MASK;
--	pr_debug("pDevice->byRFType = %x\n", pDevice->byRFType);
--
- 	if (!pDevice->bZoneRegExist)
- 		pDevice->byZoneType = pDevice->abyEEPROM[EEP_OFS_ZONETYPE];
- 
-@@ -1780,6 +1770,12 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	MACvInitialize(priv->PortOffset);
- 	MACvReadEtherAddress(priv->PortOffset, priv->abyCurrentNetAddr);
- 
-+	/* Get RFType */
-+	priv->byRFType = SROMbyReadEmbedded(priv->PortOffset, EEP_OFS_RFTYPE);
-+	priv->byRFType &= RF_MASK;
-+
-+	dev_dbg(&pcid->dev, "RF Type = %x\n", priv->byRFType);
-+
- 	device_get_options(priv);
- 	device_set_options(priv);
- 	/* Mask out the options cannot be set to the chip */
+v3: Rebased onto Greg Kroah-Hartman's staging-next tree, on top of
+    the following commit
+      5ec293650827122df300581c17ca1d5de03bac3d.
+      Staging: dgnc: release the lock before testing for nullity
+
+    Please see the individual commit messages for the changes
+    since v2. In summary, the following commits have been updated:
+    - that open brace should be on the previous line
+    - suspect code indent for conditional statements
+
+    The following commit is new:
+    - Use __func__ in trace logs
+
+    Finally, the following commit has been removed:
+    - Do not initialize a static to 0
+
+v2: Please see the individual commit messages for the changes
+    since v1. In summary, the following commits have been updated:
+    - Reformat whitespace to increase readability
+    - Fix "before/around/after" whitespace issues
+    - Rework two byte array comparisons
+
+M. Vefa Bicakci (15):
+  staging: rtl8723au: Reformat whitespace to increase readability
+  staging: rtl8723au: Fix "before/around/after" whitespace issues
+  staging: rtl8723au: else should follow close brace
+  staging: rtl8723au: Fix the indentation of two lines
+  staging: rtl8723au: Reorganize a few functions to remove indentation
+  staging: rtl8723au: else is not generally useful after a return
+  staging: rtl8723au: Remove unneeded curly braces
+  staging: rtl8723au: trailing statements should be on next line
+  staging: rtl8723au: that open brace should be on the previous line
+  staging: rtl8723au: No spaces at the start of a line
+  staging: rtl8723au: Adjust whitespace in and around comments
+  staging: rtl8723au: suspect code indent for conditional statements
+  staging: rtl8723au: Rework two byte array comparisons
+  staging: rtl8723au: Use __func__ in trace logs
+  staging: rtl8723au: Remove unneeded comments
+
+ drivers/staging/rtl8723au/core/rtw_security.c | 799 +++++++++++++-------------
+ 1 file changed, 401 insertions(+), 398 deletions(-)
+
 -- 
 2.1.4
 
