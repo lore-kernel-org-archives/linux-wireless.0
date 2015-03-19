@@ -1,30 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52724 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801AbbCTHAU (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:50194 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbbCSQ4E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 03:00:20 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 19 Mar 2015 12:56:04 -0400
+Received: from [192.168.100.236] (unknown [50.251.239.81])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id 4709C40B2CD
+	for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2015 09:56:04 -0700 (PDT)
+Message-ID: <550AFFA3.3070704@candelatech.com> (sfid-20150319_175609_616227_43812340)
+Date: Thu, 19 Mar 2015 09:56:03 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Subject: Re: mwifiex: missing curly braces in mwifiex_write_data_complete()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20150318082235.GC10434@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Zhaoyang Liu <liuzy@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20150320070019.9A289140DB9@smtp.codeaurora.org> (sfid-20150320_080025_165128_1FB54AD9)
-Date: Fri, 20 Mar 2015 07:00:19 +0000 (UTC)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: 802.11d is being banned?
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I found this page while searching for something related....
 
-> It's clear from the indenting that curly braces were intended here.
-> 
-> Fixes: e35000ead491 ('mwifiex: preprocess packets from TX queue')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Is this for real?
 
-Thanks, applied to wireless-drivers-next.git.
+http://www.silexamerica.com/unwired/802-11d/
 
-Kalle Valo
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
