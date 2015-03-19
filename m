@@ -1,390 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45419 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725AbbCKPLj (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:35182 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754348AbbCSKOC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 11:11:39 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 5/7] brcmfmac: extract ram size info from internal memory registers
-Date: Wed, 11 Mar 2015 16:11:31 +0100
-Message-ID: <1426086693-13876-6-git-send-email-arend@broadcom.com> (sfid-20150311_161148_460066_CE6A5065)
-In-Reply-To: <1426086693-13876-1-git-send-email-arend@broadcom.com>
-References: <1426086693-13876-1-git-send-email-arend@broadcom.com>
+	Thu, 19 Mar 2015 06:14:02 -0400
+Received: by wibdy8 with SMTP id dy8so113285524wib.0
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2015 03:14:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87r3sljpsa.fsf@kamboji.qca.qualcomm.com>
+References: <1426066382-481-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<878uetl7cn.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmcdiy3u8cvYYRueSoQxGzYf9Suf4dy8HpLG6UaQzJzZQ@mail.gmail.com>
+	<87r3sljpsa.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 19 Mar 2015 11:14:00 +0100
+Message-ID: <CA+BoTQkZ-dZUq0Uqy0uAUNxzz0uZtWB4sWwsZod3Wysn_a_YoQ@mail.gmail.com> (sfid-20150319_111407_496525_357EF256)
+Subject: Re: [PATCH] ath10k: fix htt t2h message conflicts among firmware revisions
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of hard-coded memory sizes it is possible to obtain that
-information from the internal memory registers.
+On 19 March 2015 at 10:32, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>>> When I was adding WMI_OP_VERSION, my idea was that we will add similar
+>>> version for HTT as well once we need it. But I guess this is good enough
+>>> for now, we can add HTT_OP_VERSION later if more changes are needed.
+>>
+>> Maybe it should be renamed to OP_VERSION (drop the WMI_) or BRANCH_ID
+>> or something else?
+>>
+>> It's not like HTT wasn't diverging. It was. However only WMI ABI was
+>> seeing major breakage that needed taking care of. HTT changes were
+>> small enough and could be ignored until now.
+>
+> I'm a bit worried that having one id for everything will be more
+> difficult to maintain, that's why I created WMI_OP_VERSION in the first
+> place. IMHO it's lot cleaner codewise to have one id for WMI interface
+> and one id for HTT (eg. HTT_OP_VERSION). What do you think?
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/chip.c | 260 ++++++++++++++++++++-----
- drivers/net/wireless/brcm80211/brcmfmac/chip.h |   4 +-
- 2 files changed, 217 insertions(+), 47 deletions(-)
+Currently both WMI and HTT seem to be developed in tandem within their
+own branches. HTT_OP_VERSION would make sense if you assume HTT/WMI
+development will be developed in parallel branches.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index c11137e..7341725 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -100,9 +100,6 @@
- #define BCM4329_CORE_SOCRAM_BASE	0x18003000
- /* ARM Cortex M3 core, ID 0x82a */
- #define BCM4329_CORE_ARM_BASE		0x18002000
--#define BCM4329_RAMSIZE			0x48000
--/* bcm43143 */
--#define BCM43143_RAMSIZE		0x70000
- 
- #define CORE_SB(base, field) \
- 		(base + SBCONFIGOFF + offsetof(struct sbconfig, field))
-@@ -150,6 +147,78 @@ struct sbconfig {
- 	u32 sbidhigh;	/* identification */
- };
- 
-+/* bankidx and bankinfo reg defines corerev >= 8 */
-+#define SOCRAM_BANKINFO_RETNTRAM_MASK	0x00010000
-+#define SOCRAM_BANKINFO_SZMASK		0x0000007f
-+#define SOCRAM_BANKIDX_ROM_MASK		0x00000100
-+
-+#define SOCRAM_BANKIDX_MEMTYPE_SHIFT	8
-+/* socram bankinfo memtype */
-+#define SOCRAM_MEMTYPE_RAM		0
-+#define SOCRAM_MEMTYPE_R0M		1
-+#define SOCRAM_MEMTYPE_DEVRAM		2
-+
-+#define SOCRAM_BANKINFO_SZBASE		8192
-+#define SRCI_LSS_MASK		0x00f00000
-+#define SRCI_LSS_SHIFT		20
-+#define	SRCI_SRNB_MASK		0xf0
-+#define	SRCI_SRNB_SHIFT		4
-+#define	SRCI_SRBSZ_MASK		0xf
-+#define	SRCI_SRBSZ_SHIFT	0
-+#define SR_BSZ_BASE		14
-+
-+struct sbsocramregs {
-+	u32 coreinfo;
-+	u32 bwalloc;
-+	u32 extracoreinfo;
-+	u32 biststat;
-+	u32 bankidx;
-+	u32 standbyctrl;
-+
-+	u32 errlogstatus;	/* rev 6 */
-+	u32 errlogaddr;	/* rev 6 */
-+	/* used for patching rev 3 & 5 */
-+	u32 cambankidx;
-+	u32 cambankstandbyctrl;
-+	u32 cambankpatchctrl;
-+	u32 cambankpatchtblbaseaddr;
-+	u32 cambankcmdreg;
-+	u32 cambankdatareg;
-+	u32 cambankmaskreg;
-+	u32 PAD[1];
-+	u32 bankinfo;	/* corev 8 */
-+	u32 bankpda;
-+	u32 PAD[14];
-+	u32 extmemconfig;
-+	u32 extmemparitycsr;
-+	u32 extmemparityerrdata;
-+	u32 extmemparityerrcnt;
-+	u32 extmemwrctrlandsize;
-+	u32 PAD[84];
-+	u32 workaround;
-+	u32 pwrctl;		/* corerev >= 2 */
-+	u32 PAD[133];
-+	u32 sr_control;     /* corerev >= 15 */
-+	u32 sr_status;      /* corerev >= 15 */
-+	u32 sr_address;     /* corerev >= 15 */
-+	u32 sr_data;        /* corerev >= 15 */
-+};
-+
-+#define SOCRAMREGOFFS(_f)	offsetof(struct sbsocramregs, _f)
-+
-+#define ARMCR4_CAP		(0x04)
-+#define ARMCR4_BANKIDX		(0x40)
-+#define ARMCR4_BANKINFO		(0x44)
-+#define ARMCR4_BANKPDA		(0x4C)
-+
-+#define	ARMCR4_TCBBNB_MASK	0xf0
-+#define	ARMCR4_TCBBNB_SHIFT	4
-+#define	ARMCR4_TCBANB_MASK	0xf
-+#define	ARMCR4_TCBANB_SHIFT	0
-+
-+#define	ARMCR4_BSZ_MASK		0x3f
-+#define	ARMCR4_BSZ_MULT		8192
-+
- struct brcmf_core_priv {
- 	struct brcmf_core pub;
- 	u32 wrapbase;
-@@ -443,10 +512,6 @@ static int brcmf_chip_cores_check(struct brcmf_chip_priv *ci)
- 			break;
- 		case BCMA_CORE_ARM_CR4:
- 			cpu_found = true;
--			if (ci->pub.rambase == 0) {
--				brcmf_err("RAM base not provided with ARM CR4 core\n");
--				return -ENOMEM;
--			}
- 			break;
- 		default:
- 			break;
-@@ -462,60 +527,160 @@ static int brcmf_chip_cores_check(struct brcmf_chip_priv *ci)
- 		brcmf_err("RAM core not provided with ARM CM3 core\n");
- 		return -ENODEV;
- 	}
--	if (!ci->pub.ramsize) {
--		brcmf_err("RAM size is undetermined\n");
--		return -ENOMEM;
--	}
- 	return 0;
- }
- 
--static void brcmf_chip_get_raminfo(struct brcmf_chip_priv *ci)
-+static u32 brcmf_chip_core_read32(struct brcmf_core_priv *core, u16 reg)
- {
--	switch (ci->pub.chip) {
--	case BRCM_CC_4329_CHIP_ID:
--		ci->pub.ramsize = BCM4329_RAMSIZE;
--		break;
--	case BRCM_CC_43143_CHIP_ID:
--		ci->pub.ramsize = BCM43143_RAMSIZE;
--		break;
--	case BRCM_CC_43241_CHIP_ID:
--		ci->pub.ramsize = 0x90000;
--		break;
--	case BRCM_CC_4330_CHIP_ID:
--		ci->pub.ramsize = 0x48000;
--		break;
-+	return core->chip->ops->read32(core->chip->ctx, core->pub.base + reg);
-+}
-+
-+static void brcmf_chip_core_write32(struct brcmf_core_priv *core,
-+				    u16 reg, u32 val)
-+{
-+	core->chip->ops->write32(core->chip->ctx, core->pub.base + reg, val);
-+}
-+
-+static bool brcmf_chip_socram_banksize(struct brcmf_core_priv *core, u8 idx,
-+				       u32 *banksize)
-+{
-+	u32 bankinfo;
-+	u32 bankidx = (SOCRAM_MEMTYPE_RAM << SOCRAM_BANKIDX_MEMTYPE_SHIFT);
-+
-+	bankidx |= idx;
-+	brcmf_chip_core_write32(core, SOCRAMREGOFFS(bankidx), bankidx);
-+	bankinfo = brcmf_chip_core_read32(core, SOCRAMREGOFFS(bankinfo));
-+	*banksize = (bankinfo & SOCRAM_BANKINFO_SZMASK) + 1;
-+	*banksize *= SOCRAM_BANKINFO_SZBASE;
-+	return !!(bankinfo & SOCRAM_BANKINFO_RETNTRAM_MASK);
-+}
-+
-+static void brcmf_chip_socram_ramsize(struct brcmf_core_priv *sr, u32 *ramsize,
-+				      u32 *srsize)
-+{
-+	u32 coreinfo;
-+	uint nb, banksize, lss;
-+	bool retent;
-+	int i;
-+
-+	*ramsize = 0;
-+	*srsize = 0;
-+
-+	if (WARN_ON(sr->pub.rev < 4))
-+		return;
-+
-+	if (!brcmf_chip_iscoreup(&sr->pub))
-+		brcmf_chip_resetcore(&sr->pub, 0, 0, 0);
-+
-+	/* Get info for determining size */
-+	coreinfo = brcmf_chip_core_read32(sr, SOCRAMREGOFFS(coreinfo));
-+	nb = (coreinfo & SRCI_SRNB_MASK) >> SRCI_SRNB_SHIFT;
-+
-+	if ((sr->pub.rev <= 7) || (sr->pub.rev == 12)) {
-+		banksize = (coreinfo & SRCI_SRBSZ_MASK);
-+		lss = (coreinfo & SRCI_LSS_MASK) >> SRCI_LSS_SHIFT;
-+		if (lss != 0)
-+			nb--;
-+		*ramsize = nb * (1 << (banksize + SR_BSZ_BASE));
-+		if (lss != 0)
-+			*ramsize += (1 << ((lss - 1) + SR_BSZ_BASE));
-+	} else {
-+		nb = (coreinfo & SRCI_SRNB_MASK) >> SRCI_SRNB_SHIFT;
-+		for (i = 0; i < nb; i++) {
-+			retent = brcmf_chip_socram_banksize(sr, i, &banksize);
-+			*ramsize += banksize;
-+			if (retent)
-+				*srsize += banksize;
-+		}
-+	}
-+
-+	/* hardcoded save&restore memory sizes */
-+	switch (sr->chip->pub.chip) {
- 	case BRCM_CC_4334_CHIP_ID:
--	case BRCM_CC_43340_CHIP_ID:
--		ci->pub.ramsize = 0x80000;
--		break;
--	case BRCM_CC_4335_CHIP_ID:
--		ci->pub.ramsize = 0xc0000;
--		ci->pub.rambase = 0x180000;
-+		if (sr->chip->pub.chiprev < 2)
-+			*srsize = (32 * 1024);
- 		break;
--	case BRCM_CC_43362_CHIP_ID:
--		ci->pub.ramsize = 0x3c000;
-+	default:
- 		break;
-+	}
-+}
-+
-+/** Return the TCM-RAM size of the ARMCR4 core. */
-+static u32 brcmf_chip_tcm_ramsize(struct brcmf_core_priv *cr4)
-+{
-+	u32 corecap;
-+	u32 memsize = 0;
-+	u32 nab;
-+	u32 nbb;
-+	u32 totb;
-+	u32 bxinfo;
-+	u32 idx;
-+
-+	corecap = brcmf_chip_core_read32(cr4, ARMCR4_CAP);
-+
-+	nab = (corecap & ARMCR4_TCBANB_MASK) >> ARMCR4_TCBANB_SHIFT;
-+	nbb = (corecap & ARMCR4_TCBBNB_MASK) >> ARMCR4_TCBBNB_SHIFT;
-+	totb = nab + nbb;
-+
-+	for (idx = 0; idx < totb; idx++) {
-+		brcmf_chip_core_write32(cr4, ARMCR4_BANKIDX, idx);
-+		bxinfo = brcmf_chip_core_read32(cr4, ARMCR4_BANKINFO);
-+		memsize += ((bxinfo & ARMCR4_BSZ_MASK) + 1) * ARMCR4_BSZ_MULT;
-+	}
-+
-+	return memsize;
-+}
-+
-+static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
-+{
-+	switch (ci->pub.chip) {
- 	case BRCM_CC_4345_CHIP_ID:
--		ci->pub.ramsize = 0xc8000;
--		ci->pub.rambase = 0x198000;
--		break;
-+		return 0x198000;
-+	case BRCM_CC_4335_CHIP_ID:
- 	case BRCM_CC_4339_CHIP_ID:
- 	case BRCM_CC_4354_CHIP_ID:
- 	case BRCM_CC_4356_CHIP_ID:
- 	case BRCM_CC_43567_CHIP_ID:
- 	case BRCM_CC_43569_CHIP_ID:
- 	case BRCM_CC_43570_CHIP_ID:
--		ci->pub.ramsize = 0xc0000;
--		ci->pub.rambase = 0x180000;
--		break;
- 	case BRCM_CC_43602_CHIP_ID:
--		ci->pub.ramsize = 0xf0000;
--		ci->pub.rambase = 0x180000;
--		break;
-+		return 0x180000;
- 	default:
- 		brcmf_err("unknown chip: %s\n", ci->pub.name);
- 		break;
- 	}
-+	return 0;
-+}
-+
-+static int brcmf_chip_get_raminfo(struct brcmf_chip_priv *ci)
-+{
-+	struct brcmf_core_priv *mem_core;
-+	struct brcmf_core *mem;
-+
-+	mem = brcmf_chip_get_core(&ci->pub, BCMA_CORE_ARM_CR4);
-+	if (mem) {
-+		mem_core = container_of(mem, struct brcmf_core_priv, pub);
-+		ci->pub.ramsize = brcmf_chip_tcm_ramsize(mem_core);
-+		ci->pub.rambase = brcmf_chip_tcm_rambase(ci);
-+		if (!ci->pub.rambase) {
-+			brcmf_err("RAM base not provided with ARM CR4 core\n");
-+			return -EINVAL;
-+		}
-+	} else {
-+		mem = brcmf_chip_get_core(&ci->pub, BCMA_CORE_INTERNAL_MEM);
-+		mem_core = container_of(mem, struct brcmf_core_priv, pub);
-+		brcmf_chip_socram_ramsize(mem_core, &ci->pub.ramsize,
-+					  &ci->pub.srsize);
-+	}
-+	brcmf_dbg(INFO, "RAM: base=0x%x size=%d (0x%x) sr=%d (0x%x)\n",
-+		  ci->pub.rambase, ci->pub.ramsize, ci->pub.ramsize,
-+		  ci->pub.srsize, ci->pub.srsize);
-+
-+	if (!ci->pub.ramsize) {
-+		brcmf_err("RAM size is undetermined\n");
-+		return -ENOMEM;
-+	}
-+	return 0;
- }
- 
- static u32 brcmf_chip_dmp_get_desc(struct brcmf_chip_priv *ci, u32 *eromaddr,
-@@ -668,6 +833,7 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
- 	struct brcmf_core *core;
- 	u32 regdata;
- 	u32 socitype;
-+	int ret;
- 
- 	/* Get CC core rev
- 	 * Chipid is assume to be at offset 0 from SI_ENUM_BASE
-@@ -720,9 +886,13 @@ static int brcmf_chip_recognition(struct brcmf_chip_priv *ci)
- 		return -ENODEV;
- 	}
- 
--	brcmf_chip_get_raminfo(ci);
-+	ret = brcmf_chip_cores_check(ci);
-+	if (ret)
-+		return ret;
- 
--	return brcmf_chip_cores_check(ci);
-+	/* assure chip is passive for core access */
-+	brcmf_chip_set_passive(&ci->pub);
-+	return brcmf_chip_get_raminfo(ci);
- }
- 
- static void brcmf_chip_disable_arm(struct brcmf_chip_priv *chip, u16 id)
-@@ -827,8 +997,6 @@ struct brcmf_chip *brcmf_chip_attach(void *ctx,
- 	if (err < 0)
- 		goto fail;
- 
--	/* assure chip is passive for download */
--	brcmf_chip_set_passive(&chip->pub);
- 	return &chip->pub;
- 
- fail:
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.h b/drivers/net/wireless/brcm80211/brcmfmac/chip.h
-index 7b7b629..60dcb38 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.h
-@@ -30,7 +30,8 @@
-  * @pmucaps: PMU capabilities.
-  * @pmurev: PMU revision.
-  * @rambase: RAM base address (only applicable for ARM CR4 chips).
-- * @ramsize: amount of RAM on chip.
-+ * @ramsize: amount of RAM on chip including retention.
-+ * @srsize: amount of retention RAM on chip.
-  * @name: string representation of the chip identifier.
-  */
- struct brcmf_chip {
-@@ -41,6 +42,7 @@ struct brcmf_chip {
- 	u32 pmurev;
- 	u32 rambase;
- 	u32 ramsize;
-+	u32 srsize;
- 	char name[8];
- };
- 
--- 
-1.9.1
+Would that even make sense from _any_ perspective? Current branching
+model seems to be based on per-purpose branching and isolation. The
+thinking behind this might be this allows better parallelization of
+efforts between teams and tasks. If my assertion is correct then both
+master-be-all branching and independent WMI/HTT branching stands in
+conflict with the per-purpose branch isolation so a single
+OP_VERSION/BRANCH_ID should suffice for ath10k.
 
+With this htt conflict patch WMI_OP_VERSION is already being treated
+as OP_VERSION effectively (and thus change the meaning of it).
+
+Would it be much of a problem to re-rename OP_VERSION and introduce
+HTT_OP_VERSION later? Hmm..
+
+
+Michał
