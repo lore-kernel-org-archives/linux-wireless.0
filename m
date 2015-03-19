@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f178.google.com ([209.85.212.178]:38651 "EHLO
-	mail-wi0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750978AbbCZKDK convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:37184 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191AbbCSOm6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2015 06:03:10 -0400
-Received: by wibgn9 with SMTP id gn9so77483888wib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 03:03:09 -0700 (PDT)
+	Thu, 19 Mar 2015 10:42:58 -0400
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQm74JDvMk=G2Hot7h4v4gU4gRh8JH0K=1yhMa_UGQ4e0A@mail.gmail.com>
-References: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com>
-	<1426849379-7562-2-git-send-email-marek.puzyniak@tieto.com>
-	<CA+BoTQm74JDvMk=G2Hot7h4v4gU4gRh8JH0K=1yhMa_UGQ4e0A@mail.gmail.com>
-Date: Thu, 26 Mar 2015 11:03:08 +0100
-Message-ID: <CA+BoTQmk+KzhO1xa3AP9tiDnEVG36OD5WoV+VwRCtvSF1sEtMw@mail.gmail.com> (sfid-20150326_110315_261884_41581B5F)
-Subject: Re: [PATCH v4 1/6] ath10k: unify tx mode and dispatch
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Marek Puzyniak <marek.puzyniak@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+In-Reply-To: <550AD7C1.2030405@gmail.com>
+References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
+	<1426696710-6891-6-git-send-email-eliad@wizery.com>
+	<550AD7C1.2030405@gmail.com>
+Date: Thu, 19 Mar 2015 16:42:57 +0200
+Message-ID: <CAB3XZEfpD7YkwdU7OJJaNFy=MnYVY3-fOVxkA48Vu01LzU0GFg@mail.gmail.com> (sfid-20150319_154304_228782_48672DE0)
+Subject: Re: [PATCH v7 5/6] ARM: dts: add wl12xx/wl18xx bindings
+From: Eliad Peller <eliad@wizery.com>
+To: Pontus Fuchs <pontus.fuchs@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 March 2015 at 10:27, Michal Kazior <michal.kazior@tieto.com> wrote:
-> On 20 March 2015 at 12:02, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
->> From: Michal Kazior <michal.kazior@tieto.com>
+hi Pontus,
+
+On Thu, Mar 19, 2015 at 4:05 PM, Pontus Fuchs <pontus.fuchs@gmail.com> wrote:
+> On 2015-03-18 17:38, Eliad Peller wrote:
 >>
->> There are a few different tx paths depending on
->> firmware and frame itself.
+>> Replace all the pdata-quirks for setting wl12xx/wl18xx
+>> platform data with proper DT definitions.
 >>
->> Creating a uniform decision will make it possible
->> to switch between different txmode easier, both
->> for testing and for future features as well.
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> Acked-by: Javier Martinez Canillas <javier@dowhile0.org>
+>> Acked-by: Enric Balletbo i Serra <eballetbo@gmail.com>
+>> Tested-by: Tony Lindgren <tony@atomide.com>
+>> ---
+>> v7: rebase
 >>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-> [...]
+>>   arch/arm/boot/dts/am335x-evmsk.dts             | 11 ++++
+>>   arch/arm/boot/dts/omap3-cm-t3517.dts           | 10 ++++
+>>   arch/arm/boot/dts/omap3-cm-t3730.dts           | 10 ++++
+>>   arch/arm/boot/dts/omap3-evm-common.dtsi        | 10 ++++
+>>   arch/arm/boot/dts/omap3-igep0020-rev-f.dts     |  9 ++++
+>>   arch/arm/boot/dts/omap3-igep0030-rev-g.dts     |  9 ++++
+>>   arch/arm/boot/dts/omap3-zoom3.dts              | 10 ++++
+>>   arch/arm/boot/dts/omap4-panda-common.dtsi      | 10 ++++
 >
-> This patch apparently breaks AP operation. I need to investigate this.
+>
+> Hi Eliad,
+>
+> Tested OK (boot, scan, join, ping) on Pandaboard ES.
+>
+thanks for testing it!
 
-Ok - htt.freq missed clearing and in some cases it contained garbage
-leading to HTT discarding packets.
-
-@Kalle: I've posted a patch `ath10k: clear htt.freq` which addresses
-the problem separately. Please apply it _before_ you apply TDLS
-patches (which are fine, including this patch) to avoid breakage
-in-between commits.
-
-
-Michał
+Eliad.
