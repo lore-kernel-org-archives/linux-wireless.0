@@ -1,127 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54453 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932698AbbCDL3z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 06:29:55 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org, mcgrof@suse.com
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v10 1/3] cfg80211: Simplify the handling of regulatory indoor setting
-Date: Wed,  4 Mar 2015 00:32:05 -0500
-Message-Id: <1425447127-22958-1-git-send-email-ilan.peer@intel.com> (sfid-20150304_123006_920132_79C7DF77)
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:35157 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbbCSIkl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 04:40:41 -0400
+Received: by wgdm6 with SMTP id m6so56002892wgd.2
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2015 01:40:40 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <878uetl7cn.fsf@kamboji.qca.qualcomm.com>
+References: <1426066382-481-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<878uetl7cn.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 19 Mar 2015 09:40:39 +0100
+Message-ID: <CA+BoTQmcdiy3u8cvYYRueSoQxGzYf9Suf4dy8HpLG6UaQzJzZQ@mail.gmail.com> (sfid-20150319_094047_467117_1C4B2033)
+Subject: Re: [PATCH] ath10k: fix htt t2h message conflicts among firmware revisions
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Directly update the indoor setting without wrapping it as
-a regulatory request, to simplify the processing.
+On 19 March 2015 at 09:27, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+>
+>> Target to host HTT messages are conflicting between 10.x and other
+>> firmware revisions. By maintaining separate HTT T2H tables for each
+>> firmware revisions (main, 10x and tlv) similar to WMI abstraction,
+>> solves the conflicts.
+>>
+>> Cc: Michal Kazior <michal.kazior@tieto.com>
+>> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>
+> So this is needed to get managements frames over HTT working, right?
+> It's good to mention that in the commit log, does this look ok:
+>
+> Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> Date:   Wed Mar 11 15:03:02 2015 +0530
+>
+>     ath10k: fix htt t2h message conflicts among firmware revisions
+>
+>     Target to host HTT messages are conflicting between 10.x and other
+>     firmware revisions. By maintaining separate HTT T2H tables for each
+>     firmware revisions (main, 10x and tlv) similar to WMI abstraction,
+>     solves the conflicts.
+>
+>     This fix is needed to get management frames over HTT (ie.
+>     ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX disabled) working with 10.2.4.48-2 firmware.
+>     Otherwise there will be unknown htt events and nothing works:
+>
+>     [30087.438343] ath10k_pci 0000:02:00.0: htt event (19) not handled
+>     [30087.448691] ath10k_pci 0000:02:00.0: htt event (19) not handled
+>     [30149.032974] ath10k_pci 0000:02:00.0: htt event (19) not handled
+[...]
+>
+> When I was adding WMI_OP_VERSION, my idea was that we will add similar
+> version for HTT as well once we need it. But I guess this is good enough
+> for now, we can add HTT_OP_VERSION later if more changes are needed.
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- net/wireless/reg.c | 34 +++-------------------------------
- 1 file changed, 3 insertions(+), 31 deletions(-)
+Maybe it should be renamed to OP_VERSION (drop the WMI_) or BRANCH_ID
+or something else?
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b586d0d..c24c8bf 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -82,17 +82,12 @@
-  *	be intersected with the current one.
-  * @REG_REQ_ALREADY_SET: the regulatory request will not change the current
-  *	regulatory settings, and no further processing is required.
-- * @REG_REQ_USER_HINT_HANDLED: a non alpha2  user hint was handled and no
-- *	further processing is required, i.e., not need to update last_request
-- *	etc. This should be used for user hints that do not provide an alpha2
-- *	but some other type of regulatory hint, i.e., indoor operation.
-  */
- enum reg_request_treatment {
- 	REG_REQ_OK,
- 	REG_REQ_IGNORE,
- 	REG_REQ_INTERSECT,
- 	REG_REQ_ALREADY_SET,
--	REG_REQ_USER_HINT_HANDLED,
- };
- 
- static struct regulatory_request core_request_world = {
-@@ -1248,13 +1243,6 @@ static bool reg_request_cell_base(struct regulatory_request *request)
- 	return request->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE;
- }
- 
--static bool reg_request_indoor(struct regulatory_request *request)
--{
--	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
--		return false;
--	return request->user_reg_hint_type == NL80211_USER_REG_HINT_INDOOR;
--}
--
- bool reg_last_request_cell_base(void)
- {
- 	return reg_request_cell_base(get_last_request());
-@@ -1833,11 +1821,6 @@ __reg_process_hint_user(struct regulatory_request *user_request)
- {
- 	struct regulatory_request *lr = get_last_request();
- 
--	if (reg_request_indoor(user_request)) {
--		reg_is_indoor = true;
--		return REG_REQ_USER_HINT_HANDLED;
--	}
--
- 	if (reg_request_cell_base(user_request))
- 		return reg_ignore_cell_hint(user_request);
- 
-@@ -1885,8 +1868,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
- 
- 	treatment = __reg_process_hint_user(user_request);
- 	if (treatment == REG_REQ_IGNORE ||
--	    treatment == REG_REQ_ALREADY_SET ||
--	    treatment == REG_REQ_USER_HINT_HANDLED) {
-+	    treatment == REG_REQ_ALREADY_SET) {
- 		reg_free_request(user_request);
- 		return treatment;
- 	}
-@@ -1947,7 +1929,6 @@ reg_process_hint_driver(struct wiphy *wiphy,
- 	case REG_REQ_OK:
- 		break;
- 	case REG_REQ_IGNORE:
--	case REG_REQ_USER_HINT_HANDLED:
- 		reg_free_request(driver_request);
- 		return treatment;
- 	case REG_REQ_INTERSECT:
-@@ -2047,7 +2028,6 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
- 	case REG_REQ_OK:
- 		break;
- 	case REG_REQ_IGNORE:
--	case REG_REQ_USER_HINT_HANDLED:
- 		/* fall through */
- 	case REG_REQ_ALREADY_SET:
- 		reg_free_request(country_ie_request);
-@@ -2086,8 +2066,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	case NL80211_REGDOM_SET_BY_USER:
- 		treatment = reg_process_hint_user(reg_request);
- 		if (treatment == REG_REQ_IGNORE ||
--		    treatment == REG_REQ_ALREADY_SET ||
--		    treatment == REG_REQ_USER_HINT_HANDLED)
-+		    treatment == REG_REQ_ALREADY_SET)
- 			return;
- 		queue_delayed_work(system_power_efficient_wq,
- 				   &reg_timeout, msecs_to_jiffies(3142));
-@@ -2311,16 +2290,9 @@ int regulatory_hint_user(const char *alpha2,
- 
- int regulatory_hint_indoor_user(void)
- {
--	struct regulatory_request *request;
- 
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
--	if (!request)
--		return -ENOMEM;
- 
--	request->wiphy_idx = WIPHY_IDX_INVALID;
--	request->initiator = NL80211_REGDOM_SET_BY_USER;
--	request->user_reg_hint_type = NL80211_USER_REG_HINT_INDOOR;
--	queue_regulatory_request(request);
-+	reg_is_indoor = true;
- 
- 	return 0;
- }
--- 
-1.8.3.2
+It's not like HTT wasn't diverging. It was. However only WMI ABI was
+seeing major breakage that needed taking care of. HTT changes were
+small enough and could be ignored until now.
 
+Perhaps the rename could be accompanied by FW API bump to 5?
+
+
+Michał
