@@ -1,85 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:49504 "EHLO mout.gmx.net"
+Received: from aibo.runbox.com ([91.220.196.211]:41594 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751439AbbCUIrk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:40 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 18/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
-Date: Sat, 21 Mar 2015 09:47:21 +0100
-Message-Id: <1426927641-18474-19-git-send-email-linux@rempel-privat.de> (sfid-20150321_100417_468756_D6814C2D)
-In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
-References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+	id S1752580AbbCSEj7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 00:39:59 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, joe@perches.com,
+	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v3 15/15] staging: rtl8723au: Remove unneeded comments
+Date: Thu, 19 Mar 2015 00:39:18 -0400
+Message-Id: <1426739958-18949-16-git-send-email-m.v.b@runbox.com> (sfid-20150319_054222_096595_88BA3A96)
+In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/eeprom_def.c | 34 ++++++++++++-----------------
- 1 file changed, 14 insertions(+), 20 deletions(-)
+This commit removes a number of unneeded comments. Two of the
+aforementioned comments were most likely meant to aid with version
+control, whereas the remaining two comments relate to (now unused)
+local variable names.
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 0980590..056f516 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -466,6 +466,7 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 				  struct ar5416_eeprom_def *eep,
- 				  u8 txRxAttenLocal, int regChainOffset, int i)
- {
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_3) {
- 		txRxAttenLocal = pModal->txRxAttenCh[i];
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index cdb3707fb2..309f3d969e 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -671,14 +671,14 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 		if ((curfragnum+1) == pattrib->nr_frags) { /* 4 the last fragment */
+ 			length = pattrib->last_txcmdsz-pattrib->hdrlen-pattrib->iv_len - pattrib->icv_len;
+ 			RT_TRACE(_module_rtl871x_security_c_, _drv_info_, ("pattrib->iv_len =%x, pattrib->icv_len =%x\n", pattrib->iv_len, pattrib->icv_len));
+-			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
++			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
  
-@@ -483,16 +484,12 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 			      AR_PHY_GAIN_2GHZ_XATTEN2_DB,
- 			      pModal->xatten2Db[i]);
+ 			arcfour_init(&mycontext, rc4key, 16);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+ 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
  		} else {
--			REG_WRITE(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
--			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
--			   ~AR_PHY_GAIN_2GHZ_BSW_MARGIN)
--			  | SM(pModal-> bswMargin[i],
--			       AR_PHY_GAIN_2GHZ_BSW_MARGIN));
--			REG_WRITE(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
--			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
--			   ~AR_PHY_GAIN_2GHZ_BSW_ATTEN)
--			  | SM(pModal->bswAtten[i],
--			       AR_PHY_GAIN_2GHZ_BSW_ATTEN));
-+			REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+				SM(pModal-> bswMargin[i], AR_PHY_GAIN_2GHZ_BSW_MARGIN),
-+				AR_PHY_GAIN_2GHZ_BSW_MARGIN);
-+			REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+				SM(pModal->bswAtten[i], AR_PHY_GAIN_2GHZ_BSW_ATTEN),
-+				AR_PHY_GAIN_2GHZ_BSW_ATTEN);
- 		}
- 	}
+ 			length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
+-			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
++			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
+ 			arcfour_init(&mycontext, rc4key, 16);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+ 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
+@@ -1272,7 +1272,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
+ 	/* Intermediate Buffers */
+ 	int curfragnum, length;
+ 	u32 prwskeylen;
+-	u8 *pframe, *prwskey; /* *payload, *iv */
++	u8 *pframe, *prwskey;
+ 	u8 hw_hdr_offset = 0;
+ 	struct sta_info *stainfo;
+ 	struct pkt_attrib *pattrib = &pxmitframe->attrib;
+@@ -1563,7 +1563,7 @@ int rtw_aes_decrypt23a(struct rtw_adapter *padapter,
+ 	struct security_priv *psecuritypriv = &padapter->securitypriv;
+ 	struct sk_buff *skb = precvframe->pkt;
+ 	int length;
+-	u8 *pframe, *prwskey; /* *payload, *iv */
++	u8 *pframe, *prwskey;
+ 	int res = _SUCCESS;
  
-@@ -504,17 +501,14 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
- 		      AR_PHY_RXGAIN + regChainOffset,
- 		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[i]);
- 	} else {
--		REG_WRITE(ah,
--			  AR_PHY_RXGAIN + regChainOffset,
--			  (REG_READ(ah, AR_PHY_RXGAIN + regChainOffset) &
--			   ~AR_PHY_RXGAIN_TXRX_ATTEN)
--			  | SM(txRxAttenLocal, AR_PHY_RXGAIN_TXRX_ATTEN));
--		REG_WRITE(ah,
--			  AR_PHY_GAIN_2GHZ + regChainOffset,
--			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
--			   ~AR_PHY_GAIN_2GHZ_RXTX_MARGIN) |
--			  SM(pModal->rxTxMarginCh[i], AR_PHY_GAIN_2GHZ_RXTX_MARGIN));
-+		REG_RMW(ah, AR_PHY_RXGAIN + regChainOffset,
-+			SM(txRxAttenLocal, AR_PHY_RXGAIN_TXRX_ATTEN),
-+			AR_PHY_RXGAIN_TXRX_ATTEN);
-+		REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
-+			SM(pModal->rxTxMarginCh[i], AR_PHY_GAIN_2GHZ_RXTX_MARGIN),
-+			AR_PHY_GAIN_2GHZ_RXTX_MARGIN);
- 	}
-+	REG_RMW_BUFFER_FLUSH(ah);
- }
- 
- static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 	pframe = skb->data;
 -- 
-1.9.1
+2.1.4
 
