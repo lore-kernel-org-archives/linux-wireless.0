@@ -1,79 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:50565 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752856AbbCJPwh (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30018 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbbCSIrb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 11:52:37 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Tony Lindgren <tony@atomide.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-Date: Tue, 10 Mar 2015 16:52:29 +0100
-Message-ID: <5683860.JYkc24rKim@wuerfel> (sfid-20150310_165244_653759_6A1A2320)
-In-Reply-To: <CAB3XZEftjwUGS_Kj2dCxYY1m82C+a1_=akbnG3_hLETCr+Dddg@mail.gmail.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com> <2223973.a64rBcZvaA@wuerfel> <CAB3XZEftjwUGS_Kj2dCxYY1m82C+a1_=akbnG3_hLETCr+Dddg@mail.gmail.com>
+	Thu, 19 Mar 2015 04:47:31 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 1/2] ath10k: enable ANI by default
+References: <1426701700-21974-1-git-send-email-arnagara@qti.qualcomm.com>
+	<874mphl6jc.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 19 Mar 2015 10:47:22 +0200
+In-Reply-To: <874mphl6jc.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Thu, 19 Mar 2015 10:45:27 +0200")
+Message-ID: <87zj79jrvp.fsf@kamboji.qca.qualcomm.com> (sfid-20150319_094736_136367_0FAF2CBD)
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10 March 2015 16:31:33 Eliad Peller wrote:
-> On Tue, Mar 10, 2015 at 4:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Tuesday 10 March 2015 13:00:19 Eliad Peller wrote:
-> >> On Tue, Mar 10, 2015 at 12:49 AM, Tony Lindgren <tony@atomide.com> wrote:
-> >> >> > I was expecting you to remove all calls to legacy_init_wl12xx from this file,
-> >> >> > including the ones for wl12xx aside from the wl18xx ones you removed, but
-> >> >> > if that's enough to clean out the platform_data handling from the wlcore
-> >> >> > driver, it's good enough as a start.
-> >> >> not sure i'm following - can you elaborate?
-> >> >>
-> >> >> i'll summarize the way i see it. please correct me if i'm wrong.
-> >> >>
-> >> >> both wl18xx and wl12xx use the platform data to get the irq number.
-> >> >> wl12xx (only) also needs some additional clock definitions to be
-> >> >> passed. there's currently some issue with specifying some the of clock
-> >> >> sources, so i preferred starting only with (the simpler) wl18xx
-> >> >> bindings.
-> >> >>
-> >> >> for platforms with wl18xx, we can remove the pdata-quirk, as all the
-> >> >> data (i.e. irq) can be passed by the new DT bindings.
-> >> >> however, for platforms with wl12xx, we still need to pass the clock
-> >> >> definitions (along with the irq), so we have to keep
-> >> >> legacy_init_wl12xx for the time being (and that's also why we have to
-> >> >> currently keep the platform_data handling in the wlcore driver)
-> >> >>
-> >> >> do you have something else in mind?
-> >> >
-> >> > I think what Arnd is saying is we've now removed all the wl12xx using
-> >> > legacy platforms, so all of them can boot with just data from dts.
-> >
-> > Right, that was my idea.
-> >
-> >> I don't think that's the case (unless i'm missing something).
-> >> e.g. there's still pdata-quirk for "compulab,omap3-sbc-t3730" which
-> >> initializes wl12xx device.
-> >
-> > This one is just like the igep0030, as Tony was saying: the board
-> > boots from device tree already, so now that we have a binding for
-> > it, we can remove the wl12xx_set_platform_data() for it.
-> >
-> i think the wl12xx_set_platform_data() name created some confusion -
-> it is used to pass platform data for both wl12xx and wl18xx devices.
-> (this confusion is all around the wlcore driver as well, due to the
-> code evolution)
-> 
-> the binding i added is for wl18xx only (there is no wl12xx binding yet).
-> the remaining boards, AFAICT, have wl12xx (rather than wl18xx) cards.
-> so i don't see how we can remove these wl12xx_set_platform_data()
-> calls before we have wl12xx bindings in-place as well.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-What is missing for that binding then? I keep getting confused here,
-but I thought that they share the implementation that looks at the
-platform data.
+> Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> writes:
+>
+>> ANI is currently not enabled by default. Enable this feature by default.
+>>
+>> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+>
+> You did not send this to ath10k list (and CC linux-wireless). Check the
+> instructions here:
+>
+> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/sources#submitting_patches
+>
+> Also the commit log doesn't tell anything. What is ANI and why should it
+> be enabled? What bug does this fix (if any)? How will the user see the
+> difference after this patch is applied?
+>
+> As a rule of thumb, the commit log should tell any engineer (even one
+> who is not familiar with ath10k) how the behaviour changes after the
+> patch is applied. Think of your target group being distro maintainers,
+> ath10k users, kernel subsystem maintainers etc. No company internal
+> jargon or anything like that, write in plain english so that everyone
+> understand.
 
-	Arnd
+I also forgot to CC ath10k list.
+
+-- 
+Kalle Valo
