@@ -1,94 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:34401 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834AbbCBIWl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 03:22:41 -0500
-Received: by widex7 with SMTP id ex7so12167671wid.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 00:22:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1425118689-32553-1-git-send-email-sjegadee@qti.qualcomm.com>
-References: <1425118689-32553-1-git-send-email-sjegadee@qti.qualcomm.com>
-Date: Mon, 2 Mar 2015 09:22:40 +0100
-Message-ID: <CA+BoTQm_Z_sMqP311mv-ozMr+-JYZYx8M2r4z4pty7idKkDCMg@mail.gmail.com> (sfid-20150302_092245_547462_135D4B29)
-Subject: Re: [PATCH] ath10k: Enable encrytion of ADDBA request in PMF configuration
-From: Michal Kazior <michal.kazior@tieto.com>
-To: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from aibo.runbox.com ([91.220.196.211]:41642 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750901AbbCSEkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 00:40:12 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, joe@perches.com,
+	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v3 07/15] staging: rtl8723au: Remove unneeded curly braces
+Date: Thu, 19 Mar 2015 00:39:10 -0400
+Message-Id: <1426739958-18949-8-git-send-email-m.v.b@runbox.com> (sfid-20150319_054036_045332_81890FD8)
+In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 February 2015 at 11:18, SenthilKumar Jegadeesan
-<sjegadee@qti.qualcomm.com> wrote:
-> In HT mode, firmware is not encrypting ADDBA request as PMF
-> configuration is not set in peer flags during association.
->
-> Set peer flags for MFP enabled station in ath10k driver.
->
-> Implemented abstraction layer for peer flags.
->
-> This change depends on mac80211 patch "[PATCH] mac80211: send
-> station PMF configuration to driver".
->
-> Signed-off-by: SenthilKumar Jegadeesan <sjegadee@qti.qualcomm.com>
-[...]
->  static bool ath10k_mac_sta_has_11g_rates(struct ieee80211_sta *sta)
-> @@ -1752,6 +1759,11 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
->         ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
->         ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
->
-> +       if (sta->mfp) {
-> +               if (ar->wmi.op_version == ATH10K_FW_WMI_OP_VERSION_10_2_4)
-> +                       arg->peer_flags |= ar->wmi.peer_flags->wmi_peer_pmf;
-> +       }
+Correct a number of checkpatch.pl warnings in rtl8723au's rtw_security.c
+related to the existence of unnecessary curly braces around single
+statement blocks:
+	WARNING: braces {} are not necessary for single statement blocks
 
-Why do you check for op_version here? Isn't the peer flag mapping
-supposed to deal with the problem already?
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-This should be just:
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index f7571cf091..b4327aaf71 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -113,9 +113,8 @@ static void crc32_init(void)
+ 	for (i = 0; i < 256; ++i) {
+ 		k = crc32_reverseBit((u8)i);
+ 
+-		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
++		for (c = ((u32)k) << 24, j = 8; j > 0; --j)
+ 			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
+-		}
+ 
+ 		p1 = (u8 *)&crc32_table[i];
+ 
+@@ -267,9 +266,8 @@ static u32 secmicgetuint32(u8 *p)
+ 	s32 i;
+ 	u32 res = 0;
+ 
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i < 4; i++)
+ 		res |= ((u32)(*p++)) << (8 * i);
+-	}
+ 
+ 	return res;
+ }
+@@ -353,9 +351,8 @@ void rtw_secgetmic23a(struct mic_data *pmicdata, u8 *dst)
+ 	rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	/*  and then zeroes until the length is a multiple of 4 */
+-	while (pmicdata->nBytesInM != 0) {
++	while (pmicdata->nBytesInM != 0)
+ 		rtw_secmicappend23abyte23a(pmicdata, 0);
+-	}
+ 	/*  The appendByte function has already computed the result. */
+ 	secmicputuint32(dst, pmicdata->L);
+ 	secmicputuint32(dst + 4, pmicdata->R);
+@@ -871,10 +868,8 @@ static void byte_sub(u8 *in, u8 *out)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < 16; i++) {
++	for (i = 0; i < 16; i++)
+ 		out[i] = sbox(in[i]);
+-	}
+-
+ }
+ 
+ static void shift_row(u8 *in, u8 *out)
+@@ -935,9 +930,8 @@ static void mix_column(u8 *in, u8 *out)
+ 
+ 	for (i = 3; i > 0; i--) { /* logical shift left 1 bit */
+ 		andf7[i] = andf7[i] << 1;
+-		if ((andf7[i - 1] & 0x80) == 0x80) {
++		if ((andf7[i - 1] & 0x80) == 0x80)
+ 			andf7[i] = (andf7[i] | 0x01);
+-		}
+ 	}
+ 	andf7[0] = andf7[0] << 1;
+ 	andf7[0] = andf7[0] & 0xfe;
+-- 
+2.1.4
 
- if (sta->mfp)
-    arg->peer_flags |= ar->wmi.peer_flags->wmi_peer_pmf;
-
-Backends which don't support PMF would have the wmi_peer_mpf = 0 so
-`|= ` would change nothing.
-
-I also think this should be in a separate patch (i.e. patch1=introduce
-peer flag map, patch2=mfp fix).
-
-
-[...]
-> +struct wmi_peer_flags_map {
-> +       u32 wmi_peer_auth;
-> +       u32 wmi_peer_qos;
-> +       u32 wmi_peer_need_ptk_4_way;
-> +       u32 wmi_peer_need_gtk_2_way;
-> +       u32 wmi_peer_apsd;
-> +       u32 wmi_peer_ht;
-> +       u32 wmi_peer_40MHZ;
-> +       u32 wmi_peer_stbc;
-> +       u32 wmi_peer_ldbc;
-> +       u32 wmi_peer_dyn_mimops;
-> +       u32 wmi_peer_static_mimops;
-> +       u32 wmi_peer_spatial_mux;
-> +       u32 wmi_peer_vht;
-> +       u32 wmi_peer_80MHZ;
-> +       u32 wmi_peer_vht_2g;
-> +       u32 wmi_peer_pmf;
-> +};
-
-Does it make sense to have the wmi_peer_ prefix for each entry?
-Without it it'd be less wrapping to fit into 80 column limit.
-
-The `MHZ` should probably lower case. It doesn't make much sense to
-promote them to uppercase. These will also be a problem if you strip
-wmi_peer_ (can't start a symbol with a number) so perhaps bw40/bw80 or
-bw_40mhz/bw_80mhz would be fine?
-
-
-Other than that this looks good. Thanks!
-
-
-Michał
