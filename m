@@ -1,81 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:51523 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751820AbbCTMkd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 08:40:33 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@codeaurora.org, adrian@freebsd.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 06/18] ath9k: add new function ath9k_hw_read_array
-Date: Fri, 20 Mar 2015 13:38:46 +0100
-Message-Id: <1426855138-6121-7-git-send-email-linux@rempel-privat.de> (sfid-20150320_134037_507841_C54E0BEA)
-In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
-References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-wg0-f45.google.com ([74.125.82.45]:36154 "EHLO
+	mail-wg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805AbbCSIIB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Mar 2015 04:08:01 -0400
+Received: by wgra20 with SMTP id a20so55316231wgr.3
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Mar 2015 01:08:00 -0700 (PDT)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 19 Mar 2015 13:37:39 +0530
+Message-ID: <CABPxzYKPhgW6-ugi8kaO8sDvTKm-ScAOOXWavuTNo4w4+WS+6g@mail.gmail.com> (sfid-20150319_090810_076347_A512FDD0)
+Subject: cfg80211: Beacon hints for DFS channels
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Luis Rodriguez <mcgrof@do-not-panic.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-REG_READ generate most overhead on usb bus. It send and read micro packages
-and reduce usb bandwidth. To reduce this overhead we should read in batches.
+Hi,
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+In the Regulatory and DFS wiki it is mentioned that
+beacon hints are not processed for DFS channels.
+But i could not find the related piece of code which
+does this.
+
+So in DFS channels can we process beacon hints?
+Assuming that if AP is beaconing then there is no
+RADAR in that channel. But how do we handle
+channel switch (if we dont disconnect) then that
+channel is enabled for active scan?
+      (or)
+should be we have something like this:
+
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h |  3 +++
- 2 files changed, 23 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 60aa8d7..15433c7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -121,6 +121,26 @@ void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
- 	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
-+void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size)
-+{
-+	u32 *tmp_reg_list, *tmp_data;
-+	int i;
-+
-+	tmp_reg_list = kmalloc(size * sizeof(u32), GFP_KERNEL);
-+	tmp_data = kmalloc(size * sizeof(u32), GFP_KERNEL);
-+
-+	for (i = 0; i < size; i++)
-+		tmp_reg_list[i] = array[i][0];
-+
-+	REG_READ_MULTI(ah, tmp_reg_list, tmp_data, size);
-+
-+	for (i = 0; i < size; i++)
-+		array[i][1] = tmp_data[i];
-+
-+	kfree(tmp_reg_list);
-+	kfree(tmp_data);
-+}
-+
- u32 ath9k_hw_reverse_bits(u32 val, u32 n)
- {
- 	u32 retval;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index f1864cc..66aba10 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -138,6 +138,8 @@
- 
- #define REG_WRITE_ARRAY(iniarray, column, regWr) \
- 	ath9k_hw_write_array(ah, iniarray, column, &(regWr))
-+#define REG_READ_ARRAY(ah, array, size) \
-+	ath9k_hw_read_array(ah, array, size)
- 
- #define AR_GPIO_OUTPUT_MUX_AS_OUTPUT             0
- #define AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED 1
-@@ -1020,6 +1022,7 @@ void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
- bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
- void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
- 			  int column, unsigned int *writecnt);
-+void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size);
- u32 ath9k_hw_reverse_bits(u32 val, u32 n);
- u16 ath9k_hw_computetxtime(struct ath_hw *ah,
- 			   u8 phy, int kbps,
+ net/wireless/reg.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 8c6cf52..25b3173 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1384,7 +1384,8 @@ static void handle_reg_beacon(struct wiphy
+*wiphy, unsigned int chan_idx,
+        chan_before.center_freq = chan->center_freq;
+        chan_before.flags = chan->flags;
+
+-       if (chan->flags & IEEE80211_CHAN_NO_IR) {
++       if (!(chan->flags & IEEE80211_CHAN_RADAR) &&
++             (chan->flags & IEEE80211_CHAN_NO_IR)) {
+                chan->flags &= ~IEEE80211_CHAN_NO_IR;
+                channel_changed = true;
+        }
+
+
 -- 
-1.9.1
-
+Thanks,
+Regards,
+Chaitanya T K.
