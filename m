@@ -1,40 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:44029 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753346AbbCWUJg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 16:09:36 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Ya8fC-0001gb-U6
-	for linux-wireless@vger.kernel.org; Mon, 23 Mar 2015 21:09:31 +0100
-Received: from p508A7EA6.dip0.t-ipconnect.de ([80.138.126.166])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 21:09:30 +0100
-Received: from juergen.Bausa by p508A7EA6.dip0.t-ipconnect.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 21:09:30 +0100
-To: linux-wireless@vger.kernel.org
-From: =?utf-8?b?SsO8cmdlbg==?= Bausa <juergen.Bausa@online.de>
-Subject: Re: Broadcom 43340
-Date: Mon, 23 Mar 2015 20:09:19 +0000 (UTC)
-Message-ID: <loom.20150323T210645-746@post.gmane.org> (sfid-20150323_210940_049102_08B0EEF8)
-References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	 	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	 	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir>	  <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com>	  <loom.20150315T213441-211@post.gmane.org> <5505F651.3060607@broadcom.com>	  <loom.20150317T214603-379@post.gmane.org>	 <1426634407.11120.50.camel@redhat.com>	 <loom.20150318T222315-999@post.gmane.org> <1426714179.26901.37.camel@redhat.com> <5509F0B5.7030601@broadcom.com> <loom.20150319T215852-35@post.gmane.org> <550B4241.4040101@broadcom.com> <loom.20150321T213803-13@post.gmane.org> <550EBF89.7030702@broadcom.com> <loom.20150322T210447-841@post.gmane.org> <550FE268.10601@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:35978 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751463AbbCTRQn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 13:16:43 -0400
+Received: by oigv203 with SMTP id v203so96557154oig.3
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 10:16:43 -0700 (PDT)
+Message-ID: <550C55F9.20600@lwfinger.net> (sfid-20150320_181653_213311_A580781D)
+Date: Fri, 20 Mar 2015 12:16:41 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Taehee Yoo <ap420073@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: Change REG_CR+2 to MSR
+References: <1426847493-5722-1-git-send-email-ap420073@gmail.com>
+In-Reply-To: <1426847493-5722-1-git-send-email-ap420073@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@...> writes:
+On 03/20/2015 05:31 AM, Taehee Yoo wrote:
+> I changed REG_CR+2 and (MSR) to MSR because MSR is defined as (REG_CR + 2).
+>
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8188ee/hw.c  | 4 ++--
+>   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  | 2 +-
+>   drivers/net/wireless/rtlwifi/rtl8192cu/mac.c | 2 +-
+>   drivers/net/wireless/rtlwifi/rtl8192de/hw.c  | 2 +-
+>   drivers/net/wireless/rtlwifi/rtl8192ee/hw.c  | 2 +-
+>   drivers/net/wireless/rtlwifi/rtl8192se/hw.c  | 2 +-
+>   drivers/net/wireless/rtlwifi/rtl8723ae/hw.c  | 2 +-
+>   drivers/net/wireless/rtlwifi/rtl8723be/hw.c  | 2 +-
+>   drivers/net/wireless/rtlwifi/rtl8821ae/hw.c  | 4 ++--
+>   9 files changed, 11 insertions(+), 11 deletions(-)
 
-> > I now got it working. Just put 'sleeep 20' before the commands and now it
-> > works perfectly.
-> 
-> Holding the boot for 20s is steep, but I guess a working device trumps a 
-> fast boot 
-> 
+I'm not sure this change contributes much to the readability of the code. It 
+certainly does not change the object code; however,
 
-Systemd runs even rc.local in parallel. So it doesn't hold the boot process.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Juergen
+Larry
+
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> index edc2cbb..ecd383f 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
+> @@ -885,7 +885,7 @@ static bool _rtl88ee_init_mac(struct ieee80211_hw *hw)
+>
+>   	rtl_write_word(rtlpriv, REG_CR, 0x2ff);
+>   	rtl_write_byte(rtlpriv, REG_CR+1, 0x06);
+> -	rtl_write_byte(rtlpriv, REG_CR+2, 0x00);
+> +	rtl_write_byte(rtlpriv, MSR, 0x00);
+>
+>   	if (!rtlhal->mac_func_enable) {
+>   		if (_rtl88ee_llt_table_init(hw) == false) {
+> @@ -1277,7 +1277,7 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
+>   			 mode);
+>   	}
+>
+> -	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
+> +	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
+>   	rtlpriv->cfg->ops->led_control(hw, ledaction);
+>   	if (mode == MSR_AP)
+>   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> index 43b2b20..d310d55 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+> @@ -1364,7 +1364,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
+>   			 "Network type %d not supported!\n", type);
+>   		goto error_out;
+>   	}
+> -	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+> +	rtl_write_byte(rtlpriv, MSR, bt_msr);
+>   	rtlpriv->cfg->ops->led_control(hw, ledaction);
+>   	if ((bt_msr & MSR_MASK) == MSR_AP)
+>   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+> index 133e395..adb8107 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+> @@ -497,7 +497,7 @@ int rtl92c_set_network_type(struct ieee80211_hw *hw, enum nl80211_iftype type)
+>   			 "Network type %d not supported!\n", type);
+>   		return -EOPNOTSUPP;
+>   	}
+> -	rtl_write_byte(rtlpriv, (REG_CR + 2), value);
+> +	rtl_write_byte(rtlpriv, MSR, value);
+>   	return 0;
+>   }
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> index 01bcc2d..f49b60d 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
+> @@ -1126,7 +1126,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+>   		break;
+>
+>   	}
+> -	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
+> +	rtl_write_byte(rtlpriv, MSR, bt_msr);
+>   	rtlpriv->cfg->ops->led_control(hw, ledaction);
+>   	if ((bt_msr & MSR_MASK) == MSR_AP)
+>   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+> index db230a3..da0a612 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
+> @@ -1510,7 +1510,7 @@ static int _rtl92ee_set_media_status(struct ieee80211_hw *hw,
+>   			 mode);
+>   	}
+>
+> -	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
+> +	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
+>   	rtlpriv->cfg->ops->led_control(hw, ledaction);
+>   	if (mode == MSR_AP)
+>   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+> index dee88a8..12b0978 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+> @@ -1204,7 +1204,7 @@ static int _rtl92se_set_media_status(struct ieee80211_hw *hw,
+>   	if (type != NL80211_IFTYPE_AP &&
+>   	    rtlpriv->mac80211.link_state < MAC80211_LINKED)
+>   		bt_msr = rtl_read_byte(rtlpriv, MSR) & ~MSR_LINK_MASK;
+> -	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+> +	rtl_write_byte(rtlpriv, MSR, bt_msr);
+>
+>   	temp = rtl_read_dword(rtlpriv, TCR);
+>   	rtl_write_dword(rtlpriv, TCR, temp & (~BIT(8)));
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+> index b3b0947..67bb47d 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
+> @@ -1183,7 +1183,7 @@ static int _rtl8723e_set_media_status(struct ieee80211_hw *hw,
+>   			 mode);
+>   	}
+>
+> -	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
+> +	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
+>   	rtlpriv->cfg->ops->led_control(hw, ledaction);
+>   	if (mode == MSR_AP)
+>   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+> index b469983..b681af3 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
+> @@ -1558,7 +1558,7 @@ static int _rtl8723be_set_media_status(struct ieee80211_hw *hw,
+>   			 mode);
+>   	}
+>
+> -	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
+> +	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
+>   	rtlpriv->cfg->ops->led_control(hw, ledaction);
+>   	if (mode == MSR_AP)
+>   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> index 2a0a71b..8704eee 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
+> @@ -423,7 +423,7 @@ void rtl8821ae_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+>   		*((u16 *)(val+4)) = rtl_read_word(rtlpriv, REG_BSSID+4);
+>   		break;
+>   	case HW_VAR_MEDIA_STATUS:
+> -		val[0] = rtl_read_byte(rtlpriv, REG_CR+2) & 0x3;
+> +		val[0] = rtl_read_byte(rtlpriv, MSR) & 0x3;
+>   		break;
+>   	case HW_VAR_SLOT_TIME:
+>   		*((u8 *)(val)) = mac->slot_time;
+> @@ -2178,7 +2178,7 @@ static int _rtl8821ae_set_media_status(struct ieee80211_hw *hw,
+>   		return 1;
+>   	}
+>
+> -	rtl_write_byte(rtlpriv, (MSR), bt_msr);
+> +	rtl_write_byte(rtlpriv, MSR, bt_msr);
+>   	rtlpriv->cfg->ops->led_control(hw, ledaction);
+>   	if ((bt_msr & 0xfc) == MSR_AP)
+>   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
+>
 
