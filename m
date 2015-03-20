@@ -1,68 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:36190 "EHLO muru.com"
+Received: from mout.gmx.net ([212.227.15.18]:60741 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751435AbbCJQAi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 12:00:38 -0400
-Date: Tue, 10 Mar 2015 08:55:30 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-Message-ID: <20150310155529.GP5264@atomide.com> (sfid-20150310_170043_922248_9AC92526)
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
- <2223973.a64rBcZvaA@wuerfel>
- <20150310142805.GN5264@atomide.com>
- <2300824.dcEMS7aYJa@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2300824.dcEMS7aYJa@wuerfel>
+	id S1751934AbbCTMlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:41:03 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 13/18] ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
+Date: Fri, 20 Mar 2015 13:38:53 +0100
+Message-Id: <1426855138-6121-14-git-send-email-linux@rempel-privat.de> (sfid-20150320_140418_296164_8A191279)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Arnd Bergmann <arnd@arndb.de> [150310 08:48]:
-> On Tuesday 10 March 2015 07:28:05 Tony Lindgren wrote:
-> > 
-> > Oops I forgot about the omap3-sbc-t3730, so yes we have to keep the
-> > platform data a little bit longer. But nothing stopping us moving
-> > all the other ones to use a proper device tree based configuration.
-> > 
-> 
-> For all I can tell, the t3730 board file does not support wl12xx
-> at the moment, only the dts file does.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Hmm strange, it seems to configure the wlan_rst pin. Maybe there
-are variants with different WLAN module. But yeah, seems to be
-unused.
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index fc54fc7..0600562 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -1082,6 +1082,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 		mask = BIT(0)|BIT(5)|BIT(10)|BIT(15)|BIT(20)|BIT(25);
+ 		pwrctrl = mask * bb_desired_scale;
+ 		clr = mask * 0x1f;
++		ENABLE_REG_RMW_BUFFER(ah);
+ 		REG_RMW(ah, AR_PHY_TX_PWRCTRL8, pwrctrl, clr);
+ 		REG_RMW(ah, AR_PHY_TX_PWRCTRL10, pwrctrl, clr);
+ 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL12, pwrctrl, clr);
+@@ -1096,6 +1097,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 		clr = mask * 0x1f;
+ 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL11, pwrctrl, clr);
+ 		REG_RMW(ah, AR_PHY_CH0_TX_PWRCTRL13, pwrctrl, clr);
++		REG_RMW_BUFFER_FLUSH(ah);
+ 	}
+ }
+ 
+-- 
+1.9.1
 
-That still leaves configuring all the dts users of the
-pdata-quirks.c legacy_init_wl12xx() with proper dts before
-removing it:
-
-$ git grep legacy_init_wl12xx pdata-quirks.c
-pdata-quirks.c:static void __init __used legacy_init_wl12xx(unsigned ref_clock,
-pdata-quirks.c:static inline void legacy_init_wl12xx(unsigned ref_clock,
-pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 136);
-pdata-quirks.c: legacy_init_wl12xx(0, 0, 177);
-pdata-quirks.c: legacy_init_wl12xx(0, 0, 136);
-pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 149);
-pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_26, 0, 162);
-pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 145);
-pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_26,
-pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 53);
-pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 41);
-pdata-quirks.c: legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 31);
-
-> If we do what Sekhar suggested and drop wl12xx support from
-> the DA850 EVM board file, we can fix all wlcore users.
-
-I guess Sekhar knows the da850 evm status the best. So up to
-you guys if wl12xx is not being used on legacy da850.
-
-Regards,
-
-Tony
