@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:39069 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752954AbbCaO7O (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34273 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750827AbbCTLGg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 10:59:14 -0400
-Date: Tue, 31 Mar 2015 17:59:10 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Avinash Patil <patila@marvell.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Li Long <longli@marvell.com>
-Subject: Re: [PATCH 1/3] mwifiex: add cfg80211 set_default_mgmt_key handler
-Message-ID: <20150331145910.GA8244@w1.fi> (sfid-20150331_165918_698232_3BA79BB5)
-References: <1423764954-30412-1-git-send-email-patila@marvell.com>
- <1423850815.2936.4.camel@sipsolutions.net>
- <CBACCFA0AEB13A41977475BCF3E896FC689F4C7E9B@SC-VEXCH2.marvell.com>
+	Fri, 20 Mar 2015 07:06:36 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH v2 02/11] ath9k: Register private AIC ops
+References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+	<1426312677-2064-3-git-send-email-sujith@msujith.org>
+Date: Fri, 20 Mar 2015 13:06:29 +0200
+In-Reply-To: <1426312677-2064-3-git-send-email-sujith@msujith.org> (Sujith
+	Manoharan's message of "Sat, 14 Mar 2015 11:27:48 +0530")
+Message-ID: <87zj78gc7e.fsf@kamboji.qca.qualcomm.com> (sfid-20150320_120642_811336_255F4839)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC689F4C7E9B@SC-VEXCH2.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 31, 2015 at 07:33:39AM -0700, Avinash Patil wrote:
-> We feel set_default_key_mgmt handler is required for devices which supports 2 pair of GTKs.
+Sujith Manoharan <sujith@msujith.org> writes:
 
-Why would a device not support multiple GTKs/IGTKs? It does not sound
-possible to implement RSN correctly without such support.. AP side could
-kind of try to work with only a single GTK/IGTK, but non-AP STA would
-not handle GTK/IGTK rekeying. In any case, IEEE Std 802.11-2012 seems to
-be pretty clear on the assumption being that the device (including
-AP-only cases) supports multiple GTK/IGTK. The authenticator state
-machines use key index values 1 and 2 and swap between these when doing
-rekeying.
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+>
+> AIC can be disabled or enabled on a per-card
+> basis using MCI configuration, so register a function
+> to check its status.
+>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+
+I guess you already saw the error from kbuild:
+
+>> ERROR: "ar9003_hw_attach_aic_ops" [drivers/net/wireless/ath/ath9k/ath9k_hw.ko] undefined!
+
+Can you send a fix for this, please?
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Kalle Valo
