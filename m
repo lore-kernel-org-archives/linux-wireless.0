@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:33424 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbbCNFyX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50317 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196AbbCTPuv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 01:54:23 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH v2 08/11] ath9k: Handle MCI_STATE_AIC_CAL_RESET
-Date: Sat, 14 Mar 2015 11:27:54 +0530
-Message-Id: <1426312677-2064-9-git-send-email-sujith@msujith.org> (sfid-20150314_065439_248203_E5CCFDDE)
-In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
-References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+	Fri, 20 Mar 2015 11:50:51 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Eliad Peller <eliad@wizery.com>,
+	Pontus Fuchs <pontus.fuchs@gmail.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap\@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v7 5/6] ARM: dts: add wl12xx/wl18xx bindings
+References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
+	<1426696710-6891-6-git-send-email-eliad@wizery.com>
+	<550AD7C1.2030405@gmail.com>
+	<CAB3XZEfpD7YkwdU7OJJaNFy=MnYVY3-fOVxkA48Vu01LzU0GFg@mail.gmail.com>
+	<20150319212505.GN31346@atomide.com>
+	<87h9tgi4sg.fsf@kamboji.qca.qualcomm.com>
+	<20150320153357.GT31346@atomide.com>
+Date: Fri, 20 Mar 2015 17:50:38 +0200
+In-Reply-To: <20150320153357.GT31346@atomide.com> (Tony Lindgren's message of
+	"Fri, 20 Mar 2015 08:33:57 -0700")
+Message-ID: <87bnjnfz1t.fsf@kamboji.qca.qualcomm.com> (sfid-20150320_165055_665334_42F2B0FA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Tony Lindgren <tony@atomide.com> writes:
 
-Add a routine to handle the MCI_STATE_AIC_CAL_RESET
-message.
+> * Kalle Valo <kvalo@codeaurora.org> [150319 23:04]:
+>> Tony Lindgren <tony@atomide.com> writes:
+>> 
+>> >> > Tested OK (boot, scan, join, ping) on Pandaboard ES.
+>> >> >
+>> >> thanks for testing it!
+>> >
+>> > Great. As suggested by Kalle, I'll apply all these into
+>> > omap-for-v4.1/wl12xx branch and send a pull request for
+>> > the arm-soc probably on Friday if no issues are found.
+>> 
+>> Great, thank you. Just in case you want this:
+>> 
+>> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+>
+> Thanks, I can push out a new branch omap-for-v4.1/wl12xx-v2
+> with your acks assuming you or somebody else have not
+> merged the existing omap-for-v4.1/wl12xx branch yet into the
+> wireless tree?
+>
+> In that case I can scrap omap-for-v4.1/wl12xx and then will
+> reply with a commit that we can consider immutable that can
+> be merged into various trees as needed in case of merge
+> conflicts.
+>
+> But I'll wait for your confirmation first :)
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_aic.c | 8 ++++++++
- drivers/net/wireless/ath/ath9k/ar9003_aic.h | 1 +
- drivers/net/wireless/ath/ath9k/ar9003_mci.c | 4 ++++
- 3 files changed, 13 insertions(+)
+After John "retired" we actually have two set of trees now: mac80211
+maintained by Johannes and wireless-drivers maintained by me. I haven't
+pulled anything from your tree and I'm 100% sure Johannes hasn't either.
+So green light from me.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-index 7bdbc7a..4e8cf08 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-@@ -512,6 +512,14 @@ exit:
- 
- }
- 
-+u8 ar9003_aic_cal_reset(struct ath_hw *ah)
-+{
-+	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
-+
-+	aic->aic_cal_state = AIC_CAL_STATE_IDLE;
-+	return aic->aic_cal_state;
-+}
-+
- u8 ar9003_aic_calibration_single(struct ath_hw *ah)
- {
- 	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.h b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-index e31c44e..f7c9546 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-@@ -53,6 +53,7 @@ struct ath_aic_out_info {
- 	struct ath_aic_sram_info sram;
- };
- 
-+u8 ar9003_aic_cal_reset(struct ath_hw *ah);
- u8 ar9003_aic_calibration_single(struct ath_hw *ah);
- 
- #endif /* AR9003_AIC_H */
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 6fa98e5..d6ed628 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -1363,6 +1363,10 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type)
- 		value = (!mci->unhalt_bt_gpm && mci->need_flush_btinfo) ? 1 : 0;
- 		mci->need_flush_btinfo = false;
- 		break;
-+	case MCI_STATE_AIC_CAL_RESET:
-+		if (ath9k_hw_is_aic_enabled(ah))
-+			value = ar9003_aic_cal_reset(ah);
-+		break;
- 	case MCI_STATE_AIC_CAL_SINGLE:
- 		if (ath9k_hw_is_aic_enabled(ah))
- 			value = ar9003_aic_calibration_single(ah);
 -- 
-2.3.1
-
+Kalle Valo
