@@ -1,85 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:4773 "EHLO mail.neratec.com"
+Received: from muru.com ([72.249.23.125]:38966 "EHLO muru.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754205AbbCFPgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 10:36:39 -0500
-Message-ID: <54F9C984.7070902@neratec.com> (sfid-20150306_163643_056828_90AA80B1)
-Date: Fri, 06 Mar 2015 16:36:36 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+	id S1751928AbbCTQ0R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 12:26:17 -0400
+Date: Fri, 20 Mar 2015 09:21:38 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eliad Peller <eliad@wizery.com>,
+	Pontus Fuchs <pontus.fuchs@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v7 5/6] ARM: dts: add wl12xx/wl18xx bindings
+Message-ID: <20150320162138.GU31346@atomide.com> (sfid-20150320_172705_319154_31CB88FA)
+References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
+ <1426696710-6891-6-git-send-email-eliad@wizery.com>
+ <550AD7C1.2030405@gmail.com>
+ <CAB3XZEfpD7YkwdU7OJJaNFy=MnYVY3-fOVxkA48Vu01LzU0GFg@mail.gmail.com>
+ <20150319212505.GN31346@atomide.com>
+ <87h9tgi4sg.fsf@kamboji.qca.qualcomm.com>
+ <20150320153357.GT31346@atomide.com>
+ <87bnjnfz1t.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-To: Henning Rogge <hrogge@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: State of DFS with Mac80211/ath9k
-References: <CAGnRvurPGf1fvYs6fyrc7kttT8g3+ST_3mO5P6+mwdbU4Ay7yA@mail.gmail.com> <54F99C9B.7000901@neratec.com> <CAGnRvuppmXMZpgsQaK0XPcourRjfxU4KMjB7RxoZ05QjHF6isg@mail.gmail.com>
-In-Reply-To: <CAGnRvuppmXMZpgsQaK0XPcourRjfxU4KMjB7RxoZ05QjHF6isg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87bnjnfz1t.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-repost, unintentionally removed linux-wireless from CC
+* Kalle Valo <kvalo@codeaurora.org> [150320 08:51]:
+> Tony Lindgren <tony@atomide.com> writes:
+> 
+> > * Kalle Valo <kvalo@codeaurora.org> [150319 23:04]:
+> >> Tony Lindgren <tony@atomide.com> writes:
+> >> 
+> >> >> > Tested OK (boot, scan, join, ping) on Pandaboard ES.
+> >> >> >
+> >> >> thanks for testing it!
+> >> >
+> >> > Great. As suggested by Kalle, I'll apply all these into
+> >> > omap-for-v4.1/wl12xx branch and send a pull request for
+> >> > the arm-soc probably on Friday if no issues are found.
+> >> 
+> >> Great, thank you. Just in case you want this:
+> >> 
+> >> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> >
+> > Thanks, I can push out a new branch omap-for-v4.1/wl12xx-v2
+> > with your acks assuming you or somebody else have not
+> > merged the existing omap-for-v4.1/wl12xx branch yet into the
+> > wireless tree?
+> >
+> > In that case I can scrap omap-for-v4.1/wl12xx and then will
+> > reply with a commit that we can consider immutable that can
+> > be merged into various trees as needed in case of merge
+> > conflicts.
+> >
+> > But I'll wait for your confirmation first :)
+> 
+> After John "retired" we actually have two set of trees now: mac80211
+> maintained by Johannes and wireless-drivers maintained by me. I haven't
+> pulled anything from your tree and I'm 100% sure Johannes hasn't either.
+> So green light from me.
 
-On 03/06/2015 01:32 PM, Henning Rogge wrote:
-> On Fri, Mar 6, 2015 at 1:24 PM, Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
->> On 03/06/2015 09:04 AM, Henning Rogge wrote:
->>> [...]
->>>
->>> Second, we are seeing a huge amount of radar events on some nodes, but
->>> not on a node on the same channel in the next room. What is the status
->>> of the DFS detector in ath9k, is it reliable or is it still
->>> "experimental".
->>>
->>
->> Henning,
->>
->> the DFS detector on one hand still can be labeled as 'experimental' since it seems
->> to be not used / tested all too much. On the other hand, our company got it
->> DFS-ETSI certified for a ath9k based product - so it does what it was made for.
->>
->> As for the 'false' radar detections you observe: those are inherent for the
->> detection method used. The ath9k's pulse detection engine reports anything that
->> somewhat looks like a radar pulse - besides very rare cases where those were
->> generated by real radar, most of them are EM-noise, WLAN traffic, other radio devices.
-> 
-> This means that the DFS algorithm produce an unacceptable (for mesh
-> networks) amount of false positives, right?
-> 
-'unacceptable' is relative ;)
+OK, I'll set up the new branch then. I take your ack is for the
+whole series? If it's just for the $subject patch, please let
+me know.
 
-Regulatory requires you to detect reference patterns with only 50% of the pulses
-seen. Take e.g. ETSI pattern 1 which has 10 nominal pulses, i.e. your detector
-must be capable to detect any combination of 5 pulses within an presumed interval
-as radar. If you have enough noise or WLAN traffic on proximate channels, there is
-no way to differentiate between false and true positives.
+Regards,
 
->> Reality check: let two APs operate close to each other on adjacent DFS-channels,
->> connect one station to one of them and generate continuous downstream traffic
->> (e.g. 10Mbps). It will take only seconds until the other AP will detect a radar -
->> simply because it is inevitable to spot some potential pattern within a lot of
->> random pulses.
-> 
-> This is bad...
-> 
-It is. Our company is developing systems that not only get certified for DFS
-operation, but also provide a reliable and continuous service on DFS channels. The
-effort required is enormous.
-
-> 
->> If you performed the tests in a similar environment, your observation is what you
->> have to expect. And unfortunately there is nothing to be done to prevent the false
->> radar detections - rendering operation on DFS frequencies inapplicable under some
->> environmental conditions.
-> 
-> Is this just a problem of the Linux Kernel implementation? Or is this
-> a problem of all wifi drivers?
-> 
-> 
-No, it is a generic problem of distinguishing radar pulses from any other type of
-interferences. This is a problem at physical layer and should be common to all
-WLAN devices out there, no matter if the DFS detection is done in HW, FW, or SW.
-We are using ath9k for that specific reason: we can't do much about the pulse
-detection in HW, but at least we have control over the pattern detector and can
-tweak the detection parameters to tune sensitivity.
-
-
-Cheers,
-Zefir
+Tony
