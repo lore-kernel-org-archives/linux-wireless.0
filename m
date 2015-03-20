@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:36022 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751624AbbCZJ75 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2015 05:59:57 -0400
-Received: by labe2 with SMTP id e2so41087008lab.3
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 02:59:56 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: clear htt.freq
-Date: Thu, 26 Mar 2015 09:57:07 +0000
-Message-Id: <1427363827-24125-1-git-send-email-michal.kazior@tieto.com> (sfid-20150326_110001_559898_4D58CBC4)
+Received: from muru.com ([72.249.23.125]:38912 "EHLO muru.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751064AbbCTO65 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 10:58:57 -0400
+Date: Fri, 20 Mar 2015 07:54:18 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Eliad Peller <eliad@wizery.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Sekhar Nori <nsekhar@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Luciano Coelho <luca@coelho.fi>
+Subject: Re: [PATCH v6 2/6] wl12xx: use frequency instead of enumerations for
+ pdata clocks
+Message-ID: <20150320145417.GR31346@atomide.com> (sfid-20150320_155902_782908_ABE173DB)
+References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
+ <20150313150047.GI5264@atomide.com>
+ <CAB3XZEcOytqpJ4pWoemLS3d+DCeA8C75MencDfGn_vhfEYrduw@mail.gmail.com>
+ <3103538.jZ037SODdT@wuerfel>
+ <87lhixphag.fsf@kamboji.qca.qualcomm.com>
+ <20150316151554.GO5264@atomide.com>
+ <87siczg44w.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87siczg44w.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If htt.freq isn't cleared and contains garbage fw
-may discard tx packets. Prevent this from
-happening by clearing htt.freq properly.
+* Kalle Valo <kvalo@codeaurora.org> [150320 07:01]:
+> Tony Lindgren <tony@atomide.com> writes:
+> 
+> >> I prefer these going through the omap tree. Like Eliad said,
+> >> drivers/net/wireless/ti does not get that many changes nowadays so the
+> >> chances of this patchset conflicting with something is very small.
+> >
+> > OK great. In that case no need to rearrange the patches, I can
+> > apply them into an immutable branch once the pending issues have
+> > been fixed if Kalle acks them.
+> >
+> > To avoid merge conflicts that branch is easiest done against
+> > v4.0-rc4. Kalle and Arnd, does that work for you guys?
+> >
+> > I can also base it on 5b7610f23562 ("ARM: OMAP2+: Fix wl12xx on
+> > dm3730-evm with mainline u-boot") that's on top of -rc2 plus few
+> > other fixes now merged to -rc4 mainline if we need a branch based
+> > on an earlier tag.
+> 
+> Sorry, it seems I forgot to answer this one:
+> 
+> Either baseline is good for me, I can't think of any problems with
+> either one. But please do remember that I'm a new maintainer, I might
+> very well miss something ;)
 
-Possible manifestation of the problem could be not
-being able to send auth request/response frames on
-firmware with HTT >= 3.4 (when freq param was
-introduced), e.g. on qca6174.
+OK, I'll base it on -rc4 unless Arnd needs something earlier.
 
-Fixes: 8d6d36243610 ("ath10k: fix offchan reliability")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 1 +
- 1 file changed, 1 insertion(+)
+Regards,
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9b8313dcb888..36a244187b9c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2927,6 +2927,7 @@ static void ath10k_tx(struct ieee80211_hw *hw,
- 		ath10k_dbg(ar, ATH10K_DBG_MAC, "IEEE80211_TX_CTL_NO_CCK_RATE\n");
- 
- 	ATH10K_SKB_CB(skb)->htt.is_offchan = false;
-+	ATH10K_SKB_CB(skb)->htt.freq = 0;
- 	ATH10K_SKB_CB(skb)->htt.tid = ath10k_tx_h_get_tid(hdr);
- 	ATH10K_SKB_CB(skb)->vdev_id = ath10k_tx_h_get_vdev_id(ar, vif);
- 
--- 
-2.1.4
-
+Tony
