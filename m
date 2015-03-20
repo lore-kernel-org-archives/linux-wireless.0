@@ -1,34 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:15298 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752821AbbCZTmX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43720 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810AbbCTNzx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2015 15:42:23 -0400
-Message-ID: <5514611B.8000704@broadcom.com> (sfid-20150326_204228_239972_2F401B47)
-Date: Thu, 26 Mar 2015 20:42:19 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Fri, 20 Mar 2015 09:55:53 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH v2 02/11] ath9k: Register private AIC ops
+References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+	<1426312677-2064-3-git-send-email-sujith@msujith.org>
+	<87zj78gc7e.fsf@kamboji.qca.qualcomm.com>
+	<21772.9425.486840.165998@gargle.gargle.HOWL>
+Date: Fri, 20 Mar 2015 15:55:42 +0200
+In-Reply-To: <21772.9425.486840.165998@gargle.gargle.HOWL> (Sujith Manoharan's
+	message of "Fri, 20 Mar 2015 19:16:57 +0530")
+Message-ID: <87wq2bg4dd.fsf@kamboji.qca.qualcomm.com> (sfid-20150320_145600_216129_FA249029)
 MIME-Version: 1.0
-To: Jocky Wilson <jockyw2001@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/7] brcm: firmware drop for brcmfmac driver
-References: <1426855445-31121-1-git-send-email-arend@broadcom.com> <loom.20150326T152756-283@post.gmane.org>
-In-Reply-To: <loom.20150326T152756-283@post.gmane.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/26/15 15:35, Jocky Wilson wrote:
-> Arend van Spriel<arend@...>  writes:
+Sujith Manoharan <sujith@msujith.org> writes:
+
+> Kalle Valo wrote:
+>> I guess you already saw the error from kbuild:
+>> 
+>> >> ERROR: "ar9003_hw_attach_aic_ops" [drivers/net/wireless/ath/ath9k/ath9k_hw.ko] undefined!
+>> 
+>> Can you send a fix for this, please?
 >
->>
->> This series adds firmware files for a number of "new" devices.
->> Admittedly there was bit of backlog. For BCM4354 SDIO this
->> series has firmware upgrade.
->>
-> Arend, will there be a firmware for the BCM4324 SDIO rev 6 pmurev 17 which is
-> built in Lenovo Thinkpad Tablet 8 and 10-series, any time soon?
+> This slipped through the radar...
+> I've posted a patch: https://patchwork.kernel.org/patch/6056731/
 
-On its way. Pending internal review.
+Thanks, I'll apply it soon.
 
-Regards,
-Arend
+-- 
+Kalle Valo
