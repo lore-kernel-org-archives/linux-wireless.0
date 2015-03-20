@@ -1,140 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:54835 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752111AbbCQIYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 04:24:07 -0400
-Message-ID: <5507E4A4.9020401@openwrt.org> (sfid-20150317_092413_271349_0D08A34F)
-Date: Tue, 17 Mar 2015 09:24:04 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
-	linux-wireless@vger.kernel.org
-CC: johannes@sipsolutions.net
-Subject: Re: [PATCH v2 07/10] mac80211: restructure per-rate throughput calculation
- into function
-References: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1423839472-15625-8-git-send-email-thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1423839472-15625-8-git-send-email-thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:34138 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752252AbbCTN44 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 09:56:56 -0400
+Received: by lbbsy1 with SMTP id sy1so75918703lbb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 06:56:55 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 6/9] ath10k: simplify fixed rate selection
+Date: Fri, 20 Mar 2015 13:54:12 +0000
+Message-Id: <1426859655-11797-7-git-send-email-michal.kazior@tieto.com> (sfid-20150320_145706_184422_E294900F)
+In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
+References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-02-13 15:57, Thomas Huehn wrote:
-> This patch moves Minstrels and Minstrel-HTs per-rate throughput
-> calculation (EWMA(thr)) into a dedicated function to be called.
-> Therefore the variable "unsigned int cur_tp" within struct
-> "minstrel_rate_stats" becomes obsolete.  and is removed to free
-> up its space.
-> 
-> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> ---
->  net/mac80211/rc80211_minstrel.c            | 46 +++++++++++------
->  net/mac80211/rc80211_minstrel.h            |  4 +-
->  net/mac80211/rc80211_minstrel_debugfs.c    | 12 ++---
->  net/mac80211/rc80211_minstrel_ht.c         | 79 ++++++++++++++++++------------
->  net/mac80211/rc80211_minstrel_ht.h         |  1 +
->  net/mac80211/rc80211_minstrel_ht_debugfs.c | 12 ++---
->  6 files changed, 94 insertions(+), 60 deletions(-)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-> index 89db6cf..28de2f7a 100644
-> --- a/net/mac80211/rc80211_minstrel.c
-> +++ b/net/mac80211/rc80211_minstrel.c
-> @@ -69,13 +69,34 @@ rix_to_ndx(struct minstrel_sta_info *mi, int rix)
->  	return i;
->  }
->  
-> +/* return current EMWA throughput */
-> +int minstrel_get_tp_avg(struct minstrel_rate *mr)
-> +{
-> +	int tp_avg, usecs;
-> +
-> +	usecs = mr->perfect_tx_time;
-> +	if (!usecs)
-> +		usecs = 1000000;
-> +
-> +	/* reset thr. below 10% success */
-> +	if (mr->stats.prob_ewma < MINSTREL_FRAC(10, 100))
-> +		tp_avg = 0;
-You don't really need a variable, you can just do return 0 here and
-reduce indentation of the line below.
+Use the existing ieee80211_rate array instead of
+definining separate one. This gets rid of the ugly
+4-index offset when dealing with 5GHz band.
 
-> +	else
-> +		tp_avg = MINSTREL_TRUNC(mr->stats.prob_ewma * (100000 / usecs));
-> +
-> +	return tp_avg;
-> +}
-> +
-> +
-> +
->  /* find & sort topmost throughput rates */
->  static inline void
->  minstrel_sort_best_tp_rates(struct minstrel_sta_info *mi, int i, u8 *tp_list)
->  {
->  	int j = MAX_THR_RATES;
->  
-> -	while (j > 0 && mi->r[i].stats.cur_tp > mi->r[tp_list[j - 1]].stats.cur_tp)
-> +	while (j > 0 && (minstrel_get_tp_avg(&mi->r[i]) >
-> +				minstrel_get_tp_avg(&mi->r[tp_list[j - 1]])))
-Indentation seems off.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 56 +++++++++++------------------------
+ 1 file changed, 17 insertions(+), 39 deletions(-)
 
->  		j--;
->  	if (j < MAX_THR_RATES - 1)
->  		memmove(&tp_list[j + 1], &tp_list[j], MAX_THR_RATES - (j + 1));
-> @@ -158,8 +179,7 @@ minstrel_update_stats(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
->  {
->  	u8 tmp_tp_rate[MAX_THR_RATES];
->  	u8 tmp_prob_rate = 0;
-> -	u32 usecs;
-> -	int i;
-> +	int i, tmp_cur_tp, tmp_prob_tp;
->  
->  	for (i = 0; i < MAX_THR_RATES; i++)
->  	    tmp_tp_rate[i] = 0;
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 6b07686..2a55f63 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -312,23 +312,23 @@ minstrel_get_ratestats(struct minstrel_ht_sta *mi, int index)
->  }
->  
->  /*
-> - * Calculate throughput based on the average A-MPDU length, taking into account
-> - * the expected number of retransmissions and their expected length
-> + * Return current throughput based on the average A-MPDU length, taking into
-> + * account the expected number of retransmissions and their expected length
->   */
-> -static void
-> -minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
-> +int
-> +minstrel_ht_get_tp_avg(struct minstrel_ht_sta *mi, int group, int rate)
->  {
->  	struct minstrel_rate_stats *mrs;
->  	unsigned int nsecs = 0;
-> -	unsigned int tmp_prob_ewma;
-> +	unsigned int tmp_prob_ewma, tp_avg;
->  
->  	mrs = &mi->groups[group].rates[rate];
->  	tmp_prob_ewma = mrs->prob_ewma;
->  
->  	/* do not account throughput if sucess prob is below 10% */
->  	if (mrs->prob_ewma < MINSTREL_FRAC(10, 100)) {
-> -		mrs->cur_tp = 0;
-> -		return;
-> +		tp_avg = 0;
-> +		return tp_avg;
-No need for the tp_avg variable.
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 72fbdc2..877afde 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -35,21 +35,19 @@
+ /*********/
+ 
+ static struct ieee80211_rate ath10k_rates[] = {
+-	/* CCK */
+-	{ .bitrate = 10 },
+-	{ .bitrate = 20 },
+-	{ .bitrate = 55 },
+-	{ .bitrate = 110 },
+-
+-	/* OFDM */
+-	{ .bitrate = 60 },
+-	{ .bitrate = 90 },
+-	{ .bitrate = 120 },
+-	{ .bitrate = 180 },
+-	{ .bitrate = 240 },
+-	{ .bitrate = 360 },
+-	{ .bitrate = 480 },
+-	{ .bitrate = 540 },
++	{ .bitrate = 10, .hw_value = ATH10K_HW_RATE_CCK_LP_1M },
++	{ .bitrate = 20, .hw_value = ATH10K_HW_RATE_CCK_LP_2M },
++	{ .bitrate = 55, .hw_value = ATH10K_HW_RATE_CCK_LP_5_5M },
++	{ .bitrate = 110, .hw_value = ATH10K_HW_RATE_CCK_LP_11M },
++
++	{ .bitrate = 60, .hw_value = ATH10K_HW_RATE_OFDM_6M },
++	{ .bitrate = 90, .hw_value = ATH10K_HW_RATE_OFDM_9M },
++	{ .bitrate = 120, .hw_value = ATH10K_HW_RATE_OFDM_12M },
++	{ .bitrate = 180, .hw_value = ATH10K_HW_RATE_OFDM_18M },
++	{ .bitrate = 240, .hw_value = ATH10K_HW_RATE_OFDM_24M },
++	{ .bitrate = 360, .hw_value = ATH10K_HW_RATE_OFDM_36M },
++	{ .bitrate = 480, .hw_value = ATH10K_HW_RATE_OFDM_48M },
++	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
+ };
+ 
+ #define ath10k_a_rates (ath10k_rates + 4)
+@@ -4970,22 +4968,6 @@ exit:
+ 	return ret;
+ }
+ 
+-/* Helper table for legacy fixed_rate/bitrate_mask */
+-static const u8 cck_ofdm_rate[] = {
+-	ATH10K_HW_RATE_CCK_LP_1M,
+-	ATH10K_HW_RATE_CCK_LP_2M,
+-	ATH10K_HW_RATE_CCK_LP_5_5M,
+-	ATH10K_HW_RATE_CCK_LP_11M,
+-	ATH10K_HW_RATE_OFDM_6M,
+-	ATH10K_HW_RATE_OFDM_9M,
+-	ATH10K_HW_RATE_OFDM_12M,
+-	ATH10K_HW_RATE_OFDM_18M,
+-	ATH10K_HW_RATE_OFDM_24M,
+-	ATH10K_HW_RATE_OFDM_36M,
+-	ATH10K_HW_RATE_OFDM_48M,
+-	ATH10K_HW_RATE_OFDM_54M,
+-};
+-
+ /* Check if only one bit set */
+ static int ath10k_check_single_mask(u32 mask)
+ {
+@@ -5133,6 +5115,7 @@ ath10k_bitrate_mask_rate(struct ath10k *ar,
+ 			 u8 *fixed_rate,
+ 			 u8 *fixed_nss)
+ {
++	struct ieee80211_supported_band *sband;
+ 	u8 rate = 0, pream = 0, nss = 0, i;
+ 	enum wmi_rate_preamble preamble;
+ 
+@@ -5146,17 +5129,12 @@ ath10k_bitrate_mask_rate(struct ath10k *ar,
+ 	case WMI_RATE_PREAMBLE_CCK:
+ 	case WMI_RATE_PREAMBLE_OFDM:
+ 		i = ffs(mask->control[band].legacy) - 1;
++		sband = &ar->mac.sbands[band];
+ 
+-		if (band == IEEE80211_BAND_2GHZ && i < 4)
+-			pream = WMI_RATE_PREAMBLE_CCK;
+-
+-		if (band == IEEE80211_BAND_5GHZ)
+-			i += 4;
+-
+-		if (i >= ARRAY_SIZE(cck_ofdm_rate))
++		if (WARN_ON(i >= sband->n_bitrates))
+ 			return false;
+ 
+-		rate = cck_ofdm_rate[i];
++		rate = sband->bitrates[i].hw_value;
+ 		break;
+ 	case WMI_RATE_PREAMBLE_HT:
+ 		for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
+-- 
+2.1.4
 
->  	}
->  
->  	/*
-> @@ -344,7 +344,9 @@ minstrel_ht_calc_tp(struct minstrel_ht_sta *mi, int group, int rate)
->  	nsecs += minstrel_mcs_groups[group].duration[rate];
->  
->  	/* prob is scaled - see MINSTREL_FRAC above */
-> -	mrs->cur_tp = MINSTREL_TRUNC(1000000 * ((tmp_prob_ewma * 1000) / nsecs));
-> +	tp_avg = MINSTREL_TRUNC(100000 * ((tmp_prob_ewma * 1000) / nsecs));
-> +
-> +	return tp_avg;
->  }
->  
->  /*
