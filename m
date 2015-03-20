@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:48336 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751405AbbCQMLT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 08:11:19 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Brett Rudley <brudley@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Daniel Kim <dekim@broadcom.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] brcmfmac: cfg80211: use msecs_to_jiffies for time conversion
-Date: Tue, 17 Mar 2015 08:06:12 -0400
-Message-Id: <1426593972-17652-1-git-send-email-hofrat@osadl.org> (sfid-20150317_131138_455970_95E07ACB)
+Received: from smtp.codeaurora.org ([198.145.29.96]:51265 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154AbbCTGaJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 02:30:09 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: rtl8188ee: fix build break due to missing
+ rtl_hal_pwrseqcmdparsingdefinition
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1426349237-7501-1-git-send-email-jeff.layton@primarydata.com>
+To: Jeff Layton <jeff.layton@primarydata.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Message-Id: <20150320063008.965E3140B84@smtp.codeaurora.org> (sfid-20150320_073013_512693_920648A5)
+Date: Fri, 20 Mar 2015 06:30:08 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Converting milliseconds to jiffies by "val * HZ / 1000" is technically
-OK but msecs_to_jiffies(val) is the cleaner solution and handles all
-corner cases correctly. This is a minor API consolidation only and
-should make things more readable.
 
-Patch was compile tested with x86_64_defconfig + CONFIG_BRCMFMAC=m
+> I've been getting this error when building mainline kernels using
+> Fedora's config files:
+> 
+>     drivers/net/wireless/rtlwifi/rtl8188ee/hw.c: In function ‘_rtl88ee_init_mac’:
+>     drivers/net/wireless/rtlwifi/rtl8188ee/hw.c:853:2: error: implicit declaration of function ‘rtl_hal_pwrseqcmdparsing’ [-Werror=implicit-function-declaration]
+>       if (!rtl_hal_pwrseqcmdparsing(rtlpriv, PWR_CUT_ALL_MSK,
+>       ^
+>     cc1: some warnings being treated as errors
+>     scripts/Makefile.build:258: recipe for target 'drivers/net/wireless/rtlwifi/rtl8188ee/hw.o' failed
+> 
+> I'm not sure if this is the correct fix, but it does seem to allow the
+> build to complete. I suspect that this was broken by commit 34ed780a6afc
+> (rtlwifi: Fix problems with building an allyesconfig). Most of the files
+> that removed the include of pwrseqcmd.h, added one for ../pwrseqcmd.h.
+> The rtl8188ee driver had it removed it but didn't add the include of the
+> file in the parent directory.
+> 
+> Signed-off-by: Jeff Layton <jeff.layton@primarydata.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Patch is agianst 4.0-rc4 (localversion-next is -next-20150317)
+Thanks, applied to wireless-drivers-next.git.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 9b805c9..1996dc2 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -1110,7 +1110,7 @@ brcmf_cfg80211_escan(struct wiphy *wiphy, struct brcmf_cfg80211_vif *vif,
- 
- 	/* Arm scan timeout timer */
- 	mod_timer(&cfg->escan_timeout, jiffies +
--			WL_ESCAN_TIMER_INTERVAL_MS * HZ / 1000);
-+		  msecs_to_jiffies(WL_ESCAN_TIMER_INTERVAL_MS));
- 
- 	return 0;
- 
--- 
-1.7.10.4
-
+Kalle Valo
