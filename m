@@ -1,48 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:35033 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199AbbCBJK0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 04:10:26 -0500
-Received: by lbjf15 with SMTP id f15so696397lbj.2
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 01:10:25 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/3] ath10k: re-enable pci device upon resume
-Date: Mon,  2 Mar 2015 10:09:04 +0100
-Message-Id: <1425287344-30594-3-git-send-email-michal.kazior@tieto.com> (sfid-20150302_101034_780337_34D9FC4B)
-In-Reply-To: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
-References: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
+Received: from mout.gmx.net ([212.227.15.15]:51523 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751820AbbCTMkd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:40:33 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 06/18] ath9k: add new function ath9k_hw_read_array
+Date: Fri, 20 Mar 2015 13:38:46 +0100
+Message-Id: <1426855138-6121-7-git-send-email-linux@rempel-privat.de> (sfid-20150320_134037_507841_C54E0BEA)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This balances out pci_disable_device() from
-ath10k_pci_hif_suspend().
+REG_READ generate most overhead on usb bus. It send and read micro packages
+and reduce usb bandwidth. To reduce this overhead we should read in batches.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/ath/ath9k/hw.c | 20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h |  3 +++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index d06b264..1295345 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2079,6 +2079,12 @@ static int ath10k_pci_hif_resume(struct ath10k *ar)
- 		return ret;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 60aa8d7..15433c7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -121,6 +121,26 @@ void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ }
  
-+	ret = pci_enable_device(pdev);
-+	if (ret) {
-+		ath10k_err(ar, "failed to enable pci device: %d\n", ret);
-+		return ret;
-+	}
++void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size)
++{
++	u32 *tmp_reg_list, *tmp_data;
++	int i;
 +
- 	pci_restore_state(pdev);
++	tmp_reg_list = kmalloc(size * sizeof(u32), GFP_KERNEL);
++	tmp_data = kmalloc(size * sizeof(u32), GFP_KERNEL);
++
++	for (i = 0; i < size; i++)
++		tmp_reg_list[i] = array[i][0];
++
++	REG_READ_MULTI(ah, tmp_reg_list, tmp_data, size);
++
++	for (i = 0; i < size; i++)
++		array[i][1] = tmp_data[i];
++
++	kfree(tmp_reg_list);
++	kfree(tmp_data);
++}
++
+ u32 ath9k_hw_reverse_bits(u32 val, u32 n)
+ {
+ 	u32 retval;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f1864cc..66aba10 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -138,6 +138,8 @@
  
- 	/* Suspend/Resume resets the PCI configuration space, so we have to
+ #define REG_WRITE_ARRAY(iniarray, column, regWr) \
+ 	ath9k_hw_write_array(ah, iniarray, column, &(regWr))
++#define REG_READ_ARRAY(ah, array, size) \
++	ath9k_hw_read_array(ah, array, size)
+ 
+ #define AR_GPIO_OUTPUT_MUX_AS_OUTPUT             0
+ #define AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED 1
+@@ -1020,6 +1022,7 @@ void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
+ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
+ void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
+ 			  int column, unsigned int *writecnt);
++void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size);
+ u32 ath9k_hw_reverse_bits(u32 val, u32 n);
+ u16 ath9k_hw_computetxtime(struct ath_hw *ah,
+ 			   u8 phy, int kbps,
 -- 
-1.8.5.3
+1.9.1
 
