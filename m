@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from dedo.coelho.fi ([88.198.205.34]:44758 "EHLO dedo.coelho.fi"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752814AbbCQOgR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 10:36:17 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org
-Date: Tue, 17 Mar 2015 16:36:01 +0200
-Message-Id: <1426602961-9484-1-git-send-email-luca@coelho.fi> (sfid-20150317_153620_917673_C079DBB6)
-Subject: [PATCH] nl80211: add net-detect delay to wowlan info
+Received: from smtp.codeaurora.org ([198.145.29.96]:51252 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751140AbbCTG3L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 02:29:11 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [v2,01/11] ath9k: Add initial structures for AIC
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1426312677-2064-2-git-send-email-sujith@msujith.org>
+To: Sujith Manoharan <sujith@msujith.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Message-Id: <20150320062910.E7EB1140B80@smtp.codeaurora.org> (sfid-20150320_072914_755622_FB0F3246)
+Date: Fri, 20 Mar 2015 06:29:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
 
-Pass the initial net-detect delay (NL80211_ATTR_SCHED_SCAN_DELAY)
-attribute in the WoWLAN info response.
+> From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> 
+> These are necessary for implementing AIC,
+> supported by chips like WB222.
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-Additionally, remove a bogus TODO comment.
+Thanks, 11 patches applied to wireless-drivers-next.git:
 
-Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
-Reviewed-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/wireless/nl80211.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+d3f193ee6538 ath9k: Add initial structures for AIC
+637625f2db84 ath9k: Register private AIC ops
+6dacafea2d3a ath9k: Add register definitions for AIC
+b6ab9ae2eed8 ath9k: Handle MCI_STATE_AIC_CAL_SINGLE
+716eed4c0dfb ath9k: Finish AIC calibration
+188f1a1288d5 ath9k: Process the AIC calibration results
+208837eeb925 ath9k: Disable AIC by default
+958b6827b781 ath9k: Handle MCI_STATE_AIC_CAL_RESET
+f2ef792a8085 ath9k: Handle MCI_STATE_AIC_START
+60544603b669 ath9k: Handle MCI_STATE_AIC_CAL
+7644317bd39c ath9k: Start AIC calibration during MCI reset
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9f14e32..7561338 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1099,8 +1099,6 @@ static int nl80211_send_wowlan(struct sk_buff *msg,
- 	if (large && nl80211_send_wowlan_tcp_caps(rdev, msg))
- 		return -ENOBUFS;
- 
--	/* TODO: send wowlan net detect */
--
- 	nla_nest_end(msg, nl_wowlan);
- 
- 	return 0;
-@@ -8831,6 +8829,9 @@ static int nl80211_send_wowlan_nd(struct sk_buff *msg,
- 	if (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_INTERVAL, req->interval))
- 		return -ENOBUFS;
- 
-+	if (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_DELAY, req->delay))
-+		return -ENOBUFS;
-+
- 	freqs = nla_nest_start(msg, NL80211_ATTR_SCAN_FREQUENCIES);
- 	if (!freqs)
- 		return -ENOBUFS;
--- 
-2.1.4
-
+Kalle Valo
