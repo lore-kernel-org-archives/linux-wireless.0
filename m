@@ -1,94 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:54805 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754403AbbCEMuO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 07:50:14 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 7/7] iwlwifi: mvm: BT Coex - fix a NULL pointer exception
-Date: Thu,  5 Mar 2015 14:49:53 +0200
-Message-Id: <1425559793-25131-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150305_135027_387004_DCD0D3A6)
-In-Reply-To: <1425558068.22928.3.camel@egrumbacBox>
-References: <1425558068.22928.3.camel@egrumbacBox>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44014 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbbCTOA6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 10:00:58 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Eliad Peller <eliad@wizery.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Sekhar Nori <nsekhar@ti.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	"linux-omap\@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	Luciano Coelho <luca@coelho.fi>
+Subject: Re: [PATCH v6 2/6] wl12xx: use frequency instead of enumerations for pdata clocks
+References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
+	<20150313150047.GI5264@atomide.com>
+	<CAB3XZEcOytqpJ4pWoemLS3d+DCeA8C75MencDfGn_vhfEYrduw@mail.gmail.com>
+	<3103538.jZ037SODdT@wuerfel> <87lhixphag.fsf@kamboji.qca.qualcomm.com>
+	<20150316151554.GO5264@atomide.com>
+Date: Fri, 20 Mar 2015 16:00:47 +0200
+In-Reply-To: <20150316151554.GO5264@atomide.com> (Tony Lindgren's message of
+	"Mon, 16 Mar 2015 08:15:55 -0700")
+Message-ID: <87siczg44w.fsf@kamboji.qca.qualcomm.com> (sfid-20150320_150104_399223_A038F461)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit below introduced an unsafe dereference of
-mvmvif->phy_ctxt. It can be NULL even if we hold the mutex.
-We can be handling a BT Coex notification while the vif has
-already been unassigned. This can happen since the BT Coex
-notification is hanled asynchronuously: we can have started
-to handle the BT Coex notification trying to acquire the
-mutex while the unassign flow already got it. The BT Coex
-notification handling will wait for the mutext. I'll get it
-later, but then mvmvif->phy_ctxt will be NULL.
+Tony Lindgren <tony@atomide.com> writes:
 
-Panic log:
+>> I prefer these going through the omap tree. Like Eliad said,
+>> drivers/net/wireless/ti does not get that many changes nowadays so the
+>> chances of this patchset conflicting with something is very small.
+>
+> OK great. In that case no need to rearrange the patches, I can
+> apply them into an immutable branch once the pending issues have
+> been fixed if Kalle acks them.
+>
+> To avoid merge conflicts that branch is easiest done against
+> v4.0-rc4. Kalle and Arnd, does that work for you guys?
+>
+> I can also base it on 5b7610f23562 ("ARM: OMAP2+: Fix wl12xx on
+> dm3730-evm with mainline u-boot") that's on top of -rc2 plus few
+> other fixes now merged to -rc4 mainline if we need a branch based
+> on an earlier tag.
 
-BUG: unable to handle kernel NULL pointer dereference at   (null)
-IP: [<f985180d>] iwl_mvm_bt_notif_iterator+0x9d/0x340 [iwlmvm]
-*pdpt = 0000000000000000 *pde = f000eef300000007
-Oops: 0000 [#1] SMP
-Workqueue: events iwl_mvm_async_handlers_wk [iwlmvm]
-task: ed719b20 ti: ec03e000 task.ti: ec03e000
-EIP: 0060:[<f985180d>] EFLAGS: 00010202 CPU: 2
-EIP is at iwl_mvm_bt_notif_iterator+0x9d/0x340 [iwlmvm]
-EAX: 00000000 EBX: f6d3cb70 ECX: f6d3cb70 EDX: 00000000
-ESI: ec03fe40 EDI: efeb8810 EBP: ec03fdf0 ESP: ec03fdac
- DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-CR0: 80050033 CR2: 00000000 CR3: 01a1a000 CR4: 001407f0
-Stack:
- f743ca80 f744a404 ec03fdcc c10e3952 00003aba f743ca80 00000246 f743ca80
- 00000246 00000000 00000001 00000000 ebd45ff6 ebd458a4 f6d3c500 ebd45578
- ebd44b01 ec03fe18 f99e1bc2 00000002 ebd44bc0 f9851770 00000000 f6d3c500
-Call Trace:
- [<c10e3952>] ? ring_buffer_unlock_commit+0xa2/0xd0
- [<f99e1bc2>] __iterate_interfaces+0x82/0x110 [mac80211]
- [<f9851770>] ? iwl_mvm_bt_coex_reduced_txp+0x140/0x140 [iwlmvm]
- [<f99e1c6a>] ieee80211_iterate_active_interfaces_atomic+0x1a/0x20 [mac80211]
- [<f9851427>] iwl_mvm_bt_coex_notif_handle+0x77/0x280 [iwlmvm]
- [<f9852161>] iwl_mvm_rx_bt_coex_notif_old+0x211/0x220 [iwlmvm]
- [<f9850b8b>] iwl_mvm_rx_bt_coex_notif+0x19b/0x1b0 [iwlmvm]
- [<f983944f>] iwl_mvm_async_handlers_wk+0x7f/0xe0 [iwlmvm]
+Sorry, it seems I forgot to answer this one:
 
-CC: <stable@vger.kernel.org> [3.19+]
-Fixes: 123f515635b1 ("iwlwifi: mvm: BT Coex - add support for TTC / RRC")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/coex.c        | 3 ++-
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+Either baseline is good for me, I can't think of any problems with
+either one. But please do remember that I'm a new maintainer, I might
+very well miss something ;)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex.c b/drivers/net/wireless/iwlwifi/mvm/coex.c
-index 1ec4d55..7810c41 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex.c
-@@ -793,7 +793,8 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (!vif->bss_conf.assoc)
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 
--	if (IWL_COEX_IS_RRC_ON(mvm->last_bt_notif.ttc_rrc_status,
-+	if (mvmvif->phy_ctxt &&
-+	    IWL_COEX_IS_RRC_ON(mvm->last_bt_notif.ttc_rrc_status,
- 			       mvmvif->phy_ctxt->id))
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-index d530ef3..542ee74 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-@@ -832,7 +832,8 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	if (!vif->bss_conf.assoc)
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 
--	if (data->notif->rrc_enabled & BIT(mvmvif->phy_ctxt->id))
-+	if (mvmvif->phy_ctxt &&
-+	    data->notif->rrc_enabled & BIT(mvmvif->phy_ctxt->id))
- 		smps_mode = IEEE80211_SMPS_AUTOMATIC;
- 
- 	IWL_DEBUG_COEX(data->mvm,
 -- 
-1.9.1
-
+Kalle Valo
