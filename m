@@ -1,109 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:8461 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753537AbbCBMUV (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:35556 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160AbbCTN4v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 07:20:21 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V5 2/2] ath10k: Fix interrupt storm
-Date: Mon, 2 Mar 2015 17:45:28 +0530
-Message-ID: <1425298528-3067-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150302_132026_609270_C4DF45F7)
-In-Reply-To: <1425298528-3067-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1425298528-3067-1-git-send-email-vthiagar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 20 Mar 2015 09:56:51 -0400
+Received: by lbcgn8 with SMTP id gn8so75782416lbc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 06:56:50 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/9] ath10k: derive rate from bitrate
+Date: Fri, 20 Mar 2015 13:54:08 +0000
+Message-Id: <1426859655-11797-3-git-send-email-michal.kazior@tieto.com> (sfid-20150320_145705_564700_3B6A513B)
+In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
+References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Promiscuous mode is enabled when wlan interface is added to
-bridge. ath10k creates a monitor mode when promiscuous mode
-is enabled. When monitor vdev is running along with other
-vdev(s) there is a huge number of interrupts generated
-especially in noisy condition. Fix this by not enabling
-promiscuous(monitor) mode when already a vdev is running.
-As disabling promiscuous mode may have issues with 4-address
-bridging in STA mode, the change is done specific to non-sta/ibss
-mode types. This does not change the support of virtual interface of
-type monitor along with other vdevs of any type.
+There's no need to store rate values in hw_value.
+This frees up the hw_value for better future use.
 
-This could fix management frame drop in fw due to unavailable
-buffers because in monitor mode device receives everything seen
-on the air. In noisy condition, disabling monitor mode helps assoc
-go through without any issue.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   34 +++++++++++++++++++++++++++++++--
- 1 file changed, 32 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 47 +++++++++++++++++++++++++----------
+ 1 file changed, 34 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3b5aaa3..c220c51 100644
+index 456d671..5721196 100644
 --- a/drivers/net/wireless/ath/ath10k/mac.c
 +++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -766,6 +766,25 @@ static int ath10k_monitor_stop(struct ath10k *ar)
- 	return 0;
- }
+@@ -42,19 +42,19 @@
  
-+static bool ath10k_mac_should_disable_promisc(struct ath10k *ar)
+ static struct ieee80211_rate ath10k_rates[] = {
+ 	/* CCK */
+-	RATETAB_ENT(10,  0x82, 0),
+-	RATETAB_ENT(20,  0x84, 0),
+-	RATETAB_ENT(55,  0x8b, 0),
+-	RATETAB_ENT(110, 0x96, 0),
++	RATETAB_ENT(10,  0, 0),
++	RATETAB_ENT(20,  0, 0),
++	RATETAB_ENT(55,  0, 0),
++	RATETAB_ENT(110, 0, 0),
+ 	/* OFDM */
+-	RATETAB_ENT(60,  0x0c, 0),
+-	RATETAB_ENT(90,  0x12, 0),
+-	RATETAB_ENT(120, 0x18, 0),
+-	RATETAB_ENT(180, 0x24, 0),
+-	RATETAB_ENT(240, 0x30, 0),
+-	RATETAB_ENT(360, 0x48, 0),
+-	RATETAB_ENT(480, 0x60, 0),
+-	RATETAB_ENT(540, 0x6c, 0),
++	RATETAB_ENT(60,  0, 0),
++	RATETAB_ENT(90,  0, 0),
++	RATETAB_ENT(120, 0, 0),
++	RATETAB_ENT(180, 0, 0),
++	RATETAB_ENT(240, 0, 0),
++	RATETAB_ENT(360, 0, 0),
++	RATETAB_ENT(480, 0, 0),
++	RATETAB_ENT(540, 0, 0),
+ };
+ 
+ #define ath10k_a_rates (ath10k_rates + 4)
+@@ -62,6 +62,25 @@ static struct ieee80211_rate ath10k_rates[] = {
+ #define ath10k_g_rates (ath10k_rates + 0)
+ #define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
+ 
++static bool ath10k_mac_bitrate_is_cck(int bitrate)
 +{
-+	struct ath10k_vif *arvif;
-+
-+	if (!(ar->filter_flags & FIF_PROMISC_IN_BSS))
++	switch (bitrate) {
++	case 10:
++	case 20:
++	case 55:
++	case 110:
 +		return true;
-+
-+	if (!ar->num_started_vdevs)
-+		return false;
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list)
-+		if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
-+			return false;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC,
-+		   "mac disabling promiscuous mode because vdev is started\n");
-+	return true;
-+}
-+
- static int ath10k_monitor_recalc(struct ath10k *ar)
- {
- 	bool should_start;
-@@ -773,7 +793,7 @@ static int ath10k_monitor_recalc(struct ath10k *ar)
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	should_start = ar->monitor ||
--		       ar->filter_flags & FIF_PROMISC_IN_BSS ||
-+		       !ath10k_mac_should_disable_promisc(ar);
- 		       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_MAC,
-@@ -910,7 +930,7 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
- 	struct ath10k *ar = arvif->ar;
- 	struct cfg80211_chan_def *chandef = &ar->chandef;
- 	struct wmi_vdev_start_request_arg arg = {};
--	int ret = 0;
-+	int ret = 0, ret2;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -969,6 +989,16 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
- 	ar->num_started_vdevs++;
- 	ath10k_recalc_radar_detection(ar);
- 
-+	ret = ath10k_monitor_recalc(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "mac failed to recalc monitor for vdev %i restart %d: %d\n",
-+			    arg.vdev_id, restart, ret);
-+		ret2 = ath10k_vdev_stop(arvif);
-+		if (ret2)
-+			ath10k_warn(ar, "mac failed to stop vdev %i restart %d: %d\n",
-+				    arg.vdev_id, restart, ret2);
 +	}
 +
- 	return ret;
- }
++	return false;
++}
++
++static u8 ath10k_mac_bitrate_to_rate(int bitrate)
++{
++	return DIV_ROUND_UP(bitrate, 5) |
++	       (ath10k_mac_bitrate_is_cck(bitrate) ? BIT(7) : 0);
++}
++
+ /**********/
+ /* Crypto */
+ /**********/
+@@ -1699,6 +1718,7 @@ static void ath10k_peer_assoc_h_rates(struct ath10k *ar,
+ 	const struct ieee80211_supported_band *sband;
+ 	const struct ieee80211_rate *rates;
+ 	u32 ratemask;
++	u8 rate;
+ 	int i;
  
+ 	lockdep_assert_held(&ar->conf_mutex);
+@@ -1713,7 +1733,8 @@ static void ath10k_peer_assoc_h_rates(struct ath10k *ar,
+ 		if (!(ratemask & 1))
+ 			continue;
+ 
+-		rateset->rates[rateset->num_rates] = rates->hw_value;
++		rate = ath10k_mac_bitrate_to_rate(rates->bitrate);
++		rateset->rates[rateset->num_rates] = rate;
+ 		rateset->num_rates++;
+ 	}
+ }
 -- 
-1.7.9.5
+2.1.4
 
