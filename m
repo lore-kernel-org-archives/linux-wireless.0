@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41510 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751928AbbC0RTe (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:39137 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbbCTMpX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Mar 2015 13:19:34 -0400
-From: Yanbo Li <yanbol@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <dreamfly281@gmail.com>, <michal.kazior@tieto.com>,
-	<ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: Change the fw stats access mask
-Date: Fri, 27 Mar 2015 10:18:00 -0700
-Message-ID: <1427476680-5532-1-git-send-email-yanbol@qca.qualcomm.com> (sfid-20150327_181937_452963_44EC04EF)
+	Fri, 20 Mar 2015 08:45:23 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 0/7] brcm: firmware drop for brcmfmac driver
+Date: Fri, 20 Mar 2015 13:43:58 +0100
+Message-ID: <1426855445-31121-1-git-send-email-arend@broadcom.com> (sfid-20150320_134527_644460_A9868842)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fix the regerssion introduced after "ath10k_wmi_requests_stats()
-call to use more stat bits", both the 10.2.X FW and community FW 10.1.X
-will return time out when access the fw_stats with the STAT_VDEV and
-STAT_PDEV. Add the condition to use different fw_stats mask for different
-FW versions.
+This series adds firmware files for a number of "new" devices.
+Admittedly there was bit of backlog. For BCM4354 SDIO this
+series has firmware upgrade.
 
-Fixes:7777d8c7ef6f("ath10k: implement fw stats for wmi-tlv")
-Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
+This series does apply to the master branch of the linux-firmware
+repo on top of commit f10b97abdab2 ("radeon: Update Kaveri MEC
+firmware to #396").
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c0e454bb6a8d..e1db4d018e90 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -958,6 +958,8 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_num_stations = TARGET_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
-+		ar->fw_stats_req_mask = WMI_STAT_PDEV | WMI_STAT_VDEV |
-+			WMI_STAT_PEER;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_1:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
-@@ -966,12 +968,15 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
-+		ar->fw_stats_req_mask = WMI_STAT_PEER;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_TLV:
- 		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
- 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_TLV_NUM_MSDU_DESC;
-+		ar->fw_stats_req_mask = WMI_STAT_PDEV | WMI_STAT_VDEV |
-+			WMI_STAT_PEER;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 	case ATH10K_FW_WMI_OP_VERSION_MAX:
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index cfd37a6e8931..1545a37c6360 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -514,6 +514,7 @@ struct ath10k {
- 	u32 fw_version_minor;
- 	u16 fw_version_release;
- 	u16 fw_version_build;
-+	u32 fw_stats_req_mask;
- 	u32 phy_capability;
- 	u32 hw_min_tx_power;
- 	u32 hw_max_tx_power;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 51cf536fd014..544c22e0a1d8 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -395,10 +395,7 @@ static int ath10k_debug_fw_stats_request(struct ath10k *ar)
- 
- 		reinit_completion(&ar->debug.fw_stats_complete);
- 
--		ret = ath10k_wmi_request_stats(ar,
--					       WMI_STAT_PDEV |
--					       WMI_STAT_VDEV |
--					       WMI_STAT_PEER);
-+		ret = ath10k_wmi_request_stats(ar, ar->fw_stats_req_mask);
- 		if (ret) {
- 			ath10k_warn(ar, "could not request stats (%d)\n", ret);
- 			return ret;
+Arend van Spriel (7):
+  brcm: add firmware for BCM43242 USB device
+  brcm: add firmware for BCM4356 PCIe device
+  brcm: add firmware files for BCM43602 PCIe device
+  brcm: add firmware for BCM43455 SDIO device
+  brcm: add firmware for BCM4339 SDIO device
+  brcm: add firmware for BCM43340/1 SDIO devices
+  brcm: upgrade firmware for BCM4354 SDIO device
+
+ WHENCE                         |   7 +++++++
+ brcm/brcmfmac43242a.bin        | Bin 0 -> 479232 bytes
+ brcm/brcmfmac43340-sdio.bin    | Bin 0 -> 397378 bytes
+ brcm/brcmfmac4339-sdio.bin     | Bin 0 -> 569291 bytes
+ brcm/brcmfmac43455-sdio.bin    | Bin 0 -> 488193 bytes
+ brcm/brcmfmac4354-sdio.bin     | Bin 507752 -> 591837 bytes
+ brcm/brcmfmac4356-pcie.bin     | Bin 0 -> 593956 bytes
+ brcm/brcmfmac43602-pcie.ap.bin | Bin 0 -> 588940 bytes
+ brcm/brcmfmac43602-pcie.bin    | Bin 0 -> 590544 bytes
+ 9 files changed, 7 insertions(+)
+ create mode 100644 brcm/brcmfmac43242a.bin
+ create mode 100644 brcm/brcmfmac43340-sdio.bin
+ create mode 100644 brcm/brcmfmac4339-sdio.bin
+ create mode 100644 brcm/brcmfmac43455-sdio.bin
+ rewrite brcm/brcmfmac4354-sdio.bin (81%)
+ create mode 100644 brcm/brcmfmac4356-pcie.bin
+ create mode 100644 brcm/brcmfmac43602-pcie.ap.bin
+ create mode 100644 brcm/brcmfmac43602-pcie.bin
+
 -- 
 1.9.1
 
