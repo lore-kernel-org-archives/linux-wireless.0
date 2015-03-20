@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:35007 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbbCXMpx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 08:45:53 -0400
-Received: by laae1 with SMTP id e1so26264813laa.2
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 05:45:52 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v5 1/7] ath10k: allow empty ssid vdev config
-Date: Tue, 24 Mar 2015 12:43:07 +0000
-Message-Id: <1427200993-7550-2-git-send-email-michal.kazior@tieto.com> (sfid-20150324_134557_587420_AB02A42E)
-In-Reply-To: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
-References: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
+Received: from mout.gmx.net ([212.227.15.18]:51519 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751147AbbCTMky (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:40:54 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 07/18] ath9k: ar9271_hw_pa_cal: use REG_READ_ARRAY
+Date: Fri, 20 Mar 2015 13:38:47 +0100
+Message-Id: <1426855138-6121-8-git-send-email-linux@rempel-privat.de> (sfid-20150320_134057_381394_4E245BDA)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It doesn't make much sense to reject a valid
-firmware configuration combination.
+insted of reading each register separatly
+and waste 4ms on each operation, we can
+use one shot read.
 
-Since SSID isn't known early on it might make
-sense to allow driver to start vdev without SSID
-and restart it later.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
- drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
- 2 files changed, 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 467d88c780c7..d4804645f8c2 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1518,8 +1518,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
- 	void *ptr;
- 	u32 flags = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index 62a2314..50fcd34 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -440,8 +440,7 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 		{ AR9285_AN_RF2G3, 0 },
+ 	};
  
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 1f47636f204b..3ef41105b95c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4248,8 +4248,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
- 	const char *cmdname;
- 	u32 flags = 0;
+-	for (i = 0; i < ARRAY_SIZE(regList); i++)
+-		regList[i][1] = REG_READ(ah, regList[i][0]);
++	REG_READ_ARRAY(ah, regList, ARRAY_SIZE(regList));
  
--	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
--		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
- 		return ERR_PTR(-EINVAL);
- 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
+ 	ENABLE_REG_RMW_BUFFER(ah);
+ 	/* 7834, b1=0 */
 -- 
-2.1.4
+1.9.1
 
