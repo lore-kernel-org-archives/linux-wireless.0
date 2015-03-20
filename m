@@ -1,43 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:64229 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751294AbbCUIrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:36 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 07/18] ath9k: ar9271_hw_pa_cal: use REG_READ_ARRAY
-Date: Sat, 21 Mar 2015 09:47:10 +0100
-Message-Id: <1426927641-18474-8-git-send-email-linux@rempel-privat.de> (sfid-20150321_094756_732834_5FE8473E)
-In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
-References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53021 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967AbbCTHHw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 03:07:52 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: mwifiex: fix crash in SDIO RX path
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1426689772-24302-1-git-send-email-patila@marvell.com>
+To: Avinash Patil <patila@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
+	<cluo@marvell.com>, <liuzy@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Message-Id: <20150320070752.1EE33140E31@smtp.codeaurora.org> (sfid-20150320_080755_731465_B8DF1D7C)
+Date: Fri, 20 Mar 2015 07:07:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-insted of reading each register separatly
-and waste 4ms on each operation, we can
-use one shot read.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> With patch '960d6d08e39 "mwifiex: delay skb allocation for RX
+> until cmd53 over"' we no more pass skb parameter to MP aggregation setup
+> helper function. We instead pass length to be aggregated.
+> 
+> This patch fixes an issue where we were passing length parameter of NULL
+> skb to aggregation routine resulting into crash. We should instead pass
+> rx_len received from mp_regs.
+> 
+> Signed-off-by: Avinash Patil <patila@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 62a2314..50fcd34 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -440,8 +440,7 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 		{ AR9285_AN_RF2G3, 0 },
- 	};
- 
--	for (i = 0; i < ARRAY_SIZE(regList); i++)
--		regList[i][1] = REG_READ(ah, regList[i][0]);
-+	REG_READ_ARRAY(ah, regList, ARRAY_SIZE(regList));
- 
- 	ENABLE_REG_RMW_BUFFER(ah);
- 	/* 7834, b1=0 */
--- 
-1.9.1
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
