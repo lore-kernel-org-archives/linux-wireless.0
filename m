@@ -1,168 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:57570 "EHLO
-	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752478AbbCXPgk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 11:36:40 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: Fwd: [Battlemesh] Announcing Battlemesh V8 Maribor, Slovenia
-Date: Tue, 24 Mar 2015 16:32:08 +0100
-Message-ID: <15860714.ZEkijQoUMz@prime> (sfid-20150324_163644_644961_73DFF0C4)
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2542334.9co0A1NLDR"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Received: from mout.gmx.net ([212.227.15.19]:55304 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751841AbbCTMkH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:40:07 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 03/18] ath9k: ar9271_hw_pa_cal: use proper makroses.
+Date: Fri, 20 Mar 2015 13:38:43 +0100
+Message-Id: <1426855138-6121-4-git-send-email-linux@rempel-privat.de> (sfid-20150320_134017_551416_4F8579AA)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c | 43 ++++++++++++---------------
+ 1 file changed, 19 insertions(+), 24 deletions(-)
 
---nextPart2542334.9co0A1NLDR
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="us-ascii"
-
-I'm sure there are some on this list who will be interested in joining!=
- Please=20
-spread the word. :)
-
-=2D---------  Forwarded Message  ----------
-
-Subject: [Battlemesh] Announcing Battlemesh V8 Maribor, Slovenia
-Date: Monday 23 March 2015, 17:13:18
-From: Musti <musti@wlan-si.net>
-To: Battle of the Mesh Mailing List <battlemesh@ml.ninux.org>
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-       Announcing the Wireless Battle Mesh v8
-    (3rd - 9th of August 2015, Maribor, Slovenia)
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-The next 'Wireless Battle of the Mesh' will take place from Mon 3rd
-till Sun 9th of August at Dom Obrambe Pekre, Maribor, Slovenia. The
-event aims to bring together people from across the globe to test the
-performance of different routing protocols for ad-hoc networks, like
-Babel, B.A.T.M.A.N., BMX, OLSR, and 802.11s. Of course, new protocols
-(working on OpenWrt) are always welcome!
-
-It is not required to be active within the mentioned protocols, so if
-you are a mesh networking enthusiast, community networking activist, or=
-
-have an interest in mesh networks in general, you have to check this ou=
-t!
-
-Information about the event is gathered at:
-http://battlemesh.org/BattleMeshV8
-
-
-Location
-=3D=3D=3D=3D=3D=3D=3D=3D
-
-The event takes place at the Dom Obrambe Pekre, Maribor, Slovenia.
-It features one large dining hall with an attached smaller hall for
-talks, a large lecture theater, several smaller classrooms and an
-outdoor auditorium. Expect to find nice community WiFi internet
-connection (open.wlan-si.net), video projectors, beverage and snack
-supplies and some curious hackers.
-
-Participant Registration and Fee
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D
-
-The event itself is free of charge and open for all, so to register
-without hotel and food supply, simply add your name to the participant
-table.
-
-http://battlemesh.org/BattleMeshV8/Participants
-
-If you wish low cost accommodation, a special group booking has been
-arranged. Payment in advance is required to get the full benefit of
-the discount. Therefore, like for the previous event, this year's
-edition features an "early bird low cost" registration program with two=
-
-accomodation options:
-
-Hotel Milena:
-=2D------------
-
-Hotel Milena is a family run hotel under mountain Pohorje for which
-the accommodation is offered in a package. Rooms are for 2-4 people,
-some rooms have a double bed only. In the case of a large number of
-participants some accommodation will be in the neighbouring hotels
-as well. Breakfast is included. There is a 15min walk to the
-conference venue.
-
-Early bird booking is available for 6 nights (August 3rd to 9th)
-for 150 EUR if payment is received before 18th April. The price
-goes up to EUR 175,00 for all later payments. These late arrangements
-are subject to availability.
-
-Camping:
-=2D-------
-
-Camping Kekec is a camping place in the vicinity of Hotel Milena,
-all the usual camping amnesties available. No breakfast included.
-There are shops nearby, walking to the conference venue takes 18 minute=
-s.
-
-Early bird booking is available for 6 nights (August 3rd to 9th)
-for 45 EUR if payment is received before 18th April The price
-goes up to EUR 55,00 for all later payments. These late arrangements
-are subject to availability.
-
-General:
-=2D-------
-
-For any additional information, requests and inquiries get in touch
-with the local organization team: battlemeshv8 at wlan-si.net
-
-Of course, this package is not compulsory. You can also find your own
-bed and food supply yourself during the event if you wish to do so.
-
-Payment information can be found be found here on the Battlemesh Wiki:
-
-http://battlemesh.org/BattleMeshV8#Participant_Registration_and_Fee
-
-Spread the Word
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-Feel free to spread the word by forwarding this mail to all lists /
-people that might be interested in it. Blogging about the event is more=
-
-than welcome, and if you do so, please add a ping-back to the wiki page=
-:
-
-http://battlemesh.org/BattleMeshV8
-
-Contact
-=3D=3D=3D=3D=3D=3D=3D
-
-* Web: http://battlemesh.org/BattleMeshV8
-* Email: http://ml.ninux.org/mailman/listinfo/battlemesh
-* IRC: irc.freenode.net #battlemesh
-
-
-Kind regards,
-Musti
-_______________________________________________
-Battlemesh mailing list
-Battlemesh@ml.ninux.org
-http://ml.ninux.org/mailman/listinfo/battlemesh
-=2D----------------------------------------
---nextPart2542334.9co0A1NLDR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEABECAAYFAlURg3gACgkQrzg/fFk7axbnFQCfYL1xKF/648BKVrgu8vbNSmHY
-Nv0AoLTVpESli1ru4hLHOjI5TaqvOi4W
-=+MsM
------END PGP SIGNATURE-----
-
---nextPart2542334.9co0A1NLDR--
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index 4576b99..8d24a73 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -443,33 +443,30 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 	for (i = 0; i < ARRAY_SIZE(regList); i++)
+ 		regList[i][1] = REG_READ(ah, regList[i][0]);
+ 
+-	regVal = REG_READ(ah, AR9285_AN_RF2G6);
+-	regVal &= (~(0x1));
+-	REG_WRITE(ah, AR9285_AN_RF2G6, regVal);
+-	regVal = REG_READ(ah, 0x9808);
+-	regVal |= (0x1 << 27);
+-	REG_WRITE(ah, 0x9808, regVal);
+-
++	/* 7834, b1=0 */
++	REG_CLR_BIT(ah, AR9285_AN_RF2G6, 1 << 0);
++	/* 9808, b27=1 */
++	REG_SET_BIT(ah, 0x9808, 1 << 27);
+ 	/* 786c,b23,1, pwddac=1 */
+-	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
++	REG_SET_BIT(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC);
+ 	/* 7854, b5,1, pdrxtxbb=1 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
++	REG_SET_BIT(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1);
+ 	/* 7854, b7,1, pdv2i=1 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
++	REG_SET_BIT(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I);
+ 	/* 7854, b8,1, pddacinterface=1 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
++	REG_SET_BIT(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF);
+ 	/* 7824,b12,0, offcal=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
++	REG_CLR_BIT(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL);
+ 	/* 7838, b1,0, pwddb=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
++	REG_CLR_BIT(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB);
+ 	/* 7820,b11,0, enpacal=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
++	REG_CLR_BIT(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL);
+ 	/* 7820,b25,1, pdpadrv1=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
++	REG_CLR_BIT(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1);
+ 	/* 7820,b24,0, pdpadrv2=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2, 0);
++	REG_CLR_BIT(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2);
+ 	/* 7820,b23,0, pdpaout=0 */
+-	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
++	REG_CLR_BIT(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT);
+ 	/* 783c,b14-16,7, padrvgn2tab_0=7 */
+ 	REG_RMW_FIELD(ah, AR9285_AN_RF2G8, AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
+ 	/*
+@@ -516,15 +513,13 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 		ah->pacal_info.prev_offset = regVal;
+ 	}
+ 
+-	ENABLE_REGWRITE_BUFFER(ah);
+ 
+-	regVal = REG_READ(ah, AR_AN_RF2G1_CH1);
+-	regVal |= 0x1;
+-	REG_WRITE(ah, AR_AN_RF2G1_CH1, regVal);
+-	regVal = REG_READ(ah, 0x9808);
+-	regVal &= (~(0x1 << 27));
+-	REG_WRITE(ah, 0x9808, regVal);
++	/* 7834, b1=1 */
++	REG_SET_BIT(ah, AR9285_AN_RF2G6, 1 << 0);
++	/* 9808, b27=0 */
++	REG_CLR_BIT(ah, 0x9808, 1 << 27);
+ 
++	ENABLE_REGWRITE_BUFFER(ah);
+ 	for (i = 0; i < ARRAY_SIZE(regList); i++)
+ 		REG_WRITE(ah, regList[i][0], regList[i][1]);
+ 
+-- 
+1.9.1
 
