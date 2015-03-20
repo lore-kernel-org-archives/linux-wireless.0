@@ -1,91 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:49322 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872AbbCVSbk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 14:31:40 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v3 06/18] ath9k: add new function ath9k_hw_read_array
-Date: Sun, 22 Mar 2015 19:29:51 +0100
-Message-Id: <1427049003-8443-7-git-send-email-linux@rempel-privat.de> (sfid-20150322_193145_678225_8310555F)
-In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
-References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:24125 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750969AbbCTMhp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:37:45 -0400
+Message-ID: <550C148D.6080000@broadcom.com> (sfid-20150320_133748_438577_D67688A8)
+Date: Fri, 20 Mar 2015 13:37:33 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Ben Hutchings <ben@decadent.org.uk>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/7] brcm: firmware drop for brcmfmac driver
+References: <1426854911-30796-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1426854911-30796-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-REG_READ generate most overhead on usb bus. It send and read micro packages
-and reduce usb bandwidth. To reduce this overhead we should read in batches.
+On 03/20/15 13:35, Arend van Spriel wrote:
+> This series adds firmware files for a number of "new" devices.
+> Admittedly there was bit of backlog. For BCM4354 SDIO this
+> series has firmware upgrade.
+>
+> This series does apply to the master branch of the linux-firmware
+> repo on top of commit f10b97abdab2 ("radeon: Update Kaveri MEC
+> firmware to #396").
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/hw.c | 30 ++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h |  3 +++
- 2 files changed, 33 insertions(+)
+Aborted this series during git-sendemail realizing something is missing.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 60aa8d7..662ef3f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -121,6 +121,36 @@ void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
- 	REGWRITE_BUFFER_FLUSH(ah);
- }
- 
-+void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size)
-+{
-+	u32 *tmp_reg_list, *tmp_data;
-+	int i;
-+
-+	tmp_reg_list = kmalloc(size * sizeof(u32), GFP_KERNEL);
-+	if (!tmp_reg_list) {
-+		dev_err(ah->dev, "%s: tmp_reg_list: alloc filed\n", __func__);
-+		return;
-+	}
-+
-+	tmp_data = kmalloc(size * sizeof(u32), GFP_KERNEL);
-+	if (!tmp_data) {
-+		dev_err(ah->dev, "%s tmp_data: alloc filed\n", __func__);
-+		goto error_tmp_data;
-+	}
-+
-+	for (i = 0; i < size; i++)
-+		tmp_reg_list[i] = array[i][0];
-+
-+	REG_READ_MULTI(ah, tmp_reg_list, tmp_data, size);
-+
-+	for (i = 0; i < size; i++)
-+		array[i][1] = tmp_data[i];
-+
-+	kfree(tmp_data);
-+error_tmp_data:
-+	kfree(tmp_reg_list);
-+}
-+
- u32 ath9k_hw_reverse_bits(u32 val, u32 n)
- {
- 	u32 retval;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index f1864cc..66aba10 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -138,6 +138,8 @@
- 
- #define REG_WRITE_ARRAY(iniarray, column, regWr) \
- 	ath9k_hw_write_array(ah, iniarray, column, &(regWr))
-+#define REG_READ_ARRAY(ah, array, size) \
-+	ath9k_hw_read_array(ah, array, size)
- 
- #define AR_GPIO_OUTPUT_MUX_AS_OUTPUT             0
- #define AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED 1
-@@ -1020,6 +1022,7 @@ void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
- bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
- void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
- 			  int column, unsigned int *writecnt);
-+void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size);
- u32 ath9k_hw_reverse_bits(u32 val, u32 n);
- u16 ath9k_hw_computetxtime(struct ath_hw *ah,
- 			   u8 phy, int kbps,
--- 
-1.9.1
+Sorry for the noise.
+
+Regards,
+Arend
+
+> Arend van Spriel (7):
+>    brcm: add firmware for BCM43242 USB device
+>    brcm: add firmware for BCM4356 PCIe device
+>    brcm: add firmware files for BCM43602 PCIe device
+>    brcm: add firmware for BCM43455 SDIO device
+>    brcm: add firmware for BCM4339 SDIO device
+>    brcm: add firmware for BCM43340/1 SDIO devices
+>    brcm: upgrade firmware for BCM4354 SDIO device
+>
+>   WHENCE                         |   7 +++++++
+>   brcm/brcmfmac43242a.bin        | Bin 0 ->  479232 bytes
+>   brcm/brcmfmac43340-sdio.bin    | Bin 0 ->  397378 bytes
+>   brcm/brcmfmac4339-sdio.bin     | Bin 0 ->  569291 bytes
+>   brcm/brcmfmac43455-sdio.bin    | Bin 0 ->  488193 bytes
+>   brcm/brcmfmac4354-sdio.bin     | Bin 507752 ->  591837 bytes
+>   brcm/brcmfmac4356-pcie.bin     | Bin 0 ->  593956 bytes
+>   brcm/brcmfmac43602-pcie.ap.bin | Bin 0 ->  588940 bytes
+>   brcm/brcmfmac43602-pcie.bin    | Bin 0 ->  590544 bytes
+>   9 files changed, 7 insertions(+)
+>   create mode 100644 brcm/brcmfmac43242a.bin
+>   create mode 100644 brcm/brcmfmac43340-sdio.bin
+>   create mode 100644 brcm/brcmfmac4339-sdio.bin
+>   create mode 100644 brcm/brcmfmac43455-sdio.bin
+>   rewrite brcm/brcmfmac4354-sdio.bin (81%)
+>   create mode 100644 brcm/brcmfmac4356-pcie.bin
+>   create mode 100644 brcm/brcmfmac43602-pcie.ap.bin
+>   create mode 100644 brcm/brcmfmac43602-pcie.bin
+>
 
