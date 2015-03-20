@@ -1,57 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:41591 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750901AbbCSEj7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 00:39:59 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, joe@perches.com,
-	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v3 09/15] staging: rtl8723au: that open brace should be on the previous line
-Date: Thu, 19 Mar 2015 00:39:12 -0400
-Message-Id: <1426739958-18949-10-git-send-email-m.v.b@runbox.com> (sfid-20150319_054114_744051_C2C3FF26)
-In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
-References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:34775 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142AbbCTLAp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 07:00:45 -0400
+Received: by lbbsy1 with SMTP id sy1so72588084lbb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 04:00:43 -0700 (PDT)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH v4 3/6] ath10k: store max tdls vdevs that fw can handle
+Date: Fri, 20 Mar 2015 12:02:56 +0100
+Message-Id: <1426849379-7562-4-git-send-email-marek.puzyniak@tieto.com> (sfid-20150320_120047_878236_54EF520C)
+In-Reply-To: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com>
+References: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct two instances of the checkpatch.pl error indicating that the
-opening curly braces should not be on new lines:
-	ERROR: that open brace { should be on the previous line
+Currently number of tdls vdevs supported by firmware
+is hardcoded. For future usage it is stored in ath10k
+structure based on defined value.
 
-v3: Make sure that all edited lines are at most 80 characters wide.
-
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c    | 1 +
+ drivers/net/wireless/ath/ath10k/core.h    | 1 +
+ drivers/net/wireless/ath/ath10k/hw.h      | 1 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 +-
+ 4 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 803f8965a4..0557a0df52 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -760,8 +760,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c0e454b..47a3c55 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -971,6 +971,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
+ 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
++		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
+ 		ar->htt.max_num_pending_tx = TARGET_TLV_NUM_MSDU_DESC;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index b07d883..7d4f9c9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -638,6 +638,7 @@ struct ath10k {
+ 	int max_num_peers;
+ 	int max_num_stations;
+ 	int max_num_vdevs;
++	int max_num_tdls_vdevs;
  
- 	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
+ 	struct work_struct offchan_tx_work;
+ 	struct sk_buff_head offchan_tx_queue;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 7f04645..3ae2dbf 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -261,6 +261,7 @@ struct ath10k_pktlog_hdr {
+ #define TARGET_TLV_NUM_PEERS			((TARGET_TLV_NUM_STATIONS) + \
+ 						 (TARGET_TLV_NUM_VDEVS) + \
+ 						 2)
++#define TARGET_TLV_NUM_TDLS_VDEVS		1
+ #define TARGET_TLV_NUM_TIDS			((TARGET_TLV_NUM_PEERS) * 2)
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
  
--	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
--	{
-+	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
-+	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
- 	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
- 				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
- 		res = _FAIL;
-@@ -845,8 +845,7 @@ static void next_key(u8 *key, int round)
- {
- 	u8 rcon;
- 	u8 sbox_key[4];
--	u8 rcon_table[12] =
--	{
-+	u8 rcon_table[12] = {
- 		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
- 		0x1b, 0x36, 0x36, 0x36
- 	};
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index a65e11b..80e882b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1271,7 +1271,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cfg->gtk_offload_max_vdev = __cpu_to_le32(2);
+ 	cfg->num_msdu_desc = __cpu_to_le32(TARGET_TLV_NUM_MSDU_DESC);
+ 	cfg->max_frag_entries = __cpu_to_le32(2);
+-	cfg->num_tdls_vdevs = __cpu_to_le32(1);
++	cfg->num_tdls_vdevs = __cpu_to_le32(TARGET_TLV_NUM_TDLS_VDEVS);
+ 	cfg->num_tdls_conn_table_entries = __cpu_to_le32(0x20);
+ 	cfg->beacon_tx_offload_max_vdev = __cpu_to_le32(2);
+ 	cfg->num_multicast_filter_entries = __cpu_to_le32(5);
 -- 
 2.1.4
 
