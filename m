@@ -1,89 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:36439 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756568AbbCMDh1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 23:37:27 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: m.v.b@runbox.com
-Subject: [PATCH 07/16] staging: rtl8723au: else is not generally useful after a return
-Date: Thu, 12 Mar 2015 23:15:23 -0400
-Message-Id: <1426216532-24058-8-git-send-email-m.v.b@runbox.com> (sfid-20150313_043746_348490_A6B98EB5)
-In-Reply-To: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
+Received: from mail-la0-f54.google.com ([209.85.215.54]:35191 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752126AbbCTN4t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 09:56:49 -0400
+Received: by labjg1 with SMTP id jg1so87648890lab.2
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 06:56:48 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/9] ath10k: move rate definitions to file start
+Date: Fri, 20 Mar 2015 13:54:07 +0000
+Message-Id: <1426859655-11797-2-git-send-email-michal.kazior@tieto.com> (sfid-20150320_145754_956348_DAFE7E70)
+In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
+References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a checkpatch.pl warning regarding rtl8723au's
-rtw_security.c::crc32_init pointing out that having an else statement
-after a break or a return is not useful.
+Prepare the code for future changes so that new
+code can refer to rate-related stuff without
+forward declarations.
 
-drivers/staging/rtl8723au/core/rtw_security.c:105:
-	WARNING: else is not generally useful after a break or return
-
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 42 ++++++++++++++-------------
- 1 file changed, 22 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 63 ++++++++++++++++++-----------------
+ 1 file changed, 32 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 3e812a67e2..6d2f037ba4 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -99,31 +99,33 @@ static u8 crc32_reverseBit(u8 data)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1214a3b..456d671 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -30,6 +30,38 @@
+ #include "wmi.h"
+ #include "wmi-ops.h"
  
- static void crc32_init(void)
++/*********/
++/* Rates */
++/*********/
++
++#define RATETAB_ENT(_rate, _rateid, _flags) { \
++	.bitrate		= (_rate), \
++	.flags			= (_flags), \
++	.hw_value		= (_rateid), \
++}
++
++static struct ieee80211_rate ath10k_rates[] = {
++	/* CCK */
++	RATETAB_ENT(10,  0x82, 0),
++	RATETAB_ENT(20,  0x84, 0),
++	RATETAB_ENT(55,  0x8b, 0),
++	RATETAB_ENT(110, 0x96, 0),
++	/* OFDM */
++	RATETAB_ENT(60,  0x0c, 0),
++	RATETAB_ENT(90,  0x12, 0),
++	RATETAB_ENT(120, 0x18, 0),
++	RATETAB_ENT(180, 0x24, 0),
++	RATETAB_ENT(240, 0x30, 0),
++	RATETAB_ENT(360, 0x48, 0),
++	RATETAB_ENT(480, 0x60, 0),
++	RATETAB_ENT(540, 0x6c, 0),
++};
++
++#define ath10k_a_rates (ath10k_rates + 4)
++#define ath10k_a_rates_size (ARRAY_SIZE(ath10k_rates) - 4)
++#define ath10k_g_rates (ath10k_rates + 0)
++#define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
++
+ /**********/
+ /* Crypto */
+ /**********/
+@@ -5420,12 +5452,6 @@ static const struct ieee80211_ops ath10k_ops = {
+ #endif
+ };
+ 
+-#define RATETAB_ENT(_rate, _rateid, _flags) { \
+-	.bitrate		= (_rate), \
+-	.flags			= (_flags), \
+-	.hw_value		= (_rateid), \
+-}
+-
+ #define CHAN2G(_channel, _freq, _flags) { \
+ 	.band			= IEEE80211_BAND_2GHZ, \
+ 	.hw_value		= (_channel), \
+@@ -5488,31 +5514,6 @@ static const struct ieee80211_channel ath10k_5ghz_channels[] = {
+ 	CHAN5G(165, 5825, 0),
+ };
+ 
+-/* Note: Be careful if you re-order these. There is code which depends on this
+- * ordering.
+- */
+-static struct ieee80211_rate ath10k_rates[] = {
+-	/* CCK */
+-	RATETAB_ENT(10,  0x82, 0),
+-	RATETAB_ENT(20,  0x84, 0),
+-	RATETAB_ENT(55,  0x8b, 0),
+-	RATETAB_ENT(110, 0x96, 0),
+-	/* OFDM */
+-	RATETAB_ENT(60,  0x0c, 0),
+-	RATETAB_ENT(90,  0x12, 0),
+-	RATETAB_ENT(120, 0x18, 0),
+-	RATETAB_ENT(180, 0x24, 0),
+-	RATETAB_ENT(240, 0x30, 0),
+-	RATETAB_ENT(360, 0x48, 0),
+-	RATETAB_ENT(480, 0x60, 0),
+-	RATETAB_ENT(540, 0x6c, 0),
+-};
+-
+-#define ath10k_a_rates (ath10k_rates + 4)
+-#define ath10k_a_rates_size (ARRAY_SIZE(ath10k_rates) - 4)
+-#define ath10k_g_rates (ath10k_rates + 0)
+-#define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
+-
+ struct ath10k *ath10k_mac_create(size_t priv_size)
  {
-+	int i, j;
-+	u32 c;
-+	u8 *p, *p1;
-+	u8 k;
- 
- 	if (bcrc32initialized == 1)
- 		return;
--	else{
--		int i, j;
--		u32 c;
--		u8 *p = (u8 *)&c, *p1;
--		u8 k;
--
--		c = 0x12340000;
--
--		for (i = 0; i < 256; ++i) {
--			k = crc32_reverseBit((u8)i);
--			for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
--				c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
--			}
--			p1 = (u8 *)&crc32_table[i];
--
--			p1[0] = crc32_reverseBit(p[3]);
--			p1[1] = crc32_reverseBit(p[2]);
--			p1[2] = crc32_reverseBit(p[1]);
--			p1[3] = crc32_reverseBit(p[0]);
-+
-+	p = (u8 *) &c;
-+	c = 0x12340000;
-+
-+	for (i = 0; i < 256; ++i) {
-+		k = crc32_reverseBit((u8)i);
-+
-+		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
-+			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
- 		}
--		bcrc32initialized = 1;
-+
-+		p1 = (u8 *)&crc32_table[i];
-+
-+		p1[0] = crc32_reverseBit(p[3]);
-+		p1[1] = crc32_reverseBit(p[2]);
-+		p1[2] = crc32_reverseBit(p[1]);
-+		p1[3] = crc32_reverseBit(p[0]);
- 	}
-+
-+	bcrc32initialized = 1;
- }
- 
- static u32 getcrc32(u8 *buf, int len)
+ 	struct ieee80211_hw *hw;
 -- 
 2.1.4
 
