@@ -1,124 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15855 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751609AbbCMGii (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 02:38:38 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2D6ZDla006760
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:38 -0700
-Received: from sc-owa04.marvell.com ([199.233.58.150])
-	by mx0b-0016f401.pphosted.com with ESMTP id 1t3pmg8hw1-3
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 23:38:38 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
-	<crlo@marvell.com>, <pchen@marvell.com>, <szli@marvell.com>,
-	<nishants@marvell.com>, Avinash Patil <patila@marvell.com>
-Subject: [PATCHv2 2/9] mwifiex: rename alloc_rx_buf to alloc_dma_aligned_buf
-Date: Fri, 13 Mar 2015 17:37:52 +0530
-Message-ID: <1426248479-28451-3-git-send-email-patila@marvell.com> (sfid-20150313_073841_900732_B49558E1)
-In-Reply-To: <1426248479-28451-1-git-send-email-patila@marvell.com>
-References: <1426248479-28451-1-git-send-email-patila@marvell.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:33197 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750823AbbCTNCM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 09:02:12 -0400
+Message-ID: <550C1A3F.5090101@openwrt.org> (sfid-20150320_140216_209960_A54151F6)
+Date: Fri, 20 Mar 2015 14:01:51 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Oleksij Rempel <linux@rempel-privat.de>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Subject: Re: [PATCH 18/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de> <1426855138-6121-19-git-send-email-linux@rempel-privat.de>
+In-Reply-To: <1426855138-6121-19-git-send-email-linux@rempel-privat.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rename this function to reflect its purpose correctly.
+On 2015-03-20 13:38, Oleksij Rempel wrote:
+> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+> ---
+>  drivers/net/wireless/ath/ath9k/eeprom_def.c | 19 +++++++++++--------
+>  1 file changed, 11 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+> index 0980590..4b43539 100644
+> --- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
+> +++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+> @@ -466,6 +466,7 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
+>  				  struct ar5416_eeprom_def *eep,
+>  				  u8 txRxAttenLocal, int regChainOffset, int i)
+>  {
+> +	ENABLE_REG_RMW_BUFFER(ah);
+>  	if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_3) {
+>  		txRxAttenLocal = pModal->txRxAttenCh[i];
+>  
+> @@ -483,16 +484,16 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
+>  			      AR_PHY_GAIN_2GHZ_XATTEN2_DB,
+>  			      pModal->xatten2Db[i]);
+>  		} else {
+> -			REG_WRITE(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
+> +			REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
+>  			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
+>  			   ~AR_PHY_GAIN_2GHZ_BSW_MARGIN)
+>  			  | SM(pModal-> bswMargin[i],
+> -			       AR_PHY_GAIN_2GHZ_BSW_MARGIN));
+> -			REG_WRITE(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
+> +			       AR_PHY_GAIN_2GHZ_BSW_MARGIN), 0);
+> +			REG_RMW(ah, AR_PHY_GAIN_2GHZ + regChainOffset,
+>  			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
+>  			   ~AR_PHY_GAIN_2GHZ_BSW_ATTEN)
+>  			  | SM(pModal->bswAtten[i],
+> -			       AR_PHY_GAIN_2GHZ_BSW_ATTEN));
+> +			       AR_PHY_GAIN_2GHZ_BSW_ATTEN), 0);
+>  		}
+>  	}
+>  
+> @@ -504,17 +505,19 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
+>  		      AR_PHY_RXGAIN + regChainOffset,
+>  		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[i]);
+>  	} else {
+> -		REG_WRITE(ah,
+> +		REG_RMW(ah,
+>  			  AR_PHY_RXGAIN + regChainOffset,
+>  			  (REG_READ(ah, AR_PHY_RXGAIN + regChainOffset) &
+>  			   ~AR_PHY_RXGAIN_TXRX_ATTEN)
+> -			  | SM(txRxAttenLocal, AR_PHY_RXGAIN_TXRX_ATTEN));
+> -		REG_WRITE(ah,
+> +			  | SM(txRxAttenLocal, AR_PHY_RXGAIN_TXRX_ATTEN), 0);
+> +		REG_RMW(ah,
+>  			  AR_PHY_GAIN_2GHZ + regChainOffset,
+>  			  (REG_READ(ah, AR_PHY_GAIN_2GHZ + regChainOffset) &
+>  			   ~AR_PHY_GAIN_2GHZ_RXTX_MARGIN) |
+> -			  SM(pModal->rxTxMarginCh[i], AR_PHY_GAIN_2GHZ_RXTX_MARGIN));
+> +			  SM(pModal->rxTxMarginCh[i],
+> +			  AR_PHY_GAIN_2GHZ_RXTX_MARGIN), 0);
+>  	}
+> +	REG_RMW_BUFFER_FLUSH(ah);
+Same in those chunks as in the other patch, do proper conversion to
+REG_RMW by eliminating the REG_READ.
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/main.h | 2 +-
- drivers/net/wireless/mwifiex/pcie.c | 8 ++++----
- drivers/net/wireless/mwifiex/sdio.c | 7 ++++---
- drivers/net/wireless/mwifiex/util.c | 4 ++--
- 4 files changed, 11 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 04ef618..d609d16 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -1423,7 +1423,7 @@ u8 mwifiex_adjust_data_rate(struct mwifiex_private *priv,
- 			    u8 rx_rate, u8 ht_info);
- 
- void mwifiex_dump_drv_info(struct mwifiex_adapter *adapter);
--void *mwifiex_alloc_rx_buf(int rx_len, gfp_t flags);
-+void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
- 
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index 4b463c3..fc59c1d 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -498,8 +498,8 @@ static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
- 
- 	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
- 		/* Allocate skb here so that firmware can DMA data from it */
--		skb = mwifiex_alloc_rx_buf(MWIFIEX_RX_DATA_BUF_SIZE,
--					   GFP_KERNEL | GFP_DMA);
-+		skb = mwifiex_alloc_dma_align_buf(MWIFIEX_RX_DATA_BUF_SIZE,
-+						  GFP_KERNEL | GFP_DMA);
- 		if (!skb) {
- 			dev_err(adapter->dev,
- 				"Unable to allocate skb for RX ring.\n");
-@@ -1298,8 +1298,8 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
- 			}
- 		}
- 
--		skb_tmp = mwifiex_alloc_rx_buf(MWIFIEX_RX_DATA_BUF_SIZE,
--					       GFP_KERNEL | GFP_DMA);
-+		skb_tmp = mwifiex_alloc_dma_align_buf(MWIFIEX_RX_DATA_BUF_SIZE,
-+						      GFP_KERNEL | GFP_DMA);
- 		if (!skb_tmp) {
- 			dev_err(adapter->dev,
- 				"Unable to allocate skb.\n");
-diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-index 9ef010b..509204f 100644
---- a/drivers/net/wireless/mwifiex/sdio.c
-+++ b/drivers/net/wireless/mwifiex/sdio.c
-@@ -1362,7 +1362,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
- 			return -1;
- 		rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
- 
--		skb = mwifiex_alloc_rx_buf(rx_len, GFP_KERNEL | GFP_DMA);
-+		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL | GFP_DMA);
- 		if (!skb)
- 			return -1;
- 
-@@ -1459,8 +1459,9 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
- 			}
- 			rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
- 
--			skb = mwifiex_alloc_rx_buf(rx_len,
--						   GFP_KERNEL | GFP_DMA);
-+			skb = mwifiex_alloc_dma_align_buf(rx_len,
-+							  GFP_KERNEL |
-+							  GFP_DMA);
- 
- 			if (!skb) {
- 				dev_err(adapter->dev, "%s: failed to alloc skb",
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index 2148a57..b8a4587 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -632,7 +632,7 @@ void mwifiex_hist_data_reset(struct mwifiex_private *priv)
- 		atomic_set(&phist_data->sig_str[ix], 0);
- }
- 
--void *mwifiex_alloc_rx_buf(int rx_len, gfp_t flags)
-+void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags)
- {
- 	struct sk_buff *skb;
- 	int buf_len, pad;
-@@ -653,4 +653,4 @@ void *mwifiex_alloc_rx_buf(int rx_len, gfp_t flags)
- 
- 	return skb;
- }
--EXPORT_SYMBOL_GPL(mwifiex_alloc_rx_buf);
-+EXPORT_SYMBOL_GPL(mwifiex_alloc_dma_align_buf);
--- 
-1.8.1.4
-
+- Felix
