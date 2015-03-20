@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:36543 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754190AbbCCT1J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 14:27:09 -0500
-Date: Tue, 03 Mar 2015 14:27:07 -0500 (EST)
-Message-Id: <20150303.142707.350079915695359225.davem@davemloft.net> (sfid-20150303_202729_892485_1DD0197C)
-To: joe@perches.com
-Cc: johannes@sipsolutions.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
- memset
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1425409397.17273.38.camel@perches.com>
-References: <1425370617.2450.3.camel@sipsolutions.net>
-	<20150303.135737.630359651880852880.davem@davemloft.net>
-	<1425409397.17273.38.camel@perches.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mout.gmx.net ([212.227.15.15]:55271 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751147AbbCTMjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:39:42 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 00/18] reduce some of ath9k_htc performance problems
+Date: Fri, 20 Mar 2015 13:38:40 +0100
+Message-Id: <1426855138-6121-1-git-send-email-linux@rempel-privat.de> (sfid-20150320_133952_042221_00F42549)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
-Date: Tue, 03 Mar 2015 11:03:17 -0800
+This patchset adds new WMI_RMW handler to reduce some of usb related
+performance problems.
 
-> On Tue, 2015-03-03 at 13:57 -0500, David Miller wrote:
->> From: Johannes Berg <johannes@sipsolutions.net>
->> Date: Tue, 03 Mar 2015 09:16:57 +0100
->> 
->> > Other than that, I guess I'll apply this, but I really wish there was a
->> > way to distinguish more easily which of these require alignment and
->> > which don't.
->> 
->> You can't apply "this" without the dependency patch #1.
->> 
->> Therefore this should probably all go through my tree.
-> 
-> Hey David.
-> 
-> The eth_<foo>_addr functions already exist so
-> 1/14 isn't a dependency.
-> 
-> It's just a trivial improvement on existing code
-> with CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS and
-> at least the arm 4.6.3 compiler.
+Oleksij Rempel (18):
+  ath9k_htc: add new WMI_REG_RMW_CMDID command
+  ath9k: ar9271_hw_pa_cal - use defs instead of magin numbers
+  ath9k: ar9271_hw_pa_cal: use proper makroses.
+  ath9k: ar9271_hw_pa_cal: use RMW buffer
+  ath9k: add multi_read to be compatible with ath9k_htc
+  ath9k: add new function ath9k_hw_read_array
+  ath9k: ar9271_hw_pa_cal: use REG_READ_ARRAY
+  ath9k: use one shot read in ath9k_hw_update_mibstats
+  ath9k: ath9k_hw_loadnf: use REG_RMW
+  ath9k: write buffer related optimisation in ar5008_hw_set_channel_regs
+  ath9k: ath9k_hw_set_4k_power_cal_tabl: use rmw buffer
+  ath9k: use rmw buffer in ath9k_hw_set_operating_mode and
+    ath9k_hw_reset
+  ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
+  ath9k: ath9k_hw_analog_shift_rmw: use REG_RMW
+  ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
+  ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
+  ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
+  ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
 
-You're right.  But I think we're skipping this series for now, see
-my other reply.
+ drivers/net/wireless/ath/ath.h                |   3 +
+ drivers/net/wireless/ath/ath9k/ani.c          |  20 +++-
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c   |   5 +-
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |  77 +++++++-------
+ drivers/net/wireless/ath/ath9k/calib.c        |  19 ++--
+ drivers/net/wireless/ath/ath9k/eeprom.c       |   7 +-
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c    |  38 ++++---
+ drivers/net/wireless/ath/ath9k/eeprom_def.c   |  19 ++--
+ drivers/net/wireless/ath/ath9k/htc.h          |   5 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 142 ++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.c           |  24 +++++
+ drivers/net/wireless/ath/ath9k/hw.h           |  15 +++
+ drivers/net/wireless/ath/ath9k/init.c         |  11 ++
+ drivers/net/wireless/ath/ath9k/wmi.c          |   3 +
+ drivers/net/wireless/ath/ath9k/wmi.h          |  16 +++
+ 15 files changed, 313 insertions(+), 91 deletions(-)
 
-If GCC can't emit as good an inline memset as we can come up with
-for 6 byte constant lengths, that's a GCC bug that should be fixed.
+-- 
+1.9.1
+
