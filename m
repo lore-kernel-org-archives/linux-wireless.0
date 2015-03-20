@@ -1,91 +1,341 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:44538 "EHLO aibo.runbox.com"
+Received: from mout.gmx.net ([212.227.15.15]:59279 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752825AbbCOAPa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 20:15:30 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	m.v.b@runbox.com
-Subject: [PATCH v2 07/16] staging: rtl8723au: else is not generally useful after a return
-Date: Sat, 14 Mar 2015 20:10:32 -0400
-Message-Id: <1426378241-32469-8-git-send-email-m.v.b@runbox.com> (sfid-20150315_011812_248700_C375B1C5)
-In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+	id S1751667AbbCTMj7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:39:59 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 01/18] ath9k_htc: add new WMI_REG_RMW_CMDID command
+Date: Fri, 20 Mar 2015 13:38:41 +0100
+Message-Id: <1426855138-6121-2-git-send-email-linux@rempel-privat.de> (sfid-20150320_134021_475745_9F0CA36A)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a checkpatch.pl warning regarding rtl8723au's
-rtw_security.c::crc32_init pointing out that having an else statement
-after a break or a return is not useful.
+Since usb bus add extra delay on each request, a command
+with read + write requests is too expensive. We can dramtically
+reduce usb load by moving this command to firmware.
 
-drivers/staging/rtl8723au/core/rtw_security.c:105:
-	WARNING: else is not generally useful after a break or return
+In my tests, this patch will reduce channel scan time
+for about 5-10 seconds.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 42 ++++++++++++++-------------
- 1 file changed, 22 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ath/ath.h                |   3 +
+ drivers/net/wireless/ath/ath9k/htc.h          |   5 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 142 ++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.h           |  12 +++
+ drivers/net/wireless/ath/ath9k/wmi.c          |   3 +
+ drivers/net/wireless/ath/ath9k/wmi.h          |  16 +++
+ 6 files changed, 175 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index f7b1d45981..f7571cf091 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -99,31 +99,33 @@ static u8 crc32_reverseBit(u8 data)
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 1eebe2e..7e94810 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -131,6 +131,9 @@ struct ath_ops {
+ 	void (*enable_write_buffer)(void *);
+ 	void (*write_flush) (void *);
+ 	u32 (*rmw)(void *, u32 reg_offset, u32 set, u32 clr);
++	void (*enable_rmw_buffer)(void *);
++	void (*rmw_flush) (void *);
++
+ };
  
- static void crc32_init(void)
- {
-+	int i, j;
-+	u32 c;
-+	u8 *p, *p1;
-+	u8 k;
+ struct ath_common;
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 300d367..e82a0d4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -444,6 +444,10 @@ static inline void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv)
+ #define OP_BT_SCAN                 BIT(4)
+ #define OP_TSF_RESET               BIT(6)
  
- 	if (bcrc32initialized == 1)
- 		return;
--	else{
--		int i, j;
--		u32 c;
--		u8 *p = (u8 *)&c, *p1;
--		u8 k;
--
--		c = 0x12340000;
--
--		for (i = 0; i < 256; ++i) {
--			k = crc32_reverseBit((u8)i);
--			for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
--				c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
--			}
--			p1 = (u8 *)&crc32_table[i];
--
--			p1[0] = crc32_reverseBit(p[3]);
--			p1[1] = crc32_reverseBit(p[2]);
--			p1[2] = crc32_reverseBit(p[1]);
--			p1[3] = crc32_reverseBit(p[0]);
++enum htc_op_flags {
++	HTC_FWFLAG_NO_RMW,
++};
 +
-+	p = (u8 *) &c;
-+	c = 0x12340000;
-+
-+	for (i = 0; i < 256; ++i) {
-+		k = crc32_reverseBit((u8)i);
-+
-+		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
-+			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
- 		}
--		bcrc32initialized = 1;
-+
-+		p1 = (u8 *)&crc32_table[i];
-+
-+		p1[0] = crc32_reverseBit(p[3]);
-+		p1[1] = crc32_reverseBit(p[2]);
-+		p1[2] = crc32_reverseBit(p[1]);
-+		p1[3] = crc32_reverseBit(p[0]);
- 	}
-+
-+	bcrc32initialized = 1;
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+ 	struct ieee80211_hw *hw;
+@@ -482,6 +486,7 @@ struct ath9k_htc_priv {
+ 	bool reconfig_beacon;
+ 	unsigned int rxfilter;
+ 	unsigned long op_flags;
++	unsigned long fw_flags;
+ 
+ 	struct ath9k_hw_cal_data caldata;
+ 	struct ath_spec_scan_priv spec_priv;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index fd22940..d7beefe 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -376,17 +376,139 @@ static void ath9k_regwrite_flush(void *hw_priv)
+ 	mutex_unlock(&priv->wmi->multi_write_mutex);
  }
  
- static u32 getcrc32(u8 *buf, int len)
+-static u32 ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 clr)
++static void ath9k_reg_rmw_buffer(void *hw_priv,
++				 u32 reg_offset, u32 set, u32 clr)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++	u32 rsp_status;
++	int r;
++
++	mutex_lock(&priv->wmi->multi_rmw_mutex);
++
++	/* Store the register/value */
++	priv->wmi->multi_rmw[priv->wmi->multi_rmw_idx].reg =
++		cpu_to_be32(reg_offset);
++	priv->wmi->multi_rmw[priv->wmi->multi_rmw_idx].set =
++		cpu_to_be32(set);
++	priv->wmi->multi_rmw[priv->wmi->multi_rmw_idx].clr =
++		cpu_to_be32(clr);
++
++	priv->wmi->multi_rmw_idx++;
++
++	/* If the buffer is full, send it out. */
++	if (priv->wmi->multi_rmw_idx == MAX_RMW_CMD_NUMBER) {
++		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
++			  (u8 *) &priv->wmi->multi_rmw,
++			  sizeof(struct register_write) * priv->wmi->multi_rmw_idx,
++			  (u8 *) &rsp_status, sizeof(rsp_status),
++			  100);
++		if (unlikely(r)) {
++			ath_dbg(common, WMI,
++				"REGISTER RMW FAILED, multi len: %d\n",
++				priv->wmi->multi_rmw_idx);
++		}
++		priv->wmi->multi_rmw_idx = 0;
++	}
++
++	mutex_unlock(&priv->wmi->multi_rmw_mutex);
++}
++
++static void ath9k_reg_rmw_flush(void *hw_priv)
+ {
+-	u32 val;
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++	u32 rsp_status;
++	int r;
++
++	if (test_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags))
++		return;
++
++	atomic_dec(&priv->wmi->m_rmw_cnt);
+ 
+-	val = ath9k_regread(hw_priv, reg_offset);
+-	val &= ~clr;
+-	val |= set;
+-	ath9k_regwrite(hw_priv, val, reg_offset);
++	mutex_lock(&priv->wmi->multi_rmw_mutex);
++
++	if (priv->wmi->multi_rmw_idx) {
++		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
++			  (u8 *) &priv->wmi->multi_rmw,
++			  sizeof(struct register_rmw) * priv->wmi->multi_rmw_idx,
++			  (u8 *) &rsp_status, sizeof(rsp_status),
++			  100);
++		if (unlikely(r)) {
++			ath_dbg(common, WMI,
++				"REGISTER RMW FAILED, multi len: %d\n",
++				priv->wmi->multi_rmw_idx);
++		}
++		priv->wmi->multi_rmw_idx = 0;
++	}
++
++	mutex_unlock(&priv->wmi->multi_rmw_mutex);
++}
++
++static void ath9k_enable_rmw_buffer(void *hw_priv)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	if (test_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags))
++		return;
++
++	atomic_inc(&priv->wmi->m_rmw_cnt);
++}
++
++static u32 ath9k_reg_rmw_single(void *hw_priv,
++				 u32 reg_offset, u32 set, u32 clr)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++	struct register_rmw buf, buf_ret;
++	int ret;
++	u32 val = 0;
++
++	buf.reg = cpu_to_be32(reg_offset);
++	buf.set = cpu_to_be32(set);
++	buf.clr = cpu_to_be32(clr);
++
++	ret = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
++			  (u8 *) &buf, sizeof(buf),
++			  (u8 *) &buf_ret, sizeof(buf_ret),
++			  100);
++	if (unlikely(ret)) {
++		ath_dbg(common, WMI, "REGISTER RMW FAILED:(0x%04x, %d)\n",
++			reg_offset, ret);
++	}
+ 	return val;
+ }
+ 
++static u32 ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 clr)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	if (test_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags)) {
++		u32 val;
++
++		val = REG_READ(ah, reg_offset);
++		val &= ~clr;
++		val |= set;
++		REG_WRITE(ah, reg_offset, val);
++
++		return 0;
++	}
++
++	if (atomic_read(&priv->wmi->m_rmw_cnt))
++		ath9k_reg_rmw_buffer(hw_priv, reg_offset, set, clr);
++	else
++		ath9k_reg_rmw_single(hw_priv, reg_offset, set, clr);
++
++	return 0;
++}
++
+ static void ath_usb_read_cachesize(struct ath_common *common, int *csz)
+ {
+ 	*csz = L1_CACHE_BYTES >> 2;
+@@ -501,6 +623,8 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	ah->reg_ops.write = ath9k_regwrite;
+ 	ah->reg_ops.enable_write_buffer = ath9k_enable_regwrite_buffer;
+ 	ah->reg_ops.write_flush = ath9k_regwrite_flush;
++	ah->reg_ops.enable_rmw_buffer = ath9k_enable_rmw_buffer;
++	ah->reg_ops.rmw_flush = ath9k_reg_rmw_flush;
+ 	ah->reg_ops.rmw = ath9k_reg_rmw;
+ 	priv->ah = ah;
+ 
+@@ -686,6 +810,12 @@ static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
+ 		return -EINVAL;
+ 	}
+ 
++	if (priv->fw_version_major == 1 && priv->fw_version_minor < 4)
++		set_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags);
++
++	dev_info(priv->dev, "FW RMW support: %s\n",
++		test_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags) ? "Off" : "On");
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 29a25d9..f1864cc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -100,6 +100,18 @@
+ 			(_ah)->reg_ops.write_flush((_ah));	\
+ 	} while (0)
+ 
++#define ENABLE_REG_RMW_BUFFER(_ah)					\
++	do {								\
++		if ((_ah)->reg_ops.enable_rmw_buffer)	\
++			(_ah)->reg_ops.enable_rmw_buffer((_ah)); \
++	} while (0)
++
++#define REG_RMW_BUFFER_FLUSH(_ah)					\
++	do {								\
++		if ((_ah)->reg_ops.rmw_flush)		\
++			(_ah)->reg_ops.rmw_flush((_ah));	\
++	} while (0)
++
+ #define PR_EEP(_s, _val)						\
+ 	do {								\
+ 		len += scnprintf(buf + len, size - len, "%20s : %10d\n",\
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 65c8894..67a2f8c 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -61,6 +61,8 @@ static const char *wmi_cmd_to_name(enum wmi_cmd_id wmi_cmd)
+ 		return "WMI_REG_READ_CMDID";
+ 	case WMI_REG_WRITE_CMDID:
+ 		return "WMI_REG_WRITE_CMDID";
++	case WMI_REG_RMW_CMDID:
++		return "WMI_REG_RMW_CMDID";
+ 	case WMI_RC_STATE_CHANGE_CMDID:
+ 		return "WMI_RC_STATE_CHANGE_CMDID";
+ 	case WMI_RC_RATE_UPDATE_CMDID:
+@@ -101,6 +103,7 @@ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv)
+ 	spin_lock_init(&wmi->event_lock);
+ 	mutex_init(&wmi->op_mutex);
+ 	mutex_init(&wmi->multi_write_mutex);
++	mutex_init(&wmi->multi_rmw_mutex);
+ 	init_completion(&wmi->cmd_wait);
+ 	INIT_LIST_HEAD(&wmi->pending_tx_events);
+ 	tasklet_init(&wmi->wmi_event_tasklet, ath9k_wmi_event_tasklet,
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 0db37f2..aa84a33 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -112,6 +112,7 @@ enum wmi_cmd_id {
+ 	WMI_TX_STATS_CMDID,
+ 	WMI_RX_STATS_CMDID,
+ 	WMI_BITRATE_MASK_CMDID,
++	WMI_REG_RMW_CMDID,
+ };
+ 
+ enum wmi_event_id {
+@@ -125,12 +126,19 @@ enum wmi_event_id {
+ };
+ 
+ #define MAX_CMD_NUMBER 62
++#define MAX_RMW_CMD_NUMBER 15
+ 
+ struct register_write {
+ 	__be32 reg;
+ 	__be32 val;
+ };
+ 
++struct register_rmw {
++	__be32 reg;
++	__be32 set;
++	__be32 clr;
++} __packed;
++
+ struct ath9k_htc_tx_event {
+ 	int count;
+ 	struct __wmi_event_txstatus txs;
+@@ -156,10 +164,18 @@ struct wmi {
+ 
+ 	spinlock_t wmi_lock;
+ 
++	/* multi write section */
+ 	atomic_t mwrite_cnt;
+ 	struct register_write multi_write[MAX_CMD_NUMBER];
+ 	u32 multi_write_idx;
+ 	struct mutex multi_write_mutex;
++
++	/* multi rmw section */
++	atomic_t m_rmw_cnt;
++	struct register_rmw multi_rmw[MAX_RMW_CMD_NUMBER];
++	u32 multi_rmw_idx;
++	struct mutex multi_rmw_mutex;
++
+ };
+ 
+ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv);
 -- 
-2.1.4
+1.9.1
 
