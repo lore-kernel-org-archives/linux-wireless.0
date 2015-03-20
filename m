@@ -1,33 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57908 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753343AbbC3IeI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:34:08 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: mwifiex: remove an unneede NULL check in mwifiex_init_adapter()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20150323093551.GC558@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20150330083407.C034F140243@smtp.codeaurora.org> (sfid-20150330_103416_630980_22879573)
-Date: Mon, 30 Mar 2015 08:34:07 +0000 (UTC)
+Received: from mout.gmx.net ([212.227.15.19]:57096 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751928AbbCTMlG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:41:06 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 16/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
+Date: Fri, 20 Mar 2015 13:38:56 +0100
+Message-Id: <1426855138-6121-17-git-send-email-linux@rempel-privat.de> (sfid-20150320_140418_703635_4A24D5DF)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+it is possible to reduce time needed for this function
+by rplacing REG_WRITE with REG_RMW (plus dummy 0) and putt all commands
+in same buffer.
 
-> "adapter->sleep_cfm" is always non-NULL at this point.  Static checkers
-> complain that we already dereference it at the start of the function
-> when we do:
-> 
-> 	skb_put(adapter->sleep_cfm, sizeof(struct mwifiex_opt_sleep_confirm));
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-Thanks, applied to wireless-drivers-next.git.
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 291c1d1..56621be 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -772,15 +772,16 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
+ 				 struct ar5416_eeprom_4k *eep,
+ 				 u8 txRxAttenLocal)
+ {
+-	REG_WRITE(ah, AR_PHY_SWITCH_CHAIN_0,
+-		  pModal->antCtrlChain[0]);
++	ENABLE_REG_RMW_BUFFER(ah);
++	REG_RMW(ah, AR_PHY_SWITCH_CHAIN_0,
++		pModal->antCtrlChain[0], 0);
+ 
+-	REG_WRITE(ah, AR_PHY_TIMING_CTRL4(0),
+-		  (REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
+-		   ~(AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF |
+-		     AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF)) |
+-		  SM(pModal->iqCalICh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF) |
+-		  SM(pModal->iqCalQCh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF));
++	REG_RMW(ah, AR_PHY_TIMING_CTRL4(0),
++		(REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
++		 ~(AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF |
++		   AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF)) |
++		SM(pModal->iqCalICh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF) |
++		SM(pModal->iqCalQCh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF), 0);
+ 
+ 	if ((eep->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+ 	    AR5416_EEP_MINOR_VER_3) {
+@@ -819,6 +820,7 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
+ 		      AR9280_PHY_RXGAIN_TXRX_ATTEN, txRxAttenLocal);
+ 	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + 0x1000,
+ 		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[0]);
++	REG_RMW_BUFFER_FLUSH(ah);
+ }
+ 
+ /*
+-- 
+1.9.1
 
-Kalle Valo
