@@ -1,127 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50058 "EHLO mga01.intel.com"
+Received: from mout.gmx.net ([212.227.15.19]:59415 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750928AbbCAMAa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 07:00:30 -0500
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org, mcgrof@suse.com
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH v9 1/3] cfg80211: Simplify the handling of regulatory indoor setting
-Date: Sun,  1 Mar 2015 01:02:27 -0500
-Message-Id: <1425189749-15271-1-git-send-email-ilan.peer@intel.com> (sfid-20150301_130034_797752_F2ABADC8)
+	id S1750913AbbCTMlF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:41:05 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 15/18] ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
+Date: Fri, 20 Mar 2015 13:38:55 +0100
+Message-Id: <1426855138-6121-16-git-send-email-linux@rempel-privat.de> (sfid-20150320_140418_401166_85E6C548)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Directly update the indoor setting without wrapping it as
-a regulatory request, to simplify the processing.
+it will reduce exution time from 14ms to 2ms on ar9271
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- net/wireless/reg.c | 34 +++-------------------------------
- 1 file changed, 3 insertions(+), 31 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index b586d0d..c24c8bf 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -82,17 +82,12 @@
-  *	be intersected with the current one.
-  * @REG_REQ_ALREADY_SET: the regulatory request will not change the current
-  *	regulatory settings, and no further processing is required.
-- * @REG_REQ_USER_HINT_HANDLED: a non alpha2  user hint was handled and no
-- *	further processing is required, i.e., not need to update last_request
-- *	etc. This should be used for user hints that do not provide an alpha2
-- *	but some other type of regulatory hint, i.e., indoor operation.
-  */
- enum reg_request_treatment {
- 	REG_REQ_OK,
- 	REG_REQ_IGNORE,
- 	REG_REQ_INTERSECT,
- 	REG_REQ_ALREADY_SET,
--	REG_REQ_USER_HINT_HANDLED,
- };
- 
- static struct regulatory_request core_request_world = {
-@@ -1248,13 +1243,6 @@ static bool reg_request_cell_base(struct regulatory_request *request)
- 	return request->user_reg_hint_type == NL80211_USER_REG_HINT_CELL_BASE;
- }
- 
--static bool reg_request_indoor(struct regulatory_request *request)
--{
--	if (request->initiator != NL80211_REGDOM_SET_BY_USER)
--		return false;
--	return request->user_reg_hint_type == NL80211_USER_REG_HINT_INDOOR;
--}
--
- bool reg_last_request_cell_base(void)
- {
- 	return reg_request_cell_base(get_last_request());
-@@ -1833,11 +1821,6 @@ __reg_process_hint_user(struct regulatory_request *user_request)
- {
- 	struct regulatory_request *lr = get_last_request();
- 
--	if (reg_request_indoor(user_request)) {
--		reg_is_indoor = true;
--		return REG_REQ_USER_HINT_HANDLED;
--	}
--
- 	if (reg_request_cell_base(user_request))
- 		return reg_ignore_cell_hint(user_request);
- 
-@@ -1885,8 +1868,7 @@ reg_process_hint_user(struct regulatory_request *user_request)
- 
- 	treatment = __reg_process_hint_user(user_request);
- 	if (treatment == REG_REQ_IGNORE ||
--	    treatment == REG_REQ_ALREADY_SET ||
--	    treatment == REG_REQ_USER_HINT_HANDLED) {
-+	    treatment == REG_REQ_ALREADY_SET) {
- 		reg_free_request(user_request);
- 		return treatment;
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 0600562..291c1d1 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -930,6 +930,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 		}
  	}
-@@ -1947,7 +1929,6 @@ reg_process_hint_driver(struct wiphy *wiphy,
- 	case REG_REQ_OK:
- 		break;
- 	case REG_REQ_IGNORE:
--	case REG_REQ_USER_HINT_HANDLED:
- 		reg_free_request(driver_request);
- 		return treatment;
- 	case REG_REQ_INTERSECT:
-@@ -2047,7 +2028,6 @@ reg_process_hint_country_ie(struct wiphy *wiphy,
- 	case REG_REQ_OK:
- 		break;
- 	case REG_REQ_IGNORE:
--	case REG_REQ_USER_HINT_HANDLED:
- 		/* fall through */
- 	case REG_REQ_ALREADY_SET:
- 		reg_free_request(country_ie_request);
-@@ -2086,8 +2066,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	case NL80211_REGDOM_SET_BY_USER:
- 		treatment = reg_process_hint_user(reg_request);
- 		if (treatment == REG_REQ_IGNORE ||
--		    treatment == REG_REQ_ALREADY_SET ||
--		    treatment == REG_REQ_USER_HINT_HANDLED)
-+		    treatment == REG_REQ_ALREADY_SET)
- 			return;
- 		queue_delayed_work(system_power_efficient_wq,
- 				   &reg_timeout, msecs_to_jiffies(3142));
-@@ -2311,16 +2290,9 @@ int regulatory_hint_user(const char *alpha2,
  
- int regulatory_hint_indoor_user(void)
- {
--	struct regulatory_request *request;
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	if (AR_SREV_9271(ah)) {
+ 		ath9k_hw_analog_shift_rmw(ah,
+ 					  AR9285_AN_RF2G3,
+@@ -1034,6 +1035,7 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 					  AR9285_AN_RF2G4_DB2_4_S,
+ 					  db2[4]);
+ 	}
++	REG_RMW_BUFFER_FLUSH(ah);
  
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
--	if (!request)
--		return -ENOMEM;
  
--	request->wiphy_idx = WIPHY_IDX_INVALID;
--	request->initiator = NL80211_REGDOM_SET_BY_USER;
--	request->user_reg_hint_type = NL80211_USER_REG_HINT_INDOOR;
--	queue_regulatory_request(request);
-+	reg_is_indoor = true;
- 
- 	return 0;
- }
+ 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
 -- 
-1.8.3.2
+1.9.1
 
