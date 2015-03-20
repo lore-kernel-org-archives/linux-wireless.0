@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:46108 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752067AbbCJOog (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 10:44:36 -0400
-From: Florian Westphal <fw@strlen.de>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, Florian Westphal <fw@strlen.de>
-Subject: [PATCH next] ath9k: make ath_frame_info fit into reduced-size rate_driver_data
-Date: Tue, 10 Mar 2015 15:44:22 +0100
-Message-Id: <1425998662-28401-1-git-send-email-fw@strlen.de> (sfid-20150310_154441_961196_4D746EF3)
+Received: from mout.gmx.net ([212.227.15.18]:55852 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751147AbbCTMk7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:40:59 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 11/18] ath9k: ath9k_hw_set_4k_power_cal_tabl: use rmw buffer
+Date: Fri, 20 Mar 2015 13:38:51 +0100
+Message-Id: <1426855138-6121-12-git-send-email-linux@rempel-privat.de> (sfid-20150320_134103_045578_5E1E7A25)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pre-requisite to shrink size of ieee80211_tx_info which in turn is
-needed to shrink skb->cb to 40 bytes again.
-
-Signed-off-by: Florian Westphal <fw@strlen.de>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 7e89236..a7a81b3 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -184,12 +184,12 @@ struct ath_frame_info {
- 	struct ath_buf *bf;
- 	u16 framelen;
- 	s8 txq;
--	enum ath9k_key_type keytype;
- 	u8 keyix;
- 	u8 rtscts_rate;
- 	u8 retries : 7;
- 	u8 baw_tracked : 1;
- 	u8 tx_power;
-+	enum ath9k_key_type keytype:2;
- };
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index e5a78d4..fc54fc7 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -389,6 +389,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 		}
+ 	}
  
- struct ath_rxbuf {
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_NUM_PD_GAIN,
+ 		      (numXpdGain - 1) & 0x3);
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_1,
+@@ -396,6 +397,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_2,
+ 		      xpdGainValues[1]);
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_3, 0);
++	REG_RMW_BUFFER_FLUSH(ah);
+ 
+ 	for (i = 0; i < AR5416_EEP4K_MAX_CHAINS; i++) {
+ 		regChainOffset = i * 0x1000;
 -- 
-2.0.5
+1.9.1
 
