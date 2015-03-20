@@ -1,41 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44825 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752430AbbCJQmr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 12:42:47 -0400
-Date: Tue, 10 Mar 2015 22:12:26 +0530
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/3] ath10k: add symlink for hwmon device
-Message-ID: <20150310164223.GA11700@qca.qualcomm.com> (sfid-20150310_174250_828679_6884AD44)
-References: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
- <1424437452-28161-3-git-send-email-rmanohar@qti.qualcomm.com>
- <87pp8gyi7x.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <87pp8gyi7x.fsf@kamboji.qca.qualcomm.com>
+Received: from mout.gmx.net ([212.227.15.19]:53941 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750913AbbCTMlA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:41:00 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 09/18] ath9k: ath9k_hw_loadnf: use REG_RMW
+Date: Fri, 20 Mar 2015 13:38:49 +0100
+Message-Id: <1426855138-6121-10-git-send-email-linux@rempel-privat.de> (sfid-20150320_134107_364845_63260D90)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 10, 2015 at 05:39:46PM +0200, Kalle Valo wrote:
-> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
-> 
-> > Add symbloic link "thermal_sensors" for hwmon devices for better
-> > readability.
-> >
-> > /sys/class/ieee80211/phyX/device/thermal_sensors ->
-> > sys/class/ieee80211/phyX/device/hwmon/hwmonY
-> 
-> I don't get it, how does that improve readability? Also I don't see any
-> other driver doing this, so isn't this just some private hack and not a
-> proper generic interface?
->
-The patch is providing same level access to monitoring device similar to
-cooling device.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/calib.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-cooling_device -> ../../../../../virtual/thermal/cooling_deviceX
-thermal_sensors -> hwmon/hwmonX
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index e200a6e..3e2e24e 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -238,7 +238,6 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+ 	struct ath9k_nfcal_hist *h = NULL;
+ 	unsigned i, j;
+-	int32_t val;
+ 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
+@@ -246,6 +245,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	if (ah->caldata)
+ 		h = ah->caldata->nfCalHist;
+ 
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	for (i = 0; i < NUM_NF_READINGS; i++) {
+ 		if (chainmask & (1 << i)) {
+ 			s16 nfval;
+@@ -258,10 +258,8 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 			else
+ 				nfval = default_nf;
+ 
+-			val = REG_READ(ah, ah->nf_regs[i]);
+-			val &= 0xFFFFFE00;
+-			val |= (((u32) nfval << 1) & 0x1ff);
+-			REG_WRITE(ah, ah->nf_regs[i], val);
++			REG_RMW(ah, ah->nf_regs[i],
++				(((u32) nfval << 1) & 0x1ff), 0x1ff);
+ 		}
+ 	}
+ 
+@@ -274,6 +272,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
+ 		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
+ 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
++	REG_RMW_BUFFER_FLUSH(ah);
+ 
+ 	/*
+ 	 * Wait for load to complete, should be fast, a few 10s of us.
+@@ -309,19 +308,17 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	 * by the median we just loaded.  This will be initial (and max) value
+ 	 * of next noise floor calibration the baseband does.
+ 	 */
+-	ENABLE_REGWRITE_BUFFER(ah);
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	for (i = 0; i < NUM_NF_READINGS; i++) {
+ 		if (chainmask & (1 << i)) {
+ 			if ((i >= AR5416_MAX_CHAINS) && !IS_CHAN_HT40(chan))
+ 				continue;
+ 
+-			val = REG_READ(ah, ah->nf_regs[i]);
+-			val &= 0xFFFFFE00;
+-			val |= (((u32) (-50) << 1) & 0x1ff);
+-			REG_WRITE(ah, ah->nf_regs[i], val);
++			REG_RMW(ah, ah->nf_regs[i],
++					(((u32) (-50) << 1) & 0x1ff), 0x1ff);
+ 		}
+ 	}
+-	REGWRITE_BUFFER_FLUSH(ah);
++	REG_RMW_BUFFER_FLUSH(ah);
+ 
+ 	return 0;
+ }
+-- 
+1.9.1
 
--Rajkumar
