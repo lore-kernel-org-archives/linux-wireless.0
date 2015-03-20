@@ -1,92 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.inescn.pt ([192.35.246.20]:49339 "EHLO trubo.inescn.pt"
+Received: from mout.gmx.net ([212.227.15.15]:54907 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751120AbbCKQJw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 12:09:52 -0400
-Message-ID: <20150311170942.14131uq8uu6moq86@horde.inescporto.pt> (sfid-20150311_170956_626410_464B931E)
-Date: Wed, 11 Mar 2015 17:09:42 +0100
-From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inescporto.pt>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Why can we not set the mcast rate for AP/STA interfaces?
-References: <54FF7095.9010800@candelatech.com>
-	<20150311105604.42081tsuhqw9inn8@horde.inescporto.pt>
-	<550065F5.5050607@candelatech.com>
-In-Reply-To: <550065F5.5050607@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
+	id S1751985AbbCTMlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Mar 2015 08:41:11 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 17/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
+Date: Fri, 20 Mar 2015 13:38:57 +0100
+Message-Id: <1426855138-6121-18-git-send-email-linux@rempel-privat.de> (sfid-20150320_140418_578048_8A541D57)
+In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok. I was asking because some routers allow changing basicrate speed  
-but only on 802.11a/b/g, in AP mode, not on mesh/Ad-Hoc modes.
-Some non-mandatory feactures can be on code of one module but not  
-implemented in the whole process.
+replace REG_WRITE to REG_RMW and place every thing in one
+RMW buffer.
 
-Thanks.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 56621be..a631962 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -1039,17 +1039,17 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 	}
+ 	REG_RMW_BUFFER_FLUSH(ah);
+ 
+-
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
+ 		      pModal->switchSettling);
+ 	REG_RMW_FIELD(ah, AR_PHY_DESIRED_SZ, AR_PHY_DESIRED_SZ_ADC,
+ 		      pModal->adcDesiredSize);
+ 
+-	REG_WRITE(ah, AR_PHY_RF_CTL4,
+-		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
+-		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
+-		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
+-		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON));
++	REG_RMW(ah, AR_PHY_RF_CTL4,
++		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
++		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
++		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
++		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON), 0);
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_RF_CTL3, AR_PHY_TX_END_TO_A2_RX_ON,
+ 		      pModal->txEndToRxOn);
+@@ -1078,6 +1078,8 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 				      pModal->swSettleHt40);
+ 	}
+ 
++	REG_RMW_BUFFER_FLUSH(ah);
++
+ 	bb_desired_scale = (pModal->bb_scale_smrt_antenna &
+ 			EEP_4K_BB_DESIRED_SCALE_MASK);
+ 	if ((pBase->txGainType == 0) && (bb_desired_scale != 0)) {
+-- 
+1.9.1
 
-
-Quoting Ben Greear <greearb@candelatech.com>:
-
-> On 03/11/2015 02:56 AM, Mário Lopes wrote:
->> On which 802.11 amendment (a/b/g/n/ac) and driver allows you  
->> setting mcast rate for mesh and IBSS interfaces?
->> Far as I know, some vendors send multicast traffic as unicast in  
->> order to reduce airtime.
->
-> I was just looking at the kernel code, I think it was  
-> linux/net/wireless/* where
-> the device type is made.  I didn't look farther to figure out what  
-> it would take
-> to make this work with stations or APs.
->
-> Thanks,
-> Ben
->
->>
->>
->> Quoting Ben Greear <greearb@candelatech.com>:
->>
->>>> From looking at 3.17 code, it appears we are only supposed to set the
->>> mcast rate for mesh and IBSS interfaces?
->>>
->>> What if I want to tell an AP or station to send broadcast/multicast
->>> at a higher than default rate?
->>>
->>> Should this just be controlled by the normal 'iw setbitrates' logic?
->>>
->>> Thanks,
->>> Ben
->>>
->>> --
->>> Ben Greear <greearb@candelatech.com>
->>> Candela Technologies Inc  http://www.candelatech.com
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe  
->>> linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->>
->>
->> ----------------------------------------------------------------
->> This message was sent using IMP, the Internet Messaging Program.
->>
->
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
