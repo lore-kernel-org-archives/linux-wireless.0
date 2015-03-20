@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:55757 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751022AbbCZBQQ (ORCPT
+Received: from mail-la0-f54.google.com ([209.85.215.54]:35705 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750777AbbCTLAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 21:16:16 -0400
-From: Marek Vasut <marex@denx.de>
-To: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Marek Vasut <marex@denx.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH V2] rtlwifi: rtl8192cu: Add new device ID
-Date: Thu, 26 Mar 2015 02:16:06 +0100
-Message-Id: <1427332566-9398-1-git-send-email-marex@denx.de> (sfid-20150326_021648_432530_48CABCEB)
+	Fri, 20 Mar 2015 07:00:25 -0400
+Received: by labjg1 with SMTP id jg1so84056277lab.2
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 04:00:23 -0700 (PDT)
+From: Marek Puzyniak <marek.puzyniak@tieto.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: Marek Puzyniak <marek.puzyniak@tieto.com>
+Subject: [PATCH v4 0/6] ath10k: add basic tdls support
+Date: Fri, 20 Mar 2015 12:02:53 +0100
+Message-Id: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com> (sfid-20150320_120029_587818_ECC14161)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add new ID for ASUS N10 WiFi dongle.
+This patchset introduces tdls funtionality without tdls peer uapsd
+and tdls channel switching. Tdls is supported by qca6174 hardware 
+what is indicated by firmware through supported services.
+Tdls station when authorized requires some parameters that are filled in 
+by rate control initialization. Rate control for tdls is initialized
+at proper time in mac80211 patch:
+mac80211: initialize rate control earlier for tdls station
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Tested-by: Marek Vasut <marex@denx.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
- 1 file changed, 1 insertion(+)
+So tdls funtionality implemented by this patchset depends on 
+mac80211: initialize rate control earlier for tdls station
 
-V2: - Move the ID into correct position
-    - Add my Tested-by to indicate this change was tested on real HW
-    - Drop the confusing USB device listing from the diffstat section
+v2:
+-introduce tdls peer counter
+-minor changes after review
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-index 90a714c..252eb76 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -321,6 +321,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
- 	{RTL_USB_DEVICE(0x07b8, 0x8188, rtl92cu_hal_cfg)}, /*Abocom - Abocom*/
- 	{RTL_USB_DEVICE(0x07b8, 0x8189, rtl92cu_hal_cfg)}, /*Funai - Abocom*/
- 	{RTL_USB_DEVICE(0x0846, 0x9041, rtl92cu_hal_cfg)}, /*NetGear WNA1000M*/
-+	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
- 	{RTL_USB_DEVICE(0x0bda, 0x5088, rtl92cu_hal_cfg)}, /*Thinkware-CC&C*/
- 	{RTL_USB_DEVICE(0x0df6, 0x0052, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
- 	{RTL_USB_DEVICE(0x0df6, 0x005c, rtl92cu_hal_cfg)}, /*Sitecom - Edimax*/
+v3:
+-more minor changes after review
+-replace tdls peer counter variable by iterate station function
+
+v4:
+-provide functions for counting tdls station per vif and tdls vifs
+-handle maximum number of tdls vifs
+-split code into more patches
+
+Marek Puzyniak (5):
+  ath10k: make peer type configurable
+  ath10k: store max tdls vdevs that fw can handle
+  ath10k: update station counting
+  ath10k: add wmi support for tdls
+  ath10k: introduce basic tdls functionality
+
+Michal Kazior (1):
+  ath10k: unify tx mode and dispatch
+
+ drivers/net/wireless/ath/ath10k/core.c    |   1 +
+ drivers/net/wireless/ath/ath10k/core.h    |   3 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c  |   8 -
+ drivers/net/wireless/ath/ath10k/htt_tx.c  |  30 ++-
+ drivers/net/wireless/ath/ath10k/hw.h      |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c     | 391 +++++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath10k/mac.h     |   8 +
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  50 +++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 160 +++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  53 ++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |   3 +-
+ drivers/net/wireless/ath/ath10k/wmi.h     |  43 ++++
+ 12 files changed, 664 insertions(+), 87 deletions(-)
+
 -- 
 2.1.4
 
