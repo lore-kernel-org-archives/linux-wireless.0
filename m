@@ -1,90 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:57869 "EHLO mout.gmx.net"
+Received: from mout.gmx.net ([212.227.15.19]:58409 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751896AbbCVSbs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 14:31:48 -0400
+	id S1751332AbbCUIrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:47:37 -0400
 From: Oleksij Rempel <linux@rempel-privat.de>
 To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
 	ath9k-devel@lists.ath9k.org
 Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v3 09/18] ath9k: ath9k_hw_loadnf: use REG_RMW
-Date: Sun, 22 Mar 2015 19:29:54 +0100
-Message-Id: <1427049003-8443-10-git-send-email-linux@rempel-privat.de> (sfid-20150322_193152_182724_51A2B8FC)
-In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
-References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+Subject: [PATCH v2 06/18] ath9k: add new function ath9k_hw_read_array
+Date: Sat, 21 Mar 2015 09:47:09 +0100
+Message-Id: <1426927641-18474-7-git-send-email-linux@rempel-privat.de> (sfid-20150321_094752_259669_EB5BE68C)
+In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+REG_READ generate most overhead on usb bus. It send and read micro packages
+and reduce usb bandwidth. To reduce this overhead we should read in batches.
+
 Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/ath9k/calib.c | 19 ++++++++-----------
- 1 file changed, 8 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c | 20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h |  3 +++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index e200a6e..3e2e24e 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -238,7 +238,6 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- {
- 	struct ath9k_nfcal_hist *h = NULL;
- 	unsigned i, j;
--	int32_t val;
- 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
-@@ -246,6 +245,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	if (ah->caldata)
- 		h = ah->caldata->nfCalHist;
- 
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	for (i = 0; i < NUM_NF_READINGS; i++) {
- 		if (chainmask & (1 << i)) {
- 			s16 nfval;
-@@ -258,10 +258,8 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 			else
- 				nfval = default_nf;
- 
--			val = REG_READ(ah, ah->nf_regs[i]);
--			val &= 0xFFFFFE00;
--			val |= (((u32) nfval << 1) & 0x1ff);
--			REG_WRITE(ah, ah->nf_regs[i], val);
-+			REG_RMW(ah, ah->nf_regs[i],
-+				(((u32) nfval << 1) & 0x1ff), 0x1ff);
- 		}
- 	}
- 
-@@ -274,6 +272,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL,
- 		    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
- 	REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-+	REG_RMW_BUFFER_FLUSH(ah);
- 
- 	/*
- 	 * Wait for load to complete, should be fast, a few 10s of us.
-@@ -309,19 +308,17 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	 * by the median we just loaded.  This will be initial (and max) value
- 	 * of next noise floor calibration the baseband does.
- 	 */
--	ENABLE_REGWRITE_BUFFER(ah);
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	for (i = 0; i < NUM_NF_READINGS; i++) {
- 		if (chainmask & (1 << i)) {
- 			if ((i >= AR5416_MAX_CHAINS) && !IS_CHAN_HT40(chan))
- 				continue;
- 
--			val = REG_READ(ah, ah->nf_regs[i]);
--			val &= 0xFFFFFE00;
--			val |= (((u32) (-50) << 1) & 0x1ff);
--			REG_WRITE(ah, ah->nf_regs[i], val);
-+			REG_RMW(ah, ah->nf_regs[i],
-+					(((u32) (-50) << 1) & 0x1ff), 0x1ff);
- 		}
- 	}
--	REGWRITE_BUFFER_FLUSH(ah);
-+	REG_RMW_BUFFER_FLUSH(ah);
- 
- 	return 0;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 60aa8d7..15433c7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -121,6 +121,26 @@ void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
+ 	REGWRITE_BUFFER_FLUSH(ah);
  }
+ 
++void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size)
++{
++	u32 *tmp_reg_list, *tmp_data;
++	int i;
++
++	tmp_reg_list = kmalloc(size * sizeof(u32), GFP_KERNEL);
++	tmp_data = kmalloc(size * sizeof(u32), GFP_KERNEL);
++
++	for (i = 0; i < size; i++)
++		tmp_reg_list[i] = array[i][0];
++
++	REG_READ_MULTI(ah, tmp_reg_list, tmp_data, size);
++
++	for (i = 0; i < size; i++)
++		array[i][1] = tmp_data[i];
++
++	kfree(tmp_reg_list);
++	kfree(tmp_data);
++}
++
+ u32 ath9k_hw_reverse_bits(u32 val, u32 n)
+ {
+ 	u32 retval;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f1864cc..66aba10 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -138,6 +138,8 @@
+ 
+ #define REG_WRITE_ARRAY(iniarray, column, regWr) \
+ 	ath9k_hw_write_array(ah, iniarray, column, &(regWr))
++#define REG_READ_ARRAY(ah, array, size) \
++	ath9k_hw_read_array(ah, array, size)
+ 
+ #define AR_GPIO_OUTPUT_MUX_AS_OUTPUT             0
+ #define AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED 1
+@@ -1020,6 +1022,7 @@ void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
+ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
+ void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
+ 			  int column, unsigned int *writecnt);
++void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size);
+ u32 ath9k_hw_reverse_bits(u32 val, u32 n);
+ u16 ath9k_hw_computetxtime(struct ath_hw *ah,
+ 			   u8 phy, int kbps,
 -- 
 1.9.1
 
