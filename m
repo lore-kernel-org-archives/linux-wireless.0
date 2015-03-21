@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53189 "EHLO sipsolutions.net"
+Received: from mout.gmx.net ([212.227.15.18]:57297 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932569AbbCQKDz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 06:03:55 -0400
-Message-ID: <1426586632.1985.5.camel@sipsolutions.net> (sfid-20150317_110404_469271_13AF6EE2)
-Subject: Re: [PATCH] mac80211: minstrel_ht: fix rounding issue in MCS
- duration calculation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, karl.beldan@gmail.com
-Date: Tue, 17 Mar 2015 11:03:52 +0100
-In-Reply-To: <1426240484-37307-1-git-send-email-nbd@openwrt.org>
-References: <1426240484-37307-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751431AbbCUIrk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:47:40 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 11/18] ath9k: ath9k_hw_set_4k_power_cal_tabl: use rmw buffer
+Date: Sat, 21 Mar 2015 09:47:14 +0100
+Message-Id: <1426927641-18474-12-git-send-email-linux@rempel-privat.de> (sfid-20150321_100417_796505_C58D5E57)
+In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-03-13 at 10:54 +0100, Felix Fietkau wrote:
-> On very high MCS bitrates, the calculated duration of rates that are
-> next to each other can be very imprecise, due to the small packet size
-> used as reference (1200 bytes).
-> This is most visible in VHT80 nss=2 MCS8/9, for which minstrel shows the
-> same throughput when the probability is also the same. This leads to a
-> bad rate selection for such rates.
-> 
-> Fix this issue by introducing an average A-MPDU size factor into the
-> calculation.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Applied.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index e5a78d4..fc54fc7 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -389,6 +389,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 		}
+ 	}
+ 
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_NUM_PD_GAIN,
+ 		      (numXpdGain - 1) & 0x3);
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_1,
+@@ -396,6 +397,7 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_2,
+ 		      xpdGainValues[1]);
+ 	REG_RMW_FIELD(ah, AR_PHY_TPCRG1, AR_PHY_TPCRG1_PD_GAIN_3, 0);
++	REG_RMW_BUFFER_FLUSH(ah);
+ 
+ 	for (i = 0; i < AR5416_EEP4K_MAX_CHAINS; i++) {
+ 		regChainOffset = i * 0x1000;
+-- 
+1.9.1
 
