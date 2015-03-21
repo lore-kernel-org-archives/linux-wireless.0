@@ -1,81 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:35078 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752099AbbCGRFe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2015 12:05:34 -0500
-Received: by wibbs8 with SMTP id bs8so10451542wib.0
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Mar 2015 09:05:32 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH resend 3/3] staging: vt6655: vnt_tx_packet fix dma_idx selection.
-Date: Sat,  7 Mar 2015 17:04:56 +0000
-Message-Id: <1425747896-8353-3-git-send-email-tvboxspy@gmail.com> (sfid-20150307_180541_153346_6B3C4F41)
-In-Reply-To: <1425747896-8353-1-git-send-email-tvboxspy@gmail.com>
-References: <1425747896-8353-1-git-send-email-tvboxspy@gmail.com>
+Received: from mout.gmx.net ([212.227.15.19]:58012 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751330AbbCUIrg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:47:36 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 12/18] ath9k: use rmw buffer in ath9k_hw_set_operating_mode and ath9k_hw_reset
+Date: Sat, 21 Mar 2015 09:47:15 +0100
+Message-Id: <1426927641-18474-13-git-send-email-linux@rempel-privat.de> (sfid-20150321_094751_627547_90F580E5)
+In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is still a problem that dma_idx is causing packets to
-go onto the wrong tx path.
-
-Protect dma_idx fully with the present first lock and
-use pTDInfo->byFlags TD_FLAGS_NETIF_SKB to set MACvTransmit.
-
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/staging/vt6655/device_main.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index a512f83..14c935f 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1179,12 +1179,14 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	PSTxDesc head_td;
--	u32 dma_idx = TYPE_AC0DMA;
-+	u32 dma_idx;
- 	unsigned long flags;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 15433c7..523a6a8 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1217,6 +1217,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
+ 	u32 mask = AR_STA_ID1_STA_AP | AR_STA_ID1_ADHOC;
+ 	u32 set = AR_STA_ID1_KSRCH_MODE;
  
- 	spin_lock_irqsave(&priv->lock, flags);
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	switch (opmode) {
+ 	case NL80211_IFTYPE_ADHOC:
+ 		if (!AR_SREV_9340_13(ah)) {
+@@ -1238,6 +1239,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
+ 		break;
+ 	}
+ 	REG_RMW(ah, AR_STA_ID1, set, mask);
++	REG_RMW_BUFFER_FLUSH(ah);
+ }
  
--	if (!ieee80211_is_data(hdr->frame_control))
-+	if (ieee80211_is_data(hdr->frame_control))
-+		dma_idx = TYPE_AC0DMA;
-+	else
- 		dma_idx = TYPE_TXDMA0;
+ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+@@ -1950,6 +1952,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (!ath9k_hw_mci_is_enabled(ah))
+ 		REG_WRITE(ah, AR_OBS, 8);
  
- 	if (AVAIL_TD(priv, dma_idx) < 1) {
-@@ -1198,6 +1200,9 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	if (ah->config.rx_intr_mitigation) {
+ 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_LAST, ah->config.rimt_last);
+ 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, ah->config.rimt_first);
+@@ -1959,6 +1962,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_LAST, 300);
+ 		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_FIRST, 750);
+ 	}
++	REG_RMW_BUFFER_FLUSH(ah);
  
- 	head_td->pTDInfo->skb = skb;
- 
-+	if (dma_idx == TYPE_AC0DMA)
-+		head_td->pTDInfo->byFlags = TD_FLAGS_NETIF_SKB;
-+
- 	priv->iTDUsed[dma_idx]++;
- 
- 	/* Take ownership */
-@@ -1226,13 +1231,10 @@ static int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
- 
- 	head_td->buff_addr = cpu_to_le32(head_td->pTDInfo->skb_dma);
- 
--	if (dma_idx == TYPE_AC0DMA) {
--		head_td->pTDInfo->byFlags = TD_FLAGS_NETIF_SKB;
--
-+	if (head_td->pTDInfo->byFlags & TD_FLAGS_NETIF_SKB)
- 		MACvTransmitAC0(priv->PortOffset);
--	} else {
-+	else
- 		MACvTransmit0(priv->PortOffset);
--	}
- 
- 	spin_unlock_irqrestore(&priv->lock, flags);
+ 	ath9k_hw_init_bb(ah, chan);
  
 -- 
-2.1.4
+1.9.1
 
