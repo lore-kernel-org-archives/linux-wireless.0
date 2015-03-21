@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wg0-f42.google.com ([74.125.82.42]:34183 "EHLO
-	mail-wg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718AbbCLGMv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 02:12:51 -0400
-Received: by wgha1 with SMTP id a1so14077386wgh.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 23:12:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1426090976.1904.7.camel@sipsolutions.net>
-References: <1426080326-14764-1-git-send-email-michal.kazior@tieto.com>
-	<1426090976.1904.7.camel@sipsolutions.net>
-Date: Thu, 12 Mar 2015 07:12:49 +0100
-Message-ID: <CA+BoTQ=K_vxuB7my+4W5pLgmmdd7p-srqEM9O1=gwWLqzJhCkQ@mail.gmail.com> (sfid-20150312_071314_490096_1AD725F7)
-Subject: Re: [PATCH] ath10k: strip qos data bit always
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.15.15]:54956 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751177AbbCUIrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:47:33 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 00/18] reduce some of ath9k_htc performance problems
+Date: Sat, 21 Mar 2015 09:47:03 +0100
+Message-Id: <1426927641-18474-1-git-send-email-linux@rempel-privat.de> (sfid-20150321_094739_610982_ADDDA56F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 March 2015 at 17:22, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2015-03-11 at 14:25 +0100, Michal Kazior wrote:
->> NativeWifi tx mode expects QoS Data frames to be
->> delivered as Data frames with QoS part (e.g. tid)
->> being delievered out-of-band in fw tx command.
->>
->> The QoS bit wasn't stripped before submitting to
->> firmware.
->>
->> Stripping fixes two known problems:
->>
->>  * qca6174 IOT with some APs, e.g.
->>    Cisco AIR-AP 1252 (which would crash after
->>    ath10k association). Some ath9k APs would
->>    crash as well.
->
-> It would probably be interesting to figure out why and fix that - this
-> is clearly a major issue.
+This patchset adds new WMI_RMW handler to reduce some of usb related
+performance problems.
 
-Good point. The patch was originally just a small fix for sniffing but
-it happened to fix the IOT problem that we started seeing with the new
-chip fw as well.
+Oleksij Rempel (18):
+  ath9k_htc: add new WMI_REG_RMW_CMDID command
+  ath9k: ar9271_hw_pa_cal - use defs instead of magin numbers
+  ath9k: ar9271_hw_pa_cal: use proper makroses.
+  ath9k: ar9271_hw_pa_cal: use RMW buffer
+  ath9k: add multi_read to be compatible with ath9k_htc
+  ath9k: add new function ath9k_hw_read_array
+  ath9k: ar9271_hw_pa_cal: use REG_READ_ARRAY
+  ath9k: use one shot read in ath9k_hw_update_mibstats
+  ath9k: ath9k_hw_loadnf: use REG_RMW
+  ath9k: write buffer related optimisation in ar5008_hw_set_channel_regs
+  ath9k: ath9k_hw_set_4k_power_cal_tabl: use rmw buffer
+  ath9k: use rmw buffer in ath9k_hw_set_operating_mode and
+    ath9k_hw_reset
+  ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
+  ath9k: ath9k_hw_analog_shift_rmw: use REG_RMW
+  ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
+  ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
+  ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
+  ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
 
-I believe that if 11n was disabled on APs the problem did not
-reproduce. I think ath9k was crashing somewhere along the BA session
-teardown (as per kernel call trace). The ath9k codebase from what I
-know was rather old (some custom 3.4 fork) so perhaps it was a race of
-some sort that has been fixed long since.
+ drivers/net/wireless/ath/ath.h                |   3 +
+ drivers/net/wireless/ath/ath9k/ani.c          |  20 +++-
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c   |   5 +-
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |  77 +++++++-------
+ drivers/net/wireless/ath/ath9k/calib.c        |  19 ++--
+ drivers/net/wireless/ath/ath9k/eeprom.c       |   7 +-
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c    |  36 ++++---
+ drivers/net/wireless/ath/ath9k/eeprom_def.c   |  34 +++---
+ drivers/net/wireless/ath/ath9k/htc.h          |   5 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 142 ++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.c           |  24 +++++
+ drivers/net/wireless/ath/ath9k/hw.h           |  15 +++
+ drivers/net/wireless/ath/ath9k/init.c         |  11 ++
+ drivers/net/wireless/ath/ath9k/wmi.c          |   3 +
+ drivers/net/wireless/ath/ath9k/wmi.h          |  16 +++
+ 15 files changed, 314 insertions(+), 103 deletions(-)
 
-I'll try to get some sniff logs and take a look at this more closely.
+-- 
+1.9.1
 
-
-Michał
