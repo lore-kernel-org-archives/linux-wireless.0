@@ -1,50 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:55782 "EHLO mga03.intel.com"
+Received: from mout.gmx.net ([212.227.15.15]:55935 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753980AbbCLHtj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 03:49:39 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] iwlwifi: mvm: disconnect if CSA time event fails scheduling
-Date: Thu, 12 Mar 2015 09:49:33 +0200
-Message-Id: <1426146573-8068-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_084943_620789_7C6C0C49)
-In-Reply-To: <1426146488.8748.16.camel@egrumbacBox>
-References: <1426146488.8748.16.camel@egrumbacBox>
+	id S1751286AbbCUIrf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:47:35 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 04/18] ath9k: ar9271_hw_pa_cal: use RMW buffer
+Date: Sat, 21 Mar 2015 09:47:07 +0100
+Message-Id: <1426927641-18474-5-git-send-email-linux@rempel-privat.de> (sfid-20150321_094743_667900_8237A394)
+In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-If this situation ever happens, the mac80211 state machine gets
-confused because it never clears csa_active. There was a separate
-bug that lead to this happening with a working connection, but it
-isn't very robust to try to keep the connection up in this case.
-
-When removing the time event the CSA essentially procedure stops,
-so the safest thing to do is to disconnect in this case.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/iwlwifi/mvm/time-event.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/time-event.c b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-index f8d6f30..4b81c0b 100644
---- a/drivers/net/wireless/iwlwifi/mvm/time-event.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/time-event.c
-@@ -197,6 +197,8 @@ iwl_mvm_te_handle_notify_csa(struct iwl_mvm *mvm,
- 			     struct iwl_time_event_notif *notif)
- {
- 	if (!le32_to_cpu(notif->status)) {
-+		if (te_data->vif->type == NL80211_IFTYPE_STATION)
-+			ieee80211_connection_loss(te_data->vif);
- 		IWL_DEBUG_TE(mvm, "CSA time event failed to start\n");
- 		iwl_mvm_te_clear_data(mvm, te_data);
- 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index 8d24a73..62a2314 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -436,13 +436,14 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 		{ AR9285_AN_RF2G2, 0 },
+ 		{ AR9285_AN_TOP2, 0 },
+ 		{ AR9285_AN_RF2G8, 0 },
+-		{ AR9285_AN_RF2G7, 0 } ,
+-		{ AR9285_AN_RF2G3, 0 } ,
++		{ AR9285_AN_RF2G7, 0 },
++		{ AR9285_AN_RF2G3, 0 },
+ 	};
+ 
+ 	for (i = 0; i < ARRAY_SIZE(regList); i++)
+ 		regList[i][1] = REG_READ(ah, regList[i][0]);
+ 
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	/* 7834, b1=0 */
+ 	REG_CLR_BIT(ah, AR9285_AN_RF2G6, 1 << 0);
+ 	/* 9808, b27=1 */
+@@ -476,6 +477,7 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
+ 	/* 7828, b0-11, ccom=fff */
+ 	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9271_AN_RF2G3_CCOMP, 0xfff);
++	REG_RMW_BUFFER_FLUSH(ah);
+ 
+ 	/* Set:
+ 	 * localmode=1,bmode=1,bmoderxtx=1,synthon=1,
+@@ -514,10 +516,12 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
+ 	}
+ 
+ 
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	/* 7834, b1=1 */
+ 	REG_SET_BIT(ah, AR9285_AN_RF2G6, 1 << 0);
+ 	/* 9808, b27=0 */
+ 	REG_CLR_BIT(ah, 0x9808, 1 << 27);
++	REG_RMW_BUFFER_FLUSH(ah);
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 	for (i = 0; i < ARRAY_SIZE(regList); i++)
 -- 
 1.9.1
 
