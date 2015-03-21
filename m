@@ -1,105 +1,341 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 18.mo6.mail-out.ovh.net ([46.105.73.110]:40806 "EHLO
-	18.mo6.mail-out.ovh.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754268AbbCIKen (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 06:34:43 -0400
-Received: from mail187.ha.ovh.net (b9.ovh.net [213.186.33.59])
-	by mo6.mail-out.ovh.net (Postfix) with SMTP id 18C6BFFA3D3
-	for <linux-wireless@vger.kernel.org>; Mon,  9 Mar 2015 11:19:12 +0100 (CET)
-From: clement.perrochaud@effinnov.com
-To: linux-nfc@lists.01.org
-Cc: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?= <clement.perrochaud@nxp.com>,
-	sunil.jogi@nxp.com, jerome.pele@nxp.com,
-	Charles.Gorand-Effinnov@nxp.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	davem@davemloft.net, grant.likely@linaro.org, lefrique@marvell.com,
-	christophe.ricard@gmail.com, cuissard@marvell.com,
-	bzhao@marvell.com, hirent@marvell.com, akarwar@marvell.com,
-	linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	anda-maria.nicolae@intel.com,
-	=?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
-	<clement.perrochaud@effinnov.com>
-Subject: [PATCH v2 1/3] NFC: nci: Add firmware download support
-Date: Mon,  9 Mar 2015 11:12:03 +0100
-Message-Id: <1425895925-20593-2-git-send-email-clement.perrochaud@effinnov.com> (sfid-20150309_113510_609358_769238F4)
-In-Reply-To: <1425895925-20593-1-git-send-email-clement.perrochaud@effinnov.com>
-References: <1425895925-20593-1-git-send-email-clement.perrochaud@effinnov.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.15.19]:58482 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751229AbbCUIrk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:47:40 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 01/18] ath9k_htc: add new WMI_REG_RMW_CMDID command
+Date: Sat, 21 Mar 2015 09:47:04 +0100
+Message-Id: <1426927641-18474-2-git-send-email-linux@rempel-privat.de> (sfid-20150321_100417_339118_DBC24832)
+In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Clément Perrochaud <clement.perrochaud@nxp.com>
+Since usb bus add extra delay on each request, a command
+with read + write requests is too expensive. We can dramtically
+reduce usb load by moving this command to firmware.
 
-A simple forward for firmware download (i.e. sending a new firmware
-to the NFC adapter) from the NFC subsystem to the drivers.
+In my tests, this patch will reduce channel scan time
+for about 5-10 seconds.
 
-This feature is required to update the firmware of NXP-NCI NFC
-controllers but can be used by any NCI driver.
-
-This feature has been present in the HCI subsystem since 9a695d.
-
-Signed-off-by: Clément Perrochaud <clement.perrochaud@effinnov.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- include/net/nfc/nci_core.h |  1 +
- net/nfc/nci/core.c         | 11 +++++++++++
- 2 files changed, 12 insertions(+)
+ drivers/net/wireless/ath/ath.h                |   3 +
+ drivers/net/wireless/ath/ath9k/htc.h          |   5 +
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 142 ++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath9k/hw.h           |  12 +++
+ drivers/net/wireless/ath/ath9k/wmi.c          |   3 +
+ drivers/net/wireless/ath/ath9k/wmi.h          |  16 +++
+ 6 files changed, 175 insertions(+), 6 deletions(-)
 
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index ff87f86..34a6e09 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -71,6 +71,7 @@ struct nci_ops {
- 	int   (*close)(struct nci_dev *ndev);
- 	int   (*send)(struct nci_dev *ndev, struct sk_buff *skb);
- 	int   (*setup)(struct nci_dev *ndev);
-+	int   (*fw_download)(struct nci_dev *ndev, const char *firmware_name);
- 	__u32 (*get_rfprotocol)(struct nci_dev *ndev, __u8 rf_protocol);
- 	int   (*discover_se)(struct nci_dev *ndev);
- 	int   (*disable_se)(struct nci_dev *ndev, u32 se_idx);
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 9575a18..49ff321 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -907,6 +907,16 @@ static int nci_se_io(struct nfc_dev *nfc_dev, u32 se_idx,
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 1eebe2e..7e94810 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -131,6 +131,9 @@ struct ath_ops {
+ 	void (*enable_write_buffer)(void *);
+ 	void (*write_flush) (void *);
+ 	u32 (*rmw)(void *, u32 reg_offset, u32 set, u32 clr);
++	void (*enable_rmw_buffer)(void *);
++	void (*rmw_flush) (void *);
++
+ };
+ 
+ struct ath_common;
+diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
+index 300d367..e82a0d4 100644
+--- a/drivers/net/wireless/ath/ath9k/htc.h
++++ b/drivers/net/wireless/ath/ath9k/htc.h
+@@ -444,6 +444,10 @@ static inline void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv)
+ #define OP_BT_SCAN                 BIT(4)
+ #define OP_TSF_RESET               BIT(6)
+ 
++enum htc_op_flags {
++	HTC_FWFLAG_NO_RMW,
++};
++
+ struct ath9k_htc_priv {
+ 	struct device *dev;
+ 	struct ieee80211_hw *hw;
+@@ -482,6 +486,7 @@ struct ath9k_htc_priv {
+ 	bool reconfig_beacon;
+ 	unsigned int rxfilter;
+ 	unsigned long op_flags;
++	unsigned long fw_flags;
+ 
+ 	struct ath9k_hw_cal_data caldata;
+ 	struct ath_spec_scan_priv spec_priv;
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index fd22940..d7beefe 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -376,17 +376,139 @@ static void ath9k_regwrite_flush(void *hw_priv)
+ 	mutex_unlock(&priv->wmi->multi_write_mutex);
+ }
+ 
+-static u32 ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 clr)
++static void ath9k_reg_rmw_buffer(void *hw_priv,
++				 u32 reg_offset, u32 set, u32 clr)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++	u32 rsp_status;
++	int r;
++
++	mutex_lock(&priv->wmi->multi_rmw_mutex);
++
++	/* Store the register/value */
++	priv->wmi->multi_rmw[priv->wmi->multi_rmw_idx].reg =
++		cpu_to_be32(reg_offset);
++	priv->wmi->multi_rmw[priv->wmi->multi_rmw_idx].set =
++		cpu_to_be32(set);
++	priv->wmi->multi_rmw[priv->wmi->multi_rmw_idx].clr =
++		cpu_to_be32(clr);
++
++	priv->wmi->multi_rmw_idx++;
++
++	/* If the buffer is full, send it out. */
++	if (priv->wmi->multi_rmw_idx == MAX_RMW_CMD_NUMBER) {
++		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
++			  (u8 *) &priv->wmi->multi_rmw,
++			  sizeof(struct register_write) * priv->wmi->multi_rmw_idx,
++			  (u8 *) &rsp_status, sizeof(rsp_status),
++			  100);
++		if (unlikely(r)) {
++			ath_dbg(common, WMI,
++				"REGISTER RMW FAILED, multi len: %d\n",
++				priv->wmi->multi_rmw_idx);
++		}
++		priv->wmi->multi_rmw_idx = 0;
++	}
++
++	mutex_unlock(&priv->wmi->multi_rmw_mutex);
++}
++
++static void ath9k_reg_rmw_flush(void *hw_priv)
+ {
+-	u32 val;
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++	u32 rsp_status;
++	int r;
++
++	if (test_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags))
++		return;
++
++	atomic_dec(&priv->wmi->m_rmw_cnt);
+ 
+-	val = ath9k_regread(hw_priv, reg_offset);
+-	val &= ~clr;
+-	val |= set;
+-	ath9k_regwrite(hw_priv, val, reg_offset);
++	mutex_lock(&priv->wmi->multi_rmw_mutex);
++
++	if (priv->wmi->multi_rmw_idx) {
++		r = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
++			  (u8 *) &priv->wmi->multi_rmw,
++			  sizeof(struct register_rmw) * priv->wmi->multi_rmw_idx,
++			  (u8 *) &rsp_status, sizeof(rsp_status),
++			  100);
++		if (unlikely(r)) {
++			ath_dbg(common, WMI,
++				"REGISTER RMW FAILED, multi len: %d\n",
++				priv->wmi->multi_rmw_idx);
++		}
++		priv->wmi->multi_rmw_idx = 0;
++	}
++
++	mutex_unlock(&priv->wmi->multi_rmw_mutex);
++}
++
++static void ath9k_enable_rmw_buffer(void *hw_priv)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	if (test_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags))
++		return;
++
++	atomic_inc(&priv->wmi->m_rmw_cnt);
++}
++
++static u32 ath9k_reg_rmw_single(void *hw_priv,
++				 u32 reg_offset, u32 set, u32 clr)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++	struct register_rmw buf, buf_ret;
++	int ret;
++	u32 val = 0;
++
++	buf.reg = cpu_to_be32(reg_offset);
++	buf.set = cpu_to_be32(set);
++	buf.clr = cpu_to_be32(clr);
++
++	ret = ath9k_wmi_cmd(priv->wmi, WMI_REG_RMW_CMDID,
++			  (u8 *) &buf, sizeof(buf),
++			  (u8 *) &buf_ret, sizeof(buf_ret),
++			  100);
++	if (unlikely(ret)) {
++		ath_dbg(common, WMI, "REGISTER RMW FAILED:(0x%04x, %d)\n",
++			reg_offset, ret);
++	}
+ 	return val;
+ }
+ 
++static u32 ath9k_reg_rmw(void *hw_priv, u32 reg_offset, u32 set, u32 clr)
++{
++	struct ath_hw *ah = (struct ath_hw *) hw_priv;
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_htc_priv *priv = (struct ath9k_htc_priv *) common->priv;
++
++	if (test_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags)) {
++		u32 val;
++
++		val = REG_READ(ah, reg_offset);
++		val &= ~clr;
++		val |= set;
++		REG_WRITE(ah, reg_offset, val);
++
++		return 0;
++	}
++
++	if (atomic_read(&priv->wmi->m_rmw_cnt))
++		ath9k_reg_rmw_buffer(hw_priv, reg_offset, set, clr);
++	else
++		ath9k_reg_rmw_single(hw_priv, reg_offset, set, clr);
++
++	return 0;
++}
++
+ static void ath_usb_read_cachesize(struct ath_common *common, int *csz)
+ {
+ 	*csz = L1_CACHE_BYTES >> 2;
+@@ -501,6 +623,8 @@ static int ath9k_init_priv(struct ath9k_htc_priv *priv,
+ 	ah->reg_ops.write = ath9k_regwrite;
+ 	ah->reg_ops.enable_write_buffer = ath9k_enable_regwrite_buffer;
+ 	ah->reg_ops.write_flush = ath9k_regwrite_flush;
++	ah->reg_ops.enable_rmw_buffer = ath9k_enable_rmw_buffer;
++	ah->reg_ops.rmw_flush = ath9k_reg_rmw_flush;
+ 	ah->reg_ops.rmw = ath9k_reg_rmw;
+ 	priv->ah = ah;
+ 
+@@ -686,6 +810,12 @@ static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
+ 		return -EINVAL;
+ 	}
+ 
++	if (priv->fw_version_major == 1 && priv->fw_version_minor < 4)
++		set_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags);
++
++	dev_info(priv->dev, "FW RMW support: %s\n",
++		test_bit(HTC_FWFLAG_NO_RMW, &priv->fw_flags) ? "Off" : "On");
++
  	return 0;
  }
  
-+static int nci_fw_download(struct nfc_dev *nfc_dev, const char *firmware_name)
-+{
-+	struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 29a25d9..f1864cc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -100,6 +100,18 @@
+ 			(_ah)->reg_ops.write_flush((_ah));	\
+ 	} while (0)
+ 
++#define ENABLE_REG_RMW_BUFFER(_ah)					\
++	do {								\
++		if ((_ah)->reg_ops.enable_rmw_buffer)	\
++			(_ah)->reg_ops.enable_rmw_buffer((_ah)); \
++	} while (0)
 +
-+	if (!ndev->ops->fw_download)
-+		return -ENOTSUPP;
++#define REG_RMW_BUFFER_FLUSH(_ah)					\
++	do {								\
++		if ((_ah)->reg_ops.rmw_flush)		\
++			(_ah)->reg_ops.rmw_flush((_ah));	\
++	} while (0)
 +
-+	return ndev->ops->fw_download(ndev, firmware_name);
-+}
-+
- static struct nfc_ops nci_nfc_ops = {
- 	.dev_up = nci_dev_up,
- 	.dev_down = nci_dev_down,
-@@ -922,6 +932,7 @@ static struct nfc_ops nci_nfc_ops = {
- 	.disable_se = nci_disable_se,
- 	.discover_se = nci_discover_se,
- 	.se_io = nci_se_io,
-+	.fw_download = nci_fw_download,
+ #define PR_EEP(_s, _val)						\
+ 	do {								\
+ 		len += scnprintf(buf + len, size - len, "%20s : %10d\n",\
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
+index 65c8894..67a2f8c 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.c
++++ b/drivers/net/wireless/ath/ath9k/wmi.c
+@@ -61,6 +61,8 @@ static const char *wmi_cmd_to_name(enum wmi_cmd_id wmi_cmd)
+ 		return "WMI_REG_READ_CMDID";
+ 	case WMI_REG_WRITE_CMDID:
+ 		return "WMI_REG_WRITE_CMDID";
++	case WMI_REG_RMW_CMDID:
++		return "WMI_REG_RMW_CMDID";
+ 	case WMI_RC_STATE_CHANGE_CMDID:
+ 		return "WMI_RC_STATE_CHANGE_CMDID";
+ 	case WMI_RC_RATE_UPDATE_CMDID:
+@@ -101,6 +103,7 @@ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv)
+ 	spin_lock_init(&wmi->event_lock);
+ 	mutex_init(&wmi->op_mutex);
+ 	mutex_init(&wmi->multi_write_mutex);
++	mutex_init(&wmi->multi_rmw_mutex);
+ 	init_completion(&wmi->cmd_wait);
+ 	INIT_LIST_HEAD(&wmi->pending_tx_events);
+ 	tasklet_init(&wmi->wmi_event_tasklet, ath9k_wmi_event_tasklet,
+diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
+index 0db37f2..aa84a33 100644
+--- a/drivers/net/wireless/ath/ath9k/wmi.h
++++ b/drivers/net/wireless/ath/ath9k/wmi.h
+@@ -112,6 +112,7 @@ enum wmi_cmd_id {
+ 	WMI_TX_STATS_CMDID,
+ 	WMI_RX_STATS_CMDID,
+ 	WMI_BITRATE_MASK_CMDID,
++	WMI_REG_RMW_CMDID,
  };
  
- /* ---- Interface to NCI drivers ---- */
+ enum wmi_event_id {
+@@ -125,12 +126,19 @@ enum wmi_event_id {
+ };
+ 
+ #define MAX_CMD_NUMBER 62
++#define MAX_RMW_CMD_NUMBER 15
+ 
+ struct register_write {
+ 	__be32 reg;
+ 	__be32 val;
+ };
+ 
++struct register_rmw {
++	__be32 reg;
++	__be32 set;
++	__be32 clr;
++} __packed;
++
+ struct ath9k_htc_tx_event {
+ 	int count;
+ 	struct __wmi_event_txstatus txs;
+@@ -156,10 +164,18 @@ struct wmi {
+ 
+ 	spinlock_t wmi_lock;
+ 
++	/* multi write section */
+ 	atomic_t mwrite_cnt;
+ 	struct register_write multi_write[MAX_CMD_NUMBER];
+ 	u32 multi_write_idx;
+ 	struct mutex multi_write_mutex;
++
++	/* multi rmw section */
++	atomic_t m_rmw_cnt;
++	struct register_rmw multi_rmw[MAX_RMW_CMD_NUMBER];
++	u32 multi_rmw_idx;
++	struct mutex multi_rmw_mutex;
++
+ };
+ 
+ struct wmi *ath9k_init_wmi(struct ath9k_htc_priv *priv);
 -- 
-Clément Perrochaud
-
-Eff'Innov Technologies
-Caen, Aix-En-Provence, Grenoble
-
-Eff'Innov Technologies
-Campus EffiScience
-2, Esplanade Anton Philips
-14460 Colombelles, FRANCE
-
-http://www.effinnov.com
+1.9.1
 
