@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23515 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752596AbbCKSFQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 14:05:16 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: move driver state check before setting throttle
-Date: Wed, 11 Mar 2015 23:34:54 +0530
-Message-ID: <1426097094-6225-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150311_190522_115035_58267DD3)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.17.22]:55606 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751177AbbCUIH7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:07:59 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org, nbd@openwrt.org, adrian@freebsd.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH 16/18 v2] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
+Date: Sat, 21 Mar 2015 09:07:37 +0100
+Message-Id: <1426925257-15130-1-git-send-email-linux@rempel-privat.de> (sfid-20150321_090822_116575_1A3F303C)
+In-Reply-To: <550C19E1.1020305@openwrt.org>
+References: <550C19E1.1020305@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since thermal daemon is unaware of the device state, it might
-try to adjust the throttle state when the device is powered down.
-So the driver caches the value and will configure it while
-powering up the target. The cached value will be programed later
-once the device is brought up. In such case, returning error
-status is confusing and misleading the user application. Hence
-moving the driver state check before sending wmi command to target.
+it is possible to reduce time needed for this function
+by rplacing REG_WRITE with REG_RMW (plus dummy 0) and putt all commands
+in same buffer.
 
-Reported-by: Matthias Kaehlcke <mka@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ath/ath10k/thermal.c | 13 ++++---------
- 1 file changed, 4 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index 3720c86..c9475ac 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -50,7 +50,6 @@ ath10k_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 				      unsigned long throttle_state)
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 291c1d1..38dc965 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -772,15 +772,14 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
+ 				 struct ar5416_eeprom_4k *eep,
+ 				 u8 txRxAttenLocal)
  {
- 	struct ath10k *ar = cdev->devdata;
--	int ret = 0;
+-	REG_WRITE(ah, AR_PHY_SWITCH_CHAIN_0,
+-		  pModal->antCtrlChain[0]);
++	ENABLE_REG_RMW_BUFFER(ah);
++	REG_RMW(ah, AR_PHY_SWITCH_CHAIN_0,
++		pModal->antCtrlChain[0], 0);
  
- 	if (throttle_state > ATH10K_THERMAL_THROTTLE_MAX) {
- 		ath10k_warn(ar, "throttle state %ld is exceeding the limit %d\n",
-@@ -59,16 +58,9 @@ ath10k_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 	}
- 	mutex_lock(&ar->conf_mutex);
- 	ar->thermal.throttle_state = throttle_state;
--
--	if (ar->state != ATH10K_STATE_ON) {
--		ret = -ENETDOWN;
--		goto out;
--	}
--
- 	ath10k_thermal_set_throttling(ar);
--out:
- 	mutex_unlock(&ar->conf_mutex);
--	return ret;
-+	return 0;
+-	REG_WRITE(ah, AR_PHY_TIMING_CTRL4(0),
+-		  (REG_READ(ah, AR_PHY_TIMING_CTRL4(0)) &
+-		   ~(AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF |
+-		     AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF)) |
+-		  SM(pModal->iqCalICh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF) |
+-		  SM(pModal->iqCalQCh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF));
++	REG_RMW(ah, AR_PHY_TIMING_CTRL4(0),
++		SM(pModal->iqCalICh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF) |
++		SM(pModal->iqCalQCh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF),
++		AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF | AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF);
+ 
+ 	if ((eep->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+ 	    AR5416_EEP_MINOR_VER_3) {
+@@ -819,6 +818,7 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
+ 		      AR9280_PHY_RXGAIN_TXRX_ATTEN, txRxAttenLocal);
+ 	REG_RMW_FIELD(ah, AR_PHY_RXGAIN + 0x1000,
+ 		      AR9280_PHY_RXGAIN_TXRX_MARGIN, pModal->rxTxMarginCh[0]);
++	REG_RMW_BUFFER_FLUSH(ah);
  }
  
- static struct thermal_cooling_device_ops ath10k_thermal_ops = {
-@@ -190,6 +182,9 @@ void ath10k_thermal_set_throttling(struct ath10k *ar)
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-+	if (ar->state != ATH10K_STATE_ON)
-+		return;
-+
- 	period = ar->thermal.quiet_period;
- 	duration = (period * ar->thermal.throttle_state) / 100;
- 	enabled = duration ? 1 : 0;
+ /*
 -- 
-2.3.2
+1.9.1
 
