@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54612 "EHLO sipsolutions.net"
+Received: from mout.gmx.net ([212.227.15.18]:58183 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752137AbbCCIo7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 03:44:59 -0500
-Message-ID: <1425372295.2450.9.camel@sipsolutions.net> (sfid-20150303_094559_604376_B1B7D1D4)
-Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
- memset
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Joe Perches <joe@perches.com>
-Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 03 Mar 2015 09:44:55 +0100
-In-Reply-To: <1425371858.17273.3.camel@perches.com>
-References: <cover.1425354527.git.joe@perches.com>
-	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
-	 <1425370617.2450.3.camel@sipsolutions.net>
-	 <1425371858.17273.3.camel@perches.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751339AbbCUIrh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:47:37 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 17/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
+Date: Sat, 21 Mar 2015 09:47:20 +0100
+Message-Id: <1426927641-18474-18-git-send-email-linux@rempel-privat.de> (sfid-20150321_100417_583733_BD3C27EC)
+In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+replace REG_WRITE to REG_RMW and place every thing in one
+RMW buffer.
 
-> > Other than that, I guess I'll apply this, but I really wish there was a
-> > way to distinguish more easily which of these require alignment and
-> > which don't.
-> 
-> My guess is the eth_zero_addr and eth_broadcast functions
-> are always taking aligned(2) arguments, just like all the
-> is_<foo>_ether_addr functions.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-Err, are you serious??? That *clearly* isn't true, and if it was then
-this patch wouldn't be safe at all.
-
-> > eth_zero_addr() doesn,t but is_zero_ether_addr() does. So does
-> > ether_addr_copy(). Frankly, it's getting a bit confusing, so I can't
-> > really fault anyone for using memset()/memcpy().
-> 
-> I suspect more than anything else all these are historic.
-
-I'd expect a mix here, certainly. Not all of them are really old though.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 38dc965..4773da6 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -1037,17 +1037,17 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 	}
+ 	REG_RMW_BUFFER_FLUSH(ah);
+ 
+-
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
+ 		      pModal->switchSettling);
+ 	REG_RMW_FIELD(ah, AR_PHY_DESIRED_SZ, AR_PHY_DESIRED_SZ_ADC,
+ 		      pModal->adcDesiredSize);
+ 
+-	REG_WRITE(ah, AR_PHY_RF_CTL4,
+-		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
+-		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
+-		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
+-		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON));
++	REG_RMW(ah, AR_PHY_RF_CTL4,
++		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
++		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
++		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
++		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON), 0);
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_RF_CTL3, AR_PHY_TX_END_TO_A2_RX_ON,
+ 		      pModal->txEndToRxOn);
+@@ -1076,6 +1076,8 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 				      pModal->swSettleHt40);
+ 	}
+ 
++	REG_RMW_BUFFER_FLUSH(ah);
++
+ 	bb_desired_scale = (pModal->bb_scale_smrt_antenna &
+ 			EEP_4K_BB_DESIRED_SCALE_MASK);
+ 	if ((pBase->txGainType == 0) && (bb_desired_scale != 0)) {
+-- 
+1.9.1
 
