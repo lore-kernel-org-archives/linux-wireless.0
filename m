@@ -1,40 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27339 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753818AbbCDMId (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 07:08:33 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: workaround corrupted htt rx events
-References: <1423490695-24829-1-git-send-email-michal.kazior@tieto.com>
-Date: Wed, 4 Mar 2015 14:08:26 +0200
-In-Reply-To: <1423490695-24829-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Mon, 9 Feb 2015 15:04:55 +0100")
-Message-ID: <87pp8p6k3p.fsf@kamboji.qca.qualcomm.com> (sfid-20150304_130836_713752_F5A2B59A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mout.gmx.net ([212.227.15.15]:53836 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751281AbbCUIre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Mar 2015 04:47:34 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v2 05/18] ath9k: add multi_read to be compatible with ath9k_htc
+Date: Sat, 21 Mar 2015 09:47:08 +0100
+Message-Id: <1426927641-18474-6-git-send-email-linux@rempel-privat.de> (sfid-20150321_100418_033884_54D9ACC7)
+In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-> qca6174 WLAN.RM.2.0-00073 firmware uses full rx
-> reordering offload and delivers Rx via a new HTT
-> event. The event however is incorrectly generated
-> in firmware and becomes overly long (with trailing
-> garbage). This was hitting defined CE buffer limit
-> that was programmed to the device and caused
-> device to crash upon busier Rx traffic.
->
-> Increasing the CE buffer limit for HTT Rx pipe to
-> 2KBytes seems to be enough to workaround this
-> problem.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-
-Thanks, applied.
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 6c6e884..041decc 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -141,6 +141,16 @@ static unsigned int ath9k_ioread32(void *hw_priv, u32 reg_offset)
+ 	return val;
+ }
+ 
++static void ath9k_multi_ioread32(void *hw_priv, u32 *addr,
++                                u32 *val, u16 count)
++{
++	int i;
++
++	for (i = 0; i < count; i++)
++		val[i] = ath9k_ioread32(hw_priv, addr[i]);
++}
++
++
+ static unsigned int __ath9k_reg_rmw(struct ath_softc *sc, u32 reg_offset,
+ 				    u32 set, u32 clr)
+ {
+@@ -530,6 +540,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	ah->hw = sc->hw;
+ 	ah->hw_version.devid = devid;
+ 	ah->reg_ops.read = ath9k_ioread32;
++	ah->reg_ops.multi_read = ath9k_multi_ioread32;
+ 	ah->reg_ops.write = ath9k_iowrite32;
+ 	ah->reg_ops.rmw = ath9k_reg_rmw;
+ 	pCap = &ah->caps;
 -- 
-Kalle Valo
+1.9.1
+
