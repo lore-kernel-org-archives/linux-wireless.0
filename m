@@ -1,64 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0147.hostedemail.com ([216.40.44.147]:52529 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752425AbbC3BtG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2015 21:49:06 -0400
-Message-ID: <1427680141.2715.60.camel@perches.com> (sfid-20150330_034929_812968_A446EBF1)
-Subject: Re: [PATCH net-next] wireless: Use bool function returns of
- true/false instead of 1/0
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: David Miller <davem@davemloft.net>,
-	Stefano Brivio <stefano.brivio@polimi.it>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Date: Sun, 29 Mar 2015 18:49:01 -0700
-In-Reply-To: <5518AAFD.1050202@lwfinger.net>
-References: <201503260524.AdqSbov9%fengguang.wu@intel.com>
-	 <20150325215525.GA26868@athens>
-	 <20150329.121655.2092434262655191613.davem@davemloft.net>
-	 <1427678712.2715.52.camel@perches.com>
-	 <1427678982.2715.55.camel@perches.com> <5518AAFD.1050202@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mout.gmx.net ([212.227.15.19]:49322 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751872AbbCVSbk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 14:31:40 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v3 06/18] ath9k: add new function ath9k_hw_read_array
+Date: Sun, 22 Mar 2015 19:29:51 +0100
+Message-Id: <1427049003-8443-7-git-send-email-linux@rempel-privat.de> (sfid-20150322_193145_678225_8310555F)
+In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-03-29 at 20:46 -0500, Larry Finger wrote:
-> On 03/29/2015 08:29 PM, Joe Perches wrote:
-> > Use bool constants as the return values instead of 1 and 0.
-> >
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> > ---
-> >> To be honest I'd might rather get bunches of these, there has to be a ton
-> >> of them, than a slow trickle of one every few weeks/days.
-> >
-> > There aren't too many here either...
-> >
-> >   drivers/net/wireless/b43/dma.c                        | 12 ++++++------
-> >   drivers/net/wireless/b43legacy/dma.c                  |  6 +++---
-> >   drivers/net/wireless/b43legacy/rfkill.c               |  8 ++++----
-> >   drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c |  2 +-
-> >   drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c |  2 +-
-> >   drivers/net/wireless/iwlwifi/iwl-config.h             |  4 ++--
-> >   6 files changed, 17 insertions(+), 17 deletions(-)
-> 
-> Please split these into separate patches for each driver. That way it will be 
-> possible to search 'git log' for the contributions to each driver. Otherwise, 
-> the patches are OK.
+REG_READ generate most overhead on usb bus. It send and read micro packages
+and reduce usb bandwidth. To reduce this overhead we should read in batches.
 
-It's still possible.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 30 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h |  3 +++
+ 2 files changed, 33 insertions(+)
 
-git log <directory> shows the individual patches.
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 60aa8d7..662ef3f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -121,6 +121,36 @@ void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
+ 	REGWRITE_BUFFER_FLUSH(ah);
+ }
+ 
++void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size)
++{
++	u32 *tmp_reg_list, *tmp_data;
++	int i;
++
++	tmp_reg_list = kmalloc(size * sizeof(u32), GFP_KERNEL);
++	if (!tmp_reg_list) {
++		dev_err(ah->dev, "%s: tmp_reg_list: alloc filed\n", __func__);
++		return;
++	}
++
++	tmp_data = kmalloc(size * sizeof(u32), GFP_KERNEL);
++	if (!tmp_data) {
++		dev_err(ah->dev, "%s tmp_data: alloc filed\n", __func__);
++		goto error_tmp_data;
++	}
++
++	for (i = 0; i < size; i++)
++		tmp_reg_list[i] = array[i][0];
++
++	REG_READ_MULTI(ah, tmp_reg_list, tmp_data, size);
++
++	for (i = 0; i < size; i++)
++		array[i][1] = tmp_data[i];
++
++	kfree(tmp_data);
++error_tmp_data:
++	kfree(tmp_reg_list);
++}
++
+ u32 ath9k_hw_reverse_bits(u32 val, u32 n)
+ {
+ 	u32 retval;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index f1864cc..66aba10 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -138,6 +138,8 @@
+ 
+ #define REG_WRITE_ARRAY(iniarray, column, regWr) \
+ 	ath9k_hw_write_array(ah, iniarray, column, &(regWr))
++#define REG_READ_ARRAY(ah, array, size) \
++	ath9k_hw_read_array(ah, array, size)
+ 
+ #define AR_GPIO_OUTPUT_MUX_AS_OUTPUT             0
+ #define AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED 1
+@@ -1020,6 +1022,7 @@ void ath9k_hw_synth_delay(struct ath_hw *ah, struct ath9k_channel *chan,
+ bool ath9k_hw_wait(struct ath_hw *ah, u32 reg, u32 mask, u32 val, u32 timeout);
+ void ath9k_hw_write_array(struct ath_hw *ah, const struct ar5416IniArray *array,
+ 			  int column, unsigned int *writecnt);
++void ath9k_hw_read_array(struct ath_hw *ah, u32 array[][2], int size);
+ u32 ath9k_hw_reverse_bits(u32 val, u32 n);
+ u16 ath9k_hw_computetxtime(struct ath_hw *ah,
+ 			   u8 phy, int kbps,
+-- 
+1.9.1
 
