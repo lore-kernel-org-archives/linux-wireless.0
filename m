@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:34521 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757444AbbCMPoY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 11:44:24 -0400
-Message-ID: <550305D5.9080209@lwfinger.net> (sfid-20150313_164446_750346_0C348AC1)
-Date: Fri, 13 Mar 2015 10:44:21 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "M. Vefa Bicakci" <m.v.b@runbox.com>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 14/16] staging: rtl8723au: Improve readability of two
- very long lines
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com> <1426216532-24058-15-git-send-email-m.v.b@runbox.com>
-In-Reply-To: <1426216532-24058-15-git-send-email-m.v.b@runbox.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mout.gmx.net ([212.227.15.19]:50989 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751872AbbCVSbo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 14:31:44 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v3 08/18] ath9k: use one shot read in ath9k_hw_update_mibstats
+Date: Sun, 22 Mar 2015 19:29:53 +0100
+Message-Id: <1427049003-8443-9-git-send-email-linux@rempel-privat.de> (sfid-20150322_193148_018832_FC851AD0)
+In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/12/2015 10:15 PM, M. Vefa Bicakci wrote:
-> Improve the readability of an if statement and its very long trace
-> output line in rtl8723au's rtw_security.c.
->
-> Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
-> ---
->   drivers/staging/rtl8723au/core/rtw_security.c | 18 +++++++++++++++---
->   1 file changed, 15 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-> index dbbe7b348d..fd04ae78bb 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_security.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_security.c
-> @@ -759,9 +759,21 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
->
->   	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length-4));
->
-> -	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
-> -		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
-> -				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
-> +	if (crc[3] != payload[length - 1] ||
-> +			crc[2] != payload[length - 2] ||
-> +			crc[1] != payload[length - 3] ||
-> +			crc[0] != payload[length - 4]) {
+this will reduce some overhead on usb bus.
 
-The continuation lines should be lined up with the opening paren. This should be
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/ani.c | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
-	if (crc[3] != payload[length - 1] ||
-	    crc[2] != payload[length - 2] ||
-	    crc[1] != payload[length - 3] ||
-	    crc[0] != payload[length - 4]) {
-
-> +
-> +		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-> +				("rtw_wep_decrypt23a:icv error "
-> +				 "crc[3](%x)!= payload[length-1](%x) || "
-> +				 "crc[2](%x)!= payload[length-2](%x) || "
-> +				 "crc[1](%x)!= payload[length-3](%x) || "
-> +				 "crc[0](%x)!= payload[length-4](%x)\n",
-> +				 crc[3], payload[length - 1],
-> +				 crc[2], payload[length - 2],
-> +				 crc[1], payload[length - 3],
-> +				 crc[0], payload[length - 4]));
-
-Same problem here.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index ca01d17..25e45e4 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -107,11 +107,21 @@ static const struct ani_cck_level_entry cck_level_table[] = {
+ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
+ 				     struct ath9k_mib_stats *stats)
+ {
+-	stats->ackrcv_bad += REG_READ(ah, AR_ACK_FAIL);
+-	stats->rts_bad += REG_READ(ah, AR_RTS_FAIL);
+-	stats->fcs_bad += REG_READ(ah, AR_FCS_FAIL);
+-	stats->rts_good += REG_READ(ah, AR_RTS_OK);
+-	stats->beacons += REG_READ(ah, AR_BEACON_CNT);
++	u32 addr[5] = {AR_RTS_OK, AR_RTS_FAIL, AR_ACK_FAIL,
++		       AR_FCS_FAIL, AR_BEACON_CNT};
++	u32 data[5];
++
++	REG_READ_MULTI(ah, &addr[0], &data[0], 5);
++	/* AR_RTS_OK */
++	stats->rts_good += data[0];
++	/* AR_RTS_FAIL */
++	stats->rts_bad += data[1];
++	/* AR_ACK_FAIL */
++	stats->ackrcv_bad += data[2];
++	/* AR_FCS_FAIL */
++	stats->fcs_bad += data[3];
++	/* AR_BEACON_CNT */
++	stats->beacons += data[4];
+ }
+ 
+ static void ath9k_ani_restart(struct ath_hw *ah)
+-- 
+1.9.1
 
