@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58925 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754063AbbCLOCq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 10:02:46 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH] ath9k_htc: force FW v1.4.0
-References: <1425929918-860-1-git-send-email-linux@rempel-privat.de>
-	<87385dz2yx.fsf@kamboji.qca.qualcomm.com>
-	<CAJ-Vmon6j71Eurbe7Sg2ZB06hbOymVYSge_-LeUKCXRDmLE5mw@mail.gmail.com>
-	<54FF5431.3020708@rempel-privat.de>
-Date: Thu, 12 Mar 2015 16:02:39 +0200
-In-Reply-To: <54FF5431.3020708@rempel-privat.de> (Oleksij Rempel's message of
-	"Tue, 10 Mar 2015 21:29:37 +0100")
-Message-ID: <87bnjytitc.fsf@kamboji.qca.qualcomm.com> (sfid-20150312_150250_736379_6D60012C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:16906 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751862AbbCVRVo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 13:21:44 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 5/6] iwlwifi: add new 3165 series PCI IDs
+Date: Sun, 22 Mar 2015 19:21:31 +0200
+Message-Id: <1427044892-13907-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150322_182148_960419_1787E9B5)
+In-Reply-To: <1427044767.8611.4.camel@egrumbacBox>
+References: <1427044767.8611.4.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel <linux@rempel-privat.de> writes:
+From: Oren Givon <oren.givon@intel.com>
 
-> Am 10.03.2015 um 16:35 schrieb Adrian Chadd:
->> Yeah, let's have it warn for a month or two.
->> 
->> There's some pending work that will break the API with 1.3 firmware,
->> so it has to happen sooner rather than later. But yeah, maybe warn for
->> about a month would be good. the older firmware is still in the git
->> tree in case people want it.
->
-> I'm not sure if warning patch will do the trick.
-> Let me resend this patch in one or two months. Are you ok with it?
-> Like Adrian said, there are pending patches (since 2013) which will
-> brake compatibility with 1.3
+Add new 3165 PCI IDs for new 1x1 cards.
 
-Yeah, that's better. The crystall ball[1] says that 4.2 will be released
-in August, that should be plenty of time for user space to catch up. So
-if you resend this end of April or so the patch should go to 4.2.
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/pcie/drv.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-[1] http://phb-crystal-ball.org/
-
+diff --git a/drivers/net/wireless/iwlwifi/pcie/drv.c b/drivers/net/wireless/iwlwifi/pcie/drv.c
+index dbd6bcf..686dd30 100644
+--- a/drivers/net/wireless/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/iwlwifi/pcie/drv.c
+@@ -368,10 +368,12 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* 3165 Series */
+ 	{IWL_PCI_DEVICE(0x3165, 0x4010, iwl3165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x3165, 0x4012, iwl3165_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x3165, 0x4110, iwl3165_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x3165, 0x4210, iwl3165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x3165, 0x4410, iwl3165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x3165, 0x4510, iwl3165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x3165, 0x4110, iwl3165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x3166, 0x4310, iwl3165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x3166, 0x4210, iwl3165_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x3165, 0x8010, iwl3165_2ac_cfg)},
+ 
+ /* 7265 Series */
+ 	{IWL_PCI_DEVICE(0x095A, 0x5010, iwl7265_2ac_cfg)},
 -- 
-Kalle Valo
+1.9.1
+
