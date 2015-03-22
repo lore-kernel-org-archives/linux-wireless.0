@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f182.google.com ([209.85.212.182]:35391 "EHLO
-	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbbCXHEd convert rfc822-to-8bit (ORCPT
+Received: from [68.230.241.172] ([68.230.241.172]:43417 "EHLO
+	fed1rmwml304.cox.net" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826AbbCVSGf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 03:04:33 -0400
-Received: by wibdy8 with SMTP id dy8so66728171wib.0
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 00:04:31 -0700 (PDT)
+	Sun, 22 Mar 2015 14:06:35 -0400
+Received: from fed1rmimpo306 ([68.230.241.174]) by fed1rmfepo201.cox.net
+          (InterMail vM.8.01.05.15 201-2260-151-145-20131218) with ESMTP
+          id <20150322175715.MFPW30340.fed1rmfepo201.cox.net@fed1rmimpo306>
+          for <linux-wireless@vger.kernel.org>;
+          Sun, 22 Mar 2015 13:57:15 -0400
+Message-ID: <20150322135714.32R0O.140556.imail@fed1rmwml206> (sfid-20150322_190639_328598_27855F3B)
+Date: Sun, 22 Mar 2015 10:57:14 -0700
+From: Conrad Lara <ipstealer@cox.net>
+To: linux-wireless@vger.kernel.org
+Subject: CRDA/REGDB and 802.11 devices with a frequency offset (transverted
+ onboard)
 MIME-Version: 1.0
-In-Reply-To: <87lhind7p7.fsf@kamboji.qca.qualcomm.com>
-References: <1427114301-18886-1-git-send-email-michal.kazior@tieto.com>
-	<1427114301-18886-2-git-send-email-michal.kazior@tieto.com>
-	<87lhind7p7.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 24 Mar 2015 08:04:31 +0100
-Message-ID: <CA+BoTQkdkNTpcyUoZ=RDNW7jsKeRpJjJt7sHruZ1QBGh8ujJSQ@mail.gmail.com> (sfid-20150324_080437_240650_2CB0E2E3)
-Subject: Re: [PATCH 1/2] ath10k: share board file loading code across FW APIs
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 March 2015 at 17:01, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> There's no need to implement the same thing twice.
->> Reduce code duplication.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> [...]
->
->> @@ -730,6 +716,12 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
->>       /* calibration file is optional, don't check for any errors */
->>       ath10k_fetch_cal_file(ar);
->>
->> +     ret = ath10k_core_fetch_board_file(ar);
->> +     if (ret) {
->> +             ath10k_err(ar, "failed to fetch board file: %d\n", ret);
->> +             return ret;
->> +     }
->> +
->>       ar->fw_api = 4;
->>       ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
->
-> There was a conflict here, please check the resolution in the pending
-> branch.
+All,
 
-Looks good, thanks!
+I've been working with hardware that is essentially ATH9k 802.11n gear that in order to maintain the manufactures investment in designing is basically a stock previous design with a transverter in the frontend (Ubuiqiti) the 900mhz devices are 2.4Ghz devices up/down converted to 900, and the 3.4/3.6GHz devices are 5.8GHz devices up/down converted.
 
+Has any thought been given to handling these sort of situations in the context of setting the radios and maintaining a REGDB compliance?
 
-Michał
+Ideally the manufacture would of just used the chip and called it directly to the frequencies in the correct band, but that would of limited the ability to mass produce under compatibility as the devices as are register just like a regular 2.4/6.8GHz device and the OS doesn't know any better so the choice appears to have been made in many cases to just transvert after the chip api.
+
+I am not sure I can see any method that would universally work without having the ability to inject a user choice or into the subject which is probably a significant hurdle to maintaining regdb compliance, however the other alternative is also just as grim, forcing the publishing of wide-open REGDB tables to handle these devices. 
+
+A middle ground may be an API in the middle that permits a re-mapping of frequency based on hardware ID's (Hopefully every single device has a unique ID, so far all the hardware I have hit has changed the ID for a band change) 
+
+Any input on what discussion (as I am having trouble locating any) may have come up on this subject would be appreciated.
+
+Please include my direct email either in TO or CC field. 
+
+Regards,
+Conrad Lara
+
