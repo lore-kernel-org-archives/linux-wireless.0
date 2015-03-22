@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:44533 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752766AbbCOAP3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 20:15:29 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	m.v.b@runbox.com
-Subject: [PATCH v2 10/16] staging: rtl8723au: that open brace should be on the previous line
-Date: Sat, 14 Mar 2015 20:10:35 -0400
-Message-Id: <1426378241-32469-11-git-send-email-m.v.b@runbox.com> (sfid-20150315_011739_707814_880B1E35)
-In-Reply-To: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
+Received: from plaes.org ([188.166.43.21]:54671 "EHLO plaes.org"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751769AbbCVNgI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 09:36:08 -0400
+From: Priit Laes <plaes@plaes.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Joe Perches <joe@perches.com>, Priit Laes <plaes@plaes.org>
+Subject: [PATCH v2 3/4] rtlwifi: Rename rtl_translate_todbm to rtl_signalpower_todbm
+Date: Sun, 22 Mar 2015 15:35:19 +0200
+Message-Id: <1427031320-10913-4-git-send-email-plaes@plaes.org> (sfid-20150322_143626_897493_58D3DCF0)
+In-Reply-To: <1427031320-10913-1-git-send-email-plaes@plaes.org>
+References: <1427031320-10913-1-git-send-email-plaes@plaes.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct two instances of the checkpatch.pl error indicating that the
-opening curly braces should not be on new lines:
-	ERROR: that open brace { should be on the previous line
-
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Signed-off-by: Priit Laes <plaes@plaes.org>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/rtlwifi/stats.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 803f8965a4..2d762276d3 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -760,8 +760,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+diff --git a/drivers/net/wireless/rtlwifi/stats.c b/drivers/net/wireless/rtlwifi/stats.c
+index 9ebeb6e..4cce472 100644
+--- a/drivers/net/wireless/rtlwifi/stats.c
++++ b/drivers/net/wireless/rtlwifi/stats.c
+@@ -48,14 +48,9 @@ u8 rtl_evm_db_to_percentage(char value)
+ }
+ EXPORT_SYMBOL(rtl_evm_db_to_percentage);
  
- 	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
- 
--	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
--	{
-+	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
- 	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
- 				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
- 		res = _FAIL;
-@@ -845,8 +844,7 @@ static void next_key(u8 *key, int round)
+-static long rtl_translate_todbm(struct ieee80211_hw *hw,
+-			 u8 signal_strength_index)
++static long rtl_signalpower_todbm(u8 signal_strength_index)
  {
- 	u8 rcon;
- 	u8 sbox_key[4];
--	u8 rcon_table[12] =
--	{
-+	u8 rcon_table[12] = {
- 		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
- 		0x1b, 0x36, 0x36, 0x36
- 	};
+-	long signal_power;
+-
+-	signal_power = (long)((signal_strength_index + 1) >> 1);
+-	signal_power -= 95;
+-	return signal_power;
++	return (long)((signal_strength_index + 1) >> 1) - 95;
+ }
+ 
+ long rtl_signal_scale_mapping(long currsig)
+@@ -93,7 +88,7 @@ static void rtl_process_ui_rssi(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
+ 	u8 rfpath;
+-	u32 last_rssi, tmpval;
++	u32 last_rssi;
+ 
+ 	if (!pstatus->packet_toself && !pstatus->packet_beacon)
+ 		return;
+@@ -112,10 +107,9 @@ static void rtl_process_ui_rssi(struct ieee80211_hw *hw,
+ 	    pstatus->signalstrength;
+ 	if (rtlpriv->stats.ui_rssi.index >= PHY_RSSI_SLID_WIN_MAX)
+ 		rtlpriv->stats.ui_rssi.index = 0;
+-	tmpval = rtlpriv->stats.ui_rssi.total_val /
+-		rtlpriv->stats.ui_rssi.total_num;
+-	rtlpriv->stats.signal_strength = rtl_translate_todbm(hw,
+-		(u8) tmpval);
++	rtlpriv->stats.signal_strength = rtl_signalpower_todbm(
++		(u8)rtlpriv->stats.ui_rssi.total_val /
++			rtlpriv->stats.ui_rssi.total_num);
+ 	pstatus->rssi = rtlpriv->stats.signal_strength;
+ 
+ 	if (pstatus->is_cck)
 -- 
-2.1.4
+2.3.3
 
