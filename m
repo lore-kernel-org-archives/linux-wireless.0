@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns2.inescn.pt ([192.35.246.20]:37102 "EHLO trubo.inescn.pt"
+Received: from mout.gmx.net ([212.227.15.19]:61966 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751725AbbCKJ4M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 05:56:12 -0400
-Message-ID: <20150311105604.42081tsuhqw9inn8@horde.inescporto.pt> (sfid-20150311_105616_136861_D12D4020)
-Date: Wed, 11 Mar 2015 10:56:04 +0100
-From: =?iso-8859-1?b?TeFyaW8=?= Lopes <mjlopes@inescporto.pt>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Why can we not set the mcast rate for AP/STA interfaces?
-References: <54FF7095.9010800@candelatech.com>
-In-Reply-To: <54FF7095.9010800@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
+	id S1751888AbbCVSbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 14:31:49 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v3 12/18] ath9k: use rmw buffer in ath9k_hw_set_operating_mode and ath9k_hw_reset
+Date: Sun, 22 Mar 2015 19:29:57 +0100
+Message-Id: <1427049003-8443-13-git-send-email-linux@rempel-privat.de> (sfid-20150322_193418_426573_B7C4C48C)
+In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On which 802.11 amendment (a/b/g/n/ac) and driver allows you setting  
-mcast rate for mesh and IBSS interfaces?
-Far as I know, some vendors send multicast traffic as unicast in order  
-to reduce airtime.
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 662ef3f..1bae771 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1227,6 +1227,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
+ 	u32 mask = AR_STA_ID1_STA_AP | AR_STA_ID1_ADHOC;
+ 	u32 set = AR_STA_ID1_KSRCH_MODE;
+ 
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	switch (opmode) {
+ 	case NL80211_IFTYPE_ADHOC:
+ 		if (!AR_SREV_9340_13(ah)) {
+@@ -1248,6 +1249,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
+ 		break;
+ 	}
+ 	REG_RMW(ah, AR_STA_ID1, set, mask);
++	REG_RMW_BUFFER_FLUSH(ah);
+ }
+ 
+ void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
+@@ -1960,6 +1962,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	if (!ath9k_hw_mci_is_enabled(ah))
+ 		REG_WRITE(ah, AR_OBS, 8);
+ 
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	if (ah->config.rx_intr_mitigation) {
+ 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_LAST, ah->config.rimt_last);
+ 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, ah->config.rimt_first);
+@@ -1969,6 +1972,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_LAST, 300);
+ 		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_FIRST, 750);
+ 	}
++	REG_RMW_BUFFER_FLUSH(ah);
+ 
+ 	ath9k_hw_init_bb(ah, chan);
+ 
+-- 
+1.9.1
 
-Quoting Ben Greear <greearb@candelatech.com>:
-
->> From looking at 3.17 code, it appears we are only supposed to set the
-> mcast rate for mesh and IBSS interfaces?
->
-> What if I want to tell an AP or station to send broadcast/multicast
-> at a higher than default rate?
->
-> Should this just be controlled by the normal 'iw setbitrates' logic?
->
-> Thanks,
-> Ben
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
