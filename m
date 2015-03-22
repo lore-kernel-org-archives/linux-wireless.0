@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44090 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:22718 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932810AbbCPQi2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 12:38:28 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: "M. Vefa Bicakci" <m.v.b@runbox.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org
-Subject: Re: [PATCH v2 15/16] staging: rtl8723au: Correct a typo in a trace log line
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
-	<1426378241-32469-16-git-send-email-m.v.b@runbox.com>
-Date: Mon, 16 Mar 2015 12:38:03 -0400
-In-Reply-To: <1426378241-32469-16-git-send-email-m.v.b@runbox.com> (M. Vefa
-	Bicakci's message of "Sat, 14 Mar 2015 20:10:40 -0400")
-Message-ID: <wrfj1tkosxsk.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150316_173844_823729_3157BE41)
+	id S1751730AbbCVRTc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 13:19:32 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2015-03-22
+Date: Sun, 22 Mar 2015 17:19:28 +0000
+Message-ID: <1427044767.8611.4.camel@egrumbacBox> (sfid-20150322_181936_394316_F56E4EA1)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"M. Vefa Bicakci" <m.v.b@runbox.com> writes:
-> Correct a typo in rtl8723au's rtw_security.c which was most likely
-> caused by a copy and paste mistake. Prior to this commit, the TKIP
-> decryption function referred to WEP in its trace log output.
->
-> Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_security.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-> index eb3544866a..e8d3ce53bb 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_security.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_security.c
-> @@ -757,7 +757,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
->  
->  	if (actual_crc != expected_crc) {
->  		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-> -			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
-> +			 ("rtw_tkip_decrypt23a:icv CRC mismatch: "
-
-If you made this ("%s:icv ....", __func__, ....
-
-you wouldn't have to worry about matching the function name to the debug
-text, in case the function later got renamed.
-
-Cheers,
-Jes
-
->  			  "actual: %08x, expected: %08x\n",
->  			  actual_crc, expected_crc));
->  		res = _FAIL;
+SGkgS2FsbGUsDQoNCkEgbmV3IHJvdW5kIG9mIGZpeGVzIGZvciA0LjAuIE1vc3Qgb2YgdGhlIHBh
+dGNoZXMgYXJlIGFsc28gQ0NlZCB0bw0Kc3RhYmxlLiBEZXRhaWxzIGluIHRoZSB0YWcuIFRoYW5r
+cyENCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCA0Y2Q0YjUwY2MyNDI5Mjk0
+YzIzYTE5OThjMzNmZGZkODA0ZGIwZjM3Og0KDQogIGl3bHdpZmk6IG12bTogQlQgQ29leCAtIGZp
+eCBhIE5VTEwgcG9pbnRlciBleGNlcHRpb24gKDIwMTUtMDMtMDUgMTQ6MTM6MjAgKzAyMDApDQoN
+CmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KDQogIGh0dHBzOi8vZ2l0
+Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1maXhl
+cy5naXQgdGFncy9pd2x3aWZpLWZvci1rYWxsZS0yMDE1LTAzLTIyDQoNCmZvciB5b3UgdG8gZmV0
+Y2ggY2hhbmdlcyB1cCB0byAxZjE2ZWEyOTRkMmVmNjMwMTM3NDBmNGM4NTM5ZTQzMGI2YzEyZGZm
+Og0KDQogIGl3bHdpZmk6IG12bTogcmVtb3ZlIFdBUk5fT04gZm9yIGludmFsaWQgQkEgbm90aWZp
+Y2F0aW9uICgyMDE1LTAzLTE5IDE1OjQzOjExICswMjAwKQ0KDQotLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoqIGF2b2lkIHBh
+bmljIHdpdGggbG90cyBvZiBJQlNTIHN0YXRpb25zDQoqIEZpeCBkdm0ncyBiZWhhdmlvciBhZnRl
+ciBzdXNwZW5kIHJlc3VtZQ0KKiBBbGxvdyB0byBrZWVwIGNvbm5lY3Rpb24gYWZ0ZXIgQ1NBIGZh
+aWx1cmUNCiogUmVtb3ZlIGEgbm9pc3kgYnkgaGFybWxlc3MgV0FSTl9PTg0KKiBOZXcgZGV2aWNl
+IElEcw0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tDQpFbW1hbnVlbCBHcnVtYmFjaCAoMik6DQogICAgICBpd2x3aWZpOiBk
+dm06IGRyb3AgVk8gcGFja2V0cyB3aGVuIG1hYzgwMjExIHRlbGxzIHVzIHRvDQogICAgICBpd2x3
+aWZpOiBkdm06IHJ1biBJTklUIGZpcm13YXJlIGFnYWluIHVwb24gLnN0YXJ0KCkNCg0KSm9oYW5u
+ZXMgQmVyZyAoMyk6DQogICAgICBpd2x3aWZpOiBtdm06IGRpc2Nvbm5lY3QgaWYgQ1NBIHRpbWUg
+ZXZlbnQgZmFpbHMgc2NoZWR1bGluZw0KICAgICAgaXdsd2lmaTogbXZtOiBwcm90ZWN0IHJhdGUg
+c2NhbGluZyBhZ2FpbnN0IG5vbi1tdm0gSUJTUyBzdGF0aW9ucw0KICAgICAgaXdsd2lmaTogbXZt
+OiByZW1vdmUgV0FSTl9PTiBmb3IgaW52YWxpZCBCQSBub3RpZmljYXRpb24NCg0KT3JlbiBHaXZv
+biAoMSk6DQogICAgICBpd2x3aWZpOiBhZGQgbmV3IDMxNjUgc2VyaWVzIFBDSSBJRHMNCg0KIGRy
+aXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvZHZtL2Rldi5oICAgICAgICB8ICAxIC0NCiBkcml2
+ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2R2bS9tYWM4MDIxMS5jICAgfCAxNyArKysrKysrKyst
+LS0tLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvZHZtL3Vjb2RlLmMgICAgICB8
+ICA1IC0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vcnMuYyAgICAgICAg
+IHwgMjQgKysrKysrKysrKysrKysrKysrKysrKy0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXds
+d2lmaS9tdm0vdGltZS1ldmVudC5jIHwgIDIgKysNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
+aWZpL212bS90eC5jICAgICAgICAgfCAgNiArKysrLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9p
+d2x3aWZpL3BjaWUvZHJ2LmMgICAgICAgfCAgNiArKysrLS0NCiA3IGZpbGVzIGNoYW5nZWQsIDQx
+IGluc2VydGlvbnMoKyksIDIwIGRlbGV0aW9ucygtKQ0KDQo=
