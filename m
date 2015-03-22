@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60381 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753225AbbCXSZT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 14:25:19 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Joe Perches <joe@perches.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: rtl8723au: Remove uses of MAC_FMT and MAC_ARG
-References: <1427220609.5642.39.camel@perches.com>
-Date: Tue, 24 Mar 2015 14:25:10 -0400
-In-Reply-To: <1427220609.5642.39.camel@perches.com> (Joe Perches's message of
-	"Tue, 24 Mar 2015 11:10:09 -0700")
-Message-ID: <wrfj8ueml0c9.fsf@redhat.com> (sfid-20150324_192537_539169_939938DA)
+Received: from mail-la0-f43.google.com ([209.85.215.43]:34742 "EHLO
+	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326AbbCVHhp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 03:37:45 -0400
+Received: by lagg8 with SMTP id g8so113640546lag.1
+        for <linux-wireless@vger.kernel.org>; Sun, 22 Mar 2015 00:37:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1426865064-17707-2-git-send-email-johannes@sipsolutions.net>
+References: <1426865064-17707-1-git-send-email-johannes@sipsolutions.net> <1426865064-17707-2-git-send-email-johannes@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Sun, 22 Mar 2015 09:37:29 +0200
+Message-ID: <CA+XVXfesez3UaeR+h5-8VEy8Mn7fJjZYgBuQZHiL+0PPGwynig@mail.gmail.com> (sfid-20150322_083835_233855_2BCC03D7)
+Subject: Re: [PATCH 1/4] mac80211: don't look up destination station twice
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-> Use the standard vsprintf kernel extension to format
-> mac addresses.
+On Fri, Mar 20, 2015 at 5:24 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> This reduces object code size a bit.
+> There's no need to look up the destination station twice while
+> building the 802.11 header for a given frame if the frame will
+> actually be transmitted to the station we initially looked up.
 >
-> Miscellanea:
+> This happens for 4-addr VLAN interfaces and TDLS connections, which
+> both directly send the frame to the station they looked up, though
+> in the case of TDLS some station conditions need to be checked.
 >
-> o Coalesce formats
-> o Realign arguments
-> o Remove the now unused MAC_FMT and MAC_ARG #defines
+> To avoid that, add a variable indicating that we've looked up the
+> station that the frame is going to be transmitted to, and avoid the
+> lookup/flag checking if it already has been done.
 >
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_ap.c           | 41 ++++++-------
->  drivers/staging/rtl8723au/core/rtw_mlme.c         | 26 ++++----
->  drivers/staging/rtl8723au/core/rtw_mlme_ext.c     | 72 +++++++++++------------
->  drivers/staging/rtl8723au/core/rtw_recv.c         | 42 +++++--------
->  drivers/staging/rtl8723au/core/rtw_wlan_util.c    |  6 +-
->  drivers/staging/rtl8723au/core/rtw_xmit.c         |  8 +--
->  drivers/staging/rtl8723au/include/ieee80211.h     |  3 -
->  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 18 +++---
->  drivers/staging/rtl8723au/os_dep/os_intfs.c       |  7 +--
->  9 files changed, 101 insertions(+), 122 deletions(-)
+> In the TDLS case, also move the authorized/wme_sta flag assignment
+> to the correct place, i.e. only when that station is really used.
+> Before this change, the new lookup should always have succeeded so
+> that the potentially erroneous data would be overwritten.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Looks good to me
+The TDLS parts look good.
 
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Arik
