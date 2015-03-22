@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:61966 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751888AbbCVSbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 14:31:49 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v3 12/18] ath9k: use rmw buffer in ath9k_hw_set_operating_mode and ath9k_hw_reset
-Date: Sun, 22 Mar 2015 19:29:57 +0100
-Message-Id: <1427049003-8443-13-git-send-email-linux@rempel-privat.de> (sfid-20150322_193418_426573_B7C4C48C)
-In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
-References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:34819 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626AbbCVQ1y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 12:27:54 -0400
+Message-ID: <550EED87.8010008@lwfinger.net> (sfid-20150322_173210_045852_CCB6D78A)
+Date: Sun, 22 Mar 2015 11:27:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Priit Laes <plaes@plaes.org>, Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Joe Perches <joe@perches.com>
+Subject: Re: [PATCH v2 0/4] rtlwifi: Use common functions for driver stats
+References: <1427031320-10913-1-git-send-email-plaes@plaes.org>
+In-Reply-To: <1427031320-10913-1-git-send-email-plaes@plaes.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/hw.c | 4 ++++
- 1 file changed, 4 insertions(+)
+On 03/22/2015 08:35 AM, Priit Laes wrote:
+> Hi all,
+>
+> This is a small fixup to unify make the drivers use common helper
+> functions for driver statistics.
+>
+> There are no functional changes since the first posting, except dropping
+> patches already applied and addressing the comments by Joe Perches.
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 662ef3f..1bae771 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1227,6 +1227,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
- 	u32 mask = AR_STA_ID1_STA_AP | AR_STA_ID1_ADHOC;
- 	u32 set = AR_STA_ID1_KSRCH_MODE;
- 
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	switch (opmode) {
- 	case NL80211_IFTYPE_ADHOC:
- 		if (!AR_SREV_9340_13(ah)) {
-@@ -1248,6 +1249,7 @@ static void ath9k_hw_set_operating_mode(struct ath_hw *ah, int opmode)
- 		break;
- 	}
- 	REG_RMW(ah, AR_STA_ID1, set, mask);
-+	REG_RMW_BUFFER_FLUSH(ah);
- }
- 
- void ath9k_hw_get_delta_slope_vals(struct ath_hw *ah, u32 coef_scaled,
-@@ -1960,6 +1962,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	if (!ath9k_hw_mci_is_enabled(ah))
- 		REG_WRITE(ah, AR_OBS, 8);
- 
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	if (ah->config.rx_intr_mitigation) {
- 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_LAST, ah->config.rimt_last);
- 		REG_RMW_FIELD(ah, AR_RIMT, AR_RIMT_FIRST, ah->config.rimt_first);
-@@ -1969,6 +1972,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_LAST, 300);
- 		REG_RMW_FIELD(ah, AR_TIMT, AR_TIMT_FIRST, 750);
- 	}
-+	REG_RMW_BUFFER_FLUSH(ah);
- 
- 	ath9k_hw_init_bb(ah, chan);
- 
--- 
-1.9.1
+Are there patches that are required before these work? Applying these four 
+results in the following build errors:
+
+drivers/net/wireless/rtlwifi/rtl8192de/trx.c: In function 
+‘_rtl92de_query_rxphystatus’:
+drivers/net/wireless/rtlwifi/rtl8192de/trx.c:132:3: error: implicit declaration 
+of function ‘rtl_query_rxpwrpercentage’ [-Werror=implicit-function-declaration]
+    pwdb_all = rtl_query_rxpwrpercentage(rx_pwr_all);
+    ^
+drivers/net/wireless/rtlwifi/rtl8192de/trx.c:192:4: error: implicit declaration 
+of function ‘rtl_evm_db_to_percentage’ [-Werror=implicit-function-declaration]
+     evm = rtl_evm_db_to_percentage(p_drvinfo->rxevm[i]);
+     ^
+drivers/net/wireless/rtlwifi/rtl8192de/trx.c:204:4: error: implicit declaration 
+of function ‘rtl_signal_scale_mapping’ [-Werror=implicit-function-declaration]
+     (u8)(rtl_signal_scale_mapping(pwdb_all));
+     ^
+cc1: some warnings being treated as errors
+scripts/Makefile.build:258: recipe for target 
+'drivers/net/wireless/rtlwifi/rtl8192de/trx.o' failed
+
+I cannot find any patches that created common routines in rtlwifi.
+
+Larry
 
