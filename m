@@ -1,30 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45647 "EHLO sipsolutions.net"
+Received: from mout.gmx.net ([212.227.15.18]:50682 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753124AbbC3Inq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:43:46 -0400
-Message-ID: <1427705012.26117.11.camel@sipsolutions.net> (sfid-20150330_104354_387395_1EAE95F1)
-Subject: Re: [PATCH] mac80211: fix failed to set smps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: miaoqing@qti.qualcomm.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com
-Date: Mon, 30 Mar 2015 10:43:32 +0200
-In-Reply-To: <1427433674-5745-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150327_062125_551844_AE1F0CE9)
-References: <1427433674-5745-1-git-send-email-miaoqing@qca.qualcomm.com>
-	 (sfid-20150327_062125_551844_AE1F0CE9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751888AbbCVSb6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 Mar 2015 14:31:58 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH v3 17/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
+Date: Sun, 22 Mar 2015 19:30:02 +0100
+Message-Id: <1427049003-8443-18-git-send-email-linux@rempel-privat.de> (sfid-20150322_193418_546456_2039DDBC)
+In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2015-03-27 at 13:21 +0800, miaoqing@qti.qualcomm.com wrote:
-> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
-> 
-> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+replace REG_WRITE to REG_RMW and place every thing in one
+RMW buffer.
 
-Since you give no commit log, I can only guess what you're trying to do,
-but I suppose you need to use "echo -n" instead of "echo".
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+---
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 38dc965..4773da6 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -1037,17 +1037,17 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 	}
+ 	REG_RMW_BUFFER_FLUSH(ah);
+ 
+-
++	ENABLE_REG_RMW_BUFFER(ah);
+ 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
+ 		      pModal->switchSettling);
+ 	REG_RMW_FIELD(ah, AR_PHY_DESIRED_SZ, AR_PHY_DESIRED_SZ_ADC,
+ 		      pModal->adcDesiredSize);
+ 
+-	REG_WRITE(ah, AR_PHY_RF_CTL4,
+-		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
+-		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
+-		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
+-		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON));
++	REG_RMW(ah, AR_PHY_RF_CTL4,
++		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
++		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
++		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
++		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON), 0);
+ 
+ 	REG_RMW_FIELD(ah, AR_PHY_RF_CTL3, AR_PHY_TX_END_TO_A2_RX_ON,
+ 		      pModal->txEndToRxOn);
+@@ -1076,6 +1076,8 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 				      pModal->swSettleHt40);
+ 	}
+ 
++	REG_RMW_BUFFER_FLUSH(ah);
++
+ 	bb_desired_scale = (pModal->bb_scale_smrt_antenna &
+ 			EEP_4K_BB_DESIRED_SCALE_MASK);
+ 	if ((pBase->txGainType == 0) && (bb_desired_scale != 0)) {
+-- 
+1.9.1
 
