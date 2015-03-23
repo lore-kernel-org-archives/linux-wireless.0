@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:35978 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750739AbbCNEfX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 00:35:23 -0400
-Message-ID: <5503BA87.7000309@openwrt.org> (sfid-20150314_053742_412946_4DFFAE59)
-Date: Sat, 14 Mar 2015 05:35:19 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:41047 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752221AbbCWVia (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2015 17:38:30 -0400
+Message-ID: <551087A3.4090905@broadcom.com> (sfid-20150323_223834_212601_990C6890)
+Date: Mon, 23 Mar 2015 22:37:39 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Sujith Manoharan <sujith@msujith.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/5] ath9k patches
-References: <1425891010-21522-1-git-send-email-sujith@msujith.org>	<87wq2lqb1d.fsf@kamboji.qca.qualcomm.com> <21763.32496.935954.70693@gargle.gargle.HOWL>
-In-Reply-To: <21763.32496.935954.70693@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=windows-1252
+To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: broadcast ssid in scheduled scan
+References: <55105DA7.3040703@broadcom.com>
+In-Reply-To: <55105DA7.3040703@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-03-14 01:21, Sujith Manoharan wrote:
-> Kalle Valo wrote:
->> With these patches I got a new warning:
->> 
->> drivers/net/wireless/ath/ath9k/ar9003_aic.c: In function 'ar9003_aic_cal_post_process':
->> drivers/net/wireless/ath/ath9k/ar9003_aic.c:431:1: warning: the frame size of 1312 bytes is larger than 1024 bytes [-Wframe-larger-than=]
->> 
->> Is it a valid warning?
-> 
-> When CONFIG_FRAME_WARN is set to 1024, this will be hit.
-> On my machine, the value is 2048, so the stack doesn't overflow.
-> 
-> But, 1024 could be a valid limit in some architectures, so I'll
-> rework ar9003_aic_cal_post_process() to avoid using the stack
-> excessively and post another series.
-It's probably enough to just change struct ath_aic_sram_info to make it
-fit: Just put the bool fields together and make them single-bit.
-This should save more than 300 bytes.
+On 03/23/15 19:38, Arend van Spriel wrote:
+> Johannes, Jouni,
+>
+> I have noticed that under some circumstances wpa_supplicant initiates a
+> scheduled scan with broadcast ssid. This is something our firmware can
+> not do so could this be avoided? Maybe by adding a feature flag for it.
+> I will look into it some more to understand the scenarios in which
+> broadcast ssid is used in scheduled scan request. If you know about this
+> feel free to let me know.
 
-- Felix
+ From the code in wpa_supplicant_req_sched_scan() it seems the wildcard 
+ssid (referred to as broadcast ssid) is added if one or more networks 
+are configured without 'scan_ssid=1'. So if none of the networks have 
+this option only the broadcast ssid ends up in the request.
+
+Regards,
+Arend
+
+> Regards,
+> Arend
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+
