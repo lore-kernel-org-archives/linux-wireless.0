@@ -1,54 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39134 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266AbbCBLHM (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:42377 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752120AbbCWSif (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 06:07:12 -0500
-Message-ID: <54F44353.1090907@qti.qualcomm.com> (sfid-20150302_120717_466562_842B63AA)
-Date: Mon, 2 Mar 2015 16:32:43 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+	Mon, 23 Mar 2015 14:38:35 -0400
+Message-ID: <55105DA7.3040703@broadcom.com> (sfid-20150323_193839_072151_DB172886)
+Date: Mon, 23 Mar 2015 19:38:31 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH V3 2/2] ath10k: Fix interrupt storm
-References: <1425030606-21933-1-git-send-email-vthiagar@qti.qualcomm.com>	<1425030606-21933-2-git-send-email-vthiagar@qti.qualcomm.com>	<CA+BoTQ=UFo=2Fa8FXw6JTGKkNLoG=m56py0a8AShyh3nTJ+TKQ@mail.gmail.com>	<1425288686058.83668@qti.qualcomm.com>	<54F438C5.802@qti.qualcomm.com> <CA+BoTQmLciCZ4dXbH4rO1vU32OQzNgF+cJT-tkFcOKvq00Ur1Q@mail.gmail.com>
-In-Reply-To: <CA+BoTQmLciCZ4dXbH4rO1vU32OQzNgF+cJT-tkFcOKvq00Ur1Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+To: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: broadcast ssid in scheduled scan
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
->
->>>> @@ -3476,6 +3504,13 @@ static void ath10k_configure_filter(struct
->>>> ieee80211_hw *hw,
->>>>
->>>>           changed_flags &= SUPPORTED_FILTERS;
->>>>           *total_flags &= SUPPORTED_FILTERS;
->>>> +       if (*total_flags & FIF_PROMISC_IN_BSS) {
->>>> +               if (ar->num_started_vdevs) {
->>>> +                       ath10k_dbg(ar, ATH10K_DBG_MAC,
->>>> +                                  "mac does not enable promiscuous mode
->>>> when already a vdev is running\n");
->>>> +                       *total_flags &= ~FIF_PROMISC_IN_BSS;
->>>> +               }
->>>> +       }
->>>
->>>
->>> There's no need for that, is there? The monitor_recalc() is supposed
->>> to deal with this.
->>
->>
->> Right, but we may not want to create any inconsistencies between
->> *total_flags and actual
->> filters enabled in the driver?.
->
-> See the "DOC: Frame filtering" in include/net/mac80211.h. ath10k
-> either always delivers frames IN_BSS (AP operation) or can be forced
-> to (via monitor vdev for STA/IBSS operation) so FIF_PROMISC_IN_BSS
-> should never be cleared.
+Johannes, Jouni,
 
-Your are right. We should not be clearing that flag as long as we support
-that functionality in one or other way. Thanks.
+I have noticed that under some circumstances wpa_supplicant initiates a 
+scheduled scan with broadcast ssid. This is something our firmware can 
+not do so could this be avoided? Maybe by adding a feature flag for it. 
+I will look into it some more to understand the scenarios in which 
+broadcast ssid is used in scheduled scan request. If you know about this 
+feel free to let me know.
 
-Vasanth
+Regards,
+Arend
