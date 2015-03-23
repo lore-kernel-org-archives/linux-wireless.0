@@ -1,60 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static.88-198-24-112.clients.your-server.de ([88.198.24.112]:34199
-	"EHLO nbd.name" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751778AbbCMJys (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:37630 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129AbbCWUuE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 05:54:48 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, karl.beldan@gmail.com
-Subject: [PATCH] mac80211: minstrel_ht: fix rounding issue in MCS duration calculation
-Date: Fri, 13 Mar 2015 10:54:44 +0100
-Message-Id: <1426240484-37307-1-git-send-email-nbd@openwrt.org> (sfid-20150313_105451_955820_5E4ACB7C)
+	Mon, 23 Mar 2015 16:50:04 -0400
+Message-ID: <55107C78.2080707@broadcom.com> (sfid-20150323_215013_322714_63465877)
+Date: Mon, 23 Mar 2015 21:50:00 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?ISO-8859-1?Q?J=FCrgen_Bausa?= <juergen.Bausa@online.de>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom 43340
+References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	 	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	 	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir>	  <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com>	  <loom.20150315T213441-211@post.gmane.org> <5505F651.3060607@broadcom.com>	  <loom.20150317T214603-379@post.gmane.org>	 <1426634407.11120.50.camel@redhat.com>	 <loom.20150318T222315-999@post.gmane.org> <1426714179.26901.37.camel@redhat.com> <5509F0B5.7030601@broadcom.com> <loom.20150319T215852-35@post.gmane.org> <550B4241.4040101@broadcom.com> <loom.20150321T213803-13@post.gmane.org> <550EBF89.7030702@broadcom.com> <loom.20150322T210447-841@post.gmane.org> <550FE268.10601@broadcom.com> <loom.20150323T210645-746@post.gmane.org>
+In-Reply-To: <loom.20150323T210645-746@post.gmane.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On very high MCS bitrates, the calculated duration of rates that are
-next to each other can be very imprecise, due to the small packet size
-used as reference (1200 bytes).
-This is most visible in VHT80 nss=2 MCS8/9, for which minstrel shows the
-same throughput when the probability is also the same. This leads to a
-bad rate selection for such rates.
+On 03/23/15 21:09, Jürgen Bausa wrote:
+> Arend van Spriel<arend@...>  writes:
+>
+>>> I now got it working. Just put 'sleeep 20' before the commands and now it
+>>> works perfectly.
+>>
+>> Holding the boot for 20s is steep, but I guess a working device trumps a
+>> fast boot
+>>
+>
+> Systemd runs even rc.local in parallel. So it doesn't hold the boot process.
 
-Fix this issue by introducing an average A-MPDU size factor into the
-calculation.
+You make me feel old ;-)
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 80452cf..60698fc 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -17,10 +17,11 @@
- #include "rc80211_minstrel.h"
- #include "rc80211_minstrel_ht.h"
- 
-+#define AVG_AMPDU_SIZE	16
- #define AVG_PKT_SIZE	1200
- 
- /* Number of bits for an average sized packet */
--#define MCS_NBITS (AVG_PKT_SIZE << 3)
-+#define MCS_NBITS ((AVG_PKT_SIZE * AVG_AMPDU_SIZE) << 3)
- 
- /* Number of symbols for a packet with (bps) bits per symbol */
- #define MCS_NSYMS(bps) DIV_ROUND_UP(MCS_NBITS, (bps))
-@@ -33,7 +34,8 @@
- 	)
- 
- /* Transmit duration for the raw data part of an average sized packet */
--#define MCS_DURATION(streams, sgi, bps) MCS_SYMBOL_TIME(sgi, MCS_NSYMS((streams) * (bps)))
-+#define MCS_DURATION(streams, sgi, bps) \
-+	(MCS_SYMBOL_TIME(sgi, MCS_NSYMS((streams) * (bps))) / AVG_AMPDU_SIZE)
- 
- #define BW_20			0
- #define BW_40			1
--- 
-2.2.2
-
+Regards,
+Arend
