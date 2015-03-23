@@ -1,74 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:35902 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757198AbbCPRvP (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:38275 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbbCWWdq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 13:51:15 -0400
-Message-ID: <5507180F.1010400@gmail.com> (sfid-20150316_185132_842755_6EFEBCDA)
-Date: Mon, 16 Mar 2015 18:51:11 +0100
-From: "christophe.ricard" <christophe.ricard@gmail.com>
+	Mon, 23 Mar 2015 18:33:46 -0400
+Received: by wibgn9 with SMTP id gn9so77225188wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 15:33:45 -0700 (PDT)
 MIME-Version: 1.0
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>, sameo@linux.intel.com,
-	lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org
-CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: st21nfca: fix st21nfca_get_iso14443_3_uid data copy
-References: <54F17F43.7060605@m4x.org> <1425358732-31752-1-git-send-email-nicolas.iooss_linux@m4x.org> <5506CC74.107@m4x.org>
-In-Reply-To: <5506CC74.107@m4x.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <55109451.5060403@candelatech.com>
+References: <1427133818-21480-1-git-send-email-greearb@candelatech.com>
+ <CAGRGNgV4vTofdxq5G-DwDHMACyd13QT74wSnAbwqxA=1SJkU_Q@mail.gmail.com> <55109451.5060403@candelatech.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 24 Mar 2015 09:33:25 +1100
+Message-ID: <CAGRGNgXh59ax8dObwhVUMQ+iso+4eAUWqLxMUT6mUXeiUK7E6Q@mail.gmail.com> (sfid-20150323_233349_899493_AC40F203)
+Subject: Re: [PATCH 1/2] hs20-ca: Update key generation scripts and files.
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nicolas,
+Hi Ben,
 
-Sorry for the late reply.
-
-I am planning to include your patch with a Acked-by in a future patch serie.
-
-Thanks a lot
-Best Regards
-Christophe
-
-On 16/03/2015 13:28, Nicolas Iooss wrote:
-> Hello,
-> I have not received any comments about this patch so I'm sending it
-> again.  Could you please review it?
+On Tue, Mar 24, 2015 at 9:31 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 03/23/2015 03:16 PM, Julian Calaby wrote:
+>> Hi Ben,
+>>
+>> On Tue, Mar 24, 2015 at 5:03 AM,  <greearb@candelatech.com> wrote:
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> This lets us properly over-ride the default w1.fi
+>>> related strings in order to properly generate keys
+>>> that can be used by the OCSP process.
+>>>
+>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>> ---
+>>>  hs20/server/ca/openssl.cnf | 12 ++++++------
+>>>  hs20/server/ca/setup.sh    | 42 ++++++++++++++++++++++++++++++------------
+>>>  2 files changed, 36 insertions(+), 18 deletions(-)
+>>>
+>>> diff --git a/hs20/server/ca/openssl.cnf b/hs20/server/ca/openssl.cnf
+>>> index e29e737..c614479 100644
+>>> --- a/hs20/server/ca/openssl.cnf
+>>> +++ b/hs20/server/ca/openssl.cnf
+>>> @@ -117,10 +117,10 @@ subjectKeyIdentifier=hash
+>>>  authorityKeyIdentifier=keyid:always,issuer
+>>>  basicConstraints = critical, CA:true, pathlen:0
+>>>  keyUsage = critical, cRLSign, keyCertSign
+>>> -authorityInfoAccess = OCSP;URI:http://osu.w1.fi:8888/
+>>> +authorityInfoAccess = OCSP;URI:@OCSP_URI@
+>>>  # For SP intermediate CA
+>>>  #subjectAltName=critical,otherName:1.3.6.1.4.1.40808.1.1.1;UTF8String:engExample OSU
+>>> -#nameConstraints=permitted;DNS:.w1.fi
+>>> +#nameConstraints=permitted;DNS:.@DOMAIN@
+>>>  #1.3.6.1.5.5.7.1.12=ASN1:SEQUENCE:LogotypeExtn
+>>>
+>>>  [ v3_osu_server ]
+>>> @@ -184,7 +184,7 @@ extendedKeyUsage = OCSPSigning
+>>>  basicConstraints=CA:FALSE
+>>>  subjectKeyIdentifier=hash
+>>>  authorityKeyIdentifier=keyid,issuer
+>>> -authorityInfoAccess = OCSP;URI:http://osu.w1.fi:8888/
+>>> +authorityInfoAccess = OCSP;@OCSP_URI@
+>>
+>> Are you sure this change is correct? You drop the "URI:" part here but
+>> not above or below.
 >
-> Nicolas
+> You are correct, this is a bug.  I've fixed it locally,
+> but not posted a new patch yet.  And, I'll post it to the hostapd
+> mailing list instead of linux-wireless next time since that seems more
+> appropriate.
 >
-> On 03/03/2015 12:58 PM, Nicolas Iooss wrote:
->> st21nfca_get_iso14443_3_uid() does not correctly copy the uid from
->> uid_skb->data to its gate parameter.  "gate = uid_skb->data;" only puts
->> a pointer to uid_skb->data to the local variable gate.  This means that
->> in st21nfca_hci_target_from_gate() the content of "u8
->> uid[NFC_NFCID1_MAXSIZE]" local variable is never initialized before
->> being used in memcpy(target->nfcid1, uid, len).
->>
->> Fix this by replacing the local variable assignment with a memcpy.
->>
->> This was found by compiling Linux with "gcc -Wunused-but-set-parameter".
->>
->> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
->> ---
->>
->> As I did not get any reply from https://lkml.org/lkml/2015/2/28/25 and
->> got confirmation by other people that this may be a real bug, I am now
->> sending a patch to fix it.
->>
->>   drivers/nfc/st21nfca/st21nfca.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/nfc/st21nfca/st21nfca.c b/drivers/nfc/st21nfca/st21nfca.c
->> index 24d3d240d5f4..ff70d2838b29 100644
->> --- a/drivers/nfc/st21nfca/st21nfca.c
->> +++ b/drivers/nfc/st21nfca/st21nfca.c
->> @@ -588,7 +588,7 @@ static int st21nfca_get_iso14443_3_uid(struct nfc_hci_dev *hdev, u8 *gate,
->>   		goto exit;
->>   	}
->>   
->> -	gate = uid_skb->data;
->> +	memcpy(gate, uid_skb->data, uid_skb->len);
->>   	*len = uid_skb->len;
->>   exit:
->>   	kfree_skb(uid_skb);
->>
+> Thanks for the review!
 
+I had no idea what the patch was for, but little inconsistencies like
+that tend to jump out at me.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
