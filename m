@@ -1,47 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34344 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753529AbbCBPO2 (ORCPT
+Received: from smtp02.msg.oleane.net ([62.161.4.2]:34174 "EHLO
+	smtp02.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752526AbbCWPQN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 10:14:28 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Tejun Heo <tj@kernel.org>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 21/32] wireless: use %*pb[l] to print bitmaps including cpumasks and nodemasks
-References: <1422108218-25398-1-git-send-email-tj@kernel.org>
-	<1422108218-25398-22-git-send-email-tj@kernel.org>
-Date: Mon, 02 Mar 2015 17:14:22 +0200
-In-Reply-To: <1422108218-25398-22-git-send-email-tj@kernel.org> (Tejun Heo's
-	message of "Sat, 24 Jan 2015 09:03:27 -0500")
-Message-ID: <87zj7va0tt.fsf@kamboji.qca.qualcomm.com> (sfid-20150302_161445_366436_F513C45C)
+	Mon, 23 Mar 2015 11:16:13 -0400
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp02.msg.oleane.net (MTA) with ESMTP id t2NFGATt003898
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 16:16:10 +0100
+Subject: ath10k: What will happens when radar is detected ?
+Date: Mon, 23 Mar 2015 16:16:09 +0100
+Message-ID: <773DB8A82AB6A046AE0195C68612A319019FEF93@sbs2003.acksys.local> (sfid-20150323_161616_223498_EA9D9D1C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tejun Heo <tj@kernel.org> writes:
+In 802.11ac standard, it is possible to dynamically reduce the channel
+width used.
+My question is:
+	If I use a channel with 80 or 40 MHz width, what will happen if
+I detect radar? 
+		The ath10k card/driver reduces automatically the channel
+width.
 
-> printk and friends can now formap bitmaps using '%*pb[l]'.  cpumask
-> and nodemask also provide cpumask_pr_args() and nodemask_pr_args()
-> respectively which can be used to generate the two printf arguments
-> necessary to format the specified cpu/nodemask.
->
-> This patch is dependent on the following two patches.
->
->  lib/vsprintf: implement bitmap printing through '%*pb[l]'
->  cpumask, nodemask: implement cpumask/nodemask_pr_args()
->
-> Please wait till the forementioned patches are merged to mainline
-> before applying to subsystem trees.
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Andrew Morton <akpm@linux-foundation.org>
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: linux-wireless@vger.kernel.org
-
-This was already applied so I'm dropping it from my queue.
-
--- 
-Kalle Valo
+Cedric Voncken.
