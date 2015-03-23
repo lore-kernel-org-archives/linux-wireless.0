@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:54763 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752310AbbCQISp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 04:18:45 -0400
-Message-ID: <5507E362.6000209@openwrt.org> (sfid-20150317_091849_802158_F647D55D)
-Date: Tue, 17 Mar 2015 09:18:42 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:56552 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751291AbbCWEuF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2015 00:50:05 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2015-03-22
+References: <1427044767.8611.4.camel@egrumbacBox>
+Date: Mon, 23 Mar 2015 06:49:58 +0200
+In-Reply-To: <1427044767.8611.4.camel@egrumbacBox> (Emmanuel Grumbach's
+	message of "Sun, 22 Mar 2015 17:19:28 +0000")
+Message-ID: <87y4moe2rt.fsf@kamboji.qca.qualcomm.com> (sfid-20150323_055010_711014_760A74BA)
 MIME-Version: 1.0
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
-	linux-wireless@vger.kernel.org
-CC: johannes@sipsolutions.net
-Subject: Re: [PATCH v2 04/10] mac80211: add new Minstrel-HT statistic output
- via csv
-References: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1423839472-15625-5-git-send-email-thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1423839472-15625-5-git-send-email-thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-02-13 15:57, Thomas Huehn wrote:
-> This patch adds a new debugfs file "rc_stats_csv" to output
-> Minstrel-HTs statistics in a common csv format that is easy
-> to parse.
-> 
-> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> Signed-off-by: Stefan Venz <ikstream86@gmail.com>
-> ---
-> --- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-> +++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-> +static int
-> +minstrel_ht_stats_csv_open(struct inode *inode, struct file *file)
-> +{
-> +	struct minstrel_ht_sta_priv *msp = inode->i_private;
-> +	struct minstrel_ht_sta *mi = &msp->ht;
-> +	struct minstrel_debugfs_info *ms;
-> +	struct timeval tv;
-> +	unsigned int i;
-> +	int ret;
-> +	char *p;
-> +
-> +	do_gettimeofday(&tv);
-> +
-> +	if (!msp->is_ht) {
-> +		inode->i_private = &msp->legacy;
-> +		ret = minstrel_stats_open(inode, file);
-Should be minstrel_stats_csv_open here?
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-- Felix
+> Hi Kalle,
+>
+> A new round of fixes for 4.0. Most of the patches are also CCed to
+> stable. Details in the tag. Thanks!
+>
+> The following changes since commit 4cd4b50cc2429294c23a1998c33fdfd804db0f37:
+>
+>   iwlwifi: mvm: BT Coex - fix a NULL pointer exception (2015-03-05 14:13:20 +0200)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-03-22
+>
+> for you to fetch changes up to 1f16ea294d2ef63013740f4c8539e430b6c12dff:
+>
+>   iwlwifi: mvm: remove WARN_ON for invalid BA notification (2015-03-19 15:43:11 +0200)
+>
+> ----------------------------------------------------------------
+> * avoid panic with lots of IBSS stations
+> * Fix dvm's behavior after suspend resume
+> * Allow to keep connection after CSA failure
+> * Remove a noisy by harmless WARN_ON
+> * New device IDs
+>
+> ----------------------------------------------------------------
+
+Thanks, pulled.
+
+-- 
+Kalle Valo
