@@ -1,127 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s72.web-hosting.com ([198.187.29.22]:46438 "EHLO
-	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbbCNFyR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62904 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167AbbCWPmI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Mar 2015 01:54:17 -0400
-From: Sujith Manoharan <sujith@msujith.org>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Subject: [PATCH v2 05/11] ath9k: Finish AIC calibration
-Date: Sat, 14 Mar 2015 11:27:51 +0530
-Message-Id: <1426312677-2064-6-git-send-email-sujith@msujith.org> (sfid-20150314_065424_629960_1AE33F6A)
-In-Reply-To: <1426312677-2064-1-git-send-email-sujith@msujith.org>
-References: <1426312677-2064-1-git-send-email-sujith@msujith.org>
+	Mon, 23 Mar 2015 11:42:08 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 0/7] ath10k: add multi-channel support
+References: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 23 Mar 2015 17:41:59 +0200
+In-Reply-To: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 17 Mar 2015 12:30:41 +0000")
+Message-ID: <87twxbd8l4.fsf@kamboji.qca.qualcomm.com> (sfid-20150323_164212_243516_A65DCADB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Set the appropriate bits in the HW after
-AIC calibration is done.
+> New qca6174 with wmi-tlv firmware supports
+> multi-channel operation. To make use of it
+> ath10k needs a few changes: implement mac80211's
+> chanctx API and rework tx queue control a bit.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_aic.c | 78 ++++++++++++++++++++++++++++-
- 1 file changed, 77 insertions(+), 1 deletion(-)
+3-way merge fails:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-index c2cfac3..00aaf4d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-@@ -186,15 +186,91 @@ static void ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
- 	aic->aic_cal_state = AIC_CAL_STATE_STARTED;
- }
- 
-+static void ar9003_aic_cal_done(struct ath_hw *ah)
-+{
-+	/* Disable AIC reference signal in BT modem. */
-+	REG_WRITE(ah, ATH_AIC_BT_JUPITER_CTRL,
-+		  (REG_READ(ah, ATH_AIC_BT_JUPITER_CTRL) &
-+		   ~ATH_AIC_BT_AIC_ENABLE));
-+}
-+
-+static u8 ar9003_aic_cal_continue(struct ath_hw *ah, bool cal_once)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
-+	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
-+	int i, num_chan;
-+
-+	num_chan = MS(mci_hw->config, ATH_MCI_CONFIG_AIC_CAL_NUM_CHAN);
-+
-+	if (!num_chan) {
-+		aic->aic_cal_state = AIC_CAL_STATE_ERROR;
-+		return aic->aic_cal_state;
-+	}
-+
-+	if (cal_once) {
-+		for (i = 0; i < 10000; i++) {
-+			if ((REG_READ(ah, AR_PHY_AIC_CTRL_0_B1) &
-+			     AR_PHY_AIC_CAL_ENABLE) == 0)
-+				break;
-+
-+			udelay(100);
-+		}
-+	}
-+
-+	/*
-+	 * Use AR_PHY_AIC_CAL_ENABLE bit instead of AR_PHY_AIC_CAL_DONE.
-+	 * Sometimes CAL_DONE bit is not asserted.
-+	 */
-+	if ((REG_READ(ah, AR_PHY_AIC_CTRL_0_B1) &
-+	     AR_PHY_AIC_CAL_ENABLE) != 0) {
-+		ath_dbg(common, MCI, "AIC cal is not done after 40ms");
-+		goto exit;
-+	}
-+
-+	REG_WRITE(ah, AR_PHY_AIC_SRAM_ADDR_B1,
-+		  (ATH_AIC_SRAM_CAL_OFFSET | ATH_AIC_SRAM_AUTO_INCREMENT));
-+
-+	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
-+		u32 value;
-+
-+		value = REG_READ(ah, AR_PHY_AIC_SRAM_DATA_B1);
-+
-+		if (value & 0x01) {
-+			if (aic->aic_sram[i] == 0)
-+				aic->aic_caled_chan++;
-+
-+			aic->aic_sram[i] = value;
-+
-+			if (!cal_once)
-+				break;
-+		}
-+	}
-+
-+	if ((aic->aic_caled_chan >= num_chan) || cal_once) {
-+		ar9003_aic_cal_done(ah);
-+	} else {
-+		/* Start calibration */
-+		REG_CLR_BIT(ah, AR_PHY_AIC_CTRL_0_B1, AR_PHY_AIC_CAL_ENABLE);
-+		REG_SET_BIT(ah, AR_PHY_AIC_CTRL_0_B1,
-+			    AR_PHY_AIC_CAL_CH_VALID_RESET);
-+		REG_SET_BIT(ah, AR_PHY_AIC_CTRL_0_B1, AR_PHY_AIC_CAL_ENABLE);
-+	}
-+exit:
-+	return aic->aic_cal_state;
-+
-+}
-+
- u8 ar9003_aic_calibration_single(struct ath_hw *ah)
- {
- 	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
--	u8 cal_ret = 0;
-+	u8 cal_ret;
- 	int num_chan;
- 
- 	num_chan = MS(mci_hw->config, ATH_MCI_CONFIG_AIC_CAL_NUM_CHAN);
- 
- 	ar9003_aic_cal_start(ah, num_chan);
-+	cal_ret = ar9003_aic_cal_continue(ah, true);
- 
- 	return cal_ret;
- }
+Applying: ath10k: allow empty ssid vdev config
+Applying: ath10k: implement chanctx API
+error: short SHA1 7b3e6ca is ambiguous.
+fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/wmi.c).
+Repository lacks necessary blobs to fall back on 3-way merge.
+Cannot fall back to three-way merge.
+Patch failed at 0002 ath10k: implement chanctx API
+
+And no wonder, 7 chars is just too short SHA1 abbreviation. Is there any
+way to make that longer?
+
+Anyway, can you please rebase?
+
 -- 
-2.3.1
-
+Kalle Valo
