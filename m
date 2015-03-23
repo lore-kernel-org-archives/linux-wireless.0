@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:56906 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752603AbbCCLnH (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45255 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751853AbbCWIv1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 06:43:07 -0500
-Date: Tue, 3 Mar 2015 12:43:02 +0100
-From: Florian Westphal <fw@strlen.de>
-To: David Miller <davem@davemloft.net>
-Cc: eric.dumazet@gmail.com, fw@strlen.de, netdev@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH RFC 00/14] shrink skb cb to 44 bytes
-Message-ID: <20150303114302.GE9762@breakpoint.cc> (sfid-20150303_124316_999232_49793CB9)
-References: <1425325763.5130.123.camel@edumazet-glaptop2.roam.corp.google.com>
- <20150302.171747.1423128180512348489.davem@davemloft.net>
- <1425355325.5130.157.camel@edumazet-glaptop2.roam.corp.google.com>
- <20150302.230534.2012113468290945834.davem@davemloft.net>
+	Mon, 23 Mar 2015 04:51:27 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t2N8jTh0005430
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 01:51:27 -0700
+Received: from sc-owa04.marvell.com ([199.233.58.150])
+	by mx0b-0016f401.pphosted.com with ESMTP id 1ta9ymgr69-2
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 01:51:26 -0700
+From: Avinash Patil <patila@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
+	Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/2] mwifiex: stop command path in suspend handler
+Date: Mon, 23 Mar 2015 19:50:55 +0530
+Message-ID: <1427120456-6247-1-git-send-email-patila@marvell.com> (sfid-20150323_095130_568830_44CD80FA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20150302.230534.2012113468290945834.davem@davemloft.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> wrote:
-> From: Eric Dumazet <eric.dumazet@gmail.com>
-> Date: Mon, 02 Mar 2015 20:02:05 -0800
-> 
-> > About the GRO layout change, reason why 'struct sk_buff *last;' is at
-> > the end of struct napi_gro_cb is that this field is not used in fast
-> > path.
-> 
-> Understood.
+Cancel all pending commands including scan commands and stop CAC
+during cfg80211 suspend handler.
 
-Moved it back to end, thanks!
+Signed-off-by: Avinash Patil <patila@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-> While reviewing this I noticed that the jiffies timestamp in GRO cb
-> could really be u32 if we want instead of full "unsigned long".
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index fc3bbe7..eab110b 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -2942,15 +2942,23 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ {
+ 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+ 	struct mwifiex_ds_hs_cfg hs_cfg;
+-	int ret = 0;
+-	struct mwifiex_private *priv =
+-			mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
++	int i, ret = 0;
++	struct mwifiex_private *priv;
++
++	for (i = 0; i < adapter->priv_num; i++) {
++		priv = adapter->priv[i];
++		mwifiex_abort_cac(priv);
++	}
++
++	mwifiex_cancel_all_pending_cmd(adapter);
+ 
+ 	if (!wowlan) {
+ 		dev_warn(adapter->dev, "None of the WOWLAN triggers enabled\n");
+ 		return 0;
+ 	}
+ 
++	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
++
+ 	if (!priv->media_connected) {
+ 		dev_warn(adapter->dev,
+ 			 "Can not configure WOWLAN in disconnected state\n");
+-- 
+1.8.1.4
 
-Made it an u16 at the moment -- then __packed is no longer needed
-and it fits in 40 bytes.
-
-> > Note : We could try to use one bit in skb to advertise zero shinfo(skb).
-> > 
-> > Many skbs have a zeroed shinfo() (but shinfo->dataref == 1) , and
-> > dereferencing skb_shinfo adds a cache line miss. 
-> > 
-> > -> We could avoid memset(shinfo, 0, offsetof(struct skb_shared_info,
-> > dataref)) & atomic_set(&shinfo->dataref, 1); 
-> > 
-> >  in alloc_skb() and friends completely.
-> > 
-> > Unfortunately this kind of change would be quite invasive...
->
-> Right, all these kinds of things touch everything.
-
-Indeed, but thanks for the hint Eric -- I'll investigate.
