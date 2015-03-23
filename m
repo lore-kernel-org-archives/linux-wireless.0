@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50317 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196AbbCTPuv (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:23311 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752467AbbCWOIa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 11:50:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Eliad Peller <eliad@wizery.com>,
-	Pontus Fuchs <pontus.fuchs@gmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap\@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v7 5/6] ARM: dts: add wl12xx/wl18xx bindings
-References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
-	<1426696710-6891-6-git-send-email-eliad@wizery.com>
-	<550AD7C1.2030405@gmail.com>
-	<CAB3XZEfpD7YkwdU7OJJaNFy=MnYVY3-fOVxkA48Vu01LzU0GFg@mail.gmail.com>
-	<20150319212505.GN31346@atomide.com>
-	<87h9tgi4sg.fsf@kamboji.qca.qualcomm.com>
-	<20150320153357.GT31346@atomide.com>
-Date: Fri, 20 Mar 2015 17:50:38 +0200
-In-Reply-To: <20150320153357.GT31346@atomide.com> (Tony Lindgren's message of
-	"Fri, 20 Mar 2015 08:33:57 -0700")
-Message-ID: <87bnjnfz1t.fsf@kamboji.qca.qualcomm.com> (sfid-20150320_165055_665334_42F2B0FA)
+	Mon, 23 Mar 2015 10:08:30 -0400
+Date: Mon, 23 Mar 2015 17:08:14 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [patch] mac80111: aes_ccm: cleanup ieee80211_aes_key_setup_encrypt()
+Message-ID: <20150323140814.GA27609@mwanda> (sfid-20150323_150834_071043_A4722FF9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150323132409.GA20999@jouni.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tony Lindgren <tony@atomide.com> writes:
+This code is written using an anti-pattern called "success handling"
+which makes it hard to read, especially if you are used to normal kernel
+style.  It should instead be written as a list of directives in a row
+with branches for error handling.
 
-> * Kalle Valo <kvalo@codeaurora.org> [150319 23:04]:
->> Tony Lindgren <tony@atomide.com> writes:
->> 
->> >> > Tested OK (boot, scan, join, ping) on Pandaboard ES.
->> >> >
->> >> thanks for testing it!
->> >
->> > Great. As suggested by Kalle, I'll apply all these into
->> > omap-for-v4.1/wl12xx branch and send a pull request for
->> > the arm-soc probably on Friday if no issues are found.
->> 
->> Great, thank you. Just in case you want this:
->> 
->> Acked-by: Kalle Valo <kvalo@codeaurora.org>
->
-> Thanks, I can push out a new branch omap-for-v4.1/wl12xx-v2
-> with your acks assuming you or somebody else have not
-> merged the existing omap-for-v4.1/wl12xx branch yet into the
-> wireless tree?
->
-> In that case I can scrap omap-for-v4.1/wl12xx and then will
-> reply with a commit that we can consider immutable that can
-> be merged into various trees as needed in case of merge
-> conflicts.
->
-> But I'll wait for your confirmation first :)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-After John "retired" we actually have two set of trees now: mac80211
-maintained by Johannes and wireless-drivers maintained by me. I haven't
-pulled anything from your tree and I'm 100% sure Johannes hasn't either.
-So green light from me.
-
--- 
-Kalle Valo
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index 7869bb40..208df7c 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -85,11 +85,15 @@ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
+ 		return tfm;
+ 
+ 	err = crypto_aead_setkey(tfm, key, key_len);
+-	if (!err)
+-		err = crypto_aead_setauthsize(tfm, mic_len);
+-	if (!err)
+-		return tfm;
++	if (err)
++		goto free_aead;
++	err = crypto_aead_setauthsize(tfm, mic_len);
++	if (err)
++		goto free_aead;
++
++	return tfm;
+ 
++free_aead:
+ 	crypto_free_aead(tfm);
+ 	return ERR_PTR(err);
+ }
