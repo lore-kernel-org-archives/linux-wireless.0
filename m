@@ -1,73 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:36703 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbbCQMdV (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:47421 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbbCWPMI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 08:33:21 -0400
-Received: by lamx15 with SMTP id x15so7108750lam.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Mar 2015 05:33:20 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v4 0/7] ath10k: add multi-channel support
-Date: Tue, 17 Mar 2015 12:30:41 +0000
-Message-Id: <1426595448-1630-1-git-send-email-michal.kazior@tieto.com> (sfid-20150317_133325_567822_146872AB)
+	Mon, 23 Mar 2015 11:12:08 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/2] ath10k: fix rts profile for second rate series
+References: <1425451847-14505-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Mon, 23 Mar 2015 17:11:52 +0200
+In-Reply-To: <1425451847-14505-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Wed, 4 Mar 2015 12:20:46 +0530")
+Message-ID: <87bnjjeojr.fsf@kamboji.qca.qualcomm.com> (sfid-20150323_161212_693475_52FF4642)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New qca6174 with wmi-tlv firmware supports
-multi-channel operation. To make use of it
-ath10k needs a few changes: implement mac80211's
-chanctx API and rework tx queue control a bit.
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
+> By default rts protection is enabled in firmware for the second
+> rateset. Currently ath10k selects RTS profile (only for software
+> retries), when legacy stations are associated or asked by mac80211.
+> On congested environment, when AP is running in HT/VHT mode and
+> there are no legacy clients associated, this will impact the
+> robustness. Also enabling RTS protection only for second rateset will
+> not impact performance on clear environment. Fix that.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-Changes since RFC:
- * I've sent `ath10k: defer AP self-peer removal
-   wait` separately now because it's not really
-   required for multi-channel per se
-
-v2:
- * fix null deref after rebasing
- * fix commit log typo
-
-v3:
- * remove some duplication wrt mac80211 [Johannes]
- * small fixes
-
-v4:
- * rebased
- * fix STA CSA
- * drop ar->arvifs data_lock protection patch
- * drop ar->arvifs for vif iteration in favour of
-   ieee80211_iterate_active_interfaces()
- * small refactor in monitor recalc
- * add a patch to fix fw resource allocation for
-   multi-vif/chan
-
-
-Michal Kazior (7):
-  ath10k: allow empty ssid vdev config
-  ath10k: implement chanctx API
-  ath10k: implement adaptive qcs command
-  ath10k: rework tx queue locking
-  ath10k: implement tx pause wmi event
-  ath10k: enable multi-channel on supported devices
-  ath10k: allocate fw resources for iface combinations
-
- drivers/net/wireless/ath/ath10k/core.h    |  18 +
- drivers/net/wireless/ath/ath10k/htt_rx.c  | 102 +++-
- drivers/net/wireless/ath/ath10k/htt_tx.c  |   4 +-
- drivers/net/wireless/ath/ath10k/hw.h      |   6 +-
- drivers/net/wireless/ath/ath10k/mac.c     | 940 ++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/mac.h     |  24 +
- drivers/net/wireless/ath/ath10k/wmi-ops.h |  16 +
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  88 ++-
- drivers/net/wireless/ath/ath10k/wmi-tlv.h |  46 ++
- drivers/net/wireless/ath/ath10k/wmi.c     |  18 +-
- drivers/net/wireless/ath/ath10k/wmi.h     |   1 +
- 11 files changed, 1125 insertions(+), 138 deletions(-)
+Thanks, both patches applied.
 
 -- 
-2.1.4
-
+Kalle Valo
