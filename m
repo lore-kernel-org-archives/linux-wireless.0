@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54172 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbbC3O2i (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:49495 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752106AbbCWOk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 10:28:38 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH 5/5] wil6210: update FW file name
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1427704134-30699-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<87wq1y6d1b.fsf@kamboji.qca.qualcomm.com>
-	<16442708.jC9XbHNgDJ@lx-wigig-72>
-Date: Mon, 30 Mar 2015 17:28:31 +0300
-In-Reply-To: <16442708.jC9XbHNgDJ@lx-wigig-72> (Vladimir Kondratiev's message
-	of "Mon, 30 Mar 2015 17:00:00 +0300")
-Message-ID: <87zj6u36gg.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_162843_973450_19D840EB)
+	Mon, 23 Mar 2015 10:40:27 -0400
+Date: Mon, 23 Mar 2015 17:40:32 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mac80111: Add BIP-GMAC-128 and BIP-GMAC-256 ciphers
+Message-ID: <20150323144032.GK10964@mwanda> (sfid-20150323_154030_685483_2F00DA36)
+References: <20150319125314.GA15250@mwanda>
+ <20150323132409.GA20999@jouni.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20150323132409.GA20999@jouni.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+On Mon, Mar 23, 2015 at 03:24:09PM +0200, Jouni Malinen wrote:
+> > This function should be a list of commands in a row with tiny detours
+> > for exceptions and error handling.  It messes everyone up if the success
+> > path is hidden somewhere in the middle and it leads to bugs like this.
+> 
+> I'm not sure that would be behind this specific bug, 
 
-> On Monday, March 30, 2015 12:38:08 PM Kalle Valo wrote:
->> Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
->> 
->> > Firmware "board" file name has changed from wil6210.board
->> > to wil6210.brd by the FW generation tools.
->> >
->> > Reflect this in the driver.
->> >
->
->> > -#define WIL_FW2_NAME "wil6210.board" /* board & radio parameters */
->> > +#define WIL_FW2_NAME "wil6210.brd" /* board & radio parameters */
->> 
->> I consider the firmware file names as part of stable user space
->> interface (older user space need to work with newer kernel etc) and this
->> change breaks that.
->
-> Hardware was not released to the public yet; no one besides developers
-> in the lab should be affected by this.
+It is though.
 
-Actually that doesn't matter as it's common to run few years old
-kernels, especially in the embedded world. So no matter what, this
-breaks compatibility with user space and without any real benefit
-whatsoever. Now will anyone hit this in practise I don't know.
+1) The code here:
 
-I guess this change is ok for now as wil6210 hw is not that common, but
-in the future please be careful with this.
+	err = crypto_aead_setkey(tfm, key, key_len);
+	if (!err)
+		return tfm;
 
--- 
-Kalle Valo
+   That looks like normal error handling code so your mind glosses over
+   it.  Reviewers are human and this is a blind spot.
+
+2) If you do it in normal kernel style then the return would have been
+   at level 1 indent so the static checkers would have complained about
+   the unreachable code.  This was caught with a static checker anyway,
+   I suppose, but that static check has a lot more false positives so
+   I'm not sure I can release it.
+
+3) This code is just confusing.  The error and the success paths are
+   twisted together.  After the first allocation then the exclusive
+   parts of the success path move from indent level 1 to indent level 2.
+   Confusing code is more likely to have bugs.
+
+regards,
+dan carpenter
+
