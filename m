@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zimbra.real-time.com ([63.170.91.9]:46465 "EHLO
-	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750830AbbCMH3e (ORCPT
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:33166 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbbCWWQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 03:29:34 -0400
-Date: Fri, 13 Mar 2015 18:20:10 +1100
-From: James Cameron <quozl@laptop.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com,
-	cluo@marvell.com, liuzy@marvell.com, crlo@marvell.com,
-	pchen@marvell.com, szli@marvell.com, nishants@marvell.com
-Subject: Re: [PATCHv2 9/9] mwifiex: delay skb allocation for RX until cmd53
- over
-Message-ID: <20150313072010.GU17299@us.netrek.org> (sfid-20150313_083038_087623_A0333706)
-References: <1426248479-28451-1-git-send-email-patila@marvell.com>
- <1426248479-28451-10-git-send-email-patila@marvell.com>
+	Mon, 23 Mar 2015 18:16:32 -0400
+Received: by wgbcc7 with SMTP id cc7so157061186wgb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 15:16:31 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426248479-28451-10-git-send-email-patila@marvell.com>
+In-Reply-To: <1427133818-21480-1-git-send-email-greearb@candelatech.com>
+References: <1427133818-21480-1-git-send-email-greearb@candelatech.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 24 Mar 2015 09:16:10 +1100
+Message-ID: <CAGRGNgV4vTofdxq5G-DwDHMACyd13QT74wSnAbwqxA=1SJkU_Q@mail.gmail.com> (sfid-20150323_231635_707878_8B8E8998)
+Subject: Re: [PATCH 1/2] hs20-ca: Update key generation scripts and files.
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 13, 2015 at 05:37:59PM +0530, Avinash Patil wrote:
-> From: Zhaoyang Liu <liuzy@marvell.com>
-> 
-> This patch moves SKB allocation for RX packets from current
-> place i.e. after reading MP regs to place where we already
-> have read data from SDIO bus ie after cmd53.
-> 
-> mp_rx_aggr_setup has been modified accordingly to set
-> skb_arr to NULL.
-> 
-> Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Reviewed-by: Amitkumar Karwar <akarwar@marvell.com>
-> Reviewed-by: Cathy Luo <cluo@marvell.com>
-> Reviewed-by: Avinash Patil <patila@marvell.com>
+Hi Ben,
+
+On Tue, Mar 24, 2015 at 5:03 AM,  <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
+>
+> This lets us properly over-ride the default w1.fi
+> related strings in order to properly generate keys
+> that can be used by the OCSP process.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
 > ---
->  drivers/net/wireless/mwifiex/sdio.c | 59 ++++++++++++++++++-------------------
->  drivers/net/wireless/mwifiex/sdio.h |  8 ++---
->  2 files changed, 33 insertions(+), 34 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
-> index fdeeb67..330e9d0 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/mwifiex/sdio.c
+>  hs20/server/ca/openssl.cnf | 12 ++++++------
+>  hs20/server/ca/setup.sh    | 42 ++++++++++++++++++++++++++++++------------
+>  2 files changed, 36 insertions(+), 18 deletions(-)
+>
+> diff --git a/hs20/server/ca/openssl.cnf b/hs20/server/ca/openssl.cnf
+> index e29e737..c614479 100644
+> --- a/hs20/server/ca/openssl.cnf
+> +++ b/hs20/server/ca/openssl.cnf
+> @@ -117,10 +117,10 @@ subjectKeyIdentifier=hash
+>  authorityKeyIdentifier=keyid:always,issuer
+>  basicConstraints = critical, CA:true, pathlen:0
+>  keyUsage = critical, cRLSign, keyCertSign
+> -authorityInfoAccess = OCSP;URI:http://osu.w1.fi:8888/
+> +authorityInfoAccess = OCSP;URI:@OCSP_URI@
+>  # For SP intermediate CA
+>  #subjectAltName=critical,otherName:1.3.6.1.4.1.40808.1.1.1;UTF8String:engExample OSU
+> -#nameConstraints=permitted;DNS:.w1.fi
+> +#nameConstraints=permitted;DNS:.@DOMAIN@
+>  #1.3.6.1.5.5.7.1.12=ASN1:SEQUENCE:LogotypeExtn
+>
+>  [ v3_osu_server ]
+> @@ -184,7 +184,7 @@ extendedKeyUsage = OCSPSigning
+>  basicConstraints=CA:FALSE
+>  subjectKeyIdentifier=hash
+>  authorityKeyIdentifier=keyid,issuer
+> -authorityInfoAccess = OCSP;URI:http://osu.w1.fi:8888/
+> +authorityInfoAccess = OCSP;@OCSP_URI@
 
-[snip]
+Are you sure this change is correct? You drop the "URI:" part here but
+not above or below.
 
-> @@ -1538,24 +1550,11 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
->  					rx_len);
->  				return -1;
->  			}
-> -			rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
->  
-> -			skb = mwifiex_alloc_dma_align_buf(rx_len,
-> -							  GFP_KERNEL |
-> -							  GFP_DMA);
-> -
-> -			if (!skb) {
-> -				dev_err(adapter->dev, "%s: failed to alloc skb",
-> -					__func__);
-> -				return -1;
-> -			}
+>  #@ALTNAME@
+>  extendedKeyUsage = clientAuth
+>
+> @@ -194,7 +194,7 @@ extendedKeyUsage = clientAuth
+>  basicConstraints=critical, CA:FALSE
+>  subjectKeyIdentifier=hash
+>  authorityKeyIdentifier=keyid,issuer
+> -authorityInfoAccess = OCSP;URI:http://osu.w1.fi:8888/
+> +authorityInfoAccess = OCSP;URI:@OCSP_URI@
+>  #@ALTNAME@
+>  extendedKeyUsage = critical, serverAuth
+>  keyUsage = critical, keyEncipherment
 
-I like it.
-
-Because I continue to have problems with dev_alloc_skb failing, and
-the "return -1;" that you are removing doesn't seem to leave the card
-and driver in a useful state.
-
-Your patch is hopefully an improvement.
-
-Have you done any testing of response after skb allocation failure
-before and after your patch?
+Thanks,
 
 -- 
-James Cameron
-http://quozl.linux.org.au/
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
