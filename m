@@ -1,31 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52487 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbbCMOVz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34759 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbbCWHZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 10:21:55 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 23 Mar 2015 03:25:32 -0400
+Date: Mon, 23 Mar 2015 12:54:58 +0530
+From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+To: Jose Antonio Delgado Alfonso <jose.delgado@aoifes.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	<arnagara@qti.qualcomm.com>
+Subject: Re: [PATCH v2 2/2] ath10k: allow user to toggle ani_enable via
+ debugfs
+Message-ID: <20150323072456.GC17876@qca.qualcomm.com> (sfid-20150323_082536_615042_5809DB2D)
+References: <1426763280-11284-1-git-send-email-arnagara@qti.qualcomm.com>
+ <1426763280-11284-2-git-send-email-arnagara@qti.qualcomm.com>
+ <550BE826.70608@aoifes.com>
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8192cu: remove unused arguments from
- _beacon_function_enable()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1425913628-6415-1-git-send-email-ap420073@gmail.com>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
-	linux-wireless@vger.kernel.org
-Message-Id: <20150313142154.7FDE2141774@smtp.codeaurora.org> (sfid-20150313_152158_170859_0451AC89)
-Date: Fri, 13 Mar 2015 14:21:54 +0000 (UTC)
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <550BE826.70608@aoifes.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Remove unnecessary parameter in rtl8192cu/hw.c
+On Fri, Mar 20, 2015 at 10:28:06AM +0100, Jose Antonio Delgado Alfonso wrote:
+> Hi Ashok,
 > 
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+> Just a quick question, is it supported by all firmware versions?
+> 
+Yes Jose. It is supported by all firmware versions.
 
-Thanks, applied to wireless-drivers-next.git. I just changed the title based on
-Larry's comment:
-
-708c964c5df8 rtlwifi: rtl8192cu: remove unused arguments from _beacon_function_enable()
-
-Kalle Valo
+Thanks,
+Ashok
+> Thanks,
+> Jose A. Delgado
+> 
+> On 19/03/15 12:08, Ashok Raj Nagarajan wrote:
+> > Now that ANI is enabled by default, allow user to disable or enable ANI feature
+> > from debugfs
+> >
+> > echo 0|1 > /sys/kernel/debug/ieee80211/phyX/ath10k/ani_enable
+> >
+> > Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+> > ---
+> > v2:
+> > Updated commit log
+> > Lock ar->ani_enabled (Kalle Valo)
+> > remove reduntant debug message (Kalle Valo)
+> >
+> >  drivers/net/wireless/ath/ath10k/core.h  |  2 ++
+> >  drivers/net/wireless/ath/ath10k/debug.c | 58 +++++++++++++++++++++++++++++++++
+> >  drivers/net/wireless/ath/ath10k/mac.c   |  2 ++
+> >  3 files changed, 62 insertions(+)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> > index 7cba781..29e0a8b 100644
+> > --- a/drivers/net/wireless/ath/ath10k/core.h
+> > +++ b/drivers/net/wireless/ath/ath10k/core.h
+> > @@ -510,6 +510,8 @@ struct ath10k {
+> >  	u32 ht_cap_info;
+> >  	u32 vht_cap_info;
+> >  	u32 num_rf_chains;
+> > +	/* protected by conf_mutex */
+> > +	bool ani_enabled;
+> >  
+> >  	DECLARE_BITMAP(fw_features, ATH10K_FW_FEATURE_COUNT);
+> >  
+> > diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+> > index 301081d..481e1cc 100644
+> > --- a/drivers/net/wireless/ath/ath10k/debug.c
+> > +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> > @@ -1708,6 +1708,61 @@ static int ath10k_debug_cal_data_release(struct inode *inode,
+> >  	return 0;
+> >  }
+> >  
+> > +static ssize_t ath10k_write_ani_enable(struct file *file,
+> > +				       const char __user *user_buf,
+> > +				       size_t count, loff_t *ppos)
+> > +{
+> > +	struct ath10k *ar = file->private_data;
+> > +	int ret;
+> > +	u8 enable;
+> > +
+> > +	if (kstrtou8_from_user(user_buf, count, 0, &enable))
+> > +		return -EINVAL;
+> > +
+> > +	mutex_lock(&ar->conf_mutex);
+> > +
+> > +	if (ar->ani_enabled == enable) {
+> > +		ret = count;
+> > +		goto exit;
+> > +	}
+> > +
+> > +	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->ani_enable,
+> > +					enable);
+> > +	if (ret) {
+> > +		ath10k_warn(ar, "ani_enable failed from debugfs: %d\n", ret);
+> > +		goto exit;
+> > +	}
+> > +	ar->ani_enabled = enable;
+> > +
+> > +	ret = count;
+> > +
+> > +exit:
+> > +	mutex_unlock(&ar->conf_mutex);
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static ssize_t ath10k_read_ani_enable(struct file *file, char __user *user_buf,
+> > +				      size_t count, loff_t *ppos)
+> > +{
+> > +	struct ath10k *ar = file->private_data;
+> > +	int len = 0;
+> > +	char buf[32];
+> > +
+> > +	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
+> > +			ar->ani_enabled);
+> > +
+> > +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> > +}
+> > +
+> > +static const struct file_operations fops_ani_enable = {
+> > +	.read = ath10k_read_ani_enable,
+> > +	.write = ath10k_write_ani_enable,
+> > +	.open = simple_open,
+> > +	.owner = THIS_MODULE,
+> > +	.llseek = default_llseek,
+> > +};
+> > +
+> >  static const struct file_operations fops_cal_data = {
+> >  	.open = ath10k_debug_cal_data_open,
+> >  	.read = ath10k_debug_cal_data_read,
+> > @@ -2068,6 +2123,9 @@ int ath10k_debug_register(struct ath10k *ar)
+> >  	debugfs_create_file("cal_data", S_IRUSR, ar->debug.debugfs_phy,
+> >  			    ar, &fops_cal_data);
+> >  
+> > +	debugfs_create_file("ani_enable", S_IRUSR | S_IWUSR,
+> > +			    ar->debug.debugfs_phy, ar, &fops_ani_enable);
+> > +
+> >  	debugfs_create_file("nf_cal_period", S_IRUSR | S_IWUSR,
+> >  			    ar->debug.debugfs_phy, ar, &fops_nf_cal_period);
+> >  
+> > diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> > index 380d4b1..366c96f 100644
+> > --- a/drivers/net/wireless/ath/ath10k/mac.c
+> > +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> > @@ -2904,6 +2904,8 @@ static int ath10k_start(struct ieee80211_hw *hw)
+> >  		goto err_core_stop;
+> >  	}
+> >  
+> > +	ar->ani_enabled = true;
+> > +
+> >  	ar->num_started_vdevs = 0;
+> >  	ath10k_regd_update(ar);
+> >  
+> 
+> 
+> -- 
+> 
+> ------------------------------------------------------------------------
+> Jose Antonio Delgado Alfonso
+> Chief Technology Officer
+> 
+> Calle Itálica 1, 1ª Planta
+> 41900 Camas (Sevilla)
+> 
+> Email: jose.delgado@aoifes.com <mailto:jose.delgado@aoifes.com>
+> Tel: (+34) 955 228 533
+> Tel2: (+34) 651 695 494
+> Skype: jdelgadoalfonso
+> Web: www.aoifes.com <http://www.aoifes.com>
+> 
+> ------------------------------------------------------------------------
+> La información contenida en este correo es confidencial y puede ser
+> privilegiada. Está dirigida exclusivamente a los destinatarios indicados
+> arriba. Si Usted no es uno de los destinatarios, le queda totalmente
+> prohibido el uso, distribución, publicación o copia de la información
+> contenida en este correo. Es su propia responsabilidad escanear este
+> correo así como sus adjuntos para detectar virus. Si Usted ha recibido
+> este correo por error, por favor indíquenoslo lo más breve posible a
+> info@aoifes.com <mailto:info@aoifes.com> y borre este correo de su sistema.
+> ------------------------------------------------------------------------
+> The information contained in this e-mail transmission is confidential
+> and may be privileged. It is intended only for the addressee(s) stated
+> above. If you are not an addressee, any use, dissemination,
+> distribution, publication or copying of the information contained in
+> this e-mail is strictly prohibited. It is your responsibility to scan
+> this email and any attachments for viruses. If you have received this
+> e-mail in error, please immediately notify us at info@aoifes.com
+> <mailto:info@aoifes.com> and delete the e-mail from your system.
+> ------------------------------------------------------------------------
