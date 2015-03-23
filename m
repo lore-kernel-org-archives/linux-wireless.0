@@ -1,89 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:36423 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756486AbbCMDhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 23:37:09 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: m.v.b@runbox.com
-Subject: [PATCH 08/16] staging: rtl8723au: Remove unneeded curly braces
-Date: Thu, 12 Mar 2015 23:15:24 -0400
-Message-Id: <1426216532-24058-9-git-send-email-m.v.b@runbox.com> (sfid-20150313_043943_466413_2193E852)
-In-Reply-To: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10919 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbbCWKEC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Mar 2015 06:04:02 -0400
+Message-ID: <550FE50F.10303@broadcom.com> (sfid-20150323_110407_909404_C57D69B4)
+Date: Mon, 23 Mar 2015 11:03:59 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: Stefano Cappa <stefano.cappa@mail.polimi.it>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: informations about Linux wifi driver's architecture today
+References: <1427048376242.67051@mail.polimi.it>,<CAMowtuMgAPsgAKuwSibjAzhDbqEdZGatikCiKks6f3w=4oth+Q@mail.gmail.com> <1427059313289.43792@mail.polimi.it>
+In-Reply-To: <1427059313289.43792@mail.polimi.it>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a number of checkpatch.pl warnings in rtl8723au's rtw_security.c
-related to the existence of unnecessary curly braces around single
-statement blocks:
-	WARNING: braces {} are not necessary for single statement blocks
+On 03/22/15 22:21, Stefano Cappa wrote:
+> Hi
+> I prefer a generic version, without specific things, like this one: h**p://postimg.org/image/hfkpjt3ux/ created by Johannes Berg.
+>
+> And, if available something for the broadcom chip bcm4339.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 16 +++++-----------
- 1 file changed, 5 insertions(+), 11 deletions(-)
+Hi Stefano,
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 6d2f037ba4..61f6c2896f 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -113,9 +113,8 @@ static void crc32_init(void)
- 	for (i = 0; i < 256; ++i) {
- 		k = crc32_reverseBit((u8)i);
- 
--		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
-+		for (c = ((u32)k) << 24, j = 8; j > 0; --j)
- 			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
--		}
- 
- 		p1 = (u8 *)&crc32_table[i];
- 
-@@ -267,9 +266,8 @@ static u32 secmicgetuint32(u8 *p)
- 	s32 i;
- 	u32 res = 0;
- 
--	for (i = 0; i < 4; i++) {
-+	for (i = 0; i < 4; i++)
- 		res |= ((u32)(*p++)) << (8 * i);
--	}
- 
- 	return res;
- }
-@@ -353,9 +351,8 @@ void rtw_secgetmic23a(struct mic_data *pmicdata, u8 *dst)
- 	rtw_secmicappend23abyte23a(pmicdata, 0);
- 	rtw_secmicappend23abyte23a(pmicdata, 0);
- 	/*  and then zeroes until the length is a multiple of 4 */
--	while (pmicdata->nBytesInM != 0) {
-+	while (pmicdata->nBytesInM != 0)
- 		rtw_secmicappend23abyte23a(pmicdata, 0);
--	}
- 	/*  The appendByte function has already computed the result. */
- 	secmicputuint32(dst, pmicdata->L);
- 	secmicputuint32(dst + 4, pmicdata->R);
-@@ -871,10 +868,8 @@ static void byte_sub(u8 *in, u8 *out)
- {
- 	int i;
- 
--	for (i = 0; i < 16; i++) {
-+	for (i = 0; i < 16; i++)
- 		out[i] = sbox(in[i]);
--	}
--
- }
- 
- static void shift_row(u8 *in, u8 *out)
-@@ -935,9 +930,8 @@ static void mix_column(u8 *in, u8 *out)
- 
- 	for (i = 3; i > 0; i--) { /* logical shift left 1 bit */
- 		andf7[i] = andf7[i] << 1;
--		if ((andf7[i - 1] & 0x80) == 0x80) {
-+		if ((andf7[i - 1] & 0x80) == 0x80)
- 			andf7[i] = (andf7[i] | 0x01);
--		}
- 	}
- 	andf7[0] = andf7[0] << 1;
- 	andf7[0] = andf7[0] & 0xfe;
--- 
-2.1.4
+The bcm4339 is supported by the brcmfmac driver and is a cfg8211-based 
+driver aka fullmac device where the 802.11 stack runs on the device. I 
+did write up some stuff about the driver internally, but we can consider 
+putting it on wireless.kernel.org under creative commons license.
+
+Regards,
+Arend
+
+> Thank you.
+>
+> ________________________________________
+> Da: Kathy Giori<kathy.giori@gmail.com>
+> Inviato: domenica 22 marzo 2015 19.35
+> A: Stefano Cappa
+> Cc: linux-wireless@vger.kernel.org
+> Oggetto: Re: informations about Linux wifi driver's architecture today
+>
+> On Sun, Mar 22, 2015 at 11:19 AM, Stefano Cappa
+> <stefano.cappa@mail.polimi.it>  wrote:
+>> Hi!
+>> some months ago, i saw the presentation of Johannes Berg in PDF, but now it isn't available, probably because it's very old.
+>>
+>> This slides will be updated to a new release?
+>>
+>> I have this slide and in page 5/35 (2009-02-26) there is the "Architecture - planned". This is the actual architecture or there are some differences in 2015? If yes, where i can find the new version of this page, with a little diagram?
+>
+> Ciao Stefano,
+>
+> Perhaps Johannes can post a current overview diagram on the Linux
+> wireless wiki (if you share with him which diagram you want to be
+> updated).
+>
+> In terms of vendor-specific architecture, and how it fits in, Kalle
+> Valo posted a high-level diagram for ath10k:
+> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/architecture
+>
+> Are you mainly interested in the architecture of vendor-agnostic upper
+> layers or a description of a specific vendor driver?
+> kg--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
