@@ -1,94 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:55306 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750958AbbCQIcc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 04:32:32 -0400
-Message-ID: <5507E69D.3080001@openwrt.org> (sfid-20150317_093324_381991_EA48BB53)
-Date: Tue, 17 Mar 2015 09:32:29 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:34777 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750906AbbCXGaF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2015 02:30:05 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: David Miller <davem@davemloft.net>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: pull-request: wireless-drivers 2015-03-24
+Date: Tue, 24 Mar 2015 08:29:54 +0200
+Message-ID: <87h9tadi1p.fsf@kamboji.qca.qualcomm.com> (sfid-20150324_073032_964092_0EB0FCA6)
 MIME-Version: 1.0
-To: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
-	linux-wireless@vger.kernel.org
-CC: johannes@sipsolutions.net
-Subject: Re: [PATCH v2 08/10] mac80211: add max. lossless throughput per rate
- to rc_stats
-References: <1423839472-15625-1-git-send-email-thomas@net.t-labs.tu-berlin.de> <1423839472-15625-9-git-send-email-thomas@net.t-labs.tu-berlin.de>
-In-Reply-To: <1423839472-15625-9-git-send-email-thomas@net.t-labs.tu-berlin.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-02-13 15:57, Thomas Huehn wrote:
-> This patch adds the new statistic "maximum possible lossless
-> throughput" to Minstrels and Minstrel-HTs rc_stats (in debugfs). This
-> enables comprehensive comparison between current per-rate throughput
-> and max. achievable per-rate throughput.
-> 
-> Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-> ---
->  net/mac80211/rc80211_minstrel.c            | 12 ++++++++++++
->  net/mac80211/rc80211_minstrel.h            |  1 +
->  net/mac80211/rc80211_minstrel_debugfs.c    | 18 +++++++++++-------
->  net/mac80211/rc80211_minstrel_ht.c         | 19 +++++++++++++++++++
->  net/mac80211/rc80211_minstrel_ht.h         |  1 +
->  net/mac80211/rc80211_minstrel_ht_debugfs.c | 20 ++++++++++++--------
->  6 files changed, 56 insertions(+), 15 deletions(-)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-> index 28de2f7a..42dfef8 100644
-> --- a/net/mac80211/rc80211_minstrel.c
-> +++ b/net/mac80211/rc80211_minstrel.c
-> @@ -87,7 +87,19 @@ int minstrel_get_tp_avg(struct minstrel_rate *mr)
->  	return tp_avg;
->  }
->  
-> +/* return max. potential lossless throughput */
-> +int minstrel_get_tp_max(struct minstrel_rate *mr)
-> +{
-> +	int tp_max, usecs;
->  
-> +	usecs = mr->perfect_tx_time;
-> +	if (!usecs)
-> +		usecs = 1000000;
-> +
-> +	tp_max = 100000 / usecs;
-> +
-> +	return tp_max;
-> +}
-This should probably be an inline function, and you can remove the
-tp_max variable as well.
-By the way, in the case of !usecs, the result (100000 / 1000000) will be
-0, so you can simplify the logic.
+Hi Dave,
 
+here are few more fixes I would like to still get to 4.0 if possible,
+detailed info in the tag below. Please let me know if there are any
+problems.
 
->  /* find & sort topmost throughput rates */
->  static inline void
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 2a55f63..b62b04e 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -350,6 +350,25 @@ minstrel_ht_get_tp_avg(struct minstrel_ht_sta *mi, int group, int rate)
->  }
->  
->  /*
-> + * Return max. potential lossless throughput based on the average A-MPDU
-> + */
-> +int
-> +minstrel_ht_get_tp_max(struct minstrel_ht_sta *mi, int group, int rate)
-> +{
-> +	unsigned int nsecs = 0;
-> +	unsigned int tp_max;
-> +
-> +	if (group != MINSTREL_CCK_GROUP)
-> +		nsecs = 1000 * mi->overhead / MINSTREL_TRUNC(mi->avg_ampdu_len);
-> +
-> +	nsecs += minstrel_mcs_groups[group].duration[rate];
-> +	tp_max = 100000000 / nsecs;
-> +
-> +	return tp_max;
-> +}
-I don't like duplication of the throughput metric - gets annoying if we
-ever decide to tweak it. How about unifying this with
-minstrel_ht_get_tp_avg by passing in the prob value as a parameter.
+Kalle
 
-- Felix
+The following changes since commit 3f1615340acea54e21f4b9d4d65921540dca84b2:
+
+  brcmfmac: Perform bound checking on vendor command buffer (2015-03-07 10:52:30 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-03-24
+
+for you to fetch changes up to 6ae4ccfee09efe5baa3951d1c1d27050a46a1469:
+
+  Merge tag 'iwlwifi-for-kalle-2014-03-22' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-03-23 06:43:43 +0200)
+
+----------------------------------------------------------------
+
+iwlwifi:
+
+* avoid panic with lots of IBSS stations
+* Fix dvm's behavior after suspend resume
+* Allow to keep connection after CSA failure
+* Remove a noisy by harmless WARN_ON
+* New device IDs
+
+rtlwifi:
+
+* fix IOMMU mapping leak in AP mode
+
+brcmfmac:
+
+* disable MBSS feature for BCM43362 to get AP mode working again
+
+ath9k:
+
+* disable Transmit Power Control (TPC) again due to regressions
+
+* fix beaconing issue with AP+STA setup
+
+----------------------------------------------------------------
+Arend van Spriel (1):
+      brcmfmac: disable MBSS feature for BCM43362
+
+Emmanuel Grumbach (2):
+      iwlwifi: dvm: drop VO packets when mac80211 tells us to
+      iwlwifi: dvm: run INIT firmware again upon .start()
+
+Felix Fietkau (2):
+      ath9k: fix tracking of enabled AP beacons
+      ath9k: disable TPC support again (for now)
+
+Johannes Berg (3):
+      iwlwifi: mvm: disconnect if CSA time event fails scheduling
+      iwlwifi: mvm: protect rate scaling against non-mvm IBSS stations
+      iwlwifi: mvm: remove WARN_ON for invalid BA notification
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2014-03-22' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Larry Finger (1):
+      rtlwifi: Fix IOMMU mapping leak in AP mode
+
+Oren Givon (1):
+      iwlwifi: add new 3165 series PCI IDs
+
+ drivers/net/wireless/ath/ath9k/beacon.c           |   20 ++++++++++-------
+ drivers/net/wireless/ath/ath9k/common.h           |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.c               |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/feature.c |    3 ++-
+ drivers/net/wireless/iwlwifi/dvm/dev.h            |    1 -
+ drivers/net/wireless/iwlwifi/dvm/mac80211.c       |   17 ++++++++-------
+ drivers/net/wireless/iwlwifi/dvm/ucode.c          |    5 -----
+ drivers/net/wireless/iwlwifi/mvm/rs.c             |   24 +++++++++++++++++++--
+ drivers/net/wireless/iwlwifi/mvm/time-event.c     |    2 ++
+ drivers/net/wireless/iwlwifi/mvm/tx.c             |    6 ++++--
+ drivers/net/wireless/iwlwifi/pcie/drv.c           |    6 ++++--
+ drivers/net/wireless/rtlwifi/pci.c                |   12 ++++++++++-
+ 12 files changed, 68 insertions(+), 32 deletions(-)
