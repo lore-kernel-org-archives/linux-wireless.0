@@ -1,191 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34759 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751853AbbCWHZc (ORCPT
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:34439 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752305AbbCXJc0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 03:25:32 -0400
-Date: Mon, 23 Mar 2015 12:54:58 +0530
-From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-To: Jose Antonio Delgado Alfonso <jose.delgado@aoifes.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	<arnagara@qti.qualcomm.com>
-Subject: Re: [PATCH v2 2/2] ath10k: allow user to toggle ani_enable via
- debugfs
-Message-ID: <20150323072456.GC17876@qca.qualcomm.com> (sfid-20150323_082536_615042_5809DB2D)
-References: <1426763280-11284-1-git-send-email-arnagara@qti.qualcomm.com>
- <1426763280-11284-2-git-send-email-arnagara@qti.qualcomm.com>
- <550BE826.70608@aoifes.com>
+	Tue, 24 Mar 2015 05:32:26 -0400
+Received: by iedfl3 with SMTP id fl3so63742193ied.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 02:32:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <550BE826.70608@aoifes.com>
+In-Reply-To: <20150323140814.GA27609@mwanda>
+References: <20150323132409.GA20999@jouni.qca.qualcomm.com>
+	<20150323140814.GA27609@mwanda>
+Date: Tue, 24 Mar 2015 10:32:25 +0100
+Message-ID: <CAKv+Gu_UUceETqDKBXxDYwKR0ApwROpSg8UxRg_DKQmyNvfBFQ@mail.gmail.com> (sfid-20150324_103229_611326_6C6649CB)
+Subject: Re: [patch] mac80111: aes_ccm: cleanup ieee80211_aes_key_setup_encrypt()
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	"<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 20, 2015 at 10:28:06AM +0100, Jose Antonio Delgado Alfonso wrote:
-> Hi Ashok,
-> 
-> Just a quick question, is it supported by all firmware versions?
-> 
-Yes Jose. It is supported by all firmware versions.
+On 23 March 2015 at 15:08, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> This code is written using an anti-pattern called "success handling"
+> which makes it hard to read, especially if you are used to normal kernel
+> style.  It should instead be written as a list of directives in a row
+> with branches for error handling.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+Acked-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 
 Thanks,
-Ashok
-> Thanks,
-> Jose A. Delgado
-> 
-> On 19/03/15 12:08, Ashok Raj Nagarajan wrote:
-> > Now that ANI is enabled by default, allow user to disable or enable ANI feature
-> > from debugfs
-> >
-> > echo 0|1 > /sys/kernel/debug/ieee80211/phyX/ath10k/ani_enable
-> >
-> > Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-> > ---
-> > v2:
-> > Updated commit log
-> > Lock ar->ani_enabled (Kalle Valo)
-> > remove reduntant debug message (Kalle Valo)
-> >
-> >  drivers/net/wireless/ath/ath10k/core.h  |  2 ++
-> >  drivers/net/wireless/ath/ath10k/debug.c | 58 +++++++++++++++++++++++++++++++++
-> >  drivers/net/wireless/ath/ath10k/mac.c   |  2 ++
-> >  3 files changed, 62 insertions(+)
-> >
-> > diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> > index 7cba781..29e0a8b 100644
-> > --- a/drivers/net/wireless/ath/ath10k/core.h
-> > +++ b/drivers/net/wireless/ath/ath10k/core.h
-> > @@ -510,6 +510,8 @@ struct ath10k {
-> >  	u32 ht_cap_info;
-> >  	u32 vht_cap_info;
-> >  	u32 num_rf_chains;
-> > +	/* protected by conf_mutex */
-> > +	bool ani_enabled;
-> >  
-> >  	DECLARE_BITMAP(fw_features, ATH10K_FW_FEATURE_COUNT);
-> >  
-> > diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-> > index 301081d..481e1cc 100644
-> > --- a/drivers/net/wireless/ath/ath10k/debug.c
-> > +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> > @@ -1708,6 +1708,61 @@ static int ath10k_debug_cal_data_release(struct inode *inode,
-> >  	return 0;
-> >  }
-> >  
-> > +static ssize_t ath10k_write_ani_enable(struct file *file,
-> > +				       const char __user *user_buf,
-> > +				       size_t count, loff_t *ppos)
-> > +{
-> > +	struct ath10k *ar = file->private_data;
-> > +	int ret;
-> > +	u8 enable;
-> > +
-> > +	if (kstrtou8_from_user(user_buf, count, 0, &enable))
-> > +		return -EINVAL;
-> > +
-> > +	mutex_lock(&ar->conf_mutex);
-> > +
-> > +	if (ar->ani_enabled == enable) {
-> > +		ret = count;
-> > +		goto exit;
-> > +	}
-> > +
-> > +	ret = ath10k_wmi_pdev_set_param(ar, ar->wmi.pdev_param->ani_enable,
-> > +					enable);
-> > +	if (ret) {
-> > +		ath10k_warn(ar, "ani_enable failed from debugfs: %d\n", ret);
-> > +		goto exit;
-> > +	}
-> > +	ar->ani_enabled = enable;
-> > +
-> > +	ret = count;
-> > +
-> > +exit:
-> > +	mutex_unlock(&ar->conf_mutex);
-> > +
-> > +	return ret;
-> > +}
-> > +
-> > +static ssize_t ath10k_read_ani_enable(struct file *file, char __user *user_buf,
-> > +				      size_t count, loff_t *ppos)
-> > +{
-> > +	struct ath10k *ar = file->private_data;
-> > +	int len = 0;
-> > +	char buf[32];
-> > +
-> > +	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
-> > +			ar->ani_enabled);
-> > +
-> > +	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-> > +}
-> > +
-> > +static const struct file_operations fops_ani_enable = {
-> > +	.read = ath10k_read_ani_enable,
-> > +	.write = ath10k_write_ani_enable,
-> > +	.open = simple_open,
-> > +	.owner = THIS_MODULE,
-> > +	.llseek = default_llseek,
-> > +};
-> > +
-> >  static const struct file_operations fops_cal_data = {
-> >  	.open = ath10k_debug_cal_data_open,
-> >  	.read = ath10k_debug_cal_data_read,
-> > @@ -2068,6 +2123,9 @@ int ath10k_debug_register(struct ath10k *ar)
-> >  	debugfs_create_file("cal_data", S_IRUSR, ar->debug.debugfs_phy,
-> >  			    ar, &fops_cal_data);
-> >  
-> > +	debugfs_create_file("ani_enable", S_IRUSR | S_IWUSR,
-> > +			    ar->debug.debugfs_phy, ar, &fops_ani_enable);
-> > +
-> >  	debugfs_create_file("nf_cal_period", S_IRUSR | S_IWUSR,
-> >  			    ar->debug.debugfs_phy, ar, &fops_nf_cal_period);
-> >  
-> > diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> > index 380d4b1..366c96f 100644
-> > --- a/drivers/net/wireless/ath/ath10k/mac.c
-> > +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> > @@ -2904,6 +2904,8 @@ static int ath10k_start(struct ieee80211_hw *hw)
-> >  		goto err_core_stop;
-> >  	}
-> >  
-> > +	ar->ani_enabled = true;
-> > +
-> >  	ar->num_started_vdevs = 0;
-> >  	ath10k_regd_update(ar);
-> >  
-> 
-> 
-> -- 
-> 
-> ------------------------------------------------------------------------
-> Jose Antonio Delgado Alfonso
-> Chief Technology Officer
-> 
-> Calle Itálica 1, 1ª Planta
-> 41900 Camas (Sevilla)
-> 
-> Email: jose.delgado@aoifes.com <mailto:jose.delgado@aoifes.com>
-> Tel: (+34) 955 228 533
-> Tel2: (+34) 651 695 494
-> Skype: jdelgadoalfonso
-> Web: www.aoifes.com <http://www.aoifes.com>
-> 
-> ------------------------------------------------------------------------
-> La información contenida en este correo es confidencial y puede ser
-> privilegiada. Está dirigida exclusivamente a los destinatarios indicados
-> arriba. Si Usted no es uno de los destinatarios, le queda totalmente
-> prohibido el uso, distribución, publicación o copia de la información
-> contenida en este correo. Es su propia responsabilidad escanear este
-> correo así como sus adjuntos para detectar virus. Si Usted ha recibido
-> este correo por error, por favor indíquenoslo lo más breve posible a
-> info@aoifes.com <mailto:info@aoifes.com> y borre este correo de su sistema.
-> ------------------------------------------------------------------------
-> The information contained in this e-mail transmission is confidential
-> and may be privileged. It is intended only for the addressee(s) stated
-> above. If you are not an addressee, any use, dissemination,
-> distribution, publication or copying of the information contained in
-> this e-mail is strictly prohibited. It is your responsibility to scan
-> this email and any attachments for viruses. If you have received this
-> e-mail in error, please immediately notify us at info@aoifes.com
-> <mailto:info@aoifes.com> and delete the e-mail from your system.
-> ------------------------------------------------------------------------
+Ard.
+
+>
+> diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+> index 7869bb40..208df7c 100644
+> --- a/net/mac80211/aes_ccm.c
+> +++ b/net/mac80211/aes_ccm.c
+> @@ -85,11 +85,15 @@ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
+>                 return tfm;
+>
+>         err = crypto_aead_setkey(tfm, key, key_len);
+> -       if (!err)
+> -               err = crypto_aead_setauthsize(tfm, mic_len);
+> -       if (!err)
+> -               return tfm;
+> +       if (err)
+> +               goto free_aead;
+> +       err = crypto_aead_setauthsize(tfm, mic_len);
+> +       if (err)
+> +               goto free_aead;
+> +
+> +       return tfm;
+>
+> +free_aead:
+>         crypto_free_aead(tfm);
+>         return ERR_PTR(err);
+>  }
