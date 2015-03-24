@@ -1,65 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f179.google.com ([209.85.212.179]:35889 "EHLO
-	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751936AbbCKKFt (ORCPT
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:34445 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbbCXMm4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 06:05:49 -0400
-Received: by wiwh11 with SMTP id h11so27123334wiw.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 03:05:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <2121942.zIG9BfPsTV@wuerfel>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
-	<1425915402-10012-2-git-send-email-eliad@wizery.com>
-	<CABxcv=mygdT2Q+ByVKPx4+o_Oj9KSy=zVX9ng9yN25ivkfSn1A@mail.gmail.com>
-	<2121942.zIG9BfPsTV@wuerfel>
-Date: Wed, 11 Mar 2015 11:05:47 +0100
-Message-ID: <CABxcv=nn9-1a-3809Y1JgC5ExkwHqQmCXRT3tX=h7Z6C7c+m2A@mail.gmail.com> (sfid-20150311_110555_313522_CD8A1AA8)
-Subject: Re: [PATCH v5 2/3] wl18xx: add basic device-tree support
-From: Javier Martinez Canillas <javier@dowhile0.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Eliad Peller <eliad@wizery.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Ido Yariv <ido@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 24 Mar 2015 08:42:56 -0400
+Received: by lbbsy1 with SMTP id sy1so139924768lbb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 05:42:55 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: don't call quiet mode if it's not implemented
+Date: Tue, 24 Mar 2015 12:40:17 +0000
+Message-Id: <1427200817-7407-1-git-send-email-michal.kazior@tieto.com> (sfid-20150324_134300_183855_B766519D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Arnd,
+qca6174 and wmi-tlv doesn't have quiet mode
+implemented. Don't even attempt to call it. This
+fixes a warning when bringing first interface up:
 
-On Wed, Mar 11, 2015 at 10:51 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Wednesday 11 March 2015 01:34:19 Javier Martinez Canillas wrote:
->> > +
->> > +static struct wl12xx_platform_data *
->> > +wlcore_get_platform_data(struct device *dev)
->> > +{
->> > +       struct wl12xx_platform_data *pdata;
->> > +
->> > +       /* first, look for DT data */
->>
->> I thought it was the opposite, that platform data should over-rule DT.
->> That way you can still use the data filled in
->> arch/arm/mach-omap2/pdata-quirks.c even after the driver supports your
->> new DT binding.
->
-> No, the pdata-quirks stuff for this driver must die, it was a hack
-> that only exists because we previously could not attach data to an
-> sdio function.
->
+  failed to set quiet mode period 100 duarion 0 enabled 0 ret -95
 
-Ok sorry, I misunderstood and thought that the output from the
-discussion in patch 3/3 was that the pdata could not still be removed
-due not having a way to configure the clocks for wl12xx.
+Fixes: 8515b5c79a54 ("ath10k: configure thermal throttle while powering up")
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
-I totally agree with removing the pdata on this driver, in fact I
-would go an just remove all the remaining OMAP2+ board files and
-pdata-quirks completely. Most OMAP2+ boards have been converted to DT
-years ago and if someone really cares about mainline support for these
-boards, they can add a DTS and DT bindings for the drivers that still
-needed like this one.
+Notes:
+    (based on pending branch)
 
-Best regards,
-Javier
+ drivers/net/wireless/ath/ath10k/thermal.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
+index 01bae867cae9..1a899d70dc5d 100644
+--- a/drivers/net/wireless/ath/ath10k/thermal.c
++++ b/drivers/net/wireless/ath/ath10k/thermal.c
+@@ -140,6 +140,9 @@ void ath10k_thermal_set_throttling(struct ath10k *ar)
+ 
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	if (!ar->wmi.ops->gen_pdev_set_quiet_mode)
++		return;
++
+ 	if (ar->state != ATH10K_STATE_ON)
+ 		return;
+ 
+-- 
+2.1.4
+
