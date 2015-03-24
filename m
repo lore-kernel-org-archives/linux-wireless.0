@@ -1,182 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:52815 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753993AbbCFRkt (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49718 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752376AbbCXUJy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Mar 2015 12:40:49 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 2/5] brcmfmac: Simplify watchdog sleep.
-Date: Fri, 6 Mar 2015 18:40:39 +0100
-Message-ID: <1425663642-19725-3-git-send-email-arend@broadcom.com> (sfid-20150306_184054_629823_17D15E3B)
-In-Reply-To: <1425663642-19725-1-git-send-email-arend@broadcom.com>
-References: <1425663642-19725-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 24 Mar 2015 16:09:54 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v4 0/10] Improve Minstrels & Minstrel-HTs common code base & statistics
+Date: Tue, 24 Mar 2015 21:09:33 +0100
+Message-Id: <1427227783-4531-1-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150324_210958_353487_8F1B3508)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+This patch series adds several improvements to the readability, the
+output format of rc_stats and the calculated statistics of Minstrel
+and Minstrel-HT. Variable names got more consistent and functions
+got unified between both rate control algorithms.
 
-The watchdog thread is used to put the SDIO bus to sleep when the
-system is idling. This patch simplifies the way it is determined
-when sleep can be entered.
+Greetings Thomas
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Daniel (Deognyoun) Kim <dekim@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 60 +++++++++-----------------
- 1 file changed, 21 insertions(+), 39 deletions(-)
+Changes in v2:
+- fix define MACRO from CPTCFG_* into CONFIG_*
+- change standard deviation symbol sigma into "sd"
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-index c54ba4f..161acd0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
-@@ -485,10 +485,9 @@ struct brcmf_sdio {
- #endif				/* DEBUG */
- 
- 	uint clkstate;		/* State of sd and backplane clock(s) */
--	bool activity;		/* Activity flag for clock down */
- 	s32 idletime;		/* Control for activity timeout */
--	s32 idlecount;	/* Activity timeout counter */
--	s32 idleclock;	/* How to set bus driver when idle */
-+	s32 idlecount;		/* Activity timeout counter */
-+	s32 idleclock;		/* How to set bus driver when idle */
- 	bool rxflow_mode;	/* Rx flow control mode */
- 	bool rxflow;		/* Is rx flow control on */
- 	bool alp_only;		/* Don't use HT clock (ALP only) */
-@@ -511,6 +510,7 @@ struct brcmf_sdio {
- 	struct workqueue_struct *brcmf_wq;
- 	struct work_struct datawork;
- 	atomic_t dpc_tskcnt;
-+	atomic_t dpc_running;
- 
- 	bool txoff;		/* Transmit flow-controlled */
- 	struct brcmf_sdio_count sdcnt;
-@@ -959,13 +959,8 @@ static int brcmf_sdio_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
- 	brcmf_dbg(SDIO, "Enter\n");
- 
- 	/* Early exit if we're already there */
--	if (bus->clkstate == target) {
--		if (target == CLK_AVAIL) {
--			brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
--			bus->activity = true;
--		}
-+	if (bus->clkstate == target)
- 		return 0;
--	}
- 
- 	switch (target) {
- 	case CLK_AVAIL:
-@@ -975,7 +970,6 @@ static int brcmf_sdio_clkctl(struct brcmf_sdio *bus, uint target, bool pendok)
- 		/* Now request HT Avail on the backplane */
- 		brcmf_sdio_htclk(bus, true, pendok);
- 		brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
--		bus->activity = true;
- 		break;
- 
- 	case CLK_SDONLY:
-@@ -1024,17 +1018,6 @@ brcmf_sdio_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
- 
- 		/* Going to sleep */
- 		if (sleep) {
--			/* Don't sleep if something is pending */
--			if (atomic_read(&bus->intstatus) ||
--			    atomic_read(&bus->ipend) > 0 ||
--			    bus->ctrl_frame_stat ||
--			    (!atomic_read(&bus->fcstate) &&
--			    brcmu_pktq_mlen(&bus->txq, ~bus->flowcontrol) &&
--			    data_ok(bus))) {
--				 err = -EBUSY;
--				 goto done;
--			}
--
- 			clkcsr = brcmf_sdiod_regrb(bus->sdiodev,
- 						   SBSDIO_FUNC1_CHIPCLKCSR,
- 						   &err);
-@@ -1045,11 +1028,7 @@ brcmf_sdio_bus_sleep(struct brcmf_sdio *bus, bool sleep, bool pendok)
- 						  SBSDIO_ALP_AVAIL_REQ, &err);
- 			}
- 			err = brcmf_sdio_kso_control(bus, false);
--			/* disable watchdog */
--			if (!err)
--				brcmf_sdio_wd_timer(bus, 0);
- 		} else {
--			bus->idlecount = 0;
- 			err = brcmf_sdio_kso_control(bus, true);
- 		}
- 		if (err) {
-@@ -3566,7 +3545,7 @@ void brcmf_sdio_isr(struct brcmf_sdio *bus)
- 	queue_work(bus->brcmf_wq, &bus->datawork);
- }
- 
--static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
-+static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TIMER, "Enter\n");
- 
-@@ -3627,22 +3606,21 @@ static bool brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
- #endif				/* DEBUG */
- 
- 	/* On idle timeout clear activity flag and/or turn off clock */
--	if ((bus->idletime > 0) && (bus->clkstate == CLK_AVAIL)) {
--		if (++bus->idlecount >= bus->idletime) {
-+	if ((atomic_read(&bus->dpc_tskcnt) == 0) &&
-+	    (atomic_read(&bus->dpc_running) == 0) &&
-+	    (bus->idletime > 0) && (bus->clkstate == CLK_AVAIL)) {
-+		bus->idlecount++;
-+		if (bus->idlecount > bus->idletime) {
-+			brcmf_dbg(SDIO, "idle\n");
-+			sdio_claim_host(bus->sdiodev->func[1]);
-+			brcmf_sdio_wd_timer(bus, 0);
- 			bus->idlecount = 0;
--			if (bus->activity) {
--				bus->activity = false;
--				brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
--			} else {
--				brcmf_dbg(SDIO, "idle\n");
--				sdio_claim_host(bus->sdiodev->func[1]);
--				brcmf_sdio_bus_sleep(bus, true, false);
--				sdio_release_host(bus->sdiodev->func[1]);
--			}
-+			brcmf_sdio_bus_sleep(bus, true, false);
-+			sdio_release_host(bus->sdiodev->func[1]);
- 		}
-+	} else {
-+		bus->idlecount = 0;
- 	}
--
--	return (atomic_read(&bus->ipend) > 0);
- }
- 
- static void brcmf_sdio_dataworker(struct work_struct *work)
-@@ -3651,8 +3629,11 @@ static void brcmf_sdio_dataworker(struct work_struct *work)
- 					      datawork);
- 
- 	while (atomic_read(&bus->dpc_tskcnt)) {
-+		atomic_set(&bus->dpc_running, 1);
- 		atomic_set(&bus->dpc_tskcnt, 0);
- 		brcmf_sdio_dpc(bus);
-+		bus->idlecount = 0;
-+		atomic_set(&bus->dpc_running, 0);
- 	}
- 	if (brcmf_sdiod_freezing(bus->sdiodev)) {
- 		brcmf_sdiod_change_state(bus->sdiodev, BRCMF_SDIOD_DOWN);
-@@ -4154,6 +4135,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 	}
- 	/* Initialize DPC thread */
- 	atomic_set(&bus->dpc_tskcnt, 0);
-+	atomic_set(&bus->dpc_running, 0);
- 
- 	/* Assign bus interface call back */
- 	bus->sdiodev->bus_if->dev = bus->sdiodev->dev;
--- 
-1.9.1
+Changes in v3:
+- fix coding style of return value parts
+- move tp_max calculation into tp_avg function in Minstrel-HT
+- reorder function changes to make patch series consistent
+(thx to Felix Fietkau for his review & comments)
 
+Changes in v4:
+- move tp_max calculation into tp_avg function in legacy Minstrel
+- remove unused function declaration
+(thx to Felix Fietkau for his review & comments)
+
+[PATCH v4 01/10] mac80211: enhance readability of Minstrels rc_stats
+[PATCH v4 02/10] mac80211: enhance readability of Minstrel-HTs
+[PATCH v4 03/10] mac80211: add new Minstrel statistic output via csv
+[PATCH v4 04/10] mac80211: add new Minstrel-HT statistic output via
+[PATCH v4 05/10] mac80211: unify Minstrel & Minstrel-HTs calculation
+[PATCH v4 06/10] mac80211: improve Minstrel variable & function
+[PATCH v4 07/10] mac80211: restructure per-rate throughput
+[PATCH v4 08/10] mac80211: add max lossless throughput per rate
+[PATCH v4 09/10] mac80211: reduce calculation costs of EWMA
+[PATCH v4 10/10] mac80211: add standard deviation to Minstrel stats
