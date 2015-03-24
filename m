@@ -1,66 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51581 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694AbbCKP5m (ORCPT
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:33471 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932610AbbCXTYU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 11:57:42 -0400
-Message-ID: <550065F5.5050607@candelatech.com> (sfid-20150311_165755_892976_7503C625)
-Date: Wed, 11 Mar 2015 08:57:41 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 24 Mar 2015 15:24:20 -0400
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?M=E1rio_Lopes?= <mjlopes@inescporto.pt>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Why can we not set the mcast rate for AP/STA interfaces?
-References: <54FF7095.9010800@candelatech.com> <20150311105604.42081tsuhqw9inn8@horde.inescporto.pt>
-In-Reply-To: <20150311105604.42081tsuhqw9inn8@horde.inescporto.pt>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <55114C85.60703@compulab.co.il>
+References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
+	<55114C85.60703@compulab.co.il>
+Date: Tue, 24 Mar 2015 21:24:19 +0200
+Message-ID: <CAB3XZEd77u36pcqKfMqfUqusHhnFBMJznqRhSL63Yp91y7BXiQ@mail.gmail.com> (sfid-20150324_202425_981211_5D22D578)
+Subject: Re: [PATCH v7 0/6] wlcore: add device-tree support
+From: Eliad Peller <eliad@wizery.com>
+To: Nikita Kiryanov <nikita@compulab.co.il>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>, Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Tony Lindgren <tony@atomide.com>, Sekhar Nori <nsekhar@ti.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	=?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Kevin Hilman <khilman@deeprootsystems.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/2015 02:56 AM, Mário Lopes wrote:
-> On which 802.11 amendment (a/b/g/n/ac) and driver allows you setting mcast rate for mesh and IBSS interfaces?
-> Far as I know, some vendors send multicast traffic as unicast in order to reduce airtime.
+hi Nikita,
 
-I was just looking at the kernel code, I think it was linux/net/wireless/* where
-the device type is made.  I didn't look farther to figure out what it would take
-to make this work with stations or APs.
+On Tue, Mar 24, 2015 at 1:37 PM, Nikita Kiryanov <nikita@compulab.co.il> wrote:
+> Hi Eliad,
+>
+> On 03/18/2015 06:38 PM, Eliad Peller wrote:
+>>
+>> Add device-tree support to the wlcore (wl12xx/wl18xx)
+>> driver.
+>>
+>> Update the current users to use the bindings instead
+>> of pdata-quirks.
+>>
+>> Finally, remove the deprecated wl12xx_platform_data
+>> struct (along with the da850 board file code that
+>> still uses it)
+>
+>
+> Tested-by: Nikita Kiryanov <nikita@compulab.co.il>
+> Tested on am437x-gp-evm with WL1835MODCOM8B
+>
+thanks for testing it!
 
-Thanks,
-Ben
-
-> 
-> 
-> Quoting Ben Greear <greearb@candelatech.com>:
-> 
->>> From looking at 3.17 code, it appears we are only supposed to set the
->> mcast rate for mesh and IBSS interfaces?
->>
->> What if I want to tell an AP or station to send broadcast/multicast
->> at a higher than default rate?
->>
->> Should this just be controlled by the normal 'iw setbitrates' logic?
->>
->> Thanks,
->> Ben
->>
->> -- 
->> Ben Greear <greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> 
-> 
-> 
-> ----------------------------------------------------------------
-> This message was sent using IMP, the Internet Messaging Program.
-> 
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Eliad.
