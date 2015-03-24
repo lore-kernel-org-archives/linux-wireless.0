@@ -1,170 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:57444 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752054AbbC1Mx7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:53:59 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
-	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
-	m.v.b@runbox.com
-Subject: [PATCH v4 14/15] staging: rtl8723au: Use __func__ in trace logs
-Date: Sat, 28 Mar 2015 08:52:47 -0400
-Message-Id: <1427547168-12078-15-git-send-email-m.v.b@runbox.com> (sfid-20150328_135439_764145_688AF786)
-In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
-References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+Received: from packetmixer.de ([79.140.42.25]:57570 "EHLO
+	mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752478AbbCXPgk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2015 11:36:40 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Subject: Fwd: [Battlemesh] Announcing Battlemesh V8 Maribor, Slovenia
+Date: Tue, 24 Mar 2015 16:32:08 +0100
+Message-ID: <15860714.ZEkijQoUMz@prime> (sfid-20150324_163644_644961_73DFF0C4)
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart2542334.9co0A1NLDR"; micalg="pgp-sha1"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rework the trace log-related lines in rtl8723au's rtw_security.c
-to use the __func__ GCC magic variable instead of hardcoding the
-function names into the trace log strings. This also corrects a
-copy-paste-related typo in the function named rtw_tkip_decrypt23a.
 
-Thanks to Jes Sorensen for the suggestion to use __func__.
+--nextPart2542334.9co0A1NLDR
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 49 ++++++++++++++++-----------
- 1 file changed, 30 insertions(+), 19 deletions(-)
+I'm sure there are some on this list who will be interested in joining!=
+ Please=20
+spread the word. :)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index eb3544866a..cdb3707fb2 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -248,9 +248,9 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
- 
- 	if (actual_crc != expected_crc) {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
-+			 ("%s:icv CRC mismatch: "
- 			  "actual: %08x, expected: %08x\n",
--			  actual_crc, expected_crc));
-+			  __func__, actual_crc, expected_crc));
- 	}
- }
- 
-@@ -634,7 +634,8 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 	}
- 
- 	if (stainfo == NULL) {
--		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo == NULL!!!\n"));
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+			 ("%s: stainfo == NULL!!!\n", __func__));
- 		DBG_8723A("%s, psta == NUL\n", __func__);
- 		return _FAIL;
- 	}
-@@ -644,7 +645,8 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 		return _FAIL;
- 	}
- 
--	RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo!= NULL!!!\n"));
-+	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+		 ("%s: stainfo!= NULL!!!\n", __func__));
- 
- 	if (is_multicast_ether_addr(pattrib->ra))
- 		prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
-@@ -718,7 +720,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 	stainfo = rtw_get_stainfo23a(&padapter->stapriv,
- 				     &prxattrib->ta[0]);
- 	if (stainfo == NULL) {
--		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt23a: stainfo == NULL!!!\n"));
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+			 ("%s: stainfo == NULL!!!\n", __func__));
- 		return _FAIL;
- 	}
- 
-@@ -731,7 +734,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 		prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
- 		prwskeylen = 16;
- 	} else {
--		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_decrypt23a: stainfo!= NULL!!!\n"));
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+			 ("%s: stainfo!= NULL!!!\n", __func__));
- 		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
- 		prwskeylen = 16;
- 	}
-@@ -757,9 +761,9 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 
- 	if (actual_crc != expected_crc) {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
-+			 ("%s:icv CRC mismatch: "
- 			  "actual: %08x, expected: %08x\n",
--			  actual_crc, expected_crc));
-+			  __func__, actual_crc, expected_crc));
- 		res = _FAIL;
- 	}
- 
-@@ -1296,7 +1300,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
- 
- 	if (!stainfo) {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--			 ("rtw_aes_encrypt23a: stainfo == NULL!!!\n"));
-+			 ("%s: stainfo == NULL!!!\n", __func__));
- 		DBG_8723A("%s, psta == NUL\n", __func__);
- 		res = _FAIL;
- 		goto out;
-@@ -1307,7 +1311,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
- 		return _FAIL;
- 	}
- 	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--		 ("rtw_aes_encrypt23a: stainfo!= NULL!!!\n"));
-+		 ("%s: stainfo!= NULL!!!\n", __func__));
- 
- 	if (is_multicast_ether_addr(pattrib->ra))
- 		prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
-@@ -1535,10 +1539,16 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 	for (i = 0; i < 8; i++) {
- 		if (pframe[hdrlen + 8 + plen - 8 + i] != message[hdrlen + 8 + plen - 8 + i]) {
- 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--				 ("aes_decipher:mic check error mic[%d]: pframe(%x) != message(%x)\n",
--				 i, pframe[hdrlen + 8 + plen - 8 + i], message[hdrlen + 8 + plen - 8 + i]));
--			DBG_8723A("aes_decipher:mic check error mic[%d]: pframe(%x) != message(%x)\n",
--				  i, pframe[hdrlen + 8 + plen - 8 + i], message[hdrlen + 8 + plen - 8 + i]);
-+				 ("%s:mic check error mic[%d]: "
-+				  "pframe(%x) != message(%x)\n",
-+				  __func__, i,
-+				  pframe[hdrlen + 8 + plen - 8 + i],
-+				  message[hdrlen + 8 + plen - 8 + i]));
-+			DBG_8723A("%s:mic check error mic[%d]: "
-+				  "pframe(%x) != message(%x)\n",
-+				  __func__, i,
-+				  pframe[hdrlen + 8 + plen - 8 + i],
-+				  message[hdrlen + 8 + plen - 8 + i]);
- 			res = _FAIL;
- 		}
- 	}
-@@ -1564,13 +1574,13 @@ int rtw_aes_decrypt23a(struct rtw_adapter *padapter,
- 	stainfo = rtw_get_stainfo23a(&padapter->stapriv, &prxattrib->ta[0]);
- 	if (!stainfo) {
- 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--			 ("rtw_aes_encrypt23a: stainfo == NULL!!!\n"));
-+			 ("%s: stainfo == NULL!!!\n", __func__));
- 		res = _FAIL;
- 		goto exit;
- 	}
- 
- 	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--		 ("rtw_aes_decrypt23a: stainfo!= NULL!!!\n"));
-+		 ("%s: stainfo!= NULL!!!\n", __func__));
- 
- 	if (is_multicast_ether_addr(prxattrib->ra)) {
- 		/* in concurrent we should use sw decrypt in
-@@ -1605,9 +1615,10 @@ void rtw_use_tkipkey_handler23a(void *FunctionContext)
- {
- 	struct rtw_adapter *padapter = (struct rtw_adapter *)FunctionContext;
- 
--	RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("^^^rtw_use_tkipkey_handler23a ^^^\n"));
-+	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+		 ("^^^%s^^^\n", __func__));
- 	padapter->securitypriv.busetkipkey = 1;
- 	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--		 ("^^^rtw_use_tkipkey_handler23a padapter->securitypriv.busetkipkey =%d^^^\n",
--		 padapter->securitypriv.busetkipkey));
-+		 ("^^^%s padapter->securitypriv.busetkipkey =%d^^^\n",
-+		  __func__, padapter->securitypriv.busetkipkey));
- }
--- 
-2.1.4
+=2D---------  Forwarded Message  ----------
+
+Subject: [Battlemesh] Announcing Battlemesh V8 Maribor, Slovenia
+Date: Monday 23 March 2015, 17:13:18
+From: Musti <musti@wlan-si.net>
+To: Battle of the Mesh Mailing List <battlemesh@ml.ninux.org>
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+       Announcing the Wireless Battle Mesh v8
+    (3rd - 9th of August 2015, Maribor, Slovenia)
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+The next 'Wireless Battle of the Mesh' will take place from Mon 3rd
+till Sun 9th of August at Dom Obrambe Pekre, Maribor, Slovenia. The
+event aims to bring together people from across the globe to test the
+performance of different routing protocols for ad-hoc networks, like
+Babel, B.A.T.M.A.N., BMX, OLSR, and 802.11s. Of course, new protocols
+(working on OpenWrt) are always welcome!
+
+It is not required to be active within the mentioned protocols, so if
+you are a mesh networking enthusiast, community networking activist, or=
+
+have an interest in mesh networks in general, you have to check this ou=
+t!
+
+Information about the event is gathered at:
+http://battlemesh.org/BattleMeshV8
+
+
+Location
+=3D=3D=3D=3D=3D=3D=3D=3D
+
+The event takes place at the Dom Obrambe Pekre, Maribor, Slovenia.
+It features one large dining hall with an attached smaller hall for
+talks, a large lecture theater, several smaller classrooms and an
+outdoor auditorium. Expect to find nice community WiFi internet
+connection (open.wlan-si.net), video projectors, beverage and snack
+supplies and some curious hackers.
+
+Participant Registration and Fee
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D
+
+The event itself is free of charge and open for all, so to register
+without hotel and food supply, simply add your name to the participant
+table.
+
+http://battlemesh.org/BattleMeshV8/Participants
+
+If you wish low cost accommodation, a special group booking has been
+arranged. Payment in advance is required to get the full benefit of
+the discount. Therefore, like for the previous event, this year's
+edition features an "early bird low cost" registration program with two=
+
+accomodation options:
+
+Hotel Milena:
+=2D------------
+
+Hotel Milena is a family run hotel under mountain Pohorje for which
+the accommodation is offered in a package. Rooms are for 2-4 people,
+some rooms have a double bed only. In the case of a large number of
+participants some accommodation will be in the neighbouring hotels
+as well. Breakfast is included. There is a 15min walk to the
+conference venue.
+
+Early bird booking is available for 6 nights (August 3rd to 9th)
+for 150 EUR if payment is received before 18th April. The price
+goes up to EUR 175,00 for all later payments. These late arrangements
+are subject to availability.
+
+Camping:
+=2D-------
+
+Camping Kekec is a camping place in the vicinity of Hotel Milena,
+all the usual camping amnesties available. No breakfast included.
+There are shops nearby, walking to the conference venue takes 18 minute=
+s.
+
+Early bird booking is available for 6 nights (August 3rd to 9th)
+for 45 EUR if payment is received before 18th April The price
+goes up to EUR 55,00 for all later payments. These late arrangements
+are subject to availability.
+
+General:
+=2D-------
+
+For any additional information, requests and inquiries get in touch
+with the local organization team: battlemeshv8 at wlan-si.net
+
+Of course, this package is not compulsory. You can also find your own
+bed and food supply yourself during the event if you wish to do so.
+
+Payment information can be found be found here on the Battlemesh Wiki:
+
+http://battlemesh.org/BattleMeshV8#Participant_Registration_and_Fee
+
+Spread the Word
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Feel free to spread the word by forwarding this mail to all lists /
+people that might be interested in it. Blogging about the event is more=
+
+than welcome, and if you do so, please add a ping-back to the wiki page=
+:
+
+http://battlemesh.org/BattleMeshV8
+
+Contact
+=3D=3D=3D=3D=3D=3D=3D
+
+* Web: http://battlemesh.org/BattleMeshV8
+* Email: http://ml.ninux.org/mailman/listinfo/battlemesh
+* IRC: irc.freenode.net #battlemesh
+
+
+Kind regards,
+Musti
+_______________________________________________
+Battlemesh mailing list
+Battlemesh@ml.ninux.org
+http://ml.ninux.org/mailman/listinfo/battlemesh
+=2D----------------------------------------
+--nextPart2542334.9co0A1NLDR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEABECAAYFAlURg3gACgkQrzg/fFk7axbnFQCfYL1xKF/648BKVrgu8vbNSmHY
+Nv0AoLTVpESli1ru4hLHOjI5TaqvOi4W
+=+MsM
+-----END PGP SIGNATURE-----
+
+--nextPart2542334.9co0A1NLDR--
 
