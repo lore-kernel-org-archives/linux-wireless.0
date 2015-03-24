@@ -1,87 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54947 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750848AbbCIRIv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Mar 2015 13:08:51 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
-References: <1425680126-25928-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1425680126-25928-2-git-send-email-Jes.Sorensen@redhat.com>
-	<54FB6DFC.3040509@lwfinger.net>
-Date: Mon, 09 Mar 2015 13:08:47 -0400
-In-Reply-To: <54FB6DFC.3040509@lwfinger.net> (Larry Finger's message of "Sat,
-	07 Mar 2015 15:30:36 -0600")
-Message-ID: <wrfjsideqesg.fsf@ultrasam.lan.trained-monkey.org> (sfid-20150309_180855_369067_1465F895)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-la0-f51.google.com ([209.85.215.51]:36162 "EHLO
+	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752151AbbCXMqA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2015 08:46:00 -0400
+Received: by labe2 with SMTP id e2so83003724lab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 05:45:58 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v5 7/7] ath10k: allocate fw resources for iface combinations
+Date: Tue, 24 Mar 2015 12:43:13 +0000
+Message-Id: <1427200993-7550-8-git-send-email-michal.kazior@tieto.com> (sfid-20150324_134609_970807_AC94657E)
+In-Reply-To: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
+References: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> Quilt reports the following when this patch is refreshed:
->
-> Warning: trailing whitespace in lines 2862,3273,3492,3521 of
-> drivers/net/wireless/rtl8xxxu.c
+The number of 3 vdevs wasn't enough to handle the
+worst case for interface combinations in practice.
 
-Hi Larry,
+wpa_supplicant may need up to 4 vifs to have 2
+vifs actually connected, i.e. p2pdev + client + 2x
+p2p (either p2p client or p2p go).
 
-I fixed up the trailing whitespaces in v2 (and added a
-(setq show-trailing-whitespace t) to my config file).
+This fixes worst case warning:
 
-> I have not analyzed all the temporary manipulations of rtl8xxxu_debug
-> to see what you are doing; however, I suggest that you add a module
-> parameter so that debugging can be enabled without rebuilding the
-> module. That way a user who is using a distro binary can enable
-> debugging without the hassle of a full kernel rebuild.
+  Free vdev map is empty, no more interfaces allowed.
 
-I added a module paramter, and worked around the %@#$%#$%#$ dynamic
-debug issues to get the driver to actually print stuff when you set it.
-For some reason I was convinced I already had this as a module
-parameter.
+This keeps the ability to associate 32 stations in
+AP mode at the cost of not being able to guarantee
+that under all circumstances, i.e. some
+combinations may consume additional fw peer
+entries for internal purposes leaving less
+resource for stations in AP mode.
 
-> Because this driver is under drivers/net, checkpatch.pl adds
-> additional tests that may not be used in other trees. For instance, it
-> complains when it finds a block comment that starts with a bare
-> "/*". What is usually done is to use "/**" instead.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/hw.h      | 6 ++----
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 8 ++++----
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-This part I will leave as is.
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 34fcb6d5786d..1e9a781a45b4 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -280,11 +280,9 @@ enum ath10k_hw_rate_cck {
+ #define TARGET_10_2_DMA_BURST_SIZE		1
+ 
+ /* Target specific defines for WMI-TLV firmware */
+-#define TARGET_TLV_NUM_VDEVS			3
++#define TARGET_TLV_NUM_VDEVS			4
+ #define TARGET_TLV_NUM_STATIONS			32
+-#define TARGET_TLV_NUM_PEERS			((TARGET_TLV_NUM_STATIONS) + \
+-						 (TARGET_TLV_NUM_VDEVS) + \
+-						 2)
++#define TARGET_TLV_NUM_PEERS			35
+ #define TARGET_TLV_NUM_TDLS_VDEVS		1
+ #define TARGET_TLV_NUM_TIDS			((TARGET_TLV_NUM_PEERS) * 2)
+ #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 73cf3d00c2d0..f42ff9d97b00 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1318,8 +1318,8 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
+ 
+ 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
+-		cfg->num_offload_peers = __cpu_to_le32(3);
+-		cfg->num_offload_reorder_bufs = __cpu_to_le32(3);
++		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
++		cfg->num_offload_reorder_bufs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+ 	} else {
+ 		cfg->num_offload_peers = __cpu_to_le32(0);
+ 		cfg->num_offload_reorder_bufs = __cpu_to_le32(0);
+@@ -1336,8 +1336,8 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
+ 	cfg->rx_timeout_pri[3] = __cpu_to_le32(0x28);
+ 	cfg->rx_decap_mode = __cpu_to_le32(1);
+ 	cfg->scan_max_pending_reqs = __cpu_to_le32(4);
+-	cfg->bmiss_offload_max_vdev = __cpu_to_le32(3);
+-	cfg->roam_offload_max_vdev = __cpu_to_le32(3);
++	cfg->bmiss_offload_max_vdev = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
++	cfg->roam_offload_max_vdev = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
+ 	cfg->roam_offload_max_ap_profiles = __cpu_to_le32(8);
+ 	cfg->num_mcast_groups = __cpu_to_le32(0);
+ 	cfg->num_mcast_table_elems = __cpu_to_le32(0);
+-- 
+2.1.4
 
-> I think I understand why some of the "#if 0" blocks are present, but
-> others are not clear. For example, I see no value of keeping code that
-> is labelled "only for PCIe". Is it your intention to add the RTL8723AE
-> to this driver?
-
-I prefer to keep them in place for now, as it makes it easier for me to
-debug the tables when I compare them to the tables in the vendor
-driver. I will eventually remove those, but it's to early to do that
-just yet.
-
-> Running checkpatch.pl on this patch results in total of 24 errors, 99
-> warnings, and 105 checks. From your mail exchange with Joe Perches, I
-> understand that you will not wish to fix all of these; however, the
-> errors should be handled. The fewer of the warnings or checks that are
-> left, the better, if only to prevent interference from the script
-> kiddies.
-
-I should have run checkpatch on Friday when I posted the first
-version. Some of the formatting was due to converting from printk() to
-other wrappers.
-
-It's rather disturbing how checkpatch has been turned into a trolling
-tool used by the script kiddies to harrass actual development, and to
-bump their number of commits in the git log, but I guess there isn't
-much to do about it. As always, I very much appreciate real bug reports!
-
-> I like the clean look of the code. That is particularly impressive
-> given the look of the original. I wish I had the hardware on which to
-> test it. Perhaps I can wedge it into a kernel version that builds and
-> runs on my Radxa Rock,
-
-Thanks, I tried hard to keep it clean, even though there were parts of
-badness that crept over from the original driver. In particular in the
-radio configuration portions.
-
-Cheers,
-Jes
