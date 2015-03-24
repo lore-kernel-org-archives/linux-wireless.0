@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:15367 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbbCEMl0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 07:41:26 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] ath10k: Bypass PLL setting on target init for QCA9888
-References: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Thu, 5 Mar 2015 14:41:16 +0200
-In-Reply-To: <1423460814-2767-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Mon, 9 Feb 2015 11:16:53 +0530")
-Message-ID: <87wq2v4nwz.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_134129_687525_8E1936C2)
+Received: from mga11.intel.com ([192.55.52.93]:40663 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751980AbbCXJn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2015 05:43:28 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+Subject: Re: [PATCH] iwlwifi: Fix memory leak in iwl_req_fw_callback()
+Date: Tue, 24 Mar 2015 09:43:14 +0000
+Message-ID: <1427190194.6454.0.camel@egrumbacBox> (sfid-20150324_104334_153035_F8D1A8AC)
+References: <1427137677-2879-1-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1427137677-2879-1-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
-
-> Some of of qca988x solutions are having global reset issue
-> during target initialization. Bypassing PLL setting before
-> downloading firmware and letting the SoC run on REF_CLK is fixing
-> the problem. Corresponding firmware change is also needed to set
-> the clock source once the target is initialized. Since 10.2.4
-> firmware is having this ROM patch, applying skip_clock_init only
-> for 10.2.4 firmware versions.
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index 310e12b..cd20805 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -797,6 +797,16 @@ static int ath10k_download_cal_data(struct ath10k *ar)
->  	ar->cal_mode = ATH10K_CAL_MODE_OTP;
->  
->  done:
-> +	if ((ar->hw_rev == ATH10K_HW_QCA988X) &&
-> +	    (ar->wmi.op_version == ATH10K_FW_WMI_OP_VERSION_10_2_4)) {
-> +		ret = ath10k_bmi_write32(ar, hi_skip_clock_init, 1);
-> +		if (ret) {
-> +			ath10k_err(ar, "could not write skip_clock_init (%d)\n",
-> +				   ret);
-> +			return ret;
-> +		}
-> +	}
-
-Didn't Michal mention that this should be a firmware feature flag?
-Checking for firmware versions can easily get too complicated, that's
-why we have tried to use feature flags for things like this.
-
-Also I think this should not be hidden inside
-ath10k_download_cal_data(). Maybe ath10k_core_start() is a better place
-to do this?
-
-I can send v3 for this patch.
-
--- 
-Kalle Valo
+T24gTW9uLCAyMDE1LTAzLTIzIGF0IDE0OjA3IC0wNTAwLCBMYXJyeSBGaW5nZXIgd3JvdGU6DQo+
+IEluIHRoaXMgcm91dGluZSwga3phbGxvYyBhbGxvY2F0ZXMgYSBtZW1vcnkgYmxvY2suIFRoaXMg
+YWxsb2NhdGlvbiBpcw0KPiBmcmVlZCBpbiB0aGUgZXJyb3IgcGF0aHMsIGJ1dCBub3QgaW4gdGhl
+IG5vcm1hbCBleGl0LCB0aHVzIHRoZSBhbGxvY2F0aW9uDQo+IGlzIGxlYWtlZC4NCj4gDQo+IFRo
+ZSBrbWVtbGVhayBmYWNpbGl0eSB3YXMgdXNlZCB0byBmaW5kIHRoZSBsZWFrLg0KPiANCg0KUGlj
+a2VkIHVwIC0gdGhhbmtzLg0KDQo+IFNpZ25lZC1vZmYtYnk6IExhcnJ5IEZpbmdlciA8TGFycnku
+RmluZ2VyQGx3ZmluZ2VyLm5ldD4NCj4gQ2M6IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdA
+aW50ZWwuY29tPg0KPiBDYzogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGlu
+dGVsLmNvbT4NCj4gQ2M6IEludGVsIExpbnV4IFdpcmVsZXNzIDxpbHdAbGludXguaW50ZWwuY29t
+Pg0KPiAtLS0NCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWRydi5jIHwgMSAr
+DQo+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKykNCj4gDQo+IGRpZmYgLS1naXQgYS9k
+cml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1kcnYuYyBiL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL2l3bHdpZmkvaXdsLWRydi5jDQo+IGluZGV4IDY2Y2EwMDAuLmFlZmRkOWIgMTAwNjQ0DQo+
+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWRydi5jDQo+ICsrKyBiL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWRydi5jDQo+IEBAIC0xMzE5LDYgKzEzMTks
+NyBAQCBzdGF0aWMgdm9pZCBpd2xfcmVxX2Z3X2NhbGxiYWNrKGNvbnN0IHN0cnVjdCBmaXJtd2Fy
+ZSAqdWNvZGVfcmF3LCB2b2lkICpjb250ZXh0KQ0KPiAgCQkJCW9wLT5uYW1lLCBlcnIpOw0KPiAg
+I2VuZGlmDQo+ICAJfQ0KPiArCWtmcmVlKHBpZWNlcyk7DQo+ICAJcmV0dXJuOw0KPiAgDQo+ICAg
+dHJ5X2FnYWluOg0KDQo=
