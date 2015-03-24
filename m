@@ -1,32 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45603 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753114AbbC3Ii1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:38:27 -0400
-Message-ID: <1427704704.26117.9.camel@sipsolutions.net> (sfid-20150330_103832_913146_3F2B0A5D)
-Subject: Re: [PATCH] mac80211: Fix misplaced return in AES-GMAC key setup
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 30 Mar 2015 10:38:24 +0200
-In-Reply-To: <1427118075-30959-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1427118075-30959-1-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:43452 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbbCXIuh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2015 04:50:37 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v4 5/6] ath10k: add wmi support for tdls
+References: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com>
+	<1426849379-7562-6-git-send-email-marek.puzyniak@tieto.com>
+	<87pp7zd81d.fsf@kamboji.qca.qualcomm.com>
+	<CADnKcVizKNOJwhc9a=XfPUZfEM3V+QJ59sK0oorWK-b3jeKRyA@mail.gmail.com>
+Date: Tue, 24 Mar 2015 10:50:28 +0200
+In-Reply-To: <CADnKcVizKNOJwhc9a=XfPUZfEM3V+QJ59sK0oorWK-b3jeKRyA@mail.gmail.com>
+	(Marek Puzyniak's message of "Tue, 24 Mar 2015 03:33:28 -0400")
+Message-ID: <874mpadbjf.fsf@kamboji.qca.qualcomm.com> (sfid-20150324_095043_860317_30756441)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-23 at 15:41 +0200, Jouni Malinen wrote:
-> Commit 8ade538bf39b ("mac80111: Add BIP-GMAC-128 and BIP-GMAC-256
-> ciphers") had the success return in incorrect place before the
-> crypto_aead_setauthsize() call which practically ended up skipping that
-> call unconditionally.
-> 
-> The missing call did not actually change any functionality since
-> GMAC_MIC_LEN (16) is identical to the maxauthsize in gcm(aes) and as
-> such, the default value used for the authsize parameter.
+Marek Puzyniak <marek.puzyniak@tieto.com> writes:
 
-Applied.
+> On 23 March 2015 at 11:53, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+>> Marek Puzyniak <marek.puzyniak@tieto.com> writes:
+>>
+>>> As a part of tdls implementation introduce
+>>> tdls related wmi data structures, constant
+>>> values and functions.
+>>>
+>>> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+>>
+>> This patch had non-trivial conflicts, please check carefully my
+>> resolution in the pending branch.
+>>
+>>   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi.h
+>>   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.h
+>>   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-tlv.c
+>>   CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/wmi-ops.h
+>>
+>> --
+>> Kalle Valo
+>
+> It looks OK, but there is one small thing in file
+> drivers/net/wireless/ath/ath10k/wmi-tlv.c.
+> There are two new lines between functions ath10k_wmi_tlv_op_gen_tdls_peer_update
+> and ath10k_wmi_tlv_op_gen_wow_enable.
 
-johannes
+Thanks, fixed now.
 
+-- 
+Kalle Valo
