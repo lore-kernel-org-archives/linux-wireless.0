@@ -1,182 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:35978 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751463AbbCTRQn (ORCPT
+Received: from mail-la0-f46.google.com ([209.85.215.46]:34991 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751917AbbCXMpw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 13:16:43 -0400
-Received: by oigv203 with SMTP id v203so96557154oig.3
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 10:16:43 -0700 (PDT)
-Message-ID: <550C55F9.20600@lwfinger.net> (sfid-20150320_181653_213311_A580781D)
-Date: Fri, 20 Mar 2015 12:16:41 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Taehee Yoo <ap420073@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Change REG_CR+2 to MSR
-References: <1426847493-5722-1-git-send-email-ap420073@gmail.com>
-In-Reply-To: <1426847493-5722-1-git-send-email-ap420073@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Tue, 24 Mar 2015 08:45:52 -0400
+Received: by laae1 with SMTP id e1so26264368laa.2
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 05:45:51 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v5 0/7] ath10k: add multi-channel support
+Date: Tue, 24 Mar 2015 12:43:06 +0000
+Message-Id: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com> (sfid-20150324_134555_871497_650309B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2015 05:31 AM, Taehee Yoo wrote:
-> I changed REG_CR+2 and (MSR) to MSR because MSR is defined as (REG_CR + 2).
->
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8188ee/hw.c  | 4 ++--
->   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c  | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8192cu/mac.c | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8192de/hw.c  | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8192ee/hw.c  | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/hw.c  | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8723ae/hw.c  | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8723be/hw.c  | 2 +-
->   drivers/net/wireless/rtlwifi/rtl8821ae/hw.c  | 4 ++--
->   9 files changed, 11 insertions(+), 11 deletions(-)
+New qca6174 with wmi-tlv firmware supports
+multi-channel operation. To make use of it
+ath10k needs a few changes: implement mac80211's
+chanctx API and rework tx queue control a bit.
 
-I'm not sure this change contributes much to the readability of the code. It 
-certainly does not change the object code; however,
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Changes since RFC:
+ * I've sent `ath10k: defer AP self-peer removal
+   wait` separately now because it's not really
+   required for multi-channel per se
 
-Larry
+v2:
+ * fix null deref after rebasing
+ * fix commit log typo
 
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> index edc2cbb..ecd383f 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8188ee/hw.c
-> @@ -885,7 +885,7 @@ static bool _rtl88ee_init_mac(struct ieee80211_hw *hw)
->
->   	rtl_write_word(rtlpriv, REG_CR, 0x2ff);
->   	rtl_write_byte(rtlpriv, REG_CR+1, 0x06);
-> -	rtl_write_byte(rtlpriv, REG_CR+2, 0x00);
-> +	rtl_write_byte(rtlpriv, MSR, 0x00);
->
->   	if (!rtlhal->mac_func_enable) {
->   		if (_rtl88ee_llt_table_init(hw) == false) {
-> @@ -1277,7 +1277,7 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
->   			 mode);
->   	}
->
-> -	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
-> +	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
->   	rtlpriv->cfg->ops->led_control(hw, ledaction);
->   	if (mode == MSR_AP)
->   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> index 43b2b20..d310d55 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-> @@ -1364,7 +1364,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
->   			 "Network type %d not supported!\n", type);
->   		goto error_out;
->   	}
-> -	rtl_write_byte(rtlpriv, (MSR), bt_msr);
-> +	rtl_write_byte(rtlpriv, MSR, bt_msr);
->   	rtlpriv->cfg->ops->led_control(hw, ledaction);
->   	if ((bt_msr & MSR_MASK) == MSR_AP)
->   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-> index 133e395..adb8107 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-> @@ -497,7 +497,7 @@ int rtl92c_set_network_type(struct ieee80211_hw *hw, enum nl80211_iftype type)
->   			 "Network type %d not supported!\n", type);
->   		return -EOPNOTSUPP;
->   	}
-> -	rtl_write_byte(rtlpriv, (REG_CR + 2), value);
-> +	rtl_write_byte(rtlpriv, MSR, value);
->   	return 0;
->   }
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> index 01bcc2d..f49b60d 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-> @@ -1126,7 +1126,7 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
->   		break;
->
->   	}
-> -	rtl_write_byte(rtlpriv, REG_CR + 2, bt_msr);
-> +	rtl_write_byte(rtlpriv, MSR, bt_msr);
->   	rtlpriv->cfg->ops->led_control(hw, ledaction);
->   	if ((bt_msr & MSR_MASK) == MSR_AP)
->   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-> index db230a3..da0a612 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192ee/hw.c
-> @@ -1510,7 +1510,7 @@ static int _rtl92ee_set_media_status(struct ieee80211_hw *hw,
->   			 mode);
->   	}
->
-> -	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
-> +	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
->   	rtlpriv->cfg->ops->led_control(hw, ledaction);
->   	if (mode == MSR_AP)
->   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-> index dee88a8..12b0978 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-> @@ -1204,7 +1204,7 @@ static int _rtl92se_set_media_status(struct ieee80211_hw *hw,
->   	if (type != NL80211_IFTYPE_AP &&
->   	    rtlpriv->mac80211.link_state < MAC80211_LINKED)
->   		bt_msr = rtl_read_byte(rtlpriv, MSR) & ~MSR_LINK_MASK;
-> -	rtl_write_byte(rtlpriv, (MSR), bt_msr);
-> +	rtl_write_byte(rtlpriv, MSR, bt_msr);
->
->   	temp = rtl_read_dword(rtlpriv, TCR);
->   	rtl_write_dword(rtlpriv, TCR, temp & (~BIT(8)));
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-> index b3b0947..67bb47d 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8723ae/hw.c
-> @@ -1183,7 +1183,7 @@ static int _rtl8723e_set_media_status(struct ieee80211_hw *hw,
->   			 mode);
->   	}
->
-> -	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
-> +	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
->   	rtlpriv->cfg->ops->led_control(hw, ledaction);
->   	if (mode == MSR_AP)
->   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-> index b469983..b681af3 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8723be/hw.c
-> @@ -1558,7 +1558,7 @@ static int _rtl8723be_set_media_status(struct ieee80211_hw *hw,
->   			 mode);
->   	}
->
-> -	rtl_write_byte(rtlpriv, (MSR), bt_msr | mode);
-> +	rtl_write_byte(rtlpriv, MSR, bt_msr | mode);
->   	rtlpriv->cfg->ops->led_control(hw, ledaction);
->   	if (mode == MSR_AP)
->   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-> index 2a0a71b..8704eee 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8821ae/hw.c
-> @@ -423,7 +423,7 @@ void rtl8821ae_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
->   		*((u16 *)(val+4)) = rtl_read_word(rtlpriv, REG_BSSID+4);
->   		break;
->   	case HW_VAR_MEDIA_STATUS:
-> -		val[0] = rtl_read_byte(rtlpriv, REG_CR+2) & 0x3;
-> +		val[0] = rtl_read_byte(rtlpriv, MSR) & 0x3;
->   		break;
->   	case HW_VAR_SLOT_TIME:
->   		*((u8 *)(val)) = mac->slot_time;
-> @@ -2178,7 +2178,7 @@ static int _rtl8821ae_set_media_status(struct ieee80211_hw *hw,
->   		return 1;
->   	}
->
-> -	rtl_write_byte(rtlpriv, (MSR), bt_msr);
-> +	rtl_write_byte(rtlpriv, MSR, bt_msr);
->   	rtlpriv->cfg->ops->led_control(hw, ledaction);
->   	if ((bt_msr & 0xfc) == MSR_AP)
->   		rtl_write_byte(rtlpriv, REG_BCNTCFG + 1, 0x00);
->
+v3:
+ * remove some duplication wrt mac80211 [Johannes]
+ * small fixes
+
+v4:
+ * rebased
+ * fix STA CSA
+ * drop ar->arvifs data_lock protection patch
+ * drop ar->arvifs for vif iteration in favour of
+   ieee80211_iterate_active_interfaces()
+ * small refactor in monitor recalc
+ * add a patch to fix fw resource allocation for
+   multi-vif/chan
+
+v5:
+ * rebased on top of pending branch
+ * 12 char commit ids
+ * increase vif limit to 3 in ifcombs
+
+
+Michal Kazior (7):
+  ath10k: allow empty ssid vdev config
+  ath10k: implement chanctx API
+  ath10k: implement adaptive qcs command
+  ath10k: rework tx queue locking
+  ath10k: implement tx pause wmi event
+  ath10k: enable multi-channel on supported devices
+  ath10k: allocate fw resources for iface combinations
+
+ drivers/net/wireless/ath/ath10k/core.h    |  18 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c  | 102 +++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c  |   4 +-
+ drivers/net/wireless/ath/ath10k/hw.h      |   6 +-
+ drivers/net/wireless/ath/ath10k/mac.c     | 941 ++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/mac.h     |  24 +
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |  16 +
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  88 ++-
+ drivers/net/wireless/ath/ath10k/wmi-tlv.h |  46 ++
+ drivers/net/wireless/ath/ath10k/wmi.c     |  18 +-
+ drivers/net/wireless/ath/ath10k/wmi.h     |   1 +
+ 11 files changed, 1125 insertions(+), 139 deletions(-)
+
+-- 
+2.1.4
 
