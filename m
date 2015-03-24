@@ -1,106 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:36405 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756274AbbCMDg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 23:36:58 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: m.v.b@runbox.com
-Subject: [PATCH 13/16] staging: rtl8723au: suspect code indent for conditional statements
-Date: Thu, 12 Mar 2015 23:15:29 -0400
-Message-Id: <1426216532-24058-14-git-send-email-m.v.b@runbox.com> (sfid-20150313_043720_920457_A87C8C13)
-In-Reply-To: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
+Received: from mail-la0-f54.google.com ([209.85.215.54]:35007 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751956AbbCXMpx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2015 08:45:53 -0400
+Received: by laae1 with SMTP id e1so26264813laa.2
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 05:45:52 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v5 1/7] ath10k: allow empty ssid vdev config
+Date: Tue, 24 Mar 2015 12:43:07 +0000
+Message-Id: <1427200993-7550-2-git-send-email-michal.kazior@tieto.com> (sfid-20150324_134557_587420_AB02A42E)
+In-Reply-To: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
+References: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a number of indentation-with-spaces-and-tabs issues in
-rtl8723au's rtw_security.c, according to checkpatch.pl:
-	WARNING: suspect code indent for conditional statements
+It doesn't make much sense to reject a valid
+firmware configuration combination.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Since SSID isn't known early on it might make
+sense to allow driver to start vdev without SSID
+and restart it later.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 36 +++++++++++++--------------
- 1 file changed, 18 insertions(+), 18 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
+ drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
+ 2 files changed, 4 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index fd5c4da2c4..dbbe7b348d 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -760,7 +760,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length-4));
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 467d88c780c7..d4804645f8c2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1518,8 +1518,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
+ 	void *ptr;
+ 	u32 flags = 0;
  
- 	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
--	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
- 				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
- 		res = _FAIL;
- 	}
-@@ -908,9 +908,9 @@ static void mix_column(u8 *in, u8 *out)
+-	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
+-		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
+ 		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 1f47636f204b..3ef41105b95c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4248,8 +4248,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
+ 	const char *cmdname;
+ 	u32 flags = 0;
  
- 	for (i = 0; i < 4; i++) {
- 		if ((in[i] & 0x80) == 0x80)
--		    add1b[i] = 0x1b;
-+			add1b[i] = 0x1b;
- 		else
--		    add1b[i] = 0x00;
-+			add1b[i] = 0x00;
- 	}
- 
- 	swap_halfs[0] = in[2]; /* Swap halfs */
-@@ -965,21 +965,21 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
- 
- 	for (round = 0; round < 11; round++) {
- 		if (round == 0) {
--		    xor_128(round_key, data, ciphertext);
--		    next_key(round_key, round);
-+			xor_128(round_key, data, ciphertext);
-+			next_key(round_key, round);
- 		} else if (round == 10) {
--		    byte_sub(ciphertext, intermediatea);
--		    shift_row(intermediatea, intermediateb);
--		    xor_128(intermediateb, round_key, ciphertext);
-+			byte_sub(ciphertext, intermediatea);
-+			shift_row(intermediatea, intermediateb);
-+			xor_128(intermediateb, round_key, ciphertext);
- 		} else { /* 1 - 9 */
--		    byte_sub(ciphertext, intermediatea);
--		    shift_row(intermediatea, intermediateb);
--		    mix_column(&intermediateb[0], &intermediatea[0]);
--		    mix_column(&intermediateb[4], &intermediatea[4]);
--		    mix_column(&intermediateb[8], &intermediatea[8]);
--		    mix_column(&intermediateb[12], &intermediatea[12]);
--		    xor_128(intermediatea, round_key, ciphertext);
--		    next_key(round_key, round);
-+			byte_sub(ciphertext, intermediatea);
-+			shift_row(intermediatea, intermediateb);
-+			mix_column(&intermediateb[0], &intermediatea[0]);
-+			mix_column(&intermediateb[4], &intermediatea[4]);
-+			mix_column(&intermediateb[8], &intermediatea[8]);
-+			mix_column(&intermediateb[12], &intermediatea[12]);
-+			xor_128(intermediatea, round_key, ciphertext);
-+			next_key(round_key, round);
- 		}
- 	}
- 
-@@ -1480,7 +1480,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 		for (j = 0; j < 16; j++)
- 			padded_buffer[j] = 0x00;
- 		for (j = 0; j < payload_remainder; j++)
--		    padded_buffer[j] = message[payload_index++];
-+			padded_buffer[j] = message[payload_index++];
- 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
- 		aes128k128d(key, chain_buffer, aes_out);
- 	}
-@@ -1510,7 +1510,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
- 				      message, pn_vector, num_blocks+1);
- 
- 		for (j = 0; j < 16; j++)
--			 padded_buffer[j] = 0x00;
-+			padded_buffer[j] = 0x00;
- 		for (j = 0; j < payload_remainder; j++)
- 			padded_buffer[j] = message[payload_index + j];
- 		aes128k128d(key, ctr_preload, aes_out);
+-	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
+-		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
+ 		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
 -- 
 2.1.4
 
