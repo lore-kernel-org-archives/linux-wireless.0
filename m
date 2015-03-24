@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16906 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751862AbbCVRVq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 13:21:46 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 6/6] iwlwifi: mvm: remove WARN_ON for invalid BA notification
-Date: Sun, 22 Mar 2015 19:21:32 +0200
-Message-Id: <1427044892-13907-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150322_182150_405719_4CEE9463)
-In-Reply-To: <1427044767.8611.4.camel@egrumbacBox>
-References: <1427044767.8611.4.camel@egrumbacBox>
+Received: from smtp01.msg.oleane.net ([62.161.4.1]:34556 "EHLO
+	smtp01.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665AbbCXImE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2015 04:42:04 -0400
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Michal Kazior'" <michal.kazior@tieto.com>
+Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A319019FEF93@sbs2003.acksys.local> <CA+BoTQkJ2qYKMzWHaW2wTq1qhoDn=FYEU7Wgo+Jyevzi1bBDEA@mail.gmail.com>
+In-Reply-To: <CA+BoTQkJ2qYKMzWHaW2wTq1qhoDn=FYEU7Wgo+Jyevzi1bBDEA@mail.gmail.com>
+Subject: RE: ath10k: What will happens when radar is detected ?
+Date: Tue, 24 Mar 2015 09:41:59 +0100
+Message-ID: <01eb01d0660e$650becc0$2f23c640$@acksys.fr> (sfid-20150324_094210_304494_B88695E4)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-The firmware frequently manages to trigger this, and there's
-no known driver workaround, so stop warning.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/tx.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> -----Message d'origine-----
+> De : Michal Kazior [mailto:michal.kazior@tieto.com]
+> Envoyé : mardi 24 mars 2015 07:56
+> À : Cedric VONCKEN
+> Cc : linux-wireless
+> Objet : Re: ath10k: What will happens when radar is detected ?
+> 
+> On 23 March 2015 at 16:16, Cedric VONCKEN <cedric.voncken@acksys.fr>
+> wrote:
+> > In 802.11ac standard, it is possible to dynamically reduce the channel
+> > width used.
+> > My question is:
+> >         If I use a channel with 80 or 40 MHz width, what will happen
+> > if I detect radar?
+> >                 The ath10k card/driver reduces automatically the
+> > channel width.
+> 
+> Currently entire chandef occupied will be marked as unavailable and AP
+> will stop/switch to a different non-overlapping chandef via CSA.
+Thanks for your answer.
+> 
+> I guess it should be possible to implement what you suggest, i.e.
+> change only chandef width when radar is narrow and located at a suitable
+> part of the chandef. This would require hw to be capable of detecting
+> radar center freq and width accurately. I'm not sure if QCA988X is
+> capable of that although firmware interface seems to be able to carry
+> this kind of information already.
+> 
+> I wonder why would you want this behaviour in the first place?
+> Wouldn't this actually end up with having less bandwidth and lower
+> throughput (which is already penalized when radar detection is active)?
+In an industrial environment we prefer to reduce the throughput but keep the link without gap. I think it can be a parameter in AP software for example.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/tx.c b/drivers/net/wireless/iwlwifi/mvm/tx.c
-index 07304e1..96a0540 100644
---- a/drivers/net/wireless/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/tx.c
-@@ -949,8 +949,10 @@ int iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
- 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	tid_data = &mvmsta->tid_data[tid];
- 
--	if (WARN_ONCE(tid_data->txq_id != scd_flow, "Q %d, tid %d, flow %d",
--		      tid_data->txq_id, tid, scd_flow)) {
-+	if (tid_data->txq_id != scd_flow) {
-+		IWL_ERR(mvm,
-+			"invalid BA notification: Q %d, tid %d, flow %d\n",
-+			tid_data->txq_id, tid, scd_flow);
- 		rcu_read_unlock();
- 		return 0;
- 	}
--- 
-1.9.1
+Cédric
 
