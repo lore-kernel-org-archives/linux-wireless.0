@@ -1,91 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:36162 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752151AbbCXMqA (ORCPT
+Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.252]:49731 "EHLO
+	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753091AbbCXUJz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 08:46:00 -0400
-Received: by labe2 with SMTP id e2so83003724lab.3
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Mar 2015 05:45:58 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v5 7/7] ath10k: allocate fw resources for iface combinations
-Date: Tue, 24 Mar 2015 12:43:13 +0000
-Message-Id: <1427200993-7550-8-git-send-email-michal.kazior@tieto.com> (sfid-20150324_134609_970807_AC94657E)
-In-Reply-To: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
-References: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 24 Mar 2015 16:09:55 -0400
+From: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@nbd.name,
+	thomas@net.t-labs.tu-berlin.de
+Subject: [PATCH v4 04/10] mac80211: add new Minstrel-HT statistic output via csv
+Date: Tue, 24 Mar 2015 21:09:37 +0100
+Message-Id: <1427227783-4531-5-git-send-email-thomas@net.t-labs.tu-berlin.de> (sfid-20150324_211005_590257_BE6E4BC8)
+In-Reply-To: <1427227783-4531-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+References: <1427227783-4531-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The number of 3 vdevs wasn't enough to handle the
-worst case for interface combinations in practice.
+This patch adds a new debugfs file "rc_stats_csv" to output
+Minstrel-HTs statistics in a common csv format that is easy
+to parse.
 
-wpa_supplicant may need up to 4 vifs to have 2
-vifs actually connected, i.e. p2pdev + client + 2x
-p2p (either p2p client or p2p go).
-
-This fixes worst case warning:
-
-  Free vdev map is empty, no more interfaces allowed.
-
-This keeps the ability to associate 32 stations in
-AP mode at the cost of not being able to guarantee
-that under all circumstances, i.e. some
-combinations may consume additional fw peer
-entries for internal purposes leaving less
-resource for stations in AP mode.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Signed-off-by: Stefan Venz <ikstream86@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/hw.h      | 6 ++----
- drivers/net/wireless/ath/ath10k/wmi-tlv.c | 8 ++++----
- 2 files changed, 6 insertions(+), 8 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.h         |   1 +
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 145 ++++++++++++++++++++++++++++-
+ 2 files changed, 144 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 34fcb6d5786d..1e9a781a45b4 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -280,11 +280,9 @@ enum ath10k_hw_rate_cck {
- #define TARGET_10_2_DMA_BURST_SIZE		1
+diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
+index f2217d6..3cc30e8 100644
+--- a/net/mac80211/rc80211_minstrel_ht.h
++++ b/net/mac80211/rc80211_minstrel_ht.h
+@@ -112,6 +112,7 @@ struct minstrel_ht_sta_priv {
+ 	};
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct dentry *dbg_stats;
++	struct dentry *dbg_stats_csv;
+ #endif
+ 	void *ratelist;
+ 	void *sample_table;
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index 7fc690f..133d7b6 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -107,8 +107,8 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 	struct minstrel_ht_sta *mi = &msp->ht;
+ 	struct minstrel_debugfs_info *ms;
+ 	unsigned int i;
+-	char *p;
+ 	int ret;
++	char *p;
  
- /* Target specific defines for WMI-TLV firmware */
--#define TARGET_TLV_NUM_VDEVS			3
-+#define TARGET_TLV_NUM_VDEVS			4
- #define TARGET_TLV_NUM_STATIONS			32
--#define TARGET_TLV_NUM_PEERS			((TARGET_TLV_NUM_STATIONS) + \
--						 (TARGET_TLV_NUM_VDEVS) + \
--						 2)
-+#define TARGET_TLV_NUM_PEERS			35
- #define TARGET_TLV_NUM_TDLS_VDEVS		1
- #define TARGET_TLV_NUM_TIDS			((TARGET_TLV_NUM_PEERS) * 2)
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index 73cf3d00c2d0..f42ff9d97b00 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1318,8 +1318,8 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
+ 	if (!msp->is_ht) {
+ 		inode->i_private = &msp->legacy;
+@@ -146,7 +146,6 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 		MINSTREL_TRUNC(mi->avg_ampdu_len),
+ 		MINSTREL_TRUNC(mi->avg_ampdu_len * 10) % 10);
+ 	ms->len = p - ms->buf;
+-
+ 	WARN_ON(ms->len + sizeof(*ms) > 32768);
  
- 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
--		cfg->num_offload_peers = __cpu_to_le32(3);
--		cfg->num_offload_reorder_bufs = __cpu_to_le32(3);
-+		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-+		cfg->num_offload_reorder_bufs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
- 	} else {
- 		cfg->num_offload_peers = __cpu_to_le32(0);
- 		cfg->num_offload_reorder_bufs = __cpu_to_le32(0);
-@@ -1336,8 +1336,8 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cfg->rx_timeout_pri[3] = __cpu_to_le32(0x28);
- 	cfg->rx_decap_mode = __cpu_to_le32(1);
- 	cfg->scan_max_pending_reqs = __cpu_to_le32(4);
--	cfg->bmiss_offload_max_vdev = __cpu_to_le32(3);
--	cfg->roam_offload_max_vdev = __cpu_to_le32(3);
-+	cfg->bmiss_offload_max_vdev = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-+	cfg->roam_offload_max_vdev = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
- 	cfg->roam_offload_max_ap_profiles = __cpu_to_le32(8);
- 	cfg->num_mcast_groups = __cpu_to_le32(0);
- 	cfg->num_mcast_table_elems = __cpu_to_le32(0);
+ 	return nonseekable_open(inode, file);
+@@ -160,6 +159,145 @@ static const struct file_operations minstrel_ht_stat_fops = {
+ 	.llseek = no_llseek,
+ };
+ 
++static char *
++minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p,
++			    struct timeval tv)
++{
++	const struct mcs_group *mg;
++	unsigned int j, tp, prob, eprob, tx_time;
++	char htmode = '2';
++	char gimode = 'L';
++	u32 gflags;
++
++	if (!mi->groups[i].supported)
++		return p;
++
++	mg = &minstrel_mcs_groups[i];
++	gflags = mg->flags;
++
++	if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		htmode = '4';
++	else if (gflags & IEEE80211_TX_RC_80_MHZ_WIDTH)
++		htmode = '8';
++	if (gflags & IEEE80211_TX_RC_SHORT_GI)
++		gimode = 'S';
++
++	for (j = 0; j < MCS_GROUP_RATES; j++) {
++		struct minstrel_rate_stats *mr = &mi->groups[i].rates[j];
++		static const int bitrates[4] = { 10, 20, 55, 110 };
++		int idx = i * MCS_GROUP_RATES + j;
++
++		if (!(mi->groups[i].supported & BIT(j)))
++			continue;
++
++		p += sprintf(p, "%ld.%.6ld,", tv.tv_sec, tv.tv_usec);
++
++		if (gflags & IEEE80211_TX_RC_MCS) {
++			p += sprintf(p, "HT%c0,", htmode);
++			p += sprintf(p, "%cGI,", gimode);
++			p += sprintf(p, "%d,", mg->streams);
++		} else if (gflags & IEEE80211_TX_RC_VHT_MCS) {
++			p += sprintf(p, "VHT%c0,", htmode);
++			p += sprintf(p, "%cGI,", gimode);
++			p += sprintf(p, "%d,", mg->streams);
++		} else {
++			p += sprintf(p, "CCK,");
++			p += sprintf(p, "%cP,", j < 4 ? 'L' : 'S');
++			p += sprintf(p, "1,");
++		}
++
++		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[0]) ? "A" : ""));
++		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[1]) ? "B" : ""));
++		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[2]) ? "C" : ""));
++		p += sprintf(p, "%s" ,((idx == mi->max_tp_rate[3]) ? "D" : ""));
++		p += sprintf(p, "%s" ,((idx == mi->max_prob_rate) ? "P" : ""));
++
++		if (gflags & IEEE80211_TX_RC_MCS) {
++			p += sprintf(p, ",MCS%-2u,", (mg->streams - 1) * 8 + j);
++		} else if (gflags & IEEE80211_TX_RC_VHT_MCS) {
++			p += sprintf(p, ",MCS%-1u/%1u,", j, mg->streams);
++		} else {
++			int r = bitrates[j % 4];
++			p += sprintf(p, ",%2u.%1uM,", r / 10, r % 10);
++		}
++
++		p += sprintf(p, "%u,", idx);
++		tx_time = DIV_ROUND_CLOSEST(mg->duration[j], 1000);
++		p += sprintf(p, "%u,", tx_time);
++
++		tp = mr->cur_tp / 10;
++		prob = MINSTREL_TRUNC(mr->cur_prob * 1000);
++		eprob = MINSTREL_TRUNC(mr->probability * 1000);
++
++		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u,%u,%u,%llu,%llu,",
++				tp / 10, tp % 10,
++				eprob / 10, eprob % 10,
++				prob / 10, prob % 10,
++				mr->retry_count,
++				mr->last_success,
++				mr->last_attempts,
++				(unsigned long long)mr->succ_hist,
++				(unsigned long long)mr->att_hist);
++		p += sprintf(p, "%d,%d,%d.%d\n",
++				max(0, (int) mi->total_packets -
++				(int) mi->sample_packets),
++				mi->sample_packets,
++				MINSTREL_TRUNC(mi->avg_ampdu_len),
++				MINSTREL_TRUNC(mi->avg_ampdu_len * 10) % 10);
++	}
++
++	return p;
++}
++
++static int
++minstrel_ht_stats_csv_open(struct inode *inode, struct file *file)
++{
++	struct minstrel_ht_sta_priv *msp = inode->i_private;
++	struct minstrel_ht_sta *mi = &msp->ht;
++	struct minstrel_debugfs_info *ms;
++	struct timeval tv;
++	unsigned int i;
++	int ret;
++	char *p;
++
++	do_gettimeofday(&tv);
++
++	if (!msp->is_ht) {
++		inode->i_private = &msp->legacy;
++		ret = minstrel_stats_csv_open(inode, file);
++		inode->i_private = msp;
++		return ret;
++	}
++
++	ms = kmalloc(32768, GFP_KERNEL);
++
++	if (!ms)
++		return -ENOMEM;
++
++	file->private_data = ms;
++
++	p = ms->buf;
++
++	p = minstrel_ht_stats_csv_dump(mi, MINSTREL_CCK_GROUP, p, tv);
++	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
++		p = minstrel_ht_stats_csv_dump(mi, i, p, tv);
++	for (i++; i < ARRAY_SIZE(mi->groups); i++)
++		p = minstrel_ht_stats_csv_dump(mi, i, p, tv);
++
++	ms->len = p - ms->buf;
++	WARN_ON(ms->len + sizeof(*ms) > 32768);
++
++	return nonseekable_open(inode, file);
++}
++
++static const struct file_operations minstrel_ht_stat_csv_fops = {
++	.owner = THIS_MODULE,
++	.open = minstrel_ht_stats_csv_open,
++	.read = minstrel_stats_read,
++	.release = minstrel_stats_release,
++	.llseek = no_llseek,
++};
++
+ void
+ minstrel_ht_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir)
+ {
+@@ -167,6 +305,8 @@ minstrel_ht_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir)
+ 
+ 	msp->dbg_stats = debugfs_create_file("rc_stats", S_IRUGO, dir, msp,
+ 			&minstrel_ht_stat_fops);
++	msp->dbg_stats_csv = debugfs_create_file("rc_stats_csv", S_IRUGO,
++			     dir, msp, &minstrel_ht_stat_csv_fops);
+ }
+ 
+ void
+@@ -175,4 +315,5 @@ minstrel_ht_remove_sta_debugfs(void *priv, void *priv_sta)
+ 	struct minstrel_ht_sta_priv *msp = priv_sta;
+ 
+ 	debugfs_remove(msp->dbg_stats);
++	debugfs_remove(msp->dbg_stats_csv);
+ }
 -- 
-2.1.4
+2.3.0
 
