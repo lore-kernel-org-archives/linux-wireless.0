@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:60387 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754152AbbCLNHs convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:37167 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251AbbCXG4O convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:07:48 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <liuzy@marvell.com>, <crlo@marvell.com>,
-	<pchen@marvell.com>, <szli@marvell.com>, <nishants@marvell.com>
-Subject: Re: [PATCH 3/9] mwifiex: enhance SD8897 MP aggregation limits
-References: <1426180920-10567-1-git-send-email-patila@marvell.com>
-	<1426180920-10567-4-git-send-email-patila@marvell.com>
-Date: Thu, 12 Mar 2015 14:07:37 +0100
-In-Reply-To: <1426180920-10567-4-git-send-email-patila@marvell.com> (Avinash
-	Patil's message of "Thu, 12 Mar 2015 22:51:54 +0530")
-Message-ID: <87bnjy2wkm.fsf@nemi.mork.no> (sfid-20150312_140753_631660_62E7F635)
+	Tue, 24 Mar 2015 02:56:14 -0400
+Received: by wixw10 with SMTP id w10so85979134wix.0
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 23:56:13 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A319019FEF93@sbs2003.acksys.local>
+References: <773DB8A82AB6A046AE0195C68612A319019FEF93@sbs2003.acksys.local>
+Date: Tue, 24 Mar 2015 07:56:12 +0100
+Message-ID: <CA+BoTQkJ2qYKMzWHaW2wTq1qhoDn=FYEU7Wgo+Jyevzi1bBDEA@mail.gmail.com> (sfid-20150324_075617_600900_6A3FB131)
+Subject: Re: ath10k: What will happens when radar is detected ?
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avinash Patil <patila@marvell.com> writes:
+On 23 March 2015 at 16:16, Cedric VONCKEN <cedric.voncken@acksys.fr> wrote:
+> In 802.11ac standard, it is possible to dynamically reduce the channel
+> width used.
+> My question is:
+>         If I use a channel with 80 or 40 MHz width, what will happen if
+> I detect radar?
+>                 The ath10k card/driver reduces automatically the channel
+> width.
 
-> diff --git a/drivers/net/wireless/mwifiex/sdio.h b/drivers/net/wireless/mwifiex/sdio.h
-> index c636944..5a23bd0 100644
-> --- a/drivers/net/wireless/mwifiex/sdio.h
-> +++ b/drivers/net/wireless/mwifiex/sdio.h
-> @@ -67,6 +67,7 @@
->  
->  #define MWIFIEX_MP_AGGR_BUF_SIZE_16K	(16384)
->  #define MWIFIEX_MP_AGGR_BUF_SIZE_32K	(32768)
-> +#define MWIFIEX_MP_AGGR_BUF_SIZE_64K    (65280)
+Currently entire chandef occupied will be marked as unavailable and AP
+will stop/switch to a different non-overlapping chandef via CSA.
 
-The first two macros are clearly matching their 16K and 32K names, but
-the 64K one is not.  Care to add a comment explaining where the missing
-256 bytes went?
+I guess it should be possible to implement what you suggest, i.e.
+change only chandef width when radar is narrow and located at a
+suitable part of the chandef. This would require hw to be capable of
+detecting radar center freq and width accurately. I'm not sure if
+QCA988X is capable of that although firmware interface seems to be
+able to carry this kind of information already.
+
+I wonder why would you want this behaviour in the first place?
+Wouldn't this actually end up with having less bandwidth and lower
+throughput (which is already penalized when radar detection is
+active)?
 
 
-Bjørn (always curious about surprising numbers :-)
+Michał
