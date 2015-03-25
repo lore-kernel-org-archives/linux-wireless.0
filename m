@@ -1,76 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38374 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750852AbbCSJRr (ORCPT
+Received: from mail-am1on0072.outbound.protection.outlook.com ([157.56.112.72]:20825
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751876AbbCYBAd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 05:17:47 -0400
-Subject: [PATCH] ath10k: bump up FW API to 5
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 19 Mar 2015 11:17:40 +0200
-Message-ID: <20150319091740.21481.55203.stgit@potku.adurom.net> (sfid-20150319_101811_552357_1832FEBE)
+	Tue, 24 Mar 2015 21:00:33 -0400
+From: Stefano Cappa <stefano.cappa@mail.polimi.it>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: informations about Linux wifi driver's architecture today
+Date: Wed, 25 Mar 2015 01:00:30 +0000
+Message-ID: <1427245230396.59674@mail.polimi.it> (sfid-20150325_020037_214635_A2DA5B31)
+References: <1427048376242.67051@mail.polimi.it>,<CAMowtuMgAPsgAKuwSibjAzhDbqEdZGatikCiKks6f3w=4oth+Q@mail.gmail.com>
+ <1427059313289.43792@mail.polimi.it>,<550FE50F.10303@broadcom.com>
+In-Reply-To: <550FE50F.10303@broadcom.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware 10.2.4.48-2 now supports management frames over HTT feature and has
-ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX. But as 10.2.4 branch has conflicting HTT ids
-patch "ath10k: fix htt t2h message conflicts among firmware revisions" is
-needed to fix the issue. Older ath10k versions don't have that fix and to maintain
-backwards compatibility we need bump up the FW API to 5 not break older
-versions.
+Thank you very much Arend, in particular for the documentation.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    7 +++++++
- drivers/net/wireless/ath/ath10k/hw.h   |    3 +++
- drivers/net/wireless/ath/ath10k/pci.c  |    1 +
- 3 files changed, 11 insertions(+)
+If i understand correctly, the levels are:
+userspace
+nl802111
+cfg80211
+firmware
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 02da72ec99cf..8c68aa81c8f6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -730,6 +730,13 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
- 	/* calibration file is optional, don't check for any errors */
- 	ath10k_fetch_cal_file(ar);
- 
-+	ar->fw_api = 5;
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
-+
-+	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API5_FILE);
-+	if (ret == 0)
-+		goto success;
-+
- 	ar->fw_api = 4;
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 22c993d4fdfc..d0177c05d952 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -78,6 +78,9 @@ enum qca6174_chip_id_rev {
- /* added support for ATH10K_FW_IE_WMI_OP_VERSION */
- #define ATH10K_FW_API4_FILE		"firmware-4.bin"
- 
-+/* HTT id conflict fix for management frames over HTT */
-+#define ATH10K_FW_API5_FILE		"firmware-5.bin"
-+
- #define ATH10K_FW_UTF_FILE		"utf.bin"
- 
- /* includes also the null byte */
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index b4aacfad4b24..262a84f67f62 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2780,6 +2780,7 @@ MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_FW_FILE);
- MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" ATH10K_FW_API2_FILE);
- MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" ATH10K_FW_API3_FILE);
- MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" ATH10K_FW_API4_FILE);
-+MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" ATH10K_FW_API5_FILE);
- MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_BOARD_DATA_FILE);
- 
- /* QCA6174 2.1 firmware files */
+No mac80211 because is a fullmac.
+Correct?
+
+Thank u, Stefano.
+
+________________________________________
+Da: Arend van Spriel <arend@broadcom.com>
+Inviato: lunedì 23 marzo 2015 11.03
+A: Stefano Cappa
+Cc: linux-wireless@vger.kernel.org
+Oggetto: Re: informations about Linux wifi driver's architecture today
+
+On 03/22/15 22:21, Stefano Cappa wrote:
+> Hi
+> I prefer a generic version, without specific things, like this one: h**p://postimg.org/image/hfkpjt3ux/ created by Johannes Berg.
+>
+> And, if available something for the broadcom chip bcm4339.
+
+Hi Stefano,
+
+The bcm4339 is supported by the brcmfmac driver and is a cfg8211-based
+driver aka fullmac device where the 802.11 stack runs on the device. I
+did write up some stuff about the driver internally, but we can consider
+putting it on wireless.kernel.org under creative commons license.
+
+Regards,
+Arend
+
+> Thank you.
+>
+> ________________________________________
+> Da: Kathy Giori<kathy.giori@gmail.com>
+> Inviato: domenica 22 marzo 2015 19.35
+> A: Stefano Cappa
+> Cc: linux-wireless@vger.kernel.org
+> Oggetto: Re: informations about Linux wifi driver's architecture today
+>
+> On Sun, Mar 22, 2015 at 11:19 AM, Stefano Cappa
+> <stefano.cappa@mail.polimi.it>  wrote:
+>> Hi!
+>> some months ago, i saw the presentation of Johannes Berg in PDF, but now it isn't available, probably because it's very old.
+>>
+>> This slides will be updated to a new release?
+>>
+>> I have this slide and in page 5/35 (2009-02-26) there is the "Architecture - planned". This is the actual architecture or there are some differences in 2015? If yes, where i can find the new version of this page, with a little diagram?
+>
+> Ciao Stefano,
+>
+> Perhaps Johannes can post a current overview diagram on the Linux
+> wireless wiki (if you share with him which diagram you want to be
+> updated).
+>
+> In terms of vendor-specific architecture, and how it fits in, Kalle
+> Valo posted a high-level diagram for ath10k:
+> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/architecture
+>
+> Are you mainly interested in the architecture of vendor-agnostic upper
+> layers or a description of a specific vendor driver?
+> kg--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
