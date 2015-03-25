@@ -1,48 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0061.hostedemail.com ([216.40.44.61]:58801 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752042AbbCCIwb (ORCPT
+Received: from mail-ie0-f179.google.com ([209.85.223.179]:34378 "EHLO
+	mail-ie0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbbCYM6e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 03:52:31 -0500
-Message-ID: <1425372748.17273.6.camel@perches.com> (sfid-20150303_095251_187046_9C700624)
-Subject: Re: [PATCH net-next 13/14] wireless: Use eth_<foo>_addr instead of
- memset
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Tue, 03 Mar 2015 00:52:28 -0800
-In-Reply-To: <1425372295.2450.9.camel@sipsolutions.net>
-References: <cover.1425354527.git.joe@perches.com>
-	 <0c710456e4875ff00c1a9fcff9378ed15110dcd3.1425354528.git.joe@perches.com>
-	 <1425370617.2450.3.camel@sipsolutions.net>
-	 <1425371858.17273.3.camel@perches.com>
-	 <1425372295.2450.9.camel@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 25 Mar 2015 08:58:34 -0400
+Received: by iedfl3 with SMTP id fl3so23759147ied.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2015 05:58:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <5512A9BC.5010902@pengutronix.de>
+References: <1419834253-18331-1-git-send-email-eliad@wizery.com>
+	<1419834253-18331-6-git-send-email-eliad@wizery.com>
+	<5512A9BC.5010902@pengutronix.de>
+Date: Wed, 25 Mar 2015 14:58:34 +0200
+Message-ID: <CAB3XZEfw5EurqA2jZypAj4LkQwwAiVeKd5wKKsxpOAh-RrCq0w@mail.gmail.com> (sfid-20150325_135840_915446_1D2309B6)
+Subject: Re: [PATCH 06/13] wlcore: enable sleep during AP mode operation
+From: Eliad Peller <eliad@wizery.com>
+To: Marc Kleine-Budde <mkl@pengutronix.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kobi Leibovitch <kobi.lev100@gmail.com>,
+	"kernel@pengutronix.de" <kernel@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-03-03 at 09:44 +0100, Johannes Berg wrote:
-> > > Other than that, I guess I'll apply this, but I really wish there was a
-> > > way to distinguish more easily which of these require alignment and
-> > > which don't.
-> > 
-> > My guess is the eth_zero_addr and eth_broadcast functions
-> > are always taking aligned(2) arguments, just like all the
-> > is_<foo>_ether_addr functions.
-> 
-> Err, are you serious???
+hi Marc,
 
-Yes.
+On Wed, Mar 25, 2015 at 2:27 PM, Marc Kleine-Budde <mkl@pengutronix.de> wrote:
+> On 12/29/2014 07:24 AM, Eliad Peller wrote:
+>> From: Kobi L <kobi.lev100@gmail.com>
+>>
+>> Enable ELP authorization in AP mode and enable the use
+>> of the wakeup bit in the ELP register.
+>>
+>> Introduce AP role sleep configuration which is disabled
+>> by default. When configured, it allows the AP to sleep
+>> when ELP is authorized for it.
+>>
+>> Signed-off-by: Kobi Leibovitch <kobi.lev100@gmail.com>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>
+> [...]
+>
+>
+> This patch requires a new firmware, loading of "wl18xx-conf.bin" from
+> [1] fails with:
+>
+>> wlcore: ERROR configuration binary file size is wrong, expected 1226 got 1221
+>
+thanks. seems you're right.
 
-> That *clearly* isn't true, and if it was then
-> this patch wouldn't be safe at all.
+anyway, note that this file is not actual fw, but only the default
+configuration params.
+you can just delete it, and the driver will load just fine.
+you can then recreate it with something like:
+cat /sys/kernel/debug/ieee80211/phy0/wlcore/wl18xx/conf >
+/lib/firmware/ti-connectivity/wl18xx-conf.bin
 
-And why is that?
+actually, i don't think it makes much sense to have this file in the
+linux-firmware git at all.
+i'll try handling it.
 
-Until patch 1 of this series, eth_zero_addr and
-eth_broadcast_addr was just an inline for a memset.
-
-Even after patch 1, it's effectively still memset.
-
+Eliad.
