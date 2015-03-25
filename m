@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59194 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751157AbbCUInn (ORCPT
+Received: from mailsrv5-bkp2.dondominio.net ([37.152.88.47]:33554 "EHLO
+	mailsrv5.dondominio.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753311AbbCYPd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:43:43 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	nbd@openwrt.org, adrian@freebsd.org
-Subject: Re: [PATCH 16/18 v2] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
-References: <550C19E1.1020305@openwrt.org>
-	<1426925257-15130-1-git-send-email-linux@rempel-privat.de>
-Date: Sat, 21 Mar 2015 10:43:35 +0200
-In-Reply-To: <1426925257-15130-1-git-send-email-linux@rempel-privat.de>
-	(Oleksij Rempel's message of "Sat, 21 Mar 2015 09:07:37 +0100")
-Message-ID: <87384yg2q0.fsf@kamboji.qca.qualcomm.com> (sfid-20150321_094400_791767_4094EE83)
+	Wed, 25 Mar 2015 11:33:28 -0400
+Message-ID: <5512D58B.6030204@aoifes.com> (sfid-20150325_163331_181496_06C73F5E)
+Date: Wed, 25 Mar 2015 16:34:35 +0100
+From: Jose Antonio Delgado Alfonso <jose.delgado@aoifes.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: kvalo@qca.qualcomm.com
+CC: linux-wireless@vger.kernel.org,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: Dynamic channel Access
+References: <CADxDmp50X2XnBjfk5qJKRH-n=1Cwagmjb_XyD+RJ4AgpPh-kjQ@mail.gmail.com> <CAEFj985wmiPwnF7rM1qCcO2K3X2yC_onO0AAMfm=9ytwpChzgg@mail.gmail.com> <etPan.542e8df5.6b8b4567.117@Okhwanui-Mac-mini.local> <55128DF0.6010109@aoifes.com>
+In-Reply-To: <55128DF0.6010109@aoifes.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel <linux@rempel-privat.de> writes:
+Hi all,
 
-> it is possible to reduce time needed for this function
-> by rplacing REG_WRITE with REG_RMW (plus dummy 0) and putt all commands
-> in same buffer.
->
-> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+I would like to ask Qualcomm's collaborators about this topic.
 
-Please resend the whole patchset, much more reliable that way.
+We are trying to certify a AP product which uses QCA988x radio module.
+We are using the ath10k driver (kernel v3.17.8) and firmware from Ben
+Greear. We are trying to pass the Dynamic Channel test, which consists
+in setting the radio at 80MHz and, at the same time, setting other
+signal in the secondary channel. So far, the radio module does not
+reduce the bandwidth and remains transmitting at 80MHz.
 
--- 
-Kalle Valo
+Please, Does someone know if Dynamic Channel Access is really supported
+by ath10k driver in newest kernel versions?
+Or, does it also depends on the firmware version?
+
+Thanks in advance.
+
+Regards,
+Jose Delgado
+
