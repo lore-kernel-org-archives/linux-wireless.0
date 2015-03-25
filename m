@@ -1,35 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:33724 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120AbbCMExY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 00:53:24 -0400
-Date: Fri, 13 Mar 2015 10:23:13 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: "M. Vefa Bicakci" <m.v.b@runbox.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 01/16] staging: rtl8723au: Reformat whitespace to
- increase readability
-Message-ID: <20150313045313.GA3687@sudip-PC> (sfid-20150313_055423_202807_B7010132)
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
- <1426216532-24058-2-git-send-email-m.v.b@runbox.com>
+Received: from muru.com ([72.249.23.125]:39864 "EHLO muru.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751128AbbCYVqy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2015 17:46:54 -0400
+Date: Wed, 25 Mar 2015 14:42:31 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eliad Peller <eliad@wizery.com>,
+	Pontus Fuchs <pontus.fuchs@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
+	Enric Balletbo i Serra <eballetbo@gmail.com>,
+	Javier Martinez Canillas <javier@dowhile0.org>,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kevin Hilman <khilman@deeprootsystems.com>
+Subject: Re: [PATCH v7 5/6] ARM: dts: add wl12xx/wl18xx bindings
+Message-ID: <20150325214230.GB31346@atomide.com> (sfid-20150325_224658_753474_7417949B)
+References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
+ <1426696710-6891-6-git-send-email-eliad@wizery.com>
+ <550AD7C1.2030405@gmail.com>
+ <CAB3XZEfpD7YkwdU7OJJaNFy=MnYVY3-fOVxkA48Vu01LzU0GFg@mail.gmail.com>
+ <20150319212505.GN31346@atomide.com>
+ <87h9tgi4sg.fsf@kamboji.qca.qualcomm.com>
+ <20150320153357.GT31346@atomide.com>
+ <87bnjnfz1t.fsf@kamboji.qca.qualcomm.com>
+ <20150320162138.GU31346@atomide.com>
+ <87twxce2oh.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426216532-24058-2-git-send-email-m.v.b@runbox.com>
+In-Reply-To: <87twxce2oh.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 12, 2015 at 11:15:17PM -0400, M. Vefa Bicakci wrote:
-> Adjust the whitespace in the local variable declaration and initialization
-> part of a number of functions to increase readability in rtl8723au's
-> rtw_security.c.
+* Kalle Valo <kvalo@codeaurora.org> [150322 21:52]:
+> Tony Lindgren <tony@atomide.com> writes:
 > 
-> Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+> >> After John "retired" we actually have two set of trees now: mac80211
+> >> maintained by Johannes and wireless-drivers maintained by me. I haven't
+> >> pulled anything from your tree and I'm 100% sure Johannes hasn't either.
+> >> So green light from me.
+> >
+> > OK, I'll set up the new branch then. I take your ack is for the
+> > whole series? If it's just for the $subject patch, please let
+> > me know.
+> 
+> It was for the whole series.
 
-you have not added the maintainers in your To list, and usually
-initials are discouraged in the Signed-off-by. The name here should
-be the name the way you use it to sign legal documents.
+OK thanks, I've sent of the pull request for arm-soc for this series
+as "[GIT PULL] wireless wl12xx and omap device tree changes for v4.1".
 
-regards
-sudip
+Regards,
 
+Tony
