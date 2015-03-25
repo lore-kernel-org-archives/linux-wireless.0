@@ -1,201 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0035.hostedemail.com ([216.40.44.35]:47825 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752425AbbC3B3r (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:50696 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932305AbbCYPqy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Mar 2015 21:29:47 -0400
-Message-ID: <1427678982.2715.55.camel@perches.com> (sfid-20150330_033008_023528_B80FC285)
-Subject: [PATCH net-next] wireless: Use bool function returns of true/false
- instead of 1/0
-From: Joe Perches <joe@perches.com>
-To: David Miller <davem@davemloft.net>
-Cc: Stefano Brivio <stefano.brivio@polimi.it>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Date: Sun, 29 Mar 2015 18:29:42 -0700
-In-Reply-To: <1427678712.2715.52.camel@perches.com>
-References: <201503260524.AdqSbov9%fengguang.wu@intel.com>
-	 <20150325215525.GA26868@athens>
-	 <20150329.121655.2092434262655191613.davem@davemloft.net>
-	 <1427678712.2715.52.camel@perches.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 25 Mar 2015 11:46:54 -0400
+Message-ID: <5512D86D.8020708@candelatech.com> (sfid-20150325_164657_959169_38B17CCB)
+Date: Wed, 25 Mar 2015 08:46:53 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Jose Antonio Delgado Alfonso <jose.delgado@aoifes.com>
+CC: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: Dynamic channel Access
+References: <CADxDmp50X2XnBjfk5qJKRH-n=1Cwagmjb_XyD+RJ4AgpPh-kjQ@mail.gmail.com> <CAEFj985wmiPwnF7rM1qCcO2K3X2yC_onO0AAMfm=9ytwpChzgg@mail.gmail.com> <etPan.542e8df5.6b8b4567.117@Okhwanui-Mac-mini.local> <55128DF0.6010109@aoifes.com> <5512D58B.6030204@aoifes.com>
+In-Reply-To: <5512D58B.6030204@aoifes.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use bool constants as the return values instead of 1 and 0.
+On 03/25/2015 08:34 AM, Jose Antonio Delgado Alfonso wrote:
+> Hi all,
+> 
+> I would like to ask Qualcomm's collaborators about this topic.
+> 
+> We are trying to certify a AP product which uses QCA988x radio module.
+> We are using the ath10k driver (kernel v3.17.8) and firmware from Ben
+> Greear. We are trying to pass the Dynamic Channel test, which consists
+> in setting the radio at 80MHz and, at the same time, setting other
+> signal in the secondary channel. So far, the radio module does not
+> reduce the bandwidth and remains transmitting at 80MHz.
+> 
+> Please, Does someone know if Dynamic Channel Access is really supported
+> by ath10k driver in newest kernel versions?
+> Or, does it also depends on the firmware version?
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
-> To be honest I'd might rather get bunches of these, there has to be a ton
-> of them, than a slow trickle of one every few weeks/days.
+You could try testing with the upstream firmware and see if that works
+any better?  Even if it is unstable under load, it should at least
+be able to run long enough to do a feature test like this.
 
-There aren't too many here either...
+If it works on 10.1.467 upstream firmware but not on mine, then probably it is a regression
+and I should be able to fix it.
 
- drivers/net/wireless/b43/dma.c                        | 12 ++++++------
- drivers/net/wireless/b43legacy/dma.c                  |  6 +++---
- drivers/net/wireless/b43legacy/rfkill.c               |  8 ++++----
- drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c |  2 +-
- drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c |  2 +-
- drivers/net/wireless/iwlwifi/iwl-config.h             |  4 ++--
- 6 files changed, 17 insertions(+), 17 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
-index 1d7982a..6837064 100644
---- a/drivers/net/wireless/b43/dma.c
-+++ b/drivers/net/wireless/b43/dma.c
-@@ -553,7 +553,7 @@ static bool b43_dma_mapping_error(struct b43_dmaring *ring,
- 				  size_t buffersize, bool dma_to_device)
- {
- 	if (unlikely(dma_mapping_error(ring->dev->dev->dma_dev, addr)))
--		return 1;
-+		return true;
- 
- 	switch (ring->type) {
- 	case B43_DMA_30BIT:
-@@ -571,13 +571,13 @@ static bool b43_dma_mapping_error(struct b43_dmaring *ring,
- 	}
- 
- 	/* The address is OK. */
--	return 0;
-+	return false;
- 
- address_error:
- 	/* We can't support this address. Unmap it again. */
- 	unmap_descbuffer(ring, addr, buffersize, dma_to_device);
- 
--	return 1;
-+	return true;
- }
- 
- static bool b43_rx_buffer_is_poisoned(struct b43_dmaring *ring, struct sk_buff *skb)
-@@ -1099,16 +1099,16 @@ static bool b43_dma_translation_in_low_word(struct b43_wldev *dev,
- 					    enum b43_dmatype type)
- {
- 	if (type != B43_DMA_64BIT)
--		return 1;
-+		return true;
- 
- #ifdef CONFIG_B43_SSB
- 	if (dev->dev->bus_type == B43_BUS_SSB &&
- 	    dev->dev->sdev->bus->bustype == SSB_BUSTYPE_PCI &&
- 	    !(pci_is_pcie(dev->dev->sdev->bus->host_pci) &&
- 	      ssb_read32(dev->dev->sdev, SSB_TMSHIGH) & SSB_TMSHIGH_DMA64))
--			return 1;
-+			return true;
- #endif
--	return 0;
-+	return false;
- }
- 
- int b43_dma_init(struct b43_wldev *dev)
-diff --git a/drivers/net/wireless/b43legacy/dma.c b/drivers/net/wireless/b43legacy/dma.c
-index b2ed179..f9dd892 100644
---- a/drivers/net/wireless/b43legacy/dma.c
-+++ b/drivers/net/wireless/b43legacy/dma.c
-@@ -427,7 +427,7 @@ static bool b43legacy_dma_mapping_error(struct b43legacy_dmaring *ring,
- 					 bool dma_to_device)
- {
- 	if (unlikely(dma_mapping_error(ring->dev->dev->dma_dev, addr)))
--		return 1;
-+		return true;
- 
- 	switch (ring->type) {
- 	case B43legacy_DMA_30BIT:
-@@ -441,13 +441,13 @@ static bool b43legacy_dma_mapping_error(struct b43legacy_dmaring *ring,
- 	}
- 
- 	/* The address is OK. */
--	return 0;
-+	return false;
- 
- address_error:
- 	/* We can't support this address. Unmap it again. */
- 	unmap_descbuffer(ring, addr, buffersize, dma_to_device);
- 
--	return 1;
-+	return true;
- }
- 
- static int setup_rx_descbuffer(struct b43legacy_dmaring *ring,
-diff --git a/drivers/net/wireless/b43legacy/rfkill.c b/drivers/net/wireless/b43legacy/rfkill.c
-index c4559bc..7c1bdbc 100644
---- a/drivers/net/wireless/b43legacy/rfkill.c
-+++ b/drivers/net/wireless/b43legacy/rfkill.c
-@@ -32,7 +32,7 @@ bool b43legacy_is_hw_radio_enabled(struct b43legacy_wldev *dev)
- 	if (dev->dev->id.revision >= 3) {
- 		if (!(b43legacy_read32(dev, B43legacy_MMIO_RADIO_HWENABLED_HI)
- 		      & B43legacy_MMIO_RADIO_HWENABLED_HI_MASK))
--			return 1;
-+			return true;
- 	} else {
- 		/* To prevent CPU fault on PPC, do not read a register
- 		 * unless the interface is started; however, on resume
-@@ -40,12 +40,12 @@ bool b43legacy_is_hw_radio_enabled(struct b43legacy_wldev *dev)
- 		 * that happens, unconditionally return TRUE.
- 		 */
- 		if (b43legacy_status(dev) < B43legacy_STAT_STARTED)
--			return 1;
-+			return true;
- 		if (b43legacy_read16(dev, B43legacy_MMIO_RADIO_HWENABLED_LO)
- 		    & B43legacy_MMIO_RADIO_HWENABLED_LO_MASK)
--			return 1;
-+			return true;
- 	}
--	return 0;
-+	return false;
- }
- 
- /* The poll callback for the hardware button. */
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-index 941b1e4..1c4e9dd 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-@@ -2949,5 +2949,5 @@ bool wlc_phy_txpower_ipa_ison(struct brcms_phy_pub *ppi)
- 	if (ISNPHY(pi))
- 		return wlc_phy_n_txpower_ipa_ison(pi);
- 	else
--		return 0;
-+		return false;
- }
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-index 5f13662..93d4cde 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c
-@@ -4999,7 +4999,7 @@ void wlc_2064_vco_cal(struct brcms_phy *pi)
- bool wlc_phy_tpc_isenabled_lcnphy(struct brcms_phy *pi)
- {
- 	if (wlc_lcnphy_tempsense_based_pwr_ctrl_enabled(pi))
--		return 0;
-+		return false;
- 	else
- 		return (LCNPHY_TX_PWR_CTRL_HW ==
- 			wlc_lcnphy_get_tx_pwr_ctrl((pi)));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-config.h b/drivers/net/wireless/iwlwifi/iwl-config.h
-index 4b190d9..19f3be0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-config.h
-@@ -92,9 +92,9 @@ static inline bool iwl_has_secure_boot(u32 hw_rev,
- {
- 	/* return 1 only for family 8000 B0 */
- 	if ((family == IWL_DEVICE_FAMILY_8000) && (hw_rev & 0xC))
--		return 1;
-+		return true;
- 
--	return 0;
-+	return false;
- }
- 
- /*
+> 
+> Thanks in advance.
+> 
+> Regards,
+> Jose Delgado
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
