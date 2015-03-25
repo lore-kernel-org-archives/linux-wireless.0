@@ -1,98 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:54900 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751229AbbCUIre (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:34 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 03/18] ath9k: ar9271_hw_pa_cal: use proper makroses.
-Date: Sat, 21 Mar 2015 09:47:06 +0100
-Message-Id: <1426927641-18474-4-git-send-email-linux@rempel-privat.de> (sfid-20150321_094742_842300_39D80B12)
-In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
-References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-out.m-online.net ([212.18.0.10]:35689 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881AbbCYVSu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Mar 2015 17:18:50 -0400
+From: Marek Vasut <marex@denx.de>
+To: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Marek Vasut <marex@denx.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: [PATCH] rtlwifi: rtl8192cu: Add new device ID
+Date: Wed, 25 Mar 2015 22:18:31 +0100
+Message-Id: <1427318311-5690-1-git-send-email-marex@denx.de> (sfid-20150325_221902_379766_2411C4E4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 43 ++++++++++++---------------
- 1 file changed, 19 insertions(+), 24 deletions(-)
+Add new ID for ASUS N10 WiFi dongle.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 4576b99..8d24a73 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -443,33 +443,30 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 	for (i = 0; i < ARRAY_SIZE(regList); i++)
- 		regList[i][1] = REG_READ(ah, regList[i][0]);
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+---
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+Bus 001 Device 004: ID 0b05:17ba ASUSTek Computer, Inc.
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  idVendor           0x0b05 ASUSTek Computer, Inc.
+  idProduct          0x17ba
+  bcdDevice            2.00
+  iManufacturer           1 Realtek
+  iProduct                2 802.11n WLAN Adapter
+  iSerial                 3 00e04c000001
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           46
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0
+    bmAttributes         0x80
+      (Bus Powered)
+    MaxPower              500mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           4
+      bInterfaceClass       255 Vendor Specific Class
+      bInterfaceSubClass    255 Vendor Specific Subclass
+      bInterfaceProtocol    255 Vendor Specific Protocol
+      iInterface              0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x03  EP 3 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x84  EP 4 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               1
+Device Qualifier (for other device speed):
+  bLength                10
+  bDescriptorType         6
+  bcdUSB               2.00
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  bNumConfigurations      1
+Device Status:     0x0000
+  (Bus Powered)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+index 90a714c..d451d2b 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+@@ -360,6 +360,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+ 	{RTL_USB_DEVICE(0x04f2, 0xaffb, rtl92cu_hal_cfg)}, /*Xavi*/
+ 	{RTL_USB_DEVICE(0x04f2, 0xaffc, rtl92cu_hal_cfg)}, /*Xavi*/
+ 	{RTL_USB_DEVICE(0x2019, 0x1201, rtl92cu_hal_cfg)}, /*Planex-Vencer*/
++	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
  
--	regVal = REG_READ(ah, AR9285_AN_RF2G6);
--	regVal &= (~(0x1));
--	REG_WRITE(ah, AR9285_AN_RF2G6, regVal);
--	regVal = REG_READ(ah, 0x9808);
--	regVal |= (0x1 << 27);
--	REG_WRITE(ah, 0x9808, regVal);
--
-+	/* 7834, b1=0 */
-+	REG_CLR_BIT(ah, AR9285_AN_RF2G6, 1 << 0);
-+	/* 9808, b27=1 */
-+	REG_SET_BIT(ah, 0x9808, 1 << 27);
- 	/* 786c,b23,1, pwddac=1 */
--	REG_RMW_FIELD(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC, 1);
-+	REG_SET_BIT(ah, AR9285_AN_TOP3, AR9285_AN_TOP3_PWDDAC);
- 	/* 7854, b5,1, pdrxtxbb=1 */
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1, 1);
-+	REG_SET_BIT(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDRXTXBB1);
- 	/* 7854, b7,1, pdv2i=1 */
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I, 1);
-+	REG_SET_BIT(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDV2I);
- 	/* 7854, b8,1, pddacinterface=1 */
--	REG_RMW_FIELD(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF, 1);
-+	REG_SET_BIT(ah, AR9285_AN_RXTXBB1, AR9285_AN_RXTXBB1_PDDACIF);
- 	/* 7824,b12,0, offcal=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL, 0);
-+	REG_CLR_BIT(ah, AR9285_AN_RF2G2, AR9285_AN_RF2G2_OFFCAL);
- 	/* 7838, b1,0, pwddb=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB, 0);
-+	REG_CLR_BIT(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PWDDB);
- 	/* 7820,b11,0, enpacal=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL, 0);
-+	REG_CLR_BIT(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_ENPACAL);
- 	/* 7820,b25,1, pdpadrv1=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1, 0);
-+	REG_CLR_BIT(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV1);
- 	/* 7820,b24,0, pdpadrv2=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2, 0);
-+	REG_CLR_BIT(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPADRV2);
- 	/* 7820,b23,0, pdpaout=0 */
--	REG_RMW_FIELD(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT, 0);
-+	REG_CLR_BIT(ah, AR9285_AN_RF2G1, AR9285_AN_RF2G1_PDPAOUT);
- 	/* 783c,b14-16,7, padrvgn2tab_0=7 */
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G8, AR9285_AN_RF2G8_PADRVGN2TAB0, 7);
- 	/*
-@@ -516,15 +513,13 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 		ah->pacal_info.prev_offset = regVal;
- 	}
- 
--	ENABLE_REGWRITE_BUFFER(ah);
- 
--	regVal = REG_READ(ah, AR_AN_RF2G1_CH1);
--	regVal |= 0x1;
--	REG_WRITE(ah, AR_AN_RF2G1_CH1, regVal);
--	regVal = REG_READ(ah, 0x9808);
--	regVal &= (~(0x1 << 27));
--	REG_WRITE(ah, 0x9808, regVal);
-+	/* 7834, b1=1 */
-+	REG_SET_BIT(ah, AR9285_AN_RF2G6, 1 << 0);
-+	/* 9808, b27=0 */
-+	REG_CLR_BIT(ah, 0x9808, 1 << 27);
- 
-+	ENABLE_REGWRITE_BUFFER(ah);
- 	for (i = 0; i < ARRAY_SIZE(regList); i++)
- 		REG_WRITE(ah, regList[i][0], regList[i][1]);
- 
+ 	/****** 8192CU ********/
+ 	{RTL_USB_DEVICE(0x050d, 0x1004, rtl92cu_hal_cfg)}, /*Belcom-SurfN300*/
 -- 
-1.9.1
+2.1.4
 
