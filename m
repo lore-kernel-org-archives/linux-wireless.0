@@ -1,65 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:41534 "EHLO aibo.runbox.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43616 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750901AbbCSEjs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 00:39:48 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, joe@perches.com,
-	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v3 03/15] staging: rtl8723au: else should follow close brace
-Date: Thu, 19 Mar 2015 00:39:06 -0400
-Message-Id: <1426739958-18949-4-git-send-email-m.v.b@runbox.com> (sfid-20150319_054238_444755_3ECCA98C)
-In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
-References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+	id S1752632AbbCYA26 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Mar 2015 20:28:58 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] staging: rtl8723au: Update RT_TRACE macro and uses
+References: <1427220609.5642.39.camel@perches.com>
+	<1427238404.12126.17.camel@perches.com>
+Date: Tue, 24 Mar 2015 20:28:56 -0400
+In-Reply-To: <1427238404.12126.17.camel@perches.com> (Joe Perches's message of
+	"Tue, 24 Mar 2015 16:06:44 -0700")
+Message-ID: <wrfjegodj4xj.fsf@redhat.com> (sfid-20150325_012922_656580_924DEA6C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct checkpatch.pl errors in rtl8723au's rtw_security.c indicating
-that an else statement should follow the closing brace of the previous
-if/else if code block:
-	ERROR: else should follow close brace '}'
+Joe Perches <joe@perches.com> writes:
+> Create an rt_trace function using %pV to reduce overall code size.
+> Update the macro uses to remove unnecessary and now harmful parentheses.
+>
+> Miscellanea around these changes:
+>
+> o Coalesce formats
+> o Realign arguments
+> o Remove commented-out RT_TRACE uses
+> o Spelling fixes in formats
+> o Add missing newlines to formats
+> o Remove multiple newlines from formats
+> o Neaten formats where noticed
+> o Use %pM in one instance
+>
+> Reduces code size ~20KB
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+> Mostly done by various scripts&emacs.
+> Compiled, untested, no hardware,
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+This could be further improved by fixing up all the places where the
+function name is hard coded into the print statement, instead of using
+__func__. In particular as a lot of it is carried over from old code
+and has been renamed since.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index cb78d6dd9c..17234e0bf1 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -379,8 +379,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
- 			rtw_secmicappend23a(&micdata, &header[24], 6);
- 		else
- 			rtw_secmicappend23a(&micdata, &header[10], 6);
--	}
--	else{	/* ToDS == 0 */
-+	} else {	/* ToDS == 0 */
- 		rtw_secmicappend23a(&micdata, &header[4], 6);   /* DA */
- 		if (header[1]&2)  /* From Ds == 1 */
- 			rtw_secmicappend23a(&micdata, &header[16], 6);
-@@ -673,8 +672,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 					arcfour_encrypt(&mycontext, payload, payload, length);
- 					arcfour_encrypt(&mycontext, payload+length, crc, 4);
- 
--				}
--				else {
-+				} else {
- 					length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
- 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
- 					arcfour_init(&mycontext, rc4key, 16);
-@@ -686,8 +684,7 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 				}
- 			}
- 
--		}
--		else {
-+		} else {
- 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_tkip_encrypt23a: stainfo == NULL!!!\n"));
- 			DBG_8723A("%s, psta == NUL\n", __func__);
- 			res = _FAIL;
--- 
-2.1.4
+It's OK with me to do this in a follow-on patch though.
 
+Jes
