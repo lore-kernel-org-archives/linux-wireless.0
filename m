@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44557 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752596AbbC3L6L (ORCPT
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:38478 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751018AbbCYJIA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 07:58:11 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix HTT op backwards compatibility for QCA6174
-References: <20150330111428.22198.36611.stgit@potku.adurom.net>
-Date: Mon, 30 Mar 2015 14:57:59 +0300
-In-Reply-To: <20150330111428.22198.36611.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Mon, 30 Mar 2015 14:14:28 +0300")
-Message-ID: <87d23q66k8.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_135814_679233_B9BA3EF1)
+	Wed, 25 Mar 2015 05:08:00 -0400
+Received: by igbqf9 with SMTP id qf9so19782991igb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2015 02:07:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1427245230396.59674@mail.polimi.it>
+References: <1427048376242.67051@mail.polimi.it>
+	<CAMowtuMgAPsgAKuwSibjAzhDbqEdZGatikCiKks6f3w=4oth+Q@mail.gmail.com>
+	<1427059313289.43792@mail.polimi.it>
+	<550FE50F.10303@broadcom.com>
+	<1427245230396.59674@mail.polimi.it>
+Date: Wed, 25 Mar 2015 10:07:59 +0100
+Message-ID: <CACna6ryn2byWm+aAd6JykQRid08QjGJ-JXYRAudcCxHgoFr36g@mail.gmail.com> (sfid-20150325_100954_843268_EB8C63F5)
+Subject: Re: informations about Linux wifi driver's architecture today
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Stefano Cappa <stefano.cappa@mail.polimi.it>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-
-> Commit 8348db298496 ("ath10k: add ATH10K_FW_IE_HTT_OP_VERSION") broke QCA6174
-> receive side as the HTT ids from ATH10K_FW_HTT_OP_VERSION_MAIN don't have
-> HTT_TLV_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND set. Fix this by adding a backwards
-> compatibility code which sets HTT op version if it's not set by the firmare
-> image.
+On 25 March 2015 at 02:00, Stefano Cappa <stefano.cappa@mail.polimi.it> wrote:
+> Thank you very much Arend, in particular for the documentation.
 >
-> Fixes: 8348db298496 ("ath10k: add ATH10K_FW_IE_HTT_OP_VERSION")
-> Reported-by: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> If i understand correctly, the levels are:
+> userspace
+> nl802111
+> cfg80211
+> firmware
 
-Applied.
+There's also brcmfmac internal code translating cfg80211 into firmware
+messages, but you probably know that.
+
+
+> No mac80211 because is a fullmac.
+> Correct?
+
+Yes.
 
 -- 
-Kalle Valo
+Rafał
