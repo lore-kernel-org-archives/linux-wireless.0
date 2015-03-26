@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f45.google.com ([209.85.215.45]:34622 "EHLO
-	mail-la0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbbCYIRa (ORCPT
+Received: from smtp-out04.msg.oleane.net ([62.161.7.2]:50353 "EHLO
+	smtp-out04.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752225AbbCZLjQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 04:17:30 -0400
-Received: by lagg8 with SMTP id g8so13509903lag.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Mar 2015 01:17:29 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ath10k: disable burst mode
-Date: Wed, 25 Mar 2015 09:14:51 +0100
-Message-Id: <1427271291-31683-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150325_091738_052457_595C8CBF)
+	Thu, 26 Mar 2015 07:39:16 -0400
+Received: from smtp29.msg.oleane.net (smtp29.mail.priv [172.17.20.151])
+	by smtp-out04.msg.oleane.net with ESMTP id t2QBIrYS028167
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 12:18:53 +0100
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp29.msg.oleane.net (MTA) with ESMTP id t2QAweu8022094
+	for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 11:58:41 +0100
+Subject: DFS ETSI conformance for weather channels (again)
+Date: Thu, 26 Mar 2015 11:58:40 +0100
+Message-ID: <773DB8A82AB6A046AE0195C68612A319019FF0E8@sbs2003.acksys.local> (sfid-20150326_123922_431774_BB0B5CC7)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+From: "Jean-Pierre TOSONI" <jp.tosoni@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmwares that indicate BURST_SERVICE as enabled
-could overwrite some wmm parameters (eg. txop).
-This could lead IOT and balancing issues.
-Hence disable this by default.
+Hi list,
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+I just stumbled on this patch that IMHO was rejected for a bad reason:
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 75dcd3a..b0d550b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3079,6 +3079,7 @@ static int ath10k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
- static int ath10k_start(struct ieee80211_hw *hw)
- {
- 	struct ath10k *ar = hw->priv;
-+	u32 burst_enable;
- 	int ret = 0;
- 
- 	/*
-@@ -3133,6 +3134,15 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		goto err_core_stop;
- 	}
- 
-+	if (test_bit(WMI_SERVICE_BURST, ar->wmi.svc_map)) {
-+		burst_enable = ar->wmi.pdev_param->burst_enable;
-+		ret = ath10k_wmi_pdev_set_param(ar, burst_enable, 0);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to disable burst: %d\n", ret);
-+			goto err_core_stop;
-+		}
-+	}
-+
- 	if (ar->cfg_tx_chainmask)
- 		__ath10k_set_antenna(ar, ar->cfg_tx_chainmask,
- 				     ar->cfg_rx_chainmask);
--- 
-1.9.1
+  [PATCH v3 4/4] cfg80211: DFS use 10 minutes CAC when weather channels
+  At http://www.spinics.net/lists/linux-wireless/msg115296.html
+
+The reason given is the "unachievable" requirement in the ETSI norm of
+99.99% detection success. It was even considered disabling the weather
+channels.
+
+*But the norm (ETSI EN 301 893 V1.7.1) does not say this.* It states
+that 99.99% is the target performance:
+
+ - during conformance tests only, (5.3.8.1.1 paragraph 5)
+ - specifically *not* a requirement with specific real life radars,
+(5.3.8.1.1 paragraph 5)
+ - on a limited series of 20 tests, (5.3.8.2.1.2 item g)
+ - with a pulse power at +10dB above other pulse detection tests,
+(5.3.8.2.1.2 item f)
+ - with some patterns excluded from the test. (5.3.8.2.1.2 item g)
+
+Hence it is very possible that existing products can achieve the
+conformance test target.
+
+That being said, would it be possible to reexamine that dropped patch
+and apply it?
+
+Best regards,
+
+Jean-Pierre Tosoni
 
