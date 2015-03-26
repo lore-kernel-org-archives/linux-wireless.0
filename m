@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:53435 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751131AbbCSVkW (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:44455 "EHLO
+	mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093AbbCZTrP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 17:40:22 -0400
-Message-ID: <550B4241.4040101@broadcom.com> (sfid-20150319_224025_323028_C14CEE35)
-Date: Thu, 19 Mar 2015 22:40:17 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?J=FCrgen_Bausa?= <Juergen.Bausa@online.de>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: Broadcom 43340
-References: <550482A2.3080803@gmail.com>	<55048833.90408@broadcom.com>	 	<55048BB1.9080906@gmail.com>	<550491DA.6030105@broadcom.com>	 	<55049507.6040209@gmail.com> <20150314213907.3f1167bb@mir>	  <5504B29F.8000305@gmail.com> <55056EFB.9020100@broadcom.com>	  <loom.20150315T213441-211@post.gmane.org> <5505F651.3060607@broadcom.com>	  <loom.20150317T214603-379@post.gmane.org>	 <1426634407.11120.50.camel@redhat.com>	 <loom.20150318T222315-999@post.gmane.org> <1426714179.26901.37.camel@redhat.com> <5509F0B5.7030601@broadcom.com> <loom.20150319T215852-35@post.gmane.org>
-In-Reply-To: <loom.20150319T215852-35@post.gmane.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Thu, 26 Mar 2015 15:47:15 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: linux-wireless@vger.kernel.org
+Cc: projekt-wlan@fem.tu-ilmenau.de,
+	Michael Braun <michael-dev@fami-braun.de>
+Subject: [RFC] mac80211: check A-MSDU inner frame source address on AP interfaces.
+Date: Thu, 26 Mar 2015 20:40:23 +0100
+Message-Id: <1427398823-30321-1-git-send-email-michael-dev@fami-braun.de> (sfid-20150326_204718_452345_B3C0C9FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/19/15 22:00, Jürgen Bausa wrote:
-> Arend van Spriel<arend@...>  writes:
->>
->> Do you have brcmfmac driver built with CONFIG_BRCMDBG. If so you can
->> enable debug output by:
->>
->> sudo sh -c 'echo 0xd416>  /sys/module/brcmfmac/parameters/debug'
->>
->
-> No, it doesnt have dbg set. I will try to compile my own kernel and then come
-> back.
+When using WPA security, the station and thus the required key is
+identified by its mac address when packets are received. So a
+station usually cannot spoof its source mac address.
 
-CONFIG_BRCM_TRACING is another way to get debug output, but I guess that 
-is not enabled either.
+But when a station sends an A-MSDU frame, port control and crypto
+is done using the outer mac address, while the packets delivered
+and forwarded use the inner mac address.
 
-Regards,
-Arend
+IEEE 802.11-2012 mandates that the outer source mac address should
+match the inner source address (section 8.3.2.2). For the
+destination mac address, matching is not required (section 10.23.15).
 
-> Juergen
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+So I was wondering whether some checking would be useful?
+
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+---
+ net/mac80211/rx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 944bdc0..e34e0b2 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2023,6 +2023,12 @@ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
+ 	     ether_addr_equal(ehdr->h_dest, pae_group_addr)))
+ 		return true;
+ 
++	/* Do not allow source MAC spoofing */
++	if (rx->sdata && (rx->sdata->vif.type == NL80211_IFTYPE_AP ||
++	    rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
++	    rx->sta && !ether_addr_equal(ehdr->h_source, rx->sta->sta.addr))
++		return false;
++
+ 	if (ieee80211_802_1x_port_control(rx) ||
+ 	    ieee80211_drop_unencrypted(rx, fc))
+ 		return false;
+-- 
+1.9.1
 
