@@ -1,91 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:41642 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750901AbbCSEkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 00:40:12 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Jes.Sorensen@redhat.com, joe@perches.com,
-	Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v3 07/15] staging: rtl8723au: Remove unneeded curly braces
-Date: Thu, 19 Mar 2015 00:39:10 -0400
-Message-Id: <1426739958-18949-8-git-send-email-m.v.b@runbox.com> (sfid-20150319_054036_045332_81890FD8)
-In-Reply-To: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
-References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:34543 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752283AbbCZT1n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2015 15:27:43 -0400
+Received: by iedfl3 with SMTP id fl3so61453304ied.1
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 12:27:43 -0700 (PDT)
+Message-ID: <55145DAC.6090204@mojatatu.com> (sfid-20150326_202756_554504_96ED9346)
+Date: Thu, 26 Mar 2015 15:27:40 -0400
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+MIME-Version: 1.0
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC: linux-wireless@vger.kernel.org, netfilter@vger.kernel.org,
+	netfilter-devel@vger.kernel.org, lwn@lwn.net,
+	netdev01@lists.netfilter.org, lartc@vger.kernel.org,
+	attendees@netdev01.org, Harout Hedeshian <harouth@codeaurora.org>,
+	Brenda Butler <bjb@mojatatu.com>,
+	Richard Guy Briggs <rgb@tricolour.ca>,
+	Miranda Gray <mirgray@gmail.com>,
+	Stephen Jaworski <jaws@mojatatu.com>,
+	David Miller <davem@davemloft.net>
+Subject: ANNOUNCEMENT: Netdev 01 materials posted
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct a number of checkpatch.pl warnings in rtl8723au's rtw_security.c
-related to the existence of unnecessary curly braces around single
-statement blocks:
-	WARNING: braces {} are not necessary for single statement blocks
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
----
- drivers/staging/rtl8723au/core/rtw_security.c | 16 +++++-----------
- 1 file changed, 5 insertions(+), 11 deletions(-)
+Folks,
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index f7571cf091..b4327aaf71 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -113,9 +113,8 @@ static void crc32_init(void)
- 	for (i = 0; i < 256; ++i) {
- 		k = crc32_reverseBit((u8)i);
- 
--		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
-+		for (c = ((u32)k) << 24, j = 8; j > 0; --j)
- 			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
--		}
- 
- 		p1 = (u8 *)&crc32_table[i];
- 
-@@ -267,9 +266,8 @@ static u32 secmicgetuint32(u8 *p)
- 	s32 i;
- 	u32 res = 0;
- 
--	for (i = 0; i < 4; i++) {
-+	for (i = 0; i < 4; i++)
- 		res |= ((u32)(*p++)) << (8 * i);
--	}
- 
- 	return res;
- }
-@@ -353,9 +351,8 @@ void rtw_secgetmic23a(struct mic_data *pmicdata, u8 *dst)
- 	rtw_secmicappend23abyte23a(pmicdata, 0);
- 	rtw_secmicappend23abyte23a(pmicdata, 0);
- 	/*  and then zeroes until the length is a multiple of 4 */
--	while (pmicdata->nBytesInM != 0) {
-+	while (pmicdata->nBytesInM != 0)
- 		rtw_secmicappend23abyte23a(pmicdata, 0);
--	}
- 	/*  The appendByte function has already computed the result. */
- 	secmicputuint32(dst, pmicdata->L);
- 	secmicputuint32(dst + 4, pmicdata->R);
-@@ -871,10 +868,8 @@ static void byte_sub(u8 *in, u8 *out)
- {
- 	int i;
- 
--	for (i = 0; i < 16; i++) {
-+	for (i = 0; i < 16; i++)
- 		out[i] = sbox(in[i]);
--	}
--
- }
- 
- static void shift_row(u8 *in, u8 *out)
-@@ -935,9 +930,8 @@ static void mix_column(u8 *in, u8 *out)
- 
- 	for (i = 3; i > 0; i--) { /* logical shift left 1 bit */
- 		andf7[i] = andf7[i] << 1;
--		if ((andf7[i - 1] & 0x80) == 0x80) {
-+		if ((andf7[i - 1] & 0x80) == 0x80)
- 			andf7[i] = (andf7[i] | 0x01);
--		}
- 	}
- 	andf7[0] = andf7[0] << 1;
- 	andf7[0] = andf7[0] & 0xfe;
--- 
-2.1.4
+We are pleased to announce that _most_ papers are now available
+off the netdev website. A few are missing but we are working to get the
+authors to submit them.
+Most if not all slides are available.
+A few videos are also up.
+Harout is vigilantly working on getting the videos for most sessions
+uploaded as soon as they are transformed and as soon as we get
+permission from the authors.
 
+And without further ado, here is the url:
+
+https://www.netdev01.org/sessions
+
+Enjoy!
+
+cheers,
+jamal
