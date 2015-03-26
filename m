@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:9166 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751941AbbCCMUu (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45240 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135AbbCZMSP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 07:20:50 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath10k: fix rts profile for second rate series
-Date: Tue, 3 Mar 2015 17:50:29 +0530
-Message-ID: <1425385230-25308-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150303_132053_726133_CDF0DA9E)
+	Thu, 26 Mar 2015 08:18:15 -0400
+Date: Thu, 26 Mar 2015 13:18:10 +0100
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "M. Vefa Bicakci" <m.v.b@runbox.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Jes.Sorensen@redhat.com, joe@perches.com,
+	Larry.Finger@lwfinger.net, mail@beyermatthias.de
+Subject: Re: [PATCH v3 01/15] staging: rtl8723au: Reformat whitespace to
+ increase readability
+Message-ID: <20150326121810.GA15960@kroah.com> (sfid-20150326_131829_937414_FD836528)
+References: <1426739958-18949-1-git-send-email-m.v.b@runbox.com>
+ <1426739958-18949-2-git-send-email-m.v.b@runbox.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1426739958-18949-2-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-By default rts protection is enabled in firmware for the second
-rateset. Currently ath10k selects RTS profile (only for software
-retries), when legacy stations are associated or asked by mac80211.
-On congested environment, when AP is running in HT/VHT mode and
-there are no legacy clients associated, this will impact the
-robustness. Also enabling RTS protection only for second rateset will
-not impact performance on clear environment. Fix that.
+On Thu, Mar 19, 2015 at 12:39:04AM -0400, M. Vefa Bicakci wrote:
+> Adjust the whitespace in the signature, local variable declaration and
+> initialization parts of a number of functions to increase readability
+> in rtl8723au's rtw_security.c.
+> 
+> v2: Make sure that the arcfour_encrypt function's argument list is split
+>     according to the kernel code style.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+The "v2" stuff here should go below the --- line, otherwise it will show
+up in the changelog :(
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 84a243e..37141b3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -798,12 +798,14 @@ static int ath10k_recalc_rtscts_prot(struct ath10k_vif *arvif)
- 
- 	vdev_param = ar->wmi.vdev_param->enable_rtscts;
- 
--	if (arvif->use_cts_prot || arvif->num_legacy_stations > 0)
--		rts_cts |= SM(WMI_RTSCTS_ENABLED, WMI_RTSCTS_SET);
-+	rts_cts |= SM(WMI_RTSCTS_ENABLED, WMI_RTSCTS_SET);
- 
- 	if (arvif->num_legacy_stations > 0)
- 		rts_cts |= SM(WMI_RTSCTS_ACROSS_SW_RETRIES,
- 			      WMI_RTSCTS_PROFILE);
-+	else
-+		rts_cts |= SM(WMI_RTSCTS_FOR_SECOND_RATESERIES,
-+			      WMI_RTSCTS_PROFILE);
- 
- 	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 					 rts_cts);
--- 
-2.3.1
+Please fix these all up and resend.
 
+thanks,
+
+greg k-h
