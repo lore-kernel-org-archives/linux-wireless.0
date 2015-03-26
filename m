@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f176.google.com ([74.125.82.176]:33175 "EHLO
-	mail-we0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751589AbbCBKRC convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58544 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbbCZQGH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 05:17:02 -0500
-Received: by wevk48 with SMTP id k48so32280745wev.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Mar 2015 02:17:00 -0800 (PST)
+	Thu, 26 Mar 2015 12:06:07 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Jean-Pierre TOSONI" <jp.tosoni@acksys.fr>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: DFS ETSI conformance for weather channels (again)
+References: <773DB8A82AB6A046AE0195C68612A319019FF0E8@sbs2003.acksys.local>
+Date: Thu, 26 Mar 2015 18:05:55 +0200
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A319019FF0E8@sbs2003.acksys.local>
+	(Jean-Pierre TOSONI's message of "Thu, 26 Mar 2015 11:58:40 +0100")
+Message-ID: <87619nagm4.fsf@kamboji.qca.qualcomm.com> (sfid-20150326_170611_560310_75AE76DA)
 MIME-Version: 1.0
-In-Reply-To: <1425288321.1906.1.camel@sipsolutions.net>
-References: <1425287344-30594-1-git-send-email-michal.kazior@tieto.com>
-	<1425287344-30594-2-git-send-email-michal.kazior@tieto.com>
-	<1425287785.1906.0.camel@sipsolutions.net>
-	<CA+BoTQnrS74yx=V_sPvTgzkoZeWbOBFawqXZMAv6oEhUypmoQA@mail.gmail.com>
-	<1425288321.1906.1.camel@sipsolutions.net>
-Date: Mon, 2 Mar 2015 11:17:00 +0100
-Message-ID: <CA+BoTQnk8FBRwqTuq=ZAp__exwHejO1HncNhcVOASwn8+dKu=g@mail.gmail.com> (sfid-20150302_111706_737169_03F202E1)
-Subject: Re: [PATCH 2/3] ath10k: always save/restore pci config space
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 March 2015 at 10:25, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2015-03-02 at 10:23 +0100, Michal Kazior wrote:
->
->> > I believe the whole thing isn't necessary at all since the kernel's PCIe
->> > layer will take care of it.
->>
->> You mean only the pci_save_state() and pci_disable_device() or, the
->> resume counterpart as well? Hmm.
->
-> Resume as well - but I believe it's all-or-nothing.
->
->> Earlier the resume counterpart didn't do any restore stuff and the
->> device ended up pretty confused..
->
-> which may explain this.
+"Jean-Pierre TOSONI" <jp.tosoni@acksys.fr> writes:
 
-Hmm.. I removed the save/restore/enable/disable completely and
-re-tested. It seems to work fine as well.
+> Hi list,
+>
+> I just stumbled on this patch that IMHO was rejected for a bad reason:
+>
+>   [PATCH v3 4/4] cfg80211: DFS use 10 minutes CAC when weather channels
+>   At http://www.spinics.net/lists/linux-wireless/msg115296.html
+>
+> The reason given is the "unachievable" requirement in the ETSI norm of
+> 99.99% detection success. It was even considered disabling the weather
+> channels.
+>
+> *But the norm (ETSI EN 301 893 V1.7.1) does not say this.* It states
+> that 99.99% is the target performance:
+>
+>  - during conformance tests only, (5.3.8.1.1 paragraph 5)
+>  - specifically *not* a requirement with specific real life radars,
+> (5.3.8.1.1 paragraph 5)
+>  - on a limited series of 20 tests, (5.3.8.2.1.2 item g)
+>  - with a pulse power at +10dB above other pulse detection tests,
+> (5.3.8.2.1.2 item f)
+>  - with some patterns excluded from the test. (5.3.8.2.1.2 item g)
+>
+> Hence it is very possible that existing products can achieve the
+> conformance test target.
+>
+> That being said, would it be possible to reexamine that dropped patch
+> and apply it?
 
-I'll post a v2 later then. Thanks!
+Don't we support this by getting the CAC time in the regulatory
+database?
 
+commit 31559f35c5724976fd975e5d7e90cdb693b8dd27
+Author: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Date:   Fri Feb 21 19:46:13 2014 +0100
 
-Michał
+    cfg80211: DFS get CAC time from regulatory database
+    
+    Send Channel Availability Check time as a parameter
+    of start_radar_detection() callback.
+    Get CAC time from regulatory database.
+    
+    Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+
+-- 
+Kalle Valo
