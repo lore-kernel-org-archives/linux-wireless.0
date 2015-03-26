@@ -1,65 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:33876 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbbCGIEG (ORCPT
+Received: from mail-out.m-online.net ([212.18.0.10]:39614 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751347AbbCZBQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2015 03:04:06 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 4/4] ath10k: cache throttle state when device is down
-Date: Sat, 7 Mar 2015 13:33:00 +0530
-Message-ID: <1425715380-11200-4-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20150307_090417_280748_68AE7BA7)
-In-Reply-To: <1425715380-11200-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1425715380-11200-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Wed, 25 Mar 2015 21:16:17 -0400
+From: Marek Vasut <marex@denx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH] rtlwifi: rtl8192cu: Add new device ID
+Date: Thu, 26 Mar 2015 02:13:42 +0100
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+References: <1427318311-5690-1-git-send-email-marex@denx.de> <551357F3.4020406@lwfinger.net>
+In-Reply-To: <551357F3.4020406@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Message-Id: <201503260213.42322.marex@denx.de> (sfid-20150326_021645_542488_8F26D499)
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow driver to cache the throttle state when the devie is not
-yet started. Configure the cached throttle state while powering
-up the device. Since thermal daemon is unaware of the up/down cycle,
-it assumes that device is throttled.
+On Thursday, March 26, 2015 at 01:50:59 AM, Larry Finger wrote:
+> On 03/25/2015 04:18 PM, Marek Vasut wrote:
+> > Add new ID for ASUS N10 WiFi dongle.
+> > 
+> > Signed-off-by: Marek Vasut <marex@denx.de>
+> > Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> > Cc: John W. Linville <linville@tuxdriver.com>
+> > Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+> > ---
+> > 
+> >   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c | 1 +
+> >   1 file changed, 1 insertion(+)
+> > 
+> > Bus 001 Device 004: ID 0b05:17ba ASUSTek Computer, Inc.
+> > 
+> > Device Descriptor:
+> >    bLength                18
+> >    bDescriptorType         1
+> >    bcdUSB               2.00
 
-Reported-by: Matthias Kaehlcke <mka@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/thermal.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index 7aef064..3720c86 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -52,19 +52,19 @@ ath10k_thermal_set_cur_throttle_state(struct thermal_cooling_device *cdev,
- 	struct ath10k *ar = cdev->devdata;
- 	int ret = 0;
- 
-+	if (throttle_state > ATH10K_THERMAL_THROTTLE_MAX) {
-+		ath10k_warn(ar, "throttle state %ld is exceeding the limit %d\n",
-+			    throttle_state, ATH10K_THERMAL_THROTTLE_MAX);
-+		return -EINVAL;
-+	}
- 	mutex_lock(&ar->conf_mutex);
-+	ar->thermal.throttle_state = throttle_state;
-+
- 	if (ar->state != ATH10K_STATE_ON) {
- 		ret = -ENETDOWN;
- 		goto out;
- 	}
- 
--	if (throttle_state > ATH10K_THERMAL_THROTTLE_MAX) {
--		ath10k_warn(ar, "throttle state %ld is exceeding the limit %d\n",
--			    throttle_state, ATH10K_THERMAL_THROTTLE_MAX);
--		ret = -EINVAL;
--		goto out;
--	}
--	ar->thermal.throttle_state = throttle_state;
- 	ath10k_thermal_set_throttling(ar);
- out:
- 	mutex_unlock(&ar->conf_mutex);
--- 
-2.3.1
+> > diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> > b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c index 90a714c..d451d2b
+> > 100644
+> > --- a/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> > +++ b/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
+> > @@ -360,6 +360,7 @@ static struct usb_device_id rtl8192c_usb_ids[] = {
+> > 
+> >   	{RTL_USB_DEVICE(0x04f2, 0xaffb, rtl92cu_hal_cfg)}, /*Xavi*/
+> >   	{RTL_USB_DEVICE(0x04f2, 0xaffc, rtl92cu_hal_cfg)}, /*Xavi*/
+> >   	{RTL_USB_DEVICE(0x2019, 0x1201, rtl92cu_hal_cfg)}, /*Planex-Vencer*/
+> > 
+> > +	{RTL_USB_DEVICE(0x0b05, 0x17ba, rtl92cu_hal_cfg)}, /*ASUS-Edimax*/
+> > 
+> >   	/****** 8192CU ********/
+> >   	{RTL_USB_DEVICE(0x050d, 0x1004, rtl92cu_hal_cfg)}, /*Belcom-SurfN300*/
 
+Hi!
+
+> The full dump from lsusb is a bit much for a commit message. All you need
+> is the one line from lsusb with no switches set.
+
+That's why I added it below the diffstat, so that it doesn't polute the commit 
+message.
+
+> According to the Vendor driver, which the comment indicates as the source
+> of part of your patch,
+
+In fact, the comment came from that same source file, from 0b05:17ab line.
+The vendor is the same though, so I kept the comment.
+
+> this particular device belongs in the "Customer ID"
+> section under 8188CU, not where you placed it. In addition, I like to keep
+> the USB IDs in numerical order within each section. Accordingly, your new
+> ID should be between 0846:9041 and 0bda:5088.
+
+OK.
+
+> I am assuming that you have such a device. A statement that this change
+> allows it to work should be in the commit message. If you have not tested,
+> then you need to state that.
+
+I have one and I tested it, I mostly checked the other commit messages and
+wrote the same thing. It's a rather mindless change afterall.
