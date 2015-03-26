@@ -1,35 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31905 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753632AbbCJPo1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 11:44:27 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/3] ath10k: add sysfs entry to configure quiet period
-References: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Tue, 10 Mar 2015 17:43:58 +0200
-In-Reply-To: <1424437452-28161-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Fri, 20 Feb 2015 18:34:10 +0530")
-Message-ID: <87lhj4yi0x.fsf@kamboji.qca.qualcomm.com> (sfid-20150310_164502_049261_DEF9E5C9)
+Received: from mga14.intel.com ([192.55.52.115]:31959 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751326AbbCZNqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2015 09:46:00 -0400
+Date: Thu, 26 Mar 2015 15:45:55 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Robert Dolca <robert.dolca@intel.com>
+Cc: linux-nfc@lists.01.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH 8/8] NFC: Add Intel FieldsPeak NFC solution driver
+Message-ID: <20150326134555.GL1878@lahna.fi.intel.com> (sfid-20150326_144625_271641_23934A1E)
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+ <1424772112-27399-9-git-send-email-robert.dolca@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1424772112-27399-9-git-send-email-robert.dolca@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+On Tue, Feb 24, 2015 at 12:01:52PM +0200, Robert Dolca wrote:
+> +static struct i2c_device_id fdp_nci_i2c_id_table[] = {
+> +	{"INT339A", 0},
 
-> Add support to configure quiet period via sysfs entry. This will
-> be helpful to experiment different quiet period values along with
-> different duty cycle ratio.
->
-> To configure quiet period as 30ms,
->
-> echo 30 >/sys/class/ieee80211/phyX/device/quiet_period
+If this is ACPI only device you can remove the above line.
 
-What's the justification? To me this looks like an ugly driver private
-hack. Why can't you use nl80211 or something else?
+> +	{}
+> +};
+> +
+> +MODULE_DEVICE_TABLE(i2c, fdp_nci_i2c_id_table);
 
--- 
-Kalle Valo
+And this as well.
+
+> +
+> +
+> +static const struct acpi_device_id fdp_nci_i2c_acpi_match[] = {
+> +	{"INT339A", 0},
+> +	{}
+> +};
+> +
+> +static struct i2c_driver fdp_nci_i2c_driver = {
+> +	.driver = {
+> +		   .name = FDP_NCI_I2C_DRIVER_NAME,
+> +		   .owner  = THIS_MODULE,
+> +		   .acpi_match_table = ACPI_PTR(fdp_nci_i2c_acpi_match),
+> +		  },
+> +	.id_table = fdp_nci_i2c_id_table,
+> +	.probe = fdp_nci_i2c_probe,
+> +	.remove = fdp_nci_i2c_remove,
+> +};
