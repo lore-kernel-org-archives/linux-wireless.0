@@ -1,50 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:16710 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756338AbbCRMZe (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:34947 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751325AbbCZJ1x convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 08:25:34 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 4/8] brcmfmac: Remove unnecessary new-line in pcie console logging.
-Date: Wed, 18 Mar 2015 13:25:24 +0100
-Message-ID: <1426681528-15831-5-git-send-email-arend@broadcom.com> (sfid-20150318_132544_304889_6C1D8E16)
-In-Reply-To: <1426681528-15831-1-git-send-email-arend@broadcom.com>
-References: <1426681528-15831-1-git-send-email-arend@broadcom.com>
+	Thu, 26 Mar 2015 05:27:53 -0400
+Received: by wibbg6 with SMTP id bg6so56551082wib.0
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 02:27:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1426849379-7562-2-git-send-email-marek.puzyniak@tieto.com>
+References: <1426849379-7562-1-git-send-email-marek.puzyniak@tieto.com>
+	<1426849379-7562-2-git-send-email-marek.puzyniak@tieto.com>
+Date: Thu, 26 Mar 2015 10:27:52 +0100
+Message-ID: <CA+BoTQm74JDvMk=G2Hot7h4v4gU4gRh8JH0K=1yhMa_UGQ4e0A@mail.gmail.com> (sfid-20150326_102801_833539_ADE9F701)
+Subject: Re: [PATCH v4 1/6] ath10k: unify tx mode and dispatch
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Marek Puzyniak <marek.puzyniak@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On 20 March 2015 at 12:02, Marek Puzyniak <marek.puzyniak@tieto.com> wrote:
+> From: Michal Kazior <michal.kazior@tieto.com>
+>
+> There are a few different tx paths depending on
+> firmware and frame itself.
+>
+> Creating a uniform decision will make it possible
+> to switch between different txmode easier, both
+> for testing and for future features as well.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+[...]
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+This patch apparently breaks AP operation. I need to investigate this.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index aa7a4df..ec426f3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -651,10 +651,9 @@ static void brcmf_pcie_bus_console_read(struct brcmf_pciedev_info *devinfo)
- 			console->log_str[console->log_idx] = ch;
- 			console->log_idx++;
- 		}
--
- 		if (ch == '\n') {
- 			console->log_str[console->log_idx] = 0;
--			brcmf_dbg(PCIE, "CONSOLE: %s\n", console->log_str);
-+			brcmf_dbg(PCIE, "CONSOLE: %s", console->log_str);
- 			console->log_idx = 0;
- 		}
- 	}
--- 
-1.9.1
 
+Michał
