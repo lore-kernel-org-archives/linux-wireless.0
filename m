@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:36086 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750917AbbC1MNL (ORCPT
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:36347 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751212AbbCZQM3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 08:13:11 -0400
-Received: by pdcp1 with SMTP id p1so32004525pdc.3
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2015 05:13:10 -0700 (PDT)
-From: Taehee Yoo <ap420073@gmail.com>
-To: Larry.Finger@lwfinger.net, ap420073@gmail.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192c: Change REG_C2HEVT_CLEAR and REG_USTIME_TSF
-Date: Sat, 28 Mar 2015 21:12:50 +0900
-Message-Id: <1427544770-28523-1-git-send-email-ap420073@gmail.com> (sfid-20150328_131321_984957_79880532)
+	Thu, 26 Mar 2015 12:12:29 -0400
+Received: by qgf60 with SMTP id 60so87176462qgf.3
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 09:12:29 -0700 (PDT)
+MIME-Version: 1.0
+Date: Thu, 26 Mar 2015 18:12:28 +0200
+Message-ID: <CABU1Ay8sVdLuHURHhmhsOf_aCVgvYnR_fw6_HyqLXziGmp3_fA@mail.gmail.com> (sfid-20150326_171232_750954_645BCF26)
+Subject: mediatek mt7630e and ksoftirqd CPU load
+From: George Moutsopoulos <gmoutso@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-in the rtl8192ce/reg.h, REG_C2HEVT_CLEAR register's address is 0x01BF
-but, vendor driver's address is 0x01AF. so i change 0x01BF to 0x01AF.
-also in the rtl8192ce/reg.h, 0x0551 is REG_USTIME_TSF, but vendor driver
-define REG_BCN_CTRL_1. so i change the REG_USTIME_TSF to REG_BCN_CTRL_1.
+Dear developers,
 
-according to r8192c vendor driver, rtl8192c do not use REG_USTIME_TSF.
+if this is not the right place to post this, sorry for the spam. I
+haven't filed a bug report yet. Tell me if I should. I am not sure if
+the problem is something kernel developers can solve.
 
-Signed-off-by: Taehee Yoo <ap420073@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/reg.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On a laptop ASUS TP500LN, I have a wireless pcie card mt7630e from
+mediatek. It is a wifi/bluetooth combo.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-index dc8460c..21c0fc9 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-@@ -117,8 +117,8 @@
- #define REG_MBIST_DONE				0x0178
- #define REG_MBIST_FAIL				0x017C
- #define REG_C2HEVT_MSG_NORMAL			0x01A0
-+#define REG_C2HEVT_CLEAR			0x01AF
- #define REG_C2HEVT_MSG_TEST			0x01B8
--#define REG_C2HEVT_CLEAR			0x01BF
- #define REG_MCUTST_1				0x01c0
- #define REG_FMETHR				0x01C8
- #define REG_HMETFR				0x01CC
-@@ -231,7 +231,7 @@
- #define REG_RD_NAV_NXT				0x0544
- #define REG_NAV_PROT_LEN			0x0546
- #define REG_BCN_CTRL				0x0550
--#define REG_USTIME_TSF				0x0551
-+#define REG_BCN_CTRL_1				0x0551
- #define REG_MBID_NUM				0x0552
- #define REG_DUAL_TSF_RST			0x0553
- #define REG_BCN_INTERVAL			0x0554
--- 
-1.9.1
+The driver is not in the kernel, but mediatek provides it for linux
+from the download site
+http://www.mediatek.com/en/downloads/
 
+The driver does not support kernel 3.16 and above. I followed the
+instructions at
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1220146
+
+The module compiles and loads succesfully. I followed the post by
+tobias bora from the ubuntu bug. It compiles on kernel version 3.16
+and above (tried up to 3.19).
+
+Like the rest on the ubuntu bug list, the wifi works and I connect
+succesfully, but ksoftirqd gets 100% cpu on one of the cores.
+
+Shall I open a bug report? I have contacted mediatek twice but they
+haven't replied. I hope it is something you can look at.
+
+Many regards,
+George
