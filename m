@@ -1,64 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:39864 "EHLO muru.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128AbbCYVqy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 17:46:54 -0400
-Date: Wed, 25 Mar 2015 14:42:31 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eliad Peller <eliad@wizery.com>,
-	Pontus Fuchs <pontus.fuchs@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	Sekhar Nori <nsekhar@ti.com>,
-	Kevin Hilman <khilman@deeprootsystems.com>
-Subject: Re: [PATCH v7 5/6] ARM: dts: add wl12xx/wl18xx bindings
-Message-ID: <20150325214230.GB31346@atomide.com> (sfid-20150325_224658_753474_7417949B)
-References: <1426696710-6891-1-git-send-email-eliad@wizery.com>
- <1426696710-6891-6-git-send-email-eliad@wizery.com>
- <550AD7C1.2030405@gmail.com>
- <CAB3XZEfpD7YkwdU7OJJaNFy=MnYVY3-fOVxkA48Vu01LzU0GFg@mail.gmail.com>
- <20150319212505.GN31346@atomide.com>
- <87h9tgi4sg.fsf@kamboji.qca.qualcomm.com>
- <20150320153357.GT31346@atomide.com>
- <87bnjnfz1t.fsf@kamboji.qca.qualcomm.com>
- <20150320162138.GU31346@atomide.com>
- <87twxce2oh.fsf@kamboji.qca.qualcomm.com>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:33303 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751002AbbCZQor (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Mar 2015 12:44:47 -0400
+Received: by obcxo2 with SMTP id xo2so1863968obc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Mar 2015 09:44:47 -0700 (PDT)
+Message-ID: <5514377C.1070906@lwfinger.net> (sfid-20150326_174450_778190_49D828C7)
+Date: Thu, 26 Mar 2015 11:44:44 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87twxce2oh.fsf@kamboji.qca.qualcomm.com>
+To: George Moutsopoulos <gmoutso@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: mediatek mt7630e and ksoftirqd CPU load
+References: <CABU1Ay8sVdLuHURHhmhsOf_aCVgvYnR_fw6_HyqLXziGmp3_fA@mail.gmail.com>
+In-Reply-To: <CABU1Ay8sVdLuHURHhmhsOf_aCVgvYnR_fw6_HyqLXziGmp3_fA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Kalle Valo <kvalo@codeaurora.org> [150322 21:52]:
-> Tony Lindgren <tony@atomide.com> writes:
-> 
-> >> After John "retired" we actually have two set of trees now: mac80211
-> >> maintained by Johannes and wireless-drivers maintained by me. I haven't
-> >> pulled anything from your tree and I'm 100% sure Johannes hasn't either.
-> >> So green light from me.
-> >
-> > OK, I'll set up the new branch then. I take your ack is for the
-> > whole series? If it's just for the $subject patch, please let
-> > me know.
-> 
-> It was for the whole series.
+On 03/26/2015 11:12 AM, George Moutsopoulos wrote:
+> Dear developers,
+>
+> if this is not the right place to post this, sorry for the spam. I
+> haven't filed a bug report yet. Tell me if I should. I am not sure if
+> the problem is something kernel developers can solve.
+>
+> On a laptop ASUS TP500LN, I have a wireless pcie card mt7630e from
+> mediatek. It is a wifi/bluetooth combo.
+>
+> The driver is not in the kernel, but mediatek provides it for linux
+> from the download site
+> http://www.mediatek.com/en/downloads/
+>
+> The driver does not support kernel 3.16 and above. I followed the
+> instructions at
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1220146
+>
+> The module compiles and loads succesfully. I followed the post by
+> tobias bora from the ubuntu bug. It compiles on kernel version 3.16
+> and above (tried up to 3.19).
+>
+> Like the rest on the ubuntu bug list, the wifi works and I connect
+> succesfully, but ksoftirqd gets 100% cpu on one of the cores.
+>
+> Shall I open a bug report? I have contacted mediatek twice but they
+> haven't replied. I hope it is something you can look at.
 
-OK thanks, I've sent of the pull request for arm-soc for this series
-as "[GIT PULL] wireless wl12xx and omap device tree changes for v4.1".
+Due to the fact that the driver is not in the kernel, it is not possible to file 
+a bug with anyone but the vendor.
 
-Regards,
+It is possible that someone on this list with Mediatek experience may be able to 
+help you, but there is no certainty. That is the downside of using a vendor driver.
 
-Tony
+As the specs for that computer specify "integrated 802.11 b/g/n", it is probably 
+not possible to change that device. I suggest that you purchase an inexpensive 
+USB wifi stick to provide wifi on this computer. If you do so, you will be aware 
+enough to check for Linux compatibility.
+
+Larry
+
