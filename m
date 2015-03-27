@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:54956 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751177AbbCUIrd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:33 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 00/18] reduce some of ath9k_htc performance problems
-Date: Sat, 21 Mar 2015 09:47:03 +0100
-Message-Id: <1426927641-18474-1-git-send-email-linux@rempel-privat.de> (sfid-20150321_094739_610982_ADDDA56F)
+Received: from mail-la0-f46.google.com ([209.85.215.46]:36738 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751698AbbC0IYn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Mar 2015 04:24:43 -0400
+Received: by labe2 with SMTP id e2so64610476lab.3
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Mar 2015 01:24:42 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: fix arvif->wep_keys clearing
+Date: Fri, 27 Mar 2015 08:21:55 +0000
+Message-Id: <1427444516-974-1-git-send-email-michal.kazior@tieto.com> (sfid-20150327_092448_563272_CBFE5A65)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset adds new WMI_RMW handler to reduce some of usb related
-performance problems.
+The variable should be cleared regardless of
+whether there's a peer associated with the key or
+not.
 
-Oleksij Rempel (18):
-  ath9k_htc: add new WMI_REG_RMW_CMDID command
-  ath9k: ar9271_hw_pa_cal - use defs instead of magin numbers
-  ath9k: ar9271_hw_pa_cal: use proper makroses.
-  ath9k: ar9271_hw_pa_cal: use RMW buffer
-  ath9k: add multi_read to be compatible with ath9k_htc
-  ath9k: add new function ath9k_hw_read_array
-  ath9k: ar9271_hw_pa_cal: use REG_READ_ARRAY
-  ath9k: use one shot read in ath9k_hw_update_mibstats
-  ath9k: ath9k_hw_loadnf: use REG_RMW
-  ath9k: write buffer related optimisation in ar5008_hw_set_channel_regs
-  ath9k: ath9k_hw_set_4k_power_cal_tabl: use rmw buffer
-  ath9k: use rmw buffer in ath9k_hw_set_operating_mode and
-    ath9k_hw_reset
-  ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-  ath9k: ath9k_hw_analog_shift_rmw: use REG_RMW
-  ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
-  ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
-  ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
-  ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
+This fixes case when user first associates with 2
+WEP keys and then disconnects and connects with 1
+WEP key. This resulted in WEP key count being 2 in
+the driver leading to default keyidx fixup
+failure.
 
- drivers/net/wireless/ath/ath.h                |   3 +
- drivers/net/wireless/ath/ath9k/ani.c          |  20 +++-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c   |   5 +-
- drivers/net/wireless/ath/ath9k/ar9002_calib.c |  77 +++++++-------
- drivers/net/wireless/ath/ath9k/calib.c        |  19 ++--
- drivers/net/wireless/ath/ath9k/eeprom.c       |   7 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c    |  36 ++++---
- drivers/net/wireless/ath/ath9k/eeprom_def.c   |  34 +++---
- drivers/net/wireless/ath/ath9k/htc.h          |   5 +
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 142 ++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath9k/hw.c           |  24 +++++
- drivers/net/wireless/ath/ath9k/hw.h           |  15 +++
- drivers/net/wireless/ath/ath9k/init.c         |  11 ++
- drivers/net/wireless/ath/ath9k/wmi.c          |   3 +
- drivers/net/wireless/ath/ath9k/wmi.h          |  16 +++
- 15 files changed, 314 insertions(+), 103 deletions(-)
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9b8313dcb888..9d873900257d 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4101,6 +4101,13 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	key->hw_key_idx = key->keyidx;
+ 
++	if (is_wep) {
++		if (cmd == SET_KEY)
++			arvif->wep_keys[key->keyidx] = key;
++		else
++			arvif->wep_keys[key->keyidx] = NULL;
++	}
++
+ 	/* the peer should not disappear in mid-way (unless FW goes awry) since
+ 	 * we already hold conf_mutex. we just make sure its there now. */
+ 	spin_lock_bh(&ar->data_lock);
+@@ -4126,11 +4133,6 @@ static int ath10k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		flags |= WMI_KEY_GROUP;
+ 
+ 	if (is_wep) {
+-		if (cmd == SET_KEY)
+-			arvif->wep_keys[key->keyidx] = key;
+-		else
+-			arvif->wep_keys[key->keyidx] = NULL;
+-
+ 		if (cmd == DISABLE_KEY)
+ 			ath10k_clear_vdev_key(arvif, key);
+ 
 -- 
-1.9.1
+2.1.4
 
