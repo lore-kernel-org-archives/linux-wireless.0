@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:46052 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752977AbbCJOZr (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:56523 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751200AbbC0FVW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 10:25:47 -0400
-From: Florian Westphal <fw@strlen.de>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Florian Westphal <fw@strlen.de>
-Subject: [PATCH next] drivers: wireless: ar5523: use container_of
-Date: Tue, 10 Mar 2015 15:25:39 +0100
-Message-Id: <1425997539-25206-1-git-send-email-fw@strlen.de> (sfid-20150310_152552_230404_9DC6CEE7)
+	Fri, 27 Mar 2015 01:21:22 -0400
+From: <miaoqing@qti.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+	Miaoqing Pan <miaoqing@qti.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: fix failed to set smps
+Date: Fri, 27 Mar 2015 13:21:14 +0800
+Message-ID: <1427433674-5745-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150327_062125_551844_AE1F0CE9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we want to shrink skb->cb then we'd have to see about
-reducing struct ieee80211_tx_info, which gets embedded inside
-skb->cb[].
+From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-It provides a scratch space to be used by wireless drivers.
-ar5523 uses the maximum space available today (40 bytes), but it seems
-we don't need this -- data->skb pointer seems to always point back to the
-skb whose cb buffer the data structure resides, iow, given a pointer to the
-embedded control buffer we can infer the skb address.
-
-Tested-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Florian Westphal <fw@strlen.de>
+Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ar5523/ar5523.c | 9 +++++----
- drivers/net/wireless/ath/ar5523/ar5523.h | 1 -
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ net/mac80211/debugfs_netdev.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index f920506..5147ebe 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -779,8 +779,6 @@ static void ar5523_tx(struct ieee80211_hw *hw,
- 		ieee80211_stop_queues(hw);
- 	}
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 4d7473f..9aeb50d 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -276,7 +276,8 @@ static ssize_t ieee80211_if_parse_smps(struct ieee80211_sub_if_data *sdata,
+ 	enum ieee80211_smps_mode mode;
  
--	data->skb = skb;
--
- 	spin_lock_irqsave(&ar->tx_data_list_lock, flags);
- 	list_add_tail(&data->list, &ar->tx_queue_pending);
- 	spin_unlock_irqrestore(&ar->tx_data_list_lock, flags);
-@@ -817,10 +815,13 @@ static void ar5523_tx_work_locked(struct ar5523 *ar)
- 		if (!data)
- 			break;
- 
--		skb = data->skb;
-+		txi = container_of((void *)data, struct ieee80211_tx_info,
-+				   driver_data);
- 		txqid = 0;
--		txi = IEEE80211_SKB_CB(skb);
-+
-+		skb = container_of((void *)txi, struct sk_buff, cb);
- 		paylen = skb->len;
-+
- 		urb = usb_alloc_urb(0, GFP_KERNEL);
- 		if (!urb) {
- 			ar5523_err(ar, "Failed to allocate TX urb\n");
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.h b/drivers/net/wireless/ath/ar5523/ar5523.h
-index 00c6fd3..9a322a6 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.h
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.h
-@@ -74,7 +74,6 @@ struct ar5523_tx_cmd {
- struct ar5523_tx_data {
- 	struct list_head	list;
- 	struct ar5523		*ar;
--	struct sk_buff		*skb;
- 	struct urb		*urb;
- };
- 
+ 	for (mode = 0; mode < IEEE80211_SMPS_NUM_MODES; mode++) {
+-		if (strncmp(buf, smps_modes[mode], buflen) == 0) {
++		if (strncmp(buf, smps_modes[mode],
++			    strlen(smps_modes[mode])) == 0) {
+ 			int err = ieee80211_set_smps(sdata, mode);
+ 			if (!err)
+ 				return buflen;
 -- 
-2.0.5
+1.9.1
 
