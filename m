@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3591 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684AbbC3SO5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 14:14:57 -0400
-From: Yanbo Li <yanbol@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <dreamfly281@gmail.com>, <michal.kazior@tieto.com>,
-	<ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] ath10k: Add the WMI Air Time Fairness service define
-Date: Mon, 30 Mar 2015 11:14:05 -0700
-Message-ID: <1427739246-2734-1-git-send-email-yanbol@qca.qualcomm.com> (sfid-20150330_201501_059456_C9AE7822)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from aibo.runbox.com ([91.220.196.211]:57354 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753397AbbC1Mxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 08:53:40 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
+	m.v.b@runbox.com
+Subject: [PATCH v4 09/15] staging: rtl8723au: that open brace should be on the previous line
+Date: Sat, 28 Mar 2015 08:52:42 -0400
+Message-Id: <1427547168-12078-10-git-send-email-m.v.b@runbox.com> (sfid-20150328_135720_304389_F216F070)
+In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the FW ATF (Air Time Fairness) service define to keep consistent
-with 10.2 FW capability
+Correct two instances of the checkpatch.pl error indicating that the
+opening curly braces should not be on new lines:
+	ERROR: that open brace { should be on the previous line
 
-Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 938e6521776b..a8f39d69eee2 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -148,6 +148,7 @@ enum wmi_service {
- 	WMI_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT,
- 	WMI_SERVICE_MDNS_OFFLOAD,
- 	WMI_SERVICE_SAP_AUTH_OFFLOAD,
-+	WMI_SERVICE_ATF,
+---
+
+v3: Make sure that all edited lines are at most 80 characters wide.
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 803f8965a4..0557a0df52 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -760,8 +760,8 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
  
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -177,6 +178,7 @@ enum wmi_10x_service {
- 	WMI_10X_SERVICE_SMART_ANTENNA_SW_SUPPORT,
- 	WMI_10X_SERVICE_FORCE_FW_HANG,
- 	WMI_10X_SERVICE_SMART_ANTENNA_HW_SUPPORT,
-+	WMI_10X_SERVICE_ATF,
- };
+ 	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
  
- enum wmi_main_service {
-@@ -293,6 +295,7 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT);
- 	SVCSTR(WMI_SERVICE_MDNS_OFFLOAD);
- 	SVCSTR(WMI_SERVICE_SAP_AUTH_OFFLOAD);
-+	SVCSTR(WMI_SERVICE_ATF);
- 	default:
- 		return NULL;
- 	}
-@@ -356,6 +359,8 @@ static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_FORCE_FW_HANG, len);
- 	SVCMAP(WMI_10X_SERVICE_SMART_ANTENNA_HW_SUPPORT,
- 	       WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT, len);
-+	SVCMAP(WMI_10X_SERVICE_ATF,
-+	       WMI_SERVICE_ATF, len);
- }
- 
- static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out,
+-	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
+-	{
++	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
++	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
+ 	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+ 				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
+ 		res = _FAIL;
+@@ -845,8 +845,7 @@ static void next_key(u8 *key, int round)
+ {
+ 	u8 rcon;
+ 	u8 sbox_key[4];
+-	u8 rcon_table[12] =
+-	{
++	u8 rcon_table[12] = {
+ 		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
+ 		0x1b, 0x36, 0x36, 0x36
+ 	};
 -- 
-1.9.1
+2.1.4
 
