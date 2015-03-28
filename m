@@ -1,40 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51782 "EHLO sipsolutions.net"
+Received: from aibo.runbox.com ([91.220.196.211]:57394 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753037AbbCBSw6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 13:52:58 -0500
-Message-ID: <1425322373.1906.3.camel@sipsolutions.net> (sfid-20150302_195307_676073_BFDDA618)
-Subject: Re: [PATCH RFC 09/14] net: wireless: mac80211: shrink private
- driver area
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Florian Westphal <fw@strlen.de>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Mon, 02 Mar 2015 19:52:53 +0100
-In-Reply-To: <1425318028-26531-10-git-send-email-fw@strlen.de> (sfid-20150302_184214_486235_3C68A9D8)
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
-	 <1425318028-26531-10-git-send-email-fw@strlen.de>
-	 (sfid-20150302_184214_486235_3C68A9D8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753443AbbC1Mxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 08:53:43 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
+	m.v.b@runbox.com
+Subject: [PATCH v4 07/15] staging: rtl8723au: Remove unneeded curly braces
+Date: Sat, 28 Mar 2015 08:52:40 -0400
+Message-Id: <1427547168-12078-8-git-send-email-m.v.b@runbox.com> (sfid-20150328_135604_068267_611E3515)
+In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-02 at 18:40 +0100, Florian Westphal wrote:
-> This makes the structure fit 44-byte sized skb->cb[].
-> 
-> Cc: linux-wireless@vger.kernel.org
-> Signed-off-by: Florian Westphal <fw@strlen.de>
-> ---
->  drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
->  include/net/mac80211.h                 | 8 +++-----
->  2 files changed, 4 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-> index 0f8e946..2ed77cf 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+Correct a number of checkpatch.pl warnings in rtl8723au's rtw_security.c
+related to the existence of unnecessary curly braces around single
+statement blocks:
+	WARNING: braces {} are not necessary for single statement blocks
 
-This is clearly not a mac80211 patch.
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-johannes
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index f7571cf091..b4327aaf71 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -113,9 +113,8 @@ static void crc32_init(void)
+ 	for (i = 0; i < 256; ++i) {
+ 		k = crc32_reverseBit((u8)i);
+ 
+-		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
++		for (c = ((u32)k) << 24, j = 8; j > 0; --j)
+ 			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
+-		}
+ 
+ 		p1 = (u8 *)&crc32_table[i];
+ 
+@@ -267,9 +266,8 @@ static u32 secmicgetuint32(u8 *p)
+ 	s32 i;
+ 	u32 res = 0;
+ 
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i < 4; i++)
+ 		res |= ((u32)(*p++)) << (8 * i);
+-	}
+ 
+ 	return res;
+ }
+@@ -353,9 +351,8 @@ void rtw_secgetmic23a(struct mic_data *pmicdata, u8 *dst)
+ 	rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	/*  and then zeroes until the length is a multiple of 4 */
+-	while (pmicdata->nBytesInM != 0) {
++	while (pmicdata->nBytesInM != 0)
+ 		rtw_secmicappend23abyte23a(pmicdata, 0);
+-	}
+ 	/*  The appendByte function has already computed the result. */
+ 	secmicputuint32(dst, pmicdata->L);
+ 	secmicputuint32(dst + 4, pmicdata->R);
+@@ -871,10 +868,8 @@ static void byte_sub(u8 *in, u8 *out)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < 16; i++) {
++	for (i = 0; i < 16; i++)
+ 		out[i] = sbox(in[i]);
+-	}
+-
+ }
+ 
+ static void shift_row(u8 *in, u8 *out)
+@@ -935,9 +930,8 @@ static void mix_column(u8 *in, u8 *out)
+ 
+ 	for (i = 3; i > 0; i--) { /* logical shift left 1 bit */
+ 		andf7[i] = andf7[i] << 1;
+-		if ((andf7[i - 1] & 0x80) == 0x80) {
++		if ((andf7[i - 1] & 0x80) == 0x80)
+ 			andf7[i] = (andf7[i] | 0x01);
+-		}
+ 	}
+ 	andf7[0] = andf7[0] << 1;
+ 	andf7[0] = andf7[0] & 0xfe;
+-- 
+2.1.4
 
