@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26795 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755698AbbCGHwB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2015 02:52:01 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: fix broken traffic for 802.1x in client mode
-References: <1424264547-2932-1-git-send-email-michal.kazior@tieto.com>
-Date: Sat, 7 Mar 2015 09:51:52 +0200
-In-Reply-To: <1424264547-2932-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 18 Feb 2015 14:02:26 +0100")
-Message-ID: <87egp11bzb.fsf@kamboji.qca.qualcomm.com> (sfid-20150307_085205_479927_CF05F089)
+Received: from aibo.runbox.com ([91.220.196.211]:58470 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752537AbbC1X6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 19:58:20 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	Larry.Finger@lwfinger.net, mail@beyermatthias.de
+Subject: Re: [PATCH v4 00/15] checkpatch clean-up of rtl8723au's rtw_security.c
+Date: Sat, 28 Mar 2015 19:58:06 -0400
+Message-ID: <42015360.hrMGRCSH7X@localhost> (sfid-20150329_005837_019059_91993A08)
+In-Reply-To: <1427572374.2715.2.camel@perches.com>
+References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com> <1427572374.2715.2.camel@perches.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Sat, March 28, 2015 12:52:54 Joe Perches wrote:
+> On Sat, 2015-03-28 at 08:52 -0400, M. Vefa Bicakci wrote:
+> > These commits address a number of checkpatch.pl warnings and errors
+> > in rtl8723au's rtw_security.c.
+> 
+> Hello.
+> 
+> This is one of those patchsets that should be
+> done against Greg's staging-testing branch.
+> 
+> There are some commits against rtl8723au in that
+> branch that will conflict with your patches.
 
-> When running 802.1x WEP keys must be installed
-> without pairwise-groupwise swap (which is
-> necessary for static WEP).
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Hello Joe,
 
-Thanks, both patches applied.
+Thank you for letting me know. Given the discussion arising from the 3rd 
+version of the patches, I should have used (or at least checked) the 
+staging-testing branch.
 
--- 
-Kalle Valo
+I rebased the commits against the staging-testing branch and corrected 
+the merge conflicts. I hope to send the 5th version of the patches out 
+for review soon.
+
+Vefa
+
