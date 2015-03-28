@@ -1,47 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:58066 "EHLO www.osadl.org"
+Received: from aibo.runbox.com ([91.220.196.211]:57346 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751356AbbCKRZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 13:25:23 -0400
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Valdis.Kletnieks@vt.edu, Bj??rn Mork <bjorn@mork.no>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH 2/2] ath10k: drop unnecessary check for negative return value
-Date: Wed, 11 Mar 2015 13:20:31 -0400
-Message-Id: <1426094431-10272-1-git-send-email-hofrat@osadl.org> (sfid-20150311_182543_545085_D45E6EDF)
+	id S1753391AbbC1Mxj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 08:53:39 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
+	m.v.b@runbox.com
+Subject: [PATCH v4 06/15] staging: rtl8723au: else is not generally useful after a return
+Date: Sat, 28 Mar 2015 08:52:39 -0400
+Message-Id: <1427547168-12078-7-git-send-email-m.v.b@runbox.com> (sfid-20150328_135752_756184_48D836BF)
+In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wait_event_timeout() returns 0 on timeout and >= 1 on success but never
-< 0 - so checking for timeout should be for equiavalence to 0 no <= 0.
+Correct a checkpatch.pl warning regarding rtl8723au's
+rtw_security.c::crc32_init pointing out that having an else statement
+after a break or a return is not useful.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+drivers/staging/rtl8723au/core/rtw_security.c:105:
+	WARNING: else is not generally useful after a break or return
+
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 ---
+ drivers/staging/rtl8723au/core/rtw_security.c | 42 ++++++++++++++-------------
+ 1 file changed, 22 insertions(+), 20 deletions(-)
 
-Patch was only compile tested with x86_64_defconfig + CONFIG_ATH_CARDS=m,
-CONFIG_ATH10K=m
-
-Patch is against 4.0-rc3 (localversion-next is -next-20150311)
-
- drivers/net/wireless/ath/ath10k/mac.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 7b27d99..4286f5c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4498,7 +4498,7 @@ static void ath10k_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 				 check_htt_state(ar, skip),
- 				 ATH10K_FLUSH_TIMEOUT_HZ);
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index f7b1d45981..f7571cf091 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -99,31 +99,33 @@ static u8 crc32_reverseBit(u8 data)
  
--	if (ret <= 0 || skip)
-+	if (ret == 0 || skip)
- 		ath10k_warn(ar, "failed to flush transmit queue (skip %i ar-state %i): %i\n",
- 			    skip, ar->state, ret);
+ static void crc32_init(void)
+ {
++	int i, j;
++	u32 c;
++	u8 *p, *p1;
++	u8 k;
  
+ 	if (bcrc32initialized == 1)
+ 		return;
+-	else{
+-		int i, j;
+-		u32 c;
+-		u8 *p = (u8 *)&c, *p1;
+-		u8 k;
+-
+-		c = 0x12340000;
+-
+-		for (i = 0; i < 256; ++i) {
+-			k = crc32_reverseBit((u8)i);
+-			for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
+-				c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
+-			}
+-			p1 = (u8 *)&crc32_table[i];
+-
+-			p1[0] = crc32_reverseBit(p[3]);
+-			p1[1] = crc32_reverseBit(p[2]);
+-			p1[2] = crc32_reverseBit(p[1]);
+-			p1[3] = crc32_reverseBit(p[0]);
++
++	p = (u8 *) &c;
++	c = 0x12340000;
++
++	for (i = 0; i < 256; ++i) {
++		k = crc32_reverseBit((u8)i);
++
++		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
++			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
+ 		}
+-		bcrc32initialized = 1;
++
++		p1 = (u8 *)&crc32_table[i];
++
++		p1[0] = crc32_reverseBit(p[3]);
++		p1[1] = crc32_reverseBit(p[2]);
++		p1[2] = crc32_reverseBit(p[1]);
++		p1[3] = crc32_reverseBit(p[0]);
+ 	}
++
++	bcrc32initialized = 1;
+ }
+ 
+ static u32 getcrc32(u8 *buf, int len)
 -- 
-1.7.10.4
+2.1.4
 
