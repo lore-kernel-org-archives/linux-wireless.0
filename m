@@ -1,96 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:52494 "EHLO arrakis.dune.hu"
+Received: from aibo.runbox.com ([91.220.196.211]:57370 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751096AbbCJXQS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 19:16:18 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by arrakis.dune.hu (Postfix) with ESMTP id 577AE28030B
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 00:15:52 +0100 (CET)
-Received: from mail-qg0-f41.google.com (mail-qg0-f41.google.com [209.85.192.41])
-	by arrakis.dune.hu (Postfix) with ESMTPSA id 6569828C04F
-	for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 00:15:47 +0100 (CET)
-Received: by qgdz107 with SMTP id z107so6082398qgd.3
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Mar 2015 16:16:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <54FF7970.10402@erley.org>
-References: <8BC2636B-D1F0-431C-90F4-1290A4158DC2@gmail.com> <54FF7970.10402@erley.org>
-From: Jonas Gorski <jogo@openwrt.org>
-Date: Wed, 11 Mar 2015 00:15:45 +0100
-Message-ID: <CAOiHx=kRLW6Bvrnht=pn7=9zT6Vg2QAcE2JMXrZstOixsL0CmA@mail.gmail.com> (sfid-20150311_001621_444509_5F0A2049)
-Subject: Re: Developing a new Driver
-To: Pat Erley <pat-lkml@erley.org>
-Cc: Huseyin <revanthedarth@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	id S1753414AbbC1Mxl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 08:53:41 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
+	m.v.b@runbox.com
+Subject: [PATCH v4 13/15] staging: rtl8723au: Rework two byte array comparisons
+Date: Sat, 28 Mar 2015 08:52:46 -0400
+Message-Id: <1427547168-12078-14-git-send-email-m.v.b@runbox.com> (sfid-20150328_135620_334208_90E5CCC2)
+In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 11, 2015 at 12:08 AM, Pat Erley <pat-lkml@erley.org> wrote:
-> On 03/10/2015 04:42 PM, Huseyin wrote:
->>
->> Hello everyone,
->>
->> I want to develop a driver for my usb wireless adapter. The device name is
->> AirTies Air 2410, codes are 0x1eda 0x2410. The company’s other usb wireless
->> adapters (for example, AirTies Air 2310, 0x1eda 0x2310) were using ralink
->> rt2800 driver, but this one doesn’t work with it.
->>
->> I opened up the device’s case, I could only find out that the board was
->> plotech e169497, 6 94v-0. I googled but these seem to be too vague and I
->> cannot go any further with it. I couldn’t find any other text on the board.
->>
->> I also contacted the company (AirTies) but they didn’t bother to reply.
->> They provide drivers for windows only.
->>
->> What should be the next step? Reverse-engineering the windows driver (I
->> have no expertise on the subject, and little expertise on windows
->> altogether) or trying to write a new driver using ralink or any other
->> existing driver code? Is it a good idea to guess that the driver I’m going
->> to develop will be similar to rt2800? This way I can make rt2800 recognize
->> my device and try to find out what goes wrong (which, seems to me, would be
->> meaningless if device is using a chipset not related to ralink), and change
->> those parts.
->>
->> I asked a little about the subject in the #kernelnewbies channel, people
->> redirected me to this mail list.
->>
->> When I make rt2800 driver recognize my device, this is what I get:
->>
->> ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07
->> failed for offset 0x1000 with error -110
->> ieee80211 phy0: rt2800_probe_rt: Error - Invalid RT chipset 0xffff, rev
->> 8800 detected
->> ieee80211 phy0: rt2x00lib_probe_dev: Error - Failed to allocate device
->> usbcore: registered new interface driver rt2800usb
->>
->
-> Based on their driver, it's a broadcom chip in there:
->
->
->   inflating:
-> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmh43xx.cat
->   inflating:
-> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmihvsrv.dll
->   inflating:
-> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmihvui.dll
->   inflating:
-> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlcoi.dll
->   inflating:
-> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlhigh6.inf
->   inflating:
-> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/bcmwlhigh6.sys
->   inflating:
-> AirTiesWirelessUSBAdapterSetup_1.0.1.0/Drivers/Air2410-Air2411/VistaDriver/WdfCoInstaller01005.dll
->
-> I don't know what the status of broadcom and usb drivers is though.
+Prior to this commit, rtl8723au's rtw_security.c had two instances of
+byte array comparisons (for CRC checks) where the individual elements
+of the byte arrays were compared one by one and an error trace would
+be output if the byte arrays were determined to be different.
 
-According to wikidevi[1], it uses BCM4323, which is SSB based, quite
-old, and will never be supported by brcmfmac, and probably never by
-b43 (one would need to reverse engineer the usb protocol used by
-broadcom).
+This commit improves the readability of the CRC verification by
+placing the individual 4 bytes of each byte array into an 32-bit
+unsigned integer and comparing the two resulting integers.
 
+Thanks to Larry Finger for spotting the code style issues in the
+previous version of this commit, and thanks to Joe Perches for
+suggesting the use of 32-bit integer comparisons instead of byte
+array comparisons.
 
-Jonas
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 
-[1] https://wikidevi.com/wiki/AirTies_Air_2410
+---
+
+v2: Correct code style issues and compare 32-bit integers instead of
+    byte arrays. Update the commit message to better reflect the nature
+    of the changes.
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 39 ++++++++++-----------------
+ 1 file changed, 14 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 4330479ee0..eb3544866a 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -210,7 +210,7 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
+ 		     struct recv_frame *precvframe)
+ {
+ 	/*  exclude ICV */
+-	u8 crc[4];
++	u32 actual_crc, expected_crc;
+ 	struct arc4context mycontext;
+ 	int length;
+ 	u32 keylength;
+@@ -243,19 +243,14 @@ void rtw_wep_decrypt23a(struct rtw_adapter *padapter,
+ 	arcfour_encrypt(&mycontext, payload, payload, length);
+ 
+ 	/* calculate icv and compare the icv */
+-	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
++	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
++	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
+ 
+-	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
+-	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
++	if (actual_crc != expected_crc) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-			 ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload"
+-			  "[length-1](%x) || crc[2](%x)!= payload[length-2](%x)"
+-			  " || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)"
+-			  "!= payload[length-4](%x)\n",
+-			  crc[3], payload[length - 1],
+-			  crc[2], payload[length - 2],
+-			  crc[1], payload[length - 3],
+-			  crc[0], payload[length - 4]));
++			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
++			  "actual: %08x, expected: %08x\n",
++			  actual_crc, expected_crc));
+ 	}
+ }
+ 
+@@ -702,7 +697,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 	u32 pnh;
+ 	u8 rc4key[16];
+ 	u8 ttkey[16];
+-	u8 crc[4];
++	u32 actual_crc, expected_crc;
+ 	struct arc4context mycontext;
+ 	int length;
+ 	u32 prwskeylen;
+@@ -757,20 +752,14 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 	arcfour_init(&mycontext, rc4key, 16);
+ 	arcfour_encrypt(&mycontext, payload, payload, length);
+ 
+-	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
++	actual_crc = le32_to_cpu(getcrc32(payload, length - 4));
++	expected_crc = le32_to_cpu(get_unaligned_le32(&payload[length - 4]));
+ 
+-	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
+-	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
++	if (actual_crc != expected_crc) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-			 ("rtw_wep_decrypt23a:icv error "
+-			  "crc[3](%x)!= payload[length-1](%x) || "
+-			  "crc[2](%x)!= payload[length-2](%x) || "
+-			  "crc[1](%x)!= payload[length-3](%x) || "
+-			  "crc[0](%x)!= payload[length-4](%x)\n",
+-			  crc[3], payload[length - 1],
+-			  crc[2], payload[length - 2],
+-			  crc[1], payload[length - 3],
+-			  crc[0], payload[length - 4]));
++			 ("rtw_wep_decrypt23a:icv CRC mismatch: "
++			  "actual: %08x, expected: %08x\n",
++			  actual_crc, expected_crc));
+ 		res = _FAIL;
+ 	}
+ 
+-- 
+2.1.4
+
