@@ -1,54 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:31959 "EHLO mga14.intel.com"
+Received: from aibo.runbox.com ([91.220.196.211]:57447 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751326AbbCZNqA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2015 09:46:00 -0400
-Date: Thu, 26 Mar 2015 15:45:55 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Robert Dolca <robert.dolca@intel.com>
-Cc: linux-nfc@lists.01.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH 8/8] NFC: Add Intel FieldsPeak NFC solution driver
-Message-ID: <20150326134555.GL1878@lahna.fi.intel.com> (sfid-20150326_144625_271641_23934A1E)
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
- <1424772112-27399-9-git-send-email-robert.dolca@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1424772112-27399-9-git-send-email-robert.dolca@intel.com>
+	id S1753558AbbC1MyB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 08:54:01 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
+	m.v.b@runbox.com
+Subject: [PATCH v4 15/15] staging: rtl8723au: Remove unneeded comments
+Date: Sat, 28 Mar 2015 08:52:48 -0400
+Message-Id: <1427547168-12078-16-git-send-email-m.v.b@runbox.com> (sfid-20150328_135426_234802_3537DF57)
+In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 24, 2015 at 12:01:52PM +0200, Robert Dolca wrote:
-> +static struct i2c_device_id fdp_nci_i2c_id_table[] = {
-> +	{"INT339A", 0},
+This commit removes a number of unneeded comments. Two of the
+aforementioned comments were most likely meant to aid with version
+control, whereas the remaining two comments relate to (now unused)
+local variable names.
 
-If this is ACPI only device you can remove the above line.
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-> +	{}
-> +};
-> +
-> +MODULE_DEVICE_TABLE(i2c, fdp_nci_i2c_id_table);
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index cdb3707fb2..309f3d969e 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -671,14 +671,14 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 		if ((curfragnum+1) == pattrib->nr_frags) { /* 4 the last fragment */
+ 			length = pattrib->last_txcmdsz-pattrib->hdrlen-pattrib->iv_len - pattrib->icv_len;
+ 			RT_TRACE(_module_rtl871x_security_c_, _drv_info_, ("pattrib->iv_len =%x, pattrib->icv_len =%x\n", pattrib->iv_len, pattrib->icv_len));
+-			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
++			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
+ 
+ 			arcfour_init(&mycontext, rc4key, 16);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+ 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
+ 		} else {
+ 			length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len;
+-			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy */
++			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
+ 			arcfour_init(&mycontext, rc4key, 16);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+ 			arcfour_encrypt(&mycontext, payload+length, crc, 4);
+@@ -1272,7 +1272,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
+ 	/* Intermediate Buffers */
+ 	int curfragnum, length;
+ 	u32 prwskeylen;
+-	u8 *pframe, *prwskey; /* *payload, *iv */
++	u8 *pframe, *prwskey;
+ 	u8 hw_hdr_offset = 0;
+ 	struct sta_info *stainfo;
+ 	struct pkt_attrib *pattrib = &pxmitframe->attrib;
+@@ -1563,7 +1563,7 @@ int rtw_aes_decrypt23a(struct rtw_adapter *padapter,
+ 	struct security_priv *psecuritypriv = &padapter->securitypriv;
+ 	struct sk_buff *skb = precvframe->pkt;
+ 	int length;
+-	u8 *pframe, *prwskey; /* *payload, *iv */
++	u8 *pframe, *prwskey;
+ 	int res = _SUCCESS;
+ 
+ 	pframe = skb->data;
+-- 
+2.1.4
 
-And this as well.
-
-> +
-> +
-> +static const struct acpi_device_id fdp_nci_i2c_acpi_match[] = {
-> +	{"INT339A", 0},
-> +	{}
-> +};
-> +
-> +static struct i2c_driver fdp_nci_i2c_driver = {
-> +	.driver = {
-> +		   .name = FDP_NCI_I2C_DRIVER_NAME,
-> +		   .owner  = THIS_MODULE,
-> +		   .acpi_match_table = ACPI_PTR(fdp_nci_i2c_acpi_match),
-> +		  },
-> +	.id_table = fdp_nci_i2c_id_table,
-> +	.probe = fdp_nci_i2c_probe,
-> +	.remove = fdp_nci_i2c_remove,
-> +};
