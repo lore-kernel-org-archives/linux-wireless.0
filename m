@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41658 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752514AbbCZSMI (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:33097 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752788AbbC1Nf5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Mar 2015 14:12:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: DFS ETSI conformance for weather channels (again)
-References: <773DB8A82AB6A046AE0195C68612A319019FF0E8@sbs2003.acksys.local>
-	<87619nagm4.fsf@kamboji.qca.qualcomm.com>
-	<000901d067e6$9f471840$ddd548c0$@acksys.fr>
-Date: Thu, 26 Mar 2015 20:11:59 +0200
-In-Reply-To: <000901d067e6$9f471840$ddd548c0$@acksys.fr> (Jean-Pierre Tosoni's
-	message of "Thu, 26 Mar 2015 18:02:20 +0100")
-Message-ID: <871tkbaas0.fsf@kamboji.qca.qualcomm.com> (sfid-20150326_191451_261718_62B48FEF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 28 Mar 2015 09:35:57 -0400
+Received: by lbcmq2 with SMTP id mq2so80712444lbc.0
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Mar 2015 06:35:56 -0700 (PDT)
+From: Kristian Evensen <kristian.evensen@gmail.com>
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: Kristian Evensen <kristian.evensen@gmail.com>
+Subject: [PATCH] ath10k: Add support for Compex WLE900VX 7AA
+Date: Sat, 28 Mar 2015 14:35:41 +0100
+Message-Id: <1427549741-20669-1-git-send-email-kristian.evensen@gmail.com> (sfid-20150328_143600_945462_2BB0D6F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Jean-Pierre Tosoni" <jp.tosoni@acksys.fr> writes:
+From: Kristian Evensen <kristian.evensen@gmail.com>
 
-> I will check the wireless-regdb list instead. But it looks like the
-> current python script that generates regulatory.bin was not updated
-> for CAC time yet :-(
+Add support for the dual-band Compex WLE900VX 7AA card, which uses the ath10k
+chipset. According to dmesg output, it is delivered with version 2.0 of qca988x.
+All supported modes (a/b/g/n/ac) has worked fine in my quick tests.
 
-IIRC CAC patches for CRDA were not accepted or something. But it should
-work with kernel internal regdb.
+Signed-off-by: Kristian Evensen <kristian.evensen@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 7681237..8de8349 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -57,12 +57,14 @@ MODULE_PARM_DESC(reset_mode, "0: auto, 1: warm only (default: 0)");
+ #define ATH10K_PCI_TARGET_WAIT 3000
+ #define ATH10K_PCI_NUM_WARM_RESET_ATTEMPTS 3
+ 
+-#define QCA988X_2_0_DEVICE_ID	(0x003c)
+-#define QCA6174_2_1_DEVICE_ID	(0x003e)
++#define QCA988X_2_0_DEVICE_ID		(0x003c)
++#define QCA6174_2_1_DEVICE_ID		(0x003e)
++#define COMPEX_WLE900VX_7AA_DEVICE_ID	(0xabcd)
+ 
+ static const struct pci_device_id ath10k_pci_id_table[] = {
+ 	{ PCI_VDEVICE(ATHEROS, QCA988X_2_0_DEVICE_ID) }, /* PCI-E QCA988X V2 */
+ 	{ PCI_VDEVICE(ATHEROS, QCA6174_2_1_DEVICE_ID) }, /* PCI-E QCA6174 V2.1 */
++	{ PCI_VDEVICE(ATHEROS, COMPEX_WLE900VX_7AA_DEVICE_ID) },
+ 	{0}
+ };
+ 
 -- 
-Kalle Valo
+1.9.1
+
