@@ -1,59 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:36943 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751998AbbC3MT2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 08:19:28 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/9] ath10k: cleanups 2015-03-20
-References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
-Date: Mon, 30 Mar 2015 15:19:19 +0300
-In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 20 Mar 2015 13:54:06 +0000")
-Message-ID: <87zj6u4r08.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_141932_795672_D266A515)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from aibo.runbox.com ([91.220.196.211]:57385 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752054AbbC1Mxm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 08:53:42 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, Jes.Sorensen@redhat.com,
+	joe@perches.com, Larry.Finger@lwfinger.net, mail@beyermatthias.de,
+	m.v.b@runbox.com
+Subject: [PATCH v4 12/15] staging: rtl8723au: suspect code indent for conditional statements
+Date: Sat, 28 Mar 2015 08:52:45 -0400
+Message-Id: <1427547168-12078-13-git-send-email-m.v.b@runbox.com> (sfid-20150328_135558_773032_C86ABABF)
+In-Reply-To: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
+References: <1427547168-12078-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Correct a number of indentation-with-spaces-and-tabs issues in
+rtl8723au's rtw_security.c, according to checkpatch.pl:
+	WARNING: suspect code indent for conditional statements
 
-> Here's a bunch of cleanups and fixes associated
-> with tx/rx rate code.
->
-> Feel free to squash some of the patches if you
-> think it makes sense or let me know which ones you
-> want me to squash.
->
-> There are a few checkpatch warnings for going over
-> 80 chars. I decided to leave them be to avoid code
-> wrapping which would make the code less readable
-> than it is now in my opinion.
->
-> I have 2 more patches for .set_bitrate_mask()
-> callback which depend on this patchset. Once you
-> apply this patchset to your `pending` branch let
-> me know, please, so I can push the rest with git
-> indexes your git repo will recognize.
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 
-Sorry, I had missed this comment and didn't realise to tell you when I
-applied the patches to pending branch. The bad part with patchwork is
-that it doesn't show the cover letter at all :(
+---
 
-> Michal Kazior (9):
->   ath10k: move rate definitions to file start
->   ath10k: derive rate from bitrate
->   ath10k: drop RATETAB_ENT macro
->   ath10k: add hw rate definitions
->   ath10k: use hw rate definitions for fixed rate
->   ath10k: simplify fixed rate selection
->   ath10k: rework legacy rx rate decoding
->   ath10k: deduplicate bitrate to rate idx conversion
->   ath10k: document ofdm/5ghz rate offset with a macro
+v3: Make sure that all edited lines are at most 80 characters wide.
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 46 ++++++++++++++++-----------
+ 1 file changed, 27 insertions(+), 19 deletions(-)
 
-Thanks, all patches applied.
-
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 8591b49664..4330479ee0 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -761,8 +761,16 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 
+ 	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
+ 	    crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
+-	    RT_TRACE(_module_rtl871x_security_c_, _drv_err_, ("rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+-				crc[3], payload[length - 1], crc[2], payload[length - 2], crc[1], payload[length - 3], crc[0], payload[length - 4]));
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 ("rtw_wep_decrypt23a:icv error "
++			  "crc[3](%x)!= payload[length-1](%x) || "
++			  "crc[2](%x)!= payload[length-2](%x) || "
++			  "crc[1](%x)!= payload[length-3](%x) || "
++			  "crc[0](%x)!= payload[length-4](%x)\n",
++			  crc[3], payload[length - 1],
++			  crc[2], payload[length - 2],
++			  crc[1], payload[length - 3],
++			  crc[0], payload[length - 4]));
+ 		res = _FAIL;
+ 	}
+ 
+@@ -909,9 +917,9 @@ static void mix_column(u8 *in, u8 *out)
+ 
+ 	for (i = 0; i < 4; i++) {
+ 		if ((in[i] & 0x80) == 0x80)
+-		    add1b[i] = 0x1b;
++			add1b[i] = 0x1b;
+ 		else
+-		    add1b[i] = 0x00;
++			add1b[i] = 0x00;
+ 	}
+ 
+ 	swap_halfs[0] = in[2]; /* Swap halfs */
+@@ -966,21 +974,21 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
+ 
+ 	for (round = 0; round < 11; round++) {
+ 		if (round == 0) {
+-		    xor_128(round_key, data, ciphertext);
+-		    next_key(round_key, round);
++			xor_128(round_key, data, ciphertext);
++			next_key(round_key, round);
+ 		} else if (round == 10) {
+-		    byte_sub(ciphertext, intermediatea);
+-		    shift_row(intermediatea, intermediateb);
+-		    xor_128(intermediateb, round_key, ciphertext);
++			byte_sub(ciphertext, intermediatea);
++			shift_row(intermediatea, intermediateb);
++			xor_128(intermediateb, round_key, ciphertext);
+ 		} else { /* 1 - 9 */
+-		    byte_sub(ciphertext, intermediatea);
+-		    shift_row(intermediatea, intermediateb);
+-		    mix_column(&intermediateb[0], &intermediatea[0]);
+-		    mix_column(&intermediateb[4], &intermediatea[4]);
+-		    mix_column(&intermediateb[8], &intermediatea[8]);
+-		    mix_column(&intermediateb[12], &intermediatea[12]);
+-		    xor_128(intermediatea, round_key, ciphertext);
+-		    next_key(round_key, round);
++			byte_sub(ciphertext, intermediatea);
++			shift_row(intermediatea, intermediateb);
++			mix_column(&intermediateb[0], &intermediatea[0]);
++			mix_column(&intermediateb[4], &intermediatea[4]);
++			mix_column(&intermediateb[8], &intermediatea[8]);
++			mix_column(&intermediateb[12], &intermediatea[12]);
++			xor_128(intermediatea, round_key, ciphertext);
++			next_key(round_key, round);
+ 		}
+ 	}
+ 
+@@ -1481,7 +1489,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 		for (j = 0; j < 16; j++)
+ 			padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+-		    padded_buffer[j] = message[payload_index++];
++			padded_buffer[j] = message[payload_index++];
+ 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
+ 		aes128k128d(key, chain_buffer, aes_out);
+ 	}
+@@ -1511,7 +1519,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 				      message, pn_vector, num_blocks+1);
+ 
+ 		for (j = 0; j < 16; j++)
+-			 padded_buffer[j] = 0x00;
++			padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+ 			padded_buffer[j] = message[payload_index + j];
+ 		aes128k128d(key, ctr_preload, aes_out);
 -- 
-Kalle Valo
+2.1.4
+
