@@ -1,310 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:60875 "EHLO aibo.runbox.com"
+Received: from mout.gmx.net ([212.227.15.19]:49767 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752532AbbC2BIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Mar 2015 21:08:19 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: joe@perches.com, gregkh@linuxfoundation.org,
-	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
-	mail@beyermatthias.de, m.v.b@runbox.com
-Subject: [PATCH v5 05/15] staging: rtl8723au: Reorganize a few functions to remove indentation
-Date: Sat, 28 Mar 2015 21:07:48 -0400
-Message-Id: <1427591278-982-6-git-send-email-m.v.b@runbox.com> (sfid-20150329_031244_783591_09CBBD87)
-In-Reply-To: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
-References: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
+	id S1753223AbbC1Nys (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 09:54:48 -0400
+Message-ID: <5516B29E.3030705@rempel-privat.de> (sfid-20150328_145451_803221_24D8E8B9)
+Date: Sat, 28 Mar 2015 14:54:38 +0100
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	ath9k-devel@lists.ath9k.org
+Subject: Re: [PATCH v3 00/18] reduce some of ath9k_htc performance problems
+References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="s3k4BIQJOiUrNoHtwcToMiasm05UNVLRL"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prior to this commit, functions rtw_tkip_encrypt23a and rtw_tkip_decrypt23a had
-large if blocks which contained the majority of the logic in the functions.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--s3k4BIQJOiUrNoHtwcToMiasm05UNVLRL
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Rework these functions so that if the negated version of the aforementioned if
-blocks' conditions are true, we return from the function with _FAIL, as
-expected by the calling code.
+Hello all,
+Any updates here?
 
-This lets us remove two levels of indentation from the functions in
-question, making them more readable.
+Am 22.03.2015 um 19:29 schrieb Oleksij Rempel:
+> This patchset adds new WMI_RMW handler to reduce some of usb related
+> performance problems.
+>=20
+> Oleksij Rempel (18):
+>   ath9k_htc: add new WMI_REG_RMW_CMDID command
+>   ath9k: ar9271_hw_pa_cal - use defs instead of magin numbers
+>   ath9k: ar9271_hw_pa_cal: use proper makroses.
+>   ath9k: ar9271_hw_pa_cal: use RMW buffer
+>   ath9k: add multi_read to be compatible with ath9k_htc
+>   ath9k: add new function ath9k_hw_read_array
+>   ath9k: ar9271_hw_pa_cal: use REG_READ_ARRAY
+>   ath9k: use one shot read in ath9k_hw_update_mibstats
+>   ath9k: ath9k_hw_loadnf: use REG_RMW
+>   ath9k: write buffer related optimisation in ar5008_hw_set_channel_reg=
+s
+>   ath9k: ath9k_hw_set_4k_power_cal_tabl: use rmw buffer
+>   ath9k: use rmw buffer in ath9k_hw_set_operating_mode and
+>     ath9k_hw_reset
+>   ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
+>   ath9k: ath9k_hw_analog_shift_rmw: use REG_RMW
+>   ath9k: ath9k_hw_4k_set_board_values: use rmw buffer
+>   ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_gain
+>   ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
+>   ath9k: use REG_RMW and rmw buffer in ath9k_hw_def_set_gain
+>=20
+>  drivers/net/wireless/ath/ath.h                |   3 +
+>  drivers/net/wireless/ath/ath9k/ani.c          |  20 +++-
+>  drivers/net/wireless/ath/ath9k/ar5008_phy.c   |   5 +-
+>  drivers/net/wireless/ath/ath9k/ar9002_calib.c |  77 +++++++-------
+>  drivers/net/wireless/ath/ath9k/calib.c        |  19 ++--
+>  drivers/net/wireless/ath/ath9k/eeprom.c       |   7 +-
+>  drivers/net/wireless/ath/ath9k/eeprom_4k.c    |  36 ++++---
+>  drivers/net/wireless/ath/ath9k/eeprom_def.c   |  34 +++---
+>  drivers/net/wireless/ath/ath9k/htc.h          |   5 +
+>  drivers/net/wireless/ath/ath9k/htc_drv_init.c | 142 ++++++++++++++++++=
+++++++--
+>  drivers/net/wireless/ath/ath9k/hw.c           |  34 ++++++
+>  drivers/net/wireless/ath/ath9k/hw.h           |  15 +++
+>  drivers/net/wireless/ath/ath9k/init.c         |  11 ++
+>  drivers/net/wireless/ath/ath9k/wmi.c          |   3 +
+>  drivers/net/wireless/ath/ath9k/wmi.h          |  16 +++
+>  15 files changed, 324 insertions(+), 103 deletions(-)
+>=20
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 
----
+--=20
+Regards,
+Oleksij
 
-v5: Move the "start to encrypt each fragment" and "start to decrypt
-    recvframe" comments in the refactored functions to more sensible
-    positions.
----
- drivers/staging/rtl8723au/core/rtw_security.c | 215 +++++++++++++-------------
- 1 file changed, 107 insertions(+), 108 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 3e79b66d0897..df7261c045fe 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -615,91 +615,90 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
- 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
- 	int res = _SUCCESS;
- 
-+	if (pattrib->encrypt != WLAN_CIPHER_SUITE_TKIP)
-+		return _FAIL;
-+
- 	if (!pxmitframe->buf_addr)
- 		return _FAIL;
- 
- 	hw_hdr_offset = TXDESC_OFFSET;
- 
- 	pframe = pxmitframe->buf_addr + hw_hdr_offset;
--	/* 4 start to encrypt each fragment */
--	if (pattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
--		if (pattrib->psta)
--			stainfo = pattrib->psta;
--		else {
--			DBG_8723A("%s, call rtw_get_stainfo()\n", __func__);
--			stainfo = rtw_get_stainfo23a(&padapter->stapriv,
--						     &pattrib->ra[0]);
--		}
- 
--		if (stainfo != NULL) {
-+	if (pattrib->psta)
-+		stainfo = pattrib->psta;
-+	else {
-+		DBG_8723A("%s, call rtw_get_stainfo()\n", __func__);
-+		stainfo = rtw_get_stainfo23a(&padapter->stapriv,
-+					     &pattrib->ra[0]);
-+	}
- 
--			if (!(stainfo->state & _FW_LINKED)) {
--				DBG_8723A("%s, psta->state(0x%x) != _FW_LINKED\n", __func__, stainfo->state);
--				return _FAIL;
--			}
-+	if (stainfo == NULL) {
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+			 "rtw_tkip_encrypt23a: stainfo == NULL!!!\n");
-+		DBG_8723A("%s, psta == NUL\n", __func__);
-+		return _FAIL;
-+	}
- 
--			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--				 "rtw_tkip_encrypt23a: stainfo!= NULL!!!\n");
-+	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+		 "rtw_tkip_encrypt23a: stainfo!= NULL!!!\n");
- 
--			if (is_multicast_ether_addr(pattrib->ra))
--				prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
--			else
--				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
-+	if (!(stainfo->state & _FW_LINKED)) {
-+		DBG_8723A("%s, psta->state(0x%x) != _FW_LINKED\n", __func__, stainfo->state);
-+		return _FAIL;
-+	}
- 
--			prwskeylen = 16;
-+	if (is_multicast_ether_addr(pattrib->ra))
-+		prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
-+	else
-+		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
- 
--			for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
--				iv = pframe + pattrib->hdrlen;
--				payload = pframe + pattrib->iv_len + pattrib->hdrlen;
-+	prwskeylen = 16;
- 
--				GET_TKIP_PN(iv, dot11txpn);
-+	/* 4 start to encrypt each fragment */
-+	for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
-+		iv = pframe + pattrib->hdrlen;
-+		payload = pframe + pattrib->iv_len + pattrib->hdrlen;
- 
--				pnl = (u16)(dot11txpn.val);
--				pnh = (u32)(dot11txpn.val>>16);
-+		GET_TKIP_PN(iv, dot11txpn);
- 
--				phase1((u16 *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
-+		pnl = (u16)(dot11txpn.val);
-+		pnh = (u32)(dot11txpn.val>>16);
- 
--				phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
-+		phase1((u16 *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
- 
--				if ((curfragnum + 1) == pattrib->nr_frags) {	/* 4 the last fragment */
--					length = (pattrib->last_txcmdsz -
--						  pattrib->hdrlen -
--						  pattrib->iv_len -
--						  pattrib->icv_len);
-+		phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
- 
--					RT_TRACE(_module_rtl871x_security_c_, _drv_info_,
--						 "pattrib->iv_len =%x, pattrib->icv_len =%x\n",
--						 pattrib->iv_len,
--						 pattrib->icv_len);
--					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
-+		if ((curfragnum + 1) == pattrib->nr_frags) {	/* 4 the last fragment */
-+			length = (pattrib->last_txcmdsz -
-+				  pattrib->hdrlen -
-+				  pattrib->iv_len -
-+				  pattrib->icv_len);
- 
--					arcfour_init(&mycontext, rc4key, 16);
--					arcfour_encrypt(&mycontext, payload, payload, length);
--					arcfour_encrypt(&mycontext, payload + length, crc, 4);
-+			RT_TRACE(_module_rtl871x_security_c_, _drv_info_,
-+				 "pattrib->iv_len =%x, pattrib->icv_len =%x\n",
-+				 pattrib->iv_len,
-+				 pattrib->icv_len);
-+			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
- 
--				} else {
--					length = (pxmitpriv->frag_len -
--						  pattrib->hdrlen -
--						  pattrib->iv_len -
--						  pattrib->icv_len);
-+			arcfour_init(&mycontext, rc4key, 16);
-+			arcfour_encrypt(&mycontext, payload, payload, length);
-+			arcfour_encrypt(&mycontext, payload + length, crc, 4);
- 
--					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
--					arcfour_init(&mycontext, rc4key, 16);
--					arcfour_encrypt(&mycontext, payload, payload, length);
--					arcfour_encrypt(&mycontext, payload + length, crc, 4);
-+		} else {
-+			length = (pxmitpriv->frag_len -
-+				  pattrib->hdrlen -
-+				  pattrib->iv_len -
-+				  pattrib->icv_len);
- 
--					pframe += pxmitpriv->frag_len;
--					pframe  = PTR_ALIGN(pframe, 4);
--				}
--			}
-+			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
-+			arcfour_init(&mycontext, rc4key, 16);
-+			arcfour_encrypt(&mycontext, payload, payload, length);
-+			arcfour_encrypt(&mycontext, payload + length, crc, 4);
- 
--		} else {
--			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--				 "rtw_tkip_encrypt23a: stainfo == NULL!!!\n");
--			DBG_8723A("%s, psta == NUL\n", __func__);
--			res = _FAIL;
-+			pframe += pxmitpriv->frag_len;
-+			pframe  = PTR_ALIGN(pframe, 4);
- 		}
--
- 	}
- 
- 	return res;
-@@ -725,64 +724,64 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
- 	struct sk_buff *skb = precvframe->pkt;
- 	int res = _SUCCESS;
- 
-+	if (prxattrib->encrypt != WLAN_CIPHER_SUITE_TKIP)
-+		return _FAIL;
-+
- 	pframe = skb->data;
- 
-+	stainfo = rtw_get_stainfo23a(&padapter->stapriv,
-+				     &prxattrib->ta[0]);
-+	if (stainfo == NULL) {
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+			 "rtw_tkip_decrypt23a: stainfo == NULL!!!\n");
-+		return _FAIL;
-+	}
-+
- 	/* 4 start to decrypt recvframe */
--	if (prxattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
-+	if (is_multicast_ether_addr(prxattrib->ra)) {
-+		if (psecuritypriv->binstallGrpkey == 0) {
-+			res = _FAIL;
-+			DBG_8723A("%s:rx bc/mc packets, but didn't install group key!!!!!!!!!!\n", __func__);
-+			goto exit;
-+		}
-+		prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
-+		prwskeylen = 16;
-+	} else {
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+			 "rtw_tkip_decrypt23a: stainfo!= NULL!!!\n");
-+		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
-+		prwskeylen = 16;
-+	}
- 
--		stainfo = rtw_get_stainfo23a(&padapter->stapriv,
--					     &prxattrib->ta[0]);
--		if (stainfo != NULL) {
--
--			if (is_multicast_ether_addr(prxattrib->ra)) {
--				if (psecuritypriv->binstallGrpkey == 0) {
--					res = _FAIL;
--					DBG_8723A("%s:rx bc/mc packets, but didn't install group key!!!!!!!!!!\n", __func__);
--					goto exit;
--				}
--				prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
--				prwskeylen = 16;
--			} else {
--				RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--					 "rtw_tkip_decrypt23a: stainfo!= NULL!!!\n");
--				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
--				prwskeylen = 16;
--			}
-+	iv = pframe + prxattrib->hdrlen;
-+	payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
-+	length = skb->len - prxattrib->hdrlen - prxattrib->iv_len;
- 
--			iv = pframe + prxattrib->hdrlen;
--			payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
--			length = skb->len - prxattrib->hdrlen - prxattrib->iv_len;
-+	GET_TKIP_PN(iv, dot11txpn);
- 
--			GET_TKIP_PN(iv, dot11txpn);
-+	pnl = (u16)(dot11txpn.val);
-+	pnh = (u32)(dot11txpn.val>>16);
- 
--			pnl = (u16)(dot11txpn.val);
--			pnh = (u32)(dot11txpn.val>>16);
-+	phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
-+	phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
- 
--			phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
--			phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
-+	/* 4 decrypt payload include icv */
-+	arcfour_init(&mycontext, rc4key, 16);
-+	arcfour_encrypt(&mycontext, payload, payload, length);
- 
--			/* 4 decrypt payload include icv */
--			arcfour_init(&mycontext, rc4key, 16);
--			arcfour_encrypt(&mycontext, payload, payload, length);
-+	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
- 
--			*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
--
--			if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
--			{
--				RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--					 "rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
--					 crc[3], payload[length - 1],
--					 crc[2], payload[length - 2],
--					 crc[1], payload[length - 3],
--					 crc[0], payload[length - 4]);
--				res = _FAIL;
--			}
--		} else {
--			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
--				 "rtw_tkip_decrypt23a: stainfo == NULL!!!\n");
--			res = _FAIL;
--		}
-+	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
-+	{
-+		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
-+			 "rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
-+			 crc[3], payload[length - 1],
-+			 crc[2], payload[length - 2],
-+			 crc[1], payload[length - 3],
-+			 crc[0], payload[length - 4]);
-+		res = _FAIL;
- 	}
-+
- exit:
- 	return res;
- }
--- 
-2.1.4
+--s3k4BIQJOiUrNoHtwcToMiasm05UNVLRL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iF4EAREIAAYFAlUWsqMACgkQHwImuRkmbWn6sAD/V+qo1JlM/oC3mw8PurjaMoje
+qhWwTZ+uRTDy+Wlj8h0A/iwqnvuX9733hb1XsdE6kr3DkvW8pR+cv/q8g6TuUTf8
+=yMFR
+-----END PGP SIGNATURE-----
+
+--s3k4BIQJOiUrNoHtwcToMiasm05UNVLRL--
