@@ -1,57 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53168 "EHLO sipsolutions.net"
+Received: from aibo.runbox.com ([91.220.196.211]:60872 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933219AbbCQJ5V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Mar 2015 05:57:21 -0400
-Message-ID: <1426586236.1985.1.camel@sipsolutions.net> (sfid-20150317_105729_717981_7C3C8983)
-Subject: Re: Connection issues with BW Tracking in mac80211
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 17 Mar 2015 10:57:16 +0100
-In-Reply-To: <CABPxzYL1uvHG-MsXMiqrnyA8HuJ47AyuJG-fAM2Ok6GQjC_dtg@mail.gmail.com> (sfid-20150312_101811_932722_326ED06E)
-References: <CABPxzYJD9KL1JngdKBwRqcGR2zFeo=hEfY0UVwAObd+E2ot5DQ@mail.gmail.com>
-	 <CABPxzYLuCdoBNJXU88TOCLWZoQKYBDSF_QgLfhuG2cXu5mc9Aw@mail.gmail.com>
-	 <1424772587.2192.14.camel@sipsolutions.net>
-	 <CABPxzY+fhpwaS1Pr7_rirPbWy+TOEqSH3yA+gE5JADL_3gczkA@mail.gmail.com>
-	 <1424774105.2192.29.camel@sipsolutions.net>
-	 <CABPxzYJkoCWud=yfNHL5m2FUCPOc854i_L+VB4sN+o8Skb-Pnw@mail.gmail.com>
-	 <CABPxzYL4Fz+y7dpp650RyqXVWtL5WC4YkvsQ1_=znOmrmUZF5A@mail.gmail.com>
-	 <1424810867.2192.60.camel@sipsolutions.net>
-	 <CABPxzY+Z97Q4JSSaR2GfGnxbbR721qJ-v_AjG4Kc1TGetHF4ng@mail.gmail.com>
-	 <1424851368.2050.8.camel@sipsolutions.net>
-	 <CABPxzYKa5eR+UrinkqY99jxOpVR4mTYcW_3xZ5f2kf9hXHCznA@mail.gmail.com>
-	 <1426090817.1904.6.camel@sipsolutions.net>
-	 <CABPxzYK-DGLe+kCWnRroErfOMDb+hUHYyNdBiYvqhBmx2QJxUg@mail.gmail.com>
-	 <CABPxzYL1uvHG-MsXMiqrnyA8HuJ47AyuJG-fAM2Ok6GQjC_dtg@mail.gmail.com>
-	 (sfid-20150312_101811_932722_326ED06E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752283AbbC2BIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 21:08:19 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, gregkh@linuxfoundation.org,
+	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v5 07/15] staging: rtl8723au: Remove unneeded curly braces
+Date: Sat, 28 Mar 2015 21:07:50 -0400
+Message-Id: <1427591278-982-8-git-send-email-m.v.b@runbox.com> (sfid-20150329_031220_798457_7A77C639)
+In-Reply-To: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
+References: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-03-12 at 14:47 +0530, Krishna Chaitanya wrote:
+Correct a number of checkpatch.pl warnings in rtl8723au's rtw_security.c
+related to the existence of unnecessary curly braces around single
+statement blocks:
+	WARNING: braces {} are not necessary for single statement blocks
 
-> 1.  Make the directed probe mandatory:
->          a. Check for successful probe resp without depending on proberesp_ies.
->          b. remove the proberesp_ies from the auth_data to trigger
-> directed probe.
-> 
-> 2. Timestamps for proberesp and beacons and update the latest one to "ies".
-> 
-> 3. while update "ies" check only for beacon as its supposed to have latest
-> information (This will trigger #1 automatically).
-> 
-> As a quick and minimal impact solution i am thinking 1-b.
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 16 +++++-----------
+ 1 file changed, 5 insertions(+), 11 deletions(-)
 
-Huh? No, that'd be one of the worst possible solution IMHO since it
-would make the system behave differently *all the time* just because of
-a very uncommon scenario.
-
-Is this really a "real world" use case? I can't really think of any way
-this would happen in practice.
-
-The least impact would probably have #2.
-
-johannes
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index b85e5de5f136..e8efdcd06329 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -113,9 +113,8 @@ static void crc32_init(void)
+ 	for (i = 0; i < 256; ++i) {
+ 		k = crc32_reverseBit((u8)i);
+ 
+-		for (c = ((u32)k) << 24, j = 8; j > 0; --j) {
++		for (c = ((u32)k) << 24, j = 8; j > 0; --j)
+ 			c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
+-		}
+ 
+ 		p1 = (u8 *)&crc32_table[i];
+ 
+@@ -264,9 +263,8 @@ static u32 secmicgetuint32(u8 *p)
+ 	s32 i;
+ 	u32 res = 0;
+ 
+-	for (i = 0; i < 4; i++) {
++	for (i = 0; i < 4; i++)
+ 		res |= ((u32)(*p++)) << (8 * i);
+-	}
+ 
+ 	return res;
+ }
+@@ -350,9 +348,8 @@ void rtw_secgetmic23a(struct mic_data *pmicdata, u8 *dst)
+ 	rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	/*  and then zeroes until the length is a multiple of 4 */
+-	while (pmicdata->nBytesInM != 0) {
++	while (pmicdata->nBytesInM != 0)
+ 		rtw_secmicappend23abyte23a(pmicdata, 0);
+-	}
+ 	/*  The appendByte function has already computed the result. */
+ 	secmicputuint32(dst, pmicdata->L);
+ 	secmicputuint32(dst + 4, pmicdata->R);
+@@ -888,10 +885,8 @@ static void byte_sub(u8 *in, u8 *out)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < 16; i++) {
++	for (i = 0; i < 16; i++)
+ 		out[i] = sbox(in[i]);
+-	}
+-
+ }
+ 
+ static void shift_row(u8 *in, u8 *out)
+@@ -952,9 +947,8 @@ static void mix_column(u8 *in, u8 *out)
+ 
+ 	for (i = 3; i > 0; i--) { /* logical shift left 1 bit */
+ 		andf7[i] = andf7[i] << 1;
+-		if ((andf7[i - 1] & 0x80) == 0x80) {
++		if ((andf7[i - 1] & 0x80) == 0x80)
+ 			andf7[i] = (andf7[i] | 0x01);
+-		}
+ 	}
+ 	andf7[0] = andf7[0] << 1;
+ 	andf7[0] = andf7[0] & 0xfe;
+-- 
+2.1.4
 
