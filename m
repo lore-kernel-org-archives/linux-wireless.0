@@ -1,159 +1,310 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13568 "EHLO mga01.intel.com"
+Received: from aibo.runbox.com ([91.220.196.211]:60875 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754159AbbCLMrO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 08:47:14 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi-next 2013-03-12
-Date: Thu, 12 Mar 2015 12:47:11 +0000
-Message-ID: <1426164431.19690.4.camel@egrumbacBox> (sfid-20150312_134720_308032_18ED1ABE)
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1752532AbbC2BIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 21:08:19 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, gregkh@linuxfoundation.org,
+	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v5 05/15] staging: rtl8723au: Reorganize a few functions to remove indentation
+Date: Sat, 28 Mar 2015 21:07:48 -0400
+Message-Id: <1427591278-982-6-git-send-email-m.v.b@runbox.com> (sfid-20150329_031244_783591_09CBBD87)
+In-Reply-To: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
+References: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCkhlcmUgaXMgYSBwdWxsIHJlcXVlc3QgZm9yIDQuMS4gRGV0YWlscyBpbiB0
-aGUgdGFnLg0KTm90ZSB0aGF0IHRoaXMgaW5jbHVkZXMgdGhlIHBhdGNoZXMgdGhhdCB3ZXJlIHB1
-bGxlZCBieSBkYXZlbS4NCllvdSBtYXkgd2FudCB0byBGRiB5b3VyIHRyZWUgYmVmb3JlIHlvdSBw
-dWxsIG15IGJpdHMuDQoNClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQgMTkwZjEw
-Mjk3NTczNDZiNzJmMjk3NzI5Y2Y4ZTVjNTYyZjJlOWQ4YzoNCg0KICBpd2x3aWZpOiBtdm06IGRv
-bid0IG92ZXJyaWRlIHBhc3NpdmUgZHdlbGwgaW4gY2FzZSBvZiBmcmFnbWVudGVkIHNjYW4gKDIw
-MTUtMDMtMDIgMDg6MjA6MzIgKzAyMDApDQoNCmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBv
-c2l0b3J5IGF0Og0KDQogIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJu
-ZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1uZXh0LmdpdCB0YWdzL2l3bHdpZmktbmV4dC1mb3Ita2Fs
-bGUtMjAxNS0wMy0xMg0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5nZXMgdXAgdG8gMjA4ZDI3MWEz
-ZjUzODg2NzJiM2Q3ZWMxNDFlOTc1YWJkODRhYjNkYToNCg0KICBNZXJnZSBicmFuY2ggJ2l3bHdp
-ZmktZml4ZXMnIGludG8gaXdsd2lmaS1uZXh0ICgyMDE1LTAzLTEyIDE0OjM4OjI2ICswMjAwKQ0K
-DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tDQoNCiogTG9jYXRpb24gQXdhcmUgUmVndWxhdG9yeSB3YXMgYWRkZWQgYnkgQXJp
-aw0KKiA4MDAwIGRldmljZSBmYW1pbHkgd29yaw0KKiBVcGRhdGUgdG8gdGhlIEJUIENvZXggZmly
-bXdhcmUgQVBJDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0NCkFuZHJlaSBPdGNoZXJldGlhbnNraSAoMSk6DQogICAgICBp
-d2x3aWZpOiBtdm06IEZpeCBST0MgcmVtb3ZhbA0KDQpBcmlrIE5lbXRzb3YgKDEyKToNCiAgICAg
-IGl3bHdpZmk6IG12bTogYWRkIE1DQyB1cGRhdGUgRlcgQVBJDQogICAgICBpd2x3aWZpOiBtdm06
-IGluaXQgY291bnRyeSBjb2RlIG9uIGluaXQvcmVjb3ZlcnkNCiAgICAgIGl3bHdpZmk6IGNyZWF0
-ZSByZWdkb21haW4gZnJvbSBtY2NfdXBkYXRlX2NtZCByZXNwb25zZQ0KICAgICAgaXdsd2lmaTog
-bXZtOiBjb25zaWRlciBMQVIgc3VwcG9ydCBkdXJpbmcgTlZNIHBhcnNlDQogICAgICBpd2x3aWZp
-OiBpZ25vcmUgSUJTUyBmbGFnIGFzIHJlZ3VsYXRvcnkgTk8tSVIgaW5kaWNhdGlvbg0KICAgICAg
-aXdsd2lmaTogbXZtOiBMQVI6IEFkZCBjaHViIG1jYyBjaGFuZ2Ugbm90aWZ5IGNvbW1hbmQNCiAg
-ICAgIGl3bHdpZmk6IG52bTogaW5pdCBjb3JyZWN0IG52bSBjaGFubmVsIGxpc3QgZm9yIDgwMDAg
-ZGV2aWNlcw0KICAgICAgaXdsd2lmaTogYWxsb3cgZGlzYWJsaW5nIExBUiB2aWEgbW9kdWxlIHBh
-cmFtDQogICAgICBpd2x3aWZpOiB1c2UgY29ycmVjdCBOVk0gb2Zmc2V0IGZvciBMQVIgZW5hYmxl
-IGZvciBuZXcgTlZNcw0KICAgICAgaXdsd2lmaTogbXZtOiByZWZsZWN0IFRETFMgcG0gc3RhdGUg
-aW4gbXZtdmlmLT5wbV9lbmFibGVkDQogICAgICBpd2x3aWZpOiBkb24ndCBhbGxvdyB0aGUgRlcg
-dG8gcmV0dXJuIGludmFsaWQgY2ggaW5kaWNlcw0KICAgICAgaXdsd2lmaTogbXZtOiBkb24ndCBp
-bml0IE1DQyBkdXJpbmcgQ1Qta2lsbA0KDQpFbGlhZCBQZWxsZXIgKDMpOg0KICAgICAgaXdsd2lm
-aTogZG9uJ3QgZGVjbGFyZSBzdXBwb3J0IGZvciA1Z2h6IGlmIG5vdCBzdXBwb3J0ZWQNCiAgICAg
-IGl3bHdpZmk6IHVzZSBJV0xfREVGQVVMVF9NQVhfVFhfUE9XRVIgZm9yIG1heF9laXJwDQogICAg
-ICBpd2x3aWZpOiBkaXNhYmxlIDExYWMgaWYgMTFuIGlzIGRpc2FibGVkDQoNCkVtbWFudWVsIEdy
-dW1iYWNoICgyMSk6DQogICAgICBpd2x3aWZpOiBmaXggbWF4X2h0X2FtcGR1X2V4cG9uZW50IGZv
-ciBvbGRlciBkZXZpY2VzDQogICAgICBpd2x3aWZpOiBtdm06IEJUIENvZXggLSBmaXggYSBOVUxM
-IHBvaW50ZXIgZXhjZXB0aW9uDQogICAgICBpd2x3aWZpOiBtdm06IGZpeCBjb21waWxhdGlvbiB3
-aXRoIElXTFdJRklfREVCVUdGUyBub3Qgc2V0DQogICAgICBpd2x3aWZpOiBkdm06IGRyb3AgVk8g
-cGFja2V0cyB3aGVuIG1hYzgwMjExIHRlbGxzIHVzIHRvDQogICAgICBpd2x3aWZpOiBmaXggbWF4
-X2h0X2FtcGR1X2V4cG9uZW50IGZvciBvbGRlciBkZXZpY2VzDQogICAgICBpd2x3aWZpOiBidW1w
-IEFQSSB0byAxMyBmb3IgZGV2aWNlcyB0aGF0IHVzZSBpd2xtdm0NCiAgICAgIGl3bHdpZmk6IG12
-bTogcmVtb3ZlIElXTF9VQ09ERV9UTFZfQVBJX0RJU0FCTEVfU1RBX1RYDQogICAgICBpd2x3aWZp
-OiBtdm06IHJlbW92ZSBJV0xfVUNPREVfVExWX0FQSV9TRl9OT19EVU1NWV9OT1RJRg0KICAgICAg
-aXdsd2lmaTogbXZtOiBCVCBDb2V4IC0gZGlzYWJsZSBSUkMgYnkgZGVmYXVsdA0KICAgICAgaXds
-d2lmaTogbXZtOiBhbHdheXMgdXBkYXRlIHRoZSBxdW90YSBhZnRlciBhc3NvY2lhdGlvbg0KICAg
-ICAgaXdsd2lmaTogcGNpZTogc3BlZWQgdXAgdGhlIFR4IERNQSBzdG9wIGZsb3cNCiAgICAgIGl3
-bHdpZmk6IHBjaWU6IGluY2x1ZGUgbW9yZSByZWdpc3RlcnMgaW4gdGhlIHBycGggZHVtcA0KICAg
-ICAgaXdsd2lmaTogZml4IHNtYXRjaCB3YXJuaW5nOiAgd2FybjogaW5jb25zaXN0ZW50IGluZGVu
-dGluZw0KICAgICAgaXdsd2lmaTogbXZtOiByZW1vdmUgdW5uZWVkZWQgaW5jbHVkZSBpd2wtZnct
-ZXJyb3ItZHVtcC5oDQogICAgICBpd2x3aWZpOiBtdm06IGZpeCBpZGVudGF0aW9uDQogICAgICBp
-d2x3aWZpOiBwY2llOiBhbGxvdyB0aGUgb3BfbW9kZSB0byBmcmVlemUgdGhlIHN0dWNrIHF1ZXVl
-IHRpbWVyDQogICAgICBpd2x3aWZpOiBtdm06IGZyZWV6ZSB0aGUgbm9uLXNoYXJlZCBxdWV1ZXMg
-d2hlbiBhIHN0YXRpb24gZ29lcyB0byBzbGVlcA0KICAgICAgaXdsd2lmaTogbXZtOiBmaXggZm9y
-Y2UgTk1JIGZvciA4MDAwDQogICAgICBpd2x3aWZpOiBtdm06IEJUIENvZXggLSB1cGRhdGUgdGhl
-IG5ldyBBUEkNCiAgICAgIGl3bHdpZmk6IHVwZGF0ZSBjb3B5cmlnaHQgdG8gaW5jbHVkZSAyMDE1
-DQogICAgICBNZXJnZSBicmFuY2ggJ2l3bHdpZmktZml4ZXMnIGludG8gaXdsd2lmaS1uZXh0DQoN
-CkVyYW4gSGFyYXJ5ICg1KToNCiAgICAgIGl3bHdpZmk6IG12bTogc3VwcG9ydCBuZXcgUEhZX1NL
-VSBudm0gc2VjdGlvbiBmb3IgZmFtaWx5IDgwMDAgQjANCiAgICAgIGl3bHdpZmk6IG12bTogdGFr
-ZSB0aGUgTUFDIGFkZHJlc3MgZnJvbSBIVyByZWdpc3RlcnMNCiAgICAgIGl3bHdpZmk6IG12bTog
-c3VwcG9ydCBmYW1pbHkgODAwMCBCMi9DIHN0ZXBzDQogICAgICBpd2x3aWZpOiB0cmFuczogVGFr
-ZSBvd25lcnNoaXAgb24gc2VjdXJlIG1hY2hpbmUgYmVmb3JlIEZXIGxvYWQNCiAgICAgIGl3bHdp
-Zmk6IG12bTogQWx3YXlzIGVuYWJsZSB0aGUgc21hcnQgRklGTw0KDQpFeWFsIFNoYXBpcmEgKDQp
-Og0KICAgICAgaXdsd2lmaTogbXZtOiByczogZml4IEJUIENvZXggY2hlY2sgdG8gbG9vayBhdCB0
-aGUgY29ycmVjdCBhbnQNCiAgICAgIGl3bHdpZmk6IG12bTogZGlzYWJsZSBiZWFtZm9ybWVyIHVu
-bGVzcyBGVyBzdXBwb3J0cyBpdA0KICAgICAgaXdsd2lmaTogbXZtOiByczogaW1wcm92ZSBzc19w
-YXJhbXMgZGVidWcgcHJpbnQNCiAgICAgIGl3bHdpZmk6IG12bTogcnM6IHVwZGF0ZSBUeCBzdGF0
-aXN0aWNzIHdoZW4gdXNpbmcgZml4ZWQgcmF0ZQ0KDQpKb2hhbm5lcyBCZXJnICg0KToNCiAgICAg
-IGl3bHdpZmk6IG12bTogZGlzY29ubmVjdCBpZiBDU0EgdGltZSBldmVudCBmYWlscyBzY2hlZHVs
-aW5nDQogICAgICBpd2x3aWZpOiBtdm06IHJlbW92ZSB3YXJuaW5nIG9uIHN0YXRpb24gZXhoYXVz
-dGlvbg0KICAgICAgaXdsd2lmaTogbXZtOiBjbGFyaWZ5IHRpbWUgZXZlbnQgZW5kIGhhbmRsaW5n
-DQogICAgICBpd2x3aWZpOiBtdm06IHNpbXBsaWZ5IGl3bF9tdm1fZ2V0X3dha2V1cF9zdGF0dXMo
-KSByZXR1cm4NCg0KSm9uYXRoYW4gRG9yb24gKDIpOg0KICAgICAgaXdsd2lmaTogbXZtOiBzdXBw
-b3J0IExBUiB1cGRhdGVzIGZyb20gQklPUw0KICAgICAgaXdsd2lmaTogbXZtOiBzZXQgTEFSIE1D
-QyBvbiBEMy9EMCB0cmFuc2l0aW9ucw0KDQpMdWNpYW5vIENvZWxobyAoMyk6DQogICAgICBpd2x3
-aWZpOiBtdm06IGNhbGwgaWVlZTgwMjExX3NjYW5fY29tcGxldGVkKCkgZXZlbiBpZiBzY2FuIGFi
-b3J0IGZhaWxzDQogICAgICBpd2x3aWZpOiBtdm06IGRvbid0IHRyeSB0byBzdG9wIHNjYW5zIHRo
-YXQgYXJlIG5vdCBydW5uaW5nIGFueW1vcmUNCiAgICAgIGl3bHdpZmk6IG12bTogZG9uJ3QgZG91
-YmxlIHVubG9jayB0aGUgbXV0ZXggaW4gX19pd2xfbXZtX3Jlc3VtZSgpDQoNCk1hdHRpIEdvdHRs
-aWViICgyKToNCiAgICAgIGl3bHdpZmk6IGNoYW5nZSBsYXN0IDVnaHogY2hhbm5lbCB0byAxNjUg
-JiBhZGQgc3VwcG9ydCBmb3IgODAwMCBmYW1pbHkNCiAgICAgIGl3bHdpZmk6IGl3bG12bTogTEFS
-OiBkaXNhYmxlIExBUiBzdXBwb3J0IGR1ZSB0byBOVk0gdnMgVExWIGNvbmZsaWN0DQoNCk9yZW4g
-R2l2b24gKDIpOg0KICAgICAgaXdsd2lmaTogYWRkIG5ldyA4MjYwIHNlcmllcyBQQ0kgSURzDQog
-ICAgICBpd2x3aWZpOiBhZGQgbW9yZSBuZXcgODI2MCBzZXJpZXMgUENJIElEcw0KDQogZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9kdm0vbWFjODAyMTEuYyAgICAgfCAgMTcgKysrKy0tLQ0K
-IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvZHZtL3JzLmMgICAgICAgICAgIHwgICA3ICst
-LQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvZHZtL3R4LmMgICAgICAgICAgIHwgICA2
-ICstLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTEwMDAuYyAgICAgICAgIHwg
-ICA2ICsrLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLTIwMDAuYyAgICAgICAg
-IHwgIDEzICsrKy0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtNTAwMC5jICAg
-ICAgICAgfCAgIDYgKystDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtNjAwMC5j
-ICAgICAgICAgfCAgMTggKysrKy0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXds
-LTcwMDAuYyAgICAgICAgIHwgICA4ICstLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-aXdsLTgwMDAuYyAgICAgICAgIHwgICA0ICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9pd2wtZGVidWcuaCAgICAgICAgfCAgIDIgKw0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdp
-ZmkvaXdsLWRydi5jICAgICAgICAgIHwgIDIyICsrKystLS0tDQogZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaXdsd2lmaS9pd2wtZHJ2LmggICAgICAgICAgfCAgIDIgKy0NCiBkcml2ZXJzL25ldC93aXJl
-bGVzcy9pd2x3aWZpL2l3bC1lZXByb20tcGFyc2UuaCB8ICAgMSArDQogZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaXdsd2lmaS9pd2wtZnctZmlsZS5oICAgICAgfCAgIDggKy0tDQogZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9pd2wtaW8uYyAgICAgICAgICAgfCAgIDIgKw0KIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvaXdsLW1vZHBhcmFtcy5oICAgIHwgICAyICsNCiBkcml2ZXJzL25l
-dC93aXJlbGVzcy9pd2x3aWZpL2l3bC1udm0tcGFyc2UuYyAgICB8IDQxMSArKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXds
-LW52bS1wYXJzZS5oICAgIHwgIDE5ICsrKysrKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3
-aWZpL2l3bC1wcnBoLmggICAgICAgICB8ICAyNyArKysrKysrKysrDQogZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMuaCAgICAgICAgfCAgMTUgKysrKysrDQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vY29leC5jICAgICAgICAgfCAyMjMgKy0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vY29leF9sZWdh
-Y3kuYyAgfCAgNjQgKysrKysrKysrKysrKysrKysrKysrKystDQogZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaXdsd2lmaS9tdm0vZDMuYyAgICAgICAgICAgfCAgMTkgKysrKystLQ0KIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvbXZtL2RlYnVnZnMtdmlmLmMgIHwgICAxIC0NCiBkcml2ZXJzL25l
-dC93aXJlbGVzcy9pd2x3aWZpL212bS9kZWJ1Z2ZzLmMgICAgICB8ICAyNiArKystLS0tLS0tDQog
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vZnctYXBpLWNvZXguaCAgfCAgNDcgLS0t
-LS0tLS0tLS0tLS0tLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9mdy1hcGku
-aCAgICAgICB8IDEwNyArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0NCiBk
-cml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9mdy5jICAgICAgICAgICB8ICAxMCArKysr
-DQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vbWFjODAyMTEuYyAgICAgfCAyMjAg
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKy0tLS0tLS0tLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212
-bS9tdm0uaCAgICAgICAgICB8ICA2NSArKysrKysrKysrKysrKysrKysrLS0tLS0NCiBkcml2ZXJz
-L25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9udm0uYyAgICAgICAgICB8IDI5MCArKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0NCiBkcml2ZXJzL25ldC93aXJl
-bGVzcy9pd2x3aWZpL212bS9vcHMuYyAgICAgICAgICB8ICAxMSArKy0tDQogZHJpdmVycy9uZXQv
-d2lyZWxlc3MvaXdsd2lmaS9tdm0vcGh5LWN0eHQuYyAgICAgfCAgIDIgKw0KIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3Bvd2VyLmMgICAgICAgIHwgICA2ICsrLQ0KIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3F1b3RhLmMgICAgICAgIHwgICAzICstDQogZHJpdmVy
-cy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9tdm0vcnMuYyAgICAgICAgICAgfCAgOTYgKysrKysrKysr
-KysrKysrKysrKysrKysrKysrLS0tLS0tLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZp
-L212bS9zY2FuLmMgICAgICAgICB8ICAxMyArKystLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3
-bHdpZmkvbXZtL3NmLmMgICAgICAgICAgIHwgIDY3ICsrKysrKysrKysrKysrKysrKysrKy0tLS0N
-CiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bS9zdGEuYyAgICAgICAgICB8ICAgNSAr
-LQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3RpbWUtZXZlbnQuYyAgIHwgIDMx
-ICsrKysrKystLS0tLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvbXZtL3V0aWxzLmMg
-ICAgICAgIHwgICAyICstDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9wY2llL2Rydi5j
-ICAgICAgICAgfCAgMjcgKysrKysrKysrLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-cGNpZS9pbnRlcm5hbC5oICAgIHwgICA0ICsrDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9wY2llL3RyYW5zLmMgICAgICAgfCAxNTcgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKy0tLS0tDQogZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9wY2llL3R4LmMgICAgICAgICAgfCAgNjMgKysrKysrKysrKysrKysrKy0tLS0tLS0NCiA0NSBm
-aWxlcyBjaGFuZ2VkLCAxNTY3IGluc2VydGlvbnMoKyksIDU4OCBkZWxldGlvbnMoLSkNCg0K
+Prior to this commit, functions rtw_tkip_encrypt23a and rtw_tkip_decrypt23a had
+large if blocks which contained the majority of the logic in the functions.
+
+Rework these functions so that if the negated version of the aforementioned if
+blocks' conditions are true, we return from the function with _FAIL, as
+expected by the calling code.
+
+This lets us remove two levels of indentation from the functions in
+question, making them more readable.
+
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+
+---
+
+v5: Move the "start to encrypt each fragment" and "start to decrypt
+    recvframe" comments in the refactored functions to more sensible
+    positions.
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 215 +++++++++++++-------------
+ 1 file changed, 107 insertions(+), 108 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 3e79b66d0897..df7261c045fe 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -615,91 +615,90 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+ 	int res = _SUCCESS;
+ 
++	if (pattrib->encrypt != WLAN_CIPHER_SUITE_TKIP)
++		return _FAIL;
++
+ 	if (!pxmitframe->buf_addr)
+ 		return _FAIL;
+ 
+ 	hw_hdr_offset = TXDESC_OFFSET;
+ 
+ 	pframe = pxmitframe->buf_addr + hw_hdr_offset;
+-	/* 4 start to encrypt each fragment */
+-	if (pattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
+-		if (pattrib->psta)
+-			stainfo = pattrib->psta;
+-		else {
+-			DBG_8723A("%s, call rtw_get_stainfo()\n", __func__);
+-			stainfo = rtw_get_stainfo23a(&padapter->stapriv,
+-						     &pattrib->ra[0]);
+-		}
+ 
+-		if (stainfo != NULL) {
++	if (pattrib->psta)
++		stainfo = pattrib->psta;
++	else {
++		DBG_8723A("%s, call rtw_get_stainfo()\n", __func__);
++		stainfo = rtw_get_stainfo23a(&padapter->stapriv,
++					     &pattrib->ra[0]);
++	}
+ 
+-			if (!(stainfo->state & _FW_LINKED)) {
+-				DBG_8723A("%s, psta->state(0x%x) != _FW_LINKED\n", __func__, stainfo->state);
+-				return _FAIL;
+-			}
++	if (stainfo == NULL) {
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 "rtw_tkip_encrypt23a: stainfo == NULL!!!\n");
++		DBG_8723A("%s, psta == NUL\n", __func__);
++		return _FAIL;
++	}
+ 
+-			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-				 "rtw_tkip_encrypt23a: stainfo!= NULL!!!\n");
++	RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++		 "rtw_tkip_encrypt23a: stainfo!= NULL!!!\n");
+ 
+-			if (is_multicast_ether_addr(pattrib->ra))
+-				prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
+-			else
+-				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
++	if (!(stainfo->state & _FW_LINKED)) {
++		DBG_8723A("%s, psta->state(0x%x) != _FW_LINKED\n", __func__, stainfo->state);
++		return _FAIL;
++	}
+ 
+-			prwskeylen = 16;
++	if (is_multicast_ether_addr(pattrib->ra))
++		prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
++	else
++		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
+ 
+-			for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
+-				iv = pframe + pattrib->hdrlen;
+-				payload = pframe + pattrib->iv_len + pattrib->hdrlen;
++	prwskeylen = 16;
+ 
+-				GET_TKIP_PN(iv, dot11txpn);
++	/* 4 start to encrypt each fragment */
++	for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
++		iv = pframe + pattrib->hdrlen;
++		payload = pframe + pattrib->iv_len + pattrib->hdrlen;
+ 
+-				pnl = (u16)(dot11txpn.val);
+-				pnh = (u32)(dot11txpn.val>>16);
++		GET_TKIP_PN(iv, dot11txpn);
+ 
+-				phase1((u16 *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
++		pnl = (u16)(dot11txpn.val);
++		pnh = (u32)(dot11txpn.val>>16);
+ 
+-				phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
++		phase1((u16 *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
+ 
+-				if ((curfragnum + 1) == pattrib->nr_frags) {	/* 4 the last fragment */
+-					length = (pattrib->last_txcmdsz -
+-						  pattrib->hdrlen -
+-						  pattrib->iv_len -
+-						  pattrib->icv_len);
++		phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
+ 
+-					RT_TRACE(_module_rtl871x_security_c_, _drv_info_,
+-						 "pattrib->iv_len =%x, pattrib->icv_len =%x\n",
+-						 pattrib->iv_len,
+-						 pattrib->icv_len);
+-					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
++		if ((curfragnum + 1) == pattrib->nr_frags) {	/* 4 the last fragment */
++			length = (pattrib->last_txcmdsz -
++				  pattrib->hdrlen -
++				  pattrib->iv_len -
++				  pattrib->icv_len);
+ 
+-					arcfour_init(&mycontext, rc4key, 16);
+-					arcfour_encrypt(&mycontext, payload, payload, length);
+-					arcfour_encrypt(&mycontext, payload + length, crc, 4);
++			RT_TRACE(_module_rtl871x_security_c_, _drv_info_,
++				 "pattrib->iv_len =%x, pattrib->icv_len =%x\n",
++				 pattrib->iv_len,
++				 pattrib->icv_len);
++			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
+ 
+-				} else {
+-					length = (pxmitpriv->frag_len -
+-						  pattrib->hdrlen -
+-						  pattrib->iv_len -
+-						  pattrib->icv_len);
++			arcfour_init(&mycontext, rc4key, 16);
++			arcfour_encrypt(&mycontext, payload, payload, length);
++			arcfour_encrypt(&mycontext, payload + length, crc, 4);
+ 
+-					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
+-					arcfour_init(&mycontext, rc4key, 16);
+-					arcfour_encrypt(&mycontext, payload, payload, length);
+-					arcfour_encrypt(&mycontext, payload + length, crc, 4);
++		} else {
++			length = (pxmitpriv->frag_len -
++				  pattrib->hdrlen -
++				  pattrib->iv_len -
++				  pattrib->icv_len);
+ 
+-					pframe += pxmitpriv->frag_len;
+-					pframe  = PTR_ALIGN(pframe, 4);
+-				}
+-			}
++			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
++			arcfour_init(&mycontext, rc4key, 16);
++			arcfour_encrypt(&mycontext, payload, payload, length);
++			arcfour_encrypt(&mycontext, payload + length, crc, 4);
+ 
+-		} else {
+-			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-				 "rtw_tkip_encrypt23a: stainfo == NULL!!!\n");
+-			DBG_8723A("%s, psta == NUL\n", __func__);
+-			res = _FAIL;
++			pframe += pxmitpriv->frag_len;
++			pframe  = PTR_ALIGN(pframe, 4);
+ 		}
+-
+ 	}
+ 
+ 	return res;
+@@ -725,64 +724,64 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 	struct sk_buff *skb = precvframe->pkt;
+ 	int res = _SUCCESS;
+ 
++	if (prxattrib->encrypt != WLAN_CIPHER_SUITE_TKIP)
++		return _FAIL;
++
+ 	pframe = skb->data;
+ 
++	stainfo = rtw_get_stainfo23a(&padapter->stapriv,
++				     &prxattrib->ta[0]);
++	if (stainfo == NULL) {
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 "rtw_tkip_decrypt23a: stainfo == NULL!!!\n");
++		return _FAIL;
++	}
++
+ 	/* 4 start to decrypt recvframe */
+-	if (prxattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
++	if (is_multicast_ether_addr(prxattrib->ra)) {
++		if (psecuritypriv->binstallGrpkey == 0) {
++			res = _FAIL;
++			DBG_8723A("%s:rx bc/mc packets, but didn't install group key!!!!!!!!!!\n", __func__);
++			goto exit;
++		}
++		prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
++		prwskeylen = 16;
++	} else {
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 "rtw_tkip_decrypt23a: stainfo!= NULL!!!\n");
++		prwskey = &stainfo->dot118021x_UncstKey.skey[0];
++		prwskeylen = 16;
++	}
+ 
+-		stainfo = rtw_get_stainfo23a(&padapter->stapriv,
+-					     &prxattrib->ta[0]);
+-		if (stainfo != NULL) {
+-
+-			if (is_multicast_ether_addr(prxattrib->ra)) {
+-				if (psecuritypriv->binstallGrpkey == 0) {
+-					res = _FAIL;
+-					DBG_8723A("%s:rx bc/mc packets, but didn't install group key!!!!!!!!!!\n", __func__);
+-					goto exit;
+-				}
+-				prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
+-				prwskeylen = 16;
+-			} else {
+-				RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-					 "rtw_tkip_decrypt23a: stainfo!= NULL!!!\n");
+-				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
+-				prwskeylen = 16;
+-			}
++	iv = pframe + prxattrib->hdrlen;
++	payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
++	length = skb->len - prxattrib->hdrlen - prxattrib->iv_len;
+ 
+-			iv = pframe + prxattrib->hdrlen;
+-			payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
+-			length = skb->len - prxattrib->hdrlen - prxattrib->iv_len;
++	GET_TKIP_PN(iv, dot11txpn);
+ 
+-			GET_TKIP_PN(iv, dot11txpn);
++	pnl = (u16)(dot11txpn.val);
++	pnh = (u32)(dot11txpn.val>>16);
+ 
+-			pnl = (u16)(dot11txpn.val);
+-			pnh = (u32)(dot11txpn.val>>16);
++	phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
++	phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
+ 
+-			phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
+-			phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
++	/* 4 decrypt payload include icv */
++	arcfour_init(&mycontext, rc4key, 16);
++	arcfour_encrypt(&mycontext, payload, payload, length);
+ 
+-			/* 4 decrypt payload include icv */
+-			arcfour_init(&mycontext, rc4key, 16);
+-			arcfour_encrypt(&mycontext, payload, payload, length);
++	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
+ 
+-			*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
+-
+-			if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
+-			{
+-				RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-					 "rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+-					 crc[3], payload[length - 1],
+-					 crc[2], payload[length - 2],
+-					 crc[1], payload[length - 3],
+-					 crc[0], payload[length - 4]);
+-				res = _FAIL;
+-			}
+-		} else {
+-			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+-				 "rtw_tkip_decrypt23a: stainfo == NULL!!!\n");
+-			res = _FAIL;
+-		}
++	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
++	{
++		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
++			 "rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
++			 crc[3], payload[length - 1],
++			 crc[2], payload[length - 2],
++			 crc[1], payload[length - 3],
++			 crc[0], payload[length - 4]);
++		res = _FAIL;
+ 	}
++
+ exit:
+ 	return res;
+ }
+-- 
+2.1.4
+
