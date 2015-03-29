@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f173.google.com ([74.125.82.173]:35226 "EHLO
-	mail-we0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751187AbbCGSqN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Mar 2015 13:46:13 -0500
-From: =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
-	<giedrius.statkevicius@gmail.com>
-To: sgruszka@redhat.com
-Cc: helmut.schaa@googlemail.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	=?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
-	<giedrius.statkevicius@gmail.com>
-Subject: [PATCH] rt2x00: use rt2x00queue_flush_queues() instead of implementing the same action
-Date: Sat,  7 Mar 2015 20:45:50 +0200
-Message-Id: <1425753950-15624-1-git-send-email-giedrius.statkevicius@gmail.com> (sfid-20150307_194637_009357_84509D68)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from aibo.runbox.com ([91.220.196.211]:60939 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752837AbbC2BIj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 21:08:39 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, gregkh@linuxfoundation.org,
+	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v5 09/15] staging: rtl8723au: that open brace should be on the previous line
+Date: Sat, 28 Mar 2015 21:07:52 -0400
+Message-Id: <1427591278-982-10-git-send-email-m.v.b@runbox.com> (sfid-20150329_031149_822794_46086DE1)
+In-Reply-To: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
+References: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use rt2x00queue_flush_queues() in rt2x00mac_flush() instead of
-reimplementing the same actions the second time. Also, now it flushes
-the rx queue aswell which it didn't before and that makes it completely
-do what it's supposed to do according to struct iee80211_ops: flush()
-must flush all queues.
+Correct two instances of the checkpatch.pl error indicating that the
+opening curly braces should not be on new lines:
+	ERROR: that open brace { should be on the previous line
 
-Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+
 ---
- drivers/net/wireless/rt2x00/rt2x00mac.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 300876d..5bc48c3 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -756,13 +756,11 @@ void rt2x00mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		     u32 queues, bool drop)
+v3: Make sure that all edited lines are at most 80 characters wide.
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 63591ddeb628..2d50777b88fb 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -773,8 +773,10 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 
+ 	*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
+ 
+-	if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
+-	{
++	if (crc[3] != payload[length - 1] ||
++	    crc[2] != payload[length - 2] ||
++	    crc[1] != payload[length - 3] ||
++	    crc[0] != payload[length - 4]) {
+ 		RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+ 			 "rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+ 			 crc[3], payload[length - 1],
+@@ -862,8 +864,7 @@ static void next_key(u8 *key, int round)
  {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
--	struct data_queue *queue;
- 
- 	if (!test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
- 		return;
- 
--	tx_queue_for_each(rt2x00dev, queue)
--		rt2x00queue_flush_queue(queue, drop);
-+	rt2x00queue_flush_queues(rt2x00dev, drop);
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_flush);
- 
+ 	u8 rcon;
+ 	u8 sbox_key[4];
+-	u8 rcon_table[12] =
+-	{
++	u8 rcon_table[12] = {
+ 		0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
+ 		0x1b, 0x36, 0x36, 0x36
+ 	};
 -- 
-2.3.1
+2.1.4
 
