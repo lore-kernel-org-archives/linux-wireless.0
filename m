@@ -1,202 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:33596 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752372AbbCTN45 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 09:56:57 -0400
-Received: by ladw1 with SMTP id w1so87619177lad.0
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 06:56:56 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 7/9] ath10k: rework legacy rx rate decoding
-Date: Fri, 20 Mar 2015 13:54:13 +0000
-Message-Id: <1426859655-11797-8-git-send-email-michal.kazior@tieto.com> (sfid-20150320_145706_791206_D265CB9A)
-In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
-References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33081 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752634AbbC2Nmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Mar 2015 09:42:50 -0400
+Date: Sun, 29 Mar 2015 15:41:44 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	"Daniel (Deognyoun) Kim" <dekim@broadcom.com>,
+	=?us-ascii?B?PT9VVEYtOD9xP1JhZmE9QzU9ODI9MjBNaT1DNT04MmVja2k/PQ==?=
+	<zajec5@gmail.com>, Julia Lawall <Julia.Lawall@lip6.fr>,
+	Brian Norris <computersforpeace@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: [PATCH 57/86] brcm80211: use uapi/linux/pci_ids.h directly
+Message-ID: <1427635734-24786-58-git-send-email-mst@redhat.com> (sfid-20150329_154812_409724_514454D7)
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427635734-24786-1-git-send-email-mst@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of using a hacky table and magic values
-use supported band information advertised to
-mac80211.
+Header moved from linux/pci_ids.h to uapi/linux/pci_ids.h,
+use the new header directly so we can drop
+the wrapper in include/linux/pci_ids.h.
 
-This may impact performance a little when dealing
-with legacy rx rates depending on system
-architecture. It's probably negligible.
-
-This also fixes a highly theoretical corner case
-when HT/VHT rates weren't reported correctly if
-channel frequency wasn't known.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 64 ++++++--------------------------
- drivers/net/wireless/ath/ath10k/mac.c    | 37 ++++++++++++++++--
- drivers/net/wireless/ath/ath10k/mac.h    |  2 +
- 3 files changed, 46 insertions(+), 57 deletions(-)
+ drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c     | 2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c       | 2 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c       | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 01a2b38..0cbd538 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -651,44 +651,15 @@ struct amsdu_subframe_hdr {
- 	__be16 len;
- } __packed;
+diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+index 2124a17..bd1370e 100644
+--- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
+@@ -17,7 +17,7 @@
+ #ifndef	_BRCM_HW_IDS_H_
+ #define	_BRCM_HW_IDS_H_
  
--static const u8 rx_legacy_rate_idx[] = {
--	3,	/* 0x00  - 11Mbps  */
--	2,	/* 0x01  - 5.5Mbps */
--	1,	/* 0x02  - 2Mbps   */
--	0,	/* 0x03  - 1Mbps   */
--	3,	/* 0x04  - 11Mbps  */
--	2,	/* 0x05  - 5.5Mbps */
--	1,	/* 0x06  - 2Mbps   */
--	0,	/* 0x07  - 1Mbps   */
--	10,	/* 0x08  - 48Mbps  */
--	8,	/* 0x09  - 24Mbps  */
--	6,	/* 0x0A  - 12Mbps  */
--	4,	/* 0x0B  - 6Mbps   */
--	11,	/* 0x0C  - 54Mbps  */
--	9,	/* 0x0D  - 36Mbps  */
--	7,	/* 0x0E  - 18Mbps  */
--	5,	/* 0x0F  - 9Mbps   */
--};
--
- static void ath10k_htt_rx_h_rates(struct ath10k *ar,
- 				  struct ieee80211_rx_status *status,
- 				  struct htt_rx_desc *rxd)
- {
--	enum ieee80211_band band;
--	u8 cck, rate, rate_idx, bw, sgi, mcs, nss;
-+	struct ieee80211_supported_band *sband;
-+	u8 cck, rate, bw, sgi, mcs, nss;
- 	u8 preamble = 0;
- 	u32 info1, info2, info3;
+-#include <linux/pci_ids.h>
++#include <uapi/linux/pci_ids.h>
+ #include <linux/mmc/sdio_ids.h>
  
--	/* Band value can't be set as undefined but freq can be 0 - use that to
--	 * determine whether band is provided.
--	 *
--	 * FIXME: Perhaps this can go away if CCK rate reporting is a little
--	 * reworked?
--	 */
--	if (!status->freq)
--		return;
--
--	band = status->band;
- 	info1 = __le32_to_cpu(rxd->ppdu_start.info1);
- 	info2 = __le32_to_cpu(rxd->ppdu_start.info2);
- 	info3 = __le32_to_cpu(rxd->ppdu_start.info3);
-@@ -697,31 +668,18 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
+ #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 7944224..227cb33 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -18,7 +18,7 @@
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
+ #include <linux/pci.h>
+-#include <linux/pci_ids.h>
++#include <uapi/linux/pci_ids.h>
+ #include <linux/sched.h>
+ #include <linux/completion.h>
+ #include <linux/scatterlist.h>
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index faec35c..5c4755d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -18,7 +18,7 @@
+ #include <linux/kernel.h>
+ #include <linux/kthread.h>
+ #include <linux/printk.h>
+-#include <linux/pci_ids.h>
++#include <uapi/linux/pci_ids.h>
+ #include <linux/netdevice.h>
+ #include <linux/interrupt.h>
+ #include <linux/sched.h>
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index eb8584a..de0ef7bb 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -17,7 +17,7 @@
  
- 	switch (preamble) {
- 	case HTT_RX_LEGACY:
-+		/* To get legacy rate index band is required. Since band can't
-+		 * be undefined check if freq is non-zero.
-+		 */
-+		if (!status->freq)
-+			return;
-+
- 		cck = info1 & RX_PPDU_START_INFO1_L_SIG_RATE_SELECT;
- 		rate = MS(info1, RX_PPDU_START_INFO1_L_SIG_RATE);
--		rate_idx = 0;
--
--		if (rate < 0x08 || rate > 0x0F)
--			break;
--
--		switch (band) {
--		case IEEE80211_BAND_2GHZ:
--			if (cck)
--				rate &= ~BIT(3);
--			rate_idx = rx_legacy_rate_idx[rate];
--			break;
--		case IEEE80211_BAND_5GHZ:
--			rate_idx = rx_legacy_rate_idx[rate];
--			/* We are using same rate table registering
--			   HW - ath10k_rates[]. In case of 5GHz skip
--			   CCK rates, so -4 here */
--			rate_idx -= 4;
--			break;
--		default:
--			break;
--		}
-+		rate &= ~RX_PPDU_START_RATE_FLAG;
+ #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
  
--		status->rate_idx = rate_idx;
-+		sband = &ar->mac.sbands[status->band];
-+		status->rate_idx = ath10k_mac_hw_rate_to_idx(sband, rate);
- 		break;
- 	case HTT_RX_HT:
- 	case HTT_RX_HT_WITH_TXBF:
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 877afde..e1902e3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -35,10 +35,20 @@
- /*********/
- 
- static struct ieee80211_rate ath10k_rates[] = {
--	{ .bitrate = 10, .hw_value = ATH10K_HW_RATE_CCK_LP_1M },
--	{ .bitrate = 20, .hw_value = ATH10K_HW_RATE_CCK_LP_2M },
--	{ .bitrate = 55, .hw_value = ATH10K_HW_RATE_CCK_LP_5_5M },
--	{ .bitrate = 110, .hw_value = ATH10K_HW_RATE_CCK_LP_11M },
-+	{ .bitrate = 10,
-+	  .hw_value = ATH10K_HW_RATE_CCK_LP_1M },
-+	{ .bitrate = 20,
-+	  .hw_value = ATH10K_HW_RATE_CCK_LP_2M,
-+	  .hw_value_short = ATH10K_HW_RATE_CCK_SP_2M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 55,
-+	  .hw_value = ATH10K_HW_RATE_CCK_LP_5_5M,
-+	  .hw_value_short = ATH10K_HW_RATE_CCK_SP_5_5M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 110,
-+	  .hw_value = ATH10K_HW_RATE_CCK_LP_11M,
-+	  .hw_value_short = ATH10K_HW_RATE_CCK_SP_11M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
- 
- 	{ .bitrate = 60, .hw_value = ATH10K_HW_RATE_OFDM_6M },
- 	{ .bitrate = 90, .hw_value = ATH10K_HW_RATE_OFDM_9M },
-@@ -74,6 +84,25 @@ static u8 ath10k_mac_bitrate_to_rate(int bitrate)
- 	       (ath10k_mac_bitrate_is_cck(bitrate) ? BIT(7) : 0);
- }
- 
-+u8 ath10k_mac_hw_rate_to_idx(const struct ieee80211_supported_band *sband,
-+			     u8 hw_rate)
-+{
-+	const struct ieee80211_rate *rate;
-+	int i;
-+
-+	for (i = 0; i < sband->n_bitrates; i++) {
-+		rate = &sband->bitrates[i];
-+
-+		if (rate->hw_value == hw_rate)
-+			return i;
-+		else if (rate->flags & IEEE80211_RATE_SHORT_PREAMBLE &&
-+			 rate->hw_value_short == hw_rate)
-+			return i;
-+	}
-+
-+	return 0;
-+}
-+
- /**********/
- /* Crypto */
- /**********/
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-index 3b64d99..e615490 100644
---- a/drivers/net/wireless/ath/ath10k/mac.h
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -47,6 +47,8 @@ bool ath10k_mac_is_peer_wep_key_set(struct ath10k *ar, const u8 *addr,
- 				    u8 keyidx);
- void ath10k_mac_handle_beacon(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_mac_handle_beacon_miss(struct ath10k *ar, u32 vdev_id);
-+u8 ath10k_mac_hw_rate_to_idx(const struct ieee80211_supported_band *sband,
-+			     u8 hw_rate);
- 
- static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
- {
+-#include <linux/pci_ids.h>
++#include <uapi/linux/pci_ids.h>
+ #include <linux/if_ether.h>
+ #include <net/cfg80211.h>
+ #include <net/mac80211.h>
 -- 
-2.1.4
+MST
 
