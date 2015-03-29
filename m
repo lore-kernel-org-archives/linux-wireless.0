@@ -1,40 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sigma-star.at ([95.130.255.111]:14386 "EHLO
-	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753155AbbCMLhO (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:18116 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752231AbbC2Qqv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 07:37:14 -0400
-From: Richard Weinberger <richard@nod.at>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
-	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
-	lauro.venancio@openbossa.org, davem@davemloft.net,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org
-Subject: net: portid signedness and format string fixes
-Date: Fri, 13 Mar 2015 12:31:12 +0100
-Message-Id: <1426246276-15839-1-git-send-email-richard@nod.at> (sfid-20150313_123856_241366_DE7A0E44)
+	Sun, 29 Mar 2015 12:46:51 -0400
+Message-ID: <55182C77.1000706@broadcom.com> (sfid-20150329_184710_623751_C4CFD8FE)
+Date: Sun, 29 Mar 2015 18:46:47 +0200
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Michael S. Tsirkin" <mst@redhat.com>
+CC: <linux-kernel@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	Hans de Goede <hdegoede@redhat.com>,
+	<linux-wireless@vger.kernel.org>,
+	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
+Subject: Re: [PATCH 83/86] brcm80211: drop pci dependency
+References: <1427635734-24786-1-git-send-email-mst@redhat.com> <1427635734-24786-84-git-send-email-mst@redhat.com>
+In-Reply-To: <1427635734-24786-84-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My application blow up as values in nfnetlink_queue suddenly turned
-negative.
+On 03/29/15 15:43, Michael S. Tsirkin wrote:
+> This file does not use any pci APIs, drop
+> pci header includes.
 
-i.e.
-$ cat /proc/net/netfilter/nfnetlink_queue
-    0  29508   278 2 65531     0 2004213241 -2129885586  1
-    1 -27747     0 2 65531     0     0        0  1
-    2 -27748     0 2 65531     0     0        0  1
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Michael S. Tsirkin<mst@redhat.com>
+> ---
+>   drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 2 --
+>   1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> index 227cb33..9331486 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+> @@ -17,8 +17,6 @@
+>
+>   #include<linux/types.h>
+>   #include<linux/netdevice.h>
+> -#include<linux/pci.h>
+> -#include<uapi/linux/pci_ids.h>
+>   #include<linux/sched.h>
+>   #include<linux/completion.h>
+>   #include<linux/scatterlist.h>
 
-This series fixes that. Patches 1 to 3 change users of signed
-portid to unsigned integers. Just for the sake of consistency.
-Patch 4 fixes the printf format string such that applications
-don't have to deal with negative numbers.
-
-[PATCH 1/4] netlink: Fix portid type in netlink_notify
-[PATCH 2/4] nfc: Fix portid type in urelease_work
-[PATCH 3/4] netfilter: Fix portid types
-[PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc file
-
-Thanks,
-//richard
