@@ -1,655 +1,632 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0111.hostedemail.com ([216.40.44.111]:54112 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753576AbbCXSKR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Mar 2015 14:10:17 -0400
-Message-ID: <1427220609.5642.39.camel@perches.com> (sfid-20150324_191038_413699_7D163A41)
-Subject: [PATCH] staging: rtl8723au: Remove uses of MAC_FMT and MAC_ARG
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Tue, 24 Mar 2015 11:10:09 -0700
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from aibo.runbox.com ([91.220.196.211]:60867 "EHLO aibo.runbox.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752275AbbC2BIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 21:08:19 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, gregkh@linuxfoundation.org,
+	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v5 02/15] staging: rtl8723au: Fix "before/around/after" whitespace issues
+Date: Sat, 28 Mar 2015 21:07:45 -0400
+Message-Id: <1427591278-982-3-git-send-email-m.v.b@runbox.com> (sfid-20150329_031217_950409_4BEF76AE)
+In-Reply-To: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
+References: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the standard vsprintf kernel extension to format
-mac addresses.
+Correct a number of "space(s) required before/around/after" checkpatch.pl
+issues in a number of functions in rtl8723au's rtw_security.c.
 
-This reduces object code size a bit.
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
 
-Miscellanea:
-
-o Coalesce formats
-o Realign arguments
-o Remove the now unused MAC_FMT and MAC_ARG #defines
-
-Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/staging/rtl8723au/core/rtw_ap.c           | 41 ++++++-------
- drivers/staging/rtl8723au/core/rtw_mlme.c         | 26 ++++----
- drivers/staging/rtl8723au/core/rtw_mlme_ext.c     | 72 +++++++++++------------
- drivers/staging/rtl8723au/core/rtw_recv.c         | 42 +++++--------
- drivers/staging/rtl8723au/core/rtw_wlan_util.c    |  6 +-
- drivers/staging/rtl8723au/core/rtw_xmit.c         |  8 +--
- drivers/staging/rtl8723au/include/ieee80211.h     |  3 -
- drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 18 +++---
- drivers/staging/rtl8723au/os_dep/os_intfs.c       |  7 +--
- 9 files changed, 101 insertions(+), 122 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
-index bed13db..6456689 100644
---- a/drivers/staging/rtl8723au/core/rtw_ap.c
-+++ b/drivers/staging/rtl8723au/core/rtw_ap.c
-@@ -260,15 +260,17 @@ void	expire_timeout_chk23a(struct rtw_adapter *padapter)
- 			list_del_init(&psta->asoc_list);
- 			pstapriv->asoc_list_cnt--;
- 
--			DBG_8723A("asoc expire "MAC_FMT", state = 0x%x\n", MAC_ARG(psta->hwaddr), psta->state);
-+			DBG_8723A("asoc expire %pM, state = 0x%x\n",
-+				  psta->hwaddr, psta->state);
- 			updated = ap_free_sta23a(padapter, psta, false, WLAN_REASON_DEAUTH_LEAVING);
- 		} else {
- 			/* TODO: Aging mechanism to digest frames in sleep_q to avoid running out of xmitframe */
- 			if (psta->sleepq_len > (NR_XMITFRAME/pstapriv->asoc_list_cnt)
- 				&& padapter->xmitpriv.free_xmitframe_cnt < ((NR_XMITFRAME/pstapriv->asoc_list_cnt)/2)
- 			) {
--				DBG_8723A("%s sta:"MAC_FMT", sleepq_len:%u, free_xmitframe_cnt:%u, asoc_list_cnt:%u, clear sleep_q\n", __func__,
--					  MAC_ARG(psta->hwaddr),
-+				DBG_8723A("%s sta:%pM, sleepq_len:%u, free_xmitframe_cnt:%u, asoc_list_cnt:%u, clear sleep_q\n",
-+					  __func__,
-+					  psta->hwaddr,
- 					  psta->sleepq_len,
- 					  padapter->xmitpriv.free_xmitframe_cnt,
- 					  pstapriv->asoc_list_cnt);
-@@ -305,7 +307,8 @@ void	expire_timeout_chk23a(struct rtw_adapter *padapter)
- 
- 		psta->keep_alive_trycnt++;
- 		if (ret == _SUCCESS) {
--			DBG_8723A("asoc check, sta(" MAC_FMT ") is alive\n", MAC_ARG(psta->hwaddr));
-+			DBG_8723A("asoc check, sta(%pM) is alive\n",
-+				  psta->hwaddr);
- 			psta->expire_to = pstapriv->expire_to;
- 			psta->keep_alive_trycnt = 0;
- 			continue;
-@@ -317,7 +320,8 @@ void	expire_timeout_chk23a(struct rtw_adapter *padapter)
- 
- 		psta->keep_alive_trycnt = 0;
- 
--		DBG_8723A("asoc expire "MAC_FMT", state = 0x%x\n", MAC_ARG(psta->hwaddr), psta->state);
-+		DBG_8723A("asoc expire %pM, state = 0x%x\n",
-+			  psta->hwaddr, psta->state);
- 		spin_lock_bh(&pstapriv->asoc_list_lock);
- 		if (!list_empty(&psta->asoc_list)) {
- 			list_del_init(&psta->asoc_list);
-@@ -1044,7 +1048,7 @@ int rtw_acl_add_sta23a(struct rtw_adapter *padapter, u8 *addr)
- 	struct wlan_acl_pool *pacl_list = &pstapriv->acl_list;
- 	struct rtw_queue *pacl_node_q = &pacl_list->acl_node_q;
- 
--	DBG_8723A("%s(acl_num =%d) =" MAC_FMT "\n", __func__, pacl_list->num, MAC_ARG(addr));
-+	DBG_8723A("%s(acl_num =%d) =%pM\n", __func__, pacl_list->num, addr);
- 
- 	if ((NUM_ACL-1) < pacl_list->num)
- 		return -1;
-@@ -1476,8 +1480,8 @@ void bss_cap_update_on_sta_join23a(struct rtw_adapter *padapter, struct sta_info
- 	if (psta->flags & WLAN_STA_HT) {
- 		u16 ht_capab = le16_to_cpu(psta->htpriv.ht_cap.cap_info);
- 
--		DBG_8723A("HT: STA " MAC_FMT " HT Capabilities Info: 0x%04x\n",
--				MAC_ARG(psta->hwaddr), ht_capab);
-+		DBG_8723A("HT: STA %pM HT Capabilities Info: 0x%04x\n",
-+			  psta->hwaddr, ht_capab);
- 
- 		if (psta->no_ht_set) {
- 			psta->no_ht_set = 0;
-@@ -1489,10 +1493,9 @@ void bss_cap_update_on_sta_join23a(struct rtw_adapter *padapter, struct sta_info
- 				psta->no_ht_gf_set = 1;
- 				pmlmepriv->num_sta_ht_no_gf++;
- 			}
--			DBG_8723A("%s STA " MAC_FMT " - no "
--				   "greenfield, num of non-gf stations %d\n",
--				   __func__, MAC_ARG(psta->hwaddr),
--				   pmlmepriv->num_sta_ht_no_gf);
-+			DBG_8723A("%s STA %pM - no greenfield, num of non-gf stations %d\n",
-+				  __func__, psta->hwaddr,
-+				  pmlmepriv->num_sta_ht_no_gf);
- 		}
- 
- 		if ((ht_capab & IEEE80211_HT_CAP_SUP_WIDTH_20_40) == 0) {
-@@ -1500,10 +1503,9 @@ void bss_cap_update_on_sta_join23a(struct rtw_adapter *padapter, struct sta_info
- 				psta->ht_20mhz_set = 1;
- 				pmlmepriv->num_sta_ht_20mhz++;
- 			}
--			DBG_8723A("%s STA " MAC_FMT " - 20 MHz HT, "
--				   "num of 20MHz HT STAs %d\n",
--				   __func__, MAC_ARG(psta->hwaddr),
--				   pmlmepriv->num_sta_ht_20mhz);
-+			DBG_8723A("%s STA %pM - 20 MHz HT, num of 20MHz HT STAs %d\n",
-+				  __func__, psta->hwaddr,
-+				  pmlmepriv->num_sta_ht_20mhz);
- 		}
- 
- 	} else {
-@@ -1512,10 +1514,9 @@ void bss_cap_update_on_sta_join23a(struct rtw_adapter *padapter, struct sta_info
- 			pmlmepriv->num_sta_no_ht++;
- 		}
- 		if (pmlmepriv->htpriv.ht_option) {
--			DBG_8723A("%s STA " MAC_FMT
--				   " - no HT, num of non-HT stations %d\n",
--				   __func__, MAC_ARG(psta->hwaddr),
--				   pmlmepriv->num_sta_no_ht);
-+			DBG_8723A("%s STA %pM - no HT, num of non-HT stations %d\n",
-+				  __func__, psta->hwaddr,
-+				  pmlmepriv->num_sta_no_ht);
- 		}
- 	}
- 
-diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
-index 7299ef0..78c05e3 100644
---- a/drivers/staging/rtl8723au/core/rtw_mlme.c
-+++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
-@@ -238,9 +238,9 @@ static void _rtw_roaming(struct rtw_adapter *padapter,
- 		pnetwork = &pmlmepriv->cur_network;
- 
- 	if (padapter->mlmepriv.to_roaming > 0) {
--		DBG_8723A("roaming from %s("MAC_FMT"), length:%d\n",
-+		DBG_8723A("roaming from %s(%pM), length:%d\n",
- 			  pnetwork->network.Ssid.ssid,
--			  MAC_ARG(pnetwork->network.MacAddress),
-+			  pnetwork->network.MacAddress,
- 			  pnetwork->network.Ssid.ssid_len);
- 		memcpy(&pmlmepriv->assoc_ssid, &pnetwork->network.Ssid,
- 		       sizeof(struct cfg80211_ssid));
-@@ -754,8 +754,8 @@ void rtw_free_assoc_resources23a(struct rtw_adapter *adapter,
- 	RT_TRACE(_module_rtl871x_mlme_c_, _drv_notice_,
- 		 ("+rtw_free_assoc_resources23a\n"));
- 	RT_TRACE(_module_rtl871x_mlme_c_, _drv_info_,
--		 ("tgt_network->network.MacAddress="MAC_FMT" ssid=%s\n",
--		  MAC_ARG(tgt_network->network.MacAddress),
-+		 ("tgt_network->network.MacAddress=%pM ssid=%s\n",
-+		  tgt_network->network.MacAddress,
- 		  tgt_network->network.Ssid.ssid));
- 
- 	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE|WIFI_AP_STATE)) {
-@@ -998,8 +998,9 @@ rtw_joinbss_update_network23a(struct rtw_adapter *padapter,
- 	DBG_8723A("%s\n", __func__);
- 
- 	RT_TRACE(_module_rtl871x_mlme_c_, _drv_info_,
--		 ("\nfw_state:%x, BSSID:"MAC_FMT"\n", get_fwstate(pmlmepriv),
--		  MAC_ARG(pnetwork->network.MacAddress)));
-+		 ("\nfw_state:%x, BSSID:%pM\n",
-+		  get_fwstate(pmlmepriv),
-+		  pnetwork->network.MacAddress));
- 
- 	/*  why not use ptarget_wlan?? */
- 	memcpy(&cur_network->network, &pnetwork->network,
-@@ -1330,8 +1331,7 @@ void rtw_stadel_event_callback23a(struct rtw_adapter *adapter, const u8 *pbuf)
- 	else
- 		mac_id = pstadel->mac_id;
- 
--	DBG_8723A("%s(mac_id=%d)=" MAC_FMT "\n", __func__, mac_id,
--		  MAC_ARG(pstadel->macaddr));
-+	DBG_8723A("%s(mac_id=%d)=%pM\n", __func__, mac_id, pstadel->macaddr);
- 
- 	if (check_fwstate(pmlmepriv, WIFI_AP_STATE))
- 		return;
-@@ -1582,13 +1582,12 @@ static int rtw_check_join_candidate(struct mlme_priv *pmlmepriv,
- 	}
- 
- 	if (updated) {
--		DBG_8723A("[by_bssid:%u][assoc_ssid:%s][to_roaming:%u] "
--			  "new candidate: %s("MAC_FMT") rssi:%d\n",
-+		DBG_8723A("[by_bssid:%u][assoc_ssid:%s][to_roaming:%u] new candidate: %s(%pM) rssi:%d\n",
- 			  pmlmepriv->assoc_by_bssid,
- 			  pmlmepriv->assoc_ssid.ssid,
- 			  adapter->mlmepriv.to_roaming,
- 			  (*candidate)->network.Ssid.ssid,
--			  MAC_ARG((*candidate)->network.MacAddress),
-+			  (*candidate)->network.MacAddress,
- 			  (int)(*candidate)->network.Rssi);
- 	}
- 
-@@ -1739,9 +1738,10 @@ int rtw_select_and_join_from_scanned_queue23a(struct mlme_priv *pmlmepriv)
- 		ret = _FAIL;
- 		goto exit;
- 	} else {
--		DBG_8723A("%s: candidate: %s("MAC_FMT", ch:%u)\n", __func__,
-+		DBG_8723A("%s: candidate: %s(%pM, ch:%u)\n",
-+			  __func__,
- 			  candidate->network.Ssid.ssid,
--			  MAC_ARG(candidate->network.MacAddress),
-+			  candidate->network.MacAddress,
- 			  candidate->network.DSConfig);
- 	}
- 
-diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-index d01ca1d..f4d847a 100644
---- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-+++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-@@ -968,8 +968,7 @@ OnAuth23a(struct rtw_adapter *padapter, struct recv_frame *precv_frame)
- 	pstat = rtw_get_stainfo23a(pstapriv, sa);
- 	if (!pstat) {
- 		/*  allocate a new one */
--		DBG_8723A("going to alloc stainfo for sa ="MAC_FMT"\n",
--			  MAC_ARG(sa));
-+		DBG_8723A("going to alloc stainfo for sa =%pM\n", sa);
- 		pstat = rtw_alloc_stainfo23a(pstapriv, sa, GFP_ATOMIC);
- 		if (!pstat) {
- 			DBG_8723A(" Exceed the upper limit of supported "
-@@ -1396,8 +1395,8 @@ OnAssocReq23a(struct rtw_adapter *padapter, struct recv_frame *precv_frame)
- 	/* now parse all ieee802_11 ie to point to elems */
- 
- 	if (rtw_validate_frame_ies(pos, left)) {
--		DBG_8723A("STA " MAC_FMT " sent invalid association request\n",
--			  MAC_ARG(pstat->hwaddr));
-+		DBG_8723A("STA %pM sent invalid association request\n",
-+			  pstat->hwaddr);
- 		status = WLAN_STATUS_UNSPECIFIED_FAILURE;
- 		goto OnAssocReq23aFail;
- 	}
-@@ -1407,8 +1406,8 @@ OnAssocReq23a(struct rtw_adapter *padapter, struct recv_frame *precv_frame)
- 	p = cfg80211_find_ie(WLAN_EID_SSID, pos, left);
- 	if (!p || p[1] == 0) {
- 		/*  broadcast ssid, however it is not allowed in assocreq */
--		DBG_8723A("STA " MAC_FMT " sent invalid association request "
--			  "lacking an SSID\n", MAC_ARG(pstat->hwaddr));
-+		DBG_8723A("STA %pM sent invalid association request lacking an SSID\n",
-+			  pstat->hwaddr);
- 		status = WLAN_STATUS_UNSPECIFIED_FAILURE;
- 		goto OnAssocReq23aFail;
- 	} else {
-@@ -1537,9 +1536,8 @@ OnAssocReq23a(struct rtw_adapter *padapter, struct recv_frame *precv_frame)
- 		int copy_len;
- 
- 		if (psecuritypriv->wpa_psk == 0) {
--			DBG_8723A("STA " MAC_FMT ": WPA/RSN IE in association "
--			"request, but AP don't support WPA/RSN\n",
--				  MAC_ARG(pstat->hwaddr));
-+			DBG_8723A("STA %pM: WPA/RSN IE in association request, but AP don't support WPA/RSN\n",
-+				  pstat->hwaddr);
- 
- 			status = WLAN_STATUS_INVALID_IE;
- 
-@@ -1645,8 +1643,8 @@ OnAssocReq23a(struct rtw_adapter *padapter, struct recv_frame *precv_frame)
- 	if (pstat->flags & WLAN_STA_HT &&
- 	    (pstat->wpa2_pairwise_cipher & WPA_CIPHER_TKIP ||
- 	     pstat->wpa_pairwise_cipher & WPA_CIPHER_TKIP)) {
--		DBG_8723A("HT: " MAC_FMT " tried to use TKIP with HT "
--			  "association\n", MAC_ARG(pstat->hwaddr));
-+		DBG_8723A("HT: %pM tried to use TKIP with HT association\n",
-+			  pstat->hwaddr);
- 
- 		/* status = WLAN_STATUS_CIPHER_REJECTED_PER_POLICY; */
- 		/* goto OnAssocReq23aFail; */
-@@ -2806,17 +2804,16 @@ static int issue_probereq_ex(struct rtw_adapter *padapter,
- 
- 	if (try_cnt && wait_ms) {
- 		if (da)
--			DBG_8723A("%s(%s): to "MAC_FMT", ch:%u%s, %d/%d "
--				  "in %u ms\n",	__func__,
--				  padapter->pnetdev->name,
--				  MAC_ARG(da), rtw_get_oper_ch23a(padapter),
--				  ret == _SUCCESS?", acked":"", i, try_cnt,
-+			DBG_8723A("%s(%s): to %pM, ch:%u%s, %d/%d in %u ms\n",
-+				  __func__, padapter->pnetdev->name,
-+				  da, rtw_get_oper_ch23a(padapter),
-+				  ret == _SUCCESS ? ", acked" : "", i, try_cnt,
- 				  jiffies_to_msecs(jiffies - start));
- 		else
- 			DBG_8723A("%s(%s):, ch:%u%s, %d/%d in %u ms\n",
- 				  __func__, padapter->pnetdev->name,
- 				  rtw_get_oper_ch23a(padapter),
--				  ret == _SUCCESS?", acked":"", i, try_cnt,
-+				  ret == _SUCCESS ? ", acked" : "", i, try_cnt,
- 				  jiffies_to_msecs(jiffies - start));
- 	}
- exit:
-@@ -3460,17 +3457,16 @@ int issue_nulldata23a(struct rtw_adapter *padapter, unsigned char *da,
- 
- 	if (try_cnt && wait_ms) {
- 		if (da)
--			DBG_8723A("%s(%s): to "MAC_FMT", ch:%u%s, %d/%d "
--				  "in %u ms\n", __func__,
--				  padapter->pnetdev->name,
--				  MAC_ARG(da), rtw_get_oper_ch23a(padapter),
--				  ret == _SUCCESS?", acked":"", i, try_cnt,
-+			DBG_8723A("%s(%s): to %pM, ch:%u%s, %d/%d in %u ms\n",
-+				  __func__, padapter->pnetdev->name,
-+				  da, rtw_get_oper_ch23a(padapter),
-+				  ret == _SUCCESS ? ", acked" : "", i, try_cnt,
- 				  jiffies_to_msecs(jiffies - start));
- 		else
- 			DBG_8723A("%s(%s):, ch:%u%s, %d/%d in %u ms\n",
- 				  __func__, padapter->pnetdev->name,
- 				  rtw_get_oper_ch23a(padapter),
--				  ret == _SUCCESS?", acked":"", i, try_cnt,
-+				  ret == _SUCCESS ? ", acked" : "", i, try_cnt,
- 				  jiffies_to_msecs(jiffies - start));
- 	}
- exit:
-@@ -3587,17 +3583,16 @@ int issue_qos_nulldata23a(struct rtw_adapter *padapter, unsigned char *da,
- 
- 	if (try_cnt && wait_ms) {
- 		if (da)
--			DBG_8723A("%s(%s): to "MAC_FMT", ch:%u%s, %d/%d "
--				  "in %u ms\n", __func__,
--				  padapter->pnetdev->name,
--				  MAC_ARG(da), rtw_get_oper_ch23a(padapter),
--				  ret == _SUCCESS?", acked":"", i, try_cnt,
-+			DBG_8723A("%s(%s): to %pM, ch:%u%s, %d/%d in %u ms\n",
-+				  __func__, padapter->pnetdev->name,
-+				  da, rtw_get_oper_ch23a(padapter),
-+				  ret == _SUCCESS ? ", acked" : "", i, try_cnt,
- 				  jiffies_to_msecs(jiffies - start));
- 		else
- 			DBG_8723A("%s(%s):, ch:%u%s, %d/%d in %u ms\n",
- 				  __func__, padapter->pnetdev->name,
- 				  rtw_get_oper_ch23a(padapter),
--				  ret == _SUCCESS?", acked":"", i, try_cnt,
-+				  ret == _SUCCESS ? ", acked" : "", i, try_cnt,
- 				  jiffies_to_msecs(jiffies - start));
- 	}
- exit:
-@@ -3615,7 +3610,7 @@ static int _issue_deauth(struct rtw_adapter *padapter, unsigned char *da,
- 	struct mlme_ext_info *pmlmeinfo = &pmlmeext->mlmext_info;
- 	int ret = _FAIL;
- 
--	/* DBG_8723A("%s to "MAC_FMT"\n", __func__, MAC_ARG(da)); */
-+	/* DBG_8723A("%s to %pM\n", __func__, da); */
- 
- 	pmgntframe = alloc_mgtxmitframe23a(pxmitpriv);
- 	if (!pmgntframe)
-@@ -3660,7 +3655,7 @@ exit:
- int issue_deauth23a(struct rtw_adapter *padapter, unsigned char *da,
- 		    unsigned short reason)
+v5: Correct even more whitespace issues.
+
+v2: Correct one more whitespace issue ("length-4") in
+    rtw_tkip_decrypt23a.
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 219 +++++++++++++-------------
+ 1 file changed, 113 insertions(+), 106 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index 92882f60bc0e..572fcf3f936d 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -129,14 +129,14 @@ static void crc32_init(void)
+ static u32 getcrc32(u8 *buf, int len)
  {
--	DBG_8723A("%s to "MAC_FMT"\n", __func__, MAC_ARG(da));
-+	DBG_8723A("%s to %pM\n", __func__, da);
- 	return _issue_deauth(padapter, da, reason, false);
+ 	u8 *p;
+-	u32  crc;
++	u32 crc;
+ 
+ 	if (bcrc32initialized == 0) crc32_init();
+ 
+ 	crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
+ 
+ 	for (p = buf; len > 0; ++p, --len)
+-		crc = crc32_table[ (crc ^ *p) & 0xff] ^ (crc >> 8);
++		crc = crc32_table[(crc ^ *p) & 0xff] ^ (crc >> 8);
+ 
+ 	return ~crc;    /* transmit complement, per CRC-32 spec */
+ }
+@@ -182,7 +182,7 @@ void rtw_wep_encrypt23a(struct rtw_adapter *padapter,
+ 		if ((curfragnum + 1) == pattrib->nr_frags) {
+ 			/* the last fragment */
+ 			length = pattrib->last_txcmdsz - pattrib->hdrlen -
+-				pattrib->iv_len- pattrib->icv_len;
++				pattrib->iv_len - pattrib->icv_len;
+ 
+ 			*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
+ 
+@@ -262,8 +262,8 @@ static u32 secmicgetuint32(u8 *p)
+ 	s32 i;
+ 	u32 res = 0;
+ 
+-	for (i = 0; i<4; i++) {
+-		res |= ((u32)(*p++)) << (8*i);
++	for (i = 0; i < 4; i++) {
++		res |= ((u32)(*p++)) << (8 * i);
+ 	}
+ 
+ 	return res;
+@@ -274,7 +274,7 @@ static void secmicputuint32(u8 *p, u32 val)
+ {
+ 	long i;
+ 
+-	for (i = 0; i<4; i++) {
++	for (i = 0; i < 4; i++) {
+ 		*p++ = (u8) (val & 0xff);
+ 		val >>= 8;
+ 	}
+@@ -307,7 +307,7 @@ void rtw_secmicappend23abyte23a(struct mic_data *pmicdata, u8 b)
+ {
+ 
+ 	/*  Append the byte to our word-sized buffer */
+-	pmicdata->M |= ((unsigned long)b) << (8*pmicdata->nBytesInM);
++	pmicdata->M |= ((unsigned long)b) << (8 * pmicdata->nBytesInM);
+ 	pmicdata->nBytesInM++;
+ 	/*  Process the word if it is full. */
+ 	if (pmicdata->nBytesInM >= 4) {
+@@ -331,7 +331,7 @@ void rtw_secmicappend23a(struct mic_data *pmicdata, u8 *src, u32 nbytes)
+ {
+ 
+ 	/*  This is simple */
+-	while(nbytes > 0) {
++	while (nbytes > 0) {
+ 		rtw_secmicappend23abyte23a(pmicdata, *src++);
+ 		nbytes--;
+ 	}
+@@ -348,12 +348,12 @@ void rtw_secgetmic23a(struct mic_data *pmicdata, u8 *dst)
+ 	rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	/*  and then zeroes until the length is a multiple of 4 */
+-	while(pmicdata->nBytesInM != 0) {
++	while (pmicdata->nBytesInM != 0) {
+ 		rtw_secmicappend23abyte23a(pmicdata, 0);
+ 	}
+ 	/*  The appendByte function has already computed the result. */
+ 	secmicputuint32(dst, pmicdata->L);
+-	secmicputuint32(dst+4, pmicdata->R);
++	secmicputuint32(dst + 4, pmicdata->R);
+ 	/*  Reset to the empty message. */
+ 	secmicclear(pmicdata);
+ 
+@@ -364,10 +364,10 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
+ {
+ 
+ 	struct mic_data micdata;
+-	u8 priority[4]={0x0, 0x0, 0x0, 0x0};
++	u8 priority[4] = {0x0, 0x0, 0x0, 0x0};
+ 
+ 	rtw_secmicsetkey23a(&micdata, key);
+-	priority[0]= pri;
++	priority[0] = pri;
+ 
+ 	/* Michael MIC pseudo header: DA, SA, 3 x 0, Priority */
+ 	if (header[1]&1) {   /* ToDS == 1 */
+@@ -398,11 +398,11 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
+ #define   Lo8(v16)   ((u8)((v16)       & 0x00FF))
+ #define   Hi8(v16)   ((u8)(((v16) >> 8) & 0x00FF))
+ #define  Lo16(v32)   ((u16)((v32)       & 0xFFFF))
+-#define  Hi16(v32)   ((u16)(((v32) >>16) & 0xFFFF))
++#define  Hi16(v32)   ((u16)(((v32) >> 16) & 0xFFFF))
+ #define  Mk16(hi, lo) ((lo) ^ (((u16)(hi)) << 8))
+ 
+ /* select the Nth 16-bit word of the temporal key unsigned char array TK[]   */
+-#define  TK16(N)     Mk16(tk[2*(N)+1], tk[2*(N)])
++#define  TK16(N)     Mk16(tk[2 * (N) + 1], tk[2 * (N)])
+ 
+ /* S-box lookup: 16 bits --> 16 bits */
+ #define _S_(v16)     (Sbox1[0][Lo8(v16)] ^ Sbox1[1][Hi8(v16)])
+@@ -415,7 +415,7 @@ void rtw_seccalctkipmic23a(u8 *key, u8 *header, u8 *data, u32 data_len,
+ #define RC4_KEY_SIZE     16    /* 128-bit RC4KEY (104 bits unknown) */
+ 
+ /* 2-unsigned char by 2-unsigned char subset of the full AES S-box table */
+-static const unsigned short Sbox1[2][256]=       /* Sbox for hash (can be in ROM)     */
++static const unsigned short Sbox1[2][256] =       /* Sbox for hash (can be in ROM)     */
+ { {
+    0xC6A5, 0xF884, 0xEE99, 0xF68D, 0xFF0D, 0xD6BD, 0xDEB1, 0x9154,
+    0x6050, 0x0203, 0xCEA9, 0x567D, 0xE719, 0xB562, 0x4DE6, 0xEC9A,
+@@ -517,13 +517,13 @@ static void phase1(u16 *p1k, const u8 *tk, const u8 *ta, u32 iv32)
+ 
+ 	/* Now compute an unbalanced Feistel cipher with 80-bit block */
+ 	/* size on the 80-bit block P1K[], using the 128-bit key TK[] */
+-	for (i = 0; i < PHASE1_LOOP_CNT ;i++) {
++	for (i = 0; i < PHASE1_LOOP_CNT; i++) {
+ 		/* Each add operation here is mod 2**16 */
+-		p1k[0] += _S_(p1k[4] ^ TK16((i&1)+0));
+-		p1k[1] += _S_(p1k[0] ^ TK16((i&1)+2));
+-		p1k[2] += _S_(p1k[1] ^ TK16((i&1)+4));
+-		p1k[3] += _S_(p1k[2] ^ TK16((i&1)+6));
+-		p1k[4] += _S_(p1k[3] ^ TK16((i&1)+0));
++		p1k[0] += _S_(p1k[4] ^ TK16((i & 1) + 0));
++		p1k[1] += _S_(p1k[0] ^ TK16((i & 1) + 2));
++		p1k[2] += _S_(p1k[1] ^ TK16((i & 1) + 4));
++		p1k[3] += _S_(p1k[2] ^ TK16((i & 1) + 6));
++		p1k[4] += _S_(p1k[3] ^ TK16((i & 1) + 0));
+ 		p1k[4] +=  (unsigned short)i;                    /* avoid "slide attacks" */
+ 		}
+ 
+@@ -558,8 +558,8 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
+ 	u16 PPK[6];                          /* temporary key for mixing    */
+ 
+ 	/* Note: all adds in the PPK[] equations below are mod 2**16         */
+-	for (i = 0;i<5;i++) PPK[i]= p1k[i];      /* first, copy P1K to PPK      */
+-		PPK[5]  =  p1k[4] +iv16;             /* next,  add in IV16          */
++	for (i = 0; i < 5; i++) PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
++		PPK[5] = p1k[4] + iv16;             /* next,  add in IV16          */
+ 
+ 	/* Bijective non-linear mixing of the 96 bits of PPK[0..5]           */
+ 	PPK[0] +=    _S_(PPK[5] ^ TK16(0));   /* Mix key in each "round"     */
+@@ -588,9 +588,9 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
+ 	rc4key[3] = Lo8((PPK[5] ^ TK16(0)) >> 1);
+ 
+ 	/* Copy 96 bits of PPK[0..5] to RC4KEY[4..15]  (little-endian)       */
+-	for (i = 0;i<6;i++) {
+-		rc4key[4+2*i] = Lo8(PPK[i]);
+-		rc4key[5+2*i] = Hi8(PPK[i]);
++	for (i = 0; i < 6; i++) {
++		rc4key[4 + 2 * i] = Lo8(PPK[i]);
++		rc4key[5 + 2 * i] = Hi8(PPK[i]);
+ 	}
+ 
+ }
+@@ -632,9 +632,9 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 						     &pattrib->ra[0]);
+ 		}
+ 
+-		if (stainfo!= NULL) {
++		if (stainfo != NULL) {
+ 
+-			if (!(stainfo->state &_FW_LINKED)) {
++			if (!(stainfo->state & _FW_LINKED)) {
+ 				DBG_8723A("%s, psta->state(0x%x) != _FW_LINKED\n", __func__, stainfo->state);
+ 				return _FAIL;
+ 			}
+@@ -649,21 +649,25 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 
+ 			prwskeylen = 16;
+ 
+-			for (curfragnum = 0;curfragnum<pattrib->nr_frags;curfragnum++) {
+-				iv = pframe+pattrib->hdrlen;
+-				payload = pframe+pattrib->iv_len+pattrib->hdrlen;
++			for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
++				iv = pframe + pattrib->hdrlen;
++				payload = pframe + pattrib->iv_len + pattrib->hdrlen;
+ 
+ 				GET_TKIP_PN(iv, dot11txpn);
+ 
+ 				pnl = (u16)(dot11txpn.val);
+ 				pnh = (u32)(dot11txpn.val>>16);
+ 
+-				phase1((u16 *)&ttkey[0], prwskey,&pattrib->ta[0], pnh);
++				phase1((u16 *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
+ 
+ 				phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
+ 
+-				if ((curfragnum+1) == pattrib->nr_frags) {	/* 4 the last fragment */
+-					length = pattrib->last_txcmdsz-pattrib->hdrlen-pattrib->iv_len- pattrib->icv_len;
++				if ((curfragnum + 1) == pattrib->nr_frags) {	/* 4 the last fragment */
++					length = (pattrib->last_txcmdsz -
++						  pattrib->hdrlen -
++						  pattrib->iv_len -
++						  pattrib->icv_len);
++
+ 					RT_TRACE(_module_rtl871x_security_c_, _drv_info_,
+ 						 "pattrib->iv_len =%x, pattrib->icv_len =%x\n",
+ 						 pattrib->iv_len,
+@@ -672,23 +676,27 @@ int rtw_tkip_encrypt23a(struct rtw_adapter *padapter,
+ 
+ 					arcfour_init(&mycontext, rc4key, 16);
+ 					arcfour_encrypt(&mycontext, payload, payload, length);
+-					arcfour_encrypt(&mycontext, payload+length, crc, 4);
++					arcfour_encrypt(&mycontext, payload + length, crc, 4);
+ 
+ 				}
+-				else{
+-					length = pxmitpriv->frag_len-pattrib->hdrlen-pattrib->iv_len-pattrib->icv_len ;
++				else {
++					length = (pxmitpriv->frag_len -
++						  pattrib->hdrlen -
++						  pattrib->iv_len -
++						  pattrib->icv_len);
++
+ 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));/* modified by Amy*/
+ 					arcfour_init(&mycontext, rc4key, 16);
+ 					arcfour_encrypt(&mycontext, payload, payload, length);
+-					arcfour_encrypt(&mycontext, payload+length, crc, 4);
++					arcfour_encrypt(&mycontext, payload + length, crc, 4);
+ 
+-				pframe+= pxmitpriv->frag_len;
+-				pframe = PTR_ALIGN(pframe, 4);
++				pframe += pxmitpriv->frag_len;
++				pframe  = PTR_ALIGN(pframe, 4);
+ 				}
+ 			}
+ 
+ 		}
+-		else{
++		else {
+ 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+ 				 "rtw_tkip_encrypt23a: stainfo == NULL!!!\n");
+ 			DBG_8723A("%s, psta == NUL\n", __func__);
+@@ -727,7 +735,7 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 
+ 		stainfo = rtw_get_stainfo23a(&padapter->stapriv,
+ 					     &prxattrib->ta[0]);
+-		if (stainfo!= NULL) {
++		if (stainfo != NULL) {
+ 
+ 			if (is_multicast_ether_addr(prxattrib->ra)) {
+ 				if (psecuritypriv->binstallGrpkey == 0) {
+@@ -744,32 +752,32 @@ int rtw_tkip_decrypt23a(struct rtw_adapter *padapter,
+ 				prwskeylen = 16;
+ 			}
+ 
+-			iv = pframe+prxattrib->hdrlen;
+-			payload = pframe+prxattrib->iv_len+prxattrib->hdrlen;
+-			length = skb->len - prxattrib->hdrlen-prxattrib->iv_len;
++			iv = pframe + prxattrib->hdrlen;
++			payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
++			length = skb->len - prxattrib->hdrlen - prxattrib->iv_len;
+ 
+ 			GET_TKIP_PN(iv, dot11txpn);
+ 
+ 			pnl = (u16)(dot11txpn.val);
+ 			pnh = (u32)(dot11txpn.val>>16);
+ 
+-			phase1((u16 *)&ttkey[0], prwskey,&prxattrib->ta[0], pnh);
++			phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
+ 			phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
+ 
+ 			/* 4 decrypt payload include icv */
+ 			arcfour_init(&mycontext, rc4key, 16);
+ 			arcfour_encrypt(&mycontext, payload, payload, length);
+ 
+-			*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length-4));
++			*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
+ 
+-			if (crc[3]!= payload[length-1] || crc[2]!= payload[length-2] || crc[1]!= payload[length-3] || crc[0]!= payload[length-4])
++			if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
+ 			{
+ 				RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+ 					 "rtw_wep_decrypt23a:icv error crc[3](%x)!= payload[length-1](%x) || crc[2](%x)!= payload[length-2](%x) || crc[1](%x)!= payload[length-3](%x) || crc[0](%x)!= payload[length-4](%x)\n",
+-					 crc[3], payload[length-1],
+-					 crc[2], payload[length-2],
+-					 crc[1], payload[length-3],
+-					 crc[0], payload[length-4]);
++					 crc[3], payload[length - 1],
++					 crc[2], payload[length - 2],
++					 crc[1], payload[length - 3],
++					 crc[0], payload[length - 4]);
+ 				res = _FAIL;
+ 			}
+ 		} else {
+@@ -835,7 +843,7 @@ static void xor_128(u8 *a, u8 *b, u8 *out)
+ {
+ 	int i;
+ 
+-	for (i = 0;i<16; i++)
++	for (i = 0; i < 16; i++)
+ 		out[i] = a[i] ^ b[i];
  }
  
-@@ -3692,17 +3687,16 @@ static int issue_deauth_ex(struct rtw_adapter *padapter, u8 *da,
+@@ -882,7 +890,7 @@ static void byte_sub(u8 *in, u8 *out)
+ {
+ 	int i;
  
- 	if (try_cnt && wait_ms) {
- 		if (da)
--			DBG_8723A("%s(%s): to "MAC_FMT", ch:%u%s, %d/%d "
--				  "in %u ms\n", __func__,
--				  padapter->pnetdev->name,
--				  MAC_ARG(da), rtw_get_oper_ch23a(padapter),
--				  ret == _SUCCESS?", acked":"", i, try_cnt,
-+			DBG_8723A("%s(%s): to %pM, ch:%u%s, %d/%d in %u ms\n",
-+				  __func__, padapter->pnetdev->name,
-+				  da, rtw_get_oper_ch23a(padapter),
-+				  ret == _SUCCESS ? ", acked" : "", i, try_cnt,
- 				  jiffies_to_msecs(jiffies - start));
+-	for (i = 0; i< 16; i++) {
++	for (i = 0; i < 16; i++) {
+ 		out[i] = sbox(in[i]);
+ 	}
+ 
+@@ -922,7 +930,7 @@ static void mix_column(u8 *in, u8 *out)
+ 	u8 temp[4];
+ 	u8 tempb[4];
+ 
+-	for (i = 0 ; i<4; i++) {
++	for (i = 0; i < 4; i++) {
+ 		if ((in[i] & 0x80) == 0x80)
+ 		    add1b[i] = 0x1b;
  		else
- 			DBG_8723A("%s(%s):, ch:%u%s, %d/%d in %u ms\n",
- 				  __func__, padapter->pnetdev->name,
- 				  rtw_get_oper_ch23a(padapter),
--				  ret == _SUCCESS?", acked":"", i, try_cnt,
-+				  ret == _SUCCESS ? ", acked" : "", i, try_cnt,
- 				  jiffies_to_msecs(jiffies - start));
- 	}
- exit:
-@@ -3719,8 +3713,8 @@ void issue_action_spct_ch_switch23a(struct rtw_adapter *padapter,
- 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
- 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+@@ -944,10 +952,10 @@ static void mix_column(u8 *in, u8 *out)
+ 	andf7[2] = in[2] & 0x7f;
+ 	andf7[3] = in[3] & 0x7f;
  
--	DBG_8723A("%s(%s): ra ="MAC_FMT", ch:%u, offset:%u\n", __func__,
--		  padapter->pnetdev->name, MAC_ARG(ra), new_ch, ch_offset);
-+	DBG_8723A("%s(%s): ra=%pM, ch:%u, offset:%u\n",
-+		  __func__, padapter->pnetdev->name, ra, new_ch, ch_offset);
- 
- 	pmgntframe = alloc_mgtxmitframe23a(pxmitpriv);
- 	if (!pmgntframe)
-diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
-index 9c78300..9ce6d22 100644
---- a/drivers/staging/rtl8723au/core/rtw_recv.c
-+++ b/drivers/staging/rtl8723au/core/rtw_recv.c
-@@ -301,10 +301,7 @@ int recvframe_chkmic(struct rtw_adapter *adapter,
- 		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
- 			 ("\n recvframe_chkmic:prxattrib->encrypt == WLAN_CIPHER_SUITE_TKIP\n"));
- 		RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
--			 ("\n recvframe_chkmic:da = 0x%02x:0x%02x:0x%02x:0x%02x:"
--			  "0x%02x:0x%02x\n", prxattrib->ra[0],
--			  prxattrib->ra[1], prxattrib->ra[2], prxattrib->ra[3],
--			  prxattrib->ra[4], prxattrib->ra[5]));
-+			 ("\n recvframe_chkmic:da = %pM\n", prxattrib->ra));
- 
- 		/* calculate mic code */
- 		if (stainfo != NULL) {
-@@ -406,12 +403,8 @@ int recvframe_chkmic(struct rtw_adapter *adapter,
- 					  prxattrib->hdrlen));
- 
- 				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
--					 ("ra = 0x%.2x 0x%.2x 0x%.2x 0x%.2x 0x%."
--					  "2x 0x%.2x psecuritypriv->"
--					  "binstallGrpkey =%d ",
--					  prxattrib->ra[0], prxattrib->ra[1],
--					  prxattrib->ra[2], prxattrib->ra[3],
--					  prxattrib->ra[4], prxattrib->ra[5],
-+					 ("ra = %pM psecuritypriv->binstallGrpkey =%d ",
-+					  prxattrib->ra,
- 					  psecuritypriv->binstallGrpkey));
- 
- 				/*  double check key_index for some timing
-@@ -887,8 +880,8 @@ int ap2sta_data_frame(struct rtw_adapter *adapter,
- 		/*  da should be for me */
- 		if (!ether_addr_equal(myhwaddr, pattrib->dst) && !bmcast) {
- 			RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
--				(" ap2sta_data_frame:  compare DA fail; DA ="
--				 MAC_FMT"\n", MAC_ARG(pattrib->dst)));
-+				 (" ap2sta_data_frame:  compare DA fail; DA=%pM\n",
-+				  pattrib->dst));
- 			ret = _FAIL;
- 			goto exit;
+-	for (i = 3; i>0; i--) { /* logical shift left 1 bit */
++	for (i = 3; i > 0; i--) { /* logical shift left 1 bit */
+ 		andf7[i] = andf7[i] << 1;
+-		if ((andf7[i-1] & 0x80) == 0x80) {
+-		    andf7[i] = (andf7[i] | 0x01);
++		if ((andf7[i - 1] & 0x80) == 0x80) {
++			andf7[i] = (andf7[i] | 0x01);
  		}
-@@ -898,15 +891,14 @@ int ap2sta_data_frame(struct rtw_adapter *adapter,
- 		    ether_addr_equal(mybssid, "\x0\x0\x0\x0\x0\x0") ||
- 		    !ether_addr_equal(pattrib->bssid, mybssid)) {
- 			RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
--				(" ap2sta_data_frame:  compare BSSID fail ; "
--				 "BSSID ="MAC_FMT"\n", MAC_ARG(pattrib->bssid)));
-+				(" ap2sta_data_frame:  compare BSSID fail ; BSSID=%pM\n",
-+				 pattrib->bssid));
- 			RT_TRACE(_module_rtl871x_recv_c_, _drv_info_,
--				 ("mybssid ="MAC_FMT"\n", MAC_ARG(mybssid)));
-+				 ("mybssid=%pM\n", mybssid));
- 
- 			if (!bmcast) {
--				DBG_8723A("issue_deauth23a to the nonassociated "
--					  "ap =" MAC_FMT " for the reason(7)\n",
--					  MAC_ARG(pattrib->bssid));
-+				DBG_8723A("issue_deauth23a to the nonassociated ap=%pM for the reason(7)\n",
-+					  pattrib->bssid);
- 				issue_deauth23a(adapter, pattrib->bssid,
- 					     WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
- 			}
-@@ -964,9 +956,8 @@ int ap2sta_data_frame(struct rtw_adapter *adapter,
- 		if (ether_addr_equal(myhwaddr, pattrib->dst) && !bmcast) {
- 			*psta = rtw_get_stainfo23a(pstapriv, pattrib->bssid);
- 			if (*psta == NULL) {
--				DBG_8723A("issue_deauth23a to the ap =" MAC_FMT
--					  " for the reason(7)\n",
--					  MAC_ARG(pattrib->bssid));
-+				DBG_8723A("issue_deauth23a to the ap=%pM for the reason(7)\n",
-+					  pattrib->bssid);
- 
- 				issue_deauth23a(adapter, pattrib->bssid,
- 					     WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
-@@ -1011,9 +1002,8 @@ int sta2ap_data_frame(struct rtw_adapter *adapter,
- 		if (*psta == NULL) {
- 			RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
- 				 ("can't get psta under AP_MODE; drop pkt\n"));
--			DBG_8723A("issue_deauth23a to sta =" MAC_FMT
--				  " for the reason(7)\n",
--				  MAC_ARG(pattrib->src));
-+			DBG_8723A("issue_deauth23a to sta=%pM for the reason(7)\n",
-+				  pattrib->src);
- 
- 			issue_deauth23a(adapter, pattrib->src,
- 				     WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
-@@ -1043,8 +1033,8 @@ int sta2ap_data_frame(struct rtw_adapter *adapter,
- 			ret = RTW_RX_HANDLED;
- 			goto exit;
- 		}
--		DBG_8723A("issue_deauth23a to sta =" MAC_FMT " for the reason(7)\n",
--			  MAC_ARG(pattrib->src));
-+		DBG_8723A("issue_deauth23a to sta=%pM for the reason(7)\n",
-+			  pattrib->src);
- 		issue_deauth23a(adapter, pattrib->src,
- 			     WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
- 		ret = RTW_RX_HANDLED;
-diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-index 69d9e0f..829bba7 100644
---- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-+++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-@@ -876,9 +876,9 @@ int rtw_check_bcn_info23a(struct rtw_adapter *Adapter,
  	}
+ 	andf7[0] = andf7[0] << 1;
+@@ -977,7 +985,7 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
+ 	u8 intermediateb[16];
+ 	u8 round_key[16];
  
- 	if (!ether_addr_equal(cur_network->network.MacAddress, mgmt->bssid)) {
--		DBG_8723A("%s: linked but recv other bssid bcn"
--			  MAC_FMT MAC_FMT "\n", __func__, MAC_ARG(mgmt->bssid),
--			  MAC_ARG(cur_network->network.MacAddress));
-+		DBG_8723A("%s: linked but recv other bssid bcn %pM %pM\n",
-+			  __func__, mgmt->bssid,
-+			  cur_network->network.MacAddress);
- 		return _FAIL;
- 	}
+-	for (i = 0; i<16; i++) round_key[i] = key[i];
++	for (i = 0; i < 16; i++) round_key[i] = key[i];
  
-diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
-index 1c82dff..98602d9 100644
---- a/drivers/staging/rtl8723au/core/rtw_xmit.c
-+++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
-@@ -493,8 +493,8 @@ static int update_attrib(struct rtw_adapter *padapter,
- 		psta = rtw_get_stainfo23a(pstapriv, pattrib->ra);
- 		if (psta == NULL) { /*  if we cannot get psta => drrp the pkt */
- 			RT_TRACE(_module_rtl871x_xmit_c_, _drv_alert_,
--				 ("\nupdate_attrib => get sta_info fail, ra:"
--				  MAC_FMT"\n", MAC_ARG(pattrib->ra)));
-+				 ("\nupdate_attrib => get sta_info fail, ra:%pM\n",
-+				  pattrib->ra));
- 			res = _FAIL;
- 			goto exit;
- 		} else if (check_fwstate(pmlmepriv, WIFI_AP_STATE) &&
-@@ -511,8 +511,8 @@ static int update_attrib(struct rtw_adapter *padapter,
- 	} else {
- 		/*  if we cannot get psta => drop the pkt */
- 		RT_TRACE(_module_rtl871x_xmit_c_, _drv_alert_,
--			 ("\nupdate_attrib => get sta_info fail, ra:" MAC_FMT
--			  "\n", MAC_ARG(pattrib->ra)));
-+			 ("\nupdate_attrib => get sta_info fail, ra:%pM\n",
-+			  pattrib->ra));
- 		res = _FAIL;
- 		goto exit;
- 	}
-diff --git a/drivers/staging/rtl8723au/include/ieee80211.h b/drivers/staging/rtl8723au/include/ieee80211.h
-index 3caf4f5..3aa40a3 100644
---- a/drivers/staging/rtl8723au/include/ieee80211.h
-+++ b/drivers/staging/rtl8723au/include/ieee80211.h
-@@ -251,9 +251,6 @@ join_res:
- > 0: TID
- */
+ 	for (round = 0; round < 11; round++) {
+ 		if (round == 0) {
+@@ -1061,7 +1069,7 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ {
+ 	int i;
  
--#define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
--#define MAC_ARG(x) ((u8*)(x))[0],((u8*)(x))[1],((u8*)(x))[2],((u8*)(x))[3],((u8*)(x))[4],((u8*)(x))[5]
+-	for (i = 0; i<16; i++) mic_header2[i]= 0x00;
++	for (i = 0; i < 16; i++) mic_header2[i] = 0x00;
+ 
+ 	mic_header2[0] = mpdu[16];    /* A3 */
+ 	mic_header2[1] = mpdu[17];
+@@ -1074,8 +1082,7 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ 	mic_header2[7] = 0x00; /* mpdu[23]; */
+ 
+ 	if (!qc_exists && a4_exists) {
+-		for (i = 0;i<6;i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
 -
- #define MAXTID	16
- 
- #define WME_OUI_TYPE 2
-diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-index 537bd82..f925170 100644
---- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-+++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
-@@ -1076,8 +1076,7 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
- 		ret = -ENOENT;
- 		goto exit;
++		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
  	}
--	DBG_8723A("%s(%s): mac =" MAC_FMT "\n", __func__, ndev->name,
--		  MAC_ARG(mac));
-+	DBG_8723A("%s(%s): mac=%pM\n", __func__, ndev->name, mac);
  
- 	/* for infra./P2PClient mode */
- 	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) &&
-@@ -1085,8 +1084,8 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
- 		struct wlan_network *cur_network = &pmlmepriv->cur_network;
+ 	if (qc_exists && !a4_exists) {
+@@ -1084,7 +1091,7 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ 	}
  
- 		if (!ether_addr_equal(mac, cur_network->network.MacAddress)) {
--			DBG_8723A("%s, mismatch bssid =" MAC_FMT "\n", __func__,
--				  MAC_ARG(cur_network->network.MacAddress));
-+			DBG_8723A("%s, mismatch bssid=%pM\n",
-+				  __func__, cur_network->network.MacAddress);
- 			ret = -ENOENT;
- 			goto exit;
+ 	if (qc_exists && a4_exists) {
+-		for (i = 0;i<6;i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
++		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
+ 
+ 		mic_header2[14] = mpdu[30] & 0x0f;
+ 		mic_header2[15] = mpdu[31] & 0x00;
+@@ -1102,7 +1109,7 @@ static void construct_ctr_preload(u8 *ctr_preload, int a4_exists, int qc_exists,
+ {
+ 	int i = 0;
+ 
+-	for (i = 0; i<16; i++) ctr_preload[i] = 0x00;
++	for (i = 0; i < 16; i++) ctr_preload[i] = 0x00;
+ 	i = 0;
+ 
+ 	ctr_preload[0] = 0x01;                                  /* flag */
+@@ -1183,12 +1190,12 @@ static int aes_cipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 	} else {
+ 		qc_exists = 0;
+ 	}
+-	pn_vector[0]= pframe[hdrlen];
+-	pn_vector[1]= pframe[hdrlen+1];
+-	pn_vector[2]= pframe[hdrlen+4];
+-	pn_vector[3]= pframe[hdrlen+5];
+-	pn_vector[4]= pframe[hdrlen+6];
+-	pn_vector[5]= pframe[hdrlen+7];
++	pn_vector[0] = pframe[hdrlen];
++	pn_vector[1] = pframe[hdrlen + 1];
++	pn_vector[2] = pframe[hdrlen + 4];
++	pn_vector[3] = pframe[hdrlen + 5];
++	pn_vector[4] = pframe[hdrlen + 6];
++	pn_vector[5] = pframe[hdrlen + 7];
+ 
+ 	construct_mic_iv(mic_iv, qc_exists, a4_exists, pframe, plen, pn_vector);
+ 
+@@ -1230,12 +1237,12 @@ static int aes_cipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 
+ 	/* Insert MIC into payload */
+ 	for (j = 0; j < 8; j++)
+-		pframe[payload_index+j] = mic[j];
++		pframe[payload_index + j] = mic[j];
+ 
+ 	payload_index = hdrlen + 8;
+ 	for (i = 0; i < num_blocks; i++) {
+ 		construct_ctr_preload(ctr_preload, a4_exists, qc_exists,
+-				      pframe, pn_vector, i+1);
++				      pframe, pn_vector, i + 1);
+ 		aes128k128d(key, ctr_preload, aes_out);
+ 		bitwise_xor(aes_out, &pframe[payload_index], chain_buffer);
+ 		for (j = 0; j < 16; j++)
+@@ -1247,15 +1254,15 @@ static int aes_cipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 		 * encrypt it and copy the unpadded part back
+ 		 */
+ 		construct_ctr_preload(ctr_preload, a4_exists, qc_exists, pframe,
+-				      pn_vector, num_blocks+1);
++				      pn_vector, num_blocks + 1);
+ 
+ 		for (j = 0; j < 16; j++)
+ 			padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+-			padded_buffer[j] = pframe[payload_index+j];
++			padded_buffer[j] = pframe[payload_index + j];
+ 		aes128k128d(key, ctr_preload, aes_out);
+ 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
+-		for (j = 0; j < payload_remainder;j++)
++		for (j = 0; j < payload_remainder; j++)
+ 			pframe[payload_index++] = chain_buffer[j];
+ 	}
+ 
+@@ -1266,11 +1273,11 @@ static int aes_cipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 	for (j = 0; j < 16; j++)
+ 		padded_buffer[j] = 0x00;
+ 	for (j = 0; j < 8; j++)
+-		padded_buffer[j] = pframe[j+hdrlen+8+plen];
++		padded_buffer[j] = pframe[j + hdrlen + 8 + plen];
+ 
+ 	aes128k128d(key, ctr_preload, aes_out);
+ 	bitwise_xor(aes_out, padded_buffer, chain_buffer);
+-	for (j = 0; j < 8;j++)
++	for (j = 0; j < 8; j++)
+ 		pframe[payload_index++] = chain_buffer[j];
+ 
+ 	return _SUCCESS;
+@@ -1315,7 +1322,7 @@ int rtw_aes_encrypt23a(struct rtw_adapter *padapter,
+ 		res = _FAIL;
+ 		goto out;
+ 	}
+-	if (!(stainfo->state &_FW_LINKED)) {
++	if (!(stainfo->state & _FW_LINKED)) {
+ 		DBG_8723A("%s, psta->state(0x%x) != _FW_LINKED\n",
+ 			  __func__, stainfo->state);
+ 		return _FAIL;
+@@ -1380,16 +1387,16 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 
+ 	/* start to decrypt the payload */
+ 
+-	num_blocks = (plen-8) / 16; /* plen including llc, payload_length and mic) */
++	num_blocks = (plen - 8) / 16; /* plen including llc, payload_length and mic) */
+ 
+-	payload_remainder = (plen-8) % 16;
++	payload_remainder = (plen - 8) % 16;
+ 
+ 	pn_vector[0]  = pframe[hdrlen];
+-	pn_vector[1]  = pframe[hdrlen+1];
+-	pn_vector[2]  = pframe[hdrlen+4];
+-	pn_vector[3]  = pframe[hdrlen+5];
+-	pn_vector[4]  = pframe[hdrlen+6];
+-	pn_vector[5]  = pframe[hdrlen+7];
++	pn_vector[1]  = pframe[hdrlen + 1];
++	pn_vector[2]  = pframe[hdrlen + 4];
++	pn_vector[3]  = pframe[hdrlen + 5];
++	pn_vector[4]  = pframe[hdrlen + 6];
++	pn_vector[5]  = pframe[hdrlen + 7];
+ 
+ 	if ((hdrlen == sizeof(struct ieee80211_hdr_3addr) ||
+ 	    (hdrlen == sizeof(struct ieee80211_qos_hdr))))
+@@ -1424,7 +1431,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 
+ 	for (i = 0; i < num_blocks; i++) {
+ 		construct_ctr_preload(ctr_preload, a4_exists, qc_exists,
+-				      pframe, pn_vector, i+1);
++				      pframe, pn_vector, i + 1);
+ 
+ 		aes128k128d(key, ctr_preload, aes_out);
+ 		bitwise_xor(aes_out, &pframe[payload_index], chain_buffer);
+@@ -1438,12 +1445,12 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 		 * encrypt it and copy the unpadded part back
+ 		 */
+ 		construct_ctr_preload(ctr_preload, a4_exists, qc_exists, pframe,
+-				      pn_vector, num_blocks+1);
++				      pn_vector, num_blocks + 1);
+ 
+ 		for (j = 0; j < 16; j++)
+ 			padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+-			padded_buffer[j] = pframe[payload_index+j];
++			padded_buffer[j] = pframe[payload_index + j];
+ 		aes128k128d(key, ctr_preload, aes_out);
+ 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
+ 		for (j = 0; j < payload_remainder; j++)
+@@ -1451,24 +1458,24 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 	}
+ 
+ 	/* start to calculate the mic */
+-	if ((hdrlen +plen+8) <= MAX_MSG_SIZE)
+-		memcpy(message, pframe, (hdrlen+plen+8)); /* 8 is for ext iv len */
++	if ((hdrlen + plen + 8) <= MAX_MSG_SIZE)
++		memcpy(message, pframe, (hdrlen + plen + 8)); /* 8 is for ext iv len */
+ 
+ 	pn_vector[0] = pframe[hdrlen];
+-	pn_vector[1] = pframe[hdrlen+1];
+-	pn_vector[2] = pframe[hdrlen+4];
+-	pn_vector[3] = pframe[hdrlen+5];
+-	pn_vector[4] = pframe[hdrlen+6];
+-	pn_vector[5] = pframe[hdrlen+7];
++	pn_vector[1] = pframe[hdrlen + 1];
++	pn_vector[2] = pframe[hdrlen + 4];
++	pn_vector[3] = pframe[hdrlen + 5];
++	pn_vector[4] = pframe[hdrlen + 6];
++	pn_vector[5] = pframe[hdrlen + 7];
+ 
+ 	construct_mic_iv(mic_iv, qc_exists, a4_exists, message,
+-			 plen-8, pn_vector);
++			 plen - 8, pn_vector);
+ 
+ 	construct_mic_header1(mic_header1, hdrlen, message);
+ 	construct_mic_header2(mic_header2, message, a4_exists, qc_exists);
+ 
+-	payload_remainder = (plen-8) % 16;
+-	num_blocks = (plen-8) / 16;
++	payload_remainder = (plen - 8) % 16;
++	num_blocks = (plen - 8) / 16;
+ 
+ 	/* Find start of payload */
+ 	payload_index = hdrlen + 8;
+@@ -1502,12 +1509,12 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 
+ 	/* Insert MIC into payload */
+ 	for (j = 0; j < 8; j++)
+-		message[payload_index+j] = mic[j];
++		message[payload_index + j] = mic[j];
+ 
+ 	payload_index = hdrlen + 8;
+-	for (i = 0; i< num_blocks; i++) {
++	for (i = 0; i < num_blocks; i++) {
+ 		construct_ctr_preload(ctr_preload, a4_exists, qc_exists,
+-				      message, pn_vector, i+1);
++				      message, pn_vector, i + 1);
+ 		aes128k128d(key, ctr_preload, aes_out);
+ 		bitwise_xor(aes_out, &message[payload_index], chain_buffer);
+ 		for (j = 0; j < 16; j++)
+@@ -1519,12 +1526,12 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 		 * encrypt it and copy the unpadded part back
+ 		 */
+ 		construct_ctr_preload(ctr_preload, a4_exists, qc_exists,
+-				      message, pn_vector, num_blocks+1);
++				      message, pn_vector, num_blocks + 1);
+ 
+ 		for (j = 0; j < 16; j++)
+ 			 padded_buffer[j] = 0x00;
+ 		for (j = 0; j < payload_remainder; j++)
+-			padded_buffer[j] = message[payload_index+j];
++			padded_buffer[j] = message[payload_index + j];
+ 		aes128k128d(key, ctr_preload, aes_out);
+ 		bitwise_xor(aes_out, padded_buffer, chain_buffer);
+ 		for (j = 0; j < payload_remainder; j++)
+@@ -1538,7 +1545,7 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 	for (j = 0; j < 16; j++)
+ 		padded_buffer[j] = 0x00;
+ 	for (j = 0; j < 8; j++)
+-		padded_buffer[j] = message[j+hdrlen+8+plen-8];
++		padded_buffer[j] = message[j + hdrlen + 8 + plen - 8];
+ 
+ 	aes128k128d(key, ctr_preload, aes_out);
+ 	bitwise_xor(aes_out, padded_buffer, chain_buffer);
+@@ -1547,13 +1554,13 @@ static int aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen)
+ 
+ 	/* compare the mic */
+ 	for (i = 0; i < 8; i++) {
+-		if (pframe[hdrlen+8+plen-8+i] != message[hdrlen+8+plen-8+i]) {
++		if (pframe[hdrlen + 8 + plen - 8 + i] != message[hdrlen + 8 + plen - 8 + i]) {
+ 			RT_TRACE(_module_rtl871x_security_c_, _drv_err_,
+ 				 "aes_decipher:mic check error mic[%d]: pframe(%x) != message(%x)\n",
+ 				 i, pframe[hdrlen + 8 + plen - 8 + i],
+ 				 message[hdrlen + 8 + plen - 8 + i]);
+ 			DBG_8723A("aes_decipher:mic check error mic[%d]: pframe(%x) != message(%x)\n",
+-				  i, pframe[hdrlen+8+plen-8+i], message[hdrlen+8+plen-8+i]);
++				  i, pframe[hdrlen + 8 + plen - 8 + i], message[hdrlen + 8 + plen - 8 + i]);
+ 			res = _FAIL;
  		}
-@@ -1989,7 +1988,7 @@ static int cfg80211_rtw_connect(struct wiphy *wiphy, struct net_device *ndev,
- 	DBG_8723A("ssid =%s, len =%zu\n", sme->ssid, sme->ssid_len);
- 
- 	if (sme->bssid)
--		DBG_8723A("bssid =" MAC_FMT "\n", MAC_ARG(sme->bssid));
-+		DBG_8723A("bssid=%pM\n", sme->bssid);
- 
- 	if (check_fwstate(pmlmepriv, _FW_UNDER_LINKING)) {
- 		ret = -EBUSY;
-@@ -2523,8 +2522,8 @@ static int rtw_cfg80211_monitor_if_xmit_entry(struct sk_buff *skb,
- 
- 		mgmt = (struct ieee80211_mgmt *)dot11_hdr;
- 
--		DBG_8723A("RTW_Tx:da =" MAC_FMT " via %s(%s)\n",
--			  MAC_ARG(mgmt->da), __func__, ndev->name);
-+		DBG_8723A("RTW_Tx:da=%pM via %s(%s)\n",
-+			  mgmt->da, __func__, ndev->name);
- 		category = mgmt->u.action.category;
- 		action = mgmt->u.action.u.wme_action.action_code;
- 		DBG_8723A("RTW_Tx:category(%u), action(%u)\n",
-@@ -2877,7 +2876,7 @@ static int cfg80211_rtw_del_station(struct wiphy *wiphy,
- 		return ret;
  	}
- 
--	DBG_8723A("free sta macaddr =" MAC_FMT "\n", MAC_ARG(mac));
-+	DBG_8723A("free sta macaddr=%pM\n", mac);
- 
- 	if (is_broadcast_ether_addr(mac))
- 		return -EINVAL;
-@@ -3053,8 +3052,7 @@ static int cfg80211_rtw_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	cfg80211_mgmt_tx_status(padapter->rtw_wdev, *cookie, buf, len, ack,
- 				GFP_KERNEL);
- 
--	DBG_8723A("RTW_Tx:tx_ch =%d, da =" MAC_FMT "\n", tx_ch,
--		  MAC_ARG(hdr->da));
-+	DBG_8723A("RTW_Tx:tx_ch =%d, da =%pM\n", tx_ch, hdr->da);
- 	category = hdr->u.action.category;
- 	action = hdr->u.action.u.wme_action.action_code;
- 	DBG_8723A("RTW_Tx:category(%u), action(%u)\n", category, action);
-diff --git a/drivers/staging/rtl8723au/os_dep/os_intfs.c b/drivers/staging/rtl8723au/os_dep/os_intfs.c
-index db6a1597..8f732d9 100644
---- a/drivers/staging/rtl8723au/os_dep/os_intfs.c
-+++ b/drivers/staging/rtl8723au/os_dep/os_intfs.c
-@@ -594,8 +594,8 @@ static int _rtw_drv_register_netdev(struct rtw_adapter *padapter, char *name)
- 		ret = _FAIL;
- 		goto error_register_netdev;
- 	}
--	DBG_8723A("%s, MAC Address (if%d) = " MAC_FMT "\n", __func__,
--		  (padapter->iface_id + 1), MAC_ARG(pnetdev->dev_addr));
-+	DBG_8723A("%s, MAC Address (if%d) = %pM\n",
-+		  __func__, padapter->iface_id + 1, pnetdev->dev_addr);
- 	return ret;
- 
- error_register_netdev:
-@@ -666,8 +666,7 @@ int netdev_open23a(struct net_device *pnetdev)
- 			goto netdev_open23a_error;
- 		}
- 
--		DBG_8723A("MAC Address = "MAC_FMT"\n",
--			  MAC_ARG(pnetdev->dev_addr));
-+		DBG_8723A("MAC Address = %pM\n", pnetdev->dev_addr);
- 
- 		if (init_hw_mlme_ext23a(padapter) == _FAIL) {
- 			DBG_8723A("can't init mlme_ext_priv\n");
-
+-- 
+2.1.4
 
