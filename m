@@ -1,53 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:37460 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753175AbbCaOHo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 10:07:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150326002946.GC10954@ribalta.home>
-References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
- <1424772112-27399-5-git-send-email-robert.dolca@intel.com> <20150326002946.GC10954@ribalta.home>
-From: Robert Dolca <robert.dolca@gmail.com>
-Date: Tue, 31 Mar 2015 17:07:22 +0300
-Message-ID: <CAFPB+Yd3gNEdyeE3+RseTQUy0cEbBiMCajwEN6cRd1Npqmj7Ww@mail.gmail.com> (sfid-20150331_160748_298073_DE9BF6C0)
-Subject: Re: [linux-nfc] [PATCH 4/8] NFC: NCI: Add a special nci_request for driver
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:38055 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750882AbbC2GQ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Mar 2015 02:16:59 -0400
+From: Ilan Peer <ilan.peer@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@suse.com, Ilan Peer <ilan.peer@intel.com>
+Subject: [PATCH] cfg80211: Stop calling crda if it is not responsive
+Date: Sun, 29 Mar 2015 09:18:51 +0300
+Message-Id: <1427609931-6113-1-git-send-email-ilan.peer@intel.com> (sfid-20150329_081902_084943_B4703242)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 26, 2015 at 2:29 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
-> Hi Robert,
->
-> On Tue, Feb 24, 2015 at 12:01:48PM +0200, Robert Dolca wrote:
->> This patch adds nci_request_driver and nci_req_complete_driver
->> as a wrapper for __nci_request. When nci_req_complete_driver is
->> called it also sets cmd_cnt to 1. This is done because the response is not
->> sent to the NFC subsystem so cmd_cnt is not decremented there.
->>
->> nci_send_cmd was previously exported in order to send commands to
->> the device from the driver. It shouldn't be used without
->> nci_req_complete_driver because cmd_cnt will have the wrong value.
-> Any NCI packet should make it to the NCI core first, because the logic
-> and synchornization between Tx and Rx, commands and response is implemented
-> there. When exporting this kind of symbols, you're opening a can of worms by
-> potentially allowing each driver to implement the same kind of logic
-> that's already implemented in the NCI core.
->
-> The solution I'd like to see implemented is the following one: Add 1
-> additional nci_ops entry for handling proprietary packets on the Rx
-> path. From your driver perspective, you call nci_recv_frame for each and
-> every packet that you receive: No intercept, no trap. The core will call
-> your proprietary packets handler for each packet (NTF or RSP) with a
-> proprietary GID.
-> You should then be able to remove all the rx work, rx queue and
-> intercept logic from your driver.
+Patch eeca9fce1d71a4955855ceb0c3b13c1eb9db27c1 (cfg80211: Schedule
+timeout for all CRDA call) introduced a regression, where in case
+that crda is not installed (or not configured properly etc.), the
+regulatory core will needlessly continue to call it.
 
-Thanks for the suggestion. Will do.
+Fix this by stop calling CRDA after too many continuous failures.
 
-Robert
+Signed-off-by: Ilan Peer <ilan.peer@intel.com>
+---
+ net/wireless/nl80211.c |  2 +-
+ net/wireless/reg.c     | 20 ++++++++++++++++++--
+ net/wireless/reg.h     |  9 ++++++++-
+ 3 files changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b020853..3f4c768 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5655,7 +5655,7 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 		}
+ 	}
+ 
+-	r = set_regdom(rd);
++	r = set_regdom(rd, REGD_SOURCE_CRDA);
+ 	/* set_regdom took ownership */
+ 	rd = NULL;
+ 
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 8c6cf52..3efc26e 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -135,6 +135,11 @@ static spinlock_t reg_indoor_lock;
+ /* Used to track the userspace process controlling the indoor setting */
+ static u32 reg_is_indoor_portid;
+ 
++/* Max number of consecutive attempts to communicate with CRDA  */
++#define REG_MAX_CRDA_TIMEOUTS 10
++
++static u32 reg_crda_timeouts;
++
+ static const struct ieee80211_regdomain *get_cfg80211_regdom(void)
+ {
+ 	return rtnl_dereference(cfg80211_regdomain);
+@@ -485,7 +490,7 @@ static void reg_regdb_search(struct work_struct *work)
+ 	mutex_unlock(&reg_regdb_search_mutex);
+ 
+ 	if (!IS_ERR_OR_NULL(regdom))
+-		set_regdom(regdom);
++		set_regdom(regdom, REGD_SOURCE_INTERNAL_DB);
+ 
+ 	rtnl_unlock();
+ }
+@@ -544,6 +549,11 @@ static int call_crda(const char *alpha2)
+ 	/* query internal regulatory database (if it exists) */
+ 	reg_regdb_query(alpha2);
+ 
++	if (reg_crda_timeouts > REG_MAX_CRDA_TIMEOUTS) {
++		pr_info("Exceeded CRDA call max attempts. Not calling CRDA\n");
++		return -EINVAL;
++	}
++
+ 	return kobject_uevent_env(&reg_pdev->dev.kobj, KOBJ_CHANGE, env);
+ }
+ 
+@@ -2893,7 +2903,8 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
+  * multiple drivers can be ironed out later. Caller must've already
+  * kmalloc'd the rd structure.
+  */
+-int set_regdom(const struct ieee80211_regdomain *rd)
++int set_regdom(const struct ieee80211_regdomain *rd,
++	       enum ieee80211_regd_source regd_src)
+ {
+ 	struct regulatory_request *lr;
+ 	bool user_reset = false;
+@@ -2904,6 +2915,9 @@ int set_regdom(const struct ieee80211_regdomain *rd)
+ 		return -EINVAL;
+ 	}
+ 
++	if (regd_src == REGD_SOURCE_CRDA)
++		reg_crda_timeouts = 0;
++
+ 	lr = get_last_request();
+ 
+ 	/* Note that this doesn't update the wiphys, this is done below */
+@@ -3063,6 +3077,7 @@ static void reg_timeout_work(struct work_struct *work)
+ {
+ 	REG_DBG_PRINT("Timeout while waiting for CRDA to reply, restoring regulatory settings\n");
+ 	rtnl_lock();
++	reg_crda_timeouts++;
+ 	restore_regulatory_settings(true);
+ 	rtnl_unlock();
+ }
+@@ -3113,6 +3128,7 @@ int __init regulatory_init(void)
+ 	spin_lock_init(&reg_pending_beacons_lock);
+ 	spin_lock_init(&reg_indoor_lock);
+ 
++	reg_crda_timeouts = 0;
+ 	reg_regdb_size_check();
+ 
+ 	rcu_assign_pointer(cfg80211_regdomain, cfg80211_world_regdom);
+diff --git a/net/wireless/reg.h b/net/wireless/reg.h
+index a2c4e16..3f310a5 100644
+--- a/net/wireless/reg.h
++++ b/net/wireless/reg.h
+@@ -16,6 +16,11 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++enum ieee80211_regd_source {
++	REGD_SOURCE_INTERNAL_DB = 0,
++	REGD_SOURCE_CRDA,
++};
++
+ extern const struct ieee80211_regdomain __rcu *cfg80211_regdomain;
+ 
+ bool reg_is_valid_request(const char *alpha2);
+@@ -46,7 +51,9 @@ void wiphy_regulatory_deregister(struct wiphy *wiphy);
+ int __init regulatory_init(void);
+ void regulatory_exit(void);
+ 
+-int set_regdom(const struct ieee80211_regdomain *rd);
++int set_regdom(const struct ieee80211_regdomain *rd,
++	       enum ieee80211_regd_source regd_src);
++
+ unsigned int reg_get_max_bandwidth(const struct ieee80211_regdomain *rd,
+ 				   const struct ieee80211_reg_rule *rule);
+ 
+-- 
+1.9.1
+
