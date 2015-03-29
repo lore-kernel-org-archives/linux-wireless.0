@@ -1,87 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51908 "EHLO sipsolutions.net"
+Received: from aibo.runbox.com ([91.220.196.211]:60926 "EHLO aibo.runbox.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751880AbbCBTS6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 14:18:58 -0500
-Message-ID: <1425323929.1906.12.camel@sipsolutions.net> (sfid-20150302_201906_972709_BFD272A6)
-Subject: Re: [PATCH RFC 08/14] net: wireless: mac80211: shrink
- ieee80211_tx_info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Florian Westphal <fw@strlen.de>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Mon, 02 Mar 2015 20:18:49 +0100
-In-Reply-To: <20150302190316.GB9762@breakpoint.cc>
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
-	 <1425318028-26531-9-git-send-email-fw@strlen.de>
-	 <1425322425.1906.4.camel@sipsolutions.net>
-	 <20150302190316.GB9762@breakpoint.cc>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752634AbbC2BI0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Mar 2015 21:08:26 -0400
+From: "M. Vefa Bicakci" <m.v.b@runbox.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: joe@perches.com, gregkh@linuxfoundation.org,
+	Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+	mail@beyermatthias.de, m.v.b@runbox.com
+Subject: [PATCH v5 08/15] staging: rtl8723au: trailing statements should be on next line
+Date: Sat, 28 Mar 2015 21:07:51 -0400
+Message-Id: <1427591278-982-9-git-send-email-m.v.b@runbox.com> (sfid-20150329_031117_302746_3DCC0F8F)
+In-Reply-To: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
+References: <1427591278-982-1-git-send-email-m.v.b@runbox.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-03-02 at 20:03 +0100, Florian Westphal wrote:
+Correct a number of checkpatch.pl errors in rtl8723au's rtw_security.c
+related to trailing statements:
+	ERROR: trailing statements should be on next line
 
-> Eventually reducing skb size to make it fit into 3 cachelines again even
-> on 64bit architectures.  For that 40 bytes need to go.
+Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+---
+ drivers/staging/rtl8723au/core/rtw_security.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-That seems like a worthy goal I guess (I guess you should've copied a
-patch 0/N to us).
-
-> > Mind you - we are actually acutely out of space and would rather have
-> > *more*, not less.
-> 
-> :-(
-> 
-> I'm not familiar with mac80211, aside from that it seemed to me
-> that 40 byte cb would be doable, given enough work.
-
-Right now it is, mostly, yes.
-
-> Where are to main problems, exactly?
-
-Well, that depends. Right now clearly we're not really using all of it
-as you saw (even if this patch moving bits here and there is really
-ugly) but there are multiple things:
- 1) Of course mac80211 isn't static, it keeps getting developed! Right
-now for
-    example we need to fix single TCP flow throughput over wifi, and for
-that we
-    need a timestamp. That won't even fit into skb->cb any more right
-now; we'll
-    probably be able to get away with (ab)using skb->tstamp or doing
-reshuffling
-    similar to yours to get some space, but that's just lucky this time.
- 2) We're actually out of flags that are kept from TX generation to TX
-    destruction and it's almost certain that we'll need to add more
-things.
-
-Also, we already do a lot of bit twiddling here, doing it even more
-makes the code even harder to follow. It's bad enough as is if you ask
-me.
-
-> I known that pushing something into ->cb is a lot easier than e.g. keeping
-> extra state on stack, but, IMO cb should really only be used when you
-> need to associate data strictly with an skb so that this data is still
-> availabe even when skb gets queued somewehere.
-
-Right, and we do that. We've in the past moved out data from here to
-elsewhere, but it's extremely tedious and error-prone, and I'm not sure
-we have much that we can possibly move now, since we do need to hang on
-to SKBs in many cases like client powersaving etc.
-
-> Is there a document somewhere that lists all of the per-skb data that
-> mac80211 needs to store (or wants to store)?
-
-Not really, sorry.
-
-> +                                       enum mac80211_tx_control_flags flags:2;
-> +                                       /* used for BUILD_BUG_ON validation that ->flags won't
-> +                                        * overlap with jiffies below */
-> +                                       char flags_end[0];
-
-That "jiffies" should probably say "other members (currently jiffies)"
-or something ... I got a bit confused here.
-
-johannes
+diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
+index e8efdcd06329..63591ddeb628 100644
+--- a/drivers/staging/rtl8723au/core/rtw_security.c
++++ b/drivers/staging/rtl8723au/core/rtw_security.c
+@@ -132,7 +132,8 @@ static u32 getcrc32(u8 *buf, int len)
+ 	u8 *p;
+ 	u32 crc;
+ 
+-	if (bcrc32initialized == 0) crc32_init();
++	if (bcrc32initialized == 0)
++		crc32_init();
+ 
+ 	crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
+ 
+@@ -556,8 +557,10 @@ static void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16)
+ 	u16 PPK[6];                          /* temporary key for mixing    */
+ 
+ 	/* Note: all adds in the PPK[] equations below are mod 2**16         */
+-	for (i = 0; i < 5; i++) PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
+-		PPK[5] = p1k[4] + iv16;             /* next,  add in IV16          */
++	for (i = 0; i < 5; i++)
++		PPK[i] = p1k[i];    /* first, copy P1K to PPK      */
++
++	PPK[5] = p1k[4] + iv16;     /* next,  add in IV16          */
+ 
+ 	/* Bijective non-linear mixing of the 96 bits of PPK[0..5]           */
+ 	PPK[0] +=    _S_(PPK[5] ^ TK16(0));   /* Mix key in each "round"     */
+@@ -977,7 +980,8 @@ static void aes128k128d(u8 *key, u8 *data, u8 *ciphertext)
+ 	u8 intermediateb[16];
+ 	u8 round_key[16];
+ 
+-	for (i = 0; i < 16; i++) round_key[i] = key[i];
++	for (i = 0; i < 16; i++)
++		round_key[i] = key[i];
+ 
+ 	for (round = 0; round < 11; round++) {
+ 		if (round == 0) {
+@@ -1061,7 +1065,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ {
+ 	int i;
+ 
+-	for (i = 0; i < 16; i++) mic_header2[i] = 0x00;
++	for (i = 0; i < 16; i++)
++		mic_header2[i] = 0x00;
+ 
+ 	mic_header2[0] = mpdu[16];    /* A3 */
+ 	mic_header2[1] = mpdu[17];
+@@ -1074,7 +1079,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ 	mic_header2[7] = 0x00; /* mpdu[23]; */
+ 
+ 	if (!qc_exists && a4_exists) {
+-		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
++		for (i = 0; i < 6; i++)
++			mic_header2[8+i] = mpdu[24+i];   /* A4 */
+ 	}
+ 
+ 	if (qc_exists && !a4_exists) {
+@@ -1083,7 +1089,8 @@ static void construct_mic_header2(u8 *mic_header2, u8 *mpdu, int a4_exists,
+ 	}
+ 
+ 	if (qc_exists && a4_exists) {
+-		for (i = 0; i < 6; i++) mic_header2[8+i] = mpdu[24+i];   /* A4 */
++		for (i = 0; i < 6; i++)
++			mic_header2[8+i] = mpdu[24+i];   /* A4 */
+ 
+ 		mic_header2[14] = mpdu[30] & 0x0f;
+ 		mic_header2[15] = mpdu[31] & 0x00;
+@@ -1101,7 +1108,9 @@ static void construct_ctr_preload(u8 *ctr_preload, int a4_exists, int qc_exists,
+ {
+ 	int i = 0;
+ 
+-	for (i = 0; i < 16; i++) ctr_preload[i] = 0x00;
++	for (i = 0; i < 16; i++)
++		ctr_preload[i] = 0x00;
++
+ 	i = 0;
+ 
+ 	ctr_preload[0] = 0x01;                                  /* flag */
+-- 
+2.1.4
 
