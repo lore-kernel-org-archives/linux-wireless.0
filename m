@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:42713 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753878AbbCBJ6z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 04:58:55 -0500
-From: Nicholas Mc Guire <hofrat@osadl.org>
+Received: from smtprelay0135.hostedemail.com ([216.40.44.135]:39440 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753253AbbC3Qmu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 12:42:50 -0400
+Message-ID: <1427733767.14276.13.camel@perches.com> (sfid-20150330_184254_776415_F3A9CC8C)
+Subject: Re: [PATCH 1/2] mac80211: add TX fastpath
+From: Joe Perches <joe@perches.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH 2/2] mesh_plink: fixup type of timeout to match usage
-Date: Mon,  2 Mar 2015 04:54:14 -0500
-Message-Id: <1425290054-26631-2-git-send-email-hofrat@osadl.org> (sfid-20150302_105920_255328_BB501938)
-In-Reply-To: <1425290054-26631-1-git-send-email-hofrat@osadl.org>
-References: <1425290054-26631-1-git-send-email-hofrat@osadl.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Mar 2015 09:42:47 -0700
+In-Reply-To: <1427728036.26117.36.camel@sipsolutions.net>
+References: <1427726167-17802-1-git-send-email-johannes@sipsolutions.net>
+	 <1427727818.14276.7.camel@perches.com>
+	 (sfid-20150330_170346_635401_65B14245) <1427728036.26117.36.camel@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-timeout was being passed as int but assigned from u32/u16 values and used 
-as unsigned type. This is really only for better readability.
+On Mon, 2015-03-30 at 17:07 +0200, Johannes Berg wrote:
+> On Mon, 2015-03-30 at 08:03 -0700, Joe Perches wrote:
+> 
+> > > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> > []
+> > > +void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
+> > > +{
+> > > +	struct ieee80211_fast_tx build = {}, *fast_tx, *old;
+> > 
+> > This "{}" memset should probably be moved farther down
+> > because there are many return paths that are possible
+> > before the memset is necessary.
+> 
+> True. However, this isn't actually the fast path I'm interested in; the
+> function ieee80211_xmit_fast() is the one that we execute per packet,
+> this one is invoked very infrequently. I prefer the more readable way
+> here.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+Perhaps using {} as an initializer amidst multiple declarations
+on the same line isn't particularly readable and the explicit
+memset is better.
 
-After review of the use locations of mesh_plink_timer_set() and declarations 
-in sta_info.h this should not be breaking any integer promotions.
-
-This patch applies on top of 
-"[PATCH 1/2] mesh_plink: use msecs_to_jiffies for proper time conversion"
-
-Patch was only compile tested with x86_64_defconfig + CONFIG_MAC80211_MESH=y
-
-Patch is against 4.0-rc1 (localversion-next is -next-20150302)
-
- net/mac80211/mesh_plink.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 4eefd5d..8465c05 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -621,7 +621,7 @@ static void mesh_plink_timer(unsigned long data)
- 				    sta->llid, sta->plid, reason);
- }
- 
--static inline void mesh_plink_timer_set(struct sta_info *sta, int timeout)
-+static inline void mesh_plink_timer_set(struct sta_info *sta, u32 timeout)
- {
- 	sta->plink_timer.expires = jiffies + msecs_to_jiffies(timeout);
- 	sta->plink_timer.data = (unsigned long) sta;
--- 
-1.7.10.4
 
