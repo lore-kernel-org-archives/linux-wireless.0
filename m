@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:54907 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751985AbbCTMlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 08:41:11 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@codeaurora.org, adrian@freebsd.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH 17/18] ath9k: use REG_RMW and rmw buffer in ath9k_hw_4k_set_board_values
-Date: Fri, 20 Mar 2015 13:38:57 +0100
-Message-Id: <1426855138-6121-18-git-send-email-linux@rempel-privat.de> (sfid-20150320_140418_578048_8A541D57)
-In-Reply-To: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
-References: <1426855138-6121-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:35853 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086AbbC3K5T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 06:57:19 -0400
+Received: by wibg7 with SMTP id g7so98066719wib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2015 03:57:18 -0700 (PDT)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] iw: handle NL80211_ATTR_EXT_FEATURES attribute
+Date: Mon, 30 Mar 2015 12:56:31 +0200
+Message-Id: <1427712991-26839-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150330_125736_656311_85301602)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-replace REG_WRITE to REG_RMW and place every thing in one
-RMW buffer.
+Print if VHT-IBSS is supported.
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/eeprom_4k.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ info.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 56621be..a631962 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1039,17 +1039,17 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+diff --git a/info.c b/info.c
+index 66887e3..91dff15 100644
+--- a/info.c
++++ b/info.c
+@@ -63,6 +63,18 @@ static char *dfs_state_name(enum nl80211_dfs_state state)
  	}
- 	REG_RMW_BUFFER_FLUSH(ah);
+ }
  
--
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	REG_RMW_FIELD(ah, AR_PHY_SETTLING, AR_PHY_SETTLING_SWITCH,
- 		      pModal->switchSettling);
- 	REG_RMW_FIELD(ah, AR_PHY_DESIRED_SZ, AR_PHY_DESIRED_SZ_ADC,
- 		      pModal->adcDesiredSize);
- 
--	REG_WRITE(ah, AR_PHY_RF_CTL4,
--		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
--		  SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
--		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
--		  SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON));
-+	REG_RMW(ah, AR_PHY_RF_CTL4,
-+		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAA_OFF) |
-+		SM(pModal->txEndToXpaOff, AR_PHY_RF_CTL4_TX_END_XPAB_OFF) |
-+		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAA_ON)  |
-+		SM(pModal->txFrameToXpaOn, AR_PHY_RF_CTL4_FRAME_XPAB_ON), 0);
- 
- 	REG_RMW_FIELD(ah, AR_PHY_RF_CTL3, AR_PHY_TX_END_TO_A2_RX_ON,
- 		      pModal->txEndToRxOn);
-@@ -1078,6 +1078,8 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
- 				      pModal->swSettleHt40);
- 	}
- 
-+	REG_RMW_BUFFER_FLUSH(ah);
++static int ext_feature_isset(const unsigned char *ext_features, int ext_features_len,
++			     enum nl80211_ext_feature_index ftidx)
++{
++	unsigned char ft_byte;
 +
- 	bb_desired_scale = (pModal->bb_scale_smrt_antenna &
- 			EEP_4K_BB_DESIRED_SCALE_MASK);
- 	if ((pBase->txGainType == 0) && (bb_desired_scale != 0)) {
++	if ((int) ftidx / 8 >= ext_features_len)
++		return 0;
++
++	ft_byte = ext_features[ftidx / 8];
++	return (ft_byte & BIT(ftidx % 8)) != 0;
++}
++
+ static int print_phy_handler(struct nl_msg *msg, void *arg)
+ {
+ 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
+@@ -601,6 +613,14 @@ broken_combination:
+ 			printf("\tDevice supports TDLS channel switching\n");
+ 	}
+ 
++	if (tb_msg[NL80211_ATTR_EXT_FEATURES]) {
++		struct nlattr *tb = tb_msg[NL80211_ATTR_EXT_FEATURES];
++
++		if (ext_feature_isset(nla_data(tb), nla_len(tb),
++				      NL80211_EXT_FEATURE_VHT_IBSS))
++			printf("\tDevice supports VHT-IBSS.\n");
++	}
++
+ 	if (tb_msg[NL80211_ATTR_TDLS_SUPPORT])
+ 		printf("\tDevice supports T-DLS.\n");
+ 
 -- 
 1.9.1
 
