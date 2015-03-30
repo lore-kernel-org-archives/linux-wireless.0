@@ -1,110 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49006 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880AbbCBLdI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 06:33:08 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH V4 2/2] ath10k: Fix interrupt storm
-Date: Mon, 2 Mar 2015 16:58:00 +0530
-Message-ID: <1425295680-2269-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20150302_123312_954990_C3DA1050)
-In-Reply-To: <1425295680-2269-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1425295680-2269-1-git-send-email-vthiagar@qti.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45030 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752939AbbC3LAY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 07:00:24 -0400
+Date: Mon, 30 Mar 2015 12:59:43 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Daniel Kim <dekim@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: [PATCH v2 5/6] brcm80211: drop pci_ids include
+Message-ID: <1427712964-16155-6-git-send-email-mst@redhat.com> (sfid-20150330_130034_055387_39E554B9)
+References: <1427712964-16155-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427712964-16155-1-git-send-email-mst@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Promiscuous mode is enabled when wlan interface is added to
-bridge. ath10k creates a monitor mode when promiscuous mode
-is enabled. When monitor vdev is running along with other
-vdev(s) there is a huge number of interrupts generated
-especially in noisy condition. Fix this by not enabling
-promiscuous(monitor) mode when already a vdev is running.
-As disabling promiscuous mode may have issues with 4-address
-bridging in STA mode, the change is done specific to non-sta/ibss
-mode types. This does not change the support of virtual interface of
-type monitor along with other vdevs of any type.
+This file does not use any pci ids, drop
+pci_ids.h include.
 
-This could fix management frame drop in fw due to unavailable
-buffers because in monitor mode device receives everything seen
-on the air. In noisy condition, disabling monitor mode helps assoc
-go through without any issue.
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |   34 +++++++++++++++++++++++++++++++--
- 1 file changed, 32 insertions(+), 2 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/sdio.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 3b5aaa3..c220c51 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -766,6 +766,26 @@ static int ath10k_monitor_stop(struct ath10k *ar)
- 	return 0;
- }
- 
-+static bool ath10k_mac_should_disable_promisc(struct ath10k *ar)
-+{
-+	struct ath10k_vif *arvif;
-+
-+	if (!(ar->filter_flags & FIF_PROMISC_IN_BSS))
-+		return true;
-+
-+	if (!ar->num_started_vdevs)
-+		return false;
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list)
-+		if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
-+			return false;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC,
-+		   "mac disabling promiscuous mode because vdev is started\n");
-+	ar->filter_flags &= ~FIF_PROMISC_IN_BSS;
-+	return true;
-+}
-+
- static int ath10k_monitor_recalc(struct ath10k *ar)
- {
- 	bool should_start;
-@@ -773,7 +793,7 @@ static int ath10k_monitor_recalc(struct ath10k *ar)
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	should_start = ar->monitor ||
--		       ar->filter_flags & FIF_PROMISC_IN_BSS ||
-+		       !ath10k_mac_should_disable_promisc(ar);
- 		       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_MAC,
-@@ -910,7 +930,7 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
- 	struct ath10k *ar = arvif->ar;
- 	struct cfg80211_chan_def *chandef = &ar->chandef;
- 	struct wmi_vdev_start_request_arg arg = {};
--	int ret = 0;
-+	int ret = 0, ret2;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -969,6 +989,16 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
- 	ar->num_started_vdevs++;
- 	ath10k_recalc_radar_detection(ar);
- 
-+	ret = ath10k_monitor_recalc(ar);
-+	if (ret) {
-+		ath10k_warn(ar, "mac failed to recalc monitor for vdev %i restart %d: %d\n",
-+			    arg.vdev_id, restart, ret);
-+		ret2 = ath10k_vdev_stop(arvif);
-+		if (ret2)
-+			ath10k_warn(ar, "mac failed to stop vdev %i restart %d: %d\n",
-+				    arg.vdev_id, restart, ret2);
-+	}
-+
- 	return ret;
- }
- 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+index faec35c..da479d4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio.c
+@@ -18,7 +18,6 @@
+ #include <linux/kernel.h>
+ #include <linux/kthread.h>
+ #include <linux/printk.h>
+-#include <linux/pci_ids.h>
+ #include <linux/netdevice.h>
+ #include <linux/interrupt.h>
+ #include <linux/sched.h>
 -- 
-1.7.9.5
+MST
 
