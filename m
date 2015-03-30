@@ -1,38 +1,730 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:62652 "EHLO mga03.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:7932 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753448AbbCJPDA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 11:03:00 -0400
-From: "Stepanov, Max" <Max.Stepanov@intel.com>
-To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] mac80211: Get IV len from key conf and not cipher scheme
-Date: Tue, 10 Mar 2015 15:02:33 +0000
-Message-ID: <3A934E7FDB083A4683727C7D377065954A2369B7@hasmsx109.ger.corp.intel.com> (sfid-20150310_160312_581186_2600CB63)
-References: <3A934E7FDB083A4683727C7D377065954A23682A@hasmsx109.ger.corp.intel.com>
- <5842EA9CC042B141995329508713AD672105A8F0@ILMAIL1.corp.local>
-In-Reply-To: <5842EA9CC042B141995329508713AD672105A8F0@ILMAIL1.corp.local>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1752858AbbC3OOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 10:14:31 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [RFC 3/5] cfg80211: add add_nan_func / rm_nan_func
+Date: Mon, 30 Mar 2015 17:14:18 +0300
+Message-Id: <1427724860-1992-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150330_161437_160338_EA31B557)
+In-Reply-To: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1427724860-1992-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->We use cipher scheme to support WAPI in both STA and AP mode.
->The patch is for the AP use case when sending a broadcast message that needs encryption. So we want to call 
->ieee80211_crypto_cs_encrypt even if sta is NULL.
+A NAN function can be either publish, subscribe or follow
+up. Make all the necessary verifications and just pass the
+request to the driver.
 
-So, on ieee80211_add_key() function call we fetch a cipher scheme and if it's present ieee80211_key_alloc() updates key->conf.iv_len setting it to cs->hdr_len. If sta is present cs is also stored in sta->cipher_scheme.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/cfg80211.h       |  71 ++++++++++
+ include/uapi/linux/nl80211.h | 138 ++++++++++++++++++++
+ net/wireless/core.c          |   3 +-
+ net/wireless/nl80211.c       | 300 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      |  22 ++++
+ net/wireless/trace.h         |  36 ++++++
+ 6 files changed, 569 insertions(+), 1 deletion(-)
 
-On Tx...
-If a cipher scheme was found and sta is present, the ieee80211_crypto_cs_encrypt() supposes to behave the same as before the change. That's looks fine.
-
-If sta is not present your patch changes the flow allowing to use key->conf.iv_len instead of cs->hdr_len associated with sta. In this case you don't need Rx handling without sta because bcast/mcast Rx is handled in STA mode only and in this case sta is present. That's looks fine too.
-
-If key is installed without cipher scheme and the cipher is not in explicitly implemented ciphers setting non zero key->conf.iv_len, the ieee80211_key_alloc() function will set key->conf.iv_len to 0.  Perhaps it makes sense to add key->conf.iv_len == 0 verification to ieee80211_crypto_cs_encrypt() before extending skb head. Does it make sense?
-
-Max
-
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 5e9a45d..64f45a9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2152,6 +2152,69 @@ struct cfg80211_qos_map {
+ };
+ 
+ /**
++ * struct cfg80211_nan_func_filter - a NAN function Rx / Tx filter
++ *
++ * @filter: the content of the filter
++ * @len: the length of the filter
++ */
++struct cfg80211_nan_func_filter {
++	const u8 *filter;
++	u8 len;
++};
++
++/**
++ * struct cfg80211_nan_func - a NAN function
++ *
++ * @type: &enum nl80211_nan_function_type
++ * @service_id: the service ID of the function
++ * @publish_type: &nl80211_nan_publish_type
++ * @discovery_range: if true, the range should be limited. Threshold is
++ *	implementation specific.
++ * @publish_bcast: if true, the solicited publish should transmit BCAST
++ * @subscribe_active: if true, the subscribe is active
++ * @followup_id: the instance ID for follow up
++ * @followup_reqid: the requestor instance ID for follow up
++ * @followup_dest: MAC address of the recipient of the follow up
++ * @ttl: time to live
++ * @serv_spec_info: Service Specific Info
++ * @serv_spec_info_len: Service Specific Info length
++ * @srf_include: if true, SRF is inclusive
++ * @srf_bf: Bloom Filter
++ * @srf_bf_len: Bloom Filter length
++ * @srf_bf_idx: Blook Filter index
++ * @srf_macs: SRF MAC addresses
++ * @srf_num_macs: number of MAC addresses in SRF
++ * @rx_filters: points to an array of &struct cfg80211_nan_func_filter
++ * @tx_filters: points to an array of &struct cfg80211_nan_func_filter
++ * @num_rx_filters: size of &rx_filters.
++ * @num_tx_filters: size of &tx_filters.
++ */
++struct cfg80211_nan_func {
++	enum nl80211_nan_function_type type;
++	u8 service_id[NL80211_NAN_FUNC_SERVICE_ID_LEN];
++	u8 publish_type;
++	bool discovery_range;
++	bool publish_bcast;
++	bool subscribe_active;
++	u8 followup_id;
++	u8 followup_reqid;
++	struct mac_address followup_dest;
++	u32 ttl;
++	const u8 *serv_spec_info;
++	u8 serv_spec_info_len;
++	bool srf_include;
++	const u8 *srf_bf;
++	u8 srf_bf_len;
++	u8 srf_bf_idx;
++	struct mac_address *srf_macs;
++	int srf_num_macs;
++	struct cfg80211_nan_func_filter *rx_filters;
++	struct cfg80211_nan_func_filter *tx_filters;
++	unsigned int num_tx_filters;
++	unsigned int num_rx_filters;
++};
++
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -2367,6 +2430,10 @@ struct cfg80211_qos_map {
+  *
+  * @start_nan: Start the NAN interface.
+  * @stop_nan: Stop the NAN interface.
++ * @add_nan_func: Add a nan function. Returns a stricly positive instance id
++ *	upon success. The data in cfg80211_nan_func must not be referenced
++ *	outside the scope of this call.
++ * @rm_nan_func: Remove a nan function
+  *
+  * @set_mac_acl: Sets MAC address control list in AP and P2P GO mode.
+  *	Parameters include ACL policy, an array of MAC address of stations
+@@ -2688,6 +2755,10 @@ struct cfg80211_ops {
+ 	int	(*start_nan)(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			     u8 master_pref);
+ 	void	(*stop_nan)(struct wiphy *wiphy, struct wireless_dev *wdev);
++	int	(*add_nan_func)(struct wiphy *wiphy, struct wireless_dev *wdev,
++				const struct cfg80211_nan_func *nan_func);
++	void	(*rm_nan_func)(struct wiphy *wiphy, struct wireless_dev *wdev,
++				   u8 instance_id);
+ };
+ 
+ /*
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b9e1758..b3bf9aa 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -806,6 +806,12 @@
+  *	NAN functions can be added.
+  * @NL80211_CMD_STOP_NAN: Stop the NAN operation, identified by
+  *	its %NL80211_ATTR_WDEV identifier.
++ * @NL80211_CMD_ADD_NAN_FUNCTION: add a NAN function. The function a
++ *	%NL80211_ATTR_NAN_FUNC attribute. When called, this operation returns
++ *	the strictly positive instance id (%NL80211_ATTR_NAN_FUNC_INST_ID) of
++ *	the function upon success.
++ * @NL80211_CMD_RM_NAN_FUNCTION: remove a NAN function based on its instance
++ *	id.
+  *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+@@ -995,6 +1001,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_START_NAN,
+ 	NL80211_CMD_STOP_NAN,
++	NL80211_CMD_ADD_NAN_FUNCTION,
++	NL80211_CMD_RM_NAN_FUNCTION,
+ 
+ 	/* add new commands above here */
+ 
+@@ -1756,6 +1764,11 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_NAN_MASTER_PREF: the master preference to be be used by
+  *	&NL80211_CMD_START_NAN. Its type is u8 and it can't be 0, 1 or 255.
++ * @NL80211_ATTR_NAN_FUNC: a function that can be added to NAN. See
++ *	&enum nl80211_nan_func_attributes for description of this nested
++ *	attribute.
++ * @NL80211_ATTR_NAN_FUNC_INST_ID: the instance id of a %NL80211_ATTR_NAN_FUNC.
++ *	Its type is u8 and it cannot be 0.
+  *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+@@ -2125,6 +2138,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_SCHED_SCAN_DELAY,
+ 
+ 	NL80211_ATTR_NAN_MASTER_PREF,
++	NL80211_ATTR_NAN_FUNC,
++	NL80211_ATTR_NAN_FUNC_INST_ID,
+ 	
+ 	NL80211_ATTR_REG_INDOOR,
+ 
+@@ -4586,4 +4601,127 @@ enum nl80211_tdls_peer_capability {
+ 	NL80211_TDLS_PEER_WMM = 1<<2,
+ };
+ 
++/**
++ * enum nl80211_nan_function_type - NAN function type
++ *
++ * Defines the function type of a NAN function
++ *
++ * @NL80211_NAN_FUNC_PUBLISH: function is publish
++ * @NL80211_NAN_FUNC_SUBSCRIBE: function is subscribe
++ * @NL80211_NAN_FUNC_FOLLOW_UP: function is follow-up
++ * @NL80211_NAN_FUNC_MAX_TYPE: must be last
++ */
++enum nl80211_nan_function_type {
++	NL80211_NAN_FUNC_PUBLISH,
++	NL80211_NAN_FUNC_SUBSCRIBE,
++	NL80211_NAN_FUNC_FOLLOW_UP,
++
++	NL80211_NAN_FUNC_MAX_TYPE,
++};
++
++/**
++ * enum nl80211_nan_publish_type - NAN publish tx type
++ *
++ * Defines how to send publish Service Discovery Frames
++ *
++ * @NL80211_NAN_SOLICITED_PUBLISH: publish function is solicited
++ * @NL80211_NAN_UNSOLICITED_PUBLISH: publish function is unsolicited
++ */
++enum nl80211_nan_publish_type {
++	NL80211_NAN_SOLICITED_PUBLISH = 1<<0,
++	NL80211_NAN_UNSOLICITED_PUBLISH = 1<<1,
++};
++
++#define NL80211_NAN_FUNC_SERVICE_ID_LEN 6
++#define NL80211_NAN_FUNC_SERVICE_SPEC_INFO_MAX_LEN 0xff
++#define NL80211_NAN_FUNC_SRF_MAX_LEN 0xff
++
++/**
++ * enum nl80211_nan_func_attributes - NAN function attributes
++ * @__NL80211_NAN_FUNC_INVALID: invalid
++ * @NL80211_NAN_FUNC_TYPE: &enum nl80211_nan_function_type (u8).
++ * @NL80211_NAN_FUNC_SERVICE_ID: 6 bytes of the service ID hash as
++ *	specified in NAN spec. This is a binary attribute.
++ * @NL80211_NAN_FUNC_PUBLISH_TYPE: relevant if the function's type is
++ *	publish. Defines the transmission type for the publish Service Discovery
++ *	Frame, see &enum nl80211_nan_publish_type. Its type is u8.
++ * @NL80211_NAN_FUNC_PUBLISH_BCAST: relevant if the function's type is publish.
++ *	Should the publish Service Discovery Frame be sent in to NAN Broadcast
++ *	address. This is a flag.
++ * @NL80211_NAN_FUNC_SUBSCRIBE_ACTIVE: relevant if the function's type is
++ *	subscribe. Is the subscribe active. This is a flag.
++ * @NL80211_NAN_FUNC_FOLLOW_UP_ID: relevant if the function's type is follow up.
++ *	The instance ID for the follow up Service Discovery Frame. This is u8.
++ * @NL80211_NAN_FUNC_FOLLOW_UP_REQ_ID: relevant if the function's type
++ *	is follow up. This is a u8.
++ *	The requestor instance ID for the follow up Service Discovery Frame.
++ * @NL80211_NAN_FUNC_FOLLOW_UP_DEST: the MAC address of the recipient of the
++ *	follow up Service Discovery Frame. This is a binary attribute.
++ * @NL80211_NAN_FUNC_DISCOVERY_RANGE: is this function limited for devices in a
++ *	certain range. This is a flag.
++ * @NL80211_NAN_FUNC_TTL: number of DWs this function should stay active. 0 is
++ *	equivalent to no TTL at all. This is a u32.
++ * @NL80211_NAN_FUNC_SERVICE_INFO: array of bytes describing the service
++ *	specific info. This is a binary attribute.
++ * @NL80211_NAN_FUNC_SRF: Service Receive Filter. This is a nested attribute.
++ *	See &enum nl80211_nan_srf_attributes.
++ * @NL80211_NAN_FUNC_RX_MATCH_FILTER: Receive Matching filter. This is a nested
++ *	attribute. It is a list of binary values.
++ * @NL80211_NAN_FUNC_TX_MATCH_FILTER: Transmit Matching filter. This is a
++ *	nested attribute. It is a list of binary values.
++ * @NUM_NL80211_NAN_FUNC_ATTR: internal
++ * @NL80211_NAN_FUNC_ATTR_MAX: highest NAN function attribute
++ */
++enum nl80211_nan_func_attributes {
++	__NL80211_NAN_FUNC_INVALID,
++	NL80211_NAN_FUNC_TYPE,
++	NL80211_NAN_FUNC_SERVICE_ID,
++	NL80211_NAN_FUNC_PUBLISH_TYPE,
++	NL80211_NAN_FUNC_PUBLISH_BCAST,
++	NL80211_NAN_FUNC_SUBSCRIBE_ACTIVE,
++	NL80211_NAN_FUNC_FOLLOW_UP_ID,
++	NL80211_NAN_FUNC_FOLLOW_UP_REQ_ID,
++	NL80211_NAN_FUNC_FOLLOW_UP_DEST,
++	NL80211_NAN_FUNC_DISCOVERY_RANGE,
++	NL80211_NAN_FUNC_TTL,
++	NL80211_NAN_FUNC_SERVICE_INFO,
++	NL80211_NAN_FUNC_SRF,
++	NL80211_NAN_FUNC_RX_MATCH_FILTER,
++	NL80211_NAN_FUNC_TX_MATCH_FILTER,
++
++	/* keep last */
++	NUM_NL80211_NAN_FUNC_ATTR,
++	NL80211_NAN_FUNC_ATTR_MAX = NUM_NL80211_NAN_FUNC_ATTR - 1
++};
++
++/**
++ * enum nl80211_nan_srf_attributes - NAN Service Response filter attributes
++ * @__NL80211_NAN_SRF_INVALID: invalid
++ * @NL80211_NAN_SRF_INCLUDE: true if the include bit of the SRF set.
++ *	This is a flag.
++ * @NL80211_NAN_SRF_TYPE_BF: true if the SRF is a Bloom Filter SRF. If false
++ *	the SRF will be &NL80211_ATTR_MAC_ADDRS. This is a flag.
++ * @NL80211_NAN_SRF_BF: Bloom Filter. Relevant and mandatory if
++ *	&NL80211_NAN_SRF_TYPE_BF is true. This attribute is binary.
++ * @NL80211_NAN_SRF_BF_IDX: index of the Bloom Filter. Relevant and
++ *	mandatory if &NL80211_NAN_SRF_TYPE_BF is true. This is a u8.
++ * @NL80211_NAN_SRF_MAC_ADDRS: list of MAC addresses for the SRF. Relevant and
++ *	mandatory if &NL80211_NAN_SRF_TYPE_BF is false. This is a nested
++ *	attribute. Each nested attribute is a MAC address.
++ * @NUM_NL80211_NAN_SRF_ATTR: internal
++ * @NL80211_NAN_SRF_ATTR_MAX: highest NAN SRF attribute
++ */
++enum nl80211_nan_srf_attributes {
++	__NL80211_NAN_SRF_INVALID,
++	NL80211_NAN_SRF_INCLUDE,
++	NL80211_NAN_SRF_TYPE_BF,
++	NL80211_NAN_SRF_BF,
++	NL80211_NAN_SRF_BF_IDX,
++	NL80211_NAN_SRF_MAC_ADDRS,
++
++	/* keep last */
++	NUM_NL80211_NAN_SRF_ATTR,
++	NL80211_NAN_SRF_ATTR_MAX = NUM_NL80211_NAN_SRF_ATTR - 1,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 1a1fae0..e9e70ec 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -600,7 +600,8 @@ int wiphy_register(struct wiphy *wiphy)
+ 		return -EINVAL;
+ 
+ 	if (WARN_ON((wiphy->interface_modes & BIT(NL80211_IFTYPE_NAN)) &&
+-		    (!rdev->ops->start_nan || !rdev->ops->stop_nan)))
++		    (!rdev->ops->start_nan || !rdev->ops->stop_nan ||
++		     !rdev->ops->add_nan_func || !rdev->ops->rm_nan_func)))
+ 		return -EINVAL;
+ 
+ 	/*
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6992694..0cfe17d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -408,6 +408,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_NAN_MASTER_PREF] = { .type = NLA_U8 },
++	[NL80211_ATTR_NAN_FUNC] = { .type = NLA_NESTED },
++	[NL80211_ATTR_NAN_FUNC_INST_ID] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -486,6 +488,38 @@ nl80211_match_policy[NL80211_SCHED_SCAN_MATCH_ATTR_MAX + 1] = {
+ 	[NL80211_SCHED_SCAN_MATCH_ATTR_RSSI] = { .type = NLA_U32 },
+ };
+ 
++/* policy for NAN function attributes */
++static const struct nla_policy
++nl80211_nan_func_policy[NL80211_NAN_FUNC_ATTR_MAX + 1] = {
++	[NL80211_NAN_FUNC_TYPE] = { .type = NLA_U8 },
++	[NL80211_NAN_FUNC_SERVICE_ID] = { .type = NLA_BINARY,
++				    .len = NL80211_NAN_FUNC_SERVICE_ID_LEN },
++	[NL80211_NAN_FUNC_PUBLISH_TYPE] = { .type = NLA_U8 },
++	[NL80211_NAN_FUNC_PUBLISH_BCAST] = { .type = NLA_FLAG },
++	[NL80211_NAN_FUNC_SUBSCRIBE_ACTIVE] = { .type = NLA_FLAG },
++	[NL80211_NAN_FUNC_FOLLOW_UP_ID] = { .type = NLA_U8 },
++	[NL80211_NAN_FUNC_FOLLOW_UP_REQ_ID] = { .type = NLA_U8 },
++	[NL80211_NAN_FUNC_FOLLOW_UP_DEST] = { .len = ETH_ALEN },
++	[NL80211_NAN_FUNC_DISCOVERY_RANGE] = { .type = NLA_FLAG },
++	[NL80211_NAN_FUNC_TTL] = { .type = NLA_U32 },
++	[NL80211_NAN_FUNC_SERVICE_INFO] = { .type = NLA_BINARY,
++					    .len = NL80211_NAN_FUNC_SERVICE_SPEC_INFO_MAX_LEN },
++	[NL80211_NAN_FUNC_SRF] = { .type = NLA_NESTED },
++	[NL80211_NAN_FUNC_RX_MATCH_FILTER] = { .type = NLA_NESTED },
++	[NL80211_NAN_FUNC_TX_MATCH_FILTER] = { .type = NLA_NESTED },
++};
++
++/* policy for Service Response Filter attributes */
++static const struct nla_policy
++nl80211_nan_srf_policy[NL80211_NAN_SRF_ATTR_MAX + 1] = {
++	[NL80211_NAN_SRF_INCLUDE] = { .type = NLA_FLAG },
++	[NL80211_NAN_SRF_TYPE_BF] = { .type = NLA_FLAG },
++	[NL80211_NAN_SRF_BF] = { .type = NLA_BINARY,
++				 .len =  NL80211_NAN_FUNC_SRF_MAX_LEN },
++	[NL80211_NAN_SRF_BF_IDX] = { .type = NLA_U8 },
++	[NL80211_NAN_SRF_MAC_ADDRS] = { .type = NLA_NESTED },
++};
++
+ static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
+ 				     struct netlink_callback *cb,
+ 				     struct cfg80211_registered_device **rdev,
+@@ -9841,6 +9875,256 @@ static int nl80211_stop_nan(struct sk_buff *skb, struct genl_info *info)
+ 	return 0;
+ }
+ 
++static int validate_nan_filter(struct nlattr *filter_attr)
++{
++	struct nlattr *attr;
++	int len = 0, n_entries = 0, rem;
++
++	nla_for_each_nested(attr, filter_attr, rem) {
++		len += nla_len(attr);
++		n_entries++;
++	}
++
++	if (len >= U8_MAX)
++		return -EINVAL;
++
++	return n_entries;
++}
++
++static int handle_nan_filter(struct nlattr *attr_filter,
++			     struct cfg80211_nan_func *func,
++			     bool tx)
++{
++	struct nlattr *attr;
++	int n_entries, rem, i;
++	struct cfg80211_nan_func_filter *filter;
++
++	n_entries = validate_nan_filter(attr_filter);
++	if (n_entries < 0)
++		return -EINVAL;
++
++	BUILD_BUG_ON(sizeof(*func->rx_filters) != sizeof(*func->tx_filters));
++
++	filter = kcalloc(n_entries, sizeof(*func->rx_filters), GFP_KERNEL);
++	if (!filter)
++		return -ENOMEM;
++
++	i = 0;
++	nla_for_each_nested(attr, attr_filter, rem) {
++		filter[i].filter = nla_data(attr);
++		filter[i].len = nla_len(attr);
++		i++;
++	}
++	if (tx) {
++		func->num_tx_filters = n_entries;
++		func->tx_filters = filter;
++	} else {
++		func->num_rx_filters = n_entries;
++		func->rx_filters = filter;
++	}
++
++	return 0;
++}
++
++static int nl80211_nan_add_func(struct sk_buff *skb,
++				struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++	struct nlattr *tb[NUM_NL80211_NAN_FUNC_ATTR];
++	struct cfg80211_nan_func func = {};
++	struct sk_buff *msg = NULL;
++	void *hdr = NULL;
++	int err, inst_id = 0;
++
++	if (wdev->iftype != NL80211_IFTYPE_NAN)
++		return -EOPNOTSUPP;
++
++	if (!info->attrs[NL80211_ATTR_NAN_FUNC])
++		return -EINVAL;
++
++	err = nla_parse(tb, NL80211_NAN_FUNC_ATTR_MAX,
++			nla_data(info->attrs[NL80211_ATTR_NAN_FUNC]),
++			nla_len(info->attrs[NL80211_ATTR_NAN_FUNC]),
++			nl80211_nan_func_policy);
++
++	if (err)
++		return err;
++
++	if (!tb[NL80211_NAN_FUNC_TYPE] ||
++	    nla_get_u8(tb[NL80211_NAN_FUNC_TYPE]) >= NL80211_NAN_FUNC_MAX_TYPE)
++		return -EINVAL;
++
++	func.type = nla_get_u8(tb[NL80211_NAN_FUNC_TYPE]);
++
++	if (!tb[NL80211_NAN_FUNC_SERVICE_ID])
++		return -EINVAL;
++
++	memcpy(func.service_id, nla_data(tb[NL80211_NAN_FUNC_SERVICE_ID]),
++	       sizeof(func.service_id));
++
++	func.discovery_range =
++		nla_get_flag(tb[NL80211_NAN_FUNC_DISCOVERY_RANGE]);
++
++	if (tb[NL80211_NAN_FUNC_SERVICE_INFO]) {
++		func.serv_spec_info_len =
++			nla_len(tb[NL80211_NAN_FUNC_SERVICE_INFO]);
++		func.serv_spec_info =
++			nla_data(tb[NL80211_NAN_FUNC_SERVICE_INFO]);
++	}
++
++	if (tb[NL80211_NAN_FUNC_TTL])
++		func.ttl = nla_get_u32(tb[NL80211_NAN_FUNC_TTL]);
++
++	switch (func.type) {
++	case NL80211_NAN_FUNC_PUBLISH:
++		if (!tb[NL80211_NAN_FUNC_PUBLISH_TYPE])
++			return -EINVAL;
++
++		func.publish_type = nla_get_u8(tb[NL80211_NAN_FUNC_PUBLISH_TYPE]);
++		func.publish_bcast =
++			nla_get_flag(tb[NL80211_NAN_FUNC_PUBLISH_BCAST]);
++
++		if ((!(func.publish_type & NL80211_NAN_SOLICITED_PUBLISH)) &&
++		    func.publish_bcast)
++			return -EINVAL;
++		break;
++	case NL80211_NAN_FUNC_SUBSCRIBE:
++		func.subscribe_active =
++			nla_get_flag(tb[NL80211_NAN_FUNC_SUBSCRIBE_ACTIVE]);
++		break;
++	case NL80211_NAN_FUNC_FOLLOW_UP:
++		if (!tb[NL80211_NAN_FUNC_FOLLOW_UP_ID] ||
++		    !tb[NL80211_NAN_FUNC_FOLLOW_UP_REQ_ID])
++			return -EINVAL;
++
++		func.followup_id =
++			nla_get_u8(tb[NL80211_NAN_FUNC_FOLLOW_UP_ID]);
++		func.followup_reqid =
++			nla_get_u8(tb[NL80211_NAN_FUNC_FOLLOW_UP_REQ_ID]);
++		memcpy(func.followup_dest.addr,
++		       nla_data(tb[NL80211_NAN_FUNC_FOLLOW_UP_DEST]),
++		       sizeof(func.followup_dest.addr));
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	if (tb[NL80211_NAN_FUNC_SRF]) {
++		struct nlattr *srf_tb[NUM_NL80211_NAN_SRF_ATTR];
++
++		err = nla_parse(srf_tb, NL80211_NAN_SRF_ATTR_MAX,
++				nla_data(tb[NL80211_NAN_FUNC_SRF]),
++				nla_len(tb[NL80211_NAN_FUNC_SRF]), NULL);
++		if (err)
++			return err;
++
++		func.srf_include =
++			nla_get_flag(srf_tb[NL80211_NAN_SRF_INCLUDE]);
++
++		if (nla_get_flag(srf_tb[NL80211_NAN_SRF_TYPE_BF])) {
++			if (!srf_tb[NL80211_NAN_SRF_BF] ||
++			    !srf_tb[NL80211_NAN_SRF_BF_IDX])
++				return -EINVAL;
++
++			func.srf_bf_len =
++				nla_len(srf_tb[NL80211_NAN_SRF_TYPE_BF]);
++			func.srf_bf =
++				nla_data(srf_tb[NL80211_NAN_SRF_TYPE_BF]);
++			func.srf_bf_idx =
++				nla_get_u8(srf_tb[NL80211_NAN_SRF_BF_IDX]);
++		} else {
++			struct nlattr *attr, *mac_attr =
++				srf_tb[NL80211_NAN_SRF_MAC_ADDRS];
++			int n_entries, rem, i = 0;
++
++			if (!mac_attr)
++				return -EINVAL;
++
++			n_entries = validate_acl_mac_addrs(mac_attr);
++			if (n_entries <= 0)
++				return -EINVAL;
++
++			func.srf_num_macs = n_entries;
++			func.srf_macs =
++				kzalloc(sizeof(*func.srf_macs) * n_entries,
++					GFP_KERNEL);
++			if (!func.srf_macs)
++				return -ENOMEM;
++
++			nla_for_each_nested(attr, mac_attr, rem)
++				memcpy(func.srf_macs[i++].addr, nla_data(attr),
++				       sizeof(*func.srf_macs));
++		}
++	}
++
++	err = handle_nan_filter(tb[NL80211_NAN_FUNC_TX_MATCH_FILTER],
++				&func, true);
++	if (err)
++		goto out;
++
++	err = handle_nan_filter(tb[NL80211_NAN_FUNC_RX_MATCH_FILTER],
++				&func, false);
++	if (err)
++		goto out;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg) {
++		err = -ENOMEM;
++		goto out;
++	}
++
++	hdr = nl80211hdr_put(msg, genl_info_snd_portid(info), info->snd_seq, 0,
++			     NL80211_CMD_ADD_NAN_FUNCTION);
++	/* This can't really happen - we just allocated 4KB */
++	if (WARN_ON(!hdr)) {
++		err = -ENOBUFS;
++		goto out;
++	}
++
++	inst_id = rdev_add_nan_func(rdev, wdev, &func);
++out:
++	kfree(func.srf_macs);
++	kfree(func.rx_filters);
++	kfree(func.tx_filters);
++
++	if (inst_id < 0) {
++		nlmsg_free(msg);
++		return inst_id;
++	}
++
++	/* propagate the instance id to userspace  */
++	if (WARN_ON(nla_put_u8(msg, NL80211_ATTR_NAN_FUNC_INST_ID, inst_id)))
++		err = -ENOBUFS;
++
++	if (hdr && msg) {
++		genlmsg_end(msg, hdr);
++		err = genlmsg_reply(msg, info);
++	}
++
++	return err;
++}
++
++static int nl80211_nan_rm_func(struct sk_buff *skb,
++			       struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++	u8 instance_id;
++
++	if (wdev->iftype != NL80211_IFTYPE_NAN)
++		return -EOPNOTSUPP;
++
++	if (!info->attrs[NL80211_ATTR_NAN_FUNC_INST_ID])
++		return -EINVAL;
++
++	instance_id = nla_get_u8(info->attrs[NL80211_ATTR_NAN_FUNC_INST_ID]);
++
++	rdev_rm_nan_func(rdev, wdev, instance_id);
++
++	return 0;
++}
++
+ static int nl80211_get_protocol_features(struct sk_buff *skb,
+ 					 struct genl_info *info)
+ {
+@@ -11005,6 +11289,22 @@ static __genl_const struct genl_ops nl80211_ops[] = {
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_ADD_NAN_FUNCTION,
++		.doit = nl80211_nan_add_func,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
++		.cmd = NL80211_CMD_RM_NAN_FUNCTION,
++		.doit = nl80211_nan_rm_func,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_SET_MCAST_RATE,
+ 		.doit = nl80211_set_mcast_rate,
+ 		.policy = nl80211_policy,
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 593fbb7..9a42c92 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -895,6 +895,28 @@ static inline void rdev_stop_nan(struct cfg80211_registered_device *rdev,
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
+ 
++static inline int
++rdev_add_nan_func(struct cfg80211_registered_device *rdev,
++		  struct wireless_dev *wdev,
++		  const struct cfg80211_nan_func *nan_func)
++{
++	int ret;
++
++	trace_rdev_add_nan_func(&rdev->wiphy, wdev, nan_func);
++	ret = rdev->ops->add_nan_func(&rdev->wiphy, wdev, nan_func);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
++static inline void rdev_rm_nan_func(struct cfg80211_registered_device *rdev,
++				    struct wireless_dev *wdev,
++				    u8 instance_id)
++{
++	trace_rdev_rm_nan_func(&rdev->wiphy, wdev, instance_id);
++	rdev->ops->rm_nan_func(&rdev->wiphy, wdev, instance_id);
++	trace_rdev_return_void(&rdev->wiphy);
++}
++
+ static inline int rdev_set_mac_acl(struct cfg80211_registered_device *rdev,
+ 				   struct net_device *dev,
+ 				   struct cfg80211_acl_data *params)
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 3718563..a0de576 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1877,6 +1877,42 @@ DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_nan,
+ 	TP_ARGS(wiphy, wdev)
+ );
+ 
++TRACE_EVENT(rdev_add_nan_func,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
++		 const struct cfg80211_nan_func *func),
++	TP_ARGS(wiphy, wdev, func),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++		__field(u8, func_type)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++		__entry->func_type = func->type;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", type=%u",
++		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->func_type)
++);
++
++TRACE_EVENT(rdev_rm_nan_func,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
++		 u8 instance_id),
++	TP_ARGS(wiphy, wdev, instance_id),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++		__field(u8, instance_id)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++		__entry->instance_id = instance_id;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT ", instance id=%u",
++		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->instance_id)
++);
++
+ TRACE_EVENT(rdev_set_mac_acl,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 struct cfg80211_acl_data *params),
+-- 
+1.9.1
 
