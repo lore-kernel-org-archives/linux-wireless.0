@@ -1,31 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:39135 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812AbbCKIWJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 04:22:09 -0400
-Received: by wiwl15 with SMTP id l15so36732053wiw.4
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Mar 2015 01:22:07 -0700 (PDT)
-From: Sven Eckelmann <sven@open-mesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: [RFC v3] mac80211: lock rate control
-Date: Wed, 11 Mar 2015 09:22:03 +0100
-Message-ID: <2019025.tnF4AxBhcq@bentobox> (sfid-20150311_092214_608623_4A10B365)
-In-Reply-To: <1426061656-17546-1-git-send-email-sven@narfation.org>
-References: <1426061656-17546-1-git-send-email-sven@narfation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:45543 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752838AbbC3ITa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:19:30 -0400
+Message-ID: <1427703568.26117.4.camel@sipsolutions.net> (sfid-20150330_101934_365926_3EA491FC)
+Subject: Re: [PATCH] mac80211: stop scan before connection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>
+Date: Mon, 30 Mar 2015 10:19:28 +0200
+In-Reply-To: <1426615118-17516-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1426615118-17516-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 11 March 2015 09:14:15 Sven Eckelmann wrote:
-> This is a modified version of RFCv2 with an addition from
-> mid.gmane.org/8006741.C7YlhOg3U7@bentobox
+On Tue, 2015-03-17 at 19:58 +0200, Emmanuel Grumbach wrote:
+> From: David Spinadel <david.spinadel@intel.com>
+> 
+> Stop scan before authentication or association to make sure
+> that nothing interferes with connection flow.
+> 
+> Currently mac80211 defers RX auth and assoc packets (among other ones)
+> until after the scan is complete, so auth during scan is likely to fail
+> if scan took too much time.
 
-This was near but still a miss. The correct link is 
-http://mid.gmane.org/2736671.Y6Lt54SxyK@bentobox
+Applied.
 
-Kind regards,
-	Sven
+johannes
+
