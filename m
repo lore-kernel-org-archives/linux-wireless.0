@@ -1,166 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:33614 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752375AbbCTN46 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 09:56:58 -0400
-Received: by ladw1 with SMTP id w1so87619620lad.0
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Mar 2015 06:56:57 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 8/9] ath10k: deduplicate bitrate to rate idx conversion
-Date: Fri, 20 Mar 2015 13:54:14 +0000
-Message-Id: <1426859655-11797-9-git-send-email-michal.kazior@tieto.com> (sfid-20150320_145708_839265_57D96760)
-In-Reply-To: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
-References: <1426859655-11797-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45619 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751482AbbC3ImP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:42:15 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80111: aes_gcm: clean up ieee80211_aes_gcm_key_setup_encrypt()
+Date: Mon, 30 Mar 2015 10:42:12 +0200
+Message-Id: <1427704932-10179-1-git-send-email-johannes@sipsolutions.net> (sfid-20150330_104218_302895_5501B405)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's possible to derive rate index from bitrate
-without any additional mapping structures/logic.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This should have little to none impact on
-performance since this is only done for management
-frames and the previous approach wasn't
-particularly optimized.
+This code is written using an anti-pattern called "success handling"
+which makes it hard to read, especially if you are used to normal kernel
+style.  It should instead be written as a list of directives in a row
+with branches for error handling.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+(Basically copied from Dan's previous patch for CCM)
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 12 +++++++
- drivers/net/wireless/ath/ath10k/mac.h |  3 ++
- drivers/net/wireless/ath/ath10k/wmi.c | 62 +++--------------------------------
- 3 files changed, 19 insertions(+), 58 deletions(-)
+ net/mac80211/aes_gcm.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e1902e3..c39a300 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -103,6 +103,18 @@ u8 ath10k_mac_hw_rate_to_idx(const struct ieee80211_supported_band *sband,
- 	return 0;
+diff --git a/net/mac80211/aes_gcm.c b/net/mac80211/aes_gcm.c
+index c2bf6698d738..fd278bbe1b0d 100644
+--- a/net/mac80211/aes_gcm.c
++++ b/net/mac80211/aes_gcm.c
+@@ -80,11 +80,15 @@ struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
+ 		return tfm;
+ 
+ 	err = crypto_aead_setkey(tfm, key, key_len);
+-	if (!err)
+-		err = crypto_aead_setauthsize(tfm, IEEE80211_GCMP_MIC_LEN);
+-	if (!err)
+-		return tfm;
++	if (err)
++		goto free_aead;
++	err = crypto_aead_setauthsize(tfm, IEEE80211_GCMP_MIC_LEN);
++	if (err)
++		goto free_aead;
++
++	return tfm;
+ 
++free_aead:
+ 	crypto_free_aead(tfm);
+ 	return ERR_PTR(err);
  }
- 
-+u8 ath10k_mac_bitrate_to_idx(const struct ieee80211_supported_band *sband,
-+			     u32 bitrate)
-+{
-+	int i;
-+
-+	for (i = 0; i < sband->n_bitrates; i++)
-+		if (sband->bitrates[i].bitrate == bitrate)
-+			return i;
-+
-+	return 0;
-+}
-+
- /**********/
- /* Crypto */
- /**********/
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-index e615490..e7df017 100644
---- a/drivers/net/wireless/ath/ath10k/mac.h
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -47,8 +47,11 @@ bool ath10k_mac_is_peer_wep_key_set(struct ath10k *ar, const u8 *addr,
- 				    u8 keyidx);
- void ath10k_mac_handle_beacon(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_mac_handle_beacon_miss(struct ath10k *ar, u32 vdev_id);
-+
- u8 ath10k_mac_hw_rate_to_idx(const struct ieee80211_supported_band *sband,
- 			     u8 hw_rate);
-+u8 ath10k_mac_bitrate_to_idx(const struct ieee80211_supported_band *sband,
-+			     u32 bitrate);
- 
- static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 54430a1..bd7a119 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1352,63 +1352,6 @@ static inline enum ieee80211_band phy_mode_to_band(u32 phy_mode)
- 	return band;
- }
- 
--static inline u8 get_rate_idx(u32 rate, enum ieee80211_band band)
--{
--	u8 rate_idx = 0;
--
--	/* rate in Kbps */
--	switch (rate) {
--	case 1000:
--		rate_idx = 0;
--		break;
--	case 2000:
--		rate_idx = 1;
--		break;
--	case 5500:
--		rate_idx = 2;
--		break;
--	case 11000:
--		rate_idx = 3;
--		break;
--	case 6000:
--		rate_idx = 4;
--		break;
--	case 9000:
--		rate_idx = 5;
--		break;
--	case 12000:
--		rate_idx = 6;
--		break;
--	case 18000:
--		rate_idx = 7;
--		break;
--	case 24000:
--		rate_idx = 8;
--		break;
--	case 36000:
--		rate_idx = 9;
--		break;
--	case 48000:
--		rate_idx = 10;
--		break;
--	case 54000:
--		rate_idx = 11;
--		break;
--	default:
--		break;
--	}
--
--	if (band == IEEE80211_BAND_5GHZ) {
--		if (rate_idx > 3)
--			/* Omit CCK rates */
--			rate_idx -= 4;
--		else
--			rate_idx = 0;
--	}
--
--	return rate_idx;
--}
--
- /* If keys are configured, HW decrypts all frames
-  * with protected bit set. Mark such frames as decrypted.
-  */
-@@ -1490,6 +1433,7 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	struct wmi_mgmt_rx_ev_arg arg = {};
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	struct ieee80211_hdr *hdr;
-+	struct ieee80211_supported_band *sband;
- 	u32 rx_status;
- 	u32 channel;
- 	u32 phy_mode;
-@@ -1560,9 +1504,11 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	if (phy_mode == MODE_11B && status->band == IEEE80211_BAND_5GHZ)
- 		ath10k_dbg(ar, ATH10K_DBG_MGMT, "wmi mgmt rx 11b (CCK) on 5GHz\n");
- 
-+	sband = &ar->mac.sbands[status->band];
-+
- 	status->freq = ieee80211_channel_to_frequency(channel, status->band);
- 	status->signal = snr + ATH10K_DEFAULT_NOISE_FLOOR;
--	status->rate_idx = get_rate_idx(rate, status->band);
-+	status->rate_idx = ath10k_mac_bitrate_to_idx(sband, rate / 100);
- 
- 	hdr = (struct ieee80211_hdr *)skb->data;
- 	fc = le16_to_cpu(hdr->frame_control);
 -- 
 2.1.4
 
