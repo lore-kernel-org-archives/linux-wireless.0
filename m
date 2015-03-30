@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43815 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750929AbbCTS7T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Mar 2015 14:59:19 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: add vlan to station add/change tracing
-Date: Fri, 20 Mar 2015 19:59:14 +0100
-Message-Id: <1426877954-17929-1-git-send-email-johannes@sipsolutions.net> (sfid-20150320_195923_775380_F2372B0B)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44557 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752596AbbC3L6L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 07:58:11 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix HTT op backwards compatibility for QCA6174
+References: <20150330111428.22198.36611.stgit@potku.adurom.net>
+Date: Mon, 30 Mar 2015 14:57:59 +0300
+In-Reply-To: <20150330111428.22198.36611.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Mon, 30 Mar 2015 14:14:28 +0300")
+Message-ID: <87d23q66k8.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_135814_679233_B9BA3EF1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-This helps debug issues with VLAN modifications that are otherwise
-not really visible in any tracing/debugging.
+> Commit 8348db298496 ("ath10k: add ATH10K_FW_IE_HTT_OP_VERSION") broke QCA6174
+> receive side as the HTT ids from ATH10K_FW_HTT_OP_VERSION_MAIN don't have
+> HTT_TLV_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND set. Fix this by adding a backwards
+> compatibility code which sets HTT op version if it's not set by the firmare
+> image.
+>
+> Fixes: 8348db298496 ("ath10k: add ATH10K_FW_IE_HTT_OP_VERSION")
+> Reported-by: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/trace.h | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Applied.
 
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index b19773c9c81b..e4e39143728c 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -627,6 +627,7 @@ DECLARE_EVENT_CLASS(station_add_change,
- 		__field(u8, plink_state)
- 		__field(u8, uapsd_queues)
- 		__array(u8, ht_capa, (int)sizeof(struct ieee80211_ht_cap))
-+		__array(char, vlan, IFNAMSIZ)
- 	),
- 	TP_fast_assign(
- 		WIPHY_ASSIGN;
-@@ -644,16 +645,19 @@ DECLARE_EVENT_CLASS(station_add_change,
- 		if (params->ht_capa)
- 			memcpy(__entry->ht_capa, params->ht_capa,
- 			       sizeof(struct ieee80211_ht_cap));
-+		memset(__entry->vlan, 0, sizeof(__entry->vlan));
-+		if (params->vlan)
-+			memcpy(__entry->vlan, params->vlan->name, IFNAMSIZ);
- 	),
- 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", station mac: " MAC_PR_FMT
- 		  ", station flags mask: %u, station flags set: %u, "
- 		  "station modify mask: %u, listen interval: %d, aid: %u, "
--		  "plink action: %u, plink state: %u, uapsd queues: %u",
-+		  "plink action: %u, plink state: %u, uapsd queues: %u, vlan:%s",
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(sta_mac),
- 		  __entry->sta_flags_mask, __entry->sta_flags_set,
- 		  __entry->sta_modify_mask, __entry->listen_interval,
- 		  __entry->aid, __entry->plink_action, __entry->plink_state,
--		  __entry->uapsd_queues)
-+		  __entry->uapsd_queues, __entry->vlan)
- );
- 
- DEFINE_EVENT(station_add_change, rdev_add_station,
 -- 
-2.1.4
-
+Kalle Valo
