@@ -1,64 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37049 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965AbbCELka convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Mar 2015 06:40:30 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Chen Gang <xili_gchen_5257@hotmail.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Arnd Bergmann <arnd@arndb.de>, Jim Davis <jim.epost@gmail.com>,
-	Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
-Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
-References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
-	<CACna6rw03OfforxrV5nWLYTUW64BQ-vvH9TuZqK2q9__2Y0edA@mail.gmail.com>
-Date: Thu, 05 Mar 2015 13:40:23 +0200
-In-Reply-To: <CACna6rw03OfforxrV5nWLYTUW64BQ-vvH9TuZqK2q9__2Y0edA@mail.gmail.com>
-	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Wed, 4 Mar 2015
- 23:23:32 +0100")
-Message-ID: <87r3t365aw.fsf@kamboji.qca.qualcomm.com> (sfid-20150305_124048_704728_C5EC91E8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:45682 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752908AbbC3I5M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:57:12 -0400
+Message-ID: <1427705830.26117.18.camel@sipsolutions.net> (sfid-20150330_105722_865644_081700AC)
+Subject: Re: [PATCH] mac80211: filter multicast data packets on AP_VLAN
+ interfaces w/o sta
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Mon, 30 Mar 2015 10:57:10 +0200
+In-Reply-To: <1426620635-868-1-git-send-email-michael-dev@fami-braun.de>
+References: <1426620635-868-1-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+On Tue, 2015-03-17 at 20:30 +0100, Michael Braun wrote:
+> Currently, multicast data packets are dropped on AP interfaces if
+> there are no authorized stations connected. This avoids superflous
 
-> Kalle, I guess the recent discussion and work on this problem could be
-> confusing, so let me try to sum it up it a bit.
->
-> First of all, please note there are 3 awaiting bcma patches that
-> should be applied independently of what we decide to do with this
-> patch. They are of course inspired by the recent building problems.
-> List of these patches:
-> [PATCH next] bcma: make bcma_host_pci_(up|down) calls safe for every config
-> [PATCH next] bcma: move internal function declarations to private header
-> [PATCH next] bcma: prepare Kconfig symbol for PCI driver
->
-> Now, the building problem is obviously caused by me, my work on
-> driver_pcie2.c and using pcie_set_readrq there without making sure
-> that is PCI available. I'm sorry for that.
->
-> All 3 above patches are moving us toward the the most optimal solution
-> of this problem. Depending on PCI only when it's really required.
-> There is still one more change missing that I'm working on. It'll take
-> me about 2 more days to get the last patch.
-> On the other way, patch proposed by Chen fixes building problem right
-> now. It's much simpler but bumps bcma requirements a bit too high.
-> bcma doesn't really have to depend on PCI.
+typo: superfluous
 
-Thanks for the good summary, it clarified things for me.
+> data packets to be transmitted on air.
+> 
+> But when using AP_VLAN, this does not happen, as the current check does
+> not apply to AP_VLAN interfaces. Though, there can easily be more AP_VLAN
+> interfaces on an AP resulting in more multicast data frames. This is
+> especially true since hostapd does not remove no-longer-used AP_VLAN
+> interfaces and bridges.
+> 
+> In order to filter on AP_VLAN interfaces, a per AP_VLAN interface
+> counter is required (in constrast to the counter on the AP interface
 
-> So you have 2 options there and I'll be happy with whatever you choose to do:
-> 1) Pick Chen patch now and in ~2 days apply my final fix + revert Chen
-> patch.
+typo: contrast
 
-I'll prefer this option so that we can quickly solve the build problem.
-Also once your final fix is ready, please remember that you need to
-revert Chen's patch within the same patch.
+> +		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
+> +		    sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+> +		    !sta->sdata->u.vlan.sta &&
+> +		    sta->sdata != vlansdata)
+> +			atomic_dec(&sta->sdata->u.vlan.num_mcast_sta);
+> +
+> +		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
+> +		    vlansdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
 
--- 
-Kalle Valo
+Hmm. Can this ever be false?
+
+> +++ b/net/mac80211/sta_info.c
+> @@ -143,6 +143,17 @@ static void __cleanup_single_sta(struct sta_info *sta)
+>  		ieee80211_purge_tx_queue(&local->hw, &tid_tx->pending);
+>  		kfree(tid_tx);
+>  	}
+> +
+> +	if (test_sta_flag(sta, WLAN_STA_AUTHORIZED)) {
+> +		if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
+> +		    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+> +		     !sta->sdata->u.vlan.sta))
+> +			atomic_dec(&sta->sdata->bss->num_mcast_sta);
+> +		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+> +		     !sta->sdata->u.vlan.sta)
+> +			atomic_dec(&sta->sdata->u.vlan.num_mcast_sta);
+> +		clear_sta_flag(sta, WLAN_STA_AUTHORIZED);
+> +	}
+>  }
+
+The new clear_sta_flag() here seems rather wrong to me?
+
+> @@ -1694,6 +1705,9 @@ int sta_info_move_state(struct sta_info *sta,
+>  			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+>  			     !sta->sdata->u.vlan.sta))
+>  				atomic_dec(&sta->sdata->bss->num_mcast_sta);
+> +			if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+> +			     !sta->sdata->u.vlan.sta)
+> +				atomic_dec(&sta->sdata->u.vlan.num_mcast_sta);
+>  			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+
+> @@ -1703,6 +1717,9 @@ int sta_info_move_state(struct sta_info *sta,
+>  			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+>  			     !sta->sdata->u.vlan.sta))
+>  				atomic_inc(&sta->sdata->bss->num_mcast_sta);
+> +			if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+> +			     !sta->sdata->u.vlan.sta)
+> +				atomic_inc(&sta->sdata->u.vlan.num_mcast_sta);
+
+It seems to me that perhaps we should split this into two new
+subfunctions or so to be able to refactor this code? After all, you have
+exactly the same conditions here ...
+
+johannes
+
