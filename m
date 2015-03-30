@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34277 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932748AbbCDUbs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 15:31:48 -0500
-Message-ID: <1425501103.1810.15.camel@sipsolutions.net> (sfid-20150304_213152_646299_B3676A5C)
-Subject: Re: [PATCH crda 2/4] allow people to turn off -Werror
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 04 Mar 2015 21:31:43 +0100
-In-Reply-To: <20150304202235.GB7320@vapier>
-References: <1425498714-8654-1-git-send-email-vapier@gentoo.org>
-	 <1425498714-8654-2-git-send-email-vapier@gentoo.org>
-	 <1425498807.1810.14.camel@sipsolutions.net> <20150304202235.GB7320@vapier>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:60598 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752949AbbC3JiQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 05:38:16 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 5/5] wil6210: update FW file name
+References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1427704134-30699-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
+Date: Mon, 30 Mar 2015 12:38:08 +0300
+In-Reply-To: <1427704134-30699-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	(Vladimir Kondratiev's message of "Mon, 30 Mar 2015 11:28:54 +0300")
+Message-ID: <87wq1y6d1b.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_113819_296349_5256615F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-03-04 at 15:22 -0500, Mike Frysinger wrote:
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-> yes, if you wanted to support:
-> 	WERROR= make
-> 
-> but the expectation is that you'd do:
-> 	make WERROR=
-> 
-> in which case this code is working as i intended.
+> Firmware "board" file name has changed from wil6210.board
+> to wil6210.brd by the FW generation tools.
+>
+> Reflect this in the driver.
+>
+> Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+> index f4681e3..abb2080 100644
+> --- a/drivers/net/wireless/ath/wil6210/wil6210.h
+> +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+> @@ -33,7 +33,7 @@ extern bool debug_fw;
+>  
+>  #define WIL_NAME "wil6210"
+>  #define WIL_FW_NAME "wil6210.fw" /* code */
+> -#define WIL_FW2_NAME "wil6210.board" /* board & radio parameters */
+> +#define WIL_FW2_NAME "wil6210.brd" /* board & radio parameters */
 
-Oh, interesting, I wasn't even really aware of this difference :)
+I consider the firmware file names as part of stable user space
+interface (older user space need to work with newer kernel etc) and this
+change breaks that.
 
-Heh. Goes to show why I shouldn't work with build systems ;-)
-
-johannes
-
+-- 
+Kalle Valo
