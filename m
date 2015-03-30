@@ -1,51 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:35813 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754046AbbCCJdw (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57693 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752866AbbC3I3m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 04:33:52 -0500
-Received: by wivz2 with SMTP id z2so1793315wiv.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Mar 2015 01:33:51 -0800 (PST)
+	Mon, 30 Mar 2015 04:29:42 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1425374168.2450.17.camel@sipsolutions.net>
-References: <1423568924-11895-1-git-send-email-michal.kazior@tieto.com> <1425374168.2450.17.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 3 Mar 2015 15:03:31 +0530
-Message-ID: <CABPxzY+hcmAHCzn+JvYRurDYO3yZ=_bRkDFODrbRMJ0L75yZ9A@mail.gmail.com> (sfid-20150303_103356_579418_6B00FFD8)
-Subject: Re: [PATCH] mac80211: disable u-APSD queues by default
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: rt2800usb: check Autorun mode on FW load only once
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20150319143249.GB2516@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Message-Id: <20150330082941.C461E1401B0@smtp.codeaurora.org> (sfid-20150330_102945_323924_F904474F)
+Date: Mon, 30 Mar 2015 08:29:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 3, 2015 at 2:46 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2015-02-10 at 12:48 +0100, Michal Kazior wrote:
->> Some APs experience problems when working with
->> U-APSD. Decreasing the probability of that
->> happening by using legacy mode for all ACs but VO
->> isn't enough.
->>
->> Cisco 4410N originally forced us to enable VO by
->> default only because it treated non-VO ACs as
->> legacy.
->>
->> However some APs (notably Netgear R7000) silently
->> reclassify packets to different ACs. Since u-APSD
->> ACs require trigger frames for frame retrieval
->> clients would never see some frames (e.g. ARP
->> responses) or would fetch them accidentally after
->> a long time.
->
-> This makes me a little sad, but I've applied this and even added a Cc
-> stable tag due to the interoperability issues.
->
-Mixed mode (uapsd + legacy) is not really the optimal
-configuration, where we expect STA to send trigger frames periodically
-to retrieve the DL packets (especially very first packet).
 
-But still if we want power save, i suggest going for
-All u-apsd (0xF), so that AP will inform us by setting the TIM bit
-and we can retrieve the first frame.
-(We have this patch internally and it works well).
+> Seems H/W report correctly firmware Autorun value only at initialization
+> stage. When we close interface and open it again, Autorun value is 0 and
+> we try to load firmware what kills the device. To fix clear
+> REQUIRE_FIRMWARE firmware flag, to do not load firmware again, once we
+> discover Autorun mode.
+> 
+> Reported-and-tested-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+Thanks, applied to wireless-drivers-next.git.
+
+Kalle Valo
