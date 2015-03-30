@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27676 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:47246 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753016AbbC3IQd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:16:33 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: send HT/VHT IEs in TDLS discovery response
-Date: Mon, 30 Mar 2015 11:16:23 +0300
-Message-Id: <1427703383-19212-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150330_101641_325167_700EBDBE)
+	id S1753067AbbC3OgL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 10:36:11 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/2] mac80211_hwsim: enable fast-xmit
+Date: Mon, 30 Mar 2015 16:36:07 +0200
+Message-Id: <1427726167-17802-2-git-send-email-johannes@sipsolutions.net> (sfid-20150330_163617_175842_B05DD4BD)
+In-Reply-To: <1427726167-17802-1-git-send-email-johannes@sipsolutions.net>
+References: <1427726167-17802-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-These are mandated by IEEE802.11-2012 section 8.5.8.6 and IEEE802.11ac-2013
-section 8.5.8.16.
+For hwsim, the duration field in frames is already not valid for
+the common case of HT/VHT MCSes, so there's little point in trying
+to keep it accurate for the legacy rates. Enable the fast-xmit code
+to allow testing that, although given the dependency on hardware
+crypto it will only be enabled in open network configurations.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/tdls.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index 79ed59a..fff0d86 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -378,7 +378,9 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
- 	sband = local->hw.wiphy->bands[band];
- 	memcpy(&ht_cap, &sband->ht_cap, sizeof(ht_cap));
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 941925991476..957abbed809f 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2396,7 +2396,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
+ 		    IEEE80211_HW_WANT_MONITOR_VIF |
+ 		    IEEE80211_HW_QUEUE_CONTROL |
+ 		    IEEE80211_HW_SUPPORTS_HT_CCK_RATES |
+-		    IEEE80211_HW_CHANCTX_STA_CSA;
++		    IEEE80211_HW_CHANCTX_STA_CSA |
++		    IEEE80211_HW_SUPPORT_FAST_XMIT;
+ 	if (rctbl)
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_RC_TABLE;
  
--	if (action_code == WLAN_TDLS_SETUP_REQUEST && ht_cap.ht_supported) {
-+	if ((action_code == WLAN_TDLS_SETUP_REQUEST ||
-+	     action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) &&
-+	    ht_cap.ht_supported) {
- 		ieee80211_apply_htcap_overrides(sdata, &ht_cap);
- 
- 		/* disable SMPS in TDLS initiator */
-@@ -432,11 +434,14 @@ ieee80211_tdls_add_setup_start_ies(struct ieee80211_sub_if_data *sdata,
- 
- 	/* build the VHT-cap similarly to the HT-cap */
- 	memcpy(&vht_cap, &sband->vht_cap, sizeof(vht_cap));
--	if (action_code == WLAN_TDLS_SETUP_REQUEST && vht_cap.vht_supported) {
-+	if ((action_code == WLAN_TDLS_SETUP_REQUEST ||
-+	     action_code == WLAN_PUB_ACTION_TDLS_DISCOVER_RES) &&
-+	    vht_cap.vht_supported) {
- 		ieee80211_apply_vhtcap_overrides(sdata, &vht_cap);
- 
- 		/* the AID is present only when VHT is implemented */
--		ieee80211_tdls_add_aid(sdata, skb);
-+		if (action_code == WLAN_TDLS_SETUP_REQUEST)
-+			ieee80211_tdls_add_aid(sdata, skb);
- 
- 		pos = skb_put(skb, sizeof(struct ieee80211_vht_cap) + 2);
- 		ieee80211_ie_build_vht_cap(pos, &vht_cap, vht_cap.cap);
 -- 
-1.9.1
+2.1.4
 
