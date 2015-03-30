@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37886 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933786AbbCPQGx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3625 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872AbbC3I3R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 12:06:53 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/3] rt2x00usb: initialize the read value in case of failure
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1426170946-13918-1-git-send-email-bigeasy@linutronix.de>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Message-Id: <20150316160652.789B313FBE6@smtp.codeaurora.org> (sfid-20150316_170656_558354_25F9EB63)
-Date: Mon, 16 Mar 2015 16:06:52 +0000 (UTC)
+	Mon, 30 Mar 2015 04:29:17 -0400
+From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 0/5] wil6210 patches
+Date: Mon, 30 Mar 2015 11:28:49 +0300
+Message-Id: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150330_102921_326031_85404CF1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Small bits here and there.
+Cosmetic but visible is firmware name change
 
-> My understanding ist that rt2x00usb_register_read() is void and so the
-> reader is unaware of read errors and assumes that whatever was on the
-> stack as it was about to read.
-> 
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Vladimir Kondratiev (5):
+  wil6210: fw debug mode
+  wil6210: debug [add|del]_key operations
+  wil6210: trace disconnect source
+  wil6210: stop_ap to leave interface closed
+  wil6210: update FW file name
 
-Thanks, 3 patches applied to wireless-drivers-next.git:
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 15 +++++++++++----
+ drivers/net/wireless/ath/wil6210/main.c     | 15 +++++++++++++++
+ drivers/net/wireless/ath/wil6210/netdev.c   |  5 +++++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |  6 ------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  3 ++-
+ 5 files changed, 33 insertions(+), 11 deletions(-)
 
-e4fcfaf802bf rt2x00usb: initialize the read value in case of failure
-92d5e2456d39 rt2x00usb: check USB's request error code in rt2800usb_autorun_detect()
-7daa54b747dd rt2x00usb: drop rt2x00usb_disable_radio() from rt2800usb_disable_radio()
+-- 
+2.1.0
 
-Kalle Valo
