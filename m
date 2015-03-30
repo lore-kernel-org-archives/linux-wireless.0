@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:60735 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964873AbbCPRHU (ORCPT
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:32954 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbbC3N1m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 13:07:20 -0400
-Date: Mon, 16 Mar 2015 18:07:14 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Joe Perches <joe@perches.com>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	"M. Vefa Bicakci" <m.v.b@runbox.com>,
-	Matthias Beyer <mail@beyermatthias.de>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net
-Subject: Re: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's
- rtw_security.c
-Message-ID: <20150316170714.GB20171@kroah.com> (sfid-20150316_180737_868213_466FEB8D)
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>
- <20150315093142.GY24643@lucy.3gs>
- <10669062.ZZNVxH5Tl9@lenny>
- <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org>
- <1426524927.23897.9.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1426524927.23897.9.camel@perches.com>
+	Mon, 30 Mar 2015 09:27:42 -0400
+From: Masanari Iida <standby24x7@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	kvalo@codeaurora.org, davem@davemloft.net, linville@tuxdriver.com
+Cc: Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] wireless:wl1251: Fix typo in MODULE_DESCRIPTION in wl1251/main.c
+Date: Mon, 30 Mar 2015 22:27:47 +0900
+Message-Id: <1427722067-8706-1-git-send-email-standby24x7@gmail.com> (sfid-20150330_152746_374464_A9C2EB69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 16, 2015 at 09:55:27AM -0700, Joe Perches wrote:
-> On Mon, 2015-03-16 at 12:01 -0400, Jes Sorensen wrote:
-> > For staging patches, you should always post patches against the
-> > staging-next tree. Please rebase them and repost them.
-> 
-> Greg is now preferring patches against his
-> staging-testing branch
-> 
+This patch fix a spelling typo in MODULE_DESCRIPTION in
+wl1251/main.c
 
-staging-testing only lasts a day or so before it turns into
-staging-next, so you are usually safe with using staging-next.
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-thanks,
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index d1e9a13..5d54d16 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -1608,7 +1608,7 @@ int wl1251_free_hw(struct wl1251 *wl)
+ }
+ EXPORT_SYMBOL_GPL(wl1251_free_hw);
+ 
+-MODULE_DESCRIPTION("TI wl1251 Wireles LAN Driver Core");
++MODULE_DESCRIPTION("TI wl1251 Wireless LAN Driver Core");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Kalle Valo <kvalo@adurom.com>");
+ MODULE_FIRMWARE(WL1251_FW_NAME);
+-- 
+2.3.4.274.g92e625d
 
-greg k-h
