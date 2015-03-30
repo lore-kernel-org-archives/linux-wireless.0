@@ -1,28 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43361 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755628AbbCCNqH (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:27197 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbbC3MXx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 08:46:07 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 30 Mar 2015 08:23:53 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix aid setup in station mode
+References: <1427104648-5681-1-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 30 Mar 2015 15:23:44 +0300
+In-Reply-To: <1427104648-5681-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Mon, 23 Mar 2015 09:57:28 +0000")
+Message-ID: <87vbhi4qsv.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_142356_459758_1D8A5E51)
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8192cu: Add case in rtl92cu_get_hw_reg
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1424892841-6446-1-git-send-email-ap420073@gmail.com>
-To: Taehee Yoo <ap420073@gmail.com>
-Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
-	linux-wireless@vger.kernel.org
-Message-Id: <20150303134607.36463140C9F@smtp.codeaurora.org> (sfid-20150303_144611_833703_5B935A51)
-Date: Tue,  3 Mar 2015 13:46:07 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Add HAL_DEF_WOWLAN case in rtl92cu_get_hw_reg
-> 
-> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> While debugging something else I noticed AID was
+> set to 0. This could lead to powersave issues in
+> station mode. Maybe this isn't really necessary
+> but set it properly just to be sure.
+>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Thanks, applied to wireless-drivers-next.git.
+Thanks, applied.
 
+-- 
 Kalle Valo
