@@ -1,93 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:46600 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbbCMI30 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57712 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752939AbbC3Iaj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 04:29:26 -0400
-From: Fred Chou <fred.chou.nd@gmail.com>
-To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Fred Chou <fred.chou.nd@gmail.com>
-Subject: [PATCH] ath9k_htc: check seq number instead of cmd id for timeout
-Date: Fri, 13 Mar 2015 16:32:38 +0800
-Message-Id: <1426235558-13787-1-git-send-email-fred.chou.nd@gmail.com> (sfid-20150313_092947_562091_3B5DFB6F)
+	Mon, 30 Mar 2015 04:30:39 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: rtlwifi: Change REG_CR+2 to MSR
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1426847493-5722-1-git-send-email-ap420073@gmail.com>
+To: Taehee Yoo <ap420073@gmail.com>
+Cc: Larry.Finger@lwfinger.net, ap420073@gmail.com,
+	linux-wireless@vger.kernel.org
+Message-Id: <20150330083036.955FD1401B6@smtp.codeaurora.org> (sfid-20150330_103042_434700_DC9F836F)
+Date: Mon, 30 Mar 2015 08:30:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fred Chou <fred.chou.nd@gmail.com>
 
-As the driver may send multiple wmi commands with identical cmd id,
-it is more robust to check seq number for timeout instead.
+> I changed REG_CR+2 and (MSR) to MSR because MSR is defined as (REG_CR + 2).
+> 
+> Signed-off-by: Taehee Yoo <ap420073@gmail.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
----
- drivers/net/wireless/ath/ath9k/wmi.c | 12 ++++++------
- drivers/net/wireless/ath/ath9k/wmi.h |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+Thanks, applied to wireless-drivers-next.git.
 
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wireless/ath/ath9k/wmi.c
-index 65c8894..aba909f 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.c
-+++ b/drivers/net/wireless/ath/ath9k/wmi.c
-@@ -224,7 +224,7 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct sk_buff *skb,
- 
- 	/* Check if there has been a timeout. */
- 	spin_lock(&wmi->wmi_lock);
--	if (cmd_id != wmi->last_cmd_id) {
-+	if (be16_to_cpu(hdr->seq_no) != wmi->last_seq_id) {
- 		spin_unlock(&wmi->wmi_lock);
- 		goto free_skb;
- 	}
-@@ -272,11 +272,16 @@ static int ath9k_wmi_cmd_issue(struct wmi *wmi,
- 			       enum wmi_cmd_id cmd, u16 len)
- {
- 	struct wmi_cmd_hdr *hdr;
-+	unsigned long flags;
- 
- 	hdr = (struct wmi_cmd_hdr *) skb_push(skb, sizeof(struct wmi_cmd_hdr));
- 	hdr->command_id = cpu_to_be16(cmd);
- 	hdr->seq_no = cpu_to_be16(++wmi->tx_seq_id);
- 
-+	spin_lock_irqsave(&wmi->wmi_lock, flags);
-+	wmi->last_seq_id = wmi->tx_seq_id;
-+	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
-+
- 	return htc_send_epid(wmi->htc, skb, wmi->ctrl_epid);
- }
- 
-@@ -292,7 +297,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 	struct sk_buff *skb;
- 	u8 *data;
- 	int time_left, ret = 0;
--	unsigned long flags;
- 
- 	if (ah->ah_flags & AH_UNPLUGGED)
- 		return 0;
-@@ -320,10 +324,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id cmd_id,
- 	wmi->cmd_rsp_buf = rsp_buf;
- 	wmi->cmd_rsp_len = rsp_len;
- 
--	spin_lock_irqsave(&wmi->wmi_lock, flags);
--	wmi->last_cmd_id = cmd_id;
--	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
--
- 	ret = ath9k_wmi_cmd_issue(wmi, skb, cmd_id, cmd_len);
- 	if (ret)
- 		goto out;
-diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wireless/ath/ath9k/wmi.h
-index 0db37f2..2aad6dc 100644
---- a/drivers/net/wireless/ath/ath9k/wmi.h
-+++ b/drivers/net/wireless/ath/ath9k/wmi.h
-@@ -143,7 +143,7 @@ struct wmi {
- 	enum htc_endpoint_id ctrl_epid;
- 	struct mutex op_mutex;
- 	struct completion cmd_wait;
--	enum wmi_cmd_id last_cmd_id;
-+	u16 last_seq_id;
- 	struct sk_buff_head wmi_event_queue;
- 	struct tasklet_struct wmi_event_tasklet;
- 	u16 tx_seq_id;
--- 
-1.9.1
-
+Kalle Valo
