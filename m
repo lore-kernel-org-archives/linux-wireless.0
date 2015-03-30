@@ -1,67 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:55935 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751286AbbCUIrf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Mar 2015 04:47:35 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v2 04/18] ath9k: ar9271_hw_pa_cal: use RMW buffer
-Date: Sat, 21 Mar 2015 09:47:07 +0100
-Message-Id: <1426927641-18474-5-git-send-email-linux@rempel-privat.de> (sfid-20150321_094743_667900_8237A394)
-In-Reply-To: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
-References: <1426927641-18474-1-git-send-email-linux@rempel-privat.de>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:37813 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690AbbC3Jer (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 05:34:47 -0400
+Received: by wiaa2 with SMTP id a2so120238608wia.0
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2015 02:34:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1427705012.26117.11.camel@sipsolutions.net>
+References: <1427433674-5745-1-git-send-email-miaoqing@qca.qualcomm.com> <1427705012.26117.11.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 30 Mar 2015 15:04:26 +0530
+Message-ID: <CABPxzYL16NbubDBLcRvtLmPSz8pMezJq627AFSVWyaj41WSxBQ@mail.gmail.com> (sfid-20150330_113452_591422_DEDA1261)
+Subject: Re: [PATCH] mac80211: fix failed to set smps
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: miaoqing@qti.qualcomm.com, John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@qca.qualcomm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/ar9002_calib.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+On Mon, Mar 30, 2015 at 2:13 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2015-03-27 at 13:21 +0800, miaoqing@qti.qualcomm.com wrote:
+>> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+>>
+>> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+>
+> Since you give no commit log, I can only guess what you're trying to do,
+> but I suppose you need to use "echo -n" instead of "echo".
+Johannes,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-index 8d24a73..62a2314 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
-@@ -436,13 +436,14 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 		{ AR9285_AN_RF2G2, 0 },
- 		{ AR9285_AN_TOP2, 0 },
- 		{ AR9285_AN_RF2G8, 0 },
--		{ AR9285_AN_RF2G7, 0 } ,
--		{ AR9285_AN_RF2G3, 0 } ,
-+		{ AR9285_AN_RF2G7, 0 },
-+		{ AR9285_AN_RF2G3, 0 },
- 	};
- 
- 	for (i = 0; i < ARRAY_SIZE(regList); i++)
- 		regList[i][1] = REG_READ(ah, regList[i][0]);
- 
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	/* 7834, b1=0 */
- 	REG_CLR_BIT(ah, AR9285_AN_RF2G6, 1 << 0);
- 	/* 9808, b27=1 */
-@@ -476,6 +477,7 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G7, AR9285_AN_RF2G7_PADRVGN2TAB0, 0);
- 	/* 7828, b0-11, ccom=fff */
- 	REG_RMW_FIELD(ah, AR9285_AN_RF2G3, AR9271_AN_RF2G3_CCOMP, 0xfff);
-+	REG_RMW_BUFFER_FLUSH(ah);
- 
- 	/* Set:
- 	 * localmode=1,bmode=1,bmoderxtx=1,synthon=1,
-@@ -514,10 +516,12 @@ static void ar9271_hw_pa_cal(struct ath_hw *ah, bool is_reset)
- 	}
- 
- 
-+	ENABLE_REG_RMW_BUFFER(ah);
- 	/* 7834, b1=1 */
- 	REG_SET_BIT(ah, AR9285_AN_RF2G6, 1 << 0);
- 	/* 9808, b27=0 */
- 	REG_CLR_BIT(ah, 0x9808, 1 << 27);
-+	REG_RMW_BUFFER_FLUSH(ah);
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
- 	for (i = 0; i < ARRAY_SIZE(regList); i++)
--- 
-1.9.1
-
+We had this discussion earlier also, i still strongly feel all cases
+must work with "echo" by default, as people are not that familiar
+to use "echo -n".
