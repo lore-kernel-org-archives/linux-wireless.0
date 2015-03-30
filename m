@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:60592 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751907AbbCVSbw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Mar 2015 14:31:52 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	ath9k-devel@lists.ath9k.org
-Cc: Oleksij Rempel <linux@rempel-privat.de>
-Subject: [PATCH v3 14/18] ath9k: ath9k_hw_analog_shift_rmw: use REG_RMW
-Date: Sun, 22 Mar 2015 19:29:59 +0100
-Message-Id: <1427049003-8443-15-git-send-email-linux@rempel-privat.de> (sfid-20150322_193418_203006_49ACCF0F)
-In-Reply-To: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
-References: <1427049003-8443-1-git-send-email-linux@rempel-privat.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8705 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752985AbbC3Nl6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 09:41:58 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Sujith Manoharan <sujith@msujith.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 3/4] ath10k: Fix no-ack frame status
+References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
+	<1418226973-13779-3-git-send-email-sujith@msujith.org>
+	<87oarazecg.fsf@kamboji.qca.qualcomm.com>
+	<21646.15326.159197.316821@gargle.gargle.HOWL>
+	<87vblduxlk.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 30 Mar 2015 16:41:48 +0300
+In-Reply-To: <87vblduxlk.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Mon, 15 Dec 2014 10:27:19 +0200")
+Message-ID: <87a8yu4n6r.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_154204_378937_FE4C582E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-use REG_RMW in ath9k_hw_analog_shift_rmw.
-It will double execution speed on usb bus.
+(Discussion from last December)
 
-Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
----
- drivers/net/wireless/ath/ath9k/eeprom.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index 971d770..cc81482 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -27,12 +27,7 @@ void ath9k_hw_analog_shift_regwrite(struct ath_hw *ah, u32 reg, u32 val)
- void ath9k_hw_analog_shift_rmw(struct ath_hw *ah, u32 reg, u32 mask,
- 			       u32 shift, u32 val)
- {
--	u32 regVal;
--
--	regVal = REG_READ(ah, reg) & ~mask;
--	regVal |= (val << shift) & mask;
--
--	REG_WRITE(ah, reg, regVal);
-+	REG_RMW(ah, reg, ((val << shift) & mask), mask);
- 
- 	if (ah->config.analog_shiftreg)
- 		udelay(100);
+> Sujith Manoharan <sujith@msujith.org> writes:
+>
+>> Kalle Valo wrote:
+>>> Johannes, are you planning to take this? Or should I take this once the
+>>> corresponding mac80211 patch trickles down to my tree?
+>>
+>> Kalle, can you please pick this one ? I'll rebase and send the ath9k patch
+>> to John once he starts merging patches.
+>
+> Yes, I'll take this patch once I have the mac80211 dependency in my
+> tree. I marked the patch as "Awaiting Upstream" in patchwork so that I
+> don't forget, hopefully :)
+>
+> https://patchwork.kernel.org/patch/5470621/
+
+Naturally I did forget this :) But the patch is in pending branch now.
+
 -- 
-1.9.1
-
+Kalle Valo
