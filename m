@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:41799 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932828AbbCDKES (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 05:04:18 -0500
-Received: by lbvp9 with SMTP id p9so20114093lbv.8
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Mar 2015 02:04:17 -0800 (PST)
+Received: from mx02.posteo.de ([89.146.194.165]:56767 "EHLO mx02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752905AbbC3ILL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:11:11 -0400
+Received: from dovecot03.posteo.de (unknown [185.67.36.28])
+	by mx02.posteo.de (Postfix) with ESMTPS id 3DCB225ACC33
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2015 10:11:10 +0200 (CEST)
+Received: from mail.posteo.de (localhost [127.0.0.1])
+	by dovecot03.posteo.de (Postfix) with ESMTPSA id 3lFmhF6Vccz5vN7
+	for <linux-wireless@vger.kernel.org>; Mon, 30 Mar 2015 10:11:09 +0200 (CEST)
+Message-ID: <5519051D.7090503@posteo.de> (sfid-20150330_101125_231440_B9355083)
+Date: Mon, 30 Mar 2015 10:11:09 +0200
+From: demos <demos@posteo.de>
 MIME-Version: 1.0
-In-Reply-To: <1425456998.1810.3.camel@sipsolutions.net>
-References: <1424850911-21017-1-git-send-email-marek.puzyniak@tieto.com>
- <1424850911-21017-4-git-send-email-marek.puzyniak@tieto.com>
- <1425041427.1960.1.camel@sipsolutions.net> <CA+XVXfchZ+L1iH47S=rM04vJbjBSKA4O8TYuhEkfZuLpNb9QDA@mail.gmail.com>
- <1425374299.2450.18.camel@sipsolutions.net> <CA+XVXffHENxD3z9dTn_LC9c7Ot0Q4FgyEoHLjdeiDTFWQGuF9w@mail.gmail.com>
- <1425377192.2450.34.camel@sipsolutions.net> <CA+XVXfdu2fCLXBP1VkMOX9nnoqCiH+h=pwzGAQ2KkBrf-H9MCQ@mail.gmail.com>
- <1425456998.1810.3.camel@sipsolutions.net>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 4 Mar 2015 12:04:01 +0200
-Message-ID: <CA+XVXfdnTATvbPSkHmGSyMF5d++OmYySskD7D50YvH-wf4eM=w@mail.gmail.com> (sfid-20150304_110425_437512_F44162D6)
-Subject: Re: [PATCH v2 3/4] mac80211: initialize rate control earlier for tdls station
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Marek Puzyniak <marek.puzyniak@tieto.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: sorry
+References: <551903EA.9070108@posteo.de>
+In-Reply-To: <551903EA.9070108@posteo.de>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="LQ12pDUh7idcxPSIB2RECGMC8D3jVup1I"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 4, 2015 at 10:16 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2015-03-03 at 12:07 +0200, Arik Nemtsov wrote:
->
->> > And doing so would also address the nss problem, right? IIRC that's done
->> > in the rate control init inline.
->>
->> Right.
->
-> Can one of you (Marek/Arik) send a combined patch then please? :)
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--LQ12pDUh7idcxPSIB2RECGMC8D3jVup1I
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-I can do it, but I'll probably only get to it next week.
+Sorry for that many mails!
+must be a bug in my email client or something....
 
-Arik
+>=20
+> kind regards
+> Demos
+>=20
+
+
+--=20
+Key hier: https://pgp.mit.edu/pks/lookup?op=3Dget&search=3D0x9B365E2DBF83=
+D308
+
+
+--LQ12pDUh7idcxPSIB2RECGMC8D3jVup1I
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJVGQUdAAoJEJs2Xi2/g9MIttkP/AsDLkijhxzOwZI/yQ0uypEY
+1o7WBRAOAypcJa2KxFTDE+jo9ItvIworQq9LarM9Lr2vMwgeuTqy9NPptCt3BXot
+0YSK7PgJY3iXBxnhGL+bR4LY+hZ0+PzJMog286r4jis9Nctj3fuFIPwxZsZtlbcN
+dY0sBVjmyNsuKbx0UG+DcVmzqGri8rc3Mb2KDJVLyDnYdt4Ai7jGToTEGil2dvsW
+eV4f6C0HZ2OvFQQCs4q6n0R5U0BkPl3GyihE6cnSWfkvgqcHHmDMCfaAzAZJEUC+
+RI1G1UmFXZ0icjOLlMsQgbkXle35HLHihd/gqKh/c3muukZFZjDayfUAvhbWk4nu
+naGh5bmYYdCeg6c4HypABFfr/Eq0Oz9tnLhySTtcw+8trYKVhO0WAYt1PyOQYDt1
+BzKgj3KxClrx6QQTrLWtGXLIM2kL7jCTURcjdRhEVsM5wrI2P1fIDsJ1dQomEcCW
+6tZmx25q2wP2aOw8GPvfxo/QGnCfiPmktnQ+uhgu4Gq19X0bZEC4kZ5E49VjzyiW
+faaGujWMzSL+H3lz4YIYNusJf0FBl1A6Se4PG01laxV37itGDqEb/f31LJNJz9hH
+qkeVWljKlNQ+6y5hp8thPCDf7axnpK/MYTLcbwdf59Zm2h9nLgWcXe0HmzxMwah5
+8ec8FYnMKcrDsnk/vgIt
+=QEsm
+-----END PGP SIGNATURE-----
+
+--LQ12pDUh7idcxPSIB2RECGMC8D3jVup1I--
