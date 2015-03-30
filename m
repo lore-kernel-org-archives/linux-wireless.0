@@ -1,75 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54117 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753962AbbCBRks (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 12:40:48 -0500
-From: Florian Westphal <fw@strlen.de>
-To: <netdev@vger.kernel.org>
-Cc: Florian Westphal <fw@strlen.de>, linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 09/14] net: wireless: mac80211: shrink private driver area
-Date: Mon,  2 Mar 2015 18:40:23 +0100
-Message-Id: <1425318028-26531-10-git-send-email-fw@strlen.de> (sfid-20150302_184214_486235_3C68A9D8)
-In-Reply-To: <1425318028-26531-1-git-send-email-fw@strlen.de>
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45647 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753124AbbC3Inq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:43:46 -0400
+Message-ID: <1427705012.26117.11.camel@sipsolutions.net> (sfid-20150330_104354_387395_1EAE95F1)
+Subject: Re: [PATCH] mac80211: fix failed to set smps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: miaoqing@qti.qualcomm.com
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com
+Date: Mon, 30 Mar 2015 10:43:32 +0200
+In-Reply-To: <1427433674-5745-1-git-send-email-miaoqing@qca.qualcomm.com> (sfid-20150327_062125_551844_AE1F0CE9)
+References: <1427433674-5745-1-git-send-email-miaoqing@qca.qualcomm.com>
+	 (sfid-20150327_062125_551844_AE1F0CE9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the structure fit 44-byte sized skb->cb[].
+On Fri, 2015-03-27 at 13:21 +0800, miaoqing@qti.qualcomm.com wrote:
+> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> 
+> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
 
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Florian Westphal <fw@strlen.de>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 2 +-
- include/net/mac80211.h                 | 8 +++-----
- 2 files changed, 4 insertions(+), 6 deletions(-)
+Since you give no commit log, I can only guess what you're trying to do,
+but I suppose you need to use "echo -n" instead of "echo".
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 0f8e946..2ed77cf 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -184,12 +184,12 @@ struct ath_frame_info {
- 	struct ath_buf *bf;
- 	u16 framelen;
- 	s8 txq;
--	enum ath9k_key_type keytype;
- 	u8 keyix;
- 	u8 rtscts_rate;
- 	u8 retries : 7;
- 	u8 baw_tracked : 1;
- 	u8 tx_power;
-+	enum ath9k_key_type keytype:2;
- };
- 
- struct ath_rxbuf {
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 36c2599..372c25a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -627,11 +627,11 @@ enum mac80211_rate_control_flags {
- };
- 
- 
--/* there are 40 bytes if you don't need the rateset to be kept */
--#define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 40
-+/* there are 32 bytes if you don't need the rateset to be kept */
-+#define IEEE80211_TX_INFO_DRIVER_DATA_SIZE 32
- 
- /* if you do need the rateset, then you have less space */
--#define IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE 24
-+#define IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE 16
- 
- /* maximum number of rate stages */
- #define IEEE80211_TX_MAX_RATES	4
-@@ -765,8 +765,6 @@ struct ieee80211_tx_info {
- 		struct {
- 			struct ieee80211_tx_rate driver_rates[
- 				IEEE80211_TX_MAX_RATES];
--			u8 pad[4];
--
- 			void *rate_driver_data[
- 				IEEE80211_TX_INFO_RATE_DRIVER_DATA_SIZE / sizeof(void *)];
- 		};
--- 
-2.0.5
+johannes
 
