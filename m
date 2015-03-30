@@ -1,54 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23662 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:47384 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754572AbbCLNGH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:06:07 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 34/49] iwlwifi: mvm: rs: improve ss_params debug print
-Date: Thu, 12 Mar 2015 15:04:19 +0200
-Message-Id: <1426165474-25586-34-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143419_130768_AD6D0707)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+	id S1751622AbbC3PHU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 11:07:20 -0400
+Message-ID: <1427728036.26117.36.camel@sipsolutions.net> (sfid-20150330_170723_841717_64D494C7)
+Subject: Re: [PATCH 1/2] mac80211: add TX fastpath
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 30 Mar 2015 17:07:16 +0200
+In-Reply-To: <1427727818.14276.7.camel@perches.com> (sfid-20150330_170346_635401_65B14245)
+References: <1427726167-17802-1-git-send-email-johannes@sipsolutions.net>
+	 <1427727818.14276.7.camel@perches.com>
+	 (sfid-20150330_170346_635401_65B14245)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Mon, 2015-03-30 at 08:03 -0700, Joe Perches wrote:
 
-Make the print a bit more readable.
+> > diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> []
+> > +void ieee80211_check_fast_xmit(struct sta_info *sta, gfp_t gfp)
+> > +{
+> > +	struct ieee80211_fast_tx build = {}, *fast_tx, *old;
+> 
+> This "{}" memset should probably be moved farther down
+> because there are many return paths that are possible
+> before the memset is necessary.
 
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/rs.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+True. However, this isn't actually the fast path I'm interested in; the
+function ieee80211_xmit_fast() is the one that we execute per packet,
+this one is invoked very infrequently. I prefer the more readable way
+here.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/rs.c b/drivers/net/wireless/iwlwifi/mvm/rs.c
-index d8dacb3..98edb18 100644
---- a/drivers/net/wireless/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/rs.c
-@@ -3373,13 +3373,13 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
- 	ss_params = le32_to_cpu(lq_sta->lq.ss_params);
- 	desc += sprintf(buff+desc, "single stream params: %s%s%s%s\n",
- 			(ss_params & LQ_SS_PARAMS_VALID) ?
--			"VALID," : "INVALID",
-+			"VALID" : "INVALID",
- 			(ss_params & LQ_SS_BFER_ALLOWED) ?
--			"BFER," : "",
-+			", BFER" : "",
- 			(ss_params & LQ_SS_STBC_1SS_ALLOWED) ?
--			"STBC," : "",
-+			", STBC" : "",
- 			(ss_params & LQ_SS_FORCE) ?
--			"FORCE" : "");
-+			", FORCE" : "");
- 	desc += sprintf(buff+desc,
- 			"Start idx [0]=0x%x [1]=0x%x [2]=0x%x [3]=0x%x\n",
- 			lq_sta->lq.initial_rate_index[0],
--- 
-1.9.1
+johannes
 
