@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55306 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752808AbbC3Jxd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 05:53:33 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mcgrof@suse.com" <mcgrof@suse.com>
-Subject: RE: [PATCH] cfg80211: Stop calling crda if it is not responsive
-Date: Mon, 30 Mar 2015 09:53:21 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04D08DD2E@HASMSX106.ger.corp.intel.com> (sfid-20150330_115339_025910_59A7EE8D)
-References: <1427609931-6113-1-git-send-email-ilan.peer@intel.com>
-	 (sfid-20150329_081902_084943_B4703242)
- <1427706675.26117.24.camel@sipsolutions.net>
-In-Reply-To: <1427706675.26117.24.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:58199 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752866AbbC3Iiv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:38:51 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Subject: Re: [V2] rtlwifi: rtl8192cu: Add new device ID
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1427332566-9398-1-git-send-email-marex@denx.de>
+To: Marek Vasut <marex@denx.de>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Marek Vasut <marex@denx.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Message-Id: <20150330083850.65D7A140338@smtp.codeaurora.org> (sfid-20150330_103908_727540_C58F90AE)
+Date: Mon, 30 Mar 2015 08:38:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWls
-dG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogTW9uZGF5LCBNYXJjaCAzMCwg
-MjAxNSAxMjoxMQ0KPiBUbzogUGVlciwgSWxhbg0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5r
-ZXJuZWwub3JnOyBtY2dyb2ZAc3VzZS5jb20NCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gY2ZnODAy
-MTE6IFN0b3AgY2FsbGluZyBjcmRhIGlmIGl0IGlzIG5vdCByZXNwb25zaXZlDQo+IA0KPiBPbiBT
-dW4sIDIwMTUtMDMtMjkgYXQgMDk6MTggKzAzMDAsIElsYW4gUGVlciB3cm90ZToNCj4gPiBQYXRj
-aCBlZWNhOWZjZTFkNzFhNDk1NTg1NWNlYjBjM2IxM2MxZWI5ZGIyN2MxIChjZmc4MDIxMToNCj4g
-U2NoZWR1bGUNCj4gPiB0aW1lb3V0IGZvciBhbGwgQ1JEQSBjYWxsKSBpbnRyb2R1Y2VkIGEgcmVn
-cmVzc2lvbiwgd2hlcmUgaW4gY2FzZSB0aGF0DQo+ID4gY3JkYSBpcyBub3QgaW5zdGFsbGVkIChv
-ciBub3QgY29uZmlndXJlZCBwcm9wZXJseSBldGMuKSwgdGhlDQo+ID4gcmVndWxhdG9yeSBjb3Jl
-IHdpbGwgbmVlZGxlc3NseSBjb250aW51ZSB0byBjYWxsIGl0Lg0KPiANCj4gQW5kIHByaW50IGEg
-bWVzc2FnZSwgd2hpY2ggd2FzIHRoZSBjb21wbGFpbnQgOikNCg0KV2lsbCBmaXguDQoNCj4gDQo+
-ID4gQEAgLTU0NCw2ICs1NDksMTEgQEAgc3RhdGljIGludCBjYWxsX2NyZGEoY29uc3QgY2hhciAq
-YWxwaGEyKQ0KPiA+ICAJLyogcXVlcnkgaW50ZXJuYWwgcmVndWxhdG9yeSBkYXRhYmFzZSAoaWYg
-aXQgZXhpc3RzKSAqLw0KPiA+ICAJcmVnX3JlZ2RiX3F1ZXJ5KGFscGhhMik7DQo+ID4NCj4gPiAr
-CWlmIChyZWdfY3JkYV90aW1lb3V0cyA+IFJFR19NQVhfQ1JEQV9USU1FT1VUUykgew0KPiA+ICsJ
-CXByX2luZm8oIkV4Y2VlZGVkIENSREEgY2FsbCBtYXggYXR0ZW1wdHMuIE5vdCBjYWxsaW5nDQo+
-IENSREFcbiIpOw0KPiA+ICsJCXJldHVybiAtRUlOVkFMOw0KPiA+ICsJfQ0KPiANCj4gYW5kIHdv
-bid0IHRoaXMganVzdCB0cmFkZSBvbmUgbWVzc2FnZSBmb3IgYW5vdGhlcj8/DQo+IA0KDQpUaGUg
-b3JpZ2luYWwgaXNzdWUgaW50cm9kdWNlZCBpbiB0aGUgcHJldmlvdXMgcGF0Y2gsIHdhcyB0aGF0
-IGluIGNhc2UgdGhhdCBjcmRhIGlzIG5vdCByZXNwb25zaXZlLCBvbiBlYWNoIHRpbWVvdXQsIGEg
-bmV3IGZsb3cgdG8gY3JkYSB3YXMgaXNzdWVkLiBTbyB3aXRoIHRoaXMgY2hhbmdlLCB1cG9uIHJl
-YWNoaW5nIHRoZSBsaW1pdCwgY3JkYSB3aWxsIG5vdCBiZSBjYWxsZWQgYW5kIG5vIHRpbWVvdXQg
-d291bGQgYmUgc2NoZWR1bGVkLCBzbyB0aGlzIHdvdWxkIGJyZWFrIHRoZSBsb29wLg0KDQo+IE9y
-IGluIGZhY3QsIGR1cGxpY2F0ZSBtZXNzYWdlcyAtICdjYWxsaW5nIGNyZGEnIGZvbGxvd2VkIGJ5
-ICdleGNlZWRlZCc/DQo+IA0KDQpJJ2xsIGNsZWFyIHRoaXMgb25lLg0KDQpSZWdhcmRzLA0KDQpJ
-bGFuLg0KDQo=
+
+> Add new ID for ASUS N10 WiFi dongle.
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Tested-by: Marek Vasut <marex@denx.de>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: John W. Linville <linville@tuxdriver.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Thanks, applied to wireless-drivers-next.git.
+
+Kalle Valo
