@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:44032 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754501AbbCLMMg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 08:12:36 -0400
-Received: by lbvn10 with SMTP id n10so15403211lbv.11
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Mar 2015 05:12:35 -0700 (PDT)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH] ath10k: setup maximum number of supported stations
-Date: Thu, 12 Mar 2015 13:11:41 +0100
-Message-Id: <1426162301-27066-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20150312_131247_444410_001CC312)
+Received: from mx1.redhat.com ([209.132.183.28]:42889 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752739AbbC3K7p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 06:59:45 -0400
+Date: Mon, 30 Mar 2015 12:59:35 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org
+Subject: [PATCH v2 4/6] brcm80211: drop pci dependency
+Message-ID: <1427712964-16155-5-git-send-email-mst@redhat.com> (sfid-20150330_130030_407260_26FE53D4)
+References: <1427712964-16155-1-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1427712964-16155-1-git-send-email-mst@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setup maximum number of associated stations supported in
-AP/P2P_GO mode.
+This file does not use any pci APIs, drop
+pci header includes.
 
-This allow hostapd/wpa_supplicant to play with that limit
-and set more information (eg. P2P group limit bit for P2P_GO).
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+Acked-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1138f4f..80f19fc 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -5766,6 +5766,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ar->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
- 	ar->hw->wiphy->features |= NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 7944224..9331486 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -17,8 +17,6 @@
  
-+	ar->hw->wiphy->max_ap_assoc_sta = ar->max_num_stations;
-+
- 	/*
- 	 * on LL hardware queues are managed entirely by the FW
- 	 * so we only advertise to mac we can do the queues thing
+ #include <linux/types.h>
+ #include <linux/netdevice.h>
+-#include <linux/pci.h>
+-#include <linux/pci_ids.h>
+ #include <linux/sched.h>
+ #include <linux/completion.h>
+ #include <linux/scatterlist.h>
 -- 
-1.9.1
+MST
 
