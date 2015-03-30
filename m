@@ -1,65 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:37596 "EHLO muru.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:45663 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756692AbbCPPea (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 11:34:30 -0400
-Date: Mon, 16 Mar 2015 08:29:39 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Eliad Peller <eliad@wizery.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Enric Balletbo i Serra <eballetbo@gmail.com>,
-	Sekhar Nori <nsekhar@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kevin Hilman <khilman@deeprootsystems.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	=?utf-8?Q?Beno=C3=AEt?= Cousson <bcousson@baylibre.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Javier Martinez Canillas <javier@dowhile0.org>,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	Luciano Coelho <luca@coelho.fi>,
-	Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-Subject: Re: [PATCH v6 6/6] wlcore: remove wl12xx_platform_data
-Message-ID: <20150316152939.GP5264@atomide.com> (sfid-20150316_163438_276517_53AC410E)
-References: <1426162154-8716-1-git-send-email-eliad@wizery.com>
- <20150313151301.GJ5264@atomide.com>
- <CAB3XZEdFMQexA69JEuw=VnqsNOEkWAM0+oWWmt6DaN9+hZ+vdw@mail.gmail.com>
- <2070859.WcMooC33YH@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2070859.WcMooC33YH@wuerfel>
+	id S1752764AbbC3ItN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:49:13 -0400
+Message-ID: <1427705350.26117.14.camel@sipsolutions.net> (sfid-20150330_104916_220448_3891C4DA)
+Subject: Re: [PATCH] mac80211: send HT/VHT IEs in TDLS discovery response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Date: Mon, 30 Mar 2015 10:49:10 +0200
+In-Reply-To: <1427703383-19212-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1427703383-19212-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Arnd Bergmann <arnd@arndb.de> [150315 05:10]:
-> On Sunday 15 March 2015 10:50:42 Eliad Peller wrote:
-> > yeah, i missed it :/
-> > 
-> > looks like there's no platform that defines platform data for it.
-> > i'll replace the dev_get_platdata() with a function that only parses
-> > the clock-frequency properties (the irq is taken in this case from the
-> > spi_device).
-> > (or maybe i should just drop it, as no one actually uses it?)
+On Mon, 2015-03-30 at 11:16 +0300, Emmanuel Grumbach wrote:
+> From: Arik Nemtsov <arik@wizery.com>
 > 
-> I don't think we should drop the driver, but dropping the platform_data
-> support sounds reasonable. New users of this driver should all be using
-> DT, and if there is a good reason to use platform_data, it's easily
-> put back.
+> These are mandated by IEEE802.11-2012 section 8.5.8.6 and IEEE802.11ac-2013
+> section 8.5.8.16.
 
-Well we have n8x0 and n900 using the spi driver. For those, n8x0 boot
-all in dts mode, but n900 still also boots in legacy mode. It seems the
-board-rx51-peripherals.c only passes the power_gpio though, so that
-should be easy to keep around.
+Applied.
 
-We should keep things still working for n900 in legacy mode until the
-pending regressions with device tree based booting have been cleared
-for at least one merge cycle. I believe the last pending issues is the
-support for ATAG_REVISION in device tree mode as posted by Pali.
+johannes
 
-Regards,
-
-Tony
