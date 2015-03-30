@@ -1,29 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp02.msg.oleane.net ([62.161.4.2]:34174 "EHLO
-	smtp02.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526AbbCWPQN convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54172 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750938AbbC3O2i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Mar 2015 11:16:13 -0400
-Received: from acksys.fr ([195.6.104.67]) (authenticated)
-	by smtp02.msg.oleane.net (MTA) with ESMTP id t2NFGATt003898
-	for <linux-wireless@vger.kernel.org>; Mon, 23 Mar 2015 16:16:10 +0100
-Subject: ath10k: What will happens when radar is detected ?
-Date: Mon, 23 Mar 2015 16:16:09 +0100
-Message-ID: <773DB8A82AB6A046AE0195C68612A319019FEF93@sbs2003.acksys.local> (sfid-20150323_161616_223498_EA9D9D1C)
+	Mon, 30 Mar 2015 10:28:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH 5/5] wil6210: update FW file name
+References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<1427704134-30699-6-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	<87wq1y6d1b.fsf@kamboji.qca.qualcomm.com>
+	<16442708.jC9XbHNgDJ@lx-wigig-72>
+Date: Mon, 30 Mar 2015 17:28:31 +0300
+In-Reply-To: <16442708.jC9XbHNgDJ@lx-wigig-72> (Vladimir Kondratiev's message
+	of "Mon, 30 Mar 2015 17:00:00 +0300")
+Message-ID: <87zj6u36gg.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_162843_973450_19D840EB)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In 802.11ac standard, it is possible to dynamically reduce the channel
-width used.
-My question is:
-	If I use a channel with 80 or 40 MHz width, what will happen if
-I detect radar? 
-		The ath10k card/driver reduces automatically the channel
-width.
+Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
 
-Cedric Voncken.
+> On Monday, March 30, 2015 12:38:08 PM Kalle Valo wrote:
+>> Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+>> 
+>> > Firmware "board" file name has changed from wil6210.board
+>> > to wil6210.brd by the FW generation tools.
+>> >
+>> > Reflect this in the driver.
+>> >
+>
+>> > -#define WIL_FW2_NAME "wil6210.board" /* board & radio parameters */
+>> > +#define WIL_FW2_NAME "wil6210.brd" /* board & radio parameters */
+>> 
+>> I consider the firmware file names as part of stable user space
+>> interface (older user space need to work with newer kernel etc) and this
+>> change breaks that.
+>
+> Hardware was not released to the public yet; no one besides developers
+> in the lab should be affected by this.
+
+Actually that doesn't matter as it's common to run few years old
+kernels, especially in the embedded world. So no matter what, this
+breaks compatibility with user space and without any real benefit
+whatsoever. Now will anyone hit this in practise I don't know.
+
+I guess this change is ok for now as wil6210 hw is not that common, but
+in the future please be careful with this.
+
+-- 
+Kalle Valo
