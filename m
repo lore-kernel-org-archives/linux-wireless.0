@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:45310 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751555AbbCKRVw (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38894 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446AbbC3GYA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Mar 2015 13:21:52 -0400
-From: Marcus Folkesson <marcus.folkesson@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Marcus Folkesson <marcus.folkesson@gmail.com>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: Fix sparse warning cast to restricted __le16
-Date: Wed, 11 Mar 2015 18:21:30 +0100
-Message-Id: <1426094490-17065-1-git-send-email-marcus.folkesson@gmail.com> (sfid-20150311_182209_541251_A9FD63B8)
+	Mon, 30 Mar 2015 02:24:00 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/2] ath10k: add ATH10K_FW_IE_HTT_OP_VERSION
+References: <20150325110835.30133.509.stgit@x230>
+Date: Mon, 30 Mar 2015 09:23:51 +0300
+In-Reply-To: <20150325110835.30133.509.stgit@x230> (Kalle Valo's message of
+	"Wed, 25 Mar 2015 13:12:13 +0200")
+Message-ID: <87619j6m14.fsf@kamboji.qca.qualcomm.com> (sfid-20150330_082403_271080_DA8C6EE4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following sparse warnings:
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-  CHECK   drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c
-  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:265:37: warning:
-  cast to restricted __le16
-  drivers/staging/rtl8723au/hal/rtl8723a_hal_init.c:267:39: warning:
-  cast to restricted __le16
+> My proposal how to solve the differences between HTT interfaces by adding
+> ATH10K_FW_IE_HTT_OP_VERSION. Based on Rajkumar's "ath10k: fix htt t2h message
+> conflicts among firmware revisions", I just added the new IE and bumped up the
+> FW API.
+>
+> For now only compile tested, I will run proper tests later.
+>
+> ---
+>
+> Kalle Valo (1):
+>       ath10k: bump up FW API to 5
+>
+> Rajkumar Manoharan (1):
+>       ath10k: add ATH10K_FW_IE_HTT_OP_VERSION
 
-Signed-off-by: Marcus Folkesson <marcus.folkesson@gmail.com>
----
- drivers/staging/rtl8723au/include/rtl8723a_hal.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Applied.
 
-diff --git a/drivers/staging/rtl8723au/include/rtl8723a_hal.h b/drivers/staging/rtl8723au/include/rtl8723a_hal.h
-index e146336..f642b11 100644
---- a/drivers/staging/rtl8723au/include/rtl8723a_hal.h
-+++ b/drivers/staging/rtl8723au/include/rtl8723a_hal.h
-@@ -255,10 +255,10 @@ struct hal_data_8723a {
- 	struct hal_version		VersionID;
- 	enum rt_customer_id CustomerID;
- 
--	u16	FirmwareVersion;
--	u16	FirmwareVersionRev;
--	u16	FirmwareSubVersion;
--	u16	FirmwareSignature;
-+	__le16	FirmwareVersion;
-+	__le16	FirmwareVersionRev;
-+	__le16	FirmwareSubVersion;
-+	__le16	FirmwareSignature;
- 
- 	/* current WIFI_PHY values */
- 	u32	ReceiveConfig;
 -- 
-1.9.1
-
+Kalle Valo
