@@ -1,77 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39470 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655AbbCCMh5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 07:37:57 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <liuzy@marvell.com>, <szli@marvell.com>,
-	Marc Yang <yangyang@marvell.com>
-Subject: Re: [PATCH 1/4] mwifiex: avoid queue_work while work is ongoing
-References: <1424883057-12102-1-git-send-email-patila@marvell.com>
-	<1424883057-12102-2-git-send-email-patila@marvell.com>
-Date: Tue, 03 Mar 2015 14:37:50 +0200
-In-Reply-To: <1424883057-12102-2-git-send-email-patila@marvell.com> (Avinash
-	Patil's message of "Wed, 25 Feb 2015 22:20:54 +0530")
-Message-ID: <87a8zu9rz5.fsf@kamboji.qca.qualcomm.com> (sfid-20150303_133800_698389_A2FEF878)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:45657 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752647AbbC3Ip7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:45:59 -0400
+Message-ID: <1427705156.26117.12.camel@sipsolutions.net> (sfid-20150330_104602_176991_A085734D)
+Subject: Re: [PATCH 4/5] wil6210: stop_ap to leave interface closed
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	wil6210@qca.qualcomm.com
+Date: Mon, 30 Mar 2015 10:45:56 +0200
+In-Reply-To: <1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150330_102927_412153_35AF5F44)
+References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 <1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	 (sfid-20150330_102927_412153_35AF5F44)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avinash Patil <patila@marvell.com> writes:
+On Mon, 2015-03-30 at 11:28 +0300, Vladimir Kondratiev wrote:
+> cfg80211_ops.stop_ap supposed to have interface closed
+> as post condition. Fulfill this requirement.
 
-> From: Marc Yang <yangyang@marvell.com>
->
-> Current code does not check whether main_work_queue or
-> rx_work_queue is running when preparing to do queue_work,
-> this code fix add check before calling queue_work, reducing
-> unnecessary queue_work switch.
->
-> This change instead sets more_task flag to ensure we run main_process
-> superloop once again.
->
-> Signed-off-by: Marc Yang <yangyang@marvell.com>
-> Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Avinash Patil <patila@marvell.com>
+"closed" is rather misleading, since you most certainly should *not* do
+dev_close() [and don't, but how should I know reading the commit log?]
 
-Really, it took six persons to write this patch? Or do you just dump the
-same names to each patch?
+johannes
 
-> +void mwifiex_queue_main_work(struct mwifiex_adapter *adapter)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
-> +	if (adapter->mwifiex_processing) {
-> +		adapter->more_task_flag = true;
-> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-> +	} else {
-> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-> +		queue_work(adapter->workqueue, &adapter->main_work);
-> +	}
-> +}
-> +EXPORT_SYMBOL_GPL(mwifiex_queue_main_work);
-> +
-> +static void mwifiex_queue_rx_work(struct mwifiex_adapter *adapter)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
-> +	if (adapter->rx_processing) {
-> +		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-> +	} else {
-> +		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-> +		queue_work(adapter->rx_workqueue, &adapter->rx_work);
-> +	}
-> +}
-
-I can apply this patch, but to me this looks like a horrible hack.
-
--- 
-Kalle Valo
