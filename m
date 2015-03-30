@@ -1,64 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:64748 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390AbbCJV10 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 17:27:26 -0400
-Message-ID: <54FF61B6.3050307@broadcom.com> (sfid-20150310_222734_677406_8823F0D7)
-Date: Tue, 10 Mar 2015 22:27:18 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: Michael Tokarev <mjt@tls.msk.ru>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Seth Forshee <seth.forshee@canonical.com>,
-	"brcm80211 development" <brcm80211-dev-list@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Network Development" <netdev@vger.kernel.org>,
-	Maximilian Engelhardt <maxi@daemonizer.de>
-Subject: Re: BCM4313 & brcmsmac & 3.12: only semi-working?
-References: <53FDACD1.8090805@msgid.tls.msk.ru> <9234001.YBqfvtcJFx@fuchs> <5496E135.1@broadcom.com> <9062978.Vq0rTjKd5z@fuchs> <20150309205451.GA13884@minime.bse>
-In-Reply-To: <20150309205451.GA13884@minime.bse>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:45539 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753299AbbC3ISh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:18:37 -0400
+Message-ID: <1427703514.26117.3.camel@sipsolutions.net> (sfid-20150330_101843_908499_8E32A8BE)
+Subject: Re: [PATCH] nl80211: add net-detect delay to wowlan info
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>
+Cc: emmanuel.grumbach@intel.com, linux-wireless@vger.kernel.org
+Date: Mon, 30 Mar 2015 10:18:34 +0200
+In-Reply-To: <1426602961-9484-1-git-send-email-luca@coelho.fi>
+References: <1426602961-9484-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/09/15 21:54, Daniel Glöckner wrote:
-> Hi Arend,
->
-> On Sun, Dec 21, 2014 at 06:34:24PM +0100, Maximilian Engelhardt wrote:
->> On Sunday 21 December 2014 16:03:17 Arend van Spriel wrote:
->>> On 12/21/14 15:24, Maximilian Engelhardt wrote:
->>>> On Sunday 21 December 2014 15:13:50 Arend van Spriel wrote:
->>>>> Thanks. It shows you have have the same bt-coex version as Michael. I am
->>>>> not familiar with bluetooth side of things. Are you both using bluetooth
->>>>> on 4313?
->>>>>
->>>>> Regards,
->>>>> Arend
->>>>
->>>> I don't know. I think I have Bluetooth somehow enabled but I'm not really
->>>> using it. I definitely don't have any Bluetooth devices connected. I could
->>>> try to unload/disable Bluetooth it to see if it makes any difference.
->>>
->>> That would be useful to know.
->>>
->>
->> I did a test with all Bluetooth modules unloaded that I could find but
->> throughput was still very low (about 4 Mbit/s with brcmsmac, my atheros USB
->> stick archived about 110 Mbit/s).
->
-> any update on this issue?
-> One of my relatives would like to get rid of that Ralink wifi stick she
-> has been carrying around for 1.5 years now since the internal wifi in her
-> Thinkpad E130 suffers from this problem.
+On Tue, 2015-03-17 at 16:36 +0200, Luca Coelho wrote:
+> From: Luciano Coelho <luciano.coelho@intel.com>
+> 
+> Pass the initial net-detect delay (NL80211_ATTR_SCHED_SCAN_DELAY)
+> attribute in the WoWLAN info response.
+> 
+> Additionally, remove a bogus TODO comment.
 
-I did get my hands on same device as Michael has/had and it now sits in 
-my developement laptop. Just need to find some time to give it a spin.
+Applied.
 
-Regards,
-Arend
-
-> Best regards,
->
->    Daniel
+johannes
 
