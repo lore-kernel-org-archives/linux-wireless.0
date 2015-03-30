@@ -1,99 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8551 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753193AbbCLI2l (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 04:28:41 -0400
-Message-ID: <55014E36.5040707@broadcom.com> (sfid-20150312_092845_698001_7FE24F26)
-Date: Thu, 12 Mar 2015 09:28:38 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: German <gentgerman@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iw dev wlp1s0 scan hangs
-References: <20150311161757.dac357e24509141a4c98e84b@gmail.com>	<5500A4B6.4050702@broadcom.com>	<20150311163353.74922db84fc618b3b9039515@gmail.com>	<5500A93C.7060309@broadcom.com>	<20150311170018.c2581ec2ddfb4589f5c8b154@gmail.com>	<5500B0F2.3010804@broadcom.com> <20150311182146.bde39b79fad1e8cc61d6f4a0@gmail.com>
-In-Reply-To: <20150311182146.bde39b79fad1e8cc61d6f4a0@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:45939 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752426AbbC3KGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 06:06:21 -0400
+Message-ID: <1427709972.26117.26.camel@sipsolutions.net> (sfid-20150330_120626_959962_B9FAA748)
+Subject: Re: [PATCH] mac80211: fix failed to set smps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: miaoqing@qti.qualcomm.com, John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@qca.qualcomm.com
+Date: Mon, 30 Mar 2015 12:06:12 +0200
+In-Reply-To: <CABPxzYL16NbubDBLcRvtLmPSz8pMezJq627AFSVWyaj41WSxBQ@mail.gmail.com> (sfid-20150330_113447_042212_D72E76E0)
+References: <1427433674-5745-1-git-send-email-miaoqing@qca.qualcomm.com>
+	 <1427705012.26117.11.camel@sipsolutions.net>
+	 <CABPxzYL16NbubDBLcRvtLmPSz8pMezJq627AFSVWyaj41WSxBQ@mail.gmail.com>
+	 (sfid-20150330_113447_042212_D72E76E0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/11/15 23:21, German wrote:
-> On Wed, 11 Mar 2015 22:17:38 +0100
-> Arend van Spriel<arend@broadcom.com>  wrote:
->
->> On 03/11/15 22:00, German wrote:
->>> On Wed, 11 Mar 2015 21:44:44 +0100
->>> Arend van Spriel<arend@broadcom.com>   wrote:
->>>
->>>> On 03/11/15 21:33, German wrote:
->>>>> On Wed, 11 Mar 2015 21:25:26 +0100
->>>>> Arend van Spriel<arend@broadcom.com>    wrote:
->>>>>
->>>>>> On 03/11/15 21:17, German wrote:
->>>>>>> Hi. When I try to run aformentioned command it hangs for about 20 secs and no output is returned. What's the problem might be? Thanks
->>>>>>
->>>>>> any more details you can share? What kernel version, what specific
->>>>>> device is wlp1s0, do you have any kernel logging.
->>>>>>
->>>>
->>>> When I wrote down the questions I was wondering how specifc I should be.
->>>>> Kernel 3.18.7-gentoo.
->>>>
->>>> ok
->>>>
->>>>> wlp1s0 is my network card.
->>>>
->>>> Sure. I meant what brand and model.
->>>>
->>>> Can you run following commands:
->>>> $ lspci
->>>> $ lsusb
->>>>
->>> realtek RTL8723BE PCIe Wireless Network Adapter
->>>
->>>>> As for kernel logging, I simply don't know if I have it. Thanks
->>>>
->>>> Ok. Can you run following command after aborting the hanging iw scan
->>>> command:
->>>>
->>>> $ dmesg
->>>
->>> Polling FW ready fail! Firmware is not ready to run.
->>>
->>> Ok, so I need some sort of firmware? That's what I thought. What is this and where can I find it in kernel when I compile it? Thanks
->>
->> Not familiar with Realtek equipment but it might be provided by the
->> linux-firmware package so:
->>
->> $ sudo emerge --ask linux-firmware
->>
->
-> Thanks Arend. This did the trick. I can now scan networks and I found mine. But how I actually connect to my network? I guess it is encrypted, but I have wpa_supplicant installed.
+On Mon, 2015-03-30 at 15:04 +0530, Krishna Chaitanya wrote:
+> On Mon, Mar 30, 2015 at 2:13 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Fri, 2015-03-27 at 13:21 +0800, miaoqing@qti.qualcomm.com wrote:
+> >> From: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> >>
+> >> Signed-off-by: Miaoqing Pan <miaoqing@qca.qualcomm.com>
+> >
+> > Since you give no commit log, I can only guess what you're trying to do,
+> > but I suppose you need to use "echo -n" instead of "echo".
+> Johannes,
+> 
+> We had this discussion earlier also, i still strongly feel all cases
+> must work with "echo" by default, as people are not that familiar
+> to use "echo -n".
 
-Gentoo does not seem to provide NetworkManager as a solution. I found 
-this page [1]. Maybe it helps.
+Well I still strongly feel that accepting garbage on the input like this
+patch will do is wrong.
 
-Regards,
-Arend
+johannes
 
-[1] 
-http://wiki.gentoo.org/wiki/Handbook:Parts/Networking/Wireless#Wireless_tools
-
->> Regards,
->> Arend
->>
->>>>
->>>> Regards,
->>>> Arend
->>>>
->>>>>> Regards,
->>>>>> Arend
->>>>>
->>>>>
->>>>
->>>
->>>
->>
->
->
 
