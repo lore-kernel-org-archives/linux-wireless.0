@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:54677 "EHLO mail.hofr.at"
+Received: from mga14.intel.com ([192.55.52.115]:13437 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932168AbbCMQYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Mar 2015 12:24:11 -0400
-Date: Fri, 13 Mar 2015 17:24:09 +0100
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/3 RFC] ath10k: wmi: match wait_for_completion_timeout
-	return type
-Message-ID: <20150313162409.GA5939@opentech.at> (sfid-20150313_172434_766318_A65439B9)
-References: <1426175362-8640-1-git-send-email-hofrat@osadl.org> <87bnjwrhse.fsf@kamboji.qca.qualcomm.com>
+	id S1751288AbbC3GZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 02:25:40 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2015-03-30
+Date: Mon, 30 Mar 2015 06:25:36 +0000
+Message-ID: <1427696735.7241.4.camel@egrumbacBox> (sfid-20150330_082545_296950_A510EC94)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87bnjwrhse.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 13 Mar 2015, Kalle Valo wrote:
-
-> Nicholas Mc Guire <hofrat@osadl.org> writes:
-> 
-> > Return type of wait_for_completion_timeout is unsigned long not int.
-> > An appropriately named unsigned long is added and the assignments fixed up.
-> > Rather than returning 0 (timeout) or a more or less random remaining time
-> > (completion success) this return 0 or 1 which also resolves the type of the
-> > functions being int.
-> >
-> > Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> 
-> Why does patch 2 in this patchset have RFC in the title but patches 1
-> and 3 not? That just makes me confused, I can't tell what you want me to
-> do with the patches. Normally I just drop all patches (or patchsets)
-> which have RFC, and that's what I'm going to do now.
-> 
-> To save everyone's time, when submitting something please state clearly
-> what's your intention.
->
-ok - was simply unsure about the proposed change 
-and 1 was a trivial cleanup (which should have been 
-sent out as a seperate patch and not part of a series - my mistake)
-
-Will fix this up and repost it.
-
-sorry for the screwup - no intent to wast anybodies time.
-
-thx!
-hofrat
- 
+SGkgS2FsbGUsDQoNCk15IGxhc3QgcHVsbCByZXF1ZXN0IGZvciA0LjAuIFRoaXMgaXMgYSBmaXgg
+Zm9yIGEgbWVtb3J5IGxlYWsgY291cnRlc3kNCm9mIExhcnJ5IEZpbmdlciAodGhhbmtzIHRvIGhp
+bSkuIFRoaXMgcGF0Y2ggaGFzIGFscmVhZHkgYmVlbiBzZW50IHRvIHRoZQ0KTUwsIHNvIEkgd29u
+J3QgcmVwbHkgdG8gdGhpcyBwdWxsIHJlcXVlc3Qgd2l0aCBnaXQtc2VuZC1lbWFpbCBhcyBJDQp1
+c3VhbGx5IGRvLg0KUGxlYXNlIHB1bGwuIFRoYW5rcy4NCg0KDQpUaGUgZm9sbG93aW5nIGNoYW5n
+ZXMgc2luY2UgY29tbWl0IDFmMTZlYTI5NGQyZWY2MzAxMzc0MGY0Yzg1MzllNDMwYjZjMTJkZmY6
+DQoNCiAgaXdsd2lmaTogbXZtOiByZW1vdmUgV0FSTl9PTiBmb3IgaW52YWxpZCBCQSBub3RpZmlj
+YXRpb24gKDIwMTUtMDMtMTkgMTU6NDM6MTEgKzAyMDApDQoNCmFyZSBhdmFpbGFibGUgaW4gdGhl
+IGdpdCByZXBvc2l0b3J5IGF0Og0KDQogIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9s
+aW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1maXhlcy5naXQgdGFncy9pd2x3aWZpLWZv
+ci1rYWxsZS0yMDE1LTAzLTMwDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byBhNzFh
+YWY2NjcyNWU4ZmMwMjI1M2EzYmJlYTE1ZDI3ZTY1NjQzNGZlOg0KDQogIGl3bHdpZmk6IEZpeCBt
+ZW1vcnkgbGVhayBpbiBpd2xfcmVxX2Z3X2NhbGxiYWNrKCkgKDIwMTUtMDMtMjQgMTE6NDA6MzYg
+KzAyMDApDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0NCiogZml4IGEgbWVtb3J5IGxlYWs6IHdlIGxlYWtlZCBtZW1vcnkg
+ZWFjaCB0aW1lIHRoZSBtb2R1bGUNCndhcyBsb2FkZWQuDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCkxhcnJ5IEZpbmdl
+ciAoMSk6DQogICAgICBpd2x3aWZpOiBGaXggbWVtb3J5IGxlYWsgaW4gaXdsX3JlcV9md19jYWxs
+YmFjaygpDQoNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1kcnYuYyB8IDEgKw0K
+IDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQ0KDQo=
