@@ -1,82 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49636 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:47242 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751157AbbCAHKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 02:10:33 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 04/16] mac80211: fix another suspend vs. association race
-Date: Sun,  1 Mar 2015 09:10:03 +0200
-Message-Id: <1425193815-17785-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_081044_054372_269FC090)
-In-Reply-To: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1425193815-17785-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1752997AbbC3Ofr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 10:35:47 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: set QoS capability before changing station state
+Date: Mon, 30 Mar 2015 16:35:38 +0200
+Message-Id: <1427726138-17745-1-git-send-email-johannes@sipsolutions.net> (sfid-20150330_163550_214376_72416847)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Since cfg80211 disconnects, but has no insight into the association
-process, it can happen that it disconnects while association is in
-progress. We then try to abort association in mac80211, but this is
-only later so the association can complete between the two.
-
-This results in removing an interface from the driver while bound
-to the channel context, obviously causing confusion and issues.
-
-Solve this by also checking if we're associated during quiesce and
-if so deauthenticating. The frame will no longer go out to the AP
-which is a bit unfortunate, but it'll resolve the crash (and before
-we would have suspended without telling the AP as well.)
-
-I'm working on a better, but more complex solution as well, which
-should avoid that problem.
+In the upcoming fast-xmit patch, changing station state will
+build a header cache based on the station's capabilities, and
+as the QoS capability (sta.wme) impacts the header, it needs
+to be set before.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mlme.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ net/mac80211/cfg.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index cf3ae93..c5f3bd6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3985,6 +3985,34 @@ void ieee80211_mgd_quiesce(struct ieee80211_sub_if_data *sdata)
- 				      IEEE80211_DEAUTH_FRAME_LEN);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 301215be59ef..e4dd2fc34de3 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1059,6 +1059,10 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 		}
  	}
  
-+	/* This is a bit of a hack - we should find a better and more generic
-+	 * solution to this. Normally when suspending, cfg80211 will in fact
-+	 * deauthenticate. However, it doesn't (and cannot) stop an ongoing
-+	 * auth (not so important) or assoc (this is the problem) process.
-+	 *
-+	 * As a consequence, it can happen that we are in the process of both
-+	 * associating and suspending, and receive an association response
-+	 * after cfg80211 has checked if it needs to disconnect, but before
-+	 * we actually set the flag to drop incoming frames. This will then
-+	 * cause the workqueue flush to process the association response in
-+	 * the suspend, resulting in a successful association just before it
-+	 * tries to remove the interface from the driver, which now though
-+	 * has a channel context assigned ... this results in issues.
-+	 *
-+	 * To work around this (for now) simply deauth here again if we're
-+	 * now connected.
-+	 */
-+	if (ifmgd->associated && !sdata->local->wowlan) {
-+		u8 bssid[ETH_ALEN];
-+		struct cfg80211_deauth_request req = {
-+			.reason_code = WLAN_REASON_DEAUTH_LEAVING,
-+			.bssid = bssid,
-+		};
++	if (mask & BIT(NL80211_STA_FLAG_WME) &&
++	    local->hw.queues >= IEEE80211_NUM_ACS)
++		sta->sta.wme = set & BIT(NL80211_STA_FLAG_WME);
 +
-+		memcpy(bssid, ifmgd->associated->bssid, ETH_ALEN);
-+		ieee80211_mgd_deauth(sdata, &req);
-+	}
-+
- 	sdata_unlock(sdata);
- }
+ 	/* auth flags will be set later for TDLS stations */
+ 	if (!test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
+ 		ret = sta_apply_auth_flags(local, sta, mask, set);
+@@ -1073,10 +1077,6 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 			clear_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE);
+ 	}
  
+-	if (mask & BIT(NL80211_STA_FLAG_WME) &&
+-	    local->hw.queues >= IEEE80211_NUM_ACS)
+-		sta->sta.wme = set & BIT(NL80211_STA_FLAG_WME);
+-
+ 	if (mask & BIT(NL80211_STA_FLAG_MFP)) {
+ 		sta->sta.mfp = !!(set & BIT(NL80211_STA_FLAG_MFP));
+ 		if (set & BIT(NL80211_STA_FLAG_MFP))
 -- 
-1.9.1
+2.1.4
 
