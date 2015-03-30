@@ -1,82 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:35422 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbbCJLAV (ORCPT
+Received: from smtprelay0118.hostedemail.com ([216.40.44.118]:38776 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752587AbbC3Qh6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 07:00:21 -0400
-MIME-Version: 1.0
-In-Reply-To: <20150309224929.GL5264@atomide.com>
-References: <1425915402-10012-1-git-send-email-eliad@wizery.com>
-	<1425915402-10012-3-git-send-email-eliad@wizery.com>
-	<9217056.Z3urqp19oZ@wuerfel>
-	<CAB3XZEc_sjpA8kgfYCsO8FjGEc6O0xhE9aKO3VtgVbd+Meaakg@mail.gmail.com>
-	<20150309224929.GL5264@atomide.com>
-Date: Tue, 10 Mar 2015 13:00:19 +0200
-Message-ID: <CAB3XZEdS+mK1MiB7OWiehFGRBnUzJ84s3rFrCy3-YFYhL-BNWw@mail.gmail.com> (sfid-20150310_120038_130119_6BC72396)
-Subject: Re: [PATCH v5 3/3] ARM: dts: igep00x0: add wl18xx bindings
-From: Eliad Peller <eliad@wizery.com>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 30 Mar 2015 12:37:58 -0400
+Message-ID: <1427733474.14276.11.camel@perches.com> (sfid-20150330_183826_395914_7AA22153)
+Subject: [PATCH -next] mac80211: Use #define IEEE80211_CCMP_PN_LEN and bool
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Mon, 30 Mar 2015 09:37:54 -0700
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 10, 2015 at 12:49 AM, Tony Lindgren <tony@atomide.com> wrote:
-> * Eliad Peller <eliad@wizery.com> [150309 14:03]:
->> On Mon, Mar 9, 2015 at 9:50 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->> > On Monday 09 March 2015 17:36:42 Eliad Peller wrote:
->> >> --- a/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
->> >> +++ b/arch/arm/boot/dts/omap3-igep0030-rev-g.dts
->> >> @@ -64,4 +64,13 @@
->> >>         vmmc-supply = <&lbep5clwmc_wlen>;
->> >>         bus-width = <4>;
->> >>         non-removable;
->> >> +
->> >> +       #address-cells = <1>;
->> >> +       #size-cells = <0>;
->> >> +       wlcore: wlcore@2 {
->> >> +               compatible = "ti,wl1835";
->> >> +               reg = <2>;
->> >> +               interrupt-parent = <&gpio5>;
->> >> +               interrupts = <8 IRQ_TYPE_NONE>;
->> >> +       };
->> >>
->> >
->> > Why IRQ_TYPE_NONE?
->> >
->> i simply mirrored the current board file (which only sets the irq number).
->>
->> > I was expecting you to remove all calls to legacy_init_wl12xx from this file,
->> > including the ones for wl12xx aside from the wl18xx ones you removed, but
->> > if that's enough to clean out the platform_data handling from the wlcore
->> > driver, it's good enough as a start.
->> not sure i'm following - can you elaborate?
->>
->> i'll summarize the way i see it. please correct me if i'm wrong.
->>
->> both wl18xx and wl12xx use the platform data to get the irq number.
->> wl12xx (only) also needs some additional clock definitions to be
->> passed. there's currently some issue with specifying some the of clock
->> sources, so i preferred starting only with (the simpler) wl18xx
->> bindings.
->>
->> for platforms with wl18xx, we can remove the pdata-quirk, as all the
->> data (i.e. irq) can be passed by the new DT bindings.
->> however, for platforms with wl12xx, we still need to pass the clock
->> definitions (along with the irq), so we have to keep
->> legacy_init_wl12xx for the time being (and that's also why we have to
->> currently keep the platform_data handling in the wlcore driver)
->>
->> do you have something else in mind?
->
-> I think what Arnd is saying is we've now removed all the wl12xx using
-> legacy platforms, so all of them can boot with just data from dts.
->
-I don't think that's the case (unless i'm missing something).
-e.g. there's still pdata-quirk for "compulab,omap3-sbc-t3730" which
-initializes wl12xx device.
+Use a #define constant instead of a hardcoded value
+and use bool for an int used as a bool to reduce
+structure size.
 
-Eliad.
+Miscellanea:
+
+Neaten comments in structure definition.
+Add #include of ieee80211.h
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ net/mac80211/ieee80211_i.h | 7 ++++---
+ net/mac80211/rx.c          | 4 ++--
+ 2 files changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 8d53d65..08f994d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -26,6 +26,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/leds.h>
+ #include <linux/idr.h>
++#include <linux/ieee80211.h>
+ #include <net/ieee80211_radiotap.h>
+ #include <net/cfg80211.h>
+ #include <net/mac80211.h>
+@@ -89,11 +90,11 @@ struct ieee80211_fragment_entry {
+ 	unsigned int last_frag;
+ 	unsigned int extra_len;
+ 	struct sk_buff_head skb_list;
+-	int ccmp; /* Whether fragments were encrypted with CCMP */
+-	u8 last_pn[6]; /* PN of the last fragment if CCMP was used */
++	/* for CCMP fragments */
++	bool ccmp;				/* encrypted with CCMP */
++	u8 last_pn[IEEE80211_CCMP_PN_LEN];	/* PN of the last fragment */
+ };
+ 
+-
+ struct ieee80211_bss {
+ 	u32 device_ts_beacon, device_ts_presp;
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 944bdc0..367ed9c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1711,7 +1711,7 @@ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
+ 	entry->seq = seq;
+ 	entry->rx_queue = rx_queue;
+ 	entry->last_frag = frag;
+-	entry->ccmp = 0;
++	entry->ccmp = false;
+ 	entry->extra_len = 0;
+ 
+ 	return entry;
+@@ -1812,7 +1812,7 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 			int queue = rx->security_idx;
+ 			/* Store CCMP PN so that we can verify that the next
+ 			 * fragment has a sequential PN value. */
+-			entry->ccmp = 1;
++			entry->ccmp = true;
+ 			memcpy(entry->last_pn,
+ 			       rx->key->u.ccmp.rx_pn[queue],
+ 			       IEEE80211_CCMP_PN_LEN);
+
+
