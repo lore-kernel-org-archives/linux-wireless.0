@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from blu004-omc1s21.hotmail.com ([65.55.116.32]:51256 "EHLO
-	BLU004-OMC1S21.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753930AbbCCVPd (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:3591 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684AbbC3SO5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 16:15:33 -0500
-Message-ID: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl> (sfid-20150303_221549_853590_F48461C3)
-Date: Wed, 4 Mar 2015 05:16:18 +0800
-From: Chen Gang <xili_gchen_5257@hotmail.com>
+	Mon, 30 Mar 2015 14:14:57 -0400
+From: Yanbo Li <yanbol@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <dreamfly281@gmail.com>, <michal.kazior@tieto.com>,
+	<ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath10k: Add the WMI Air Time Fairness service define
+Date: Mon, 30 Mar 2015 11:14:05 -0700
+Message-ID: <1427739246-2734-1-git-send-email-yanbol@qca.qualcomm.com> (sfid-20150330_201501_059456_C9AE7822)
 MIME-Version: 1.0
-To: zajec5@gmail.com
-CC: linux-wireless@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH] bcma: Kconfig: Let it depend on PCI
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bcma also needs PCI, just like IOMEM and DMA, so let it depend on PCI,
-or will cause building break for allmodconfig under c6x:
+Add the FW ATF (Air Time Fairness) service define to keep consistent
+with 10.2 FW capability
 
-    CC [M]  drivers/bcma/driver_pcie2.o
-  drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
-  drivers/bcma/driver_pcie2.c:196:8: error: implicit declaration of function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
-    err = pcie_set_readrq(dev, pcie2->reqsize);
-          ^
+Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
 
-Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
----
- drivers/bcma/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
-index 0ee48be..8be284e 100644
---- a/drivers/bcma/Kconfig
-+++ b/drivers/bcma/Kconfig
-@@ -1,6 +1,6 @@
- config BCMA_POSSIBLE
- 	bool
--	depends on HAS_IOMEM && HAS_DMA
-+	depends on HAS_IOMEM && HAS_DMA && PCI
- 	default y
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 938e6521776b..a8f39d69eee2 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -148,6 +148,7 @@ enum wmi_service {
+ 	WMI_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT,
+ 	WMI_SERVICE_MDNS_OFFLOAD,
+ 	WMI_SERVICE_SAP_AUTH_OFFLOAD,
++	WMI_SERVICE_ATF,
  
- menu "Broadcom specific AMBA"
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -177,6 +178,7 @@ enum wmi_10x_service {
+ 	WMI_10X_SERVICE_SMART_ANTENNA_SW_SUPPORT,
+ 	WMI_10X_SERVICE_FORCE_FW_HANG,
+ 	WMI_10X_SERVICE_SMART_ANTENNA_HW_SUPPORT,
++	WMI_10X_SERVICE_ATF,
+ };
+ 
+ enum wmi_main_service {
+@@ -293,6 +295,7 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_MDNS_OFFLOAD);
+ 	SVCSTR(WMI_SERVICE_SAP_AUTH_OFFLOAD);
++	SVCSTR(WMI_SERVICE_ATF);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -356,6 +359,8 @@ static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_FORCE_FW_HANG, len);
+ 	SVCMAP(WMI_10X_SERVICE_SMART_ANTENNA_HW_SUPPORT,
+ 	       WMI_SERVICE_SMART_ANTENNA_HW_SUPPORT, len);
++	SVCMAP(WMI_10X_SERVICE_ATF,
++	       WMI_SERVICE_ATF, len);
+ }
+ 
+ static inline void wmi_main_svc_map(const __le32 *in, unsigned long *out,
 -- 
-1.9.3
+1.9.1
+
