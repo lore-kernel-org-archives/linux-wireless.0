@@ -1,64 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39637 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752068AbbCCMj7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Mar 2015 07:39:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Avinash Patil <patila@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <akarwar@marvell.com>,
-	<cluo@marvell.com>, <liuzy@marvell.com>, <szli@marvell.com>
-Subject: Re: [PATCH 3/4] mwifiex: remove_bss_prio_lock
-References: <1424883057-12102-1-git-send-email-patila@marvell.com>
-	<1424883057-12102-4-git-send-email-patila@marvell.com>
-Date: Tue, 03 Mar 2015 14:39:52 +0200
-In-Reply-To: <1424883057-12102-4-git-send-email-patila@marvell.com> (Avinash
-	Patil's message of "Wed, 25 Feb 2015 22:20:56 +0530")
-Message-ID: <8761ai9rvr.fsf@kamboji.qca.qualcomm.com> (sfid-20150303_134003_363786_A31DEDFD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:45613 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753404AbbC3IkT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 04:40:19 -0400
+Message-ID: <1427704814.26117.10.camel@sipsolutions.net> (sfid-20150330_104029_524948_3BEBBF43)
+Subject: Re: [patch] mac80111: aes_ccm: cleanup
+ ieee80211_aes_key_setup_encrypt()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 30 Mar 2015 10:40:14 +0200
+In-Reply-To: <20150323140814.GA27609@mwanda>
+References: <20150323140814.GA27609@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avinash Patil <patila@marvell.com> writes:
+On Mon, 2015-03-23 at 17:08 +0300, Dan Carpenter wrote:
+> This code is written using an anti-pattern called "success handling"
+> which makes it hard to read, especially if you are used to normal kernel
+> style.  It should instead be written as a list of directives in a row
+> with branches for error handling.
 
-> From: Zhaoyang Liu <liuzy@marvell.com>
->
-> This patch does away with spinlock in
-> mwifiex_wmm_get_highest_priolist_ptr in order to improve TP.
->
-> Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <patila@marvell.com>
-> Signed-off-by: Avinash Patil <patila@marvell.com>
+Applied.
 
-[...]
+johannes
 
-> @@ -727,6 +730,25 @@ static int mwifiex_deinit_priv_params(struct mwifiex_private *priv)
->  	}
->  
->  	mwifiex_deauthenticate(priv, NULL);
-> +
-> +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
-> +	adapter->main_locked = true;
-> +	if (adapter->mwifiex_processing) {
-> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-> +		flush_workqueue(adapter->workqueue);
-> +	} else {
-> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
-> +	}
-> +
-> +	spin_lock_irqsave(&adapter->rx_proc_lock, flags);
-> +	adapter->rx_locked = true;
-> +	if (adapter->rx_processing) {
-> +		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-> +		flush_workqueue(adapter->rx_workqueue);
-> +	} else {
-> +		spin_unlock_irqrestore(&adapter->rx_proc_lock, flags);
-> +	}
-
-And here the horrible hack just grows to other functions.
-
--- 
-Kalle Valo
