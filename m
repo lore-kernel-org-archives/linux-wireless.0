@@ -1,60 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:49089 "EHLO mail.us.es"
+Received: from s3.sipsolutions.net ([5.9.151.49]:45719 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753062AbbCPNIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Mar 2015 09:08:07 -0400
-Date: Mon, 16 Mar 2015 14:11:13 +0100
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: Richard Weinberger <richard@nod.at>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	coreteam@netfilter.org, netfilter-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org, sameo@linux.intel.com,
-	aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	davem@davemloft.net, kadlec@blackhole.kfki.hu, kaber@trash.net
-Subject: Re: [PATCH 4/4] netfilter: Fix format string of nfnetlink_queue proc
- file
-Message-ID: <20150316131113.GA5744@salvia> (sfid-20150316_140818_129629_0E15C66E)
-References: <1426246276-15839-1-git-send-email-richard@nod.at>
- <1426246276-15839-5-git-send-email-richard@nod.at>
- <20150313121539.GA14488@salvia>
- <5502E99A.2060901@nod.at>
- <20150313135329.GA6054@salvia>
- <5502F28F.9050601@nod.at>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5502F28F.9050601@nod.at>
+	id S1753151AbbC3JGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Mar 2015 05:06:31 -0400
+Message-ID: <1427706386.26117.21.camel@sipsolutions.net> (sfid-20150330_110634_690008_3021BBF0)
+Subject: Re: [RFC] mac80211: check A-MSDU inner frame source address on AP
+ interfaces.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Mon, 30 Mar 2015 11:06:26 +0200
+In-Reply-To: <1427398823-30321-1-git-send-email-michael-dev@fami-braun.de> (sfid-20150326_204718_452345_B3C0C9FE)
+References: <1427398823-30321-1-git-send-email-michael-dev@fami-braun.de>
+	 (sfid-20150326_204718_452345_B3C0C9FE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 13, 2015 at 03:22:07PM +0100, Richard Weinberger wrote:
-> Am 13.03.2015 um 14:53 schrieb Pablo Neira Ayuso:
-> >> You mean statistics via netlink attributes? I can add that!
-> > 
-> > Add a new NFQNL_CFG_CMD_STATS command to request the statistics. If
-> > NLM_F_DUMP is set, then we'll basically provide the full list of
-> > instances. Otherwise, in case you want to retrieve stats for a
-> > specific netlink socket, you can use the netlink portID as index.
-> > And you'll have to add attributes for this new command, yes.
+On Thu, 2015-03-26 at 20:40 +0100, Michael Braun wrote:
+> When using WPA security, the station and thus the required key is
+> identified by its mac address when packets are received. So a
+> station usually cannot spoof its source mac address.
 > 
-> This was my plan. Thanks for the pointer!
-
-It would be great if you can contribute this new interface.
-
-> >> But I think we should also fix the format string of the proc file
-> >> as the fix is easy and non-intrusive.
-> > 
-> > Unfortunately we don't know how many people are relying on that
-> > output, I prefer to remain conservative and provide a proper netlink
-> > interface for this.
+> But when a station sends an A-MSDU frame, port control and crypto
+> is done using the outer mac address, while the packets delivered
+> and forwarded use the inner mac address.
 > 
-> I understand your concerns but an application which is able to parse positive
-> and negative numbers can also parse pure positives.
-> Just made a small test application, glibc's %d in sscanf() can also deal with UINT_MAX.
-> And I don't expect that applications to check whether the returned values from
-> /proc/net/netfilter/nfnetlink_queue are between INT_MIN and INT_MAX.
+> IEEE 802.11-2012 mandates that the outer source mac address should
+> match the inner source address (section 8.3.2.2). For the
+> destination mac address, matching is not required (section 10.23.15).
 > 
-> That said, I'd have assumed that an user would report negative values as plain kernel bug.
+> So I was wondering whether some checking would be useful?
 
-Makes sense, please fix net/netfilter/nfnetlink_log.c too.
+Makes sense, but perhaps it should just be done in A-MSDU de-aggregation
+in ieee80211_amsdu_to_8023s() so we can simply not even allocate the skb
+for that frame if it's mismatched? It'd only be possible for those
+callers who set has_80211_header=true, but mac80211 would still be
+covered.
 
-Thanks.
+Alternatively, we could pass the TA into the function, and then check
+against that.
+
+johannes
+
