@@ -1,35 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:23759 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753360AbbCJQti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Mar 2015 12:49:38 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [PATCH 0/3] ath9k: add DFS support for HT40
-Date: Tue, 10 Mar 2015 17:49:28 +0100
-Message-Id: <1426006171-2555-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20150310_174947_906427_50388157)
+Received: from mail-la0-f46.google.com ([209.85.215.46]:32787 "EHLO
+	mail-la0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753343AbbCaKdE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2015 06:33:04 -0400
+Received: by lajy8 with SMTP id y8so9215384laj.0
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 03:33:03 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v6 1/7] ath10k: allow empty ssid vdev config
+Date: Tue, 31 Mar 2015 10:26:20 +0000
+Message-Id: <1427797586-5132-2-git-send-email-michal.kazior@tieto.com> (sfid-20150331_123310_434569_D9DCFC20)
+In-Reply-To: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com>
+References: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Atheros chipsets certified for DFS (currently AR_SREV_VERSION_9580)
-also support HT40 DFS mode. This patch series provides handling of
-radar pulses reported for primary and extension channels and
-sets small knobs in the detector and interface-combinations to
-enable operating on HT40 DFS channels.
+It doesn't make much sense to reject a valid
+firmware configuration combination.
 
+Since SSID isn't known early on it might make
+sense to allow driver to start vdev without SSID
+and restart it later.
 
-Zefir Kurtisi (3):
-  ath9k: restart only triggering DFS detector line
-  ath9k: add DFS support for extension channel
-  ath9k: allow 40MHz radar detection width
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
+ drivers/net/wireless/ath/ath10k/wmi.c     | 2 --
+ 2 files changed, 4 deletions(-)
 
- drivers/net/wireless/ath/ath9k/dfs.c            | 44 ++++++++++++++++---------
- drivers/net/wireless/ath/ath9k/init.c           |  3 +-
- drivers/net/wireless/ath/dfs_pattern_detector.c |  2 +-
- 3 files changed, 32 insertions(+), 17 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 7bfb45492027..ac3b4fd5b752 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1518,8 +1518,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
+ 	void *ptr;
+ 	u32 flags = 0;
+ 
+-	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
+-		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
+ 		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 4778031b8635..da2fc1d99291 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4244,8 +4244,6 @@ ath10k_wmi_op_gen_vdev_start(struct ath10k *ar,
+ 	const char *cmdname;
+ 	u32 flags = 0;
+ 
+-	if (WARN_ON(arg->ssid && arg->ssid_len == 0))
+-		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->hidden_ssid && !arg->ssid))
+ 		return ERR_PTR(-EINVAL);
+ 	if (WARN_ON(arg->ssid_len > sizeof(cmd->ssid.ssid)))
 -- 
-1.9.1
+2.1.4
 
