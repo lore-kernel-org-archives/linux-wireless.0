@@ -1,75 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33735 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:52040 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751185AbbCRTWy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Mar 2015 15:22:54 -0400
-Message-ID: <1426706561.3001.25.camel@sipsolutions.net> (sfid-20150318_202257_673790_A47FFEF8)
-Subject: Re: [PATCH] mac80211: stop scan before connection
+	id S1753751AbbCaLIh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2015 07:08:37 -0400
+Message-ID: <1427800111.2057.18.camel@sipsolutions.net> (sfid-20150331_130841_818747_56AB378F)
+Subject: Re: Throughput regression with `tcp: refine TSO autosizing`
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	David Spinadel <david.spinadel@intel.com>
-Date: Wed, 18 Mar 2015 20:22:41 +0100
-In-Reply-To: <CAB3XZEdJTjRS9tek_KnR9t_HT5+AHjvcjKuBavY2KSrHj9jLkw@mail.gmail.com> (sfid-20150318_111123_601058_E60EC6E5)
-References: <1426615118-17516-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <CAB3XZEd7cQwKm_yLztzeTB0S_-uEp4FwzDUV1O8cG6mNtkiY_A@mail.gmail.com>
-	 <1426671981.3001.12.camel@sipsolutions.net>
-	 <CAB3XZEdJTjRS9tek_KnR9t_HT5+AHjvcjKuBavY2KSrHj9jLkw@mail.gmail.com>
-	 (sfid-20150318_111123_601058_E60EC6E5)
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Neal Cardwell <ncardwell@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Eyal Perry <eyalpe@dev.mellanox.co.il>
+Date: Tue, 31 Mar 2015 13:08:31 +0200
+In-Reply-To: <1423494690.31870.189.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20150209_161141_280698_3CDB7CE7)
+References: <CA+BoTQkVu23P3EOmY_Q3E1GJnWsyF==Pawz4iPOS_Bq5dvfO5Q@mail.gmail.com>
+	 <1422537297.21689.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQk2xT-8DqPuiiKG+kHAjLPrj8F9dLTb-rcGhvMq0u_2Qw@mail.gmail.com>
+	 <1422628835.21689.95.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkV+mOZfe_Niz5101sMQeaV6muKCsShptjGQ1AgOHqqoQ@mail.gmail.com>
+	 <1422903136.21689.114.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1422926330.21689.138.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkMikA8wxm1ce2DkKhPB0HiKeAqT7f+sQ=91W40z=X0Rg@mail.gmail.com>
+	 <1422973660.907.10.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmvUuFdfYF=wVMYxrf_nQZB5GCV=LvDZVvfs-3hAE4WKw@mail.gmail.com>
+	 <1423051045.907.108.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=BDcQ779uKCuX+f40=4npXVF4MTQnpjKimNYAxPsxBoQ@mail.gmail.com>
+	 <1423053531.907.115.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=qmCZz4CmSOvCOzMLowrDEG12XBffkTcYxjGqVD9604g@mail.gmail.com>
+	 <1423055810.907.125.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423056591.907.130.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423084303.31870.15.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQnnwrv0nrKyGyQNvosz_E4e5fBa9iN8fpeqcd-iRfi17g@mail.gmail.com>
+	 <1423141038.31870.38.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423142342.31870.49.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQmcShK0U_cXvEOLY_8y7LH8x3taTgjcyMzv0MLVn4UtCA@mail.gmail.com>
+	 <1423147286.31870.59.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423156205.31870.86.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQ=WaKLV=r6qWaWAEfyDr2pqMWpm4NDmnek92TEVndnxRQ@mail.gmail.com>
+	 <1423230001.31870.128.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <1423230785.31870.131.camel@edumazet-glaptop2.roam.corp.google.com>
+	 <CA+BoTQkazCOin7VWLfrHUjtgKDPV6T+sFsk5FPS7D-morr4FZQ@mail.gmail.com>
+	 <CA+BoTQn3KRym0qCJ+fLav5LQgjfiN_-Eqz0xPSc2eXJ-ijNjQw@mail.gmail.com>
+	 <1423494690.31870.189.camel@edumazet-glaptop2.roam.corp.google.com>
+	 (sfid-20150209_161141_280698_3CDB7CE7)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-03-18 at 12:11 +0200, Eliad Peller wrote:
+To revive an old thread ...
 
-> i'm not sure. the AP will probably have some retransmissions, 
+On Mon, 2015-02-09 at 07:11 -0800, Eric Dumazet wrote:
 
-It hopefully will, but they'll be real retransmissions (with retry bit),
-usually occurring within a very short period of time.
 
-> so the
-> station should have good chances to get the frames (assuming the
-> hardware will give this interface some airtime during the scan).
+> Ideally the formula would be in TCP something very fast to compute :
+> 
+> amount = (sk->sk_pacing_rate >> 10) + sk->tx_completion_delay_cushion;
+> limit = max(2 * skb->truesize, amount);
+> limit = min_t(u32, limit, sysctl_tcp_limit_output_bytes);
+> 
+> So a 'problematic' driver would have to do the math (64 bit maths) like
+> this :
+> 
+> 
+> sk->tx_completion_delay_cushion = ewma_tx_delay * sk->sk_pacing_rate;
 
-So the normal dwell time during even an active scan (say 30ms) will mean
-that all of those retries will not be heard once you miss the first one.
+The whole notion with "ewma_tx_delay" seems very wrong to me. Measuring
+something while also trying to control it (or something closely related)
+seems a bit strange, but perhaps you meant to measure something
+different than what Michal implemented.
 
-> > So in a sense you could say deferring the handling doesn't make sense,
-> > but I'd still argue you shouldn't start this process while you're in the
-> > middle of scanning, hence this patch.
-> >
-> i agree the patch makes sense anyway, i just noted that mac80211
-> behavior seems wrong.
-> you should avoid scanning while connecting in first place, not defer
-> the handling.
+What he implemented was measuring the time it takes from submission to
+the hardware queues, but that seems to create a bad feedback cycle:
+Allowing it as extra transmit "cushion" will, IIUC, cause TCP to submit
+more data to the queues, which will in turn cause the next packets to be
+potentially delayed more (since there are still waiting ones) thus
+causing a longer delay to be measured, which in turn allows even more
+data to be submitted etc.
 
-Yeah, agree.
+IOW, while traffic is flowing this will likely cause feedback that
+completely removes the point of this, no? Leaving only
+sysctl_tcp_limit_output_bytes as the limit (*).
 
-> btw, note that both this patch and ieee80211_iface_work() don't count
-> for the sched scan case, which is basically the same.
-
-True, except we can't really cover that case since we don't even know
-when we're really scanning while sched scan is enabled.
-
-I'd expect drivers to either abort the scheduled scan in that case, or
-protected the authentication/association in some way (like iwlwifi does,
-for example, by giving a few hundred ms of guaranteed channel time in
-the mgd_prepare_tx method)
-
-> > We may have to do more exclusions (e.g. don't start a scan while
-> > authenticating or associating) here though, and ultimately not
-> > *processing* the frames will be irrelevant as they shouldn't be coming
-> > in anyway.
-> that's true for auth/assoc frames. but some other frames (e.g. deauth)
-> can come anytime, and i don't see why we should defer processing in
-> this case.
-
-Yeah, true. This seems like something we should take a closer look at,
-think about the design more and document the expectations better.
-
-Still, I think this patch is one step along that way.
+It seems it'd be better to provide a calculated estimate, perhaps based
+on current transmit rate and (if available) CCA/TXOP acquisition time.
 
 johannes
+
+(*) Which, btw, isn't all that big given that a maximally sized A-MPDU
+is like 1MB containing close to that much actual data! Don't think that
+can actually be done at current transmit rates though.
 
