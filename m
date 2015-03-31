@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4406 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754579AbbCLNGO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:06:14 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 38/49] iwlwifi: mvm: don't init MCC during CT-kill
-Date: Thu, 12 Mar 2015 15:04:23 +0200
-Message-Id: <1426165474-25586-38-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143417_319904_74B4966B)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+Received: from mail-ie0-f175.google.com ([209.85.223.175]:34748 "EHLO
+	mail-ie0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717AbbCaUuM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2015 16:50:12 -0400
+Received: by iedfl3 with SMTP id fl3so29871420ied.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 13:50:11 -0700 (PDT)
+Date: Tue, 31 Mar 2015 16:49:33 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: ferran <ranker72@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Fwd: Unable to operate a rt2770 device at 5GHz in mesh mode
+Message-ID: <20150331204933.GC11601@localhost> (sfid-20150331_225017_730782_CB334130)
+References: <551AE9AD.4050102@gmail.com>
+ <551AEB27.1020003@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <551AEB27.1020003@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+On Tue, Mar 31, 2015 at 08:44:55PM +0200, ferran wrote:
+>   * Channels 12,13,14 and 36 to 48 and 149 to 165
+> 
+>     ffff MHz [cc] (20.0 dBm) (passive scanning, no IBSS)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-RTNL is not taken during CT-kill so regulatory APIs cannot be invoked.
-That's fine, since the HW is only brought up to check the temperature
-during CT-kill. We don't expect Tx or scanning.
+In other words you cannot send beacons or other frames on this
+channel.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Reviewed-by: Luciano Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/fw.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+> Does
+> it have anything to do with regulation restrictions? I have succeeded at
+> connecting to an AP at 5 GHz in managed mode.
 
-diff --git a/drivers/net/wireless/iwlwifi/mvm/fw.c b/drivers/net/wireless/iwlwifi/mvm/fw.c
-index c03bde0..6cf7d98 100644
---- a/drivers/net/wireless/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/fw.c
-@@ -739,9 +739,15 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
- 	if (ret)
- 		goto error;
- 
--	ret = iwl_mvm_init_mcc(mvm);
--	if (ret)
--		goto error;
-+	/*
-+	 * RTNL is not taken during Ct-kill, but we don't need to scan/Tx
-+	 * anyway, so don't init MCC.
-+	 */
-+	if (!test_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status)) {
-+		ret = iwl_mvm_init_mcc(mvm);
-+		if (ret)
-+			goto error;
-+	}
- 
- 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
- 		ret = iwl_mvm_config_scan(mvm);
+Yes.
+
+Once you start a mesh, it will create the mesh and start beaconing
+immediately, so the regulatory domain of your device and/or CRDA may prevent
+you from doing this.
+
+In managed mode, the device is not beaconing so it doesn't have this
+limitation, although it will not be able to send probe requests.
+
 -- 
-1.9.1
-
+Bob Copeland %% http://bobcopeland.com/
