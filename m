@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24107 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751182AbbCATc3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Mar 2015 14:32:29 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/31] iwlwifi: mvm: don't iterate interfaces to disconnect in net-detect
-Date: Sun,  1 Mar 2015 21:31:32 +0200
-Message-Id: <1425238304-498-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150301_203416_906562_23D42C6D)
-In-Reply-To: <1425238186.30202.5.camel@egrumbacBox>
-References: <1425238186.30202.5.camel@egrumbacBox>
+Received: from mail.w1.fi ([212.71.239.96]:39069 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752954AbbCaO7O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2015 10:59:14 -0400
+Date: Tue, 31 Mar 2015 17:59:10 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Avinash Patil <patila@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Li Long <longli@marvell.com>
+Subject: Re: [PATCH 1/3] mwifiex: add cfg80211 set_default_mgmt_key handler
+Message-ID: <20150331145910.GA8244@w1.fi> (sfid-20150331_165918_698232_3BA79BB5)
+References: <1423764954-30412-1-git-send-email-patila@marvell.com>
+ <1423850815.2936.4.camel@sipsolutions.net>
+ <CBACCFA0AEB13A41977475BCF3E896FC689F4C7E9B@SC-VEXCH2.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CBACCFA0AEB13A41977475BCF3E896FC689F4C7E9B@SC-VEXCH2.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luciano Coelho <luciano.coelho@intel.com>
+On Tue, Mar 31, 2015 at 07:33:39AM -0700, Avinash Patil wrote:
+> We feel set_default_key_mgmt handler is required for devices which supports 2 pair of GTKs.
 
-We shouldn't call iwl_mvm_d3_disconnect_iter() on the running
-interfaces when we are woken up due to net-detect, because it doesn't
-make sense.  Additionally, this seems to set the
-IEEE80211_SDATA_DISCONNECT_RESUME flag that will cause a disconnection
-on the next resume (if a normal WoWLAN is used).
+Why would a device not support multiple GTKs/IGTKs? It does not sound
+possible to implement RSN correctly without such support.. AP side could
+kind of try to work with only a single GTK/IGTK, but non-AP STA would
+not handle GTK/IGTK rekeying. In any case, IEEE Std 802.11-2012 seems to
+be pretty clear on the assumption being that the device (including
+AP-only cases) supports multiple GTK/IGTK. The authenticator state
+machines use key index values 1 and 2 and swap between these when doing
+rekeying.
 
-To solve this, skip the iteration loop when net-detect is set.
-
-Reported-by: Samuel Tan <samueltan@chromium.org>
-Reviewed-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/mvm/d3.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/mvm/d3.c b/drivers/net/wireless/iwlwifi/mvm/d3.c
-index 14e8fd6..9bdfa95 100644
---- a/drivers/net/wireless/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/d3.c
-@@ -1876,25 +1876,28 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
- 
- 	if (mvm->net_detect) {
- 		iwl_mvm_query_netdetect_reasons(mvm, vif);
-+		/* has unlocked the mutex, so skip that */
-+		goto out;
- 	} else {
- 		keep = iwl_mvm_query_wakeup_reasons(mvm, vif);
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 		if (keep)
- 			mvm->keep_vif = vif;
-+		/* has unlocked the mutex, so skip that */
-+		goto out_iterate;
- #endif
- 	}
--	/* has unlocked the mutex, so skip that */
--	goto out;
- 
-  out_unlock:
- 	mutex_unlock(&mvm->mutex);
- 
-- out:
-+out_iterate:
- 	if (!test)
- 		ieee80211_iterate_active_interfaces_rtnl(mvm->hw,
- 			IEEE80211_IFACE_ITER_NORMAL,
- 			iwl_mvm_d3_disconnect_iter, keep ? vif : NULL);
- 
-+out:
- 	/* return 1 to reconfigure the device */
- 	set_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
- 	set_bit(IWL_MVM_STATUS_D3_RECONFIG, &mvm->status);
 -- 
-1.9.1
-
+Jouni Malinen                                            PGP id EFC895FA
