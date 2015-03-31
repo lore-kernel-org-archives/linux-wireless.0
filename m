@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ie0-f176.google.com ([209.85.223.176]:35884 "EHLO
-	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374AbbCDMIu convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57256 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754763AbbCaOdq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Mar 2015 07:08:50 -0500
+	Tue, 31 Mar 2015 10:33:46 -0400
+From: Avinash Patil <patila@marvell.com>
+To: Avinash Patil <patila@marvell.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Li Long <longli@marvell.com>
+Date: Tue, 31 Mar 2015 07:33:39 -0700
+Subject: RE: [PATCH 1/3] mwifiex: add cfg80211 set_default_mgmt_key handler
+Message-ID: <CBACCFA0AEB13A41977475BCF3E896FC689F4C7E9B@SC-VEXCH2.marvell.com> (sfid-20150331_163350_208941_59EE7071)
+References: <1423764954-30412-1-git-send-email-patila@marvell.com>
+	 (sfid-20150212_134627_640778_2A1810BC)
+ <1423850815.2936.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CACna6rxJ_uQHmpQS9NPs9JW=zNS4oc2-_cH6nXG0Z9CWu7iW7A@mail.gmail.com>
-References: <BLU436-SMTP3656F4A0610686DAE30BA1B9110@phx.gbl>
-	<CACna6rxJ_uQHmpQS9NPs9JW=zNS4oc2-_cH6nXG0Z9CWu7iW7A@mail.gmail.com>
-Date: Wed, 4 Mar 2015 13:08:49 +0100
-Message-ID: <CACna6ryi4ACAfkYRDGTWkwGh9PQrj9zxcnaWjO56m1dyhmiFGA@mail.gmail.com> (sfid-20150304_130908_740840_AF188F44)
-Subject: Re: [PATCH] bcma: Kconfig: Let it depend on PCI
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Chen Gang <xili_gchen_5257@hotmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 March 2015 at 07:19, Rafał Miłecki <zajec5@gmail.com> wrote:
-> On 3 March 2015 at 22:16, Chen Gang <xili_gchen_5257@hotmail.com> wrote:
->> bcma also needs PCI, just like IOMEM and DMA, so let it depend on PCI,
->> or will cause building break for allmodconfig under c6x:
->>
->>     CC [M]  drivers/bcma/driver_pcie2.o
->>   drivers/bcma/driver_pcie2.c: In function 'bcma_core_pcie2_up':
->>   drivers/bcma/driver_pcie2.c:196:8: error: implicit declaration of function 'pcie_set_readrq' [-Werror=implicit-function-declaration]
->>     err = pcie_set_readrq(dev, pcie2->reqsize);
->>           ^
->>
->> Signed-off-by: Chen Gang <gang.chen.5i5j@gmail.com>
->> ---
->>  drivers/bcma/Kconfig | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->> index 0ee48be..8be284e 100644
->> --- a/drivers/bcma/Kconfig
->> +++ b/drivers/bcma/Kconfig
->> @@ -1,6 +1,6 @@
->>  config BCMA_POSSIBLE
->>         bool
->> -       depends on HAS_IOMEM && HAS_DMA
->> +       depends on HAS_IOMEM && HAS_DMA && PCI
->>         default y
->>
->>  menu "Broadcom specific AMBA"
->> --
->> 1.9.3
->
-> Hm, I'm not sure how to ideally handle this. Cc-ing few ppl, maybe
-> they have something to add.
->
-> In fact there are SoCs (not using PCI host code obviously) with
-> everything embedded (without any PCI host mode cores). So note
-> following info about driver_pci.c and driver_pcie2.c:
-> 1) For BCMA_HOST_PCI
-> They are required, because of needed host-related PCI(e) core initialization.
-> 2) For BCMA_HOST_SOC
-> They are needed only if your SoC has PCI(e) host cores and you want to use them.
->
-> So I guess in theory we could have BCMA_DRIVER_PCI and *require* it
-> for BCMA_HOST_PCI only.
-
-After thinking about this.
-We already have Kconfig entries for other internal drivers, so I guess
-it makes sense to do the same for PCIe.
-
--- 
-Rafał
+SGkgSm9oYW5uZXMsDQoNCkNvdWxkIHlvdSBwbGVhc2UgY2hlY2sgb3VyIHJlc3BvbnNlPw0KV2Ug
+ZmVlbCBzZXRfZGVmYXVsdF9rZXlfbWdtdCBoYW5kbGVyIGlzIHJlcXVpcmVkIGZvciBkZXZpY2Vz
+IHdoaWNoIHN1cHBvcnRzIDIgcGFpciBvZiBHVEtzLg0KSG93IGRvIHdlIHdvcmsgYXJvdW5kIHRo
+aXM/DQoNClRoYW5rcywNCkF2aW5hc2gNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
+PiBGcm9tOiBBdmluYXNoIFBhdGlsDQo+IFNlbnQ6IFR1ZXNkYXksIE1hcmNoIDE3LCAyMDE1IDQ6
+NTUgUE0NCj4gVG86ICdKb2hhbm5lcyBCZXJnJw0KPiBDYzogbGludXgtd2lyZWxlc3NAdmdlci5r
+ZXJuZWwub3JnOyBBbWl0a3VtYXIgS2Fyd2FyOyBDYXRoeSBMdW87IFhpbm1pbmcgSHU7DQo+IExp
+IExvbmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSCAxLzNdIG13aWZpZXg6IGFkZCBjZmc4MDIxMSBz
+ZXRfZGVmYXVsdF9tZ210X2tleSBoYW5kbGVyDQo+IA0KPiANCj4gDQo+ID4gLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCj4gPiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNA
+c2lwc29sdXRpb25zLm5ldF0NCj4gPiBTZW50OiBGcmlkYXksIEZlYnJ1YXJ5IDEzLCAyMDE1IDEx
+OjM3IFBNDQo+ID4gVG86IEF2aW5hc2ggUGF0aWwNCj4gPiBDYzogbGludXgtd2lyZWxlc3NAdmdl
+ci5rZXJuZWwub3JnOyBBbWl0a3VtYXIgS2Fyd2FyOyBDYXRoeSBMdW87DQo+ID4gWGlubWluZyBI
+dTsgTGkgTG9uZw0KPiA+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS8zXSBtd2lmaWV4OiBhZGQgY2Zn
+ODAyMTEgc2V0X2RlZmF1bHRfbWdtdF9rZXkNCj4gPiBoYW5kbGVyDQo+ID4NCj4gPiBPbiBUaHUs
+IDIwMTUtMDItMTIgYXQgMjM6NDUgKzA1MzAsIEF2aW5hc2ggUGF0aWwgd3JvdGU6DQo+ID4gPiBG
+cm9tOiBYaW5taW5nIEh1IDxodXhtQG1hcnZlbGwuY29tPg0KPiA+ID4NCj4gPiA+IEl0IGlzIG9i
+c2VydmVkIHRoYXQgaG9zdGFwZCBmYWlsZWQgdG8gc2V0dXAgd2l0aCBtYW5hZ2VtZW50IGZyYW1l
+DQo+ID4gPiBwcm90ZWN0aW9uIG1vZGUgZW5hYmxlZCB3aGVuIHVzaW5nIG13aWZpZXguDQo+ID4g
+Pg0KPiA+ID4gVGhpcyBpcyBiZWNhdXNlIGhvc3RhcGQgd2lsbCB0cnkgdG8gaW5zdGFsbCBJR1RL
+IHVzaW5nDQo+ID4gPiBjZmc4MDIxMSBzZXRfZGVmYXVsdF9tZ210X2tleSBoYW5kbGVyLg0KPiA+
+ID4NCj4gPiA+IHdlIGhhdmUgYWxyZWFkeSBzdXBwb3J0IElHVEsgaW5zdGFsbCBpbiBzZXRfa2V5
+IGhhbmRsZXIsIHNvIGp1c3QNCj4gPiA+IHdvcmsgYXJvdW5kIHRoaXMgaXNzdWUgYnkgYWRkIGFu
+IGVtcHR5IGNmZzgwMjExX3NldF9kZWZhdWx0X21nbXRfa2V5DQo+IGhhbmRsZXIuDQo+ID4NCj4g
+PiBJIGJlbGlldmUgdGhhdCB0aGlzIGlzIGluY29ycmVjdCBzaW5jZSB0aGUga2V5IHNob3VsZCBv
+bmx5IGJlDQo+ID4gaW5zdGFsbGVkIGZvciBUWCBhZnRlciB0aGlzIGhhbmRsZXIsIG5vdCBpbiB0
+aGUgc2V0X2tleSBoYW5kbGVyLiBUaGlzDQo+ID4gc2hvdWxkIG1ha2UgYSBkaWZmZXJlbmNlIGlu
+IHRoZSBjYXNlIG9mIHJla2V5aW5nPyBQZXJoYXBzIGhvc3RhcGQNCj4gPiBkb2Vzbid0IGFjdHVh
+bGx5IHByb2dyYW0gdGhlIGtleSB1bnRpbCByZWtleWluZyB3aXRoIGFsbCBzdGF0aW9ucyBmaW5p
+c2hlcw0KPiB0aG91Z2guDQo+IA0KPiBJIGJlbGlldmUgdGhhdCBzZXRfZGVmdWFsdF9tZ210X2tl
+eSBhbmQgY29ycmVzcG9uZGluZyBjaGFuZ2VzIGluIGhvc3RhcGQgJg0KPiBjZmc4MDIxMSBhcmUg
+ZGVzaWduZWQgd2l0aCBmb2N1cyBvbiBtYWM4MDIxMS4NCj4gT3VyIGRlc2lnbiBpcyBhIGJpdCBk
+aWZmZXJlbnQgaW4gYSB3YXkgYWxsIFBNRiBpcyBoYW5kbGVkIGluIEZXOyBhbHNvIHdlIGRvbid0
+DQo+IHN1cHBvcnQgdHdvIHBhaXIgb2YgR1RLL0lHVEtzLg0KPiBXZSBhbHJlYWR5IGhhdmUgaW5z
+dGFsbGVkIElHVEsgdG8gRlcgaW4gYWRkX2tleSBoYW5kbGVyLg0KPiANCj4gPiBqb2hhbm5lcw0K
+DQo=
