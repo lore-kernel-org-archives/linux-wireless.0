@@ -1,249 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from Chamillionaire.breakpoint.cc ([80.244.247.6]:54108 "EHLO
-	Chamillionaire.breakpoint.cc" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753962AbbCBRkn (ORCPT
+Received: from mail-wi0-f182.google.com ([209.85.212.182]:36969 "EHLO
+	mail-wi0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752379AbbCaOJW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Mar 2015 12:40:43 -0500
-From: Florian Westphal <fw@strlen.de>
-To: <netdev@vger.kernel.org>
-Cc: Florian Westphal <fw@strlen.de>, linux-wireless@vger.kernel.org
-Subject: [PATCH RFC 04/14] drivers: wireless: rt2x00: move skb_dma to queue entry
-Date: Mon,  2 Mar 2015 18:40:18 +0100
-Message-Id: <1425318028-26531-5-git-send-email-fw@strlen.de> (sfid-20150302_184054_285181_4AD318B0)
-In-Reply-To: <1425318028-26531-1-git-send-email-fw@strlen.de>
-References: <1425318028-26531-1-git-send-email-fw@strlen.de>
+	Tue, 31 Mar 2015 10:09:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <20150326002925.GA10954@ribalta.home>
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+ <1424772112-27399-2-git-send-email-robert.dolca@intel.com> <20150326002925.GA10954@ribalta.home>
+From: Robert Dolca <robert.dolca@gmail.com>
+Date: Tue, 31 Mar 2015 17:03:42 +0300
+Message-ID: <CAFPB+Yc-+1s4Y1iWnnCHWjnk=U5Rq-6Wq-idtakCxju8pvYi4Q@mail.gmail.com> (sfid-20150331_160943_722397_5F61E4C5)
+Subject: Re: [linux-nfc] [PATCH 1/8] NFC: NCI: Allow connection close with dev down
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-... to shrink size needed for the skb frame desc.
+On Thu, Mar 26, 2015 at 2:29 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+> Hi Robert,
+>
+> On Tue, Feb 24, 2015 at 12:01:45PM +0200, Robert Dolca wrote:
+>> By calling __nci_request instead of nci_request allows the driver to use
+>> the function while initializing the device (setup stage)
+>>
+>> Signed-off-by: Robert Dolca <robert.dolca@intel.com>
+>> ---
+>>  net/nfc/nci/core.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+>> index 9575a18..c4dd5d8 100644
+>> --- a/net/nfc/nci/core.c
+>> +++ b/net/nfc/nci/core.c
+>> @@ -558,7 +558,7 @@ static void nci_core_conn_close_req(struct nci_dev *ndev, unsigned long opt)
+>>
+>>  int nci_core_conn_close(struct nci_dev *ndev, u8 conn_id)
+>>  {
+>> -     return nci_request(ndev, nci_core_conn_close_req, conn_id,
+>> +     return __nci_request(ndev, nci_core_conn_close_req, conn_id,
+>>                               msecs_to_jiffies(NCI_CMD_TIMEOUT));
+> You're fixing your problem by removing the NCI request serialization and
+> removing the check for your device being UP.
+> I assume you need to open and close a proprietary connection from your
+> setup hook ? Then please extend nci_request() to check for both NCI_UP
+> and NCI_INIT.
 
-Note that this is just the lowest hanging fruit I found, if you find
-better/other means to shrink the space needed in skb->cb
-(or to shrink it even further) -- great.
+You are right, I am opening and closing a connection from the setup
+function. The setup is called by nci_open_device. At the beginning of
+nci_open_device, req_lock is being acquired and it is release at the
+end of the function. That means that when setup is being called
+req_lock is acuired. As you said I can modify nci_request to check for
+NCI_INIT but it tries to acquire req_lock and it can not succeed.
 
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Florian Westphal <fw@strlen.de>
----
- drivers/net/wireless/rt2x00/rt2400pci.c   |  5 ++---
- drivers/net/wireless/rt2x00/rt2500pci.c   |  5 ++---
- drivers/net/wireless/rt2x00/rt2800mmio.c  |  7 +++----
- drivers/net/wireless/rt2x00/rt2x00queue.c | 10 +++++-----
- drivers/net/wireless/rt2x00/rt2x00queue.h | 17 ++++++++---------
- drivers/net/wireless/rt2x00/rt61pci.c     |  5 ++---
- 6 files changed, 22 insertions(+), 27 deletions(-)
+We could use another mutex for nci_request but I am not sure if that
+is a good idea.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2400pci.c b/drivers/net/wireless/rt2x00/rt2400pci.c
-index bdf5590..5c7927c 100644
---- a/drivers/net/wireless/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2400pci.c
-@@ -739,7 +739,6 @@ static bool rt2400pci_get_entry_state(struct queue_entry *entry)
- static void rt2400pci_clear_entry(struct queue_entry *entry)
- {
- 	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	u32 word;
- 
- 	if (entry->queue->qid == QID_RX) {
-@@ -748,7 +747,7 @@ static void rt2400pci_clear_entry(struct queue_entry *entry)
- 		rt2x00_desc_write(entry_priv->desc, 2, word);
- 
- 		rt2x00_desc_read(entry_priv->desc, 1, &word);
--		rt2x00_set_field32(&word, RXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
-+		rt2x00_set_field32(&word, RXD_W1_BUFFER_ADDRESS, entry->skb_dma);
- 		rt2x00_desc_write(entry_priv->desc, 1, word);
- 
- 		rt2x00_desc_read(entry_priv->desc, 0, &word);
-@@ -1111,7 +1110,7 @@ static void rt2400pci_write_tx_desc(struct queue_entry *entry,
- 	 * Start writing the descriptor words.
- 	 */
- 	rt2x00_desc_read(txd, 1, &word);
--	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
-+	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, entry->skb_dma);
- 	rt2x00_desc_write(txd, 1, word);
- 
- 	rt2x00_desc_read(txd, 2, &word);
-diff --git a/drivers/net/wireless/rt2x00/rt2500pci.c b/drivers/net/wireless/rt2x00/rt2500pci.c
-index 79f4fe6..907d7c2 100644
---- a/drivers/net/wireless/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2500pci.c
-@@ -828,12 +828,11 @@ static bool rt2500pci_get_entry_state(struct queue_entry *entry)
- static void rt2500pci_clear_entry(struct queue_entry *entry)
- {
- 	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	u32 word;
- 
- 	if (entry->queue->qid == QID_RX) {
- 		rt2x00_desc_read(entry_priv->desc, 1, &word);
--		rt2x00_set_field32(&word, RXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
-+		rt2x00_set_field32(&word, RXD_W1_BUFFER_ADDRESS, entry->skb_dma);
- 		rt2x00_desc_write(entry_priv->desc, 1, word);
- 
- 		rt2x00_desc_read(entry_priv->desc, 0, &word);
-@@ -1264,7 +1263,7 @@ static void rt2500pci_write_tx_desc(struct queue_entry *entry,
- 	 * Start writing the descriptor words.
- 	 */
- 	rt2x00_desc_read(txd, 1, &word);
--	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, skbdesc->skb_dma);
-+	rt2x00_set_field32(&word, TXD_W1_BUFFER_ADDRESS, entry->skb_dma);
- 	rt2x00_desc_write(txd, 1, word);
- 
- 	rt2x00_desc_read(txd, 2, &word);
-diff --git a/drivers/net/wireless/rt2x00/rt2800mmio.c b/drivers/net/wireless/rt2x00/rt2800mmio.c
-index de4790b..45772a1 100644
---- a/drivers/net/wireless/rt2x00/rt2800mmio.c
-+++ b/drivers/net/wireless/rt2x00/rt2800mmio.c
-@@ -66,7 +66,7 @@ void rt2800mmio_write_tx_desc(struct queue_entry *entry,
- 	 * Initialize TX descriptor
- 	 */
- 	word = 0;
--	rt2x00_set_field32(&word, TXD_W0_SD_PTR0, skbdesc->skb_dma);
-+	rt2x00_set_field32(&word, TXD_W0_SD_PTR0, entry->skb_dma);
- 	rt2x00_desc_write(txd, 0, word);
- 
- 	word = 0;
-@@ -82,7 +82,7 @@ void rt2800mmio_write_tx_desc(struct queue_entry *entry,
- 
- 	word = 0;
- 	rt2x00_set_field32(&word, TXD_W2_SD_PTR1,
--			   skbdesc->skb_dma + txwi_size);
-+			   entry->skb_dma + txwi_size);
- 	rt2x00_desc_write(txd, 2, word);
- 
- 	word = 0;
-@@ -710,13 +710,12 @@ EXPORT_SYMBOL_GPL(rt2800mmio_get_entry_state);
- void rt2800mmio_clear_entry(struct queue_entry *entry)
- {
- 	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	struct rt2x00_dev *rt2x00dev = entry->queue->rt2x00dev;
- 	u32 word;
- 
- 	if (entry->queue->qid == QID_RX) {
- 		rt2x00_desc_read(entry_priv->desc, 0, &word);
--		rt2x00_set_field32(&word, RXD_W0_SDP0, skbdesc->skb_dma);
-+		rt2x00_set_field32(&word, RXD_W0_SDP0, entry->skb_dma);
- 		rt2x00_desc_write(entry_priv->desc, 0, word);
- 
- 		rt2x00_desc_read(entry_priv->desc, 1, &word);
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c b/drivers/net/wireless/rt2x00/rt2x00queue.c
-index 68b620b..6c79266 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
-@@ -95,7 +95,7 @@ struct sk_buff *rt2x00queue_alloc_rxskb(struct queue_entry *entry, gfp_t gfp)
- 			return NULL;
- 		}
- 
--		skbdesc->skb_dma = skb_dma;
-+		entry->skb_dma = skb_dma;
- 		skbdesc->flags |= SKBDESC_DMA_MAPPED_RX;
- 	}
- 
-@@ -107,10 +107,10 @@ int rt2x00queue_map_txskb(struct queue_entry *entry)
- 	struct device *dev = entry->queue->rt2x00dev->dev;
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 
--	skbdesc->skb_dma =
-+	entry->skb_dma =
- 	    dma_map_single(dev, entry->skb->data, entry->skb->len, DMA_TO_DEVICE);
- 
--	if (unlikely(dma_mapping_error(dev, skbdesc->skb_dma)))
-+	if (unlikely(dma_mapping_error(dev, entry->skb_dma)))
- 		return -ENOMEM;
- 
- 	skbdesc->flags |= SKBDESC_DMA_MAPPED_TX;
-@@ -124,11 +124,11 @@ void rt2x00queue_unmap_skb(struct queue_entry *entry)
- 	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 
- 	if (skbdesc->flags & SKBDESC_DMA_MAPPED_RX) {
--		dma_unmap_single(dev, skbdesc->skb_dma, entry->skb->len,
-+		dma_unmap_single(dev, entry->skb_dma, entry->skb->len,
- 				 DMA_FROM_DEVICE);
- 		skbdesc->flags &= ~SKBDESC_DMA_MAPPED_RX;
- 	} else if (skbdesc->flags & SKBDESC_DMA_MAPPED_TX) {
--		dma_unmap_single(dev, skbdesc->skb_dma, entry->skb->len,
-+		dma_unmap_single(dev, entry->skb_dma, entry->skb->len,
- 				 DMA_TO_DEVICE);
- 		skbdesc->flags &= ~SKBDESC_DMA_MAPPED_TX;
- 	}
-diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.h b/drivers/net/wireless/rt2x00/rt2x00queue.h
-index 2233b91..e6f6a2e 100644
---- a/drivers/net/wireless/rt2x00/rt2x00queue.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00queue.h
-@@ -101,23 +101,19 @@ enum skb_frame_desc_flags {
-  *	Note that this pointer could point to something outside
-  *	of the scope of the skb->data pointer.
-  * @iv: IV/EIV data used during encryption/decryption.
-- * @skb_dma: (PCI-only) the DMA address associated with the sk buffer.
-  * @entry: The entry to which this sk buffer belongs.
-  */
- struct skb_frame_desc {
--	u8 flags;
--
--	u8 desc_len;
--	u8 tx_rate_idx;
--	u8 tx_rate_flags;
--
-+	struct queue_entry *entry;
- 	void *desc;
- 
- 	__le32 iv[2];
- 
--	dma_addr_t skb_dma;
-+	u8 flags;
- 
--	struct queue_entry *entry;
-+	u8 desc_len;
-+	u8 tx_rate_idx;
-+	u8 tx_rate_flags;
- };
- 
- /**
-@@ -372,6 +368,7 @@ enum queue_entry_flags {
-  * @entry_idx: The entry index number.
-  * @priv_data: Private data belonging to this queue entry. The pointer
-  *	points to data specific to a particular driver and queue type.
-+ * @skb_dma: (PCI-only) the DMA address associated with the sk buffer.
-  * @status: Device specific status
-  */
- struct queue_entry {
-@@ -386,6 +383,8 @@ struct queue_entry {
- 
- 	u32 status;
- 
-+	dma_addr_t skb_dma;
-+
- 	void *priv_data;
- };
- 
-diff --git a/drivers/net/wireless/rt2x00/rt61pci.c b/drivers/net/wireless/rt2x00/rt61pci.c
-index 8194550..a0c8de1 100644
---- a/drivers/net/wireless/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/rt2x00/rt61pci.c
-@@ -1397,13 +1397,12 @@ static bool rt61pci_get_entry_state(struct queue_entry *entry)
- static void rt61pci_clear_entry(struct queue_entry *entry)
- {
- 	struct queue_entry_priv_mmio *entry_priv = entry->priv_data;
--	struct skb_frame_desc *skbdesc = get_skb_frame_desc(entry->skb);
- 	u32 word;
- 
- 	if (entry->queue->qid == QID_RX) {
- 		rt2x00_desc_read(entry_priv->desc, 5, &word);
- 		rt2x00_set_field32(&word, RXD_W5_BUFFER_PHYSICAL_ADDRESS,
--				   skbdesc->skb_dma);
-+				   entry->skb_dma);
- 		rt2x00_desc_write(entry_priv->desc, 5, word);
- 
- 		rt2x00_desc_read(entry_priv->desc, 0, &word);
-@@ -1913,7 +1912,7 @@ static void rt61pci_write_tx_desc(struct queue_entry *entry,
- 	if (entry->queue->qid != QID_BEACON) {
- 		rt2x00_desc_read(txd, 6, &word);
- 		rt2x00_set_field32(&word, TXD_W6_BUFFER_PHYSICAL_ADDRESS,
--				   skbdesc->skb_dma);
-+				   entry->skb_dma);
- 		rt2x00_desc_write(txd, 6, word);
- 
- 		rt2x00_desc_read(txd, 11, &word);
--- 
-2.0.5
-
+Regards,
+Robert
