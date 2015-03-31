@@ -1,41 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:36400 "EHLO aibo.runbox.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756213AbbCMDg4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 23:36:56 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-To: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: m.v.b@runbox.com
-Subject: [PATCH 06/16] staging: rtl8723au: Do not initialize a static to 0
-Date: Thu, 12 Mar 2015 23:15:22 -0400
-Message-Id: <1426216532-24058-7-git-send-email-m.v.b@runbox.com> (sfid-20150313_044102_423331_BBD13EBD)
-In-Reply-To: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
-References: <1426216532-24058-1-git-send-email-m.v.b@runbox.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61697 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753989AbbCaSRq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2015 14:17:46 -0400
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] ath: define JP DFS patterns separated from FCC
+Date: Tue, 31 Mar 2015 11:16:24 -0700
+Message-ID: <1427825785-21389-1-git-send-email-poh@qca.qualcomm.com> (sfid-20150331_201752_627963_60AF1AE1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prior to this commit, a static integer named bcrc32initialized in
-rtl8723au's rtw_security.c was explicitly initialized to zero, even
-though this is not necessary. Remove the unneeded initialization.
+Separate Japan's DFS pattern from FCC to control PPB threshold.
 
-Signed-off-by: M. Vefa Bicakci <m.v.b@runbox.com>
+Currently all the radar detectors use the same threshold rate at
+50%, but it's not able to achieve if data traffic rate is higher
+than 40% because WLAN baseband used by ath9k and ath10k often fails
+detecting radar pulses, so that SW cannot get enough radar reports
+to achieve the rate.
+
+Since Japan's W53 band requires 50% data traffic during its DFS
+test we need to apply different threshold rate than others on it.
+Hence define its own pattern to give flexibility to threshold rate.
+
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 ---
- drivers/staging/rtl8723au/core/rtw_security.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 27 ++++++++++++++++---------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_security.c b/drivers/staging/rtl8723au/core/rtw_security.c
-index 0e87e1c10b..3e812a67e2 100644
---- a/drivers/staging/rtl8723au/core/rtw_security.c
-+++ b/drivers/staging/rtl8723au/core/rtw_security.c
-@@ -85,7 +85,7 @@ static void arcfour_encrypt(struct arc4context *parc4ctx,
- 		dest[i] = src[i] ^ (unsigned char)arcfour_byte(parc4ctx);
- }
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index b1de8c6..8d1e082 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -42,6 +42,7 @@ struct radar_types {
+ /* percentage on ppb threshold to trigger detection */
+ #define MIN_PPB_THRESH	50
+ #define PPB_THRESH(PPB) ((PPB * MIN_PPB_THRESH + 50) / 100)
++#define PPB_THRESH_JP(PPB, RATE) ((PPB * RATE + 100 - RATE) / 100)
+ #define PRF2PRI(PRF) ((1000000 + PRF / 2) / PRF)
+ /* percentage of pulse width tolerance */
+ #define WIDTH_TOLERANCE 5
+@@ -96,17 +97,23 @@ static const struct radar_types fcc_radar_types = {
+ 	.radar_types		= fcc_radar_ref_types,
+ };
  
--static int bcrc32initialized = 0;
-+static int bcrc32initialized;
- static u32 crc32_table[256];
+-#define JP_PATTERN FCC_PATTERN
++#define JP_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB, RATE, CHIRP)	\
++{								\
++	ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),		\
++	PMIN - PRI_TOLERANCE,					\
++	PMAX * PRF + PRI_TOLERANCE, PRF, PPB * PRF,		\
++	PPB_THRESH_JP(PPB, RATE), PRI_TOLERANCE, CHIRP	\
++}
+ static const struct radar_detector_specs jp_radar_ref_types[] = {
+-	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
+-	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, false),
+-	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, false),
+-	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, false),
+-	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, false),
+-	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, false),
+-	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, false),
+-	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, false),
+-	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, false),
++	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 50, false),
++	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 50, false),
++	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
++	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
++	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
++	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, 50, false),
++	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, 50, false),
++	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, 50, false),
++	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, 50, false),
+ };
  
- static u8 crc32_reverseBit(u8 data)
+ static const struct radar_types jp_radar_types = {
 -- 
-2.1.4
+1.9.1
 
