@@ -1,1284 +1,879 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:32806 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752809AbbCaKdG (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:33928 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbbCaFyt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Mar 2015 06:33:06 -0400
-Received: by lajy8 with SMTP id y8so9215887laj.0
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 03:33:05 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v6 2/7] ath10k: implement chanctx API
-Date: Tue, 31 Mar 2015 10:26:21 +0000
-Message-Id: <1427797586-5132-3-git-send-email-michal.kazior@tieto.com> (sfid-20150331_123313_677939_3F516D03)
-In-Reply-To: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com>
-References: <1427797586-5132-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 31 Mar 2015 01:54:49 -0400
+Received: from 71-9-20-218.static.reno.nv.charter.com ([71.9.20.218] helo=[10.9.8.4])
+	by youngberry.canonical.com with esmtpsa (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16)
+	(Exim 4.71)
+	(envelope-from <ryan.finnie@canonical.com>)
+	id 1Ycp8R-0000vQ-If
+	for linux-wireless@vger.kernel.org; Tue, 31 Mar 2015 05:54:48 +0000
+Message-ID: <551A36A5.2050300@canonical.com> (sfid-20150331_075456_332787_A0835429)
+Date: Mon, 30 Mar 2015 22:54:45 -0700
+From: Ryan Finnie <ryan.finnie@canonical.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Intel 7265 wireless performance unstable on Linux >= 3.19
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The chanctx API will allow ath10k to support
-multi-channel operation.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
+[1.] One line summary of the problem:
+Intel 7265 wireless performance unstable on Linux >= 3.19
 
-Notes:
-    v2:
-     * prevent null deref in ath10k_peer_assoc_h_vht()
-       after rebasing to latest master branch
-    
-    v3:
-     * remove chanctx internal ath10k list [Johannes]
-       (I still keep local chandef copy)
-     * remove arvif->arctx and use vif->chanctx_conf directly
-     * remove ar->chandef
-     * fix typo sanity check (arvif->arctx was checked twice in rx_h_peer_channel;
-       arvif itself should be checked too)
-     * skip presp template setup for IBSS
-    
-    v4;
-     * fix CSA
-     * refactor monitor recalc code a bit
-    
-    v6:
-     * fix rcu locking [Kalle]
+[2.] Full description of the problem/report:
+When in kernel >= 3.19, using iwlwifi and the 7265D firmwares
+(iwlwifi-7265D-12.ucode 25.15.12.0, or iwlwifi-7265D-10.ucode 23.15.10.0), I am
+experiencing the following issues:
 
- drivers/net/wireless/ath/ath10k/core.h   |  10 +
- drivers/net/wireless/ath/ath10k/htt_rx.c | 100 ++++-
- drivers/net/wireless/ath/ath10k/mac.c    | 699 +++++++++++++++++++++++++------
- drivers/net/wireless/ath/ath10k/mac.h    |   2 +
- drivers/net/wireless/ath/ath10k/wmi.c    |  13 +-
- 5 files changed, 699 insertions(+), 125 deletions(-)
+ * On 5GHz 802.11ac, I'll get DEAUTH_LEAVING almost exactly every minute,
+followed by an immediate reconnect (consistently reproducible).
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 8bc19ddf42c1..17704d18f7c6 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -284,6 +284,15 @@ struct ath10k_sta {
- #endif
- };
- 
-+struct ath10k_chanctx {
-+	/* Used to story copy of chanctx_conf to avoid inconsistencies. Ideally
-+	 * mac80211 should allow some sort of explicit locking to guarantee
-+	 * that the publicly available chanctx_conf can be accessed safely at
-+	 * all times.
-+	 */
-+	struct ieee80211_chanctx_conf conf;
-+};
-+
- #define ATH10K_VDEV_SETUP_TIMEOUT_HZ (5*HZ)
- 
- enum ath10k_beacon_state {
-@@ -607,6 +616,7 @@ struct ath10k {
- 	struct cfg80211_chan_def chandef;
- 
- 	unsigned long long free_vdev_map;
-+	struct ath10k_vif *monitor_arvif;
- 	bool monitor;
- 	int monitor_vdev_id;
- 	bool monitor_started;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 157dc8dd2ee0..d5395bc7dec7 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -723,8 +723,87 @@ static void ath10k_htt_rx_h_rates(struct ath10k *ar,
- 	}
- }
- 
-+static struct ieee80211_channel *
-+ath10k_htt_rx_h_peer_channel(struct ath10k *ar, struct htt_rx_desc *rxd)
-+{
-+	struct ath10k_peer *peer;
-+	struct ath10k_vif *arvif;
-+	struct cfg80211_chan_def def;
-+	u16 peer_id;
-+
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	if (!rxd)
-+		return NULL;
-+
-+	if (rxd->attention.flags &
-+	    __cpu_to_le32(RX_ATTENTION_FLAGS_PEER_IDX_INVALID))
-+		return NULL;
-+
-+	if (!(rxd->msdu_end.info0 &
-+	      __cpu_to_le32(RX_MSDU_END_INFO0_FIRST_MSDU)))
-+		return NULL;
-+
-+	peer_id = MS(__le32_to_cpu(rxd->mpdu_start.info0),
-+		     RX_MPDU_START_INFO0_PEER_IDX);
-+
-+	peer = ath10k_peer_find_by_id(ar, peer_id);
-+	if (!peer)
-+		return NULL;
-+
-+	arvif = ath10k_get_arvif(ar, peer->vdev_id);
-+	if (WARN_ON_ONCE(!arvif))
-+		return NULL;
-+
-+	if (WARN_ON(ath10k_mac_vif_chan(arvif->vif, &def)))
-+		return NULL;
-+
-+	return def.chan;
-+}
-+
-+static struct ieee80211_channel *
-+ath10k_htt_rx_h_vdev_channel(struct ath10k *ar, u32 vdev_id)
-+{
-+	struct ath10k_vif *arvif;
-+	struct cfg80211_chan_def def;
-+
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	list_for_each_entry(arvif, &ar->arvifs, list) {
-+		if (arvif->vdev_id == vdev_id &&
-+		    ath10k_mac_vif_chan(arvif->vif, &def) == 0)
-+			return def.chan;
-+	}
-+
-+	return NULL;
-+}
-+
-+static void
-+ath10k_htt_rx_h_any_chan_iter(struct ieee80211_hw *hw,
-+			      struct ieee80211_chanctx_conf *conf,
-+			      void *data)
-+{
-+	struct cfg80211_chan_def *def = data;
-+
-+	*def = conf->def;
-+}
-+
-+static struct ieee80211_channel *
-+ath10k_htt_rx_h_any_channel(struct ath10k *ar)
-+{
-+	struct cfg80211_chan_def def = {};
-+
-+	ieee80211_iter_chan_contexts_atomic(ar->hw,
-+					    ath10k_htt_rx_h_any_chan_iter,
-+					    &def);
-+
-+	return def.chan;
-+}
-+
- static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
--				    struct ieee80211_rx_status *status)
-+				    struct ieee80211_rx_status *status,
-+				    struct htt_rx_desc *rxd,
-+				    u32 vdev_id)
- {
- 	struct ieee80211_channel *ch;
- 
-@@ -732,6 +811,12 @@ static bool ath10k_htt_rx_h_channel(struct ath10k *ar,
- 	ch = ar->scan_channel;
- 	if (!ch)
- 		ch = ar->rx_channel;
-+	if (!ch)
-+		ch = ath10k_htt_rx_h_peer_channel(ar, rxd);
-+	if (!ch)
-+		ch = ath10k_htt_rx_h_vdev_channel(ar, vdev_id);
-+	if (!ch)
-+		ch = ath10k_htt_rx_h_any_channel(ar);
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	if (!ch)
-@@ -769,7 +854,8 @@ static void ath10k_htt_rx_h_mactime(struct ath10k *ar,
- 
- static void ath10k_htt_rx_h_ppdu(struct ath10k *ar,
- 				 struct sk_buff_head *amsdu,
--				 struct ieee80211_rx_status *status)
-+				 struct ieee80211_rx_status *status,
-+				 u32 vdev_id)
- {
- 	struct sk_buff *first;
- 	struct htt_rx_desc *rxd;
-@@ -801,7 +887,7 @@ static void ath10k_htt_rx_h_ppdu(struct ath10k *ar,
- 		status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
- 		ath10k_htt_rx_h_signal(ar, status, rxd);
--		ath10k_htt_rx_h_channel(ar, status);
-+		ath10k_htt_rx_h_channel(ar, status, rxd, vdev_id);
- 		ath10k_htt_rx_h_rates(ar, status, rxd);
- 	}
- 
-@@ -1472,7 +1558,7 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 			break;
- 		}
- 
--		ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status);
-+		ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
- 		ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
- 		ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
- 		ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
-@@ -1519,7 +1605,7 @@ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
- 		return;
- 	}
- 
--	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status);
-+	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
- 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
- 	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
- 	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
-@@ -1746,7 +1832,7 @@ static void ath10k_htt_rx_h_rx_offload(struct ath10k *ar,
- 		status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
- 		ath10k_htt_rx_h_rx_offload_prot(status, msdu);
--		ath10k_htt_rx_h_channel(ar, status);
-+		ath10k_htt_rx_h_channel(ar, status, NULL, rx->vdev_id);
- 		ath10k_process_rx(ar, status, msdu);
- 	}
- }
-@@ -1819,7 +1905,7 @@ static void ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			 * better to report something than nothing though. This
- 			 * should still give an idea about rx rate to the user.
- 			 */
--			ath10k_htt_rx_h_ppdu(ar, &amsdu, status);
-+			ath10k_htt_rx_h_ppdu(ar, &amsdu, status, vdev_id);
- 			ath10k_htt_rx_h_filter(ar, &amsdu, status);
- 			ath10k_htt_rx_h_mpdu(ar, &amsdu, status);
- 			ath10k_htt_rx_h_deliver(ar, &amsdu, status);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 9206b109e1ce..9390ad6f1714 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -517,6 +517,54 @@ static u8 ath10k_parse_mpdudensity(u8 mpdudensity)
- 	}
- }
- 
-+int ath10k_mac_vif_chan(struct ieee80211_vif *vif,
-+			struct cfg80211_chan_def *def)
-+{
-+	struct ieee80211_chanctx_conf *conf;
-+
-+	rcu_read_lock();
-+	conf = rcu_dereference(vif->chanctx_conf);
-+	if (!conf) {
-+		rcu_read_unlock();
-+		return -ENOENT;
-+	}
-+
-+	*def = conf->def;
-+	rcu_read_unlock();
-+
-+	return 0;
-+}
-+
-+static void ath10k_mac_num_chanctxs_iter(struct ieee80211_hw *hw,
-+					 struct ieee80211_chanctx_conf *conf,
-+					 void *data)
-+{
-+	int *num = data;
-+
-+	(*num)++;
-+}
-+
-+static int ath10k_mac_num_chanctxs(struct ath10k *ar)
-+{
-+	int num = 0;
-+
-+	ieee80211_iter_chan_contexts_atomic(ar->hw,
-+					    ath10k_mac_num_chanctxs_iter,
-+					    &num);
-+
-+	return num;
-+}
-+
-+static void
-+ath10k_mac_get_any_chandef_iter(struct ieee80211_hw *hw,
-+				struct ieee80211_chanctx_conf *conf,
-+				void *data)
-+{
-+	struct cfg80211_chan_def **def = data;
-+
-+	*def = &conf->def;
-+}
-+
- static int ath10k_peer_create(struct ath10k *ar, u32 vdev_id, const u8 *addr,
- 			      enum wmi_peer_type peer_type)
- {
-@@ -764,13 +812,21 @@ static inline int ath10k_vdev_setup_sync(struct ath10k *ar)
- 
- static int ath10k_monitor_vdev_start(struct ath10k *ar, int vdev_id)
- {
--	struct cfg80211_chan_def *chandef = &ar->chandef;
-+	struct cfg80211_chan_def *chandef = NULL;
- 	struct ieee80211_channel *channel = chandef->chan;
- 	struct wmi_vdev_start_request_arg arg = {};
- 	int ret = 0;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-+	ieee80211_iter_chan_contexts_atomic(ar->hw,
-+					    ath10k_mac_get_any_chandef_iter,
-+					    &chandef);
-+	if (WARN_ON_ONCE(!chandef))
-+		return -ENOENT;
-+
-+	channel = chandef->chan;
-+
- 	arg.vdev_id = vdev_id;
- 	arg.channel.freq = channel->center_freq;
- 	arg.channel.band_center_freq1 = chandef->center_freq1;
-@@ -971,27 +1027,79 @@ static bool ath10k_mac_should_disable_promisc(struct ath10k *ar)
- 	return true;
- }
- 
-+static bool ath10k_mac_monitor_vdev_is_needed(struct ath10k *ar)
-+{
-+	int num_ctx;
-+
-+	/* At least one chanctx is required to derive a channel to start
-+	 * monitor vdev on.
-+	 */
-+	num_ctx = ath10k_mac_num_chanctxs(ar);
-+	if (num_ctx == 0)
-+		return false;
-+
-+	/* If there's already an existing special monitor interface then don't
-+	 * bother creating another monitor vdev.
-+	 */
-+	if (ar->monitor_arvif)
-+		return false;
-+
-+	return ar->monitor ||
-+	       !ath10k_mac_should_disable_promisc(ar) ||
-+	       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
-+}
-+
-+static bool ath10k_mac_monitor_vdev_is_allowed(struct ath10k *ar)
-+{
-+	int num_ctx;
-+
-+	num_ctx = ath10k_mac_num_chanctxs(ar);
-+
-+	/* FIXME: Current interface combinations and cfg80211/mac80211 code
-+	 * shouldn't allow this but make sure to prevent handling the following
-+	 * case anyway since multi-channel DFS hasn't been tested at all.
-+	 */
-+	if (test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags) && num_ctx > 1)
-+		return false;
-+
-+	return true;
-+}
-+
- static int ath10k_monitor_recalc(struct ath10k *ar)
- {
--	bool should_start;
-+	bool needed;
-+	bool allowed;
-+	int ret;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	should_start = ar->monitor ||
--		       !ath10k_mac_should_disable_promisc(ar) ||
--		       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
-+	needed = ath10k_mac_monitor_vdev_is_needed(ar);
-+	allowed = ath10k_mac_monitor_vdev_is_allowed(ar);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_MAC,
--		   "mac monitor recalc started? %d should? %d\n",
--		   ar->monitor_started, should_start);
-+		   "mac monitor recalc started? %d needed? %d allowed? %d\n",
-+		   ar->monitor_started, needed, allowed);
- 
--	if (should_start == ar->monitor_started)
-+	if (WARN_ON(needed && !allowed)) {
-+		if (ar->monitor_started) {
-+			ath10k_dbg(ar, ATH10K_DBG_MAC, "mac monitor stopping disallowed monitor\n");
-+
-+			ret = ath10k_monitor_stop(ar);
-+			if (ret)
-+				ath10k_warn(ar, "failed to stop disallowed monitor: %d\n", ret);
-+				/* not serious */
-+		}
-+
-+		return -EPERM;
-+	}
-+
-+	if (needed == ar->monitor_started)
- 		return 0;
- 
--	if (should_start)
-+	if (needed)
- 		return ath10k_monitor_start(ar);
--
--	return ath10k_monitor_stop(ar);
-+	else
-+		return ath10k_monitor_stop(ar);
- }
- 
- static int ath10k_recalc_rtscts_prot(struct ath10k_vif *arvif)
-@@ -1053,6 +1161,27 @@ static int ath10k_stop_cac(struct ath10k *ar)
- 	return 0;
- }
- 
-+static void ath10k_mac_has_radar_iter(struct ieee80211_hw *hw,
-+				      struct ieee80211_chanctx_conf *conf,
-+				      void *data)
-+{
-+	bool *ret = data;
-+
-+	if (!*ret && conf->radar_enabled)
-+		*ret = true;
-+}
-+
-+static bool ath10k_mac_has_radar_enabled(struct ath10k *ar)
-+{
-+	bool has_radar = false;
-+
-+	ieee80211_iter_chan_contexts_atomic(ar->hw,
-+					    ath10k_mac_has_radar_iter,
-+					    &has_radar);
-+
-+	return has_radar;
-+}
-+
- static void ath10k_recalc_radar_detection(struct ath10k *ar)
- {
- 	int ret;
-@@ -1061,7 +1190,7 @@ static void ath10k_recalc_radar_detection(struct ath10k *ar)
- 
- 	ath10k_stop_cac(ar);
- 
--	if (!ar->radar_enabled)
-+	if (!ath10k_mac_has_radar_enabled(ar))
- 		return;
- 
- 	if (ar->num_started_vdevs > 0)
-@@ -1112,10 +1241,11 @@ static int ath10k_vdev_stop(struct ath10k_vif *arvif)
- 	return ret;
- }
- 
--static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
-+static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
-+				     const struct cfg80211_chan_def *chandef,
-+				     bool restart)
- {
- 	struct ath10k *ar = arvif->ar;
--	struct cfg80211_chan_def *chandef = &ar->chandef;
- 	struct wmi_vdev_start_request_arg arg = {};
- 	int ret = 0, ret2;
- 
-@@ -1189,14 +1319,16 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif, bool restart)
- 	return ret;
- }
- 
--static int ath10k_vdev_start(struct ath10k_vif *arvif)
-+static int ath10k_vdev_start(struct ath10k_vif *arvif,
-+			     const struct cfg80211_chan_def *def)
- {
--	return ath10k_vdev_start_restart(arvif, false);
-+	return ath10k_vdev_start_restart(arvif, def, false);
- }
- 
--static int ath10k_vdev_restart(struct ath10k_vif *arvif)
-+static int ath10k_vdev_restart(struct ath10k_vif *arvif,
-+			       const struct cfg80211_chan_def *def)
- {
--	return ath10k_vdev_start_restart(arvif, true);
-+	return ath10k_vdev_start_restart(arvif, def, true);
- }
- 
- static int ath10k_mac_setup_bcn_p2p_ie(struct ath10k_vif *arvif,
-@@ -1343,6 +1475,80 @@ static int ath10k_mac_setup_prb_tmpl(struct ath10k_vif *arvif)
- 	return 0;
- }
- 
-+static int ath10k_mac_vif_fix_hidden_ssid(struct ath10k_vif *arvif)
-+{
-+	struct ath10k *ar = arvif->ar;
-+	struct cfg80211_chan_def def;
-+	int ret;
-+
-+	/* When originally vdev is started during assign_vif_chanctx() some
-+	 * information is missing, notably SSID. Firmware revisions with beacon
-+	 * offloading require the SSID to be provided during vdev (re)start to
-+	 * handle hidden SSID properly.
-+	 *
-+	 * Vdev restart must be done after vdev has been both started and
-+	 * upped. Otherwise some firmware revisions (at least 10.2) fail to
-+	 * deliver vdev restart response event causing timeouts during vdev
-+	 * syncing in ath10k.
-+	 *
-+	 * Note: The vdev down/up and template reinstallation could be skipped
-+	 * since only wmi-tlv firmware are known to have beacon offload and
-+	 * wmi-tlv doesn't seem to misbehave like 10.2 wrt vdev restart
-+	 * response delivery. It's probably more robust to keep it as is.
-+	 */
-+	if (!test_bit(WMI_SERVICE_BEACON_OFFLOAD, ar->wmi.svc_map))
-+		return 0;
-+
-+	if (WARN_ON(!arvif->is_started))
-+		return -EINVAL;
-+
-+	if (WARN_ON(!arvif->is_up))
-+		return -EINVAL;
-+
-+	if (WARN_ON(ath10k_mac_vif_chan(arvif->vif, &def)))
-+		return -EINVAL;
-+
-+	ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to bring down ap vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	/* Vdev down reset beacon & presp templates. Reinstall them. Otherwise
-+	 * firmware will crash upon vdev up.
-+	 */
-+
-+	ret = ath10k_mac_setup_bcn_tmpl(arvif);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to update beacon template: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_mac_setup_prb_tmpl(arvif);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to update presp template: %d\n", ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_vdev_restart(arvif, &def);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to restart ap vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	ret = ath10k_wmi_vdev_up(arvif->ar, arvif->vdev_id, arvif->aid,
-+				 arvif->bssid);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to bring up ap vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static void ath10k_control_beaconing(struct ath10k_vif *arvif,
- 				     struct ieee80211_bss_conf *info)
- {
-@@ -1352,9 +1558,11 @@ static void ath10k_control_beaconing(struct ath10k_vif *arvif,
- 	lockdep_assert_held(&arvif->ar->conf_mutex);
- 
- 	if (!info->enable_beacon) {
--		ath10k_vdev_stop(arvif);
-+		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
-+		if (ret)
-+			ath10k_warn(ar, "failed to down vdev_id %i: %d\n",
-+				    arvif->vdev_id, ret);
- 
--		arvif->is_started = false;
- 		arvif->is_up = false;
- 
- 		spin_lock_bh(&arvif->ar->data_lock);
-@@ -1366,10 +1574,6 @@ static void ath10k_control_beaconing(struct ath10k_vif *arvif,
- 
- 	arvif->tx_seq_no = 0x1000;
- 
--	ret = ath10k_vdev_start(arvif);
--	if (ret)
--		return;
--
- 	arvif->aid = 0;
- 	ether_addr_copy(arvif->bssid, info->bssid);
- 
-@@ -1378,13 +1582,18 @@ static void ath10k_control_beaconing(struct ath10k_vif *arvif,
- 	if (ret) {
- 		ath10k_warn(ar, "failed to bring up vdev %d: %i\n",
- 			    arvif->vdev_id, ret);
--		ath10k_vdev_stop(arvif);
- 		return;
- 	}
- 
--	arvif->is_started = true;
- 	arvif->is_up = true;
- 
-+	ret = ath10k_mac_vif_fix_hidden_ssid(arvif);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to fix hidden ssid for vdev %i, expect trouble: %d\n",
-+			    arvif->vdev_id, ret);
-+		return;
-+	}
-+
- 	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vdev %d up\n", arvif->vdev_id);
- }
- 
-@@ -1753,15 +1962,18 @@ static void ath10k_peer_assoc_h_crypto(struct ath10k *ar,
- 				       struct wmi_peer_assoc_complete_arg *arg)
- {
- 	struct ieee80211_bss_conf *info = &vif->bss_conf;
-+	struct cfg80211_chan_def def;
- 	struct cfg80211_bss *bss;
- 	const u8 *rsnie = NULL;
- 	const u8 *wpaie = NULL;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	bss = cfg80211_get_bss(ar->hw->wiphy, ar->hw->conf.chandef.chan,
--			       info->bssid, NULL, 0, IEEE80211_BSS_TYPE_ANY,
--			       IEEE80211_PRIVACY_ANY);
-+	if (WARN_ON(ath10k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	bss = cfg80211_get_bss(ar->hw->wiphy, def.chan, info->bssid, NULL, 0,
-+			       IEEE80211_BSS_TYPE_ANY, IEEE80211_PRIVACY_ANY);
- 	if (bss) {
- 		const struct cfg80211_bss_ies *ies;
- 
-@@ -1791,10 +2003,12 @@ static void ath10k_peer_assoc_h_crypto(struct ath10k *ar,
- }
- 
- static void ath10k_peer_assoc_h_rates(struct ath10k *ar,
-+				      struct ieee80211_vif *vif,
- 				      struct ieee80211_sta *sta,
- 				      struct wmi_peer_assoc_complete_arg *arg)
- {
- 	struct wmi_rate_set_arg *rateset = &arg->peer_legacy_rates;
-+	struct cfg80211_chan_def def;
- 	const struct ieee80211_supported_band *sband;
- 	const struct ieee80211_rate *rates;
- 	u32 ratemask;
-@@ -1803,8 +2017,11 @@ static void ath10k_peer_assoc_h_rates(struct ath10k *ar,
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	sband = ar->hw->wiphy->bands[ar->hw->conf.chandef.chan->band];
--	ratemask = sta->supp_rates[ar->hw->conf.chandef.chan->band];
-+	if (WARN_ON(ath10k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	sband = ar->hw->wiphy->bands[def.chan->band];
-+	ratemask = sta->supp_rates[def.chan->band];
- 	rates = sband->bitrates;
- 
- 	rateset->num_rates = 0;
-@@ -1970,18 +2187,23 @@ static int ath10k_peer_assoc_qos_ap(struct ath10k *ar,
- }
- 
- static void ath10k_peer_assoc_h_vht(struct ath10k *ar,
-+				    struct ieee80211_vif *vif,
- 				    struct ieee80211_sta *sta,
- 				    struct wmi_peer_assoc_complete_arg *arg)
- {
- 	const struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+	struct cfg80211_chan_def def;
- 	u8 ampdu_factor;
- 
-+	if (WARN_ON(ath10k_mac_vif_chan(vif, &def)))
-+		return;
-+
- 	if (!vht_cap->vht_supported)
- 		return;
- 
- 	arg->peer_flags |= WMI_PEER_VHT;
- 
--	if (ar->hw->conf.chandef.chan->band == IEEE80211_BAND_2GHZ)
-+	if (def.chan->band == IEEE80211_BAND_2GHZ)
- 		arg->peer_flags |= WMI_PEER_VHT_2G;
- 
- 	arg->peer_vht_caps = vht_cap->cap;
-@@ -2058,9 +2280,13 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
- 					struct ieee80211_sta *sta,
- 					struct wmi_peer_assoc_complete_arg *arg)
- {
-+	struct cfg80211_chan_def def;
- 	enum wmi_phy_mode phymode = MODE_UNKNOWN;
- 
--	switch (ar->hw->conf.chandef.chan->band) {
-+	if (WARN_ON(ath10k_mac_vif_chan(vif, &def)))
-+		return;
-+
-+	switch (def.chan->band) {
- 	case IEEE80211_BAND_2GHZ:
- 		if (sta->vht_cap.vht_supported) {
- 			if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
-@@ -2122,9 +2348,9 @@ static int ath10k_peer_assoc_prepare(struct ath10k *ar,
- 
- 	ath10k_peer_assoc_h_basic(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_crypto(ar, vif, arg);
--	ath10k_peer_assoc_h_rates(ar, sta, arg);
-+	ath10k_peer_assoc_h_rates(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_ht(ar, sta, arg);
--	ath10k_peer_assoc_h_vht(ar, sta, arg);
-+	ath10k_peer_assoc_h_vht(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_qos(ar, vif, sta, arg);
- 	ath10k_peer_assoc_h_phymode(ar, vif, sta, arg);
- 
-@@ -3209,6 +3435,7 @@ void ath10k_halt(struct ath10k *ar)
- 	clear_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
- 	ar->filter_flags = 0;
- 	ar->monitor = false;
-+	ar->monitor_arvif = NULL;
- 
- 	if (ar->monitor_started)
- 		ath10k_monitor_stop(ar);
-@@ -3450,42 +3677,15 @@ static int ath10k_config_ps(struct ath10k *ar)
- 	return ret;
- }
- 
--static const char *chandef_get_width(enum nl80211_chan_width width)
--{
--	switch (width) {
--	case NL80211_CHAN_WIDTH_20_NOHT:
--		return "20 (noht)";
--	case NL80211_CHAN_WIDTH_20:
--		return "20";
--	case NL80211_CHAN_WIDTH_40:
--		return "40";
--	case NL80211_CHAN_WIDTH_80:
--		return "80";
--	case NL80211_CHAN_WIDTH_80P80:
--		return "80+80";
--	case NL80211_CHAN_WIDTH_160:
--		return "160";
--	case NL80211_CHAN_WIDTH_5:
--		return "5";
--	case NL80211_CHAN_WIDTH_10:
--		return "10";
--	}
--	return "?";
--}
--
--static void ath10k_config_chan(struct ath10k *ar)
-+static void ath10k_mac_chan_reconfigure(struct ath10k *ar)
- {
- 	struct ath10k_vif *arvif;
-+	struct cfg80211_chan_def def;
- 	int ret;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
--	ath10k_dbg(ar, ATH10K_DBG_MAC,
--		   "mac config channel to %dMHz (cf1 %dMHz cf2 %dMHz width %s)\n",
--		   ar->chandef.chan->center_freq,
--		   ar->chandef.center_freq1,
--		   ar->chandef.center_freq2,
--		   chandef_get_width(ar->chandef.width));
-+	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac chan reconfigure\n");
- 
- 	/* First stop monitor interface. Some FW versions crash if there's a
- 	 * lone monitor interface. */
-@@ -3529,7 +3729,10 @@ static void ath10k_config_chan(struct ath10k *ar)
- 			ath10k_warn(ar, "failed to update prb tmpl during csa: %d\n",
- 				    ret);
- 
--		ret = ath10k_vdev_restart(arvif);
-+		if (WARN_ON(ath10k_mac_vif_chan(arvif->vif, &def)))
-+			continue;
-+
-+		ret = ath10k_vdev_restart(arvif, &def);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to restart vdev %d: %d\n",
- 				    arvif->vdev_id, ret);
-@@ -3616,26 +3819,6 @@ static int ath10k_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	mutex_lock(&ar->conf_mutex);
- 
--	if (changed & IEEE80211_CONF_CHANGE_CHANNEL) {
--		ath10k_dbg(ar, ATH10K_DBG_MAC,
--			   "mac config channel %dMHz flags 0x%x radar %d\n",
--			   conf->chandef.chan->center_freq,
--			   conf->chandef.chan->flags,
--			   conf->radar_enabled);
--
--		spin_lock_bh(&ar->data_lock);
--		ar->rx_channel = conf->chandef.chan;
--		spin_unlock_bh(&ar->data_lock);
--
--		ar->radar_enabled = conf->radar_enabled;
--		ath10k_recalc_radar_detection(ar);
--
--		if (!cfg80211_chandef_identical(&ar->chandef, &conf->chandef)) {
--			ar->chandef = conf->chandef;
--			ath10k_config_chan(ar);
--		}
--	}
--
- 	if (changed & IEEE80211_CONF_CHANGE_PS)
- 		ath10k_config_ps(ar);
- 
-@@ -3879,6 +4062,15 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		goto err_peer_delete;
- 	}
- 
-+	if (vif->type == NL80211_IFTYPE_MONITOR) {
-+		ar->monitor_arvif = arvif;
-+		ret = ath10k_monitor_recalc(ar);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to recalc monitor: %d\n", ret);
-+			goto err_peer_delete;
-+		}
-+	}
-+
- 	mutex_unlock(&ar->conf_mutex);
- 	return 0;
- 
-@@ -3962,6 +4154,13 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 
- 	ath10k_peer_cleanup(ar, arvif->vdev_id);
- 
-+	if (vif->type == NL80211_IFTYPE_MONITOR) {
-+		ar->monitor_arvif = NULL;
-+		ret = ath10k_monitor_recalc(ar);
-+		if (ret)
-+			ath10k_warn(ar, "failed to recalc monitor: %d\n", ret);
-+	}
-+
- 	mutex_unlock(&ar->conf_mutex);
- }
- 
-@@ -4682,23 +4881,6 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			goto exit;
- 		}
- 
--		if (vif->type == NL80211_IFTYPE_STATION &&
--		    !sta->tdls) {
--			WARN_ON(arvif->is_started);
--
--			ret = ath10k_vdev_start(arvif);
--			if (ret) {
--				ath10k_warn(ar, "failed to start vdev %i: %d\n",
--					    arvif->vdev_id, ret);
--				WARN_ON(ath10k_peer_delete(ar, arvif->vdev_id,
--							   sta->addr));
--				ath10k_mac_dec_num_stations(arvif, sta);
--				goto exit;
--			}
--
--			arvif->is_started = true;
--		}
--
- 		if (!sta->tdls)
- 			goto exit;
- 
-@@ -4754,18 +4936,6 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 			   "mac vdev %d peer delete %pM (sta gone)\n",
- 			   arvif->vdev_id, sta->addr);
- 
--		if (vif->type == NL80211_IFTYPE_STATION &&
--		    !sta->tdls) {
--			WARN_ON(!arvif->is_started);
--
--			ret = ath10k_vdev_stop(arvif);
--			if (ret)
--				ath10k_warn(ar, "failed to stop vdev %i: %d\n",
--					    arvif->vdev_id, ret);
--
--			arvif->is_started = false;
--		}
--
- 		ret = ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
- 		if (ret)
- 			ath10k_warn(ar, "failed to delete peer %pM for vdev %d: %i\n",
-@@ -5532,15 +5702,21 @@ static int ath10k_set_bitrate_mask(struct ieee80211_hw *hw,
- 				   const struct cfg80211_bitrate_mask *mask)
- {
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+	struct cfg80211_chan_def def;
- 	struct ath10k *ar = arvif->ar;
--	enum ieee80211_band band = ar->hw->conf.chandef.chan->band;
-+	enum ieee80211_band band;
- 	u8 fixed_rate = WMI_FIXED_RATE_NONE;
- 	u8 fixed_nss = ar->num_rf_chains;
- 	u8 force_sgi;
- 
-+	if (ath10k_mac_vif_chan(vif, &def))
-+		return -EPERM;
-+
- 	if (ar->cfg_tx_chainmask)
- 		fixed_nss = get_nss_from_chainmask(ar->cfg_tx_chainmask);
- 
-+	band = def.chan->band;
-+
- 	force_sgi = mask->control[band].gi;
- 	if (force_sgi == NL80211_TXRATE_FORCE_LGI)
- 		return -EINVAL;
-@@ -5677,6 +5853,286 @@ static int ath10k_ampdu_action(struct ieee80211_hw *hw,
- 	return -EINVAL;
- }
- 
-+static void
-+ath10k_mac_update_rx_channel(struct ath10k *ar)
-+{
-+	struct cfg80211_chan_def *def = NULL;
-+
-+	/* Both locks are required because ar->rx_channel is modified. This
-+	 * allows readers to hold either lock.
-+	 */
-+	lockdep_assert_held(&ar->conf_mutex);
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	/* FIXME: Sort of an optimization and a workaround. Peers and vifs are
-+	 * on a linked list now. Doing a lookup peer -> vif -> chanctx for each
-+	 * ppdu on Rx may reduce performance on low-end systems. It should be
-+	 * possible to make tables/hashmaps to speed the lookup up (be vary of
-+	 * cpu data cache lines though regarding sizes) but to keep the initial
-+	 * implementation simple and less intrusive fallback to the slow lookup
-+	 * only for multi-channel cases. Single-channel cases will remain to
-+	 * use the old channel derival and thus performance should not be
-+	 * affected much.
-+	 */
-+	rcu_read_lock();
-+	if (ath10k_mac_num_chanctxs(ar) == 1) {
-+		ieee80211_iter_chan_contexts_atomic(ar->hw,
-+					ath10k_mac_get_any_chandef_iter,
-+					&def);
-+		ar->rx_channel = def->chan;
-+	} else {
-+		ar->rx_channel = NULL;
-+	}
-+	rcu_read_unlock();
-+}
-+
-+static void
-+ath10k_mac_chan_ctx_init(struct ath10k *ar,
-+			 struct ath10k_chanctx *arctx,
-+			 struct ieee80211_chanctx_conf *conf)
-+{
-+	lockdep_assert_held(&ar->conf_mutex);
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	memset(arctx, 0, sizeof(*arctx));
-+
-+	arctx->conf = *conf;
-+}
-+
-+static int
-+ath10k_mac_op_add_chanctx(struct ieee80211_hw *hw,
-+			  struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_chanctx *arctx = (void *)ctx->drv_priv;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC,
-+		   "mac chanctx add freq %hu width %d ptr %p\n",
-+		   ctx->def.chan->center_freq, ctx->def.width, ctx);
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	ath10k_mac_chan_ctx_init(ar, arctx, ctx);
-+	ath10k_mac_update_rx_channel(ar);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ath10k_recalc_radar_detection(ar);
-+	ath10k_monitor_recalc(ar);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return 0;
-+}
-+
-+static void
-+ath10k_mac_op_remove_chanctx(struct ieee80211_hw *hw,
-+			     struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath10k *ar = hw->priv;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC,
-+		   "mac chanctx remove freq %hu width %d ptr %p\n",
-+		   ctx->def.chan->center_freq, ctx->def.width, ctx);
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	ath10k_mac_update_rx_channel(ar);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ath10k_recalc_radar_detection(ar);
-+	ath10k_monitor_recalc(ar);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static void
-+ath10k_mac_op_change_chanctx(struct ieee80211_hw *hw,
-+			     struct ieee80211_chanctx_conf *ctx,
-+			     u32 changed)
-+{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_chanctx *arctx = (void *)ctx->drv_priv;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC,
-+		   "mac chanctx change freq %hu->%hu width %d->%d ptr %p changed %x\n",
-+		   arctx->conf.def.chan->center_freq,
-+		   ctx->def.chan->center_freq,
-+		   arctx->conf.def.width, ctx->def.width,
-+		   ctx, changed);
-+
-+	/* This shouldn't really happen because channel switching should use
-+	 * switch_vif_chanctx().
-+	 */
-+	if (WARN_ON(changed & IEEE80211_CHANCTX_CHANGE_CHANNEL))
-+		goto unlock;
-+
-+	spin_lock_bh(&ar->data_lock);
-+	arctx->conf = *ctx;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	ath10k_recalc_radar_detection(ar);
-+
-+	/* FIXME: How to configure Rx chains properly? */
-+
-+	/* No other actions are actually necessary. Firmware maintains channel
-+	 * definitions per vdev internally and there's no host-side channel
-+	 * context abstraction to configure, e.g. channel width.
-+	 */
-+
-+unlock:
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static int
-+ath10k_mac_op_assign_vif_chanctx(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif *vif,
-+				 struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_chanctx *arctx = (void *)ctx->drv_priv;
-+	struct ath10k_vif *arvif = (void *)vif->drv_priv;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC,
-+		   "mac chanctx assign ptr %p vdev_id %i\n",
-+		   ctx, arvif->vdev_id);
-+
-+	if (WARN_ON(arvif->is_started)) {
-+		mutex_unlock(&ar->conf_mutex);
-+		return -EBUSY;
-+	}
-+
-+	ret = ath10k_vdev_start(arvif, &arctx->conf.def);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to start vdev %i addr %pM on freq %d: %d\n",
-+			    arvif->vdev_id, vif->addr,
-+			    arctx->conf.def.chan->center_freq, ret);
-+		goto err;
-+	}
-+
-+	arvif->is_started = true;
-+
-+	if (vif->type == NL80211_IFTYPE_MONITOR) {
-+		ret = ath10k_wmi_vdev_up(ar, arvif->vdev_id, 0, vif->addr);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to up monitor vdev %i: %d\n",
-+				    arvif->vdev_id, ret);
-+			goto err_stop;
-+		}
-+
-+		arvif->is_up = true;
-+	}
-+
-+	mutex_unlock(&ar->conf_mutex);
-+	return 0;
-+
-+err_stop:
-+	ath10k_vdev_stop(arvif);
-+	arvif->is_started = false;
-+
-+err:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static void
-+ath10k_mac_op_unassign_vif_chanctx(struct ieee80211_hw *hw,
-+				   struct ieee80211_vif *vif,
-+				   struct ieee80211_chanctx_conf *ctx)
-+{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_vif *arvif = (void *)vif->drv_priv;
-+	int ret;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC,
-+		   "mac chanctx unassign ptr %p vdev_id %i\n",
-+		   ctx, arvif->vdev_id);
-+
-+	WARN_ON(!arvif->is_started);
-+
-+	if (vif->type == NL80211_IFTYPE_MONITOR) {
-+		WARN_ON(!arvif->is_up);
-+
-+		ret = ath10k_wmi_vdev_down(ar, arvif->vdev_id);
-+		if (ret)
-+			ath10k_warn(ar, "failed to down monitor vdev %i: %d\n",
-+				    arvif->vdev_id, ret);
-+
-+		arvif->is_up = false;
-+	}
-+
-+	ret = ath10k_vdev_stop(arvif);
-+	if (ret)
-+		ath10k_warn(ar, "failed to stop vdev %i: %d\n",
-+			    arvif->vdev_id, ret);
-+
-+	arvif->is_started = false;
-+
-+	mutex_unlock(&ar->conf_mutex);
-+}
-+
-+static int
-+ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
-+				 struct ieee80211_vif_chanctx_switch *vifs,
-+				 int n_vifs,
-+				 enum ieee80211_chanctx_switch_mode mode)
-+{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_vif *arvif;
-+	struct ath10k_chanctx *arctx_new, *arctx_old;
-+	int i;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	ath10k_dbg(ar, ATH10K_DBG_MAC,
-+		   "mac chanctx switch n_vifs %d mode %d\n",
-+		   n_vifs, mode);
-+
-+	spin_lock_bh(&ar->data_lock);
-+	for (i = 0; i < n_vifs; i++) {
-+		arvif = ath10k_vif_to_arvif(vifs[i].vif);
-+		arctx_new = (void *)vifs[i].new_ctx->drv_priv;
-+		arctx_old = (void *)vifs[i].old_ctx->drv_priv;
-+
-+		ath10k_dbg(ar, ATH10K_DBG_MAC,
-+			   "mac chanctx switch vdev_id %i freq %hu->%hu width %d->%d ptr %p->%p\n",
-+			   arvif->vdev_id,
-+			   vifs[i].old_ctx->def.chan->center_freq,
-+			   vifs[i].new_ctx->def.chan->center_freq,
-+			   vifs[i].old_ctx->def.width,
-+			   vifs[i].new_ctx->def.width,
-+			   arctx_old, arctx_new);
-+
-+		if (mode == CHANCTX_SWMODE_SWAP_CONTEXTS) {
-+			ath10k_mac_chan_ctx_init(ar, arctx_new,
-+						 vifs[i].new_ctx);
-+		}
-+
-+		arctx_new->conf = *vifs[i].new_ctx;
-+
-+		/* FIXME: ath10k_mac_chan_reconfigure() uses current, i.e. not
-+		 * yet updated chanctx_conf pointer.
-+		 */
-+		arctx_old->conf = *vifs[i].new_ctx;
-+	}
-+	ath10k_mac_update_rx_channel(ar);
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	/* FIXME: Reconfigure only affected vifs */
-+	ath10k_mac_chan_reconfigure(ar);
-+
-+	mutex_unlock(&ar->conf_mutex);
-+	return 0;
-+}
-+
- static const struct ieee80211_ops ath10k_ops = {
- 	.tx				= ath10k_tx,
- 	.start				= ath10k_start,
-@@ -5708,6 +6164,12 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.get_et_sset_count		= ath10k_debug_get_et_sset_count,
- 	.get_et_stats			= ath10k_debug_get_et_stats,
- 	.get_et_strings			= ath10k_debug_get_et_strings,
-+	.add_chanctx			= ath10k_mac_op_add_chanctx,
-+	.remove_chanctx			= ath10k_mac_op_remove_chanctx,
-+	.change_chanctx			= ath10k_mac_op_change_chanctx,
-+	.assign_vif_chanctx		= ath10k_mac_op_assign_vif_chanctx,
-+	.unassign_vif_chanctx		= ath10k_mac_op_unassign_vif_chanctx,
-+	.switch_vif_chanctx		= ath10k_mac_op_switch_vif_chanctx,
- 
- 	CFG80211_TESTMODE_CMD(ath10k_tm_cmd)
- 
-@@ -6077,7 +6539,9 @@ int ath10k_mac_register(struct ath10k *ar)
- 			IEEE80211_HW_AP_LINK_PS |
- 			IEEE80211_HW_SPECTRUM_MGMT |
- 			IEEE80211_HW_SW_CRYPTO_CONTROL |
--			IEEE80211_HW_CONNECTION_MONITOR;
-+			IEEE80211_HW_CONNECTION_MONITOR |
-+			IEEE80211_HW_WANT_MONITOR_VIF |
-+			IEEE80211_HW_CHANCTX_STA_CSA;
- 
- 	ar->hw->wiphy->features |= NL80211_FEATURE_STATIC_SMPS;
- 
-@@ -6094,6 +6558,7 @@ int ath10k_mac_register(struct ath10k *ar)
- 
- 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
- 	ar->hw->sta_data_size = sizeof(struct ath10k_sta);
-+	ar->hw->chanctx_data_size = sizeof(struct ath10k_chanctx);
- 
- 	ar->hw->max_listen_interval = ATH10K_MAX_HW_LISTEN_INTERVAL;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-index a381740b8fc8..b1e3653e5e20 100644
---- a/drivers/net/wireless/ath/ath10k/mac.h
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -53,6 +53,8 @@ void ath10k_mac_vif_beacon_free(struct ath10k_vif *arvif);
- void ath10k_drain_tx(struct ath10k *ar);
- bool ath10k_mac_is_peer_wep_key_set(struct ath10k *ar, const u8 *addr,
- 				    u8 keyidx);
-+int ath10k_mac_vif_chan(struct ieee80211_vif *vif,
-+			struct cfg80211_chan_def *def);
- void ath10k_mac_handle_beacon(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_mac_handle_beacon_miss(struct ath10k *ar, u32 vdev_id);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index da2fc1d99291..c0716a162c3e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2421,6 +2421,7 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
- 				    u64 tsf)
- {
- 	u32 reg0, reg1, tsf32l;
-+	struct ieee80211_channel *ch;
- 	struct pulse_event pe;
- 	u64 tsf64;
- 	u8 rssi, width;
-@@ -2449,6 +2450,15 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
- 	if (!ar->dfs_detector)
- 		return;
- 
-+	spin_lock_bh(&ar->data_lock);
-+	ch = ar->rx_channel;
-+	spin_unlock_bh(&ar->data_lock);
-+
-+	if (!ch) {
-+		ath10k_warn(ar, "failed to derive channel for radar pulse, treating as radar\n");
-+		goto radar_detected;
-+	}
-+
- 	/* report event to DFS pattern detector */
- 	tsf32l = __le32_to_cpu(phyerr->tsf_timestamp);
- 	tsf64 = tsf & (~0xFFFFFFFFULL);
-@@ -2464,7 +2474,7 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
- 		rssi = 0;
- 
- 	pe.ts = tsf64;
--	pe.freq = ar->hw->conf.chandef.chan->center_freq;
-+	pe.freq = ch->center_freq;
- 	pe.width = width;
- 	pe.rssi = rssi;
- 	pe.chirp = (MS(reg0, RADAR_REPORT_REG0_PULSE_IS_CHIRP) != 0);
-@@ -2480,6 +2490,7 @@ static void ath10k_dfs_radar_report(struct ath10k *ar,
- 		return;
- 	}
- 
-+radar_detected:
- 	ath10k_dbg(ar, ATH10K_DBG_REGULATORY, "dfs radar detected\n");
- 	ATH10K_DFS_STAT_INC(ar, radar_detected);
- 
--- 
-2.1.4
+ * On both 2.4GHz and 5GHz, all network activity will cease after 10-20
+minutes. A manual reconnect will temporarily fix network activity (not
+consistently reproducible).
 
+Due to the co-dependencies of the 3.19 iwlwifi modules and the new 7265D
+firmwares, I believe I am not able to do a kernel bisect in this situation.
+Linux 3.18 and older with the old 7265 (non-D, level 9) firmware worked
+correctly.
+
+Client is a Lenovo Thinkpad X250, latest firmware (1.07).  AP is an ASUS
+RT-AC87R (retail version of the RT-AC87U, same hardware), latest firmware
+(3.0.0.4.378_4608-g7e6c1e5), in WAP-only mode.
+
+[3.] Keywords (i.e., modules, networking, kernel):
+
+[4.] Kernel version (from /proc/version):
+Linux version 4.0.0-040000rc6-generic (kernel@gomeisa) (gcc version 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5) ) #201503291935 SMP Sun Mar 29 23:36:50 UTC 2015
+
+[5.] Output of Oops.. message (if applicable) with symbolic information resolved (see Documentation/oops-tracing.txt)
+N/A
+
+[6.] A small shell script or example program which triggers the problem (if possible)
+N/A
+
+[7.] Environment
+Please execute the following in a terminal, and paste the results:
+Description:	Ubuntu Vivid Vervet (development branch)
+Release:	15.04
+
+[7.1.] Software (add the output of the ver_linux script here)
+Linux linda 4.0.0-040000rc6-generic #201503291935 SMP Sun Mar 29 23:36:50 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+ 
+Gnu C                  4.9.2
+Gnu make               4.0
+binutils               2.25
+util-linux             2.25.2
+mount                  debug
+module-init-tools      18
+e2fsprogs              1.42.12
+pcmciautils            018
+PPP                    2.4.6
+Linux C Library        2.21
+Dynamic linker (ldd)   2.21
+Procps                 3.3.9
+Net-tools              1.60
+Kbd                    1.15.5
+Sh-utils               8.23
+wireless-tools         30
+Modules Loaded         ctr ccm rfcomm bnep nls_iso8859_1 arc4 snd_hda_codec_hdmi iwlmvm snd_hda_codec_realtek snd_hda_codec_generic mac80211 intel_rapl iosf_mbi x86_pkg_temp_thermal intel_powerclamp snd_hda_intel coretemp snd_hda_controller snd_hda_codec iwlwifi kvm_intel uvcvideo snd_seq_midi snd_hwdep kvm videobuf2_vmalloc snd_seq_midi_event snd_pcm videobuf2_memops videobuf2_core cfg80211 v4l2_common snd_rawmidi videodev serio_raw btusb rtsx_pci_ms media snd_seq bluetooth mei_me memstick mei snd_seq_device thinkpad_acpi snd_timer nvram snd lpc_ich soundcore shpchp mac_hid parport_pc ppdev lp parport autofs4 dm_crypt rtsx_pci_sdmmc crct10dif_pclmul crc32_pclmul ghash_clmulni_intel aesni_intel i915 aes_x86_64 lrw gf128mul glue_helper ablk_helper cryptd psmouse ahci e1000e libahci ptp rtsx_pci i2c_algo_bit pps_core drm_kms_helper drm wmi video
+
+[7.2.] Processor information (from /proc/cpuinfo):
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 61
+model name	: Intel(R) Core(TM) i5-5300U CPU @ 2.30GHz
+stepping	: 4
+microcode	: 0x1d
+cpu MHz		: 1900.015
+cache size	: 3072 KB
+physical id	: 0
+siblings	: 4
+core id		: 0
+cpu cores	: 2
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 20
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch ida arat epb pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt
+bugs		:
+bogomips	: 4589.70
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 61
+model name	: Intel(R) Core(TM) i5-5300U CPU @ 2.30GHz
+stepping	: 4
+microcode	: 0x1d
+cpu MHz		: 1953.023
+cache size	: 3072 KB
+physical id	: 0
+siblings	: 4
+core id		: 0
+cpu cores	: 2
+apicid		: 1
+initial apicid	: 1
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 20
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch ida arat epb pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt
+bugs		:
+bogomips	: 4589.70
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+
+processor	: 2
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 61
+model name	: Intel(R) Core(TM) i5-5300U CPU @ 2.30GHz
+stepping	: 4
+microcode	: 0x1d
+cpu MHz		: 1617.636
+cache size	: 3072 KB
+physical id	: 0
+siblings	: 4
+core id		: 1
+cpu cores	: 2
+apicid		: 2
+initial apicid	: 2
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 20
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch ida arat epb pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt
+bugs		:
+bogomips	: 4589.70
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+
+processor	: 3
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 61
+model name	: Intel(R) Core(TM) i5-5300U CPU @ 2.30GHz
+stepping	: 4
+microcode	: 0x1d
+cpu MHz		: 1928.675
+cache size	: 3072 KB
+physical id	: 0
+siblings	: 4
+core id		: 1
+cpu cores	: 2
+apicid		: 3
+initial apicid	: 3
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 20
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc aperfmperf eagerfpu pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch ida arat epb pln pts dtherm tpr_shadow vnmi flexpriority ept vpid fsgsbase tsc_adjust bmi1 hle avx2 smep bmi2 erms invpcid rtm rdseed adx smap xsaveopt
+bugs		:
+bogomips	: 4589.70
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 39 bits physical, 48 bits virtual
+power management:
+
+[7.3.] Module information (from /proc/modules):
+ctr 16384 2 - Live 0x0000000000000000
+ccm 20480 2 - Live 0x0000000000000000
+rfcomm 77824 8 - Live 0x0000000000000000
+bnep 24576 2 - Live 0x0000000000000000
+nls_iso8859_1 16384 1 - Live 0x0000000000000000
+arc4 16384 2 - Live 0x0000000000000000
+snd_hda_codec_hdmi 53248 1 - Live 0x0000000000000000
+iwlmvm 299008 0 - Live 0x0000000000000000
+snd_hda_codec_realtek 81920 1 - Live 0x0000000000000000
+snd_hda_codec_generic 73728 1 snd_hda_codec_realtek, Live 0x0000000000000000
+mac80211 774144 1 iwlmvm, Live 0x0000000000000000
+intel_rapl 20480 0 - Live 0x0000000000000000
+iosf_mbi 16384 1 intel_rapl, Live 0x0000000000000000
+x86_pkg_temp_thermal 16384 0 - Live 0x0000000000000000
+intel_powerclamp 20480 0 - Live 0x0000000000000000
+snd_hda_intel 32768 5 - Live 0x0000000000000000
+coretemp 16384 0 - Live 0x0000000000000000
+snd_hda_controller 36864 1 snd_hda_intel, Live 0x0000000000000000
+snd_hda_codec 147456 5 snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_codec_generic,snd_hda_intel,snd_hda_controller, Live 0x0000000000000000
+iwlwifi 208896 1 iwlmvm, Live 0x0000000000000000
+kvm_intel 159744 0 - Live 0x0000000000000000
+uvcvideo 94208 0 - Live 0x0000000000000000
+snd_seq_midi 16384 0 - Live 0x0000000000000000
+snd_hwdep 16384 1 snd_hda_codec, Live 0x0000000000000000
+kvm 512000 1 kvm_intel, Live 0x0000000000000000
+videobuf2_vmalloc 16384 1 uvcvideo, Live 0x0000000000000000
+snd_seq_midi_event 16384 1 snd_seq_midi, Live 0x0000000000000000
+snd_pcm 110592 4 snd_hda_codec_hdmi,snd_hda_intel,snd_hda_controller,snd_hda_codec, Live 0x0000000000000000
+videobuf2_memops 16384 1 videobuf2_vmalloc, Live 0x0000000000000000
+videobuf2_core 53248 1 uvcvideo, Live 0x0000000000000000
+cfg80211 581632 3 iwlmvm,mac80211,iwlwifi, Live 0x0000000000000000
+v4l2_common 16384 1 videobuf2_core, Live 0x0000000000000000
+snd_rawmidi 32768 1 snd_seq_midi, Live 0x0000000000000000
+videodev 163840 3 uvcvideo,videobuf2_core,v4l2_common, Live 0x0000000000000000
+serio_raw 16384 0 - Live 0x0000000000000000
+btusb 45056 0 - Live 0x0000000000000000
+rtsx_pci_ms 20480 0 - Live 0x0000000000000000
+media 24576 2 uvcvideo,videodev, Live 0x0000000000000000
+snd_seq 69632 2 snd_seq_midi,snd_seq_midi_event, Live 0x0000000000000000
+bluetooth 524288 22 rfcomm,bnep,btusb, Live 0x0000000000000000
+mei_me 20480 0 - Live 0x0000000000000000
+memstick 20480 1 rtsx_pci_ms, Live 0x0000000000000000
+mei 90112 1 mei_me, Live 0x0000000000000000
+snd_seq_device 16384 3 snd_seq_midi,snd_rawmidi,snd_seq, Live 0x0000000000000000
+thinkpad_acpi 86016 1 - Live 0x0000000000000000
+snd_timer 32768 2 snd_pcm,snd_seq, Live 0x0000000000000000
+nvram 16384 1 thinkpad_acpi, Live 0x0000000000000000
+snd 86016 22 snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_codec_generic,snd_hda_intel,snd_hda_codec,snd_hwdep,snd_pcm,snd_rawmidi,snd_seq,snd_seq_device,thinkpad_acpi,snd_timer, Live 0x0000000000000000
+lpc_ich 24576 0 - Live 0x0000000000000000
+soundcore 16384 2 snd_hda_codec,snd, Live 0x0000000000000000
+shpchp 40960 0 - Live 0x0000000000000000
+mac_hid 16384 0 - Live 0x0000000000000000
+parport_pc 36864 0 - Live 0x0000000000000000
+ppdev 20480 0 - Live 0x0000000000000000
+lp 20480 0 - Live 0x0000000000000000
+parport 45056 3 parport_pc,ppdev,lp, Live 0x0000000000000000
+autofs4 40960 2 - Live 0x0000000000000000
+dm_crypt 28672 1 - Live 0x0000000000000000
+rtsx_pci_sdmmc 24576 0 - Live 0x0000000000000000
+crct10dif_pclmul 16384 0 - Live 0x0000000000000000
+crc32_pclmul 16384 0 - Live 0x0000000000000000
+ghash_clmulni_intel 16384 0 - Live 0x0000000000000000
+aesni_intel 172032 7 - Live 0x0000000000000000
+i915 1126400 5 - Live 0x0000000000000000
+aes_x86_64 20480 1 aesni_intel, Live 0x0000000000000000
+lrw 16384 1 aesni_intel, Live 0x0000000000000000
+gf128mul 16384 1 lrw, Live 0x0000000000000000
+glue_helper 16384 1 aesni_intel, Live 0x0000000000000000
+ablk_helper 16384 1 aesni_intel, Live 0x0000000000000000
+cryptd 24576 4 ghash_clmulni_intel,aesni_intel,ablk_helper, Live 0x0000000000000000
+psmouse 126976 0 - Live 0x0000000000000000
+ahci 36864 3 - Live 0x0000000000000000
+e1000e 233472 0 - Live 0x0000000000000000
+libahci 32768 1 ahci, Live 0x0000000000000000
+ptp 20480 1 e1000e, Live 0x0000000000000000
+rtsx_pci 53248 2 rtsx_pci_ms,rtsx_pci_sdmmc, Live 0x0000000000000000
+i2c_algo_bit 16384 1 i915, Live 0x0000000000000000
+pps_core 20480 1 ptp, Live 0x0000000000000000
+drm_kms_helper 126976 1 i915, Live 0x0000000000000000
+drm 352256 6 i915,drm_kms_helper, Live 0x0000000000000000
+wmi 20480 0 - Live 0x0000000000000000
+video 28672 1 i915, Live 0x0000000000000000
+
+[7.4.] Loaded driver and hardware information (/proc/ioports, /proc/iomem)
+0000-0cf7 : PCI Bus 0000:00
+  0000-001f : dma1
+  0020-0021 : pic1
+  0040-0043 : timer0
+  0050-0053 : timer1
+  0060-0060 : keyboard
+  0061-0061 : PNP0800:00
+  0062-0062 : PNP0C09:00
+    0062-0062 : EC data
+  0064-0064 : keyboard
+  0066-0066 : PNP0C09:00
+    0066-0066 : EC cmd
+  0070-0071 : rtc0
+  0080-008f : dma page reg
+  00a0-00a1 : pic2
+  00c0-00df : dma2
+  00f0-00ff : fpu
+    00f0-00f0 : PNP0C04:00
+  03c0-03df : vesafb
+  0800-087f : pnp 00:01
+  0880-08ff : pnp 00:01
+  0900-097f : pnp 00:01
+  0980-09ff : pnp 00:01
+  0a00-0a7f : pnp 00:01
+  0a80-0aff : pnp 00:01
+  0b00-0b7f : pnp 00:01
+  0b80-0bff : pnp 00:01
+0cf8-0cff : PCI conf1
+0d00-ffff : PCI Bus 0000:00
+  15e0-15ef : pnp 00:01
+  1600-167f : pnp 00:01
+    1640-165f : pnp 00:01
+  1800-1803 : ACPI PM1a_EVT_BLK
+  1804-1805 : ACPI PM1a_CNT_BLK
+  1808-180b : ACPI PM_TMR
+  1810-1815 : ACPI CPU throttle
+  1830-1833 : iTCO_wdt
+  1850-1850 : ACPI PM2_CNT_BLK
+  1860-187f : iTCO_wdt
+  1880-189f : ACPI GPE0_BLK
+  3000-303f : 0000:00:02.0
+  3060-307f : 0000:00:1f.2
+    3060-307f : ahci
+  3080-309f : 0000:00:19.0
+  30a0-30a7 : 0000:00:1f.2
+    30a0-30a7 : ahci
+  30a8-30af : 0000:00:1f.2
+    30a8-30af : ahci
+  30b8-30bb : 0000:00:1f.2
+    30b8-30bb : ahci
+  30bc-30bf : 0000:00:1f.2
+    30bc-30bf : ahci
+  efa0-efbf : 0000:00:1f.3
+
+00000000-00000fff : reserved
+00001000-0009cfff : System RAM
+0009d000-0009ffff : reserved
+000a0000-000bffff : PCI Bus 0000:00
+000c0000-000cfdff : Video ROM
+000d0000-000d3fff : pnp 00:00
+000d4000-000d7fff : pnp 00:00
+000d8000-000dbfff : pnp 00:00
+000dc000-000dffff : pnp 00:00
+000e0000-000fffff : reserved
+  000f0000-000fffff : System ROM
+00100000-0fffffff : System RAM
+  01000000-017f4e98 : Kernel code
+  017f4e99-01d1c57f : Kernel data
+  01e89000-01fcbfff : Kernel bss
+10000000-1000afff : reserved
+1000b000-bf06afff : System RAM
+bf06b000-ccbfefff : reserved
+ccbff000-ccd7efff : ACPI Non-volatile Storage
+ccd7f000-ccdfefff : ACPI Tables
+ccdff000-cfffffff : reserved
+  ce000000-cfffffff : Graphics Stolen Memory
+d0000000-febfffff : PCI Bus 0000:00
+  d0000000-d000ffff : pnp 00:05
+  d0010000-d001ffff : pnp 00:05
+  e0000000-efffffff : 0000:00:02.0
+  f0000000-f0ffffff : 0000:00:02.0
+  f1000000-f10fffff : PCI Bus 0000:03
+    f1000000-f1001fff : 0000:03:00.0
+      f1000000-f1001fff : iwlwifi
+  f1100000-f11fffff : PCI Bus 0000:02
+    f1100000-f1100fff : 0000:02:00.0
+      f1100000-f1100fff : rtsx_pci
+  f1200000-f121ffff : 0000:00:19.0
+    f1200000-f121ffff : e1000e
+  f1220000-f122ffff : 0000:00:14.0
+    f1220000-f122ffff : xhci-hcd
+  f1230000-f1233fff : 0000:00:03.0
+    f1230000-f1233fff : ICH HD audio
+  f1234000-f1237fff : 0000:00:1b.0
+    f1234000-f1237fff : ICH HD audio
+  f1238000-f12380ff : 0000:00:1f.3
+  f1239000-f123901f : 0000:00:16.0
+    f1239000-f123901f : mei_me
+  f123b000-f123bfff : 0000:00:1f.6
+  f123c000-f123c7ff : 0000:00:1f.2
+    f123c000-f123c7ff : ahci
+  f123d000-f123d3ff : 0000:00:1d.0
+    f123d000-f123d3ff : ehci_hcd
+  f123e000-f123efff : 0000:00:19.0
+    f123e000-f123efff : e1000e
+  f8000000-fbffffff : PCI MMCONFIG 0000 [bus 00-3f]
+    f8000000-fbffffff : reserved
+      f8000000-fbffffff : pnp 00:01
+fec00000-fec00fff : reserved
+  fec00000-fec003ff : IOAPIC 0
+fed00000-fed003ff : HPET 0
+  fed00000-fed003ff : PNP0103:00
+fed08000-fed08fff : reserved
+fed10000-fed19fff : reserved
+  fed10000-fed13fff : pnp 00:01
+  fed18000-fed18fff : pnp 00:01
+  fed19000-fed19fff : pnp 00:01
+fed1c000-fed1ffff : reserved
+  fed1c000-fed1ffff : pnp 00:01
+    fed1f410-fed1f414 : iTCO_wdt
+fed40000-fed4bfff : PCI Bus 0000:00
+  fed45000-fed4bfff : pnp 00:01
+fed90000-fed90fff : dmar0
+fed91000-fed91fff : dmar1
+fee00000-fee00fff : Local APIC
+  fee00000-fee00fff : reserved
+ffa00000-ffffffff : reserved
+100000000-22dffffff : System RAM
+22e000000-22fffffff : RAM buffer
+
+[7.5.] PCI information ('lspci -vvv' as root)
+00:00.0 Host bridge: Intel Corporation Broadwell-U Host Bridge -OPI (rev 09)
+	Subsystem: Lenovo Device 2226
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ >SERR- <PERR- INTx-
+	Latency: 0
+	Capabilities: [e0] Vendor Specific Information: Len=0c <?>
+
+00:02.0 VGA compatible controller: Intel Corporation Broadwell-U Integrated Graphics (rev 09) (prog-if 00 [VGA controller])
+	Subsystem: Lenovo Device 2226
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 45
+	Region 0: Memory at f0000000 (64-bit, non-prefetchable) [size=16M]
+	Region 2: Memory at e0000000 (64-bit, prefetchable) [size=256M]
+	Region 4: I/O ports at 3000 [size=64]
+	Expansion ROM at <unassigned> [disabled]
+	Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
+		Address: fee00018  Data: 0000
+	Capabilities: [d0] Power Management version 2
+		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [a4] PCI Advanced Features
+		AFCap: TP+ FLR+
+		AFCtrl: FLR-
+		AFStatus: TP-
+	Kernel driver in use: i915
+
+00:03.0 Audio device: Intel Corporation Broadwell-U Audio Controller (rev 09)
+	Subsystem: Lenovo Device 2226
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 50
+	Region 0: Memory at f1230000 (64-bit, non-prefetchable) [size=16K]
+	Capabilities: [50] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [60] MSI: Enable+ Count=1/1 Maskable- 64bit-
+		Address: fee00478  Data: 0000
+	Capabilities: [70] Express (v1) Root Complex Integrated Endpoint, MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0
+			ExtTag- RBE-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+	Kernel driver in use: snd_hda_intel
+
+00:14.0 USB controller: Intel Corporation Wildcat Point-LP USB xHCI Controller (rev 03) (prog-if 30 [XHCI])
+	Subsystem: Lenovo Device 2226
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 42
+	Region 0: Memory at f1220000 (64-bit, non-prefetchable) [size=64K]
+	Capabilities: [70] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0-,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [80] MSI: Enable+ Count=1/8 Maskable- 64bit+
+		Address: 00000000fee00318  Data: 0000
+	Kernel driver in use: xhci_hcd
+
+00:16.0 Communication controller: Intel Corporation Wildcat Point-LP MEI Controller #1 (rev 03)
+	Subsystem: Lenovo Device 2226
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 47
+	Region 0: Memory at f1239000 (64-bit, non-prefetchable) [size=32]
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [8c] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000fee003f8  Data: 0000
+	Kernel driver in use: mei_me
+
+00:19.0 Ethernet controller: Intel Corporation Ethernet Connection (3) I218-LM (rev 03)
+	Subsystem: Lenovo Device 2226
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 46
+	Region 0: Memory at f1200000 (32-bit, non-prefetchable) [size=128K]
+	Region 1: Memory at f123e000 (32-bit, non-prefetchable) [size=4K]
+	Region 2: I/O ports at 3080 [size=32]
+	Capabilities: [c8] Power Management version 2
+		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=1 PME-
+	Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000fee003d8  Data: 0000
+	Capabilities: [e0] PCI Advanced Features
+		AFCap: TP+ FLR+
+		AFCtrl: FLR-
+		AFStatus: TP-
+	Kernel driver in use: e1000e
+
+00:1b.0 Audio device: Intel Corporation Wildcat Point-LP High Definition Audio Controller (rev 03)
+	Subsystem: Lenovo Device 2226
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 32, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 49
+	Region 0: Memory at f1234000 (64-bit, non-prefetchable) [size=16K]
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [60] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000fee00458  Data: 0000
+	Kernel driver in use: snd_hda_intel
+
+00:1c.0 PCI bridge: Intel Corporation Wildcat Point-LP PCI Express Root Port #6 (rev e3) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+	I/O behind bridge: 0000f000-00000fff
+	Memory behind bridge: f1100000-f11fffff
+	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0
+			ExtTag- RBE+
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+		LnkCap:	Port #6, Speed 5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <512ns, L1 <16us
+			ClockPM- Surprise- LLActRep+ BwNot+
+		LnkCtl:	ASPM L0s L1 Enabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+			Slot #5, PowerLimit 10.000W; Interlock- NoCompl+
+		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+			Changed: MRL- PresDet- LinkState+
+		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+		RootCap: CRSVisible-
+		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR+, OBFF Not Supported ARIFwd-
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled ARIFwd-
+		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+		Address: 00000000  Data: 0000
+	Capabilities: [90] Subsystem: Lenovo Device 2226
+	Capabilities: [a0] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [100 v0] #00
+	Capabilities: [200 v1] L1 PM Substates
+		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
+			  PortCommonModeRestoreTime=40us PortTPowerOnTime=10us
+	Kernel driver in use: pcieport
+
+00:1c.1 PCI bridge: Intel Corporation Wildcat Point-LP PCI Express Root Port #3 (rev e3) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Bus: primary=00, secondary=03, subordinate=03, sec-latency=0
+	I/O behind bridge: 0000f000-00000fff
+	Memory behind bridge: f1000000-f10fffff
+	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0
+			ExtTag- RBE+
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+		LnkCap:	Port #3, Speed 5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <512ns, L1 <16us
+			ClockPM- Surprise- LLActRep+ BwNot+
+		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+			Slot #2, PowerLimit 10.000W; Interlock- NoCompl+
+		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+			Changed: MRL- PresDet- LinkState+
+		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+		RootCap: CRSVisible-
+		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR+, OBFF Not Supported ARIFwd-
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled ARIFwd-
+		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+		Address: 00000000  Data: 0000
+	Capabilities: [90] Subsystem: Lenovo Device 2226
+	Capabilities: [a0] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [100 v0] #00
+	Capabilities: [200 v1] L1 PM Substates
+		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
+			  PortCommonModeRestoreTime=40us PortTPowerOnTime=10us
+	Kernel driver in use: pcieport
+
+00:1d.0 USB controller: Intel Corporation Wildcat Point-LP USB EHCI Controller (rev 03) (prog-if 20 [EHCI])
+	Subsystem: Lenovo Device 2226
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 23
+	Region 0: Memory at f123d000 (32-bit, non-prefetchable) [size=1K]
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [58] Debug port: BAR=1 offset=00a0
+	Capabilities: [98] PCI Advanced Features
+		AFCap: TP+ FLR+
+		AFCtrl: FLR-
+		AFStatus: TP-
+	Kernel driver in use: ehci-pci
+
+00:1f.0 ISA bridge: Intel Corporation Wildcat Point-LP LPC Controller (rev 03)
+	Subsystem: Lenovo Device 2226
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Capabilities: [e0] Vendor Specific Information: Len=0c <?>
+	Kernel driver in use: lpc_ich
+
+00:1f.2 SATA controller: Intel Corporation Wildcat Point-LP SATA Controller [AHCI Mode] (rev 03) (prog-if 01 [AHCI 1.0])
+	Subsystem: Lenovo Device 2226
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin B routed to IRQ 44
+	Region 0: I/O ports at 30a8 [size=8]
+	Region 1: I/O ports at 30bc [size=4]
+	Region 2: I/O ports at 30a0 [size=8]
+	Region 3: I/O ports at 30b8 [size=4]
+	Region 4: I/O ports at 3060 [size=32]
+	Region 5: Memory at f123c000 (32-bit, non-prefetchable) [size=2K]
+	Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
+		Address: fee00398  Data: 0000
+	Capabilities: [70] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
+	Kernel driver in use: ahci
+
+00:1f.3 SMBus: Intel Corporation Wildcat Point-LP SMBus Controller (rev 03)
+	Subsystem: Lenovo Device 2226
+	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Interrupt: pin C routed to IRQ 10
+	Region 0: Memory at f1238000 (64-bit, non-prefetchable) [size=256]
+	Region 4: I/O ports at efa0 [size=32]
+
+00:1f.6 Signal processing controller: Intel Corporation Wildcat Point-LP Thermal Management Controller (rev 03)
+	Subsystem: Lenovo Device 2226
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin C routed to IRQ 10
+	Region 0: Memory at f123b000 (64-bit, non-prefetchable) [size=4K]
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+		Address: 00000000  Data: 0000
+
+02:00.0 Unassigned class [ff00]: Realtek Semiconductor Co., Ltd. RTS5227 PCI Express Card Reader (rev 01)
+	Subsystem: Lenovo Device 2226
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 43
+	Region 0: Memory at f1100000 (32-bit, non-prefetchable) [size=4K]
+	Capabilities: [40] Power Management version 3
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA PME(D0-,D1+,D2+,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000fee00358  Data: 0000
+	Capabilities: [70] Express (v2) Endpoint, MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s unlimited, L1 <64us
+			ClockPM+ Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk-
+			ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+		DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR+, OBFF Via message/WAKE#
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled
+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [100 v2] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [140 v1] Device Serial Number 00-00-00-01-00-4c-e0-00
+	Capabilities: [150 v1] Latency Tolerance Reporting
+		Max snoop latency: 71680ns
+		Max no snoop latency: 71680ns
+	Capabilities: [158 v1] L1 PM Substates
+		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
+			  PortCommonModeRestoreTime=60us PortTPowerOnTime=60us
+	Kernel driver in use: rtsx_pci
+
+03:00.0 Network controller: Intel Corporation Wireless 7265 (rev 59)
+	Subsystem: Intel Corporation Dual Band Wireless-AC 7265
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 48
+	Region 0: Memory at f1000000 (64-bit, non-prefetchable) [size=8K]
+	Capabilities: [c8] Power Management version 3
+		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000fee00418  Data: 0000
+	Capabilities: [40] Express (v2) Endpoint, MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 unlimited
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr+ NoSnoop+ FLReset-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L1, Exit Latency L0s <4us, L1 <32us
+			ClockPM+ Surprise- LLActRep- BwNot-
+		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+		DevCap2: Completion Timeout: Range B, TimeoutDis+, LTR+, OBFF Via WAKE#
+		DevCtl2: Completion Timeout: 16ms to 55ms, TimeoutDis-, LTR+, OBFF Disabled
+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP+ BadDLLP- Rollover- Timeout+ NonFatalErr+
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+	Capabilities: [140 v1] Device Serial Number 60-57-18-ff-ff-bf-da-92
+	Capabilities: [14c v1] Latency Tolerance Reporting
+		Max snoop latency: 71680ns
+		Max no snoop latency: 71680ns
+	Capabilities: [154 v1] L1 PM Substates
+		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
+			  PortCommonModeRestoreTime=30us PortTPowerOnTime=60us
+	Kernel driver in use: iwlwifi
+
+[7.6.] SCSI information (from /proc/scsi/scsi)
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: ATA      Model: Crucial_CT256MX1 Rev: MU01
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi1 Channel: 00 Id: 00 Lun: 00
+  Vendor: ATA      Model: SBe M2 SSD       Rev: 02.0
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+
+[7.7.] Other information that might be relevant to the problem (please look in /proc and include all information that you think to be relevant):
+wlan0     IEEE 802.11abgn  ESSID:"Hello Rock Stars 5GHz"  
+          Mode:Managed  Frequency:5.805 GHz  Access Point: 38:2C:4A:5C:7F:E4   
+          Bit Rate=9 Mb/s   Tx-Power=22 dBm   
+          Retry short limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
+          Link Quality=57/70  Signal level=-53 dBm  
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:0  Invalid misc:1   Missed beacon:0
+
+[14435.297900] Intel(R) Wireless WiFi driver for Linux
+[14435.297903] Copyright(c) 2003- 2014 Intel Corporation
+[14435.299441] iwlwifi 0000:03:00.0: loaded firmware version 25.15.12.0 op_mode iwlmvm
+[14435.307732] iwlwifi 0000:03:00.0: Detected Intel(R) Dual Band Wireless AC 7265, REV=0x210
+[14435.308081] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
+[14435.308537] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
+[14435.378757] ieee80211 phy2: Selected rate control algorithm 'iwl-mvm-rs'
+[14435.393141] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
+[14435.393845] iwlwifi 0000:03:00.0: L1 Enabled - LTR Enabled
+[14438.709325] wlan0: authenticate with 38:2c:4a:5c:7f:e4
+[14438.716955] wlan0: send auth to 38:2c:4a:5c:7f:e4 (try 1/3)
+[14438.717729] wlan0: authenticated
+[14438.718240] wlan0: associate with 38:2c:4a:5c:7f:e4 (try 1/3)
+[14438.726887] wlan0: RX AssocResp from 38:2c:4a:5c:7f:e4 (capab=0x511 status=0 aid=87)
+[14438.728091] wlan0: associated
+[14438.728150] cfg80211: Calling CRDA for country: US
+[14438.730810] cfg80211: Regulatory domain changed to country: US
+[14438.730814] cfg80211:  DFS Master region: FCC
+[14438.730815] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
+[14438.730818] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm), (N/A)
+[14438.730820] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm), (N/A)
+[14438.730822] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (0 s)
+[14438.730824] cfg80211:   (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (0 s)
+[14438.730826] cfg80211:   (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (0 s)
+[14438.730828] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm), (N/A)
+[14438.730830] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 4000 mBm), (N/A)
+[14438.758567] wlan0: Limiting TX power to 30 (30 - 0) dBm as advertised by 38:2c:4a:5c:7f:e4
+[14498.784128] wlan0: deauthenticating from 38:2c:4a:5c:7f:e4 by local choice (Reason: 3=DEAUTH_LEAVING)
+[14498.800307] cfg80211: Calling CRDA to update world regulatory domain
+[14498.802849] cfg80211: World regulatory domain updated:
+[14498.802851] cfg80211:  DFS Master region: unset
+[14498.802852] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
+[14498.802854] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (N/A)
+[14498.802855] cfg80211:   (2457000 KHz - 2482000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (N/A)
+[14498.802857] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm), (N/A)
+[14498.802858] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (N/A)
+[14498.802859] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (N/A)
+[14502.034641] wlan0: authenticate with 38:2c:4a:5c:7f:e4
+[14502.041201] wlan0: send auth to 38:2c:4a:5c:7f:e4 (try 1/3)
+[14502.041979] wlan0: authenticated
+[14502.042301] wlan0: associate with 38:2c:4a:5c:7f:e4 (try 1/3)
+[14502.050959] wlan0: RX AssocResp from 38:2c:4a:5c:7f:e4 (capab=0x511 status=0 aid=88)
+[14502.052199] wlan0: associated
+[14502.052253] cfg80211: Calling CRDA for country: US
+[14502.054593] cfg80211: Regulatory domain changed to country: US
+[14502.054596] cfg80211:  DFS Master region: FCC
+[14502.054597] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp), (dfs_cac_time)
+[14502.054599] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm), (N/A)
+[14502.054600] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm), (N/A)
+[14502.054601] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (0 s)
+[14502.054602] cfg80211:   (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (0 s)
+[14502.054604] cfg80211:   (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm), (0 s)
+[14502.054605] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm), (N/A)
+[14502.054606] cfg80211:   (57240000 KHz - 63720000 KHz @ 2160000 KHz), (N/A, 4000 mBm), (N/A)
+[14502.109627] wlan0: Limiting TX power to 30 (30 - 0) dBm as advertised by 38:2c:4a:5c:7f:e4
+
+[X.] Other notes, patches, fixes, workarounds:
+Downstream bug report: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1437913
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCAAGBQJVGjahAAoJEH5go6aGro2YyXgQAILf+yh7cHjOV9+GerA+Q8XJ
+R8dt+rhyj84ee7tI0j5fO4dmIzTZyUxlCxggFGC68fqFoK/hbTXWj/Oyqz/AbuJr
+JEwMRpMvbdTjlWrlxIVjfGiI3/YkMNT4xpXKYWMOBNy5G5n2JMeqr38NwEUYbSik
+RLxZEjoSUppQ0eJEiJeKNp4MBvZXSmSZENTHp4io4WHmZEyV0v54297GKW4yzq16
+yySgNmg/NfDwVGn3JxCGja55Vv2HD8OLDXS6MPefKHv4WWRdNGuKtVkoaysHpLcK
+j14/UEff0kugq2F0iOk5YxZYrEo5SI2rDH1NmlPiRVD/tvmVVQPxj/bZqqW3Ym9F
+HY33Md4LeawZK4+/wdOQ45+Tz6avCtgkLud8oJyMuOM+vDWhun4TLQcFrQ0KVsxP
+V/7EMIHEbIu5g2cNuIOhd/g4ZM8KeTnSwXJ7zuSS0u07Arno6ccsamCaWM76796P
++lJgsNzOY2l7o8Dq0V2HIYDh9VONRFnikguZeKz61UIz6Pu7ziKPzJW2ZajnWQlO
+b30LE3HvKon1mWz2i+By58yKc9s8cswQY4XUkf2LfkKwgkIaOPzANlHrEMDvfj6u
+0fIlIXUjJmWrQVd+r5e+/z+jFE6k5Wuh22/jBCZn05wvAZNWTykkQ6mUZCVGybiU
+9BZ/EI3wBuFnrWB6m4We
+=lpV2
+-----END PGP SIGNATURE-----
