@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:35910 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933937AbbDQRaV (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7301 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752228AbbCaXqG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2015 13:30:21 -0400
-Received: by pdea3 with SMTP id a3so134444319pde.3
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Apr 2015 10:30:21 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] cfg80211: allow the plink state blocking for user managed mesh
-Date: Sat, 18 Apr 2015 01:30:02 +0800
-Message-Id: <1429291802-14168-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20150417_193025_697424_9F170FBA)
+	Tue, 31 Mar 2015 19:46:06 -0400
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/2] ath: define JP DFS patterns separated from FCC
+Date: Tue, 31 Mar 2015 16:44:42 -0700
+Message-ID: <413e207292d5c52cd621912762e6d4a40a8dfc48.1427845453.git.poh@qca.qualcomm.com> (sfid-20150401_014610_764941_AED3FDD6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wpa_supplicant or authsae handles the mesh peering in user
-space, but the plink state is still managed in kernel space.
-Currently, there is no implementation by wpa_supplicant or
-authsae to block the plink state after it is set to ESTAB.
+Separate Japan's DFS pattern from FCC to control PPB threshold.
 
-By applying this patch, we can use the "iw mesh0 station set
-<MAC address> plink_action block" to block the peer mesh STA.
-This is useful for experimenting purposes.
+Currently all the radar detectors use the same threshold rate at
+50%, but it's not able to achieve if data traffic rate is higher
+than 40% because WLAN baseband used by ath9k and ath10k often fails
+detecting radar pulses, so that SW cannot get enough radar reports
+to achieve the rate.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Since Japan's W53 band requires 50% data traffic during its DFS
+test we need to apply different threshold rate than others on it.
+Hence define its own pattern to give flexibility to threshold rate.
 
-v2: respin the commit log (Johannes)
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 ---
- net/wireless/nl80211.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 29 +++++++++++++++----------
+ 1 file changed, 18 insertions(+), 11 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index dd78445..8a33bba 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4061,7 +4061,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- 			return -EINVAL;
- 		break;
- 	case CFG80211_STA_MESH_PEER_USER:
--		if (params->plink_action != NL80211_PLINK_ACTION_NO_ACTION)
-+		if (params->plink_action != NL80211_PLINK_ACTION_NO_ACTION &&
-+		    params->plink_action != NL80211_PLINK_ACTION_BLOCK)
- 			return -EINVAL;
- 		break;
- 	}
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index b1de8c6..2d4ad45 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -41,7 +41,8 @@ struct radar_types {
+ 
+ /* percentage on ppb threshold to trigger detection */
+ #define MIN_PPB_THRESH	50
+-#define PPB_THRESH(PPB) ((PPB * MIN_PPB_THRESH + 50) / 100)
++#define PPB_THRESH_RATE(PPB, RATE) ((PPB * RATE + 100 - RATE) / 100)
++#define PPB_THRESH(PPB) PPB_THRESH_RATE(PPB, MIN_PPB_THRESH)
+ #define PRF2PRI(PRF) ((1000000 + PRF / 2) / PRF)
+ /* percentage of pulse width tolerance */
+ #define WIDTH_TOLERANCE 5
+@@ -96,17 +97,23 @@ static const struct radar_types fcc_radar_types = {
+ 	.radar_types		= fcc_radar_ref_types,
+ };
+ 
+-#define JP_PATTERN FCC_PATTERN
++#define JP_PATTERN(ID, WMIN, WMAX, PMIN, PMAX, PRF, PPB, RATE, CHIRP)	\
++{								\
++	ID, WIDTH_LOWER(WMIN), WIDTH_UPPER(WMAX),		\
++	PMIN - PRI_TOLERANCE,					\
++	PMAX * PRF + PRI_TOLERANCE, PRF, PPB * PRF,		\
++	PPB_THRESH_RATE(PPB, RATE), PRI_TOLERANCE, CHIRP	\
++}
+ static const struct radar_detector_specs jp_radar_ref_types[] = {
+-	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, false),
+-	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, false),
+-	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, false),
+-	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, false),
+-	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, false),
+-	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, false),
+-	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, false),
+-	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, false),
+-	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, false),
++	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 50, false),
++	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 50, false),
++	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
++	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
++	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
++	JP_PATTERN(5, 6, 10, 200, 500, 1, 16, 50, false),
++	JP_PATTERN(6, 11, 20, 200, 500, 1, 12, 50, false),
++	JP_PATTERN(7, 50, 100, 1000, 2000, 1, 20, 50, false),
++	JP_PATTERN(5, 0, 1, 333, 333, 1, 9, 50, false),
+ };
+ 
+ static const struct radar_types jp_radar_types = {
 -- 
-2.3.0
+1.9.1
 
