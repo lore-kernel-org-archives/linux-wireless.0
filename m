@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aibo.runbox.com ([91.220.196.211]:41339 "EHLO aibo.runbox.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53151 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750731AbbCSEen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Mar 2015 00:34:43 -0400
-Message-ID: <550A51D5.5060304@runbox.com> (sfid-20150319_053500_257721_ED50D815)
-Date: Thu, 19 Mar 2015 00:34:29 -0400
-From: "M. Vefa Bicakci" <m.v.b@runbox.com>
-MIME-Version: 1.0
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: Matthias Beyer <mail@beyermatthias.de>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	joe@perches.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org
-Subject: Re: [PATCH v2 00/16] checkpatch clean-up of rtl8723au's rtw_security.c
-References: <1426378241-32469-1-git-send-email-m.v.b@runbox.com>	<20150315093142.GY24643@lucy.3gs> <10669062.ZZNVxH5Tl9@lenny> <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org>
-In-Reply-To: <wrfjvbi1rkwy.fsf@ultrasam.lan.trained-monkey.org>
-Content-Type: text/plain; charset=windows-1252
+	id S1751289AbbCaO1y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2015 10:27:54 -0400
+Message-ID: <1427812067.2057.27.camel@sipsolutions.net> (sfid-20150331_162758_327425_7F26E55C)
+Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 31 Mar 2015 16:27:47 +0200
+In-Reply-To: <5500AE12.6040103@candelatech.com>
+References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>
+	 	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>
+	 	 <54EB66CC.1030800@candelatech.com>
+	  <1424772714.2192.16.camel@sipsolutions.net>
+	  <54EC8C5D.5090400@candelatech.com>
+	 <1424788834.2192.34.camel@sipsolutions.net>
+	 <5500AE12.6040103@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-03-16 12:01 PM, Jes Sorensen wrote:
-> "M. Vefa Bicakci" <m.v.b@runbox.com> writes:
->>
-[snip]
->>
->> I hope this clarifies my set-up. Is there something I am doing incorrectly?
->> If there is anything I can assist with, please let me know.
->>
->> Thank you,
->>
->> Vefa
->>
->> [1]
->> https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/log/?h=staging-next
->> [2] https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/
+On Wed, 2015-03-11 at 14:05 -0700, Ben Greear wrote:
+
+> I took a look at the hw-scan code a bit...I guess we might could do additional
+> info calls to user-space as we iterate through the channels while scanning?
 > 
-> For staging patches, you should always post patches against the
-> staging-next tree. Please rebase them and repost them.
-> 
-> Jes
+> A real driver would be causing the NIC to change channels at these junctures,
+> either by directly setting registers or sending some message off to the
+> target NIC's cpu, right?
 
-Hello Jes,
+Well, depends. Our driver just asks the firmware to do the scan, and it
+will do all the scheduling by itself, i.e. it'll go through the channels
+at convenient times etc.
 
-Thank you for the review!
+> I would assume that off-channel work could do similar logic.
 
-I have addressed your comments, and I will send the third version of the commits
-for review shortly.
+Yeah.
 
-Vefa
+> Is that the sort of thing you had in mind?
+
+To be honest, I'm not really sure myself. It seems to really do this
+you'd also need powersave handling (tell the AP you're going to sleep
+when scanning) and potentially P2P-GO NoA handling (tell the clients
+you're going to sleep).
+
+The thing with hwsim right now is that it totally makes use of its
+ability to be on as many channels at the same time as it wants, so it
+doesn't have to worry about that, but if you want to actually have the
+channel "changed" then we need to handle a lot more details.
+
+johannes
+
