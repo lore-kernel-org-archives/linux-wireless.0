@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14617 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754512AbbCLNFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Mar 2015 09:05:53 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 23/49] iwlwifi: mvm: BT Coex - disable RRC by default
-Date: Thu, 12 Mar 2015 15:04:08 +0200
-Message-Id: <1426165474-25586-23-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150312_143417_054498_A32AC41B)
-In-Reply-To: <1426164431.19690.4.camel@egrumbacBox>
-References: <1426164431.19690.4.camel@egrumbacBox>
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:38244 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752540AbbCaKhQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Mar 2015 06:37:16 -0400
+Received: by wibgn9 with SMTP id gn9so20323561wib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Mar 2015 03:37:15 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87iodi318p.fsf@kamboji.qca.qualcomm.com>
+References: <1427200993-7550-1-git-send-email-michal.kazior@tieto.com>
+	<1427200993-7550-3-git-send-email-michal.kazior@tieto.com>
+	<87iodi318p.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 31 Mar 2015 12:37:15 +0200
+Message-ID: <CA+BoTQkouPcREDVpKx=iKs05aeoAUv8Qj-keO3FPVdOyojyDnQ@mail.gmail.com> (sfid-20150331_123721_696350_DEAD3AE2)
+Subject: Re: [PATCH v5 2/7] ath10k: implement chanctx API
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable this feature only if the firmware advertises support
-for it.
+On 30 March 2015 at 18:21, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> The chanctx API will allow ath10k to support
+>> multi-channel operation.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> kbuild reports:
+>
+> sparse warnings: (new ones prefixed by >>)
+>
+>>> drivers/net/wireless/ath/ath10k/mac.h:72:57: sparse: incorrect type in initializer (different address spaces)
+>    drivers/net/wireless/ath/ath10k/mac.h:72:57:    expected struct ieee80211_chanctx_conf *conf
+>    drivers/net/wireless/ath/ath10k/mac.h:72:57:    got struct ieee80211_chanctx_conf [noderef] <asn:4>*chanctx_conf
+>>> drivers/net/wireless/ath/ath10k/mac.h:72:57: sparse: incorrect type in initializer (different address spaces)
+[...]
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-fw-file.h     | 2 ++
- drivers/net/wireless/iwlwifi/mvm/coex_legacy.c | 2 +-
- drivers/net/wireless/iwlwifi/mvm/mvm.h         | 6 ++++++
- 3 files changed, 9 insertions(+), 1 deletion(-)
+Thanks for catching this! I've sent a v6.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-index e5fd19d..291a338 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
-@@ -290,6 +290,7 @@ enum iwl_ucode_tlv_api {
-  * @IWL_UCODE_TLV_CAPA_HOTSPOT_SUPPORT: supports Hot Spot Command
-  * @IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS: support radio and beacon statistics
-  * @IWL_UCODE_TLV_CAPA_BT_COEX_PLCR: enabled BT Coex packet level co-running
-+ * @IWL_UCODE_TLV_CAPA_BT_COEX_RRC: supports BT Coex RRC
-  */
- enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_D0I3_SUPPORT			= BIT(0),
-@@ -306,6 +307,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_HOTSPOT_SUPPORT		= BIT(18),
- 	IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS		= BIT(22),
- 	IWL_UCODE_TLV_CAPA_BT_COEX_PLCR			= BIT(28),
-+	IWL_UCODE_TLV_CAPA_BT_COEX_RRC			= BIT(30),
- };
- 
- /* The default calibrate table size if not specified by firmware file */
-diff --git a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-index 9717ee6..593bed7 100644
---- a/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-+++ b/drivers/net/wireless/iwlwifi/mvm/coex_legacy.c
-@@ -633,7 +633,7 @@ int iwl_send_bt_init_conf_old(struct iwl_mvm *mvm)
- 	if (IWL_MVM_BT_COEX_TTC)
- 		bt_cmd->flags |= cpu_to_le32(BT_COEX_TTC);
- 
--	if (IWL_MVM_BT_COEX_RRC)
-+	if (iwl_mvm_bt_is_rrc_supported(mvm))
- 		bt_cmd->flags |= cpu_to_le32(BT_COEX_RRC);
- 
- 	if (mvm->cfg->bt_shared_single_ant)
-diff --git a/drivers/net/wireless/iwlwifi/mvm/mvm.h b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-index 9a8868e..4d44cf0 100644
---- a/drivers/net/wireless/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/iwlwifi/mvm/mvm.h
-@@ -948,6 +948,12 @@ static inline bool iwl_mvm_bt_is_plcr_supported(struct iwl_mvm *mvm)
- 		IWL_MVM_BT_COEX_CORUNNING;
- }
- 
-+static inline bool iwl_mvm_bt_is_rrc_supported(struct iwl_mvm *mvm)
-+{
-+	return (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_BT_COEX_RRC) &&
-+		IWL_MVM_BT_COEX_RRC;
-+}
-+
- extern const u8 iwl_mvm_ac_to_tx_fifo[];
- 
- struct iwl_rate_info {
--- 
-1.9.1
+Btw. I'm puzzled why my sparse isn't helpful like this. Ideas?
 
+
+Michał
