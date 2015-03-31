@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6010 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753205AbbC3I3U (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:36979 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751384AbbCaPAS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Mar 2015 04:29:20 -0400
-From: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 5/5] wil6210: update FW file name
-Date: Mon, 30 Mar 2015 11:28:54 +0300
-Message-Id: <1427704134-30699-6-git-send-email-qca_vkondrat@qca.qualcomm.com> (sfid-20150330_102930_219929_FAC6CAAE)
-In-Reply-To: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
+	Tue, 31 Mar 2015 11:00:18 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] mac80211: reduce log spam from ieee80211_handle_pwr_constr
+Date: Tue, 31 Mar 2015 10:49:14 -0400
+Message-Id: <1427813354-7983-1-git-send-email-linville@tuxdriver.com> (sfid-20150331_170023_147566_6DCB0A56)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware "board" file name has changed from wil6210.board
-to wil6210.brd by the FW generation tools.
+This changes a couple of messages from sdata_info to sdata_dbg.
+This should reduce some log spam, as reported here:
 
-Reflect this in the driver.
+	https://bugzilla.redhat.com/show_bug.cgi?id=1206468
 
-Signed-off-by: Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/mlme.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index f4681e3..abb2080 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -33,7 +33,7 @@ extern bool debug_fw;
- 
- #define WIL_NAME "wil6210"
- #define WIL_FW_NAME "wil6210.fw" /* code */
--#define WIL_FW2_NAME "wil6210.board" /* board & radio parameters */
-+#define WIL_FW2_NAME "wil6210.brd" /* board & radio parameters */
- 
- #define WIL_MAX_BUS_REQUEST_KBPS 800000 /* ~6.1Gbps */
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 00103f36dcbf..26053bf2faa8 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1348,15 +1348,15 @@ static u32 ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
+ 	 */
+ 	if (has_80211h_pwr &&
+ 	    (!has_cisco_pwr || pwr_level_80211h <= pwr_level_cisco)) {
+-		sdata_info(sdata,
+-			   "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
+-			   pwr_level_80211h, chan_pwr, pwr_reduction_80211h,
+-			   sdata->u.mgd.bssid);
++		sdata_dbg(sdata,
++			  "Limiting TX power to %d (%d - %d) dBm as advertised by %pM\n",
++			  pwr_level_80211h, chan_pwr, pwr_reduction_80211h,
++			  sdata->u.mgd.bssid);
+ 		new_ap_level = pwr_level_80211h;
+ 	} else {  /* has_cisco_pwr is always true here. */
+-		sdata_info(sdata,
+-			   "Limiting TX power to %d dBm as advertised by %pM\n",
+-			   pwr_level_cisco, sdata->u.mgd.bssid);
++		sdata_dbg(sdata,
++			  "Limiting TX power to %d dBm as advertised by %pM\n",
++			  pwr_level_cisco, sdata->u.mgd.bssid);
+ 		new_ap_level = pwr_level_cisco;
+ 	}
  
 -- 
 2.1.0
