@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:50696 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932305AbbCYPqy (ORCPT
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:37460 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753175AbbCaOHo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Mar 2015 11:46:54 -0400
-Message-ID: <5512D86D.8020708@candelatech.com> (sfid-20150325_164657_959169_38B17CCB)
-Date: Wed, 25 Mar 2015 08:46:53 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Tue, 31 Mar 2015 10:07:44 -0400
 MIME-Version: 1.0
-To: Jose Antonio Delgado Alfonso <jose.delgado@aoifes.com>
-CC: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: Dynamic channel Access
-References: <CADxDmp50X2XnBjfk5qJKRH-n=1Cwagmjb_XyD+RJ4AgpPh-kjQ@mail.gmail.com> <CAEFj985wmiPwnF7rM1qCcO2K3X2yC_onO0AAMfm=9ytwpChzgg@mail.gmail.com> <etPan.542e8df5.6b8b4567.117@Okhwanui-Mac-mini.local> <55128DF0.6010109@aoifes.com> <5512D58B.6030204@aoifes.com>
-In-Reply-To: <5512D58B.6030204@aoifes.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20150326002946.GC10954@ribalta.home>
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+ <1424772112-27399-5-git-send-email-robert.dolca@intel.com> <20150326002946.GC10954@ribalta.home>
+From: Robert Dolca <robert.dolca@gmail.com>
+Date: Tue, 31 Mar 2015 17:07:22 +0300
+Message-ID: <CAFPB+Yd3gNEdyeE3+RseTQUy0cEbBiMCajwEN6cRd1Npqmj7Ww@mail.gmail.com> (sfid-20150331_160748_298073_DE9BF6C0)
+Subject: Re: [linux-nfc] [PATCH 4/8] NFC: NCI: Add a special nci_request for driver
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/25/2015 08:34 AM, Jose Antonio Delgado Alfonso wrote:
-> Hi all,
-> 
-> I would like to ask Qualcomm's collaborators about this topic.
-> 
-> We are trying to certify a AP product which uses QCA988x radio module.
-> We are using the ath10k driver (kernel v3.17.8) and firmware from Ben
-> Greear. We are trying to pass the Dynamic Channel test, which consists
-> in setting the radio at 80MHz and, at the same time, setting other
-> signal in the secondary channel. So far, the radio module does not
-> reduce the bandwidth and remains transmitting at 80MHz.
-> 
-> Please, Does someone know if Dynamic Channel Access is really supported
-> by ath10k driver in newest kernel versions?
-> Or, does it also depends on the firmware version?
+On Thu, Mar 26, 2015 at 2:29 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+> Hi Robert,
+>
+> On Tue, Feb 24, 2015 at 12:01:48PM +0200, Robert Dolca wrote:
+>> This patch adds nci_request_driver and nci_req_complete_driver
+>> as a wrapper for __nci_request. When nci_req_complete_driver is
+>> called it also sets cmd_cnt to 1. This is done because the response is not
+>> sent to the NFC subsystem so cmd_cnt is not decremented there.
+>>
+>> nci_send_cmd was previously exported in order to send commands to
+>> the device from the driver. It shouldn't be used without
+>> nci_req_complete_driver because cmd_cnt will have the wrong value.
+> Any NCI packet should make it to the NCI core first, because the logic
+> and synchornization between Tx and Rx, commands and response is implemented
+> there. When exporting this kind of symbols, you're opening a can of worms by
+> potentially allowing each driver to implement the same kind of logic
+> that's already implemented in the NCI core.
+>
+> The solution I'd like to see implemented is the following one: Add 1
+> additional nci_ops entry for handling proprietary packets on the Rx
+> path. From your driver perspective, you call nci_recv_frame for each and
+> every packet that you receive: No intercept, no trap. The core will call
+> your proprietary packets handler for each packet (NTF or RSP) with a
+> proprietary GID.
+> You should then be able to remove all the rx work, rx queue and
+> intercept logic from your driver.
 
-You could try testing with the upstream firmware and see if that works
-any better?  Even if it is unstable under load, it should at least
-be able to run long enough to do a feature test like this.
+Thanks for the suggestion. Will do.
 
-If it works on 10.1.467 upstream firmware but not on mine, then probably it is a regression
-and I should be able to fix it.
-
-Thanks,
-Ben
-
-> 
-> Thanks in advance.
-> 
-> Regards,
-> Jose Delgado
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Robert
