@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp01.msg.oleane.net ([62.161.4.1]:36394 "EHLO
-	smtp01.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754086AbbDMQZL (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:39677 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751668AbbCaXp6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2015 12:25:11 -0400
-Received: from RD9 ([195.6.104.67]) (authenticated)
-	by smtp01.msg.oleane.net (MSA) with ESMTP id t3DGP8uU018183
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2015 18:25:09 +0200
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: <linux-wireless@vger.kernel.org>
-Subject: [mac80211] 4-addresses mode: the AP does not detect the advertizing null data frame from the client
-Date: Mon, 13 Apr 2015 18:25:08 +0200
-Message-ID: <000f01d07606$68bccf30$3a366d90$@acksys.fr> (sfid-20150413_182515_862537_C8F0AAE5)
+	Tue, 31 Mar 2015 19:45:58 -0400
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/2] ath: lower JP W53 band DFS detection threshold around 30%
+Date: Tue, 31 Mar 2015 16:44:43 -0700
+Message-ID: <bd5498920dcb60bf08a0d6c69e08b297e922b797.1427845453.git.poh@qca.qualcomm.com> (sfid-20150401_014604_108341_74068890)
+In-Reply-To: <413e207292d5c52cd621912762e6d4a40a8dfc48.1427845453.git.poh@qca.qualcomm.com>
+References: <413e207292d5c52cd621912762e6d4a40a8dfc48.1427845453.git.poh@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello list,
+Japan's W53 band requires 50% data traffic during its DFS test,
+but WLAN baseband used by ath9k and ath10k is not able to achieve
+current threshold rate, 50%, under the data traffic rate.
+In other words, HW occasionally fails detecting radar pulses,
+so that SW cannot get enough radar reports to achieve the rate.
 
-I am using compat-wireless-2014-11-04 and hostapd-2014-06-03 in an openwrt
-environment.
-I have set up a wpa_supplicant and an AP using Atheros chips. The supplicant
-is set in 4-addresses mode. The AP is set to put its 4-addresses clients
-into a bridge.
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/dfs_pattern_detector.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Symptom: the supplicant associates to the AP as expected. But from the AP it
-is not possible to ping the PC connected behind the supplicant, until that
-PC send something (an ARP or whatever data frame).
-The reason I found is that hostapd does not put the 4-addr station in the
-bridge.
-
-I noticed that in mac80211/mlme.c the client station sends a null data frame
-to inform the AP that it will use the 4-addresses format. On the AP, hostapd
-logs show that it does not receive an event for this frame,  but it receives
-a 4-addr event alright on a subsequent, real data frame.
-I also noticed that in mac80211/rx.c the ieee80211_rx_h_sta_process()
-function sends an event to userspace. But in the case of the first
-null-data, the frame is trapped before, in ieee80211_rx_h_check(), in the
-test of cfg80211_rx_spurious_frame().
-
-So, though everything looks all set for the AP to detect its 4-addr client,
-this does not occur if the client does not send real data.
-- I tried to move the event generation code from
-ieee80211_rx_h_sta_process() to ieee80211_rx_h_check(), but this does not
-work, it looks like rx->sta does not exist yet at this point in the frame
-processing.
-- I tried to keep the 4-addr null-data by returning RX_CONTINUE in
-ieee80211_rx_h_check() but the event is not generated either.
-- I tried to use wpa-psk keys in the hope that the EAPOL frames 2 and 4
-would be detected as 4-addr, but it looks like these frames are send in
-3-addresses format by the supplicant (why?)
-
-I'm stuck now.
-
-Any ideas?
-
-
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 2d4ad45..6f6533a 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -105,8 +105,8 @@ static const struct radar_types fcc_radar_types = {
+ 	PPB_THRESH_RATE(PPB, RATE), PRI_TOLERANCE, CHIRP	\
+ }
+ static const struct radar_detector_specs jp_radar_ref_types[] = {
+-	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 50, false),
+-	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 50, false),
++	JP_PATTERN(0, 0, 1, 1428, 1428, 1, 18, 29, false),
++	JP_PATTERN(1, 2, 3, 3846, 3846, 1, 18, 29, false),
+ 	JP_PATTERN(2, 0, 1, 1388, 1388, 1, 18, 50, false),
+ 	JP_PATTERN(3, 1, 2, 4000, 4000, 1, 18, 50, false),
+ 	JP_PATTERN(4, 0, 5, 150, 230, 1, 23, 50, false),
+-- 
+1.9.1
 
