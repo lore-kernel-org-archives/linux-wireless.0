@@ -1,65 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:33193 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418AbbDTXcB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43685 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbbDARR2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 19:32:01 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jani Nikula <jani.nikula@intel.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH v1 6/6] kernel/module.c: use module_param_config_on() for sig_enforce
-Date: Mon, 20 Apr 2015 16:30:37 -0700
-Message-Id: <1429572637-30234-7-git-send-email-mcgrof@do-not-panic.com> (sfid-20150421_013208_170683_8A253C93)
-In-Reply-To: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
+	Wed, 1 Apr 2015 13:17:28 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: thermal: match wait_for_completion_timeout return type
+References: <1426325842-19774-1-git-send-email-hofrat@osadl.org>
+Date: Wed, 1 Apr 2015 20:17:18 +0300
+In-Reply-To: <1426325842-19774-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
+	Guire's message of "Sat, 14 Mar 2015 05:37:22 -0400")
+Message-ID: <871tk3zs2p.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_191748_590689_3CBCFECF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+Nicholas Mc Guire <hofrat@osadl.org> writes:
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Jani Nikula <jani.nikula@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- kernel/module.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+> Return type of wait_for_completion_timeout is unsigned long not int.
+> An appropriately named unsigned long is added and the assignments fixed up.
+>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-diff --git a/kernel/module.c b/kernel/module.c
-index 43a1ef3..e63bbd2 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -106,13 +106,7 @@ struct list_head *kdb_modules = &modules; /* kdb needs the list of modules */
- #endif /* CONFIG_KGDB_KDB */
- 
- #ifdef CONFIG_MODULE_SIG
--#ifdef CONFIG_MODULE_SIG_FORCE
--static bool sig_enforce = true;
--#else
--static bool sig_enforce = false;
--
--module_param(sig_enforce, bool_enable_only, 0644);
--#endif /* !CONFIG_MODULE_SIG_FORCE */
-+module_param_config_on(sig_enforce, sig_enforce, 0644, CONFIG_MODULE_SIG_FORCE);
- #endif /* CONFIG_MODULE_SIG */
- 
- /* Block module loading/unloading? */
+Thanks, applied.
+
 -- 
-2.3.2.209.gd67f9d5.dirty
-
+Kalle Valo
