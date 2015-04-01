@@ -1,67 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:34282 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbbDLOt1 (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58419 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752992AbbDARU4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2015 10:49:27 -0400
-From: Cheolhyun Park <pch851130@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, linville@tuxdriver.com, pch851130@gmail.com,
-	Julia.Lawall@lip6.fr
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: misspelled code and comments corrected.
-Date: Sun, 12 Apr 2015 14:50:06 +0000
-Message-Id: <1428850206-1303-1-git-send-email-pch851130@gmail.com> (sfid-20150412_164942_125393_43F60001)
+	Wed, 1 Apr 2015 13:20:56 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix survey reporting
+References: <1427200691-7109-1-git-send-email-michal.kazior@tieto.com>
+Date: Wed, 1 Apr 2015 20:20:47 +0300
+In-Reply-To: <1427200691-7109-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 24 Mar 2015 12:38:11 +0000")
+Message-ID: <87oan7ydcg.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_192059_679470_D45F95C6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Cheolhyun Park <pch851130@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c | 2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c       | 2 +-
- drivers/net/wireless/rtlwifi/rtl8821ae/dm.c       | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index f5ee67c..1273997 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -312,7 +312,7 @@ static void rtl92c_dm_ctrl_initgain_by_rssi(struct ieee80211_hw *hw)
- 	struct dig_t *digtable = &rtlpriv->dm_digtable;
- 	u32 isbt;
- 
--	/* modify DIG lower bound, deal with abnorally large false alarm */
-+	/* modify DIG lower bound, deal with abnormally arge false alarm */
- 	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
- 		digtable->large_fa_hit++;
- 		if (digtable->forbidden_igi < digtable->cur_igvalue) {
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-index a1be5a6..f209cda 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-@@ -420,7 +420,7 @@ static void rtl92d_dm_dig(struct ieee80211_hw *hw)
- 		 "dm_DIG() Before: Recover_cnt=%d, rx_gain_min=%x\n",
- 		 de_digtable->recover_cnt, de_digtable->rx_gain_min);
- 
--	/* deal with abnorally large false alarm */
-+	/* deal with abnormally large false alarm */
- 	if (falsealm_cnt->cnt_all > 10000) {
- 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
- 			 "dm_DIG(): Abnormally false alarm case\n");
-diff --git a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-index 0b2082d..342678d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8821ae/dm.c
-@@ -873,7 +873,7 @@ static void rtl8821ae_dm_dig(struct ieee80211_hw *hw)
- 
- 	if (rtlpriv->falsealm_cnt.cnt_all > 10000) {
- 		RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
--			 "Abnornally false alarm case.\n");
-+			 "Abnormally false alarm case.\n");
- 
- 		if (dm_digtable->large_fa_hit != 3)
- 			dm_digtable->large_fa_hit++;
+> Number of channels is stored in a separate macro
+> in a header file and channel list is constructed
+> independently. The macro is used to define survey
+> array.
+>
+> This fixes a recent regression introduced after
+> adding support for 144 channel. The regression
+> would lead to a warning and incomplete survey data
+> on channel 165:
+>
+>   chan info: invalid frequency 5825 (idx 38 out of bounds)
+>
+> Also make sure to enforce the sizes and avoid this
+> kind of problem in the future.
+>
+> Fixes: 4a7898fed5f3 ("ath10k: enable channel 144 on 5GHz band")
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+
+Thanks, applied.
+
 -- 
-1.9.1
-
+Kalle Valo
