@@ -1,117 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54224 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751646AbbDNAKS (ORCPT
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:34109 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751298AbbDAPfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2015 20:10:18 -0400
-Message-ID: <552C5AE9.4050304@candelatech.com> (sfid-20150414_021023_870235_80C177E4)
-Date: Mon, 13 Apr 2015 17:10:17 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 1 Apr 2015 11:35:52 -0400
 MIME-Version: 1.0
-To: ath10k <ath10k@lists.infradead.org>
-CC: "hostap@lists.shmoo.com" <hostap@lists.shmoo.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: CT ath10k firmware now supports IBSS + RSN
-References: <55285D8D.6070703@candelatech.com> <552BFFB8.6030301@candelatech.com>
-In-Reply-To: <552BFFB8.6030301@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20150326003025.GE10954@ribalta.home>
+References: <1424772112-27399-1-git-send-email-robert.dolca@intel.com>
+ <1424772112-27399-9-git-send-email-robert.dolca@intel.com> <20150326003025.GE10954@ribalta.home>
+From: Robert Dolca <robert.dolca@gmail.com>
+Date: Wed, 1 Apr 2015 18:35:31 +0300
+Message-ID: <CAFPB+Yf1jWX=tv+feZRonZEprjXwHdD8mMXAupdm5XrDaYvWMA@mail.gmail.com> (sfid-20150401_173556_545496_A106E5C6)
+Subject: Re: [linux-nfc] [PATCH 8/8] NFC: Add Intel FieldsPeak NFC solution driver
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Robert Dolca <robert.dolca@intel.com>, linux-nfc@lists.01.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/13/2015 10:41 AM, Ben Greear wrote:
-> Looks like I have some more work to do.  For any moderately large frames,
-> I am now dropping the last 16 bytes.  Looks like the skb_put_padto logic
-> was working around a more serious issue...
+On Thu, Mar 26, 2015 at 2:30 AM, Samuel Ortiz <sameo@linux.intel.com> wrote:
+>> +     /* If a patch was applied the new version is checked */
+>> +     if (patched) {
+>> +             r = nci_init(ndev);
+>> +             if (r)
+>> +                     goto error;
+>> +
+>> +             r = fdp_nci_get_versions(ndev);
+>> +             if (r)
+>> +                     goto error;
+>> +
+>> +             if (info->otp_version != info->otp_patch_version ||
+>> +                 info->ram_version != info->ram_patch_version) {
+>> +                     pr_err("FRP firmware update failed");
+>> +                     r = -EINVAL;
+>> +             }
+>> +     }
+>> +
+>> +     /* Check if the device has VSC */
+>> +     if (fdp_post_fw_vsc_cfg[0]) {
+>> +             /* Set the vendor specific configuration */
+>> +             r = fdp_nci_set_production_data(ndev, fdp_post_fw_vsc_cfg[3],
+>> +                                             &fdp_post_fw_vsc_cfg[4]);
+>> +             if (r)
+>> +                     goto error;
+>> +     }
+>> +
+>> +     /* Set clock type and frequency */
+>> +     r = fdp_nci_set_clock(ndev, 0, 26000);
+>> +     if (r)
+>> +             goto error;
+> The version checking, production data setting and clock setting should
+> be part of a post setup notification call. Please add an nci_dev
+> notify() ops that could get called on certain events, for example when
+> NCI is up. Bluetooth's HCI does something along those lines already.
+> From this notification hook you could implement this post setup stage.
+>
+> The idea is for your setup routine to only do firmware update and
+> nothing else. It will make it shorter, and thus easier to read as well.
 
-A better-tested version of kernel and firmware is uploaded now.
+Hi Samuel,
 
-Looks like I needed to add a hack to firmware to bump pkt-size by
-16 for IBSS + RSN encrypted frames.  Not sure exactly why, but seems
-to work in light testing.
+If the RAM patch wasn't applied successfully the device can't be used
+so the setup function should fail.
+If the production data (specifically the clock frequency) is not set
+the device can not be used. If the user space tries to start polling
+before the notification is sent the polling will fail. Having it
+called later would mean introducing a race condition.
 
-I removed the skb-padto hack from the kernel, and kernel is rebased on
-top of official 4.0 now.
-
-Thanks,
-Ben
-
-> On 04/10/2015 04:32 PM, Ben Greear wrote:
->> First, thanks to everyone that helped me with questions,
->> QCA/Tieto's upstream patches, etc.
->>
->> This needs more testing, but it appears to at least mostly work.
->>
->> I am using this 4.0 related kernel.  I think only the last 3 patches
->> are IBSS specific, but possibly there are others that matter as well.
->>
->> http://dmz2.candelatech.com/git/gitweb.cgi?p=linux-4.0.dev.y/.git;a=summary
->>
->> Firmware binaries and release notes are here:
->> http://www.candelatech.com/downloads/ath10k-fw-beta/
->>
->> I'm using a very recent wpa_supplicant..upstream should work I think,
->> but I am using this one:
->>
->> https://github.com/greearb/hostap-ct/tree/master/hostapd
->>
->> supplicant needs to have this enabled, among other things:
->>
->> CONFIG_IBSS_RSN=y
->>
->>
->> I suspect there are lingering bugs, perhaps in supplicant, as it seems to take
->> a few tries for the 4-way to happen properly, and I have to re-start hostapd
->> on each side each time I associate.
->>
->> My supplicant config files look like this (you can comment out any options
->> your supplicant doesn't know about...I have a few extra features not specifically
->> related to IBSS in my hostapd tree)
->>
->> ctrl_interface=/var/run/wpa_supplicant
->> fast_reauth=1
->> concurrent_assoc_ok=1
->> scan_cur_freq=1
->> min_scan_gap=5
->> freq_list=5180
->>
->> bss_max_count=2000
->> network={
->>     ssid="ota-ibss-ssid"
->>     disable_ht=0
->>     disable_vht=0
->>     ieee80211w=0
->>     disable_ht40=1
->>     disable_sgi=0
->>     ht_mcs=""
->>     disable_max_amsdu=-1
->>     ampdu_factor=-1
->>     ampdu_density=-1
->>     freq_list=5180
->>     fixed_freq=1
->>
->>     mode=1
->>     frequency=5180
->>     proto=RSN
->>     key_mgmt=WPA-PSK
->>     #psk="ben-ota-passwd"
->>     psk=fc29b6edf32abd7a9818af3c94b2aa5364c785eee33ed3df11605a3db8f905bc
->>     pairwise=CCMP
->>     group=CCMP
->>     proactive_key_caching=0
->>
->> }
->>
->>
->> I'm curious to know if anyone tries it out.
->>
->> Thanks,
->> Ben
->>
-> 
-> 
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Cheers,
+Robert
