@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53399 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753619AbbDMK13 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2015 06:27:29 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Andreas Fenkart <afenkart@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Avinash Patil <patila@marvell.com>
-Date: Mon, 13 Apr 2015 03:27:25 -0700
-Subject: RE: [PATCH 2/2] mwifiex: sdio: bug: dead-lock in card reset
-Message-ID: <5FF020A1CFFEEC49BD1E09530C4FF5951B16DFB8F9@SC-VEXCH1.marvell.com> (sfid-20150413_122733_320562_97DB0134)
-References: <1428916704-9635-1-git-send-email-afenkart@gmail.com>
- <1428916704-9635-2-git-send-email-afenkart@gmail.com>
-In-Reply-To: <1428916704-9635-2-git-send-email-afenkart@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.codeaurora.org ([198.145.29.96]:36677 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751863AbbDAQ7r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2015 12:59:47 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2015-04-01
+Date: Wed, 01 Apr 2015 19:59:39 +0300
+Message-ID: <87mw2rzsw3.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_190008_641725_E685CAA2)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andreas,
+Hi Dave,
 
-Thanks for the patch series.
+one last pull request for 4.0, I hope I'm not too late on this one. Only
+one iwlwifi memory leak fix this time. Please let me know if there are
+any problems.
 
-> 
-> Card reset is implemented by removing/re-adding the adapter instance.
-> This is implemented by removing the mmc host, which will then trigger a
-> cascade of removal callbacks including mwifiex_sdio_remove.
-> The dead-lock results in the latter function, trying to cancel the work
-> item executing the mmc host removal. This patch adds a driver level, not
-> adapter level, work struct to break the dead-lock
-> 
-> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
-> ---
->  drivers/net/wireless/mwifiex/main.h |  1 -
-> drivers/net/wireless/mwifiex/sdio.c | 63 +++++++++++++++++++++++++++++--
-> ------
->  2 files changed, 50 insertions(+), 14 deletions(-)
-> 
+Kalle
 
-We had recently submitted a patch to address this issue. So these two patches won't be needed now.
-http://www.spinics.net/lists/linux-wireless/msg135146.html
+The following changes since commit 6ae4ccfee09efe5baa3951d1c1d27050a46a1469:
 
-Could you please check and let us know if you have any suggestions for improvement?
+  Merge tag 'iwlwifi-for-kalle-2014-03-22' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-03-23 06:43:43 +0200)
 
-Regards,
-Amit
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2015-04-01
+
+for you to fetch changes up to 69628cd0652a091591ef44ac07c150063b789c4a:
+
+  Merge tag 'iwlwifi-for-kalle-2015-03-30' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2015-03-30 09:39:12 +0300)
+
+----------------------------------------------------------------
+
+iwlwifi:
+
+* fix a memory leak, we leaked memory each time the module
+  was loaded.
+
+----------------------------------------------------------------
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2015-03-30' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Larry Finger (1):
+      iwlwifi: Fix memory leak in iwl_req_fw_callback()
+
+ drivers/net/wireless/iwlwifi/iwl-drv.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+-- 
+Kalle Valo
