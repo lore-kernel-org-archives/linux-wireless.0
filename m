@@ -1,80 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56634 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753548AbbDMKcn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Apr 2015 06:32:43 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.14.5/8.14.5) with SMTP id t3DATZJK018763
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2015 03:32:42 -0700
-Received: from sc-owa03.marvell.com ([199.233.58.149])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1tpw03vrpe-1
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 13 Apr 2015 03:32:42 -0700
-From: Avinash Patil <patila@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <akarwar@marvell.com>, <cluo@marvell.com>, <liuzy@marvell.com>,
-	Avinash Patil <patila@marvell.com>
-Subject: [PATCH 2/2] mwifiex: fix invalid HT IE configuration in FW
-Date: Mon, 13 Apr 2015 21:32:25 +0530
-Message-ID: <1428940945-4123-2-git-send-email-patila@marvell.com> (sfid-20150413_123246_650508_FEFB1460)
-In-Reply-To: <1428940945-4123-1-git-send-email-patila@marvell.com>
-References: <1428940945-4123-1-git-send-email-patila@marvell.com>
+Received: from mx3.wp.pl ([212.77.101.10]:19212 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751964AbbDAQFt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2015 12:05:49 -0400
+Date: Wed, 1 Apr 2015 18:05:43 +0200
+From: Jakub =?UTF-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	George Moutsopoulos <gmoutso@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: mediatek mt7630e and ksoftirqd CPU load
+Message-ID: <20150401180543.2b33184d@north> (sfid-20150401_180553_288133_A076DCD9)
+In-Reply-To: <5514377C.1070906@lwfinger.net>
+References: <CABU1Ay8sVdLuHURHhmhsOf_aCVgvYnR_fw6_HyqLXziGmp3_fA@mail.gmail.com>
+	<5514377C.1070906@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zhaoyang Liu <liuzy@marvell.com>
+On Thu, 26 Mar 2015 11:44:44 -0500, Larry Finger wrote:
+> On 03/26/2015 11:12 AM, George Moutsopoulos wrote:
+> > Dear developers,
+> >
+> > if this is not the right place to post this, sorry for the spam. I
+> > haven't filed a bug report yet. Tell me if I should. I am not sure if
+> > the problem is something kernel developers can solve.
+> >
+> > On a laptop ASUS TP500LN, I have a wireless pcie card mt7630e from
+> > mediatek. It is a wifi/bluetooth combo.
+> >
+> > The driver is not in the kernel, but mediatek provides it for linux
+> > from the download site
+> > http://www.mediatek.com/en/downloads/
+> >
+> > The driver does not support kernel 3.16 and above. I followed the
+> > instructions at
+> > https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1220146
+> >
+> > The module compiles and loads succesfully. I followed the post by
+> > tobias bora from the ubuntu bug. It compiles on kernel version 3.16
+> > and above (tried up to 3.19).
+> >
+> > Like the rest on the ubuntu bug list, the wifi works and I connect
+> > succesfully, but ksoftirqd gets 100% cpu on one of the cores.
+> >
+> > Shall I open a bug report? I have contacted mediatek twice but they
+> > haven't replied. I hope it is something you can look at.  
+> 
+> Due to the fact that the driver is not in the kernel, it is not possible to file 
+> a bug with anyone but the vendor.
 
-This patch fixes an issue where it was discovered that driver is setting
-invalid HT IEs to FW. This was happening because bug in parsing HT IE.
-Driver would incorrectly point to start of HT IE while FW only needs actual
-HT configuration - excluding EID and length.
+Larry, did you notice that rt2x00/mt_linux.c does not have a GPL
+header?  Do you think this can cause some legal problems if this code
+or anything based on it is merged upstream?
 
-Signed-off-by: Zhaoyang Liu <liuzy@marvell.com>
-Signed-off-by: Avinash Patil <patila@marvell.com>
----
- drivers/net/wireless/mwifiex/uap_cmd.c | 2 +-
- drivers/net/wireless/mwifiex/util.c    | 7 +++++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+> It is possible that someone on this list with Mediatek experience may be able to 
+> help you, but there is no certainty. That is the downside of using a vendor driver.
 
-diff --git a/drivers/net/wireless/mwifiex/uap_cmd.c b/drivers/net/wireless/mwifiex/uap_cmd.c
-index f5c2af0..3d02811 100644
---- a/drivers/net/wireless/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/mwifiex/uap_cmd.c
-@@ -167,7 +167,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
- 	ht_ie = cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, params->beacon.tail,
- 				 params->beacon.tail_len);
- 	if (ht_ie) {
--		memcpy(&bss_cfg->ht_cap, ht_ie,
-+		memcpy(&bss_cfg->ht_cap, ht_ie + 2,
- 		       sizeof(struct ieee80211_ht_cap));
- 		cap_info = le16_to_cpu(bss_cfg->ht_cap.cap_info);
- 		memset(&bss_cfg->ht_cap.mcs, 0,
-diff --git a/drivers/net/wireless/mwifiex/util.c b/drivers/net/wireless/mwifiex/util.c
-index b8a4587..9482d95 100644
---- a/drivers/net/wireless/mwifiex/util.c
-+++ b/drivers/net/wireless/mwifiex/util.c
-@@ -536,13 +536,16 @@ void
- mwifiex_set_sta_ht_cap(struct mwifiex_private *priv, const u8 *ies,
- 		       int ies_len, struct mwifiex_sta_node *node)
- {
-+	struct ieee_types_header *ht_cap_ie;
- 	const struct ieee80211_ht_cap *ht_cap;
- 
- 	if (!ies)
- 		return;
- 
--	ht_cap = (void *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies, ies_len);
--	if (ht_cap) {
-+	ht_cap_ie = (void *)cfg80211_find_ie(WLAN_EID_HT_CAPABILITY, ies,
-+					     ies_len);
-+	if (ht_cap_ie) {
-+		ht_cap = (void *)(ht_cap_ie + 1);
- 		node->is_11n_enabled = 1;
- 		node->max_amsdu = le16_to_cpu(ht_cap->cap_info) &
- 				  IEEE80211_HT_CAP_MAX_AMSDU ?
--- 
-1.8.1.4
+I can try to help, sorry for a late response.
 
+George, can you try https://github.com/kuba-moo/mt7630e ?  This is a
+slightly cleaned up version of the vendor driver V3.14_20140625_v2.
+
+I run it for a few hours and I cannot reproduce the issue you describe.
