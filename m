@@ -1,44 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54681 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965916AbbD1QTK (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:6362 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbbDAIgL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 12:19:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwl4965: Enable checking of format strings
-References: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>
-Date: Tue, 28 Apr 2015 19:19:02 +0300
-In-Reply-To: <1423695069-23436-1-git-send-email-linux@rasmusvillemoes.dk>
-	(Rasmus Villemoes's message of "Wed, 11 Feb 2015 23:51:08 +0100")
-Message-ID: <877fsw5iq1.fsf@kamboji.qca.qualcomm.com> (sfid-20150428_181932_266507_7DCC0D24)
+	Wed, 1 Apr 2015 04:36:11 -0400
+Message-ID: <551BADF5.3000409@broadcom.com> (sfid-20150401_103615_645123_DCF5EC89)
+Date: Wed, 1 Apr 2015 10:36:05 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Ilan Peer <ilan.peer@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<linux-wireless@vger.kernel.org>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: Re: [PATCH 7/7] mac80211: Count correctly interface types
+References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>	 <1426143210-25635-7-git-send-email-emmanuel.grumbach@intel.com>	 <CALhHN=qkEmUPEL2XBuuudmq6Rg-6s7jm0TOdRuQCetgSiKyrpg@mail.gmail.com>	 (sfid-20150401_080606_876573_33E52A4C) <1427872324.2432.3.camel@sipsolutions.net>
+In-Reply-To: <1427872324.2432.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
-
-> Since these fmt_* variables are just const char*, and not const
-> char[], gcc (and smatch) doesn't to type checking of the arguments to
-> the printf functions. Since the linker knows perfectly well to merge
-> identical string constants, there's no point in having three static
-> pointers waste memory and give an extra level of indirection.
+On 04/01/15 09:12, Johannes Berg wrote:
+> On Wed, 2015-04-01 at 08:06 +0200, Janusz Dziedzic wrote:
 >
-> This removes over 100 "non-constant format argument" warnings from
-> smatch, accounting for about 20% of all such warnings in an
-> allmodconfig.
+>> Hello,
+>>
+>> Seems this one break IBSS case when started from wpa_supplicant at
+>> least for Intel7260 and ath10k where dedicated p2p_device is used.
+>>
+>> This is wpa_supplicant log:
+>> 1427867673.149187: nl80211: Set mode ifindex 8 iftype 1 (ADHOC)
+>> 1427867673.149225: nl80211: Mode change succeeded while interface is down
+>> 1427867673.149234: Could not set interface wlan3 flags (UP): Device or
+>> resource busy
 >
-> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+> That's actually the correct behaviour, given the interface limitations,
+> at least for iwlmvm devices:
+>
+> iw list
+> [...]
+> 	Supported interface modes:
+> 		 * IBSS
+> 		 * managed
+> 		 * AP
+> 		 * AP/VLAN
+> 		 * monitor
+> 		 * P2P-client
+> 		 * P2P-GO
+> 		 * P2P-device
+> [...]
+> 	software interface modes (can always be added):
+> 		 * AP/VLAN
+> 		 * monitor
+> 	valid interface combinations:
+> 		 * #{ managed }<= 1, #{ AP, P2P-client, P2P-GO }<= 1, #{ P2P-device }<= 1,
+> 		   total<= 3, #channels<= 2
+>
+> So there's no combination with P2P-device and IBSS together.
+>
+> In our device I'm pretty sure the two couldn't be supported together.
+> Perhaps the supplicant has issues though with how it creates the
+> P2P-Device? Should probably not be there if you have IBSS, it's pretty
+> useless anyway then. Or at least not be there if the driver doesn't
+> advertise support for that combination.
 
-So what's the conclusion, should I commit this patch or not?
+I think in latest wpa_s the P2P-Device is always created. There used to 
+be a driver_param to create it. Not sure if that driver_param could 
+still be used to avoid P2P-Device creation.
 
-Full discussion here:
+The interface combinations look confusing to me. Why is there no IBSS or 
+monitor listed there?
 
-https://patchwork.kernel.org/patch/5814811/
+Regards,
+Arend
 
--- 
-Kalle Valo
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
