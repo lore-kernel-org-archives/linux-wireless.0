@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57351 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751044AbbDAIoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Apr 2015 04:44:15 -0400
-Message-ID: <1427877848.3428.1.camel@sipsolutions.net> (sfid-20150401_104420_365306_4EE1DF9B)
-Subject: Re: [PATCH 7/7] mac80211: Count correctly interface types
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Ilan Peer <ilan.peer@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Wed, 01 Apr 2015 10:44:08 +0200
-In-Reply-To: <551BADF5.3000409@broadcom.com>
-References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
-		 <1426143210-25635-7-git-send-email-emmanuel.grumbach@intel.com>
-		 <CALhHN=qkEmUPEL2XBuuudmq6Rg-6s7jm0TOdRuQCetgSiKyrpg@mail.gmail.com>
-		 (sfid-20150401_080606_876573_33E52A4C) <1427872324.2432.3.camel@sipsolutions.net>
-	 <551BADF5.3000409@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27959 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752992AbbDARTi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2015 13:19:38 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: core: match wait_for_completion_timeout return type
+References: <1426325858-19808-1-git-send-email-hofrat@osadl.org>
+Date: Wed, 1 Apr 2015 20:19:26 +0300
+In-Reply-To: <1426325858-19808-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
+	Guire's message of "Sat, 14 Mar 2015 05:37:37 -0400")
+Message-ID: <87sicjydep.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_191956_778073_3A78EF9A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2015-04-01 at 10:36 +0200, Arend van Spriel wrote:
+Nicholas Mc Guire <hofrat@osadl.org> writes:
 
-> I think in latest wpa_s the P2P-Device is always created. There used to 
-> be a driver_param to create it. Not sure if that driver_param could 
-> still be used to avoid P2P-Device creation.
+> Return type of wait_for_completion_timeout is unsigned long not int.
+> An appropriately named unsigned long is added and the assignments fixed up.
+>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-Yeah, I feared this was the case so I added Ilan :)
+Thanks, applied.
 
-I think we need to fix that perhaps in some way? I'm pretty sure we
-cannot have P2P-Device and IBSS at the same time properly in our device.
-
-> The interface combinations look confusing to me. Why is there no IBSS or 
-> monitor listed there?
-
-Only "real" combinations are listed - anything that's in the "Supported
-interface modes" is, by default, only supported with a single virtual
-interface. Real combinations (of >1 interface) are listed separately.
-
-johannes
-
+-- 
+Kalle Valo
