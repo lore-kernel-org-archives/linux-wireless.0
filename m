@@ -1,54 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47074 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58259 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752687AbbDBGl6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Apr 2015 02:41:58 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eran Harary <eran.harary@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 16/31] iwlwifi: mvm: fix debug print in the RSA ownership workaround
-Date: Thu,  2 Apr 2015 09:41:04 +0300
-Message-Id: <1427956879-11725-16-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_090418_527247_9DD702CF)
-In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
-References: <1427956656.8122.2.camel@egrumbacBox>
+	id S1752893AbbDAMjF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2015 08:39:05 -0400
+Message-ID: <1427891939.3428.5.camel@sipsolutions.net> (sfid-20150401_143908_199348_078CACB4)
+Subject: Re: [PATCH] mac80211: reduce log spam from
+ ieee80211_handle_pwr_constr
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 01 Apr 2015 14:38:59 +0200
+In-Reply-To: <1427813354-7983-1-git-send-email-linville@tuxdriver.com>
+References: <1427813354-7983-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eran Harary <eran.harary@intel.com>
+On Tue, 2015-03-31 at 10:49 -0400, John W. Linville wrote:
+> This changes a couple of messages from sdata_info to sdata_dbg.
+> This should reduce some log spam, as reported here:
+> 
+> 	https://bugzilla.redhat.com/show_bug.cgi?id=1206468
+> 
+Applied, thanks.
 
-The semaphore may not be accessible. Fix the debug prints
-accordingly.
-
-Signed-off-by: Eran Harary <eran.harary@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/iwlwifi/pcie/trans.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/pcie/trans.c b/drivers/net/wireless/iwlwifi/pcie/trans.c
-index d8984fb..2de8fbf 100644
---- a/drivers/net/wireless/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/iwlwifi/pcie/trans.c
-@@ -691,11 +691,15 @@ static int iwl_pcie_rsa_race_bug_wa(struct iwl_trans *trans)
- {
- 	u32 val, loop = 1000;
- 
--	/* Check the RSA semaphore is accessible - if not, we are in trouble */
-+	/*
-+	 * Check the RSA semaphore is accessible.
-+	 * If the HW isn't locked and the rsa semaphore isn't accessible,
-+	 * we are in trouble.
-+	 */
- 	val = iwl_read_prph(trans, PREG_AUX_BUS_WPROT_0);
- 	if (val & (BIT(1) | BIT(17))) {
--		IWL_ERR(trans,
--			"can't access the RSA semaphore it is write protected\n");
-+		IWL_INFO(trans,
-+			 "can't access the RSA semaphore it is write protected\n");
- 		return 0;
- 	}
- 
--- 
-1.9.1
+johannes
 
