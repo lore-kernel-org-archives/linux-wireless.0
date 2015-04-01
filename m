@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:56741 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57390 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755111AbbDGQFg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 12:05:36 -0400
-From: Ilan Peer <ilan.peer@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Subject: [PATCH 2/2] mac80211_hwsim: Fix the supported VHT mcs rates
-Date: Tue,  7 Apr 2015 19:05:22 +0300
-Message-Id: <1428422722-655-2-git-send-email-ilan.peer@intel.com> (sfid-20150407_180543_406719_3DA9D5FF)
-In-Reply-To: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
-References: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
+	id S1751474AbbDAI7N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2015 04:59:13 -0400
+Message-ID: <1427878747.3428.3.camel@sipsolutions.net> (sfid-20150401_105917_709309_6A036980)
+Subject: Re: [PATCH v4 0/10] Improve Minstrels & Minstrel-HTs common code
+ base & statistics
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Thomas Huehn <thomas@net.t-labs.tu-berlin.de>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 01 Apr 2015 10:59:07 +0200
+In-Reply-To: <5511FE44.3070802@openwrt.org>
+References: <1427227783-4531-1-git-send-email-thomas@net.t-labs.tu-berlin.de>
+	 <5511FE44.3070802@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Declare that MCS 0-9 are supported for all Rx chains.
+On Wed, 2015-03-25 at 01:16 +0100, Felix Fietkau wrote:
+> On 2015-03-24 21:09, Thomas Huehn wrote:
+> > This patch series adds several improvements to the readability, the
+> > output format of rc_stats and the calculated statistics of Minstrel
+> > and Minstrel-HT. Variable names got more consistent and functions
+> > got unified between both rate control algorithms.
+> Acked-by: Felix Fietkau <nbd@openwrt.org>
 
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+All applied, thanks.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 2f0ebda..c5f5841 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2453,14 +2453,14 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 				IEEE80211_VHT_CAP_RXSTBC_4 |
- 				IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK;
- 			sband->vht_cap.vht_mcs.rx_mcs_map =
--				cpu_to_le16(IEEE80211_VHT_MCS_SUPPORT_0_8 << 0 |
--					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 2 |
-+				cpu_to_le16(IEEE80211_VHT_MCS_SUPPORT_0_9 << 0 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 2 |
- 					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 4 |
--					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 6 |
--					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 8 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 6 |
-+					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 8 |
- 					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 10 |
- 					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 12 |
--					    IEEE80211_VHT_MCS_SUPPORT_0_8 << 14);
-+					    IEEE80211_VHT_MCS_SUPPORT_0_9 << 14);
- 			sband->vht_cap.vht_mcs.tx_mcs_map =
- 				sband->vht_cap.vht_mcs.rx_mcs_map;
- 			break;
--- 
-1.9.1
+johannes
 
