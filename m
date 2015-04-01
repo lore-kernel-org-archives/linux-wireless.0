@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49369 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755930AbbDOPGZ (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:15713 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbbDAJBz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Apr 2015 11:06:25 -0400
-Message-ID: <552E7E70.5070101@candelatech.com> (sfid-20150415_170628_422795_B230D7E3)
-Date: Wed, 15 Apr 2015 08:06:24 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 1 Apr 2015 05:01:55 -0400
+Message-ID: <551BB401.7070607@broadcom.com> (sfid-20150401_110200_217661_9F397489)
+Date: Wed, 1 Apr 2015 11:01:53 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
-References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>			  	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>			  	 <54EB66CC.1030800@candelatech.com>			   <1424772714.2192.16.camel@sipsolutions.net>			   <54EC8C5D.5090400@candelatech.com>			  <1424788834.2192.34.camel@sipsolutions.net>			  <5500AE12.6040103@candelatech.com>			 <1427812067.2057.27.camel@sipsolutions.net>			 <551AC3B6.1040001@candelatech.com>		 <1428999215.3019.6.camel@sipsolutions.net>		 <552D2A90.1070307@candelatech.com>	 <1429023990.3019.15.camel@sipsolutions.net>	 <552D386E.40306@candelatech.com> <1429090400.1784.2.camel@sipsolutions.net>
-In-Reply-To: <1429090400.1784.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Luca Coelho <luca@coelho.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>, Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: broadcast ssid in scheduled scan
+References: <55105DA7.3040703@broadcom.com>	 <1427811715.2057.24.camel@sipsolutions.net> <1427869720.10642.6.camel@coelho.fi>
+In-Reply-To: <1427869720.10642.6.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 04/15/2015 02:33 AM, Johannes Berg wrote:
-> On Tue, 2015-04-14 at 08:55 -0700, Ben Greear wrote:
->
->>> True, although I'd like to see the multi-channel issue addressed better.
+On 04/01/15 08:28, Luca Coelho wrote:
+> On Tue, 2015-03-31 at 16:21 +0200, Johannes Berg wrote:
+>> On Mon, 2015-03-23 at 19:38 +0100, Arend van Spriel wrote:
+>>> Johannes, Jouni,
+>>>
+>>> I have noticed that under some circumstances wpa_supplicant initiates a
+>>> scheduled scan with broadcast ssid. This is something our firmware can
+>>> not do so could this be avoided? Maybe by adding a feature flag for it.
 >>
->> I need a hint or two on what exactly you want changed in my patch to
->> address your request, or maybe you or someone else can just address
->> the issue in follow-on patches?
+>> I guess this would be difficult to do since you'd basically have to
+>> "remove" support for normal scheduled scan (that assumes this ability)
+>> and add support for another scheduled scan (that doesn't assume it) in
+>> nl80211 ... just to be compatible with older implementations of
+>> wpa_supplicant etc.
+>>
+>> I do wonder why the firmware cannot do this though - there's no
+>> fundamental reason the 0-length SSID is all that different from a 1-byte
+>> one?
 >
-> So right now you're basically saying to userspace "switch to channel X".
-> But that's not really how the more generic system works, that's more
-> "start using channel X (ctx=1)" / "stop using channel X (ctx=1)" /
-> "change channel to X (ctx=1)" and similar.
->
-> It seems to me that such an API should probably be the only API to
-> userspace. The non-chanctx case in hwsim could simply fake it by
-> starting with "start using channel X (ctx=0)" and then changing that
-> channel all the time.
->
-> The issue is that with your patch in this can't be addressed in
-> follow-on patches as it fixes the userspace API.
+> Is the problem in having a 0-length SSID in the probe_reqs or is it in
+> having it in the matches (i.e. it doesn't support "pass all")? The
+> latter makes a bit more sense, since filtering on a 0-length SSID, if
+> not treated specially, would return nothing (since it would never match,
+> unless an AP does send an SSID IE with 0-length).
 
-Ok, so adding an additional 'uint16 ctx' to the channel change data,
-and providing a 'type' field that includes start-using, stop-using
-would address this problem adequately?
+This is indeed the issue. The scheduled scan firmware implementation 
+sits on top of the scan engine and tries to match found bss'es. So 
+having a broadcast ssid in struct cfg80211_sched_scan_request::ssids but 
+it is for struct cfg80211_sched_scan_request::match_sets.
 
-Start-using seems it would be the same as change-channel, or do I need
-a type for that as well?
+> It doesn't make much sense to have a "match all" scheduled scan though,
+> unless wpa_s needs to find more SSIDs than what the driver supports.
+> Even in that case, it wouldn't make much difference than using a normal
+> scan periodically...
 
-THanks,
-Ben
+That is what scheduled scan with only broadcast ssid intends to do, 
+right? I guess the advantage is that host can be idle.
 
+Regards,
+Arend
 
-
->
-> johannes
+> --
+> Luca.
 >
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
