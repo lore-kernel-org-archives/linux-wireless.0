@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30030 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753604AbbDHS3n convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f180.google.com ([209.85.212.180]:35206 "EHLO
+	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845AbbDAVdb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2015 14:29:43 -0400
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH 1/2] mac80211_hwsim: Set VHT capabilities only for the
- 5.2 GHz band
-Date: Wed, 8 Apr 2015 18:29:38 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A04D09BD1B@HASMSX106.ger.corp.intel.com> (sfid-20150408_202947_061786_034BEB2B)
-References: <1428422722-655-1-git-send-email-ilan.peer@intel.com>
- <552400F4.5010701@candelatech.com>
-In-Reply-To: <552400F4.5010701@candelatech.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 1 Apr 2015 17:33:31 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 2/2] staging: vt6655: use ieee80211_tx_info to select packet type.
+Date: Wed,  1 Apr 2015 22:32:52 +0100
+Message-Id: <1427923972-11947-2-git-send-email-tvboxspy@gmail.com> (sfid-20150401_233334_836919_547C677C)
+In-Reply-To: <1427923972-11947-1-git-send-email-tvboxspy@gmail.com>
+References: <1427923972-11947-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+Information for packet type is in ieee80211_tx_info
 
-> -----Original Message-----
-> From: Ben Greear [mailto:greearb@candelatech.com]
-> Sent: Tuesday, April 07, 2015 19:08
-> To: Peer, Ilan
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH 1/2] mac80211_hwsim: Set VHT capabilities only for the
-> 5.2 GHz band
-> 
-> On 04/07/2015 09:05 AM, Ilan Peer wrote:
-> > Previously, VHT capabilities and supported MCSs where set for all
-> > bands, although VHT is only allowed on 5.2 GHz band. Fix it.
-> 
-> I saw a patch on ath10k list that enabled VHT for 2.4Ghz for that
-> driver/firmware...are you sure it is absolutely not supported?
-> 
+band IEEE80211_BAND_5GHZ for PK_TYPE_11A.
 
-According to the 802.11ac amendment: "The IEEE 802.11 VHT STA operates in frequency bands below 6 GHz excluding the 2.4 GHz band", so at least the spec. is clear about it. However, I guess it would be possible to enable VHT for 2.4 as well to enjoy some of benefits, but do you see a reason/use case to enable it also for hwsim?
+IEEE80211_TX_RC_USE_CTS_PROTECT via tx_rate flags selects PK_TYPE_11GB
 
-Regards,
+This ensures that the packet is always the right type.
 
-Ilan.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v3.19+
+---
+ drivers/staging/vt6655/rxtx.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 195dcc9..7468776 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -1305,10 +1305,18 @@ int vnt_generate_fifo_header(struct vnt_private *priv, u32 dma_idx,
+ 			    priv->hw->conf.chandef.chan->hw_value);
+ 	}
+ 
+-	if (current_rate > RATE_11M)
+-		pkt_type = (u8)priv->byPacketType;
+-	else
++	if (current_rate > RATE_11M) {
++		if (info->band == IEEE80211_BAND_5GHZ) {
++			pkt_type = PK_TYPE_11A;
++		} else {
++			if (tx_rate->flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
++				pkt_type = PK_TYPE_11GB;
++			else
++				pkt_type = PK_TYPE_11GA;
++		}
++	} else {
+ 		pkt_type = PK_TYPE_11B;
++	}
+ 
+ 	/*Set fifo controls */
+ 	if (pkt_type == PK_TYPE_11A)
+-- 
+2.1.0
 
