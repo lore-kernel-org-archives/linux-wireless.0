@@ -1,89 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34914 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750753AbbDTXbW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 19:31:22 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jani Nikula <jani.nikula@intel.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH v1 2/6] kernel/module.c: use generic module param operaters for sig_enforce
-Date: Mon, 20 Apr 2015 16:30:33 -0700
-Message-Id: <1429572637-30234-3-git-send-email-mcgrof@do-not-panic.com> (sfid-20150421_013233_832745_F6F31600)
-In-Reply-To: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from dedo.coelho.fi ([88.198.205.34]:46351 "EHLO dedo.coelho.fi"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751030AbbDAG2u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2015 02:28:50 -0400
+Message-ID: <1427869720.10642.6.camel@coelho.fi> (sfid-20150401_082854_371310_B0453F00)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arend van Spriel <arend@broadcom.com>, Jouni Malinen <j@w1.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 01 Apr 2015 09:28:40 +0300
+In-Reply-To: <1427811715.2057.24.camel@sipsolutions.net>
+References: <55105DA7.3040703@broadcom.com>
+	 <1427811715.2057.24.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: broadcast ssid in scheduled scan
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+On Tue, 2015-03-31 at 16:21 +0200, Johannes Berg wrote:
+> On Mon, 2015-03-23 at 19:38 +0100, Arend van Spriel wrote:
+> > Johannes, Jouni,
+> > 
+> > I have noticed that under some circumstances wpa_supplicant initiates a 
+> > scheduled scan with broadcast ssid. This is something our firmware can 
+> > not do so could this be avoided? Maybe by adding a feature flag for it. 
+> 
+> I guess this would be difficult to do since you'd basically have to
+> "remove" support for normal scheduled scan (that assumes this ability)
+> and add support for another scheduled scan (that doesn't assume it) in
+> nl80211 ... just to be compatible with older implementations of
+> wpa_supplicant etc.
+> 
+> I do wonder why the firmware cannot do this though - there's no
+> fundamental reason the 0-length SSID is all that different from a 1-byte
+> one?
 
-We're directly checking and modifying sig_enforce when needed instead
-of using the generic helpers. This prevents us from generalizing this
-helper so that others can use it. Use indirect helpers to allow us
-to generalize this code a bit and to make it a bit more clear what
-this is doing.
+Is the problem in having a 0-length SSID in the probe_reqs or is it in
+having it in the matches (i.e. it doesn't support "pass all")? The
+latter makes a bit more sense, since filtering on a 0-length SSID, if
+not treated specially, would return nothing (since it would never match,
+unless an AP does send an SSID IE with 0-length).
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Jani Nikula <jani.nikula@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: cocci@systeme.lip6.fr
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
----
- kernel/module.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+It doesn't make much sense to have a "match all" scheduled scan though,
+unless wpa_s needs to find more SSIDs than what the driver supports.
+Even in that case, it wouldn't make much difference than using a normal
+scan periodically...
 
-diff --git a/kernel/module.c b/kernel/module.c
-index 42a1d2a..de12c4a 100644
---- a/kernel/module.c
-+++ b/kernel/module.c
-@@ -114,23 +114,25 @@ static bool sig_enforce = false;
- static int param_set_bool_enable_only(const char *val,
- 				      const struct kernel_param *kp)
- {
--	int err;
--	bool test;
-+	int err = 0;
-+	bool new_value;
-+	bool orig_value = *(bool *)kp->arg;
- 	struct kernel_param dummy_kp = *kp;
- 
--	dummy_kp.arg = &test;
-+	dummy_kp.arg = &new_value;
- 
- 	err = param_set_bool(val, &dummy_kp);
- 	if (err)
- 		return err;
- 
- 	/* Don't let them unset it once it's set! */
--	if (!test && sig_enforce)
-+	if (!new_value && orig_value)
- 		return -EROFS;
- 
--	if (test)
--		sig_enforce = true;
--	return 0;
-+	if (new_value)
-+		err = param_set_bool(val, kp);
-+
-+	return err;
- }
- 
- static const struct kernel_param_ops param_ops_bool_enable_only = {
--- 
-2.3.2.209.gd67f9d5.dirty
+--
+Luca.
 
