@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56255 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:55163 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750724AbbD3L6S (ORCPT
+	with ESMTP id S1751158AbbDAVBV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Apr 2015 07:58:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 0/7] wil6210 patches
-References: <1430307906-28393-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<87y4la1gdm.fsf@kamboji.qca.qualcomm.com>
-	<2058417.XHv0o6uz9r@lx-wigig-72>
-Date: Thu, 30 Apr 2015 14:58:11 +0300
-In-Reply-To: <2058417.XHv0o6uz9r@lx-wigig-72> (Vladimir Kondratiev's message
-	of "Thu, 30 Apr 2015 11:59:44 +0300")
-Message-ID: <87618d25gs.fsf@kamboji.qca.qualcomm.com> (sfid-20150430_135821_965130_C1EA4782)
+	Wed, 1 Apr 2015 17:01:21 -0400
+Message-ID: <551C5C51.8010109@codeaurora.org> (sfid-20150401_230124_314427_EC49520D)
+Date: Wed, 01 Apr 2015 14:00:01 -0700
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath: use PRI value given by spec for fixed PRI
+References: <1427475590-2198-1-git-send-email-poh@qca.qualcomm.com> <55191D89.2000300@neratec.com> <55198EA4.1010101@codeaurora.org> <551BC2B1.3030002@neratec.com>
+In-Reply-To: <551BC2B1.3030002@neratec.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com> writes:
+Hi,
 
-> On Thursday, April 30, 2015 05:47:49 AM Kalle Valo wrote:
->> I see some warnings and errors:
->> 
->> drivers/net/wireless/ath/wil6210/pmc.c:94:228: warning: format '%ld' expects argument of type 'long int', but argument 6 has type 'unsigned int' [-Wformat]
->> drivers/net/wireless/ath/wil6210/pmc.c:94:228: warning: format '%ld' expects argument of type 'long int', but argument 8 has type 'unsigned int' [-Wformat]
->> drivers/net/wireless/ath/wil6210/pmc.c:94:448: warning: format '%ld' expects argument of type 'long int', but argument 5 has type 'unsigned int' [-Wformat]
->> drivers/net/wireless/ath/wil6210/pmc.c:94:448: warning: format '%ld' expects argument of type 'long int', but argument 7 has type 'unsigned int' [-Wformat]
->> 
->> [...]
->> 
->> Kernel: arch/x86/boot/bzImage is ready  (#923)
->>   Building modules, stage 2.
->>   MODPOST 45 modules
->> ERROR: "__divdi3" [drivers/net/wireless/ath/wil6210/wil6210.ko] undefined!
->> 
+
+On 04/01/2015 03:04 AM, Zefir Kurtisi wrote:
+> On 03/30/2015 07:57 PM, Peter Oh wrote:
+>> On 03/30/2015 02:55 AM, Zefir Kurtisi wrote:
+>>> [...]
+>>> That's why I believe we need to
+>>> be very cautious when changing it to fix / improve minor issues.
+>> This patch is not for minor fix.
+>> Current DFS detector fails on Japan W53 band which requires at least 50%
+> of data
+>> traffic during DFS certificate.
+>> So this patch should apply to both of 9k and 10k.
+> That is the core of my concern: you add changes to fix FCC/JP, which at
+> the same
+> time also affects ETSI.
 >
-> Ops, sorry. I forgot there are still 32-bit platforms here...
-> Following is patch v2, it cleanly compiles on 32-bit x86
-
-Please resend the whole series, less problems that way.
-
--- 
-Kalle Valo
+> Our company (and maybe others) got ath9k certified for ETSI, and any
+> potential
+> change to the detector relevant for that domain would essentially require
+> to
+> re-certify.
+>
+> There were several patches lately added to the detector that were isolated
+> to
+> specific domains (like the recent updates for FCC pattern 1) which I knew
+> won't
+> affect the ETSI detector performance, since they touched only the FCC
+> configuration but not the algorithm itself. This patch does, and that's
+> why I need
+> to point out that doing so might void certification efforts out there.
+I'll try to find a way to not affect ETSI detector to keep the existing 
+certificate.
+> Unfortunately, I have no good idea how to cope with it. Freezing the
+> driver at the
+> certified state is no option, since we all want to evolve. Having multiple
+> copies
+> of the detector for each regulatory domain would be an option (and
+> essentially
+> will happen since FCC/JP can't be covered by PRI detectors only), but
+> gives
+> unacceptable code duplication. Ideally we would fully separate algorithm
+> from
+> configuration and leave the algorithm untouched ever after, not sure how
+> doable,
+> though.
+>
+>
+> As for your patch at hand, I tested it for ETSI and it does not change
+> detector
+> performance,
+The patch is useful when there are many missing pulses within a burst.
+It happens almost every time when channel loading rate is higher than 40%,
+but around 30% channel loading does not miss pulses that much.
+> therefore (please replace 16 with PRI_TOLERANCE in the macro)
+I'll do.
+> Acked-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+>
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
+Thanks,
+Peter
