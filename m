@@ -1,46 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:35348 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbbD2XwX (ORCPT
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:34841 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752213AbbDAVd2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 19:52:23 -0400
-Received: by igbyr2 with SMTP id yr2so133969153igb.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Apr 2015 16:52:22 -0700 (PDT)
-From: "Nick Kossifidis" <mickflemm@gmail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	adrian.chadd@gmail.com, Nick Kossifidis <mickflemm@gmail.com>
-Subject: [PATCH 11/11] ath9k: Enable short repeat by default on ath9k_htc
-Date: Wed, 29 Apr 2015 23:51:22 +0000
-Message-Id: <1430351482-59418-12-git-send-email-mickflemm@gmail.com> (sfid-20150430_020417_822050_1F48AFAC)
-In-Reply-To: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
-References: <1430351482-59418-1-git-send-email-mickflemm@gmail.com>
+	Wed, 1 Apr 2015 17:33:28 -0400
+Received: by wgdm6 with SMTP id m6so66974851wgd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Apr 2015 14:33:27 -0700 (PDT)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 1/2] staging: vt6655: s_vGenerateTxParameter Replace PSTxBufHead with struct vnt_tx_fifo_head
+Date: Wed,  1 Apr 2015 22:32:51 +0100
+Message-Id: <1427923972-11947-1-git-send-email-tvboxspy@gmail.com> (sfid-20150401_233331_943599_BCB85997)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Normal FFT reports generate a LOT of data, to save resources
-enable short repeat by default also on ath9k_htc (it's already
-enabled by default on ath9k). This can always be changed from
-userspace if needed.
+With endian correction on fifo_ctl and current_rate.
 
-Signed-off-by: Nick Kossifidis <mickflemm@gmail.com>
+Removing pTxBufHead, pFifoHead and wFifoCtl
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/vt6655/rxtx.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index d7beefe..7468562 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -594,7 +594,7 @@ static void ath9k_init_misc(struct ath9k_htc_priv *priv)
+diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+index 5b869d1..195dcc9 100644
+--- a/drivers/staging/vt6655/rxtx.c
++++ b/drivers/staging/vt6655/rxtx.c
+@@ -116,7 +116,7 @@ void
+ s_vGenerateTxParameter(
+ 	struct vnt_private *pDevice,
+ 	unsigned char byPktType,
+-	void *pTxBufHead,
++	struct vnt_tx_fifo_head *,
+ 	void *pvRrvTime,
+ 	void *pvRTS,
+ 	void *pvCTS,
+@@ -944,7 +944,7 @@ void
+ s_vGenerateTxParameter(
+ 	struct vnt_private *pDevice,
+ 	unsigned char byPktType,
+-	void *pTxBufHead,
++	struct vnt_tx_fifo_head *tx_buffer_head,
+ 	void *pvRrvTime,
+ 	void *pvRTS,
+ 	void *pvCTS,
+@@ -955,21 +955,18 @@ s_vGenerateTxParameter(
+ 	unsigned short wCurrentRate
+ )
+ {
+-	unsigned short wFifoCtl;
++	u16 fifo_ctl = le16_to_cpu(tx_buffer_head->fifo_ctl);
+ 	bool bDisCRC = false;
+ 	unsigned char byFBOption = AUTO_FB_NONE;
  
- 	priv->spec_priv.ah = priv->ah;
- 	priv->spec_priv.spec_config.enabled = 0;
--	priv->spec_priv.spec_config.short_repeat = false;
-+	priv->spec_priv.spec_config.short_repeat = true;
- 	priv->spec_priv.spec_config.count = 8;
- 	priv->spec_priv.spec_config.endless = false;
- 	priv->spec_priv.spec_config.period = 0x12;
+-	PSTxBufHead pFifoHead = (PSTxBufHead)pTxBufHead;
+-
+-	pFifoHead->wReserved = wCurrentRate;
+-	wFifoCtl = pFifoHead->wFIFOCtl;
++	tx_buffer_head->current_rate = cpu_to_le16(wCurrentRate);
+ 
+-	if (wFifoCtl & FIFOCTL_CRCDIS)
++	if (fifo_ctl & FIFOCTL_CRCDIS)
+ 		bDisCRC = true;
+ 
+-	if (wFifoCtl & FIFOCTL_AUTO_FB_0)
++	if (fifo_ctl & FIFOCTL_AUTO_FB_0)
+ 		byFBOption = AUTO_FB_0;
+-	else if (wFifoCtl & FIFOCTL_AUTO_FB_1)
++	else if (fifo_ctl & FIFOCTL_AUTO_FB_1)
+ 		byFBOption = AUTO_FB_1;
+ 
+ 	if (!pvRrvTime)
 -- 
-2.3.5
+2.1.0
 
