@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sigma-star.at ([95.130.255.111]:14389 "EHLO
-	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569AbbDLWwv (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:8252 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751271AbbDAROz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2015 18:52:51 -0400
-From: Richard Weinberger <richard@nod.at>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
-	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
-	lauro.venancio@openbossa.org, davem@davemloft.net,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
-	Richard Weinberger <richard@nod.at>
-Subject: [PATCH 5/5 v4] netfilter: Fix format string of nfnetlink_log proc file
-Date: Mon, 13 Apr 2015 00:52:39 +0200
-Message-Id: <1428879159-19237-5-git-send-email-richard@nod.at> (sfid-20150413_005402_155979_5CB8610E)
-In-Reply-To: <1428879159-19237-1-git-send-email-richard@nod.at>
-References: <1428879159-19237-1-git-send-email-richard@nod.at>
+	Wed, 1 Apr 2015 13:14:55 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: htc: match wait_for_completion_timeout return type
+References: <1426271901-20596-1-git-send-email-hofrat@osadl.org>
+Date: Wed, 1 Apr 2015 20:14:45 +0300
+In-Reply-To: <1426271901-20596-1-git-send-email-hofrat@osadl.org> (Nicholas Mc
+	Guire's message of "Fri, 13 Mar 2015 14:38:21 -0400")
+Message-ID: <87a8yrzs6y.fsf@kamboji.qca.qualcomm.com> (sfid-20150401_191514_755905_A0B4967A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The printed values are all of type unsigned integer, therefore use
-%u instead of %d. Otherwise an user can face negative values.
+Nicholas Mc Guire <hofrat@osadl.org> writes:
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- net/netfilter/nfnetlink_log.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Return type of wait_for_completion_timeout is unsigned long not int.
+> An appropriately named unsigned long is added and the assignments fixed up.
+>
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
-index 5c79735..3ad9126 100644
---- a/net/netfilter/nfnetlink_log.c
-+++ b/net/netfilter/nfnetlink_log.c
-@@ -1007,7 +1007,7 @@ static int seq_show(struct seq_file *s, void *v)
- {
- 	const struct nfulnl_instance *inst = v;
- 
--	seq_printf(s, "%5d %6d %5d %1d %5d %6d %2d\n",
-+	seq_printf(s, "%5u %6u %5u %1u %5u %6u %2u\n",
- 		   inst->group_num,
- 		   inst->peer_portid, inst->qlen,
- 		   inst->copy_mode, inst->copy_range,
+Thanks, applied.
+
 -- 
-1.8.4.5
-
+Kalle Valo
