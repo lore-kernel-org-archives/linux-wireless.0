@@ -1,94 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59897 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753736AbbDGQdl (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:59892 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726AbbDAJPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Apr 2015 12:33:41 -0400
-Message-ID: <552406E4.50600@candelatech.com> (sfid-20150407_183346_718883_53B7D9C0)
-Date: Tue, 07 Apr 2015 09:33:40 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 1 Apr 2015 05:15:47 -0400
+Message-ID: <551BB741.7050702@broadcom.com> (sfid-20150401_111554_021172_21F2972A)
+Date: Wed, 1 Apr 2015 11:15:45 +0200
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k to ath9k IBSS, ath9k has interface-combinations issue
-References: <5523273F.4060803@candelatech.com> <CA+BoTQ=UUbfi5D9ZbN5Rxb20f5xpzuYQMo392=P++Qyhz8Hs+w@mail.gmail.com> <CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com>
-In-Reply-To: <CALhHN=oCvQ=SvobWTvc3geK-66k2+YDzB1HqSguCxTeV0QzWwg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Ilan Peer <ilan.peer@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	<linux-wireless@vger.kernel.org>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: Re: [PATCH 7/7] mac80211: Count correctly interface types
+References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>		 <1426143210-25635-7-git-send-email-emmanuel.grumbach@intel.com>		 <CALhHN=qkEmUPEL2XBuuudmq6Rg-6s7jm0TOdRuQCetgSiKyrpg@mail.gmail.com>		 (sfid-20150401_080606_876573_33E52A4C) <1427872324.2432.3.camel@sipsolutions.net>	 <551BADF5.3000409@broadcom.com> <1427877848.3428.1.camel@sipsolutions.net>
+In-Reply-To: <1427877848.3428.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/06/2015 10:17 PM, Janusz Dziedzic wrote:
-> On 7 April 2015 at 07:12, Michal Kazior <michal.kazior@tieto.com> wrote:
->> On 7 April 2015 at 02:39, Ben Greear <greearb@candelatech.com> wrote:
->>> Has anyone tried running ath10k to ath9k IBSS?
->>>
->>> I'm trying this with a somewhat hacked 4.0-rc6 kernel,
->>> and latest wpa_supplicant.
->>>
->>> ath9k to ath9k works with and without encryption, and ath10k to ath10k works
->>> (w/out encryption at least).
->>>
->>> But, if I try to tell ath10k to connect to ath9k, then the ath9k reports
->>> interface combinations
->>> issues and will not associate.  I've added some debug, and the issue is the
->>> 'num==0' part here:
->>>
->>>
->>> int cfg80211_check_combinations(struct wiphy *wiphy,
->>>                                 const int num_different_channels,
->>>                                 const u8 radar_detect,
->>>                                 const int iftype_num[NUM_NL80211_IFTYPES])
->>> {
->>>         int err, num = 0;
->>>
->>>         err = cfg80211_iter_combinations(wiphy, num_different_channels,
->>>                                          radar_detect, iftype_num,
->>>                                          cfg80211_iter_sum_ifcombs, &num);
->>>         if (err) {
->>>                 pr_info("cfg-comb-check: failed to iterate combinations\n");
->>>                 return err;
->>>         }
->>>         if (num == 0) {
->>>                 pr_info("cfg-comb-check: iter-combinations returned
->>> num==0\n");
->>>                 return -EBUSY;
->>>         }
->>>
->>>         return 0;
->>> }
->>> EXPORT_SYMBOL(cfg80211_check_combinations);
->>>
->>> There should be exactly one interface on this radio that is admin-up, and it
->>> is the
->>> one that I am trying to make run in adhoc mode.
->>>
->>> Any ideas on this?
->>
->> IBSS with non-fixed or dfs channel? It would bump
->> num_different_channels and yield no valid combinations. But why would
->> that work fine with, e.g. ath9k-ath9k otherwise - no idea.
->>
-> 
-> Check this discussion (ibss + p2p_device - this could be one you hit).
-> http://www.spinics.net/lists/linux-wireless/msg134447.html
+On 04/01/15 10:44, Johannes Berg wrote:
+> On Wed, 2015-04-01 at 10:36 +0200, Arend van Spriel wrote:
+>
+>> I think in latest wpa_s the P2P-Device is always created. There used to
+>> be a driver_param to create it. Not sure if that driver_param could
+>> still be used to avoid P2P-Device creation.
+>
+> Yeah, I feared this was the case so I added Ilan :)
+>
+> I think we need to fix that perhaps in some way? I'm pretty sure we
+> cannot have P2P-Device and IBSS at the same time properly in our device.
+>
+>> The interface combinations look confusing to me. Why is there no IBSS or
+>> monitor listed there?
+>
+> Only "real" combinations are listed - anything that's in the "Supported
+> interface modes" is, by default, only supported with a single virtual
+> interface. Real combinations (of>1 interface) are listed separately.
 
-That patch is in my tree already, so must be something else.
+Thanks. That helps.
 
-Thanks,
-Ben
-
-> 
-> BR
-> Janusz
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+Arend
