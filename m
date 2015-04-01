@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40634 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751403AbbDHIG2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Apr 2015 04:06:28 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Vladimir Kondratiev <QCA_vkondrat@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 4/5] wil6210: stop_ap to leave interface closed
-References: <1427704134-30699-1-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1427704134-30699-5-git-send-email-qca_vkondrat@qca.qualcomm.com>
-	<1427705156.26117.12.camel@sipsolutions.net>
-	<3799169.j0UvFx0Mjg@lx-wigig-72>
-	<87k2xnx5n8.fsf@kamboji.qca.qualcomm.com>
-	<4C0E19B4-8F05-47B6-B32F-B60F0BC03D3A@sipsolutions.net>
-Date: Wed, 08 Apr 2015 11:06:21 +0300
-In-Reply-To: <4C0E19B4-8F05-47B6-B32F-B60F0BC03D3A@sipsolutions.net> (Johannes
-	Berg's message of "Tue, 07 Apr 2015 21:52:16 +0200")
-Message-ID: <87iod7hwn6.fsf@kamboji.qca.qualcomm.com> (sfid-20150408_100636_107377_BD5BB339)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:58637 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752117AbbDANqP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2015 09:46:15 -0400
+Message-ID: <1427895969.3428.9.camel@sipsolutions.net> (sfid-20150401_154624_791097_93BB99A2)
+Subject: pull-request: mac80211 2015-04-01
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 01 Apr 2015 15:46:09 +0200
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Hi Dave,
 
->>>> "closed" is rather misleading, since you most certainly should *not*
->>do
->>>> dev_close() [and don't, but how should I know reading the commit
->>log?]
->>>> 
->>>> johannes
->>>> 
->>>
->>> Yes, I see.
->>> I meant that actually stop_ap leaves device in state similar to
->>ndo_stop,
->>> where it is non operational.
->>>
->>> Would you suggest better wording? "Inactive", "down", "non
->>operational"
->>> or something else?
->>
->>Isn't "down" good enough here? So can I change it to:
->
-> Well that kinda proves my point - down is wrong.
->
-> Carrier turned off is probably the right thing to do here.
+This morning I randomly ran into a kernel crash and then I looked into
+it and came up with this fix. It's clearly been around for quite a while
+without anyone having seen it before (to my knowledge), so if you think
+you don't want to pull it into net.git at this point that should be
+fine.
 
-Ok, I change the commit log to:
+Let me know what you want to do with it, I can also put it into
+mac80211-next instead (although then Greg complains that he gets a lot
+of Cc stable patches in rc1, but all the processes need time ...).
 
-  cfg80211_ops.stop_ap supposed to have interface carried turned off as
-  post condition. Fulfill this requirement.
+Thanks,
+johannes
 
--- 
-Kalle Valo
+
+The following changes since commit f84eaa1068315409ffbef57e6fea312180787db3:
+
+  mac80211: ignore CSA to same channel (2015-03-16 09:36:12 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2015-04-01
+
+for you to fetch changes up to 788211d81bfdf9b6a547d0530f206ba6ee76b107:
+
+  mac80211: fix RX A-MPDU session reorder timer deletion (2015-04-01 14:35:01 +0200)
+
+----------------------------------------------------------------
+This contains just a single fix for a crash I happened to randomly
+run into today during testing. It's clearly been around for a while,
+but is pretty hard to trigger, even when I tried explicitly (and
+modified the code to make it more likely) it rarely did.
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      mac80211: fix RX A-MPDU session reorder timer deletion
+
+ net/mac80211/agg-rx.c   | 8 ++++++--
+ net/mac80211/rx.c       | 7 ++++---
+ net/mac80211/sta_info.h | 2 ++
+ 3 files changed, 12 insertions(+), 5 deletions(-)
+
+
