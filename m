@@ -1,147 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:51723 "EHLO mout.gmx.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56998 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752773AbbDFKBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Apr 2015 06:01:49 -0400
-Message-ID: <55225978.6050903@rempel-privat.de> (sfid-20150406_120203_798220_FE20D39F)
-Date: Mon, 06 Apr 2015 12:01:28 +0200
-From: Oleksij Rempel <linux@rempel-privat.de>
-MIME-Version: 1.0
-To: Fred Chou <fred.chou.nd@gmail.com>, ath9k-devel@qca.qualcomm.com,
-	kvalo@codeaurora.org
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ath9k_htc: check seq number instead of cmd id for timeout
-References: <1426235558-13787-1-git-send-email-fred.chou.nd@gmail.com> <552228AB.8060000@gmail.com>
-In-Reply-To: <552228AB.8060000@gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="VFEVunLR3NdP5bRgi3e7UFcRc052OnrGG"
+	id S1752012AbbDAHMH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Apr 2015 03:12:07 -0400
+Message-ID: <1427872324.2432.3.camel@sipsolutions.net> (sfid-20150401_091212_460071_A7C8AD99)
+Subject: Re: [PATCH 7/7] mac80211: Count correctly interface types
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	Ilan Peer <ilan.peer@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Wed, 01 Apr 2015 09:12:04 +0200
+In-Reply-To: <CALhHN=qkEmUPEL2XBuuudmq6Rg-6s7jm0TOdRuQCetgSiKyrpg@mail.gmail.com> (sfid-20150401_080606_876573_33E52A4C)
+References: <1426143210-25635-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1426143210-25635-7-git-send-email-emmanuel.grumbach@intel.com>
+	 <CALhHN=qkEmUPEL2XBuuudmq6Rg-6s7jm0TOdRuQCetgSiKyrpg@mail.gmail.com>
+	 (sfid-20150401_080606_876573_33E52A4C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---VFEVunLR3NdP5bRgi3e7UFcRc052OnrGG
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On Wed, 2015-04-01 at 08:06 +0200, Janusz Dziedzic wrote:
 
-Hi Kalle,
+> Hello,
+> 
+> Seems this one break IBSS case when started from wpa_supplicant at
+> least for Intel7260 and ath10k where dedicated p2p_device is used.
+> 
+> This is wpa_supplicant log:
+> 1427867673.149187: nl80211: Set mode ifindex 8 iftype 1 (ADHOC)
+> 1427867673.149225: nl80211: Mode change succeeded while interface is down
+> 1427867673.149234: Could not set interface wlan3 flags (UP): Device or
+> resource busy
 
-can you please apply this patch.
+That's actually the correct behaviour, given the interface limitations,
+at least for iwlmvm devices:
 
-Am 06.04.2015 um 08:33 schrieb Fred Chou:
-> Hi all,
->=20
-> May I have an update on the patch status please?
->=20
-> Thanks and regards,
-> Fred
->=20
-> On 13/3/2015 4:32 PM, Fred Chou wrote:
->> From: Fred Chou <fred.chou.nd@gmail.com>
->>
->> As the driver may send multiple wmi commands with identical cmd id,
->> it is more robust to check seq number for timeout instead.
->>
->> Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/wmi.c | 12 ++++++------
->>  drivers/net/wireless/ath/ath9k/wmi.h |  2 +-
->>  2 files changed, 7 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wirele=
-ss/ath/ath9k/wmi.c
->> index 65c8894..aba909f 100644
->> --- a/drivers/net/wireless/ath/ath9k/wmi.c
->> +++ b/drivers/net/wireless/ath/ath9k/wmi.c
->> @@ -224,7 +224,7 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct s=
-k_buff *skb,
->> =20
->>  	/* Check if there has been a timeout. */
->>  	spin_lock(&wmi->wmi_lock);
->> -	if (cmd_id !=3D wmi->last_cmd_id) {
->> +	if (be16_to_cpu(hdr->seq_no) !=3D wmi->last_seq_id) {
->>  		spin_unlock(&wmi->wmi_lock);
->>  		goto free_skb;
->>  	}
->> @@ -272,11 +272,16 @@ static int ath9k_wmi_cmd_issue(struct wmi *wmi,
->>  			       enum wmi_cmd_id cmd, u16 len)
->>  {
->>  	struct wmi_cmd_hdr *hdr;
->> +	unsigned long flags;
->> =20
->>  	hdr =3D (struct wmi_cmd_hdr *) skb_push(skb, sizeof(struct wmi_cmd_h=
-dr));
->>  	hdr->command_id =3D cpu_to_be16(cmd);
->>  	hdr->seq_no =3D cpu_to_be16(++wmi->tx_seq_id);
->> =20
->> +	spin_lock_irqsave(&wmi->wmi_lock, flags);
->> +	wmi->last_seq_id =3D wmi->tx_seq_id;
->> +	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
->> +
->>  	return htc_send_epid(wmi->htc, skb, wmi->ctrl_epid);
->>  }
->> =20
->> @@ -292,7 +297,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id=
- cmd_id,
->>  	struct sk_buff *skb;
->>  	u8 *data;
->>  	int time_left, ret =3D 0;
->> -	unsigned long flags;
->> =20
->>  	if (ah->ah_flags & AH_UNPLUGGED)
->>  		return 0;
->> @@ -320,10 +324,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_i=
-d cmd_id,
->>  	wmi->cmd_rsp_buf =3D rsp_buf;
->>  	wmi->cmd_rsp_len =3D rsp_len;
->> =20
->> -	spin_lock_irqsave(&wmi->wmi_lock, flags);
->> -	wmi->last_cmd_id =3D cmd_id;
->> -	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
->> -
->>  	ret =3D ath9k_wmi_cmd_issue(wmi, skb, cmd_id, cmd_len);
->>  	if (ret)
->>  		goto out;
->> diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wirele=
-ss/ath/ath9k/wmi.h
->> index 0db37f2..2aad6dc 100644
->> --- a/drivers/net/wireless/ath/ath9k/wmi.h
->> +++ b/drivers/net/wireless/ath/ath9k/wmi.h
->> @@ -143,7 +143,7 @@ struct wmi {
->>  	enum htc_endpoint_id ctrl_epid;
->>  	struct mutex op_mutex;
->>  	struct completion cmd_wait;
->> -	enum wmi_cmd_id last_cmd_id;
->> +	u16 last_seq_id;
->>  	struct sk_buff_head wmi_event_queue;
->>  	struct tasklet_struct wmi_event_tasklet;
->>  	u16 tx_seq_id;
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->=20
+iw list
+[...]
+	Supported interface modes:
+		 * IBSS
+		 * managed
+		 * AP
+		 * AP/VLAN
+		 * monitor
+		 * P2P-client
+		 * P2P-GO
+		 * P2P-device
+[...]
+	software interface modes (can always be added):
+		 * AP/VLAN
+		 * monitor
+	valid interface combinations:
+		 * #{ managed } <= 1, #{ AP, P2P-client, P2P-GO } <= 1, #{ P2P-device } <= 1,
+		   total <= 3, #channels <= 2
 
+So there's no combination with P2P-device and IBSS together.
 
---=20
-Regards,
-Oleksij
+In our device I'm pretty sure the two couldn't be supported together.
+Perhaps the supplicant has issues though with how it creates the
+P2P-Device? Should probably not be there if you have IBSS, it's pretty
+useless anyway then. Or at least not be there if the driver doesn't
+advertise support for that combination.
 
+johannes
 
---VFEVunLR3NdP5bRgi3e7UFcRc052OnrGG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iF4EAREIAAYFAlUiWYEACgkQHwImuRkmbWlS3wD/Xf9kTClFI6u+5CkwfMyL7h/y
-e9/QrlTRxWALplSddoUA/2vfqYV92JCSzQFNW3ZPFLWjtAE9Xu7q/qfXb8bglEz/
-=PyJZ
------END PGP SIGNATURE-----
-
---VFEVunLR3NdP5bRgi3e7UFcRc052OnrGG--
