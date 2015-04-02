@@ -1,99 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33398 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754167AbbDTXb3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Apr 2015 19:31:29 -0400
-From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-To: rusty@rustcorp.com.au
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	keescook@chromium.org, casey@schaufler-ca.com,
-	cocci@systeme.lip6.fr, "Luis R. Rodriguez" <mcgrof@suse.com>,
-	Jani Nikula <jani.nikula@intel.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: [PATCH v1 4/6] moduleparam.h: add module_param_config_*() helpers
-Date: Mon, 20 Apr 2015 16:30:35 -0700
-Message-Id: <1429572637-30234-5-git-send-email-mcgrof@do-not-panic.com> (sfid-20150421_013204_775650_1DB4CAD6)
-In-Reply-To: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
-References: <1429572637-30234-1-git-send-email-mcgrof@do-not-panic.com>
+Received: from mga02.intel.com ([134.134.136.20]:40007 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752384AbbDBGmZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Apr 2015 02:42:25 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Alexander Bondar <alexander.bondar@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/31] iwlwifi: mvm: Clean up UMAC scan UIDs in the reset and drv_stop flows
+Date: Thu,  2 Apr 2015 09:41:06 +0300
+Message-Id: <1427956879-11725-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_090419_798190_132417AF)
+In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
+References: <1427956656.8122.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <mcgrof@suse.com>
+From: Alexander Bondar <alexander.bondar@intel.com>
 
-This adds a couple of bool module_param_config_*() helpers
-which are designed to let us easily associate a booloean
-module parameter with an associated kernel configuration
-option, and to help us remove #ifdef'ery eyesores.
+In the reset flow, the driver cancels ongoing scan and sends scan
+complete notification to mac80211. However it does not clean its UID.
+Add cleaning scan UID for the ongoing scan. Loop over all other UIDs
+to make sure there's nothing left there and warn if any is found.
 
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Jani Nikula <jani.nikula@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: linux-kernel@vger.kernel.org
-Cc: cocci@systeme.lip6.fr
-Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+Signed-off-by: Alexander Bondar <alexander.bondar@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/linux/moduleparam.h | 37 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 14 +++++++++++
+ drivers/net/wireless/iwlwifi/mvm/scan.c     | 37 ++++++++++++++++++++++++++---
+ 2 files changed, 48 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/moduleparam.h b/include/linux/moduleparam.h
-index 7e00799..fdf7b87 100644
---- a/include/linux/moduleparam.h
-+++ b/include/linux/moduleparam.h
-@@ -155,6 +155,43 @@ struct kparam_array
- 	__MODULE_PARM_TYPE(name, #type)
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 213bd72..07344e11 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -1413,6 +1413,20 @@ void __iwl_mvm_mac_stop(struct iwl_mvm *mvm)
+ 	 */
+ 	clear_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status);
  
- /**
-+ * module_param_config_on_off - bool parameter with run time override
-+ * @name: a valid C identifier which is the parameter name.
-+ * @value: the actual lvalue to alter.
-+ * @perm: visibility in sysfs.
-+ * @config: kernel parameter which will enable this option if this
-+ * 	kernel configuration option has been enabled.
-+ *
-+ * This lets you define a bool module paramter which by default will be
-+ * set to true if the config option has been set on your kernel's
-+ * configuration, otherwise it is set to false.
-+ */
-+#define module_param_config_on_off(name, var, perm, config) 		\
-+	static bool var = IS_ENABLED(config);				\
-+	module_param_named(name, var, bool, perm);
++	/* We shouldn't have any UIDs still set.  Loop over all the UIDs to
++	 * make sure there's nothing left there and warn if any is found.
++	 */
++	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
++		int i;
 +
-+/**
-+ * module_param_config_on - bool parameter with run time enablement override
-+ * @name: a valid C identifier which is the parameter name.
-+ * @value: the actual lvalue to alter.
-+ * @perm: visibility in sysfs.
-+ * @config: kernel parameter which will enable this option if this
-+ * 	kernel configuration option has been enabled.
-+ *
-+ * This lets you define a bool module paramter which by default will be
-+ * set to true if the config option has been set on your kernel's
-+ * configuration, otherwise it is set to false. This particular helper
-+ * will ensure that if the kernel configuration has been set you will not
-+ * be able to disable this kernel parameter. You can only use this to let
-+ * the an option that was disabled on your kernel configuration be enabled
-+ * at run time.
-+ */
-+#define module_param_config_on(name, var, perm, config) 		\
-+	static bool var = IS_ENABLED(config);				\
-+	module_param_named(name, var, bool_enable_only, perm);
++		for (i = 0; i < IWL_MVM_MAX_SIMULTANEOUS_SCANS; i++) {
++			if (WARN_ONCE(mvm->scan_uid[i],
++				      "UMAC scan UID %d was not cleaned\n",
++				      mvm->scan_uid[i]))
++				mvm->scan_uid[i] = 0;
++		}
++	}
 +
+ 	mvm->ucode_loaded = false;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 2997864..74e1c86 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -1179,6 +1179,18 @@ static bool iwl_mvm_find_scan_type(struct iwl_mvm *mvm,
+ 	return false;
+ }
+ 
++static int iwl_mvm_find_first_scan(struct iwl_mvm *mvm,
++				   enum iwl_umac_scan_uid_type type)
++{
++	int i;
 +
-+/**
-  * module_param_cb - general callback for a module/cmdline parameter
-  * @name: a valid C identifier which is the parameter name.
-  * @ops: the set & get operations for this parameter.
++	for (i = 0; i < IWL_MVM_MAX_SIMULTANEOUS_SCANS; i++)
++		if (mvm->scan_uid[i] & type)
++			return i;
++
++	return i;
++}
++
+ static u32 iwl_generate_scan_uid(struct iwl_mvm *mvm,
+ 				 enum iwl_umac_scan_uid_type type)
+ {
+@@ -1629,11 +1641,30 @@ int iwl_mvm_scan_size(struct iwl_mvm *mvm)
+ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
+ {
+ 	if (mvm->fw->ucode_capa.capa[0] & IWL_UCODE_TLV_CAPA_UMAC_SCAN) {
+-		if (iwl_mvm_find_scan_type(mvm, IWL_UMAC_SCAN_UID_REG_SCAN))
++		u32 uid, i;
++
++		uid = iwl_mvm_find_first_scan(mvm, IWL_UMAC_SCAN_UID_REG_SCAN);
++		if (uid < IWL_MVM_MAX_SIMULTANEOUS_SCANS) {
+ 			ieee80211_scan_completed(mvm->hw, true);
+-		if (iwl_mvm_find_scan_type(mvm, IWL_UMAC_SCAN_UID_SCHED_SCAN) &&
+-		    !mvm->restart_fw)
++			mvm->scan_uid[uid] = 0;
++		}
++		uid = iwl_mvm_find_first_scan(mvm,
++					      IWL_UMAC_SCAN_UID_SCHED_SCAN);
++		if (uid < IWL_MVM_MAX_SIMULTANEOUS_SCANS && !mvm->restart_fw) {
+ 			ieee80211_sched_scan_stopped(mvm->hw);
++			mvm->scan_uid[uid] = 0;
++		}
++
++		/* We shouldn't have any UIDs still set.  Loop over all the
++		 * UIDs to make sure there's nothing left there and warn if
++		 * any is found.
++		 */
++		for (i = 0; i < IWL_MVM_MAX_SIMULTANEOUS_SCANS; i++) {
++			if (WARN_ONCE(mvm->scan_uid[i],
++				      "UMAC scan UID %d was not cleaned\n",
++				      mvm->scan_uid[i]))
++				mvm->scan_uid[i] = 0;
++		}
+ 	} else {
+ 		switch (mvm->scan_status) {
+ 		case IWL_MVM_SCAN_NONE:
 -- 
-2.3.2.209.gd67f9d5.dirty
+1.9.1
 
