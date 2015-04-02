@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:35342 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753940AbbDNPz1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 11:55:27 -0400
-Message-ID: <552D386E.40306@candelatech.com> (sfid-20150414_175530_563171_7FEF247D)
-Date: Tue, 14 Apr 2015 08:55:26 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [RFC] mac80211_hwsim: notify user-space about channel change.
-References: <1424217588-29558-1-git-send-email-greearb@candelatech.com>		  	  (sfid-20150218_005956_617537_D2A9B91F) <1424692155.2782.6.camel@sipsolutions.net>		  	 <54EB66CC.1030800@candelatech.com>		   <1424772714.2192.16.camel@sipsolutions.net>		   <54EC8C5D.5090400@candelatech.com>		  <1424788834.2192.34.camel@sipsolutions.net>		  <5500AE12.6040103@candelatech.com>		 <1427812067.2057.27.camel@sipsolutions.net>		 <551AC3B6.1040001@candelatech.com>	 <1428999215.3019.6.camel@sipsolutions.net>	 <552D2A90.1070307@candelatech.com> <1429023990.3019.15.camel@sipsolutions.net>
-In-Reply-To: <1429023990.3019.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:40007 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752766AbbDBGm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Apr 2015 02:42:29 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/31] iwlwifi: mvm: don't return uninitialized value in get_survey()
+Date: Thu,  2 Apr 2015 09:41:15 +0300
+Message-Id: <1427956879-11725-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_090418_657527_F3815DAA)
+In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
+References: <1427956656.8122.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+If ucode_loaded isn't true the function returns the 'ret' variable
+without having assigned a value properly. Fix that.
 
-On 04/14/2015 08:06 AM, Johannes Berg wrote:
-> On Tue, 2015-04-14 at 07:56 -0700, Ben Greear wrote:
->
->>> Well, the question isn't really that offloading, the question is what
->>> happens with the hw-scan logic in hwsim? Though I guess now that I think
->>> about it, that wouldn't show up in userspace at all with your changes.
->>
->> I think for HW scan and related matters, you treat user-space like a firmware
->> target, so you send it a message, and then get some response or action, similar
->> to how you would request ath10k or some USB dongle NIC to do things for you.
->
-> That's not really how it works today, but it's one possible (probably
-> the only possible) approach.
->
->> My own interest in hwsim user-space is to make it act more like ath9k
->> than a firmware target driver, but I don't think my changes preclude doing
->> target based emulation in the future.
->
-> True, although I'd like to see the multi-channel issue addressed better.
+Reported-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I need a hint or two on what exactly you want changed in my patch to
-address your request, or maybe you or someone else can just address
-the issue in follow-on patches?
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index fc73cc1..74912e7 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -3911,6 +3911,7 @@ static int iwl_mvm_mac_get_survey(struct ieee80211_hw *hw, int idx,
+ 			    mvm->radio_stats.on_time_scan;
+ 	do_div(survey->time_scan, USEC_PER_MSEC);
+ 
++	ret = 0;
+  out:
+ 	mutex_unlock(&mvm->mutex);
+ 	return ret;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
+
