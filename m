@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13929 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755189AbbDIMII (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Apr 2015 08:08:08 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Yanbo Li <yanbol@qca.qualcomm.com>
-CC: <dreamfly281@gmail.com>, <linux-wireless@vger.kernel.org>,
-	<michal.kazior@tieto.com>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Change the fw stats access mask
-References: <1427476680-5532-1-git-send-email-yanbol@qca.qualcomm.com>
-Date: Thu, 9 Apr 2015 15:08:01 +0300
-In-Reply-To: <1427476680-5532-1-git-send-email-yanbol@qca.qualcomm.com> (Yanbo
-	Li's message of "Fri, 27 Mar 2015 10:18:00 -0700")
-Message-ID: <87vbh5ec7y.fsf@kamboji.qca.qualcomm.com> (sfid-20150409_140811_764967_959F2FEB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga02.intel.com ([134.134.136.20]:64527 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752555AbbDBGll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Apr 2015 02:41:41 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 09/31] iwlwifi: mvm: remove d0i3 ref correctly during AP start
+Date: Thu,  2 Apr 2015 09:40:57 +0300
+Message-Id: <1427956879-11725-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_084144_733864_8A71BB03)
+In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
+References: <1427956656.8122.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yanbo Li <yanbol@qca.qualcomm.com> writes:
+From: Arik Nemtsov <arik@wizery.com>
 
-> This fix the regerssion introduced after "ath10k_wmi_requests_stats()
-> call to use more stat bits", both the 10.2.X FW and community FW 10.1.X
-> will return time out when access the fw_stats with the STAT_VDEV and
-> STAT_PDEV. Add the condition to use different fw_stats mask for different
-> FW versions.
->
-> Fixes:7777d8c7ef6f("ath10k: implement fw stats for wmi-tlv")
-> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
+The AP_START d0i3 reference was never removed if the AP started correctly.
+This has the unpleasant side-effect of preventing D0i3 on Android if the
+WiFi hotspot was ever started on the device.
 
-Thanks, applied.
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index a3a84d1..b4e28ff 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -2215,8 +2215,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
+ 	if (iwl_mvm_phy_ctx_count(mvm) > 1)
+ 		iwl_mvm_teardown_tdls_peers(mvm);
+ 
+-	mutex_unlock(&mvm->mutex);
+-	return 0;
++	goto out_unlock;
+ 
+ out_quota_failed:
+ 	iwl_mvm_power_update_mac(mvm);
 -- 
-Kalle Valo
+1.9.1
+
