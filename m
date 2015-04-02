@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:18522 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753166AbbDXKUj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Apr 2015 06:20:39 -0400
-From: Johnny Kim <johnny.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>,
-	<devel@driverdev.osuosl.org>
-CC: <tony.cho@atmel.com>, <DL-NMI-KR-Kernel@atmel.com>,
-	<Nicolas.FERRE@atmel.com>, Johnny Kim <johnny.kim@atmel.com>
-Subject: [PATCH 2/2] staging: MAINTAINERS: add maintainer for wilc1000 device
-Date: Fri, 24 Apr 2015 19:20:01 +0900
-Message-ID: <33946bb15be3cff34ef21668c40cf28ceee820eb.1429868048.git.johnny.kim@atmel.com> (sfid-20150424_122042_480481_57BEC7C3)
-In-Reply-To: <8899ee1d8570c87be1934c685f188b8f04d374b6.1429868048.git.johnny.kim@atmel.com>
-References: <8899ee1d8570c87be1934c685f188b8f04d374b6.1429868048.git.johnny.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:64527 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752639AbbDBGlt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Apr 2015 02:41:49 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luciano Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/31] iwlwifi: mvm: add delay to scheduled scan
+Date: Thu,  2 Apr 2015 09:41:00 +0300
+Message-Id: <1427956879-11725-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_090419_057186_D396328B)
+In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
+References: <1427956656.8122.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add myself as maintainer for atmel wilc1000
+From: Luciano Coelho <luciano.coelho@intel.com>
 
-Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
-Signed-off-by: Dean Lee <dean.lee@atmel.com>
-Signed-off-by: Chris Park <chris.park@atmel.com>
+Add support for delaying the start of a scheduled scan (or a WoWLAN
+net-detect scan).
+
+Signed-off-by: Luciano Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- MAINTAINERS | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/iwlwifi/mvm/scan.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1b8263c..e4252b5 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9473,6 +9473,16 @@ M:	Forest Bond <forest@alittletooquiet.net>
- S:	Odd Fixes
- F:	drivers/staging/vt665?/
+diff --git a/drivers/net/wireless/iwlwifi/mvm/scan.c b/drivers/net/wireless/iwlwifi/mvm/scan.c
+index 6352587..2997864 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/iwlwifi/mvm/scan.c
+@@ -935,6 +935,8 @@ int iwl_mvm_unified_sched_scan_lmac(struct iwl_mvm *mvm,
  
-+STAGING - WILC1000 WIFI DRIVER
-+M:	Johnny Kim <johnny.kim@atmel.com>
-+M:	Rachel Kim <rachel.kim@atmel.com>
-+M:	Dean Lee <dean.lee@atmel.com>
-+M:	Chris Park <chris.park@atmel.com>
-+L:	devel@driverdev.osuosl.org
-+L:	linux-wireless@vger.kernel.org
-+S:	Supported
-+F:	drivers/staging/atmel/wilc1000/
+ 	cmd->n_channels = (u8)req->n_channels;
+ 
++	cmd->delay = cpu_to_le32(req->delay);
 +
- STAGING - XGI Z7,Z9,Z11 PCI DISPLAY DRIVER
- M:	Arnaud Patard <arnaud.patard@rtp-net.org>
- S:	Odd Fixes
+ 	if (iwl_mvm_scan_pass_all(mvm, req))
+ 		flags |= IWL_MVM_LMAC_SCAN_FLAG_PASS_ALL;
+ 	else
+@@ -1436,7 +1438,13 @@ int iwl_mvm_sched_scan_umac(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 				cpu_to_le16(req->interval / MSEC_PER_SEC);
+ 	sec_part->schedule[0].iter_count = 0xff;
+ 
+-	sec_part->delay = 0;
++	if (req->delay > U16_MAX) {
++		IWL_DEBUG_SCAN(mvm,
++			       "delay value is > 16-bits, set to max possible\n");
++		sec_part->delay = cpu_to_le16(U16_MAX);
++	} else {
++		sec_part->delay = cpu_to_le16(req->delay);
++	}
+ 
+ 	iwl_mvm_build_unified_scan_probe(mvm, vif, ies, &sec_part->preq,
+ 		req->flags & NL80211_SCAN_FLAG_RANDOM_ADDR ?
 -- 
 1.9.1
 
