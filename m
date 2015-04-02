@@ -1,70 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:6743 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbbDQIuL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2015 04:50:11 -0400
-Message-ID: <5530C940.6010407@broadcom.com> (sfid-20150417_105057_505423_44174BBA)
-Date: Fri, 17 Apr 2015 10:50:08 +0200
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Hante Meuleman <meuleman@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	mailinglist <openwrt-devel@lists.openwrt.org>,
-	Florian Fainelli <fainelli@broadcom.com>
-Subject: Re: [PATCH 10/10] brcmfmac: Add support for multiple PCIE devices
- in nvram.
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>	<1429035033-14076-11-git-send-email-arend@broadcom.com>	<CACna6rwJn695OzCdHu9KWUczcXext5mrLHvfVSMXsLekBm2tUg@mail.gmail.com>	<F51492713EF10846800D8C0ED37A7DCE019304D6@SJEXCHMB15.corp.ad.broadcom.com> <CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>
-In-Reply-To: <CACna6rzVfDqe_TBaLSoV704ZHU--d_JqrzDF2fM85pnTYUJMeg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:32677 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752762AbbDBGm3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Apr 2015 02:42:29 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 26/31] iwlwifi: mvm: add trigger for firmware dump upon MLME failures
+Date: Thu,  2 Apr 2015 09:41:14 +0300
+Message-Id: <1427956879-11725-26-git-send-email-emmanuel.grumbach@intel.com> (sfid-20150402_090417_387344_690C4FE7)
+In-Reply-To: <1427956656.8122.2.camel@egrumbacBox>
+References: <1427956656.8122.2.camel@egrumbacBox>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ openwrt-devel list
+This will allow to catch failures in MLME and get the
+firmware data when this happens.
 
-On 04/17/15 09:45, Rafał Miłecki wrote:
-> Huh, why dropping linux-wireless (and top posting btw)? Please let
-> everyone follow the discussion :)
->
-> On 15 April 2015 at 21:20, Hante Meuleman<meuleman@broadcom.com>  wrote:
->> As I wrote to you in a mail and on the openwrt forum, this patch is indeed an attempt to support more complex nvram files. I also wrote, that in order to be able to use it, the nvram contents of the device (r8000) needs to be put a specific file. Now for your concerns, we can perhaps add something which will read the nvram contents directly from an nvram store. But that is irrelevant to this patch. The parsing is still needed, and all we would need to add is something which is reading the nvram contents from some other place
->
-> So it makes me wonder if we need this patch in its current form. I
-> think getting NVRAM directly from the platform is much user friendly.
-> It doesn't require user to install some extra tools for dumping NVRAM
-> and putting it in a specific file. One extra layer less.
-> With that said I think it's hard to review your code for parsing
-> NVRAM. We don't know how it's going to be fetched in the first place.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h |  4 +-
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h       | 35 +++++++++++++
+ drivers/net/wireless/iwlwifi/mvm/mac80211.c      | 65 ++++++++++++++++++++++++
+ 3 files changed, 102 insertions(+), 2 deletions(-)
 
-You already made that point and we agreed to look for a solution.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+index 46cbae8..8b926ec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-error-dump.h
+@@ -246,7 +246,7 @@ iwl_fw_error_next_data(struct iwl_fw_error_dump_data *data)
+  * @FW_DBG_TRIGGER_CHANNEL_SWITCH: trigger log collection upon channel switch.
+  * @FW_DBG_TRIGGER_FW_NOTIF: trigger log collection when the firmware sends a
+  *	command response or a notification.
+- * @FW_DB_TRIGGER_RESERVED: reserved
++ * @FW_DBG_TRIGGER_MLME: trigger log collection upon MLME event.
+  * @FW_DBG_TRIGGER_STATS: trigger log collection upon statistics threshold.
+  * @FW_DBG_TRIGGER_RSSI: trigger log collection when the rssi of the beacon
+  *	goes below a threshold.
+@@ -260,7 +260,7 @@ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_MISSED_BEACONS,
+ 	FW_DBG_TRIGGER_CHANNEL_SWITCH,
+ 	FW_DBG_TRIGGER_FW_NOTIF,
+-	FW_DB_TRIGGER_RESERVED,
++	FW_DBG_TRIGGER_MLME,
+ 	FW_DBG_TRIGGER_STATS,
+ 	FW_DBG_TRIGGER_RSSI,
+ 	FW_DBG_TRIGGER_TXQ_TIMERS,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+index 0cfc66d..823938e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/iwlwifi/iwl-fw-file.h
+@@ -579,6 +579,41 @@ struct iwl_fw_dbg_trigger_low_rssi {
+ } __packed;
+ 
+ /**
++ * struct iwl_fw_dbg_trigger_mlme - configures trigger for mlme events
++ * @stop_auth_denied: number of denied authentication to collect
++ * @stop_auth_timeout: number of authentication timeout to collect
++ * @stop_rx_deauth: number of Rx deauth before to collect
++ * @stop_tx_deauth: number of Tx deauth before to collect
++ * @stop_assoc_denied: number of denied association to collect
++ * @stop_assoc_timeout: number of association timeout to collect
++ * @start_auth_denied: number of denied authentication to start recording
++ * @start_auth_timeout: number of authentication timeout to start recording
++ * @start_rx_deauth: number of Rx deauth to start recording
++ * @start_tx_deauth: number of Tx deauth to start recording
++ * @start_assoc_denied: number of denied association to start recording
++ * @start_assoc_timeout: number of association timeout to start recording
++ */
++struct iwl_fw_dbg_trigger_mlme {
++	u8 stop_auth_denied;
++	u8 stop_auth_timeout;
++	u8 stop_rx_deauth;
++	u8 stop_tx_deauth;
++
++	u8 stop_assoc_denied;
++	u8 stop_assoc_timeout;
++	__le16 reserved2;
++
++	u8 start_auth_denied;
++	u8 start_auth_timeout;
++	u8 start_rx_deauth;
++	u8 start_tx_deauth;
++
++	u8 start_assoc_denied;
++	u8 start_assoc_timeout;
++	__le16 reserved4;
++} __packed;
++
++/**
+  * struct iwl_fw_dbg_trigger_txq_timer - configures the Tx queue's timer
+  * @command_queue: timeout for the command queue in ms
+  * @bss: timeout for the queues of a BSS (except for TDLS queues) in ms
+diff --git a/drivers/net/wireless/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+index 810b6d3..fc73cc1 100644
+--- a/drivers/net/wireless/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/iwlwifi/mvm/mac80211.c
+@@ -3956,6 +3956,69 @@ static void iwl_mvm_mac_sta_statistics(struct ieee80211_hw *hw,
+ 	mutex_unlock(&mvm->mutex);
+ }
+ 
++static void iwl_mvm_mac_event_callback(struct ieee80211_hw *hw,
++				       struct ieee80211_vif *vif,
++				       const struct ieee80211_event *event)
++{
++#define CHECK_MLME_TRIGGER(_mvm, _trig, _buf, _cnt, _str...)	\
++	do {							\
++		if ((_cnt) && --(_cnt))				\
++			break;					\
++		snprintf(_buf, sizeof(_buf), ##_str);		\
++		iwl_mvm_fw_dbg_collect_trig(_mvm, _trig, _buf,	\
++					    sizeof(_buf));	\
++	} while (0)
++
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++	struct iwl_fw_dbg_trigger_tlv *trig;
++	struct iwl_fw_dbg_trigger_mlme *trig_mlme;
++	char buf[32];
++
++	if (!iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_MLME))
++		return;
++
++	if (event->u.mlme.status == MLME_SUCCESS)
++		return;
++
++	trig = iwl_fw_dbg_get_trigger(mvm->fw, FW_DBG_TRIGGER_MLME);
++	trig_mlme = (void *)trig->data;
++	if (!iwl_fw_dbg_trigger_check_stop(mvm, vif, trig))
++		return;
++
++	memset(buf, 0, sizeof(buf));
++
++	if (event->u.mlme.data == ASSOC_EVENT) {
++		if (event->u.mlme.status == MLME_DENIED)
++			CHECK_MLME_TRIGGER(mvm, trig, buf,
++					   trig_mlme->stop_assoc_denied,
++					   "DENIED ASSOC: reason %d",
++					    event->u.mlme.reason);
++		else if (event->u.mlme.status == MLME_TIMEOUT)
++			CHECK_MLME_TRIGGER(mvm, trig, buf,
++					   trig_mlme->stop_assoc_timeout,
++					   "ASSOC TIMEOUT");
++	} else if (event->u.mlme.data == AUTH_EVENT) {
++		if (event->u.mlme.status == MLME_DENIED)
++			CHECK_MLME_TRIGGER(mvm, trig, buf,
++					   trig_mlme->stop_auth_denied,
++					   "DENIED AUTH: reason %d",
++					   event->u.mlme.reason);
++		else if (event->u.mlme.status == MLME_TIMEOUT)
++			CHECK_MLME_TRIGGER(mvm, trig, buf,
++					   trig_mlme->stop_auth_timeout,
++					   "AUTH TIMEOUT");
++	} else if (event->u.mlme.data == DEAUTH_RX_EVENT) {
++		CHECK_MLME_TRIGGER(mvm, trig, buf,
++				   trig_mlme->stop_rx_deauth,
++				   "DEAUTH RX %d", event->u.mlme.reason);
++	} else if (event->u.mlme.data == DEAUTH_TX_EVENT) {
++		CHECK_MLME_TRIGGER(mvm, trig, buf,
++				   trig_mlme->stop_tx_deauth,
++				   "DEAUTH TX %d", event->u.mlme.reason);
++	}
++#undef CHECK_MLME_TRIGGER
++}
++
+ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.tx = iwl_mvm_mac_tx,
+ 	.ampdu_action = iwl_mvm_mac_ampdu_action,
+@@ -4009,6 +4072,8 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.tdls_cancel_channel_switch = iwl_mvm_tdls_cancel_channel_switch,
+ 	.tdls_recv_channel_switch = iwl_mvm_tdls_recv_channel_switch,
+ 
++	.event_callback = iwl_mvm_mac_event_callback,
++
+ 	CFG80211_TESTMODE_CMD(iwl_mvm_mac_testmode_cmd)
+ 
+ #ifdef CONFIG_PM_SLEEP
+-- 
+1.9.1
 
->> though it would have to be put under some kernel config flag as this would not be supported in non-router systems. The contents of the nvram would however still need to be parsed in exactly the same way as the nvram files we read from disk.
->
-> Again, it's hard to say for me. Are you going to use
-> bcm47xx_nvram_getenv? Are you going to use MTD subsystem? Are you
-> going to develop different solution? When using e.g.
-> bcm47xx_nvram_getenv you won't want all this parsing stuff at all.
-
-Please look at the usage scenario here. The brcmfmac driver is not 
-needing a few key,value pairs. It needs a portion of NVRAM to download 
-to the device. The patch provides the functionality to do just that. Get 
-the appropriate portion, strip comments and whitespace, and send it to 
-the device. Using bcm47xx_nvram_getenv is not a useful api as it would 
-mean we need brcmfmac to know which key ids to ask for, reassemble it to 
-key=value string and send it to the fullmac device.
-
-In bcm47xx_nvram_getenv() it does have the whole nvram content available 
-in nvram_buf which is filled by nvram_init(). So if something similar is 
-made available on r8000 (or ARM routers in general) build target all we 
-need is an api to get the nvram_buf.
-
-Another option is to add the parsing stuff in that nvram code and have 
-an api to get the appropriate portion based on pcie domain and bus 
-number as used in brcmf_fw_get_firmwares_pcie(). However, I would prefer 
-to have this in the driver and not in arch specific code as there may be 
-other platforms like our set-top boxes needing this.
-
-Regards,
-Arend
