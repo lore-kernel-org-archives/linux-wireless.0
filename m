@@ -1,59 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34807 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753433AbbDWOmL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2015 10:42:11 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211: fix rhashtable conversion
-Date: Thu, 23 Apr 2015 16:42:08 +0200
-Message-Id: <1429800128-1333-1-git-send-email-johannes@sipsolutions.net> (sfid-20150423_164215_935901_52574FF6)
+Received: from s72.web-hosting.com ([198.187.29.22]:46259 "EHLO
+	s72.web-hosting.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752662AbbDCBNF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Apr 2015 21:13:05 -0400
+From: Sujith Manoharan <sujith@msujith.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Message-ID: <21789.59627.667215.173720@gargle.gargle.HOWL> (sfid-20150403_031310_404671_7697A312)
+Date: Fri, 3 Apr 2015 06:42:11 +0530
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 3/4] ath10k: Fix no-ack frame status
+In-Reply-To: <87a8yu4n6r.fsf@kamboji.qca.qualcomm.com>
+References: <1418226973-13779-1-git-send-email-sujith@msujith.org>
+	<1418226973-13779-3-git-send-email-sujith@msujith.org>
+	<87oarazecg.fsf@kamboji.qca.qualcomm.com>
+	<21646.15326.159197.316821@gargle.gargle.HOWL>
+	<87vblduxlk.fsf@kamboji.qca.qualcomm.com>
+	<87a8yu4n6r.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Kalle Valo wrote:
+> > https://patchwork.kernel.org/patch/5470621/
+> 
+> Naturally I did forget this :) But the patch is in pending branch now.
 
-My conversion of the mac80211 station hash table to rhashtable
-completely broke the lookup in sta_info_get() as it no longer
-took into account the virtual interface. Fix that.
+Thanks...
 
-Fixes: 7bedd0cfad4e1 ("mac80211: use rhashtable for station table")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 12971b71d0fa..39893178a1a9 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -157,8 +157,24 @@ struct sta_info *sta_info_get(struct ieee80211_sub_if_data *sdata,
- 			      const u8 *addr)
- {
- 	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+	struct rhash_head *tmp;
-+	const struct bucket_table *tbl;
-+
-+	rcu_read_lock();
-+	tbl = rht_dereference_rcu(local->sta_hash.tbl, &local->sta_hash);
- 
--	return rhashtable_lookup_fast(&local->sta_hash, addr, sta_rht_params);
-+	for_each_sta_info(local, tbl, addr, sta, tmp) {
-+		if (sta->sdata == sdata) {
-+			rcu_read_unlock();
-+			/* this is safe as the caller must already hold
-+			 * another rcu read section or the mutex
-+			 */
-+			return sta;
-+		}
-+	}
-+	rcu_read_unlock();
-+	return NULL;
- }
- 
- /*
--- 
-2.1.4
-
+Sujith
