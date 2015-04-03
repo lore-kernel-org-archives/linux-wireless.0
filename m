@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:31461 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752230AbbDQGem (ORCPT
+Received: from smtprelay0081.hostedemail.com ([216.40.44.81]:44188 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752189AbbDCV3G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Apr 2015 02:34:42 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: add extra check for frame tracing
-References: <1428670948-7665-1-git-send-email-michal.kazior@tieto.com>
-Date: Fri, 17 Apr 2015 09:34:32 +0300
-In-Reply-To: <1428670948-7665-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Fri, 10 Apr 2015 13:02:28 +0000")
-Message-ID: <87r3rj4613.fsf@kamboji.qca.qualcomm.com> (sfid-20150417_083502_546380_43AA4448)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 3 Apr 2015 17:29:06 -0400
+Message-ID: <1428096542.29510.11.camel@perches.com> (sfid-20150403_232910_633626_01694DF2)
+Subject: Re: [PATCH 2/4] mac80211-hwsim: remove dmesg spam about get-survey.
+From: Joe Perches <joe@perches.com>
+To: greearb@candelatech.com
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 03 Apr 2015 14:29:02 -0700
+In-Reply-To: <1428095590-600-2-git-send-email-greearb@candelatech.com>
+References: <1428095590-600-1-git-send-email-greearb@candelatech.com>
+	 <1428095590-600-2-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Fri, 2015-04-03 at 14:13 -0700, greearb@candelatech.com wrote:
+> This message just fills up dmesg and/or kernel logs and does
+> not provide any useful information.
+[]
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+[]
+> @@ -1696,7 +1696,7 @@ static int mac80211_hwsim_get_survey(
+>  {
+>  	struct ieee80211_conf *conf = &hw->conf;
+>  
+> -	wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx);
+> +	/* wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx); */
 
-> Frames are logged via tracing in two slices:
-> header and payload, separately. This is done for
-> performance reasons when one wants to, e.g.
-> analyse metadata only of frames only.
->
-> If for some reason device delivered a frame buffer
-> which was sized below what 802.11 header implied
-> tracing logic would blow doing an invalid memory
-> accesses.
->
-> I've hit this problem when running IBSS on QCA988X
-> with 999.999.0.636 and tracing at the same time.
->
-> Fixes: 5ce8e7fdcc7a ("ath10k: handle ieee80211 header and payload tracing separately")
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+It's better, if it's really useless, to delete this
+than comment it out.
 
-Thanks, applied.
+But it's not on by default anyway, so why it an issue?
 
--- 
-Kalle Valo
