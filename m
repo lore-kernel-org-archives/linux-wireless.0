@@ -1,35 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42076 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965549AbbD1MzP (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34627 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752720AbbDCVNS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Apr 2015 08:55:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 1/1] New driver: rtl8723au (mac80211)
-References: <1427142300-28051-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1427142300-28051-2-git-send-email-Jes.Sorensen@redhat.com>
-	<87383kps0o.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 28 Apr 2015 15:55:08 +0300
-In-Reply-To: <87383kps0o.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 28 Apr 2015 11:37:59 +0300")
-Message-ID: <87oam876qb.fsf@kamboji.qca.qualcomm.com> (sfid-20150428_145522_701046_93396FE5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 3 Apr 2015 17:13:18 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 4/4] mac80211-hwsim: enable better rx-status when using netlink.
+Date: Fri,  3 Apr 2015 14:13:10 -0700
+Message-Id: <1428095590-600-4-git-send-email-greearb@candelatech.com> (sfid-20150403_231323_913227_02030888)
+In-Reply-To: <1428095590-600-1-git-send-email-greearb@candelatech.com>
+References: <1428095590-600-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> And I pushed this to wireless-drivers-next.git pending branch so that
-> kbuild will run it's tests with this driver.
+This allows proper rx-status reporting for packets received
+from the netlink api.
 
-There was one warning from kbuild, but I didn't check if it's just a
-false warning or what:
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 10 ++++++++++
+ drivers/net/wireless/mac80211_hwsim.h | 18 ++++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-drivers/net/wireless/rtl8xxxu.c: In function 'rtl8723a_phy_lc_calibrate':
-drivers/net/wireless/rtl8xxxu.c:2457: warning: 'rf_amode' may be used uninitialized in this function
-
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index afb2139..67c604b 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -2824,6 +2824,16 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	rx_status.rate_idx = nla_get_u32(info->attrs[HWSIM_ATTR_RX_RATE]);
+ 	rx_status.signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
+ 
++	if (info->attrs[HWSIM_ATTR_RX_INFO]) {
++		struct hwsim_rx_info *r;
++		r = (struct hwsim_rx_info *)nla_data(
++			info->attrs[HWSIM_ATTR_RX_INFO]);
++		rx_status.flag = r->rx_flags;
++		rx_status.vht_flag = r->vht_flags;
++		rx_status.vht_nss = r->vht_nss;
++		rx_status.ampdu_reference = r->ampdu_reference;
++	}
++
+ 	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
+ 	data2->rx_pkts++;
+ 	data2->rx_bytes += skb->len;
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index a2e2e11..0e26c9f 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -130,6 +130,7 @@ enum {
+  * @HWSIM_ATTR_NO_VIF:  Do not create vif (wlanX) when creating radio.
+  * @HWSIM_ATTR_FREQ: Frequency at which packet is transmitted or received.
+  * @HWSIM_ATTR_TX_INFO2: hwsim_tx_rate2 array
++ * @HWSIM_ATTR_RX_INFO: hwsim_rx_info
+  * @__HWSIM_ATTR_MAX: enum limit
+  */
+ 
+@@ -156,6 +157,7 @@ enum {
+ 	HWSIM_ATTR_NO_VIF,
+ 	HWSIM_ATTR_FREQ,
+ 	HWSIM_ATTR_TX_INFO2,
++	HWSIM_ATTR_RX_INFO,
+ 	__HWSIM_ATTR_MAX,
+ };
+ #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
+@@ -184,4 +186,20 @@ struct hwsim_tx_rate2 {
+ 	s16 power_level;
+ } __packed;
+ 
++/**
++ * This relates to the ieee80211_rx_status struct in mac80211.h
++ * @rx_flags: %RX_FLAG_* (see  mac80211_rx_flags)
++ * @vht_flags: %RX_VHT_FLAG_*
++ * @vht_nss: number of streams (VHT only)
++ * @ampdu_reference: A-MPDU reference number, must be a different value for
++ *	each A-MPDU but the same for each subframe within one A-MPDU
++ */
++struct hwsim_rx_info {
++	u32 rx_flags;
++	u8 vht_flags;
++	u8 vht_nss;
++	u16 unused_pad; /* pad to 32-bits, and space for growth */
++	u32 ampdu_reference;
++} __packed;
++
+ #endif /* __MAC80211_HWSIM_H */
 -- 
-Kalle Valo
+1.7.11.7
+
