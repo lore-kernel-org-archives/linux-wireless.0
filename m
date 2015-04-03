@@ -1,112 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:35481 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755389AbbDVHcd (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34618 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752116AbbDCVNP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Apr 2015 03:32:33 -0400
-Received: by qcbii10 with SMTP id ii10so88813859qcb.2
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Apr 2015 00:32:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1429035033-14076-8-git-send-email-arend@broadcom.com>
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-	<1429035033-14076-8-git-send-email-arend@broadcom.com>
-Date: Wed, 22 Apr 2015 09:32:32 +0200
-Message-ID: <CAPDyKFqGb81m9ExECL1ZCea8OuhekH+aWiXC=8zafnLN2T02Vw@mail.gmail.com> (sfid-20150422_093251_608847_CCF5C30B)
-Subject: Re: [PATCH 07/10] brcmfmac: fix sdio suspend and resume
-From: Ulf Hansson <ulf.hansson@linaro.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 3 Apr 2015 17:13:15 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/4] mac80211-hwsim: notify user-space about channel change.
+Date: Fri,  3 Apr 2015 14:13:07 -0700
+Message-Id: <1428095590-600-1-git-send-email-greearb@candelatech.com> (sfid-20150403_231318_610932_3171D5F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 April 2015 at 20:10, Arend van Spriel <arend@broadcom.com> wrote:
-> commit 330b4e4be937 ("brcmfmac: Add wowl support for SDIO devices.")
-> changed the behaviour by removing the MMC_PM_KEEP_POWER flag for
-> non-wowl scenario, which needs to be restored. Another necessary
-> change is to mark the card as being non-removable. With this in place
-> the suspend resume test passes successfully doing:
->
->  # echo devices > /sys/power/pm_test
->  # echo mem > /sys/power/state
->
-> Note that power may still be switched off when system is going
-> in S3 state.
->
-> Reported-by: Fu, Zhonghui <<zhonghui.fu@linux.intel.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c | 18 +++++++++++++-----
->  1 file changed, 13 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> index 9b508bd..8a69544 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-> @@ -1011,6 +1011,14 @@ static int brcmf_sdiod_remove(struct brcmf_sdio_dev *sdiodev)
->         return 0;
->  }
->
-> +static void brcmf_sdiod_host_fixup(struct mmc_host *host)
-> +{
-> +       /* runtime-pm powers off the device */
-> +       pm_runtime_forbid(host->parent);
+From: Ben Greear <greearb@candelatech.com>
 
-That you need this, clearly shows that something is broken in the mmc
-core/host layer.
+The goal is to allow the user-space application to properly
+filter packets before sending them down to the kernel.  This
+should more closely mimic what a real piece of hardware would
+do.
 
-Could you elaborate a bit on what configuration you are using. Like
-what mmc host, which SDIO bus speed mode.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 48 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/mac80211_hwsim.h |  6 +++++
+ 2 files changed, 54 insertions(+)
 
-And have you tested different configurations? Like what happens if you
-use a different SDIO bus speed mode?
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 8908be6..d0e88b2 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -871,6 +871,52 @@ static bool hwsim_ps_rx_ok(struct mac80211_hwsim_data *data,
+ 	return true;
+ }
+ 
++static void mac80211_hwsim_check_nl_notify(struct mac80211_hwsim_data *data)
++{
++	struct sk_buff *skb;
++	u32 center_freq = 0;
++	u32 _portid;
++	void *msg_head;
++
++	/* wmediumd mode check */
++	_portid = ACCESS_ONCE(wmediumd_portid);
++
++	if (!_portid)
++		return;
++
++	skb = genlmsg_new(GENLMSG_DEFAULT_SIZE, GFP_ATOMIC);
++	if (skb == NULL)
++		goto err_print;
++
++	msg_head = genlmsg_put(skb, 0, 0, &hwsim_genl_family, 0,
++			       HWSIM_CMD_NOTIFY);
++	if (msg_head == NULL) {
++		printk(KERN_DEBUG "mac80211_hwsim: problem with msg_head, notify\n");
++		goto nla_put_failure;
++	}
++
++	if (nla_put(skb, HWSIM_ATTR_ADDR_TRANSMITTER,
++		    ETH_ALEN, data->addresses[1].addr))
++		goto nla_put_failure;
++
++	if (data->channel)
++		center_freq = data->channel->center_freq;
++
++	if (nla_put_u32(skb, HWSIM_ATTR_FREQ, center_freq))
++		goto nla_put_failure;
++
++	genlmsg_end(skb, msg_head);
++	if (genlmsg_unicast(&init_net, skb, _portid))
++		goto err_print;
++
++	return;
++
++nla_put_failure:
++	nlmsg_free(skb);
++err_print:
++	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
++}
++
+ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 				       struct sk_buff *my_skb,
+ 				       int dst_portid)
+@@ -1465,6 +1511,8 @@ static int mac80211_hwsim_config(struct ieee80211_hw *hw, u32 changed)
+ 				      HRTIMER_MODE_REL);
+ 	}
+ 
++	mac80211_hwsim_check_nl_notify(data);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
+index 66e1c73..f0fc495c 100644
+--- a/drivers/net/wireless/mac80211_hwsim.h
++++ b/drivers/net/wireless/mac80211_hwsim.h
+@@ -71,6 +71,11 @@ enum hwsim_tx_control_flags {
+  * @HWSIM_CMD_DEL_RADIO: destroy a radio, reply is multicasted
+  * @HWSIM_CMD_GET_RADIO: fetch information about existing radios, uses:
+  *	%HWSIM_ATTR_RADIO_ID
++ * @HWSIM_CMD_NOTIFY: notify user-space about driver changes.  This is
++ * designed to help the user-space app better emulate radio hardware.
++ * This command uses:
++ *      %HWSIM_ATTR_FREQ # Notify current operating center frequency.
++ *      %HWSIM_ATTR_ADDR_TRANSMITTER # ID which radio we are notifying about.
+  * @__HWSIM_CMD_MAX: enum limit
+  */
+ enum {
+@@ -81,6 +86,7 @@ enum {
+ 	HWSIM_CMD_NEW_RADIO,
+ 	HWSIM_CMD_DEL_RADIO,
+ 	HWSIM_CMD_GET_RADIO,
++	HWSIM_CMD_NOTIFY,
+ 	__HWSIM_CMD_MAX,
+ };
+ #define HWSIM_CMD_MAX (_HWSIM_CMD_MAX - 1)
+-- 
+1.7.11.7
 
-> +       /* avoid removal detection upon resume */
-> +       host->caps |= MMC_CAP_NONREMOVABLE;
-> +}
-> +
->  static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
->  {
->         struct sdio_func *func;
-> @@ -1076,7 +1084,7 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
->                 ret = -ENODEV;
->                 goto out;
->         }
-> -       pm_runtime_forbid(host->parent);
-> +       brcmf_sdiod_host_fixup(host);
->  out:
->         if (ret)
->                 brcmf_sdiod_remove(sdiodev);
-> @@ -1246,15 +1254,15 @@ static int brcmf_ops_sdio_suspend(struct device *dev)
->         brcmf_sdiod_freezer_on(sdiodev);
->         brcmf_sdio_wd_timer(sdiodev->bus, 0);
->
-> +       sdio_flags = MMC_PM_KEEP_POWER;
->         if (sdiodev->wowl_enabled) {
-> -               sdio_flags = MMC_PM_KEEP_POWER;
->                 if (sdiodev->pdata->oob_irq_supported)
->                         enable_irq_wake(sdiodev->pdata->oob_irq_nr);
->                 else
-> -                       sdio_flags = MMC_PM_WAKE_SDIO_IRQ;
-> -               if (sdio_set_host_pm_flags(sdiodev->func[1], sdio_flags))
-> -                       brcmf_err("Failed to set pm_flags %x\n", sdio_flags);
-> +                       sdio_flags |= MMC_PM_WAKE_SDIO_IRQ;
->         }
-> +       if (sdio_set_host_pm_flags(sdiodev->func[1], sdio_flags))
-> +               brcmf_err("Failed to set pm_flags %x\n", sdio_flags);
->         return 0;
->  }
->
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Kind regards
-Uffe
