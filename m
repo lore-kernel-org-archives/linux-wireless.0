@@ -1,62 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:52218 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752256AbbDWJMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Apr 2015 05:12:53 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "jkosina@suse.cz" <jkosina@suse.cz>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: iwlwifi getting stuck with current Linus' tree (646da63172)
-Date: Thu, 23 Apr 2015 09:12:46 +0000
-Message-ID: <1429780366.11859.1.camel@intel.com> (sfid-20150423_111300_928672_9C5D4A6F)
-References: <alpine.LNX.2.00.1504222235340.3695@pobox.suse.cz>
-	 <1429764440.4084.5.camel@intel.com>
-	 <alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz>
-In-Reply-To: <alpine.LNX.2.00.1504231011500.3695@pobox.suse.cz>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:34621 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752116AbbDCVNQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Apr 2015 17:13:16 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/4] mac80211-hwsim: remove dmesg spam about get-survey.
+Date: Fri,  3 Apr 2015 14:13:08 -0700
+Message-Id: <1428095590-600-2-git-send-email-greearb@candelatech.com> (sfid-20150403_231320_379910_6088EF09)
+In-Reply-To: <1428095590-600-1-git-send-email-greearb@candelatech.com>
+References: <1428095590-600-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE1LTA0LTIzIGF0IDEwOjE1ICswMjAwLCBKaXJpIEtvc2luYSB3cm90ZToNCj4g
-T24gVGh1LCAyMyBBcHIgMjAxNSwgR3J1bWJhY2gsIEVtbWFudWVsIHdyb3RlOg0KPiANCj4gPiA+
-IEkndmUgYmVlbiBydW5uaW5nIGN1cnJlbnQgTGludXMnIHRyZWUgYW5kIGhhdmUgYmVlbiBnZXR0
-aW5nIHN5c3RlbSBsb2NrdXBzIA0KPiA+ID4gZnJlcXVlbnRseS4gQWZ0ZXIgYSBmZXcgInNpbGVu
-dCIgbG9ja3VwcywgSSB3YXMgYWJsZSB0byBvYnRhaW4gYSBkbWVzZyANCj4gPiA+IGJlZm9yZSB0
-aGUgbWFjaGluZSB0dXJuZWQgZGVhZCBhZ2FpbiAod2lmaSBzdG9wcGVkIHdvcmtpbmcgc2hvcnRs
-eSBiZWZvcmUgDQo+ID4gPiB0aGF0KS4NCj4gPiA+IA0KPiA+ID4gQmVmb3JlIHN0YXJ0aW5nIHRv
-IGRlYnVnIC8gYmlzZWN0IChsYXN0IGtub3duIGdvb2Qgb24gdGhpcyBtYWNoaW5lIGlzIA0KPiA+
-ID4gNC4wLXJjNiksIEkgYW0gYXR0YWNoaW5nIHRoZSBkbWVzZyBpbiBjYXNlIHNvbWVvbmUgYWxy
-ZWFkeSBrbm93cyB3aGF0IHRoZSANCj4gPiA+IGlzc3VlIGlzLg0KPiA+ID4gDQo+ID4gDQo+ID4g
-SSBicmllZmx5IHdlbnQgb3ZlciB0aGUgaXdsd2lmaSBjb21taXRzIGJldHdlZW4gNC4wLXJjNiBh
-bmQgbGludXgvbWFzdGVyDQo+ID4gYW5kIGNvdWxkbid0IGZpbmQgYW55dGhpbmcgb2J2aW91cy4N
-Cj4gPiBOb3RlIHRoYXQgZm9yIHRoZSBkZXZpY2UgeW91IGhhdmUsIHRoZSBjb21taXRzIHRoYXQg
-dG91Y2gNCj4gPiBkcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL212bSBhcmUgbm90IHJlbGV2
-YW50Lg0KPiA+IA0KPiA+IFdoYXQgeW91IGFyZSBzZWVpbmcgaXMgdGhhdCB0aGUgUENJIGhvc3Qg
-aXMgZGlzY29ubmVjdGluZyB0aGUgV2lGaSBOSUMNCj4gPiBmb3Igc29tZSB3ZWlyZCByZWFzb24u
-IEl0IGlzIG5vdCB0aGUgZmlyc3QgdGltZSBJIHNlZSB0aGF0LCBidXQNCj4gPiB1bmZvcnR1bmF0
-ZWx5LCBJIGhhdmUgbmV2ZXIgYmVlbiBhYmxlIHRvIGRlYnVnIHRoaXMuIEkgYW0gcGVyc29uYWxs
-eSBub3QNCj4gPiBhIEhXIFBDSSBleHBlcnQgYW5kIEkgY291bGRuJ3QgcmVwcm9kdWNlIGVpdGhl
-ci4uLg0KPiA+IA0KPiA+IEkgYW0gYWZyYWlkIEkgd29uJ3Qgc2F2ZSB5b3UgdGhlIHRpbWUgb2Yg
-dGhlIGJpc2VjdGlvbiwgYnV0IEkgYW0gbm90DQo+ID4gZW50aXJlbHkgc3VyZSB0aGF0IGJpc2Vj
-dGluZyB0aGUgaXdsd2lmaSBkcml2ZXIgaXMgZW5vdWdoIHRvIGZpbmQgdGhlDQo+ID4gY29tbWl0
-IHRoYXQgYnJva2UgaXQuIFlvdSBtYXkgd2FudCB0byBiaXNlY3QgdGhlIHBjaSBidXMgZHJpdmVy
-IGFzIHdlbGwuDQo+IA0KPiBUaGUgcHJvYmxlbSBpcyB0aGF0IEkgY2FuJ3QgcmVhbGx5IHJlbGlh
-Ymx5IHJlcHJvZHVjZSBpdDsgaXQgaGFwcGVucyANCj4gcmF0aGVyIG9mdGVuLCBidXQgbm90IHNv
-IG9mdGVuIHRoYXQgSSBjb3VsZCBiZSBjZXJ0YWlubHkgc3VyZSB0aGF0IG15IA0KPiBkaXN0aW5j
-dGlvbiBvZiBnb29kIGFuZCBiYWQga2VybmVscyB3b3VsZCBiZSBhY2N1cmF0ZS4NCj4gDQo+IEkg
-d2lsbCB0cnkgaXQsIGJ1dCBJIGV4cGVjdCB0aGUgcmVzdWx0IHRvIGJlIGJvZ3VzIGJlY2F1c2Ug
-b2YgdGhpcywgDQo+IHVuZm9ydHVuYXRlbHkuDQo+IA0KDQpJIGNhbiB1bmRlcnN0YW5kLiBBIGZl
-dyB1c2VycyByZXBvcnRlZCB0aGF0IHRoaXMgYnVnIG9jY3VycmVkIG1vcmUNCnJlbGlhYmx5IHdo
-ZW4gbW92aW5nIHRoZWlyIHN5c3RlbSwgYWx0aG91Z2ggaXQgc2VlbXMgdmVyeSB3ZWlyZCB0byBt
-ZS4NCg0KPiA+IEZpcnN0IHF1ZXN0aW9uIGlzOiBBcmUgeW91IHN1cmUgdGhhdCA0LjAtcmM2IHdh
-cyBnb29kPw0KPiANCj4gUHJldHR5IG11Y2gsIHllcy4gSSd2ZSBiZWVuIHJ1bm5pbmcgaXQgZm9y
-IHF1aXRlIHNvbWUgdGltZSBvbiB0aGlzIA0KPiBtYWNoaW5lIHdpdGhvdXQgYW55IGlzc3Vlcy4g
-QnV0IGFmdGVyIHVwZGF0aW5nIHRvIGN1cnJlbnQgSEVBRCB0d28gZGF5cyANCj4gYWdvLCB0aGUg
-aXNzdWUgdHJpZ2dlcmVkIGxpa2UgNiBvciA3IHRpbWVzIGFscmVhZHkuDQo+IA0KDQpPayAtIEkg
-d2lsbCB0cnkgdG8gbG9vayBhdCB0aGUgUENJIGNvbW1pdHMgdGhlcmUgYWx0aG91Z2ggSSBhbSBu
-b3Qgc3VyZQ0KSSdsbCBiZSBhYmxlIHRvIG1ha2UgbXVjaCBzZW5zZSBvZiB0aGVtLi4uDQoNCj4g
-VGhhbmtzLA0KPiANCg0K
+From: Ben Greear <greearb@candelatech.com>
+
+This message just fills up dmesg and/or kernel logs and does
+not provide any useful information.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index d0e88b2..5089169 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1696,7 +1696,7 @@ static int mac80211_hwsim_get_survey(
+ {
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 
+-	wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx);
++	/* wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx); */
+ 
+ 	if (idx != 0)
+ 		return -ENOENT;
+-- 
+1.7.11.7
+
