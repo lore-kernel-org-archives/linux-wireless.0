@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:38172 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422855AbbD2Mue (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35014 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752112AbbDCVi5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Apr 2015 08:50:34 -0400
-From: Johnny Kim <johnny.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>, <linux-wireless@vger.kernel.org>
-CC: <chris.park@atmel.com>, <rachel.kim@atmel.com>,
-	<tony.cho@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Johnny Kim <johnny.kim@atmel.com>
-Subject: [PATCH v2 2/2] staging: MAINTAINERS: add maintainer for wilc1000 device
-Date: Wed, 29 Apr 2015 21:50:04 +0900
-Message-ID: <0c403fce8ae243edb21419cc2840195a94f829ee.1430301575.git.johnny.kim@atmel.com> (sfid-20150429_145037_372554_48E481FC)
-In-Reply-To: <90c05bda434a068796547a599e8ea5e3ad3acb21.1430301575.git.johnny.kim@atmel.com>
-References: <90c05bda434a068796547a599e8ea5e3ad3acb21.1430301575.git.johnny.kim@atmel.com>
+	Fri, 3 Apr 2015 17:38:57 -0400
+Message-ID: <551F0871.3060906@candelatech.com> (sfid-20150403_233900_985639_F620AA09)
+Date: Fri, 03 Apr 2015 14:38:57 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Joe Perches <joe@perches.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/4] mac80211-hwsim: remove dmesg spam about get-survey.
+References: <1428095590-600-1-git-send-email-greearb@candelatech.com>  <1428095590-600-2-git-send-email-greearb@candelatech.com> <1428096542.29510.11.camel@perches.com>
+In-Reply-To: <1428096542.29510.11.camel@perches.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add myself as maintainer for atmel wilc1000
+On 04/03/2015 02:29 PM, Joe Perches wrote:
+> On Fri, 2015-04-03 at 14:13 -0700, greearb@candelatech.com wrote:
+>> This message just fills up dmesg and/or kernel logs and does
+>> not provide any useful information.
+> []
+>> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> []
+>> @@ -1696,7 +1696,7 @@ static int mac80211_hwsim_get_survey(
+>>  {
+>>  	struct ieee80211_conf *conf = &hw->conf;
+>>  
+>> -	wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx);
+>> +	/* wiphy_debug(hw->wiphy, "%s (idx=%d)\n", __func__, idx); */
+> 
+> It's better, if it's really useless, to delete this
+> than comment it out.
+> 
+> But it's not on by default anyway, so why it an issue?
 
-Signed-off-by: Johnny Kim <johnny.kim@atmel.com>
-Signed-off-by: Rachel Kim <rachel.kim@atmel.com>
-Signed-off-by: Dean Lee <dean.lee@atmel.com>
-Signed-off-by: Chris Park <chris.park@atmel.com>
----
-Changes in v2:
-- fix the permissions
-- fix the folder tree
----
- MAINTAINERS | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+It's on on my systems...rest of the wiphy debug is normally useful,
+but this particular one is not and spams the logs.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 1b8263c..2ddf38c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9473,6 +9473,16 @@ M:	Forest Bond <forest@alittletooquiet.net>
- S:	Odd Fixes
- F:	drivers/staging/vt665?/
- 
-+STAGING - WILC1000 WIFI DRIVER
-+M:	Johnny Kim <johnny.kim@atmel.com>
-+M:	Rachel Kim <rachel.kim@atmel.com>
-+M:	Dean Lee <dean.lee@atmel.com>
-+M:	Chris Park <chris.park@atmel.com>
-+L:	devel@driverdev.osuosl.org
-+L:	linux-wireless@vger.kernel.org
-+S:	Supported
-+F:	drivers/staging/wilc1000/
-+
- STAGING - XGI Z7,Z9,Z11 PCI DISPLAY DRIVER
- M:	Arnaud Patard <arnaud.patard@rtp-net.org>
- S:	Odd Fixes
+I don't mind removing it entirely, but thought maybe someone would
+want an easy way to enable it again for some reason.
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
