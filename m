@@ -1,106 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:36229 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754511AbbDNSKv (ORCPT
+Received: from mail-wi0-f173.google.com ([209.85.212.173]:36299 "EHLO
+	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753010AbbDDTtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Apr 2015 14:10:51 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 08/10] brcmfmac: add support for BCM4358 PCIe device
-Date: Tue, 14 Apr 2015 20:10:31 +0200
-Message-ID: <1429035033-14076-9-git-send-email-arend@broadcom.com> (sfid-20150414_201113_820076_4B6EC99F)
-In-Reply-To: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-References: <1429035033-14076-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 4 Apr 2015 15:49:35 -0400
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] staging: vt6656: use ieee80211_tx_info to select packet type.
+Date: Sat,  4 Apr 2015 20:49:10 +0100
+Message-Id: <1428176950-3128-1-git-send-email-tvboxspy@gmail.com> (sfid-20150404_214953_325681_B1E0248A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for the BCM4358 2x2 11ac device.
+Information for packet type is in ieee80211_tx_info
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+band IEEE80211_BAND_5GHZ for PK_TYPE_11A.
+
+IEEE80211_TX_RC_USE_CTS_PROTECT via tx_rate flags selects PK_TYPE_11GB
+
+This ensures that the packet is always the right type.
+
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Cc: <stable@vger.kernel.org> # v3.17+
 ---
- drivers/net/wireless/brcm80211/brcmfmac/chip.c       | 1 +
- drivers/net/wireless/brcm80211/brcmfmac/pcie.c       | 9 +++++++++
- drivers/net/wireless/brcm80211/include/brcm_hw_ids.h | 2 ++
- 3 files changed, 12 insertions(+)
+ drivers/staging/vt6656/rxtx.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-index ab2fac8..288f831 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/chip.c
-@@ -649,6 +649,7 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
- 	case BRCM_CC_43567_CHIP_ID:
- 	case BRCM_CC_43569_CHIP_ID:
- 	case BRCM_CC_43570_CHIP_ID:
-+	case BRCM_CC_4358_CHIP_ID:
- 	case BRCM_CC_43602_CHIP_ID:
- 		return 0x180000;
- 	default:
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-index 1831ecd..8815de7 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/pcie.c
-@@ -51,6 +51,8 @@ enum brcmf_pcie_state {
- #define BRCMF_PCIE_4356_NVRAM_NAME		"brcm/brcmfmac4356-pcie.txt"
- #define BRCMF_PCIE_43570_FW_NAME		"brcm/brcmfmac43570-pcie.bin"
- #define BRCMF_PCIE_43570_NVRAM_NAME		"brcm/brcmfmac43570-pcie.txt"
-+#define BRCMF_PCIE_4358_FW_NAME			"brcm/brcmfmac4358-pcie.bin"
-+#define BRCMF_PCIE_4358_NVRAM_NAME		"brcm/brcmfmac4358-pcie.txt"
+diff --git a/drivers/staging/vt6656/rxtx.c b/drivers/staging/vt6656/rxtx.c
+index f6c2cf8..5c58996 100644
+--- a/drivers/staging/vt6656/rxtx.c
++++ b/drivers/staging/vt6656/rxtx.c
+@@ -805,10 +805,18 @@ int vnt_tx_packet(struct vnt_private *priv, struct sk_buff *skb)
+ 		vnt_schedule_command(priv, WLAN_CMD_SETPOWER);
+ 	}
  
- #define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
+-	if (current_rate > RATE_11M)
+-		pkt_type = priv->packet_type;
+-	else
++	if (current_rate > RATE_11M) {
++		if (info->band == IEEE80211_BAND_5GHZ) {
++			pkt_type = PK_TYPE_11A;
++		} else {
++			if (tx_rate->flags & IEEE80211_TX_RC_USE_CTS_PROTECT)
++				pkt_type = PK_TYPE_11GB;
++			else
++				pkt_type = PK_TYPE_11GA;
++		}
++	} else {
+ 		pkt_type = PK_TYPE_11B;
++	}
  
-@@ -189,6 +191,8 @@ MODULE_FIRMWARE(BRCMF_PCIE_4356_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_4356_NVRAM_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_43570_FW_NAME);
- MODULE_FIRMWARE(BRCMF_PCIE_43570_NVRAM_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4358_FW_NAME);
-+MODULE_FIRMWARE(BRCMF_PCIE_4358_NVRAM_NAME);
+ 	spin_lock_irqsave(&priv->lock, flags);
  
- 
- struct brcmf_pcie_console {
-@@ -1333,6 +1337,10 @@ static int brcmf_pcie_get_fwnames(struct brcmf_pciedev_info *devinfo)
- 		fw_name = BRCMF_PCIE_43570_FW_NAME;
- 		nvram_name = BRCMF_PCIE_43570_NVRAM_NAME;
- 		break;
-+	case BRCM_CC_4358_CHIP_ID:
-+		fw_name = BRCMF_PCIE_4358_FW_NAME;
-+		nvram_name = BRCMF_PCIE_4358_NVRAM_NAME;
-+		break;
- 	default:
- 		brcmf_err("Unsupported chip 0x%04x\n", devinfo->ci->chip);
- 		return -ENODEV;
-@@ -1850,6 +1858,7 @@ static struct pci_device_id brcmf_pcie_devid_table[] = {
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_4356_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43567_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43570_DEVICE_ID),
-+	BRCMF_PCIE_DEVICE(BRCM_PCIE_4358_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_2G_DEVICE_ID),
- 	BRCMF_PCIE_DEVICE(BRCM_PCIE_43602_5G_DEVICE_ID),
-diff --git a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-index 4efdd51..2543282 100644
---- a/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/brcm80211/include/brcm_hw_ids.h
-@@ -45,6 +45,7 @@
- #define BRCM_CC_43567_CHIP_ID		43567
- #define BRCM_CC_43569_CHIP_ID		43569
- #define BRCM_CC_43570_CHIP_ID		43570
-+#define BRCM_CC_4358_CHIP_ID		0x4358
- #define BRCM_CC_43602_CHIP_ID		43602
- 
- /* USB Device IDs */
-@@ -59,6 +60,7 @@
- #define BRCM_PCIE_4356_DEVICE_ID	0x43ec
- #define BRCM_PCIE_43567_DEVICE_ID	0x43d3
- #define BRCM_PCIE_43570_DEVICE_ID	0x43d9
-+#define BRCM_PCIE_4358_DEVICE_ID	0x43e9
- #define BRCM_PCIE_43602_DEVICE_ID	0x43ba
- #define BRCM_PCIE_43602_2G_DEVICE_ID	0x43bb
- #define BRCM_PCIE_43602_5G_DEVICE_ID	0x43bc
 -- 
-1.9.1
+2.1.0
 
