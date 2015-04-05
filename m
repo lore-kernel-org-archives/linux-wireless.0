@@ -1,138 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34624 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753018AbbDCVNR (ORCPT
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:13122
+	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753145AbbDEMOo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Apr 2015 17:13:17 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 3/4] mac80211-hwsim: Pass rate-ctrl flags and tx-power to user-space
-Date: Fri,  3 Apr 2015 14:13:09 -0700
-Message-Id: <1428095590-600-3-git-send-email-greearb@candelatech.com> (sfid-20150403_231322_676557_14E92AC1)
-In-Reply-To: <1428095590-600-1-git-send-email-greearb@candelatech.com>
-References: <1428095590-600-1-git-send-email-greearb@candelatech.com>
+	Sun, 5 Apr 2015 08:14:44 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: devel@driverdev.osuosl.org
+Cc: kernel-janitors@vger.kernel.org, HPDD-discuss@lists.01.org,
+	alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org,
+	linux-input@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/16] fix error return code
+Date: Sun,  5 Apr 2015 14:06:20 +0200
+Message-Id: <1428235596-4757-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20150405_141926_985448_A7073353)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+The complate semantic patch that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-The flags field allows user-space to properly decode what the
-rate->idx really means.  The tx-power field is useful as well,
-in case user-space is interested in doing something clever with
-path-loss calculations.
+// <smpl>
+@ok exists@
+identifier f,ret,i;
+expression e;
+constant c;
+@@
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/mac80211_hwsim.c | 21 ++++++++++++++++++++-
- drivers/net/wireless/mac80211_hwsim.h |  8 ++++++++
- 2 files changed, 28 insertions(+), 1 deletion(-)
+// identify a function that returns a negative return value at least once.
+f(...) {
+... when any
+(
+return -c@i;
+|
+ret = -c@i;
+... when != ret = e
+return ret;
+|
+if (ret < 0) { ... return ret; }
+)
+... when any
+}
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 5089169..afb2139 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -521,6 +521,9 @@ static const struct nla_policy hwsim_genl_policy[HWSIM_ATTR_MAX + 1] = {
- 	[HWSIM_ATTR_RADIO_NAME] = { .type = NLA_STRING },
- 	[HWSIM_ATTR_NO_VIF] = { .type = NLA_FLAG },
- 	[HWSIM_ATTR_FREQ] = { .type = NLA_U32 },
-+	[HWSIM_ATTR_TX_INFO2] = { .type = NLA_UNSPEC,
-+				  .len = IEEE80211_TX_MAX_RATES *
-+				         sizeof(struct hwsim_tx_rate2)},
- };
- 
- static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
-@@ -929,6 +932,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	unsigned int hwsim_flags = 0;
- 	int i;
- 	struct hwsim_tx_rate tx_attempts[IEEE80211_TX_MAX_RATES];
-+	struct hwsim_tx_rate2 tx_attempts2[IEEE80211_TX_MAX_RATES];
- 
- 	if (data->ps != PS_DISABLED)
- 		hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PM);
-@@ -980,6 +984,8 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		tx_attempts[i].idx = info->status.rates[i].idx;
- 		tx_attempts[i].count = info->status.rates[i].count;
-+		tx_attempts2[i].rc_flags = info->status.rates[i].flags;
-+		tx_attempts2[i].power_level = data->power_level;
- 	}
- 
- 	if (nla_put(skb, HWSIM_ATTR_TX_INFO,
-@@ -987,6 +993,11 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 		    tx_attempts))
- 		goto nla_put_failure;
- 
-+	if (nla_put(skb, HWSIM_ATTR_TX_INFO2,
-+		    sizeof(struct hwsim_tx_rate2)*IEEE80211_TX_MAX_RATES,
-+		    tx_attempts2))
-+		goto nla_put_failure;
-+
- 	/* We create a cookie to identify this skb */
- 	if (nla_put_u64(skb, HWSIM_ATTR_COOKIE, (unsigned long) my_skb))
- 		goto nla_put_failure;
-@@ -2680,6 +2691,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	struct mac80211_hwsim_data *data2;
- 	struct ieee80211_tx_info *txi;
- 	struct hwsim_tx_rate *tx_attempts;
-+	struct hwsim_tx_rate2 *tx_attempts2;
- 	unsigned long ret_skb_ptr;
- 	struct sk_buff *skb, *tmp;
- 	const u8 *src;
-@@ -2723,6 +2735,12 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	tx_attempts = (struct hwsim_tx_rate *)nla_data(
- 		       info->attrs[HWSIM_ATTR_TX_INFO]);
- 
-+	if (info->attrs[HWSIM_ATTR_TX_INFO2])
-+		tx_attempts2 = (struct hwsim_tx_rate2 *)nla_data(
-+		       info->attrs[HWSIM_ATTR_TX_INFO2]);
-+	else
-+		tx_attempts2 = NULL;
-+
- 	/* now send back TX status */
- 	txi = IEEE80211_SKB_CB(skb);
- 
-@@ -2731,7 +2749,8 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		txi->status.rates[i].idx = tx_attempts[i].idx;
- 		txi->status.rates[i].count = tx_attempts[i].count;
--		/*txi->status.rates[i].flags = 0;*/
-+		if (tx_attempts2)
-+			txi->status.rates[i].flags = tx_attempts2[i].rc_flags;
- 	}
- 
- 	txi->status.ack_signal = nla_get_u32(info->attrs[HWSIM_ATTR_SIGNAL]);
-diff --git a/drivers/net/wireless/mac80211_hwsim.h b/drivers/net/wireless/mac80211_hwsim.h
-index f0fc495c..a2e2e11 100644
---- a/drivers/net/wireless/mac80211_hwsim.h
-+++ b/drivers/net/wireless/mac80211_hwsim.h
-@@ -129,6 +129,7 @@ enum {
-  * @HWSIM_ATTR_RADIO_NAME: Name of radio, e.g. phy666
-  * @HWSIM_ATTR_NO_VIF:  Do not create vif (wlanX) when creating radio.
-  * @HWSIM_ATTR_FREQ: Frequency at which packet is transmitted or received.
-+ * @HWSIM_ATTR_TX_INFO2: hwsim_tx_rate2 array
-  * @__HWSIM_ATTR_MAX: enum limit
-  */
- 
-@@ -154,6 +155,7 @@ enum {
- 	HWSIM_ATTR_RADIO_NAME,
- 	HWSIM_ATTR_NO_VIF,
- 	HWSIM_ATTR_FREQ,
-+	HWSIM_ATTR_TX_INFO2,
- 	__HWSIM_ATTR_MAX,
- };
- #define HWSIM_ATTR_MAX (__HWSIM_ATTR_MAX - 1)
-@@ -176,4 +178,10 @@ struct hwsim_tx_rate {
- 	u8 count;
- } __packed;
- 
-+/* Auxilary info to allow user-space to better understand the rate */
-+struct hwsim_tx_rate2 {
-+	u16 rc_flags; /* rate-ctrl flags (see mac80211_rate_control_flags) */
-+	s16 power_level;
-+} __packed;
-+
- #endif /* __MAC80211_HWSIM_H */
--- 
-1.7.11.7
+@r exists@
+identifier ret,ok.f,fn;
+expression e1,e2,e3,e4,e5,e6,x;
+statement S,S1;
+position p1,p2,p3;
+@@
+
+// identify a case where the return variable is set to a non-negative value
+// and then returned in error-handling code
+f(...) {
+... when any
+(
+if@p1 (\(ret < 0\|ret != 0\))
+ { ... return ret; }
+|
+ret@p1 = 0
+)
+... when != \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\)
+    when != &ret
+    when any
+(
+ if (<+... ret = e5 ...+>) S1
+|
+ if (<+... &ret ...+>) S1
+|
+if@p2(<+...x = fn(...)...+>)
+ {
+  ... when != ret = e6
+      when forall
+ return@p3 ret;
+}
+|
+break;
+|
+x = fn(...)
+... when != \(ret = e4\|ret++\|ret--\|ret+=e4\|ret-=e4\)
+    when != &ret
+(
+ if (<+... ret = e3 ...+>) S
+|
+ if (<+... &ret ...+>) S
+|
+if@p2(<+...\(x != 0\|x < 0\|x == NULL\|IS_ERR(x)\)...+>)
+ {
+  ... when != ret = e2
+      when forall
+ return@p3 ret;
+}
+)
+)
+... when any
+}
+
+@printer depends on r@
+position p;
+identifier ok.f,pr;
+constant char [] c;
+@@
+
+f(...) { <...pr@p(...,c,...)...> }
+
+@bad0 exists@
+identifier r.ret,ok.f,g != {ERR_PTR,IS_ERR};
+position p != printer.p;
+@@
+
+f(...) { ... when any
+g@p(...,ret,...)
+... when any
+ }
+
+@bad depends on !bad0 exists@
+position r.p1,r.p2;
+statement S1,S2;
+identifier r.ret;
+expression e1;
+@@
+
+// ignore the above if there is some path where the variable is set to
+// something else
+(
+if@p1 (\(ret < 0\|ret != 0\)) S1
+|
+ret@p1 = 0
+)
+... when any
+ \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\|&ret\)
+... when any
+if@p2(...) S2
+
+@bad1 depends on !bad0 && !bad exists@
+position r.p2;
+statement S2;
+identifier r.ret;
+expression e1;
+constant c;
+@@
+
+ret = -c
+... when != \(ret = e1\|ret++\|ret--\|ret+=e1\|ret-=e1\)
+    when != &ret
+    when any
+if@p2(...) S2
+
+@bad2 depends on !bad0 && !bad && !bad1 exists@
+position r.p1,r.p2;
+identifier r.ret;
+expression e1;
+statement S2;
+constant c;
+@@
+
+// likewise ignore it if there has been an intervening return
+ret@p1 = 0
+... when != if (...) { ... ret = e1 ... return ret; }
+    when != if (...) { ... return -c; }
+    when any
+if@p2(...) S2
+
+@script:python depends on !bad0 && !bad && !bad1 && !bad2@
+p1 << r.p1;
+p2 << r.p2;
+p3 << r.p3;
+@@
+
+cocci.print_main("",p1)
+cocci.print_secs("",p2)
+cocci.print_secs("",p3)
+// </smpl>
 
