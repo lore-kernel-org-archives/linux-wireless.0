@@ -1,88 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sigma-star.at ([95.130.255.111]:14387 "EHLO
-	mail.sigma-star.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752534AbbDLWwu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Apr 2015 18:52:50 -0400
-From: Richard Weinberger <richard@nod.at>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, coreteam@netfilter.org,
-	netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sameo@linux.intel.com, aloisio.almeida@openbossa.org,
-	lauro.venancio@openbossa.org, davem@davemloft.net,
-	kadlec@blackhole.kfki.hu, kaber@trash.net, pablo@netfilter.org,
-	Richard Weinberger <richard@nod.at>
-Subject: [PATCH 3/5 v4] netfilter: Fix portid types
-Date: Mon, 13 Apr 2015 00:52:37 +0200
-Message-Id: <1428879159-19237-3-git-send-email-richard@nod.at> (sfid-20150413_005505_549440_85725E5C)
-In-Reply-To: <1428879159-19237-1-git-send-email-richard@nod.at>
-References: <1428879159-19237-1-git-send-email-richard@nod.at>
+Received: from mout.gmx.net ([212.227.15.18]:51723 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752773AbbDFKBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Apr 2015 06:01:49 -0400
+Message-ID: <55225978.6050903@rempel-privat.de> (sfid-20150406_120203_798220_FE20D39F)
+Date: Mon, 06 Apr 2015 12:01:28 +0200
+From: Oleksij Rempel <linux@rempel-privat.de>
+MIME-Version: 1.0
+To: Fred Chou <fred.chou.nd@gmail.com>, ath9k-devel@qca.qualcomm.com,
+	kvalo@codeaurora.org
+CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ath9k_htc: check seq number instead of cmd id for timeout
+References: <1426235558-13787-1-git-send-email-fred.chou.nd@gmail.com> <552228AB.8060000@gmail.com>
+In-Reply-To: <552228AB.8060000@gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="VFEVunLR3NdP5bRgi3e7UFcRc052OnrGG"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The netlink portid is an unsigned integer, use this type
-also in netfilter.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--VFEVunLR3NdP5bRgi3e7UFcRc052OnrGG
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Richard Weinberger <richard@nod.at>
----
- net/netfilter/nfnetlink_log.c        | 4 ++--
- net/netfilter/nfnetlink_queue_core.c | 7 +++----
- 2 files changed, 5 insertions(+), 6 deletions(-)
+Hi Kalle,
 
-diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
-index 51afea4..5c79735 100644
---- a/net/netfilter/nfnetlink_log.c
-+++ b/net/netfilter/nfnetlink_log.c
-@@ -63,7 +63,7 @@ struct nfulnl_instance {
- 	struct timer_list timer;
- 	struct net *net;
- 	struct user_namespace *peer_user_ns;	/* User namespace of the peer process */
--	int peer_portid;			/* PORTID of the peer process */
-+	u32 peer_portid;		/* PORTID of the peer process */
- 
- 	/* configurable parameters */
- 	unsigned int flushtimeout;	/* timeout until queue flush */
-@@ -152,7 +152,7 @@ static void nfulnl_timer(unsigned long data);
- 
- static struct nfulnl_instance *
- instance_create(struct net *net, u_int16_t group_num,
--		int portid, struct user_namespace *user_ns)
-+		u32 portid, struct user_namespace *user_ns)
- {
- 	struct nfulnl_instance *inst;
- 	struct nfnl_log_net *log = nfnl_log_pernet(net);
-diff --git a/net/netfilter/nfnetlink_queue_core.c b/net/netfilter/nfnetlink_queue_core.c
-index 628afc3..49267f8 100644
---- a/net/netfilter/nfnetlink_queue_core.c
-+++ b/net/netfilter/nfnetlink_queue_core.c
-@@ -55,7 +55,7 @@ struct nfqnl_instance {
- 	struct hlist_node hlist;		/* global list of queues */
- 	struct rcu_head rcu;
- 
--	int peer_portid;
-+	u32 peer_portid;
- 	unsigned int queue_maxlen;
- 	unsigned int copy_range;
- 	unsigned int queue_dropped;
-@@ -110,8 +110,7 @@ instance_lookup(struct nfnl_queue_net *q, u_int16_t queue_num)
- }
- 
- static struct nfqnl_instance *
--instance_create(struct nfnl_queue_net *q, u_int16_t queue_num,
--		int portid)
-+instance_create(struct nfnl_queue_net *q, u_int16_t queue_num, u32 portid)
- {
- 	struct nfqnl_instance *inst;
- 	unsigned int h;
-@@ -870,7 +869,7 @@ static const struct nla_policy nfqa_verdict_batch_policy[NFQA_MAX+1] = {
- };
- 
- static struct nfqnl_instance *
--verdict_instance_lookup(struct nfnl_queue_net *q, u16 queue_num, int nlportid)
-+verdict_instance_lookup(struct nfnl_queue_net *q, u16 queue_num, u32 nlportid)
- {
- 	struct nfqnl_instance *queue;
- 
--- 
-1.8.4.5
+can you please apply this patch.
 
+Am 06.04.2015 um 08:33 schrieb Fred Chou:
+> Hi all,
+>=20
+> May I have an update on the patch status please?
+>=20
+> Thanks and regards,
+> Fred
+>=20
+> On 13/3/2015 4:32 PM, Fred Chou wrote:
+>> From: Fred Chou <fred.chou.nd@gmail.com>
+>>
+>> As the driver may send multiple wmi commands with identical cmd id,
+>> it is more robust to check seq number for timeout instead.
+>>
+>> Signed-off-by: Fred Chou <fred.chou.nd@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/wmi.c | 12 ++++++------
+>>  drivers/net/wireless/ath/ath9k/wmi.h |  2 +-
+>>  2 files changed, 7 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/wmi.c b/drivers/net/wirele=
+ss/ath/ath9k/wmi.c
+>> index 65c8894..aba909f 100644
+>> --- a/drivers/net/wireless/ath/ath9k/wmi.c
+>> +++ b/drivers/net/wireless/ath/ath9k/wmi.c
+>> @@ -224,7 +224,7 @@ static void ath9k_wmi_ctrl_rx(void *priv, struct s=
+k_buff *skb,
+>> =20
+>>  	/* Check if there has been a timeout. */
+>>  	spin_lock(&wmi->wmi_lock);
+>> -	if (cmd_id !=3D wmi->last_cmd_id) {
+>> +	if (be16_to_cpu(hdr->seq_no) !=3D wmi->last_seq_id) {
+>>  		spin_unlock(&wmi->wmi_lock);
+>>  		goto free_skb;
+>>  	}
+>> @@ -272,11 +272,16 @@ static int ath9k_wmi_cmd_issue(struct wmi *wmi,
+>>  			       enum wmi_cmd_id cmd, u16 len)
+>>  {
+>>  	struct wmi_cmd_hdr *hdr;
+>> +	unsigned long flags;
+>> =20
+>>  	hdr =3D (struct wmi_cmd_hdr *) skb_push(skb, sizeof(struct wmi_cmd_h=
+dr));
+>>  	hdr->command_id =3D cpu_to_be16(cmd);
+>>  	hdr->seq_no =3D cpu_to_be16(++wmi->tx_seq_id);
+>> =20
+>> +	spin_lock_irqsave(&wmi->wmi_lock, flags);
+>> +	wmi->last_seq_id =3D wmi->tx_seq_id;
+>> +	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+>> +
+>>  	return htc_send_epid(wmi->htc, skb, wmi->ctrl_epid);
+>>  }
+>> =20
+>> @@ -292,7 +297,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_id=
+ cmd_id,
+>>  	struct sk_buff *skb;
+>>  	u8 *data;
+>>  	int time_left, ret =3D 0;
+>> -	unsigned long flags;
+>> =20
+>>  	if (ah->ah_flags & AH_UNPLUGGED)
+>>  		return 0;
+>> @@ -320,10 +324,6 @@ int ath9k_wmi_cmd(struct wmi *wmi, enum wmi_cmd_i=
+d cmd_id,
+>>  	wmi->cmd_rsp_buf =3D rsp_buf;
+>>  	wmi->cmd_rsp_len =3D rsp_len;
+>> =20
+>> -	spin_lock_irqsave(&wmi->wmi_lock, flags);
+>> -	wmi->last_cmd_id =3D cmd_id;
+>> -	spin_unlock_irqrestore(&wmi->wmi_lock, flags);
+>> -
+>>  	ret =3D ath9k_wmi_cmd_issue(wmi, skb, cmd_id, cmd_len);
+>>  	if (ret)
+>>  		goto out;
+>> diff --git a/drivers/net/wireless/ath/ath9k/wmi.h b/drivers/net/wirele=
+ss/ath/ath9k/wmi.h
+>> index 0db37f2..2aad6dc 100644
+>> --- a/drivers/net/wireless/ath/ath9k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath9k/wmi.h
+>> @@ -143,7 +143,7 @@ struct wmi {
+>>  	enum htc_endpoint_id ctrl_epid;
+>>  	struct mutex op_mutex;
+>>  	struct completion cmd_wait;
+>> -	enum wmi_cmd_id last_cmd_id;
+>> +	u16 last_seq_id;
+>>  	struct sk_buff_head wmi_event_queue;
+>>  	struct tasklet_struct wmi_event_tasklet;
+>>  	u16 tx_seq_id;
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>=20
+
+
+--=20
+Regards,
+Oleksij
+
+
+--VFEVunLR3NdP5bRgi3e7UFcRc052OnrGG
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iF4EAREIAAYFAlUiWYEACgkQHwImuRkmbWlS3wD/Xf9kTClFI6u+5CkwfMyL7h/y
+e9/QrlTRxWALplSddoUA/2vfqYV92JCSzQFNW3ZPFLWjtAE9Xu7q/qfXb8bglEz/
+=PyJZ
+-----END PGP SIGNATURE-----
+
+--VFEVunLR3NdP5bRgi3e7UFcRc052OnrGG--
